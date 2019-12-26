@@ -27,6 +27,8 @@
 # Assumes there is no intrinsic size for the border-image-source, so uses
 # the size of the border image area.
 
+from __future__ import print_function, absolute_import
+
 import sys
 
 class Point:
@@ -65,7 +67,7 @@ class np:
 def parse_p(tok):
   if tok[-2:] == "px":
     return float(tok[:-2])
-  print "Whoops, not a pixel value " + tok
+  print("Whoops, not a pixel value", tok)
 
 def parse_np(tok):
   if tok[-2:] == "px":
@@ -121,47 +123,47 @@ def normalise(props):
 
 def check_parse(props):
   if not hasattr(props, 'source'):
-    print "missing border-image-source"
+    print("missing border-image-source")
     return False
   if not hasattr(props.size, 'width'):
-    print "missing width"
+    print("missing width")
     return False
   if not hasattr(props.size, 'height'):
-    print "missing height"
+    print("missing height")
     return False
   if not hasattr(props, 'width'):
-    print "missing border-width"
+    print("missing border-width")
     return False
   if not hasattr(props, 'image_width'):
-    print "missing border-image-width"
+    print("missing border-image-width")
     return False
   if not hasattr(props, 'slice'):
-    print "missing border-image-slice"
+    print("missing border-image-slice")
     return False
   if not hasattr(props, 'repeat') or (props.repeat not in ["stretch", "repeat", "round"]):
-    print "missing or incorrect border-image-repeat '" + props.repeat + "'"
+    print("missing or incorrect border-image-repeat '" + props.repeat + "'")
     return False
   if not hasattr(props, 'outset'):
-    print "missing border-image-outset"
+    print("missing border-image-outset")
     return False
 
   return True
 
 def check_normalise(props):
   if not hasattr(props, 'source'):
-    print "missing border-image-source"
+    print("missing border-image-source")
     return False
   if not hasattr(props.size, 'width'):
-    print "missing width"
+    print("missing width")
     return False
   if not hasattr(props.size, 'height'):
-    print "missing height"
+    print("missing height")
     return False
   if not hasattr(props, 'slice'):
-    print "missing border-image-slice"
+    print("missing border-image-slice")
     return False
   if not hasattr(props, 'repeat') or (props.repeat not in ["stretch", "repeat", "round"]):
-    print "missing or incorrect border-image-repeat '" + props.repeat + "'"
+    print("missing or incorrect border-image-repeat '" + props.repeat + "'")
     return False
 
   return True
@@ -239,7 +241,7 @@ def compute(props):
     for t in [tiles[i] for i in [3, 4, 5]]:
       t.scale.y = dest_tile_size.height/t.slice.height()
   else:
-    print "Whoops, invalid border-image-repeat value"
+    print("Whoops, invalid border-image-repeat value")
 
   # catch overlapping slices. Its easier to deal with it here than to catch
   # earlier and have to avoid all the divide by zeroes above
@@ -312,34 +314,34 @@ def compute(props):
       dest_tiles[(i+1)*tiles_h-2].dest_size.width -= diff_h
 
   # output the table to simulate the border
-  print "<table>"
+  print("<table>")
   for i in range(tiles_h):
-    print "<col style=\"width: " + str(dest_tiles[i].dest_size.width) + "px;\">"
+    print("<col style=\"width: " + str(dest_tiles[i].dest_size.width) + "px;\">")
   for i in range(tiles_v):
-    print "<tr style=\"height: " + str(dest_tiles[i*tiles_h].dest_size.height) + "px;\">"
+    print("<tr style=\"height: " + str(dest_tiles[i*tiles_h].dest_size.height) + "px;\">")
     for j in range(tiles_h):
       width = dest_tiles[i*tiles_h+j].size.width
       height = dest_tiles[i*tiles_h+j].size.height
       # catch any tiles with negative widths/heights
       # this happends when the total of the border-image-slices > borde drawing area
       if width <= 0 or height <= 0:
-        print "  <td style=\"background: white;\"></td>"
+        print("  <td style=\"background: white;\"></td>")
       else:
-        print "  <td style=\"background-image: " + props.source + "; background-size: " + str(width) + "px " + str(height) + "px; background-position: " + str(dest_tiles[i*tiles_h+j].offset.x) + "px " + str(dest_tiles[i*tiles_h+j].offset.y) + "px;\"></td>"
-    print "</tr>"
-  print "</table>"
+        print("  <td style=\"background-image: " + props.source + "; background-size: " + str(width) + "px " + str(height) + "px; background-position: " + str(dest_tiles[i*tiles_h+j].offset.x) + "px " + str(dest_tiles[i*tiles_h+j].offset.y) + "px;\"></td>")
+    print("</tr>")
+  print("</table>")
 
 
 # start here
 args = sys.argv[1:]
 if len(args) == 0:
-  print "whoops: no source file"
+  print("whoops: no source file")
   exit(1)
 
 
 props = parse(args[0])
 if not check_parse(props):
-  print dir(props)
+  print(dir(props))
   exit(1)
 props = normalise(props)
 if not check_normalise(props):
