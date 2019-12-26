@@ -57,7 +57,6 @@ vector<string> gRestartArgs;
 GThread* gSendThreadID;
 
 // From crashreporter_linux.cpp
-void SaveSettings();
 void SendReport();
 void DisableGUIAndSendReport();
 void TryInitGnome();
