@@ -413,6 +413,7 @@ const rollout = {
     const legacyLocalStorageKeys = [
       "doneFirstRun",
       "skipHeuristicsCheck",
+      DOH_ENABLED_PREF,
       DOH_PREVIOUS_TRR_MODE_PREF,
       DOH_DOORHANGER_SHOWN_PREF,
       DOH_DOORHANGER_USER_DECISION_PREF,
