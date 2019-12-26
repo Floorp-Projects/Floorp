@@ -363,7 +363,6 @@ void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
          profiler_get_inner_window_id_from_docshell(mDocShell)));
   }
 #endif
-  return;
 }
 
 void nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument() {
