@@ -241,7 +241,7 @@ wa.au
 // 3LDs
 act.edu.au
 catholic.edu.au
-eq.edu.au
+// eq.edu.au - Removed at the request of the Queensland Department of Education
 nsw.edu.au
 nt.edu.au
 qld.edu.au
@@ -7074,7 +7074,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-12-11T17:19:54Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-12-25T17:26:24Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7195,6 +7195,9 @@ alsace
 
 // alstom : 2015-07-30 ALSTOM
 alstom
+
+// amazon : 2019-12-19 Amazon EU S.à r.l.
+amazon
 
 // americanexpress : 2015-07-31 American Express Travel Related Services Company, Inc.
 americanexpress
@@ -9062,9 +9065,6 @@ mov
 // movie : 2015-02-05 Binky Moon, LLC
 movie
 
-// movistar : 2014-10-16 Telefónica S.A.
-movistar
-
 // msd : 2015-07-23 MSD Registry Holdings, Inc.
 msd
 
@@ -9959,9 +9959,6 @@ tech
 // technology : 2013-09-13 Binky Moon, LLC
 technology
 
-// telefonica : 2014-10-16 Telefónica S.A.
-telefonica
-
 // temasek : 2014-08-07 Temasek Holdings (Private) Limited
 temasek
 
@@ -10403,6 +10400,9 @@ xin
 // xn--cck2b3b : 2015-02-26 Amazon Registry Services, Inc.
 ストア
 
+// xn--cckwcxetd : 2019-12-19 Amazon EU S.à r.l.
+アマゾン
+
 // xn--cg4bki : 2013-09-27 SAMSUNG SDS CO., LTD
 삼성
 
@@ -10471,6 +10471,9 @@ xin
 
 // xn--j1aef : 2015-01-15 VeriSign Sarl
 ком
+
+// xn--jlq480n2rg : 2019-12-19 Amazon EU S.à r.l.
+亚马逊
 
 // xn--jlq61u9w7b : 2015-01-08 Nokia Corporation
 诺基亚
