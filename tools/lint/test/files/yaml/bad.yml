@@ -5,3 +5,4 @@ yamllint:
         - .cron.yml
         - browser/config/
         - wrong
+  application:bar
