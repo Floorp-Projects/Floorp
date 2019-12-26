@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1576774452261">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1576881756956">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3425,6 +3425,18 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="b96957ff-ca4e-4ec4-97f7-3dbb4ddbc479" id="/^((beeline@beelinereader\.com)|(\{e046e345-918c-4fe8-89a2-0987c5d12636\})|(adi@fmt-tools\.com)|(\{90e41842-755d-40e0-9136-8129df55a64b\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d940ce81-7ac8-4741-9fc8-2699cb92d4ef" id="/^((\{cee1ccee-5503-4927-a923-9a557e63bbc8\})|(\{8a84b40d-84a4-40d6-96de-c504a4fcd114\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="31a14241-2af8-4ec8-b597-d5c3ebedc30c" id="s3firefox@translator">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="e028ecb3-be1e-48fb-9681-9c04ff7fad3d" id="@mendeleyimporter">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
