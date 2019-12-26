@@ -54,3 +54,5 @@ jobs:
                 - linux64-sccache
                 - linux64-nasm
                 - linux64-node
+                - lucetc
+                - wasi-sysroot

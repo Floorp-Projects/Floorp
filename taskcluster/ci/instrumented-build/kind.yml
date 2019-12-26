@@ -82,6 +82,8 @@ jobs:
                 - linux64-cbindgen
                 - linux64-nasm
                 - linux64-node
+                - lucetc
+                - wasi-sysroot
 
     macosx64-shippable/opt:
         description: "MacOS X x64 Cross-compile Instrumented"
