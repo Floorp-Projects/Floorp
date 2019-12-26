@@ -131,27 +131,6 @@ void MediaControlService::RemoveMediaController(MediaController* aController) {
   mMediaControllerAmountChangedEvent.Notify(GetControllersNum());
 }
 
-void MediaControlService::PlayAllControllers() const {
-  for (auto iter = mControllers.ConstIter(); !iter.Done(); iter.Next()) {
-    const RefPtr<MediaController>& controller = iter.Data();
-    controller->Play();
-  }
-}
-
-void MediaControlService::PauseAllControllers() const {
-  for (auto iter = mControllers.ConstIter(); !iter.Done(); iter.Next()) {
-    const RefPtr<MediaController>& controller = iter.Data();
-    controller->Pause();
-  }
-}
-
-void MediaControlService::StopAllControllers() const {
-  for (auto iter = mControllers.ConstIter(); !iter.Done(); iter.Next()) {
-    const RefPtr<MediaController>& controller = iter.Data();
-    controller->Stop();
-  }
-}
-
 void MediaControlService::ShutdownAllControllers() const {
   for (auto iter = mControllers.ConstIter(); !iter.Done(); iter.Next()) {
     const RefPtr<MediaController>& controller = iter.Data();
