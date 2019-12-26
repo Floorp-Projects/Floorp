@@ -94,6 +94,7 @@ If you want to analyze performance during **local development**:
 - Caveats:
   - debuggable has a non-trivial & variable impact on performance but is needed to take profiles.
   - Random experiment opt-in & feature flags may impact performance (see [perf-frontend-issues#45](https://github.com/mozilla-mobile/perf-frontend-issues/issues/45) for mitigation).
+  - This is slower to build than debug builds because it does additional tasks (e.g. minification) similar to other release builds
 
 If you want to run **performance tests/benchmarks** in automation or locally:
 - Recommendation: production builds. If debuggable is required, use recommendation above but note the caveat above. If your needs are not met, please contact the front-end perf group to identify a new solution.
