@@ -1884,7 +1884,6 @@ void WebRenderBridgeParent::AddPipelineIdForCompositable(
   // transaction.
   mAsyncImageManager->SetEmptyDisplayList(aPipelineId, aTxn,
                                           aTxnForImageBridge);
-  return;
 }
 
 void WebRenderBridgeParent::RemovePipelineIdForCompositable(
