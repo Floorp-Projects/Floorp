@@ -11,6 +11,7 @@ cd /setup
 
 apt_packages=()
 apt_packages+=('curl')
+apt_packages+=('iproute2')
 apt_packages+=('locales')
 apt_packages+=('git')
 apt_packages+=('python')
