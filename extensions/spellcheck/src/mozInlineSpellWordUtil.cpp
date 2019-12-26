@@ -28,6 +28,10 @@ using namespace mozilla;
 //
 //    These characters are ones that we should ignore in input.
 
+inline bool IsIgnorableCharacter(char ch) {
+  return (ch == static_cast<char>(0xAD));  // SOFT HYPHEN
+}
+
 inline bool IsIgnorableCharacter(char16_t ch) {
   return (ch == 0xAD ||   // SOFT HYPHEN
           ch == 0x1806);  // MONGOLIAN TODO SOFT HYPHEN
@@ -37,6 +41,11 @@ inline bool IsIgnorableCharacter(char16_t ch) {
 //
 //    Some characters (like apostrophes) require characters on each side to be
 //    part of a word, and are otherwise punctuation.
+
+inline bool IsConditionalPunctuation(char ch) {
+  return (ch == '\'' ||       // RIGHT SINGLE QUOTATION MARK
+          ch == static_cast<char>(0xB7));  // MIDDLE DOT
+}
 
 inline bool IsConditionalPunctuation(char16_t ch) {
   return (ch == '\'' || ch == 0x2019 ||  // RIGHT SINGLE QUOTATION MARK
@@ -49,6 +58,11 @@ static bool IsAmbiguousDOMWordSeprator(char16_t ch) {
           IsConditionalPunctuation(ch));
 }
 
+static bool IsAmbiguousDOMWordSeprator(char ch) {
+  // This class may be CHAR_CLASS_SEPARATOR, but it depends on context.
+  return IsAmbiguousDOMWordSeprator(static_cast<char16_t>(ch));
+}
+
 // IsDOMWordSeparator
 //
 //    Determines if the given character should be considered as a DOM Word
@@ -57,6 +71,12 @@ static bool IsAmbiguousDOMWordSeprator(char16_t ch) {
 //    For example, we can't have any punctuation that could appear in a URL
 //    or email address in this, because those need to always fit into a single
 //    DOM word.
+
+static bool IsDOMWordSeparator(char ch) {
+  // simple spaces or no-break space
+  return (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' ||
+          ch == static_cast<char>(0xA0));
+}
 
 static bool IsDOMWordSeparator(char16_t ch) {
   // simple spaces
@@ -414,6 +434,8 @@ struct MOZ_STACK_CLASS WordSplitState {
   // it. This function does not modify aSeparatorOffset when it returns false.
   bool GetDOMWordSeparatorOffset(int32_t aOffset,
                                  int32_t* aSeparatorOffset) const;
+
+  char16_t GetUnicharAt(int32_t aIndex) const;
 };
 
 // WordSplitState::ClassifyCharacter
@@ -427,7 +449,7 @@ CharClass WordSplitState<T>::ClassifyCharacter(int32_t aIndex,
   // this will classify the character, we want to treat "ignorable" characters
   // such as soft hyphens, and also ZWJ and ZWNJ as word characters.
   nsUGenCategory charCategory =
-      mozilla::unicode::GetGenCategory(mDOMWordText[aIndex]);
+      mozilla::unicode::GetGenCategory(GetUnicharAt(aIndex));
   if (charCategory == nsUGenCategory::kLetter ||
       IsIgnorableCharacter(mDOMWordText[aIndex]) ||
       mDOMWordText[aIndex] == 0x200C /* ZWNJ */ ||
@@ -588,7 +610,7 @@ bool WordSplitState<T>::ShouldSkipWord(int32_t aStart, int32_t aLength) const {
 
   // check to see if the word contains a digit
   for (int32_t i = aStart; i < last; i++) {
-    if (unicode::GetGenCategory(mDOMWordText[i]) == nsUGenCategory::kNumber) {
+    if (mozilla::unicode::GetGenCategory(GetUnicharAt(i)) == nsUGenCategory::kNumber) {
       return true;
     }
   }
@@ -619,6 +641,18 @@ bool WordSplitState<T>::GetDOMWordSeparatorOffset(
     }
   }
   return false;
+}
+
+template <>
+char16_t WordSplitState<nsDependentSubstring>::GetUnicharAt(
+    int32_t aIndex) const {
+  return mDOMWordText[aIndex];
+}
+
+template <>
+char16_t WordSplitState<nsDependentCSubstring>::GetUnicharAt(
+    int32_t aIndex) const {
+  return static_cast<char16_t>(static_cast<uint8_t>(mDOMWordText[aIndex]));
 }
 
 static inline bool IsBRElement(nsINode* aNode) {
