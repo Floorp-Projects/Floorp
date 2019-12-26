@@ -142,6 +142,8 @@ clang_checkers:
       - win32
       - win64
     reliability: medium
+  - name: modernize-concat-nested-namespaces
+    reliability: high
   - name: modernize-deprecated-ios-base-aliases
     reliability: high
   - name: modernize-loop-convert
