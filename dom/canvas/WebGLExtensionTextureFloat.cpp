@@ -22,9 +22,8 @@ WebGLExtensionTextureFloat::WebGLExtensionTextureFloat(WebGLContext* webgl)
   webgl::DriverUnpackInfo dui;
   const GLint* swizzle = nullptr;
 
-  const auto fnAdd = [&](webgl::EffectiveFormat effFormat) {
-    MOZ_ASSERT_IF(swizzle, gl->IsSupported(gl::GLFeature::texture_swizzle));
-
+  const auto fnAdd = [&fua, &pi, &dui,
+                      &swizzle](webgl::EffectiveFormat effFormat) {
     auto usage = fua->EditUsage(effFormat);
     usage->textureSwizzleRGBA = swizzle;
     fua->AddTexUnpack(usage, pi, dui);
@@ -32,18 +31,19 @@ WebGLExtensionTextureFloat::WebGLExtensionTextureFloat(WebGLContext* webgl)
     fua->AllowUnsizedTexFormat(pi, usage);
   };
 
-  bool useSizedFormats = true;
-  const bool hasSizedLegacyFormats = gl->IsCompatibilityProfile();
-  if (gl->IsGLES() && gl->Version() < 300) {
-    useSizedFormats = false;
-  }
+  const bool needsSwizzle = gl->IsCoreProfile();
+  MOZ_ASSERT_IF(needsSwizzle, gl->IsSupported(gl::GLFeature::texture_swizzle));
+
+  const bool needsSizedFormat = !gl->IsGLES();
 
   ////////////////
 
   pi = {LOCAL_GL_RGBA, LOCAL_GL_FLOAT};
   dui = {pi.format, pi.format, pi.type};
   swizzle = nullptr;
-  if (useSizedFormats) {
+  if (needsSizedFormat ||
+      gl->IsExtensionSupported(
+          gl::GLContext::CHROMIUM_color_buffer_float_rgba)) {
     dui.internalFormat = LOCAL_GL_RGBA32F;
   }
   fnAdd(webgl::EffectiveFormat::RGBA32F);
@@ -53,7 +53,7 @@ WebGLExtensionTextureFloat::WebGLExtensionTextureFloat(WebGLContext* webgl)
   pi = {LOCAL_GL_RGB, LOCAL_GL_FLOAT};
   dui = {pi.format, pi.format, pi.type};
   swizzle = nullptr;
-  if (useSizedFormats) {
+  if (needsSizedFormat) {
     dui.internalFormat = LOCAL_GL_RGB32F;
   }
   fnAdd(webgl::EffectiveFormat::RGB32F);
@@ -63,14 +63,11 @@ WebGLExtensionTextureFloat::WebGLExtensionTextureFloat(WebGLContext* webgl)
   pi = {LOCAL_GL_LUMINANCE, LOCAL_GL_FLOAT};
   dui = {pi.format, pi.format, pi.type};
   swizzle = nullptr;
-  if (useSizedFormats) {
-    if (hasSizedLegacyFormats) {
-      dui.internalFormat = LOCAL_GL_LUMINANCE32F_ARB;
-    } else {
-      dui.internalFormat = LOCAL_GL_R32F;
-      dui.unpackFormat = LOCAL_GL_RED;
-      swizzle = webgl::FormatUsageInfo::kLuminanceSwizzleRGBA;
-    }
+  if (needsSwizzle) {
+    dui = {LOCAL_GL_R32F, LOCAL_GL_RED, LOCAL_GL_FLOAT};
+    swizzle = webgl::FormatUsageInfo::kLuminanceSwizzleRGBA;
+  } else if (needsSizedFormat) {
+    dui.internalFormat = LOCAL_GL_LUMINANCE32F_ARB;
   }
   fnAdd(webgl::EffectiveFormat::Luminance32F);
 
@@ -79,14 +76,11 @@ WebGLExtensionTextureFloat::WebGLExtensionTextureFloat(WebGLContext* webgl)
   pi = {LOCAL_GL_ALPHA, LOCAL_GL_FLOAT};
   dui = {pi.format, pi.format, pi.type};
   swizzle = nullptr;
-  if (useSizedFormats) {
-    if (hasSizedLegacyFormats) {
-      dui.internalFormat = LOCAL_GL_ALPHA32F_ARB;
-    } else {
-      dui.internalFormat = LOCAL_GL_R32F;
-      dui.unpackFormat = LOCAL_GL_RED;
-      swizzle = webgl::FormatUsageInfo::kAlphaSwizzleRGBA;
-    }
+  if (needsSwizzle) {
+    dui = {LOCAL_GL_R32F, LOCAL_GL_RED, LOCAL_GL_FLOAT};
+    swizzle = webgl::FormatUsageInfo::kAlphaSwizzleRGBA;
+  } else if (needsSizedFormat) {
+    dui.internalFormat = LOCAL_GL_ALPHA32F_ARB;
   }
   fnAdd(webgl::EffectiveFormat::Alpha32F);
 
@@ -95,14 +89,11 @@ WebGLExtensionTextureFloat::WebGLExtensionTextureFloat(WebGLContext* webgl)
   pi = {LOCAL_GL_LUMINANCE_ALPHA, LOCAL_GL_FLOAT};
   dui = {pi.format, pi.format, pi.type};
   swizzle = nullptr;
-  if (useSizedFormats) {
-    if (hasSizedLegacyFormats) {
-      dui.internalFormat = LOCAL_GL_LUMINANCE_ALPHA32F_ARB;
-    } else {
-      dui.internalFormat = LOCAL_GL_RG32F;
-      dui.unpackFormat = LOCAL_GL_RG;
-      swizzle = webgl::FormatUsageInfo::kLumAlphaSwizzleRGBA;
-    }
+  if (needsSwizzle) {
+    dui = {LOCAL_GL_RG32F, LOCAL_GL_RG, LOCAL_GL_FLOAT};
+    swizzle = webgl::FormatUsageInfo::kLumAlphaSwizzleRGBA;
+  } else if (needsSizedFormat) {
+    dui.internalFormat = LOCAL_GL_LUMINANCE_ALPHA32F_ARB;
   }
   fnAdd(webgl::EffectiveFormat::Luminance32FAlpha32F);
 }
