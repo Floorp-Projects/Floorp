@@ -6046,6 +6046,10 @@ public class GeckoSession implements Parcelable {
     }
 
     private static void fixupManifestColor(final JSONObject manifest, final String name) throws JSONException {
+        if (manifest.isNull(name)) {
+            return;
+        }
+
         manifest.put(name, rgbaToArgb(manifest.getString(name)));
     }
 
