@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mozilla bug 1602526</title>
+  <link rel=stylesheet href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/AddTask.js"></script>
+  <script src="/tests/editor/libeditor/tests/spellcheck.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1602526">Mozilla Bug 1602526</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="contenteditable" contenteditable=true>kkkk&#xf6;kkkk</div>
+
+<script>
+const {onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+
+SimpleTest.waitForExplicitFinish();
+
+function getEditor() {
+  return SpecialPowers.wrap(window).docShell.editor;
+}
+
+SimpleTest.waitForFocus(async () => {
+  let contenteditable = document.getElementById("contenteditable");
+  let misspeltWords = [];
+  misspeltWords.push("kkkk\u00f6kkkk");
+
+  contenteditable.focus();
+  window.getSelection().collapse(contenteditable.firstChild, contenteditable.firstChild.length);
+
+  synthesizeKey(" ");
+
+  // Run spell checker
+  await new Promise((resolve) => { onSpellCheck(contenteditable, resolve); });
+
+  synthesizeKey("a");
+  synthesizeKey("a");
+  synthesizeKey("a");
+
+  await new Promise((resolve) => { onSpellCheck(contenteditable, resolve); });
+  let editor = getEditor();
+  // isSpellingCheckOk is defined in spellcheck.js
+  // eslint-disable-next-line no-undef
+  ok(isSpellingCheckOk(editor, misspeltWords), "correct word is seleced as misspell");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
