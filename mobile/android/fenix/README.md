@@ -89,8 +89,8 @@ which app id and settings to use. Here is a description of what each means:
 For accurate performance measurements, read this section!
 
 If you want to analyze performance during **local development**:
-- Recommendation: use a `forPerformanceTest` variant with local Leanplum, Adjust, & Sentry API keys: contact the front-end perf group for access to them
-- Rationale: `forPerformanceTest` is a release variant with `debuggable` set to true. There are numerous performance-impacting differences between debug and release variants so we need a release variant. To profile, we also need debuggable, which is disabled on other release variants. If API keys are not provided, the SDKs may change their behavior in non-trivial ways.
+- Recommendation: use a `forPerformanceTest` variant with local Leanplum, Adjust, & Sentry API tokens: contact the front-end perf group for access to them
+- Rationale: `forPerformanceTest` is a release variant with `debuggable` set to true. There are numerous performance-impacting differences between debug and release variants so we need a release variant. To profile, we also need debuggable, which is disabled on other release variants. If API tokens are not provided, the SDKs may change their behavior in non-trivial ways.
 - Caveats:
   - debuggable has a non-trivial & variable impact on performance but is needed to take profiles.
   - Random experiment opt-in & feature flags may impact performance (see [perf-frontend-issues#45](https://github.com/mozilla-mobile/perf-frontend-issues/issues/45) for mitigation).
