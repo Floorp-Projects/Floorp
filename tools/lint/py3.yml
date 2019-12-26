@@ -8,7 +8,6 @@ py3:
         - dom/canvas/test
         - gfx
         - ipc/ipdl
-        - layout/reftests
         - layout/style/ServoCSSPropList.mako.py
         - security/manager/ssl
         - testing/awsy
