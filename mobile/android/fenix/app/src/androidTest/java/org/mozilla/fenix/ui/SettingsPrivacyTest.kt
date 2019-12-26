@@ -14,6 +14,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
@@ -104,6 +105,31 @@ class SettingsPrivacyTest {
             verifyDeleteBrowsingDataOnQuitButton()
             verifyDataCollectionButton()
             verifyLeakCanaryButton()
+        }
+    }
+
+    // Tests only for initial state without signing in.
+    // For tests after singing in, see SyncIntegration test suite
+
+    @Test
+    fun loginsAndPasswordsTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            // Necessary to scroll a little bit for all screen sizes
+            TestHelper.scrollToElementByText("Logins and passwords")
+        }.openLoginsAndPasswordSubMenu {
+            verifyDefaultView()
+            verifyDefaultValueSyncLogins()
+        }.openSavedLogins {
+            verifySavedLoginsView()
+            tapSetupLater()
+            // Verify that logins list is empty
+            // Issue #7272 nothing is shown
+        }.goBack {
+        }.openSyncLogins {
+            verifyReadyToScanOption()
+            verifyUseEmailOption()
         }
     }
 

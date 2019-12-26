@@ -121,6 +121,14 @@ class SettingsRobot {
             SettingsSubMenuEnhancedTrackingProtectionRobot().interact()
             return SettingsSubMenuEnhancedTrackingProtectionRobot.Transition()
         }
+
+        fun openLoginsAndPasswordSubMenu(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
+            fun loginsAndPasswordsButton() = onView(ViewMatchers.withText("Logins and passwords"))
+            loginsAndPasswordsButton().click()
+
+            SettingsSubMenuLoginsAndPasswordRobot().interact()
+            return SettingsSubMenuLoginsAndPasswordRobot.Transition()
+        }
     }
 }
 
