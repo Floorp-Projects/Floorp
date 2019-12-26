@@ -93,22 +93,21 @@ void MediaControlService::Shutdown() {
   mMediaControlKeysManager->RemoveListener(mMediaKeysHandler.get());
 }
 
-RefPtr<MediaController> MediaControlService::GetOrCreateControllerById(
+MediaController* MediaControlService::GetOrCreateControllerById(
     const uint64_t aId) const {
-  RefPtr<MediaController> controller = mControllers.Get(aId);
+  MediaController* controller = GetControllerById(aId);
   if (!controller) {
     controller = new MediaController(aId);
   }
   return controller;
 }
 
-RefPtr<MediaController> MediaControlService::GetControllerById(
+MediaController* MediaControlService::GetControllerById(
     const uint64_t aId) const {
-  return mControllers.Get(aId);
+  return mControllers.Get(aId).get();
 }
 
-void MediaControlService::AddMediaController(
-    const RefPtr<MediaController>& aController) {
+void MediaControlService::AddMediaController(MediaController* aController) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
   const uint64_t cId = aController->Id();
   MOZ_DIAGNOSTIC_ASSERT(!mControllers.GetValue(cId),
@@ -120,8 +119,7 @@ void MediaControlService::AddMediaController(
   mMediaControllerAmountChangedEvent.Notify(GetControllersNum());
 }
 
-void MediaControlService::RemoveMediaController(
-    const RefPtr<MediaController>& aController) {
+void MediaControlService::RemoveMediaController(MediaController* aController) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
   const uint64_t cId = aController->Id();
   MOZ_DIAGNOSTIC_ASSERT(mControllers.GetValue(cId),
@@ -165,12 +163,11 @@ uint64_t MediaControlService::GetControllersNum() const {
   return mControllers.Count();
 }
 
-already_AddRefed<MediaController>
-MediaControlService::GetLastAddedController() {
+MediaController* MediaControlService::GetLastAddedController() const {
   if (mControllerHistory.IsEmpty()) {
     return nullptr;
   }
-  return GetControllerById(mControllerHistory.LastElement()).forget();
+  return GetControllerById(mControllerHistory.LastElement());
 }
 
 void MediaControlService::GenerateMediaControlKeysTestEvent(
