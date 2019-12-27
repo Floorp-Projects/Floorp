@@ -88,13 +88,15 @@ which app id and settings to use. Here is a description of what each means:
 #### Performance Build Variants
 For accurate performance measurements, read this section!
 
-If you want to analyze performance during **local development**:
+If you want to analyze performance during **local development** (note: there is a non-trivial performance impact - see caveats):
 - Recommendation: use a `forPerformanceTest` variant with local Leanplum, Adjust, & Sentry API tokens: contact the front-end perf group for access to them
 - Rationale: `forPerformanceTest` is a release variant with `debuggable` set to true. There are numerous performance-impacting differences between debug and release variants so we need a release variant. To profile, we also need debuggable, which is disabled on other release variants. If API tokens are not provided, the SDKs may change their behavior in non-trivial ways.
 - Caveats:
   - debuggable has a non-trivial & variable impact on performance but is needed to take profiles.
   - Random experiment opt-in & feature flags may impact performance (see [perf-frontend-issues#45](https://github.com/mozilla-mobile/perf-frontend-issues/issues/45) for mitigation).
   - This is slower to build than debug builds because it does additional tasks (e.g. minification) similar to other release builds
+
+Nightly `forPerformanceTest` variants with API tokens already added [are also available from Taskcluster](https://firefox-ci-tc.services.mozilla.com/tasks/index/project.mobile.fenix.v2.performance-test/).
 
 If you want to run **performance tests/benchmarks** in automation or locally:
 - Recommendation: production builds. If debuggable is required, use recommendation above but note the caveat above. If your needs are not met, please contact the front-end perf group to identify a new solution.
