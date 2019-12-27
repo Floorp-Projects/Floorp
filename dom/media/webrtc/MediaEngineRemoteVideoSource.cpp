@@ -531,6 +531,11 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
     }
   }
 
+  // Ensure width and height are at least two. Smaller frames can lead to
+  // problems with scaling and video encoding.
+  dst_width = std::max(2, dst_width);
+  dst_height = std::max(2, dst_height);
+
   rtc::Callback0<void> callback_unused;
   rtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
       new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
