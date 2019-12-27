@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">Odczytywanie i zmienianie ustawień prywatności</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">Dostęp do danych użytkownika na wszystkich stronach</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">Dostęp do kart przeglądarki</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Przechowywanie nieograniczonej ilości danych na urządzeniu</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Dostęp do aktywności przeglądarki podczas nawigacji</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">Odczytywanie i zmienianie zakładek</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Odczytywanie i zmienianie ustawień przeglądarki</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">Usuwanie ostatniej historii przeglądania, ciasteczek i powiązanych danych</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Odczytywanie danych ze schowka</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Dodawanie danych do schowka</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">Pobieranie plików i odczytywanie oraz zmienianie historii pobieranych plików</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Otwieranie plików pobranych na urządzenie</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">Odczytywanie tekstów ze wszystkich otwartych kart</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">Dostęp do informacji o położeniu</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">Dostęp do historii przeglądania</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Monitorowanie wykorzystania rozszerzeń i zarządzanie motywami</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Wymienianie wiadomości z aplikacjami innymi niż ta</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Wyświetlanie powiadomień</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Dostarczanie kryptograficznych usług uwierzytelniania</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Kontrolowanie ustawień proxy przeglądarki</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">Dostęp do ostatnio zamkniętych kart</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Ukrywanie i wyświetlanie kart przeglądarki</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">Dostęp do historii przeglądania</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">Dostęp do danych użytkownika i otwartych kart poprzez rozszerzone narzędzia programistyczne</string>
+    <!-- The version on an addon. -->
+    <string name="mozac_feature_addons_version">Wersja</string>
+    <!-- The authors of an addon. -->
+    <string name="mozac_feature_addons_authors">Autorzy</string>
+    <!-- The last date that the addon was updated. -->
+    <string name="mozac_feature_addons_last_updated">Ostatnia aktualizacja</string>
+    <!-- The developer website (Homepage) of the addon. -->
+    <string name="mozac_feature_addons_home_page">Strona domowa</string>
+    <!-- A link where users can find more information about addons permissions. -->
+    <string name="mozac_feature_addons_learn_more">Więcej informacji o uprawnieniach</string>
+    <!-- The rating of the addon. -->
+    <string name="mozac_feature_addons_rating">Ocena</string>
+    <!-- The settings of the addon. -->
+    <string name="mozac_feature_addons_settings">Ustawienia</string>
+    <!-- Indicates the addon is enable. -->
+    <string name="mozac_feature_addons_settings_on">Włączony</string>
+    <!-- Indicates the addon is disable. -->
+    <string name="mozac_feature_addons_settings_off">Wyłączony</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">Zainstalowane</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">Polecane</string>
+    <!-- Displays a page with all the details of an addon. -->
+    <string name="mozac_feature_addons_details">Szczegóły</string>
+    <!-- Displays a page with all the permissions of an addon. -->
+    <string name="mozac_feature_addons_permissions">Uprawnienia</string>
+    <!-- This is button that remove (uninstall an addon). -->
+    <string name="mozac_feature_addons_remove">Usuń</string>
+    <!-- This is the title of a dialog that indicates to the user if wants to install or not an addon. %1$s is the addon name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">Czy dodać „%1$s”?</string>
+    <!-- This is the subtitle of a dialog that indicate to the user if wants to install or not an addon, the subtitle list the permissions that this addon requires, the permissions will dynamically listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Ten dodatek wymaga następujących uprawnień:</string>
+    <!-- This a button to add (installs) an addon . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">Dodaj</string>
+    <!-- This a button to cancel the addon installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">Anuluj</string>
+    <!-- Accessibility content description to install addon button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">Zainstaluj dodatek</string>
+    <!-- Indicate how many user has rated an addon. %1$s will be replace with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">Użytkownicy: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that addon has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">Dodatki</string>
+</resources>

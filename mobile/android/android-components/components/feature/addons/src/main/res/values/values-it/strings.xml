@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">Leggere e modificare le impostazioni relative alla privacy</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">Accedere ai dati di tutti i siti web</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">Accedere alle schede del browser</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Salvare dati sul dispositivo senza limitazioni di spazio</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Accedere all’attività del browser durante la navigazione</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">Leggere e modificare i segnalibri</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Leggere e modificare le impostazioni del browser</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">Eliminare cronologia di navigazione recente, cookie e dati associati</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Leggere dati dagli appunti</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Salvare dati negli appunti</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">Scaricare file, leggere e modificare la cronologia di download del browser</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Aprire i file scaricati sul dispositivo</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">Leggere il testo di tutte le schede aperte</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">Accedere alla posizione</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">Accedere alla cronologia di navigazione</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Monitorare l’utilizzo delle estensioni e gestire i temi</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Scambiare messaggi con altre app</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Visualizzare notifiche</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Fornire servizi di autenticazione crittografica</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Controllare le impostazioni relative ai proxy</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">Accedere alle schede chiuse di recente</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Nascondere e mostrare schede</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">Accedere alla cronologia di navigazione</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">Consentire agli strumenti di sviluppo di accedere ai dati delle schede</string>
+    <!-- The version on an addon. -->
+    <string name="mozac_feature_addons_version">Versione</string>
+    <!-- The authors of an addon. -->
+    <string name="mozac_feature_addons_authors">Autori</string>
+    <!-- The last date that the addon was updated. -->
+    <string name="mozac_feature_addons_last_updated">Ultimo aggiornamento</string>
+    <!-- The developer website (Homepage) of the addon. -->
+    <string name="mozac_feature_addons_home_page">Pagina iniziale</string>
+    <!-- A link where users can find more information about addons permissions. -->
+    <string name="mozac_feature_addons_learn_more">Ulteriori informazioni sui permessi</string>
+    <!-- The rating of the addon. -->
+    <string name="mozac_feature_addons_rating">Voto</string>
+    <!-- The settings of the addon. -->
+    <string name="mozac_feature_addons_settings">Impostazioni</string>
+    <!-- Indicates the addon is enable. -->
+    <string name="mozac_feature_addons_settings_on">Attiva</string>
+    <!-- Indicates the addon is disable. -->
+    <string name="mozac_feature_addons_settings_off">Disattivata</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">Installata</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">Consigliate</string>
+    <!-- Displays a page with all the details of an addon. -->
+    <string name="mozac_feature_addons_details">Informazioni</string>
+    <!-- Displays a page with all the permissions of an addon. -->
+    <string name="mozac_feature_addons_permissions">Permessi</string>
+    <!-- This is button that remove (uninstall an addon). -->
+    <string name="mozac_feature_addons_remove">Elimina</string>
+    <!-- This is the title of a dialog that indicates to the user if wants to install or not an addon. %1$s is the addon name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">Installare %1$s?</string>
+    <!-- This is the subtitle of a dialog that indicate to the user if wants to install or not an addon, the subtitle list the permissions that this addon requires, the permissions will dynamically listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Richiede il permesso di:</string>
+    <!-- This a button to add (installs) an addon . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">Installa</string>
+    <!-- This a button to cancel the addon installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">Annulla</string>
+    <!-- Accessibility content description to install addon button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">Installa componente aggiuntivo</string>
+    <!-- Indicate how many user has rated an addon. %1$s will be replace with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">Utenti: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that addon has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">Componenti aggiuntivi</string>
+</resources>

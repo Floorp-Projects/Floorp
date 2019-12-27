@@ -122,6 +122,15 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">Adres bulunamadı</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[      <p>Tarayıcı girilen adresin sunucusunu bulamadı.</p>
+      <ul>
+        <li>Adreste olabilecek yazım hatalarını kontrol edin. 
+          Örneğin <strong>www</strong>.example.com yerine
+          <strong>ww</strong>.example.com yazmış olabilir misiniz?</li>
+        <li>Hiçbir sayfa açılmıyorsa cihazınızın mobil internet veya Wi-Fi bağlantısını kontrol edin.</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">İnternet bağlantısı yok</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->

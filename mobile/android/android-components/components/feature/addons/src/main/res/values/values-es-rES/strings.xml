@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">Leer y modificar configuración de privacidad</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">Acceder a tus datos de todos los sitios web</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">Acceder a las pestañas del navegador</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Almacenar una cantidad ilimitada de datos en el lado del cliente</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Acceder a la actividad del navegador durante la navegación</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">Leer y modificar marcadores</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Leer y modificar ajustes del navegador</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">Limpiar el historial de navegación reciente, cookies y datos relacionados</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Obtener datos del portapapeles</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Introducir datos en el portapapeles</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">Descargar archivos y leer y modificar el historial de descargas del navegador</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Abrir archivos descargados en tu equipo</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">Leer el texto de todas las pestañas abiertas</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">Acceder a tu ubicación</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">Acceder al historial de navegación</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Monitorizar el uso de extensiones y administrar temas</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Intercambiar mensajes con otras aplicaciones distintas</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Mostrarte notificaciones</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Proporcionar servicios de autenticación criptográfica</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Controlar la configuración proxy del navegador</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">Acceder a las pestañas cerradas recientemente</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Ocultar y mostrar pestañas del navegador</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">Acceder al historial de navegación</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">Ampliar las herramientas para desarrolladores para acceder a tus datos en las pestañas abiertas</string>
+    <!-- The version on an addon. -->
+    <string name="mozac_feature_addons_version">Versión</string>
+    <!-- The authors of an addon. -->
+    <string name="mozac_feature_addons_authors">Autores</string>
+    <!-- The last date that the addon was updated. -->
+    <string name="mozac_feature_addons_last_updated">Última actualización</string>
+    <!-- The developer website (Homepage) of the addon. -->
+    <string name="mozac_feature_addons_home_page">Página de inicio</string>
+    <!-- A link where users can find more information about addons permissions. -->
+    <string name="mozac_feature_addons_learn_more">Saber más sobre permisos</string>
+    <!-- The rating of the addon. -->
+    <string name="mozac_feature_addons_rating">Calificación</string>
+    <!-- The settings of the addon. -->
+    <string name="mozac_feature_addons_settings">Ajustes</string>
+    <!-- Indicates the addon is enable. -->
+    <string name="mozac_feature_addons_settings_on">Activado</string>
+    <!-- Indicates the addon is disable. -->
+    <string name="mozac_feature_addons_settings_off">Desactivado</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">Instalado</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">Recomendado</string>
+    <!-- Displays a page with all the details of an addon. -->
+    <string name="mozac_feature_addons_details">Detalles</string>
+    <!-- Displays a page with all the permissions of an addon. -->
+    <string name="mozac_feature_addons_permissions">Permisos</string>
+    <!-- This is button that remove (uninstall an addon). -->
+    <string name="mozac_feature_addons_remove">Eliminar</string>
+    <!-- This is the title of a dialog that indicates to the user if wants to install or not an addon. %1$s is the addon name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">¿Añadir %1$s?</string>
+    <!-- This is the subtitle of a dialog that indicate to the user if wants to install or not an addon, the subtitle list the permissions that this addon requires, the permissions will dynamically listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Se necesita tu permiso para:</string>
+    <!-- This a button to add (installs) an addon . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">Añadir</string>
+    <!-- This a button to cancel the addon installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">Cancelar</string>
+    <!-- Accessibility content description to install addon button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">Instalar complemento</string>
+    <!-- Indicate how many user has rated an addon. %1$s will be replace with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">Usuarios: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that addon has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">Complementos</string>
+</resources>

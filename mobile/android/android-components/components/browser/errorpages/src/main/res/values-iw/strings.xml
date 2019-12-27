@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">בעיה בטעינת הדף</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">ניסיון חוזר</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">חזרה</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">לא ניתן להשלים את הבקשה</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+<p>מידע נוסף על בעיה או שגיאה זו אינו זמין כעת.</p>
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">חיבור מאובטח נכשל</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>לא ניתן להציג את הדף המבוקש מכיוון שאין אפשרות לאמת את אמינות הנתונים שהתקבלו.</li>
+        <li>נא ליצור קשר עם בעלי האתר כדי ליידע אותם על בעיה זו.</li>
+      </ul>
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">חיבור מאובטח נכשל</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">החיבור הופסק</string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">תם הזמן המוקצב לחיבור</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>האתר המבוקש לא הגיב לבקשת התחברות והדפדפן הפסיק להמתין לתגובה.</p>
+      <ul>
+        <li>האם ייתכן שהשרת חווה עומסים גבוהים או הפסקה זמנית? נא לנסות שוב מאוחר יותר.</li>
+        <li>האם אין ביכולתך לגלוש באתרים אחרים? נא לבדוק את הגדרות החיבור לרשת של המחשב.</li>
+        <li>האם המחשב או הרשת שלך מוגנים על־ידי חומת אש או שרת מתווך? הגדרות לא נכונות עלולות להפריע לגלישה באינטרנט.</li>
+        <li>עדיין נתקל בבעיות? היוועץ במנהל הרשת או בספק האינטרנט שלך לקבלת עזרה.</li>
+      </ul>
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">כישלון בהתחברות</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>האתר עשוי להיות לא זמין כעת או עמוס. נא לנסות שוב בעוד מספר רגעים.</li>
+        <li>אם לא ניתן לטעון גם דפים אחרים, נא לבדוק את חיבור הנתונים או האינטרנט האלחוטי של המכשיר שברשותך.</li>
+      </ul>
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">תגובה לא צפויה מהשרת</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>האתר הגיב לבקשה מהרשת באופן בלתי צפוי, והדפדפן אינו יכול להמשיך.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">הדף מבצע העברה לא תקינה</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>הדפדפן הפסיק לנסות למצוא את הפריט המבוקש. האתר מכוון מחדש את הבקשה בצורה שלעולם לא תושלם.</p>
+      <ul>
+        <li>האם ביטלת או חסמת עוגיות שנדרשות על־ידי אתר זה?</li>
+        <li>אם קבלת עוגיות מאתר זה אינה פותרת את הבעיה, סביר שמדובר בתקלה בהגדרות השרת ולא במחשב שלך.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">מצב לא־מקוון</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>הדפדפן פועל כעת במצב לא־מקוון ואינו יכול להתחבר לפריט המבוקש.</p>
+      <ul>
+        <li>האם המחשב מחובר לרשת פעילה?</li>
+        <li>יש ללחוץ על ״ניסיון חוזר״ כדי לעבור למצב מקוון ולטעון מחדש את הדף.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">השער נחסם מסיבות אבטחה</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>הכתובת המבוקשת ציינה שער (לדוגמה: <q>mozilla.org:80</q> עבור שער 80 ב־mozilla.org) המיועד בדרך כלל לשימוש <em>אחר</em> מאשר גלישה באינטרנט. הדפדפן ביטל את הבקשה עבור ההגנה והאבטחה שלך.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">סוג קובץ מסוכן</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>נא ליצור קשר עם בעלי האתר כדי ליידע אותם על בעיה זו.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">שגיאת תוכן פגום</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>לא ניתן להציג את הדף המבוקש מכיוון שאותרה שגיאה בתעבורת הנתונים.</p>
+      <ul>
+        <li>נא ליצור קשר עם בעלי האתר כדי ליידע אותם על בעיה זו.</li>
+      </ul>
+    ]]></string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>לא ניתן להציג את הדף המבוקש מכיוון שאותרה שגיאה בתעבורת הנתונים.</p>
+      <ul>
+        <li>נא ליצור קשר עם בעלי האתר כדי ליידע אותם על בעיה זו.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">שגיאה בקידוד תוכן</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>לא ניתן להציג את הדף המבוקש מכיוון שהוא משתמש בסוג דחיסה שאינו חוקי או שאינו נתמך.</p>
+      <ul>
+        <li>נא ליצור קשר עם בעלי האתר כדי ליידע אותם על בעיה זו.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">הכתובת לא נמצאה</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">אין חיבור לרשת</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">טעינה מחדש</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">כתובת לא חוקית</string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">כתובת לא חוקית</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>כתובות אינטרנט לרוב נכתבות בצורה דומה לזו: <strong>http://www.example.com/</strong></li>
+        <li>יש לוודא כי נעשה שימוש בלוכסנים קדמיים (כלומר <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">פרוטוקול לא מוכר</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">קובץ לא נמצא</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">הגישה לקובץ נדחתה</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>ייתכן שהקובץ הוסר, הועבר או שההרשאות מונעות את הגישה אליו.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">השרת המתווך דחה את ההתחברות</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">שרת מתווך לא נמצא</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>האתר בכתובת %1$s דווח כאתר תקיפה ונחסם בהתאם להעדפות האבטחה שלך.</p>
+    ]]></string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>האתר בכתובת %1$s דווח כאתר המגיש תוכנה בלתי רצויה ונחסם בהתאם להעדפות האבטחה שלך.</p>
+    ]]></string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>האתר בכתובת %1$s דווח כאתר שככל הנראה מזיק ונחסם בהתאם להעדפות האבטחה שלך.</p>
+    ]]></string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>הדף בכתובת %1$s דווח כאתר מטעה ונחסם בהתאם להעדפות האבטחה שלך.</p>
+    ]]></string>
+</resources>

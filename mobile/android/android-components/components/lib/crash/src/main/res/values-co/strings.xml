@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_dialog_title">Per disgrazia, %1$s hà scuntratu un penseru è s’hè chjosu di manera gattiva.</string>
+
+    <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_crash_dialog_checkbox">Mandà un raportu di penseri à %1$s</string>
+
+    <!-- Label of the button closing the crash reporter dialog. -->
+    <string name="mozac_lib_crash_dialog_button_close">Chjode</string>
+
+    <!-- Label of the button closing the crash reporter dialog and restarting the app. -->
+    <string name="mozac_lib_crash_dialog_button_restart">Rilancià %1$s</string>
+
+    <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_lib_crash_channel">Lampate</string>
+
+    <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
+    <string name="mozac_lib_crash_notification_action_report">Signalà</string>
+
+    <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_send_crash_report_in_progress">Inviu di u raportu di penseri à %1$s</string>
+</resources>

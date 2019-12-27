@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Sbagliu di caricamentu di a pagina</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Pruvà torna</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Ritornu</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">A richiesta ùn pò riesce</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[      <p>Nisuna infurmazione di dispunibule apprupositu di u penseru o di u sbagliu.</p>¶
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Fiascu di a cunnessione assicurizata</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[¶
+      <ul>¶
+        <li>A pagina chì vò circate à fighjà ùn pò micca esse affissata, perchè a sputichezza di i dati ricevuti ùn pò micca esse verificata.</li>¶
+        <li>Ci vuleria à cuntattà i prupietarii di u situ web per infurmalli di stu penseru.</li>¶
+      </ul>¶
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Fiascu di a cunnessione assicurizata</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[¶
+      <ul>¶
+        <li>Stu penseru pò vene di a cunfigurazione di u servitore, osinnò ghjè qualchissia forse chì prova d’impatrunissi di u servitore.</li>¶
+        <li>S’è vo avete dighjà riesciutu à cunnettavvi à stu servitore, u sbagliu pò esse timpurariu, è pudete pruvà torna da quì à pocu.</li>¶
+      </ul>¶
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">A cunnessione hè stata interrotta</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[¶
+      <p>U navigatore s’hè cunnettatu bè, ma a cunnessione hè stata interrotta durante u trasferimentu d’infurmazioni. Ci vole à pruvà torna.</p>¶
+      <ul>¶
+        <li>Forse u site hè timpurariamente indispunibule o sopraccarcu. Pruvate torna da quì à pocu.</li>¶
+        <li>S’ella ùn hè mancu pussibule di navigà nant’à un situ, verificate a cunnessione di dati o Wi-Fi di u vostru apparechju.</li>¶
+      </ul>¶
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">U cumportu d’attesa hè statu ecciditu</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[¶
+      <p>U navigatore hà troppu aspettatu durante a cunnessione à u situ è hà fermatu d’aspettà una risposta.</p>¶
+      <ul>¶
+        <li>Forse u servitore tratta dumande numerose o hè timpurariamente in panna ? Pruvate torna da quì à pocu.</li>¶
+        <li>Ùn pudete micca navigà nant’à d’altri siti ? Verificate a cunnessione à a reta di u vostru urdinatore./li>¶
+        <li>U vostru urdinatore o a vostra reta hè pruttetu da un parafocu o un proxy ? Gattivi parametri ponu interferisce cù a navigazione nant’à u web.</li>¶
+        <li>Avete sempre penseri ? Cuntattate u vostru amministratore di a reta o u vostru furnidore d’accessu à internet per ottene un aiutu.</li>¶
+      </ul>¶
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Impussibule di cunnettassi</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[¶
+      <ul>¶
+        <li>Forse u site hè timpurariamente indispunibule o sopraccarcu. Pruvate torna da quì à pocu.</li>¶
+        <li>S’ella ùn hè mancu pussibule di navigà nant’à un situ, verificate a cunnessione di dati o Wi-Fi di u vostru apparechju.</li>¶
+      </ul>¶
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Risposta inespettata da u servitore</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[¶
+      <p>U situ hà rispostu à a dumanda di a reta da una manera inaspettata è u navigatore ùn pò micca cuntinuà.</p>¶
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">A pagina ùn hè micca ridirettata currettamente</string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Modu fora di cunnessione</string>
+
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Attualizà</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Indirizzu inaccettevule</string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">L’indirizzu ùn hè accettevule</string>
+
+    </resources>

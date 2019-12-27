@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_alert_title">این صفحه در %1$s می‌گوید:</string>
+    <!-- Text for the message of an auth dialog displayed by a web page.
+    %1$s will be replaced by the realm, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_message">%2$s درخواست نام کاربری و کلمه عبور شما را دارد. این پایگاه اطلاع رسانی می‌گوید:“%1$s”</string>
+    <!-- Text for the message of an auth dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_no_realm_message">%1$s در حال درخواست نام کاربری و رمز عبور شما است.</string>
+</resources>
