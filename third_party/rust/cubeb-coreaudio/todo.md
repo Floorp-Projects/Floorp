@@ -71,6 +71,10 @@ and create a new one. It's easier than the current implementation.
   sub devices list of the aggregate device
 - Check the `name: CFStringRef` of the master device is not `NULL`
 
+### Mixer
+- Don't force output device to mono or stereo when the output device has one or two channel
+    - unless the output devicv is _Bose QC35, mark 1 and 2_.
+
 ## Interface to system types and APIs
 - Check if we need `AudioDeviceID` and `AudioObjectID` at the same time
 - Create wrapper for `AudioObjectGetPropertyData(Size)` with _qualifier_ info
