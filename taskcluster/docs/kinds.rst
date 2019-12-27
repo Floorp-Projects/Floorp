@@ -297,6 +297,10 @@ release-secondary-snap-push
 Performs the same function as `release-snap-push`, except for the beta channel as part of RC
 Releases.
 
+release-notify-av-announce
+--------------------------
+Notify anti-virus vendors when a release is likely shipping.
+
 release-notify-push
 -------------------
 Notify when a release has been pushed to CDNs.
