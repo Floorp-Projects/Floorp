@@ -19,7 +19,7 @@ Configuration
 -------------
 
 To enable codespell on new directory, add the path to the include
-section in the `codespell.yaml <https://searchfox.org/mozilla-central/source/tools/lint/codespell.yml>`_ file.
+section in the `codespell.yml <https://searchfox.org/mozilla-central/source/tools/lint/codespell.yml>`_ file.
 
 
 Autofix
