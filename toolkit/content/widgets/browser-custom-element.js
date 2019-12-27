@@ -1370,6 +1370,14 @@
         }
       }
 
+      if (this._controller) {
+        try {
+          this.controllers.removeController(this._controller);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      }
+
       this.resetFields();
 
       if (!this.mInitialized) {
@@ -1377,17 +1385,6 @@
       }
 
       this.mInitialized = false;
-
-      if (this.isRemoteBrowser) {
-        try {
-          this.controllers.removeController(this._controller);
-        } catch (ex) {
-          // This can fail when this browser element is not attached to a
-          // BrowserDOMWindow.
-        }
-        return;
-      }
-
       this.lastURI = null;
 
       if (!this.isRemoteBrowser) {
