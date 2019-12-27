@@ -12,7 +12,7 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { toFixed } = require("devtools/client/inspector/fonts/utils/font-utils");
+const { toFixed } = require("../utils/font-utils");
 
 class FontPropertyValue extends PureComponent {
   static get propTypes() {

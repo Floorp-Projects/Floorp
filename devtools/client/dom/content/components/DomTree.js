@@ -24,9 +24,9 @@ const { Rep } = REPS;
 
 const Grip = REPS.Grip;
 // DOM Panel
-const { GripProvider } = require("devtools/client/dom/content/grip-provider");
+const { GripProvider } = require("../grip-provider");
 
-const { DomDecorator } = require("devtools/client/dom/content/dom-decorator");
+const { DomDecorator } = require("../dom-decorator");
 
 /**
  * Renders DOM panel tree.

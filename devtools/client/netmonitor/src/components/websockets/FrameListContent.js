@@ -18,33 +18,27 @@ const {
   getDisplayedFrames,
   isCurrentChannelClosed,
   getClosedConnectionDetails,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("../../selectors/index");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { table, tbody, tr, td, div, input, label, hr, p } = dom;
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const { L10N } = require("../../utils/l10n");
 const FRAMES_EMPTY_TEXT = L10N.getStr("messagesEmptyText");
 const TOGGLE_MESSAGES_TRUNCATION = L10N.getStr("toggleMessagesTruncation");
 const TOGGLE_MESSAGES_TRUNCATION_TITLE = L10N.getStr(
   "toggleMessagesTruncation.title"
 );
 const CONNECTION_CLOSED_TEXT = L10N.getStr("netmonitor.ws.connection.closed");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
+const Actions = require("../../actions/index");
 
-const {
-  getSelectedFrame,
-} = require("devtools/client/netmonitor/src/selectors/index");
+const { getSelectedFrame } = require("../../selectors/index");
 
 // Components
 const FrameListContextMenu = require("devtools/client/netmonitor/src/components/websockets/FrameListContextMenu");
 loader.lazyGetter(this, "FrameListHeader", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/websockets/FrameListHeader")
-  );
+  return createFactory(require("./FrameListHeader"));
 });
 loader.lazyGetter(this, "FrameListItem", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/websockets/FrameListItem")
-  );
+  return createFactory(require("./FrameListItem"));
 });
 
 const LEFT_MOUSE_BUTTON = 0;

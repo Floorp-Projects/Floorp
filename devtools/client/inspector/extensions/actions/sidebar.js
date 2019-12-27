@@ -9,7 +9,7 @@ const {
   EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE,
   EXTENSION_SIDEBAR_PAGE_UPDATE,
   EXTENSION_SIDEBAR_REMOVE,
-} = require("devtools/client/inspector/extensions/actions/index");
+} = require("./index");
 
 module.exports = {
   /**

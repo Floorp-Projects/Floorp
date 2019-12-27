@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  DEFAULT_PAGE,
-  UPDATE_SELECTED_PAGE,
-} = require("devtools/client/application/src/constants");
+const { DEFAULT_PAGE, UPDATE_SELECTED_PAGE } = require("../constants");
 
 function UiState() {
   return {

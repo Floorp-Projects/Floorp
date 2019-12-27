@@ -9,7 +9,7 @@ const {
   ADD_TIMING_MARKER,
   CLEAR_TIMING_MARKERS,
   CLEAR_REQUESTS,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("../constants");
 
 function TimingMarkers() {
   return {

@@ -51,7 +51,7 @@ function setMockedModule(mock, modulePath) {
       if (typeof target[key] === "function") {
         // Functions are wrapped to be able to update the methods during the test, even if
         // the methods were imported with destructuring. For instance:
-        //   `const { someMethod } = require("devtools/client/shared/my-module");`
+        //   `const { someMethod } = require("./my-module");`
         return function() {
           return target[key].apply(target, arguments);
         };

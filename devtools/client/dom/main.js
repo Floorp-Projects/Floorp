@@ -23,4 +23,4 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 this.l10n = new LocalizationHelper("devtools/client/locales/dom.properties");
 
 // Load DOM panel content
-require("devtools/client/dom/content/dom-view.js");
+require("./content/dom-view.js");

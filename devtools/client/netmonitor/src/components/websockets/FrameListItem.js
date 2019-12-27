@@ -12,34 +12,22 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 loader.lazyGetter(this, "FrameListColumnSize", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/websockets/FrameListColumnSize")
-  );
+  return createFactory(require("./FrameListColumnSize"));
 });
 loader.lazyGetter(this, "FrameListColumnData", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/websockets/FrameListColumnData")
-  );
+  return createFactory(require("./FrameListColumnData"));
 });
 loader.lazyGetter(this, "FrameListColumnOpCode", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/websockets/FrameListColumnOpCode")
-  );
+  return createFactory(require("./FrameListColumnOpCode"));
 });
 loader.lazyGetter(this, "FrameListColumnMaskBit", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/websockets/FrameListColumnMaskBit")
-  );
+  return createFactory(require("./FrameListColumnMaskBit"));
 });
 loader.lazyGetter(this, "FrameListColumnFinBit", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/websockets/FrameListColumnFinBit")
-  );
+  return createFactory(require("./FrameListColumnFinBit"));
 });
 loader.lazyGetter(this, "FrameListColumnTime", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/websockets/FrameListColumnTime")
-  );
+  return createFactory(require("./FrameListColumnTime"));
 });
 
 const COLUMN_COMPONENT_MAP = {

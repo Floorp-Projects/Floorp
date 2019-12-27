@@ -10,7 +10,7 @@
 
 "use strict";
 
-const { AdbSocket } = require("devtools/shared/adb/adb-socket");
+const { AdbSocket } = require("./adb-socket");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 
 const OKAY = 0x59414b4f;

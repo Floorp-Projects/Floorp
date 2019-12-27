@@ -11,13 +11,9 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  L10N,
-  formatNumber,
-  formatPercent,
-} = require("devtools/client/memory/utils");
+const { L10N, formatNumber, formatPercent } = require("../utils");
 const Frame = createFactory(require("devtools/client/shared/components/Frame"));
-const { TREE_ROW_HEIGHT } = require("devtools/client/memory/constants");
+const { TREE_ROW_HEIGHT } = require("../constants");
 
 class SeparatorClass extends Component {
   render() {

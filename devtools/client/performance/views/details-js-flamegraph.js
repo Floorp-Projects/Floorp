@@ -6,11 +6,9 @@
 
 const { extend } = require("devtools/shared/extend");
 
-const EVENTS = require("devtools/client/performance/events");
-const { L10N } = require("devtools/client/performance/modules/global");
-const {
-  DetailsSubview,
-} = require("devtools/client/performance/views/details-abstract-subview");
+const EVENTS = require("../events");
+const { L10N } = require("../modules/global");
+const { DetailsSubview } = require("./details-abstract-subview");
 
 const {
   FlameGraph,

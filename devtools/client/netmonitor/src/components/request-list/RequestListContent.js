@@ -17,16 +17,14 @@ const {
   HTMLTooltip,
 } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 
-const Actions = require("devtools/client/netmonitor/src/actions/index");
-const {
-  formDataURI,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+const Actions = require("../../actions/index");
+const { formDataURI } = require("../../utils/request-utils");
 const {
   getDisplayedRequests,
   getColumns,
   getSelectedRequest,
   getWaterfallScale,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("../../selectors/index");
 
 loader.lazyRequireGetter(
   this,
@@ -44,13 +42,9 @@ loader.lazyGetter(this, "getImageDimensions", function() {
 });
 
 // Components
-const RequestListHeader = createFactory(
-  require("devtools/client/netmonitor/src/components/request-list/RequestListHeader")
-);
-const RequestListItem = createFactory(
-  require("devtools/client/netmonitor/src/components/request-list/RequestListItem")
-);
-const RequestListContextMenu = require("devtools/client/netmonitor/src/widgets/RequestListContextMenu");
+const RequestListHeader = createFactory(require("./RequestListHeader"));
+const RequestListItem = createFactory(require("./RequestListItem"));
+const RequestListContextMenu = require("../../widgets/RequestListContextMenu");
 
 const { div } = dom;
 

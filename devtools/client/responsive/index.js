@@ -23,21 +23,16 @@ const {
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
-const message = require("devtools/client/responsive/utils/message");
-const App = createFactory(require("devtools/client/responsive/components/App"));
-const Store = require("devtools/client/responsive/store");
-const {
-  loadDevices,
-  restoreDeviceState,
-} = require("devtools/client/responsive/actions/devices");
+const message = require("./utils/message");
+const App = createFactory(require("./components/App"));
+const Store = require("./store");
+const { loadDevices, restoreDeviceState } = require("./actions/devices");
 const {
   addViewport,
   resizeViewport,
   zoomViewport,
-} = require("devtools/client/responsive/actions/viewports");
-const {
-  changeDisplayPixelRatio,
-} = require("devtools/client/responsive/actions/ui");
+} = require("./actions/viewports");
+const { changeDisplayPixelRatio } = require("./actions/ui");
 
 // Exposed for use by tests
 window.require = require;

@@ -14,7 +14,7 @@ const Accordion = createFactory(
   require("devtools/client/shared/components/Accordion")
 );
 
-const Types = require("devtools/client/inspector/extensions/types");
+const Types = require("../types");
 
 const {
   REPS: { Grip },

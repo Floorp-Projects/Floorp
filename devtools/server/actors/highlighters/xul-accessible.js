@@ -4,14 +4,8 @@
 
 "use strict";
 
-const {
-  getBounds,
-  XULWindowInfobar,
-} = require("devtools/server/actors/highlighters/utils/accessibility");
-const {
-  createNode,
-  isNodeValid,
-} = require("devtools/server/actors/highlighters/utils/markup");
+const { getBounds, XULWindowInfobar } = require("./utils/accessibility");
+const { createNode, isNodeValid } = require("./utils/markup");
 const { getCurrentZoom, loadSheet } = require("devtools/shared/layout/utils");
 const { TEXT_NODE } = require("devtools/shared/dom-node-constants");
 

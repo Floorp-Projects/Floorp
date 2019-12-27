@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  getFormatStr,
-  getStr,
-} = require("devtools/client/inspector/changes/utils/l10n");
+const { getFormatStr, getStr } = require("./l10n");
 
 /**
  * Get a human-friendly style source path to display in the Changes panel.

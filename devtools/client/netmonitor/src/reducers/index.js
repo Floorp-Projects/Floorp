@@ -5,21 +5,15 @@
 "use strict";
 
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
-const batchingReducer = require("devtools/client/netmonitor/src/reducers/batching");
-const requestBlockingReducer = require("devtools/client/netmonitor/src/reducers/request-blocking");
-const {
-  requestsReducer,
-} = require("devtools/client/netmonitor/src/reducers/requests");
-const { search } = require("devtools/client/netmonitor/src/reducers/search");
-const { sortReducer } = require("devtools/client/netmonitor/src/reducers/sort");
-const { filters } = require("devtools/client/netmonitor/src/reducers/filters");
-const {
-  timingMarkers,
-} = require("devtools/client/netmonitor/src/reducers/timing-markers");
-const { ui } = require("devtools/client/netmonitor/src/reducers/ui");
-const {
-  webSockets,
-} = require("devtools/client/netmonitor/src/reducers/web-sockets");
+const batchingReducer = require("./batching");
+const requestBlockingReducer = require("./request-blocking");
+const { requestsReducer } = require("./requests");
+const { search } = require("./search");
+const { sortReducer } = require("./sort");
+const { filters } = require("./filters");
+const { timingMarkers } = require("./timing-markers");
+const { ui } = require("./ui");
+const { webSockets } = require("./web-sockets");
 const networkThrottling = require("devtools/client/shared/components/throttling/reducer");
 
 module.exports = batchingReducer(

@@ -14,7 +14,7 @@ const {
   getCSSMatrixTransform,
 } = require("devtools/shared/layout/dom-matrix-2d");
 
-const Types = require("devtools/client/inspector/grids/types");
+const Types = require("../types");
 
 // The delay prior to executing the grid cell highlighting.
 const GRID_HIGHLIGHTING_DEBOUNCE = 50;

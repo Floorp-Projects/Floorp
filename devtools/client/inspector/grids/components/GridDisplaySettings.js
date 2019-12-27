@@ -9,7 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
-const Types = require("devtools/client/inspector/grids/types");
+const Types = require("../types");
 
 class GridDisplaySettings extends PureComponent {
   static get propTypes() {

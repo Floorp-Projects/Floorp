@@ -16,12 +16,8 @@ define(function(require, exports, module) {
   const { tr } = dom;
 
   // Tree
-  const TreeCell = createFactory(
-    require("devtools/client/shared/components/tree/TreeCell")
-  );
-  const LabelCell = createFactory(
-    require("devtools/client/shared/components/tree/LabelCell")
-  );
+  const TreeCell = createFactory(require("./TreeCell"));
+  const LabelCell = createFactory(require("./LabelCell"));
 
   const {
     wrapMoveFocus,

@@ -12,11 +12,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Tree = createFactory(
   require("devtools/client/shared/components/VirtualizedTree")
 );
-const DominatorTreeItem = createFactory(
-  require("devtools/client/memory/components/DominatorTreeItem")
-);
-const { TREE_ROW_HEIGHT } = require("devtools/client/memory/constants");
-const models = require("devtools/client/memory/models");
+const DominatorTreeItem = createFactory(require("./DominatorTreeItem"));
+const { TREE_ROW_HEIGHT } = require("../constants");
+const models = require("../models");
 
 /**
  * The list of individuals in a census group.

@@ -14,16 +14,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const Message = createFactory(
-  require("devtools/client/aboutdebugging/src/components/shared/Message")
-);
-const SidebarItem = createFactory(
-  require("devtools/client/aboutdebugging/src/components/sidebar/SidebarItem")
-);
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
-const {
-  MESSAGE_LEVEL,
-} = require("devtools/client/aboutdebugging/src/constants");
+const Message = createFactory(require("../shared/Message"));
+const SidebarItem = createFactory(require("./SidebarItem"));
+const Actions = require("../../actions/index");
+const { MESSAGE_LEVEL } = require("../../constants");
 
 /**
  * This component displays a runtime item of the Sidebar component.

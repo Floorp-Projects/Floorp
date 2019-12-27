@@ -14,14 +14,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const ExtensionDetail = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/ExtensionDetail")
-);
-const FieldPair = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/FieldPair")
-);
+const ExtensionDetail = createFactory(require("./ExtensionDetail"));
+const FieldPair = createFactory(require("./FieldPair"));
 
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Types = require("../../types/index");
 
 const TEMP_ID_DOC_URL =
   "https://developer.mozilla.org/Add-ons/WebExtensions/WebExtensions_and_the_Add-on_ID";

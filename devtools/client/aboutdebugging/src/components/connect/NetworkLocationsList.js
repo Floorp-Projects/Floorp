@@ -14,8 +14,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Actions = require("../../actions/index");
+const Types = require("../../types/index");
 
 class NetworkLocationsList extends PureComponent {
   static get propTypes() {

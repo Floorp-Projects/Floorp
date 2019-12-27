@@ -21,9 +21,7 @@ const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
 const { button, span, div } = dom;
 
 // Components
-const FrameFilterMenu = createFactory(
-  require("devtools/client/netmonitor/src/components/websockets/FrameFilterMenu")
-);
+const FrameFilterMenu = createFactory(require("./FrameFilterMenu"));
 const SearchBox = createFactory(
   require("devtools/client/shared/components/SearchBox")
 );

@@ -55,13 +55,13 @@ class Connector {
   }
 
   connectChrome(connection, actions, getState) {
-    const ChromeConnector = require("devtools/client/netmonitor/src/connector/chrome-connector");
+    const ChromeConnector = require("./chrome-connector");
     this.connector = new ChromeConnector();
     return this.connector.connect(connection, actions, getState);
   }
 
   connectFirefox(connection, actions, getState) {
-    const FirefoxConnector = require("devtools/client/netmonitor/src/connector/firefox-connector");
+    const FirefoxConnector = require("./firefox-connector");
     this.connector = new FirefoxConnector();
     return this.connector.connect(connection, actions, getState);
   }

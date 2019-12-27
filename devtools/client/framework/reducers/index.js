@@ -4,6 +4,5 @@
 "use strict";
 
 module.exports = {
-  domMutationBreakpoints: require("devtools/client/framework/reducers/dom-mutation-breakpoints")
-    .reducer,
+  domMutationBreakpoints: require("./dom-mutation-breakpoints").reducer,
 };

@@ -12,16 +12,10 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const CSSDeclaration = createFactory(
-  require("devtools/client/inspector/changes/components/CSSDeclaration")
-);
-const {
-  getChangesTree,
-} = require("devtools/client/inspector/changes/selectors/changes");
-const {
-  getSourceForDisplay,
-} = require("devtools/client/inspector/changes/utils/changes-utils");
-const { getStr } = require("devtools/client/inspector/changes/utils/l10n");
+const CSSDeclaration = createFactory(require("./CSSDeclaration"));
+const { getChangesTree } = require("../selectors/changes");
+const { getSourceForDisplay } = require("../utils/changes-utils");
+const { getStr } = require("../utils/l10n");
 
 class ChangesApp extends PureComponent {
   static get propTypes() {

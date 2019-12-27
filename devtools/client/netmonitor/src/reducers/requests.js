@@ -7,7 +7,7 @@
 const {
   getUrlDetails,
   processNetworkUpdates,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("../utils/request-utils");
 const {
   ADD_REQUEST,
   CLEAR_REQUESTS,
@@ -20,7 +20,7 @@ const {
   SEND_CUSTOM_REQUEST,
   TOGGLE_RECORDING,
   UPDATE_REQUEST,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("../constants");
 
 /**
  * This structure stores list of all HTTP requests received

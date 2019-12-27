@@ -9,7 +9,7 @@ const {
   UPDATE_FLEXBOX,
   UPDATE_FLEXBOX_COLOR,
   UPDATE_FLEXBOX_HIGHLIGHTED,
-} = require("devtools/client/inspector/flexbox/actions/index");
+} = require("./index");
 
 module.exports = {
   /**

@@ -21,10 +21,8 @@ const {
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const Types = require("devtools/client/application/src/types/index");
-const Worker = createFactory(
-  require("devtools/client/application/src/components/service-workers/Worker")
-);
+const Types = require("../../types/index");
+const Worker = createFactory(require("./Worker"));
 
 /**
  * This component handles the list of service workers displayed in the application panel

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { TIMING_KEYS } = require("devtools/client/netmonitor/src/constants");
+const { TIMING_KEYS } = require("../constants");
 
 var guid = 0;
 

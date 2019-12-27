@@ -4,8 +4,8 @@
 
 "use strict";
 
-const createStore = require("devtools/client/shared/redux/create-store");
-const reducers = require("devtools/client/memory/reducers");
+const createStore = require("../shared/redux/create-store");
+const reducers = require("./reducers");
 
 module.exports = () =>
   createStore(reducers, {

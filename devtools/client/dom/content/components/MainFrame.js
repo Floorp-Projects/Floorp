@@ -15,13 +15,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 // DOM Panel
-const DomTree = createFactory(
-  require("devtools/client/dom/content/components/DomTree")
-);
+const DomTree = createFactory(require("./DomTree"));
 
-const MainToolbar = createFactory(
-  require("devtools/client/dom/content/components/MainToolbar")
-);
+const MainToolbar = createFactory(require("./MainToolbar"));
 // Shortcuts
 const { div } = dom;
 

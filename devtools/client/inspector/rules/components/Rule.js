@@ -13,20 +13,12 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { editableItem } = require("devtools/client/shared/inplace-editor");
 
-const Declarations = createFactory(
-  require("devtools/client/inspector/rules/components/Declarations")
-);
-const Selector = createFactory(
-  require("devtools/client/inspector/rules/components/Selector")
-);
-const SelectorHighlighter = createFactory(
-  require("devtools/client/inspector/rules/components/SelectorHighlighter")
-);
-const SourceLink = createFactory(
-  require("devtools/client/inspector/rules/components/SourceLink")
-);
+const Declarations = createFactory(require("./Declarations"));
+const Selector = createFactory(require("./Selector"));
+const SelectorHighlighter = createFactory(require("./SelectorHighlighter"));
+const SourceLink = createFactory(require("./SourceLink"));
 
-const Types = require("devtools/client/inspector/rules/types");
+const Types = require("../types");
 
 class Rule extends PureComponent {
   static get propTypes() {

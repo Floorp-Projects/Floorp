@@ -6,7 +6,7 @@
 
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Types = require("../../types/index");
 
 /**
  * This component displays detail information for a process.

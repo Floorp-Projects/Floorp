@@ -13,11 +13,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Types = require("devtools/client/responsive/types");
+const Types = require("../types");
 
-const Device = createFactory(
-  require("devtools/client/responsive/components/Device")
-);
+const Device = createFactory(require("./Device"));
 
 class DeviceList extends PureComponent {
   static get propTypes() {

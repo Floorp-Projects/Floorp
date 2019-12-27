@@ -11,18 +11,10 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const CurrentTimeLabel = createFactory(
-  require("devtools/client/inspector/animation/components/CurrentTimeLabel")
-);
-const PauseResumeButton = createFactory(
-  require("devtools/client/inspector/animation/components/PauseResumeButton")
-);
-const PlaybackRateSelector = createFactory(
-  require("devtools/client/inspector/animation/components/PlaybackRateSelector")
-);
-const RewindButton = createFactory(
-  require("devtools/client/inspector/animation/components/RewindButton")
-);
+const CurrentTimeLabel = createFactory(require("./CurrentTimeLabel"));
+const PauseResumeButton = createFactory(require("./PauseResumeButton"));
+const PlaybackRateSelector = createFactory(require("./PlaybackRateSelector"));
+const RewindButton = createFactory(require("./RewindButton"));
 
 class AnimationToolbar extends PureComponent {
   static get propTypes() {

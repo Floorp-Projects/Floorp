@@ -11,10 +11,8 @@ const {
   getResponseHeader,
   getStartTime,
   ipToLong,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
-const {
-  RESPONSE_HEADERS,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("./request-utils");
+const { RESPONSE_HEADERS } = require("../constants");
 
 /**
  * Predicates used when sorting items.

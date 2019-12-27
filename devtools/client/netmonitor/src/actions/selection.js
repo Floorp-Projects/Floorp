@@ -4,11 +4,11 @@
 
 "use strict";
 
-const { SELECT_REQUEST } = require("devtools/client/netmonitor/src/constants");
+const { SELECT_REQUEST } = require("../constants");
 const {
   getDisplayedRequests,
   getSortedRequests,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("../selectors/index");
 
 const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
 

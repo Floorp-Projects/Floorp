@@ -26,15 +26,13 @@ const {
   SHOW_PROFILER_DIALOG,
   USB_RUNTIMES_SCAN_START,
   USB_RUNTIMES_SCAN_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("../constants");
 
-const NetworkLocationsModule = require("devtools/client/aboutdebugging/src/modules/network-locations");
+const NetworkLocationsModule = require("../modules/network-locations");
 const { adbAddon } = require("devtools/shared/adb/adb-addon");
-const {
-  refreshUSBRuntimes,
-} = require("devtools/client/aboutdebugging/src/modules/usb-runtimes");
+const { refreshUSBRuntimes } = require("../modules/usb-runtimes");
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+const Actions = require("./index");
 
 function selectPage(page, runtimeId) {
   return async (dispatch, getState) => {

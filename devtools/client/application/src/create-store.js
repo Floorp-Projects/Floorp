@@ -12,19 +12,11 @@ const {
 
 // Reducers
 
-const rootReducer = require("devtools/client/application/src/reducers/index");
-const {
-  ManifestState,
-} = require("devtools/client/application/src/reducers/manifest-state");
-const {
-  WorkersState,
-} = require("devtools/client/application/src/reducers/workers-state");
-const {
-  PageState,
-} = require("devtools/client/application/src/reducers/page-state");
-const {
-  UiState,
-} = require("devtools/client/application/src/reducers/ui-state");
+const rootReducer = require("./reducers/index");
+const { ManifestState } = require("./reducers/manifest-state");
+const { WorkersState } = require("./reducers/workers-state");
+const { PageState } = require("./reducers/page-state");
+const { UiState } = require("./reducers/ui-state");
 
 function configureStore() {
   // Prepare initial state.

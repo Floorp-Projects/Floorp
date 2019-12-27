@@ -25,9 +25,7 @@ const Services = require("Services");
 const focusManager = Services.focus;
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {
-  findMostRelevantCssPropertyIndex,
-} = require("devtools/client/shared/suggestion-picker");
+const { findMostRelevantCssPropertyIndex } = require("./suggestion-picker");
 
 loader.lazyRequireGetter(
   this,

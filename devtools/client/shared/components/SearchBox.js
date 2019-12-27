@@ -20,7 +20,7 @@ loader.lazyGetter(this, "AutocompletePopup", function() {
   );
 });
 loader.lazyGetter(this, "MDNLink", function() {
-  return createFactory(require("devtools/client/shared/components/MdnLink"));
+  return createFactory(require("./MdnLink"));
 });
 
 loader.lazyRequireGetter(

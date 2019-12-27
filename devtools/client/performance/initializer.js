@@ -12,38 +12,20 @@ const { require } = BrowserLoader({
   window: window,
 });
 
-const {
-  PerformanceController,
-} = require("devtools/client/performance/performance-controller");
-const {
-  PerformanceView,
-} = require("devtools/client/performance/performance-view");
-const { DetailsView } = require("devtools/client/performance/views/details");
-const {
-  DetailsSubview,
-} = require("devtools/client/performance/views/details-abstract-subview");
-const {
-  JsCallTreeView,
-} = require("devtools/client/performance/views/details-js-call-tree");
-const {
-  JsFlameGraphView,
-} = require("devtools/client/performance/views/details-js-flamegraph");
-const {
-  MemoryCallTreeView,
-} = require("devtools/client/performance/views/details-memory-call-tree");
-const {
-  MemoryFlameGraphView,
-} = require("devtools/client/performance/views/details-memory-flamegraph");
-const { OverviewView } = require("devtools/client/performance/views/overview");
-const {
-  RecordingsView,
-} = require("devtools/client/performance/views/recordings");
-const { ToolbarView } = require("devtools/client/performance/views/toolbar");
-const {
-  WaterfallView,
-} = require("devtools/client/performance/views/details-waterfall");
+const { PerformanceController } = require("./performance-controller");
+const { PerformanceView } = require("./performance-view");
+const { DetailsView } = require("./views/details");
+const { DetailsSubview } = require("./views/details-abstract-subview");
+const { JsCallTreeView } = require("./views/details-js-call-tree");
+const { JsFlameGraphView } = require("./views/details-js-flamegraph");
+const { MemoryCallTreeView } = require("./views/details-memory-call-tree");
+const { MemoryFlameGraphView } = require("./views/details-memory-flamegraph");
+const { OverviewView } = require("./views/overview");
+const { RecordingsView } = require("./views/recordings");
+const { ToolbarView } = require("./views/toolbar");
+const { WaterfallView } = require("./views/details-waterfall");
 
-const EVENTS = require("devtools/client/performance/events");
+const EVENTS = require("./events");
 
 /**
  * The performance panel used to only share modules through references on the window

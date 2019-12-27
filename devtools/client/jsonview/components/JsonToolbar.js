@@ -11,12 +11,8 @@ define(function(require, exports, module) {
   const { createFactories } = require("devtools/client/shared/react-utils");
   const { div } = require("devtools/client/shared/vendor/react-dom-factories");
 
-  const { SearchBox } = createFactories(
-    require("devtools/client/jsonview/components/SearchBox")
-  );
-  const { Toolbar, ToolbarButton } = createFactories(
-    require("devtools/client/jsonview/components/reps/Toolbar")
-  );
+  const { SearchBox } = createFactories(require("./SearchBox"));
+  const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
 
   /* 100kB file */
   const EXPAND_THRESHOLD = 100 * 1024;

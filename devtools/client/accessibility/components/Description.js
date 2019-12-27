@@ -18,24 +18,17 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const Button = createFactory(
-  require("devtools/client/accessibility/components/Button").Button
-);
-const LearnMoreLink = createFactory(
-  require("devtools/client/accessibility/components/LearnMoreLink")
-);
-const {
-  enable,
-  updateCanBeEnabled,
-} = require("devtools/client/accessibility/actions/ui");
+const Button = createFactory(require("./Button").Button);
+const LearnMoreLink = createFactory(require("./LearnMoreLink"));
+const { enable, updateCanBeEnabled } = require("../actions/ui");
 
 // Localization
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const { L10N } = require("../utils/l10n");
 
 const {
   A11Y_LEARN_MORE_LINK,
   A11Y_SERVICE_ENABLED_COUNT,
-} = require("devtools/client/accessibility/constants");
+} = require("../constants");
 
 /**
  * Landing UI for the accessibility panel when Accessibility features are

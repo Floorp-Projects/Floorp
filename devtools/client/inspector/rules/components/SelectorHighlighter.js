@@ -9,8 +9,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const { getStr } = require("devtools/client/inspector/rules/utils/l10n");
-const Types = require("devtools/client/inspector/rules/types");
+const { getStr } = require("../utils/l10n");
+const Types = require("../types");
 
 class SelectorHighlighter extends PureComponent {
   static get propTypes() {

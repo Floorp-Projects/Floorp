@@ -31,14 +31,10 @@ const {
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const {
-  services,
-} = require("devtools/client/application/src/modules/application-services");
-const Types = require("devtools/client/application/src/types/index");
+const { services } = require("../../modules/application-services");
+const Types = require("../../types/index");
 
-const UIButton = createFactory(
-  require("devtools/client/application/src/components/ui/UIButton")
-);
+const UIButton = createFactory(require("../ui/UIButton"));
 
 /**
  * This component is dedicated to display a worker, more accurately a service worker, in

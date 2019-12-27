@@ -10,19 +10,13 @@ const { div } = dom;
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Components
-const StatusBar = createFactory(
-  require("devtools/client/netmonitor/src/components/StatusBar")
-);
+const StatusBar = createFactory(require("../StatusBar"));
 
 loader.lazyGetter(this, "RequestListContent", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/request-list/RequestListContent")
-  );
+  return createFactory(require("./RequestListContent"));
 });
 loader.lazyGetter(this, "RequestListEmptyNotice", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/request-list/RequestListEmptyNotice")
-  );
+  return createFactory(require("./RequestListEmptyNotice"));
 });
 
 /**

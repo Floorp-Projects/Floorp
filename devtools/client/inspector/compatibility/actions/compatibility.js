@@ -10,7 +10,7 @@ const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
   COMPATIBILITY_UPDATE_SELECTED_NODE_COMPLETE,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS,
-} = require("devtools/client/inspector/compatibility/actions/index");
+} = require("./index");
 
 function updateSelectedNode(nodeFront) {
   return async ({ dispatch }) => {

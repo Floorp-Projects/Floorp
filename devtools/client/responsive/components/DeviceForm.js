@@ -14,12 +14,10 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const ViewportDimension = createFactory(
-  require("devtools/client/responsive/components/ViewportDimension")
-);
+const ViewportDimension = createFactory(require("./ViewportDimension"));
 
-const { getStr } = require("devtools/client/responsive/utils/l10n");
-const Types = require("devtools/client/responsive/types");
+const { getStr } = require("../utils/l10n");
+const Types = require("../types");
 
 class DeviceForm extends PureComponent {
   static get propTypes() {

@@ -15,16 +15,11 @@ const { createParentMap } = require("devtools/shared/heapsnapshot/CensusUtils");
 const Tree = createFactory(
   require("devtools/client/shared/components/VirtualizedTree")
 );
-const DominatorTreeItem = createFactory(
-  require("devtools/client/memory/components/DominatorTreeItem")
-);
-const { L10N } = require("devtools/client/memory/utils");
-const {
-  TREE_ROW_HEIGHT,
-  dominatorTreeState,
-} = require("devtools/client/memory/constants");
-const { dominatorTreeModel } = require("devtools/client/memory/models");
-const DominatorTreeLazyChildren = require("devtools/client/memory/dominator-tree-lazy-children");
+const DominatorTreeItem = createFactory(require("./DominatorTreeItem"));
+const { L10N } = require("../utils");
+const { TREE_ROW_HEIGHT, dominatorTreeState } = require("../constants");
+const { dominatorTreeModel } = require("../models");
+const DominatorTreeLazyChildren = require("../dominator-tree-lazy-children");
 
 const DOMINATOR_TREE_AUTO_EXPAND_DEPTH = 3;
 

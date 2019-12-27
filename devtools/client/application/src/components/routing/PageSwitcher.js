@@ -10,15 +10,11 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const { PAGE_TYPES } = require("devtools/client/application/src/constants");
-const Types = require("devtools/client/application/src/types/index");
+const { PAGE_TYPES } = require("../../constants");
+const Types = require("../../types/index");
 
-const ManifestPage = createFactory(
-  require("devtools/client/application/src/components/manifest/ManifestPage")
-);
-const WorkersPage = createFactory(
-  require("devtools/client/application/src/components/service-workers/WorkersPage")
-);
+const ManifestPage = createFactory(require("../manifest/ManifestPage"));
+const WorkersPage = createFactory(require("../service-workers/WorkersPage"));
 
 class PageSwitcher extends PureComponent {
   static get propTypes() {

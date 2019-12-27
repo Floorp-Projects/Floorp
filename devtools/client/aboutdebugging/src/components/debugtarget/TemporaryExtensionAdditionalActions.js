@@ -14,18 +14,12 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Actions = require("../../actions/index");
+const Types = require("../../types/index");
 
-const DetailsLog = createFactory(
-  require("devtools/client/aboutdebugging/src/components/shared/DetailsLog")
-);
-const Message = createFactory(
-  require("devtools/client/aboutdebugging/src/components/shared/Message")
-);
-const {
-  MESSAGE_LEVEL,
-} = require("devtools/client/aboutdebugging/src/constants");
+const DetailsLog = createFactory(require("../shared/DetailsLog"));
+const Message = createFactory(require("../shared/Message"));
+const { MESSAGE_LEVEL } = require("../../constants");
 
 /**
  * This component provides components that reload/remove temporary extension.

@@ -21,9 +21,7 @@ const Localized = createFactory(FluentReact.Localized);
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const {
-  fetchManifest,
-} = require("devtools/client/application/src/actions/manifest");
+const { fetchManifest } = require("../../actions/manifest");
 
 class ManifestLoader extends PureComponent {
   static get propTypes() {

@@ -27,7 +27,7 @@ const {
   MESSAGE_UPDATE_PAYLOAD,
   PAUSED_EXECUTION_POINT,
   PRIVATE_MESSAGES_CLEAR,
-} = require("devtools/client/webconsole/constants");
+} = require("../constants");
 
 const defaultIdGenerator = new IdGenerator();
 

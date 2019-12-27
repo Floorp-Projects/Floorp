@@ -11,11 +11,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Declaration = createFactory(
-  require("devtools/client/inspector/rules/components/Declaration")
-);
+const Declaration = createFactory(require("./Declaration"));
 
-const Types = require("devtools/client/inspector/rules/types");
+const Types = require("../types");
 
 class Declarations extends PureComponent {
   static get propTypes() {

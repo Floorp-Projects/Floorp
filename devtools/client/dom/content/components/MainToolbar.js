@@ -14,15 +14,11 @@ const SearchBox = createFactory(
   require("devtools/client/shared/components/SearchBox")
 );
 
-const { l10n } = require("devtools/client/dom/content/utils");
+const { l10n } = require("../utils");
 
 // Actions
-const {
-  fetchProperties,
-} = require("devtools/client/dom/content/actions/grips");
-const {
-  setVisibilityFilter,
-} = require("devtools/client/dom/content/actions/filter");
+const { fetchProperties } = require("../actions/grips");
+const { setVisibilityFilter } = require("../actions/filter");
 
 /**
  * This template is responsible for rendering a toolbar

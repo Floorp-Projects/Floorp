@@ -7,9 +7,7 @@
 const { Ci, Cu } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
-const {
-  BrowserElementWebNavigation,
-} = require("devtools/client/responsive/browser/web-navigation");
+const { BrowserElementWebNavigation } = require("./web-navigation");
 const { getStack } = require("devtools/shared/platform/stack");
 
 // A symbol used to hold onto the frame loader from the outer browser while tunneling.

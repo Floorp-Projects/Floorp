@@ -14,9 +14,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const {
-  MESSAGE_LEVEL,
-} = require("devtools/client/aboutdebugging/src/constants");
+const { MESSAGE_LEVEL } = require("../../constants");
 
 const ICONS = {
   [MESSAGE_LEVEL.ERROR]:

@@ -4,12 +4,8 @@
 
 "use strict";
 
-const {
-  isNodeValid,
-} = require("devtools/server/actors/highlighters/utils/markup");
-const {
-  BoxModelHighlighter,
-} = require("devtools/server/actors/highlighters/box-model");
+const { isNodeValid } = require("./utils/markup");
+const { BoxModelHighlighter } = require("./box-model");
 
 // How many maximum nodes can be highlighted at the same time by the
 // SelectorHighlighter

@@ -13,11 +13,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-const BoxModelEditable = createFactory(
-  require("devtools/client/inspector/boxmodel/components/BoxModelEditable")
-);
+const BoxModelEditable = createFactory(require("./BoxModelEditable"));
 
-const Types = require("devtools/client/inspector/boxmodel/types");
+const Types = require("../types");
 
 const SHARED_STRINGS_URI = "devtools/client/locales/shared.properties";
 const SHARED_L10N = new LocalizationHelper(SHARED_STRINGS_URI);

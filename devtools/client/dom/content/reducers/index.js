@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { grips } = require("devtools/client/dom/content/reducers/grips");
-const { filter } = require("devtools/client/dom/content/reducers/filter");
+const { grips } = require("./grips");
+const { filter } = require("./filter");
 
 exports.reducers = {
   grips,

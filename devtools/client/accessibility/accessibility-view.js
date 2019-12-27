@@ -16,23 +16,18 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 // Accessibility Panel
-const MainFrame = createFactory(
-  require("devtools/client/accessibility/components/MainFrame")
-);
+const MainFrame = createFactory(require("./components/MainFrame"));
 
 // Store
 const createStore = require("devtools/client/shared/redux/create-store");
 
 // Reducers
-const { reducers } = require("devtools/client/accessibility/reducers/index");
+const { reducers } = require("./reducers/index");
 const store = createStore(reducers);
 
 // Actions
-const { reset } = require("devtools/client/accessibility/actions/ui");
-const {
-  select,
-  highlight,
-} = require("devtools/client/accessibility/actions/accessibles");
+const { reset } = require("./actions/ui");
+const { select, highlight } = require("./actions/accessibles");
 
 /**
  * This object represents view of the Accessibility panel and is responsible

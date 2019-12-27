@@ -12,12 +12,10 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Types = require("devtools/client/responsive/types");
-const e10s = require("devtools/client/responsive/utils/e10s");
-const message = require("devtools/client/responsive/utils/message");
-const {
-  getTopLevelWindow,
-} = require("devtools/client/responsive/utils/window");
+const Types = require("../types");
+const e10s = require("../utils/e10s");
+const message = require("../utils/message");
+const { getTopLevelWindow } = require("../utils/window");
 
 const FRAME_SCRIPT = "resource://devtools/client/responsive/browser/content.js";
 

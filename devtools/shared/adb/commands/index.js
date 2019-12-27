@@ -4,15 +4,11 @@
 
 "use strict";
 
-const { listDevices } = require("devtools/shared/adb/commands/list-devices");
-const {
-  prepareTCPConnection,
-} = require("devtools/shared/adb/commands/prepare-tcp-connection");
-const { runCommand } = require("devtools/shared/adb/commands/run-command");
-const { shell } = require("devtools/shared/adb/commands/shell");
-const {
-  TrackDevicesCommand,
-} = require("devtools/shared/adb/commands/track-devices");
+const { listDevices } = require("./list-devices");
+const { prepareTCPConnection } = require("./prepare-tcp-connection");
+const { runCommand } = require("./run-command");
+const { shell } = require("./shell");
+const { TrackDevicesCommand } = require("./track-devices");
 
 module.exports = {
   listDevices,

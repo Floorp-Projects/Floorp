@@ -4,8 +4,8 @@
 "use strict";
 
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { actions } = require("devtools/client/memory/constants");
-const { refresh } = require("devtools/client/memory/actions/refresh");
+const { actions } = require("../constants");
+const { refresh } = require("./refresh");
 /**
  * Sets the tree map display as the current display and refreshes the tree map
  * census.

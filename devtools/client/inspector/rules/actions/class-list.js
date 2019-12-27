@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  UPDATE_CLASSES,
-  UPDATE_CLASS_PANEL_EXPANDED,
-} = require("devtools/client/inspector/rules/actions/index");
+const { UPDATE_CLASSES, UPDATE_CLASS_PANEL_EXPANDED } = require("./index");
 
 module.exports = {
   /**

@@ -1318,7 +1318,7 @@ Editor.prototype = {
     // The autocomplete module will overwrite this.initializeAutoCompletion
     // with a mode specific autocompletion handler.
     if (!this.initializeAutoCompletion) {
-      this.extend(require("devtools/client/shared/sourceeditor/autocomplete"));
+      this.extend(require("./autocomplete"));
     }
 
     if (this.config.autocomplete && Services.prefs.getBoolPref(AUTOCOMPLETE)) {

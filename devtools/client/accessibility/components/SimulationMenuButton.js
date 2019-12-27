@@ -16,7 +16,7 @@ const {
   div,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const { L10N } = require("../utils/l10n");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const MenuButton = createFactory(
   require("devtools/client/shared/components/menu/MenuButton")
@@ -28,7 +28,7 @@ const {
 const {
   accessibility: { SIMULATION_TYPE },
 } = require("devtools/shared/constants");
-const actions = require("devtools/client/accessibility/actions/simulation");
+const actions = require("../actions/simulation");
 
 loader.lazyGetter(this, "MenuItem", function() {
   return createFactory(

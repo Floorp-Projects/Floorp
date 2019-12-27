@@ -9,7 +9,7 @@ const {
   HIGHLIGHT,
   RESET,
   SELECT,
-} = require("devtools/client/accessibility/constants");
+} = require("../constants");
 
 /**
  * Initial state definition

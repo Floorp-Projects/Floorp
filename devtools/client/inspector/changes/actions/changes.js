@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  RESET_CHANGES,
-  TRACK_CHANGE,
-} = require("devtools/client/inspector/changes/actions/index");
+const { RESET_CHANGES, TRACK_CHANGE } = require("./index");
 
 module.exports = {
   resetChanges() {

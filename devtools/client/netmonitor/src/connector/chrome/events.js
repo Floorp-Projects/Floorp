@@ -3,14 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const { EVENTS } = require("devtools/client/netmonitor/src/constants");
-const {
-  Payloads,
-} = require("devtools/client/netmonitor/src/connector/chrome/utils");
-const {
-  getBulkLoader,
-  PriorityLevels,
-} = require("devtools/client/netmonitor/src/connector/chrome/bulk-loader");
+const { EVENTS } = require("../../constants");
+const { Payloads } = require("./utils");
+const { getBulkLoader, PriorityLevels } = require("./bulk-loader");
 
 class CDPConnector {
   constructor() {

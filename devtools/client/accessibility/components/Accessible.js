@@ -23,19 +23,14 @@ const {
   ORDERED_PROPS,
   ACCESSIBLE_EVENTS,
   VALUE_FLASHING_DURATION,
-} = require("devtools/client/accessibility/constants");
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+} = require("../constants");
+const { L10N } = require("../utils/l10n");
 const {
   flashElementOn,
   flashElementOff,
 } = require("devtools/client/inspector/markup/utils");
-const {
-  updateDetails,
-} = require("devtools/client/accessibility/actions/details");
-const {
-  select,
-  unhighlight,
-} = require("devtools/client/accessibility/actions/accessibles");
+const { updateDetails } = require("../actions/details");
+const { select, unhighlight } = require("../actions/accessibles");
 
 const Tree = createFactory(
   require("devtools/client/shared/components/VirtualizedTree")

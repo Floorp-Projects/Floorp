@@ -7,14 +7,12 @@
 const { prepareTCPConnection } = require("devtools/shared/adb/commands/index");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 const { DebuggerServer } = require("devtools/server/debugger-server");
-const {
-  ClientWrapper,
-} = require("devtools/client/aboutdebugging/src/modules/client-wrapper");
+const { ClientWrapper } = require("./client-wrapper");
 const {
   remoteClientManager,
 } = require("devtools/client/shared/remote-debugging/remote-client-manager");
 
-const { RUNTIMES } = require("devtools/client/aboutdebugging/src/constants");
+const { RUNTIMES } = require("../constants");
 
 async function createLocalClient() {
   DebuggerServer.init();
