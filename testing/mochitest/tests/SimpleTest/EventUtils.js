@@ -21,6 +21,7 @@
  *  synthesizeDropAfterDragOver
  *  synthesizeDrop
  *  synthesizePlainDragAndDrop
+ *  synthesizePlainDragAndCancel
  *
  *  When adding methods to this file, please add a performance test for it.
  */
@@ -2420,80 +2421,6 @@ function synthesizeNativeOSXClick(x, y) {
 }
 
 /**
- * Emulate a dragstart event.
- *  element - element to fire the dragstart event on
- *  expectedDragData - the data you expect the data transfer to contain afterwards
- *                      This data is in the format:
- *                         [ [ {type: value, data: value, test: function}, ... ], ... ]
- *                     can be null
- *  aWindow - optional; defaults to the current window object.
- *  x - optional; initial x coordinate
- *  y - optional; initial y coordinate
- * Returns null if data matches.
- * Returns the event.dataTransfer if data does not match
- *
- * eqTest is an optional function if comparison can't be done with x == y;
- *   function (actualData, expectedData) {return boolean}
- *   @param actualData from dataTransfer
- *   @param expectedData from expectedDragData
- * see bug 462172 for example of use
- *
- */
-function synthesizeDragStart(element, expectedDragData, aWindow, x, y) {
-  if (!aWindow) aWindow = window;
-  x = x || 2;
-  y = y || 2;
-  const step = 9;
-
-  var result = "trapDrag was not called";
-  var trapDrag = function(event) {
-    try {
-      // We must wrap only in plain mochitests, not chrome
-      var dataTransfer = _EU_maybeWrap(event.dataTransfer);
-      result = null;
-      if (!dataTransfer) throw "no dataTransfer";
-      if (
-        expectedDragData == null ||
-        dataTransfer.mozItemCount != expectedDragData.length
-      )
-        throw dataTransfer;
-      for (var i = 0; i < dataTransfer.mozItemCount; i++) {
-        var dtTypes = dataTransfer.mozTypesAt(i);
-        if (dtTypes.length != expectedDragData[i].length) throw dataTransfer;
-        for (var j = 0; j < dtTypes.length; j++) {
-          if (dtTypes[j] != expectedDragData[i][j].type) throw dataTransfer;
-          var dtData = dataTransfer.mozGetDataAt(dtTypes[j], i);
-          if (expectedDragData[i][j].eqTest) {
-            if (
-              !expectedDragData[i][j].eqTest(
-                dtData,
-                expectedDragData[i][j].data
-              )
-            )
-              throw dataTransfer;
-          } else if (expectedDragData[i][j].data != dtData) throw dataTransfer;
-        }
-      }
-    } catch (ex) {
-      result = ex;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-  };
-  aWindow.addEventListener("dragstart", trapDrag);
-  synthesizeMouse(element, x, y, { type: "mousedown" }, aWindow);
-  x += step;
-  y += step;
-  synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
-  x += step;
-  y += step;
-  synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
-  aWindow.removeEventListener("dragstart", trapDrag);
-  synthesizeMouse(element, x, y, { type: "mouseup" }, aWindow);
-  return result;
-}
-
-/**
  * Synthesize a query text rect event.
  *
  * @param aOffset  The character offset.  0 means the first character in the
@@ -2881,6 +2808,19 @@ function synthesizeDrop(
   }
 }
 
+function _computeSrcElementFromSrcSelection(aSrcSelection) {
+  let srcElement = aSrcSelection.focusNode;
+  while (_EU_maybeWrap(srcElement).isNativeAnonymous) {
+    srcElement = _EU_maybeUnwrap(
+      _EU_maybeWrap(srcElement).flattenedTreeParentNode
+    );
+  }
+  if (srcElement.nodeType !== Node.NODE_TYPE_ELEMENT) {
+    srcElement = srcElement.parentElement;
+  }
+  return srcElement;
+}
+
 /**
  * Emulate a drag and drop by emulating a dragstart by mousedown and mousemove,
  * and firing events dragenter, dragover, drop, and dragend.
@@ -2945,15 +2885,7 @@ async function synthesizePlainDragAndDrop(aParams) {
   }
 
   if (srcSelection) {
-    srcElement = srcSelection.focusNode;
-    while (_EU_maybeWrap(srcElement).isNativeAnonymous) {
-      srcElement = _EU_maybeUnwrap(
-        _EU_maybeWrap(srcElement).flattenedTreeParentNode
-      );
-    }
-    if (srcElement.nodeType !== Node.NODE_TYPE_ELEMENT) {
-      srcElement = srcElement.parentElement;
-    }
+    srcElement = _computeSrcElementFromSrcSelection(srcSelection);
     let srcElementRect = srcElement.getBoundingClientRect();
     if (logFunc) {
       logFunc(
@@ -2971,21 +2903,13 @@ async function synthesizePlainDragAndDrop(aParams) {
       );
     }
     // Click at center of last selection rect.
-    srcX = Math.floor(
-      lastSelectionRect.left + lastSelectionRect.width / 2
-    );
-    srcY = Math.floor(
-      lastSelectionRect.top + lastSelectionRect.height / 2
-    );
+    srcX = Math.floor(lastSelectionRect.left + lastSelectionRect.width / 2);
+    srcY = Math.floor(lastSelectionRect.top + lastSelectionRect.height / 2);
     // Then, adjust srcX and srcY for making them offset relative to
     // srcElementRect because they will be used when we call synthesizeMouse()
     // with srcElement.
-    srcX = Math.floor(
-      srcX - srcElementRect.left
-    );
-    srcY = Math.floor(
-      srcY - srcElementRect.top
-    );
+    srcX = Math.floor(srcX - srcElementRect.left);
+    srcY = Math.floor(srcY - srcElementRect.top);
     // Finally, recalculate finalX and finalY with new srcX and srcY if they
     // are not specified by the caller.
     if (aParams.finalX === undefined) {
@@ -3022,7 +2946,11 @@ async function synthesizePlainDragAndDrop(aParams) {
       if (logFunc) {
         logFunc(`"${aEvent.type}" event is fired`);
       }
-      if (!srcElement.contains(aEvent.target)) {
+      if (
+        !srcElement.contains(
+          _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget)
+        )
+      ) {
         // If srcX and srcY does not point in one of rects in srcElement,
         // "dragstart" target is not in srcElement.  Such case must not
         // be expected by this API users so that we should throw an exception
@@ -3078,7 +3006,13 @@ async function synthesizePlainDragAndDrop(aParams) {
     let session = ds.getCurrentSession();
     if (!session) {
       if (expectCancelDragStart) {
-        synthesizeMouse(srcElement, srcX, srcY, { type: "mouseup" }, srcWindow);
+        synthesizeMouse(
+          srcElement,
+          finalX,
+          finalY,
+          { type: "mouseup" },
+          srcWindow
+        );
         return;
       }
       throw new Error("drag hasn't been started by the operation");
@@ -3180,12 +3114,16 @@ async function synthesizePlainDragAndDrop(aParams) {
         if (logFunc) {
           logFunc(`"${aEvent.type}" event is fired`);
         }
-        if (!destElement.contains(aEvent.target)) {
+        if (
+          !destElement.contains(
+            _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget)
+          )
+        ) {
           throw new Error(
             'event target of "drop" is not destElement nor its descendant'
           );
         }
-      };
+      }
       destWindow.addEventListener("drop", onDrop, { capture: true });
       try {
         let event = createDragEventObject(
@@ -3227,9 +3165,13 @@ async function synthesizePlainDragAndDrop(aParams) {
         if (logFunc) {
           logFunc(`"${aEvent.type}" event is fired`);
         }
-        if (!srcElement.contains(aEvent.target)) {
+        if (
+          !srcElement.contains(
+            _EU_maybeUnwrap(_EU_maybeWrap(aEvent).composedTarget)
+          )
+        ) {
           throw new Error(
-            'event target of "dragend" is not srcElement not its descendant'
+            'event target of "dragend" is not srcElement nor its descendant'
           );
         }
       }
@@ -3251,6 +3193,106 @@ async function synthesizePlainDragAndDrop(aParams) {
       logFunc("synthesizePlainDragAndDrop() -- END");
     }
   }
+}
+
+function _checkDataTransferItems(aDataTransfer, aExpectedDragData) {
+  try {
+    // We must wrap only in plain mochitests, not chrome
+    let dataTransfer = _EU_maybeWrap(aDataTransfer);
+    if (!dataTransfer) {
+      return null;
+    }
+    if (
+      aExpectedDragData == null ||
+      dataTransfer.mozItemCount != aExpectedDragData.length
+    ) {
+      return dataTransfer;
+    }
+    for (let i = 0; i < dataTransfer.mozItemCount; i++) {
+      let dtTypes = dataTransfer.mozTypesAt(i);
+      if (dtTypes.length != aExpectedDragData[i].length) {
+        return dataTransfer;
+      }
+      for (let j = 0; j < dtTypes.length; j++) {
+        if (dtTypes[j] != aExpectedDragData[i][j].type) {
+          return dataTransfer;
+        }
+        let dtData = dataTransfer.mozGetDataAt(dtTypes[j], i);
+        if (aExpectedDragData[i][j].eqTest) {
+          if (
+            !aExpectedDragData[i][j].eqTest(
+              dtData,
+              aExpectedDragData[i][j].data
+            )
+          ) {
+            return dataTransfer;
+          }
+        } else if (aExpectedDragData[i][j].data != dtData) {
+          return dataTransfer;
+        }
+      }
+    }
+  } catch (ex) {
+    return ex;
+  }
+  return true;
+}
+
+/**
+ * synthesizePlainDragAndCancel() synthesizes drag start with
+ * synthesizePlainDragAndDrop(), but always cancel it with preventing default
+ * of "dragstart".  Additionally, this checks whether the dataTransfer of
+ * "dragstart" event has only expected items.
+ *
+ * @param aParams       The params which is set to the argument of
+ *                      synthesizePlainDragAndDrop().
+ * @param aExpectedDataTransferItems
+ *                      All expected dataTransfer items.
+ *                      This data is in the format:
+ *                         [ [ {type: value, data: value, test: function}, ... ], ... ]
+ *                      can be null.
+ *                      eqTest is an optional function if comparison can't be
+ *                      done with x == y;
+ *                      function (actualData, expectedData) {return boolean}
+ * @return              true if aExpectedDataTransferItems matches with
+ *                      DragEvent.dataTransfer of "dragstart" event.
+ *                      Otherwise, the dataTransfer object (may be null) or
+ *                      thrown exception, NOT false.  Therefore, you shouldn't
+ *                      use 
+ */
+async function synthesizePlainDragAndCancel(
+  aParams,
+  aExpectedDataTransferItems
+) {
+  let srcElement = aParams.srcSelection
+    ? _computeSrcElementFromSrcSelection(aParams.srcSelection)
+    : aParams.srcElement;
+  let result;
+  function onDragStart(aEvent) {
+    aEvent.preventDefault();
+    result = _checkDataTransferItems(
+      aEvent.dataTransfer,
+      aExpectedDataTransferItems
+    );
+  }
+  SpecialPowers.addSystemEventListener(
+    srcElement.ownerDocument,
+    "dragstart",
+    onDragStart,
+    { capture: true }
+  );
+  try {
+    aParams.expectCancelDragStart = true;
+    await synthesizePlainDragAndDrop(aParams);
+  } finally {
+    SpecialPowers.removeSystemEventListener(
+      srcElement.ownerDocument,
+      "dragstart",
+      onDragStart,
+      { capture: true }
+    );
+  }
+  return result;
 }
 
 var PluginUtils = {

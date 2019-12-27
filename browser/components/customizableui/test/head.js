@@ -31,11 +31,7 @@ registerCleanupFunction(() =>
   Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck")
 );
 
-var {
-  synthesizeDragStart,
-  synthesizeDrop,
-  synthesizeMouseAtCenter,
-} = EventUtils;
+var { synthesizeDrop, synthesizeMouseAtCenter } = EventUtils;
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
