@@ -46,7 +46,6 @@ TARGET_TASK_FILTERS = (
     '.*win64-aarch64-laptop.*',
     'android-hw.*',
     '.*android-geckoview-docs.*',
-    'source-test-python-mozharness-py3'
 )
 
 
