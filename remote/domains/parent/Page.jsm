@@ -306,7 +306,7 @@ class Page extends Domain {
    *     Based on the transferMode setting data is a base64-encoded string,
    *     or stream is a handle to a OS.File stream.
    */
-  async printToPDF(options) {
+  async printToPDF(options = {}) {
     const {
       displayHeaderFooter = false,
       // Bug 1601570 - Implement templates for header and footer
