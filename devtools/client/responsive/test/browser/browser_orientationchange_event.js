@@ -61,7 +61,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
 
   info("Check that the viewport orientation values persist after reload");
   const browser = ui.getViewportBrowser();
-  await browser.reload();
+  const reload = waitForViewportLoad(ui);
+  browser.reload();
+  await reload;
 
   await SpecialPowers.spawn(ui.getViewportBrowser(), [], async function() {
     info("Check that we still have the previous orientation values.");
