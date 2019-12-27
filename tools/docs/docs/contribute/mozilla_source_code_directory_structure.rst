@@ -1,8 +1,8 @@
 Mozilla Source Code Directory Structure
----------------------------------------
+=======================================
 
-The code for all projects in the Mozilla family (such
-as `Firefox <https://www.mozilla.org/en-US/firefox/products/>`__ , `Thunderbird <https://www.mozilla.org/projects/thunderbird/>`__ , `etc. <https://www.mozilla.org/products/>`__)
+The code for some projects in the Mozilla family (such
+as `Firefox <https://www.mozilla.org/en-US/firefox/products/>`__ , `Gecko <https://developer.mozilla.org/docs/Mozilla/Gecko/>`__ , `etc. <https://www.mozilla.org/products/>`__)
 is combined into a single source tree. The tree contains the source code
 as well as the code required to build each project on supported
 platforms (Linux, Windows, macOS, etc). This article provides an
@@ -10,23 +10,23 @@ overview of what the various directories contain.
 
 To simply take a look at the Mozilla source code, you do not need to
 download it. You can look at the source directly with your web browser
-using DXR (start at https://dxr.mozilla.org/mozilla-central/source/ for
+using Searchfox (start at https://searchfox.org/mozilla-central/source for
 the complete mozilla source code of branch HEAD).
 
 In order to modify the source, you have to acquire it either by
 downloading a
-`snapshot </en-US/docs/Developer_Guide/Source_Code/Downloading_Source_Archives>`__
+`snapshot <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Downloading_Source_Archives>`__
 of the sources or by `checking out the current sources from
-Mercurial </en-US/docs/Mercurial>`__.
+Mercurial <How to contribute to Firefox>`__.
 
-This document describes the directory structure that can be pulled by
-``client.mk`` -- i.e., directories that are used by at least some of the
+This document describes the directory structure -- i.e., directories that
+are used by at least some of the
 Mozilla project's client products. There are other directories in the
-Mozilla CVS repository, such as those for Web tools and those for the
+other Mozilla repository, such as those for Web tools and those for the
 Classic codebase.
 
 See `source code directories
-overview <https://developer.mozilla.org/en-US/docs/Archive/Misc_top_level/Source_code_directories_overview>`__ for a
+overview <https://developer.mozilla.org/docs/Archive/Misc_top_level/Source_code_directories_overview>`__ for a
 somewhat different (older) version of the same information. Also see the
 `more detailed overview of the pieces of
 Gecko <https://wiki.mozilla.org/Gecko:Overview>`__.
@@ -49,7 +49,7 @@ accessible
 
 Files for accessibility (i.e., MSAA (Microsoft Active Accessibility),
 ATK (Accessibility Toolkit, used by GTK+ 2) support files). See
-`Accessibility <https://developer.mozilla.org/en-US/docs/Web/Accessibility>`__.
+`Accessibility <https://developer.mozilla.org/docs/Web/Accessibility>`__.
 
 
 browser
@@ -57,13 +57,13 @@ browser
 
 Contains the front end code (in XUL, Javascript, XBL, and C++) for the
 Firefox browser. Many of these files started off as a copy of files in
-`xpfe <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Directory_structure#xpfe>`__/.
+`xpfe <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Directory_structure#xpfe>`__/.
 
 browser/extensions
 ------------------
 
 Contains `PDF.js <https://mozilla.github.io/pdf.js/>`__ and
-`Shumway <https://mozilla.github.io/shumway/>`__ built-in extensions.
+`WebCompat <https://github.com/mozilla/webcompat-addon>`__ built-in extensions.
 
 browser/themes
 --------------
@@ -75,15 +75,15 @@ build
 -----
 
 Miscellaneous files used by the build process. See also
-`config <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Directory_structure#config>`__/.
+`config <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Directory_structure#config>`__/.
 
 caps
 ----
 
 Capability-based web page security management. It contains C++ interfaces
 and code for determining the capabilities of content based on the
-security settings or certificates (e.g., VeriSign). See \ `Component
-Security <https://www.mozilla.org/projects/security/components/>`__\ .
+security settings or certificates (e.g., VeriSign). See `Component
+Security <https://www.mozilla.org/projects/security/components/>`__ .
 
 chrome
 ------
@@ -91,7 +91,7 @@ chrome
 Chrome registry (See
 `here <https://developer.mozilla.org/en/docs/Chrome_Registration>`__)
 used with `toolkit <#toolkit>`__/. These files were originally copies of
-files in `rdf/chrome/` (SeaMonkey still uses these).
+files in `rdf/chrome/`.
 
 config
 ------
@@ -99,22 +99,11 @@ config
 More files used by the build process, common includes for the makefiles,
 etc.
 
-db
---
-
-Container for database-accessing modules.
-
-
-db/sqlite3
-----------
-
-The SQLite database, used by `storage <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Storage>`__.
-
 
 devtools
 --------
 
-The `Firefox Developer Tools <https://developer.mozilla.org/en-US/docs/Tools>`__ server and client components.
+The `Firefox Developer Tools <https://developer.mozilla.org/docs/Tools>`__ server and client components.
 
 docshell
 --------
@@ -128,15 +117,15 @@ an application.
 dom
 ---
 
--  `IDL definitions <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPIDL>`__ of the interfaces defined by
+-  `IDL definitions <https://developer.mozilla.org/docs/Mozilla/Tech/XPIDL>`__ of the interfaces defined by
    the DOM specifications and Mozilla extensions to those interfaces
    (implementations of these interfaces are primarily, but not
-   completely, in `content <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Directory_structure#content>`__).
+   completely, in `content <https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Directory_structure#content>`__).
 -  The parts of the connection between JavaScript and the
    implementations of DOM objects that are specific both to JavaScript
    and to the DOM.
 -  Implementations of a few of the core "DOM Level 0" objects, such as
-   `window <https://developer.mozilla.org/en-US/docs/Web/API/Window>`__ , `window.navigator <https://developer.mozilla.org/en-US/docs/Web/API/Window/navigator>`__, `window.location <https://developer.mozilla.org/en-US/docs/Web/API/Window/location>`__, etc.
+   `window <https://developer.mozilla.org/docs/Web/API/Window>`__ , `window.navigator <https://developer.mozilla.org/docs/Web/API/Window/navigator>`__, `window.location <https://developer.mozilla.org/docs/Web/API/Window/location>`__, etc.
 
 editor
 ------
@@ -160,14 +149,6 @@ Contains:
    Editor <https://www.mozilla.org/editor/>`__.
 -  The frontend for the HTML editor that is part of SeaMonkey.
 
-embedding
----------
-
-This directory contains IDL, headers, and support files needed in order
-to embed Gecko in applications.
-
-See also: `Embedding Mozilla <https://developer.mozilla.org/en-US/docs/Mozilla/Gecko/Embedding_Mozilla>`__.
-
 extensions
 ----------
 
@@ -186,12 +167,6 @@ Implementation of the negotiate auth method for HTTP and other
 protocols. Has code for SSPI, GSSAPI, etc. See `Integrated
 Authentication <https://www.mozilla.org/projects/netlib/integrated-auth.html>`__.
 
-
-extensions/cookie
------------------
-
-Permissions backend for cookies, images, etc., as well as the user
-interface to these permissions and other cookie features.
 
 extensions/pref
 ---------------
@@ -225,7 +200,7 @@ a C++ wrapper called thebes). See
 gradle
 ------
 
-Containing files related to a JVM (Java Virtual Machine) build system.
+Containing files related to a Java build system.
 
 hal
 ---
@@ -237,7 +212,7 @@ alarms/vibrate/notifications/orientation, etc)
 image
 -----
 
-Image rendering library. Contains decoders for the image formats mozilla
+Image rendering library. Contains decoders for the image formats Firefox
 supports.
 
 intl
@@ -245,11 +220,6 @@ intl
 
 Internationalization and localization support. See
 `L10n:NewProjects <https://wiki.mozilla.org/L10n:NewProjects>`__.
-
-intl/chardet
-------------
-
-Code for "sniffing" the character encoding of Web pages.
 
 intl/locale
 -----------
@@ -284,22 +254,19 @@ ipc
 
 Container for implementations of IPC (Inter-Process Communication).
 
-js
---
-
 js/src
 ------
 
 The JavaScript engine, also known as
-`SpiderMonkey <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey>`__.
-See also `JavaScript <https://developer.mozilla.org/en-US/docs/JavaScript>`__.
+`SpiderMonkey <https://developer.mozilla.org/docs/Mozilla/Projects/SpiderMonkey>`__.
+See also `JavaScript <https://developer.mozilla.org/docs/JavaScript>`__.
 
 js/xpconnect
 ------------
 
 Support code for calling JavaScript code from C++ code and C++ code from
 JavaScript code, using XPCOM interfaces. See
-`XPConnect <https://developer.mozilla.org/en-US/docs/XPConnect>`__.
+`XPConnect <https://developer.mozilla.org/docs/XPConnect>`__.
 
 layout
 ------
@@ -331,12 +298,12 @@ basic CSS boxes.
 layout/mathml
 -------------
 
-Rendering tree objects for `MathML <https://developer.mozilla.org/en-US/docs/Web/MathML>`__.
+Rendering tree objects for `MathML <https://developer.mozilla.org/docs/Web/MathML>`__.
 
 layout/svg
 ----------
 
-Rendering tree objects for `SVG <https://developer.mozilla.org/en-US/docs/Web/SVG>`__.
+Rendering tree objects for `SVG <https://developer.mozilla.org/docs/Web/SVG>`__.
 
 layout/tables
 -------------
@@ -346,7 +313,7 @@ Rendering tree objects for CSS/HTML tables.
 layout/xul
 ----------
 
-Additional rendering object interfaces for `XUL <https://developer.mozilla.org/en-US/docs/XUL>`__ and
+Additional rendering object interfaces for `XUL <https://developer.mozilla.org/docs/XUL>`__ and
 the rendering tree objects for XUL boxes.
 
 media
@@ -364,7 +331,7 @@ mfbt
 
 Implementations of classes like *WeakPtr*. Multi-platform *assertions*
 etc. `More on
-MFBT <https://developer.mozilla.org/en-US/docs/Mozilla/MFBT>`__
+MFBT <https://developer.mozilla.org/docs/Mozilla/MFBT>`__
 
 mobile
 ------
@@ -372,7 +339,7 @@ mobile
 mobile/android
 --------------
 
-Firefox for Android
+Firefox for Android and Geckoview
 
 modules
 -------
@@ -406,9 +373,15 @@ dynamic linker for Android, a DLL block list for Windows, etc.
 netwerk
 -------
 
-`Networking library <https://developer.mozilla.org/en-US/docs/Necko>`__, also known as Necko.
+`Networking library <https://developer.mozilla.org/docs/Necko>`__, also known as Necko.
 Responsible for doing actual transfers from and to servers, as well as
 for URI handling and related stuff.
+
+netwerk/cookie
+--------------
+
+Permissions backend for cookies, images, etc., as well as the user
+interface to these permissions and other cookie features.
 
 nsprpub
 -------
@@ -426,7 +399,7 @@ other-licenses
 --------------
 
 Contains libraries that are not covered by the MPL but are used in some
-mozilla code.
+Firefox code.
 
 parser
 ------
@@ -456,11 +429,6 @@ parser/xml
 
 The code for integrating expat (from parser/expat) into Gecko.
 
-probes
-------
-
-Files related to dtrace.
-
 python
 ------
 
@@ -469,16 +437,8 @@ Cross module python code.
 python/mach
 -----------
 
-The code for the `Mach <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/mach>`__ building
+The code for the `Mach <https://developer.mozilla.org/docs/Mozilla/Developer_guide/mach>`__ building
 tool.
-
-rdf
----
-
-RDF handling APIs. See `RDF <https://developer.mozilla.org/en-US/docs/Archive/Web/RDF>`__ and
-`RDF <https://www.mozilla.org/rdf/doc/>`__. Also contains the chrome
-registry code used by SeaMonkey, although toolkit apps (such as Firefox
-and Thunderbird) use the copy forked into `chrome/` .
 
 security
 --------
@@ -509,7 +469,7 @@ XXX this needs a description.
 storage
 -------
 
-`Storage <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Storage>`__: XPCOM wrapper for sqlite. Wants to
+`Storage <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Storage>`__: XPCOM wrapper for sqlite. Wants to
 unify storage of all profile-related data. Supersedes mork. See also
 `Unified Storage <https://wiki.mozilla.org/Mozilla2:Unified_Storage>`__.
 
@@ -544,15 +504,20 @@ toolkit/mozapps/extensions/test/xpinstall
 
 The installer, which contains code for installing Mozilla and for
 installing XPIs/extensions. This directory also contains code needed to
-build installer packages. See `XPInstall <https://developer.mozilla.org/en-US/docs/XPInstall>`__ and
+build installer packages. See `XPInstall <https://developer.mozilla.org/docs/XPInstall>`__ and
 the `XPInstall project
 page <https://www.mozilla.org/projects/xpinstall/>`__.
 
 tools
 -----
 
-Some tools which are optionally built during the mozilla build process,
-mostly used for debugging.
+Some tools which are optionally built during the mozilla build process.
+
+tools/lint
+----------
+
+The linter declarations and configurations.
+See `linting documentation </tools/lint/>`_
 
 uriloader
 ---------
@@ -624,246 +589,7 @@ Components used by the Mozilla frontend, as well as implementations of
 interfaces that other parts of mozilla expect.
 
 
-Moved/Renamed/Deleted Directories
----------------------------------
-
-b2g
----
-
-Source code for the Boot2Gecko project used when building
-`FirefoxOS <https://developer.mozilla.org/en-US/docs/Archive/B2G_OS>`__.
-
-
-content
--------
-
-The data structures that represent the structure of Web pages (HTML,
-SVG, XML documents, elements, text nodes, etc.) These objects contain
-the implementation of many DOM interfaces and also implement some
-behaviors associated with those objects, such as link handling, form
-control behavior, and form submission.
-
-This directory also contains the code for `XUL <https://developer.mozilla.org/en-US/docs/Archive/Mozilla/XUL>`__,
-`XBL <https://developer.mozilla.org/en-US/docs/Archive/Mozilla/XBL>`__, `XTF <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XTF>`__,
-`<canvas> <https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API>`__, as well as the code implementing
-XSLT and event handling.
-
-
-extensions
-----------
-
-extensions/content-packs
-------------------------
-
-Content- and locale-pack switching user interface.
-
-
-extensions/cview
-----------------
-
-Component viewer, which allows to view the currently registered
-components and interfaces.
-
-extensions/datetime
--------------------
-
-Support for the datetime protocol.
-
-extensions/finger
------------------
-
-Support for the finger protocol.
-
-extensions/gnomevfs
--------------------
-
-Interface to gnome-vfs to allow using all protocols supported by
-gnome-vfs inside of mozilla.
-
-extensions/help
----------------
-
-Help viewer and help content. See `Mozilla Help Viewer
-Project <https://www.mozilla.org/projects/help-viewer/>`__.
-
-extensions/irc
---------------
-
-This is ChatZilla, the IRC (Internet Relay Chat) component. See
-`ChatZilla <https://www.mozilla.org/projects/rt-messaging/chatzilla/>`__.
-
-extensions/java
----------------
-
-XPCOM<->Java bridge ("`JavaXPCOM <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Language_bindings/JavaXPCOM>`__", formerly
-known as Javaconnect).
-
-extensions/layout-debug
------------------------
-
-Layout debugger. Intended as replacement for "viewer". Can be used to
-run layout regression tests and has support for other layout debugging
-features.
-
-extensions/lightning
---------------------
-
-The Lightning project, "an extension to tightly integrate calendar
-functionality (scheduling, tasks, etc.) into Thunderbird." See
-`Lightning <https://wiki.mozilla.org/Calendar:Lightning>`__.
-
-extensions/mono
----------------
-
-A two-way bridge between the CLR/.NET/Mono/C#/etc. world and XPCOM.
-
-extensions/p3p
---------------
-
-Implementation of W3C's Platform for Privacy Preferences standard. See
-`Platform for Privacy Preferences
-(P3P) <https://www.mozilla.org/projects/p3p/>`__.
-
-extensions/python
--------------------
-
-Support for implementing XPCOM components in python. See
-`PyXPCOM <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Language_bindings/PyXPCOM>`__.
-
-
-extensions/reporter
--------------------
-
-An extension to report problems with web pages. Client-side part. See
-`Mozilla Reporter <https://reporter.mozilla.org/>`__.
-
-extension/schema-validation
----------------------------
-
-Allows to validate XML trees according to specified XML Schemas.
-
-extension/spatialnavigation
----------------------------
-
-Spatial navigation, navigating between links of a document according to
-their on-screen position. See `Spatial
-Navigation <https://www.mozilla.org/access/keyboard/snav/>`__.
-
-extensions/sql
---------------
-
-Support for accessing SQL databases from XUL applications. See `SQL
-Support in Mozilla <https://www.mozilla.org/projects/sql/>`__.
-
-extensions/sroaming
--------------------
-
-Session roaming, i.e. support for storing a profile on a remote server.
-
-
-extensions/transformiix
------------------------
-
-XSLT support. XSL Transformations is a language used to transform XML
-documents into other XML documents. See `XSL
-Transformations <https://www.mozilla.org/projects/xslt/>`__.
-
-
-extensions/tridentprofile
--------------------------
-
-Support for importing profiles from MSIE.
-
-
-extensions/typeaheadfind
-------------------------
-
-Find As You Type allows quick web page navigation when you type a
-succession of characters in the body of the displayed page. See `Find As
-You
-Type <https://www.mozilla.org/projects/ui/accessibility/typeaheadfind.html>`__.
-
-
-extensions/universalchardet
----------------------------
-
-Universal character set detector.
-
-
-extensions/venkman
-------------------
-
-The `JavaScript Debugger <https://developer.mozilla.org/en-US/docs/Archive/Mozilla/Venkman>`__.
-
-extensions/wallet
------------------
-
-Password and Form Manager.
-
-extensions/webdav
------------------
-
-WebDAV code; exposes special APIs for accessing WebDAV servers. Used by
-the Calendar project.
-
-
-extensions/webservices
-----------------------
-
-Support for Webservices. See `Web
-Services <https://www.mozilla.org/projects/webservices/>`__.
-
-
-extensions/xforms
------------------
-
-Code for the XForms extension. See
-`XForms <https://www.mozilla.org/projects/xforms/>`__.
-
-
-extensions/xmlextras
---------------------
-
-Several XML-related extensions. See `XML
-Extras <https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XML_Extras>`__.
-
-
-extensions/xml-rpc
-------------------
-
-XML Remote Procedure Calls. Unowned these days. See `XML-RPC in
-Mozilla <https://www.mozilla.org/projects/xmlrpc/>`__.
-
-
-extensions/xmlterm
-------------------
-
-XMLTerm, a terminal implemented using mozilla technology. Only available
-on GTK builds.
-
-
-intl
-----
-
-intl/ctl
---------
-
-Code for dealing with Complex Text Layout, related to shaping of south
-Asian languages (not built by default, needs ``--enable-ctl``).
-
-profile
--------
-
-Code for profile handling, the profile manager backend and frontend.
-
-xulrunner
----------
-
-Code for `XULRunner <https://wiki.mozilla.org/XUL:Xul_Runner>`__. See
-also `XULRunner <https://developer.mozilla.org/en-US/docs/XULRunner>`__.
-
-
 More documentation about Mozilla Source Code Directory Structure
 ----------------------------------------------------------------
 
-https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Directory_structure
+https://developer.mozilla.org/docs/Mozilla/Developer_guide/Source_Code/Directory_structure
