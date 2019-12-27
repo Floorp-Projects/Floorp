@@ -28,8 +28,7 @@
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Se abrió una nueva pestaña privada</string>
 
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_text_copied">Texto copiado en el portapapeles</string>
-
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Enlace copiado al portapapeles</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Cambiar</string>
 </resources>
