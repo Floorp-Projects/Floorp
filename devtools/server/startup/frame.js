@@ -79,7 +79,10 @@ try {
         const {
           FrameTargetActor,
         } = require("devtools/server/actors/targets/frame");
-        actor = new FrameTargetActor(conn, chromeGlobal);
+        const { docShell } = chromeGlobal;
+        // For a script loaded via loadFrameScript, the global is the content
+        // message manager.
+        actor = new FrameTargetActor(conn, docShell);
       }
 
       const actorPool = new ActorPool(conn);
