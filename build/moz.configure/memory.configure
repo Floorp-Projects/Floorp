@@ -23,7 +23,7 @@ add_old_configure_assignment('MOZ_MEMORY', True, when='--enable-jemalloc')
 def replace_malloc_default(milestone, build_project):
     if build_project == 'memory':
         return True
-    if milestone.is_nightly and build_project != 'js':
+    if milestone.is_early_beta_or_earlier and build_project != 'js':
         return True
 
 
@@ -57,8 +57,8 @@ def phc_default(milestone, target, replace_malloc_default, replace_malloc):
     if not replace_malloc_default or \
        (replace_malloc.origin != 'default' and not replace_malloc):
         return False
-    # Nightly only because PHC has a non-negligible performance cost.
-    if not milestone.is_nightly:
+    # Nightly or early beta only because PHC has a non-negligible performance cost.
+    if not milestone.is_early_beta_or_earlier:
         return False
     # Both Linux32 and Win32 have frequent crashes when stack tracing (for
     # unclear reasons), so PHC is enabled only on 64-bit only in both cases.
