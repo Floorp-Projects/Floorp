@@ -352,7 +352,7 @@ workers:
             worker-type:
                 by-release-level:
                     production: signing-mac-v1
-                    staging:  depsigning-mac-v1
+                    staging: depsigning-mac-v1
         t-ap.*:
             provisioner: proj-autophone
             implementation: script-engine-autophone
