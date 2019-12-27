@@ -31,162 +31,6 @@ fn test_make_sized_audio_channel_layout_with_wrong_size() {
     let _ = make_sized_audio_channel_layout(wrong_size);
 }
 
-// has_input
-// ------------------------------------
-// TODO
-
-// has_output
-// ------------------------------------
-// TODO
-
-// channel_label_to_cubeb_channel
-// ------------------------------------
-// Convert a CAChannelLabel into a ChannelLayout
-#[test]
-fn test_channel_label_to_cubeb_channel_layout() {
-    let pairs = [
-        (kAudioChannelLabel_Left, ChannelLayout::FRONT_LEFT),
-        (kAudioChannelLabel_Right, ChannelLayout::FRONT_RIGHT),
-        (kAudioChannelLabel_Center, ChannelLayout::FRONT_CENTER),
-        (kAudioChannelLabel_LFEScreen, ChannelLayout::LOW_FREQUENCY),
-        (kAudioChannelLabel_LeftSurround, ChannelLayout::BACK_LEFT),
-        (kAudioChannelLabel_RightSurround, ChannelLayout::BACK_RIGHT),
-        (
-            kAudioChannelLabel_LeftCenter,
-            ChannelLayout::FRONT_LEFT_OF_CENTER,
-        ),
-        (
-            kAudioChannelLabel_RightCenter,
-            ChannelLayout::FRONT_RIGHT_OF_CENTER,
-        ),
-        (
-            kAudioChannelLabel_CenterSurround,
-            ChannelLayout::BACK_CENTER,
-        ),
-        (
-            kAudioChannelLabel_LeftSurroundDirect,
-            ChannelLayout::SIDE_LEFT,
-        ),
-        (
-            kAudioChannelLabel_RightSurroundDirect,
-            ChannelLayout::SIDE_RIGHT,
-        ),
-        (
-            kAudioChannelLabel_TopCenterSurround,
-            ChannelLayout::TOP_CENTER,
-        ),
-        (
-            kAudioChannelLabel_VerticalHeightLeft,
-            ChannelLayout::TOP_FRONT_LEFT,
-        ),
-        (
-            kAudioChannelLabel_VerticalHeightCenter,
-            ChannelLayout::TOP_FRONT_CENTER,
-        ),
-        (
-            kAudioChannelLabel_VerticalHeightRight,
-            ChannelLayout::TOP_FRONT_RIGHT,
-        ),
-        (kAudioChannelLabel_TopBackLeft, ChannelLayout::TOP_BACK_LEFT),
-        (
-            kAudioChannelLabel_TopBackCenter,
-            ChannelLayout::TOP_BACK_CENTER,
-        ),
-        (
-            kAudioChannelLabel_TopBackRight,
-            ChannelLayout::TOP_BACK_RIGHT,
-        ),
-        (kAudioChannelLabel_Unknown, ChannelLayout::UNDEFINED),
-    ];
-
-    for (label, channel) in pairs.iter() {
-        let channel_label = CAChannelLabel(*label);
-        let layout: ChannelLayout = channel_label.into();
-        assert_eq!(layout, *channel);
-    }
-}
-
-// cubeb_channel_to_channel_label
-// ------------------------------------
-// Convert a ChannelLayout into a CAChannelLabel
-#[test]
-fn test_cubeb_channel_layout_to_channel_label() {
-    let pairs = [
-        (ChannelLayout::FRONT_LEFT, kAudioChannelLabel_Left),
-        (ChannelLayout::FRONT_RIGHT, kAudioChannelLabel_Right),
-        (ChannelLayout::FRONT_CENTER, kAudioChannelLabel_Center),
-        (ChannelLayout::LOW_FREQUENCY, kAudioChannelLabel_LFEScreen),
-        (ChannelLayout::BACK_LEFT, kAudioChannelLabel_LeftSurround),
-        (ChannelLayout::BACK_RIGHT, kAudioChannelLabel_RightSurround),
-        (
-            ChannelLayout::FRONT_LEFT_OF_CENTER,
-            kAudioChannelLabel_LeftCenter,
-        ),
-        (
-            ChannelLayout::FRONT_RIGHT_OF_CENTER,
-            kAudioChannelLabel_RightCenter,
-        ),
-        (
-            ChannelLayout::BACK_CENTER,
-            kAudioChannelLabel_CenterSurround,
-        ),
-        (
-            ChannelLayout::SIDE_LEFT,
-            kAudioChannelLabel_LeftSurroundDirect,
-        ),
-        (
-            ChannelLayout::SIDE_RIGHT,
-            kAudioChannelLabel_RightSurroundDirect,
-        ),
-        (
-            ChannelLayout::TOP_CENTER,
-            kAudioChannelLabel_TopCenterSurround,
-        ),
-        (
-            ChannelLayout::TOP_FRONT_LEFT,
-            kAudioChannelLabel_VerticalHeightLeft,
-        ),
-        (
-            ChannelLayout::TOP_FRONT_CENTER,
-            kAudioChannelLabel_VerticalHeightCenter,
-        ),
-        (
-            ChannelLayout::TOP_FRONT_RIGHT,
-            kAudioChannelLabel_VerticalHeightRight,
-        ),
-        (ChannelLayout::TOP_BACK_LEFT, kAudioChannelLabel_TopBackLeft),
-        (
-            ChannelLayout::TOP_BACK_CENTER,
-            kAudioChannelLabel_TopBackCenter,
-        ),
-        (
-            ChannelLayout::TOP_BACK_RIGHT,
-            kAudioChannelLabel_TopBackRight,
-        ),
-    ];
-
-    for (channel, label) in pairs.iter() {
-        let channel_label = CAChannelLabel(*label);
-        assert_eq!(CAChannelLabel::from(*channel), channel_label);
-    }
-}
-
-#[test]
-#[should_panic]
-fn test_cubeb_channel_layout_to_channel_label_with_invalid_channel() {
-    let _label = CAChannelLabel::from(ChannelLayout::_3F4_LFE);
-}
-
-#[test]
-#[should_panic]
-fn test_cubeb_channel_layout_to_channel_label_with_unknown_channel() {
-    assert_eq!(
-        ChannelLayout::from(ffi::CHANNEL_UNKNOWN),
-        ChannelLayout::UNDEFINED
-    );
-    let _label = CAChannelLabel::from(ChannelLayout::UNDEFINED);
-}
-
 // active_streams
 // update_latency_by_adding_stream
 // update_latency_by_removing_stream
@@ -264,14 +108,6 @@ fn test_make_silent() {
     }
 }
 
-// render_input
-// ------------------------------------
-// TODO
-
-// input_callback
-// ------------------------------------
-// TODO
-
 // minimum_resampling_input_frames
 // ------------------------------------
 #[test]
@@ -309,10 +145,6 @@ fn test_minimum_resampling_input_frames_equal_input_output_rate() {
         frames
     );
 }
-
-// output_callback
-// ------------------------------------
-// TODO
 
 // create_device_info
 // ------------------------------------
@@ -377,22 +209,6 @@ fn test_set_device_info_to_nonexistent_output_device() {
     let nonexistent_id = std::u32::MAX;
     let _device = create_device_info(nonexistent_id, DeviceType::OUTPUT);
 }
-
-// reinit_stream
-// ------------------------------------
-// TODO
-
-// reinit_stream_async
-// ------------------------------------
-// TODO
-
-// event_addr_to_string
-// ------------------------------------
-// TODO
-
-// property_listener_callback
-// ------------------------------------
-// TODO
 
 // add_listener (for default output device)
 // ------------------------------------
@@ -505,14 +321,6 @@ fn test_remove_listener_unknown_device() {
     });
 }
 
-// install_system_changed_callback
-// ------------------------------------
-// TODO
-
-// uninstall_system_changed_callback
-// ------------------------------------
-// TODO
-
 // get_default_device_id
 // ------------------------------------
 #[test]
@@ -555,26 +363,30 @@ fn test_get_default_device_id_with_inout_type() {
 #[test]
 fn test_convert_channel_layout() {
     let pairs = [
-        // The single channel is mapped to mono now.
-        (vec![kAudioObjectUnknown], ChannelLayout::MONO),
-        (vec![kAudioChannelLabel_Mono], ChannelLayout::MONO),
-        // The dual channels are mapped to stereo now.
+        (vec![kAudioObjectUnknown], vec![mixer::Channel::Silence]),
+        (
+            vec![kAudioChannelLabel_Mono],
+            vec![mixer::Channel::FrontCenter],
+        ),
         (
             vec![kAudioChannelLabel_Mono, kAudioChannelLabel_LFEScreen],
-            ChannelLayout::STEREO,
+            vec![mixer::Channel::FrontCenter, mixer::Channel::LowFrequency],
         ),
         (
             vec![kAudioChannelLabel_Left, kAudioChannelLabel_Right],
-            ChannelLayout::STEREO,
+            vec![mixer::Channel::FrontLeft, mixer::Channel::FrontRight],
         ),
-        // The Layouts containing any unknonwn channel will be mapped to UNDEFINED.
         (
             vec![
                 kAudioChannelLabel_Left,
                 kAudioChannelLabel_Right,
                 kAudioChannelLabel_Unknown,
             ],
-            ChannelLayout::UNDEFINED,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::Silence,
+            ],
         ),
         (
             vec![
@@ -582,7 +394,11 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_Right,
                 kAudioChannelLabel_Unused,
             ],
-            ChannelLayout::UNDEFINED,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::Silence,
+            ],
         ),
         (
             vec![
@@ -590,7 +406,11 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_Right,
                 kAudioChannelLabel_ForeignLanguage,
             ],
-            ChannelLayout::UNDEFINED,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::Silence,
+            ],
         ),
         // The SMPTE layouts.
         (
@@ -599,7 +419,11 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_Right,
                 kAudioChannelLabel_LFEScreen,
             ],
-            ChannelLayout::STEREO_LFE,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::LowFrequency,
+            ],
         ),
         (
             vec![
@@ -607,7 +431,11 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_Right,
                 kAudioChannelLabel_Center,
             ],
-            ChannelLayout::_3F,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::FrontCenter,
+            ],
         ),
         (
             vec![
@@ -616,7 +444,12 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_Center,
                 kAudioChannelLabel_LFEScreen,
             ],
-            ChannelLayout::_3F_LFE,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::FrontCenter,
+                mixer::Channel::LowFrequency,
+            ],
         ),
         (
             vec![
@@ -624,7 +457,11 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_Right,
                 kAudioChannelLabel_CenterSurround,
             ],
-            ChannelLayout::_2F1,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::BackCenter,
+            ],
         ),
         (
             vec![
@@ -633,7 +470,12 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_CenterSurround,
                 kAudioChannelLabel_LFEScreen,
             ],
-            ChannelLayout::_2F1_LFE,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::BackCenter,
+                mixer::Channel::LowFrequency,
+            ],
         ),
         (
             vec![
@@ -642,7 +484,12 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_Center,
                 kAudioChannelLabel_CenterSurround,
             ],
-            ChannelLayout::_3F1,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::FrontCenter,
+                mixer::Channel::BackCenter,
+            ],
         ),
         (
             vec![
@@ -652,7 +499,13 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_CenterSurround,
                 kAudioChannelLabel_LFEScreen,
             ],
-            ChannelLayout::_3F1_LFE,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::FrontCenter,
+                mixer::Channel::BackCenter,
+                mixer::Channel::LowFrequency,
+            ],
         ),
         (
             vec![
@@ -661,7 +514,12 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_LeftSurroundDirect,
                 kAudioChannelLabel_RightSurroundDirect,
             ],
-            ChannelLayout::_2F2,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::SideLeft,
+                mixer::Channel::SideRight,
+            ],
         ),
         (
             vec![
@@ -671,7 +529,13 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_RightSurroundDirect,
                 kAudioChannelLabel_LFEScreen,
             ],
-            ChannelLayout::_2F2_LFE,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::SideLeft,
+                mixer::Channel::SideRight,
+                mixer::Channel::LowFrequency,
+            ],
         ),
         (
             vec![
@@ -680,7 +544,12 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_LeftSurround,
                 kAudioChannelLabel_RightSurround,
             ],
-            ChannelLayout::QUAD,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::BackLeft,
+                mixer::Channel::BackRight,
+            ],
         ),
         (
             vec![
@@ -690,7 +559,13 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_RightSurround,
                 kAudioChannelLabel_LFEScreen,
             ],
-            ChannelLayout::QUAD_LFE,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::BackLeft,
+                mixer::Channel::BackRight,
+                mixer::Channel::LowFrequency,
+            ],
         ),
         (
             vec![
@@ -700,7 +575,13 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_LeftSurroundDirect,
                 kAudioChannelLabel_RightSurroundDirect,
             ],
-            ChannelLayout::_3F2,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::FrontCenter,
+                mixer::Channel::SideLeft,
+                mixer::Channel::SideRight,
+            ],
         ),
         (
             vec![
@@ -711,7 +592,14 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_RightSurroundDirect,
                 kAudioChannelLabel_LFEScreen,
             ],
-            ChannelLayout::_3F2_LFE,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::FrontCenter,
+                mixer::Channel::SideLeft,
+                mixer::Channel::SideRight,
+                mixer::Channel::LowFrequency,
+            ],
         ),
         (
             vec![
@@ -721,7 +609,13 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_RightSurround,
                 kAudioChannelLabel_Center,
             ],
-            ChannelLayout::_3F2_BACK,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::BackLeft,
+                mixer::Channel::BackRight,
+                mixer::Channel::FrontCenter,
+            ],
         ),
         (
             vec![
@@ -732,7 +626,14 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_Center,
                 kAudioChannelLabel_LFEScreen,
             ],
-            ChannelLayout::_3F2_LFE_BACK,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::BackLeft,
+                mixer::Channel::BackRight,
+                mixer::Channel::FrontCenter,
+                mixer::Channel::LowFrequency,
+            ],
         ),
         (
             vec![
@@ -744,7 +645,15 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_LeftSurroundDirect,
                 kAudioChannelLabel_RightSurroundDirect,
             ],
-            ChannelLayout::_3F3R_LFE,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::FrontCenter,
+                mixer::Channel::LowFrequency,
+                mixer::Channel::BackCenter,
+                mixer::Channel::SideLeft,
+                mixer::Channel::SideRight,
+            ],
         ),
         (
             vec![
@@ -757,7 +666,16 @@ fn test_convert_channel_layout() {
                 kAudioChannelLabel_LeftSurroundDirect,
                 kAudioChannelLabel_RightSurroundDirect,
             ],
-            ChannelLayout::_3F4_LFE,
+            vec![
+                mixer::Channel::FrontLeft,
+                mixer::Channel::FrontRight,
+                mixer::Channel::FrontCenter,
+                mixer::Channel::LowFrequency,
+                mixer::Channel::BackLeft,
+                mixer::Channel::BackRight,
+                mixer::Channel::SideLeft,
+                mixer::Channel::SideRight,
+            ],
         ),
     ];
 
@@ -794,8 +712,8 @@ fn test_convert_channel_layout() {
         }
         let layout_ref = unsafe { &(*(&layout as *const TestLayout as *const AudioChannelLayout)) };
         assert_eq!(
-            audiounit_convert_channel_layout(layout_ref),
-            *expected_layout
+            &audiounit_convert_channel_layout(layout_ref),
+            expected_layout
         );
     }
 }
@@ -804,12 +722,13 @@ fn test_convert_channel_layout() {
 // ------------------------------------
 #[test]
 fn test_get_preferred_channel_layout_output() {
+    const STEREO: [mixer::Channel; 2] = [mixer::Channel::FrontLeft, mixer::Channel::FrontRight];
     // Predefined whitelist
     use std::collections::HashMap;
-    let devices_layouts: HashMap<&'static str, ChannelLayout> = [
-        ("hdpn", ChannelLayout::STEREO),
-        ("ispk", ChannelLayout::STEREO),
-        ("FApd", ChannelLayout::STEREO),
+    let devices_layouts: HashMap<&'static str, Vec<mixer::Channel>> = [
+        ("hdpn", STEREO.to_vec()),
+        ("ispk", STEREO.to_vec()),
+        ("FApd", STEREO.to_vec()),
     ]
     .into_iter()
     .cloned()
@@ -826,29 +745,26 @@ fn test_get_preferred_channel_layout_output() {
     let unit = unit.unwrap();
     if let Some(layout) = devices_layouts.get(source.as_str()) {
         assert_eq!(
-            audiounit_get_preferred_channel_layout(unit.get_inner()),
-            *layout
+            &audiounit_get_preferred_channel_layout(unit.get_inner()),
+            layout
         );
     } else {
         println!("Device {} is not in the whitelist.", source);
     }
 }
 
-// TODO: Should it be banned ? It only works with output audiounit for now.
-// #[test]
-// fn test_get_preferred_channel_layout_input() {
-// }
-
 // get_current_channel_layout
 // ------------------------------------
 #[test]
 fn test_get_current_channel_layout_output() {
+    const STEREO: [mixer::Channel; 2] = [mixer::Channel::FrontLeft, mixer::Channel::FrontRight];
+
     // Predefined whitelist
     use std::collections::HashMap;
-    let devices_layouts: HashMap<&'static str, ChannelLayout> = [
-        ("hdpn", ChannelLayout::STEREO),
-        ("ispk", ChannelLayout::STEREO),
-        ("FApd", ChannelLayout::STEREO),
+    let devices_layouts: HashMap<&'static str, Vec<mixer::Channel>> = [
+        ("hdpn", STEREO.to_vec()),
+        ("ispk", STEREO.to_vec()),
+        ("FApd", STEREO.to_vec()),
     ]
     .into_iter()
     .cloned()
@@ -872,11 +788,6 @@ fn test_get_current_channel_layout_output() {
         println!("Device {} is not in the whitelist.", source);
     }
 }
-
-// TODO: Should it be banned ? It only works with output audiounit for now.
-// #[test]
-// fn test_get_current_channel_layout_input() {
-// }
 
 // create_stream_description
 // ------------------------------------
@@ -926,81 +837,6 @@ fn test_create_stream_description() {
         assert_eq!(description.mBytesPerPacket, bytes * raw.channels);
         assert_eq!(description.mReserved, 0);
     }
-}
-
-// set_channel_layout
-// ------------------------------------
-#[test]
-fn test_set_channel_layout_output() {
-    // Predefined whitelist
-    use std::collections::HashMap;
-    let devices_layouts: HashMap<&'static str, ChannelLayout> = [
-        ("hdpn", ChannelLayout::STEREO),
-        ("ispk", ChannelLayout::STEREO),
-        ("FApd", ChannelLayout::STEREO),
-    ]
-    .into_iter()
-    .cloned()
-    .collect();
-
-    let source = test_get_default_source_name(Scope::Output);
-    let unit = test_get_default_audiounit(Scope::Output);
-    if source.is_none() || unit.is_none() {
-        println!("No output audiounit or device source name found.");
-        return;
-    }
-
-    let source = source.unwrap();
-    let unit = unit.unwrap();
-    if let Some(layout) = devices_layouts.get(source.as_str()) {
-        assert!(audiounit_set_channel_layout(unit.get_inner(), *layout).is_ok());
-        assert_eq!(
-            audiounit_get_current_channel_layout(unit.get_inner()),
-            *layout
-        );
-    } else {
-        println!("Device {} is not in the whitelist.", source);
-    }
-}
-
-#[test]
-fn test_set_channel_layout_output_undefind() {
-    if let Some(unit) = test_get_default_audiounit(Scope::Output) {
-        // Get original layout.
-        let original_layout = audiounit_get_current_channel_layout(unit.get_inner());
-        // Leave layout as it is.
-        assert!(audiounit_set_channel_layout(unit.get_inner(), ChannelLayout::UNDEFINED).is_ok());
-        // Check the layout is same as the original one.
-        assert_eq!(
-            audiounit_get_current_channel_layout(unit.get_inner()),
-            original_layout
-        );
-    } else {
-        println!("No output audiounit.");
-    }
-}
-
-#[test]
-fn test_set_channel_layout_input() {
-    if let Some(unit) = test_get_default_audiounit(Scope::Input) {
-        // Get original layout.
-        let original_layout = audiounit_get_current_channel_layout(unit.get_inner());
-        // Leave layout as it is.
-        assert!(audiounit_set_channel_layout(unit.get_inner(), ChannelLayout::UNDEFINED).is_ok());
-        // Check the layout is same as the original one.
-        assert_eq!(
-            audiounit_get_current_channel_layout(unit.get_inner()),
-            original_layout
-        );
-    } else {
-        println!("No input audiounit.");
-    }
-}
-
-#[test]
-#[should_panic]
-fn test_set_channel_layout_with_null_unit() {
-    assert!(audiounit_set_channel_layout(ptr::null_mut(), ChannelLayout::UNDEFINED).is_err());
 }
 
 // create_default_audiounit
@@ -1290,30 +1126,6 @@ fn test_set_buffer_size_sync_by_scope_with_null_unit(scope: Scope) {
     assert!(set_buffer_size_sync(unit, scope.into(), 2048).is_err());
 }
 
-// setup_stream
-// ------------------------------------
-// TODO
-
-// stream_destroy_internal
-// ------------------------------------
-// TODO
-
-// stream_destroy
-// ------------------------------------
-// TODO
-
-// stream_start_internal
-// ------------------------------------
-// TODO
-
-// stream_start
-// ------------------------------------
-// TODO
-
-// stream_stop_internal
-// ------------------------------------
-// TODO
-
 // get_volume, set_volume
 // ------------------------------------
 #[test]
@@ -1358,10 +1170,6 @@ fn test_get_default_device_name() {
         }
     }
 }
-
-// strref_to_cstr_utf8
-// ------------------------------------
-// TODO
 
 // is_device_a_type_of
 // ------------------------------------

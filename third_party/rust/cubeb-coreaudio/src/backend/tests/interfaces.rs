@@ -527,21 +527,22 @@ fn test_ops_stream_device_destroy() {
     });
 }
 
-// Enable this after cubeb-rs version is updated to one that implements
-// stream_register_device_changed_callback operation.
-// #[test]
-// fn test_ops_stream_register_device_changed_callback() {
-//     extern "C" fn callback(_: *mut c_void) {}
+#[test]
+fn test_ops_stream_register_device_changed_callback() {
+    extern "C" fn callback(_: *mut c_void) {}
 
-//     test_default_output_stream_operation("stream: register device changed callback", |stream| {
-//         assert_eq!(
-//             unsafe {
-//                 OPS.stream_register_device_changed_callback.unwrap()(
-//                     stream,
-//                     Some(callback)
-//                 )
-//             },
-//             ffi::CUBEB_OK
-//         );
-//     });
-// }
+    test_default_output_stream_operation("stream: register device changed callback", |stream| {
+        assert_eq!(
+            unsafe { OPS.stream_register_device_changed_callback.unwrap()(stream, Some(callback)) },
+            ffi::CUBEB_OK
+        );
+        assert_eq!(
+            unsafe { OPS.stream_register_device_changed_callback.unwrap()(stream, Some(callback)) },
+            ffi::CUBEB_ERROR_INVALID_PARAMETER
+        );
+        assert_eq!(
+            unsafe { OPS.stream_register_device_changed_callback.unwrap()(stream, None) },
+            ffi::CUBEB_OK
+        );
+    });
+}
