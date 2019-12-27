@@ -7,7 +7,7 @@
 const {
   UPDATE_CLASSES,
   UPDATE_CLASS_PANEL_EXPANDED,
-} = require("../actions/index");
+} = require("devtools/client/inspector/rules/actions/index");
 
 const INITIAL_CLASS_LIST = {
   // An array of objects containing the CSS class state that is applied to the current

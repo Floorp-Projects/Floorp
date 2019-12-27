@@ -13,7 +13,7 @@ const {
   CanvasFrameAnonymousContentHelper,
   createSVGNode,
   createNode,
-} = require("./utils/markup");
+} = require("devtools/server/actors/highlighters/utils/markup");
 
 // Maximum size, in pixel, for the horizontal ruler and vertical ruler
 // used by RulersHighlighter

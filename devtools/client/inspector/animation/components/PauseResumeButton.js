@@ -13,8 +13,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
-const { getStr } = require("../utils/l10n");
-const { hasRunningAnimation } = require("../utils/utils");
+const { getStr } = require("devtools/client/inspector/animation/utils/l10n");
+const {
+  hasRunningAnimation,
+} = require("devtools/client/inspector/animation/utils/utils");
 
 class PauseResumeButton extends PureComponent {
   static get propTypes() {

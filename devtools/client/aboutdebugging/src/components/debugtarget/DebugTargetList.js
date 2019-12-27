@@ -14,9 +14,11 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const DebugTargetItem = createFactory(require("./DebugTargetItem"));
+const DebugTargetItem = createFactory(
+  require("devtools/client/aboutdebugging/src/components/debugtarget/DebugTargetItem")
+);
 
-const Types = require("../../types/index");
+const Types = require("devtools/client/aboutdebugging/src/types/index");
 
 /**
  * This component displays list of debug target.

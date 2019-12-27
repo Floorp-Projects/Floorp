@@ -30,8 +30,13 @@
 
 "use strict";
 
-const { FILTER_FLAGS, SUPPORTED_HTTP_CODES } = require("../constants");
-const { getFormattedIPAndPort } = require("./format-utils");
+const {
+  FILTER_FLAGS,
+  SUPPORTED_HTTP_CODES,
+} = require("devtools/client/netmonitor/src/constants");
+const {
+  getFormattedIPAndPort,
+} = require("devtools/client/netmonitor/src/utils/format-utils");
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
 
 /*

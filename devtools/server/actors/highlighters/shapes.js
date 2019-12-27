@@ -9,14 +9,16 @@ const {
   createSVGNode,
   createNode,
   getComputedStyle,
-} = require("./utils/markup");
+} = require("devtools/server/actors/highlighters/utils/markup");
 const {
   setIgnoreLayoutChanges,
   getCurrentZoom,
   getAdjustedQuads,
   getFrameOffsets,
 } = require("devtools/shared/layout/utils");
-const { AutoRefreshHighlighter } = require("./auto-refresh");
+const {
+  AutoRefreshHighlighter,
+} = require("devtools/server/actors/highlighters/auto-refresh");
 const {
   getDistance,
   clickedOnEllipseEdge,

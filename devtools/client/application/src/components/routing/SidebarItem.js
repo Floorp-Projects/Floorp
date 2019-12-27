@@ -16,14 +16,14 @@ const {
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Actions = require("./../../actions/index");
+const Actions = require("devtools/client/application/src/actions/index");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { PAGE_TYPES } = require("../../constants");
-const Types = require("../../types/index");
+const { PAGE_TYPES } = require("devtools/client/application/src/constants");
+const Types = require("devtools/client/application/src/types/index");
 
 const ICONS = {
   [PAGE_TYPES.MANIFEST]:

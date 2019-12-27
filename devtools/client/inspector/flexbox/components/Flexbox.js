@@ -15,19 +15,27 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
 loader.lazyGetter(this, "FlexItemList", function() {
-  return createFactory(require("./FlexItemList"));
+  return createFactory(
+    require("devtools/client/inspector/flexbox/components/FlexItemList")
+  );
 });
 loader.lazyGetter(this, "FlexItemSizingOutline", function() {
-  return createFactory(require("./FlexItemSizingOutline"));
+  return createFactory(
+    require("devtools/client/inspector/flexbox/components/FlexItemSizingOutline")
+  );
 });
 loader.lazyGetter(this, "FlexItemSizingProperties", function() {
-  return createFactory(require("./FlexItemSizingProperties"));
+  return createFactory(
+    require("devtools/client/inspector/flexbox/components/FlexItemSizingProperties")
+  );
 });
 loader.lazyGetter(this, "Header", function() {
-  return createFactory(require("./Header"));
+  return createFactory(
+    require("devtools/client/inspector/flexbox/components/Header")
+  );
 });
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/flexbox/types");
 
 class Flexbox extends PureComponent {
   static get propTypes() {

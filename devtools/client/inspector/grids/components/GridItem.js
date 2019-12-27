@@ -27,7 +27,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/grids/types");
 
 class GridItem extends PureComponent {
   static get propTypes() {

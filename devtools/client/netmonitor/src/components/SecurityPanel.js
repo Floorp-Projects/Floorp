@@ -10,15 +10,17 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("../utils/l10n");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   fetchNetworkUpdatePacket,
   getUrlHost,
-} = require("../utils/request-utils");
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 // Components
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
-const PropertiesView = createFactory(require("./PropertiesView"));
+const PropertiesView = createFactory(
+  require("devtools/client/netmonitor/src/components/PropertiesView")
+);
 
 loader.lazyGetter(this, "Rep", function() {
   return require("devtools/client/shared/components/reps/reps").REPS.Rep;

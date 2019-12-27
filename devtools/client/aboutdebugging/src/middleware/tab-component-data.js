@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { DEBUG_TARGETS, REQUEST_TABS_SUCCESS } = require("../constants");
+const {
+  DEBUG_TARGETS,
+  REQUEST_TABS_SUCCESS,
+} = require("devtools/client/aboutdebugging/src/constants");
 
 /**
  * This middleware converts tabs object that get from DebuggerClient.listTabs() to data

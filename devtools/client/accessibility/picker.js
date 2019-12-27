@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { L10N } = require("./utils/l10n");
+const { L10N } = require("devtools/client/accessibility/utils/l10n");
 
 class Picker {
   constructor(panel) {

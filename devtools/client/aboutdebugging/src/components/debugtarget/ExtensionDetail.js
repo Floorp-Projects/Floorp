@@ -14,12 +14,20 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const DetailsLog = createFactory(require("../shared/DetailsLog"));
-const FieldPair = createFactory(require("./FieldPair"));
-const Message = createFactory(require("../shared/Message"));
+const DetailsLog = createFactory(
+  require("devtools/client/aboutdebugging/src/components/shared/DetailsLog")
+);
+const FieldPair = createFactory(
+  require("devtools/client/aboutdebugging/src/components/debugtarget/FieldPair")
+);
+const Message = createFactory(
+  require("devtools/client/aboutdebugging/src/components/shared/Message")
+);
 
-const { MESSAGE_LEVEL } = require("../../constants");
-const Types = require("../../types/index");
+const {
+  MESSAGE_LEVEL,
+} = require("devtools/client/aboutdebugging/src/constants");
+const Types = require("devtools/client/aboutdebugging/src/types/index");
 
 /**
  * This component displays detail information for extension.

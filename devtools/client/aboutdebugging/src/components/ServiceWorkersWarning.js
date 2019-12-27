@@ -13,9 +13,13 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const Message = createFactory(require("./shared/Message"));
+const Message = createFactory(
+  require("devtools/client/aboutdebugging/src/components/shared/Message")
+);
 
-const { MESSAGE_LEVEL } = require("../constants");
+const {
+  MESSAGE_LEVEL,
+} = require("devtools/client/aboutdebugging/src/constants");
 const DOC_URL =
   "https://developer.mozilla.org/docs/Tools/about:debugging#Service_workers_not_compatible";
 

@@ -8,7 +8,9 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { getFormattedTitle } = require("../utils/l10n");
+const {
+  getFormattedTitle,
+} = require("devtools/client/inspector/animation/utils/l10n");
 
 class AnimationDetailHeader extends PureComponent {
   static get propTypes() {

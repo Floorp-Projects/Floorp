@@ -21,9 +21,16 @@ loader.lazyRequireGetter(
   "devtools/shared/platform/clipboard"
 );
 
-const ChangesApp = createFactory(require("./components/ChangesApp"));
-const { getChangesStylesheet } = require("./selectors/changes");
-const { resetChanges, trackChange } = require("./actions/changes");
+const ChangesApp = createFactory(
+  require("devtools/client/inspector/changes/components/ChangesApp")
+);
+const {
+  getChangesStylesheet,
+} = require("devtools/client/inspector/changes/selectors/changes");
+const {
+  resetChanges,
+  trackChange,
+} = require("devtools/client/inspector/changes/actions/changes");
 
 class ChangesView {
   constructor(inspector, window) {

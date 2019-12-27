@@ -10,15 +10,19 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
-const { L10N } = require("../utils/l10n");
-const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
-const Actions = require("../actions/index");
-const { getSelectedRequest } = require("../selectors/index");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  fetchNetworkUpdatePacket,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
+const Actions = require("devtools/client/netmonitor/src/actions/index");
+const {
+  getSelectedRequest,
+} = require("devtools/client/netmonitor/src/selectors/index");
 const {
   getUrlQuery,
   parseQueryString,
   writeHeaderText,
-} = require("../utils/request-utils");
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 const { button, div, input, label, textarea } = dom;
 

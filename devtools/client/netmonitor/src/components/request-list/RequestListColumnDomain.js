@@ -10,9 +10,15 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { td } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getFormattedIPAndPort } = require("../../utils/format-utils");
-const { propertiesEqual } = require("../../utils/request-utils");
-const SecurityState = createFactory(require("../SecurityState"));
+const {
+  getFormattedIPAndPort,
+} = require("devtools/client/netmonitor/src/utils/format-utils");
+const {
+  propertiesEqual,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
+const SecurityState = createFactory(
+  require("devtools/client/netmonitor/src/components/SecurityState")
+);
 
 const UPDATED_DOMAIN_PROPS = ["remoteAddress", "securityState", "urlDetails"];
 

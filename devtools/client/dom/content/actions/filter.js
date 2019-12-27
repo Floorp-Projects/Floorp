@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const constants = require("../constants");
+const constants = require("devtools/client/dom/content/constants");
 
 /**
  * Used to filter DOM panel content.

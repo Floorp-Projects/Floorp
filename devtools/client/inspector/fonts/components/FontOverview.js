@@ -14,10 +14,12 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Accordion = createFactory(
   require("devtools/client/shared/components/Accordion")
 );
-const FontList = createFactory(require("./FontList"));
+const FontList = createFactory(
+  require("devtools/client/inspector/fonts/components/FontList")
+);
 
-const { getStr } = require("../utils/l10n");
-const Types = require("../types");
+const { getStr } = require("devtools/client/inspector/fonts/utils/l10n");
+const Types = require("devtools/client/inspector/fonts/types");
 
 class FontOverview extends PureComponent {
   static get propTypes() {

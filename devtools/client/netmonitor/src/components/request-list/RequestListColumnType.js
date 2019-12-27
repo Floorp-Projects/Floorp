@@ -7,7 +7,9 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getAbbreviatedMimeType } = require("../../utils/request-utils");
+const {
+  getAbbreviatedMimeType,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 class RequestListColumnType extends Component {
   static get propTypes() {

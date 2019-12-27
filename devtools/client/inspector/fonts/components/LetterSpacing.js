@@ -10,10 +10,15 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const FontPropertyValue = createFactory(require("./FontPropertyValue"));
+const FontPropertyValue = createFactory(
+  require("devtools/client/inspector/fonts/components/FontPropertyValue")
+);
 
-const { getStr } = require("../utils/l10n");
-const { getUnitFromValue, getStepForUnit } = require("../utils/font-utils");
+const { getStr } = require("devtools/client/inspector/fonts/utils/l10n");
+const {
+  getUnitFromValue,
+  getStepForUnit,
+} = require("devtools/client/inspector/fonts/utils/font-utils");
 
 class LetterSpacing extends PureComponent {
   static get propTypes() {

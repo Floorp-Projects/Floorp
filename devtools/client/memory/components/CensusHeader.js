@@ -6,8 +6,8 @@
 
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("../utils");
-const models = require("../models");
+const { L10N } = require("devtools/client/memory/utils");
+const models = require("devtools/client/memory/models");
 
 class CensusHeader extends Component {
   static get propTypes() {

@@ -20,7 +20,7 @@ loader.lazyRequireGetter(
   "devtools/client/inspector/shared/node-reps"
 );
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/flexbox/types");
 
 class FlexContainer extends PureComponent {
   static get propTypes() {

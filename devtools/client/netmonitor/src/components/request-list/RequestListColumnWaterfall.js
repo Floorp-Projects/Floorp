@@ -8,14 +8,14 @@ const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { L10N } = require("../../utils/l10n");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   fetchNetworkUpdatePacket,
   propertiesEqual,
-} = require("../../utils/request-utils");
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 // List of properties of the timing info we want to create boxes for
-const { TIMING_KEYS } = require("../../constants");
+const { TIMING_KEYS } = require("devtools/client/netmonitor/src/constants");
 
 const { div } = dom;
 

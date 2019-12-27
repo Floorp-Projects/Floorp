@@ -13,7 +13,7 @@ const {
   AUDITING,
   FILTER_TOGGLE,
   FILTERS,
-} = require("../constants");
+} = require("devtools/client/accessibility/constants");
 
 exports.filterToggle = filter => dispatch =>
   dispatch({ filter, type: FILTER_TOGGLE });

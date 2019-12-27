@@ -14,7 +14,7 @@ const {
   getSnapshot,
   createSnapshot,
   dominatorTreeIsComputed,
-} = require("../utils");
+} = require("devtools/client/memory/utils");
 const {
   actions,
   snapshotState: states,
@@ -23,11 +23,11 @@ const {
   treeMapState,
   dominatorTreeState,
   individualsState,
-} = require("../constants");
-const view = require("./view");
-const refresh = require("./refresh");
-const diffing = require("./diffing");
-const TaskCache = require("./task-cache");
+} = require("devtools/client/memory/constants");
+const view = require("devtools/client/memory/actions/view");
+const refresh = require("devtools/client/memory/actions/refresh");
+const diffing = require("devtools/client/memory/actions/diffing");
+const TaskCache = require("devtools/client/memory/actions/task-cache");
 
 /**
  * A series of actions are fired from this task to save, read and generate the

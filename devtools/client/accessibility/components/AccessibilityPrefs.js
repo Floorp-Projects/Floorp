@@ -9,7 +9,7 @@ const {
   Component,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("../utils/l10n");
+const { L10N } = require("devtools/client/accessibility/utils/l10n");
 
 const { hr } = require("devtools/client/shared/vendor/react-dom-factories");
 
@@ -29,13 +29,15 @@ loader.lazyGetter(this, "MenuList", function() {
   );
 });
 
-const { A11Y_LEARN_MORE_LINK } = require("../constants");
+const {
+  A11Y_LEARN_MORE_LINK,
+} = require("devtools/client/accessibility/constants");
 const { openDocLink } = require("devtools/client/shared/link");
 
-const { updatePref } = require("../actions/ui");
+const { updatePref } = require("devtools/client/accessibility/actions/ui");
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { PREFS } = require("../constants");
+const { PREFS } = require("devtools/client/accessibility/constants");
 
 class AccessibilityPrefs extends Component {
   static get propTypes() {

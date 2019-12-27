@@ -11,14 +11,19 @@ const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 const { PluralForm } = require("devtools/shared/plural-form");
-const Actions = require("../actions/index");
+const Actions = require("devtools/client/netmonitor/src/actions/index");
 const {
   getDisplayedRequestsSummary,
   getDisplayedTimingMarker,
-} = require("../selectors/index");
-const { getFormattedSize, getFormattedTime } = require("../utils/format-utils");
-const { L10N } = require("../utils/l10n");
-const { propertiesEqual } = require("../utils/request-utils");
+} = require("devtools/client/netmonitor/src/selectors/index");
+const {
+  getFormattedSize,
+  getFormattedTime,
+} = require("devtools/client/netmonitor/src/utils/format-utils");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  propertiesEqual,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 const { button, div } = dom;
 

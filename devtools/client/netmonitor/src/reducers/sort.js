@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { SORT_BY, RESET_COLUMNS } = require("../constants");
+const {
+  SORT_BY,
+  RESET_COLUMNS,
+} = require("devtools/client/netmonitor/src/constants");
 
 function Sort() {
   return {

@@ -5,15 +5,15 @@
 "use strict";
 
 const actionModules = [
-  require("./autocomplete"),
-  require("./filters"),
-  require("./input"),
-  require("./messages"),
-  require("./ui"),
-  require("./notifications"),
-  require("./object"),
-  require("./toolbox"),
-  require("./history"),
+  require("devtools/client/webconsole/actions/autocomplete"),
+  require("devtools/client/webconsole/actions/filters"),
+  require("devtools/client/webconsole/actions/input"),
+  require("devtools/client/webconsole/actions/messages"),
+  require("devtools/client/webconsole/actions/ui"),
+  require("devtools/client/webconsole/actions/notifications"),
+  require("devtools/client/webconsole/actions/object"),
+  require("devtools/client/webconsole/actions/toolbox"),
+  require("devtools/client/webconsole/actions/history"),
 ];
 
 const actions = Object.assign({}, ...actionModules);

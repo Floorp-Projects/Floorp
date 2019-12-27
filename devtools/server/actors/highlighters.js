@@ -559,7 +559,8 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(
         );
       }
 
-      const constructor = require("./highlighters/" + modulePath)[typeName];
+      const constructor = require("devtools/server/actors/highlighters/" +
+        modulePath)[typeName];
       // The assumption is that custom highlighters either need the canvasframe
       // container to append their elements and thus a non-XUL window or they have
       // to define a static XULSupported flag that indicates that the highlighter

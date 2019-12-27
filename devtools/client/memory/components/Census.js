@@ -12,9 +12,11 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Tree = createFactory(
   require("devtools/client/shared/components/VirtualizedTree")
 );
-const CensusTreeItem = createFactory(require("./CensusTreeItem"));
-const { TREE_ROW_HEIGHT } = require("../constants");
-const { censusModel, diffingModel } = require("../models");
+const CensusTreeItem = createFactory(
+  require("devtools/client/memory/components/CensusTreeItem")
+);
+const { TREE_ROW_HEIGHT } = require("devtools/client/memory/constants");
+const { censusModel, diffingModel } = require("devtools/client/memory/models");
 
 class Census extends Component {
   static get propTypes() {

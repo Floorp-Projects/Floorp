@@ -13,14 +13,20 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
-const AnimationList = createFactory(require("./AnimationList"));
-const CurrentTimeScrubber = createFactory(require("./CurrentTimeScrubber"));
+const AnimationList = createFactory(
+  require("devtools/client/inspector/animation/components/AnimationList")
+);
+const CurrentTimeScrubber = createFactory(
+  require("devtools/client/inspector/animation/components/CurrentTimeScrubber")
+);
 const ProgressInspectionPanel = createFactory(
-  require("./ProgressInspectionPanel")
+  require("devtools/client/inspector/animation/components/ProgressInspectionPanel")
 );
 
-const { findOptimalTimeInterval } = require("../utils/utils");
-const { getStr } = require("../utils/l10n");
+const {
+  findOptimalTimeInterval,
+} = require("devtools/client/inspector/animation/utils/utils");
+const { getStr } = require("devtools/client/inspector/animation/utils/l10n");
 
 // The minimum spacing between 2 time graduation headers in the timeline (px).
 const TIME_GRADUATION_MIN_SPACING = 40;

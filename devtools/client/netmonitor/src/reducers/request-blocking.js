@@ -11,7 +11,7 @@ const {
   UPDATE_BLOCKED_URL,
   REMOVE_BLOCKED_URL,
   TOGGLE_BLOCKING_ENABLED,
-} = require("../constants");
+} = require("devtools/client/netmonitor/src/constants");
 
 function RequestBlocking() {
   return {
