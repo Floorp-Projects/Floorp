@@ -32,22 +32,23 @@ class BrowserRobot {
             .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     }
 
-    fun verifyHelpUrl() {
+    fun verifyUrl(redirectUrl: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        val redirectUrl = "https://support.mozilla.org/"
-        mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")),
-            TestAssetHelper.waitingTime)
+        mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")), TestAssetHelper.waitingTime)
         onView(withId(R.id.mozac_browser_toolbar_url_view))
             .check(matches(withText(containsString(redirectUrl))))
     }
 
+    fun verifyHelpUrl() {
+        verifyUrl("https://support.mozilla.org/")
+    }
+
     fun verifyWhatsNewURL() {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        val redirectUrl = "https://support.mozilla.org/"
-        mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")),
-            TestAssetHelper.waitingTime)
-        onView(withId(R.id.mozac_browser_toolbar_url_view))
-            .check(matches(withText(containsString(redirectUrl))))
+        verifyUrl("https://support.mozilla.org/")
+    }
+
+    fun verifyRateOnGooglePlayURL() {
+        verifyUrl("https://play.google.com/store/apps/details?id=org.mozilla.fenix")
     }
 
     /* Asserts that the text within DOM element with ID="testContent" has the given text, i.e.
@@ -132,6 +133,7 @@ fun browserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
 }
 
 private fun dismissOnboardingButton() = onView(withId(R.id.close_onboarding))
+
 fun dismissTrackingOnboarding() {
     mDevice.wait(Until.findObject(By.res("close_onboarding")), TestAssetHelper.waitingTime)
     dismissOnboardingButton().click()

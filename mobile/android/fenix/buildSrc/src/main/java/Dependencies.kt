@@ -206,6 +206,7 @@ object Deps {
     const val espresso_contrib = "androidx.test.espresso:espresso-contrib:${Versions.espresso_version}"
     const val espresso_core = "androidx.test.espresso:espresso-core:${Versions.espresso_version}"
     const val espresso_idling_resources = "androidx.test.espresso:espresso-idling-resource:${Versions.espresso_version}"
+    const val espresso_intents = "androidx.test.espresso:espresso-intents:${Versions.espresso_version}"
     const val mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
     const val orchestrator = "androidx.test:orchestrator:${Versions.orchestrator}"
     const val tools_test_rules = "androidx.test:rules:${Versions.tools_test_rules}"

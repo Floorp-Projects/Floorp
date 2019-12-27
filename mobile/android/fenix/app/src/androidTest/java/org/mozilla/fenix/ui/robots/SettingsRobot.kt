@@ -6,11 +6,15 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.content.pm.PackageManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents.intended
+import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -20,6 +24,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.click
@@ -64,21 +69,31 @@ class SettingsRobot {
 
     fun verifyRateOnGooglePlay() = assertRateOnGooglePlay()
     fun verifyAboutFirefoxPreview() = assertAboutFirefoxPreview()
+    fun verifyGooglePlayRedirect() = assertGooglePlayRedirect()
 
     class Transition {
 
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            mDevice.waitForIdle()
-            goBackButton().perform(ViewActions.click())
+            goBackButton().click()
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
 
-        fun openSearchSubMenu(interact: SettingsSubMenuSearchRobot.() -> Unit): SettingsSubMenuSearchRobot.Transition {
-            mDevice.waitForIdle()
+        fun openAboutFirefoxPreview(interact: SettingsSubMenuAboutRobot.() -> Unit):
+                SettingsSubMenuAboutRobot.Transition {
+
+            assertAboutFirefoxPreview().click()
+
+            SettingsSubMenuAboutRobot().interact()
+            return SettingsSubMenuAboutRobot.Transition()
+        }
+
+        fun openSearchSubMenu(interact: SettingsSubMenuSearchRobot.() -> Unit):
+                SettingsSubMenuSearchRobot.Transition {
+
             fun searchEngineButton() = onView(ViewMatchers.withText("Search"))
             searchEngineButton().click()
 
@@ -87,7 +102,7 @@ class SettingsRobot {
         }
 
         fun openThemeSubMenu(interact: SettingsSubMenuThemeRobot.() -> Unit): SettingsSubMenuThemeRobot.Transition {
-            mDevice.waitForIdle()
+
             fun themeButton() = onView(ViewMatchers.withText("Theme"))
             themeButton().click()
 
@@ -96,7 +111,7 @@ class SettingsRobot {
         }
 
         fun openAccessibilitySubMenu(interact: SettingsSubMenuAccessibilityRobot.() -> Unit): SettingsSubMenuAccessibilityRobot.Transition {
-            mDevice.waitForIdle()
+
             fun accessibilityButton() = onView(ViewMatchers.withText("Accessibility"))
             accessibilityButton().click()
 
@@ -105,7 +120,7 @@ class SettingsRobot {
         }
 
         fun openDefaultBrowserSubMenu(interact: SettingsSubMenuDefaultBrowserRobot.() -> Unit): SettingsSubMenuDefaultBrowserRobot.Transition {
-            mDevice.waitForIdle()
+
             fun defaultBrowserButton() = onView(ViewMatchers.withText("Set as default browser"))
             defaultBrowserButton().click()
 
@@ -114,8 +129,8 @@ class SettingsRobot {
         }
 
         fun openEnhancedTrackingProtectionSubMenu(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {
-            mDevice.waitForIdle()
-            fun enhancedTrackingProtectionButton() = onView(ViewMatchers.withText("Enhanced Tracking Protection"))
+            fun enhancedTrackingProtectionButton() =
+                onView(ViewMatchers.withText("Enhanced Tracking Protection"))
             enhancedTrackingProtectionButton().click()
 
             SettingsSubMenuEnhancedTrackingProtectionRobot().interact()
@@ -231,24 +246,46 @@ private fun assertRemoteDebug() {
 }
 
 // ABOUT SECTION
-private fun assertAboutHeading() {
+private fun assertAboutHeading(): ViewInteraction {
     TestHelper.scrollToElementByText("About")
-    onView(ViewMatchers.withText("About"))
+    return onView(ViewMatchers.withText("About"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertRateOnGooglePlay() {
+private fun assertRateOnGooglePlay(): ViewInteraction {
     TestHelper.scrollToElementByText("About Firefox Preview")
-    onView(ViewMatchers.withText("Rate on Google Play"))
+    return onView(ViewMatchers.withText("Rate on Google Play"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertAboutFirefoxPreview() {
+private fun assertAboutFirefoxPreview(): ViewInteraction {
     TestHelper.scrollToElementByText("About Firefox Preview")
-    onView(ViewMatchers.withText("About Firefox Preview"))
+    return onView(ViewMatchers.withText("About Firefox Preview"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
-
-private fun goBackButton() = onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
 
 fun swipeToBottom() = onView(ViewMatchers.withId(R.id.recycler_view)).perform(ViewActions.swipeUp())
+
+fun clickRateButtonGooglePlay() {
+    assertRateOnGooglePlay().click()
+}
+
+private fun assertGooglePlayRedirect() {
+    if (isPackageInstalled(GOOGLE_PLAY_SERVICES)) {
+        intended(toPackage(GOOGLE_PLAY_SERVICES))
+    } else {
+        BrowserRobot().verifyRateOnGooglePlayURL()
+    }
+}
+
+fun isPackageInstalled(packageName: String): Boolean {
+    return try {
+        val packageManager = InstrumentationRegistry.getInstrumentation().context.packageManager
+        packageManager.getApplicationInfo(packageName, 0).enabled
+    } catch (exception: PackageManager.NameNotFoundException) {
+        false
+    }
+}
+
+private fun goBackButton() =
+    onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))

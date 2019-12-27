@@ -10,10 +10,10 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.Rule
 import org.junit.Before
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.ui.robots.clickRateButtonGooglePlay
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
@@ -28,7 +28,7 @@ class SettingsAboutTest {
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
+    val activityIntentTestRule = HomeActivityIntentTestRule()
 
     @Before
     fun setUp() {
@@ -58,35 +58,24 @@ class SettingsAboutTest {
     }
 
     // ABOUT
-    @Ignore("This is a stub test, ignore for now")
-    @Test
-    fun verifyHelpRedirect() {
-        // Open 3dot (main) menu
-        // Select settings
-        // Click on "Help"
-        // Verify redirect to: https://support.mozilla.org/
-    }
-
-    @Ignore("This is a stub test, ignore for now")
     @Test
     fun verifyRateOnGooglePlayRedirect() {
-        // Open 3dot (main) menu
-        // Select settings
-        // Click on "Rate on Google Play"
-        // Verify Android "Open with Google Play Store" sub menu
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            clickRateButtonGooglePlay()
+            verifyGooglePlayRedirect()
+        }
+
     }
 
-    @Ignore("This is a stub test, ignore for now")
     @Test
     fun verifyAboutFirefoxPreview() {
-        // Open 3dot (main) menu
-        // Select settings
-        // Click on "Verify About Firefox Preview"
-        // Verify about page contains....
-        // Build #
-        // Version #
-        // "Firefox Preview is produced by Mozilla"
-        // Day, Date, timestamp
-        // "Open source libraries we use"
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAboutFirefoxPreview {
+            verifyAboutFirefoxPreview()
+        }
     }
 }
