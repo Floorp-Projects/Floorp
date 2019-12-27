@@ -18,8 +18,10 @@ const {
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { MANIFEST_ISSUE_LEVELS } = require("../../constants");
-const Types = require("../../types/index");
+const {
+  MANIFEST_ISSUE_LEVELS,
+} = require("devtools/client/application/src/constants");
+const Types = require("devtools/client/application/src/types/index");
 
 /**
  * A Manifest validation issue (warning, error)

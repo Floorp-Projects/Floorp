@@ -11,7 +11,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const SidebarItem = createFactory(require("./SidebarItem"));
+const SidebarItem = createFactory(
+  require("devtools/client/aboutdebugging/src/components/sidebar/SidebarItem")
+);
 
 /**
  * This component displays a fixed item in the Sidebar component.

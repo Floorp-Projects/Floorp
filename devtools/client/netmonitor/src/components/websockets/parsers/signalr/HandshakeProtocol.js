@@ -13,8 +13,8 @@
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const TextMessageFormat = require("./TextMessageFormat");
-const Utils = require("./Utils");
+const TextMessageFormat = require("devtools/client/netmonitor/src/components/websockets/parsers/signalr/TextMessageFormat");
+const Utils = require("devtools/client/netmonitor/src/components/websockets/parsers/signalr/Utils");
 /** @private */
 class HandshakeProtocol {
   // Handshake request is always JSON

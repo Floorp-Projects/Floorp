@@ -12,10 +12,16 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const ExtensionPage = createFactory(require("./ExtensionPage"));
-const ObjectTreeView = createFactory(require("./ObjectTreeView"));
-const ObjectValueGripView = createFactory(require("./ObjectValueGripView"));
-const Types = require("../types");
+const ExtensionPage = createFactory(
+  require("devtools/client/inspector/extensions/components/ExtensionPage")
+);
+const ObjectTreeView = createFactory(
+  require("devtools/client/inspector/extensions/components/ObjectTreeView")
+);
+const ObjectValueGripView = createFactory(
+  require("devtools/client/inspector/extensions/components/ObjectValueGripView")
+);
+const Types = require("devtools/client/inspector/extensions/types");
 
 /**
  * The ExtensionSidebar is a React component with 2 supported viewMode:

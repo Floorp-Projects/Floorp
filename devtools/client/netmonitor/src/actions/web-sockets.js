@@ -14,9 +14,11 @@ const {
   WS_TOGGLE_COLUMN,
   WS_RESET_COLUMNS,
   WS_CLOSE_CONNECTION,
-} = require("../constants");
+} = require("devtools/client/netmonitor/src/constants");
 
-const { getDisplayedFrames } = require("../selectors/index");
+const {
+  getDisplayedFrames,
+} = require("devtools/client/netmonitor/src/selectors/index");
 const PAGE_SIZE_ITEM_COUNT_RATIO = 5;
 
 /**

@@ -6,8 +6,8 @@
 
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { treeMapModel } = require("../models");
-const startVisualization = require("./tree-map/start");
+const { treeMapModel } = require("devtools/client/memory/models");
+const startVisualization = require("devtools/client/memory/components/tree-map/start");
 
 class TreeMap extends Component {
   static get propTypes() {

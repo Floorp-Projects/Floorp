@@ -4,9 +4,11 @@
 
 "use strict";
 
-const { setupDraw } = require("./draw");
-const DragZoom = require("./drag-zoom");
-const CanvasUtils = require("./canvas-utils");
+const {
+  setupDraw,
+} = require("devtools/client/memory/components/tree-map/draw");
+const DragZoom = require("devtools/client/memory/components/tree-map/drag-zoom");
+const CanvasUtils = require("devtools/client/memory/components/tree-map/canvas-utils");
 
 /**
  * Start the tree map visualization

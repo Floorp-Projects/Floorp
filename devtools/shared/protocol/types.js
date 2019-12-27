@@ -4,7 +4,7 @@
 
 "use strict";
 
-var { Actor } = require("./Actor");
+var { Actor } = require("devtools/shared/protocol/Actor");
 var { lazyLoadSpec, lazyLoadFront } = require("devtools/shared/specs/index");
 
 /**

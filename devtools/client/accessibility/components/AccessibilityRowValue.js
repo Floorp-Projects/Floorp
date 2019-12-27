@@ -11,8 +11,12 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
-const Badges = createFactory(require("./Badges"));
-const AuditController = createFactory(require("./AuditController"));
+const Badges = createFactory(
+  require("devtools/client/accessibility/components/Badges")
+);
+const AuditController = createFactory(
+  require("devtools/client/accessibility/components/AuditController")
+);
 
 const { REPS } = require("devtools/client/shared/components/reps/reps");
 const { Grip } = REPS;

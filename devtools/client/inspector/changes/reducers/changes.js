@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { RESET_CHANGES, TRACK_CHANGE } = require("../actions/index");
+const {
+  RESET_CHANGES,
+  TRACK_CHANGE,
+} = require("devtools/client/inspector/changes/actions/index");
 
 /**
  * Return a deep clone of the given state object.

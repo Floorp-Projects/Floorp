@@ -12,10 +12,12 @@ const {
   getFormDataSections,
   getUrlQuery,
   parseQueryString,
-} = require("../utils/request-utils");
-const { buildHarLog } = require("./har-builder-utils");
+} = require("devtools/client/netmonitor/src/utils/request-utils");
+const {
+  buildHarLog,
+} = require("devtools/client/netmonitor/src/har/har-builder-utils");
 const L10N = new LocalizationHelper("devtools/client/locales/har.properties");
-const { TIMING_KEYS } = require("../constants");
+const { TIMING_KEYS } = require("devtools/client/netmonitor/src/constants");
 
 /**
  * This object is responsible for building HAR file. See HAR spec:

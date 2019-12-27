@@ -8,7 +8,7 @@ const {
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
   TOGGLE_REQUEST_FILTER_TYPE,
   SET_REQUEST_FILTER_TEXT,
-} = require("../constants");
+} = require("devtools/client/netmonitor/src/constants");
 
 /**
  * Toggle an existing filter type state.

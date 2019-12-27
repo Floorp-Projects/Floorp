@@ -8,7 +8,7 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Types = require("../../types/index");
+const Types = require("devtools/client/aboutdebugging/src/types/index");
 
 /**
  * This component displays debug target.

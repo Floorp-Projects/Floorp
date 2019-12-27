@@ -11,11 +11,11 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Actions = require("../actions/index");
+const Actions = require("devtools/client/aboutdebugging/src/actions/index");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { RUNTIMES } = require("../constants");
+const { RUNTIMES } = require("devtools/client/aboutdebugging/src/constants");
 
 /**
  * This component displays runtime information.

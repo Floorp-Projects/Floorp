@@ -16,7 +16,7 @@ const {
   TEMPORARY_EXTENSION_INSTALL_SUCCESS,
   USB_RUNTIMES_SCAN_START,
   USB_RUNTIMES_SCAN_SUCCESS,
-} = require("../constants");
+} = require("devtools/client/aboutdebugging/src/constants");
 
 function UiState(
   locations = [],

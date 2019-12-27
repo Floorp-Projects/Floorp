@@ -6,19 +6,21 @@
 
 const Services = require("Services");
 
-const Actions = require("./index");
+const Actions = require("devtools/client/aboutdebugging/src/actions/index");
 
 const {
   getAllRuntimes,
   getCurrentRuntime,
   findRuntimeById,
-} = require("../modules/runtimes-state-helper");
+} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
 
-const { l10n } = require("../modules/l10n");
-const { createClientForRuntime } = require("../modules/runtime-client-factory");
+const { l10n } = require("devtools/client/aboutdebugging/src/modules/l10n");
+const {
+  createClientForRuntime,
+} = require("devtools/client/aboutdebugging/src/modules/runtime-client-factory");
 const {
   isSupportedDebugTargetPane,
-} = require("../modules/debug-target-support");
+} = require("devtools/client/aboutdebugging/src/modules/debug-target-support");
 
 const {
   remoteClientManager,
@@ -51,7 +53,7 @@ const {
   WATCH_RUNTIME_FAILURE,
   WATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
-} = require("../constants");
+} = require("devtools/client/aboutdebugging/src/constants");
 
 const CONNECTION_TIMING_OUT_DELAY = 3000;
 const CONNECTION_CANCEL_DELAY = 13000;

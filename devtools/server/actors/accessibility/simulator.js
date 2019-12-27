@@ -8,7 +8,7 @@ const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { simulatorSpec } = require("devtools/shared/specs/accessibility");
 const {
   simulation: { COLOR_TRANSFORMATION_MATRICES },
-} = require("./constants");
+} = require("devtools/server/actors/accessibility/constants");
 
 /**
  * The SimulatorActor is responsible for setting color matrices

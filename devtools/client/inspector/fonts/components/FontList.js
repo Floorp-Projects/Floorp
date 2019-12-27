@@ -14,10 +14,14 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Font = createFactory(require("./Font"));
-const FontPreviewInput = createFactory(require("./FontPreviewInput"));
+const Font = createFactory(
+  require("devtools/client/inspector/fonts/components/Font")
+);
+const FontPreviewInput = createFactory(
+  require("devtools/client/inspector/fonts/components/FontPreviewInput")
+);
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/fonts/types");
 
 class FontList extends PureComponent {
   static get propTypes() {

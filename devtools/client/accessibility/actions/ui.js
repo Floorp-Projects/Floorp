@@ -13,7 +13,7 @@ const {
   UPDATE_CAN_BE_ENABLED,
   UPDATE_PREF,
   PREF_KEYS,
-} = require("../constants");
+} = require("devtools/client/accessibility/constants");
 
 /**
  * Reset accessibility panel UI.

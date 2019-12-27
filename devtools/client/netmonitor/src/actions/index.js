@@ -4,16 +4,16 @@
 
 "use strict";
 
-const batching = require("./batching");
-const filters = require("./filters");
-const requests = require("./requests");
-const selection = require("./selection");
-const sort = require("./sort");
-const timingMarkers = require("./timing-markers");
-const ui = require("./ui");
-const webSockets = require("./web-sockets");
-const search = require("./search");
-const requestBlocking = require("./request-blocking");
+const batching = require("devtools/client/netmonitor/src/actions/batching");
+const filters = require("devtools/client/netmonitor/src/actions/filters");
+const requests = require("devtools/client/netmonitor/src/actions/requests");
+const selection = require("devtools/client/netmonitor/src/actions/selection");
+const sort = require("devtools/client/netmonitor/src/actions/sort");
+const timingMarkers = require("devtools/client/netmonitor/src/actions/timing-markers");
+const ui = require("devtools/client/netmonitor/src/actions/ui");
+const webSockets = require("devtools/client/netmonitor/src/actions/web-sockets");
+const search = require("devtools/client/netmonitor/src/actions/search");
+const requestBlocking = require("devtools/client/netmonitor/src/actions/request-blocking");
 
 Object.assign(
   exports,

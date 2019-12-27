@@ -10,8 +10,11 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { getStr, getFormatStr } = require("../utils/l10n");
-const Types = require("../types");
+const {
+  getStr,
+  getFormatStr,
+} = require("devtools/client/responsive/utils/l10n");
+const Types = require("devtools/client/responsive/types");
 
 loader.lazyRequireGetter(
   this,

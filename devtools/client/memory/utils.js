@@ -27,7 +27,7 @@ const {
   treeMapState,
   dominatorTreeState,
   individualsState,
-} = require("./constants");
+} = require("devtools/client/memory/constants");
 
 /**
  * Takes a snapshot object and returns the localized form of its timestamp to be

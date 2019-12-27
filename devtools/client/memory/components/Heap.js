@@ -11,18 +11,34 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { assert, safeErrorString } = require("devtools/shared/DevToolsUtils");
-const Census = createFactory(require("./Census"));
-const CensusHeader = createFactory(require("./CensusHeader"));
-const DominatorTree = createFactory(require("./DominatorTree"));
-const DominatorTreeHeader = createFactory(require("./DominatorTreeHeader"));
-const TreeMap = createFactory(require("./TreeMap"));
+const Census = createFactory(
+  require("devtools/client/memory/components/Census")
+);
+const CensusHeader = createFactory(
+  require("devtools/client/memory/components/CensusHeader")
+);
+const DominatorTree = createFactory(
+  require("devtools/client/memory/components/DominatorTree")
+);
+const DominatorTreeHeader = createFactory(
+  require("devtools/client/memory/components/DominatorTreeHeader")
+);
+const TreeMap = createFactory(
+  require("devtools/client/memory/components/TreeMap")
+);
 const HSplitBox = createFactory(
   require("devtools/client/shared/components/HSplitBox")
 );
-const Individuals = createFactory(require("./Individuals"));
-const IndividualsHeader = createFactory(require("./IndividualsHeader"));
-const ShortestPaths = createFactory(require("./ShortestPaths"));
-const { getStatusTextFull, L10N } = require("../utils");
+const Individuals = createFactory(
+  require("devtools/client/memory/components/Individuals")
+);
+const IndividualsHeader = createFactory(
+  require("devtools/client/memory/components/IndividualsHeader")
+);
+const ShortestPaths = createFactory(
+  require("devtools/client/memory/components/ShortestPaths")
+);
+const { getStatusTextFull, L10N } = require("devtools/client/memory/utils");
 const {
   snapshotState: states,
   diffingState,
@@ -31,8 +47,8 @@ const {
   treeMapState,
   dominatorTreeState,
   individualsState,
-} = require("../constants");
-const models = require("../models");
+} = require("devtools/client/memory/constants");
+const models = require("devtools/client/memory/models");
 const { snapshot: snapshotModel, diffingModel } = models;
 
 /**

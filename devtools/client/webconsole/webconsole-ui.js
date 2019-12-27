@@ -403,7 +403,7 @@ class WebConsoleUI {
     const WebConsoleWrapper = BrowserLoader({
       baseURI: "resource://devtools/client/webconsole/",
       window: this.window,
-    }).require("./webconsole-wrapper");
+    }).require("devtools/client/webconsole/webconsole-wrapper");
 
     this.wrapper = new WebConsoleWrapper(
       this.outputNode,

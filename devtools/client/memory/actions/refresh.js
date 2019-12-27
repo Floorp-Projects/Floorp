@@ -4,9 +4,9 @@
 "use strict";
 
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { viewState } = require("../constants");
-const { refreshDiffing } = require("./diffing");
-const snapshot = require("./snapshot");
+const { viewState } = require("devtools/client/memory/constants");
+const { refreshDiffing } = require("devtools/client/memory/actions/diffing");
+const snapshot = require("devtools/client/memory/actions/snapshot");
 
 /**
  * Refresh the main thread's data from the heap analyses worker, if needed.

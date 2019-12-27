@@ -11,8 +11,8 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Types = require("../types");
-const { getStr } = require("../utils/l10n");
+const Types = require("devtools/client/inspector/fonts/types");
+const { getStr } = require("devtools/client/inspector/fonts/utils/l10n");
 
 const PREVIEW_TEXT_MAX_LENGTH = 30;
 

@@ -19,9 +19,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
-const Actions = require("../../actions/index");
-const { L10N } = require("../../utils/l10n");
-const { PANELS } = require("../../constants");
+const Actions = require("devtools/client/netmonitor/src/actions/index");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const { PANELS } = require("devtools/client/netmonitor/src/constants");
 
 const ENABLE_BLOCKING_LABEL = L10N.getStr(
   "netmonitor.actionbar.enableBlocking"

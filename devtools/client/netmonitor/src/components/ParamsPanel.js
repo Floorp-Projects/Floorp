@@ -14,19 +14,25 @@ const Services = require("Services");
 const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
-const { L10N } = require("../utils/l10n");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   fetchNetworkUpdatePacket,
   getUrlQuery,
   parseQueryString,
   parseFormData,
-} = require("../utils/request-utils");
-const { sortObjectKeys } = require("../utils/sort-utils");
-const { updateFormDataSections } = require("../utils/request-utils");
-const Actions = require("../actions/index");
+} = require("devtools/client/netmonitor/src/utils/request-utils");
+const {
+  sortObjectKeys,
+} = require("devtools/client/netmonitor/src/utils/sort-utils");
+const {
+  updateFormDataSections,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
+const Actions = require("devtools/client/netmonitor/src/actions/index");
 
 // Components
-const PropertiesView = createFactory(require("./PropertiesView"));
+const PropertiesView = createFactory(
+  require("devtools/client/netmonitor/src/components/PropertiesView")
+);
 
 const { div } = dom;
 

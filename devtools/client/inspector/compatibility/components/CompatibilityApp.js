@@ -12,9 +12,11 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/compatibility/types");
 
-const IssueList = createFactory(require("./IssueList"));
+const IssueList = createFactory(
+  require("devtools/client/inspector/compatibility/components/IssueList")
+);
 
 class CompatibilityApp extends PureComponent {
   static get propTypes() {

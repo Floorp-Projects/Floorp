@@ -11,11 +11,17 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const BoxModelInfo = createFactory(require("./BoxModelInfo"));
-const BoxModelMain = createFactory(require("./BoxModelMain"));
-const BoxModelProperties = createFactory(require("./BoxModelProperties"));
+const BoxModelInfo = createFactory(
+  require("devtools/client/inspector/boxmodel/components/BoxModelInfo")
+);
+const BoxModelMain = createFactory(
+  require("devtools/client/inspector/boxmodel/components/BoxModelMain")
+);
+const BoxModelProperties = createFactory(
+  require("devtools/client/inspector/boxmodel/components/BoxModelProperties")
+);
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/boxmodel/types");
 
 class BoxModel extends PureComponent {
   static get propTypes() {

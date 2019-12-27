@@ -16,7 +16,7 @@ const ComputedProperty = createFactory(
   require("devtools/client/inspector/boxmodel/components/ComputedProperty")
 );
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/boxmodel/types");
 
 const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
 const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);

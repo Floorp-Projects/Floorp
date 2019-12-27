@@ -10,8 +10,10 @@ const EventEmitter = require("devtools/shared/event-emitter");
 
 const Telemetry = require("devtools/client/shared/telemetry");
 
-const { Picker } = require("./picker");
-const { A11Y_SERVICE_DURATION } = require("./constants");
+const { Picker } = require("devtools/client/accessibility/picker");
+const {
+  A11Y_SERVICE_DURATION,
+} = require("devtools/client/accessibility/constants");
 
 // The panel's window global is an EventEmitter firing the following events:
 const EVENTS = {

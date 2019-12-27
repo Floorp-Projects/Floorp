@@ -7,12 +7,16 @@
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const { div } = require("devtools/client/shared/vendor/react-dom-factories");
 
-const { L10N } = require("../utils/l10n");
-const Accessible = createFactory(require("./Accessible"));
+const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const Accessible = createFactory(
+  require("devtools/client/accessibility/components/Accessible")
+);
 const Accordion = createFactory(
   require("devtools/client/shared/components/Accordion")
 );
-const Checks = createFactory(require("./Checks"));
+const Checks = createFactory(
+  require("devtools/client/accessibility/components/Checks")
+);
 
 // Component that is responsible for rendering accessible panel's sidebar.
 function RightSidebar({ toolbox }) {
