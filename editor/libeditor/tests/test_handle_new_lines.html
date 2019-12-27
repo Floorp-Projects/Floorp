@@ -24,7 +24,7 @@ SimpleTest.waitForExplicitFinish();
 async function copyPlaintext(aText) {
   return new Promise(resolve => {
     SimpleTest.waitForClipboard(
-      () => { return true; }, // because of mismatch of linebreakers
+      aText.replace(/\r\n?/g, "\n"),
       () => {
         let element = document.getElementById("toCopyPlaintext");
         element.style.display = "block";

@@ -27,10 +27,9 @@ SimpleTest.waitForFocus(function() {
   t.focus();
 
   const kValue = "a\r\nb";
-  const kExpectedValue = (navigator.platform.indexOf("Win") == 0) ?
-    "a\nb" : kValue;
 
-  SimpleTest.waitForClipboard(kExpectedValue,
+  SimpleTest.waitForClipboard(
+    kValue.replace(/\r\n?/g, "\n"),
     function() {
       SpecialPowers.clipboardCopyString(kValue);
     },
