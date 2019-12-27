@@ -31,6 +31,7 @@ define("ServicesMock", () => ({ appinfo: {} }));
 require.config({
   baseUrl: "resource://devtools-client-jsonview/",
   paths: {
+    "devtools/client/jsonview": "resource://devtools-client-jsonview",
     "devtools/client/shared": "resource://devtools-client-shared",
     "devtools/shared": "resource://devtools/shared",
     "devtools/client/shared/vendor/react": JSONView.debugJsModules

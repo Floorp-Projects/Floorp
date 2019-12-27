@@ -7,7 +7,9 @@
 const Services = require("Services");
 
 const PREF_PREFIX = "devtools.aboutdebugging.collapsibilities.";
-const { DEBUG_TARGET_PANE } = require("../constants");
+const {
+  DEBUG_TARGET_PANE,
+} = require("devtools/client/aboutdebugging/src/constants");
 
 /**
  * This module provides a collection of helper methods to read and update the debug

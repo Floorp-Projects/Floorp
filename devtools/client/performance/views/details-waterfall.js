@@ -14,13 +14,21 @@ const {
 const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
-const EVENTS = require("../events");
-const WaterfallUtils = require("../modules/logic/waterfall-utils");
-const { TickUtils } = require("../modules/waterfall-ticks");
-const { MarkerDetails } = require("../modules/widgets/marker-details");
-const { DetailsSubview } = require("./details-abstract-subview");
+const EVENTS = require("devtools/client/performance/events");
+const WaterfallUtils = require("devtools/client/performance/modules/logic/waterfall-utils");
+const {
+  TickUtils,
+} = require("devtools/client/performance/modules/waterfall-ticks");
+const {
+  MarkerDetails,
+} = require("devtools/client/performance/modules/widgets/marker-details");
+const {
+  DetailsSubview,
+} = require("devtools/client/performance/views/details-abstract-subview");
 
-const Waterfall = React.createFactory(require("../components/Waterfall"));
+const Waterfall = React.createFactory(
+  require("devtools/client/performance/components/Waterfall")
+);
 
 const MARKER_DETAILS_WIDTH = 200;
 // Units are in milliseconds.

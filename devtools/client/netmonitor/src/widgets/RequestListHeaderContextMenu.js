@@ -5,9 +5,11 @@
 "use strict";
 
 const { showMenu } = require("devtools/client/shared/components/menu/utils");
-const { HEADERS } = require("../constants");
-const { L10N } = require("../utils/l10n");
-const { getVisibleColumns } = require("../selectors/index");
+const { HEADERS } = require("devtools/client/netmonitor/src/constants");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  getVisibleColumns,
+} = require("devtools/client/netmonitor/src/selectors/index");
 
 const stringMap = HEADERS.filter(header =>
   header.hasOwnProperty("label")

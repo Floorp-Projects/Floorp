@@ -20,7 +20,7 @@ const {
 } = require("devtools/shared/css/parsing-utils");
 const { ELEMENT_STYLE } = require("devtools/client/inspector/rules/constants");
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/rules/types");
 
 class Selector extends PureComponent {
   static get propTypes() {

@@ -15,10 +15,14 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
-const FlexContainer = createFactory(require("./FlexContainer"));
-const FlexItemSelector = createFactory(require("./FlexItemSelector"));
+const FlexContainer = createFactory(
+  require("devtools/client/inspector/flexbox/components/FlexContainer")
+);
+const FlexItemSelector = createFactory(
+  require("devtools/client/inspector/flexbox/components/FlexItemSelector")
+);
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/flexbox/types");
 
 class Header extends PureComponent {
   static get propTypes() {

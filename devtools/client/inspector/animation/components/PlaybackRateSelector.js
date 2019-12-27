@@ -9,7 +9,9 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const { getFormatStr } = require("../utils/l10n");
+const {
+  getFormatStr,
+} = require("devtools/client/inspector/animation/utils/l10n");
 
 const PLAYBACK_RATES = [0.1, 0.25, 0.5, 1, 2, 5, 10];
 

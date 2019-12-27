@@ -4,9 +4,9 @@
 
 "use strict";
 
-var { Request } = require("../Request");
-const { Response } = require("../Response");
-var { types, registeredTypes } = require("../types");
+var { Request } = require("devtools/shared/protocol/Request");
+const { Response } = require("devtools/shared/protocol/Response");
+var { types, registeredTypes } = require("devtools/shared/protocol/types");
 
 /**
  * Generates an actor specification from an actor description.

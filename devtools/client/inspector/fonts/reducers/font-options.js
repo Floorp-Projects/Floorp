@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { UPDATE_PREVIEW_TEXT } = require("../actions/index");
+const {
+  UPDATE_PREVIEW_TEXT,
+} = require("devtools/client/inspector/fonts/actions/index");
 
 const INITIAL_FONT_OPTIONS = {
   previewText: "",

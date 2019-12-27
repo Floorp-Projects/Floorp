@@ -12,15 +12,21 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
-const ColorPath = createFactory(require("./ColorPath"));
-const DiscretePath = createFactory(require("./DiscretePath"));
-const DistancePath = createFactory(require("./DistancePath"));
+const ColorPath = createFactory(
+  require("devtools/client/inspector/animation/components/keyframes-graph/ColorPath")
+);
+const DiscretePath = createFactory(
+  require("devtools/client/inspector/animation/components/keyframes-graph/DiscretePath")
+);
+const DistancePath = createFactory(
+  require("devtools/client/inspector/animation/components/keyframes-graph/DistancePath")
+);
 
 const {
   DEFAULT_EASING_HINT_STROKE_WIDTH,
   DEFAULT_GRAPH_HEIGHT,
   DEFAULT_KEYFRAMES_GRAPH_DURATION,
-} = require("../../utils/graph-helper");
+} = require("devtools/client/inspector/animation/utils/graph-helper");
 
 class KeyframesGraphPath extends PureComponent {
   static get propTypes() {

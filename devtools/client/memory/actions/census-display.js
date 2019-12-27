@@ -4,8 +4,8 @@
 "use strict";
 
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { actions } = require("../constants");
-const { refresh } = require("./refresh");
+const { actions } = require("devtools/client/memory/constants");
+const { refresh } = require("devtools/client/memory/actions/refresh");
 
 exports.setCensusDisplayAndRefresh = function(heapWorker, display) {
   return async function(dispatch, getState) {

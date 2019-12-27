@@ -8,7 +8,7 @@ const { dumpn } = require("devtools/shared/DevToolsUtils");
 const {
   ConnectionManager,
 } = require("devtools/shared/client/connection-manager");
-const { runCommand } = require("./run-command");
+const { runCommand } = require("devtools/shared/adb/commands/run-command");
 
 // sends adb forward deviceId, localPort and devicePort
 const forwardPort = function(deviceId, localPort, devicePort) {

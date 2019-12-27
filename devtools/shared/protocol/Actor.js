@@ -5,7 +5,7 @@
 "use strict";
 
 const { extend } = require("devtools/shared/extend");
-var { Pool } = require("./Pool");
+var { Pool } = require("devtools/shared/protocol/Pool");
 
 /**
  * Keep track of which actorSpecs have been created. If a replica of a spec

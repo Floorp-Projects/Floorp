@@ -7,7 +7,9 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getFormattedSize } = require("../../utils/format-utils");
+const {
+  getFormattedSize,
+} = require("devtools/client/netmonitor/src/utils/format-utils");
 
 /**
  * Renders the "Size" column of a WebSocket frame.

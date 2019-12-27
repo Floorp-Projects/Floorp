@@ -5,7 +5,9 @@
 "use strict";
 
 const { createSelector } = require("devtools/client/shared/vendor/reselect");
-const { REQUESTS_WATERFALL } = require("../constants");
+const {
+  REQUESTS_WATERFALL,
+} = require("devtools/client/netmonitor/src/constants");
 
 const EPSILON = 0.001;
 

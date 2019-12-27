@@ -14,7 +14,7 @@
 
 const { Cc, Ci } = require("chrome");
 const Services = require("Services");
-const { gDevTools } = require("./devtools");
+const { gDevTools } = require("devtools/client/framework/devtools");
 
 // Load target and toolbox lazily as they need gDevTools to be fully initialized
 loader.lazyRequireGetter(

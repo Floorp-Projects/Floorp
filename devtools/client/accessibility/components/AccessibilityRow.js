@@ -15,8 +15,12 @@ const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const TreeRow = require("devtools/client/shared/components/tree/TreeRow");
-const AuditFilter = createFactory(require("./AuditFilter"));
-const AuditController = createFactory(require("./AuditController"));
+const AuditFilter = createFactory(
+  require("devtools/client/accessibility/components/AuditFilter")
+);
+const AuditController = createFactory(
+  require("devtools/client/accessibility/components/AuditController")
+);
 
 // Utils
 const {
@@ -28,15 +32,19 @@ const {
   PREFS,
   VALUE_FLASHING_DURATION,
   VALUE_HIGHLIGHT_DURATION,
-} = require("../constants");
+} = require("devtools/client/accessibility/constants");
 
 const nodeConstants = require("devtools/shared/dom-node-constants");
 
 // Actions
-const { updateDetails } = require("../actions/details");
-const { unhighlight } = require("../actions/accessibles");
+const {
+  updateDetails,
+} = require("devtools/client/accessibility/actions/details");
+const {
+  unhighlight,
+} = require("devtools/client/accessibility/actions/accessibles");
 
-const { L10N } = require("../utils/l10n");
+const { L10N } = require("devtools/client/accessibility/utils/l10n");
 
 loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
 loader.lazyRequireGetter(

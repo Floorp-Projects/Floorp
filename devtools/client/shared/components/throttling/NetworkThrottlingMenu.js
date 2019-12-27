@@ -8,8 +8,8 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const throttlingProfiles = require("./profiles");
-const Types = require("./types");
+const throttlingProfiles = require("devtools/client/shared/components/throttling/profiles");
+const Types = require("devtools/client/shared/components/throttling/types");
 
 // Localization
 const { LocalizationHelper } = require("devtools/shared/l10n");

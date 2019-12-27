@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { UPDATE_FONTS } = require("./index");
+const {
+  UPDATE_FONTS,
+} = require("devtools/client/inspector/fonts/actions/index");
 
 module.exports = {
   /**

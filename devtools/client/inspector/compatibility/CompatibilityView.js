@@ -19,10 +19,10 @@ loader.lazyRequireGetter(
 const {
   updateSelectedNode,
   updateTargetBrowsers,
-} = require("./actions/compatibility");
+} = require("devtools/client/inspector/compatibility/actions/compatibility");
 
 const CompatibilityApp = createFactory(
-  require("./components/CompatibilityApp")
+  require("devtools/client/inspector/compatibility/components/CompatibilityApp")
 );
 
 class CompatibilityView {

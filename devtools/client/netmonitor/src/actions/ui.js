@@ -17,9 +17,11 @@ const {
   TOGGLE_COLUMN,
   WATERFALL_RESIZE,
   SET_COLUMNS_WIDTH,
-} = require("../constants");
+} = require("devtools/client/netmonitor/src/constants");
 
-const { getDisplayedRequests } = require("../selectors/index");
+const {
+  getDisplayedRequests,
+} = require("devtools/client/netmonitor/src/selectors/index");
 
 const DEVTOOLS_DISABLE_CACHE_PREF = "devtools.cache.disabled";
 

@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { UPDATE_CAN_DEBUG_WORKERS, UPDATE_WORKERS } = require("../constants");
+const {
+  UPDATE_CAN_DEBUG_WORKERS,
+  UPDATE_WORKERS,
+} = require("devtools/client/application/src/constants");
 
 function updateWorkers(workers) {
   return {

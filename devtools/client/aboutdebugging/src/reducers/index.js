@@ -5,9 +5,15 @@
 "use strict";
 
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
-const { debugTargetsReducer } = require("./debug-targets-state");
-const { runtimesReducer } = require("./runtimes-state");
-const { uiReducer } = require("./ui-state");
+const {
+  debugTargetsReducer,
+} = require("devtools/client/aboutdebugging/src/reducers/debug-targets-state");
+const {
+  runtimesReducer,
+} = require("devtools/client/aboutdebugging/src/reducers/runtimes-state");
+const {
+  uiReducer,
+} = require("devtools/client/aboutdebugging/src/reducers/ui-state");
 
 module.exports = combineReducers({
   debugTargets: debugTargetsReducer,

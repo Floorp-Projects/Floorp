@@ -8,7 +8,7 @@ const {
   updateGeometryEditorEnabled,
   updateLayout,
   updateOffsetParent,
-} = require("./actions/box-model");
+} = require("devtools/client/inspector/boxmodel/actions/box-model");
 
 loader.lazyRequireGetter(
   this,

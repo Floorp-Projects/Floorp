@@ -17,17 +17,31 @@ const {
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
-const { l10n } = require("../../modules/l10n");
+const { l10n } = require("devtools/client/application/src/modules/l10n");
 
-const ManifestColorItem = createFactory(require("./ManifestColorItem"));
-const ManifestIconItem = createFactory(require("./ManifestIconItem"));
-const ManifestItem = createFactory(require("./ManifestItem"));
-const ManifestIssueList = createFactory(require("./ManifestIssueList"));
-const ManifestSection = createFactory(require("./ManifestSection"));
-const ManifestJsonLink = createFactory(require("./ManifestJsonLink"));
+const ManifestColorItem = createFactory(
+  require("devtools/client/application/src/components/manifest/ManifestColorItem")
+);
+const ManifestIconItem = createFactory(
+  require("devtools/client/application/src/components/manifest/ManifestIconItem")
+);
+const ManifestItem = createFactory(
+  require("devtools/client/application/src/components/manifest/ManifestItem")
+);
+const ManifestIssueList = createFactory(
+  require("devtools/client/application/src/components/manifest/ManifestIssueList")
+);
+const ManifestSection = createFactory(
+  require("devtools/client/application/src/components/manifest/ManifestSection")
+);
+const ManifestJsonLink = createFactory(
+  require("devtools/client/application/src/components/manifest/ManifestJsonLink")
+);
 
-const { MANIFEST_MEMBER_VALUE_TYPES } = require("../../constants");
-const Types = require("../../types/index");
+const {
+  MANIFEST_MEMBER_VALUE_TYPES,
+} = require("devtools/client/application/src/constants");
+const Types = require("devtools/client/application/src/types/index");
 
 /**
  * A canonical manifest, splitted in different sections

@@ -14,7 +14,7 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Actions = require("../../actions/index");
+const Actions = require("devtools/client/aboutdebugging/src/actions/index");
 
 class RefreshDevicesButton extends PureComponent {
   static get propTypes() {

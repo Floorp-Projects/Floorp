@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { L10N } = require("../utils/l10n");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
 loader.lazyRequireGetter(
   this,

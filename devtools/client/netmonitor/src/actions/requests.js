@@ -14,8 +14,11 @@ const {
   SEND_CUSTOM_REQUEST,
   TOGGLE_RECORDING,
   UPDATE_REQUEST,
-} = require("../constants");
-const { getSelectedRequest, getRequestById } = require("../selectors/index");
+} = require("devtools/client/netmonitor/src/constants");
+const {
+  getSelectedRequest,
+  getRequestById,
+} = require("devtools/client/netmonitor/src/selectors/index");
 
 function addRequest(id, data, batch) {
   return {
