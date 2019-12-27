@@ -51,12 +51,12 @@ class TabViewHolder(
         play_pause_button.setOnClickListener {
             when (tab?.mediaState) {
                 is MediaState.Playing -> {
-                    it.context.components.analytics.metrics.track(Event.TabMediaPlay)
+                    it.context.components.analytics.metrics.track(Event.TabMediaPause)
                     interactor.onPauseMediaClicked()
                 }
 
                 is MediaState.Paused -> {
-                    it.context.components.analytics.metrics.track(Event.TabMediaPause)
+                    it.context.components.analytics.metrics.track(Event.TabMediaPlay)
                     interactor.onPlayMediaClicked()
                 }
             }
