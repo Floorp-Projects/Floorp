@@ -1312,7 +1312,7 @@ def milestone(build_env, build_project, version_path, _):
     # firefox version for display.
     app_version_display = versions[-1] if len(versions) > 3 else firefox_version_display
 
-    is_nightly = is_release_or_beta = None
+    is_nightly = is_release_or_beta = is_early_beta_or_earlier = None
 
     if 'a1' in milestone:
         is_nightly = True
@@ -1322,6 +1322,20 @@ def milestone(build_env, build_project, version_path, _):
     major_version = milestone.split('.')[0]
     m = re.search(r"([ab]\d+)", milestone)
     ab_patch = m.group(1) if m else ''
+
+    defines = os.path.join(build_env.topsrcdir, 'build', 'defines.sh')
+    with open(defines, 'r') as fh:
+        for line in fh.read().splitlines():
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            name, _, value = line.partition('=')
+            name = name.strip()
+            value = value.strip()
+            if name != 'EARLY_BETA_OR_EARLIER':
+                die('Only the EARLY_BETA_OR_EARLIER variable can be set in build/defines.sh')
+            if value:
+                is_early_beta_or_earlier = True
 
     # Only expose the major version milestone in the UA string and hide the
     # patch leve (bugs 572659 and 870868).
@@ -1333,6 +1347,7 @@ def milestone(build_env, build_project, version_path, _):
                      symbolversion='%s%s' % (major_version, ab_patch),
                      is_nightly=is_nightly,
                      is_release_or_beta=is_release_or_beta,
+                     is_early_beta_or_earlier=is_early_beta_or_earlier,
                      app_version=app_version,
                      app_version_display=app_version_display)
 
@@ -1344,6 +1359,10 @@ set_config('RELEASE_OR_BETA', milestone.is_release_or_beta)
 set_define('RELEASE_OR_BETA', milestone.is_release_or_beta)
 add_old_configure_assignment('RELEASE_OR_BETA',
                              milestone.is_release_or_beta)
+set_config('EARLY_BETA_OR_EARLIER', milestone.is_early_beta_or_earlier)
+set_define('EARLY_BETA_OR_EARLIER', milestone.is_early_beta_or_earlier)
+add_old_configure_assignment('EARLY_BETA_OR_EARLIER',
+                             milestone.is_early_beta_or_earlier)
 set_define('MOZILLA_VERSION', depends(milestone)(lambda m: '"%s"' % m.version))
 set_config('MOZILLA_VERSION', milestone.version)
 set_define('MOZILLA_VERSION_U', milestone.version)
