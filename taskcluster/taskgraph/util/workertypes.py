@@ -32,7 +32,7 @@ WORKER_TYPES = {
 
 
 @memoize
-def _get(graph_config, alias, level):
+def _get(graph_config, alias, level, release_level):
     """Get the configuration for this worker_type alias: {provisioner,
     worker-type, implementation, os}"""
     level = str(level)
@@ -69,26 +69,23 @@ def _get(graph_config, alias, level):
     worker_config['worker-type'] = evaluate_keyed_by(
         worker_config['worker-type'],
         "worker-type alias {} field worker-type".format(alias),
-        {"level": level}).format(level=level, alias=alias)
+        {"level": level, 'release-level': release_level}).format(level=level, alias=alias)
 
     return worker_config
 
 
-@memoize
 def worker_type_implementation(graph_config, worker_type):
     """Get the worker implementation and OS for the given workerType, where the
     OS represents the host system, not the target OS, in the case of
     cross-compiles."""
-    worker_config = _get(graph_config, worker_type, '1')
+    worker_config = _get(graph_config, worker_type, '1', 'staging')
     return worker_config['implementation'], worker_config.get('os')
 
 
-@memoize
-def get_worker_type(graph_config, worker_type, level):
+def get_worker_type(graph_config, worker_type, level, release_level):
     """
     Get the worker type provisioner and worker-type, optionally evaluating
     aliases from the graph config.
     """
-    worker_config = _get(graph_config, worker_type, level)
-
+    worker_config = _get(graph_config, worker_type, level, release_level)
     return worker_config['provisioner'], worker_config['worker-type']
