@@ -36,7 +36,7 @@ class IO extends Domain {
    * @param {string} options.handle
    *     Handle of the stream to close.
    */
-  async close(options) {
+  async close(options = {}) {
     const { handle } = options;
 
     if (typeof handle != "string") {
