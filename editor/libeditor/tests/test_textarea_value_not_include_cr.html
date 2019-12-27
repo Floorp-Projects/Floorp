@@ -34,12 +34,7 @@ SimpleTest.waitForFocus(async () => {
   textarea.value = "";
   await new Promise((resolve, reject) => {
     SimpleTest.waitForClipboard(
-      (aData) => {
-        // It depends on platform whether the copied value's line breaks are
-        // replaced to \n at setting or getting the value.  Therefore, we
-        // need to compare with replaced value here.
-        return aData.replace(/\r\n?/g, "\n") === "ab\ncd\nef";
-      },
+      "ab\ncd\nef",
       () => { SpecialPowers.clipboardCopyString("ab\r\ncd\ref"); },
       resolve,
       () => {

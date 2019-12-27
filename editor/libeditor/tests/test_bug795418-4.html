@@ -36,7 +36,12 @@ SimpleTest.waitForFocus(function() {
   r.setEnd(div.firstChild, 9);
   sel.addRange(r);
 
-  SimpleTest.waitForClipboard(() => true,
+  SimpleTest.waitForClipboard(
+    aData => {
+      // XXX Oddly, specifying `r.toString()` causes timeout in headless mode.
+      info(`copied text: "${aData}"`);
+      return true;
+    },
     function setup() {
       synthesizeKey("C", {accelKey: true});
     },

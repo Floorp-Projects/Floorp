@@ -64,7 +64,9 @@ SimpleTest.waitForFocus(function() {
   }
 
   SimpleTest.waitForClipboard(
-    function compare(value) {
+    aData => {
+      // XXX Oddly, specifying `r.toString()` causes timeout in headless mode.
+      info(`copied text: "${aData}"`);
       return true;
     },
     function setup() {

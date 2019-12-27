@@ -450,12 +450,9 @@ async function testCopyPaste(isXHTML) {
   var val = "1\n 2\n  3";
   textarea.value = val;
   textarea.select();
-  await SimpleTest.promiseClipboardChange(
-    () => true,
-    () => {
-      textarea.editor.copy();
-    }
-  );
+  await SimpleTest.promiseClipboardChange(textarea.value, () => {
+    textarea.editor.copy();
+  });
   textarea.value = "";
   textarea.editor.paste(1);
   is(textarea.value, val);
