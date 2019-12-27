@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.release_deps:transforms
+    - taskgraph.transforms.release_notifications:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - post-beetmover-dummy
+
+job-defaults:
+    name: notify-av-announce
+    description: Sends email to antivirus vendors telling them that the release is available for scanning.
+    run-on-projects: []
+    shipping-phase: push
+    worker-type: succeed
+    worker:
+        implementation: succeed
+    notifications:
+        # !t is a custom format option that calls .title() on the string.
+        subject: "{task[shipping-product]!t} {release_config[version]} build{release_config[build_number]} release"
+        message: |
+            Company Name: Mozilla
+            Contact Department: Release Engineering
+            Contact email address: release@mozilla.com
+            Product information: {task[shipping-product]} {release_config[version]}
+            Product location: https://releases.mozilla.org/pub/{task[shipping-product]}/candidates/{release_config[version]}-candidates/build{release_config[build_number]}/
+        emails:
+            by-project:
+                mozilla-(beta|release|esr.*): ["av-vendor-release-announce@mozilla.org"]
+                try: ["{config[params][owner]}"]
+                default: []
+
+jobs:
+    firefox:
+        shipping-product: firefox
+    devedition:
+        shipping-product: devedition
