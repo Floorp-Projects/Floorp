@@ -57,9 +57,17 @@ if (supportsReturnWithoutNewline) {
 
 async function paste(input) {
   try {
-    await SimpleTest.promiseClipboardChange(input, () => {
-      clipboardHelper.copyString(input);
-    });
+    await SimpleTest.promiseClipboardChange(
+      aData => {
+        // This test checks how "\r" is treated.  Therefore, we cannot specify
+        // string here and instead, we need to compare strictly with this
+        // function.
+        return aData === input;
+      },
+      () => {
+        clipboardHelper.copyString(input);
+      }
+    );
   } catch (ex) {
     Assert.ok(false, "Failed to copy string '" + input + "' to clipboard");
   }

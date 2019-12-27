@@ -939,6 +939,16 @@ SimpleTest.waitForFocus = function (callback, targetWindow, expectBlankPage) {
  * @param aExpectedStringOrValidatorFn
  *        The string value that is expected to be on the clipboard or a
  *        validator function getting expected clipboard data and returning a bool.
+ *        If you specify string value, line breakers in clipboard are treated
+ *        as LineFeed.  Therefore, you cannot include CarriageReturn to the
+ *        string.
+ *        If you specify string value and expect "text/html" data, this wraps
+ *        the expected value with "<html><body>\n<!--StartFragment-->" and
+ *        "<!--EndFragment-->\n</body>\n</html>" only when it runs on Windows
+ *        because they are appended only by nsDataObj.cpp for Windows.
+ *        https://searchfox.org/mozilla-central/rev/8f7b017a31326515cb467e69eef1f6c965b4f00e/widget/windows/nsDataObj.cpp#1798-1805,1839-1840,1842
+ *        Therefore, you can specify selected (copied) HTML data simply on any
+ *        platforms.
  * @param aSetupFn
  *        A function responsible for setting the clipboard to the expected value,
  *        called after the known value setting succeeds.
@@ -987,9 +997,23 @@ SimpleTest.promiseClipboardChange = async function(aExpectedStringOrValidatorFn,
         };
     } else {
         // Build a default validator function for common string input.
-        inputValidatorFn = typeof(aExpectedStringOrValidatorFn) == "string"
-            ? function(aData) { return aData == aExpectedStringOrValidatorFn; }
-            : aExpectedStringOrValidatorFn;
+        if (typeof(aExpectedStringOrValidatorFn) == "string") {
+          if (aExpectedStringOrValidatorFn.includes("\r")) {
+            throw new Error("Use function instead of string to compare raw line breakers in clipboard");
+          }
+          if (requestedFlavor === "text/html" && navigator.platform.includes("Win")) {
+            inputValidatorFn = function(aData) {
+              return aData.replace(/\r\n?/g, "\n") ===
+                         `<html><body>\n<!--StartFragment-->${aExpectedStringOrValidatorFn}<!--EndFragment-->\n</body>\n</html>`;
+            };
+          } else {
+            inputValidatorFn = function(aData) {
+              return aData.replace(/\r\n?/g, "\n") === aExpectedStringOrValidatorFn;
+            };
+          }
+        } else {
+          inputValidatorFn = aExpectedStringOrValidatorFn;
+        }
     }
 
     let maxPolls = aTimeout ? aTimeout / 100 : 50;

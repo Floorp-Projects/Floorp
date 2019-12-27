@@ -29,7 +29,7 @@ function copyToClipboard(str, callback) {
   gTextarea.value = str;
   SpecialPowers.wrap(gTextarea).editor.selectAll();
   SimpleTest.waitForClipboard(
-    () => true,
+    gTextarea.value,
     () => {
       SpecialPowers.wrap(gTextarea).editor.copy();
     },
