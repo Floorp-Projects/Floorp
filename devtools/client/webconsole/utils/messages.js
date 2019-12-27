@@ -65,8 +65,15 @@ const urlRegex = /(^|[\s(,;'"`“])((?:https?:\/\/|www\d{0,3}[.][a-z0-9.\-]{2,24
 // parentheses (english-specific).
 const uneatLastUrlCharsRegex = /(?:[),;.!?`'"]|[.!?]\)|\)[.!?])$/;
 
-const { MESSAGE_SOURCE, MESSAGE_TYPE, MESSAGE_LEVEL } = require("../constants");
-const { ConsoleMessage, NetworkEventMessage } = require("../types");
+const {
+  MESSAGE_SOURCE,
+  MESSAGE_TYPE,
+  MESSAGE_LEVEL,
+} = require("devtools/client/webconsole/constants");
+const {
+  ConsoleMessage,
+  NetworkEventMessage,
+} = require("devtools/client/webconsole/types");
 
 function prepareMessage(packet, idGenerator) {
   if (!packet.source) {

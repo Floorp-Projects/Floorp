@@ -14,21 +14,34 @@ const {
 } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { reset } = require("../actions/ui");
+const { reset } = require("devtools/client/accessibility/actions/ui");
 
 // Localization
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
 // Constants
-const { SIDEBAR_WIDTH, PORTRAIT_MODE_WIDTH } = require("../constants");
+const {
+  SIDEBAR_WIDTH,
+  PORTRAIT_MODE_WIDTH,
+} = require("devtools/client/accessibility/constants");
 
 // Accessibility Panel
-const AccessibilityTree = createFactory(require("./AccessibilityTree"));
-const AuditProgressOverlay = createFactory(require("./AuditProgressOverlay"));
-const Description = createFactory(require("./Description").Description);
-const RightSidebar = createFactory(require("./RightSidebar"));
-const Toolbar = createFactory(require("./Toolbar"));
+const AccessibilityTree = createFactory(
+  require("devtools/client/accessibility/components/AccessibilityTree")
+);
+const AuditProgressOverlay = createFactory(
+  require("devtools/client/accessibility/components/AuditProgressOverlay")
+);
+const Description = createFactory(
+  require("devtools/client/accessibility/components/Description").Description
+);
+const RightSidebar = createFactory(
+  require("devtools/client/accessibility/components/RightSidebar")
+);
+const Toolbar = createFactory(
+  require("devtools/client/accessibility/components/Toolbar")
+);
 const SplitBox = createFactory(
   require("devtools/client/shared/components/splitter/SplitBox")
 );

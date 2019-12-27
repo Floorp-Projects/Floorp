@@ -7,7 +7,9 @@
 const { Ci } = require("chrome");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { getOrientation } = require("./utils/orientation");
+const {
+  getOrientation,
+} = require("devtools/client/responsive/utils/orientation");
 
 loader.lazyRequireGetter(
   this,

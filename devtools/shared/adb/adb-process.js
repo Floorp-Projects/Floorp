@@ -7,7 +7,7 @@
 const { Cc, Ci } = require("chrome");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { getFileForBinary } = require("./adb-binary");
+const { getFileForBinary } = require("devtools/shared/adb/adb-binary");
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
 
 loader.lazyRequireGetter(

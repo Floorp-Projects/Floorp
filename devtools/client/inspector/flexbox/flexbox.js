@@ -12,7 +12,7 @@ const {
   updateFlexbox,
   updateFlexboxColor,
   updateFlexboxHighlighted,
-} = require("./actions/flexbox");
+} = require("devtools/client/inspector/flexbox/actions/flexbox");
 
 loader.lazyRequireGetter(
   this,

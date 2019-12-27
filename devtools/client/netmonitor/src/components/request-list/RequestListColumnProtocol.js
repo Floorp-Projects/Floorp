@@ -7,7 +7,9 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { getFormattedProtocol } = require("../../utils/request-utils");
+const {
+  getFormattedProtocol,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 class RequestListColumnProtocol extends Component {
   static get propTypes() {

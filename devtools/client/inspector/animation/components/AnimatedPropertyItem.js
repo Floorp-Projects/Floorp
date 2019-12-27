@@ -11,9 +11,11 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const AnimatedPropertyName = createFactory(require("./AnimatedPropertyName"));
+const AnimatedPropertyName = createFactory(
+  require("devtools/client/inspector/animation/components/AnimatedPropertyName")
+);
 const KeyframesGraph = createFactory(
-  require("./keyframes-graph/KeyframesGraph")
+  require("devtools/client/inspector/animation/components/keyframes-graph/KeyframesGraph")
 );
 
 class AnimatedPropertyItem extends PureComponent {

@@ -12,8 +12,8 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { parseUserAgent } = require("../utils/ua");
-const Types = require("../types");
+const { parseUserAgent } = require("devtools/client/responsive/utils/ua");
+const Types = require("devtools/client/responsive/types");
 
 class DeviceInfo extends PureComponent {
   static get propTypes() {

@@ -4,8 +4,10 @@
 
 "use strict";
 
-const { ACTIVITY_TYPE } = require("../constants");
-const { CDPConnector } = require("./chrome/events");
+const { ACTIVITY_TYPE } = require("devtools/client/netmonitor/src/constants");
+const {
+  CDPConnector,
+} = require("devtools/client/netmonitor/src/connector/chrome/events");
 
 /**
  * DO NOT DELETE THIS FILE

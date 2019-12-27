@@ -7,7 +7,7 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("../../utils/l10n");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
 /**
  * Renders the "Data" column of a WebSocket frame.

@@ -8,7 +8,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 const { colorUtils } = require("devtools/shared/css/color.js");
 
-const ComputedStylePath = require("./ComputedStylePath");
+const ComputedStylePath = require("devtools/client/inspector/animation/components/keyframes-graph/ComputedStylePath");
 
 const DEFAULT_COLOR = { r: 0, g: 0, b: 0, a: 1 };
 

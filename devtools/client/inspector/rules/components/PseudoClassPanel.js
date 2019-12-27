@@ -9,7 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/rules/types");
 
 class PseudoClassPanel extends PureComponent {
   static get propTypes() {

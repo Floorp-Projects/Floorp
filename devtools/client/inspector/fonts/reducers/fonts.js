@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { UPDATE_FONTS } = require("../actions/index");
+const {
+  UPDATE_FONTS,
+} = require("devtools/client/inspector/fonts/actions/index");
 
 const INITIAL_FONT_DATA = {
   // All fonts on the current page.

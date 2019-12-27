@@ -10,7 +10,9 @@
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { MarkerBlueprintUtils } = require("../modules/marker-blueprint-utils");
+const {
+  MarkerBlueprintUtils,
+} = require("devtools/client/performance/modules/marker-blueprint-utils");
 
 const LEVEL_INDENT = 10; // px
 const ARROW_NODE_OFFSET = -14; // px

@@ -11,7 +11,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const KeyframeMarkerItem = createFactory(require("./KeyframeMarkerItem"));
+const KeyframeMarkerItem = createFactory(
+  require("devtools/client/inspector/animation/components/keyframes-graph/KeyframeMarkerItem")
+);
 
 class KeyframeMarkerList extends PureComponent {
   static get propTypes() {

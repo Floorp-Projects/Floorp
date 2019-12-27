@@ -6,9 +6,11 @@
 
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("../../utils/l10n");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { propertiesEqual } = require("../../utils/request-utils");
+const {
+  propertiesEqual,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 const UPDATED_FILE_PROPS = ["urlDetails"];
 

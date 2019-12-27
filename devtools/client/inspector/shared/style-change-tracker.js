@@ -5,7 +5,7 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const WalkerEventListener = require("./walker-event-listener");
+const WalkerEventListener = require("devtools/client/inspector/shared/walker-event-listener");
 
 /**
  * The InspectorStyleChangeTracker simply emits an event when it detects any changes in

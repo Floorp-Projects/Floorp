@@ -20,7 +20,7 @@ const {
   UPDATE_DETAILS,
   PREF_KEYS,
   PREFS,
-} = require("../constants");
+} = require("devtools/client/accessibility/constants");
 
 const TreeView = require("devtools/client/shared/components/tree/TreeView");
 

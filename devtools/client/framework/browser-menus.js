@@ -230,7 +230,7 @@ function addAllToolsToMenu(doc) {
 function addTopLevelItems(doc) {
   const menuItems = doc.createDocumentFragment();
 
-  const { menuitems } = require("../menus");
+  const { menuitems } = require("devtools/client/menus");
   for (const item of menuitems) {
     if (item.separator) {
       const separator = doc.createXULElement("menuseparator");
@@ -302,7 +302,7 @@ exports.addMenus = function(doc) {
 
   addAllToolsToMenu(doc);
 
-  require("../webreplay/menu").addWebReplayMenu(doc);
+  require("devtools/client/webreplay/menu").addWebReplayMenu(doc);
 };
 
 /**

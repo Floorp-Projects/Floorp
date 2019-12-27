@@ -8,9 +8,15 @@ define(function(require, exports, module) {
   const { Component } = require("devtools/client/shared/vendor/react");
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const { createFactories } = require("devtools/client/shared/react-utils");
-  const { JsonPanel } = createFactories(require("./JsonPanel"));
-  const { TextPanel } = createFactories(require("./TextPanel"));
-  const { HeadersPanel } = createFactories(require("./HeadersPanel"));
+  const { JsonPanel } = createFactories(
+    require("devtools/client/jsonview/components/JsonPanel")
+  );
+  const { TextPanel } = createFactories(
+    require("devtools/client/jsonview/components/TextPanel")
+  );
+  const { HeadersPanel } = createFactories(
+    require("devtools/client/jsonview/components/HeadersPanel")
+  );
   const { Tabs, TabPanel } = createFactories(
     require("devtools/client/shared/components/tabs/Tabs")
   );

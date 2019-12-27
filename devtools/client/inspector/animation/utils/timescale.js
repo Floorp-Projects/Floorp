@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { getFormatStr } = require("./l10n");
+const {
+  getFormatStr,
+} = require("devtools/client/inspector/animation/utils/l10n");
 
 // If total duration for all animations is eqaul to or less than
 // TIME_FORMAT_MAX_DURATION_IN_MS, the text which expresses time is in milliseconds,

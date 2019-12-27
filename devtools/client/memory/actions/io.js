@@ -8,14 +8,21 @@ const {
   reportException,
   assert,
 } = require("devtools/shared/DevToolsUtils");
-const { snapshotState: states, actions } = require("../constants");
-const { L10N, openFilePicker, createSnapshot } = require("../utils");
+const {
+  snapshotState: states,
+  actions,
+} = require("devtools/client/memory/constants");
+const {
+  L10N,
+  openFilePicker,
+  createSnapshot,
+} = require("devtools/client/memory/utils");
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const {
   selectSnapshot,
   computeSnapshotData,
   readSnapshot,
-} = require("./snapshot");
+} = require("devtools/client/memory/actions/snapshot");
 const VALID_EXPORT_STATES = [states.SAVED, states.READ];
 
 exports.pickFileAndExportSnapshot = function(snapshot) {

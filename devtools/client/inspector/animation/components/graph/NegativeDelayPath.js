@@ -6,7 +6,7 @@
 
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-const NegativePath = require("./NegativePath");
+const NegativePath = require("devtools/client/inspector/animation/components/graph/NegativePath");
 
 class NegativeDelayPath extends NegativePath {
   getClassName() {

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { BATCH_ACTIONS } = require("../constants");
+const { BATCH_ACTIONS } = require("devtools/client/netmonitor/src/constants");
 
 /**
  * A reducer to handle batched actions. For each action in the BATCH_ACTIONS array,

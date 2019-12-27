@@ -7,7 +7,7 @@
 const {
   TAKE_SCREENSHOT_END,
   TAKE_SCREENSHOT_START,
-} = require("../actions/index");
+} = require("devtools/client/responsive/actions/index");
 
 const INITIAL_SCREENSHOT = {
   isCapturing: false,

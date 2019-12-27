@@ -11,8 +11,12 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-const TickLabels = createFactory(require("./TickLabels"));
-const TickLines = createFactory(require("./TickLines"));
+const TickLabels = createFactory(
+  require("devtools/client/inspector/animation/components/TickLabels")
+);
+const TickLines = createFactory(
+  require("devtools/client/inspector/animation/components/TickLines")
+);
 
 /**
  * This component is a panel for the progress of animations or keyframes, supports

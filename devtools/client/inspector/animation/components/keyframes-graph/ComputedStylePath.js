@@ -13,7 +13,7 @@ const {
   DEFAULT_DURATION_RESOLUTION,
   getPreferredProgressThresholdByKeyframes,
   toPathString,
-} = require("../../utils/graph-helper");
+} = require("devtools/client/inspector/animation/utils/graph-helper");
 
 /*
  * This class is an abstraction for computed style path of keyframes.

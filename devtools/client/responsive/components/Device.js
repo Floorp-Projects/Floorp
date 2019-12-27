@@ -13,11 +13,13 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { getFormatStr } = require("../utils/l10n");
-const { parseUserAgent } = require("../utils/ua");
-const Types = require("../types");
+const { getFormatStr } = require("devtools/client/responsive/utils/l10n");
+const { parseUserAgent } = require("devtools/client/responsive/utils/ua");
+const Types = require("devtools/client/responsive/types");
 
-const DeviceInfo = createFactory(require("./DeviceInfo"));
+const DeviceInfo = createFactory(
+  require("devtools/client/responsive/components/DeviceInfo")
+);
 
 class Device extends PureComponent {
   static get propTypes() {

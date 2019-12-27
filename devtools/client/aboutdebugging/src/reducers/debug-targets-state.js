@@ -12,7 +12,7 @@ const {
   TEMPORARY_EXTENSION_RELOAD_FAILURE,
   TEMPORARY_EXTENSION_RELOAD_START,
   UNWATCH_RUNTIME_SUCCESS,
-} = require("../constants");
+} = require("devtools/client/aboutdebugging/src/constants");
 
 function DebugTargetsState() {
   return {

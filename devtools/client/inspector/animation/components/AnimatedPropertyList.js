@@ -11,7 +11,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const AnimatedPropertyItem = createFactory(require("./AnimatedPropertyItem"));
+const AnimatedPropertyItem = createFactory(
+  require("devtools/client/inspector/animation/components/AnimatedPropertyItem")
+);
 
 class AnimatedPropertyList extends Component {
   static get propTypes() {

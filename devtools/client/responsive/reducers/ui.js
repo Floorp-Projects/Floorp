@@ -14,7 +14,7 @@ const {
   TOGGLE_RELOAD_ON_USER_AGENT,
   TOGGLE_TOUCH_SIMULATION,
   TOGGLE_USER_AGENT_INPUT,
-} = require("../actions/index");
+} = require("devtools/client/responsive/actions/index");
 
 const LEFT_ALIGNMENT_ENABLED = "devtools.responsive.leftAlignViewport.enabled";
 const RELOAD_ON_TOUCH_SIMULATION =
