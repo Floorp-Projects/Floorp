@@ -8,11 +8,14 @@ job-defaults:
     workdir: /builds/worker
     run-on-projects:
         by-app:
-            fenix: []
+            fenix:
+                by-test-platform:
+                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                    default: []
             geckoview:
                 by-test-platform:
-                    android-hw-p2-.*-api-16/.*: []
-                    default: ["mozilla-central", "try"]
+                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                    default: []
             refbrow: []
     tier: 3
     target:
@@ -59,6 +62,7 @@ browsertime-tp6m:
     raptor-subtests: ['amazon', 'youtube']
     apps: ["geckoview", "fenix"]
     pageload: cold
+    run-visual-metrics: true
     treeherder-symbol: Btime(tp6m)
 
 browsertime-tp6m-profiling:
