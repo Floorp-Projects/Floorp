@@ -14,7 +14,7 @@ const {
   UPDATE_RULES,
   UPDATE_SOURCE_LINK_ENABLED,
   UPDATE_SOURCE_LINK,
-} = require("devtools/client/inspector/rules/actions/index");
+} = require("../actions/index");
 
 const INITIAL_RULES = {
   // The selector of the node that is highlighted by the selector highlighter.

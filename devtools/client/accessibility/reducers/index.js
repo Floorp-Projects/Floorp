@@ -3,15 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {
-  accessibles,
-} = require("devtools/client/accessibility/reducers/accessibles");
-const { audit } = require("devtools/client/accessibility/reducers/audit");
-const { details } = require("devtools/client/accessibility/reducers/details");
-const {
-  simulation,
-} = require("devtools/client/accessibility/reducers/simulation");
-const { ui } = require("devtools/client/accessibility/reducers/ui");
+const { accessibles } = require("./accessibles");
+const { audit } = require("./audit");
+const { details } = require("./details");
+const { simulation } = require("./simulation");
+const { ui } = require("./ui");
 
 exports.reducers = {
   accessibles,

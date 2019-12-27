@@ -38,7 +38,7 @@ const {
   testSetup,
   testTeardown,
   SIMPLE_URL,
-} = require("devtools/docs/head");
+} = require("../head");
 
 module.exports = async function() {
   await testSetup(SIMPLE_URL);

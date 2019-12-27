@@ -10,17 +10,11 @@ const {
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const {
-  getNetMonitorTimingsURL,
-} = require("devtools/client/netmonitor/src/utils/mdn-utils");
-const {
-  fetchNetworkUpdatePacket,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
-const {
-  getFormattedTime,
-} = require("devtools/client/netmonitor/src/utils/format-utils");
-const { TIMING_KEYS } = require("devtools/client/netmonitor/src/constants");
+const { L10N } = require("../utils/l10n");
+const { getNetMonitorTimingsURL } = require("../utils/mdn-utils");
+const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
+const { getFormattedTime } = require("../utils/format-utils");
+const { TIMING_KEYS } = require("../constants");
 
 // Components
 const MDNLink = require("devtools/client/shared/components/MdnLink");

@@ -9,17 +9,11 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const { td } = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const { L10N } = require("../../utils/l10n");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  getFormattedIPAndPort,
-} = require("devtools/client/netmonitor/src/utils/format-utils");
-const {
-  propertiesEqual,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
-const SecurityState = createFactory(
-  require("devtools/client/netmonitor/src/components/SecurityState")
-);
+const { getFormattedIPAndPort } = require("../../utils/format-utils");
+const { propertiesEqual } = require("../../utils/request-utils");
+const SecurityState = createFactory(require("../SecurityState"));
 const UPDATED_FILE_PROPS = ["remoteAddress", "securityState", "urlDetails"];
 
 class RequestListColumnUrl extends Component {

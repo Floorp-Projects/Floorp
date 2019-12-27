@@ -13,27 +13,18 @@ const {
   span,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
-const Button = createFactory(
-  require("devtools/client/accessibility/components/Button").Button
-);
+const { L10N } = require("../utils/l10n");
+const Button = createFactory(require("./Button").Button);
 const AccessibilityTreeFilter = createFactory(
-  require("devtools/client/accessibility/components/AccessibilityTreeFilter")
+  require("./AccessibilityTreeFilter")
 );
-const AccessibilityPrefs = createFactory(
-  require("devtools/client/accessibility/components/AccessibilityPrefs")
-);
+const AccessibilityPrefs = createFactory(require("./AccessibilityPrefs"));
 loader.lazyGetter(this, "SimulationMenuButton", function() {
-  return createFactory(
-    require("devtools/client/accessibility/components/SimulationMenuButton")
-  );
+  return createFactory(require("./SimulationMenuButton"));
 });
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const {
-  disable,
-  updateCanBeDisabled,
-} = require("devtools/client/accessibility/actions/ui");
+const { disable, updateCanBeDisabled } = require("../actions/ui");
 
 class Toolbar extends Component {
   static get propTypes() {

@@ -6,12 +6,8 @@
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const {
-  MANIFEST_ISSUE_LEVELS,
-} = require("devtools/client/application/src/constants");
-const {
-  MANIFEST_MEMBER_VALUE_TYPES,
-} = require("devtools/client/application/src/constants");
+const { MANIFEST_ISSUE_LEVELS } = require("../constants");
+const { MANIFEST_MEMBER_VALUE_TYPES } = require("../constants");
 
 const manifestIssue = {
   level: PropTypes.oneOf(Object.values(MANIFEST_ISSUE_LEVELS)).isRequired,

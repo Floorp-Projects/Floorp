@@ -13,9 +13,9 @@ const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 const { div } = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
-const { PANELS } = require("devtools/client/netmonitor/src/constants");
+const { L10N } = require("../utils/l10n");
+const Actions = require("../actions/index");
+const { PANELS } = require("../constants");
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
@@ -27,15 +27,11 @@ const TabPanel = createFactory(
 );
 
 loader.lazyGetter(this, "SearchPanel", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/search/SearchPanel")
-  );
+  return createFactory(require("./search/SearchPanel"));
 });
 
 loader.lazyGetter(this, "RequestBlockingPanel", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/request-blocking/RequestBlockingPanel")
-  );
+  return createFactory(require("./request-blocking/RequestBlockingPanel"));
 });
 
 class NetworkActionBar extends Component {

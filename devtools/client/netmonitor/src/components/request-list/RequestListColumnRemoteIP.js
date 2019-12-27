@@ -7,9 +7,7 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  getFormattedIPAndPort,
-} = require("devtools/client/netmonitor/src/utils/format-utils");
+const { getFormattedIPAndPort } = require("../../utils/format-utils");
 
 class RequestListColumnRemoteIP extends Component {
   static get propTypes() {

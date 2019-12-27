@@ -3,10 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {
-  ADD_TIMING_MARKER,
-  CLEAR_TIMING_MARKERS,
-} = require("devtools/client/netmonitor/src/constants");
+const { ADD_TIMING_MARKER, CLEAR_TIMING_MARKERS } = require("../constants");
 
 exports.addTimingMarker = marker => {
   return {

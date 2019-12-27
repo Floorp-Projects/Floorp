@@ -14,15 +14,11 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const {
-  SERVICE_WORKER_FETCH_STATES,
-} = require("devtools/client/aboutdebugging/src/constants");
+const { SERVICE_WORKER_FETCH_STATES } = require("../../constants");
 
-const FieldPair = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/FieldPair")
-);
+const FieldPair = createFactory(require("./FieldPair"));
 
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Types = require("../../types/index");
 
 /**
  * This component displays detail information for worker.

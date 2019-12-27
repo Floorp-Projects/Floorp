@@ -16,16 +16,14 @@ const RecordingButton = React.createFactory(
   require("devtools/client/performance/components/RecordingButton")
 );
 
-const EVENTS = require("devtools/client/performance/events");
-const PerformanceUtils = require("devtools/client/performance/modules/utils");
-const { DetailsView } = require("devtools/client/performance/views/details");
-const { OverviewView } = require("devtools/client/performance/views/overview");
-const {
-  RecordingsView,
-} = require("devtools/client/performance/views/recordings");
-const { ToolbarView } = require("devtools/client/performance/views/toolbar");
+const EVENTS = require("./events");
+const PerformanceUtils = require("./modules/utils");
+const { DetailsView } = require("./views/details");
+const { OverviewView } = require("./views/overview");
+const { RecordingsView } = require("./views/recordings");
+const { ToolbarView } = require("./views/toolbar");
 
-const { L10N } = require("devtools/client/performance/modules/global");
+const { L10N } = require("./modules/global");
 /**
  * Master view handler for the performance tool.
  */

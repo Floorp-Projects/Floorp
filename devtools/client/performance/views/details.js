@@ -5,23 +5,13 @@
 
 "use strict";
 
-const EVENTS = require("devtools/client/performance/events");
+const EVENTS = require("../events");
 
-const {
-  WaterfallView,
-} = require("devtools/client/performance/views/details-waterfall");
-const {
-  JsCallTreeView,
-} = require("devtools/client/performance/views/details-js-call-tree");
-const {
-  JsFlameGraphView,
-} = require("devtools/client/performance/views/details-js-flamegraph");
-const {
-  MemoryCallTreeView,
-} = require("devtools/client/performance/views/details-memory-call-tree");
-const {
-  MemoryFlameGraphView,
-} = require("devtools/client/performance/views/details-memory-flamegraph");
+const { WaterfallView } = require("./details-waterfall");
+const { JsCallTreeView } = require("./details-js-call-tree");
+const { JsFlameGraphView } = require("./details-js-flamegraph");
+const { MemoryCallTreeView } = require("./details-memory-call-tree");
+const { MemoryFlameGraphView } = require("./details-memory-flamegraph");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 

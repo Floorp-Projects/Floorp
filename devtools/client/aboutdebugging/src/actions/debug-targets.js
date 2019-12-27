@@ -10,21 +10,21 @@ const {
 } = require("devtools/client/shared/remote-debugging/remote-client-manager");
 const Services = require("Services");
 
-const { l10n } = require("devtools/client/aboutdebugging/src/modules/l10n");
+const { l10n } = require("../modules/l10n");
 
 const {
   isSupportedDebugTargetPane,
-} = require("devtools/client/aboutdebugging/src/modules/debug-target-support");
+} = require("../modules/debug-target-support");
 
 const {
   openTemporaryExtension,
   uninstallAddon,
-} = require("devtools/client/aboutdebugging/src/modules/extensions-helper");
+} = require("../modules/extensions-helper");
 
 const {
   getCurrentClient,
   getCurrentRuntime,
-} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
+} = require("../modules/runtimes-state-helper");
 
 const {
   DEBUG_TARGETS,
@@ -48,9 +48,9 @@ const {
   TEMPORARY_EXTENSION_RELOAD_START,
   TEMPORARY_EXTENSION_RELOAD_SUCCESS,
   RUNTIMES,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("../constants");
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+const Actions = require("./index");
 
 function isCachedActorNeeded(runtime, type, id) {
   // Unique ids for workers were introduced in Firefox 68 (Bug 1539328). When debugging

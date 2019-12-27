@@ -9,12 +9,8 @@ define(function(require, exports, module) {
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
   const { createFactories } = require("devtools/client/shared/react-utils");
-  const { TextToolbar } = createFactories(
-    require("devtools/client/jsonview/components/TextToolbar")
-  );
-  const { LiveText } = createFactories(
-    require("devtools/client/jsonview/components/LiveText")
-  );
+  const { TextToolbar } = createFactories(require("./TextToolbar"));
+  const { LiveText } = createFactories(require("./LiveText"));
   const { div } = dom;
 
   /**

@@ -12,7 +12,7 @@ const {
   TOGGLE_BLOCKING_ENABLED,
   DISABLE_MATCHING_URLS,
   REQUEST_BLOCKING_UPDATE_COMPLETE,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("../constants");
 
 const BLOCKING_EVENTS = [
   ADD_BLOCKED_URL,

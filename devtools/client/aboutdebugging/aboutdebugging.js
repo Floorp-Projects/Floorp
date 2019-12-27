@@ -19,26 +19,24 @@ const Provider = createFactory(
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
-const actions = require("devtools/client/aboutdebugging/src/actions/index");
-const {
-  configureStore,
-} = require("devtools/client/aboutdebugging/src/create-store");
+const actions = require("./src/actions/index");
+const { configureStore } = require("./src/create-store");
 const {
   setDebugTargetCollapsibilities,
-} = require("devtools/client/aboutdebugging/src/modules/debug-target-collapsibilities");
+} = require("./src/modules/debug-target-collapsibilities");
 
-const { l10n } = require("devtools/client/aboutdebugging/src/modules/l10n");
+const { l10n } = require("./src/modules/l10n");
 
 const {
   addNetworkLocationsObserver,
   getNetworkLocations,
   removeNetworkLocationsObserver,
-} = require("devtools/client/aboutdebugging/src/modules/network-locations");
+} = require("./src/modules/network-locations");
 const {
   addUSBRuntimesObserver,
   getUSBRuntimes,
   removeUSBRuntimesObserver,
-} = require("devtools/client/aboutdebugging/src/modules/usb-runtimes");
+} = require("./src/modules/usb-runtimes");
 
 loader.lazyRequireGetter(this, "adb", "devtools/shared/adb/adb", true);
 loader.lazyRequireGetter(
@@ -57,9 +55,7 @@ loader.lazyRequireGetter(
 const Router = createFactory(
   require("devtools/client/shared/vendor/react-router-dom").HashRouter
 );
-const App = createFactory(
-  require("devtools/client/aboutdebugging/src/components/App")
-);
+const App = createFactory(require("./src/components/App"));
 
 const AboutDebugging = {
   async init() {

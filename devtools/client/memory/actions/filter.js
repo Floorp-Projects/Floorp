@@ -3,8 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { actions } = require("devtools/client/memory/constants");
-const { refresh } = require("devtools/client/memory/actions/refresh");
+const { actions } = require("../constants");
+const { refresh } = require("./refresh");
 
 const setFilterString = (exports.setFilterString = function(filterString) {
   return {

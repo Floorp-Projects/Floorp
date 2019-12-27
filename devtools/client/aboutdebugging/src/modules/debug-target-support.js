@@ -4,11 +4,7 @@
 
 "use strict";
 
-const {
-  DEBUG_TARGET_PANE,
-  PREFERENCES,
-  RUNTIMES,
-} = require("devtools/client/aboutdebugging/src/constants");
+const { DEBUG_TARGET_PANE, PREFERENCES, RUNTIMES } = require("../constants");
 
 const Services = require("Services");
 

@@ -11,7 +11,7 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const Frame = createFactory(require("devtools/client/shared/components/Frame"));
+const Frame = createFactory(require("./Frame"));
 
 const l10n = new LocalizationHelper(
   "devtools/client/locales/webconsole.properties"

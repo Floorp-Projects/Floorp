@@ -10,7 +10,7 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const { TargetMixin } = require("devtools/shared/fronts/targets/target-mixin");
+const { TargetMixin } = require("./target-mixin");
 
 class BrowsingContextTargetFront extends TargetMixin(
   FrontClassWithSpec(browsingContextTargetSpec)

@@ -12,16 +12,12 @@ const {
 const Provider = createFactory(
   require("devtools/client/shared/vendor/react-redux").Provider
 );
-const App = createFactory(
-  require("devtools/client/netmonitor/src/components/App")
-);
-const { EVENTS } = require("devtools/client/netmonitor/src/constants");
+const App = createFactory(require("./components/App"));
+const { EVENTS } = require("./constants");
 
-const {
-  getDisplayedRequestById,
-} = require("devtools/client/netmonitor/src/selectors/index");
+const { getDisplayedRequestById } = require("./selectors/index");
 
-const SearchWorker = require("devtools/client/netmonitor/src/workers/search/index");
+const SearchWorker = require("./workers/search/index");
 const SEARCH_WORKER_URL =
   "resource://devtools/client/netmonitor/src/workers/search/worker.js";
 

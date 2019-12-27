@@ -10,10 +10,8 @@
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("devtools/client/performance/modules/global");
-const {
-  TickUtils,
-} = require("devtools/client/performance/modules/waterfall-ticks");
+const { L10N } = require("../modules/global");
+const { TickUtils } = require("../modules/waterfall-ticks");
 
 const WATERFALL_HEADER_TICKS_MULTIPLE = 5; // ms
 const WATERFALL_HEADER_TICKS_SPACING_MIN = 50; // px

@@ -13,17 +13,13 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const AnimationDetailContainer = createFactory(
-  require("devtools/client/inspector/animation/components/AnimationDetailContainer")
+  require("./AnimationDetailContainer")
 );
 const AnimationListContainer = createFactory(
-  require("devtools/client/inspector/animation/components/AnimationListContainer")
+  require("./AnimationListContainer")
 );
-const AnimationToolbar = createFactory(
-  require("devtools/client/inspector/animation/components/AnimationToolbar")
-);
-const NoAnimationPanel = createFactory(
-  require("devtools/client/inspector/animation/components/NoAnimationPanel")
-);
+const AnimationToolbar = createFactory(require("./AnimationToolbar"));
+const NoAnimationPanel = createFactory(require("./NoAnimationPanel"));
 const SplitBox = createFactory(
   require("devtools/client/shared/components/splitter/SplitBox")
 );

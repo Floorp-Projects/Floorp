@@ -11,7 +11,7 @@ const {
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const ExtensionSidebarComponent = createFactory(
-  require("devtools/client/inspector/extensions/components/ExtensionSidebar")
+  require("./components/ExtensionSidebar")
 );
 
 const {
@@ -19,7 +19,7 @@ const {
   updateObjectTreeView,
   updateObjectValueGripView,
   removeExtensionSidebar,
-} = require("devtools/client/inspector/extensions/actions/sidebar");
+} = require("./actions/sidebar");
 
 /**
  * ExtensionSidebar instances represents Inspector sidebars installed by add-ons

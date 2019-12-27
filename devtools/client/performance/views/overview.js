@@ -8,10 +8,8 @@
 // backend. Make sure this isn't lower than DEFAULT_TIMELINE_DATA_PULL_TIMEOUT
 // in devtools/server/actors/timeline.js
 
-const EVENTS = require("devtools/client/performance/events");
-const {
-  GraphsController,
-} = require("devtools/client/performance/modules/widgets/graphs");
+const EVENTS = require("../events");
+const { GraphsController } = require("../modules/widgets/graphs");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 

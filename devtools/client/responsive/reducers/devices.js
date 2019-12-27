@@ -14,9 +14,9 @@ const {
   REMOVE_DEVICE,
   UPDATE_DEVICE_DISPLAYED,
   UPDATE_DEVICE_MODAL,
-} = require("devtools/client/responsive/actions/index");
+} = require("../actions/index");
 
-const Types = require("devtools/client/responsive/types");
+const Types = require("../types");
 
 const INITIAL_DEVICES = {
   isModalOpen: false,

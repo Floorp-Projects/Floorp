@@ -16,15 +16,9 @@ define(function(require, exports, module) {
   const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
   // Reps
-  const {
-    ObjectProvider,
-  } = require("devtools/client/shared/components/tree/ObjectProvider");
-  const TreeRow = createFactory(
-    require("devtools/client/shared/components/tree/TreeRow")
-  );
-  const TreeHeader = createFactory(
-    require("devtools/client/shared/components/tree/TreeHeader")
-  );
+  const { ObjectProvider } = require("./ObjectProvider");
+  const TreeRow = createFactory(require("./TreeRow"));
+  const TreeHeader = createFactory(require("./TreeHeader"));
 
   const { scrollIntoView } = require("devtools/client/shared/scroll");
 

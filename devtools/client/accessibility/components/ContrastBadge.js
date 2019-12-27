@@ -10,15 +10,13 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
+const { L10N } = require("../utils/l10n");
 
 const {
   accessibility: { SCORES },
 } = require("devtools/shared/constants");
 
-loader.lazyGetter(this, "Badge", () =>
-  createFactory(require("devtools/client/accessibility/components/Badge"))
-);
+loader.lazyGetter(this, "Badge", () => createFactory(require("./Badge")));
 
 /**
  * Component for rendering a badge for contrast accessibliity check

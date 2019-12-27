@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  AutoRefreshHighlighter,
-} = require("devtools/server/actors/highlighters/auto-refresh");
+const { AutoRefreshHighlighter } = require("./auto-refresh");
 const { apply } = require("devtools/shared/layout/dom-matrix-2d");
 const {
   CANVAS_SIZE,
@@ -17,12 +15,12 @@ const {
   getCurrentMatrix,
   updateCanvasElement,
   updateCanvasPosition,
-} = require("devtools/server/actors/highlighters/utils/canvas");
+} = require("./utils/canvas");
 const {
   CanvasFrameAnonymousContentHelper,
   createNode,
   getComputedStyle,
-} = require("devtools/server/actors/highlighters/utils/markup");
+} = require("./utils/markup");
 const {
   getAbsoluteScrollOffsetsForNode,
   getCurrentZoom,

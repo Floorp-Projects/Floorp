@@ -10,7 +10,7 @@ const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { accessibleWalkerSpec } = require("devtools/shared/specs/accessibility");
 const {
   simulation: { COLOR_TRANSFORMATION_MATRICES },
-} = require("devtools/server/actors/accessibility/constants");
+} = require("./constants");
 
 loader.lazyRequireGetter(
   this,

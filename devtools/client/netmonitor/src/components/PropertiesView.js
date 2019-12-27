@@ -19,13 +19,11 @@ const {
 const {
   setTargetSearchResult,
 } = require("devtools/client/netmonitor/src/actions/search");
-const {
-  FILTER_SEARCH_DELAY,
-} = require("devtools/client/netmonitor/src/constants");
+const { FILTER_SEARCH_DELAY } = require("../constants");
 
 // Components
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
-const PropertiesViewContextMenu = require("devtools/client/netmonitor/src/widgets/PropertiesViewContextMenu");
+const PropertiesViewContextMenu = require("../widgets/PropertiesViewContextMenu");
 const JSONPreview = createFactory(
   require("devtools/client/netmonitor/src/components/JSONPreview")
 );
@@ -39,21 +37,17 @@ loader.lazyGetter(this, "TreeRow", function() {
   );
 });
 loader.lazyGetter(this, "SourceEditor", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/SourceEditor")
-  );
+  return createFactory(require("./SourceEditor"));
 });
 loader.lazyGetter(this, "HTMLPreview", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/HtmlPreview")
-  );
+  return createFactory(require("./HtmlPreview"));
 });
 
 // Constants
 const {
   AUTO_EXPAND_MAX_LEVEL,
   AUTO_EXPAND_MAX_NODES,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("../constants");
 
 const { div, tr, td, pre } = dom;
 const EDITOR_CONFIG_ID = "EDITOR_CONFIG";

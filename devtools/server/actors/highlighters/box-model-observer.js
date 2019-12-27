@@ -5,14 +5,12 @@
 "use strict";
 
 const { DebuggerServer } = require("devtools/server/debugger-server");
-const {
-  AutoRefreshHighlighter,
-} = require("devtools/server/actors/highlighters/auto-refresh");
+const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   getBindingElementAndPseudo,
   hasPseudoClassLock,
   isNodeValid,
-} = require("devtools/server/actors/highlighters/utils/markup");
+} = require("./utils/markup");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 const {

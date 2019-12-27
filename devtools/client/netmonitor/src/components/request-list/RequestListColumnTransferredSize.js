@@ -7,16 +7,10 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  getFormattedSize,
-} = require("devtools/client/netmonitor/src/utils/format-utils");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const {
-  propertiesEqual,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
-const {
-  BLOCKED_REASON_MESSAGES,
-} = require("devtools/client/netmonitor/src/constants");
+const { getFormattedSize } = require("../../utils/format-utils");
+const { L10N } = require("../../utils/l10n");
+const { propertiesEqual } = require("../../utils/request-utils");
+const { BLOCKED_REASON_MESSAGES } = require("../../constants");
 
 const SIZE_CACHED = L10N.getStr("networkMenu.sizeCached");
 const SIZE_SERVICE_WORKER = L10N.getStr("networkMenu.sizeServiceWorker");

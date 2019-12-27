@@ -14,7 +14,7 @@ const {
   SEND_CUSTOM_REQUEST,
   ENABLE_PERSISTENT_LOGS,
   WS_SELECT_FRAME,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("../constants");
 
 const {
   CHANGE_NETWORK_THROTTLING,

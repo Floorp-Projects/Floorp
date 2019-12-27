@@ -4,12 +4,8 @@
 
 "use strict";
 
-var {
-  findPlaceholders,
-  getPath,
-  describeTemplate,
-} = require("devtools/shared/protocol/utils");
-var { types } = require("devtools/shared/protocol/types");
+var { findPlaceholders, getPath, describeTemplate } = require("./utils");
+var { types } = require("./types");
 
 /**
  * Manages a response template.

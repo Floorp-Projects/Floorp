@@ -4,4 +4,4 @@
 
 "use strict";
 
-exports.flexbox = require("devtools/client/inspector/flexbox/reducers/flexbox");
+exports.flexbox = require("./flexbox");

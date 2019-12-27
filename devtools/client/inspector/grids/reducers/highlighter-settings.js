@@ -10,7 +10,7 @@ const {
   UPDATE_SHOW_GRID_AREAS,
   UPDATE_SHOW_GRID_LINE_NUMBERS,
   UPDATE_SHOW_INFINITE_LINES,
-} = require("devtools/client/inspector/grids/actions/index");
+} = require("../actions/index");
 
 const SHOW_GRID_AREAS = "devtools.gridinspector.showGridAreas";
 const SHOW_GRID_LINE_NUMBERS = "devtools.gridinspector.showGridLineNumbers";

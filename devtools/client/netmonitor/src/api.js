@@ -7,12 +7,10 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
-const { Connector } = require("devtools/client/netmonitor/src/connector/index");
-const {
-  configureStore,
-} = require("devtools/client/netmonitor/src/create-store");
-const { EVENTS } = require("devtools/client/netmonitor/src/constants");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
+const { Connector } = require("./connector/index");
+const { configureStore } = require("./create-store");
+const { EVENTS } = require("./constants");
+const Actions = require("./actions/index");
 
 // Telemetry
 const Telemetry = require("devtools/client/shared/telemetry");
@@ -20,7 +18,7 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const {
   getDisplayedRequestById,
   getSortedRequests,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("./selectors/index");
 
 /**
  * API object for NetMonitor panel (like a facade). This object can be

@@ -17,11 +17,9 @@ const {
   REMOTE_RUNTIMES_UPDATED,
   SELECTED_RUNTIME_ID_UPDATED,
   THIS_FIREFOX_RUNTIME_CREATED,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("../constants");
 
-const {
-  findRuntimeById,
-} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
+const { findRuntimeById } = require("../modules/runtimes-state-helper");
 
 const {
   remoteClientManager,

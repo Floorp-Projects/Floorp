@@ -4,15 +4,12 @@
 
 "use strict";
 
-const {
-  DEBUG_TARGETS,
-  REQUEST_EXTENSIONS_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
+const { DEBUG_TARGETS, REQUEST_EXTENSIONS_SUCCESS } = require("../constants");
 
 const {
   getExtensionUuid,
   parseFileUri,
-} = require("devtools/client/aboutdebugging/src/modules/extensions-helper");
+} = require("../modules/extensions-helper");
 
 /**
  * This middleware converts extensions object that get from DebuggerClient.listAddons()

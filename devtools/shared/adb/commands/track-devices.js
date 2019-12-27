@@ -10,8 +10,8 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { setTimeout } = require("resource://gre/modules/Timer.jsm");
 
-const { adbProcess } = require("devtools/shared/adb/adb-process");
-const client = require("devtools/shared/adb/adb-client");
+const { adbProcess } = require("../adb-process");
+const client = require("../adb-client");
 
 const ADB_STATUS_OFFLINE = "offline";
 const OKAY = 0x59414b4f;

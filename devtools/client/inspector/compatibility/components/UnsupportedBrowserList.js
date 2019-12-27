@@ -12,10 +12,10 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const UnsupportedBrowserItem = createFactory(
-  require("devtools/client/inspector/compatibility/components/UnsupportedBrowserItem")
+  require("./UnsupportedBrowserItem")
 );
 
-const Types = require("devtools/client/inspector/compatibility/types");
+const Types = require("../types");
 
 class UnsupportedBrowserList extends PureComponent {
   static get propTypes() {

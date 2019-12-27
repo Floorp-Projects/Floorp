@@ -14,30 +14,20 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const DevicePixelRatioMenu = createFactory(
-  require("devtools/client/responsive/components/DevicePixelRatioMenu")
-);
-const DeviceSelector = createFactory(
-  require("devtools/client/responsive/components/DeviceSelector")
-);
+const DevicePixelRatioMenu = createFactory(require("./DevicePixelRatioMenu"));
+const DeviceSelector = createFactory(require("./DeviceSelector"));
 const NetworkThrottlingMenu = createFactory(
   require("devtools/client/shared/components/throttling/NetworkThrottlingMenu")
 );
-const SettingsMenu = createFactory(
-  require("devtools/client/responsive/components/SettingsMenu")
-);
-const ViewportDimension = createFactory(
-  require("devtools/client/responsive/components/ViewportDimension")
-);
+const SettingsMenu = createFactory(require("./SettingsMenu"));
+const ViewportDimension = createFactory(require("./ViewportDimension"));
 
 loader.lazyGetter(this, "UserAgentInput", function() {
-  return createFactory(
-    require("devtools/client/responsive/components/UserAgentInput")
-  );
+  return createFactory(require("./UserAgentInput"));
 });
 
-const { getStr } = require("devtools/client/responsive/utils/l10n");
-const Types = require("devtools/client/responsive/types");
+const { getStr } = require("../utils/l10n");
+const Types = require("../types");
 
 class Toolbar extends PureComponent {
   static get propTypes() {

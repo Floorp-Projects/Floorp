@@ -25,21 +25,12 @@ const Redirect = createFactory(
   require("devtools/client/shared/vendor/react-router-dom").Redirect
 );
 
-const Types = require("devtools/client/aboutdebugging/src/types/index");
-const {
-  PAGE_TYPES,
-  RUNTIMES,
-} = require("devtools/client/aboutdebugging/src/constants");
+const Types = require("../types/index");
+const { PAGE_TYPES, RUNTIMES } = require("../constants");
 
-const ConnectPage = createFactory(
-  require("devtools/client/aboutdebugging/src/components/connect/ConnectPage")
-);
-const RuntimePage = createFactory(
-  require("devtools/client/aboutdebugging/src/components/RuntimePage")
-);
-const Sidebar = createFactory(
-  require("devtools/client/aboutdebugging/src/components/sidebar/Sidebar")
-);
+const ConnectPage = createFactory(require("./connect/ConnectPage"));
+const RuntimePage = createFactory(require("./RuntimePage"));
+const Sidebar = createFactory(require("./sidebar/Sidebar"));
 
 class App extends PureComponent {
   static get propTypes() {

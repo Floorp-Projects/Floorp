@@ -18,8 +18,8 @@ const require = (window.windowRequire = BrowserLoader({
   window,
 }).require);
 
-const { NetMonitorAPI } = require("devtools/client/netmonitor/src/api");
-const { NetMonitorApp } = require("devtools/client/netmonitor/src/app");
+const { NetMonitorAPI } = require("./src/api");
+const { NetMonitorApp } = require("./src/app");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 // Inject EventEmitter into global window.

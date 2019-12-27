@@ -14,7 +14,7 @@ const {
   CanvasFrameAnonymousContentHelper,
   createSVGNode,
   createNode,
-} = require("devtools/server/actors/highlighters/utils/markup");
+} = require("./utils/markup");
 
 // Hard coded value about the size of measuring tool label, in order to
 // position and flip it when is needed.

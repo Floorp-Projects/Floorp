@@ -15,9 +15,7 @@ const Check = createFactory(
   require("devtools/client/accessibility/components/Check")
 );
 
-const {
-  A11Y_TEXT_LABEL_LINKS,
-} = require("devtools/client/accessibility/constants");
+const { A11Y_TEXT_LABEL_LINKS } = require("../constants");
 const {
   accessibility: {
     AUDIT_TYPE: { TEXT_LABEL },

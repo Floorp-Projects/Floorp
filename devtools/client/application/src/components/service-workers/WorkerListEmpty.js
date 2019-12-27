@@ -21,9 +21,7 @@ const {
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const {
-  services,
-} = require("devtools/client/application/src/modules/application-services");
+const { services } = require("../../modules/application-services");
 
 const DOC_URL =
   "https://developer.mozilla.org/docs/Web/API/Service_Worker_API/Using_Service_Workers" +

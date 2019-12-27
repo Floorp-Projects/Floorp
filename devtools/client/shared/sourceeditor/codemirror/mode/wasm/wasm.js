@@ -8,7 +8,7 @@
   if (typeof define === 'function' && define.amd) {
     define(["../../lib/codemirror"], factory);
   } else if (typeof exports !== 'undefined') {
-    factory(require("devtools/client/shared/sourceeditor/codemirror/lib/codemirror"));
+    factory(require("../../lib/codemirror"));
   } else {
     factory(root.CodeMirror);
   }

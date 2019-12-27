@@ -15,12 +15,12 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const ConnectionPromptSetting = createFactory(
-  require("devtools/client/aboutdebugging/src/components/ConnectionPromptSetting")
+  require("./ConnectionPromptSetting")
 );
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
-const { RUNTIMES } = require("devtools/client/aboutdebugging/src/constants");
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Actions = require("../actions/index");
+const { RUNTIMES } = require("../constants");
+const Types = require("../types/index");
 
 class RuntimeActions extends PureComponent {
   static get propTypes() {

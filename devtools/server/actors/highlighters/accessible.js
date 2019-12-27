@@ -4,15 +4,13 @@
 
 "use strict";
 
-const {
-  AutoRefreshHighlighter,
-} = require("devtools/server/actors/highlighters/auto-refresh");
+const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   CanvasFrameAnonymousContentHelper,
   createNode,
   createSVGNode,
   isNodeValid,
-} = require("devtools/server/actors/highlighters/utils/markup");
+} = require("./utils/markup");
 const { TEXT_NODE } = require("devtools/shared/dom-node-constants");
 const { setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 

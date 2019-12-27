@@ -5,13 +5,13 @@
 "use strict";
 
 const Services = require("Services");
-const { l10n } = require("devtools/client/aboutdebugging/src/modules/l10n");
+const { l10n } = require("../modules/l10n");
 
 const {
   DEBUG_TARGETS,
   PREFERENCES,
   REQUEST_PROCESSES_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("../constants");
 
 /**
  * This middleware converts tabs object that get from DebuggerClient.listProcesses() to

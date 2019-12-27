@@ -17,7 +17,7 @@ const {
   CLOSE_SEARCH,
   SELECT_ACTION_BAR_TAB,
   PANELS,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("../constants");
 
 function toggleRequestBlockingPanel() {
   return (dispatch, getState) => {

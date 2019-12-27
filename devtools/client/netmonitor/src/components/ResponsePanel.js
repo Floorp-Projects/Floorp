@@ -14,25 +14,21 @@ const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 const Services = require("Services");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const { L10N } = require("../utils/l10n");
 const {
   decodeUnicodeBase64,
   fetchNetworkUpdatePacket,
   formDataURI,
   getUrlBaseName,
   isJSON,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
-const {
-  Filters,
-} = require("devtools/client/netmonitor/src/utils/filter-predicates");
+} = require("../utils/request-utils");
+const { Filters } = require("../utils/filter-predicates");
 const {
   setTargetSearchResult,
 } = require("devtools/client/netmonitor/src/actions/search");
 
 // Components
-const PropertiesView = createFactory(
-  require("devtools/client/netmonitor/src/components/PropertiesView")
-);
+const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { div, img } = dom;
 const JSON_SCOPE_NAME = L10N.getStr("jsonScopeName");

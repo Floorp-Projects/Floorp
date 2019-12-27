@@ -4,9 +4,9 @@
 
 "use strict";
 
-const manifestTypes = require("devtools/client/application/src/types/manifest");
-const routingTypes = require("devtools/client/application/src/types/routing");
-const workersTypes = require("devtools/client/application/src/types/service-workers");
+const manifestTypes = require("./manifest");
+const routingTypes = require("./routing");
+const workersTypes = require("./service-workers");
 
 module.exports = Object.assign(
   {},

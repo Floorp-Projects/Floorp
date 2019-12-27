@@ -10,11 +10,9 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const FontPropertyValue = createFactory(
-  require("devtools/client/inspector/fonts/components/FontPropertyValue")
-);
+const FontPropertyValue = createFactory(require("./FontPropertyValue"));
 
-const Types = require("devtools/client/inspector/fonts/types");
+const Types = require("../types");
 
 class FontAxis extends PureComponent {
   static get propTypes() {

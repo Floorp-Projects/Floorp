@@ -10,11 +10,9 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Rule = createFactory(
-  require("devtools/client/inspector/rules/components/Rule")
-);
+const Rule = createFactory(require("./Rule"));
 
-const Types = require("devtools/client/inspector/rules/types");
+const Types = require("../types");
 
 class Rules extends PureComponent {
   static get propTypes() {

@@ -20,22 +20,22 @@ const { PREFS } = require("devtools/client/webconsole/constants");
 const { getPrefsService } = require("devtools/client/webconsole/utils/prefs");
 
 // Reducers
-const { reducers } = require("devtools/client/webconsole/reducers/index");
+const { reducers } = require("./reducers/index");
 
 // Middlewares
 const { ignore } = require("devtools/client/shared/redux/middleware/ignore");
-const eventTelemetry = require("devtools/client/webconsole/middleware/event-telemetry");
-const historyPersistence = require("devtools/client/webconsole/middleware/history-persistence");
+const eventTelemetry = require("./middleware/event-telemetry");
+const historyPersistence = require("./middleware/history-persistence");
 const {
   thunkWithOptions,
 } = require("devtools/client/shared/redux/middleware/thunk-with-options");
 
 // Enhancers
-const enableBatching = require("devtools/client/webconsole/enhancers/batching");
-const enableActorReleaser = require("devtools/client/webconsole/enhancers/actor-releaser");
-const ensureCSSErrorReportingEnabled = require("devtools/client/webconsole/enhancers/css-error-reporting");
-const enableNetProvider = require("devtools/client/webconsole/enhancers/net-provider");
-const enableMessagesCacheClearing = require("devtools/client/webconsole/enhancers/message-cache-clearing");
+const enableBatching = require("./enhancers/batching");
+const enableActorReleaser = require("./enhancers/actor-releaser");
+const ensureCSSErrorReportingEnabled = require("./enhancers/css-error-reporting");
+const enableNetProvider = require("./enhancers/net-provider");
+const enableMessagesCacheClearing = require("./enhancers/message-cache-clearing");
 
 /**
  * Create and configure store for the Console panel. This is the place

@@ -154,7 +154,7 @@ exports.censusDisplays = Object.freeze({
     get tooltip() {
       // Importing down here is necessary because of the circular dependency
       // this introduces with `./utils.js`.
-      const { L10N } = require("devtools/client/memory/utils");
+      const { L10N } = require("./utils");
       return L10N.getStr("censusDisplays.coarseType.tooltip");
     },
     inverted: true,
@@ -164,7 +164,7 @@ exports.censusDisplays = Object.freeze({
   allocationStack: Object.freeze({
     displayName: "Call Stack",
     get tooltip() {
-      const { L10N } = require("devtools/client/memory/utils");
+      const { L10N } = require("./utils");
       return L10N.getStr("censusDisplays.allocationStack.tooltip");
     },
     inverted: false,
@@ -174,7 +174,7 @@ exports.censusDisplays = Object.freeze({
   invertedAllocationStack: Object.freeze({
     displayName: "Inverted Call Stack",
     get tooltip() {
-      const { L10N } = require("devtools/client/memory/utils");
+      const { L10N } = require("./utils");
       return L10N.getStr("censusDisplays.invertedAllocationStack.tooltip");
     },
     inverted: true,
@@ -202,7 +202,7 @@ exports.labelDisplays = Object.freeze({
   coarseType: Object.freeze({
     displayName: "Type",
     get tooltip() {
-      const { L10N } = require("devtools/client/memory/utils");
+      const { L10N } = require("./utils");
       return L10N.getStr("dominatorTreeDisplays.coarseType.tooltip");
     },
     breakdown: DOMINATOR_TREE_LABEL_COARSE_TYPE,
@@ -211,7 +211,7 @@ exports.labelDisplays = Object.freeze({
   allocationStack: Object.freeze({
     displayName: "Call Stack",
     get tooltip() {
-      const { L10N } = require("devtools/client/memory/utils");
+      const { L10N } = require("./utils");
       return L10N.getStr("dominatorTreeDisplays.allocationStack.tooltip");
     },
     breakdown: Object.freeze({
@@ -226,7 +226,7 @@ exports.treeMapDisplays = Object.freeze({
   coarseType: Object.freeze({
     displayName: "Type",
     get tooltip() {
-      const { L10N } = require("devtools/client/memory/utils");
+      const { L10N } = require("./utils");
       return L10N.getStr("treeMapDisplays.coarseType.tooltip");
     },
     breakdown: COARSE_TYPE,

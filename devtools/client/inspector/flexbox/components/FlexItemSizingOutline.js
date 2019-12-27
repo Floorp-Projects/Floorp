@@ -8,7 +8,7 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Types = require("devtools/client/inspector/flexbox/types");
+const Types = require("../types");
 
 class FlexItemSizingOutline extends PureComponent {
   static get propTypes() {

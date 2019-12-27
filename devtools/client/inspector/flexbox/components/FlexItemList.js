@@ -12,11 +12,9 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
-const FlexItem = createFactory(
-  require("devtools/client/inspector/flexbox/components/FlexItem")
-);
+const FlexItem = createFactory(require("./FlexItem"));
 
-const Types = require("devtools/client/inspector/flexbox/types");
+const Types = require("../types");
 
 class FlexItemList extends PureComponent {
   static get propTypes() {

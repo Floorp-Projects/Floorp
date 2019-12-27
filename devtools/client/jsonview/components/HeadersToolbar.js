@@ -9,9 +9,7 @@ define(function(require, exports, module) {
   const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
   const { createFactories } = require("devtools/client/shared/react-utils");
 
-  const { Toolbar, ToolbarButton } = createFactories(
-    require("devtools/client/jsonview/components/reps/Toolbar")
-  );
+  const { Toolbar, ToolbarButton } = createFactories(require("./reps/Toolbar"));
 
   /**
    * This template is responsible for rendering a toolbar

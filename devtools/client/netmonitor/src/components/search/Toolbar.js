@@ -11,9 +11,7 @@ const {
 const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
-const {
-  FILTER_SEARCH_DELAY,
-} = require("devtools/client/netmonitor/src/constants");
+const { FILTER_SEARCH_DELAY } = require("../../constants");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Actions = require("devtools/client/netmonitor/src/actions/index");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");

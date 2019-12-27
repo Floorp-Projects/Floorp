@@ -12,12 +12,12 @@ const {
   updateGridColor,
   updateGridHighlighted,
   updateGrids,
-} = require("devtools/client/inspector/grids/actions/grids");
+} = require("./actions/grids");
 const {
   updateShowGridAreas,
   updateShowGridLineNumbers,
   updateShowInfiniteLines,
-} = require("devtools/client/inspector/grids/actions/highlighter-settings");
+} = require("./actions/highlighter-settings");
 
 loader.lazyRequireGetter(
   this,

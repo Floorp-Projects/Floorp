@@ -13,21 +13,15 @@ const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const {
-  fetchNetworkUpdatePacket,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
-const {
-  sortObjectKeys,
-} = require("devtools/client/netmonitor/src/utils/sort-utils");
+const { L10N } = require("../utils/l10n");
+const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
+const { sortObjectKeys } = require("../utils/sort-utils");
 const {
   setTargetSearchResult,
 } = require("devtools/client/netmonitor/src/actions/search");
 
 // Component
-const PropertiesView = createFactory(
-  require("devtools/client/netmonitor/src/components/PropertiesView")
-);
+const PropertiesView = createFactory(require("./PropertiesView"));
 
 const { div } = dom;
 

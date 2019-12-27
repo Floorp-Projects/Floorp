@@ -8,7 +8,7 @@ const {
   SELECT,
   HIGHLIGHT,
   UNHIGHLIGHT,
-} = require("devtools/client/accessibility/constants");
+} = require("../constants");
 
 /**
  * Fetch child accessibles for a given accessible object.
