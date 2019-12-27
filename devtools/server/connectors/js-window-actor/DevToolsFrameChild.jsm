@@ -70,8 +70,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     const connection = DebuggerServer.connectToParentWindowActor(prefix, this);
 
     // Create the actual target actor.
-    const { messageManager } = this.docShell;
-    const targetActor = new FrameTargetActor(connection, messageManager);
+    const targetActor = new FrameTargetActor(connection, this.docShell);
 
     // Add the newly created actor to the connection pool.
     const actorPool = new ActorPool(connection);
