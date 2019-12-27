@@ -20,7 +20,7 @@ var scrollbar = document.getElementById("scrollbar");
 var downButton;
 
 var domWinUtils = SpecialPowers.DOMWindowUtils;
-  domWinUtils.loadSheetUsingURIString('data:text/css,@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); scrollbarbutton[type="increment"][sbattr="scrollbar-down-bottom"] { display: -moz-box; }', domWinUtils.AGENT_SHEET);
+domWinUtils.loadSheetUsingURIString('data:text/css,@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); scrollbarbutton[type="increment"][sbattr="scrollbar-down-bottom"] { display: -moz-box; min-width: 3px; min-height: 3px; }', domWinUtils.AGENT_SHEET);
 
 function init()
 {
