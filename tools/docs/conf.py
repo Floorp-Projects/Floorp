@@ -117,4 +117,5 @@ def setup(app):
         # We use it for testing/web-platform/tests
         'enable_eval_rst': True,
             }, True)
+    app.add_stylesheet('custom_theme.css')
     app.add_transform(AutoStructify)
