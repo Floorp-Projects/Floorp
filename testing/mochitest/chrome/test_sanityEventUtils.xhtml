@@ -106,24 +106,6 @@
       var startTime = new Date();
       var result;
 
-      /* test synthesizeDragStart */
-      result = synthesizeDragStart($("drag1"), drag1, window);
-      is(result, null, "drag1 is text/uri-list");
-      result = synthesizeDragStart($("drag1"), drag1WrongFlavor, window);
-      isnot(result, null, "drag1 is not text/plain");
-      result = synthesizeDragStart($("drag1"), drag2items, window);
-      isnot(result, null, "drag1 is not 2 items");
-      result = synthesizeDragStart($("drag2"), drag2, window);
-      is(result, null, "drag2 is ordered text/plain then text/uri-list");
-      result = synthesizeDragStart($("drag2"), drag1, window);
-      isnot(result, null, "drag2 is not one flavor");
-      result = synthesizeDragStart($("drag2"), drag2WrongOrder, window);
-      isnot(result, null, "drag2 is not ordered text/uri-list then text/plain");
-      result = synthesizeDragStart($("dragfile"), dragfile, window);
-      is(result, null, "dragfile is nsIFile");
-      result = synthesizeDragStart($("drag1"), null, window);
-      is(result, regularDtForDrag1, "synthesizeDragStart accepts null expectedDragData");
-     
       /* test synthesizeDrop */
       result = synthesizeDrop($("dragDrop"), $("dragDrop"), dragDrop, null, window);
       ok(gEnter, "Fired dragenter");

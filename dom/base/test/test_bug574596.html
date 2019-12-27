@@ -60,15 +60,25 @@ function dumpTransfer(dataTransfer,expect) {
   alert(dtData);
 }
 
-function runTest() {
-  var result = synthesizeDragStart($('link1'), dragLinkText, window);
-  is(result, null, "Drag -moz-user-select:none link (#link1)");
+async function runTest() {
+  var result = await synthesizePlainDragAndCancel(
+    {
+      srcElement: $('link1').firstChild,
+      finalY: -10, // Avoid clicking the link
+    },
+    dragLinkText);
+  ok(result === true, "Drag -moz-user-select:none link (#link1)");
   // if (result) dumpTransfer(result,dragLinkText);
 
   dragLinkText[0][2].data = "link2";
   dragLinkText[0][6].data = '<div id="link2"><a href="http://www.mozilla.org/">link2</a></div>'
-  var result = synthesizeDragStart($('link2'), dragLinkText, window);
-  is(result, null, "Drag link (#link2)");
+  var result = await synthesizePlainDragAndCancel(
+    {
+      srcElement: $('link2').firstChild,
+      finalY: -10, // Avoid clicking the link
+    },
+    dragLinkText);
+  ok(result === true, "Drag link (#link2)");
   // if (result) dumpTransfer(result,dragLinkText);
 
   SimpleTest.finish();
