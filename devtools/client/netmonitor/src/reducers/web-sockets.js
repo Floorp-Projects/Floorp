@@ -15,7 +15,7 @@ const {
   WS_TOGGLE_COLUMN,
   WS_RESET_COLUMNS,
   WS_CLOSE_CONNECTION,
-} = require("../constants");
+} = require("devtools/client/netmonitor/src/constants");
 
 /**
  * The default column state for the FramesListItem component.

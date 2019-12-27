@@ -12,8 +12,12 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const AnimationTarget = createFactory(require("./AnimationTarget"));
-const SummaryGraph = createFactory(require("./graph/SummaryGraph"));
+const AnimationTarget = createFactory(
+  require("devtools/client/inspector/animation/components/AnimationTarget")
+);
+const SummaryGraph = createFactory(
+  require("devtools/client/inspector/animation/components/graph/SummaryGraph")
+);
 
 class AnimationItem extends Component {
   static get propTypes() {

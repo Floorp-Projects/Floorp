@@ -16,16 +16,22 @@ const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 // GridDisplaySettings and GridList because we assume the CSS grid usage is low
 // and usually will not appear on the page.
 loader.lazyGetter(this, "GridDisplaySettings", function() {
-  return createFactory(require("./GridDisplaySettings"));
+  return createFactory(
+    require("devtools/client/inspector/grids/components/GridDisplaySettings")
+  );
 });
 loader.lazyGetter(this, "GridList", function() {
-  return createFactory(require("./GridList"));
+  return createFactory(
+    require("devtools/client/inspector/grids/components/GridList")
+  );
 });
 loader.lazyGetter(this, "GridOutline", function() {
-  return createFactory(require("./GridOutline"));
+  return createFactory(
+    require("devtools/client/inspector/grids/components/GridOutline")
+  );
 });
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/grids/types");
 
 class Grid extends PureComponent {
   static get propTypes() {

@@ -8,7 +8,9 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { ICON_LABEL_LEVEL } = require("../../constants");
+const {
+  ICON_LABEL_LEVEL,
+} = require("devtools/client/aboutdebugging/src/constants");
 
 const ICONS = {
   [ICON_LABEL_LEVEL.INFO]: "chrome://global/skin/icons/info.svg",

@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { CHANGE_NETWORK_THROTTLING } = require("./actions");
+const {
+  CHANGE_NETWORK_THROTTLING,
+} = require("devtools/client/shared/components/throttling/actions");
 
 const INITIAL_STATE = {
   enabled: false,

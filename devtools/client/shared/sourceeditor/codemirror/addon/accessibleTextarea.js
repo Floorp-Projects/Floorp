@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 (function(mod) {
-  mod(require("../lib/codemirror"));
+  mod(require("devtools/client/shared/sourceeditor/codemirror/lib/codemirror"));
 })(function(CodeMirror) {
   // CodeMirror uses an offscreen <textarea> to detect input.
   // Due to inconsistencies in the many browsers it supports, it simplifies things by

@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { AutoRefreshHighlighter } = require("./auto-refresh");
+const {
+  AutoRefreshHighlighter,
+} = require("devtools/server/actors/highlighters/auto-refresh");
 const {
   CanvasFrameAnonymousContentHelper,
   createNode,
@@ -13,7 +15,7 @@ const {
   hasPseudoClassLock,
   isNodeValid,
   moveInfobar,
-} = require("./utils/markup");
+} = require("devtools/server/actors/highlighters/utils/markup");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const {
   getCurrentZoom,

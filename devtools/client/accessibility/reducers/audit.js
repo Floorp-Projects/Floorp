@@ -15,7 +15,7 @@ const {
   FILTERS,
   RESET,
   SELECT,
-} = require("../constants");
+} = require("devtools/client/accessibility/constants");
 
 /**
  * Initial state definition

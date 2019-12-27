@@ -17,11 +17,13 @@ const Localized = createFactory(FluentReact.Localized);
 
 const {
   getCurrentRuntimeDetails,
-} = require("../../modules/runtimes-state-helper");
+} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
 
-const Actions = require("../../actions/index");
-const Types = require("../../types/index");
-const { SERVICE_WORKER_STATUSES } = require("../../constants");
+const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+const Types = require("devtools/client/aboutdebugging/src/types/index");
+const {
+  SERVICE_WORKER_STATUSES,
+} = require("devtools/client/aboutdebugging/src/constants");
 
 /**
  * The main purpose of this component is to expose a meaningful prop

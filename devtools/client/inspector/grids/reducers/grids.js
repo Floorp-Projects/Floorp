@@ -10,7 +10,7 @@ const {
   UPDATE_GRID_COLOR,
   UPDATE_GRID_HIGHLIGHTED,
   UPDATE_GRIDS,
-} = require("../actions/index");
+} = require("devtools/client/inspector/grids/actions/index");
 
 const INITIAL_GRIDS = [];
 

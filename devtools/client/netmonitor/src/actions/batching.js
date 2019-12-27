@@ -9,7 +9,7 @@ const {
   BATCH_ENABLE,
   BATCH_RESET,
   BATCH_FLUSH,
-} = require("../constants");
+} = require("devtools/client/netmonitor/src/constants");
 
 /**
  * Process multiple actions at once as part of one dispatch, and produce only one

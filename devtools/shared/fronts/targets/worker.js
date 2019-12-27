@@ -9,7 +9,7 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const { TargetMixin } = require("./target-mixin");
+const { TargetMixin } = require("devtools/shared/fronts/targets/target-mixin");
 
 class WorkerTargetFront extends TargetMixin(
   FrontClassWithSpec(workerTargetSpec)

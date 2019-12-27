@@ -13,7 +13,9 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 
-const IndicationBar = createFactory(require("./IndicationBar"));
+const IndicationBar = createFactory(
+  require("devtools/client/inspector/animation/components/IndicationBar")
+);
 
 class CurrentTimeScrubber extends PureComponent {
   static get propTypes() {

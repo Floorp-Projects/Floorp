@@ -10,7 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { ELEMENT_STYLE } = require("devtools/client/inspector/rules/constants");
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/rules/types");
 
 class SourceLink extends PureComponent {
   static get propTypes() {

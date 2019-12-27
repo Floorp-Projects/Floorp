@@ -18,9 +18,9 @@ const {
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT,
   ZOOM_VIEWPORT,
-} = require("./index");
+} = require("devtools/client/responsive/actions/index");
 
-const { post } = require("../utils/message");
+const { post } = require("devtools/client/responsive/utils/message");
 
 module.exports = {
   /**

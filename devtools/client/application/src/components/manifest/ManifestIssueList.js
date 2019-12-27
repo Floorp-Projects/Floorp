@@ -10,10 +10,14 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { ul } = require("devtools/client/shared/vendor/react-dom-factories");
 
-const { MANIFEST_ISSUE_LEVELS } = require("../../constants");
-const Types = require("../../types/index");
+const {
+  MANIFEST_ISSUE_LEVELS,
+} = require("devtools/client/application/src/constants");
+const Types = require("devtools/client/application/src/types/index");
 
-const ManifestIssue = createFactory(require("./ManifestIssue"));
+const ManifestIssue = createFactory(
+  require("devtools/client/application/src/components/manifest/ManifestIssue")
+);
 
 /**
  * A collection of manifest issues (errors, warnings)

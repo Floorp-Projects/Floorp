@@ -7,7 +7,7 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
-const { getStr } = require("../utils/l10n");
+const { getStr } = require("devtools/client/inspector/rules/utils/l10n");
 
 class SearchBox extends PureComponent {
   static get propTypes() {

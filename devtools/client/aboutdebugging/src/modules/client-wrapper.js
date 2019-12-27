@@ -8,7 +8,9 @@ const {
   checkVersionCompatibility,
 } = require("devtools/client/shared/remote-debugging/version-checker");
 
-const { RUNTIME_PREFERENCE } = require("../constants");
+const {
+  RUNTIME_PREFERENCE,
+} = require("devtools/client/aboutdebugging/src/constants");
 const { WorkersListener } = require("devtools/client/shared/workers-listener");
 
 const PREF_TYPES = {

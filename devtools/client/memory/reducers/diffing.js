@@ -5,8 +5,12 @@
 
 const Immutable = require("devtools/client/shared/vendor/immutable");
 const { immutableUpdate, assert } = require("devtools/shared/DevToolsUtils");
-const { actions, diffingState, viewState } = require("../constants");
-const { snapshotIsDiffable } = require("../utils");
+const {
+  actions,
+  diffingState,
+  viewState,
+} = require("devtools/client/memory/constants");
+const { snapshotIsDiffable } = require("devtools/client/memory/utils");
 
 const handlers = Object.create(null);
 

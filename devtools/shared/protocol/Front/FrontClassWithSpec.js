@@ -4,7 +4,7 @@
 
 "use strict";
 
-var { Front } = require("../Front");
+var { Front } = require("devtools/shared/protocol/Front");
 
 /**
  * Generates request methods as described by the given actor specification on

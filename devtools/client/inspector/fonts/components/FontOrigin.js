@@ -14,8 +14,8 @@ loader.lazyRequireGetter(
   "devtools/shared/platform/clipboard"
 );
 
-const { getStr } = require("../utils/l10n");
-const Types = require("../types");
+const { getStr } = require("devtools/client/inspector/fonts/utils/l10n");
+const Types = require("devtools/client/inspector/fonts/types");
 
 class FontOrigin extends PureComponent {
   static get propTypes() {

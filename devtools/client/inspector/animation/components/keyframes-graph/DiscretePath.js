@@ -7,7 +7,7 @@
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const ComputedStylePath = require("./ComputedStylePath");
+const ComputedStylePath = require("devtools/client/inspector/animation/components/keyframes-graph/ComputedStylePath");
 
 class DiscretePath extends ComputedStylePath {
   static get propTypes() {

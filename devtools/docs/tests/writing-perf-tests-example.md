@@ -14,14 +14,14 @@ The full code for the test looks as follows:
 ```
 const {
   reloadInspectorAndLog,
-} = require("./inspector-helpers");
+} = require("devtools/docs/tests/inspector-helpers");
 
 const {
   openToolbox,
   runTest,
   testSetup,
   testTeardown,
-} = require("../head");
+} = require("devtools/docs/head");
 
 module.exports = async function() {
   // Define here your custom document via a data URI:

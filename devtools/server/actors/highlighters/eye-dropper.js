@@ -12,7 +12,7 @@ const { Ci, Cc } = require("chrome");
 const {
   CanvasFrameAnonymousContentHelper,
   createNode,
-} = require("./utils/markup");
+} = require("devtools/server/actors/highlighters/utils/markup");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {

@@ -8,7 +8,7 @@ const {
   DISABLE_ALL_PSEUDO_CLASSES,
   SET_PSEUDO_CLASSES,
   TOGGLE_PSEUDO_CLASS,
-} = require("./index");
+} = require("devtools/client/inspector/rules/actions/index");
 
 module.exports = {
   /**

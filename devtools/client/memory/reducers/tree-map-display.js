@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { actions, treeMapDisplays } = require("../constants");
+const {
+  actions,
+  treeMapDisplays,
+} = require("devtools/client/memory/constants");
 const DEFAULT_TREE_MAP_DISPLAY = treeMapDisplays.coarseType;
 
 const handlers = Object.create(null);

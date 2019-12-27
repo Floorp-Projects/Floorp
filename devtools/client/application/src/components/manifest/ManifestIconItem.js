@@ -17,10 +17,12 @@ const {
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
-const { l10n } = require("../../modules/l10n");
+const { l10n } = require("devtools/client/application/src/modules/l10n");
 
-const Types = require("../../types/index");
-const ManifestItem = createFactory(require("./ManifestItem"));
+const Types = require("devtools/client/application/src/types/index");
+const ManifestItem = createFactory(
+  require("devtools/client/application/src/components/manifest/ManifestItem")
+);
 
 /**
  * This component displays a Manifest member which holds a color value

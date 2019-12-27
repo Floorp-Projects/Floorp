@@ -16,26 +16,36 @@ const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
-const Actions = require("../actions/index");
-const { updateFormDataSections } = require("../utils/request-utils");
+const Actions = require("devtools/client/netmonitor/src/actions/index");
+const {
+  updateFormDataSections,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 const {
   getSelectedRequest,
   isSelectedRequestVisible,
-} = require("../selectors/index");
+} = require("devtools/client/netmonitor/src/selectors/index");
 
 // Components
 const SplitBox = createFactory(
   require("devtools/client/shared/components/splitter/SplitBox")
 );
-const RequestList = createFactory(require("./request-list/RequestList"));
-const Toolbar = createFactory(require("./Toolbar"));
+const RequestList = createFactory(
+  require("devtools/client/netmonitor/src/components/request-list/RequestList")
+);
+const Toolbar = createFactory(
+  require("devtools/client/netmonitor/src/components/Toolbar")
+);
 
 loader.lazyGetter(this, "NetworkDetailsPanel", function() {
-  return createFactory(require("./NetworkDetailsPanel"));
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/NetworkDetailsPanel")
+  );
 });
 
 loader.lazyGetter(this, "NetworkActionBar", function() {
-  return createFactory(require("./NetworkActionBar"));
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/NetworkActionBar")
+  );
 });
 
 // MediaQueryList object responsible for switching sidebar splitter

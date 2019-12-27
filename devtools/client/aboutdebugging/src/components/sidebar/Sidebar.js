@@ -14,8 +14,12 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { ICON_LABEL_LEVEL, PAGE_TYPES, RUNTIMES } = require("../../constants");
-const Types = require("../../types/index");
+const {
+  ICON_LABEL_LEVEL,
+  PAGE_TYPES,
+  RUNTIMES,
+} = require("devtools/client/aboutdebugging/src/constants");
+const Types = require("devtools/client/aboutdebugging/src/types/index");
 loader.lazyRequireGetter(
   this,
   "ADB_ADDON_STATES",
@@ -23,11 +27,21 @@ loader.lazyRequireGetter(
   true
 );
 
-const IconLabel = createFactory(require("../shared/IconLabel"));
-const SidebarItem = createFactory(require("./SidebarItem"));
-const SidebarFixedItem = createFactory(require("./SidebarFixedItem"));
-const SidebarRuntimeItem = createFactory(require("./SidebarRuntimeItem"));
-const RefreshDevicesButton = createFactory(require("./RefreshDevicesButton"));
+const IconLabel = createFactory(
+  require("devtools/client/aboutdebugging/src/components/shared/IconLabel")
+);
+const SidebarItem = createFactory(
+  require("devtools/client/aboutdebugging/src/components/sidebar/SidebarItem")
+);
+const SidebarFixedItem = createFactory(
+  require("devtools/client/aboutdebugging/src/components/sidebar/SidebarFixedItem")
+);
+const SidebarRuntimeItem = createFactory(
+  require("devtools/client/aboutdebugging/src/components/sidebar/SidebarRuntimeItem")
+);
+const RefreshDevicesButton = createFactory(
+  require("devtools/client/aboutdebugging/src/components/sidebar/RefreshDevicesButton")
+);
 const FIREFOX_ICON =
   "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
 const CONNECT_ICON = "chrome://devtools/skin/images/settings.svg";

@@ -16,25 +16,32 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   getFormattedIPAndPort,
   getFormattedSize,
-} = require("../utils/format-utils");
-const { L10N } = require("../utils/l10n");
+} = require("devtools/client/netmonitor/src/utils/format-utils");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const {
   getHeadersURL,
   getHTTPStatusCodeURL,
   getTrackingProtectionURL,
-} = require("../utils/mdn-utils");
+} = require("devtools/client/netmonitor/src/utils/mdn-utils");
 const {
   fetchNetworkUpdatePacket,
   writeHeaderText,
-} = require("../utils/request-utils");
-const { HeadersProvider, HeaderList } = require("../utils/headers-provider");
+} = require("devtools/client/netmonitor/src/utils/request-utils");
+const {
+  HeadersProvider,
+  HeaderList,
+} = require("devtools/client/netmonitor/src/utils/headers-provider");
 const {
   setTargetSearchResult,
 } = require("devtools/client/netmonitor/src/actions/search");
 
 // Components
-const PropertiesView = createFactory(require("./PropertiesView"));
-const StatusCode = createFactory(require("./StatusCode"));
+const PropertiesView = createFactory(
+  require("devtools/client/netmonitor/src/components/PropertiesView")
+);
+const StatusCode = createFactory(
+  require("devtools/client/netmonitor/src/components/StatusCode")
+);
 
 loader.lazyGetter(this, "MDNLink", function() {
   return createFactory(require("devtools/client/shared/components/MdnLink"));
