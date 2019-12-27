@@ -278,8 +278,7 @@ nsBaseDragService::InvokeDragSession(
   //
   // The best way to avoid this is to catch the dragstart event on the item
   // being dragged, and then to call preventDefault() and stopPropagating() on
-  // it. Alternatively, use EventUtils.synthesizeDragStart, which will do this
-  // for you.
+  // it.
   if (XRE_IsParentProcess()) {
     MOZ_ASSERT(
         !xpc::IsInAutomation(),

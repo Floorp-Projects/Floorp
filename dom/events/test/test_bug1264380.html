@@ -6,25 +6,19 @@
   <script src="/tests/SimpleTest/EventUtils.js"></script>
 <script>
 
-function runTests()
+async function runTests()
 {
   let dragService = SpecialPowers.Cc["@mozilla.org/widget/dragservice;1"].
     getService(SpecialPowers.Ci.nsIDragService);
 
-  let iframe = document.createElement('iframe');
-  document.body.appendChild(iframe);
-  iframe.contentDocument.body.innerHTML = '<div id="outer"/>';
-
+  let iframe = document.querySelector("iframe");
   let iframeDoc = iframe.contentDocument;
   let iframeWin = iframe.contentWindow;
 
   let shadow = iframeDoc.querySelector('#outer').attachShadow({mode: 'open'});
+
   let target = iframeDoc.createElement('a');
-
-  const TEXT = "Drag me if you can!";
-  let linkText = iframeDoc.createTextNode(TEXT);
-  target.appendChild(linkText);
-
+  target.textContent = "Drag me if you can!";
   const URL = "http://www.mozilla.org/";
   target.href = URL;
   shadow.appendChild(target);
@@ -63,8 +57,14 @@ function runTests()
     data: URL,
   }]];
 
-  let result = synthesizeDragStart(target, EXPECTED_DRAG_DATA, iframeWin);
-  is(result, null, "Should have gotten the expected drag data.");
+  let result = await synthesizePlainDragAndCancel(
+    {
+      srcElement: target,
+      srcWindow: iframeWin,
+      finalY: -10,  // Avoid clicking the link
+    },
+    EXPECTED_DRAG_DATA);
+  ok(result === true, "Should have gotten the expected drag data.");
   SimpleTest.finish();
 }
 
@@ -77,5 +77,6 @@ window.onload = () => {
 </script>
 
 <body>
+  <iframe srcdoc='<div id="outer"/>'></iframe>
 </body>
 </html>

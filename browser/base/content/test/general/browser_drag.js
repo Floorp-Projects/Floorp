@@ -1,4 +1,4 @@
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   let EventUtils = {};
@@ -22,11 +22,13 @@ function test() {
   // set the valid attribute so dropping is allowed
   var oldstate = gURLBar.getAttribute("pageproxystate");
   gURLBar.setPageProxyState("valid");
-  var dt = EventUtils.synthesizeDragStart(
-    document.getElementById("identity-box"),
+  let result = await EventUtils.synthesizePlainDragAndCancel(
+    {
+      srcElement: document.getElementById("identity-box"),
+    },
     expected
   );
-  is(dt, null, "drag on proxy icon");
+  ok(result === true, "dragging dataTransfer should be expected");
   gURLBar.setPageProxyState(oldstate);
   // Now, the identity information panel is opened by the proxy icon click.
   // We need to close it for next tests.
