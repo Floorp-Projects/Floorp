@@ -34,4 +34,8 @@ class MenuPresenter(
     override fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?) {
         menuToolbar.invalidateActions()
     }
+
+    override fun onReaderableStateUpdated(session: Session, readerable: Boolean) {
+        menuToolbar.invalidateActions()
+    }
 }
