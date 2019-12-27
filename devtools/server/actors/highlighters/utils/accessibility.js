@@ -9,7 +9,10 @@ const {
   getCurrentZoom,
   getViewportDimensions,
 } = require("devtools/shared/layout/utils");
-const { moveInfobar, createNode } = require("./markup");
+const {
+  moveInfobar,
+  createNode,
+} = require("devtools/server/actors/highlighters/utils/markup");
 const { truncateString } = require("devtools/shared/inspector/utils");
 
 const STRINGS_URI = "devtools/shared/locales/accessibility.properties";

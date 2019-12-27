@@ -10,8 +10,10 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { span } = require("devtools/client/shared/vendor/react-dom-factories");
 
-const Types = require("../../types/index");
-const ManifestItem = createFactory(require("./ManifestItem"));
+const Types = require("devtools/client/application/src/types/index");
+const ManifestItem = createFactory(
+  require("devtools/client/application/src/components/manifest/ManifestItem")
+);
 
 /**
  * This component displays a Manifest member which holds a color value

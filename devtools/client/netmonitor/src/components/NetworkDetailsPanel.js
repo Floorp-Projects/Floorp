@@ -10,15 +10,21 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
-const Actions = require("../actions/index");
-const { getSelectedRequest } = require("../selectors/index");
+const Actions = require("devtools/client/netmonitor/src/actions/index");
+const {
+  getSelectedRequest,
+} = require("devtools/client/netmonitor/src/selectors/index");
 
 // Components
 loader.lazyGetter(this, "CustomRequestPanel", function() {
-  return createFactory(require("./CustomRequestPanel"));
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/CustomRequestPanel")
+  );
 });
 loader.lazyGetter(this, "TabboxPanel", function() {
-  return createFactory(require("./TabboxPanel"));
+  return createFactory(
+    require("devtools/client/netmonitor/src/components/TabboxPanel")
+  );
 });
 
 const { div } = dom;

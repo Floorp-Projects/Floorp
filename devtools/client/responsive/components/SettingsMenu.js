@@ -9,7 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const { getStr } = require("../utils/l10n");
+const { getStr } = require("devtools/client/responsive/utils/l10n");
 
 loader.lazyRequireGetter(
   this,

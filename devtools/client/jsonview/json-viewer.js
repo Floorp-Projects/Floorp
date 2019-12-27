@@ -8,7 +8,7 @@ define(function(require, exports, module) {
   const { render } = require("devtools/client/shared/vendor/react-dom");
   const { createFactories } = require("devtools/client/shared/react-utils");
   const { MainTabbedArea } = createFactories(
-    require("./components/MainTabbedArea")
+    require("devtools/client/jsonview/components/MainTabbedArea")
   );
   const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 

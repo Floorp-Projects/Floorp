@@ -10,8 +10,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   createSummaryGraphPathStringFunction,
   SummaryGraphHelper,
-} = require("../../utils/graph-helper");
-const TimingPath = require("./TimingPath");
+} = require("devtools/client/inspector/animation/utils/graph-helper");
+const TimingPath = require("devtools/client/inspector/animation/components/graph/TimingPath");
 
 class EffectTimingPath extends TimingPath {
   static get propTypes() {

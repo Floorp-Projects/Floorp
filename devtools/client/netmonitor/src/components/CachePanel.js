@@ -10,12 +10,16 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { L10N } = require("../utils/l10n");
-const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const {
+  fetchNetworkUpdatePacket,
+} = require("devtools/client/netmonitor/src/utils/request-utils");
 
 // Components
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
-const PropertiesView = createFactory(require("./PropertiesView"));
+const PropertiesView = createFactory(
+  require("devtools/client/netmonitor/src/components/PropertiesView")
+);
 
 const { div, input } = dom;
 

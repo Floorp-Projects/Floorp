@@ -9,7 +9,7 @@ const {
   TOGGLE_REQUEST_FILTER_TYPE,
   SET_REQUEST_FILTER_TEXT,
   FILTER_TAGS,
-} = require("../constants");
+} = require("devtools/client/netmonitor/src/constants");
 
 function FilterTypes(overrideParams = {}) {
   const allFilterTypes = ["all"].concat(FILTER_TAGS);

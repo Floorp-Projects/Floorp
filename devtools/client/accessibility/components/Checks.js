@@ -16,11 +16,16 @@ const List = createFactory(
   require("devtools/client/shared/components/List").List
 );
 const ColorContrastCheck = createFactory(
-  require("./ColorContrastAccessibility").ColorContrastCheck
+  require("devtools/client/accessibility/components/ColorContrastAccessibility")
+    .ColorContrastCheck
 );
-const TextLabelCheck = createFactory(require("./TextLabelCheck"));
-const KeyboardCheck = createFactory(require("./KeyboardCheck"));
-const { L10N } = require("../utils/l10n");
+const TextLabelCheck = createFactory(
+  require("devtools/client/accessibility/components/TextLabelCheck")
+);
+const KeyboardCheck = createFactory(
+  require("devtools/client/accessibility/components/KeyboardCheck")
+);
+const { L10N } = require("devtools/client/accessibility/utils/l10n");
 
 const {
   accessibility: { AUDIT_TYPE },

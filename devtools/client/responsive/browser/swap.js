@@ -7,7 +7,9 @@
 const { Ci } = require("chrome");
 const Services = require("Services");
 const { E10SUtils } = require("resource://gre/modules/E10SUtils.jsm");
-const { tunnelToInnerBrowser } = require("./tunnel");
+const {
+  tunnelToInnerBrowser,
+} = require("devtools/client/responsive/browser/tunnel");
 
 function debug(msg) {
   // console.log(`RDM swap: ${msg}`);

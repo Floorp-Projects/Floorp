@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { UPDATE_SELECTED_PAGE } = require("../constants");
+const {
+  UPDATE_SELECTED_PAGE,
+} = require("devtools/client/application/src/constants");
 
 function updateSelectedPage(selectedPage) {
   return {

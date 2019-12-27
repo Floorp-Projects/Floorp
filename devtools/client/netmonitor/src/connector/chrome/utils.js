@@ -4,9 +4,19 @@
 
 "use strict";
 
-const { Request, Header, PostData } = require("./request");
-const { State, ResponseContent, Timings } = require("./response");
-const { getBulkLoader } = require("./bulk-loader");
+const {
+  Request,
+  Header,
+  PostData,
+} = require("devtools/client/netmonitor/src/connector/chrome/request");
+const {
+  State,
+  ResponseContent,
+  Timings,
+} = require("devtools/client/netmonitor/src/connector/chrome/response");
+const {
+  getBulkLoader,
+} = require("devtools/client/netmonitor/src/connector/chrome/bulk-loader");
 
 class Payload {
   constructor() {

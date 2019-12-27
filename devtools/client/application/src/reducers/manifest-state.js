@@ -12,7 +12,7 @@ const {
   FETCH_MANIFEST_START,
   FETCH_MANIFEST_SUCCESS,
   RESET_MANIFEST,
-} = require("../constants");
+} = require("devtools/client/application/src/constants");
 
 function _processRawManifestIcons(rawIcons) {
   // NOTE: about `rawIcons` array we are getting from platform:

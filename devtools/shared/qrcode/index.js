@@ -9,19 +9,20 @@ const defer = require("devtools/shared/defer");
 
 // Lazily require encoder and decoder in case only one is needed
 Object.defineProperty(this, "Encoder", {
-  get: () => require("./encoder/index").Encoder,
+  get: () => require("devtools/shared/qrcode/encoder/index").Encoder,
 });
 Object.defineProperty(this, "QRRSBlock", {
-  get: () => require("./encoder/index").QRRSBlock,
+  get: () => require("devtools/shared/qrcode/encoder/index").QRRSBlock,
 });
 Object.defineProperty(this, "QRErrorCorrectLevel", {
-  get: () => require("./encoder/index").QRErrorCorrectLevel,
+  get: () =>
+    require("devtools/shared/qrcode/encoder/index").QRErrorCorrectLevel,
 });
 Object.defineProperty(this, "decoder", {
   get: () => {
     // Some applications don't ship the decoder, see moz.build
     try {
-      return require("./decoder/index");
+      return require("devtools/shared/qrcode/decoder/index");
     } catch (e) {
       return null;
     }

@@ -8,7 +8,7 @@ const {
   isNodeValid,
   addPseudoClassLock,
   removePseudoClassLock,
-} = require("./utils/markup");
+} = require("devtools/server/actors/highlighters/utils/markup");
 
 const { loadSheet } = require("devtools/shared/layout/utils");
 

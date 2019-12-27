@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { WorkerDispatcher } = require("../worker-utils");
+const {
+  WorkerDispatcher,
+} = require("devtools/client/netmonitor/src/workers/worker-utils");
 
 let startArgs;
 let dispatcher;

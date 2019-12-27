@@ -12,8 +12,8 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { editableItem } = require("devtools/client/shared/inplace-editor");
 
-const { getStr } = require("../utils/l10n");
-const Types = require("../types");
+const { getStr } = require("devtools/client/inspector/rules/utils/l10n");
+const Types = require("devtools/client/inspector/rules/types");
 
 class Declaration extends PureComponent {
   static get propTypes() {

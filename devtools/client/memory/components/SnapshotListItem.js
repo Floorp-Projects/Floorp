@@ -14,9 +14,12 @@ const {
   getStatusText,
   snapshotIsDiffable,
   getSavedCensus,
-} = require("../utils");
-const { diffingState } = require("../constants");
-const { snapshot: snapshotModel, app: appModel } = require("../models");
+} = require("devtools/client/memory/utils");
+const { diffingState } = require("devtools/client/memory/constants");
+const {
+  snapshot: snapshotModel,
+  app: appModel,
+} = require("devtools/client/memory/models");
 
 class SnapshotListItem extends Component {
   static get propTypes() {

@@ -11,17 +11,25 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const AnimationName = createFactory(require("./AnimationName"));
-const DelaySign = createFactory(require("./DelaySign"));
-const EndDelaySign = createFactory(require("./EndDelaySign"));
-const SummaryGraphPath = createFactory(require("./SummaryGraphPath"));
+const AnimationName = createFactory(
+  require("devtools/client/inspector/animation/components/graph/AnimationName")
+);
+const DelaySign = createFactory(
+  require("devtools/client/inspector/animation/components/graph/DelaySign")
+);
+const EndDelaySign = createFactory(
+  require("devtools/client/inspector/animation/components/graph/EndDelaySign")
+);
+const SummaryGraphPath = createFactory(
+  require("devtools/client/inspector/animation/components/graph/SummaryGraphPath")
+);
 
 const {
   getFormattedTitle,
   getFormatStr,
   getStr,
   numberWithDecimals,
-} = require("../../utils/l10n");
+} = require("devtools/client/inspector/animation/utils/l10n");
 
 class SummaryGraph extends PureComponent {
   static get propTypes() {

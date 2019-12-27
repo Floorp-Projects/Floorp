@@ -12,9 +12,11 @@ const { extend } = require("devtools/shared/extend");
 const RecordingUtils = require("devtools/shared/performance/recording-utils");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-const EVENTS = require("../events");
-const { DetailsSubview } = require("./details-abstract-subview");
-const { L10N } = require("../modules/global");
+const EVENTS = require("devtools/client/performance/events");
+const {
+  DetailsSubview,
+} = require("devtools/client/performance/views/details-abstract-subview");
+const { L10N } = require("devtools/client/performance/modules/global");
 
 /**
  * FlameGraph view containing a pyramid-like visualization of memory allocation

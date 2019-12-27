@@ -11,7 +11,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
   createSummaryGraphPathStringFunction,
   SummaryGraphHelper,
-} = require("../../utils/graph-helper");
+} = require("devtools/client/inspector/animation/utils/graph-helper");
 
 class NegativePath extends PureComponent {
   static get propTypes() {

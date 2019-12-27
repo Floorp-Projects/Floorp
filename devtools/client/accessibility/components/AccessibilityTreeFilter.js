@@ -16,7 +16,7 @@ const {
   span,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("../utils/l10n");
+const { L10N } = require("devtools/client/accessibility/utils/l10n");
 
 loader.lazyGetter(this, "MenuButton", function() {
   return createFactory(
@@ -34,10 +34,10 @@ loader.lazyGetter(this, "MenuList", function() {
   );
 });
 
-const actions = require("../actions/audit");
+const actions = require("devtools/client/accessibility/actions/audit");
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { FILTERS } = require("../constants");
+const { FILTERS } = require("devtools/client/accessibility/constants");
 
 const TELEMETRY_AUDIT_ACTIVATED = "devtools.accessibility.audit_activated";
 const FILTER_LABELS = {

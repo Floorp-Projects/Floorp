@@ -12,7 +12,9 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 const FlexboxInspector = require("devtools/client/inspector/flexbox/flexbox");
 const GridInspector = require("devtools/client/inspector/grids/grid-inspector");
 
-const LayoutApp = createFactory(require("./components/LayoutApp"));
+const LayoutApp = createFactory(
+  require("devtools/client/inspector/layout/components/LayoutApp")
+);
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const INSPECTOR_L10N = new LocalizationHelper(

@@ -11,11 +11,17 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const FontName = createFactory(require("./FontName"));
-const FontOrigin = createFactory(require("./FontOrigin"));
-const FontPreview = createFactory(require("./FontPreview"));
+const FontName = createFactory(
+  require("devtools/client/inspector/fonts/components/FontName")
+);
+const FontOrigin = createFactory(
+  require("devtools/client/inspector/fonts/components/FontOrigin")
+);
+const FontPreview = createFactory(
+  require("devtools/client/inspector/fonts/components/FontPreview")
+);
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/fonts/types");
 
 class Font extends PureComponent {
   static get propTypes() {

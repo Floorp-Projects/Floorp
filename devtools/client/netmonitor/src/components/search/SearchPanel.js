@@ -12,7 +12,7 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { div, span } = dom;
 const Actions = require("devtools/client/netmonitor/src/actions/index");
-const { PANELS } = require("../../constants");
+const { PANELS } = require("devtools/client/netmonitor/src/constants");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   connect,
@@ -22,9 +22,15 @@ const TreeView = createFactory(TreeViewClass);
 const LabelCell = createFactory(
   require("devtools/client/shared/components/tree/LabelCell")
 );
-const { SearchProvider } = require("./search-provider");
-const Toolbar = createFactory(require("./Toolbar"));
-const StatusBar = createFactory(require("./StatusBar"));
+const {
+  SearchProvider,
+} = require("devtools/client/netmonitor/src/components/search/search-provider");
+const Toolbar = createFactory(
+  require("devtools/client/netmonitor/src/components/search/Toolbar")
+);
+const StatusBar = createFactory(
+  require("devtools/client/netmonitor/src/components/search/StatusBar")
+);
 // There are two levels in the search panel tree hierarchy:
 // 0: Resource - represents the source request object
 // 1: Search Result - represents a match coming from the parent resource

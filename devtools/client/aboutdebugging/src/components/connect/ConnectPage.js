@@ -14,9 +14,9 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const { USB_STATES } = require("../../constants");
+const { USB_STATES } = require("devtools/client/aboutdebugging/src/constants");
 
-const Actions = require("../../actions/index");
+const Actions = require("devtools/client/aboutdebugging/src/actions/index");
 
 loader.lazyRequireGetter(
   this,
@@ -28,13 +28,24 @@ loader.lazyRequireGetter(
 const Link = createFactory(
   require("devtools/client/shared/vendor/react-router-dom").Link
 );
-const ConnectSection = createFactory(require("./ConnectSection"));
-const ConnectSteps = createFactory(require("./ConnectSteps"));
-const NetworkLocationsForm = createFactory(require("./NetworkLocationsForm"));
-const NetworkLocationsList = createFactory(require("./NetworkLocationsList"));
+const ConnectSection = createFactory(
+  require("devtools/client/aboutdebugging/src/components/connect/ConnectSection")
+);
+const ConnectSteps = createFactory(
+  require("devtools/client/aboutdebugging/src/components/connect/ConnectSteps")
+);
+const NetworkLocationsForm = createFactory(
+  require("devtools/client/aboutdebugging/src/components/connect/NetworkLocationsForm")
+);
+const NetworkLocationsList = createFactory(
+  require("devtools/client/aboutdebugging/src/components/connect/NetworkLocationsList")
+);
 
-const { PAGE_TYPES, RUNTIMES } = require("../../constants");
-const Types = require("../../types/index");
+const {
+  PAGE_TYPES,
+  RUNTIMES,
+} = require("devtools/client/aboutdebugging/src/constants");
+const Types = require("devtools/client/aboutdebugging/src/types/index");
 
 const USB_ICON_SRC =
   "chrome://devtools/skin/images/aboutdebugging-usb-icon.svg";

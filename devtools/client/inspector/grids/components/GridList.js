@@ -12,9 +12,11 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getStr } = require("devtools/client/inspector/layout/utils/l10n");
 
-const GridItem = createFactory(require("./GridItem"));
+const GridItem = createFactory(
+  require("devtools/client/inspector/grids/components/GridItem")
+);
 
-const Types = require("../types");
+const Types = require("devtools/client/inspector/grids/types");
 
 class GridList extends PureComponent {
   static get propTypes() {

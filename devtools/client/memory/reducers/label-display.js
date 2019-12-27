@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { actions, labelDisplays } = require("../constants");
+const { actions, labelDisplays } = require("devtools/client/memory/constants");
 const DEFAULT_LABEL_DISPLAY = labelDisplays.coarseType;
 
 const handlers = Object.create(null);

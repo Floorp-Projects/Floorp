@@ -8,11 +8,15 @@ const {
   createStore,
   applyMiddleware,
 } = require("devtools/client/shared/vendor/redux");
-const { thunk } = require("./middleware/thunk");
-const { thunkWithOptions } = require("./middleware/thunk-with-options");
-const { waitUntilService } = require("./middleware/wait-service");
-const { task } = require("./middleware/task");
-const { promise } = require("./middleware/promise");
+const { thunk } = require("devtools/client/shared/redux/middleware/thunk");
+const {
+  thunkWithOptions,
+} = require("devtools/client/shared/redux/middleware/thunk-with-options");
+const {
+  waitUntilService,
+} = require("devtools/client/shared/redux/middleware/wait-service");
+const { task } = require("devtools/client/shared/redux/middleware/task");
+const { promise } = require("devtools/client/shared/redux/middleware/promise");
 const flags = require("devtools/shared/flags");
 
 loader.lazyRequireGetter(

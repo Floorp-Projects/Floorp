@@ -4,9 +4,13 @@
 /* globals $, $$, PerformanceController */
 "use strict";
 
-const EVENTS = require("../events");
-const { TIMELINE_BLUEPRINT } = require("../modules/markers");
-const { MarkerBlueprintUtils } = require("../modules/marker-blueprint-utils");
+const EVENTS = require("devtools/client/performance/events");
+const {
+  TIMELINE_BLUEPRINT,
+} = require("devtools/client/performance/modules/markers");
+const {
+  MarkerBlueprintUtils,
+} = require("devtools/client/performance/modules/marker-blueprint-utils");
 
 const { OptionsView } = require("devtools/client/shared/options-view");
 const EventEmitter = require("devtools/shared/event-emitter");

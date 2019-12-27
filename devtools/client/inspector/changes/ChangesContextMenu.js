@@ -11,7 +11,7 @@ loader.lazyRequireGetter(
   "devtools/client/framework/menu-item"
 );
 
-const { getStr } = require("./utils/l10n");
+const { getStr } = require("devtools/client/inspector/changes/utils/l10n");
 
 /**
  * Context menu for the Changes panel with options to select, copy and export CSS changes.

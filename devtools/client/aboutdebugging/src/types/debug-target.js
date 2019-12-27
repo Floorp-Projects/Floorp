@@ -5,7 +5,9 @@
 "use strict";
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { DEBUG_TARGETS } = require("../constants");
+const {
+  DEBUG_TARGETS,
+} = require("devtools/client/aboutdebugging/src/constants");
 
 const extensionTargetDetails = {
   // actor ID for this extention.
