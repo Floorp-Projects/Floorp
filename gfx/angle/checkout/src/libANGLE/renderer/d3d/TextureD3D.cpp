@@ -205,7 +205,8 @@ bool TextureD3D::couldUseSetData() const
 
     if (!mRenderer->getFeatures().setDataFasterThanImageUploadOn128bitFormats.enabled)
     {
-        gl::InternalFormat internalFormat = gl::GetSizedInternalFormatInfo(getBaseLevelInternalFormat());
+        gl::InternalFormat internalFormat =
+            gl::GetSizedInternalFormatInfo(getBaseLevelInternalFormat());
         return internalFormat.pixelBytes < 16;
     }
 
