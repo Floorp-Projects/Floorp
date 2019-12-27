@@ -19,19 +19,11 @@ const {
   treeMapDisplays,
   diffingState,
   viewState,
-} = require("devtools/client/memory/constants");
-const {
-  toggleRecordingAllocationStacks,
-} = require("devtools/client/memory/actions/allocations");
-const {
-  setCensusDisplayAndRefresh,
-} = require("devtools/client/memory/actions/census-display");
-const {
-  setLabelDisplayAndRefresh,
-} = require("devtools/client/memory/actions/label-display");
-const {
-  setTreeMapDisplayAndRefresh,
-} = require("devtools/client/memory/actions/tree-map-display");
+} = require("./constants");
+const { toggleRecordingAllocationStacks } = require("./actions/allocations");
+const { setCensusDisplayAndRefresh } = require("./actions/census-display");
+const { setLabelDisplayAndRefresh } = require("./actions/label-display");
+const { setTreeMapDisplayAndRefresh } = require("./actions/tree-map-display");
 
 const {
   getCustomCensusDisplays,
@@ -44,14 +36,12 @@ const {
   expandDiffingCensusNode,
   collapseDiffingCensusNode,
   focusDiffingCensusNode,
-} = require("devtools/client/memory/actions/diffing");
-const {
-  setFilterStringAndRefresh,
-} = require("devtools/client/memory/actions/filter");
+} = require("./actions/diffing");
+const { setFilterStringAndRefresh } = require("./actions/filter");
 const {
   pickFileAndExportSnapshot,
   pickFileAndImportSnapshotAndCensus,
-} = require("devtools/client/memory/actions/io");
+} = require("./actions/io");
 const {
   selectSnapshotAndRefresh,
   takeSnapshotAndCensus,
@@ -66,21 +56,16 @@ const {
   focusDominatorTreeNode,
   fetchIndividuals,
   focusIndividual,
-} = require("devtools/client/memory/actions/snapshot");
-const {
-  changeViewAndRefresh,
-  popViewAndRefresh,
-} = require("devtools/client/memory/actions/view");
-const { resizeShortestPaths } = require("devtools/client/memory/actions/sizes");
-const Toolbar = createFactory(
-  require("devtools/client/memory/components/Toolbar")
-);
-const List = createFactory(require("devtools/client/memory/components/List"));
+} = require("./actions/snapshot");
+const { changeViewAndRefresh, popViewAndRefresh } = require("./actions/view");
+const { resizeShortestPaths } = require("./actions/sizes");
+const Toolbar = createFactory(require("./components/Toolbar"));
+const List = createFactory(require("./components/List"));
 const SnapshotListItem = createFactory(
-  require("devtools/client/memory/components/SnapshotListItem")
+  require("./components/SnapshotListItem")
 );
-const Heap = createFactory(require("devtools/client/memory/components/Heap"));
-const { app: appModel } = require("devtools/client/memory/models");
+const Heap = createFactory(require("./components/Heap"));
+const { app: appModel } = require("./models");
 
 class MemoryApp extends Component {
   static get propTypes() {

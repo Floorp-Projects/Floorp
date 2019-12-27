@@ -14,15 +14,11 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const Message = createFactory(
-  require("devtools/client/aboutdebugging/src/components/shared/Message")
-);
+const Message = createFactory(require("../shared/Message"));
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
-const {
-  MESSAGE_LEVEL,
-} = require("devtools/client/aboutdebugging/src/constants");
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Actions = require("../../actions/index");
+const { MESSAGE_LEVEL } = require("../../constants");
+const Types = require("../../types/index");
 
 class NetworkLocationsForm extends PureComponent {
   static get propTypes() {

@@ -7,9 +7,7 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  fetchNetworkUpdatePacket,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+const { fetchNetworkUpdatePacket } = require("../../utils/request-utils");
 
 class RequestListColumnCookies extends Component {
   static get propTypes() {

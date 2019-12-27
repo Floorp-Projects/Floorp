@@ -18,18 +18,12 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Accordion = createFactory(
   require("devtools/client/shared/components/Accordion")
 );
-const Rule = createFactory(
-  require("devtools/client/inspector/rules/components/Rule")
-);
-const Rules = createFactory(
-  require("devtools/client/inspector/rules/components/Rules")
-);
-const Toolbar = createFactory(
-  require("devtools/client/inspector/rules/components/Toolbar")
-);
+const Rule = createFactory(require("./Rule"));
+const Rules = createFactory(require("./Rules"));
+const Toolbar = createFactory(require("./Toolbar"));
 
-const { getStr } = require("devtools/client/inspector/rules/utils/l10n");
-const Types = require("devtools/client/inspector/rules/types");
+const { getStr } = require("../utils/l10n");
+const Types = require("../types");
 
 const SHOW_PSEUDO_ELEMENTS_PREF = "devtools.inspector.show_pseudo_elements";
 

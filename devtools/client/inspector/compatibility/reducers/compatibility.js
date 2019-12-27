@@ -14,7 +14,7 @@ const {
   COMPATIBILITY_UPDATE_SELECTED_NODE_SUCCESS,
   COMPATIBILITY_UPDATE_SELECTED_NODE_FAILURE,
   COMPATIBILITY_UPDATE_TARGET_BROWSERS,
-} = require("devtools/client/inspector/compatibility/actions/index");
+} = require("../actions/index");
 
 const INITIAL_STATE = {
   selectedNodeIssues: [],

@@ -4,8 +4,8 @@
 
 "use strict";
 
-exports.devices = require("devtools/client/responsive/reducers/devices");
+exports.devices = require("./reducers/devices");
 exports.networkThrottling = require("devtools/client/shared/components/throttling/reducer");
-exports.screenshot = require("devtools/client/responsive/reducers/screenshot");
-exports.ui = require("devtools/client/responsive/reducers/ui");
-exports.viewports = require("devtools/client/responsive/reducers/viewports");
+exports.screenshot = require("./reducers/screenshot");
+exports.ui = require("./reducers/ui");
+exports.viewports = require("./reducers/viewports");

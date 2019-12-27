@@ -5,13 +5,8 @@
 "use strict";
 
 const { createSelector } = require("devtools/client/shared/vendor/reselect");
-const {
-  Filters,
-  isFreetextMatch,
-} = require("devtools/client/netmonitor/src/utils/filter-predicates");
-const {
-  Sorters,
-} = require("devtools/client/netmonitor/src/utils/sort-predicates");
+const { Filters, isFreetextMatch } = require("../utils/filter-predicates");
+const { Sorters } = require("../utils/sort-predicates");
 
 /**
  * Take clones into account when sorting.

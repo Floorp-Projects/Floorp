@@ -18,7 +18,7 @@ loader.lazyRequireGetter(
   "devtools/client/inspector/shared/node-reps"
 );
 
-const Types = require("devtools/client/inspector/flexbox/types");
+const Types = require("../types");
 
 loader.lazyRequireGetter(
   this,

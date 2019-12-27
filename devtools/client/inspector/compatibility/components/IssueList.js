@@ -11,11 +11,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Types = require("devtools/client/inspector/compatibility/types");
+const Types = require("../types");
 
-const IssueItem = createFactory(
-  require("devtools/client/inspector/compatibility/components/IssueItem")
-);
+const IssueItem = createFactory(require("./IssueItem"));
 
 class IssueList extends PureComponent {
   static get propTypes() {

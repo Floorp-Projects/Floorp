@@ -8,7 +8,7 @@ const {
   UPDATE_GEOMETRY_EDITOR_ENABLED,
   UPDATE_LAYOUT,
   UPDATE_OFFSET_PARENT,
-} = require("devtools/client/inspector/boxmodel/actions/index");
+} = require("../actions/index");
 
 const INITIAL_BOX_MODEL = {
   geometryEditorEnabled: false,

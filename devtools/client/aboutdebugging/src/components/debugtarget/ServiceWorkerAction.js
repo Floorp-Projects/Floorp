@@ -17,16 +17,12 @@ const Localized = createFactory(FluentReact.Localized);
 
 const {
   getCurrentRuntimeDetails,
-} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
+} = require("../../modules/runtimes-state-helper");
 
-const InspectAction = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/InspectAction")
-);
+const InspectAction = createFactory(require("./InspectAction"));
 
-const Types = require("devtools/client/aboutdebugging/src/types/index");
-const {
-  SERVICE_WORKER_STATUSES,
-} = require("devtools/client/aboutdebugging/src/constants");
+const Types = require("../../types/index");
+const { SERVICE_WORKER_STATUSES } = require("../../constants");
 
 /**
  * This component displays buttons for service worker.

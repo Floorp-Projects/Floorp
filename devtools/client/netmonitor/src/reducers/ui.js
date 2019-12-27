@@ -24,7 +24,7 @@ const {
   PANELS,
   MIN_COLUMN_WIDTH,
   SET_COLUMNS_WIDTH,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("../constants");
 
 const cols = {
   status: true,

@@ -4,18 +4,18 @@
 
 "use strict";
 
-const { l10n } = require("devtools/client/application/src/modules/l10n");
+const { l10n } = require("../modules/l10n");
 
 const {
   services,
   ManifestDevToolsError,
-} = require("devtools/client/application/src/modules/application-services");
+} = require("../modules/application-services");
 const {
   FETCH_MANIFEST_FAILURE,
   FETCH_MANIFEST_START,
   FETCH_MANIFEST_SUCCESS,
   RESET_MANIFEST,
-} = require("devtools/client/application/src/constants");
+} = require("../constants");
 
 function fetchManifest() {
   return async (dispatch, getState) => {

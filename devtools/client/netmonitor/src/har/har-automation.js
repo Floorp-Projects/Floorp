@@ -8,13 +8,9 @@
 
 const { Ci } = require("chrome");
 const Services = require("Services");
-const {
-  HarCollector,
-} = require("devtools/client/netmonitor/src/har/har-collector");
-const {
-  HarExporter,
-} = require("devtools/client/netmonitor/src/har/har-exporter");
-const { HarUtils } = require("devtools/client/netmonitor/src/har/har-utils");
+const { HarCollector } = require("./har-collector");
+const { HarExporter } = require("./har-exporter");
+const { HarUtils } = require("./har-utils");
 
 const prefDomain = "devtools.netmonitor.har.";
 

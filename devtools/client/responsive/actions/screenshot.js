@@ -8,20 +8,15 @@
 
 const Services = require("Services");
 
-const {
-  TAKE_SCREENSHOT_START,
-  TAKE_SCREENSHOT_END,
-} = require("devtools/client/responsive/actions/index");
+const { TAKE_SCREENSHOT_START, TAKE_SCREENSHOT_END } = require("./index");
 
-const { getFormatStr } = require("devtools/client/responsive/utils/l10n");
-const {
-  getTopLevelWindow,
-} = require("devtools/client/responsive/utils/window");
-const e10s = require("devtools/client/responsive/utils/e10s");
+const { getFormatStr } = require("../utils/l10n");
+const { getTopLevelWindow } = require("../utils/window");
+const e10s = require("../utils/e10s");
 
 const CAMERA_AUDIO_URL = "resource://devtools/client/themes/audio/shutter.wav";
 
-const message = require("devtools/client/responsive/utils/message");
+const message = require("../utils/message");
 
 const animationFrame = () =>
   new Promise(resolve => {

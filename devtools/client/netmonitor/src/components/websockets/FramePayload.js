@@ -37,9 +37,7 @@ const {
 const Accordion = createFactory(
   require("devtools/client/shared/components/Accordion")
 );
-const RawData = createFactory(
-  require("devtools/client/netmonitor/src/components/websockets/RawData")
-);
+const RawData = createFactory(require("./RawData"));
 loader.lazyGetter(this, "JSONPreview", function() {
   return createFactory(
     require("devtools/client/netmonitor/src/components/JSONPreview")

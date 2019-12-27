@@ -12,11 +12,9 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const AnimationDetailHeader = createFactory(
-  require("devtools/client/inspector/animation/components/AnimationDetailHeader")
-);
+const AnimationDetailHeader = createFactory(require("./AnimationDetailHeader"));
 const AnimatedPropertyListContainer = createFactory(
-  require("devtools/client/inspector/animation/components/AnimatedPropertyListContainer")
+  require("./AnimatedPropertyListContainer")
 );
 
 class AnimationDetailContainer extends PureComponent {

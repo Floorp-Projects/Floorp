@@ -10,7 +10,7 @@
 
 var { Ci, Cc, Cu, components } = require("chrome");
 var Services = require("Services");
-var flags = require("devtools/shared/flags");
+var flags = require("./flags");
 var {
   getStack,
   callFunctionWithAsyncStack,
@@ -28,7 +28,7 @@ loader.lazyRequireGetter(
 var DevToolsUtils = exports;
 
 // Re-export the thread-safe utils.
-const ThreadSafeDevToolsUtils = require("devtools/shared/ThreadSafeDevToolsUtils.js");
+const ThreadSafeDevToolsUtils = require("./ThreadSafeDevToolsUtils.js");
 for (const key of Object.keys(ThreadSafeDevToolsUtils)) {
   exports[key] = ThreadSafeDevToolsUtils[key];
 }

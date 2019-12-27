@@ -5,7 +5,7 @@
 "use strict";
 
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { actions } = require("devtools/client/memory/constants");
+const { actions } = require("../constants");
 
 const handlers = Object.create(null);
 

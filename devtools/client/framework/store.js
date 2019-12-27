@@ -4,7 +4,7 @@
 "use strict";
 
 const createStore = require("devtools/client/shared/redux/create-store");
-const reducers = require("devtools/client/framework/reducers/index");
+const reducers = require("./reducers/index");
 
 exports.createToolboxStore = () =>
   createStore(reducers, {

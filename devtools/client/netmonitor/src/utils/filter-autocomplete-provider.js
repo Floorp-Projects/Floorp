@@ -4,10 +4,7 @@
 
 "use strict";
 
-const {
-  FILTER_FLAGS,
-  SUPPORTED_HTTP_CODES,
-} = require("devtools/client/netmonitor/src/constants");
+const { FILTER_FLAGS, SUPPORTED_HTTP_CODES } = require("../constants");
 
 /**
  * Generates a value for the given filter

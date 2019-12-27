@@ -20,4 +20,4 @@ const { require } = BrowserLoader({
 // script tags are using Promises bound to the lifecycle of the document, while modules
 // loaded with a devtools loader use Promises that will still resolve if the document is
 // destroyed. This is particularly useful to ensure asynchronous destroy() calls succeed.
-require("devtools/client/aboutdebugging/aboutdebugging");
+require("./aboutdebugging");

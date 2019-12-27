@@ -7,7 +7,7 @@
 const {
   CanvasFrameAnonymousContentHelper,
   createNode,
-} = require("devtools/server/actors/highlighters/utils/markup");
+} = require("./utils/markup");
 
 loader.lazyGetter(this, "L10N", () => {
   const { LocalizationHelper } = require("devtools/shared/l10n");

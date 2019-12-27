@@ -10,7 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   getResponseHeader,
   fetchNetworkUpdatePacket,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("../../utils/request-utils");
 
 /**
  * Renders a response header column in the requests list.  The actual

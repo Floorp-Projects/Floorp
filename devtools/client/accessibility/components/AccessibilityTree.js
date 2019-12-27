@@ -19,19 +19,13 @@ const TreeView = createFactory(
 // Reps
 const { MODE } = require("devtools/client/shared/components/reps/reps");
 
-const {
-  fetchChildren,
-} = require("devtools/client/accessibility/actions/accessibles");
+const { fetchChildren } = require("../actions/accessibles");
 
-const { L10N } = require("devtools/client/accessibility/utils/l10n");
-const { isFiltered } = require("devtools/client/accessibility/utils/audit");
-const AccessibilityRow = createFactory(
-  require("devtools/client/accessibility/components/AccessibilityRow")
-);
-const AccessibilityRowValue = createFactory(
-  require("devtools/client/accessibility/components/AccessibilityRowValue")
-);
-const { Provider } = require("devtools/client/accessibility/provider");
+const { L10N } = require("../utils/l10n");
+const { isFiltered } = require("../utils/audit");
+const AccessibilityRow = createFactory(require("./AccessibilityRow"));
+const AccessibilityRowValue = createFactory(require("./AccessibilityRowValue"));
+const { Provider } = require("../provider");
 
 const { scrollIntoView } = require("devtools/client/shared/scroll");
 

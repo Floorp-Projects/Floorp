@@ -8,8 +8,8 @@ const React = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const { isFiltered } = require("devtools/client/accessibility/utils/audit");
-const { FILTERS } = require("devtools/client/accessibility/constants");
+const { isFiltered } = require("../utils/audit");
+const { FILTERS } = require("../constants");
 const {
   accessibility: {
     AUDIT_TYPE,

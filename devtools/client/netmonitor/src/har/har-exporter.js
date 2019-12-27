@@ -9,9 +9,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const JSZip = require("devtools/client/shared/vendor/jszip");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 const { HarUtils } = require("devtools/client/netmonitor/src/har/har-utils");
-const {
-  HarBuilder,
-} = require("devtools/client/netmonitor/src/har/har-builder");
+const { HarBuilder } = require("./har-builder");
 
 var uid = 1;
 

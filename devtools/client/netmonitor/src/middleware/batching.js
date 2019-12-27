@@ -9,7 +9,7 @@ const {
   BATCH_ENABLE,
   BATCH_RESET,
   BATCH_FLUSH,
-} = require("devtools/client/netmonitor/src/constants");
+} = require("../constants");
 
 const REQUESTS_REFRESH_RATE = 50; // ms
 

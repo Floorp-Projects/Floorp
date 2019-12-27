@@ -4,18 +4,18 @@
 /* globals $, PerformanceController */
 "use strict";
 
-const EVENTS = require("devtools/client/performance/events");
-const { L10N } = require("devtools/client/performance/modules/global");
+const EVENTS = require("../events");
+const { L10N } = require("../modules/global");
 
-const PerformanceUtils = require("devtools/client/performance/modules/utils");
+const PerformanceUtils = require("../modules/utils");
 
 const React = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const RecordingList = React.createFactory(
-  require("devtools/client/performance/components/RecordingList")
+  require("../components/RecordingList")
 );
 const RecordingListItem = React.createFactory(
-  require("devtools/client/performance/components/RecordingListItem")
+  require("../components/RecordingListItem")
 );
 
 const EventEmitter = require("devtools/shared/event-emitter");

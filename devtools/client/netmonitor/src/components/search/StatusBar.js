@@ -18,7 +18,7 @@ const {
 const { PluralForm } = require("devtools/shared/plural-form");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
 const { div, span } = dom;
-const { SEARCH_STATUS } = require("devtools/client/netmonitor/src/constants");
+const { SEARCH_STATUS } = require("../../constants");
 
 /**
  * Displays the number of lines found for results and resource count (files)

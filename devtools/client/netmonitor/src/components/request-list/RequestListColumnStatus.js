@@ -13,9 +13,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Components
 
-const StatusCode = createFactory(
-  require("devtools/client/netmonitor/src/components/StatusCode")
-);
+const StatusCode = createFactory(require("../StatusCode"));
 
 class RequestListColumnStatus extends Component {
   static get propTypes() {

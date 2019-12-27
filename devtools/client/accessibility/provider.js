@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {
-  fetchChildren,
-} = require("devtools/client/accessibility/actions/accessibles");
+const { fetchChildren } = require("./actions/accessibles");
 
 /**
  * Data provider that is responsible for mapping of an accessibles cache to the

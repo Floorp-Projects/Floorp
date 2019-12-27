@@ -8,11 +8,9 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { isKeyIn } = require("devtools/client/responsive/utils/key");
-const {
-  MIN_VIEWPORT_DIMENSION,
-} = require("devtools/client/responsive/constants");
-const Types = require("devtools/client/responsive/types");
+const { isKeyIn } = require("../utils/key");
+const { MIN_VIEWPORT_DIMENSION } = require("../constants");
+const Types = require("../types");
 
 class ViewportDimension extends PureComponent {
   static get propTypes() {

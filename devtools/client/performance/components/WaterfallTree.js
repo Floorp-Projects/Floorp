@@ -11,9 +11,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const Tree = createFactory(
   require("devtools/client/shared/components/VirtualizedTree")
 );
-const WaterfallTreeRow = createFactory(
-  require("devtools/client/performance/components/WaterfallTreeRow")
-);
+const WaterfallTreeRow = createFactory(require("./WaterfallTreeRow"));
 
 // Keep in sync with var(--waterfall-tree-row-height) in performance.css
 const WATERFALL_TREE_ROW_HEIGHT = 15; // px

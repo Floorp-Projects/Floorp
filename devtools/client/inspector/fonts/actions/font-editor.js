@@ -12,7 +12,7 @@ const {
   UPDATE_EDITOR_STATE,
   UPDATE_PROPERTY_VALUE,
   UPDATE_WARNING_MESSAGE,
-} = require("devtools/client/inspector/fonts/actions/index");
+} = require("./index");
 
 module.exports = {
   resetFontEditor() {

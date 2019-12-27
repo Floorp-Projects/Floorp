@@ -13,12 +13,10 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const Browser = createFactory(
-  require("devtools/client/responsive/components/Browser")
-);
+const Browser = createFactory(require("./Browser"));
 
-const Constants = require("devtools/client/responsive/constants");
-const Types = require("devtools/client/responsive/types");
+const Constants = require("../constants");
+const Types = require("../types");
 
 const VIEWPORT_MIN_WIDTH = Constants.MIN_VIEWPORT_DIMENSION;
 const VIEWPORT_MIN_HEIGHT = Constants.MIN_VIEWPORT_DIMENSION;

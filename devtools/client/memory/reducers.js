@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-exports.allocations = require("devtools/client/memory/reducers/allocations");
-exports.censusDisplay = require("devtools/client/memory/reducers/census-display");
-exports.diffing = require("devtools/client/memory/reducers/diffing");
-exports.individuals = require("devtools/client/memory/reducers/individuals");
-exports.labelDisplay = require("devtools/client/memory/reducers/label-display");
-exports.treeMapDisplay = require("devtools/client/memory/reducers/tree-map-display");
-exports.errors = require("devtools/client/memory/reducers/errors");
-exports.filter = require("devtools/client/memory/reducers/filter");
-exports.sizes = require("devtools/client/memory/reducers/sizes");
-exports.snapshots = require("devtools/client/memory/reducers/snapshots");
-exports.view = require("devtools/client/memory/reducers/view");
+exports.allocations = require("./reducers/allocations");
+exports.censusDisplay = require("./reducers/census-display");
+exports.diffing = require("./reducers/diffing");
+exports.individuals = require("./reducers/individuals");
+exports.labelDisplay = require("./reducers/label-display");
+exports.treeMapDisplay = require("./reducers/tree-map-display");
+exports.errors = require("./reducers/errors");
+exports.filter = require("./reducers/filter");
+exports.sizes = require("./reducers/sizes");
+exports.snapshots = require("./reducers/snapshots");
+exports.view = require("./reducers/view");

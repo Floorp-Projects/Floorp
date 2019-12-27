@@ -10,8 +10,8 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const { PANELS } = require("devtools/client/netmonitor/src/constants");
+const { L10N } = require("../utils/l10n");
+const { PANELS } = require("../constants");
 
 // Components
 const Tabbar = createFactory(
@@ -20,33 +20,15 @@ const Tabbar = createFactory(
 const TabPanel = createFactory(
   require("devtools/client/shared/components/tabs/Tabs").TabPanel
 );
-const CookiesPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/CookiesPanel")
-);
-const HeadersPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/HeadersPanel")
-);
-const WebSocketsPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/websockets/WebSocketsPanel")
-);
-const ParamsPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/ParamsPanel")
-);
-const CachePanel = createFactory(
-  require("devtools/client/netmonitor/src/components/CachePanel")
-);
-const ResponsePanel = createFactory(
-  require("devtools/client/netmonitor/src/components/ResponsePanel")
-);
-const SecurityPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/SecurityPanel")
-);
-const StackTracePanel = createFactory(
-  require("devtools/client/netmonitor/src/components/StackTracePanel")
-);
-const TimingsPanel = createFactory(
-  require("devtools/client/netmonitor/src/components/TimingsPanel")
-);
+const CookiesPanel = createFactory(require("./CookiesPanel"));
+const HeadersPanel = createFactory(require("./HeadersPanel"));
+const WebSocketsPanel = createFactory(require("./websockets/WebSocketsPanel"));
+const ParamsPanel = createFactory(require("./ParamsPanel"));
+const CachePanel = createFactory(require("./CachePanel"));
+const ResponsePanel = createFactory(require("./ResponsePanel"));
+const SecurityPanel = createFactory(require("./SecurityPanel"));
+const StackTracePanel = createFactory(require("./StackTracePanel"));
+const TimingsPanel = createFactory(require("./TimingsPanel"));
 
 const COLLAPSE_DETAILS_PANE = L10N.getStr("collapseDetailsPane");
 const CACHE_TITLE = L10N.getStr("netmonitor.tab.cache");

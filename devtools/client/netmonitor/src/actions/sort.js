@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { SORT_BY } = require("devtools/client/netmonitor/src/constants");
+const { SORT_BY } = require("../constants");
 
 function sortBy(sortType) {
   return {

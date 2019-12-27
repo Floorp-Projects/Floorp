@@ -16,31 +16,23 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
+const Actions = require("../../actions/index");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const {
   getSelectedFrame,
   isSelectedFrameVisible,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("../../selectors/index");
 
 // Components
 const SplitBox = createFactory(
   require("devtools/client/shared/components/splitter/SplitBox")
 );
-const FrameListContent = createFactory(
-  require("devtools/client/netmonitor/src/components/websockets/FrameListContent")
-);
-const Toolbar = createFactory(
-  require("devtools/client/netmonitor/src/components/websockets/Toolbar")
-);
-const StatusBar = createFactory(
-  require("devtools/client/netmonitor/src/components/websockets/StatusBar")
-);
+const FrameListContent = createFactory(require("./FrameListContent"));
+const Toolbar = createFactory(require("./Toolbar"));
+const StatusBar = createFactory(require("./StatusBar"));
 
 loader.lazyGetter(this, "FramePayload", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/websockets/FramePayload")
-  );
+  return createFactory(require("./FramePayload"));
 });
 
 /**

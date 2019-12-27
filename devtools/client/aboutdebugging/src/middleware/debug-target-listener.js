@@ -7,8 +7,8 @@
 const {
   UNWATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
+} = require("../constants");
+const Actions = require("../actions/index");
 
 function debugTargetListenerMiddleware(store) {
   const onExtensionsUpdated = () => {

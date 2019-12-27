@@ -14,13 +14,9 @@ const {
 } = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const Types = require("devtools/client/application/src/types/index");
-const WorkerList = createFactory(
-  require("devtools/client/application/src/components/service-workers/WorkerList")
-);
-const WorkerListEmpty = createFactory(
-  require("devtools/client/application/src/components/service-workers/WorkerListEmpty")
-);
+const Types = require("../../types/index");
+const WorkerList = createFactory(require("./WorkerList"));
+const WorkerListEmpty = createFactory(require("./WorkerListEmpty"));
 
 class WorkersPage extends PureComponent {
   static get propTypes() {

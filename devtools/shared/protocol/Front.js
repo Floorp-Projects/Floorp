@@ -7,7 +7,7 @@
 var { settleAll } = require("devtools/shared/DevToolsUtils");
 var EventEmitter = require("devtools/shared/event-emitter");
 
-var { Pool } = require("devtools/shared/protocol/Pool");
+var { Pool } = require("./Pool");
 var {
   getStack,
   callFunctionWithAsyncStack,

@@ -9,7 +9,7 @@ const {
   REQUEST_WORKERS_SUCCESS,
   SERVICE_WORKER_FETCH_STATES,
   SERVICE_WORKER_STATUSES,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("../constants");
 
 /**
  * This middleware converts workers object that get from DebuggerClient.listAllWorkers()

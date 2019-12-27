@@ -17,14 +17,10 @@ const flags = require("devtools/shared/flags");
 const {
   PerformanceTelemetry,
 } = require("devtools/client/performance/modules/logic/telemetry");
-const {
-  PerformanceView,
-} = require("devtools/client/performance/performance-view");
-const { DetailsView } = require("devtools/client/performance/views/details");
-const {
-  RecordingsView,
-} = require("devtools/client/performance/views/recordings");
-const { ToolbarView } = require("devtools/client/performance/views/toolbar");
+const { PerformanceView } = require("./performance-view");
+const { DetailsView } = require("./views/details");
+const { RecordingsView } = require("./views/recordings");
+const { ToolbarView } = require("./views/toolbar");
 
 /**
  * Functions handling target-related lifetime events and

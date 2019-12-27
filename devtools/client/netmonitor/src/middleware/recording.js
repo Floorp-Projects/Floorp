@@ -4,13 +4,9 @@
 
 "use strict";
 
-const {
-  TOGGLE_RECORDING,
-} = require("devtools/client/netmonitor/src/constants");
+const { TOGGLE_RECORDING } = require("../constants");
 
-const {
-  getRecordingState,
-} = require("devtools/client/netmonitor/src/selectors/index");
+const { getRecordingState } = require("../selectors/index");
 
 /**
  * Start/stop HTTP traffic recording.

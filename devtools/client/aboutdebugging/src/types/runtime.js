@@ -5,9 +5,7 @@
 "use strict";
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const {
-  ClientWrapper,
-} = require("devtools/client/aboutdebugging/src/modules/client-wrapper");
+const { ClientWrapper } = require("../modules/client-wrapper");
 const {
   COMPATIBILITY_STATUS,
 } = require("devtools/client/shared/remote-debugging/version-checker");

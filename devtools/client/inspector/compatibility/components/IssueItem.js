@@ -19,10 +19,10 @@ loader.lazyRequireGetter(
 );
 
 const UnsupportedBrowserList = createFactory(
-  require("devtools/client/inspector/compatibility/components/UnsupportedBrowserList")
+  require("./UnsupportedBrowserList")
 );
 
-const Types = require("devtools/client/inspector/compatibility/types");
+const Types = require("../types");
 
 // For test
 loader.lazyRequireGetter(

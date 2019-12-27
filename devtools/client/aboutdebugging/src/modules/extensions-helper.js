@@ -18,7 +18,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const { PREFERENCES } = require("devtools/client/aboutdebugging/src/constants");
+const { PREFERENCES } = require("../constants");
 
 /**
  * Uninstall the addon with the provided id.

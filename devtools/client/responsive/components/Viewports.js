@@ -12,11 +12,9 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const ResizableViewport = createFactory(
-  require("devtools/client/responsive/components/ResizableViewport")
-);
+const ResizableViewport = createFactory(require("./ResizableViewport"));
 
-const Types = require("devtools/client/responsive/types");
+const Types = require("../types");
 
 class Viewports extends PureComponent {
   static get propTypes() {

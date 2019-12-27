@@ -5,14 +5,9 @@
 "use strict";
 
 const Services = require("Services");
-const {
-  ACTIVITY_TYPE,
-  EVENTS,
-} = require("devtools/client/netmonitor/src/constants");
-const FirefoxDataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
-const {
-  getDisplayedTimingMarker,
-} = require("devtools/client/netmonitor/src/selectors/index");
+const { ACTIVITY_TYPE, EVENTS } = require("../constants");
+const FirefoxDataProvider = require("./firefox-data-provider");
+const { getDisplayedTimingMarker } = require("../selectors/index");
 
 // Network throttling
 loader.lazyRequireGetter(

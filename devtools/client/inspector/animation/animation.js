@@ -12,10 +12,8 @@ const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 
-const App = createFactory(
-  require("devtools/client/inspector/animation/components/App")
-);
-const CurrentTimeTimer = require("devtools/client/inspector/animation/current-time-timer");
+const App = createFactory(require("./components/App"));
+const CurrentTimeTimer = require("./current-time-timer");
 
 const {
   updateAnimations,
@@ -25,11 +23,11 @@ const {
   updatePlaybackRates,
   updateSelectedAnimation,
   updateSidebarSize,
-} = require("devtools/client/inspector/animation/actions/animations");
+} = require("./actions/animations");
 const {
   hasAnimationIterationCountInfinite,
   hasRunningAnimation,
-} = require("devtools/client/inspector/animation/utils/utils");
+} = require("./utils/utils");
 
 class AnimationInspector {
   constructor(inspector, win) {

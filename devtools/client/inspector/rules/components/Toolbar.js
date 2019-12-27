@@ -13,22 +13,16 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { COLOR_SCHEMES } = require("devtools/client/inspector/rules/constants");
 
-const SearchBox = createFactory(
-  require("devtools/client/inspector/rules/components/SearchBox")
-);
+const SearchBox = createFactory(require("./SearchBox"));
 
 loader.lazyGetter(this, "ClassListPanel", function() {
-  return createFactory(
-    require("devtools/client/inspector/rules/components/ClassListPanel")
-  );
+  return createFactory(require("./ClassListPanel"));
 });
 loader.lazyGetter(this, "PseudoClassPanel", function() {
-  return createFactory(
-    require("devtools/client/inspector/rules/components/PseudoClassPanel")
-  );
+  return createFactory(require("./PseudoClassPanel"));
 });
 
-const { getStr } = require("devtools/client/inspector/rules/utils/l10n");
+const { getStr } = require("../utils/l10n");
 
 class Toolbar extends PureComponent {
   static get propTypes() {

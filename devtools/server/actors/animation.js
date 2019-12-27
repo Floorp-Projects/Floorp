@@ -32,9 +32,7 @@ const {
   animationPlayerSpec,
   animationsSpec,
 } = require("devtools/shared/specs/animation");
-const {
-  ANIMATION_TYPE_FOR_LONGHANDS,
-} = require("devtools/server/actors/animation-type-longhand");
+const { ANIMATION_TYPE_FOR_LONGHANDS } = require("./animation-type-longhand");
 
 // Types of animations.
 const ANIMATION_TYPES = {

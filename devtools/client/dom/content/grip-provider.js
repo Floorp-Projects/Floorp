@@ -3,10 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {
-  fetchProperties,
-} = require("devtools/client/dom/content/actions/grips");
-const { Property } = require("devtools/client/dom/content/reducers/grips");
+const { fetchProperties } = require("./actions/grips");
+const { Property } = require("./reducers/grips");
 
 // Implementation
 function GripProvider(grips, dispatch) {

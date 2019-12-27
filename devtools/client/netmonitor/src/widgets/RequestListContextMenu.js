@@ -6,16 +6,16 @@
 
 const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
+const { L10N } = require("../utils/l10n");
 const {
   formDataURI,
   getUrlQuery,
   getUrlBaseName,
   parseQueryString,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("../utils/request-utils");
 const {
   hasMatchingBlockingRequestPattern,
-} = require("devtools/client/netmonitor/src/utils/request-blocking");
+} = require("../utils/request-blocking");
 
 loader.lazyRequireGetter(this, "Curl", "devtools/client/shared/curl", true);
 loader.lazyRequireGetter(this, "saveAs", "devtools/shared/DevToolsUtils", true);

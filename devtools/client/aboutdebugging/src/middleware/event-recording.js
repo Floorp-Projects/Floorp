@@ -24,13 +24,13 @@ const {
   SHOW_PROFILER_DIALOG,
   TELEMETRY_RECORD,
   UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
-} = require("devtools/client/aboutdebugging/src/constants");
+} = require("../constants");
 
 const {
   findRuntimeById,
   getAllRuntimes,
   getCurrentRuntime,
-} = require("devtools/client/aboutdebugging/src/modules/runtimes-state-helper");
+} = require("../modules/runtimes-state-helper");
 
 function recordEvent(method, details) {
   // Add the session id to the event details.

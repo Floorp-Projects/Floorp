@@ -7,9 +7,7 @@
 const { Cu } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const ReplayInspector = require("devtools/server/actors/replay/inspector");
-const {
-  isNodeValid,
-} = require("devtools/server/actors/highlighters/utils/markup");
+const { isNodeValid } = require("./utils/markup");
 const {
   getAdjustedQuads,
   getWindowDimensions,

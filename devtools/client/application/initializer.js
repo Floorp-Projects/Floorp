@@ -21,22 +21,16 @@ const Provider = createFactory(
   require("devtools/client/shared/vendor/react-redux").Provider
 );
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
-const { l10n } = require("devtools/client/application/src/modules/l10n");
+const { l10n } = require("./src/modules/l10n");
 
-const {
-  configureStore,
-} = require("devtools/client/application/src/create-store");
-const actions = require("devtools/client/application/src/actions/index");
+const { configureStore } = require("./src/create-store");
+const actions = require("./src/actions/index");
 
 const { WorkersListener } = require("devtools/client/shared/workers-listener");
 
-const {
-  services,
-} = require("devtools/client/application/src/modules/application-services");
+const { services } = require("./src/modules/application-services");
 
-const App = createFactory(
-  require("devtools/client/application/src/components/App")
-);
+const App = createFactory(require("./src/components/App"));
 
 /**
  * Global Application object in this panel. This object is expected by panel.js and is

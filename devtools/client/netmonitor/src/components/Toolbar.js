@@ -14,24 +14,18 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
-const Actions = require("devtools/client/netmonitor/src/actions/index");
-const {
-  FILTER_SEARCH_DELAY,
-  FILTER_TAGS,
-  PANELS,
-} = require("devtools/client/netmonitor/src/constants");
+const Actions = require("../actions/index");
+const { FILTER_SEARCH_DELAY, FILTER_TAGS, PANELS } = require("../constants");
 const {
   getDisplayedRequests,
   getRecordingState,
   getTypeFilteredRequests,
-} = require("devtools/client/netmonitor/src/selectors/index");
+} = require("../selectors/index");
 const {
   autocompleteProvider,
-} = require("devtools/client/netmonitor/src/utils/filter-autocomplete-provider");
-const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
-const {
-  fetchNetworkUpdatePacket,
-} = require("devtools/client/netmonitor/src/utils/request-utils");
+} = require("../utils/filter-autocomplete-provider");
+const { L10N } = require("../utils/l10n");
+const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
 loader.lazyRequireGetter(
   this,
@@ -40,9 +34,7 @@ loader.lazyRequireGetter(
 );
 
 // MDN
-const {
-  getFilterBoxURL,
-} = require("devtools/client/netmonitor/src/utils/mdn-utils");
+const { getFilterBoxURL } = require("../utils/mdn-utils");
 const LEARN_MORE_URL = getFilterBoxURL();
 
 // Components

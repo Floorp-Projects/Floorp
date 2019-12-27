@@ -4,9 +4,7 @@
 
 "use strict";
 
-const {
-  isFreetextMatch,
-} = require("devtools/client/netmonitor/src/utils/filter-text-utils");
+const { isFreetextMatch } = require("./filter-text-utils");
 
 /**
  * Predicates used when filtering items.

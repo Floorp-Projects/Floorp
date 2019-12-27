@@ -9,7 +9,7 @@ const {
   UPDATE_FLEXBOX,
   UPDATE_FLEXBOX_COLOR,
   UPDATE_FLEXBOX_HIGHLIGHTED,
-} = require("devtools/client/inspector/flexbox/actions/index");
+} = require("../actions/index");
 
 const INITIAL_FLEXBOX = {
   // The color of the flexbox highlighter overlay.

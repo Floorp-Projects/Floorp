@@ -16,9 +16,7 @@ const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
 const { Rep } = REPS;
 const ElementNode = REPS.ElementNode;
 
-const {
-  getInspectorStr,
-} = require("devtools/client/inspector/animation/utils/l10n");
+const { getInspectorStr } = require("../utils/l10n");
 
 class AnimationTarget extends Component {
   static get propTypes() {

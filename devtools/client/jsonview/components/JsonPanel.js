@@ -16,9 +16,7 @@ define(function(require, exports, module) {
   const TreeView = createFactory(
     require("devtools/client/shared/components/tree/TreeView")
   );
-  const { JsonToolbar } = createFactories(
-    require("devtools/client/jsonview/components/JsonToolbar")
-  );
+  const { JsonToolbar } = createFactories(require("./JsonToolbar"));
 
   const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
   const { Rep } = REPS;

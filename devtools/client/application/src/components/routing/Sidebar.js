@@ -15,12 +15,10 @@ const {
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const SidebarItem = createFactory(
-  require("devtools/client/application/src/components/routing/SidebarItem")
-);
+const SidebarItem = createFactory(require("./SidebarItem"));
 
-const Types = require("devtools/client/application/src/types/index");
-const { PAGE_TYPES } = require("devtools/client/application/src/constants");
+const Types = require("../../types/index");
+const { PAGE_TYPES } = require("../../constants");
 
 class Sidebar extends PureComponent {
   static get propTypes() {

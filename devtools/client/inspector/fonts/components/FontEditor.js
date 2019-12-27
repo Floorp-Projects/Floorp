@@ -11,30 +11,16 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const FontAxis = createFactory(
-  require("devtools/client/inspector/fonts/components/FontAxis")
-);
-const FontName = createFactory(
-  require("devtools/client/inspector/fonts/components/FontName")
-);
-const FontSize = createFactory(
-  require("devtools/client/inspector/fonts/components/FontSize")
-);
-const FontStyle = createFactory(
-  require("devtools/client/inspector/fonts/components/FontStyle")
-);
-const FontWeight = createFactory(
-  require("devtools/client/inspector/fonts/components/FontWeight")
-);
-const LetterSpacing = createFactory(
-  require("devtools/client/inspector/fonts/components/LetterSpacing")
-);
-const LineHeight = createFactory(
-  require("devtools/client/inspector/fonts/components/LineHeight")
-);
+const FontAxis = createFactory(require("./FontAxis"));
+const FontName = createFactory(require("./FontName"));
+const FontSize = createFactory(require("./FontSize"));
+const FontStyle = createFactory(require("./FontStyle"));
+const FontWeight = createFactory(require("./FontWeight"));
+const LetterSpacing = createFactory(require("./LetterSpacing"));
+const LineHeight = createFactory(require("./LineHeight"));
 
-const { getStr } = require("devtools/client/inspector/fonts/utils/l10n");
-const Types = require("devtools/client/inspector/fonts/types");
+const { getStr } = require("../utils/l10n");
+const Types = require("../types");
 
 // Maximum number of font families to be shown by default. Any others will be hidden
 // under a collapsed <details> element with a toggle to reveal them.

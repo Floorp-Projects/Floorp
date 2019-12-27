@@ -4,9 +4,9 @@
 "use strict";
 
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { actions } = require("devtools/client/memory/constants");
-const { findSelectedSnapshot } = require("devtools/client/memory/utils");
-const refresh = require("devtools/client/memory/actions/refresh");
+const { actions } = require("../constants");
+const { findSelectedSnapshot } = require("../utils");
+const refresh = require("./refresh");
 
 /**
  * Change the currently selected view.

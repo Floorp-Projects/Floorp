@@ -10,7 +10,7 @@ module.exports = {
   verbose: true,
   moduleNameMapper: {
     // Custom name mappers for modules that require m-c specific API.
-    "^devtools/client/accessibility/utils/l10n": `${__dirname}/fixtures/l10n`,
+    "^../utils/l10n": `${__dirname}/fixtures/l10n`,
     "^devtools/client/shared/link": `${__dirname}/fixtures/stub`,
     "^devtools/shared/flags": `${__dirname}/fixtures/stub`,
     "^devtools/shared/event-emitter": `${__dirname}/node_modules/devtools-modules/src/utils/event-emitter`,

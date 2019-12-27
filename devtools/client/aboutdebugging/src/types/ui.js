@@ -6,10 +6,7 @@
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { ADB_ADDON_STATES } = require("devtools/shared/adb/adb-addon");
-const {
-  DEBUG_TARGET_PANE,
-  PAGE_TYPES,
-} = require("devtools/client/aboutdebugging/src/constants");
+const { DEBUG_TARGET_PANE, PAGE_TYPES } = require("../constants");
 
 function makeCollapsibilitiesType(isRequired) {
   return (props, propName, componentName, _, propFullName) => {

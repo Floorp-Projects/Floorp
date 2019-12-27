@@ -4,9 +4,9 @@
 
 "use strict";
 
-const workers = require("devtools/client/application/src/actions/workers");
-const page = require("devtools/client/application/src/actions/page");
-const ui = require("devtools/client/application/src/actions/ui");
-const manifest = require("devtools/client/application/src/actions/manifest");
+const workers = require("./workers");
+const page = require("./page");
+const ui = require("./ui");
+const manifest = require("./manifest");
 
 Object.assign(exports, workers, page, ui, manifest);

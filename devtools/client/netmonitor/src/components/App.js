@@ -16,19 +16,13 @@ const {
 
 // Components
 loader.lazyGetter(this, "MonitorPanel", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/MonitorPanel")
-  );
+  return createFactory(require("./MonitorPanel"));
 });
 loader.lazyGetter(this, "StatisticsPanel", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/StatisticsPanel")
-  );
+  return createFactory(require("./StatisticsPanel"));
 });
 loader.lazyGetter(this, "DropHarHandler", function() {
-  return createFactory(
-    require("devtools/client/netmonitor/src/components/DropHarHandler")
-  );
+  return createFactory(require("./DropHarHandler"));
 });
 
 const { div } = dom;

@@ -12,7 +12,7 @@ const {
   TOGGLE_RELOAD_ON_USER_AGENT,
   TOGGLE_TOUCH_SIMULATION,
   TOGGLE_USER_AGENT_INPUT,
-} = require("devtools/client/responsive/actions/index");
+} = require("./index");
 
 module.exports = {
   /**

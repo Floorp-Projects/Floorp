@@ -14,12 +14,10 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 
-const DebugTargetList = createFactory(
-  require("devtools/client/aboutdebugging/src/components/debugtarget/DebugTargetList")
-);
+const DebugTargetList = createFactory(require("./DebugTargetList"));
 
-const Actions = require("devtools/client/aboutdebugging/src/actions/index");
-const Types = require("devtools/client/aboutdebugging/src/types/index");
+const Actions = require("../../actions/index");
+const Types = require("../../types/index");
 
 /**
  * This component provides list for debug target and name area.

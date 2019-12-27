@@ -8,7 +8,7 @@ const {
   DISABLE_ALL_PSEUDO_CLASSES,
   SET_PSEUDO_CLASSES,
   TOGGLE_PSEUDO_CLASS,
-} = require("devtools/client/inspector/rules/actions/index");
+} = require("../actions/index");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 
 const INITIAL_PSEUDO_CLASSES = PSEUDO_CLASSES.reduce(

@@ -5,7 +5,7 @@
 "use strict";
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { PAGE_TYPES } = require("devtools/client/application/src/constants");
+const { PAGE_TYPES } = require("../constants");
 
 const page = PropTypes.oneOf(Object.values(PAGE_TYPES));
 
