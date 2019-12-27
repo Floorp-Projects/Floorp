@@ -15,3 +15,4 @@ cubeb-backend = "0.6"
 libc = "0.2"
 lazy_static = "1.2"
 mach = "0.3"
+mixer = { path = "mixer" }

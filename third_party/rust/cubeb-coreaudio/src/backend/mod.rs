@@ -32,9 +32,8 @@ use self::resampler::*;
 use self::utils::*;
 use atomic;
 use cubeb_backend::{
-    ffi, ChannelLayout, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType,
-    Error, Ops, Result, SampleFormat, State, Stream, StreamOps, StreamParams, StreamParamsRef,
-    StreamPrefs,
+    ffi, Context, ContextOps, DeviceCollectionRef, DeviceId, DeviceRef, DeviceType, Error, Ops,
+    Result, SampleFormat, State, Stream, StreamOps, StreamParams, StreamParamsRef, StreamPrefs,
 };
 use mach::mach_time::{mach_absolute_time, mach_timebase_info};
 use std::cmp;
@@ -137,64 +136,31 @@ impl device_property_listener {
 #[derive(Debug, PartialEq)]
 struct CAChannelLabel(AudioChannelLabel);
 
-impl CAChannelLabel {
-    fn get_raw_label(&self) -> AudioChannelLabel {
-        self.0
-    }
-}
-
-impl From<ChannelLayout> for CAChannelLabel {
-    fn from(layout: ChannelLayout) -> Self {
-        // Make sure the layout is a channel (only one bit set to 1)
-        assert_eq!(layout.bits() & (layout.bits() - 1), 0);
-        let channel = match layout {
-            ChannelLayout::FRONT_LEFT => kAudioChannelLabel_Left,
-            ChannelLayout::FRONT_RIGHT => kAudioChannelLabel_Right,
-            ChannelLayout::FRONT_CENTER => kAudioChannelLabel_Center,
-            ChannelLayout::LOW_FREQUENCY => kAudioChannelLabel_LFEScreen,
-            ChannelLayout::BACK_LEFT => kAudioChannelLabel_LeftSurround,
-            ChannelLayout::BACK_RIGHT => kAudioChannelLabel_RightSurround,
-            ChannelLayout::FRONT_LEFT_OF_CENTER => kAudioChannelLabel_LeftCenter,
-            ChannelLayout::FRONT_RIGHT_OF_CENTER => kAudioChannelLabel_RightCenter,
-            ChannelLayout::BACK_CENTER => kAudioChannelLabel_CenterSurround,
-            ChannelLayout::SIDE_LEFT => kAudioChannelLabel_LeftSurroundDirect,
-            ChannelLayout::SIDE_RIGHT => kAudioChannelLabel_RightSurroundDirect,
-            ChannelLayout::TOP_CENTER => kAudioChannelLabel_TopCenterSurround,
-            ChannelLayout::TOP_FRONT_LEFT => kAudioChannelLabel_VerticalHeightLeft,
-            ChannelLayout::TOP_FRONT_CENTER => kAudioChannelLabel_VerticalHeightCenter,
-            ChannelLayout::TOP_FRONT_RIGHT => kAudioChannelLabel_VerticalHeightRight,
-            ChannelLayout::TOP_BACK_LEFT => kAudioChannelLabel_TopBackLeft,
-            ChannelLayout::TOP_BACK_CENTER => kAudioChannelLabel_TopBackCenter,
-            ChannelLayout::TOP_BACK_RIGHT => kAudioChannelLabel_TopBackRight,
-            _ => kAudioChannelLabel_Unknown,
-        };
-        Self(channel)
-    }
-}
-
-impl Into<ChannelLayout> for CAChannelLabel {
-    fn into(self) -> ChannelLayout {
+impl Into<mixer::Channel> for CAChannelLabel {
+    fn into(self) -> mixer::Channel {
         use self::coreaudio_sys_utils::sys;
         match self.0 {
-            sys::kAudioChannelLabel_Left => ChannelLayout::FRONT_LEFT,
-            sys::kAudioChannelLabel_Right => ChannelLayout::FRONT_RIGHT,
-            sys::kAudioChannelLabel_Center => ChannelLayout::FRONT_CENTER,
-            sys::kAudioChannelLabel_LFEScreen => ChannelLayout::LOW_FREQUENCY,
-            sys::kAudioChannelLabel_LeftSurround => ChannelLayout::BACK_LEFT,
-            sys::kAudioChannelLabel_RightSurround => ChannelLayout::BACK_RIGHT,
-            sys::kAudioChannelLabel_LeftCenter => ChannelLayout::FRONT_LEFT_OF_CENTER,
-            sys::kAudioChannelLabel_RightCenter => ChannelLayout::FRONT_RIGHT_OF_CENTER,
-            sys::kAudioChannelLabel_CenterSurround => ChannelLayout::BACK_CENTER,
-            sys::kAudioChannelLabel_LeftSurroundDirect => ChannelLayout::SIDE_LEFT,
-            sys::kAudioChannelLabel_RightSurroundDirect => ChannelLayout::SIDE_RIGHT,
-            sys::kAudioChannelLabel_TopCenterSurround => ChannelLayout::TOP_CENTER,
-            sys::kAudioChannelLabel_VerticalHeightLeft => ChannelLayout::TOP_FRONT_LEFT,
-            sys::kAudioChannelLabel_VerticalHeightCenter => ChannelLayout::TOP_FRONT_CENTER,
-            sys::kAudioChannelLabel_VerticalHeightRight => ChannelLayout::TOP_FRONT_RIGHT,
-            sys::kAudioChannelLabel_TopBackLeft => ChannelLayout::TOP_BACK_LEFT,
-            sys::kAudioChannelLabel_TopBackCenter => ChannelLayout::TOP_BACK_CENTER,
-            sys::kAudioChannelLabel_TopBackRight => ChannelLayout::TOP_BACK_RIGHT,
-            _ => ChannelLayout::UNDEFINED,
+            sys::kAudioChannelLabel_Left => mixer::Channel::FrontLeft,
+            sys::kAudioChannelLabel_Right => mixer::Channel::FrontRight,
+            sys::kAudioChannelLabel_Center | sys::kAudioChannelLabel_Mono => {
+                mixer::Channel::FrontCenter
+            }
+            sys::kAudioChannelLabel_LFEScreen => mixer::Channel::LowFrequency,
+            sys::kAudioChannelLabel_LeftSurround => mixer::Channel::BackLeft,
+            sys::kAudioChannelLabel_RightSurround => mixer::Channel::BackRight,
+            sys::kAudioChannelLabel_LeftCenter => mixer::Channel::FrontLeftOfCenter,
+            sys::kAudioChannelLabel_RightCenter => mixer::Channel::FrontRightOfCenter,
+            sys::kAudioChannelLabel_CenterSurround => mixer::Channel::BackCenter,
+            sys::kAudioChannelLabel_LeftSurroundDirect => mixer::Channel::SideLeft,
+            sys::kAudioChannelLabel_RightSurroundDirect => mixer::Channel::SideRight,
+            sys::kAudioChannelLabel_TopCenterSurround => mixer::Channel::TopCenter,
+            sys::kAudioChannelLabel_VerticalHeightLeft => mixer::Channel::TopFrontLeft,
+            sys::kAudioChannelLabel_VerticalHeightCenter => mixer::Channel::TopFrontCenter,
+            sys::kAudioChannelLabel_VerticalHeightRight => mixer::Channel::TopFrontRight,
+            sys::kAudioChannelLabel_TopBackLeft => mixer::Channel::TopBackLeft,
+            sys::kAudioChannelLabel_TopBackCenter => mixer::Channel::TopBackCenter,
+            sys::kAudioChannelLabel_TopBackRight => mixer::Channel::TopBackRight,
+            _ => mixer::Channel::Silence,
         }
     }
 }
@@ -922,23 +888,14 @@ fn audiounit_get_default_device_id(devtype: DeviceType) -> AudioObjectID {
     devid
 }
 
-fn audiounit_convert_channel_layout(layout: &AudioChannelLayout) -> ChannelLayout {
-    // When having one or two channel, force mono or stereo. Some devices (namely,
-    // Bose QC35, mark 1 and 2), expose a single channel mapped to the right for
-    // some reason.
-    if layout.mNumberChannelDescriptions == 1 {
-        return ChannelLayout::MONO;
-    } else if layout.mNumberChannelDescriptions == 2 {
-        return ChannelLayout::STEREO;
-    }
-
+fn audiounit_convert_channel_layout(layout: &AudioChannelLayout) -> Vec<mixer::Channel> {
     if layout.mChannelLayoutTag != kAudioChannelLayoutTag_UseChannelDescriptions {
         // kAudioChannelLayoutTag_UseChannelBitmap
         // kAudioChannelLayoutTag_Mono
         // kAudioChannelLayoutTag_Stereo
         // ....
         cubeb_log!("Only handle UseChannelDescriptions for now.\n");
-        return ChannelLayout::UNDEFINED;
+        return Vec::new();
     }
 
     let channel_descriptions = unsafe {
@@ -948,20 +905,16 @@ fn audiounit_convert_channel_layout(layout: &AudioChannelLayout) -> ChannelLayou
         )
     };
 
-    let mut cl = ChannelLayout::UNDEFINED;
+    let mut channels = Vec::with_capacity(layout.mNumberChannelDescriptions as usize);
     for description in channel_descriptions {
         let label = CAChannelLabel(description.mChannelLabel);
-        let channel: ChannelLayout = label.into();
-        if channel == ChannelLayout::UNDEFINED {
-            return ChannelLayout::UNDEFINED;
-        }
-        cl |= channel;
+        channels.push(label.into());
     }
 
-    cl
+    channels
 }
 
-fn audiounit_get_preferred_channel_layout(output_unit: AudioUnit) -> ChannelLayout {
+fn audiounit_get_preferred_channel_layout(output_unit: AudioUnit) -> Vec<mixer::Channel> {
     let mut rv = NO_ERR;
     let mut size: usize = 0;
     rv = audio_unit_get_property_info(
@@ -977,7 +930,7 @@ fn audiounit_get_preferred_channel_layout(output_unit: AudioUnit) -> ChannelLayo
             "AudioUnitGetPropertyInfo/kAudioDevicePropertyPreferredChannelLayout rv={}",
             rv
         );
-        return ChannelLayout::UNDEFINED;
+        return Vec::new();
     }
     assert!(size > 0);
 
@@ -995,13 +948,15 @@ fn audiounit_get_preferred_channel_layout(output_unit: AudioUnit) -> ChannelLayo
             "AudioUnitGetProperty/kAudioDevicePropertyPreferredChannelLayout rv={}",
             rv
         );
-        return ChannelLayout::UNDEFINED;
+        return Vec::new();
     }
 
     audiounit_convert_channel_layout(layout.as_ref())
 }
 
-fn audiounit_get_current_channel_layout(output_unit: AudioUnit) -> ChannelLayout {
+// This is for output AudioUnit only. Calling this by input-only AudioUnit is prone
+// to crash intermittently.
+fn audiounit_get_current_channel_layout(output_unit: AudioUnit) -> Vec<mixer::Channel> {
     let mut rv = NO_ERR;
     let mut size: usize = 0;
     rv = audio_unit_get_property_info(
@@ -1036,69 +991,10 @@ fn audiounit_get_current_channel_layout(output_unit: AudioUnit) -> ChannelLayout
             "AudioUnitGetProperty/kAudioUnitProperty_AudioChannelLayout rv={}",
             rv
         );
-        return ChannelLayout::UNDEFINED;
+        return Vec::new();
     }
 
     audiounit_convert_channel_layout(layout.as_ref())
-}
-
-fn audiounit_set_channel_layout(
-    unit: AudioUnit,
-    layout: ChannelLayout,
-) -> std::result::Result<(), OSStatus> {
-    assert!(!unit.is_null());
-
-    if layout == ChannelLayout::UNDEFINED {
-        // We leave everything as-is...
-        return Ok(());
-    }
-
-    let nb_channels = unsafe { ffi::cubeb_channel_layout_nb_channels(layout.into()) };
-
-    // We do not use CoreAudio standard layout for lack of documentation on what
-    // the actual channel orders are. So we set a custom layout.
-    assert!(nb_channels >= 1);
-    let size = mem::size_of::<AudioChannelLayout>()
-        + (nb_channels as usize - 1) * mem::size_of::<AudioChannelDescription>();
-    let mut au_layout = make_sized_audio_channel_layout(size);
-    au_layout.as_mut().mChannelLayoutTag = kAudioChannelLayoutTag_UseChannelDescriptions;
-    au_layout.as_mut().mNumberChannelDescriptions = nb_channels;
-    let channel_descriptions = unsafe {
-        slice::from_raw_parts_mut(
-            au_layout.as_mut().mChannelDescriptions.as_mut_ptr(),
-            nb_channels as usize,
-        )
-    };
-
-    let mut channels: usize = 0;
-    let mut channel_map: ffi::cubeb_channel_layout = layout.into();
-    let i = 0;
-    while channel_map != 0 {
-        assert!(channels < nb_channels as usize);
-        let channel = (channel_map & 1) << i;
-        if channel != 0 {
-            let layout = ChannelLayout::from(channel);
-            let label = CAChannelLabel::from(layout);
-            channel_descriptions[channels].mChannelLabel = label.get_raw_label();
-            channel_descriptions[channels].mChannelFlags = kAudioChannelFlags_AllOff;
-            channels += 1;
-        }
-        channel_map >>= 1;
-    }
-
-    let err = audio_unit_set_property(
-        unit,
-        kAudioUnitProperty_AudioChannelLayout,
-        kAudioUnitScope_Input,
-        AU_OUT_BUS,
-        au_layout.as_ref(),
-        size,
-    );
-    if err == NO_ERR {
-        Ok(())
-    } else {
-        Err(err)
-    }
 }
 
 fn start_audiounit(unit: AudioUnit) -> Result<()> {
@@ -2348,7 +2244,7 @@ struct CoreStreamData<'ctx> {
     input_hw_rate: f64,
     output_hw_rate: f64,
     // Channel layout of the output AudioUnit.
-    device_layout: ChannelLayout,
+    device_layout: Vec<mixer::Channel>,
     // Hold the input samples in every input callback iteration.
     // Only accessed on input/output callback thread and during initial configure.
     input_linear_buffer: Option<Box<dyn AutoArrayWrapper>>,
@@ -2389,7 +2285,7 @@ impl<'ctx> Default for CoreStreamData<'ctx> {
             output_device: device_info::default(),
             input_hw_rate: 0_f64,
             output_hw_rate: 0_f64,
-            device_layout: ChannelLayout::UNDEFINED,
+            device_layout: Vec::new(),
             input_linear_buffer: None,
             default_input_listener: None,
             default_output_listener: None,
@@ -2434,7 +2330,7 @@ impl<'ctx> CoreStreamData<'ctx> {
             output_device: out_dev,
             input_hw_rate: 0_f64,
             output_hw_rate: 0_f64,
-            device_layout: ChannelLayout::UNDEFINED,
+            device_layout: Vec::new(),
             input_linear_buffer: None,
             default_input_listener: None,
             default_output_listener: None,
@@ -2727,21 +2623,11 @@ impl<'ctx> CoreStreamData<'ctx> {
             self.output_hw_rate = output_hw_desc.mSampleRate;
             let hw_channels = output_hw_desc.mChannelsPerFrame;
 
-            // Set the input layout to match the output device layout.
             self.device_layout = audiounit_get_current_channel_layout(self.output_unit);
-            let msg = match audiounit_set_channel_layout(self.output_unit, self.device_layout) {
-                Ok(_) => "successfully".to_string(),
-                Err(e) => format!("failed. Error: {}", e),
-            };
-            cubeb_log!(
-                "({:p}) Set output hardware layout to {:?} {}.",
-                self.stm_ptr,
-                self.device_layout,
-                msg
-            );
 
             self.mixer = if hw_channels != self.output_stream_params.channels()
-                || self.device_layout != self.output_stream_params.layout()
+                || self.device_layout
+                    != mixer::get_channel_order(self.output_stream_params.layout())
             {
                 cubeb_log!("Incompatible channel layouts detected, setting up remixer");
                 // We will be remixing the data before it reaches the output device.
@@ -2754,10 +2640,10 @@ impl<'ctx> CoreStreamData<'ctx> {
                     self.output_desc.mBytesPerFrame * self.output_desc.mFramesPerPacket;
                 Some(Mixer::new(
                     self.output_stream_params.format(),
-                    self.output_stream_params.channels(),
+                    self.output_stream_params.channels() as usize,
                     self.output_stream_params.layout(),
-                    hw_channels,
-                    self.device_layout,
+                    hw_channels as usize,
+                    self.device_layout.clone(),
                 ))
             } else {
                 None
