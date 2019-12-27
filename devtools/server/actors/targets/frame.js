@@ -35,25 +35,23 @@ const frameTargetPrototype = extend({}, browsingContextTargetPrototype);
  *
  * @param connection DebuggerServerConnection
  *        The conection to the client.
- * @param chromeGlobal
- *        The content script global holding |content| and |docShell| properties for a tab.
- * @param prefix
- *        the prefix used in protocol to create IDs for each actor.
- *        Used as ID identifying this particular target actor from the parent process.
+ * @param docShell
+ *        The |docShell| for the debugged frame.
  */
-frameTargetPrototype.initialize = function(connection, chromeGlobal) {
-  this._chromeGlobal = chromeGlobal;
-  BrowsingContextTargetActor.prototype.initialize.call(
-    this,
-    connection,
-    chromeGlobal
-  );
+frameTargetPrototype.initialize = function(connection, docShell) {
+  BrowsingContextTargetActor.prototype.initialize.call(this, connection);
+
+  // Retrieve the message manager from the provided docShell.
+  // Note that messageManager also has a docShell property, but in some
+  // situations docShell.messageManager.docShell points to a different docShell.
+  this._messageManager = docShell.messageManager;
+
   this.traits.reconfigure = false;
   this._sendForm = this._sendForm.bind(this);
-  this._chromeGlobal.addMessageListener("debug:form", this._sendForm);
+  this._messageManager.addMessageListener("debug:form", this._sendForm);
 
   Object.defineProperty(this, "docShell", {
-    value: this._chromeGlobal.docShell,
+    value: docShell,
     configurable: true,
   });
 };
@@ -69,7 +67,7 @@ Object.defineProperty(frameTargetPrototype, "title", {
 frameTargetPrototype.exit = function() {
   if (this._sendForm) {
     try {
-      this._chromeGlobal.removeMessageListener("debug:form", this._sendForm);
+      this._messageManager.removeMessageListener("debug:form", this._sendForm);
     } catch (e) {
       if (e.result != Cr.NS_ERROR_NULL_POINTER) {
         throw e;
@@ -83,7 +81,7 @@ frameTargetPrototype.exit = function() {
 
   BrowsingContextTargetActor.prototype.exit.call(this);
 
-  this._chromeGlobal = null;
+  this._messageManager = null;
 };
 
 /**
@@ -91,7 +89,7 @@ frameTargetPrototype.exit = function() {
  * counterpart in the parent process that participates in the tab list.
  */
 frameTargetPrototype._sendForm = function() {
-  this._chromeGlobal.sendAsyncMessage("debug:form", this.form());
+  this._messageManager.sendAsyncMessage("debug:form", this.form());
 };
 
 exports.FrameTargetActor = ActorClassWithSpec(

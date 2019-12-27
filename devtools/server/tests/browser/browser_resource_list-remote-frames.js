@@ -20,24 +20,28 @@ async function testLocalListFrames(tabTarget) {
   // we should move this to descriptorFront.listRemoteFrames once we have
   // tabDescriptors
   const { frames } = await tabTarget.listRemoteFrames();
-  is(frames.length, 2, "Got two frames");
+  is(frames.length, 3, "Got three frames");
 
   info("Check that we can connect to the remote targets");
+  const frameTargets = [];
   for (const frame of frames) {
     const frameTarget = await frame.getTarget();
     ok(frameTarget && frameTarget.actor, "Valid frame target retrieved");
+    frameTargets.push(frameTarget);
   }
 
-  // However we can confirm that the newly created iframe is there.
-  const browser = gBrowser.selectedBrowser;
-  const oopID = await SpecialPowers.spawn(browser, [], async () => {
-    const oop = content.document.querySelector("iframe");
-    return oop.frameLoader.browsingContext.id;
-  });
-  ok(
-    frames.find(f => f.id === oopID),
-    "tabTarget.listRemoteFrames returns the oop frame descriptor"
-  );
+  // Check that we retrieved frame targets for the expected URLs.
+  const expectedUrls = [
+    "data:text/html,<iframe src='data:text/html,foo'></iframe>",
+    "data:text/html,foo",
+    "http://example.com/browser/devtools/server/tests/browser/doc_iframe_content.html",
+  ];
+  for (const url of expectedUrls) {
+    ok(
+      frameTargets.find(target => target.url === url),
+      "Found a frame target for the expected url " + url
+    );
+  }
 }
 async function testBrowserListFrames(tabTarget) {
   // Now, we can test against the entire browser. getMainProcess will return
