@@ -32,7 +32,9 @@ class NotificationSessionObserver(
     }
 
     override fun onSessionAdded(session: Session) {
-        if (session.private) {
+        // Custom tabs are meant to feel like part of the app that opened them, not Fenix, so we
+        // don't need to show a 'close tab' notification for them
+        if (session.private && !session.isCustomTabSession()) {
             SessionNotificationService.start(context)
         }
     }

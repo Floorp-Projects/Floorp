@@ -26,7 +26,14 @@ import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.sessionsOfType
 
 /**
- * As long as a session is active this service will keep the notification (and our process) alive.
+ * Manages notifications for private tabs.
+ *
+ * Private tab notifications solve two problems for us:
+ * 1 - They allow users to interact with us from outside of the app (example: by closing all
+ * private tabs).
+ * 2 - The notification will keep our process alive, allowing us to keep private tabs in memory.
+ *
+ * As long as a session is active this service will keep its notification alive.
  */
 class SessionNotificationService : Service() {
 
