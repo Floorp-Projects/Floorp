@@ -2432,7 +2432,8 @@ void InitializeFeatures(const Renderer11DeviceCaps &deviceCaps,
         {
             features->rewriteUnaryMinusOperator.enabled = capsVersion < IntelDriverVersion(4624);
 
-            // Haswell drivers occasionally corrupt (small?) (vertex?) texture data uploads for 128bit formats.
+            // Haswell drivers occasionally corrupt (small?) (vertex?) texture data uploads for
+            // 128bit formats.
             features->setDataFasterThanImageUploadOn128bitFormats.enabled = false;
         }
     }
