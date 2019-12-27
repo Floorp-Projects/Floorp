@@ -117,12 +117,9 @@ LOCAL_INCLUDES += [
     '../../base',
 ]
 
-GENERATED_FILES = [
-    'dafsa_test_1.inc',
-]
-dafsa_data = GENERATED_FILES['dafsa_test_1.inc']
-dafsa_data.script = '../../ds/tools/make_dafsa.py'
-dafsa_data.inputs = ['dafsa_test_1.dat']
+GeneratedFile('dafsa_test_1.inc',
+              script='../../ds/tools/make_dafsa.py',
+              inputs=['dafsa_test_1.dat'])
 
 TEST_HARNESS_FILES.gtest += [
     'wikipedia/ar.txt',
