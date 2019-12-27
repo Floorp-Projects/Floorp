@@ -90,7 +90,7 @@ class TestMemoryUsage(AwsyTestCase):
         self._extra_opts = ["tp6"]
 
         if self.marionette.get_pref('fission.autostart'):
-            self._extra_opts.append("fission-enabled")
+            self._extra_opts.append("fission")
 
         # Now we setup the mitm proxy with our tp6 pageset.
         tp6_pageset_manifest = os.path.join(AWSY_PATH, 'tp6-pageset.manifest')

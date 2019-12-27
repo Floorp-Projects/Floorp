@@ -12,7 +12,8 @@ from raptor.raptor import RaptorAndroid
 
 
 def test_no_device():
-    raptor = RaptorAndroid('geckoview', 'org.mozilla.org.mozilla.geckoview_example', cpu_test=True)
+    raptor = RaptorAndroid('geckoview', 'org.mozilla.org.mozilla.geckoview_example',
+                           cpu_test=True, no_conditioned_profile=False)
     raptor.device = None
     resp = cpu.start_android_cpu_profiler(raptor)
     assert resp is None

@@ -179,7 +179,7 @@ class RaptorResultsHandler(PerftestResultsHandler):
         if self.no_conditioned_profile:
             new_result.extra_options.append('nocondprof')
         if self.fission_enabled:
-            new_result.extra_options.append('fission_enabled')
+            new_result.extra_options.append('fission')
         self.results.append(new_result)
 
     def summarize_and_output(self, test_config, tests, test_names):
