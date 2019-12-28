@@ -40,10 +40,11 @@ pub extern "C" fn lucet_load_module(lucet_module_path: *const c_char) -> *mut c_
 
 #[no_mangle]
 pub extern "C" fn lucet_drop_module(inst_ptr: *mut c_void) {
-    unsafe {
-        let inst = inst_ptr as *mut LucetSandboxInstance;
-        inst.drop_in_place();
-    }
+    // Need to invoke the destructor
+    let _inst = unsafe {
+        Box::from_raw(inst_ptr as *mut LucetSandboxInstance)
+    };
+
 }
 
 fn lucet_load_module_helper(module_path: &String) -> Result<LucetSandboxInstance, Error> {
