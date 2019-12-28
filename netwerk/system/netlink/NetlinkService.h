@@ -20,10 +20,6 @@
 namespace mozilla {
 namespace net {
 
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
-#  define NL_DEBUG_LOG
-#endif
-
 class NetlinkAddress;
 class NetlinkNeighbor;
 class NetlinkLink;
