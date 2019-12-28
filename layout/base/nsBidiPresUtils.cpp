@@ -603,9 +603,8 @@ static bool IsBidiLeaf(nsIFrame* aFrame) {
  *        newly-created continuation of aParent.
  *        If aFrame is null, all the children of aParent are reparented.
  */
-static nsresult SplitInlineAncestors(nsContainerFrame* aParent,
-                                     nsLineList::iterator aLine,
-                                     nsIFrame* aFrame) {
+static void SplitInlineAncestors(nsContainerFrame* aParent,
+                                 nsLineList::iterator aLine, nsIFrame* aFrame) {
   nsPresContext* presContext = aParent->PresContext();
   PresShell* presShell = presContext->PresShell();
   nsIFrame* frame = aFrame;
@@ -627,11 +626,7 @@ static nsresult SplitInlineAncestors(nsContainerFrame* aParent,
       nsFrameList tail = parent->StealFramesAfter(frame);
 
       // Reparent views as necessary
-      nsresult rv;
-      rv = nsContainerFrame::ReparentFrameViewList(tail, parent, newParent);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+      nsContainerFrame::ReparentFrameViewList(tail, parent, newParent);
 
       // The parent's continuation adopts the siblings after the split.
       MOZ_ASSERT(!newParent->IsBlockFrameOrSubclass(),
@@ -661,8 +656,6 @@ static nsresult SplitInlineAncestors(nsContainerFrame* aParent,
     frame = parent;
     parent = grandparent;
   }
-
-  return NS_OK;
 }
 
 static void MakeContinuationFluid(nsIFrame* aFrame, nsIFrame* aNext) {
@@ -705,9 +698,9 @@ static void JoinInlineAncestors(nsIFrame* aFrame) {
   }
 }
 
-static nsresult CreateContinuation(nsIFrame* aFrame,
-                                   const nsLineList::iterator aLine,
-                                   nsIFrame** aNewFrame, bool aIsFluid) {
+static void CreateContinuation(nsIFrame* aFrame,
+                               const nsLineList::iterator aLine,
+                               nsIFrame** aNewFrame, bool aIsFluid) {
   MOZ_ASSERT(aNewFrame, "null OUT ptr");
   MOZ_ASSERT(aFrame, "null ptr");
 
@@ -736,16 +729,14 @@ static nsresult CreateContinuation(nsIFrame* aFrame,
     parentLine = nullptr;
   }
 
-  nsresult rv = NS_OK;
-
   // Have to special case floating first letter frames because the continuation
   // doesn't go in the first letter frame. The continuation goes with the rest
   // of the text that the first letter frame was made out of.
   if (parent->IsLetterFrame() && parent->IsFloating()) {
     nsFirstLetterFrame* letterFrame = do_QueryFrame(parent);
-    rv = letterFrame->CreateContinuationForFloatingParent(presContext, aFrame,
-                                                          aNewFrame, aIsFluid);
-    return rv;
+    letterFrame->CreateContinuationForFloatingParent(presContext, aFrame,
+                                                     aNewFrame, aIsFluid);
+    return;
   }
 
   *aNewFrame = presShell->FrameConstructor()->CreateContinuingFrame(
@@ -759,13 +750,8 @@ static nsresult CreateContinuation(nsIFrame* aFrame,
 
   if (!aIsFluid) {
     // Split inline ancestor frames
-    rv = SplitInlineAncestors(parent, aLine, aFrame);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    SplitInlineAncestors(parent, aLine, aFrame);
   }
-
-  return NS_OK;
 }
 
 /*
@@ -1033,11 +1019,8 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
           currentLine->MarkDirty();
           nsIFrame* nextBidi;
           int32_t runEnd = contentOffset + runLength;
-          rv = EnsureBidiContinuation(frame, currentLine, &nextBidi,
-                                      contentOffset, runEnd);
-          if (NS_FAILED(rv)) {
-            break;
-          }
+          EnsureBidiContinuation(frame, currentLine, &nextBidi, contentOffset,
+                                 runEnd);
           nextBidi->AdjustOffsetsForBidi(runEnd,
                                          contentOffset + fragmentLength);
           frame = nextBidi;
@@ -1942,14 +1925,14 @@ nsIFrame* nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame* aFrame,
   return nullptr;
 }
 
-inline nsresult nsBidiPresUtils::EnsureBidiContinuation(
+inline void nsBidiPresUtils::EnsureBidiContinuation(
     nsIFrame* aFrame, const nsLineList::iterator aLine, nsIFrame** aNewFrame,
     int32_t aStart, int32_t aEnd) {
   MOZ_ASSERT(aNewFrame, "null OUT ptr");
   MOZ_ASSERT(aFrame, "aFrame is null");
 
   aFrame->AdjustOffsetsForBidi(aStart, aEnd);
-  return CreateContinuation(aFrame, aLine, aNewFrame, false);
+  CreateContinuation(aFrame, aLine, aNewFrame, false);
 }
 
 void nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData* aBpd,
