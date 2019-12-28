@@ -293,22 +293,10 @@ private:
     }
   }
 
-  inline void set_callbacks_slots_ref(bool external_loads_exist)
+  inline std::shared_ptr<FunctionTable> get_callback_ref_data(
+    LucetFunctionTable& functionPointerTable)
   {
-    LucetFunctionTable functionPointerTable =
-      lucet_get_function_pointer_table(sandbox);
-    void* key = functionPointerTable.data;
-
-    std::lock_guard<std::mutex> lock(callback_table_mutex);
-    std::weak_ptr<FunctionTable> slots = shared_callback_slots[key];
-
-    if (auto shared_slots = slots.lock()) {
-      // pointer exists
-      callback_slots = shared_slots;
-      return;
-    }
-
-    callback_slots = std::make_shared<FunctionTable>();
+    auto callback_slots = std::make_shared<FunctionTable>();
 
     for (size_t i = 0; i < MAX_CALLBACKS; i++) {
       uintptr_t reservedVal =
@@ -328,6 +316,56 @@ private:
       detail::dynamic_check(found, "Unable to intialize callback tables");
     }
 
+    return callback_slots;
+  }
+
+  inline void reinit_callback_ref_data(
+    LucetFunctionTable& functionPointerTable,
+    std::shared_ptr<FunctionTable>& callback_slots)
+  {
+    for (size_t i = 0; i < MAX_CALLBACKS; i++) {
+      uintptr_t reservedVal =
+        lucet_get_reserved_callback_slot_val(sandbox, i + 1);
+
+      for (size_t j = 0; j < functionPointerTable.length; j++) {
+        if (functionPointerTable.data[j].rf == reservedVal) {
+          functionPointerTable.data[j].rf = 0;
+
+          detail::dynamic_check(
+            callback_slots->elements[i] == &(functionPointerTable.data[j]) &&
+              callback_slots->slot_number[i] == static_cast<uint32_t>(j),
+            "Sandbox creation error: Error when checking the values of "
+            "callback slot data");
+
+          break;
+        }
+      }
+    }
+  }
+
+  inline void set_callbacks_slots_ref(bool external_loads_exist)
+  {
+    LucetFunctionTable functionPointerTable =
+      lucet_get_function_pointer_table(sandbox);
+    void* key = functionPointerTable.data;
+
+    std::lock_guard<std::mutex> lock(callback_table_mutex);
+    std::weak_ptr<FunctionTable> slots = shared_callback_slots[key];
+
+    if (auto shared_slots = slots.lock()) {
+      // pointer exists
+      callback_slots = shared_slots;
+      // Sometimes, dlopen and process forking seem to act a little weird.
+      // Writes to the writable page of the dynamic lib section seem to not
+      // always be propogated (possibly when the dynamic library is opened
+      // externally - "external_loads_exist")). This occurred in when RLBox was
+      // used in ASAN builds of Firefox. In general, we take the precaustion of
+      // rechecking this on each sandbix creation.
+      reinit_callback_ref_data(functionPointerTable, callback_slots);
+      return;
+    }
+
+    callback_slots = get_callback_ref_data(functionPointerTable);
     shared_callback_slots[key] = callback_slots;
     if (external_loads_exist) {
       saved_callback_slot_info.push_back(callback_slots);

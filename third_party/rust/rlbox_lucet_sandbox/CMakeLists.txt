@@ -25,6 +25,9 @@ else()
   endif()
 endif()
 
+# For ASAN
+# add_compile_options(-fsanitize=address -O2 -gline-tables-only)
+
 # Dev Tools ###################
 
 find_program(CLANG_TIDY "clang-tidy")
@@ -80,7 +83,7 @@ FetchContent_Declare(
   rlbox
   GIT_REPOSITORY https://github.com/PLSysSec/rlbox_api_cpp17.git)
 FetchContent_GetProperties(rlbox)
-if(NOT catch2_POLULATED)
+if(NOT catch2_POPULATED)
   FetchContent_Populate(rlbox)
 endif()
 
@@ -88,7 +91,7 @@ FetchContent_Declare(catch2
                      GIT_REPOSITORY https://github.com/catchorg/Catch2.git
                      GIT_TAG v2.9.1)
 FetchContent_GetProperties(catch2)
-if(NOT catch2_POLULATED)
+if(NOT catch2_POPULATED)
   FetchContent_Populate(catch2)
 endif()
 
@@ -101,7 +104,7 @@ FetchContent_Declare(
     https://github.com/CraneStation/wasi-sdk/releases/download/wasi-sdk-6/wasi-sdk-6.0-linux.tar.gz
   )
 FetchContent_GetProperties(wasiclang)
-if(NOT wasiclang_POLULATED)
+if(NOT wasiclang_POPULATED)
   FetchContent_Populate(wasiclang)
 endif()
 
@@ -109,7 +112,7 @@ FetchContent_Declare(
   mod_lucet
   GIT_REPOSITORY https://github.com/PLSysSec/lucet_sandbox_compiler)
 FetchContent_GetProperties(mod_lucet)
-if(NOT mod_lucet_POLULATED)
+if(NOT mod_lucet_POPULATED)
   FetchContent_Populate(mod_lucet)
 endif()
 # Rust Lib ###################
