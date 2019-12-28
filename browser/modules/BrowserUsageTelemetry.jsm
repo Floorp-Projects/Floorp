@@ -300,7 +300,7 @@ let URICountListener = {
     if (gRecentVisitedOriginsExpiry) {
       let timeoutId = setTimeout(() => {
         this._domain24hrSet.delete(baseDomain);
-        this._timeouts.remove(timeoutId);
+        this._timeouts.delete(timeoutId);
       }, gRecentVisitedOriginsExpiry * 1000);
       this._timeouts.add(timeoutId);
     }
