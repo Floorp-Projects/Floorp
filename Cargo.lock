@@ -1499,7 +1499,7 @@ dependencies = [
  "prefs_parser 0.0.1",
  "profiler_helper 0.1.0",
  "remote 0.1.0",
- "rlbox_lucet_sandbox 0.1.0 (git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=9068928a00f54db2a060704e972007b0b5247ca9)",
+ "rlbox_lucet_sandbox 0.1.0 (git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=a31b9119bd01893ae1e930331ca4fe1738a088f7)",
  "rsdparsa_capi 0.1.0",
  "rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "shift_or_euc_c 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3282,7 +3282,7 @@ dependencies = [
 [[package]]
 name = "rlbox_lucet_sandbox"
 version = "0.1.0"
-source = "git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=9068928a00f54db2a060704e972007b0b5247ca9#9068928a00f54db2a060704e972007b0b5247ca9"
+source = "git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=a31b9119bd01893ae1e930331ca4fe1738a088f7#a31b9119bd01893ae1e930331ca4fe1738a088f7"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "goblin 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -4934,7 +4934,7 @@ dependencies = [
 "checksum ringbuf 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "588456c74d5ff0a5806bc084818e043e767533f743c11ee6f3ccf298599c6847"
 "checksum rkv 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9aab7c645d32e977e186448b0a5c2c3139a91a7f630cfd8a8c314d1d145e78bf"
 "checksum rkv 0.11.0 (git+https://github.com/mozilla/rkv?rev=6a866fdad2ca880df9b87fcbc9921abac1e91914)" = "<none>"
-"checksum rlbox_lucet_sandbox 0.1.0 (git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=9068928a00f54db2a060704e972007b0b5247ca9)" = "<none>"
+"checksum rlbox_lucet_sandbox 0.1.0 (git+https://github.com/PLSysSec/rlbox_lucet_sandbox/?rev=a31b9119bd01893ae1e930331ca4fe1738a088f7)" = "<none>"
 "checksum ron 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "da06feaa07f69125ab9ddc769b11de29090122170b402547f64b86fe16ebc399"
 "checksum runloop 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5d79b4b604167921892e84afbbaad9d5ad74e091bf6c511d9dbfb0593f09fabd"
 "checksum rust-argon2 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4ca4eaef519b494d1f2848fc602d18816fed808a981aedf4f1f00ceb7c9d32cf"

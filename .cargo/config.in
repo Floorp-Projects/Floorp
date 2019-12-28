@@ -50,7 +50,7 @@ replace-with = "vendored-sources"
 [source."https://github.com/PLSysSec/rlbox_lucet_sandbox/"]
 git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/"
 replace-with = "vendored-sources"
-rev = "9068928a00f54db2a060704e972007b0b5247ca9"
+rev = "a31b9119bd01893ae1e930331ca4fe1738a088f7"
 
 [source."https://github.com/PLSysSec/lucet_sandbox_compiler"]
 git = "https://github.com/PLSysSec/lucet_sandbox_compiler"
