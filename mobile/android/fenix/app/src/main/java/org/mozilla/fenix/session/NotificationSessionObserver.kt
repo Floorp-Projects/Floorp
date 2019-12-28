@@ -16,26 +16,27 @@ import org.mozilla.fenix.ext.sessionsOfType
  */
 
 class NotificationSessionObserver(
-    private val context: Context
+    private val context: Context,
+    private val notificationService: SessionNotificationService.Companion = SessionNotificationService
 ) : SessionManager.Observer {
 
     override fun onSessionRemoved(session: Session) {
         val privateTabsEmpty = context.components.core.sessionManager.sessionsOfType(private = true).none()
 
         if (privateTabsEmpty) {
-            SessionNotificationService.stop(context)
+            notificationService.stop(context)
         }
     }
 
     override fun onAllSessionsRemoved() {
-        SessionNotificationService.stop(context)
+        notificationService.stop(context)
     }
 
     override fun onSessionAdded(session: Session) {
         // Custom tabs are meant to feel like part of the app that opened them, not Fenix, so we
         // don't need to show a 'close tab' notification for them
         if (session.private && !session.isCustomTabSession()) {
-            SessionNotificationService.start(context)
+            notificationService.start(context)
         }
     }
 }
