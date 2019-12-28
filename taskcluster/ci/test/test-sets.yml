@@ -38,6 +38,8 @@ common-tests:
     - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
@@ -378,7 +380,7 @@ linux-qr-tests:
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgl1-core
-    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
     - reftest
     - xpcshell
 
@@ -396,9 +398,7 @@ windows-qr-tests:
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgl1-core
-    - mochitest-webgl1-ext
     - mochitest-webgl2-core
-    - mochitest-webgl2-ext
     - reftest
 
 ccov-code-coverage-tests:
@@ -519,7 +519,7 @@ macosx1014-64-tests:
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
-    # - mochitest-webgl2-ext test  # timeouts
+    - mochitest-webgl2-ext
     - reftest
     - telemetry-tests-client
     - test-verify
@@ -565,6 +565,10 @@ android-x86_64-tests:
     - gtest
     - mochitest
     - mochitest-gpu
+    # - mochitest-webgl1-core # Harness issues?
+    # - mochitest-webgl1-ext
+    # - mochitest-webgl2-core # Emulator not creating ES3?
+    # - mochitest-webgl2-ext
     - reftest
     - test-verify
     - web-platform-tests
@@ -589,6 +593,9 @@ remote-tests:
 
 android-hw-arm7-opt-unittests:
     - mochitest-media
+    #- mochitest-webgl1-core
+    #- mochitest-webgl1-ext
+    #- mochitest-webgl2-core
 
 android-hw-arm7-pgo-unittests:
     - jittest
@@ -599,6 +606,9 @@ android-hw-arm7-debug-unittests:
     - jittest
     - jsreftest
     - mochitest-media
+    #- mochitest-webgl1-core
+    #- mochitest-webgl1-ext
+    #- mochitest-webgl2-core
 
 android-hw-arm7-qr:
     - crashtest
