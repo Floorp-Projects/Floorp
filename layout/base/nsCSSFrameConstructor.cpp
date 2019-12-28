@@ -2148,14 +2148,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     GetRootFrame()->SetComputedStyleWithoutNotification(sc);
   }
 
-  ServoStyleSet* set = mPresShell->StyleSet();
-
   // Ensure the document element is styled at this point.
   if (!aDocElement->HasServoData()) {
-    // NOTE(emilio): If the root has a non-null binding, we'll stop at the
-    // document element and won't process any children, loading the bindings
-    // (or failing to do so) will take care of the rest.
-    set->StyleNewSubtree(aDocElement);
+    mPresShell->StyleSet()->StyleNewSubtree(aDocElement);
   }
 
   // Make sure to call UpdateViewportScrollStylesOverride before
@@ -3922,7 +3917,7 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
     styleSet->GetCachedAnonymousContentStyles(info.mKey, cachedStyles);
 
     if (cachedStyles.IsEmpty()) {
-      // We haven't store cached styles for this kind of NAC subtree yet.
+      // We haven't stored cached styles for this kind of NAC subtree yet.
       // Eagerly compute those styles, then cache them for later.
       styleSet->StyleNewSubtree(e);
       for (Element* e : elements) {
