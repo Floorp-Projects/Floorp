@@ -475,9 +475,9 @@ nsresult nsContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
   return NS_OK;
 }
 
-nsresult nsContainerFrame::ReparentFrameViewList(
-    const nsFrameList& aChildFrameList, nsIFrame* aOldParentFrame,
-    nsIFrame* aNewParentFrame) {
+void nsContainerFrame::ReparentFrameViewList(const nsFrameList& aChildFrameList,
+                                             nsIFrame* aOldParentFrame,
+                                             nsIFrame* aNewParentFrame) {
   MOZ_ASSERT(aChildFrameList.NotEmpty(), "empty child frame list");
   MOZ_ASSERT(aOldParentFrame, "null old parent frame pointer");
   MOZ_ASSERT(aNewParentFrame, "null new parent frame pointer");
@@ -512,7 +512,7 @@ nsresult nsContainerFrame::ReparentFrameViewList(
     // and the common parent or the new parent frame and the common parent.
     // Because neither the old parent frame nor the new parent frame have views,
     // then any child views don't need reparenting
-    return NS_OK;
+    return;
   }
 
   // We found views for one or both of the ancestor frames before we
@@ -531,8 +531,6 @@ nsresult nsContainerFrame::ReparentFrameViewList(
       e.get()->ReparentFrameViewTo(viewManager, newParentView, oldParentView);
     }
   }
-
-  return NS_OK;
 }
 
 static nsIWidget* GetPresContextContainerWidget(nsPresContext* aPresContext) {
