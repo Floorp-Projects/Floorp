@@ -20,6 +20,9 @@ with Files("docs/**"):
     BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")
     SCHEDULES.exclusive = ['docs']
 
+with Files("github-sync/**"):
+    BUG_COMPONENT = ("Core", "Graphics")
+
 with Files("lint/**"):
     BUG_COMPONENT = ("Firefox Build System", "Lint and Formatting")
 
