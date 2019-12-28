@@ -546,9 +546,10 @@ class nsBidiPresUtils {
    * @see Resolve()
    * @see RemoveBidiContinuation()
    */
-  static inline nsresult EnsureBidiContinuation(
-      nsIFrame* aFrame, const nsLineList::iterator aLine, nsIFrame** aNewFrame,
-      int32_t aStart, int32_t aEnd);
+  static inline void EnsureBidiContinuation(nsIFrame* aFrame,
+                                            const nsLineList::iterator aLine,
+                                            nsIFrame** aNewFrame,
+                                            int32_t aStart, int32_t aEnd);
 
   /**
    * Helper method for Resolve()
