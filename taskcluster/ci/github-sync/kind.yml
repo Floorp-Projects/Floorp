@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+    - toolchain
+    - build
+
+transforms:
+    - taskgraph.transforms.github_sync:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    attributes:
+        retrigger: true
+    run-on-projects: ['mozilla-central', 'try']
+    worker-type: b-linux
+    treeherder:
+        platform: other/opt
+        tier: 2
+        kind: other
+    worker:
+        max-run-time: 3600
+        docker-image: {in-tree: github-sync}
+    run:
+        sparse-profile: github-sync
+        using: run-task
+
+jobs:
+    wgpu:
+        description: Sync wgpu to github mirror
+        secret: gecko/gfx-github-sync/token
+        run:
+            command: '$GECKO_PATH/tools/github-sync/sync-to-github.sh wgpu gfx/wgpu gfx-rs/wgpu'
+        when:
+            files-changed:
+                - 'gfx/wgpu/**'
+        treeherder:
+            symbol: GhS(wgpu)

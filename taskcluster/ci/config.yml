@@ -150,6 +150,7 @@ treeherder:
         'vismet': 'Visual Metrics Analysis'
         'condprof': 'Conditioned Profile Builder'
         'doc': 'Documentation'
+        'GhS': 'GitHub Synchronization'
 
 index:
     products:

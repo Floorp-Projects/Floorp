@@ -586,6 +586,11 @@ webrender
 Tasks used to do testing of WebRender standalone (without gecko). The
 WebRender code lives in gfx/wr and has its own testing infrastructure.
 
+github-sync
+------------
+Tasks used to do synchronize parts of Gecko that have downstream GitHub
+repositories.
+
 instrumented-build
 ------------------
 Tasks that generate builds with PGO instrumentation enabled. This is an
