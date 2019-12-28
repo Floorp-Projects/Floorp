@@ -8,6 +8,9 @@ This aims to be a simple tutorial for lazy copy and paste.
 
 Each section in this tutorial links to more detailed documentation on the topic.
 
+The whole process is a bit long, it will take time to get things right.
+If at any point you are stuck, please don't feel shy to ask on IRC at irc.mozilla.org in `#introduction <https://kiwiirc.com/nextclient/irc.mozilla.org:6697/introduction>`__ channel.
+
 Clone the sources
 -----------------
 
@@ -166,7 +169,7 @@ more information.
 To submit a patch
 -----------------
 
-To submit a patch for review, we use a tool called `moz-phab <https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html#using-moz-phab>`__.
+To submit a patch for review, we use a tool called `moz-phab <https://pypi.org/project/MozPhab/>`__.
 
 .. code-block:: shell
 
