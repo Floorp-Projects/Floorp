@@ -252,6 +252,9 @@ jobs:
     visual-metrics:
         symbol: I(visual-metrics)
         parent: debian9-base
+    github-sync:
+        symbol: I(github-sync)
+        parent: debian9-base
     system-symbols-mac:
         symbol: I(system-symbols-mac)
     system-symbols-win:
