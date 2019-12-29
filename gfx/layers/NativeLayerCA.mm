@@ -54,20 +54,34 @@ struct MOZ_STACK_CLASS AutoCATransaction final {
   return layerRoot.forget();
 }
 
+// Returns an autoreleased CALayer* object.
+static CALayer* MakeOffscreenRootCALayer() {
+  // This layer should behave similarly to the backing layer of a flipped NSView.
+  // It will never be rendered on the screen and it will never be attached to an NSView's layer;
+  // instead, it will be the root layer of a "local" CAContext.
+  // Setting geometryFlipped to YES causes the orientation of descendant CALayers' contents (such as
+  // IOSurfaces) to be consistent with what happens in a layer subtree that is attached to a flipped
+  // NSView. Setting it to NO would cause the surfaces in individual leaf layers to render upside
+  // down (rather than just flipping the entire layer tree upside down).
+  AutoCATransaction transaction;
+  CALayer* layer = [CALayer layer];
+  layer.position = NSZeroPoint;
+  layer.bounds = NSZeroRect;
+  layer.anchorPoint = NSZeroPoint;
+  layer.contentsGravity = kCAGravityTopLeft;
+  layer.masksToBounds = YES;
+  layer.geometryFlipped = YES;
+  return layer;
+}
+
 NativeLayerRootCA::NativeLayerRootCA(CALayer* aLayer)
-    : mMutex("NativeLayerRootCA"), mRootCALayer([aLayer retain]) {}
+    : mMutex("NativeLayerRootCA"),
+      mOnscreenRepresentation(aLayer),
+      mOffscreenRepresentation(MakeOffscreenRootCALayer()) {}
 
 NativeLayerRootCA::~NativeLayerRootCA() {
   MOZ_RELEASE_ASSERT(mSublayers.IsEmpty(),
                      "Please clear all layers before destroying the layer root.");
-  if (mMutated) {
-    // Clear the root layer's sublayers. At this point the window is usually closed, so this
-    // transaction does not cause any screen updates.
-    AutoCATransaction transaction;
-    mRootCALayer.sublayers = @[];
-  }
-
-  [mRootCALayer release];
 }
 
 already_AddRefed<NativeLayer> NativeLayerRootCA::CreateLayer(
@@ -85,7 +99,7 @@ void NativeLayerRootCA::AppendLayer(NativeLayer* aLayer) {
 
   mSublayers.AppendElement(layerCA);
   layerCA->SetBackingScale(mBackingScale);
-  mMutated = true;
+  ForAllRepresentations([&](Representation& r) { r.mMutated = true; });
 }
 
 void NativeLayerRootCA::RemoveLayer(NativeLayer* aLayer) {
@@ -95,7 +109,7 @@ void NativeLayerRootCA::RemoveLayer(NativeLayer* aLayer) {
   MOZ_RELEASE_ASSERT(layerCA);
 
   mSublayers.RemoveElement(layerCA);
-  mMutated = true;
+  ForAllRepresentations([&](Representation& r) { r.mMutated = true; });
 }
 
 void NativeLayerRootCA::SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) {
@@ -117,7 +131,7 @@ void NativeLayerRootCA::SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) 
 
   if (layersCA != mSublayers) {
     mSublayers = std::move(layersCA);
-    mMutated = true;
+    ForAllRepresentations([&](Representation& r) { r.mMutated = true; });
   }
 }
 
@@ -159,28 +173,52 @@ bool NativeLayerRootCA::CommitToScreen() {
     return false;
   }
 
-  // Force a CoreAnimation layer tree update from this thread.
+  mOnscreenRepresentation.Commit(WhichRepresentation::ONSCREEN, mSublayers);
+
+  mCommitPending = false;
+
+  return true;
+}
+
+template <typename F>
+void NativeLayerRootCA::ForAllRepresentations(F aFn) {
+  aFn(mOnscreenRepresentation);
+  aFn(mOffscreenRepresentation);
+}
+
+NativeLayerRootCA::Representation::Representation(CALayer* aRootCALayer)
+    : mRootCALayer([aRootCALayer retain]) {}
+
+NativeLayerRootCA::Representation::~Representation() {
+  if (mMutated) {
+    // Clear the root layer's sublayers. At this point the window is usually closed, so this
+    // transaction does not cause any screen updates.
+    AutoCATransaction transaction;
+    mRootCALayer.sublayers = @[];
+  }
+
+  [mRootCALayer release];
+}
+
+void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentation,
+                                               const nsTArray<RefPtr<NativeLayerCA>>& aSublayers) {
   AutoCATransaction transaction;
 
   // Call ApplyChanges on our sublayers first, and then update the root layer's
   // list of sublayers. The order is important because we need layer->UnderlyingCALayer()
   // to be non-null, and the underlying CALayer gets lazily initialized in ApplyChanges().
-  for (auto layer : mSublayers) {
-    layer->ApplyChanges();
+  for (auto layer : aSublayers) {
+    layer->ApplyChanges(aRepresentation);
   }
 
   if (mMutated) {
-    NSMutableArray<CALayer*>* sublayers = [NSMutableArray arrayWithCapacity:mSublayers.Length()];
-    for (auto layer : mSublayers) {
-      [sublayers addObject:layer->UnderlyingCALayer()];
+    NSMutableArray<CALayer*>* sublayers = [NSMutableArray arrayWithCapacity:aSublayers.Length()];
+    for (auto layer : aSublayers) {
+      [sublayers addObject:layer->UnderlyingCALayer(aRepresentation)];
     }
     mRootCALayer.sublayers = sublayers;
     mMutated = false;
   }
-
-  mCommitPending = false;
-
-  return true;
 }
 
 NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque,
@@ -214,7 +252,7 @@ void NativeLayerCA::SetSurfaceIsFlipped(bool aIsFlipped) {
 
   if (aIsFlipped != mSurfaceIsFlipped) {
     mSurfaceIsFlipped = aIsFlipped;
-    mRepresentation.mMutatedSurfaceIsFlipped = true;
+    ForAllRepresentations([&](Representation& r) { r.mMutatedSurfaceIsFlipped = true; });
   }
 }
 
@@ -234,7 +272,7 @@ void NativeLayerCA::SetPosition(const IntPoint& aPosition) {
 
   if (aPosition != mPosition) {
     mPosition = aPosition;
-    mRepresentation.mMutatedPosition = true;
+    ForAllRepresentations([&](Representation& r) { r.mMutatedPosition = true; });
   }
 }
 
@@ -253,7 +291,7 @@ void NativeLayerCA::SetBackingScale(float aBackingScale) {
 
   if (aBackingScale != mBackingScale) {
     mBackingScale = aBackingScale;
-    mRepresentation.mMutatedBackingScale = true;
+    ForAllRepresentations([&](Representation& r) { r.mMutatedBackingScale = true; });
   }
 }
 
@@ -267,7 +305,7 @@ void NativeLayerCA::SetClipRect(const Maybe<gfx::IntRect>& aClipRect) {
 
   if (aClipRect != mClipRect) {
     mClipRect = aClipRect;
-    mRepresentation.mMutatedClipRect = true;
+    ForAllRepresentations([&](Representation& r) { r.mMutatedClipRect = true; });
   }
 }
 
@@ -443,7 +481,7 @@ void NativeLayerCA::NotifySurfaceReady() {
   IOSurfaceDecrementUseCount(mInProgressSurface->mSurface.get());
   mFrontSurface = std::move(mInProgressSurface);
   mFrontSurface->mInvalidRegion = IntRect();
-  mRepresentation.mMutatedFrontSurface = true;
+  ForAllRepresentations([&](Representation& r) { r.mMutatedFrontSurface = true; });
 }
 
 void NativeLayerCA::DiscardBackbuffers() {
@@ -455,16 +493,32 @@ void NativeLayerCA::DiscardBackbuffers() {
   mSurfaces.clear();
 }
 
-void NativeLayerCA::ApplyChanges() {
-  MutexAutoLock lock(mMutex);
-  mRepresentation.ApplyChanges(mSize, mIsOpaque, mPosition, mClipRect, mBackingScale,
-                               mSurfaceIsFlipped,
-                               mFrontSurface ? mFrontSurface->mSurface : nullptr);
+NativeLayerCA::Representation& NativeLayerCA::GetRepresentation(
+    WhichRepresentation aRepresentation) {
+  switch (aRepresentation) {
+    case WhichRepresentation::ONSCREEN:
+      return mOnscreenRepresentation;
+    case WhichRepresentation::OFFSCREEN:
+      return mOffscreenRepresentation;
+  }
 }
 
-CALayer* NativeLayerCA::UnderlyingCALayer() {
+template <typename F>
+void NativeLayerCA::ForAllRepresentations(F aFn) {
+  aFn(mOnscreenRepresentation);
+  aFn(mOffscreenRepresentation);
+}
+
+void NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation) {
   MutexAutoLock lock(mMutex);
-  return mRepresentation.UnderlyingCALayer();
+  GetRepresentation(aRepresentation)
+      .ApplyChanges(mSize, mIsOpaque, mPosition, mClipRect, mBackingScale, mSurfaceIsFlipped,
+                    mFrontSurface ? mFrontSurface->mSurface : nullptr);
+}
+
+CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
+  MutexAutoLock lock(mMutex);
+  return GetRepresentation(aRepresentation).UnderlyingCALayer();
 }
 
 void NativeLayerCA::Representation::ApplyChanges(const IntSize& aSize, bool aIsOpaque,
