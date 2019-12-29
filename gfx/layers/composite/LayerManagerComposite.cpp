@@ -1296,6 +1296,10 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     AUTO_PROFILER_LABEL("LayerManagerComposite::Render:EndFrame", GRAPHICS);
 
     mCompositor->EndFrame();
+
+    if (usingNativeLayers) {
+      mNativeLayerRoot->CommitToScreen();
+    }
   }
 
   mCompositor->GetWidget()->PostRender(&widgetContext);

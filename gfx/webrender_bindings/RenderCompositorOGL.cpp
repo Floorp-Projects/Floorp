@@ -119,10 +119,16 @@ RenderedFrameId RenderCompositorOGL::EndFrame(
     const FfiVec<DeviceIntRect>& aDirtyRects) {
   RenderedFrameId frameId = GetNextRenderFrameId();
   InsertFrameDoneSync();
-  mGL->SwapBuffers();
+
+  if (!mNativeLayerRoot) {
+    mGL->SwapBuffers();
+    return frameId;
+  }
 
   if (mNativeLayerForEntireWindow) {
+    mGL->fFlush();
     mNativeLayerForEntireWindow->NotifySurfaceReady();
+    mNativeLayerRoot->CommitToScreen();
   }
 
   return frameId;
@@ -208,6 +214,8 @@ void RenderCompositorOGL::CompositorEndFrame() {
   mDrawnPixelCount = 0;
 
   mNativeLayerRoot->SetLayers(mAddedLayers);
+  mGL->fFlush();
+  mNativeLayerRoot->CommitToScreen();
   mSurfacePoolHandle->OnEndFrame();
 }
 
