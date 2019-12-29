@@ -201,10 +201,6 @@ NativeLayerCA::~NativeLayerCA() {
     IOSurfaceDecrementUseCount(mInProgressSurface->mSurface.get());
     mSurfacePoolHandle->ReturnSurfaceToPool(mInProgressSurface->mSurface);
   }
-  if (mReadySurface) {
-    IOSurfaceDecrementUseCount(mReadySurface->mSurface.get());
-    mSurfacePoolHandle->ReturnSurfaceToPool(mReadySurface->mSurface);
-  }
   if (mFrontSurface) {
     mSurfacePoolHandle->ReturnSurfaceToPool(mFrontSurface->mSurface);
   }
@@ -289,9 +285,6 @@ void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
   if (mInProgressSurface) {
     mInProgressSurface->mInvalidRegion.OrWith(r);
   }
-  if (mReadySurface) {
-    mReadySurface->mInvalidRegion.OrWith(r);
-  }
   if (mFrontSurface) {
     mFrontSurface->mInvalidRegion.OrWith(r);
   }
@@ -343,21 +336,18 @@ void NativeLayerCA::HandlePartialUpdate(const MutexAutoLock& aLock,
     // aUpdateRegion. We will obtain valid content for those parts by copying from a previous
     // surface.
     MOZ_RELEASE_ASSERT(
-        mReadySurface || mFrontSurface,
+        mFrontSurface,
         "The first call to NextSurface* must always update the entire layer. If this "
-        "is the second call, mReadySurface or mFrontSurface will be Some().");
+        "is the second call, mFrontSurface will be Some().");
 
-    // NotifySurfaceReady marks the entire surface as valid. The valid surface is then stored in
-    // mReadySurface, and later moves to mFrontSurface. Get the surface that NotifySurfaceReady was
-    // called on most recently.
-    SurfaceWithInvalidRegion& copySource = mReadySurface ? *mReadySurface : *mFrontSurface;
-    MOZ_RELEASE_ASSERT(copySource.mInvalidRegion.Intersect(copyRegion).IsEmpty(),
-                       "copySource should have valid content in the entire copy region, because "
+    // NotifySurfaceReady marks the entirety of mFrontSurface as valid.
+    MOZ_RELEASE_ASSERT(mFrontSurface->mInvalidRegion.Intersect(copyRegion).IsEmpty(),
+                       "mFrontSurface should have valid content in the entire copy region, because "
                        "the only invalidation since NotifySurfaceReady was aUpdateRegion, and "
                        "aUpdateRegion has no overlap with copyRegion.");
 
-    // Now copy the valid content, using a callar-provided copy function.
-    aCopyFn(copySource.mSurface, copyRegion);
+    // Now copy the valid content, using a caller-provided copy function.
+    aCopyFn(mFrontSurface->mSurface, copyRegion);
     mInProgressSurface->mInvalidRegion.SubOut(copyRegion);
   }
 
@@ -436,19 +426,21 @@ void NativeLayerCA::NotifySurfaceReady() {
 
   MOZ_RELEASE_ASSERT(mInProgressSurface,
                      "NotifySurfaceReady called without preceding call to NextSurface");
-  if (mReadySurface) {
-    IOSurfaceDecrementUseCount(mReadySurface->mSurface.get());
-    mSurfaces.push_back({*mReadySurface, 0});
-    mReadySurface = Nothing();
-  }
 
   if (mInProgressLockedIOSurface) {
     mInProgressLockedIOSurface->Unlock(false);
     mInProgressLockedIOSurface = nullptr;
   }
 
-  mReadySurface = std::move(mInProgressSurface);
-  mReadySurface->mInvalidRegion = IntRect();
+  if (mFrontSurface) {
+    mSurfaces.push_back({*mFrontSurface, 0});
+    mFrontSurface = Nothing();
+  }
+
+  IOSurfaceDecrementUseCount(mInProgressSurface->mSurface.get());
+  mFrontSurface = std::move(mInProgressSurface);
+  mFrontSurface->mInvalidRegion = IntRect();
+  mMutatedFrontSurface = true;
 }
 
 void NativeLayerCA::DiscardBackbuffers() {
@@ -557,23 +549,15 @@ void NativeLayerCA::ApplyChanges() {
     }
   }
 
+  if (mMutatedFrontSurface) {
+    mContentCALayer.contents = (id)mFrontSurface->mSurface.get();
+  }
+
   mMutatedPosition = false;
   mMutatedBackingScale = false;
   mMutatedSurfaceIsFlipped = false;
   mMutatedClipRect = false;
-
-  if (mReadySurface) {
-    mContentCALayer.contents = (id)mReadySurface->mSurface.get();
-    IOSurfaceDecrementUseCount(mReadySurface->mSurface.get());
-
-    if (mFrontSurface) {
-      mSurfaces.push_back({*mFrontSurface, 0});
-      mFrontSurface = Nothing();
-    }
-
-    mFrontSurface = Some(*mReadySurface);
-    mReadySurface = Nothing();
-  }
+  mMutatedFrontSurface = false;
 }
 
 // Called when mMutex is already being held by the current thread.
