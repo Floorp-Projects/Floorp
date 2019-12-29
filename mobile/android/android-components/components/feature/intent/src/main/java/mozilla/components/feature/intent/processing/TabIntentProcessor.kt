@@ -18,6 +18,7 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.WebURLFinder
 
@@ -99,8 +100,7 @@ class TabIntentProcessor(
     }
 
     private fun resolveSearch(query : String, source: Source) {
-        val queryIsAnUrl = WebURLFinder.isWebURL(query)
-        if (queryIsAnUrl) {
+        if (query.isUrl()) {
             val session = createSession(query, private = isPrivate, source = source)
             loadUrlUseCase(query, session, LoadUrlFlags.external())
         } else {
