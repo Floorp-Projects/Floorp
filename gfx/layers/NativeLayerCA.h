@@ -200,50 +200,28 @@ class NativeLayerCA : public NativeLayer {
   // determines it is no longer needed (because the swap chain has grown too
   // long) or until DiscardBackbuffers() is called or the layer is destroyed.
   // During the surface's lifetime, it will continuously move through the fields
-  // mInProgressSurface, mReadySurface, mFrontSurface, and back to front through
-  // the mSurfaces queue:
+  // mInProgressSurface, mFrontSurface, and back to front through the mSurfaces
+  // queue:
   //
   //  mSurfaces.front()
   //  ------[NextSurface()]-----> mInProgressSurface
-  //  --[NotifySurfaceReady()]--> mReadySurface
-  //  ----[ApplyChanges()]------> mFrontSurface
-  //  ----[ApplyChanges()]------> mSurfaces.back()  --> .... -->
+  //  --[NotifySurfaceReady()]--> mFrontSurface
+  //  --[NotifySurfaceReady()]--> mSurfaces.back()  --> .... -->
   //  mSurfaces.front()
   //
   // We mark an IOSurface as "in use" as long as it is either in
-  // mInProgressSurface or in mReadySurface. When it is in mFrontSurface or in
-  // the mSurfaces queue, it is not marked as "in use" by us - but it can be "in
-  // use" by the window server. Consequently, IOSurfaceIsInUse on a surface from
-  // mSurfaces reflects whether the window server is still reading from the
-  // surface, and we can use this indicator to decide when to recycle the
-  // surface.
+  // mInProgressSurface. When it is in mFrontSurface or in the mSurfaces queue,
+  // it is not marked as "in use" by us - but it can be "in use" by the window
+  // server. Consequently, IOSurfaceIsInUse on a surface from mSurfaces reflects
+  // whether the window server is still reading from the surface, and we can use
+  // this indicator to decide when to recycle the surface.
   //
   // Users of NativeLayerCA normally proceed in this order:
   //  1. Begin a frame by calling NextSurface to get the surface.
   //  2. Draw to the surface.
   //  3. Mark the surface as done by calling NotifySurfaceReady.
-  //  4. Trigger a CoreAnimation transaction, and call ApplyChanges within the
-  //  transaction.
-  //
-  // For two consecutive frames, this results in the following ordering of
-  // calls:
-  // I. NextSurface, NotifySurfaceReady, ApplyChanges, NextSurface,
-  //    NotifySurfaceReady, ApplyChanges
-  //
-  // In this scenario, either mInProgressSurface or mReadySurface is always
-  // Nothing().
-  //
-  // However, sometimes we see the following ordering instead:
-  // II. NextSurface, NotifySurfaceReady, NextSurface, ApplyChanges,
-  //     NotifySurfaceReady, ApplyChanges
-  //
-  // This has the NextSurface and ApplyChanges calls in the middle reversed.
-  //
-  // In that scenario, both mInProgressSurface and mReadySurface will be Some()
-  // between the calls to NextSurface and ApplyChanges in the middle, and the
-  // two ApplyChanges invocations will submit two different surfaces. It is
-  // important that we don't simply discard the first surface during the second
-  // call to NextSurface in this scenario.
+  //  4. Call NativeLayerRoot::CommitToScreen(), which calls ApplyChanges()
+  //     during a CATransaction.
 
   // The surface we returned from the most recent call to NextSurface, before
   // the matching call to NotifySurfaceReady.
@@ -251,14 +229,8 @@ class NativeLayerCA : public NativeLayer {
   Maybe<SurfaceWithInvalidRegion> mInProgressSurface;
 
   // The surface that the most recent call to NotifySurfaceReady was for.
-  // Will only be Some() between calls to NotifySurfaceReady and the next call
-  // to ApplyChanges.
-  // Both mInProgressSurface and mReadySurface can be Some() at the same time.
-  Maybe<SurfaceWithInvalidRegion> mReadySurface;
-
-  // The surface that the most recent call to ApplyChanges set on the CALayer.
-  // Will be Some() after the first sequence of NextSurface, NotifySurfaceReady,
-  // ApplyChanges calls, for the rest of the layer's life time.
+  // Will be Some() after the first call to NotifySurfaceReady, for the rest of
+  // the layer's life time.
   Maybe<SurfaceWithInvalidRegion> mFrontSurface;
 
   // The queue of surfaces which make up the rest of our "swap chain".
@@ -290,6 +262,7 @@ class NativeLayerCA : public NativeLayer {
   bool mMutatedSurfaceIsFlipped = false;
   bool mMutatedPosition = false;
   bool mMutatedClipRect = false;
+  bool mMutatedFrontSurface = false;
 };
 
 }  // namespace layers
