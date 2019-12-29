@@ -25,11 +25,23 @@ const uiUtils = Cc["@mozilla.org/windows-ui-utils;1"].getService(
   Ci.nsIWindowsUIUtils
 );
 
+const taskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(
+  Ci.nsIWinTaskbar
+);
+
 const File = Components.Constructor(
   "@mozilla.org/file/local;1",
   Ci.nsIFile,
   "initWithPath"
 );
+
+function buildGroupId(id) {
+  try {
+    return `${taskbar.defaultGroupId}.ssb.${id}`;
+  } catch (e) {
+    return `Firefox.ssb.${id}`;
+  }
+}
 
 const WindowsSupport = {
   /**
@@ -71,6 +83,7 @@ const WindowsSupport = {
       ["-profile", OS.Constants.Path.profileDir, "-start-ssb", ssb.id],
       ssb.name,
       iconFile,
+      buildGroupId(ssb.id),
       new File(link)
     );
   },
@@ -141,5 +154,7 @@ const WindowsSupport = {
     if (icons[0] || icons[1]) {
       uiUtils.setWindowIcon(window, icons[0], icons[1]);
     }
+
+    taskbar.setGroupIdForWindow(window, buildGroupId(ssb.id));
   },
 };
