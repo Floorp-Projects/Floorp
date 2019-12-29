@@ -207,10 +207,6 @@ NativeLayerCA::~NativeLayerCA() {
   for (const auto& surf : mSurfaces) {
     mSurfacePoolHandle->ReturnSurfaceToPool(surf.mEntry.mSurface);
   }
-
-  [mContentCALayer release];
-  [mOpaquenessTintLayer release];
-  [mWrappingCALayer release];
 }
 
 void NativeLayerCA::SetSurfaceIsFlipped(bool aIsFlipped) {
@@ -218,7 +214,7 @@ void NativeLayerCA::SetSurfaceIsFlipped(bool aIsFlipped) {
 
   if (aIsFlipped != mSurfaceIsFlipped) {
     mSurfaceIsFlipped = aIsFlipped;
-    mMutatedSurfaceIsFlipped = true;
+    mRepresentation.mMutatedSurfaceIsFlipped = true;
   }
 }
 
@@ -232,12 +228,13 @@ IntSize NativeLayerCA::GetSize() {
   MutexAutoLock lock(mMutex);
   return mSize;
 }
+
 void NativeLayerCA::SetPosition(const IntPoint& aPosition) {
   MutexAutoLock lock(mMutex);
 
   if (aPosition != mPosition) {
     mPosition = aPosition;
-    mMutatedPosition = true;
+    mRepresentation.mMutatedPosition = true;
   }
 }
 
@@ -256,7 +253,7 @@ void NativeLayerCA::SetBackingScale(float aBackingScale) {
 
   if (aBackingScale != mBackingScale) {
     mBackingScale = aBackingScale;
-    mMutatedBackingScale = true;
+    mRepresentation.mMutatedBackingScale = true;
   }
 }
 
@@ -270,13 +267,19 @@ void NativeLayerCA::SetClipRect(const Maybe<gfx::IntRect>& aClipRect) {
 
   if (aClipRect != mClipRect) {
     mClipRect = aClipRect;
-    mMutatedClipRect = true;
+    mRepresentation.mMutatedClipRect = true;
   }
 }
 
 Maybe<gfx::IntRect> NativeLayerCA::ClipRect() {
   MutexAutoLock lock(mMutex);
   return mClipRect;
+}
+
+NativeLayerCA::Representation::~Representation() {
+  [mContentCALayer release];
+  [mOpaquenessTintLayer release];
+  [mWrappingCALayer release];
 }
 
 void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const MutexAutoLock&,
@@ -440,7 +443,7 @@ void NativeLayerCA::NotifySurfaceReady() {
   IOSurfaceDecrementUseCount(mInProgressSurface->mSurface.get());
   mFrontSurface = std::move(mInProgressSurface);
   mFrontSurface->mInvalidRegion = IntRect();
-  mMutatedFrontSurface = true;
+  mRepresentation.mMutatedFrontSurface = true;
 }
 
 void NativeLayerCA::DiscardBackbuffers() {
@@ -454,7 +457,21 @@ void NativeLayerCA::DiscardBackbuffers() {
 
 void NativeLayerCA::ApplyChanges() {
   MutexAutoLock lock(mMutex);
+  mRepresentation.ApplyChanges(mSize, mIsOpaque, mPosition, mClipRect, mBackingScale,
+                               mSurfaceIsFlipped,
+                               mFrontSurface ? mFrontSurface->mSurface : nullptr);
+}
 
+CALayer* NativeLayerCA::UnderlyingCALayer() {
+  MutexAutoLock lock(mMutex);
+  return mRepresentation.UnderlyingCALayer();
+}
+
+void NativeLayerCA::Representation::ApplyChanges(const IntSize& aSize, bool aIsOpaque,
+                                                 const IntPoint& aPosition,
+                                                 const Maybe<IntRect>& aClipRect,
+                                                 float aBackingScale, bool aSurfaceIsFlipped,
+                                                 CFTypeRefPtr<IOSurfaceRef> aFrontSurface) {
   if (!mWrappingCALayer) {
     mWrappingCALayer = [[CALayer layer] retain];
     mWrappingCALayer.position = NSZeroPoint;
@@ -466,12 +483,12 @@ void NativeLayerCA::ApplyChanges() {
     mContentCALayer.anchorPoint = NSZeroPoint;
     mContentCALayer.contentsGravity = kCAGravityTopLeft;
     mContentCALayer.contentsScale = 1;
-    mContentCALayer.bounds = CGRectMake(0, 0, mSize.width, mSize.height);
-    mContentCALayer.opaque = mIsOpaque;
+    mContentCALayer.bounds = CGRectMake(0, 0, aSize.width, aSize.height);
+    mContentCALayer.opaque = aIsOpaque;
     if ([mContentCALayer respondsToSelector:@selector(setContentsOpaque:)]) {
       // The opaque property seems to not be enough when using IOSurface contents.
       // Additionally, call the private method setContentsOpaque.
-      [mContentCALayer setContentsOpaque:mIsOpaque];
+      [mContentCALayer setContentsOpaque:aIsOpaque];
     }
     [mWrappingCALayer addSublayer:mContentCALayer];
   }
@@ -483,7 +500,7 @@ void NativeLayerCA::ApplyChanges() {
     mOpaquenessTintLayer.bounds = mContentCALayer.bounds;
     mOpaquenessTintLayer.anchorPoint = NSZeroPoint;
     mOpaquenessTintLayer.contentsGravity = kCAGravityTopLeft;
-    if (mIsOpaque) {
+    if (aIsOpaque) {
       mOpaquenessTintLayer.backgroundColor =
           [[[NSColor greenColor] colorWithAlphaComponent:0.5] CGColor];
     } else {
@@ -507,26 +524,26 @@ void NativeLayerCA::ApplyChanges() {
   //  Important: Always use integral numbers for the width and height of your layer.
   // We hope that this refers to integral physical pixels, and not to integral logical coordinates.
 
-  auto globalClipOrigin = mClipRect ? mClipRect->TopLeft() : gfx::IntPoint{};
-  auto globalLayerOrigin = mPosition;
+  auto globalClipOrigin = aClipRect ? aClipRect->TopLeft() : gfx::IntPoint{};
+  auto globalLayerOrigin = aPosition;
   auto clipToLayerOffset = globalLayerOrigin - globalClipOrigin;
 
   if (mMutatedBackingScale) {
     mContentCALayer.bounds =
-        CGRectMake(0, 0, mSize.width / mBackingScale, mSize.height / mBackingScale);
+        CGRectMake(0, 0, aSize.width / aBackingScale, aSize.height / aBackingScale);
     if (mOpaquenessTintLayer) {
       mOpaquenessTintLayer.bounds = mContentCALayer.bounds;
     }
-    mContentCALayer.contentsScale = mBackingScale;
+    mContentCALayer.contentsScale = aBackingScale;
   }
 
   if (mMutatedBackingScale || mMutatedClipRect) {
     mWrappingCALayer.position =
-        CGPointMake(globalClipOrigin.x / mBackingScale, globalClipOrigin.y / mBackingScale);
-    if (mClipRect) {
+        CGPointMake(globalClipOrigin.x / aBackingScale, globalClipOrigin.y / aBackingScale);
+    if (aClipRect) {
       mWrappingCALayer.masksToBounds = YES;
       mWrappingCALayer.bounds =
-          CGRectMake(0, 0, mClipRect->Width() / mBackingScale, mClipRect->Height() / mBackingScale);
+          CGRectMake(0, 0, aClipRect->Width() / aBackingScale, aClipRect->Height() / aBackingScale);
     } else {
       mWrappingCALayer.masksToBounds = NO;
     }
@@ -534,15 +551,15 @@ void NativeLayerCA::ApplyChanges() {
 
   if (mMutatedBackingScale || mMutatedPosition || mMutatedClipRect) {
     mContentCALayer.position =
-        CGPointMake(clipToLayerOffset.x / mBackingScale, clipToLayerOffset.y / mBackingScale);
+        CGPointMake(clipToLayerOffset.x / aBackingScale, clipToLayerOffset.y / aBackingScale);
     if (mOpaquenessTintLayer) {
       mOpaquenessTintLayer.position = mContentCALayer.position;
     }
   }
 
   if (mMutatedBackingScale || mMutatedSurfaceIsFlipped) {
-    if (mSurfaceIsFlipped) {
-      CGFloat height = mSize.height / mBackingScale;
+    if (aSurfaceIsFlipped) {
+      CGFloat height = aSize.height / aBackingScale;
       mContentCALayer.affineTransform = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, height);
     } else {
       mContentCALayer.affineTransform = CGAffineTransformIdentity;
@@ -550,7 +567,7 @@ void NativeLayerCA::ApplyChanges() {
   }
 
   if (mMutatedFrontSurface) {
-    mContentCALayer.contents = (id)mFrontSurface->mSurface.get();
+    mContentCALayer.contents = (id)aFrontSurface.get();
   }
 
   mMutatedPosition = false;
