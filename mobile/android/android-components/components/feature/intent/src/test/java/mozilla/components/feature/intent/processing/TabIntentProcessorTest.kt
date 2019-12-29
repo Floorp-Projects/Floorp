@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.intent.processing
 
+import android.app.SearchManager
 import android.content.Intent
 import android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -243,6 +244,115 @@ class TabIntentProcessorTest {
 
         val processed = handler.process(intent)
         assertFalse(processed)
+    }
+
+    @Test
+    fun `processor handles ACTION_SEARCH with empty text`() = runBlockingTest {
+        val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(Intent.ACTION_SEARCH)
+        whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn(" ")
+
+        val processed = handler.process(intent)
+        assertFalse(processed)
+    }
+
+    @Test
+    fun `load URL on ACTION_SEARCH if text is an URL`() = runBlockingTest {
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+
+        val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(Intent.ACTION_SEARCH)
+
+        whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn("http://mozilla.org")
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
+    }
+
+    @Test
+    fun `perform search on ACTION_SEARCH if text (no URL) provided`() = runBlockingTest {
+        val engine = mock<Engine>()
+        val sessionManager = spy(SessionManager(engine))
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+
+        val searchUseCases = SearchUseCases(testContext, searchEngineManager, sessionManager)
+        val sessionUseCases = SessionUseCases(sessionManager)
+
+        val searchTerms = "mozilla android"
+        val searchUrl = "http://search-url.com?$searchTerms"
+
+        val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(Intent.ACTION_SEARCH)
+        whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn(searchTerms)
+
+        val searchEngine = mock<SearchEngine>()
+        whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
+        whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
+
+        handler.process(intent)
+        verify(engineSession).loadUrl(searchUrl)
+        assertEquals(searchUrl, sessionManager.selectedSession?.url)
+        assertEquals(searchTerms, sessionManager.selectedSession?.searchTerms)
+    }
+
+
+    @Test
+    fun `processor handles ACTION_WEB_SEARCH with empty text`() = runBlockingTest {
+        val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(Intent.ACTION_WEB_SEARCH)
+        whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn(" ")
+
+        val processed = handler.process(intent)
+        assertFalse(processed)
+    }
+
+    @Test
+    fun `load URL on ACTION_WEB_SEARCH if text is an URL`() = runBlockingTest {
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+
+        val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(Intent.ACTION_WEB_SEARCH)
+
+        whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn("http://mozilla.org")
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
+    }
+
+    @Test
+    fun `perform search on ACTION_WEB_SEARCH if text (no URL) provided`() = runBlockingTest {
+        val engine = mock<Engine>()
+        val sessionManager = spy(SessionManager(engine))
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+
+        val searchUseCases = SearchUseCases(testContext, searchEngineManager, sessionManager)
+        val sessionUseCases = SessionUseCases(sessionManager)
+
+        val searchTerms = "mozilla android"
+        val searchUrl = "http://search-url.com?$searchTerms"
+
+        val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
+
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(Intent.ACTION_WEB_SEARCH)
+        whenever(intent.getStringExtra(SearchManager.QUERY)).thenReturn(searchTerms)
+
+        val searchEngine = mock<SearchEngine>()
+        whenever(searchEngine.buildSearchUrl(searchTerms)).thenReturn(searchUrl)
+        whenever(searchEngineManager.getDefaultSearchEngine(testContext)).thenReturn(searchEngine)
+
+        handler.process(intent)
+        verify(engineSession).loadUrl(searchUrl)
+        assertEquals(searchUrl, sessionManager.selectedSession?.url)
+        assertEquals(searchTerms, sessionManager.selectedSession?.searchTerms)
     }
 
     @Suppress("UNCHECKED_CAST")
