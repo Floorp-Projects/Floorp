@@ -593,22 +593,6 @@ class nsChildView final : public nsBaseWidget {
   RefPtr<mozilla::SwipeTracker> mSwipeTracker;
   mozilla::UniquePtr<mozilla::SwipeEventQueue> mSwipeEventQueue;
 
-  // Coordinates the triggering of CoreAnimation transactions between the main
-  // thread and the compositor thread in order to avoid glitches during window
-  // resizing and window focus changes.
-  struct WidgetCompositingState {
-    // While mAsyncCATransactionsSuspended is true, no CoreAnimation transaction
-    // should be triggered on a non-main thread, because they might race with
-    // main-thread driven updates such as window shape changes, and cause glitches.
-    bool mAsyncCATransactionsSuspended = false;
-
-    // Set to true if mNativeLayerRoot->ApplyChanges() needs to be called at the
-    // next available opportunity. Set to false whenever ApplyChanges does get
-    // called.
-    bool mNativeLayerChangesPending = false;
-  };
-  mozilla::DataMutex<WidgetCompositingState> mCompositingState;
-
   RefPtr<mozilla::CancelableRunnable> mUnsuspendAsyncCATransactionsRunnable;
 
   // This flag is only used when APZ is off. It indicates that the current pan
