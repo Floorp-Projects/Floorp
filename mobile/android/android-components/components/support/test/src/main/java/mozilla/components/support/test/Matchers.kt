@@ -4,6 +4,7 @@
 
 package mozilla.components.support.test
 
+import org.mockito.AdditionalMatchers
 import org.mockito.Mockito
 
 /**
@@ -23,6 +24,15 @@ fun <T> any(): T {
  */
 fun <T> eq(value: T): T {
     return Mockito.eq(value) ?: value
+}
+
+/**
+ * Mockito matcher that matches if the argument is not the same as the provided value.
+ *
+ * (The version from Mockito doesn't work correctly with Kotlin code.)
+ */
+fun <T> not(value: T): T {
+    return AdditionalMatchers.not(value) ?: value
 }
 
 @Suppress("UNCHECKED_CAST")

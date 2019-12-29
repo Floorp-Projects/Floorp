@@ -14,6 +14,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.app.links.AppLinksUseCases
 
 /**
  * A candidate for an item to be displayed in the context menu.
@@ -102,6 +103,29 @@ data class ContextMenuCandidate(
                     R.string.mozac_feature_contextmenu_snackbar_action_switch
                 ) {
                     tabsUseCases.selectTab(tab)
+                }
+            }
+        )
+
+        /**
+         * Context Menu item: "Open Link in external App".
+         */
+        fun createOpenInExternalAppCandidate(
+            context: Context,
+            appLinksUseCases: AppLinksUseCases
+        ) = ContextMenuCandidate(
+            id = "mozac.feature.contextmenu.open_in_external_app",
+            label = context.getString(R.string.mozac_feature_contextmenu_open_link_in_external_app),
+            showFor = { _, hitResult -> hitResult.canOpenInExternalApp(appLinksUseCases) },
+            action = { _, hitResult ->
+                val link = hitResult.getLink()
+                val redirect = appLinksUseCases.appLinkRedirectIncludeInstall(link)
+                val appIntent = redirect.appIntent
+                val marketPlaceIntent = redirect.marketplaceIntent
+                if (appIntent != null) {
+                    appLinksUseCases.openAppLink(appIntent)
+                } else if (marketPlaceIntent != null) {
+                    appLinksUseCases.openAppLink(marketPlaceIntent)
                 }
             }
         )
@@ -262,6 +286,19 @@ private fun HitResult.isImage(): Boolean =
 private fun HitResult.isLink(): Boolean =
     ((this is HitResult.UNKNOWN && src.isNotEmpty()) || this is HitResult.IMAGE_SRC) &&
         getLink().startsWith("http")
+
+private fun HitResult.isIntent(): Boolean =
+    (this is HitResult.UNKNOWN && src.isNotEmpty() &&
+        getLink().startsWith("intent"))
+
+private fun HitResult.canOpenInExternalApp(appLinksUseCases: AppLinksUseCases): Boolean
+{
+    if (isLink() || isIntent()) {
+        val redirect = appLinksUseCases.appLinkRedirectIncludeInstall(getLink())
+        return redirect.hasExternalApp() || redirect.hasMarketplaceIntent()
+    }
+    return false
+}
 
 internal fun HitResult.getLink(): String = when (this) {
     is HitResult.UNKNOWN -> src
