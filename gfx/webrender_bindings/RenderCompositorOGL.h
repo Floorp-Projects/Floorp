@@ -13,6 +13,7 @@
 namespace mozilla {
 
 namespace layers {
+class NativeLayerRootSnapshotter;
 class NativeLayerRoot;
 class NativeLayer;
 class SurfacePoolHandle;
@@ -44,6 +45,11 @@ class RenderCompositorOGL : public RenderCompositor {
   bool ShouldUseNativeCompositor() override;
   uint32_t GetMaxUpdateRects() override;
 
+  // Does the readback for the ShouldUseNativeCompositor() case.
+  bool MaybeReadback(const gfx::IntSize& aReadbackSize,
+                     const wr::ImageFormat& aReadbackFormat,
+                     const Range<uint8_t>& aReadbackBuffer) override;
+
   // Interface for wr::Compositor
   void CompositorBeginFrame() override;
   void CompositorEndFrame() override;
@@ -73,6 +79,7 @@ class RenderCompositorOGL : public RenderCompositor {
 
   // Can be null.
   RefPtr<layers::NativeLayerRoot> mNativeLayerRoot;
+  UniquePtr<layers::NativeLayerRootSnapshotter> mNativeLayerRootSnapshotter;
   RefPtr<layers::NativeLayer> mNativeLayerForEntireWindow;
   RefPtr<layers::SurfacePoolHandle> mSurfacePoolHandle;
 
