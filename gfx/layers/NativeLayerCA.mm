@@ -7,6 +7,7 @@
 
 #import <AppKit/NSAnimationContext.h>
 #import <AppKit/NSColor.h>
+#import <OpenGL/gl.h>
 #import <QuartzCore/QuartzCore.h>
 
 #include <utility>
@@ -14,6 +15,7 @@
 
 #include "GLBlitHelper.h"
 #include "GLContextCGL.h"
+#include "GLContextProvider.h"
 #include "MozFramebuffer.h"
 #include "mozilla/layers/SurfacePoolCA.h"
 #include "ScopedGLHelpers.h"
@@ -29,6 +31,7 @@ using gfx::IntPoint;
 using gfx::IntSize;
 using gfx::IntRect;
 using gfx::IntRegion;
+using gfx::SurfaceFormat;
 using gl::GLContext;
 using gl::GLContextCGL;
 
@@ -180,6 +183,31 @@ bool NativeLayerRootCA::CommitToScreen() {
   return true;
 }
 
+UniquePtr<NativeLayerRootSnapshotter> NativeLayerRootCA::CreateSnapshotter() {
+  MutexAutoLock lock(mMutex);
+  MOZ_RELEASE_ASSERT(
+      !mWeakSnapshotter,
+      "No NativeLayerRootSnapshotter for this NativeLayerRoot should exist when this is called");
+
+  auto cr = NativeLayerRootSnapshotterCA::Create(this, mOffscreenRepresentation.mRootCALayer);
+  if (cr) {
+    mWeakSnapshotter = cr.get();
+  }
+  return cr;
+}
+
+void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
+    NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter) {
+  MutexAutoLock lock(mMutex);
+  MOZ_RELEASE_ASSERT(mWeakSnapshotter == aNativeLayerRootSnapshotter);
+  mWeakSnapshotter = nullptr;
+}
+
+void NativeLayerRootCA::CommitOffscreen() {
+  MutexAutoLock lock(mMutex);
+  mOffscreenRepresentation.Commit(WhichRepresentation::OFFSCREEN, mSublayers);
+}
+
 template <typename F>
 void NativeLayerRootCA::ForAllRepresentations(F aFn) {
   aFn(mOnscreenRepresentation);
@@ -219,6 +247,94 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
     mRootCALayer.sublayers = sublayers;
     mMutated = false;
   }
+}
+
+/* static */ UniquePtr<NativeLayerRootSnapshotterCA> NativeLayerRootSnapshotterCA::Create(
+    NativeLayerRootCA* aLayerRoot, CALayer* aRootCALayer) {
+  if (NS_IsMainThread()) {
+    // Disallow creating snapshotters on the main thread.
+    // On the main thread, any explicit CATransaction / NSAnimationContext is nested within a global
+    // implicit transaction. This makes it impossible to apply CALayer mutations synchronously such
+    // that they become visible to CARenderer. As a result, the snapshotter would not capture
+    // the right output on the main thread.
+    return nullptr;
+  }
+
+  nsCString failureUnused;
+  RefPtr<gl::GLContext> gl =
+      gl::GLContextProvider::CreateHeadless(gl::CreateContextFlags::ALLOW_OFFLINE_RENDERER |
+                                                gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE,
+                                            &failureUnused);
+  if (!gl) {
+    return nullptr;
+  }
+
+  return UniquePtr<NativeLayerRootSnapshotterCA>(
+      new NativeLayerRootSnapshotterCA(aLayerRoot, std::move(gl), aRootCALayer));
+}
+
+NativeLayerRootSnapshotterCA::NativeLayerRootSnapshotterCA(NativeLayerRootCA* aLayerRoot,
+                                                           RefPtr<GLContext>&& aGL,
+                                                           CALayer* aRootCALayer)
+    : mLayerRoot(aLayerRoot), mGL(aGL) {
+  AutoCATransaction transaction;
+  mRenderer = [[CARenderer rendererWithCGLContext:gl::GLContextCGL::Cast(mGL)->GetCGLContext()
+                                          options:nil] retain];
+  mRenderer.layer = aRootCALayer;
+}
+
+NativeLayerRootSnapshotterCA::~NativeLayerRootSnapshotterCA() {
+  mLayerRoot->OnNativeLayerRootSnapshotterDestroyed(this);
+  [mRenderer release];
+}
+
+bool NativeLayerRootSnapshotterCA::ReadbackPixels(const IntSize& aReadbackSize,
+                                                  SurfaceFormat aReadbackFormat,
+                                                  const Range<uint8_t>& aReadbackBuffer) {
+  if (aReadbackFormat != SurfaceFormat::B8G8R8A8) {
+    return false;
+  }
+
+  float scale = mLayerRoot->BackingScale();
+  CGSize size = {aReadbackSize.width / scale, aReadbackSize.height / scale};
+  CGRect bounds = {CGPointZero, size};
+
+  {
+    AutoCATransaction transaction;
+    mRenderer.layer.bounds = bounds;
+    mRenderer.bounds = bounds;
+  }
+
+  mLayerRoot->CommitOffscreen();
+
+  mGL->MakeCurrent();
+
+  if (!mFB || mFB->mSize != aReadbackSize) {
+    mFB = gl::MozFramebuffer::Create(mGL, aReadbackSize, 0, false);
+    if (!mFB) {
+      return false;
+    }
+    [mRenderer addUpdateRect:bounds];  // fresh framebuffer, draw everything
+  }
+
+  const gl::ScopedBindFramebuffer bindFB(mGL, mFB->mFB);
+  mGL->fViewport(0.0, 0.0, aReadbackSize.width, aReadbackSize.height);
+
+  // These legacy OpenGL function calls are part of CARenderer's API contract, see CARenderer.h.
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(0.0, size.width, 0.0, size.height, -1, 1);
+
+  float mediaTime = CACurrentMediaTime();
+  [mRenderer beginFrameAtTime:mediaTime timeStamp:nullptr];
+  [mRenderer render];
+  [mRenderer endFrame];
+
+  gl::ScopedPackState safePackState(mGL);
+  mGL->fReadPixels(0.0f, 0.0f, aReadbackSize.width, aReadbackSize.height, LOCAL_GL_BGRA,
+                   LOCAL_GL_UNSIGNED_BYTE, &aReadbackBuffer[0]);
+
+  return true;
 }
 
 NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque,
