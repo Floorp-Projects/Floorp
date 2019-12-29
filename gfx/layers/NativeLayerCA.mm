@@ -32,6 +32,22 @@ using gfx::IntRegion;
 using gl::GLContext;
 using gl::GLContextCGL;
 
+// Needs to be on the stack whenever CALayer mutations are performed.
+// (Mutating CALayers outside of a transaction can result in permanently stuck rendering, because
+// such mutations create an implicit transaction which never auto-commits if the current thread does
+// not have a native runloop.)
+// Uses NSAnimationContext, which wraps CATransaction with additional off-main-thread protection,
+// see bug 1585523.
+struct MOZ_STACK_CLASS AutoCATransaction final {
+  AutoCATransaction() {
+    [NSAnimationContext beginGrouping];
+    // By default, mutating a CALayer property triggers an animation which smoothly transitions the
+    // property to the new value. We don't need these animations, and this call turns them off:
+    [CATransaction setDisableActions:YES];
+  }
+  ~AutoCATransaction() { [NSAnimationContext endGrouping]; }
+};
+
 /* static */ already_AddRefed<NativeLayerRootCA> NativeLayerRootCA::CreateForCALayer(
     CALayer* aLayer) {
   RefPtr<NativeLayerRootCA> layerRoot = new NativeLayerRootCA(aLayer);
@@ -149,8 +165,7 @@ bool NativeLayerRootCA::CommitToScreen() {
   }
 
   // Force a CoreAnimation layer tree update from this thread.
-  [NSAnimationContext beginGrouping];
-  [CATransaction setDisableActions:YES];
+  AutoCATransaction transaction;
 
   // Call ApplyChanges on our sublayers first, and then update the root layer's
   // list of sublayers. The order is important because we need layer->UnderlyingCALayer()
@@ -167,7 +182,6 @@ bool NativeLayerRootCA::CommitToScreen() {
     mRootCALayer.sublayers = sublayers;
     mMutated = false;
   }
-  [NSAnimationContext endGrouping];
 
   mCommitPending = false;
 
