@@ -300,7 +300,6 @@ class TabIntentProcessorTest {
         assertEquals(searchTerms, sessionManager.selectedSession?.searchTerms)
     }
 
-
     @Test
     fun `processor handles ACTION_WEB_SEARCH with empty text`() = runBlockingTest {
         val handler = TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch)
