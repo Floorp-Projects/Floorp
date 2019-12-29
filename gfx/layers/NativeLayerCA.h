@@ -38,7 +38,8 @@ class SurfacePoolHandleCA;
 
 // NativeLayerRootCA is the CoreAnimation implementation of the NativeLayerRoot
 // interface. A NativeLayerRootCA is created by the widget around an existing
-// CALayer with a call to CreateForCALayer.
+// CALayer with a call to CreateForCALayer - this CALayer is the root of the
+// "onscreen" representation of this layer tree.
 // All methods can be called from any thread, there is internal locking.
 // All effects from mutating methods are buffered locally and don't modify the
 // underlying CoreAnimation layers until CommitToScreen() is called. This
@@ -51,6 +52,10 @@ class SurfacePoolHandleCA;
 // window resizing: During a window resize, we still need the drawing part to
 // happen on the compositing thread, but the modifications to the underlying
 // CALayers need to happen on the main thread, once compositing is done.
+//
+// NativeLayerRootCA + NativeLayerCA create and maintain *two* CALayer tree
+// representations: An "onscreen" representation and an "offscreen"
+// representation.
 class NativeLayerRootCA : public NativeLayerRoot {
  public:
   static already_AddRefed<NativeLayerRootCA> CreateForCALayer(CALayer* aLayer);
@@ -71,6 +76,8 @@ class NativeLayerRootCA : public NativeLayerRoot {
 
   bool AreOffMainThreadCommitsSuspended();
 
+  enum class WhichRepresentation : uint8_t { ONSCREEN, OFFSCREEN };
+
   // Overridden methods
   already_AddRefed<NativeLayer> CreateLayer(
       const gfx::IntSize& aSize, bool aIsOpaque,
@@ -86,9 +93,22 @@ class NativeLayerRootCA : public NativeLayerRoot {
   explicit NativeLayerRootCA(CALayer* aLayer);
   ~NativeLayerRootCA() override;
 
-  Mutex mMutex;                                // protects all other fields
+  struct Representation {
+    explicit Representation(CALayer* aRootCALayer);
+    ~Representation();
+    void Commit(WhichRepresentation aRepresentation,
+                const nsTArray<RefPtr<NativeLayerCA>>& aSublayers);
+    CALayer* mRootCALayer = nullptr;  // strong
+    bool mMutated = false;
+  };
+
+  template <typename F>
+  void ForAllRepresentations(F aFn);
+
+  Mutex mMutex;  // protects all other fields
+  Representation mOnscreenRepresentation;
+  Representation mOffscreenRepresentation;
   nsTArray<RefPtr<NativeLayerCA>> mSublayers;  // in z-order
-  CALayer* mRootCALayer = nullptr;             // strong
   float mBackingScale = 1.0f;
   bool mMutated = false;
 
@@ -156,8 +176,9 @@ class NativeLayerCA : public NativeLayer {
   bool NextSurface(const MutexAutoLock&);
 
   // To be called by NativeLayerRootCA:
-  CALayer* UnderlyingCALayer();
-  void ApplyChanges();
+  typedef NativeLayerRootCA::WhichRepresentation WhichRepresentation;
+  CALayer* UnderlyingCALayer(WhichRepresentation aRepresentation);
+  void ApplyChanges(WhichRepresentation aRepresentation);
   void SetBackingScale(float aBackingScale);
 
   // Invalidates the specified region in all surfaces that are tracked by this
@@ -192,7 +213,7 @@ class NativeLayerCA : public NativeLayer {
   Maybe<SurfaceWithInvalidRegion> GetUnusedSurfaceAndCleanUp(
       const MutexAutoLock&);
 
-  // Wraps the CALayer representation of this NativeLayer.
+  // Wraps one CALayer representation of this NativeLayer.
   struct Representation {
     ~Representation();
 
@@ -222,6 +243,10 @@ class NativeLayerCA : public NativeLayer {
     bool mMutatedSurfaceIsFlipped = true;
     bool mMutatedFrontSurface = true;
   };
+
+  Representation& GetRepresentation(WhichRepresentation aRepresentation);
+  template <typename F>
+  void ForAllRepresentations(F aFn);
 
   // Controls access to all fields of this class.
   Mutex mMutex;
@@ -274,7 +299,8 @@ class NativeLayerCA : public NativeLayer {
 
   RefPtr<SurfacePoolHandleCA> mSurfacePoolHandle;
 
-  Representation mRepresentation;
+  Representation mOnscreenRepresentation;
+  Representation mOffscreenRepresentation;
 
   gfx::IntPoint mPosition;
   const gfx::IntSize mSize;
