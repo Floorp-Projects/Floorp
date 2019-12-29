@@ -7,6 +7,8 @@
 #define mozilla_layers_NativeLayer_h
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Range.h"
+#include "mozilla/UniquePtr.h"
 
 #include "GLTypes.h"
 #include "nsISupportsImpl.h"
@@ -22,6 +24,7 @@ namespace layers {
 
 class NativeLayer;
 class NativeLayerCA;
+class NativeLayerRootSnapshotter;
 class SurfacePoolHandle;
 
 // NativeLayerRoot and NativeLayer allow building up a flat layer "tree" of
@@ -45,8 +48,41 @@ class NativeLayerRoot {
   // successful.
   virtual bool CommitToScreen() = 0;
 
+  // Returns a new NativeLayerRootSnapshotter that can be used to read back the
+  // visual output of this NativeLayerRoot. The snapshotter needs to be
+  // destroyed on the same thread that CreateSnapshotter() was called on. Only
+  // one snapshotter per NativeLayerRoot can be in existence at any given time.
+  // CreateSnapshotter() makes sure of this and crashes if called at a time at
+  // which there still exists a snapshotter for this NativeLayerRoot.
+  virtual UniquePtr<NativeLayerRootSnapshotter> CreateSnapshotter() {
+    return nullptr;
+  }
+
  protected:
   virtual ~NativeLayerRoot() {}
+};
+
+// Allows reading back the visual output of a NativeLayerRoot.
+// Can only be used on a single thread, unlike NativeLayerRoot.
+// Holds a strong reference to the NativeLayerRoot that created it.
+// On Mac, this owns a GLContext, which wants to be created and destroyed on the
+// same thread.
+class NativeLayerRootSnapshotter {
+ public:
+  virtual ~NativeLayerRootSnapshotter() {}
+
+  // Reads the composited result of the NativeLayer tree into aReadbackBuffer,
+  // synchronously. Should only be called right after a call to CommitToScreen()
+  // - in that case it is guaranteed to read back exactly the NativeLayer state
+  // that was committed. If called at other times, this API does not define
+  // whether the observed state includes NativeLayer modifications which have
+  // not been committed. (The macOS implementation will include those pending
+  // modifications by doing an offscreen commit.)
+  // The readback buffer's stride is assumed to be aReadbackSize.width * 4. Only
+  // BGRA is supported.
+  virtual bool ReadbackPixels(const gfx::IntSize& aReadbackSize,
+                              gfx::SurfaceFormat aReadbackFormat,
+                              const Range<uint8_t>& aReadbackBuffer) = 0;
 };
 
 // Represents a native layer. Native layers, such as CoreAnimation layers on

@@ -34,6 +34,7 @@ class MozFramebuffer;
 
 namespace layers {
 
+class NativeLayerRootSnapshotterCA;
 class SurfacePoolHandleCA;
 
 // NativeLayerRootCA is the CoreAnimation implementation of the NativeLayerRoot
@@ -55,7 +56,19 @@ class SurfacePoolHandleCA;
 //
 // NativeLayerRootCA + NativeLayerCA create and maintain *two* CALayer tree
 // representations: An "onscreen" representation and an "offscreen"
-// representation.
+// representation. These representations are updated via calls to
+// CommitToScreen() and CommitOffscreen(), respectively. The reason for having
+// two representations is the following: Our implementation of the snapshotter
+// API uses CARenderer, which lets us render the composited result of our layer
+// tree into a GPU buffer. But CARenderer requires "ownership" of the rendered
+// CALayers in the sense that it associates the CALayers with a local
+// "CAContext". A CALayer can only be associated with one CAContext at any time.
+// If we wanted te render our *onscreen* CALayers with CARenderer, we would need
+// to remove them from the window, reparent them to the CARenderer, render them,
+// and then put them back into the window. This would lead to a visible flashing
+// effect. To solve this problem, we build two CALayer representations, so that
+// one representation can stay inside the window and the other can stay attached
+// to the CARenderer.
 class NativeLayerRootCA : public NativeLayerRoot {
  public:
   static already_AddRefed<NativeLayerRootCA> CreateForCALayer(CALayer* aLayer);
@@ -64,6 +77,10 @@ class NativeLayerRootCA : public NativeLayerRoot {
   // successful. Will return false if called off the main thread while
   // off-main-thread commits are suspended.
   bool CommitToScreen() override;
+
+  void CommitOffscreen();
+  void OnNativeLayerRootSnapshotterDestroyed(
+      NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter);
 
   // Enters a mode during which CommitToScreen(), when called on a non-main
   // thread, will not apply any updates to the CALayer tree.
@@ -85,6 +102,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
+  UniquePtr<NativeLayerRootSnapshotter> CreateSnapshotter() override;
 
   void SetBackingScale(float aBackingScale);
   float BackingScale();
@@ -108,6 +126,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
   Mutex mMutex;  // protects all other fields
   Representation mOnscreenRepresentation;
   Representation mOffscreenRepresentation;
+  NativeLayerRootSnapshotterCA* mWeakSnapshotter = nullptr;
   nsTArray<RefPtr<NativeLayerCA>> mSublayers;  // in z-order
   float mBackingScale = 1.0f;
   bool mMutated = false;
@@ -123,6 +142,28 @@ class NativeLayerRootCA : public NativeLayerRoot {
   // indicates that CommitToScreen() needs to be called at the next available
   // opportunity.
   bool mCommitPending = false;
+};
+
+class NativeLayerRootSnapshotterCA final : public NativeLayerRootSnapshotter {
+ public:
+  static UniquePtr<NativeLayerRootSnapshotterCA> Create(
+      NativeLayerRootCA* aLayerRoot, CALayer* aRootCALayer);
+  virtual ~NativeLayerRootSnapshotterCA();
+
+  bool ReadbackPixels(const gfx::IntSize& aReadbackSize,
+                      gfx::SurfaceFormat aReadbackFormat,
+                      const Range<uint8_t>& aReadbackBuffer) override;
+
+ protected:
+  NativeLayerRootSnapshotterCA(NativeLayerRootCA* aLayerRoot,
+                               RefPtr<gl::GLContext>&& aGL,
+                               CALayer* aRootCALayer);
+
+  RefPtr<NativeLayerRootCA> mLayerRoot;
+  RefPtr<gl::GLContext> mGL;
+  UniquePtr<gl::MozFramebuffer>
+      mFB;  // can be null, recreated when aReadbackSize changes
+  CARenderer* mRenderer = nullptr;  // strong
 };
 
 // NativeLayerCA wraps a CALayer and lets you draw to it. It ensures that only
