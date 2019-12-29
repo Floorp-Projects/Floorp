@@ -156,7 +156,7 @@ class NativeLayerCA : public NativeLayer {
   bool NextSurface(const MutexAutoLock&);
 
   // To be called by NativeLayerRootCA:
-  CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
+  CALayer* UnderlyingCALayer();
   void ApplyChanges();
   void SetBackingScale(float aBackingScale);
 
@@ -191,6 +191,37 @@ class NativeLayerCA : public NativeLayer {
 
   Maybe<SurfaceWithInvalidRegion> GetUnusedSurfaceAndCleanUp(
       const MutexAutoLock&);
+
+  // Wraps the CALayer representation of this NativeLayer.
+  struct Representation {
+    ~Representation();
+
+    CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
+
+    // Applies buffered changes to the native CALayers. The contract with the
+    // caller is as follows: If any of these values have changed since the last
+    // call to ApplyChanges, mMutated[Field] needs to have been set to true
+    // before the call.
+    void ApplyChanges(const gfx::IntSize& aSize, bool aIsOpaque,
+                      const gfx::IntPoint& aPosition,
+                      const Maybe<gfx::IntRect>& aClipRect, float aBackingScale,
+                      bool aSurfaceIsFlipped,
+                      CFTypeRefPtr<IOSurfaceRef> aFrontSurface);
+
+    // Lazily initialized by first call to ApplyChanges. mWrappingLayer is the
+    // layer that applies mClipRect (if set), and mContentCALayer is the layer
+    // that hosts the IOSurface. We do not share clip layers between consecutive
+    // NativeLayerCA objects with the same clip rect.
+    CALayer* mWrappingCALayer = nullptr;      // strong
+    CALayer* mContentCALayer = nullptr;       // strong
+    CALayer* mOpaquenessTintLayer = nullptr;  // strong
+
+    bool mMutatedPosition = true;
+    bool mMutatedClipRect = true;
+    bool mMutatedBackingScale = true;
+    bool mMutatedSurfaceIsFlipped = true;
+    bool mMutatedFrontSurface = true;
+  };
 
   // Controls access to all fields of this class.
   Mutex mMutex;
@@ -243,26 +274,14 @@ class NativeLayerCA : public NativeLayer {
 
   RefPtr<SurfacePoolHandleCA> mSurfacePoolHandle;
 
+  Representation mRepresentation;
+
   gfx::IntPoint mPosition;
   const gfx::IntSize mSize;
   Maybe<gfx::IntRect> mClipRect;
-
-  // Lazily initialized by first call to ApplyChanges. mWrappingLayer is the
-  // layer that applies mClipRect (if set), and mContentCALayer is the layer
-  // that hosts the IOSurface. We do not share clip layers between consecutive
-  // NativeLayerCA objects with the same clip rect.
-  CALayer* mWrappingCALayer = nullptr;      // strong
-  CALayer* mContentCALayer = nullptr;       // strong
-  CALayer* mOpaquenessTintLayer = nullptr;  // strong
-
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
   const bool mIsOpaque = false;
-  bool mMutatedBackingScale = false;
-  bool mMutatedSurfaceIsFlipped = false;
-  bool mMutatedPosition = false;
-  bool mMutatedClipRect = false;
-  bool mMutatedFrontSurface = false;
 };
 
 }  // namespace layers
