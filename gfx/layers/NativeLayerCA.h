@@ -41,12 +41,35 @@ class SurfacePoolHandleCA;
 // CALayer with a call to CreateForCALayer.
 // All methods can be called from any thread, there is internal locking.
 // All effects from mutating methods are buffered locally and don't modify the
-// underlying CoreAnimation layers until ApplyChanges() is called. This ensures
-// that the modifications can be limited to run within a CoreAnimation
-// transaction, and on a thread of the caller's choosing.
+// underlying CoreAnimation layers until CommitToScreen() is called. This
+// ensures that the modifications happen on the right thread.
+//
+// More specifically: During normal operation, screen updates are driven from a
+// compositing thread. On this thread, the layers are created / destroyed, their
+// contents are painted, and the result is committed to the screen. However,
+// there are some scenarios that need to involve the main thread, most notably
+// window resizing: During a window resize, we still need the drawing part to
+// happen on the compositing thread, but the modifications to the underlying
+// CALayers need to happen on the main thread, once compositing is done.
 class NativeLayerRootCA : public NativeLayerRoot {
  public:
   static already_AddRefed<NativeLayerRootCA> CreateForCALayer(CALayer* aLayer);
+
+  // Can be called on any thread at any point. Returns whether comitting was
+  // successful. Will return false if called off the main thread while
+  // off-main-thread commits are suspended.
+  bool CommitToScreen() override;
+
+  // Enters a mode during which CommitToScreen(), when called on a non-main
+  // thread, will not apply any updates to the CALayer tree.
+  void SuspendOffMainThreadCommits();
+
+  // Exits the mode entered by SuspendOffMainThreadCommits().
+  // Returns true if the last CommitToScreen() was canceled due to suspension,
+  // indicating that another call to CommitToScreen() is needed.
+  bool UnsuspendOffMainThreadCommits();
+
+  bool AreOffMainThreadCommitsSuspended();
 
   // Overridden methods
   already_AddRefed<NativeLayer> CreateLayer(
@@ -59,9 +82,6 @@ class NativeLayerRootCA : public NativeLayerRoot {
   void SetBackingScale(float aBackingScale);
   float BackingScale();
 
-  // Must be called within a current CATransaction on the transaction's thread.
-  void ApplyChanges();
-
  protected:
   explicit NativeLayerRootCA(CALayer* aLayer);
   ~NativeLayerRootCA() override;
@@ -71,6 +91,18 @@ class NativeLayerRootCA : public NativeLayerRoot {
   CALayer* mRootCALayer = nullptr;             // strong
   float mBackingScale = 1.0f;
   bool mMutated = false;
+
+  // While mOffMainThreadCommitsSuspended is true, no commits
+  // should happen on a non-main thread, because they might race with
+  // main-thread driven updates such as window shape changes, and cause
+  // glitches.
+  bool mOffMainThreadCommitsSuspended = false;
+
+  // Set to true if CommitToScreen() was aborted because of commit suspension.
+  // Set to false when CommitToScreen() completes successfully. When true,
+  // indicates that CommitToScreen() needs to be called at the next available
+  // opportunity.
+  bool mCommitPending = false;
 };
 
 // NativeLayerCA wraps a CALayer and lets you draw to it. It ensures that only
