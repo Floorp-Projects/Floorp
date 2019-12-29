@@ -60,17 +60,12 @@ NativeLayerRootCA::NativeLayerRootCA(CALayer* aLayer)
 NativeLayerRootCA::~NativeLayerRootCA() {
   MOZ_RELEASE_ASSERT(mSublayers.IsEmpty(),
                      "Please clear all layers before destroying the layer root.");
-
-  // FIXME: mMutated might be true at this point, which would indicate that, even
-  // though mSublayers is empty now, this state may not yet have been synced to
-  // the underlying CALayer. In other words, mRootCALayer might still have sublayers.
-  // Should we do anything about that?
-  // We could just clear mRootCALayer's sublayers now, but doing so would be a
-  // layer tree transformation outside of a transaction, which we want to avoid.
-  // But we also don't want to trigger a transaction just for clearing the
-  // window's layers. And we wouldn't expect a NativeLayerRootCA to be destroyed
-  // while the window is still open and visible. Are layer tree modifications
-  // outside of CATransactions allowed while the window is closed? Who knows.
+  if (mMutated) {
+    // Clear the root layer's sublayers. At this point the window is usually closed, so this
+    // transaction does not cause any screen updates.
+    AutoCATransaction transaction;
+    mRootCALayer.sublayers = @[];
+  }
 
   [mRootCALayer release];
 }
