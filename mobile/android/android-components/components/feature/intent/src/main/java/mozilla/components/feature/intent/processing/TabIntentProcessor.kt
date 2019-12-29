@@ -4,9 +4,12 @@
 
 package mozilla.components.feature.intent.processing
 
+import android.app.SearchManager
 import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.ACTION_VIEW
+import android.content.Intent.ACTION_SEARCH
+import android.content.Intent.ACTION_WEB_SEARCH
 import android.content.Intent.EXTRA_TEXT
 import android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED
 import mozilla.components.browser.session.Session
@@ -73,6 +76,38 @@ class TabIntentProcessor(
         }
     }
 
+    private fun processSearchIntent(intent: SafeIntent): Boolean {
+        val searchQuery = intent.getStringExtra(SearchManager.QUERY)
+
+        return if (searchQuery.isNullOrBlank()) {
+            false
+        } else {
+            resolveSearch(searchQuery, Source.ACTION_SEARCH)
+            true
+        }
+    }
+
+    private fun processWebSearchIntent(intent: SafeIntent): Boolean {
+        val searchQuery = intent.getStringExtra(SearchManager.QUERY)
+
+        return if (searchQuery.isNullOrBlank()) {
+            false
+        } else {
+            resolveSearch(searchQuery, Source.ACTION_WEB_SEARCH)
+            true
+        }
+    }
+
+    private fun resolveSearch(query : String, source: Source) {
+        val queryIsAnUrl = WebURLFinder.isWebURL(query)
+        if (queryIsAnUrl) {
+            val session = createSession(query, private = isPrivate, source = source)
+            loadUrlUseCase(query, session, LoadUrlFlags.external())
+        } else {
+            newTabSearchUseCase(query, source, openNewTab)
+        }
+    }
+
     private fun createSession(url: String, private: Boolean = false, source: Source): Session {
         return if (openNewTab) {
             Session(url, private, source).also { sessionManager.add(it, selected = true) }
@@ -85,7 +120,9 @@ class TabIntentProcessor(
         val safeIntent = SafeIntent(intent)
         return safeIntent.action == ACTION_VIEW ||
             safeIntent.action == ACTION_SEND ||
-            safeIntent.action == ACTION_NDEF_DISCOVERED
+            safeIntent.action == ACTION_NDEF_DISCOVERED ||
+                safeIntent.action == ACTION_SEARCH ||
+                safeIntent.action == ACTION_WEB_SEARCH
     }
 
     /**
@@ -99,6 +136,8 @@ class TabIntentProcessor(
         return when (safeIntent.action) {
             ACTION_VIEW, ACTION_NDEF_DISCOVERED -> processViewIntent(safeIntent)
             ACTION_SEND -> processSendIntent(safeIntent)
+            ACTION_SEARCH -> processSearchIntent(safeIntent)
+            ACTION_WEB_SEARCH -> processWebSearchIntent(safeIntent)
             else -> false
         }
     }

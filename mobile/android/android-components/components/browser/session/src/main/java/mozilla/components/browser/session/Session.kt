@@ -132,6 +132,16 @@ class Session(
         ACTION_SEND,
 
         /**
+         * Created to handle an ACTION_SEARCH intent
+         */
+        ACTION_SEARCH,
+
+        /**
+         * Created to handle an ACTION_WEB_SEARCH intent
+         */
+        ACTION_WEB_SEARCH,
+
+        /**
          * Created to handle an ACTION_VIEW intent
          */
         ACTION_VIEW,
