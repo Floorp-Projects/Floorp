@@ -236,7 +236,6 @@ nsChildView::nsChildView()
       mDrawing(false),
       mIsDispatchPaint(false),
       mPluginFocused{false},
-      mCompositingState("nsChildView::mCompositingState"),
       mCurrentPanGestureBelongsToSwipe{false} {}
 
 nsChildView::~nsChildView() {
@@ -849,13 +848,12 @@ void nsChildView::SuspendAsyncCATransactions() {
   // accidentally stay suspended indefinitely.
   [mView markLayerForDisplay];
 
-  auto compositingState = mCompositingState.Lock();
-  compositingState->mAsyncCATransactionsSuspended = true;
+  mNativeLayerRoot->SuspendOffMainThreadCommits();
 }
 
 void nsChildView::MaybeScheduleUnsuspendAsyncCATransactions() {
-  auto compositingState = mCompositingState.Lock();
-  if (compositingState->mAsyncCATransactionsSuspended && !mUnsuspendAsyncCATransactionsRunnable) {
+  if (mNativeLayerRoot->AreOffMainThreadCommitsSuspended() &&
+      !mUnsuspendAsyncCATransactionsRunnable) {
     mUnsuspendAsyncCATransactionsRunnable =
         NewCancelableRunnableMethod("nsChildView::MaybeScheduleUnsuspendAsyncCATransactions", this,
                                     &nsChildView::UnsuspendAsyncCATransactions);
@@ -866,14 +864,12 @@ void nsChildView::MaybeScheduleUnsuspendAsyncCATransactions() {
 void nsChildView::UnsuspendAsyncCATransactions() {
   mUnsuspendAsyncCATransactionsRunnable = nullptr;
 
-  auto compositingState = mCompositingState.Lock();
-  compositingState->mAsyncCATransactionsSuspended = false;
-  if (compositingState->mNativeLayerChangesPending) {
-    // We need to call mNativeLayerRoot->ApplyChanges() at the next available
-    // opportunity, and it needs to happen during a CoreAnimation transaction.
+  if (mNativeLayerRoot->UnsuspendOffMainThreadCommits()) {
+    // We need to call mNativeLayerRoot->CommitToScreen() at the next available
+    // opportunity.
     // The easiest way to handle this request is to mark the layer as needing
     // display, because this will schedule a main thread CATransaction, during
-    // which HandleMainThreadCATransaction will call ApplyChanges().
+    // which HandleMainThreadCATransaction will call CommitToScreen().
     [mView markLayerForDisplay];
   }
 }
@@ -1378,11 +1374,7 @@ void nsChildView::HandleMainThreadCATransaction() {
   // Apply the changes inside mNativeLayerRoot to the underlying CALayers. Now is a
   // good time to call this because we know we're currently inside a main thread
   // CATransaction.
-  {
-    auto compositingState = mCompositingState.Lock();
-    mNativeLayerRoot->ApplyChanges();
-    compositingState->mNativeLayerChangesPending = false;
-  }
+  mNativeLayerRoot->CommitToScreen();
 
   MaybeScheduleUnsuspendAsyncCATransactions();
 }
@@ -1717,20 +1709,8 @@ bool nsChildView::PreRender(WidgetRenderingContext* aContext) {
 }
 
 void nsChildView::PostRender(WidgetRenderingContext* aContext) {
-  {  // scope for lock
-    auto compositingState = mCompositingState.Lock();
-    if (compositingState->mAsyncCATransactionsSuspended) {
-      // We should not trigger a CATransactions on this thread. Instead, let the
-      // main thread take care of calling ApplyChanges at an appropriate time.
-      compositingState->mNativeLayerChangesPending = true;
-    } else {
-      // Force a CoreAnimation layer tree update from this thread.
-      [NSAnimationContext beginGrouping];
-      mNativeLayerRoot->ApplyChanges();
-      compositingState->mNativeLayerChangesPending = false;
-      [NSAnimationContext endGrouping];
-    }
-  }
+  mNativeLayerRoot->CommitToScreen();
+
   mViewTearDownLock.Unlock();
 }
 

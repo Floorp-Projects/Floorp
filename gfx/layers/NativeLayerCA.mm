@@ -5,8 +5,9 @@
 
 #include "mozilla/layers/NativeLayerCA.h"
 
-#import <QuartzCore/QuartzCore.h>
+#import <AppKit/NSAnimationContext.h>
 #import <AppKit/NSColor.h>
+#import <QuartzCore/QuartzCore.h>
 
 #include <utility>
 #include <algorithm>
@@ -123,10 +124,32 @@ float NativeLayerRootCA::BackingScale() {
   return mBackingScale;
 }
 
-// Must be called within a current CATransaction on the transaction's thread.
-void NativeLayerRootCA::ApplyChanges() {
+void NativeLayerRootCA::SuspendOffMainThreadCommits() {
+  MutexAutoLock lock(mMutex);
+  mOffMainThreadCommitsSuspended = true;
+}
+
+bool NativeLayerRootCA::UnsuspendOffMainThreadCommits() {
+  MutexAutoLock lock(mMutex);
+  mOffMainThreadCommitsSuspended = false;
+  return mCommitPending;
+}
+
+bool NativeLayerRootCA::AreOffMainThreadCommitsSuspended() {
+  MutexAutoLock lock(mMutex);
+  return mOffMainThreadCommitsSuspended;
+}
+
+bool NativeLayerRootCA::CommitToScreen() {
   MutexAutoLock lock(mMutex);
 
+  if (!NS_IsMainThread() && mOffMainThreadCommitsSuspended) {
+    mCommitPending = true;
+    return false;
+  }
+
+  // Force a CoreAnimation layer tree update from this thread.
+  [NSAnimationContext beginGrouping];
   [CATransaction setDisableActions:YES];
 
   // Call ApplyChanges on our sublayers first, and then update the root layer's
@@ -144,6 +167,11 @@ void NativeLayerRootCA::ApplyChanges() {
     mRootCALayer.sublayers = sublayers;
     mMutated = false;
   }
+  [NSAnimationContext endGrouping];
+
+  mCommitPending = false;
+
+  return true;
 }
 
 NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque,
