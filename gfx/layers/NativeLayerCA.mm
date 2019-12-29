@@ -109,6 +109,20 @@ void NativeLayerRootCA::SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) 
   }
 }
 
+void NativeLayerRootCA::SetBackingScale(float aBackingScale) {
+  MutexAutoLock lock(mMutex);
+
+  mBackingScale = aBackingScale;
+  for (auto layer : mSublayers) {
+    layer->SetBackingScale(aBackingScale);
+  }
+}
+
+float NativeLayerRootCA::BackingScale() {
+  MutexAutoLock lock(mMutex);
+  return mBackingScale;
+}
+
 // Must be called within a current CATransaction on the transaction's thread.
 void NativeLayerRootCA::ApplyChanges() {
   MutexAutoLock lock(mMutex);
@@ -129,15 +143,6 @@ void NativeLayerRootCA::ApplyChanges() {
     }
     mRootCALayer.sublayers = sublayers;
     mMutated = false;
-  }
-}
-
-void NativeLayerRootCA::SetBackingScale(float aBackingScale) {
-  MutexAutoLock lock(mMutex);
-
-  mBackingScale = aBackingScale;
-  for (auto layer : mSublayers) {
-    layer->SetBackingScale(aBackingScale);
   }
 }
 

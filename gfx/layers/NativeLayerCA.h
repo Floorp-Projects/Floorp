@@ -48,11 +48,6 @@ class NativeLayerRootCA : public NativeLayerRoot {
  public:
   static already_AddRefed<NativeLayerRootCA> CreateForCALayer(CALayer* aLayer);
 
-  // Must be called within a current CATransaction on the transaction's thread.
-  void ApplyChanges();
-
-  void SetBackingScale(float aBackingScale);
-
   // Overridden methods
   already_AddRefed<NativeLayer> CreateLayer(
       const gfx::IntSize& aSize, bool aIsOpaque,
@@ -60,6 +55,12 @@ class NativeLayerRootCA : public NativeLayerRoot {
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
+
+  void SetBackingScale(float aBackingScale);
+  float BackingScale();
+
+  // Must be called within a current CATransaction on the transaction's thread.
+  void ApplyChanges();
 
  protected:
   explicit NativeLayerRootCA(CALayer* aLayer);
