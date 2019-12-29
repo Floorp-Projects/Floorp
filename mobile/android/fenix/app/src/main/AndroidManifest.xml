@@ -127,6 +127,18 @@
             </intent-filter>
 
             <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data android:name="android.app.searchable"
+                android:resource="@xml/searchable"/>
+
+            <intent-filter>
+                <action android:name="android.intent.action.WEB_SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
                 <action android:name="mozilla.components.feature.pwa.VIEW_PWA" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="https" />
@@ -147,6 +159,7 @@
             <meta-data
                 android:name="com.android.systemui.action_assist_icon"
                 android:resource="@mipmap/ic_launcher" />
+
         </activity>
 
         <activity android:name=".widget.VoiceSearchActivity" />
