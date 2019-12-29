@@ -99,7 +99,7 @@ class TabIntentProcessor(
         }
     }
 
-    private fun resolveSearch(query : String, source: Source) {
+    private fun resolveSearch(query: String, source: Source) {
         if (query.isUrl()) {
             val session = createSession(query, private = isPrivate, source = source)
             loadUrlUseCase(query, session, LoadUrlFlags.external())
@@ -121,8 +121,8 @@ class TabIntentProcessor(
         return safeIntent.action == ACTION_VIEW ||
             safeIntent.action == ACTION_SEND ||
             safeIntent.action == ACTION_NDEF_DISCOVERED ||
-                safeIntent.action == ACTION_SEARCH ||
-                safeIntent.action == ACTION_WEB_SEARCH
+            safeIntent.action == ACTION_SEARCH ||
+            safeIntent.action == ACTION_WEB_SEARCH
     }
 
     /**
