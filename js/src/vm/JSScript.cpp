@@ -4637,13 +4637,6 @@ void JSScript::finalize(JSFreeOp* fop) {
 
   fop->runtime()->geckoProfiler().onScriptFinalized(this);
 
-  // Finalize the base-script fields.
-  BaseScript::finalize(fop);
-
-  if (hasJitScript()) {
-    releaseJitScriptOnFinalize(fop);
-  }
-
   destroyScriptCounts();
   DebugAPI::destroyDebugScript(fop, this);
 
@@ -4653,6 +4646,13 @@ void JSScript::finalize(JSFreeOp* fop) {
     zone()->scriptVTuneIdMap->remove(this);
   }
 #endif
+
+  // Finalize the base-script fields.
+  BaseScript::finalize(fop);
+
+  if (hasJitScript()) {
+    releaseJitScriptOnFinalize(fop);
+  }
 
   freeScriptData();
 
