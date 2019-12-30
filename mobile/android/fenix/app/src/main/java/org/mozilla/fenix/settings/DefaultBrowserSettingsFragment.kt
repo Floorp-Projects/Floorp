@@ -51,9 +51,12 @@ class DefaultBrowserSettingsFragment : PreferenceFragmentCompat() {
         findPreference<DefaultBrowserPreference>(getPreferenceKey(R.string.pref_key_make_default_browser))
             ?.updateSwitch()
 
+        val settings = context!!.settings()
+        settings.unsetOpenLinksInAPrivateTabIfNecessary()
+
         findPreference<CheckBoxPreference>(getPreferenceKey(R.string.pref_key_open_links_in_a_private_tab))?.apply {
             isEnabled = Browsers.all(requireContext()).isDefaultBrowser
-            isChecked = context.settings().openLinksInAPrivateTab
+            isChecked = settings.openLinksInAPrivateTab
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }
