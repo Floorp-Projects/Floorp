@@ -319,8 +319,17 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
       }
       currentOffset += compressedSize;
 
-      if (!mTable.putNew(key, StartupCacheEntry(offset, compressedSize,
-                                                uncompressedSize))) {
+      // We could use mTable.putNew if we knew the file we're loading weren't
+      // corrupt. However, we don't know that, so check if the key already
+      // exists. If it does, we know the file must be corrupt.
+      decltype(mTable)::AddPtr p = mTable.lookupForAdd(key);
+      if (p) {
+        return Err(NS_ERROR_UNEXPECTED);
+      }
+
+      if (!mTable.add(
+              p, key,
+              StartupCacheEntry(offset, compressedSize, uncompressedSize))) {
         return Err(NS_ERROR_UNEXPECTED);
       }
     }
