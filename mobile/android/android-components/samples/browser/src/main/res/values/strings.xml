@@ -7,4 +7,6 @@
     <string name="menu_action_add_tab">Add New Tab</string>
     <string name="mozac_reader_view_description">Enable Reader View</string>
     <string name="mozac_reader_view_description_selected">Disable Reader View</string>
+
+    <string name="mozac_add_on_install_progress_caption">Downloading and verifying add-on&#8230;</string>
 </resources>
