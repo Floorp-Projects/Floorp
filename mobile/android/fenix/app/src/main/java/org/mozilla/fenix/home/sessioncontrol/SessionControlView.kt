@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.HomeFragmentState
@@ -37,10 +38,16 @@ val noCollectionMessage = AdapterItem.NoContentMessage(
 
 private fun normalModeAdapterItems(
     tabs: List<Tab>,
+    topSites: List<TopSite>,
     collections: List<TabCollection>,
     expandedCollections: Set<Long>
 ): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
+
+    if (topSites.isNotEmpty()) {
+        items.add(AdapterItem.TopSiteList(topSites))
+    }
+
     items.add(AdapterItem.TabHeader(false, tabs.isNotEmpty()))
 
     if (tabs.isNotEmpty()) {
@@ -52,7 +59,6 @@ private fun normalModeAdapterItems(
 
     items.add(AdapterItem.CollectionHeader)
     if (collections.isNotEmpty()) {
-
         // If the collection is expanded, we want to add all of its tabs beneath it in the adapter
         collections.map {
             AdapterItem.CollectionItem(it, expandedCollections.contains(it.id), tabs.isNotEmpty())
@@ -116,7 +122,7 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
 }
 
 private fun HomeFragmentState.toAdapterList(): List<AdapterItem> = when (mode) {
-    is Mode.Normal -> normalModeAdapterItems(tabs, collections, expandedCollections)
+    is Mode.Normal -> normalModeAdapterItems(tabs, topSites, collections, expandedCollections)
     is Mode.Private -> privateModeAdapterItems(tabs)
     is Mode.Onboarding -> onboardingAdapterItems(mode.state)
 }

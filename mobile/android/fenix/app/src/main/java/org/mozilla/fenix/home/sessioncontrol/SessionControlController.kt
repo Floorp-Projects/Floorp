@@ -113,6 +113,11 @@ interface SessionControlController {
     fun handleSelectTab(tabView: View, sessionId: String)
 
     /**
+     * @see [TopSiteInteractor.onSelectTopSite]
+     */
+    fun handleSelectTopSite(url: String)
+
+    /**
      * @see [TabSessionInteractor.onShareTabs]
      */
     fun handleShareTabs()
@@ -296,6 +301,14 @@ class DefaultSessionControlController(
                 )
                 .build()
         navController.nav(R.id.homeFragment, directions, extras)
+    }
+
+    override fun handleSelectTopSite(url: String) {
+        activity.components.useCases.tabsUseCases.addTab.invoke(url, true, true)
+        navController.nav(
+            R.id.homeFragment,
+            HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null)
+        )
     }
 
     override fun handleShareTabs() {

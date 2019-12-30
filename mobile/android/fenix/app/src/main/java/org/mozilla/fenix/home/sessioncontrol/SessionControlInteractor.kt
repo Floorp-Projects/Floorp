@@ -150,14 +150,26 @@ interface TabSessionInteractor {
 }
 
 /**
+ * Interface for top site related actions in the [SessionControlInteractor].
+ */
+interface TopSiteInteractor {
+    /**
+     * Selects the given top site. Called when a user clicks on a top site.
+     *
+     * @param url The URL of the top site.
+     */
+    fun onSelectTopSite(url: String)
+}
+
+/**
  * Interactor for the Home screen.
- * Provides implementations for the CollectionInteractor, OnboardingInteractor and
- * TabSessionInteractor.
+ * Provides implementations for the CollectionInteractor, OnboardingInteractor,
+ * TabSessionInteractor and TopSiteInteractor.
  */
 @SuppressWarnings("TooManyFunctions")
 class SessionControlInteractor(
     private val controller: SessionControlController
-) : CollectionInteractor, OnboardingInteractor, TabSessionInteractor {
+) : CollectionInteractor, OnboardingInteractor, TabSessionInteractor, TopSiteInteractor {
     override fun onCloseTab(sessionId: String) {
         controller.handleCloseTab(sessionId)
     }
@@ -212,6 +224,10 @@ class SessionControlInteractor(
 
     override fun onSelectTab(tabView: View, sessionId: String) {
         controller.handleSelectTab(tabView, sessionId)
+    }
+
+    override fun onSelectTopSite(url: String) {
+        controller.handleSelectTopSite(url)
     }
 
     override fun onShareTabs() {

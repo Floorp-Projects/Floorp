@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.tab_list_row.*
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.Tab
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHolder
@@ -27,6 +28,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.SaveTabGroupViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
+import org.mozilla.fenix.home.sessioncontrol.viewholders.TopSiteViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingAutomaticSignInViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingFinishViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingHeaderViewHolder
@@ -64,6 +66,8 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
             }
         }
     }
+
+    data class TopSiteList(val topSites: List<TopSite>) : AdapterItem(TopSiteViewHolder.LAYOUT_ID)
 
     object SaveTabGroup : AdapterItem(SaveTabGroupViewHolder.LAYOUT_ID)
 
@@ -148,6 +152,7 @@ class SessionControlAdapter(
         return when (viewType) {
             TabHeaderViewHolder.LAYOUT_ID -> TabHeaderViewHolder(view, interactor)
             TabViewHolder.LAYOUT_ID -> TabViewHolder(view, interactor)
+            TopSiteViewHolder.LAYOUT_ID -> TopSiteViewHolder(view, interactor)
             SaveTabGroupViewHolder.LAYOUT_ID -> SaveTabGroupViewHolder(view, interactor)
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(view, interactor)
             NoContentMessageViewHolder.LAYOUT_ID -> NoContentMessageViewHolder(view)
@@ -169,6 +174,7 @@ class SessionControlAdapter(
 
     override fun getItemViewType(position: Int) = getItem(position).viewType
 
+    @SuppressWarnings("ComplexMethod")
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val item = getItem(position)
         when (holder) {
@@ -178,6 +184,9 @@ class SessionControlAdapter(
             }
             is TabViewHolder -> {
                 holder.bindSession((item as AdapterItem.TabItem).tab)
+            }
+            is TopSiteViewHolder -> {
+                holder.bind((item as AdapterItem.TopSiteList).topSites)
             }
             is NoContentMessageViewHolder -> {
                 val (icon, header, description) = item as AdapterItem.NoContentMessage
