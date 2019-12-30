@@ -173,6 +173,7 @@ const char* GeckoProfilerRuntime::profileString(JSContext* cx,
     if (!str) {
       return nullptr;
     }
+    MOZ_ASSERT(script->hasBytecode());
     if (!strings().add(s, script, std::move(str))) {
       ReportOutOfMemory(cx);
       return nullptr;
