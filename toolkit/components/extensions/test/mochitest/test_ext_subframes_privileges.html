@@ -304,32 +304,35 @@ add_task(async function test_sub_subframe_conduit_verified_env() {
   };
 
   async function expectErrors(ext, log) {
-    consoleMonitor.start([{message: log}]);
-
     let err = await ext.awaitMessage("content_child");
     is(err, "Bad sender context envType: content_child");
   
     err = await ext.awaitMessage("addon_child");
     is(err, "Unknown sender or wrong actor for recvCreateProxyContext");
-
-    await consoleMonitor.finished();
-    info("Conduit creation logged correct exception.");
   }
+
+  let remote = SpecialPowers.getBoolPref("extensions.webextensions.remote");
+
+  let badProcess = { message: /Bad {[\w-]+} process: web/ };
+  let badPrincipal = { message: /Bad {[\w-]+} principal: http/ };
+  consoleMonitor.start(remote ? [badPrincipal, badProcess] : [badProcess]);
 
   let extension = ExtensionTestUtils.loadExtension({ manifest, files });
   await extension.startup();
   
-  if (SpecialPowers.getBoolPref("extensions.webextensions.remote", true)) {
-    info("Need OOP to spoof from web iframe inside background page.");
-    await expectErrors(extension, /Bad {[\w-]+} principal: http/);
+  if (remote) {
+    info("Need OOP to spoof from a web iframe inside background page.");
+    await expectErrors(extension);
   }
 
   info("Try spoofing from the web process.");
   let win = window.open("./file_sample.html");
-  await expectErrors(extension, /Bad {[\w-]+} process: web/);
+  await expectErrors(extension);
   win.close();
 
   await extension.unload();
+  await consoleMonitor.finished();
+  info("Conduit creation logged correct exception(s).");
 });
 
 </script>
