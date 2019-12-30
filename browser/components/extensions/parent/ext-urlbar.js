@@ -14,13 +14,6 @@ var { ExtensionPreferencesManager } = ChromeUtils.import(
 );
 var { getSettingsAPI } = ExtensionPreferencesManager;
 
-ExtensionPreferencesManager.addSetting("openViewOnFocus", {
-  prefNames: ["browser.urlbar.openViewOnFocus"],
-  setCallback(value) {
-    return { [this.prefNames[0]]: value };
-  },
-});
-
 ExtensionPreferencesManager.addSetting("engagementTelemetry", {
   prefNames: ["browser.urlbar.eventTelemetry.enabled"],
   setCallback(value) {
@@ -142,12 +135,6 @@ this.urlbar = class extends ExtensionAPI {
             return () => provider.setEventListener("resultPicked", null);
           },
         }).api(),
-
-        openViewOnFocus: getSettingsAPI({
-          context,
-          name: "openViewOnFocus",
-          callback: () => UrlbarPrefs.get("openViewOnFocus"),
-        }),
 
         engagementTelemetry: getSettingsAPI({
           context,
