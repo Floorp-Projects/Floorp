@@ -1674,11 +1674,6 @@ if test -n "$WITH_APP_BASENAME" ; then
     MOZ_APP_BASENAME="$WITH_APP_BASENAME"
 fi
 
-# Graphene is a desktop runtime for running applications with a HTML UI.
-if test -n "$MOZ_GRAPHENE"; then
-    AC_DEFINE(MOZ_GRAPHENE)
-fi
-
 dnl ========================================================
 dnl Ensure Android SDK and build-tools versions depending on
 dnl mobile target.
