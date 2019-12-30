@@ -414,6 +414,7 @@ dependencies {
     implementation Deps.mozilla_feature_site_permissions
     implementation Deps.mozilla_feature_readerview
     implementation Deps.mozilla_feature_tab_collections
+    implementation Deps.mozilla_feature_top_sites
     implementation Deps.mozilla_feature_accounts_push
     implementation Deps.mozilla_feature_webcompat
     implementation Deps.mozilla_feature_webnotifications
@@ -468,7 +469,7 @@ dependencies {
 // Removed pending AndroidX fixes
     androidTestImplementation "tools.fastlane:screengrab:2.0.0"
 //    androidTestImplementation "br.com.concretesolutions:kappuccino:1.2.1"
-    
+
     androidTestImplementation Deps.espresso_core, {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
