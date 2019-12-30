@@ -40,6 +40,15 @@
   direction: rtl;
 }
 
+/*
+ * Native anonymous popups and tooltips in html are document-level, which means
+ * that they don't inherit from the root, so this is needed.
+ */
+popupgroup:-moz-native-anonymous:-moz-locale-dir(rtl),
+tooltip:-moz-native-anonymous:-moz-locale-dir(rtl) {
+  direction: rtl;
+}
+
 /* ::::::::::
    :: Rules for 'hiding' portions of the chrome for special
    :: kinds of windows (not JUST browser windows) with toolbars
