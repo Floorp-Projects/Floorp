@@ -187,6 +187,7 @@ sm-gdb-linux64/debug:
         docker-image: {in-tree: gdb-test}
     treeherder:
         platform: linux64/debug
+        tier: 2
         symbol: SM(gdb)
     run:
         spidermonkey-variant: gdb
