@@ -835,7 +835,7 @@ async function addTopSite(site) {
     await PlacesTestUtils.addVisits(site);
   }
 
-  await updateTopSites(sites => sites && sites[0].url == site);
+  await updateTopSites(sites => sites && sites[0] && sites[0].url == site);
 }
 
 function registerTipProvider() {
