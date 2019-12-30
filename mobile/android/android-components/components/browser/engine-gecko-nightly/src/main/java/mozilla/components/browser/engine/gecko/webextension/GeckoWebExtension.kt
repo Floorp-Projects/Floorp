@@ -29,9 +29,9 @@ import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionActio
 class GeckoWebExtension(
     id: String,
     url: String,
+    webExtensionController: WebExtensionController,
     allowContentMessaging: Boolean = true,
     supportActions: Boolean = false,
-    webExtensionController: WebExtensionController,
     val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension(
         url,
         id,
@@ -44,7 +44,7 @@ class GeckoWebExtension(
     private val logger = Logger("GeckoWebExtension")
 
     constructor(native: GeckoNativeWebExtension, webExtensionController: WebExtensionController) :
-        this(native.id, native.location, true, true, webExtensionController, native)
+        this(native.id, native.location, webExtensionController, true, true, native)
 
     /**
      * Uniquely identifies a port using its name and the session it

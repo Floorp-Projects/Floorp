@@ -227,9 +227,9 @@ class GeckoWebExtensionTest {
         val extensionWithActions = GeckoWebExtension(
             "mozacTest",
             "url",
-            false,
-            false,
             webExtensionController,
+            false,
+            false,
             nativeGeckoWebExt
         )
         extensionWithActions.registerActionHandler(actionHandler)

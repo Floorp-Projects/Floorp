@@ -44,6 +44,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mozilla.gecko.util.GeckoBundle
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.ContentBlockingController.Event
@@ -52,6 +53,7 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
+import org.mozilla.geckoview.MockWebExtension
 import org.mozilla.geckoview.StorageController
 import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebPushController
@@ -759,9 +761,9 @@ class GeckoEngineTest {
         val extension = spy(mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
+            runtime.webExtensionController,
             true,
-            true,
-            runtime.webExtensionController
+            true
         ))
         engine.installWebExtension(extension)
         result.complete(null)
@@ -835,7 +837,19 @@ class GeckoEngineTest {
 
     @Test
     fun `list web extensions successfully`() {
+        val bundle = GeckoBundle()
+        bundle.putString("webExtensionId", "id")
+        bundle.putString("locationURI", "uri")
+        val installedExtension = MockWebExtension(bundle)
+
+        val installedExtensions = listOf<GeckoWebExtension>(installedExtension)
+        val installedExtensionResult = GeckoResult<List<GeckoWebExtension>>()
+
         val runtime = mock<GeckoRuntime>()
+        val extensionController: WebExtensionController = mock()
+        whenever(extensionController.list()).thenReturn(installedExtensionResult)
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
         val engine = GeckoEngine(context, runtime = runtime)
         var extensions: List<WebExtension>? = null
         var onErrorCalled = false
@@ -844,9 +858,34 @@ class GeckoEngineTest {
             onSuccess = { extensions = it },
             onError = { onErrorCalled = true }
         )
+        installedExtensionResult.complete(installedExtensions)
 
         assertFalse(onErrorCalled)
         assertNotNull(extensions)
+    }
+
+    @Test
+    fun `list web extensions failure`() {
+        val installedExtensionResult = GeckoResult<List<GeckoWebExtension>>()
+
+        val runtime = mock<GeckoRuntime>()
+        val extensionController: WebExtensionController = mock()
+        whenever(extensionController.list()).thenReturn(installedExtensionResult)
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        var extensions: List<WebExtension>? = null
+        val expected = IOException()
+        var throwable: Throwable? = null
+
+        engine.listInstalledWebExtensions(
+            onSuccess = { extensions = it },
+            onError = { throwable = it }
+        )
+        installedExtensionResult.completeExceptionally(expected)
+
+        assertSame(expected, throwable)
+        assertNull(extensions)
     }
 
     @Test
@@ -862,9 +901,9 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
+            runtime.webExtensionController,
             true,
-            true,
-            runtime.webExtensionController
+            true
         )
         var enabledExtension: WebExtension? = null
         var onErrorCalled = false
@@ -893,9 +932,9 @@ class GeckoEngineTest {
         val extension = mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
             "test-webext",
             "resource://android/assets/extensions/test",
+            runtime.webExtensionController,
             true,
-            true,
-            runtime.webExtensionController
+            true
         )
         var disabledExtension: WebExtension? = null
         var onErrorCalled = false
