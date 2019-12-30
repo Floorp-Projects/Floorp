@@ -168,6 +168,7 @@ wasi-sysroot:
         toolchain-artifact: public/build/wasi-sysroot.tar.xz
     fetches:
         fetch:
+            - clang-9
             - wasi-sdk
         toolchain:
             - linux64-binutils
