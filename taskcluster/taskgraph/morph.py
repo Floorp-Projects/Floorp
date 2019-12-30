@@ -27,6 +27,7 @@ from slugid import nice as slugid
 from .task import Task
 from .graph import Graph
 from .taskgraph import TaskGraph
+from .util.workertypes import get_worker_type
 
 here = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ def amend_taskgraph(taskgraph, label_to_taskid, to_add):
     return taskgraph, label_to_taskid
 
 
-def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid):
+def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid, parameters, graph_config):
     """Create the shell of a task that depends on `task` and on the given docker
     image."""
     label = '{}-{}'.format(purpose, task.label)
@@ -56,6 +57,10 @@ def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid):
     # this is why all docker image tasks are included in the target task graph: we
     # need to find them in label_to_taskid, if if nothing else required them
     image_taskid = label_to_taskid['build-docker-image-' + image]
+
+    provisioner_id, worker_type = get_worker_type(
+        graph_config, 'misc', parameters['level'], parameters.release_level()
+    )
 
     task_def = {
         'provisionerId': 'gecko-t',
@@ -108,14 +113,14 @@ SCOPE_SUMMARY_REGEXPS = [
 ]
 
 
-def make_index_task(parent_task, taskgraph, label_to_taskid):
+def make_index_task(parent_task, taskgraph, label_to_taskid, parameters, graph_config):
     index_paths = [r.split('.', 1)[1] for r in parent_task.task['routes']
                    if r.startswith('index.')]
     parent_task.task['routes'] = [r for r in parent_task.task['routes']
                                   if not r.startswith('index.')]
 
     task = derive_misc_task(parent_task, 'index-task', 'index-task',
-                            taskgraph, label_to_taskid)
+                            taskgraph, label_to_taskid, graph_config, parameters)
 
     # we need to "summarize" the scopes, otherwise a particularly
     # namespace-heavy index task might have more scopes than can fit in a
@@ -139,7 +144,7 @@ def make_index_task(parent_task, taskgraph, label_to_taskid):
     return task
 
 
-def add_index_tasks(taskgraph, label_to_taskid):
+def add_index_tasks(taskgraph, label_to_taskid, parameters, graph_config):
     """
     The TaskCluster queue only allows 10 routes on a task, but we have tasks
     with many more routes, for purposes of indexing. This graph morph adds
@@ -152,7 +157,7 @@ def add_index_tasks(taskgraph, label_to_taskid):
     for label, task in taskgraph.tasks.iteritems():
         if len(task.task.get('routes', [])) <= MAX_ROUTES:
             continue
-        added.append(make_index_task(task, taskgraph, label_to_taskid))
+        added.append(make_index_task(task, taskgraph, label_to_taskid, graph_config, parameters))
 
     if added:
         taskgraph, label_to_taskid = amend_taskgraph(
@@ -162,27 +167,23 @@ def add_index_tasks(taskgraph, label_to_taskid):
     return taskgraph, label_to_taskid
 
 
-class add_try_task_duplicates():
-
-    def __init__(self, try_config):
-        self.try_config = try_config
-
-    def __call__(self, taskgraph, label_to_taskid):
-        rebuild = self.try_config.get('rebuild')
-        if rebuild:
-            for task in taskgraph.tasks.itervalues():
-                if task.label in self.try_config.get('tasks', []):
-                    task.attributes['task_duplicates'] = rebuild
-        return taskgraph, label_to_taskid
+def add_try_task_duplicates(taskgraph, label_to_taskid, parameters, graph_config):
+    try_config = parameters['try_task_config']
+    rebuild = try_config.get('rebuild')
+    if rebuild:
+        for task in taskgraph.tasks.itervalues():
+            if task.label in self.try_config.get('tasks', []):
+                task.attributes['task_duplicates'] = rebuild
+    return taskgraph, label_to_taskid
 
 
-def morph(taskgraph, label_to_taskid, parameters):
+def morph(taskgraph, label_to_taskid, parameters, graph_config):
     """Apply all morphs"""
     morphs = [
         add_index_tasks,
-        add_try_task_duplicates(parameters['try_task_config']),
+        add_try_task_duplicates,
     ]
 
     for m in morphs:
-        taskgraph, label_to_taskid = m(taskgraph, label_to_taskid)
+        taskgraph, label_to_taskid = m(taskgraph, label_to_taskid, parameters, graph_config)
     return taskgraph, label_to_taskid
