@@ -2514,14 +2514,24 @@ setterLevel:                                                                  \
     return data_->getFieldInitializers();
   }
 
-  RuntimeScriptData* sharedData() { return sharedData_; }
+  RuntimeScriptData* sharedData() const { return sharedData_; }
   void freeSharedData() { sharedData_ = nullptr; }
+
+  bool hasBytecode() const {
+    if (sharedData_) {
+      MOZ_ASSERT(data_);
+      MOZ_ASSERT(warmUpData_.isWarmUpCount() || warmUpData_.isJitScript());
+      return true;
+    }
+    return false;
+  }
 
  protected:
   void traceChildren(JSTracer* trc);
-  void finalize(JSFreeOp* fop);
 
  public:
+  void finalize(JSFreeOp* fop);
+
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(data_);
   }
@@ -3208,8 +3218,6 @@ class JSScript : public js::BaseScript {
   // invariants of debuggee compartments, scripts, and frames.
   inline bool isDebuggee() const;
 
-  void finalize(JSFreeOp* fop);
-
   static const JS::TraceKind TraceKind = JS::TraceKind::Script;
 
   void traceChildren(JSTracer* trc);
@@ -3413,7 +3421,6 @@ class LazyScript : public BaseScript {
 
   friend class GCMarker;
   void traceChildren(JSTracer* trc);
-  void finalize(JSFreeOp* fop) { BaseScript::finalize(fop); }
 
   static const JS::TraceKind TraceKind = JS::TraceKind::LazyScript;
 };

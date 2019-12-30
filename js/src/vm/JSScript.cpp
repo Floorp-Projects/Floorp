@@ -681,6 +681,30 @@ void js::BaseScript::setEnclosingScope(Scope* enclosingScope) {
 }
 
 void js::BaseScript::finalize(JSFreeOp* fop) {
+  // Scripts with bytecode may have optional data stored in per-runtime or
+  // per-zone maps. Note that a failed compilation must not have entries since
+  // the script itself will not be marked as having bytecode.
+  if (hasBytecode()) {
+    JSScript* script = static_cast<JSScript*>(this);
+
+    if (coverage::IsLCovEnabled()) {
+      coverage::CollectScriptCoverage(script);
+    }
+
+    fop->runtime()->geckoProfiler().onScriptFinalized(script);
+
+    script->destroyScriptCounts();
+
+    DebugAPI::destroyDebugScript(fop, script);
+
+#ifdef MOZ_VTUNE
+    if (zone()->scriptVTuneIdMap) {
+      // Note: we should only get here if the VTune JIT profiler is running.
+      zone()->scriptVTuneIdMap->remove(script);
+    }
+#endif
+  }
+
   if (warmUpData_.isJitScript()) {
     JSScript* script = static_cast<JSScript*>(this);
     script->releaseJitScriptOnFinalize(fop);
@@ -1430,6 +1454,8 @@ bool JSScript::initScriptCounts(JSContext* cx) {
     ReportOutOfMemory(cx);
     return false;
   }
+
+  MOZ_ASSERT(this->hasBytecode());
 
   // Register the current ScriptCounts in the zone's map.
   if (!zone()->scriptCountsMap->putNew(this, std::move(sc))) {
@@ -4367,6 +4393,8 @@ uint32_t JSScript::vtuneMethodID() {
     return p->value();
   }
 
+  MOZ_ASSERT(this->hasBytecode());
+
   uint32_t id = vtune::GenerateUniqueMethodID();
   if (!zone()->scriptVTuneIdMap->add(p, this, id)) {
     MOZ_CRASH("Failed to add vtune method id");
@@ -4628,40 +4656,6 @@ void JSScript::addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
 }
 
 js::GlobalObject& JSScript::uninlinedGlobal() const { return global(); }
-
-void JSScript::finalize(JSFreeOp* fop) {
-  // NOTE: this JSScript may be partially initialized at this point.  E.g. we
-  // may have created it and partially initialized it with
-  // JSScript::Create(), but not yet finished initializing it with
-  // fullyInitFromEmitter().
-
-  if (coverage::IsLCovEnabled()) {
-    coverage::CollectScriptCoverage(this);
-  }
-
-  fop->runtime()->geckoProfiler().onScriptFinalized(this);
-
-  destroyScriptCounts();
-  DebugAPI::destroyDebugScript(fop, this);
-
-#ifdef MOZ_VTUNE
-  if (zone()->scriptVTuneIdMap) {
-    // Note: we should only get here if the VTune JIT profiler is running.
-    zone()->scriptVTuneIdMap->remove(this);
-  }
-#endif
-
-  // Finalize the base-script fields.
-  BaseScript::finalize(fop);
-
-  // In most cases, our LazyScript's script pointer will reference this
-  // script, and thus be nulled out by normal weakref processing. However, if
-  // we unlazified the LazyScript during incremental sweeping, it will have a
-  // completely different JSScript.
-  MOZ_ASSERT_IF(
-      lazyScript && !IsAboutToBeFinalizedUnbarriered(&lazyScript),
-      !lazyScript->hasScript() || lazyScript->maybeScriptUnbarriered() != this);
-}
 
 static const uint32_t GSN_CACHE_THRESHOLD = 100;
 
@@ -5316,20 +5310,10 @@ void ScriptWarmUpData::trace(JSTracer* trc) {
 }
 
 void JSScript::traceChildren(JSTracer* trc) {
-  // NOTE: this JSScript may be partially initialized at this point.  E.g. we
-  // may have created it and partially initialized it with
-  // JSScript::Create(), but not yet finished initializing it with
-  // fullyInitFromEmitter().
-
-  // Trace base class fields.
   BaseScript::traceChildren(trc);
 
-  if (maybeLazyScript()) {
+  if (lazyScript) {
     TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
-  }
-
-  if (hasDebugScript()) {
-    DebugAPI::traceDebugScript(trc, this);
   }
 
   if (trc->isMarkingTracer()) {

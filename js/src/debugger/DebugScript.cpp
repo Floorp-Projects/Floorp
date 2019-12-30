@@ -72,6 +72,8 @@ DebugScript* DebugScript::getOrCreate(JSContext* cx, JSScript* script) {
     script->zone()->debugScriptMap = std::move(map);
   }
 
+  MOZ_ASSERT(script->hasBytecode());
+
   DebugScript* borrowed = debug.get();
   if (!script->zone()->debugScriptMap->putNew(script, std::move(debug))) {
     ReportOutOfMemory(cx);

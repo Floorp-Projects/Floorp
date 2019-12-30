@@ -671,6 +671,8 @@ bool InitScriptCoverage(JSContext* cx, JSScript* script) {
     return false;
   }
 
+  MOZ_ASSERT(script->hasBytecode());
+
   // Save source in map for when we collect coverage.
   if (!zone->scriptLCovMap->putNew(script,
                                    mozilla::MakeTuple(source, scriptName))) {
