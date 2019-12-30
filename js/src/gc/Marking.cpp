@@ -1105,6 +1105,10 @@ void BaseScript::traceChildren(JSTracer* trc) {
   if (data_) {
     data_->trace(trc);
   }
+
+  if (sharedData_) {
+    sharedData_->traceChildren(trc);
+  }
 }
 
 void LazyScript::traceChildren(JSTracer* trc) {
@@ -1140,6 +1144,9 @@ inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
       }
     }
   }
+
+  MOZ_ASSERT(thing->sharedData_ == nullptr,
+             "LazyScript should not have shared data.");
 
   // script_ is weak so is not traced here.
 
