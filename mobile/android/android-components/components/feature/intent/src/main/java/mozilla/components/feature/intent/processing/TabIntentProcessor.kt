@@ -121,8 +121,8 @@ class TabIntentProcessor(
         return safeIntent.action == ACTION_VIEW ||
             safeIntent.action == ACTION_SEND ||
             safeIntent.action == ACTION_NDEF_DISCOVERED ||
-                safeIntent.action == ACTION_SEARCH ||
-                safeIntent.action == ACTION_WEB_SEARCH
+            safeIntent.action == ACTION_SEARCH ||
+            safeIntent.action == ACTION_WEB_SEARCH
     }
 
     /**
