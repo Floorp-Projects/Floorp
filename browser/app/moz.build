@@ -69,7 +69,6 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     RCINCLUDE = 'splash.rc'
-    DEFINES['MOZ_PHOENIX'] = True
     DIRS += [
         'winlauncher',
     ]

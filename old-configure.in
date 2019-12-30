@@ -1674,21 +1674,10 @@ if test -n "$WITH_APP_BASENAME" ; then
     MOZ_APP_BASENAME="$WITH_APP_BASENAME"
 fi
 
-# Special cases where we need to AC_DEFINE something. Also a holdover for apps
-# that haven't made a confvars.sh yet. Don't add new stuff here, use
-# MOZ_BUILD_APP.
-case "$MOZ_BUILD_APP" in
-browser)
-  AC_DEFINE(MOZ_PHOENIX)
-  ;;
-esac
-
 # Graphene is a desktop runtime for running applications with a HTML UI.
 if test -n "$MOZ_GRAPHENE"; then
     AC_DEFINE(MOZ_GRAPHENE)
 fi
-
-AC_SUBST(MOZ_PHOENIX)
 
 dnl ========================================================
 dnl Ensure Android SDK and build-tools versions depending on
