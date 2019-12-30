@@ -9,6 +9,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -44,21 +45,32 @@ fun List<Tab>.toSessionBundle(sessionManager: SessionManager): List<Session> {
  *                               in the [HomeFragment].
  * @property mode The state of the [HomeFragment] UI.
  * @property tabs The list of opened [Tab] in the [HomeFragment].
+ * @property topSites The list of [TopSite] in the [HomeFragment].
  */
 data class HomeFragmentState(
     val collections: List<TabCollection>,
     val expandedCollections: Set<Long>,
     val mode: Mode,
-    val tabs: List<Tab>
+    val tabs: List<Tab>,
+    val topSites: List<TopSite>
 ) : State
 
 sealed class HomeFragmentAction : Action {
-    data class Change(val tabs: List<Tab>, val mode: Mode, val collections: List<TabCollection>) :
+    data class Change(
+        val tabs: List<Tab>,
+        val topSites: List<TopSite>,
+        val mode: Mode,
+        val collections: List<TabCollection>
+    ) :
         HomeFragmentAction()
-    data class CollectionExpanded(val collection: TabCollection, val expand: Boolean) : HomeFragmentAction()
+
+    data class CollectionExpanded(val collection: TabCollection, val expand: Boolean) :
+        HomeFragmentAction()
+
     data class CollectionsChange(val collections: List<TabCollection>) : HomeFragmentAction()
     data class ModeChange(val mode: Mode, val tabs: List<Tab> = emptyList()) : HomeFragmentAction()
     data class TabsChange(val tabs: List<Tab>) : HomeFragmentAction()
+    data class TopSitesChange(val topSites: List<TopSite>) : HomeFragmentAction()
 }
 
 private fun homeFragmentStateReducer(
@@ -69,7 +81,8 @@ private fun homeFragmentStateReducer(
         is HomeFragmentAction.Change -> state.copy(
             collections = action.collections,
             mode = action.mode,
-            tabs = action.tabs
+            tabs = action.tabs,
+            topSites = action.topSites
         )
         is HomeFragmentAction.CollectionExpanded -> {
             val newExpandedCollection = state.expandedCollections.toMutableSet()
@@ -85,5 +98,6 @@ private fun homeFragmentStateReducer(
         is HomeFragmentAction.CollectionsChange -> state.copy(collections = action.collections)
         is HomeFragmentAction.ModeChange -> state.copy(mode = action.mode, tabs = action.tabs)
         is HomeFragmentAction.TabsChange -> state.copy(tabs = action.tabs)
+        is HomeFragmentAction.TopSitesChange -> state.copy(topSites = action.topSites)
     }
 }

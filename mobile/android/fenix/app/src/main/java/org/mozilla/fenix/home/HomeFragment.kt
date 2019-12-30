@@ -62,6 +62,7 @@ import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.util.dpToPx
+import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -174,7 +175,8 @@ class HomeFragment : Fragment() {
                     collections = requireComponents.core.tabCollectionStorage.cachedTabCollections,
                     expandedCollections = emptySet(),
                     mode = currentMode.getCurrentMode(),
-                    tabs = emptyList()
+                    tabs = emptyList(),
+                    topSites = requireComponents.core.topSiteStorage.cachedTopSites
                 )
             )
         }
@@ -311,6 +313,7 @@ class HomeFragment : Fragment() {
     override fun onStart() {
         super.onStart()
         subscribeToTabCollections()
+        subscribeToTopSites()
 
         val context = requireContext()
         val components = context.components
@@ -318,7 +321,8 @@ class HomeFragment : Fragment() {
         homeFragmentStore.dispatch(HomeFragmentAction.Change(
             collections = components.core.tabCollectionStorage.cachedTabCollections,
             mode = currentMode.getCurrentMode(),
-            tabs = getListOfSessions().toTabs()
+            tabs = getListOfSessions().toTabs(),
+            topSites = components.core.topSiteStorage.cachedTopSites
         ))
 
         requireComponents.backgroundServices.accountManager.register(currentMode, owner = this)
@@ -570,6 +574,15 @@ class HomeFragment : Fragment() {
             homeFragmentStore.dispatch(HomeFragmentAction.CollectionsChange(it))
         }.also { observer ->
             requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
+        }
+    }
+
+    private fun subscribeToTopSites(): Observer<List<TopSite>> {
+        return Observer<List<TopSite>> { topSites ->
+            requireComponents.core.topSiteStorage.cachedTopSites = topSites
+            homeFragmentStore.dispatch(HomeFragmentAction.TopSitesChange(topSites))
+        }.also { observer ->
+            requireComponents.core.topSiteStorage.getTopSites().observe(this, observer)
         }
     }
 
