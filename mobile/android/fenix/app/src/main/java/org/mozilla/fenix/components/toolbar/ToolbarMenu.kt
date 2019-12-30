@@ -24,6 +24,7 @@ interface ToolbarMenu {
         object ReportIssue : Item()
         object OpenInFenix : Item()
         object SaveToCollection : Item()
+        object AddToFirefoxHome : Item()
         object AddToHomeScreen : Item()
         object Quit : Item()
         data class ReaderMode(val isChecked: Boolean) : Item()

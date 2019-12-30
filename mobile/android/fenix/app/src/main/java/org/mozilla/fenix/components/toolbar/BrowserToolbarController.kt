@@ -11,12 +11,14 @@ import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.FragmentNavigator
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -35,8 +37,10 @@ import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
@@ -56,7 +60,6 @@ interface BrowserToolbarController {
 class DefaultBrowserToolbarController(
     private val store: BrowserFragmentStore,
     private val activity: Activity,
-    private val snackbar: FenixSnackbar?,
     private val navController: NavController,
     private val readerModeController: ReaderModeController,
     private val browsingModeManager: BrowsingModeManager,
@@ -70,12 +73,19 @@ class DefaultBrowserToolbarController(
     private val getSupportUrl: () -> String,
     private val openInFenixIntent: Intent,
     private val bookmarkTapped: (Session) -> Unit,
-    private val scope: LifecycleCoroutineScope,
-    private val tabCollectionStorage: TabCollectionStorage
+    private val scope: CoroutineScope,
+    private val tabCollectionStorage: TabCollectionStorage,
+    private val topSiteStorage: TopSiteStorage
 ) : BrowserToolbarController {
 
     private val currentSession
         get() = customTabSession ?: activity.components.core.sessionManager.selectedSession
+
+    // We hold onto a reference of the inner scope so that we can override this with the
+    // TestCoroutineScope to ensure sequential execution. If we didn't have this, our tests
+    // would fail intermittently due to the async nature of coroutine scheduling.
+    @VisibleForTesting
+    internal var ioScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun handleToolbarPaste(text: String) {
         adjustBackgroundAndNavigate.invoke(
@@ -131,6 +141,19 @@ class DefaultBrowserToolbarController(
                 item.isChecked,
                 currentSession
             )
+            ToolbarMenu.Item.AddToFirefoxHome -> {
+                ioScope.launch {
+                    currentSession?.let {
+                        topSiteStorage.addTopSite(it.title, it.url)
+                    }
+
+                    activity.getRootView()?.let {
+                        FenixSnackbar.makeWithToolbarPadding(it, Snackbar.LENGTH_SHORT)
+                            .setText(it.context.getString(R.string.snackbar_added_to_firefox_home))
+                            .show()
+                    }
+                }
+            }
             ToolbarMenu.Item.AddToHomeScreen -> {
                 MainScope().launch {
                     with(activity.components.useCases.webAppUseCases) {
@@ -211,7 +234,17 @@ class DefaultBrowserToolbarController(
                 // Close this activity since it is no longer displaying any session
                 activity.finish()
             }
-            ToolbarMenu.Item.Quit -> deleteAndQuit(activity, scope, snackbar)
+            ToolbarMenu.Item.Quit -> {
+                // We need to show the snackbar while the browsing data is deleting (if "Delete
+                // browsing data on quit" is activated). After the deletion is over, the snackbar
+                // is dismissed.
+                val snackbar: FenixSnackbar? = activity.getRootView()?.let { v ->
+                    FenixSnackbar.makeWithToolbarPadding(v)
+                        .setText(v.context.getString(R.string.deleting_browsing_data_in_progress))
+                }
+
+                deleteAndQuit(activity, scope, snackbar)
+            }
             is ToolbarMenu.Item.ReaderMode -> {
                 val enabled = currentSession?.readerMode
                     ?: activity.components.core.sessionManager.selectedSession?.readerMode
@@ -289,6 +322,7 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.OpenInFenix -> Event.BrowserMenuItemTapped.Item.OPEN_IN_FENIX
             ToolbarMenu.Item.Share -> Event.BrowserMenuItemTapped.Item.SHARE
             ToolbarMenu.Item.SaveToCollection -> Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION
+            ToolbarMenu.Item.AddToFirefoxHome -> Event.BrowserMenuItemTapped.Item.ADD_TO_FIREFOX_HOME
             ToolbarMenu.Item.AddToHomeScreen -> Event.BrowserMenuItemTapped.Item.ADD_TO_HOMESCREEN
             ToolbarMenu.Item.Quit -> Event.BrowserMenuItemTapped.Item.QUIT
             is ToolbarMenu.Item.ReaderMode ->

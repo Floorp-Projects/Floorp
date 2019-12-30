@@ -23,6 +23,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -44,6 +45,7 @@ import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
@@ -76,6 +78,7 @@ class DefaultBrowserToolbarControllerTest {
     private val adjustBackgroundAndNavigate: (NavDirections) -> Unit = mockk(relaxed = true)
     private val snackbar = mockk<FenixSnackbar>(relaxed = true)
     private val tabCollectionStorage = mockk<TabCollectionStorage>(relaxed = true)
+    private val topSiteStorage = mockk<TopSiteStorage>(relaxed = true)
 
     private lateinit var controller: DefaultBrowserToolbarController
 
@@ -85,7 +88,6 @@ class DefaultBrowserToolbarControllerTest {
 
         controller = DefaultBrowserToolbarController(
             activity = activity,
-            snackbar = snackbar,
             navController = navController,
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
@@ -98,6 +100,7 @@ class DefaultBrowserToolbarControllerTest {
             browserLayout = browserLayout,
             swipeRefresh = swipeRefreshLayout,
             tabCollectionStorage = tabCollectionStorage,
+            topSiteStorage = topSiteStorage,
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
             sessionManager = mockk(),
@@ -292,6 +295,37 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
+    fun handleToolbarAddToFirefoxHomePress() = runBlockingTest {
+        val item = ToolbarMenu.Item.AddToFirefoxHome
+
+        controller = DefaultBrowserToolbarController(
+            activity = activity,
+            navController = navController,
+            browsingModeManager = browsingModeManager,
+            findInPageLauncher = findInPageLauncher,
+            engineView = engineView,
+            adjustBackgroundAndNavigate = adjustBackgroundAndNavigate,
+            customTabSession = null,
+            getSupportUrl = getSupportUrl,
+            openInFenixIntent = openInFenixIntent,
+            scope = this,
+            browserLayout = browserLayout,
+            swipeRefresh = swipeRefreshLayout,
+            tabCollectionStorage = tabCollectionStorage,
+            topSiteStorage = topSiteStorage,
+            bookmarkTapped = mockk(),
+            readerModeController = mockk(),
+            sessionManager = mockk(),
+            store = mockk()
+        )
+        controller.ioScope = this
+
+        controller.handleToolbarItemInteraction(item)
+
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.ADD_TO_FIREFOX_HOME)) }
+    }
+
+    @Test
     fun handleToolbarAddToHomeScreenPress() {
         val item = ToolbarMenu.Item.AddToHomeScreen
 
@@ -453,7 +487,6 @@ class DefaultBrowserToolbarControllerTest {
     fun handleToolbarOpenInFenixPress() {
         controller = DefaultBrowserToolbarController(
             activity = activity,
-            snackbar = snackbar,
             navController = navController,
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
@@ -466,6 +499,7 @@ class DefaultBrowserToolbarControllerTest {
             browserLayout = browserLayout,
             swipeRefresh = swipeRefreshLayout,
             tabCollectionStorage = tabCollectionStorage,
+            topSiteStorage = topSiteStorage,
             bookmarkTapped = mockk(),
             readerModeController = mockk(),
             sessionManager = mockk(),
@@ -489,11 +523,33 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleToolbarQuitPress() {
+    fun handleToolbarQuitPress() = runBlockingTest {
         val item = ToolbarMenu.Item.Quit
+        val testScope = this
+
+        controller = DefaultBrowserToolbarController(
+            activity = activity,
+            navController = navController,
+            browsingModeManager = browsingModeManager,
+            findInPageLauncher = findInPageLauncher,
+            engineView = engineView,
+            adjustBackgroundAndNavigate = adjustBackgroundAndNavigate,
+            customTabSession = null,
+            getSupportUrl = getSupportUrl,
+            openInFenixIntent = openInFenixIntent,
+            scope = testScope,
+            browserLayout = browserLayout,
+            swipeRefresh = swipeRefreshLayout,
+            tabCollectionStorage = tabCollectionStorage,
+            topSiteStorage = topSiteStorage,
+            bookmarkTapped = mockk(),
+            readerModeController = mockk(),
+            sessionManager = mockk(),
+            store = mockk()
+        )
 
         controller.handleToolbarItemInteraction(item)
 
-        verify { deleteAndQuit(activity, scope, snackbar) }
+        verify { deleteAndQuit(activity, testScope, null) }
     }
 }

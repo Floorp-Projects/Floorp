@@ -78,7 +78,6 @@ import org.mozilla.fenix.downloads.DownloadNotificationBottomSheetDialog
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.hideToolbar
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -153,19 +152,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
         val store = context.components.core.store
 
         return getSessionById()?.also { session ->
-
-            // We need to show the snackbar while the browsing data is deleting(if "Delete
-            // browsing data on quit" is activated). After the deletion is over, the snackbar
-            // is dismissed.
-            val snackbar: FenixSnackbar? = requireActivity().getRootView()?.let { v ->
-                FenixSnackbar.makeWithToolbarPadding(v)
-                    .setText(v.context.getString(R.string.deleting_browsing_data_in_progress))
-            }
-
             val browserToolbarController = DefaultBrowserToolbarController(
                 store = browserFragmentStore,
                 activity = requireActivity(),
-                snackbar = snackbar,
                 navController = findNavController(),
                 readerModeController = DefaultReaderModeController(
                     readerViewFeature,
@@ -192,7 +181,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 },
                 bookmarkTapped = { lifecycleScope.launch { bookmarkTapped(it) } },
                 scope = lifecycleScope,
-                tabCollectionStorage = requireComponents.core.tabCollectionStorage
+                tabCollectionStorage = requireComponents.core.tabCollectionStorage,
+                topSiteStorage = requireComponents.core.topSiteStorage
             )
 
             browserInteractor = BrowserInteractor(

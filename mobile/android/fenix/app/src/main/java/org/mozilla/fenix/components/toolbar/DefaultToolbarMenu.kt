@@ -155,6 +155,7 @@ class DefaultToolbarMenu(
             settings,
             library,
             desktopMode,
+            addToFirefoxHome,
             addToHomescreen.apply { visible = ::shouldShowAddToHomescreen },
             findInPage,
             privateTab,
@@ -212,6 +213,14 @@ class DefaultToolbarMenu(
         initialState = requestDesktopStateProvider
     ) { checked ->
         onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
+    }
+
+    private val addToFirefoxHome = BrowserMenuImageText(
+        label = context.getString(R.string.browser_menu_add_to_firefox_home),
+        imageResource = R.drawable.ic_home,
+        iconTintColorResource = primaryTextColor()
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.AddToFirefoxHome)
     }
 
     private val addToHomescreen = BrowserMenuHighlightableItem(
