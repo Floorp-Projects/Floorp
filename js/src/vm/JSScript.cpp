@@ -681,6 +681,11 @@ void js::BaseScript::setEnclosingScope(Scope* enclosingScope) {
 }
 
 void js::BaseScript::finalize(JSFreeOp* fop) {
+  if (warmUpData_.isJitScript()) {
+    JSScript* script = static_cast<JSScript*>(this);
+    script->releaseJitScriptOnFinalize(fop);
+  }
+
   if (data_) {
     size_t size = data_->allocationSize();
     AlwaysPoison(data_, JS_POISONED_JSSCRIPT_DATA_PATTERN, size,
@@ -4649,10 +4654,6 @@ void JSScript::finalize(JSFreeOp* fop) {
 
   // Finalize the base-script fields.
   BaseScript::finalize(fop);
-
-  if (hasJitScript()) {
-    releaseJitScriptOnFinalize(fop);
-  }
 
   freeScriptData();
 
