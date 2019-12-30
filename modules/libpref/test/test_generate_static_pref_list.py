@@ -10,7 +10,10 @@ import sys
 import unittest
 import yaml
 from os import path
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 sys.path.append(path.join(path.dirname(__file__), ".."))
 from init.generate_static_pref_list import generate_code
