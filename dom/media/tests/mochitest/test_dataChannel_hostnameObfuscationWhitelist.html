@@ -45,6 +45,9 @@
   }
 
   runNetworkTest(async (options) => {
+    await SpecialPowers.pushPrefEnv({
+      set: [["media.peerconnection.ice.obfuscate_host_addresses", true]]
+    });
     await testWhitelist(options, null, true);
     await testWhitelist(options, "", true);
     await testWhitelist(options, "example.com", true);
