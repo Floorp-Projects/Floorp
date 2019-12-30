@@ -10,6 +10,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.RadioGroup
 import androidx.annotation.IdRes
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatButton
 import androidx.constraintlayout.widget.ConstraintLayout
 import mozilla.components.feature.readerview.R
@@ -28,6 +29,8 @@ class ReaderViewControlsBar @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), ReaderViewControlsView {
 
+    private var inflated: Boolean = false
+
     override var listener: ReaderViewControlsView.Listener? = null
 
     private lateinit var fontIncrementButton: AppCompatButton
@@ -36,12 +39,8 @@ class ReaderViewControlsBar @JvmOverloads constructor(
     private lateinit var colorSchemeGroup: RadioGroup
 
     init {
-        View.inflate(getContext(), R.layout.mozac_feature_readerview_view, this)
-
         isFocusableInTouchMode = true
         isClickable = true
-
-        bindViews()
     }
 
     /**
@@ -50,6 +49,8 @@ class ReaderViewControlsBar @JvmOverloads constructor(
      * @param font The applicable font types available.
      */
     override fun setFont(font: FontType) {
+        inflateIfNeeded()
+
         val selected = when (font) {
             FontType.SERIF -> R.id.mozac_feature_readerview_font_serif
             FontType.SANSSERIF -> R.id.mozac_feature_readerview_font_sans_serif
@@ -66,6 +67,8 @@ class ReaderViewControlsBar @JvmOverloads constructor(
      * @param size An integer value in the range [MIN_TEXT_SIZE] to [MAX_TEXT_SIZE].
      */
     override fun setFontSize(size: Int) {
+        inflateIfNeeded()
+
         val (incrementState, decrementState) = when {
             size <= MIN_TEXT_SIZE -> {
                 Pair(first = true, second = false)
@@ -87,6 +90,8 @@ class ReaderViewControlsBar @JvmOverloads constructor(
      * @param scheme The applicable colour schemes available.
      */
     override fun setColorScheme(scheme: ColorScheme) {
+        inflateIfNeeded()
+
         val selected = when (scheme) {
             ColorScheme.DARK -> R.id.mozac_feature_readerview_color_dark
             ColorScheme.SEPIA -> R.id.mozac_feature_readerview_color_sepia
@@ -100,6 +105,8 @@ class ReaderViewControlsBar @JvmOverloads constructor(
      * Updates visibility to [View.VISIBLE] and requests focus for the UI controls.
      */
     override fun showControls() {
+        inflateIfNeeded()
+
         visibility = View.VISIBLE
         requestFocus()
     }
@@ -142,6 +149,19 @@ class ReaderViewControlsBar @JvmOverloads constructor(
         }
         fontDecrementButton = applyClickListener(R.id.mozac_feature_readerview_font_size_decrease) {
             listener?.onFontSizeDecreased()?.let { setFontSize(it) }
+        }
+    }
+
+    /**
+     * Inflates child views lazily. Call this from any method which needs to access lateinit variables
+     * or child views.
+     */
+    @VisibleForTesting
+    internal fun inflateIfNeeded() {
+        if (!inflated) {
+            View.inflate(context, R.layout.mozac_feature_readerview_view, this)
+            bindViews()
+            inflated = true
         }
     }
 
