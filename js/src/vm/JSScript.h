@@ -2515,6 +2515,7 @@ setterLevel:                                                                  \
   }
 
   RuntimeScriptData* sharedData() { return sharedData_; }
+  void freeSharedData() { sharedData_ = nullptr; }
 
  protected:
   void traceChildren(JSTracer* trc);
@@ -3010,7 +3011,6 @@ class JSScript : public js::BaseScript {
                                  uint32_t noteLength, uint32_t numResumeOffsets,
                                  uint32_t numScopeNotes, uint32_t numTryNotes);
   bool shareScriptData(JSContext* cx);
-  void freeScriptData();
 
  public:
   inline uint32_t getWarmUpCount() const;

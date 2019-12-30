@@ -692,6 +692,8 @@ void js::BaseScript::finalize(JSFreeOp* fop) {
                  MemCheckKind::MakeNoAccess);
     fop->free_(this, data_, size, MemoryUse::ScriptPrivateData);
   }
+
+  freeSharedData();
 }
 
 template <XDRMode mode>
@@ -1232,13 +1234,12 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     }
   }
 
-  // If XDR operation fails, we must call JSScript::freeScriptData in order
-  // to neuter the script. Various things that iterate raw scripts in a GC
-  // arena use the presense of this data to detect if initialization is
-  // complete.
+  // If XDR operation fails, we must call BaseScript::freeSharedData in order to
+  // neuter the script. Various things that iterate raw scripts in a GC arena
+  // use the presense of this data to detect if initialization is complete.
   auto scriptDataGuard = mozilla::MakeScopeExit([&] {
     if (mode == XDR_DECODE) {
-      script->freeScriptData();
+      script->freeSharedData();
     }
   });
 
@@ -4131,8 +4132,6 @@ bool JSScript::createImmutableScriptData(JSContext* cx, uint32_t codeLength,
   return true;
 }
 
-void JSScript::freeScriptData() { sharedData_ = nullptr; }
-
 // Takes owndership of the script's sharedData_ and either adds it into the
 // runtime's RuntimeScriptDataTable or frees it if a matching entry already
 // exists.
@@ -4458,11 +4457,11 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
                                     frontend::BytecodeEmitter* bce) {
   MOZ_ASSERT(!script->data_, "JSScript already initialized");
 
-  // If initialization fails, we must call JSScript::freeScriptData in order to
-  // neuter the script. Various things that iterate raw scripts in a GC arena
+  // If initialization fails, we must call BaseScript::freeSharedData in order
+  // to neuter the script. Various things that iterate raw scripts in a GC arena
   // use the presense of this data to detect if initialization is complete.
   auto scriptDataGuard =
-      mozilla::MakeScopeExit([&] { script->freeScriptData(); });
+      mozilla::MakeScopeExit([&] { script->freeSharedData(); });
 
   /* The counts of indexed things must be checked during code generation. */
   MOZ_ASSERT(bce->perScriptData().atomIndices()->count() <= INDEX_LIMIT);
@@ -4654,8 +4653,6 @@ void JSScript::finalize(JSFreeOp* fop) {
 
   // Finalize the base-script fields.
   BaseScript::finalize(fop);
-
-  freeScriptData();
 
   // In most cases, our LazyScript's script pointer will reference this
   // script, and thus be nulled out by normal weakref processing. However, if
@@ -5326,10 +5323,6 @@ void JSScript::traceChildren(JSTracer* trc) {
 
   // Trace base class fields.
   BaseScript::traceChildren(trc);
-
-  if (sharedData()) {
-    sharedData()->traceChildren(trc);
-  }
 
   if (maybeLazyScript()) {
     TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
