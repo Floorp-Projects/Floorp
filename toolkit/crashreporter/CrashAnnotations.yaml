@@ -104,13 +104,9 @@ AsyncShutdownTimeout:
 
 AvailablePageFile:
   description: >
-    Available commit-space in bytes.
-    - Under Windows, computed from the PERFORMANCE_INFORMATION structure by substracting
-      the CommitTotal field from the CommitLimit field.
-    - Under Linux, computed from /proc/meminfo's CommitLimit - Committed_AS. Note that
-      the kernel is not guaranteed to enforce that CommittedLimit >= Committed_AS. If
-      Committed_AS > CommittedLimit, this value is set to 0.
-    - Not available on other platforms.
+    Windows-only, available commit-space in bytes.  This annotation is computed
+    from the PERFORMANCE_INFORMATION structure by substracting the CommitTotal
+    field from the CommitLimit field.
   type: string
   ping: true
 
@@ -120,28 +116,22 @@ AvailablePhysicalMemory:
     - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure
     ullAvailPhys field.
     - Under macOS, populated with vm_statistics64_data_t::free_count.
-    - Under Linux, populated with /proc/meminfo's MemFree.
-    - Not available on other platforms.
+    - Not available under other platforms.
   type: string
   ping: true
 
 AvailableSwapMemory:
   description: >
-    Amount of free swap space in bytes.
-    - Under macOS, populated with the contents of
-      sysctl "vm.swapusage" :: xsu_avail.
-    - Under Linux, populated with /proc/meminfo's SwapFree.
-    - Not available on other platforms.
+    macOS-only, amount of free swap space. Populated with the coontents of
+    sysctl "vm.swapusage" :: xsu_avail.
   type: string
   ping: true
 
 AvailableVirtualMemory:
   description: >
-    Amount of free virtual memory in bytes
-    - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure ullAvailVirtual field.
-    - Under Linux, populated with /proc/meminfo's MemAvailable.
-    - Not available on other platforms.
-    - For macOS, see AvailableSwapMemory, AvailablePhysicalMemory and PurgeablePhysicalMemory.
+    Windows-only, amount of free virtual memory in bytes. Populated with the contents
+    of the MEMORYSTATUSEX's structure ullAvailVirtual field.
+    For macOS, see AvailableSwapMemory, AvailablePhysicalMemory and PurgeablePhysicalMemory.
   type: string
   ping: true
 
@@ -853,11 +843,9 @@ ThreadIdNameMapping:
 
 TotalPageFile:
   description: >
-    Maximum amount of memory that can be committed without extending the swap/page file.
+    Maximum amount of memory that can be committed.
     - Under Windows, populated with the contents of the PERFORMANCE_INFORMATION's
       structure CommitLimit field.
-    - Under Linux, populated with /proc/meminfo MemTotal + SwapTotal. The swap file
-      typically cannot be extended, so that's a hard limit.
     - Not available on other systems.
   type: string
   ping: true
@@ -868,17 +856,14 @@ TotalPhysicalMemory:
     - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure
     ullTotalPhys field.
     - Under macOS, populated with sysctl "hw.memsize".
-    - Under Linux, populated with /proc/meminfo's "MemTotal".
-    - Not available on other systems.
   type: string
   ping: true
 
 TotalVirtualMemory:
   description: >
-    Size of the virtual address space.
-    - Under Windows, populated with the contents of the MEMORYSTATUSEX's structure
-      ullTotalVirtual field.
-    - Not available on other platforms.
+    Windows-only. Size of the virtual address space. This annotation is
+    populated with the contents of the MEMORYSTATUSEX's structure
+    ullTotalVirtual field.
   type: string
   ping: true
 
