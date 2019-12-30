@@ -46,4 +46,10 @@ add_task(async function() {
 
   setInputValue(hud, "x + z");
   await waitForEagerEvaluationResult(hud, /ReferenceError/);
+
+  setInputValue(hud, "var a = 5");
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "x + a");
+  await waitForEagerEvaluationResult(hud, /ReferenceError/);
 });
