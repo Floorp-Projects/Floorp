@@ -34,10 +34,11 @@ internal class SharedIds(
         val key = tagToKey(tag)
         val lastUsedKey = tagToLastUsedKey(tag)
 
+        removeExpiredIds(preferences, editor)
+
         // First check if we already have an id for this tag
         val id = preferences.getInt(key, -1)
         if (id != -1) {
-            removeExpiredIds(preferences, editor)
             editor.putLong(lastUsedKey, now()).apply()
             return id
         }
@@ -48,9 +49,29 @@ internal class SharedIds(
         editor.putInt(KEY_NEXT_ID, nextId + 1) // Ignoring overflow for now.
         editor.putInt(key, nextId)
         editor.putLong(lastUsedKey, now())
+        editor.apply()
+
+        return nextId
+    }
+
+    /**
+     * Get the next available unique ID for the provided unique tag.
+     */
+    @Synchronized
+    fun getNextIdForTag(context: Context, tag: String): Int {
+        val preferences = preferences(context)
+        val editor = preferences.edit()
+        val key = tagToKey(tag)
+        val lastUsedKey = tagToLastUsedKey(tag)
 
         removeExpiredIds(preferences, editor)
 
+        // always use the next available one and save that.
+        val nextId = preferences.getInt(KEY_NEXT_ID, offset)
+
+        editor.putInt(KEY_NEXT_ID, nextId + 1) // Ignoring overflow for now.
+        editor.putInt(key, nextId)
+        editor.putLong(lastUsedKey, now())
         editor.apply()
 
         return nextId
@@ -82,6 +103,7 @@ internal class SharedIds(
             val tag = lastUsedKey.substring(KEY_LAST_USED_PREFIX.length)
             editor.remove(tagToKey(tag))
             editor.remove(lastUsedKey)
+            editor.apply()
         }
     }
 

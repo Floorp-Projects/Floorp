@@ -14,10 +14,11 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.utils.AllSessionsObserver
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.feature.media.notification.MediaNotificationChannel
-import mozilla.components.support.base.ids.cancel
-import mozilla.components.support.base.ids.notify
+import mozilla.components.support.base.ids.SharedIdsHelper
 
 private const val NOTIFICATION_TAG = "mozac.feature.media.recordingDevices"
+private const val NOTIFICATION_ID = 1
+private const val PENDING_INTENT_TAG = "mozac.feature.media.pendingintent"
 
 /**
  * Feature for displaying an ongoing notification while recording devices (camera, microphone) are used.
@@ -57,8 +58,8 @@ class RecordingDevicesNotificationFeature(
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         } ?: throw IllegalStateException("Package has no launcher intent")
 
-        val pendingIntent = PendingIntent.getActivity(
-            context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getActivity(context,
+            SharedIdsHelper.getIdForTag(context, PENDING_INTENT_TAG), intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(state.iconResource)
@@ -70,12 +71,12 @@ class RecordingDevicesNotificationFeature(
             .build()
 
         NotificationManagerCompat.from(context)
-            .notify(context, NOTIFICATION_TAG, notification)
+            .notify(NOTIFICATION_TAG, NOTIFICATION_ID, notification)
     }
 
     private fun hideNotification() {
         NotificationManagerCompat.from(context)
-            .cancel(context, NOTIFICATION_TAG)
+            .cancel(NOTIFICATION_TAG, NOTIFICATION_ID)
     }
 }
 

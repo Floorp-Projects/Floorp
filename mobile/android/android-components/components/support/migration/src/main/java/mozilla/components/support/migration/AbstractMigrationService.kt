@@ -15,7 +15,7 @@ import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import mozilla.components.support.base.ids.NotificationIds
+import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 
 private const val NOTIFICATION_TAG = "mozac.support.migration.notification"
@@ -85,7 +85,7 @@ abstract class AbstractMigrationService : Service() {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
-        val id = NotificationIds.getIdForTag(this, NOTIFICATION_TAG)
+        val id = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
         startForeground(id, builder.build())
     }
 

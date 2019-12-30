@@ -46,6 +46,20 @@ permalink: /changelog/
 * **support-ktx**
   * Added `Context.getDrawableWithTint` extension method to get a drawable resource with a tint applied.
 
+* **support-base**
+  * ⚠️ **This is a breaking change**:
+  * Removed helper for unique notification id.
+  * Added helper for providing unique stable `Int` ids based on a `String` tag to avoid id conflicts between components and app code.  This is now for any id, not just notification id.
+  * Added new API that allows user to request for the next available id using the same tag.
+
+  ```kotlin
+  // Get a unique id for the provided tag
+  val id = NotificationIds.getIdForTag(context, "mozac.my.feature")
+
+  // Get the next unique id for the provided tag
+  val id = NotificationIds.getNextIdForTag(context, "mozac.my.feature")
+  ```
+
 # 26.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v25.0.0...v26.0.0)
@@ -326,7 +340,7 @@ permalink: /changelog/
         store.dispatch(RemoveTabAction(tab.id))
       }
     }
-  }
+  })
   ```
 
 # 19.0.1

@@ -18,6 +18,7 @@ import mozilla.components.feature.media.ext.nonPrivateIcon
 import mozilla.components.feature.media.ext.nonPrivateUrl
 import mozilla.components.feature.media.service.MediaService
 import mozilla.components.feature.media.state.MediaState
+import mozilla.components.support.base.ids.SharedIdsHelper
 
 /**
  * Helper to display a notification for web content playing media.
@@ -84,9 +85,9 @@ private fun MediaState.toNotificationData(context: Context): NotificationData {
                     MediaService.pauseIntent(context),
                     0)
             ).build(),
-            contentIntent = PendingIntent.getActivity(context, 0, intent?.apply {
-                putExtra(MediaFeature.EXTRA_TAB_ID, session.id)
-            }, 0)
+            contentIntent = PendingIntent.getActivity(context,
+                SharedIdsHelper.getIdForTag(context, MediaFeature.PENDING_INTENT_TAG),
+                intent?.apply { putExtra(MediaFeature.EXTRA_TAB_ID, session.id) }, 0)
         )
         is MediaState.Paused -> NotificationData(
             title = session.getTitleOrUrl(context),
@@ -102,9 +103,9 @@ private fun MediaState.toNotificationData(context: Context): NotificationData {
                     MediaService.playIntent(context),
                     0)
             ).build(),
-            contentIntent = PendingIntent.getActivity(context, 0, intent?.apply {
-                putExtra(MediaFeature.EXTRA_TAB_ID, session.id)
-            }, 0)
+            contentIntent = PendingIntent.getActivity(context,
+                SharedIdsHelper.getIdForTag(context, MediaFeature.PENDING_INTENT_TAG),
+                intent?.apply { putExtra(MediaFeature.EXTRA_TAB_ID, session.id) }, 0)
         )
         // Dummy notification that is only used to satisfy the requirement to ALWAYS call
         // startForeground with a notification.

@@ -18,8 +18,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mozilla.components.support.base.ids.SharedIdsHelper
 
-private const val NOTIFICATION_CHANNEL_ID = "lib-crash"
+private const val NOTIFICATION_CHANNEL_ID = "mozac.lib.crash.notification"
+private const val NOTIFICATION_TAG = "mozac.lib.crash.foreground-service"
 private const val DELAY_CRASH_MS = 10000L
 
 /**
@@ -35,7 +37,7 @@ class CrashService : Service() {
 
         // We need to put this service into foreground because otherwise Android may kill it (with no visible app UI)
         // before we can crash.
-        startForeground(1, createNotification())
+        startForeground(SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG), createNotification())
 
         GlobalScope.launch(Dispatchers.Main) {
             delay(DELAY_CRASH_MS)

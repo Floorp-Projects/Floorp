@@ -14,6 +14,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import mozilla.components.feature.media.MediaFeature.Companion.NOTIFICATION_TAG
 import mozilla.components.feature.media.ext.getSession
 import mozilla.components.feature.media.ext.getTitleOrUrl
 import mozilla.components.feature.media.ext.isForCustomTabSession
@@ -27,10 +28,9 @@ import mozilla.components.feature.media.notification.MediaNotification
 import mozilla.components.feature.media.session.MediaSessionCallback
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.media.state.MediaStateMachine
-import mozilla.components.support.base.ids.NotificationIds
+import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 
-private const val NOTIFICATION_TAG = "mozac.feature.media.foreground-service"
 private const val ACTION_UPDATE_STATE = "mozac.feature.media.service.UPDATE_STATE"
 private const val ACTION_PLAY = "mozac.feature.media.service.PLAY"
 private const val ACTION_PAUSE = "mozac.feature.media.service.PAUSE"
@@ -117,7 +117,7 @@ internal class MediaService : Service() {
     }
 
     private fun updateNotification(state: MediaState) {
-        val notificationId = NotificationIds.getIdForTag(this, NOTIFICATION_TAG)
+        val notificationId = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
 
         val notification = notification.create(state, mediaSession)
 

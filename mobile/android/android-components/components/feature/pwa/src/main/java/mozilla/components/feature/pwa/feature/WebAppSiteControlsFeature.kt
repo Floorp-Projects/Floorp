@@ -27,8 +27,6 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.R
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.support.base.ids.cancel
-import mozilla.components.support.base.ids.notify
 
 /**
  * Displays site controls notification for fullscreen web apps.
@@ -50,7 +48,7 @@ class WebAppSiteControlsFeature(
         applicationContext.registerReceiver(this, filter)
 
         NotificationManagerCompat.from(applicationContext)
-            .notify(applicationContext, NOTIFICATION_TAG, buildNotification())
+            .notify(NOTIFICATION_TAG, NOTIFICATION_ID, buildNotification())
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
@@ -58,7 +56,7 @@ class WebAppSiteControlsFeature(
         applicationContext.unregisterReceiver(this)
 
         NotificationManagerCompat.from(applicationContext)
-            .cancel(applicationContext, NOTIFICATION_TAG)
+            .cancel(NOTIFICATION_TAG, NOTIFICATION_ID)
     }
 
     /**
@@ -141,6 +139,7 @@ class WebAppSiteControlsFeature(
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "Site Controls"
         private const val NOTIFICATION_TAG = "SiteControls"
+        private const val NOTIFICATION_ID = 1
         private const val ACTION_COPY = "mozilla.components.feature.pwa.COPY"
         private const val ACTION_REFRESH = "mozilla.components.feature.pwa.REFRESH"
     }
