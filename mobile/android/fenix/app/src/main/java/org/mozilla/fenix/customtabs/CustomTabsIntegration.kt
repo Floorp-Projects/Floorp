@@ -25,6 +25,7 @@ class CustomTabsIntegration(
     activity: Activity,
     engineLayout: View,
     onItemTapped: (ToolbarMenu.Item) -> Unit = {},
+    shouldReverseItems: Boolean,
     isPrivate: Boolean
 ) : LifecycleAwareFeature, UserInteractionHandler {
 
@@ -86,6 +87,7 @@ class CustomTabsIntegration(
             activity,
             sessionManager,
             sessionId,
+            shouldReverseItems,
             onItemTapped = onItemTapped
         )
     }

@@ -5,12 +5,14 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Context
+import android.graphics.Typeface
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
-import mozilla.components.browser.menu.item.BrowserMenuSwitch
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
+import mozilla.components.browser.menu.item.BrowserMenuCategory
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import org.mozilla.fenix.R
@@ -21,6 +23,7 @@ class CustomTabToolbarMenu(
     private val context: Context,
     private val sessionManager: SessionManager,
     private val sessionId: String?,
+    private val shouldReverseItems: Boolean,
     private val onItemTapped: (ToolbarMenu.Item) -> Unit = {}
 ) : ToolbarMenu {
     override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
@@ -84,16 +87,17 @@ class CustomTabToolbarMenu(
     }
 
     private val menuItems by lazy {
-        listOf(
-            menuToolbar,
+        val menuItems = listOf(
+            poweredBy,
             BrowserMenuDivider(),
             share,
             desktopMode,
             findInPage,
             openInFenix,
             BrowserMenuDivider(),
-            poweredBy
+            menuToolbar
         )
+        if (shouldReverseItems) { menuItems.reversed() } else { menuItems }
     }
 
     private val share = BrowserMenuImageText(
@@ -105,7 +109,8 @@ class CustomTabToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.Share)
     }
 
-    private val desktopMode = BrowserMenuSwitch(
+    private val desktopMode = BrowserMenuImageSwitch(
+        imageResource = R.drawable.ic_desktop,
         label = context.getString(R.string.browser_menu_desktop_site),
         initialState = { session?.desktopMode ?: false }
     ) { checked ->
@@ -130,13 +135,14 @@ class CustomTabToolbarMenu(
         onItemTapped.invoke(ToolbarMenu.Item.OpenInFenix)
     }
 
-    private val poweredBy = SimpleBrowserMenuItem(
+    private val poweredBy = BrowserMenuCategory(
         label = {
             val appName = context.getString(R.string.app_name)
             context.getString(R.string.browser_menu_powered_by, appName).toUpperCase()
         }(),
         textSize = ToolbarMenu.CAPTION_TEXT_SIZE,
-        textColorResource = primaryTextColor()
+        textColorResource = primaryTextColor(),
+        textStyle = Typeface.NORMAL
     )
 
     private fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.primaryText, context)

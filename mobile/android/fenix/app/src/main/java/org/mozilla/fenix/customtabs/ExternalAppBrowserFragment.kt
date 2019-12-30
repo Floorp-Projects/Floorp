@@ -35,6 +35,7 @@ import org.mozilla.fenix.browser.FenixSnackbarDelegate
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 
 /**
  * Fragment used for browsing the web within external apps.
@@ -68,7 +69,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         activity = activity,
                         engineLayout = view.swipeRefresh,
                         onItemTapped = { browserInteractor.onBrowserToolbarMenuItemTapped(it) },
-                        isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
+                        isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate,
+                        shouldReverseItems = !activity.settings().shouldUseBottomToolbar
                     ),
                     owner = this,
                     view = view

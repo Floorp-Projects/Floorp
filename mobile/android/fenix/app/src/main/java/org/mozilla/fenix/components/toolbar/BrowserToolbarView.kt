@@ -178,6 +178,7 @@ class BrowserToolbarView(
                     this,
                     sessionManager,
                     customTabSession?.id,
+                    shouldReverseItems = !shouldUseBottomToolbar,
                     onItemTapped = {
                         interactor.onBrowserToolbarMenuItemTapped(it)
                     }
