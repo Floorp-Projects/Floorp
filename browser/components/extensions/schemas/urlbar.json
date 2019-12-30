@@ -110,10 +110,6 @@
       }
     ],
     "properties": {
-      "openViewOnFocus": {
-        "$ref": "types.Setting",
-        "description": "Enables or disables the open-view-on-focus mode."
-      },
       "engagementTelemetry": {
         "$ref": "types.Setting",
         "description": "Enables or disables the engagement telemetry."
