@@ -81,7 +81,10 @@ add_task(async function topSitesShown() {
 });
 
 add_task(async function selectSearchTopSite() {
-  await updateTopSites(sites => sites[0].searchTopSite, true);
+  await updateTopSites(
+    sites => sites && sites[0] && sites[0].searchTopSite,
+    true
+  );
   await UrlbarTestUtils.promisePopupOpen(window, () => {
     EventUtils.synthesizeMouseAtCenter(window.gURLBar.inputField, {});
   });

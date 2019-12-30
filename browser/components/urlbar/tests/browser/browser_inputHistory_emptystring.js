@@ -65,7 +65,7 @@ add_task(async function setup() {
     await PlacesTestUtils.addVisits(TEST_URL);
   }
 
-  await updateTopSites(sites => sites[0].url == TEST_URL);
+  await updateTopSites(sites => sites && sites[0] && sites[0].url == TEST_URL);
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
   });
