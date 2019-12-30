@@ -5,11 +5,12 @@
 # This module produces a JSON file that provides basic build info and
 # configuration metadata.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
+import json
 import os
 import re
-import json
+import six
 
 
 def build_dict(config, env=os.environ):
@@ -150,7 +151,7 @@ def write_mozinfo(file, config, env=os.environ):
     and what keys are produced.
     """
     build_conf = build_dict(config, env)
-    if isinstance(file, basestring):
-        file = open(file, 'wb')
+    if isinstance(file, six.text_type):
+        file = open(file, 'wt')
 
     json.dump(build_conf, file, sort_keys=True, indent=4)
