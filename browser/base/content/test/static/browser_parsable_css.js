@@ -40,7 +40,7 @@ let whitelist = [
     isFromDevTools: false,
   },
   {
-    sourceName: /minimal-xul\.css$/i,
+    sourceName: /(minimal-xul|xul)\.css$/i,
     errorMessage: /Unknown pseudo-class.*-moz-/i,
     isFromDevTools: false,
   },
