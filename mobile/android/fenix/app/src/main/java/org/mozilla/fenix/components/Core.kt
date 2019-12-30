@@ -192,6 +192,8 @@ class Core(private val context: Context) {
 
     val tabCollectionStorage by lazy { TabCollectionStorage(context, sessionManager) }
 
+    val topSiteStorage by lazy { TopSiteStorage(context) }
+
     val permissionStorage by lazy { PermissionStorage(context) }
 
     val webAppManifestStorage by lazy { ManifestStorage(context) }
