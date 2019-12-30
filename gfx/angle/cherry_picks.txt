@@ -1,3 +1,15 @@
+commit fcb79c41d2440a0ecd6357acd01275c6da9b1282
+Author: Jeff Gilbert <jgilbert@mozilla.com>
+Date:   Thu Dec 26 20:58:48 2019 -0800
+
+    Lost no-error context should gracefully handle GetProgramiv.
+    
+    Includes test that a lost no-error context doesn't crash on getProgramiv.
+    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1601703
+    
+    Bug: angleproject:4244
+    Change-Id: Iaf86cabd0e70d644d5b0e9ef2f51e9edeee5d020
+
 commit 6bbe8f55d3e4b3b44394af323c5842296938ceab
 Author: Lee Salzman <lsalzman@mozilla.com>
 Date:   Fri Aug 2 07:11:16 2019 +1000
