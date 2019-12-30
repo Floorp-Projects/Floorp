@@ -1725,7 +1725,7 @@ bool DebuggerScript::CallData::getEffectfulOffsets() {
   if (!result) {
     return false;
   }
-  for (BytecodeRangeWithPosition r(cx, script); !r.empty(); r.popFront()) {
+  for (BytecodeRange r(cx, script); !r.empty(); r.popFront()) {
     if (BytecodeIsEffectful(r.frontOpcode())) {
       if (!NewbornArrayPush(cx, result, NumberValue(r.frontOffset()))) {
         return false;
