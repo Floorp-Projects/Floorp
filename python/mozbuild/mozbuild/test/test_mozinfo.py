@@ -3,14 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
+import six
 import tempfile
 import unittest
 
-from StringIO import StringIO
+from six import StringIO
 
 import mozunit
 
@@ -205,7 +206,8 @@ class TestWriteMozinfo(unittest.TestCase, Base):
     """
 
     def setUp(self):
-        fd, self.f = tempfile.mkstemp()
+        fd, f = tempfile.mkstemp()
+        self.f = six.ensure_text(f)
         os.close(fd)
 
     def tearDown(self):
@@ -222,7 +224,8 @@ class TestWriteMozinfo(unittest.TestCase, Base):
         ))
         tempdir = tempfile.tempdir
         c.topsrcdir = tempdir
-        with NamedTemporaryFile(dir=os.path.normpath(c.topsrcdir)) as mozconfig:
+        with NamedTemporaryFile(dir=os.path.normpath(c.topsrcdir),
+                                mode='wt') as mozconfig:
             mozconfig.write('unused contents')
             mozconfig.flush()
             c.mozconfig = mozconfig.name
