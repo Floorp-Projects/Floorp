@@ -35,7 +35,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.TestApplication
-import org.mozilla.fenix.components.FenixSnackbarPresenter
+import org.mozilla.fenix.components.BrowserSnackbarPresenter
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.metrics
@@ -61,7 +61,7 @@ class ShareControllerTest {
     )
     private val textToShare = "${shareData[0].url}\n${shareData[1].url}"
     private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
-    private val snackbarPresenter = mockk<FenixSnackbarPresenter>(relaxed = true)
+    private val snackbarPresenter = mockk<BrowserSnackbarPresenter>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
     private val dismiss = mockk<(ShareController.Result) -> Unit>(relaxed = true)
     private val controller = DefaultShareController(

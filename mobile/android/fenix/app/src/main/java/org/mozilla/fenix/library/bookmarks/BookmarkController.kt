@@ -17,7 +17,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.FenixSnackbarPresenter
+import org.mozilla.fenix.components.BrowserSnackbarPresenter
 import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -46,7 +46,7 @@ interface BookmarkController {
 class DefaultBookmarkController(
     private val context: Context,
     private val navController: NavController,
-    private val snackbarPresenter: FenixSnackbarPresenter,
+    private val snackbarPresenter: BrowserSnackbarPresenter,
     private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit,
     private val invokePendingDeletion: () -> Unit
 ) : BookmarkController {

@@ -22,7 +22,7 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.FenixSnackbarPresenter
+import org.mozilla.fenix.components.BrowserSnackbarPresenter
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -53,7 +53,7 @@ interface ShareController {
  * @param context [Context] used for various Android interactions.
  * @param shareData the list of [ShareData]s that can be shared.
  * @param sendTabUseCases instance of [SendTabUseCases] which allows sending tabs to account devices.
- * @param snackbarPresenter - instance of [FenixSnackbarPresenter] for displaying styled snackbars
+ * @param snackbarPresenter - instance of [BrowserSnackbarPresenter] for displaying styled snackbars
  * @param navController - [NavController] used for navigation.
  * @param dismiss - callback signalling sharing can be closed.
  */
@@ -62,7 +62,7 @@ class DefaultShareController(
     private val context: Context,
     private val shareData: List<ShareData>,
     private val sendTabUseCases: SendTabUseCases,
-    private val snackbarPresenter: FenixSnackbarPresenter,
+    private val snackbarPresenter: BrowserSnackbarPresenter,
     private val navController: NavController,
     private val dismiss: (ShareController.Result) -> Unit
 ) : ShareController {

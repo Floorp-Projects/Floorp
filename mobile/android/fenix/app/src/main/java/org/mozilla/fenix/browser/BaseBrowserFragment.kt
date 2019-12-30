@@ -64,6 +64,7 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.BrowserSnackbarPresenter
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
@@ -283,10 +284,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         download = download,
                         tryAgain = downloadFeature::tryAgain,
                         onCannotOpenFile = {
-                            FenixSnackbar.make(view, Snackbar.LENGTH_SHORT)
-                                .setText(context.getString(R.string.mozac_feature_downloads_could_not_open_file))
-                                .setAnchorView(browserToolbarView.getSnackbarAnchor())
-                                .show()
+                            BrowserSnackbarPresenter(view).present(
+                                text = context.getString(R.string.mozac_feature_downloads_could_not_open_file),
+                                length = Snackbar.LENGTH_SHORT
+                            )
                         }
 
                     )
@@ -705,18 +706,17 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 requireComponents.analytics.metrics.track(Event.AddBookmark)
 
                 view?.let { view ->
-                    FenixSnackbar.make(view, Snackbar.LENGTH_LONG)
-                        .setAnchorView(browserToolbarView.getSnackbarAnchor())
-                        .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
-                            nav(
-                                R.id.browserFragment,
-                                BrowserFragmentDirections.actionBrowserFragmentToBookmarkEditFragment(
-                                    guid
-                                )
-                            )
-                        }
-                        .setText(getString(R.string.bookmark_saved_snackbar))
-                        .show()
+                    BrowserSnackbarPresenter(view).present(
+                        text = getString(R.string.bookmark_saved_snackbar),
+                        action = { nav(
+                            R.id.browserFragment,
+                            BrowserFragmentDirections.actionBrowserFragmentToBookmarkEditFragment(
+                                guid
+                            ))
+                        },
+                        actionName = getString(R.string.edit_bookmark_snackbar_action),
+                        length = Snackbar.LENGTH_LONG
+                    )
                 }
             }
         }

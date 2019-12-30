@@ -8,9 +8,9 @@ import android.view.View
 import androidx.annotation.StringRes
 import com.google.android.material.snackbar.Snackbar
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
-import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.BrowserSnackbarPresenter
 
-class FenixSnackbarDelegate(val view: View, private val anchorView: View?) :
+class FenixSnackbarDelegate(val view: View) :
     ContextMenuCandidate.SnackbarDelegate {
     override fun show(
         snackBarParentView: View,
@@ -19,13 +19,18 @@ class FenixSnackbarDelegate(val view: View, private val anchorView: View?) :
         @StringRes action: Int,
         listener: ((v: View) -> Unit)?
     ) {
-        val snackbar = FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(view.context.getString(text))
         if (listener != null && action != 0) {
-            snackbar.setAction(view.context.getString(action)) {
-                listener.invoke(view)
-            }
+            BrowserSnackbarPresenter(view).present(
+                text = view.context.getString(text),
+                length = Snackbar.LENGTH_LONG,
+                actionName = view.context.getString(action),
+                action = { listener.invoke(view) }
+            )
+        } else {
+            BrowserSnackbarPresenter(view).present(
+                text = view.context.getString(text),
+                length = Snackbar.LENGTH_LONG
+            )
         }
-        snackbar.anchorView = anchorView
-        snackbar.show()
     }
 }

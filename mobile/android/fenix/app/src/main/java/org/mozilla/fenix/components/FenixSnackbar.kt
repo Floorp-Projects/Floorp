@@ -18,6 +18,7 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fenix_snackbar.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
 
 @Mockable
@@ -147,7 +148,11 @@ private class FenixSnackbarCallback(
     }
 }
 
-class FenixSnackbarPresenter(
+/**
+ * This snackbar presenter should be used when displaying a snackbar that will appear in
+ * the BrowserFragment as it takes into account the position of the BrowserToolbar
+ */
+class BrowserSnackbarPresenter(
     private val view: View
 ) {
     fun present(
@@ -157,8 +162,20 @@ class FenixSnackbarPresenter(
         actionName: String? = null,
         isError: Boolean = false
     ) {
-        FenixSnackbar.make(view, length, isError).setText(text).let {
-            if (action != null && actionName != null) it.setAction(actionName, action) else it
-        }.show()
+        val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
+        val toolbarHeight = view.context.resources
+            .getDimensionPixelSize(R.dimen.browser_toolbar_height)
+
+        FenixSnackbar.make(view, length, isError).apply {
+            if (action != null && actionName != null) setAction(actionName, action)
+            setText(text)
+            view.setPadding(
+                0,
+                0,
+                0,
+                if (shouldUseBottomToolbar) toolbarHeight else 0
+            )
+            show()
+        }
     }
 }

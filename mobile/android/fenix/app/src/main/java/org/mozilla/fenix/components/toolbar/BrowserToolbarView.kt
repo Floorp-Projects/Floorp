@@ -224,14 +224,6 @@ class BrowserToolbarView(
         }
     }
 
-    /**
-     * Returns the correct snackbar anchor for bottom or top toolbar configuration.
-     * A null anchor view is ignored.
-     *
-     * @see #setAnchorView(com.google.android.material.snackbar.BaseTransientBottomBar)
-     */
-    fun getSnackbarAnchor(): View? = if (shouldUseBottomToolbar) view else null
-
     @Suppress("UNUSED_PARAMETER")
     fun update(state: BrowserFragmentState) {
         // Intentionally leaving this as a stub for now since we don't actually want to update currently
