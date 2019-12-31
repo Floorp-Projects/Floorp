@@ -77,15 +77,16 @@ class IdlePeriodState {
   // Get the current cached idle deadline.  This may return a null timestamp.
   TimeStamp GetCachedIdleDeadline() { return mCachedIdleDeadline; }
 
-  // Peek our current idle deadline.  This can return a null timestamp (which
-  // means we are not idle right now).  This method does not have any
-  // side-effects on our state, apart from guaranteeing that if it returns
-  // non-null then GetDeadlineForIdleTask will return non-null until
-  // ForgetPendingTaskGuarantee() is called.
+  // Peek our current idle deadline into mCachedIdleDeadline.  This can cause
+  // mCachedIdleDeadline to be a null timestamp (which means we are not idle
+  // right now).  This method does not have any side-effects on our state, apart
+  // from guaranteeing that if it returns non-null then GetDeadlineForIdleTask
+  // will return non-null until ForgetPendingTaskGuarantee() is called, and its
+  // effects on mCachedIdleDeadline.
   //
   // aProofOfUnlock is the proof that our caller unlocked its mutex.
-  TimeStamp PeekIdleDeadline(const MutexAutoUnlock& aProofOfUnlock) {
-    return GetIdleDeadlineInternal(true, aProofOfUnlock);
+  void CachePeekedIdleDeadline(const MutexAutoUnlock& aProofOfUnlock) {
+    mCachedIdleDeadline = GetIdleDeadlineInternal(true, aProofOfUnlock);
   }
 
   void SetIdleToken(uint64_t aId, TimeDuration aDuration);
