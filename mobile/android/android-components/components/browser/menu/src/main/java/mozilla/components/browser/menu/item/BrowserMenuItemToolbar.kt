@@ -10,6 +10,7 @@ import android.widget.LinearLayout
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageButton
+import androidx.appcompat.widget.TooltipCompat
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
@@ -75,6 +76,7 @@ class BrowserMenuItemToolbar(
         internal open fun bind(view: ImageView) {
             view.setImageResource(imageResource)
             view.contentDescription = contentDescription
+            TooltipCompat.setTooltipText(view, contentDescription)
             view.setTintResource(iconTintColorResource)
             view.isEnabled = isEnabled()
         }
@@ -124,6 +126,7 @@ class BrowserMenuItemToolbar(
             } else {
                 view.setImageResource(secondaryImageResource)
                 view.contentDescription = secondaryContentDescription
+                TooltipCompat.setTooltipText(view, secondaryContentDescription)
                 view.setTintResource(secondaryImageTintResource)
                 view.isEnabled = !disableInSecondaryState
             }
