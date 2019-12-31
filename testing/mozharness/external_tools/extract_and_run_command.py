@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""\
+"""
 Usage: extract_and_run_command.py [-j N] [command to run] -- [files and/or directories]
     -j is the number of workers to start, defaulting to 1.
     [command to run] must be a command that can accept one or many files
@@ -7,7 +7,7 @@ Usage: extract_and_run_command.py [-j N] [command to run] -- [files and/or direc
 
 WARNING: This script does NOT respond to SIGINT. You must use SIGQUIT or SIGKILL to
          terminate it early.
- """
+"""
 
 ### The canonical location for this file is
 ###   https://hg.mozilla.org/build/tools/file/default/stage/extract_and_run_command.py
@@ -18,14 +18,18 @@ WARNING: This script does NOT respond to SIGINT. You must use SIGQUIT or SIGKILL
 
 import logging
 import os
-from os import path
-import sys
-from Queue import Queue
 import shutil
 import subprocess
+import sys
 import tempfile
-from threading import Thread
 import time
+from os import path
+from threading import Thread
+
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.INFO, format="%(message)s")
@@ -70,12 +74,12 @@ EXTRACTORS = {
 
 def find_files(d):
     """yields all of the files in `d'"""
-    for root, dirs, files in os.walk(d):
+    for root, _, files in os.walk(d):
         for f in files:
             yield path.abspath(path.join(root, f))
 
 
-def rchmod(d, mode=0755):
+def rchmod(d, mode=0o755):
     """chmods everything in `d' to `mode', including `d' itself"""
     os.chmod(d, mode)
     for root, dirs, files in os.walk(d):
