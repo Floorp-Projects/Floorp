@@ -73,6 +73,9 @@ add_task(async function test_empty_item() {
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, "", "origin should be blank");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, "", "username should be blank");
   is(gLoginItem._passwordInput.value, "", "password should be blank");
+  ok(!gLoginItem._passwordInput.isConnected, "Real password input should be disconnected");
+  is(gLoginItem._passwordDisplayInput.value, "", "password display should be blank");
+  ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display input should be visible");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, "", "time-created should be blank when undefined");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, "", "time-changed should be blank when undefined");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, "", "time-used should be blank when undefined");
@@ -89,9 +92,15 @@ add_task(async function test_set_login() {
   let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
   is(usernameInput.value, TEST_LOGIN_1.username, "username should be populated");
   is(document.l10n.getAttributes(usernameInput).id, "about-logins-login-item-username", "username field should have default placeholder when not editing");
+
   let passwordInput = gLoginItem._passwordInput;
   is(passwordInput.value, TEST_LOGIN_1.password, "password should be populated");
   ok(!passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
+  ok(!gLoginItem._passwordInput.isConnected, "Real password input should be disconnected");
+  let passwordDisplayInput = gLoginItem._passwordDisplayInput;
+  is(passwordDisplayInput.value, " ".repeat(TEST_LOGIN_1.password.length), "password display should be populated");
+  ok(!isHidden(passwordDisplayInput), "Password display input should be visible");
+
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
@@ -179,6 +188,7 @@ add_task(async function test_edit_login() {
   );
   is(usernameInput.placeholder, "", "there should be no placeholder on the username input in edit mode");
   is(gLoginItem._passwordInput.value, TEST_LOGIN_1.password, "password should be populated");
+  is(gLoginItem._passwordDisplayInput.value, " ".repeat(TEST_LOGIN_1.password.length), "password display should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
@@ -233,19 +243,23 @@ add_task(async function test_reveal_password_change_selected_login() {
   await SimpleTest.promiseWaitForCondition(() => passwordInput.type == "text",
     "waiting for password input type to change after checking for master password");
   is(passwordInput.type, "text", "Password should be unmasked when checkbox is clicked");
+  ok(!isHidden(passwordInput), "Password input should be visible");
 
   let editButton = gLoginItem.shadowRoot.querySelector(".edit-button");
   editButton.click();
   await asyncElementRendered();
-
+  ok(!isHidden(passwordInput), "Password input should still be visible");
   ok(revealCheckbox.checked, "reveal-checkbox should remain checked when entering 'edit' mode");
   gLoginItem.shadowRoot.querySelector(".cancel-button").click();
   ok(!revealCheckbox.checked, "reveal-checkbox should be unchecked after canceling 'edit' mode");
   revealCheckbox.click();
-
+  ok(isHidden(passwordInput), "Password input should be hidden");
+  ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display should be visible");
   gLoginItem.setLogin(TEST_LOGIN_2);
   ok(!revealCheckbox.checked, "reveal-checkbox should be unchecked when changing logins");
   is(passwordInput.type, "password", "Password should be masked by default when switching logins");
+  ok(isHidden(passwordInput), "Password input should be hidden");
+  ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display should be visible");
 });
 
 add_task(async function test_set_login_empty() {
@@ -260,6 +274,8 @@ add_task(async function test_set_login_empty() {
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, "", "origin should be empty");
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, "", "username should be empty");
   is(gLoginItem._passwordInput.value, "", "password should be empty");
+  ok(!isHidden(gLoginItem._passwordInput), "Real password input should be visible in edit mode");
+  ok(isHidden(gLoginItem._passwordDisplayInput), "Password display should be hidden in edit mode");
   ok(!gLoginItem._passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, "", "time-created should be blank when undefined");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, "", "time-changed should be blank when undefined");
@@ -317,6 +333,9 @@ add_task(async function test_different_login_modified() {
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be unchanged");
   is(gLoginItem._passwordInput.value, TEST_LOGIN_1.password, "password should be unchanged");
   ok(!gLoginItem._passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
+  ok(!gLoginItem._passwordInput.isConnected, "Real password input should be disconnected in masked non-edit mode");
+  ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display should be visible in masked non-edit mode");
+
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be unchanged");
@@ -332,6 +351,8 @@ add_task(async function test_different_login_removed() {
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, TEST_LOGIN_1.username, "username should be unchanged");
   is(gLoginItem._passwordInput.value, TEST_LOGIN_1.password, "password should be unchanged");
   ok(!gLoginItem._passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
+  ok(!gLoginItem._passwordInput.isConnected, "Real password input should be disconnected in masked non-edit mode");
+  ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display should be visible in masked non-edit mode");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, TEST_LOGIN_1.timeCreated, "time-created should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be unchanged");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be unchanged");
@@ -347,6 +368,8 @@ add_task(async function test_login_modified() {
   is(gLoginItem.shadowRoot.querySelector("input[name='username']").value, modifiedLogin.username, "username should be updated");
   is(gLoginItem._passwordInput.value, modifiedLogin.password, "password should be updated");
   ok(!gLoginItem._passwordInput.hasAttribute("value"), "Password shouldn't be exposed in @value");
+  ok(!gLoginItem._passwordInput.isConnected, "Real password input should be disconnected in masked non-edit mode");
+  ok(!isHidden(gLoginItem._passwordDisplayInput), "Password display should be visible in masked non-edit mode");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-created")).args.timeCreated, modifiedLogin.timeCreated, "time-created should be updated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, modifiedLogin.timePasswordChanged, "time-changed should be updated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, modifiedLogin.timeLastUsed, "time-used should be updated");

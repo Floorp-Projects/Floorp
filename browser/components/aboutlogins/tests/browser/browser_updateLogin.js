@@ -56,6 +56,7 @@ add_task(async function test_login_item() {
         "input[name='username']"
       );
       let passwordInput = loginItem._passwordInput;
+      let passwordDisplayInput = loginItem._passwordDisplayInput;
 
       let editButton = loginItem.shadowRoot.querySelector(".edit-button");
 
@@ -107,12 +108,22 @@ add_task(async function test_login_item() {
           login.password,
           "Password change should be reverted"
         );
+        is(
+          passwordDisplayInput.value,
+          " ".repeat(login.password.length),
+          "Password change should be reverted for display"
+        );
         ok(
           !passwordInput.hasAttribute("value"),
           "Password shouldn't be exposed in @value"
         );
         is(
           passwordInput.style.width,
+          login.password.length + "ch",
+          "Password field width shouldn't have changed"
+        );
+        is(
+          passwordDisplayInput.style.width,
           login.password.length + "ch",
           "Password field width shouldn't have changed"
         );
@@ -171,6 +182,11 @@ add_task(async function test_login_item() {
         passwordInput.style.width,
         passwordInput.value.length + "ch",
         "Password field width should be correctly updated"
+      );
+      is(
+        passwordDisplayInput.style.width,
+        passwordDisplayInput.value.length + "ch",
+        "Password display field width should be correctly updated"
       );
 
       editButton.click();
