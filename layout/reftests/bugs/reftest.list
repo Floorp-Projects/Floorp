@@ -1516,12 +1516,6 @@ fuzzy-if(Android,0-1,0-1) needs-focus == 568441.html 568441-ref.html
 == 571281-1a.html 571281-1-ref.html
 == 571281-1b.html 571281-1-ref.html
 == 571281-1c.html 571281-1-ref.html
-# Bug 1423383: The three tests for bug 571281 are duplicated for testing
-# while layout.css.column-span.enabled is disabled. Remove them once the
-# pref is default on.
-pref(layout.css.column-span.enabled,true) == 571281-1a.html 571281-1-ref.html
-pref(layout.css.column-span.enabled,true) == 571281-1b.html 571281-1-ref.html
-pref(layout.css.column-span.enabled,true) == 571281-1c.html 571281-1-ref.html
 == 571347-1a.html 571347-1-ref.html
 == 571347-1b.html 571347-1-ref.html
 == 571347-2a.html 571347-2-ref.html
