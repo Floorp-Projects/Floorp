@@ -65,6 +65,19 @@ ConvertMediaControlKeysTestEventToMediaControlKeysEvent(
   }
 }
 
+inline const char* ToPlaybackStateEventStr(
+    MediaControlKeysEventSource::PlaybackState aState) {
+  switch (aState) {
+    case MediaControlKeysEventSource::PlaybackState::ePlayed:
+      return "Played";
+    case MediaControlKeysEventSource::PlaybackState::ePaused:
+      return "Paused";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid playback state.");
+      return "Unknown";
+  }
+}
+
 void NotifyMediaStarted(uint64_t aWindowID);
 void NotifyMediaStopped(uint64_t aWindowID);
 void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible);
