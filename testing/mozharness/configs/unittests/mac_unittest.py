@@ -24,7 +24,6 @@ config = {
         "cppunittest": "runcppunittests.py",
         "gtest": "rungtests.py",
         "jittest": "jit_test.py",
-        "mozmill": "runtestlist.py",
     },
     "minimum_tests_zip_dirs": [
         "bin/*",
@@ -76,16 +75,6 @@ config = {
             ],
             "run_filename": "runtests.py",
             "testsdir": "mochitest"
-        },
-        "mozmill": {
-            "options": [
-                "--binary=%(binary_path)s",
-                "--testing-modules-dir=tests/modules",
-                "--plugins-path=%(test_plugin_path)s",
-                "--symbols-path=%(symbols_path)s"
-            ],
-            "run_filename": "runtestlist.py",
-            "testsdir": "mozmill"
         },
         "reftest": {
             "options": [
@@ -203,7 +192,6 @@ config = {
     "minidump_save_path": "%(abs_work_dir)s/../minidumps",
     "unstructured_flavors": {"xpcshell": [],
                              "gtest": [],
-                             "mozmill": [],
                              "cppunittest": [],
                              "jittest": [],
                              },
