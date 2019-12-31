@@ -428,3 +428,14 @@ class TrySelect(MachCommandBase):
         """Push the current tree to try, configured for a staging release.
         """
         return self.run(**kwargs)
+
+    @SubCommand('try',
+                'scriptworker',
+                description='Run scriptworker tasks against a recent release.',
+                parser=get_parser('scriptworker'))
+    def try_scriptworker(self, **kwargs):
+        """Run scriptworker tasks against a recent release.
+
+        Requires VPN and shipit access.
+        """
+        return self.run(**kwargs)
