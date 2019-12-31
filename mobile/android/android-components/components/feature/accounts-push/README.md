@@ -1,4 +1,4 @@
-# [Android Components](../../../README.md) > Feature > SendTab
+# [Android Components](../../../README.md) > Feature > Accounts-Push
 
 Feature component for sending tabs to other devices with a registered FxA Account.
 
@@ -19,7 +19,7 @@ See the [service-firefox-accounts](../../service/firefox-accounts/README.md) for
 
 ```kotlin
 
-val sendTabUseCases = SendTabUseCases(accountManager)
+val sendTabUseCases = SendTabUseCases(fxaAccountManager)
 
 // Send to a particular device
 sendTabUseCases.sendToDeviceAsync("1234", TabData("Mozilla", "https://mozilla.org"))
@@ -31,6 +31,27 @@ sendTabUseCases.sendToAllAsync(TabData("Mozilla", "https://mozilla.org"))
 sendTabUseCases.sendToDeviceAsync("1234", listof(tab1, tab2))
 sendTabUseCases.sendToAllAsync(listof(tab1, tab2))
 
+```
+
+To receive tabs:
+
+```kotlin
+SendTabFeature(fxaAccountManager) { device, tabs ->
+  // handle tab data here.
+}
+```
+
+### Push Support
+
+Over time, push registration information can become stale on an FxA server in various ways,
+(e.g. registration expires from long intervals of no use).
+
+To counter this, the FxA server can notify us on the next sync to force registration to occur
+in order to fix the problem. Therefore, if FxA and Push are used together,
+include the support feature as well:
+
+```kotlin
+FxaPushSupportFeature(context, fxaAccountManager, autoPushFeature)
 ```
 
 ## License
