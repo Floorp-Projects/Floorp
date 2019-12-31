@@ -299,11 +299,12 @@ bool PrioritizedEventQueue::HasReadyEvent(const MutexAutoLock& aProofOfLock) {
   }
 
   // Temporarily unlock so we can peek our idle deadline.
-  TimeStamp idleDeadline;
   {
     MutexAutoUnlock unlock(*mMutex);
-    idleDeadline = mIdlePeriodState.PeekIdleDeadline(unlock);
+    mIdlePeriodState.CachePeekedIdleDeadline(unlock);
   }
+  TimeStamp idleDeadline = mIdlePeriodState.GetCachedIdleDeadline();
+  mIdlePeriodState.ClearCachedIdleDeadline();
 
   // Re-check the emptiness of the queues, since we had the lock released for a
   // bit.
