@@ -4,14 +4,23 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+
 import pytest
 
-from taskgraph import morph
+from taskgraph import morph, GECKO
+from taskgraph.config import load_graph_config
 from taskgraph.graph import Graph
+from taskgraph.parameters import Parameters
 from taskgraph.taskgraph import TaskGraph
 from taskgraph.task import Task
 
 from mozunit import main
+
+
+@pytest.fixture(scope='module')
+def graph_config():
+    return load_graph_config(os.path.join(GECKO, 'taskcluster', 'ci'))
 
 
 @pytest.fixture
@@ -27,7 +36,7 @@ def make_taskgraph():
     return inner
 
 
-def test_make_index_tasks(make_taskgraph):
+def test_make_index_tasks(make_taskgraph, graph_config):
     task_def = {
         'routes': [
             "index.gecko.v2.mozilla-central.latest.firefox-l10n.linux64-opt.es-MX",
@@ -79,7 +88,9 @@ def test_make_index_tasks(make_taskgraph):
         docker_task.label: docker_task,
     })
 
-    index_task = morph.make_index_task(task, taskgraph, label_to_taskid)
+    index_task = morph.make_index_task(
+        task, taskgraph, label_to_taskid, Parameters(strict=False), graph_config
+    )
 
     assert index_task.task['payload']['command'][0] == 'insert-indexes.js'
     assert index_task.task['payload']['env']['TARGET_TASKID'] == 'a-tid'
