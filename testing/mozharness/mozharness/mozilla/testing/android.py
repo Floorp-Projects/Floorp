@@ -375,6 +375,7 @@ class AndroidMixin(object):
         return False
 
     def shell_output(self, cmd):
+        import mozdevice
         try:
             return self.device.shell_output(cmd, timeout=30)
         except (mozdevice.ADBTimeoutError) as e:
