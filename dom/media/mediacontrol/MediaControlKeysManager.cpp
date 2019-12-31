@@ -20,6 +20,8 @@
 namespace mozilla {
 namespace dom {
 
+using PlaybackState = MediaControlKeysEventSource::PlaybackState;
+
 bool MediaControlKeysManager::IsOpened() const {
   // As MediaControlKeysManager represents a platform-indenpendent event source,
   // which we can use to add other listeners to moniter media key events, we
@@ -60,6 +62,7 @@ void MediaControlKeysManager::StartMonitoringControlKeys() {
   if (mEventSource && !mEventSource->IsOpened()) {
     LOG("StartMonitoringControlKeys");
     mEventSource->Open();
+    mEventSource->SetPlaybackState(mPlaybackState);
     mEventSource->AddListener(this);
   }
 }
@@ -85,6 +88,20 @@ void MediaControlKeysManager::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
   for (auto listener : mListeners) {
     listener->OnKeyPressed(aKeyEvent);
   }
+}
+
+void MediaControlKeysManager::SetPlaybackState(PlaybackState aState) {
+  if (mEventSource) {
+    mEventSource->SetPlaybackState(aState);
+  } else {
+    // If the event source haven't been created, we have to cache the state,
+    // then set the event source's state again when it's created.
+    mPlaybackState = aState;
+  }
+}
+
+PlaybackState MediaControlKeysManager::GetPlaybackState() const {
+  return mEventSource ? mEventSource->GetPlaybackState() : mPlaybackState;
 }
 
 }  // namespace dom

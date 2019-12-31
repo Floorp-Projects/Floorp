@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace dom {
 
+using PlaybackState = MediaControlKeysEventSource::PlaybackState;
+
 // avoid redefined macro in unified build
 #undef LOG_SOURCE
 #define LOG_SOURCE(msg, ...)                 \
@@ -90,6 +92,18 @@ size_t MediaControlKeysEventSource::GetListenersNum() const {
 void MediaControlKeysEventSource::Close() {
   LOG_SOURCE("Close source");
   mListeners.Clear();
+}
+
+void MediaControlKeysEventSource::SetPlaybackState(PlaybackState aState) {
+  if (mPlaybackState == aState) {
+    return;
+  }
+  LOG_SOURCE("SetPlaybackState '%s'", ToPlaybackStateEventStr(aState));
+  mPlaybackState = aState;
+}
+
+PlaybackState MediaControlKeysEventSource::GetPlaybackState() const {
+  return mPlaybackState;
 }
 
 }  // namespace dom

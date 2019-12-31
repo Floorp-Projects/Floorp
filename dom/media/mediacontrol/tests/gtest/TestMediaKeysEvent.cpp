@@ -6,6 +6,7 @@
 #include "MediaControlKeysEvent.h"
 
 using namespace mozilla::dom;
+using PlaybackState = MediaControlKeysEventSource::PlaybackState;
 
 class MediaControlKeysEventSourceTestImpl : public MediaControlKeysEventSource {
  public:
@@ -31,4 +32,17 @@ TEST(MediaControlKeysEvent, TestAddOrRemoveListener)
 
   source->RemoveListener(listener);
   ASSERT_TRUE(source->GetListenersNum() == 0);
+}
+
+TEST(MediaControlKeysEvent, SetSourcePlaybackState)
+{
+  RefPtr<MediaControlKeysEventSource> source =
+      new MediaControlKeysEventSourceTestImpl();
+  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::ePaused);
+
+  source->SetPlaybackState(PlaybackState::ePlayed);
+  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::ePlayed);
+
+  source->SetPlaybackState(PlaybackState::ePaused);
+  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::ePaused);
 }
