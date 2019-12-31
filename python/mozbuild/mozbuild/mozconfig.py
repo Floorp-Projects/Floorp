@@ -7,13 +7,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 import filecmp
 import os
 import re
+import six
 import sys
 import subprocess
 import traceback
 from textwrap import dedent
 
 from mozpack import path as mozpath
-from mozbuild.util import system_encoding, ensure_subprocess_env
+from mozbuild.util import ensure_subprocess_env
 
 MOZ_MYCONFIG_ERROR = '''
 The MOZ_MYCONFIG environment variable to define the location of mozconfigs
@@ -66,7 +67,8 @@ class MozconfigLoadException(Exception):
             mozconfig output:
 
             {output}
-            """).format(output="\n".join(self.output))
+            """).format(output="\n".join(
+                [six.ensure_text(s) for s in self.output]))
 
         Exception.__init__(self, message)
 
@@ -254,9 +256,9 @@ class MozconfigLoader(object):
         try:
             # We need to capture stderr because that's where the shell sends
             # errors if execution fails.
-            output = subprocess.check_output(command, stderr=subprocess.STDOUT,
-                                             cwd=self.topsrcdir,
-                                             env=ensure_subprocess_env(os.environ))
+            output = six.ensure_text(subprocess.check_output(
+                command, stderr=subprocess.STDOUT, cwd=self.topsrcdir,
+                env=ensure_subprocess_env(os.environ), universal_newlines=True))
         except subprocess.CalledProcessError as e:
             lines = e.output.splitlines()
 
@@ -372,11 +374,6 @@ class MozconfigLoader(object):
         in_variable = None
 
         for line in output.splitlines():
-
-            # XXX This is an ugly hack. Data may be lost from things
-            # like environment variable values.
-            # See https://bugzilla.mozilla.org/show_bug.cgi?id=831381
-            line = line.decode(system_encoding, 'ignore')
 
             if not line:
                 continue
