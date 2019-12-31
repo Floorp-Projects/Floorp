@@ -2837,6 +2837,55 @@ void MacroAssembler::moveRegPair(Register src0, Register src1, Register dst0,
 // ===============================================================
 // Branch functions
 
+void MacroAssembler::loadFunctionLength(Register func, Register funFlags,
+                                        Register output, Label* slowPath) {
+#ifdef DEBUG
+  {
+    // These flags should already have been checked by caller.
+    Label ok;
+    uint32_t FlagsToCheck =
+        FunctionFlags::INTERPRETED_LAZY | FunctionFlags::RESOLVED_LENGTH;
+    branchTest32(Assembler::Zero, funFlags, Imm32(FlagsToCheck), &ok);
+    assumeUnreachable("The function flags should already have been checked.");
+    bind(&ok);
+  }
+#endif  // DEBUG
+
+  // NOTE: `funFlags` and `output` must be allowed to alias.
+
+  // Load the target function's length.
+  Label isInterpreted, isBound, lengthLoaded;
+  branchTest32(Assembler::NonZero, funFlags, Imm32(FunctionFlags::BOUND_FUN),
+               &isBound);
+  branchTest32(Assembler::NonZero, funFlags, Imm32(FunctionFlags::INTERPRETED),
+               &isInterpreted);
+  {
+    // Load the length property of a native function.
+    load16ZeroExtend(Address(func, JSFunction::offsetOfNargs()), output);
+    jump(&lengthLoaded);
+  }
+  bind(&isBound);
+  {
+    // Load the length property of a bound function.
+    Address boundLength(
+        func, FunctionExtended::offsetOfExtendedSlot(BOUND_FUN_LENGTH_SLOT));
+    branchTestInt32(Assembler::NotEqual, boundLength, slowPath);
+    unboxInt32(boundLength, output);
+    jump(&lengthLoaded);
+  }
+  bind(&isInterpreted);
+  {
+    // Load the length property of an interpreted function.
+    loadPtr(Address(func, JSFunction::offsetOfScript()), output);
+    loadPtr(Address(output, JSScript::offsetOfSharedData()), output);
+    branchTestPtr(Assembler::Zero, output, output, slowPath);
+    loadPtr(Address(output, RuntimeScriptData::offsetOfISD()), output);
+    load16ZeroExtend(Address(output, ImmutableScriptData::offsetOfFunLength()),
+                     output);
+  }
+  bind(&lengthLoaded);
+}
+
 void MacroAssembler::branchIfNotInterpretedConstructor(Register fun,
                                                        Register scratch,
                                                        Label* label) {
