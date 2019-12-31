@@ -1982,6 +1982,11 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateReplayingProcess(
     return IPC_FAIL_NO_REASON(this);
   }
 
+  if (recordreplay::parent::UseCloudForReplayingProcesses()) {
+    recordreplay::parent::CreateReplayingCloudProcess(Pid(), aChannelId);
+    return IPC_OK();
+  }
+
   while (aChannelId >= mReplayingChildren.length()) {
     if (!mReplayingChildren.append(nullptr)) {
       return IPC_FAIL_NO_REASON(this);
