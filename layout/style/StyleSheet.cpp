@@ -13,6 +13,7 @@
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MediaList.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/ShadowRootBinding.h"
 #include "mozilla/NullPrincipal.h"
@@ -32,6 +33,7 @@ using namespace dom;
 StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
                        const dom::SRIMetadata& aIntegrity)
     : mParent(nullptr),
+      mConstructorDocument(nullptr),
       mDocumentOrShadowRoot(nullptr),
       mOwningNode(nullptr),
       mOwnerRule(nullptr),
@@ -47,6 +49,7 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentToUse,
                        dom::DocumentOrShadowRoot* aDocumentOrShadowRoot,
                        nsINode* aOwningNodeToUse)
     : mParent(aParentToUse),
+      mConstructorDocument(aCopy.mConstructorDocument),
       mTitle(aCopy.mTitle),
       mDocumentOrShadowRoot(aDocumentOrShadowRoot),
       mOwningNode(aOwningNodeToUse),
@@ -76,6 +79,43 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentToUse,
     // sheets in sync!
     mMedia = aCopy.mMedia->Clone();
   }
+}
+
+/* static */
+// https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-cssstylesheet
+already_AddRefed<StyleSheet> StyleSheet::Constructor(
+    const dom::GlobalObject& aGlobal, const dom::CSSStyleSheetInit& aOptions,
+    ErrorResult& aRv) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
+
+  if (!window) {
+    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                          "CSSStyleSheet constructor not supported when there "
+                          "is no document");
+    return nullptr;
+  }
+
+  Document* constructorDocument = window->GetExtantDoc();
+  if (!constructorDocument) {
+    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                          "CSSStyleSheet constructor not supported when there "
+                          "is no document");
+    return nullptr;
+  }
+
+  auto ss = MakeRefPtr<StyleSheet>(css::SheetParsingMode::eAuthorSheetFeatures,
+                                   CORSMode::CORS_NONE, dom::SRIMetadata());
+
+  ss->mConstructorDocument = constructorDocument;
+
+  // TODO(nordzilla) aOptions.mAlternate is currently unused.
+  // Functionality will be implemented later.
+  // There are still issues with the spec that I need to work out
+  // before I can fully test all of the options:
+  // https://github.com/WICG/construct-stylesheets/issues/105
+
+  return ss.forget();
 }
 
 StyleSheet::~StyleSheet() {
@@ -171,6 +211,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(StyleSheet)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(StyleSheet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMedia)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConstructorDocument)
   tmp->TraverseInner(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -178,6 +219,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(StyleSheet)
   tmp->DropMedia();
   tmp->UnlinkInner();
   tmp->DropRuleList();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConstructorDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -513,6 +555,61 @@ int32_t StyleSheet::AddRule(const nsAString& aSelector, const nsAString& aBlock,
   InsertRuleInternal(rule, index, aRv);
   // Always return -1.
   return -1;
+}
+
+// https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-replace
+already_AddRefed<dom::Promise> StyleSheet::Replace(const nsAString& aText,
+                                                   ErrorResult& aRv) {
+  // TODO(nordzilla) This is a stub to land the Constructable Stylesheets
+  // API under a preference (Bug 1604296). Functionality will be added later.
+
+  // Step 1 and 4 are variable declarations
+
+  // 2.1 Check if sheet is constructed, else throw.
+  if (!mConstructorDocument) {
+    aRv.ThrowDOMException(
+        NS_ERROR_DOM_NOT_ALLOWED_ERR,
+        "The replace() method can only be called on constructed style sheets");
+    return nullptr;
+  }
+
+  // 2.2 Check if sheet is modifiable, else throw.
+  // 3. Disallow modifications until finished.
+
+  nsIGlobalObject* globalObject = mConstructorDocument->GetScopeObject();
+  RefPtr<dom::Promise> promise = dom::Promise::Create(globalObject, aRv);
+  if (!promise) {
+    return nullptr;
+  }
+
+  // In parallel
+  // 5.1 Parse aText into rules.
+  // 5.2 Load import rules, throw NetworkError if failed.
+  // 5.3 Set sheet's rules to new rules.
+  promise->MaybeResolve(this);
+
+  // 6. Return the promise
+  return promise.forget();
+}
+
+// https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-replacesync
+void StyleSheet::ReplaceSync(const nsAString& aText, ErrorResult& aRv) {
+  // TODO(nordzilla) This is a stub to land the Constructable Stylesheets
+  // API under a preference (Bug 1604296). Functionality will be added later.
+
+  // Step 1 is a variable declaration
+
+  // 2.1 Check if sheet is constructed, else throw.
+  if (!mConstructorDocument) {
+    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_ALLOWED_ERR,
+                          "The replaceSync() method can only be called on "
+                          "constructed style sheets");
+    return;
+  }
+  // 2.2 Check if sheet is modifiable, else throw.
+  // 3. Parse aText into rules.
+  // 4. If rules contain @imports, throw NotAllowedError
+  // 5. Set sheet's rules to rules.
 }
 
 nsresult StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup,
