@@ -37,15 +37,6 @@ TryEmitter::TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind)
   }
 }
 
-// Emits JSOP_GOTO to the end of try-catch-finally.
-// Used in `yield*`.
-bool TryEmitter::emitJumpOverCatchAndFinally() {
-  if (!bce_->emitJump(JSOP_GOTO, &catchAndFinallyJump_)) {
-    return false;
-  }
-  return true;
-}
-
 bool TryEmitter::emitTry() {
   MOZ_ASSERT(state_ == State::Start);
 
