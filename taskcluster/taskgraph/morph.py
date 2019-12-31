@@ -120,7 +120,7 @@ def make_index_task(parent_task, taskgraph, label_to_taskid, parameters, graph_c
                                   if not r.startswith('index.')]
 
     task = derive_misc_task(parent_task, 'index-task', 'index-task',
-                            taskgraph, label_to_taskid, graph_config, parameters)
+                            taskgraph, label_to_taskid, parameters, graph_config)
 
     # we need to "summarize" the scopes, otherwise a particularly
     # namespace-heavy index task might have more scopes than can fit in a
@@ -157,7 +157,7 @@ def add_index_tasks(taskgraph, label_to_taskid, parameters, graph_config):
     for label, task in taskgraph.tasks.iteritems():
         if len(task.task.get('routes', [])) <= MAX_ROUTES:
             continue
-        added.append(make_index_task(task, taskgraph, label_to_taskid, graph_config, parameters))
+        added.append(make_index_task(task, taskgraph, label_to_taskid, parameters, graph_config))
 
     if added:
         taskgraph, label_to_taskid = amend_taskgraph(
