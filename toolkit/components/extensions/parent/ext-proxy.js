@@ -259,7 +259,7 @@ this.proxy = class extends ExtensionAPI {
                 // Match what about:preferences does with proxy settings
                 // since the proxy service does not check the value
                 // of share_proxy_settings.
-                for (let prop of ["ftp", "ssl"]) {
+                for (let prop of ["ftp", "ssl", "socks"]) {
                   value[prop] = value.http;
                 }
               }

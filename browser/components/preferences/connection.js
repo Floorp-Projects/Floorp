@@ -137,11 +137,11 @@ var gConnectionsDialog = {
       );
       let proxyPref = Preferences.get("network.proxy." + prefName);
       // Only worry about ports which are currently active. If the share option is on, then ignore
-      // all ports except the HTTP and SOCKS port
+      // all ports except the HTTP port
       if (
         proxyPref.value != "" &&
         proxyPortPref.value == 0 &&
-        (prefName == "http" || prefName == "socks" || !shareProxiesPref.value)
+        (prefName == "http" || !shareProxiesPref.value)
       ) {
         document
           .getElementById("networkProxy" + prefName.toUpperCase() + "_Port")
@@ -153,7 +153,7 @@ var gConnectionsDialog = {
 
     // In the case of a shared proxy preference, backup the current values and update with the HTTP value
     if (shareProxiesPref.value) {
-      var proxyPrefs = ["ssl", "ftp"];
+      var proxyPrefs = ["ssl", "ftp", "socks"];
       for (var i = 0; i < proxyPrefs.length; ++i) {
         var proxyServerURLPref = Preferences.get(
           "network.proxy." + proxyPrefs[i]
@@ -270,7 +270,7 @@ var gConnectionsDialog = {
       );
 
       // Restore previous per-proxy custom settings, if present.
-      if (proxyPrefs[i] != "socks" && !shareProxiesPref.value) {
+      if (!shareProxiesPref.value) {
         var backupServerURLPref = Preferences.get(
           "network.proxy.backup." + proxyPrefs[i]
         );
@@ -301,16 +301,14 @@ var gConnectionsDialog = {
   },
 
   readProxyProtocolPref(aProtocol, aIsPort) {
-    if (aProtocol != "socks") {
-      var shareProxiesPref = Preferences.get(
-        "network.proxy.share_proxy_settings"
+    var shareProxiesPref = Preferences.get(
+      "network.proxy.share_proxy_settings"
+    );
+    if (shareProxiesPref.value) {
+      var pref = Preferences.get(
+        "network.proxy.http" + (aIsPort ? "_port" : "")
       );
-      if (shareProxiesPref.value) {
-        var pref = Preferences.get(
-          "network.proxy.http" + (aIsPort ? "_port" : "")
-        );
-        return pref.value;
-      }
+      return pref.value;
     }
 
     var backupPref = Preferences.get(

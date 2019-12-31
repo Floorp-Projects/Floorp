@@ -1043,20 +1043,3 @@ richlistitem .text-link {
 richlistitem .text-link:hover {
   color: inherit;
 }
-
-#proxy-grid,
-#dnsOverHttps-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-}
-
-#proxy-grid > .thin {
-  grid-column-end: 3;
-  height: 20px;
-}
-
-#dnsOverHttps-grid.custom-container-hidden #networkCustomDnsOverHttpsInputLabelContainer,
-#dnsOverHttps-grid.custom-container-hidden #networkCustomDnsOverHttpsInput {
-  display: none;
-}

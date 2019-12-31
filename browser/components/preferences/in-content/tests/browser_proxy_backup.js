@@ -30,15 +30,15 @@ function test() {
 
   let connectionURL = "chrome://browser/content/preferences/connection.xhtml";
 
-  // Set a shared proxy and an SSL backup
+  // Set a shared proxy and a SOCKS backup
   Services.prefs.setIntPref("network.proxy.type", 1);
   Services.prefs.setBoolPref("network.proxy.share_proxy_settings", true);
   Services.prefs.setCharPref("network.proxy.http", "example.com");
   Services.prefs.setIntPref("network.proxy.http_port", 1200);
-  Services.prefs.setCharPref("network.proxy.ssl", "example.com");
-  Services.prefs.setIntPref("network.proxy.ssl_port", 1200);
-  Services.prefs.setCharPref("network.proxy.backup.ssl", "127.0.0.1");
-  Services.prefs.setIntPref("network.proxy.backup.ssl_port", 9050);
+  Services.prefs.setCharPref("network.proxy.socks", "example.com");
+  Services.prefs.setIntPref("network.proxy.socks_port", 1200);
+  Services.prefs.setCharPref("network.proxy.backup.socks", "127.0.0.1");
+  Services.prefs.setIntPref("network.proxy.backup.socks_port", 9050);
 
   /*
   The connection dialog alone won't save onaccept since it uses type="child",
@@ -64,14 +64,14 @@ function test() {
     let dialogClosingEvent = await dialogClosingPromise;
     ok(dialogClosingEvent, "connection window closed");
 
-    // The SSL backup should not be replaced by the shared value
+    // The SOCKS backup should not be replaced by the shared value
     is(
-      Services.prefs.getCharPref("network.proxy.backup.ssl"),
+      Services.prefs.getCharPref("network.proxy.backup.socks"),
       "127.0.0.1",
       "Shared proxy backup shouldn't be replaced"
     );
     is(
-      Services.prefs.getIntPref("network.proxy.backup.ssl_port"),
+      Services.prefs.getIntPref("network.proxy.backup.socks_port"),
       9050,
       "Shared proxy port backup shouldn't be replaced"
     );
