@@ -8,23 +8,17 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
-import androidx.lifecycle.ProcessLifecycleOwner
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
-import mozilla.components.concept.push.Bus
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceCapability
-import mozilla.components.concept.sync.DeviceEvent
-import mozilla.components.concept.sync.DeviceEventsObserver
-import mozilla.components.concept.sync.DevicePushSubscription
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.feature.accounts.push.FxaPushSupportFeature
+import mozilla.components.feature.accounts.push.SendTabFeature
 import mozilla.components.feature.push.AutoPushFeature
-import mozilla.components.feature.push.AutoPushSubscription
 import mozilla.components.feature.push.PushConfig
-import mozilla.components.feature.push.PushSubscriptionObserver
-import mozilla.components.feature.push.PushType
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.fxa.DeviceConfig
@@ -115,24 +109,12 @@ class BackgroundServices(
         GlobalSyncableStoreProvider.configureKeyStorage(secureAbove22Preferences)
     }
 
-    private val deviceEventObserver = object : DeviceEventsObserver {
-        private val logger = Logger("DeviceEventsObserver")
-        override fun onEvents(events: List<DeviceEvent>) {
-            logger.info("Received ${events.size} device event(s)")
-            events.filterIsInstance<DeviceEvent.TabReceived>().forEach {
-                notificationManager.showReceivedTabs(it)
-            }
-        }
-    }
-
     private val telemetryAccountObserver = TelemetryAccountObserver(
         context,
         context.components.analytics.metrics
     )
 
     val accountAbnormalities = AccountAbnormalities(context, crashReporter)
-
-    private val pushAccountObserver by lazy { push?.let { PushAccountObserver(it) } }
 
     val accountManager = makeAccountManager(context, serverConfig, deviceConfig, syncConfig)
 
@@ -185,11 +167,6 @@ class BackgroundServices(
     ).also { accountManager ->
         // TODO this needs to change once we have a SyncManager
         context.settings().fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
-        accountManager.registerForDeviceEvents(
-            deviceEventObserver,
-            ProcessLifecycleOwner.get(),
-            false
-        )
 
         // Register a telemetry account observer to keep track of FxA auth metrics.
         accountManager.register(telemetryAccountObserver)
@@ -200,39 +177,13 @@ class BackgroundServices(
 
         // Enable push if it's configured.
         push?.let { autoPushFeature ->
-            // Register the push account observer so we know how to update our push subscriptions.
-            accountManager.register(pushAccountObserver!!)
-
-            val logger = Logger("AutoPushFeature")
-
-            // Notify observers for Services' messages.
-            autoPushFeature.registerForPushMessages(
-                PushType.Services,
-                object : Bus.Observer<PushType, String> {
-                    override fun onEvent(type: PushType, message: String) {
-                        accountManager.authenticatedAccount()?.deviceConstellation()
-                            ?.processRawEventAsync(message)
-                    }
-                })
-
-            // Notify observers for subscription changes.
-            autoPushFeature.registerForSubscriptions(object : PushSubscriptionObserver {
-                override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
-                    // Update for only the services subscription.
-                    if (subscription.type == PushType.Services) {
-                        logger.info("New push subscription received for FxA")
-                        accountManager.authenticatedAccount()?.deviceConstellation()
-                            ?.setDevicePushSubscriptionAsync(
-                                DevicePushSubscription(
-                                    endpoint = subscription.endpoint,
-                                    publicKey = subscription.publicKey,
-                                    authKey = subscription.authKey
-                                )
-                            )
-                    }
-                }
-            })
+            FxaPushSupportFeature(context, accountManager, autoPushFeature)
         }
+
+        SendTabFeature(accountManager) { device, tabs ->
+            notificationManager.showReceivedTabs(context, device, tabs)
+        }
+
         accountAbnormalities.accountManagerInitializedAsync(
             accountManager,
             accountManager.initAsync()
@@ -242,7 +193,7 @@ class BackgroundServices(
     /**
      * Provides notification functionality, manages notification channels.
      */
-    val notificationManager by lazy {
+    private val notificationManager by lazy {
         NotificationManager(context)
     }
 }
@@ -288,32 +239,5 @@ class TelemetryAccountObserver(
         metricController.track(Event.SyncAuthSignOut)
         // Used by Leanplum as a context variable.
         context.settings().fxaSignedIn = false
-    }
-}
-
-/**
- * When we login/logout of FxA, we need to update our push subscriptions to match the newly
- * logged in account.
- *
- * We added the push service to the AccountManager observer so that we can control when the
- * service will start/stop. Firebase was added when landing the push service to ensure it works
- * as expected without causing any (as many) side effects.
- *
- * In order to use Firebase with Leanplum and other marketing features, we need it always
- * running so we cannot leave this code in place when we implement those features.
- *
- * We should have this removed when we are more confident
- * of the send-tab/push feature: https://github.com/mozilla-mobile/fenix/issues/4063
- */
-@VisibleForTesting(otherwise = PRIVATE)
-class PushAccountObserver(private val push: AutoPushFeature) : AccountObserver {
-    override fun onLoggedOut() {
-        push.unsubscribeForType(PushType.Services)
-    }
-
-    override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-        if (authType != AuthType.Existing) {
-            push.subscribeForType(PushType.Services)
-        }
     }
 }
