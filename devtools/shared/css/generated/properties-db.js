@@ -10878,10 +10878,6 @@ exports.PSEUDO_ELEMENTS = [
  */
 exports.PREFERENCES = [
   [
-    "column-span",
-    "layout.css.column-span.enabled"
-  ],
-  [
     "contain",
     "layout.css.contain.enabled"
   ],
@@ -11100,10 +11096,6 @@ exports.PREFERENCES = [
   [
     "-webkit-appearance",
     "layout.css.webkit-appearance.enabled"
-  ],
-  [
-    "-moz-column-span",
-    "layout.css.column-span.enabled"
   ],
   [
     "-moz-font-feature-settings",

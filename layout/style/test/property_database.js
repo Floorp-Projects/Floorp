@@ -2668,6 +2668,21 @@ var gCSSProperties = {
     alias_for: "column-rule-color",
     subproperties: ["column-rule-color"],
   },
+  "column-span": {
+    domProp: "columnSpan",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: ["all"],
+    invalid_values: ["-1", "0", "auto", "2px"],
+  },
+  "-moz-column-span": {
+    domProp: "MozColumnSpan",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "column-span",
+    subproperties: ["column-span"],
+  },
   "column-width": {
     domProp: "columnWidth",
     inherited: false,
@@ -12557,24 +12572,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.offset-logical-properties.enabled")) {
 }
 
 gCSSProperties["display"].other_values.push("flow-root");
-
-if (IsCSSPropertyPrefEnabled("layout.css.column-span.enabled")) {
-  gCSSProperties["column-span"] = {
-    domProp: "columnSpan",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["none"],
-    other_values: ["all"],
-    invalid_values: ["-1", "0", "auto", "2px"],
-  };
-  gCSSProperties["-moz-column-span"] = {
-    domProp: "MozColumnSpan",
-    inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    alias_for: "column-span",
-    subproperties: ["column-span"],
-  };
-}
 
 if (IsCSSPropertyPrefEnabled("layout.css.webkit-line-clamp.enabled")) {
   gCSSProperties["-webkit-line-clamp"] = {
