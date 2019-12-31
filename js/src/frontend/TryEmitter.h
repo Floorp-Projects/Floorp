@@ -191,10 +191,6 @@ class MOZ_STACK_CLASS TryEmitter {
  public:
   TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind);
 
-  // Emits JSOP_GOTO to the end of try-catch-finally.
-  // Used in `yield*`.
-  MOZ_MUST_USE bool emitJumpOverCatchAndFinally();
-
   MOZ_MUST_USE bool emitTry();
   MOZ_MUST_USE bool emitCatch();
 
