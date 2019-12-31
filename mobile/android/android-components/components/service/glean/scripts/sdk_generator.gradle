@@ -2,6 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**********************************************************************
+  THIS FILE IS OBSOLETE AND UNMAINTAINED.
+  The functionality in this file has moved to a proper Gradle plugin
+  in https://github.com/mozilla/glean
+  However, this file must remain on the master branch indefinitely so that
+  Glean-using applications can continue to build historical revisions from
+  prior to the existence of the plugin.
+**********************************************************************/
+
 /*
  * IMPORTANT DEVELOPER'S NOTE:
  *
@@ -13,9 +22,13 @@
  * of android-components rather than tracking snapshots.)
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonOutput
+import java.util.logging.Logger
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.internal.artifacts.ArtifactAttributes
+
+Logger logger = Logger.getLogger("Glean sdk_generator.gradle")
+logger.warning("The Glean sdk_generator.gradle script is deprecated. Use the Glean Gradle plugin instead")
 
 // This installs a Miniconda3 environment into the gradle user home directory
 // so that it will be shared between all libraries that use Glean.  This is

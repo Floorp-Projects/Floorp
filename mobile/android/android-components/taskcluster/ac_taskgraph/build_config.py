@@ -10,7 +10,10 @@ import yaml
 from taskgraph.util.memoize import memoize
 
 
-AAR_EXTENSIONS = ('.aar', '.pom', '-sources.jar')
+EXTENSIONS = {
+    'aar': ('.aar', '.pom', '-sources.jar'),
+    'jar': ('.jar', '.pom', '-sources.jar')
+}
 CHECKSUMS_EXTENSIONS = ('.sha1', '.md5')
 
 
@@ -29,6 +32,22 @@ def get_version(is_snapshot=False):
 
 def get_path(component):
     return _read_build_config()["projects"][component]["path"]
+
+
+def get_extensions(component):
+    artifact_type = _read_build_config()["projects"][component].get("artifact-type", "aar")
+    if artifact_type not in EXTENSIONS:
+        raise ValueError(
+            "For '{}', 'artifact-type' must be one of {}".format(
+                component, repr(EXTENSIONS.keys())
+            )
+        )
+
+    return [
+        extension + checksum_extension
+        for extension in EXTENSIONS[artifact_type]
+        for checksum_extension in ('',) + CHECKSUMS_EXTENSIONS
+    ]
 
 
 @memoize
