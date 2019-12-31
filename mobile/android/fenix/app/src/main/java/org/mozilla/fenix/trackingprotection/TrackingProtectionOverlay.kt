@@ -13,6 +13,8 @@ import android.view.View.MeasureSpec
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.PopupWindow
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import kotlinx.android.synthetic.main.tracking_protection_onboarding_popup.view.*
 import mozilla.components.browser.session.Session
 import org.mozilla.fenix.R
@@ -44,8 +46,14 @@ class TrackingProtectionOverlay(
     private fun showTrackingProtectionOnboarding() {
         val layout = LayoutInflater.from(context)
             .inflate(R.layout.tracking_protection_onboarding_popup, null)
+        val isBottomToolbar = Settings.getInstance(context).shouldUseBottomToolbar
+        layout.drop_down_triangle.isGone = isBottomToolbar
+        layout.pop_up_triangle.isVisible = isBottomToolbar
         layout.onboarding_message.text =
-            context.getString(R.string.etp_onboarding_message_2, context.getString(R.string.app_name))
+            context.getString(
+                R.string.etp_onboarding_message_2,
+                context.getString(R.string.app_name)
+            )
 
         val res = context.resources
         val trackingOnboarding = PopupWindow(
@@ -81,13 +89,18 @@ class TrackingProtectionOverlay(
         val xOffset = res.getDimensionPixelSize(R.dimen.tp_onboarding_x_offset)
 
         // Positioning the popup above the tp anchor.
-        val yOffset = -containerHeight - (toolbar.height / 3 * 2) + triangleHeight
+        val yOffset = if (isBottomToolbar) {
+            -containerHeight - (toolbar.height / 3 * 2) + triangleHeight
+        } else {
+            CFR_Y_OFFSET
+        }
 
         trackingOnboarding.showAsDropDown(trackingProtectionIcon, xOffset, yOffset)
         settings.incrementTrackingProtectionOnboardingCount()
     }
 
     private companion object {
+        private const val CFR_Y_OFFSET = -24
         private const val BUTTON_INCREASE_DPS = 12
     }
 }
