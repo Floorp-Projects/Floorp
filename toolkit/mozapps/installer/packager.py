@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, unicode_literals, print_function
+
 from mozpack.packager.formats import (
     FlatFormatter,
     JarFormatter,
@@ -30,7 +32,8 @@ import buildconfig
 from argparse import ArgumentParser
 from createprecomplete import generate_precomplete
 import os
-from StringIO import StringIO
+import six
+from six import StringIO
 import subprocess
 import mozinfo
 
@@ -82,13 +85,7 @@ class ToolLauncher(object):
         for e in extra_env:
             env[e] = extra_env[e]
 
-        # Work around a bug in Python 2.7.2 and lower where unicode types in
-        # environment variables aren't handled by subprocess.
-        for k, v in env.items():
-            if isinstance(v, unicode):
-                env[k] = v.encode('utf-8')
-
-        print >>errors.out, 'Executing', ' '.join(cmd)
+        print('Executing %s' % ' '.join(cmd), file=errors.out)
         errors.out.flush()
         return subprocess.call(cmd, env=env)
 
@@ -103,7 +100,7 @@ class LibSignFile(File):
     File class for shlibsign signatures.
     '''
     def copy(self, dest, skip_if_older=True):
-        assert isinstance(dest, basestring)
+        assert isinstance(dest, six.string_types)
         # os.path.getmtime returns a result in seconds with precision up to the
         # microsecond. But microsecond is too precise because shutil.copystat
         # only copies milliseconds, and seconds is not enough precision.
@@ -121,15 +118,16 @@ class RemovedFiles(GeneratedFile):
     '''
     def __init__(self, copier):
         self.copier = copier
-        GeneratedFile.__init__(self, '')
+        GeneratedFile.__init__(self, b'')
 
-    def handle_line(self, str):
-        f = str.strip()
+    def handle_line(self, f):
+        f = f.strip()
         if not f:
             return
         if self.copier.contains(f):
             errors.error('Removal of packaged file(s): %s' % f)
-        self.content += f + '\n'
+        ensure = six.ensure_binary if 'b' in self._mode else six.ensure_text
+        self.content += ensure(f) + ensure('\n')
 
 
 def split_define(define):
@@ -303,7 +301,10 @@ def main():
     # If a pdb file is present and we were instructed to copy it, include it.
     # Run on all OSes to capture MinGW builds
     if buildconfig.substs.get('MOZ_COPY_PDBS'):
-        for p, f in copier:
+        # We want to mutate the copier while we're iterating through it, so copy
+        # the items to a list first.
+        copier_items = [(p, f) for p, f in copier]
+        for p, f in copier_items:
             if isinstance(f, ExecutableFile):
                 pdbname = os.path.splitext(f.inputs()[0])[0] + '.pdb'
                 if os.path.exists(pdbname):
