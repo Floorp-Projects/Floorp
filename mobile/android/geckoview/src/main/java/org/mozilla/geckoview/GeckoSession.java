@@ -4670,14 +4670,14 @@ public class GeckoSession implements Parcelable {
             }
 
             /**
-             * The type of the prompt request, one of {@link #Type}.
+             * The type of the prompt request, one of {@link LoginStoragePrompt.Type}.
              */
             public final @LoginStorageType int type;
 
             /**
              * The hint may provide some additional information on the nature or
              * confidence level of the prompt request to support appropriate
-             * prompting styles. A flag combination of {@link #Hint}.
+             * prompting styles. A flag combination of {@link LoginStoragePrompt.Hint}.
              */
             public final @LoginStorageHint int hint;
 
