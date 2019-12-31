@@ -946,14 +946,22 @@
 # Cross-Origin-Embedder-Policy header will fail to load
 - name: browser.tabs.remote.useCrossOriginEmbedderPolicy
   type: RelaxedAtomicBool
-  value: false
+#if !defined(ANDROID)
+  value: @IS_NIGHTLY_BUILD@
+#else
+  value: false # Blocked by DocumentChannel, see Bug 1589982.
+#endif
   mirror: always
 
 # When this pref is enabled top level loads with a mismatched
 # Cross-Origin-Opener-Policy header will be loaded in a separate process.
 - name: browser.tabs.remote.useCrossOriginOpenerPolicy
   type: RelaxedAtomicBool
-  value: false
+#if !defined(ANDROID)
+  value: @IS_NIGHTLY_BUILD@
+#else
+  value: false # Blocked by DocumentChannel, see Bug 1589982.
+#endif
   mirror: always
 
 # When this pref is enabled, the browser will check no-cors responses that
@@ -962,7 +970,11 @@
 # (or base domain) of the loaded resource.
 - name: browser.tabs.remote.useCORP
   type: bool
-  value: false
+#if !defined(ANDROID)
+  value: @IS_NIGHTLY_BUILD@
+#else
+  value: false # Blocked by DocumentChannel, see Bug 1589982.
+#endif
   mirror: always
 
 # The percentage of the screen that needs to be scrolled before toolbar
@@ -1978,10 +1990,15 @@
   value: true
   mirror: always
 
-# re-SAB; Whether allow postMessage a sharedArrayBuffer
+# re-SAB: Whether to allow postMessage of a SharedArrayBuffer if various
+# preconditions related to COOP and COEP are met
 - name: dom.postMessage.sharedArrayBuffer.withCOOP_COEP
   type: RelaxedAtomicBool
-  value: false
+#if !defined(ANDROID)
+  value: @IS_NIGHTLY_BUILD@
+#else
+  value: false # Blocked by DocumentChannel, see Bug 1589982.
+#endif
   mirror: always
 
 # Overridden in all.js on RELEASE_OR_BETA in order to add the locked attribute.
