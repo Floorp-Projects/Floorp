@@ -1605,6 +1605,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOP_STRICTEVAL:
     case JSOP_INT8:
     case JSOP_UINT16:
+    case JSOP_RESUMEKIND:
     case JSOP_GETGNAME:
     case JSOP_GETNAME:
     case JSOP_GETINTRINSIC:
@@ -1696,6 +1697,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOP_ISGENCLOSING:
     case JSOP_FINALYIELDRVAL:
     case JSOP_RESUME:
+    case JSOP_CHECK_RESUMEKIND:
     case JSOP_AFTERYIELD:
     case JSOP_AWAIT:
     case JSOP_TRYSKIPAWAIT:

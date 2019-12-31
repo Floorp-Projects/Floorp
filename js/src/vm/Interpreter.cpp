@@ -4008,16 +4008,40 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       goto successful_return_continuation;
     }
 
+    CASE(JSOP_RESUMEKIND) {
+      GeneratorResumeKind resumeKind = ResumeKindFromPC(REGS.pc);
+      PUSH_INT32(int32_t(resumeKind));
+    }
+    END_CASE(JSOP_RESUMEKIND)
+
+    CASE(JSOP_CHECK_RESUMEKIND) {
+      int32_t kindInt = REGS.sp[-1].toInt32();
+      GeneratorResumeKind resumeKind = IntToResumeKind(kindInt);
+      if (MOZ_UNLIKELY(resumeKind != GeneratorResumeKind::Next)) {
+        ReservedRooted<Value> val(&rootValue0, REGS.sp[-3]);
+        Rooted<AbstractGeneratorObject*> gen(
+            cx, &REGS.sp[-2].toObject().as<AbstractGeneratorObject>());
+        MOZ_ALWAYS_FALSE(GeneratorThrowOrReturn(cx, activation.regs().fp(), gen,
+                                                val, resumeKind));
+        goto error;
+      }
+      REGS.sp -= 2;
+    }
+    END_CASE(JSOP_CHECK_RESUMEKIND)
+
     CASE(JSOP_RESUME) {
       {
         Rooted<AbstractGeneratorObject*> gen(
-            cx, &REGS.sp[-2].toObject().as<AbstractGeneratorObject>());
-        ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
+            cx, &REGS.sp[-3].toObject().as<AbstractGeneratorObject>());
+        ReservedRooted<Value> val(&rootValue0, REGS.sp[-2]);
+        ReservedRooted<Value> resumeKindVal(&rootValue1, REGS.sp[-1]);
+
         // popInlineFrame expects there to be an additional value on the stack
         // to pop off, so leave "gen" on the stack.
+        REGS.sp -= 1;
 
-        auto resumeKind = AbstractGeneratorObject::getResumeKind(REGS.pc);
-        if (!AbstractGeneratorObject::resume(cx, activation, gen, val)) {
+        if (!AbstractGeneratorObject::resume(cx, activation, gen, val,
+                                             resumeKindVal)) {
           goto error;
         }
 
@@ -4041,18 +4065,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
                 gen->isClosed());
           }
           goto error;
-        }
-
-        switch (resumeKind) {
-          case GeneratorResumeKind::Next:
-            break;
-          case GeneratorResumeKind::Throw:
-          case GeneratorResumeKind::Return:
-            MOZ_ALWAYS_FALSE(GeneratorThrowOrReturn(cx, activation.regs().fp(),
-                                                    gen, val, resumeKind));
-            goto error;
-          default:
-            MOZ_CRASH("bad resumeKind");
         }
       }
       ADVANCE_AND_DISPATCH(0);
