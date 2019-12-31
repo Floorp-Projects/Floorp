@@ -13,6 +13,7 @@ These are the currently implemented try selectors:
   can be chosen with treeherder's ``Add New Jobs`` feature.
 * :doc:`syntax <syntax>`: Select tasks using classic try syntax.
 * :doc:`release <release>`: Prepare a tree for doing a staging release.
+* :doc:`scriptworker <scriptworker>`: Run scriptworker tasks against a recent release.
 
 You can run them with:
 
@@ -37,3 +38,4 @@ See selector specific options by running:
   Empty <empty>
   Syntax <syntax>
   Release <release>
+  Scriptworker <scriptworker>
