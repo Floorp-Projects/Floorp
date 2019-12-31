@@ -61,6 +61,7 @@ UNIFIED_SOURCES += [
     'nsSystemStatusBarCocoa.mm',
     'nsToolkit.mm',
     'nsTouchBar.mm',
+    'nsTouchBarInput.mm',
     'nsTouchBarInputIcon.mm',
     'nsTouchBarUpdater.mm',
     'nsWidgetFactory.mm',

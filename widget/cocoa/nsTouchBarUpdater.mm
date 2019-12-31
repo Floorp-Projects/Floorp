@@ -5,7 +5,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsTouchBar.h"
-#include "nsITouchBarInput.h"
+#include "nsTouchBarInput.h"
 #include "nsTouchBarUpdater.h"
 #include "nsTouchBarNativeAPIDefines.h"
 
