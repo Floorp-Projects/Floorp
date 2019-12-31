@@ -91,9 +91,6 @@ def generate_suites_from_config(path):
     config = mod.config
 
     for category in sorted(config['suite_definitions']):
-        if category == 'mozmill':
-            continue
-
         key = 'all_{}_suites'.format(category)
         if key not in config:
             yield category,

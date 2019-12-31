@@ -1305,7 +1305,6 @@ CHUNK_SUITES_BLACKLIST = (
     'mochitest-webgl1-ext',
     'mochitest-webgl2-core',
     'mochitest-webgl2-ext',
-    'mozmill',
     'raptor',
     'reftest',
     'reftest-gpu',

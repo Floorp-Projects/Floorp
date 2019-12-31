@@ -90,12 +90,6 @@ TinderBoxPrintRe = {
         'fail_group': "FAILED",
         'known_fail_group': None,
     },
-    "mozmill_summary": {
-        'regex': re.compile(r'''INFO (Passed|Failed|Skipped): (\d+)'''),
-        'pass_group': "Passed",
-        'fail_group': "Failed",
-        'known_fail_group': "Skipped",
-    },
     "geckoview_summary": {
         'regex': re.compile(r'''(Passed|Failed): (\d+)'''),
         'pass_group': "Passed",
