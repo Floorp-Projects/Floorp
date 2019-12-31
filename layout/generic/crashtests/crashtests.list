@@ -512,7 +512,7 @@ load 810726.html
 load 812822-1.html
 load 812879-1.html
 load 812879-2.html
-pref(layout.css.column-span.enabled,true) asserts(4-26) asserts-if(Android,4-34) load 812893.html # bug 1581653
+asserts(4-26) asserts-if(Android,4-34) load 812893.html # bug 1581653
 load 814995.html
 load 822910.xhtml
 load 824297-1.html
@@ -712,13 +712,13 @@ load 1493710.html
 load 1493741.html
 load 1494380.html
 load 1505817.html
-pref(layout.css.column-span.enabled,true) load 1506216.html
-pref(layout.css.column-span.enabled,true) load 1506306.html
-pref(layout.css.column-span.enabled,true) load 1507196.html
+load 1506216.html
+load 1506306.html
+load 1507196.html
 load 1513282.html
 load 1515124.html
-pref(layout.css.column-span.enabled,true) load 1517033.html
-pref(layout.css.column-span.enabled,true) load 1517297.html
+load 1517033.html
+load 1517297.html
 load chrome://reftest/content/crashtests/layout/generic/crashtests/1520798-1.xhtml
 load 1520798-2.html
 load 1528771.html
@@ -727,24 +727,24 @@ load 1544060-1.html
 load 1544060-2.html
 load 1542441.html
 pref(layout.css.grid-template-subgrid-value.enabled,true) load 1553824.html
-pref(layout.css.column-span.enabled,true) load 1554824.html
+load 1554824.html
 load 1555142.html
 load 1560349.html
 load 1560397.html
 load 1560397-2.html
 load 1562105.html
-pref(layout.css.column-span.enabled,true) load 1563131.html
-pref(layout.css.column-span.enabled,true) load 1568001-1.html
-pref(layout.css.column-span.enabled,true) load 1568001-2.html
+load 1563131.html
+load 1568001-1.html
+load 1568001-2.html
 load 1569639.html
-pref(layout.css.column-span.enabled,true) load 1571239.html
+load 1571239.html
 load 1571460.html
-pref(layout.css.column-span.enabled,true) load 1571598.html
-pref(layout.css.column-span.enabled,true) load 1571897.html
-pref(layout.css.column-span.enabled,true) load 1572901.html
-pref(layout.css.column-span.enabled,true) load 1573216.html
+load 1571598.html
+load 1571897.html
+load 1572901.html
+load 1573216.html
 load 1574552.html
-pref(layout.css.column-span.enabled,true) load 1574993.html
-pref(layout.css.column-span.enabled,true) load 1582019.html
+load 1574993.html
+load 1582019.html
 load 1586470.html
 load 1596310.html
