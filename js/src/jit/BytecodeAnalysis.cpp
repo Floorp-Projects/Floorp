@@ -101,13 +101,11 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
 
       case JSOP_TRY: {
         for (const JSTryNote& tn : script_->trynotes()) {
-          if (tn.start == offset + 1) {
-            uint32_t catchOffset = tn.start + tn.length;
-
-            if (tn.kind != JSTRY_FOR_IN) {
-              infos_[catchOffset].init(stackDepth);
-              infos_[catchOffset].jumpTarget = true;
-            }
+          if (tn.start == offset + 1 &&
+              (tn.kind == JSTRY_CATCH || tn.kind == JSTRY_FINALLY)) {
+            uint32_t catchOrFinallyOffset = tn.start + tn.length;
+            infos_[catchOrFinallyOffset].init(stackDepth);
+            infos_[catchOrFinallyOffset].jumpTarget = true;
           }
         }
 
