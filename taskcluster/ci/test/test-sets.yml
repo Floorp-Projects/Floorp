@@ -337,15 +337,12 @@ awsy-stylo-sequential:
 # Limited test sets for specific platforms
 
 linux-common-tests:
-    - cppunit
-    - crashtest
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
     - gtest
     - jittest
     - jsreftest
     - marionette
-    - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
@@ -361,12 +358,15 @@ linux-common-tests:
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
-    - xpcshell
 
-# List of tests that are green on ubuntu1804 doker image.
+# List of tests that are green on ubuntu1804 docker image.
 # See Bug 1602863 for information.
 linux1804-tests:
     - cppunit
+    - crashtest
+    - mochitest
+    - mochitest-gpu
+    - xpcshell
 
 linux-qr-tests:
     - cppunit
