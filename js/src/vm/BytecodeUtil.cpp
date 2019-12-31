@@ -544,9 +544,9 @@ class BytecodeParser {
                              const OffsetAndDefIndex* offsetStack,
                              uint32_t stackDepth);
 
-  inline bool addJump(uint32_t offset, uint32_t* currentOffset,
-                      uint32_t stackDepth, const OffsetAndDefIndex* offsetStack,
-                      jsbytecode* pc, JumpKind kind);
+  inline bool addJump(uint32_t offset, uint32_t stackDepth,
+                      const OffsetAndDefIndex* offsetStack, jsbytecode* pc,
+                      JumpKind kind);
 };
 
 }  // anonymous namespace
@@ -775,8 +775,7 @@ bool BytecodeParser::recordBytecode(uint32_t offset,
   return true;
 }
 
-bool BytecodeParser::addJump(uint32_t offset, uint32_t* currentOffset,
-                             uint32_t stackDepth,
+bool BytecodeParser::addJump(uint32_t offset, uint32_t stackDepth,
                              const OffsetAndDefIndex* offsetStack,
                              jsbytecode* pc, JumpKind kind) {
   if (!recordBytecode(offset, offsetStack, stackDepth)) {
@@ -784,21 +783,17 @@ bool BytecodeParser::addJump(uint32_t offset, uint32_t* currentOffset,
   }
 
 #ifdef DEBUG
+  uint32_t currentOffset = script_->pcToOffset(pc);
   if (isStackDump) {
-    if (!codeArray_[offset]->addJump(script_->pcToOffset(pc), kind)) {
+    if (!codeArray_[offset]->addJump(currentOffset, kind)) {
       reportOOM();
       return false;
     }
   }
-#endif /* DEBUG */
 
-  Bytecode*& code = codeArray_[offset];
-  if (offset < *currentOffset && !code->parsed) {
-    // Backedge in a while/for loop, whose body has not been parsed due
-    // to a lack of fallthrough at the loop head. Roll back the offset
-    // to analyze the body.
-    *currentOffset = offset;
-  }
+  // If this is a backedge, assert we parsed the target JSOP_LOOPHEAD.
+  MOZ_ASSERT_IF(offset < currentOffset, codeArray_[offset]->parsed);
+#endif /* DEBUG */
 
   return true;
 }
@@ -834,22 +829,16 @@ bool BytecodeParser::parse() {
   startcode->stackDepth = 0;
   codeArray_[0] = startcode;
 
-  uint32_t offset, nextOffset = 0;
-  while (nextOffset < length) {
-    offset = nextOffset;
-
+  for (uint32_t offset = 0, nextOffset = 0; offset < length;
+       offset = nextOffset) {
     Bytecode* code = maybeCode(offset);
     jsbytecode* pc = script_->offsetToPC(offset);
 
+    // Next bytecode to analyze.
+    nextOffset = offset + GetBytecodeLength(pc);
+
     JSOp op = (JSOp)*pc;
     MOZ_ASSERT(op < JSOP_LIMIT);
-
-    // Immediate successor of this bytecode.
-    uint32_t successorOffset = offset + GetBytecodeLength(pc);
-
-    // Next bytecode to analyze.  This is either the successor, or is an
-    // earlier bytecode if this bytecode has a loop backedge.
-    nextOffset = successorOffset;
 
     if (!code) {
       // Haven't found a path by which this bytecode is reachable.
@@ -892,7 +881,7 @@ bool BytecodeParser::parse() {
         int32_t high = GET_JUMP_OFFSET(pc2);
         pc2 += JUMP_OFFSET_LEN;
 
-        if (!addJump(defaultOffset, &nextOffset, stackDepth, offsetStack, pc,
+        if (!addJump(defaultOffset, stackDepth, offsetStack, pc,
                      JumpKind::SwitchDefault)) {
           return false;
         }
@@ -902,7 +891,7 @@ bool BytecodeParser::parse() {
         for (uint32_t i = 0; i < ncases; i++) {
           uint32_t targetOffset = script_->tableSwitchCaseOffset(pc, i);
           if (targetOffset != defaultOffset) {
-            if (!addJump(targetOffset, &nextOffset, stackDepth, offsetStack, pc,
+            if (!addJump(targetOffset, stackDepth, offsetStack, pc,
                          JumpKind::SwitchCase)) {
               return false;
             }
@@ -921,13 +910,13 @@ bool BytecodeParser::parse() {
           if (tn.start == offset + 1) {
             uint32_t catchOffset = tn.start + tn.length;
             if (tn.kind == JSTRY_CATCH) {
-              if (!addJump(catchOffset, &nextOffset, stackDepth, offsetStack,
-                           pc, JumpKind::TryCatch)) {
+              if (!addJump(catchOffset, stackDepth, offsetStack, pc,
+                           JumpKind::TryCatch)) {
                 return false;
               }
             } else if (tn.kind == JSTRY_FINALLY) {
-              if (!addJump(catchOffset, &nextOffset, stackDepth, offsetStack,
-                           pc, JumpKind::TryFinally)) {
+              if (!addJump(catchOffset, stackDepth, offsetStack, pc,
+                           JumpKind::TryFinally)) {
                 return false;
               }
             }
@@ -949,7 +938,7 @@ bool BytecodeParser::parse() {
       }
 
       uint32_t targetOffset = offset + GET_JUMP_OFFSET(pc);
-      if (!addJump(targetOffset, &nextOffset, newStackDepth, offsetStack, pc,
+      if (!addJump(targetOffset, newStackDepth, offsetStack, pc,
                    JumpKind::Simple)) {
         return false;
       }
@@ -957,7 +946,7 @@ bool BytecodeParser::parse() {
 
     // Handle any fallthrough from this opcode.
     if (BytecodeFallsThrough(op)) {
-      if (!recordBytecode(successorOffset, offsetStack, stackDepth)) {
+      if (!recordBytecode(nextOffset, offsetStack, stackDepth)) {
         return false;
       }
     }
