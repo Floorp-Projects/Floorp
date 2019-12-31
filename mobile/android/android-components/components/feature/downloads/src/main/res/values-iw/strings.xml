@@ -10,10 +10,15 @@
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_failed_notification_text2">ההורדה נכשלה</string>
 
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">הורדה (%1$s)</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">הורדה</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">ביטול</string>
+
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">אין באפשרות %1$s להוריד את סוג הקובץ הזה</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">אין אפשרות לפתוח את הקובץ</string>
