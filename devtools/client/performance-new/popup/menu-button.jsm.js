@@ -32,17 +32,20 @@ function requireLazy(callback) {
   };
 }
 
+// Provide an exports object for the JSM to be properly read by TypeScript.
+/** @type {any} */ (this).exports = {};
+
 const lazyServices = requireLazy(() =>
   /** @type {import("resource://gre/modules/Services.jsm")} */
   (ChromeUtils.import("resource://gre/modules/Services.jsm"))
 );
 const lazyCustomizableUI = requireLazy(() =>
   /** @type {import("resource:///modules/CustomizableUI.jsm")} */
-  ChromeUtils.import("resource:///modules/CustomizableUI.jsm")
+  (ChromeUtils.import("resource:///modules/CustomizableUI.jsm"))
 );
 const lazyCustomizableWidgets = requireLazy(() =>
   /** @type {import("resource:///modules/CustomizableWidgets.jsm")} */
-  ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm")
+  (ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm"))
 );
 /** @type {PerformancePref["PopupEnabled"]} */
 const BUTTON_ENABLED_PREF = "devtools.performance.popup.enabled";
@@ -72,7 +75,7 @@ function setMenuItemChecked(document, isChecked) {
 /**
  * Toggle the menu button, and initialize the widget if needed.
  *
- * @param {object} document - The browser's document.
+ * @param {ChromeDocument} document - The browser's document.
  * @return {void}
  */
 function toggle(document) {
@@ -92,7 +95,7 @@ function toggle(document) {
     // The widgets are not being properly destroyed. This is a workaround
     // until Bug 1552565 lands.
     const element = document.getElementById("PanelUI-profiler");
-    delete element._addedEventListeners;
+    delete /** @type {any} */ (element)._addedEventListeners;
   }
 }
 
@@ -258,4 +261,8 @@ function initialize() {
 
 const ProfilerMenuButton = { toggle, initialize, isEnabled };
 
-var EXPORTED_SYMBOLS = ["ProfilerMenuButton"];
+exports.ProfilerMenuButton = ProfilerMenuButton;
+
+// Object.keys() confuses the linting which expects a static array expression.
+// eslint-disable-next-line
+var EXPORTED_SYMBOLS = Object.keys(exports);

@@ -344,16 +344,23 @@ function getDefaultRecordingPreferencesForOlderFirefox() {
   return _defaultPrefsForOlderFirefox;
 }
 
-var EXPORTED_SYMBOLS = [
-  "captureProfile",
-  "startProfiler",
-  "stopProfiler",
-  "restartProfiler",
-  "toggleProfiler",
-  "platform",
-  "getSymbolsFromThisBrowser",
-  "getRecordingPreferencesFromBrowser",
-  "setRecordingPreferencesOnBrowser",
-  "revertRecordingPreferences",
-  "getDefaultRecordingPreferencesForOlderFirefox",
-];
+// Provide a fake module.exports for the JSM to be properly read by TypeScript.
+/** @type {any} */ (this).module = { exports: {} };
+
+module.exports = {
+  captureProfile,
+  startProfiler,
+  stopProfiler,
+  restartProfiler,
+  toggleProfiler,
+  platform,
+  getSymbolsFromThisBrowser,
+  getRecordingPreferencesFromBrowser,
+  setRecordingPreferencesOnBrowser,
+  revertRecordingPreferences,
+  getDefaultRecordingPreferencesForOlderFirefox,
+};
+
+// Object.keys() confuses the linting which expects a static array expression.
+// eslint-disable-next-line
+var EXPORTED_SYMBOLS = Object.keys(module.exports);
