@@ -513,7 +513,7 @@ async function test_background_page_storage(testAreaName) {
           );
           browser.test.assertEq(
             "/regexp/",
-            obj.regexp.toSource(),
+            obj.regexp.toString(),
             "regexp part correct"
           );
         } else {

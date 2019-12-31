@@ -272,7 +272,7 @@ async function contentScript(checkGet) {
         );
         browser.test.assertEq(
           "/regexp/",
-          obj.regexp.toSource(),
+          obj.regexp.toString(),
           "regexp part correct"
         );
       } else {
