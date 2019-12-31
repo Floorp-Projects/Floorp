@@ -754,7 +754,6 @@ def set_treeherder_machine_platform(config, tests):
     translation = {
         # Linux64 build platforms for asan and pgo are specified differently to
         # treeherder.
-        'linux64-asan/opt': 'linux64/asan',
         'linux64-pgo/opt': 'linux64/pgo',
         'macosx1014-64/debug': 'osx-10-14/debug',
         'macosx1014-64/opt': 'osx-10-14/opt',
@@ -788,6 +787,13 @@ def set_treeherder_machine_platform(config, tests):
         elif 'android-em-7.0-x86' in test['test-platform']:
             opt = test['test-platform'].split('/')[1]
             test['treeherder-machine-platform'] = 'android-em-7-0-x86/'+opt
+        # Bug 1602863 - must separately define linux64/asan and linux1804-64/asan
+        # otherwise causes an exception during taskgraph generation about
+        # duplicate treeherder platform/symbol.
+        elif 'linux64-asan/opt' in test['test-platform']:
+            test['treeherder-machine-platform'] = 'linux64/asan'
+        elif 'linux1804-asan/opt' in test['test-platform']:
+            test['treeherder-machine-platform'] = 'linux1804-64/asan'
         else:
             test['treeherder-machine-platform'] = translation.get(
                 test['build-platform'], test['test-platform'])
@@ -827,6 +833,10 @@ def set_tier(config, tests):
                                          'linux1804-64/opt',
                                          'linux1804-64/debug',
                                          'linux1804-64-shippable/opt',
+                                         'linux1804-64-qr/opt',
+                                         'linux1804-64-qr/debug',
+                                         'linux1804-64-shippable-qr/opt',
+                                         'linux1804-64-asan/opt',
                                          'windows7-32/debug',
                                          'windows7-32/opt',
                                          'windows7-32-pgo/opt',
