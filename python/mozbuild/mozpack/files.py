@@ -75,6 +75,14 @@ else:
             raise TypeError('mismatched path types!')
 
 
+# Helper function; ensures we always open files with the correct encoding when
+# opening them in text mode.
+def _open(path, mode='r'):
+    if six.PY3 and 'b' not in mode:
+        return open(path, mode, encoding='utf-8')
+    return open(path, mode)
+
+
 class Dest(object):
     '''
     Helper interface for BaseFile.copy. The interface works as follows:
@@ -96,13 +104,13 @@ class Dest(object):
 
     def read(self, length=-1, mode='rb'):
         if self.mode != 'r':
-            self.file = open(self.path, mode)
+            self.file = _open(self.path, mode)
             self.mode = 'r'
         return self.file.read(length)
 
     def write(self, data, mode='wb'):
         if self.mode != 'w':
-            self.file = open(self.path, mode)
+            self.file = _open(self.path, mode)
             self.mode = 'w'
         if 'b' in mode:
             to_write = six.ensure_binary(data)
@@ -245,7 +253,7 @@ class BaseFile(object):
         a custom file-like object.
         '''
         assert self.path is not None
-        return open(self.path, mode=mode)
+        return _open(self.path, mode=mode)
 
     def read(self):
         raise NotImplementedError('BaseFile.read() not implemented. Bug 1170329.')
@@ -293,7 +301,7 @@ class File(BaseFile):
 
     def read(self):
         '''Return the contents of the file.'''
-        with open(self.path, 'rb') as fh:
+        with _open(self.path, 'rb') as fh:
             return fh.read()
 
     def size(self):
@@ -547,8 +555,8 @@ class PreprocessedFile(BaseFile):
         pp = Preprocessor(defines=self.defines, marker=self.marker)
         pp.setSilenceDirectiveWarnings(self.silence_missing_directive_warnings)
 
-        with open(self.path, 'rU') as input:
-            with open(os.devnull, 'w') as output:
+        with _open(self.path, 'rU') as input:
+            with _open(os.devnull, 'w') as output:
                 pp.processFile(input=input, output=output)
 
         # This always yields at least self.path.
@@ -579,7 +587,7 @@ class PreprocessedFile(BaseFile):
         # dependencies from that file to our list.
         if self.depfile and os.path.exists(self.depfile):
             target = mozpath.normpath(dest.name)
-            with open(self.depfile, 'rt') as fileobj:
+            with _open(self.depfile, 'rt') as fileobj:
                 for rule in makeutil.read_dep_makefile(fileobj):
                     if target in rule.targets():
                         pp_deps.update(rule.dependencies())
@@ -603,7 +611,7 @@ class PreprocessedFile(BaseFile):
         pp = Preprocessor(defines=self.defines, marker=self.marker)
         pp.setSilenceDirectiveWarnings(self.silence_missing_directive_warnings)
 
-        with open(self.path, 'rU') as input:
+        with _open(self.path, 'rU') as input:
             pp.processFile(input=input, output=dest, depfile=deps_out)
 
         dest.close()
