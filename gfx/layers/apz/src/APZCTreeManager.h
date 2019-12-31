@@ -954,6 +954,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
  private:
   RefPtr<AndroidDynamicToolbarAnimator> mToolbarAnimator;
+
+  // Last Frame metrics sent to java through UIController.
+  FrameMetrics mLastRootMetrics;
 #endif  // defined(MOZ_WIDGET_ANDROID)
 };
 
