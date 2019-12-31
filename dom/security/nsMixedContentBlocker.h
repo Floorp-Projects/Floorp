@@ -77,11 +77,16 @@ class nsMixedContentBlocker : public nsIContentPolicy,
   static bool URISafeToBeLoadedInSecureContext(nsIURI* aURI);
 
   static bool ShouldUpgradeMixedDisplayContent();
+  static void OnPrefChange(const char* aPref, void* aClosure);
+  static void GetSecureContextWhiteList(nsACString& aList);
+  static void Shutdown();
 
   static bool sBlockMixedScript;
   static bool sBlockMixedObjectSubrequest;
   static bool sBlockMixedDisplay;
   static bool sUpgradeMixedDisplay;
+  static bool sSecurecontextWhitelistCached;
+  static nsCString* sSecurecontextWhitelist;
 };
 
 #endif /* nsMixedContentBlocker_h___ */

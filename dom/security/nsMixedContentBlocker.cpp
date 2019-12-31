@@ -55,6 +55,11 @@ bool nsMixedContentBlocker::sBlockMixedDisplay = false;
 // Is mixed display content upgrading (images, audio, video) enabled?
 bool nsMixedContentBlocker::sUpgradeMixedDisplay = false;
 
+// Whitelist of hostnames that should be considered secure contexts even when
+// served over http:// or ws://
+nsCString* nsMixedContentBlocker::sSecurecontextWhitelist = nullptr;
+bool nsMixedContentBlocker::sSecurecontextWhitelistCached = false;
+
 enum MixedContentHSTSState {
   MCB_HSTS_PASSIVE_NO_HSTS = 0,
   MCB_HSTS_PASSIVE_WITH_HSTS = 1,
@@ -418,6 +423,35 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(nsIURI* aURL) {
   return StringEndsWith(host, NS_LITERAL_CSTRING(".onion"));
 }
 
+// static
+void nsMixedContentBlocker::OnPrefChange(const char* aPref, void* aClosure) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aPref, "dom.securecontext.whitelist"));
+  Preferences::GetCString("dom.securecontext.whitelist",
+                          *sSecurecontextWhitelist);
+}
+
+// static
+void nsMixedContentBlocker::GetSecureContextWhiteList(nsACString& aList) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!sSecurecontextWhitelistCached) {
+    MOZ_ASSERT(!sSecurecontextWhitelist);
+    sSecurecontextWhitelistCached = true;
+    sSecurecontextWhitelist = new nsCString();
+    Preferences::RegisterCallbackAndCall(OnPrefChange,
+                                         "dom.securecontext.whitelist");
+  }
+  aList = *sSecurecontextWhitelist;
+}
+
+// static
+void nsMixedContentBlocker::Shutdown() {
+  if (sSecurecontextWhitelist) {
+    delete sSecurecontextWhitelist;
+    sSecurecontextWhitelist = nullptr;
+  }
+}
+
 bool nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(nsIURI* aURI) {
   // The following implements:
   // https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
@@ -472,16 +506,15 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(nsIURI* aURI) {
   }
 
   nsAutoCString whitelist;
-  rv = Preferences::GetCString("dom.securecontext.whitelist", whitelist);
-  if (NS_SUCCEEDED(rv)) {
-    nsCCharSeparatedTokenizer tokenizer(whitelist, ',');
-    while (tokenizer.hasMoreTokens()) {
-      const nsACString& allowedHost = tokenizer.nextToken();
-      if (host.Equals(allowedHost)) {
-        return true;
-      }
+  GetSecureContextWhiteList(whitelist);
+  nsCCharSeparatedTokenizer tokenizer(whitelist, ',');
+  while (tokenizer.hasMoreTokens()) {
+    const nsACString& allowedHost = tokenizer.nextToken();
+    if (host.Equals(allowedHost)) {
+      return true;
     }
   }
+
   // Maybe we have a .onion URL. Treat it as whitelisted as well if
   // `dom.securecontext.whitelist_onions` is `true`.
   if (nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(aURI)) {
