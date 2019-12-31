@@ -229,6 +229,7 @@ input[type="url"][readOnly]:hover:active {
   width: 40px;
 }
 
+input.password-display,
 input[name="password"] {
   font-family: monospace !important; /* override `all: unset` in the rule above */
 }
