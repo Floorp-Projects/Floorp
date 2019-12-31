@@ -85,10 +85,6 @@ object Deps {
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
     const val rxBindings = "com.jakewharton.rxbinding3:rxbinding:${Versions.rxBindings}"
 
-    const val anko_commons = "org.jetbrains.anko:anko-commons:${Versions.anko}"
-    const val anko_sdk = "org.jetbrains.anko:anko-sdk25:${Versions.anko}"
-    const val anko_constraintlayout = "org.jetbrains.anko:anko-constraint-layout:${Versions.anko}"
-
     const val mozilla_concept_engine = "org.mozilla.components:concept-engine:${Versions.mozilla_android_components}"
     const val mozilla_concept_push = "org.mozilla.components:concept-push:${Versions.mozilla_android_components}"
     const val mozilla_concept_tabstray = "org.mozilla.components:concept-tabstray:${Versions.mozilla_android_components}"

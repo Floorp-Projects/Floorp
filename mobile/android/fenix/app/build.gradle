@@ -381,10 +381,6 @@ dependencies {
     implementation Deps.autodispose_android
     implementation Deps.autodispose_android_aac
 
-    implementation Deps.anko_commons
-    implementation Deps.anko_sdk
-    implementation Deps.anko_constraintlayout
-
     implementation Deps.sentry
     implementation Deps.leanplum
     implementation Deps.osslicenses_library
