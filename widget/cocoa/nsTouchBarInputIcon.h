@@ -14,6 +14,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "nsIconLoaderService.h"
+#include "nsTouchBarInput.h"
 #include "nsTouchBarNativeAPIDefines.h"
 
 using namespace mozilla::dom;
