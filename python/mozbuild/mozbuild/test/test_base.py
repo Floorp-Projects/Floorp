@@ -11,7 +11,7 @@ import sys
 import tempfile
 import unittest
 
-from cStringIO import StringIO
+from six import StringIO
 from mozfile.mozfile import NamedTemporaryFile
 
 from mozunit import main
@@ -54,8 +54,8 @@ class TestMozbuildObject(unittest.TestCase):
     def test_objdir_config_guess(self):
         base = self.get_base()
 
-        with NamedTemporaryFile() as mozconfig:
-            os.environ[b'MOZCONFIG'] = mozconfig.name
+        with NamedTemporaryFile(mode='wt') as mozconfig:
+            os.environ['MOZCONFIG'] = mozconfig.name
 
             self.assertIsNotNone(base.topobjdir)
             self.assertEqual(len(base.topobjdir.split()), 1)
@@ -68,10 +68,10 @@ class TestMozbuildObject(unittest.TestCase):
         """Trailing slashes in topobjdir should be removed."""
         base = self.get_base()
 
-        with NamedTemporaryFile() as mozconfig:
+        with NamedTemporaryFile(mode='wt') as mozconfig:
             mozconfig.write('mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/foo/')
             mozconfig.flush()
-            os.environ[b'MOZCONFIG'] = mozconfig.name
+            os.environ['MOZCONFIG'] = mozconfig.name
 
             self.assertEqual(base.topobjdir, mozpath.join(base.topsrcdir,
                                                           'foo'))
@@ -104,7 +104,7 @@ class TestMozbuildObject(unittest.TestCase):
                     mozconfig=mozconfig,
                 ), fh)
 
-            os.environ[b'MOZCONFIG'] = mozconfig.encode('utf-8')
+            os.environ['MOZCONFIG'] = mozconfig
             os.chdir(topobjdir)
 
             obj = MozbuildObject.from_environment(
@@ -133,7 +133,7 @@ class TestMozbuildObject(unittest.TestCase):
                     mozconfig=mozconfig,
                 ), fh)
 
-            os.environ[b'MOZCONFIG'] = mozconfig.encode('utf-8')
+            os.environ['MOZCONFIG'] = mozconfig
             child = os.path.join(topobjdir, 'foo', 'bar')
             os.makedirs(child)
             os.chdir(child)
@@ -147,7 +147,8 @@ class TestMozbuildObject(unittest.TestCase):
             os.chdir(self._old_cwd)
             shutil.rmtree(d)
 
-    @unittest.skipIf(not hasattr(os, 'symlink'), 'symlinks not available.')
+    @unittest.skipIf(not hasattr(os, 'symlink') or os.name == 'nt',
+                     'symlinks not available.')
     def test_symlink_objdir(self):
         """Objdir that is a symlink is loaded properly."""
         d = os.path.realpath(tempfile.mkdtemp())

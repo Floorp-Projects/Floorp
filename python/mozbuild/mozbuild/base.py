@@ -55,7 +55,10 @@ def ancestors(path):
 
 
 def samepath(path1, path2):
-    if hasattr(os.path, 'samefile'):
+    # Under Python 3 (but NOT Python 2), MozillaBuild exposes the
+    # os.path.samefile function despite it not working, so only use it if we're
+    # not running under Windows.
+    if hasattr(os.path, 'samefile') and os.name != 'nt':
         return os.path.samefile(path1, path2)
     return os.path.normcase(os.path.realpath(path1)) == \
         os.path.normcase(os.path.realpath(path2))
