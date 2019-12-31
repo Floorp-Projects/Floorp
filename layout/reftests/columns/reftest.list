@@ -17,7 +17,7 @@ fuzzy-if(webrender,0-126,0-364) == column-balancing-overflow-005.html column-bal
 == column-balancing-002.html column-balancing-002.ref.html
 == column-balancing-003.html column-balancing-000.ref.html
 == column-balancing-004.html column-balancing-004.ref.html
-pref(layout.css.column-span.enabled,true) == column-balancing-paged-001.html column-balancing-paged-001-ref.html
+== column-balancing-paged-001.html column-balancing-paged-001-ref.html
 == column-box-alignment-rtl.html column-box-alignment-rtl-ref.html
 == column-box-alignment-rtl-2.html column-box-alignment-rtl-2-ref.html
 == column-box-alignment-rtl-3.html column-box-alignment-rtl-3-ref.html
@@ -44,20 +44,6 @@ fuzzy-if(browserIsRemote&&winWidget,0-142,0-276) == fieldset-columns-001.html fi
 == dynamic-text-indent-1.html dynamic-text-indent-1-ref.html
 == dynamic-text-indent-2.html dynamic-text-indent-2-ref.html
 == break-avoid-line-position-1.html break-avoid-line-position-1-ref.html
-pref(layout.css.column-span.enabled,true) == column-span-bidi-1.html column-span-bidi-1-ref.html
-pref(layout.css.column-span.enabled,true) == first-line-first-letter.html first-line-first-letter-ref.html
+== column-span-bidi-1.html column-span-bidi-1-ref.html
+== first-line-first-letter.html first-line-first-letter-ref.html
 == zero-height-nondirty-reflow.html zero-height-nondirty-reflow-ref.html
-
-# The following lines are duplicates of other lines from further up in this
-# manifest. They're listed again here so we can re-run these tests with
-# column-span enabled. These lines can be removed once the pref becomes
-# default-enabled (Bug 1426010).
-default-preferences pref(layout.css.column-span.enabled,true)
-== min-width-2.html min-width-2-ref.html
-== column-box-alignment-rtl.html column-box-alignment-rtl-ref.html
-== column-box-alignment-rtl-2.html column-box-alignment-rtl-2-ref.html
-== column-box-alignment-rtl-3.html column-box-alignment-rtl-3-ref.html
-== column-box-alignment-rtl-4.html column-box-alignment-rtl-4-ref.html
-== column-balancing-nested-001.html column-balancing-nested-001-ref.html
-== zero-height-nondirty-reflow.html zero-height-nondirty-reflow-ref.html
-default-preferences
