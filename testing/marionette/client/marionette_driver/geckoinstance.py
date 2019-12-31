@@ -561,9 +561,6 @@ class DesktopInstance(GeckoInstance):
         # Don't check for the default web browser during startup
         "browser.shell.checkDefaultBrowser": False,
 
-        # Disable e10s by default
-        "browser.tabs.remote.autostart": False,
-
         # Needed for branded builds to prevent opening a second tab on startup
         "browser.startup.homepage_override.mstone": "ignore",
         # Start with a blank page by default
