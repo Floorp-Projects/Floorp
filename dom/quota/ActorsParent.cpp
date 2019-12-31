@@ -1129,6 +1129,7 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
 
  protected:
   bool mNeedsQuotaManagerInit;
+  bool mNeedsStorageInit;
 
  public:
   void NoteActorDestroyed() {
@@ -1151,7 +1152,8 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
         mResultCode(NS_OK),
         mState(State_Initial),
         mActorDestroyed(false),
-        mNeedsQuotaManagerInit(false) {}
+        mNeedsQuotaManagerInit(false),
+        mNeedsStorageInit(false) {}
 
   // Reference counted.
   virtual ~OriginOperationBase() {
@@ -1536,10 +1538,9 @@ class ResetOrClearOp final : public QuotaRequestBase {
   const bool mClear;
 
  public:
-  explicit ResetOrClearOp(bool aClear)
-      : QuotaRequestBase(/* aExclusive */ true), mClear(aClear) {
-    AssertIsOnOwningThread();
-  }
+  explicit ResetOrClearOp(bool aClear);
+
+  bool Init(Quota* aQuota) override;
 
  private:
   ~ResetOrClearOp() {}
@@ -8325,7 +8326,7 @@ nsresult OriginOperationBase::DirectoryWork() {
 
   nsresult rv;
 
-  if (mNeedsQuotaManagerInit) {
+  if (mNeedsStorageInit) {
     rv = quotaManager->EnsureStorageIsInitialized();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -8930,6 +8931,7 @@ bool QuotaUsageRequestBase::Init(Quota* aQuota) {
   MOZ_ASSERT(aQuota);
 
   mNeedsQuotaManagerInit = true;
+  mNeedsStorageInit = true;
 
   return true;
 }
@@ -9289,6 +9291,7 @@ GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
 
   // Overwrite OriginOperationBase default values.
   mNeedsQuotaManagerInit = true;
+  mNeedsStorageInit = true;
 }
 
 nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
@@ -9355,6 +9358,7 @@ bool QuotaRequestBase::Init(Quota* aQuota) {
   MOZ_ASSERT(aQuota);
 
   mNeedsQuotaManagerInit = true;
+  mNeedsStorageInit = true;
 
   return true;
 }
@@ -9486,6 +9490,22 @@ void InitStorageAndOriginOp::GetResponse(RequestResponse& aResponse) {
   response.created() = mCreated;
 
   aResponse = response;
+}
+
+ResetOrClearOp::ResetOrClearOp(bool aClear)
+    : QuotaRequestBase(/* aExclusive */ true), mClear(aClear) {
+  AssertIsOnOwningThread();
+
+  // Overwrite OriginOperationBase default values.
+  mNeedsQuotaManagerInit = true;
+  mNeedsStorageInit = mClear;
+}
+
+bool ResetOrClearOp::Init(Quota* aQuota) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+
+  return true;
 }
 
 void ResetOrClearOp::DeleteFiles(QuotaManager* aQuotaManager) {
@@ -10073,6 +10093,7 @@ EstimateOp::EstimateOp(const RequestParams& aParams)
 
   // Overwrite OriginOperationBase default values.
   mNeedsQuotaManagerInit = true;
+  mNeedsStorageInit = true;
 }
 
 nsresult EstimateOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
@@ -10124,6 +10145,7 @@ bool ListOriginsOp::Init(Quota* aQuota) {
   MOZ_ASSERT(aQuota);
 
   mNeedsQuotaManagerInit = true;
+  mNeedsStorageInit = true;
 
   return true;
 }
