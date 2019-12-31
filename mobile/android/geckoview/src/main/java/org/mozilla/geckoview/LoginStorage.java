@@ -298,7 +298,7 @@ public class LoginStorage {
         /**
          * Request saving or updating of the given login entry.
          * This is triggered by confirming a
-         * {@link GeckoSession.PromptDelegate.onLoginStoragePrompt onLoginStoragePrompt}
+         * {@link GeckoSession.PromptDelegate#onLoginStoragePrompt onLoginStoragePrompt}
          * request of type
          * {@link GeckoSession.PromptDelegate.LoginStoragePrompt.Type#SAVE Type.SAVE}.
          *
