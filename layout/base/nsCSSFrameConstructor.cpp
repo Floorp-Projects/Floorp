@@ -376,9 +376,6 @@ static bool ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame) {
 // context). Basically, this is testing whether aFrame establishes a new block
 // formatting context or not.
 static bool ShouldSuppressColumnSpanDescendants(nsIFrame* aFrame) {
-  MOZ_ASSERT(StaticPrefs::layout_css_column_span_enabled(),
-             "Call this only when layout.css.column-span.enabled is true!");
-
   if (aFrame->Style()->GetPseudoType() == PseudoStyleType::columnContent) {
     // Never suppress column-span under ::-moz-column-content frames.
     return false;
@@ -3040,8 +3037,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
     }
   }
 
-  if (!StaticPrefs::layout_css_column_span_enabled() ||
-      !MayNeedToCreateColumnSpanSiblings(contentFrame, childList)) {
+  if (!MayNeedToCreateColumnSpanSiblings(contentFrame, childList)) {
     // Set the inner frame's initial child lists.
     contentFrame->SetInitialChildList(kPrincipalList, childList);
   } else {
@@ -3743,8 +3739,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
         childList = newList;
       }
 
-      if (!StaticPrefs::layout_css_column_span_enabled() ||
-          !(bits & FCDATA_ALLOW_GRID_FLEX_COLUMN) ||
+      if (!(bits & FCDATA_ALLOW_GRID_FLEX_COLUMN) ||
           !MayNeedToCreateColumnSpanSiblings(newFrameAsContainer, childList)) {
         // Set the frame's initial child list. Note that MathML depends on this
         // being called even if childList is empty!
@@ -6851,8 +6846,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
-  if (StaticPrefs::layout_css_column_span_enabled() &&
-      MaybeRecreateForColumnSpan(state, parentFrame, frameList, prevSibling)) {
+  if (MaybeRecreateForColumnSpan(state, parentFrame, frameList, prevSibling)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
@@ -7300,8 +7294,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
-  if (StaticPrefs::layout_css_column_span_enabled() &&
-      MaybeRecreateForColumnSpan(state, insertion.mParentFrame, frameList,
+  if (MaybeRecreateForColumnSpan(state, insertion.mParentFrame, frameList,
                                  prevSibling)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return;
@@ -10547,23 +10540,15 @@ void nsCSSFrameConstructor::ConstructBlock(
         *aNewFrame, aPositionedFrameForAbsPosContainer, absoluteSaveState);
   }
 
-  if (StaticPrefs::layout_css_column_span_enabled()) {
-    if (aParentFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) &&
-        !ShouldSuppressColumnSpanDescendants(aParentFrame)) {
-      blockFrame->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
-    }
+  if (aParentFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) &&
+      !ShouldSuppressColumnSpanDescendants(aParentFrame)) {
+    blockFrame->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
   }
 
   // Process the child content
   nsFrameList childList;
   ProcessChildren(aState, aContent, aComputedStyle, blockFrame, true, childList,
                   true);
-
-  if (!StaticPrefs::layout_css_column_span_enabled()) {
-    // Set the frame's initial child list
-    blockFrame->SetInitialChildList(kPrincipalList, childList);
-    return;
-  }
 
   if (!MayNeedToCreateColumnSpanSiblings(blockFrame, childList)) {
     // No need to create column-span siblings.
@@ -10609,7 +10594,7 @@ void nsCSSFrameConstructor::ConstructBlock(
              "The column-span siblings should be moved to the proper place!");
 }
 
-nsContainerFrame* nsCSSFrameConstructor::BeginBuildingColumns(
+nsBlockFrame* nsCSSFrameConstructor::BeginBuildingColumns(
     nsFrameConstructorState& aState, nsIContent* aContent,
     nsContainerFrame* aParentFrame, nsContainerFrame* aColumnContent,
     ComputedStyle* aComputedStyle) {
@@ -10618,23 +10603,6 @@ nsContainerFrame* nsCSSFrameConstructor::BeginBuildingColumns(
       "aColumnContent should either be a block frame or a details frame.");
   MOZ_ASSERT(aComputedStyle->StyleColumn()->IsColumnContainerStyle(),
              "No need to build a column hierarchy!");
-
-  if (!StaticPrefs::layout_css_column_span_enabled()) {
-    // Preserve the old behavior which supports no column-span.
-    // Wrap the block frame in a ColumnSetFrame.
-    nsContainerFrame* columnSetFrame = NS_NewColumnSetFrame(
-        mPresShell, aComputedStyle, nsFrameState(NS_FRAME_OWNS_ANON_BOXES));
-    InitAndRestoreFrame(aState, aContent, aParentFrame, columnSetFrame);
-
-    RefPtr<ComputedStyle> anonBlockStyle =
-        mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
-            PseudoStyleType::columnContent, aComputedStyle);
-    aColumnContent->SetComputedStyleWithoutNotification(anonBlockStyle);
-    InitAndRestoreFrame(aState, aContent, columnSetFrame, aColumnContent);
-
-    SetInitialSingleChild(columnSetFrame, aColumnContent);
-    return columnSetFrame;
-  }
 
   // The initial column hierarchy looks like this:
   //
@@ -10676,9 +10644,6 @@ nsContainerFrame* nsCSSFrameConstructor::BeginBuildingColumns(
 void nsCSSFrameConstructor::FinishBuildingColumns(
     nsFrameConstructorState& aState, nsContainerFrame* aColumnSetWrapper,
     nsContainerFrame* aColumnContent, nsFrameList& aColumnContentSiblings) {
-  MOZ_ASSERT(StaticPrefs::layout_css_column_span_enabled(),
-             "Call this only when layout.css.column-span.enabled is true!");
-
   nsContainerFrame* prevColumnSet = aColumnContent->GetParent();
 
   MOZ_ASSERT(prevColumnSet->IsColumnSetFrame() &&
@@ -10719,9 +10684,6 @@ void nsCSSFrameConstructor::FinishBuildingColumns(
 
 bool nsCSSFrameConstructor::MayNeedToCreateColumnSpanSiblings(
     nsContainerFrame* aBlockFrame, const nsFrameList& aChildList) {
-  MOZ_ASSERT(StaticPrefs::layout_css_column_span_enabled(),
-             "Call this only when layout.css.column-span.enabled is true!");
-
   if (!aBlockFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
     // The block frame isn't in a multi-column block formatting context.
     return false;
@@ -10820,9 +10782,6 @@ nsFrameList nsCSSFrameConstructor::CreateColumnSpanSiblings(
 bool nsCSSFrameConstructor::MaybeRecreateForColumnSpan(
     nsFrameConstructorState& aState, nsContainerFrame* aParentFrame,
     nsFrameList& aFrameList, nsIFrame* aPrevSibling) {
-  MOZ_ASSERT(StaticPrefs::layout_css_column_span_enabled(),
-             "Call this only when layout.css.column-span.enabled is true!");
-
   if (!aParentFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
     return false;
   }
@@ -10977,11 +10936,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructInline(
     aState.PushAbsoluteContainingBlock(newFrame, newFrame, absoluteSaveState);
   }
 
-  if (StaticPrefs::layout_css_column_span_enabled()) {
-    if (aParentFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) &&
-        !ShouldSuppressColumnSpanDescendants(aParentFrame)) {
-      newFrame->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
-    }
+  if (aParentFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR) &&
+      !ShouldSuppressColumnSpanDescendants(aParentFrame)) {
+    newFrame->AddStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
   }
 
   // Process the child content
@@ -11068,8 +11025,7 @@ void nsCSSFrameConstructor::CreateIBSiblings(nsFrameConstructorState& aState,
     nsFrameList blockKids =
         aChildList.Split([](nsIFrame* f) { return !f->IsBlockOutside(); });
 
-    if (!StaticPrefs::layout_css_column_span_enabled() ||
-        !aInitialInline->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
+    if (!aInitialInline->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
       MoveChildrenTo(aInitialInline, blockFrame, blockKids);
 
       SetFrameIsIBSplit(lastNewInline, blockFrame);
