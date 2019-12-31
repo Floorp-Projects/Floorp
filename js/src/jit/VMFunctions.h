@@ -962,13 +962,12 @@ MOZ_MUST_USE bool NormalSuspend(JSContext* cx, HandleObject obj,
                                 jsbytecode* pc);
 MOZ_MUST_USE bool FinalSuspend(JSContext* cx, HandleObject obj, jsbytecode* pc);
 MOZ_MUST_USE bool InterpretResume(JSContext* cx, HandleObject obj,
-                                  HandleValue val, HandlePropertyName kind,
-                                  MutableHandleValue rval);
+                                  Value* stackValues, MutableHandleValue rval);
 MOZ_MUST_USE bool DebugAfterYield(JSContext* cx, BaselineFrame* frame);
 MOZ_MUST_USE bool GeneratorThrowOrReturn(
     JSContext* cx, BaselineFrame* frame,
     Handle<AbstractGeneratorObject*> genObj, HandleValue arg,
-    uint32_t resumeKindArg);
+    int32_t resumeKindArg);
 
 MOZ_MUST_USE bool GlobalNameConflictsCheckFromIon(JSContext* cx,
                                                   HandleScript script);

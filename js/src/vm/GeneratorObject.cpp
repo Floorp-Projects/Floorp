@@ -162,7 +162,7 @@ bool js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
 bool AbstractGeneratorObject::resume(JSContext* cx,
                                      InterpreterActivation& activation,
                                      Handle<AbstractGeneratorObject*> genObj,
-                                     HandleValue arg) {
+                                     HandleValue arg, HandleValue resumeKind) {
   MOZ_ASSERT(genObj->isSuspended());
 
   RootedFunction callee(cx, &genObj->callee());
@@ -189,12 +189,12 @@ bool AbstractGeneratorObject::resume(JSContext* cx,
   uint32_t offset = script->resumeOffsets()[genObj->resumeIndex()];
   activation.regs().pc = script->offsetToPC(offset);
 
-  // Always push on a value, even if we are raising an exception. In the
-  // exception case, the stack needs to have something on it so that exception
-  // handling doesn't skip the catch blocks. See TryNoteIter::settle.
-  activation.regs().sp++;
+  // Push arg, generator, resumeKind Values on the generator's stack.
+  activation.regs().sp += 3;
   MOZ_ASSERT(activation.regs().spForStackDepth(activation.regs().stackDepth()));
-  activation.regs().sp[-1] = arg;
+  activation.regs().sp[-3] = arg;
+  activation.regs().sp[-2] = ObjectValue(*genObj);
+  activation.regs().sp[-1] = resumeKind;
 
   genObj->setRunning();
   return true;
@@ -378,4 +378,29 @@ template <>
 bool JSObject::is<js::AbstractGeneratorObject>() const {
   return is<GeneratorObject>() || is<AsyncFunctionGeneratorObject>() ||
          is<AsyncGeneratorObject>();
+}
+
+GeneratorResumeKind js::AtomToResumeKind(JSContext* cx, JSAtom* atom) {
+  if (atom == cx->names().next) {
+    return GeneratorResumeKind::Next;
+  }
+  if (atom == cx->names().throw_) {
+    return GeneratorResumeKind::Throw;
+  }
+  MOZ_ASSERT(atom == cx->names().return_);
+  return GeneratorResumeKind::Return;
+}
+
+JSAtom* js::ResumeKindToAtom(JSContext* cx, GeneratorResumeKind kind) {
+  switch (kind) {
+    case GeneratorResumeKind::Next:
+      return cx->names().next;
+
+    case GeneratorResumeKind::Throw:
+      return cx->names().throw_;
+
+    case GeneratorResumeKind::Return:
+      return cx->names().return_;
+  }
+  MOZ_CRASH("Invalid resume kind");
 }

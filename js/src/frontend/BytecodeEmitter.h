@@ -51,6 +51,12 @@
 #include "vm/StringType.h"  // JSAtom
 
 namespace js {
+
+enum class GeneratorResumeKind;
+
+}  // namespace js
+
+namespace js {
 namespace frontend {
 
 class CallOrNewEmitter;
@@ -573,6 +579,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   }
   MOZ_MUST_USE bool emitAwaitInInnermostScope(UnaryNode* awaitNode);
   MOZ_MUST_USE bool emitAwaitInScope(EmitterScope& currentScope);
+
+  MOZ_MUST_USE bool emitPushResumeKind(GeneratorResumeKind kind);
 
   MOZ_MUST_USE bool emitPropLHS(PropertyAccess* prop);
   MOZ_MUST_USE bool emitPropIncDec(UnaryNode* incDec);
