@@ -554,6 +554,10 @@ class AsyncPanZoomController {
   const FrameMetrics& Metrics() const;
   FrameMetrics& Metrics();
 
+  // Helper function to compare root frame metrics and update them
+  // Returns true when the metrics have changed and were updated.
+  bool UpdateRootFrameMetricsIfChanged(FrameMetrics& metrics);
+
  private:
   // Get whether the horizontal content of the honoured target of auto-dir
   // scrolling starts from right to left. If you don't know of auto-dir
