@@ -3672,9 +3672,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       // Calculate the multicol containing block's block size so that the
       // children with percentage block size get correct percentage basis.
       const ReflowInput* cbReflowInput =
-          StaticPrefs::layout_css_column_span_enabled()
-              ? aState.mReflowInput.mParentReflowInput->mCBReflowInput
-              : aState.mReflowInput.mCBReflowInput;
+          aState.mReflowInput.mParentReflowInput->mCBReflowInput;
       MOZ_ASSERT(cbReflowInput->mFrame->StyleColumn()->IsColumnContainerStyle(),
                  "Get unexpected reflow input of multicol containing block!");
 
@@ -7269,7 +7267,7 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
         GetWritingMode().IsVerticalSideways() !=
             GetParent()->GetWritingMode().IsVerticalSideways())) ||
       StyleDisplay()->IsContainPaint() || StyleDisplay()->IsContainLayout() ||
-      (StaticPrefs::layout_css_column_span_enabled() && IsColumnSpan())) {
+      IsColumnSpan()) {
     AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
   }
 
