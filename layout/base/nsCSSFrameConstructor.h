@@ -1750,16 +1750,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   //        ColumnSetWrapperFrame (which would have been the parent of
   //        aColumnContent if we were not creating a column hierarchy).
   // @param aContent is the content of the aColumnContent.
-  // @return the outermost ColumnSetWrapperFrame (or ColumnSetFrame if
-  //         "column-span" is disabled).
-  //
-  // Bug 1499281: We can change the return type to ColumnSetWrapperFrame
-  // once "layout.css.column-span.enabled" is removed.
-  nsContainerFrame* BeginBuildingColumns(nsFrameConstructorState& aState,
-                                         nsIContent* aContent,
-                                         nsContainerFrame* aParentFrame,
-                                         nsContainerFrame* aColumnContent,
-                                         ComputedStyle* aComputedStyle);
+  // @return the outermost ColumnSetWrapperFrame.
+  nsBlockFrame* BeginBuildingColumns(nsFrameConstructorState& aState,
+                                     nsIContent* aContent,
+                                     nsContainerFrame* aParentFrame,
+                                     nsContainerFrame* aColumnContent,
+                                     ComputedStyle* aComputedStyle);
 
   // Complete building the column hierarchy by first wrapping each
   // non-column-span child in aChildList in a ColumnSetFrame (skipping
@@ -1773,8 +1769,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // @param aColumnContentSiblings contains the aColumnContent's siblings, which
   //        are the column spanners and aColumnContent's continuations returned
   //        by CreateColumnSpanSiblings(). It'll become empty after this call.
-  //
-  // Note: No need to call this function if "column-span" is disabled.
   void FinishBuildingColumns(nsFrameConstructorState& aState,
                              nsContainerFrame* aColumnSetWrapper,
                              nsContainerFrame* aColumnContent,
