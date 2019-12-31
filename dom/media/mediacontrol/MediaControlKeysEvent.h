@@ -70,6 +70,14 @@ class MediaControlKeysEventSource {
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   MediaControlKeysEventSource() = default;
 
+  // This is used to indicate current media playback state. For those platforms
+  // which have virtual control interface, we have to update the playback state
+  // correctly in order to show the correct control icon on the interface.
+  enum class PlaybackState : uint8_t {
+    ePaused,
+    ePlayed,
+  };
+
   virtual void AddListener(MediaControlKeysEventListener* aListener);
   virtual void RemoveListener(MediaControlKeysEventListener* aListener);
   size_t GetListenersNum() const;
@@ -80,9 +88,13 @@ class MediaControlKeysEventSource {
   virtual void Close();
   virtual bool IsOpened() const = 0;
 
+  virtual void SetPlaybackState(PlaybackState aState);
+  virtual PlaybackState GetPlaybackState() const;
+
  protected:
   virtual ~MediaControlKeysEventSource() = default;
   nsTArray<RefPtr<MediaControlKeysEventListener>> mListeners;
+  PlaybackState mPlaybackState = PlaybackState::ePaused;
 };
 
 }  // namespace dom
