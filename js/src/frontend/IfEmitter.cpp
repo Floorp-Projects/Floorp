@@ -136,8 +136,11 @@ bool IfEmitter::emitIf(const Maybe<uint32_t>& ifPos) {
 
 bool IfEmitter::emitThen() {
   MOZ_ASSERT(state_ == State::If || state_ == State::ElseIf);
-  MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
-  MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
+
+  if (kind_ == Kind::MayContainLexicalAccessInBranch) {
+    MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
+    MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
+  }
 
   if (!emitThenInternal()) {
     return false;
@@ -151,8 +154,11 @@ bool IfEmitter::emitThen() {
 
 bool IfEmitter::emitThenElse() {
   MOZ_ASSERT(state_ == State::If || state_ == State::ElseIf);
-  MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
-  MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
+
+  if (kind_ == Kind::MayContainLexicalAccessInBranch) {
+    MOZ_ASSERT_IF(state_ == State::ElseIf, tdzCache_.isSome());
+    MOZ_ASSERT_IF(state_ != State::ElseIf, tdzCache_.isNothing());
+  }
 
   if (!emitThenInternal()) {
     return false;
