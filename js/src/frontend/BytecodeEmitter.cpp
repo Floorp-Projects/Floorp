@@ -2305,6 +2305,10 @@ bool BytecodeEmitter::emitYieldOp(JSOp op) {
   return emitJumpTargetOp(JSOP_AFTERYIELD, &unusedOffset);
 }
 
+bool BytecodeEmitter::emitPushResumeKind(GeneratorResumeKind kind) {
+  return emit2(JSOP_RESUMEKIND, uint8_t(kind));
+}
+
 bool BytecodeEmitter::emitSetThis(BinaryNode* setThisNode) {
   // ParseNodeKind::SetThis is used to update |this| after a super() call
   // in a derived class constructor.
@@ -6053,10 +6057,15 @@ bool BytecodeEmitter::emitInitialYield(UnaryNode* yieldNode) {
   }
 
   if (!emitYieldOp(JSOP_INITIALYIELD)) {
+    //              [stack] RVAL GENERATOR RESUMEKIND
     return false;
   }
-
+  if (!emit1(JSOP_CHECK_RESUMEKIND)) {
+    //              [stack] RVAL
+    return false;
+  }
   if (!emit1(JSOP_POP)) {
+    //              [stack]
     return false;
   }
 
@@ -6112,6 +6121,11 @@ bool BytecodeEmitter::emitYield(UnaryNode* yieldNode) {
   }
 
   if (!emitYieldOp(JSOP_YIELD)) {
+    //              [stack] YIELDRESULT GENERATOR RESUMEKIND
+    return false;
+  }
+
+  if (!emit1(JSOP_CHECK_RESUMEKIND)) {
     //              [stack] YIELDRESULT
     return false;
   }
@@ -6162,6 +6176,10 @@ bool BytecodeEmitter::emitAwaitInScope(EmitterScope& currentScope) {
     return false;
   }
   if (!emitYieldOp(JSOP_AWAIT)) {
+    //              [stack] RESOLVED GENERATOR RESUMEKIND
+    return false;
+  }
+  if (!emit1(JSOP_CHECK_RESUMEKIND)) {
     //              [stack] RESOLVED
     return false;
   }
@@ -6269,6 +6287,10 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
 
   // Yield RESULT as-is, without re-boxing.
   if (!emitYieldOp(JSOP_YIELD)) {
+    //              [stack] NEXT ITER RECEIVED GENERATOR RESUMEKIND
+    return false;
+  }
+  if (!emit1(JSOP_CHECK_RESUMEKIND)) {
     //              [stack] NEXT ITER RECEIVED
     return false;
   }
@@ -6993,21 +7015,29 @@ bool BytecodeEmitter::emitSelfHostedResumeGenerator(BinaryNode* callNode) {
 
   ParseNode* genNode = argsList->head();
   if (!emitTree(genNode)) {
+    //              [stack] GENERATOR
     return false;
   }
 
   ParseNode* valNode = genNode->pn_next;
   if (!emitTree(valNode)) {
+    //              [stack] GENERATOR VALUE
     return false;
   }
 
   ParseNode* kindNode = valNode->pn_next;
   MOZ_ASSERT(kindNode->isKind(ParseNodeKind::StringExpr));
-  uint8_t operand = uint8_t(AbstractGeneratorObject::getResumeKind(
-      cx, kindNode->as<NameNode>().atom()));
+  GeneratorResumeKind kind =
+      AtomToResumeKind(cx, kindNode->as<NameNode>().atom());
   MOZ_ASSERT(!kindNode->pn_next);
 
-  if (!emit2(JSOP_RESUME, operand)) {
+  if (!emitPushResumeKind(kind)) {
+    //              [stack] GENERATOR VALUE RESUMEKIND
+    return false;
+  }
+
+  if (!emit1(JSOP_RESUME)) {
+    //              [stack] RVAL
     return false;
   }
 

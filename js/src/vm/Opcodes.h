@@ -1898,14 +1898,17 @@
     MACRO(JSOP_GENERATOR, "generator", NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Pops the generator from the top of the stack, suspends it and stops
-     * interpretation.
+     * execution.
+     *
+     * When resuming execution, JSOP_RESUME pushes the rval, gen and resumeKind
+     * values. resumeKind is the GeneratorResumeKind stored as int32.
      *
      *   Category: Statements
      *   Type: Generator
      *   Operands: uint24_t resumeIndex
-     *   Stack: generator => generator
+     *   Stack: gen => rval, gen, resumeKind
      */ \
-    MACRO(JSOP_INITIALYIELD, "initialyield", NULL, 4, 1, 1, JOF_RESUMEINDEX) \
+    MACRO(JSOP_INITIALYIELD, "initialyield", NULL, 4, 1, 3, JOF_RESUMEINDEX) \
     /*
      * Bytecode emitted after 'yield' expressions. This is useful for the
      * Debugger and AbstractGeneratorObject::isAfterYieldOrAwait. It's treated
@@ -1929,15 +1932,18 @@
      */ \
     MACRO(JSOP_FINALYIELDRVAL, "finalyieldrval", NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Pops the generator and the return value 'rval1', stops interpretation
-     * and returns 'rval1'. Pushes sent value from 'send()' onto the stack.
+     * Pops the generator and the return value 'rval1', stops execution and
+     * returns 'rval1'.
+     *
+     * When resuming execution, JSOP_RESUME pushes the rval2, gen and resumeKind
+     * values.
      *
      *   Category: Statements
      *   Type: Generator
      *   Operands: uint24_t resumeIndex
-     *   Stack: rval1, gen => rval2
+     *   Stack: rval1, gen => rval2, gen, resumeKind
      */ \
-    MACRO(JSOP_YIELD, "yield", NULL, 4, 2, 1, JOF_RESUMEINDEX) \
+    MACRO(JSOP_YIELD, "yield", NULL, 4, 2, 3, JOF_RESUMEINDEX) \
     /*
      * Pushes a boolean indicating whether the top of the stack is
      * MagicValue(JS_GENERATOR_CLOSING).
@@ -1973,15 +1979,18 @@
      */ \
     MACRO(JSOP_ASYNCRESOLVE, "async-resolve", NULL, 2, 2, 1, JOF_UINT8) \
     /*
-     * Pops the generator and the return value 'promise', stops interpretation
-     * and returns 'promise'. Pushes resolved value onto the stack.
+     * Pops the generator and the return value 'promise', stops execution and
+     * returns 'promise'.
+     *
+     * When resuming execution, JSOP_RESUME pushes the resolved, gen and
+     * resumeKind values. resumeKind is the GeneratorResumeKind stored as int32.
      *
      *   Category: Statements
      *   Type: Generator
      *   Operands: uint24_t resumeIndex
-     *   Stack: promise, gen => resolved
+     *   Stack: promise, gen => resolved, gen, resumeKind
      */ \
-    MACRO(JSOP_AWAIT, "await", NULL, 4, 2, 1, JOF_RESUMEINDEX) \
+    MACRO(JSOP_AWAIT, "await", NULL, 4, 2, 3, JOF_RESUMEINDEX) \
     /*
      * Pops the top of stack value as 'value', checks if the await for 'value'
      * can be skipped. If the await operation can be skipped and the resolution
@@ -1996,16 +2005,37 @@
      */ \
     MACRO(JSOP_TRYSKIPAWAIT, "tryskipawait", NULL, 1, 1, 2, JOF_BYTE) \
     /*
-     * Pops the generator and argument from the stack, pushes a new generator
-     * frame and resumes execution of it. Pushes the return value after the
-     * generator yields.
+     * Pushes one of the GeneratorResumeKind values as Int32Value.
      *
      *   Category: Statements
      *   Type: Generator
-     *   Operands: resume kind (AbstractGeneratorObject::ResumeKind)
-     *   Stack: gen, val => rval
+     *   Operands: resumeKind (GeneratorResumeKind)
+     *   Stack: => resumeKind
      */ \
-    MACRO(JSOP_RESUME, "resume", NULL, 2, 2, 1, JOF_UINT8|JOF_INVOKE) \
+    MACRO(JSOP_RESUMEKIND, "resumekind", NULL, 2, 0, 1, JOF_UINT8) \
+    /*
+     * Pops the generator and resumeKind values. resumeKind is the
+     * GeneratorResumeKind stored as int32. If resumeKind is Next, continue
+     * execution. If resumeKind is Throw or Return, these completions are
+     * handled by throwing an exception. See GeneratorThrowOrReturn.
+     *
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands:
+     *   Stack: rval, gen, resumeKind => rval
+     */ \
+    MACRO(JSOP_CHECK_RESUMEKIND, "check-resumekind", NULL, 1, 3, 1, JOF_BYTE) \
+    /*
+     * Pops the generator, argument and resumeKind from the stack, pushes a new
+     * generator frame and resumes execution of it. Pushes the return value
+     * after the generator yields.
+     *
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands:
+     *   Stack: gen, val, resumeKind => rval
+     */ \
+    MACRO(JSOP_RESUME, "resume", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE) \
     /*
      * This opcode is a no-op and it indicates the location of a jump
      * instruction target. Some other opcodes act as jump targets as well, see
@@ -2999,8 +3029,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(238)                                   \
-  MACRO(239)                                   \
   MACRO(240)                                   \
   MACRO(241)                                   \
   MACRO(242)                                   \

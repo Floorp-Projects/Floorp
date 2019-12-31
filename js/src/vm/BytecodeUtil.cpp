@@ -691,7 +691,6 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
     case JSOP_THROWSETCALLEE:
     case JSOP_THROWSETCONST:
     case JSOP_INITALIASEDLEXICAL:
-    case JSOP_INITIALYIELD:
     case JSOP_ITERNEXT:
       // Keep the top value.
       MOZ_ASSERT(nuses == 1);
@@ -701,6 +700,12 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
     case JSOP_INITHOMEOBJECT:
       // Pop the top value, keep the other value.
       MOZ_ASSERT(nuses == 2);
+      MOZ_ASSERT(ndefs == 1);
+      break;
+
+    case JSOP_CHECK_RESUMEKIND:
+      // Pop the top two values, keep the other value.
+      MOZ_ASSERT(nuses == 3);
       MOZ_ASSERT(ndefs == 1);
       break;
 
@@ -2126,12 +2131,23 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       case JSOP_UNINITIALIZED:
         return write("UNINITIALIZED");
 
+      case JSOP_INITIALYIELD:
       case JSOP_AWAIT:
       case JSOP_YIELD:
         // Printing "yield SOMETHING" is confusing since the operand doesn't
         // match to the syntax, since the stack operand for "yield 10" is
         // the result object, not 10.
-        return write("RVAL");
+        if (defIndex == 0) {
+          return write("RVAL");
+        }
+        if (defIndex == 1) {
+          return write("GENERATOR");
+        }
+        MOZ_ASSERT(defIndex == 2);
+        return write("RESUMEKIND");
+
+      case JSOP_RESUMEKIND:
+        return write("RESUMEKIND");
 
       case JSOP_ASYNCAWAIT:
       case JSOP_ASYNCRESOLVE:

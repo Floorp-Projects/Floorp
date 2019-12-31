@@ -40,6 +40,6 @@ assertEq(
     log.join(", "),
     "f in, 8, 9, z in, 1, z out, " +
     "9, 10, z in, 1, 2, 3, z out, " +
-    "10, 11, z in, 2, 4, 5, z out, " +  // not sure why we hit line 2 here, source notes bug maybe
+    "10, 11, z in, 3, 2, 4, 5, z out, " +  // not sure why we hit line 2 here, source notes bug maybe
     "11, 12, f out"
 );

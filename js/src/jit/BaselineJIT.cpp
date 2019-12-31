@@ -1025,7 +1025,6 @@ void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
 void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                uint32_t interpretOpNoDebugTrapOffset,
                                uint32_t bailoutPrologueOffset,
-                               uint32_t generatorThrowOrReturnCallOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
                                uint32_t debugTrapHandlerOffset,
@@ -1038,7 +1037,6 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
   interpretOpOffset_ = interpretOpOffset;
   interpretOpNoDebugTrapOffset_ = interpretOpNoDebugTrapOffset;
   bailoutPrologueOffset_ = bailoutPrologueOffset;
-  generatorThrowOrReturnCallOffset_ = generatorThrowOrReturnCallOffset;
   profilerEnterToggleOffset_ = profilerEnterToggleOffset;
   profilerExitToggleOffset_ = profilerExitToggleOffset;
   debugTrapHandlerOffset_ = debugTrapHandlerOffset;

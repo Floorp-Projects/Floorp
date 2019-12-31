@@ -2549,6 +2549,8 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOP_YIELD:
     case JSOP_FINALYIELDRVAL:
     case JSOP_RESUME:
+    case JSOP_RESUMEKIND:
+    case JSOP_CHECK_RESUMEKIND:
     case JSOP_AFTERYIELD:
     case JSOP_AWAIT:
     case JSOP_TRYSKIPAWAIT:

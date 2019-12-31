@@ -40,5 +40,5 @@ dbg.onEnterFrame = frame => {
 assertThrowsValue(() => g.f(), "fit");
 // z{1} is the initial generator setup.
 // z{12} is the first .next() call, running to `yield 1` on line 2
-// The final `z{!}` is for the .throw() call.
-assertEq(log, "f{56z{1}67z{12}78z{!}!}");
+// The final `z{2!}` is for the .throw() call.
+assertEq(log, "f{56z{1}67z{12}78z{2!}!}");
