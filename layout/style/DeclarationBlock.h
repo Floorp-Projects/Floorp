@@ -95,9 +95,11 @@ class DeclarationBlock final {
       // copied. As a result the new value does not replace rule node tree until
       // traversal happens.
       //
-      // FIXME(emilio): This is a hack for ::first-line and transitions starting
-      // due to CSSOM changes when other transitions are already running. Try
-      // to simplify this setup.
+      // FIXME(emilio, bug 1606413): This is a hack for ::first-line and
+      // transitions starting due to CSSOM changes when other transitions are
+      // already running. Try to simplify this setup, so that rule tree updates
+      // find the mutated declaration block properly rather than having to
+      // insert the cloned declaration in the tree.
       return Clone();
     }
 
