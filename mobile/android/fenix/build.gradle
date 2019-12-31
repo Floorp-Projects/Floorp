@@ -70,6 +70,8 @@ configurations {
 
 dependencies {
     ktlint "com.pinterest:ktlint:0.34.2"
+    detekt project(":mozilla-detekt-rules")
+    detekt "io.gitlab.arturbosch.detekt:detekt-cli:${Versions.detekt}"
 }
 
 task ktlint(type: JavaExec, group: "verification") {

@@ -1,0 +1,14 @@
+apply plugin: 'kotlin'
+
+dependencies {
+  compileOnly Deps.detektApi
+
+  testImplementation Deps.detektApi
+  testImplementation Deps.detektTest
+  implementation Deps.kotlin_stdlib
+  testImplementation Deps.junitApi
+  testImplementation Deps.junitParams
+  testImplementation Deps.assertJ
+  testRuntimeOnly Deps.junitEngine
+}
+

@@ -106,6 +106,15 @@ complexity:
     thresholdInObjects: 11
     thresholdInEnums: 11
 
+mozilla-detekt-rules:
+  active: true
+  MozillaBannedPropertyAccess:
+    active: true
+    # BuildConfig.Debug: This property tests whether the application was built
+    # with the debuggable flag or not. Use a check for different build variants,
+    # instead.
+    bannedProperties: "BuildConfig.DEBUG"
+
 empty-blocks:
   active: true
   EmptyCatchBlock:

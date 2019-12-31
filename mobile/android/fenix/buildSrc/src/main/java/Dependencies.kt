@@ -11,6 +11,7 @@ object Versions {
     const val leanplum = "5.2.3"
     const val osslicenses_plugin = "0.9.5"
     const val osslicenses_library = "17.0.0"
+    const val detekt = "1.0.0-RC16"
 
     const val androidx_appcompat = "1.1.0"
     const val androidx_biometric = "1.0.1"
@@ -45,7 +46,8 @@ object Versions {
     const val adjust = "4.18.3"
     const val installreferrer = "1.0"
 
-    const val junit = "4.12"
+    const val junit = "5.5.2"
+    const val assertJ = "3.13.2"
     const val mockito = "2.24.5"
     const val mockk = "1.9.kotlin12"
     const val assertk = "0.19"
@@ -204,4 +206,11 @@ object Deps {
     const val google_ads_id = "com.google.android.gms:play-services-ads-identifier:${Versions.google_ads_id_version}"
 
     const val lottie = "com.airbnb.android:lottie:${Versions.airbnb_lottie}"
+
+    const val detektApi = "io.gitlab.arturbosch.detekt:detekt-api:${Versions.detekt}"
+    const val detektTest = "io.gitlab.arturbosch.detekt:detekt-test:${Versions.detekt}"
+    const val junitApi = "org.junit.jupiter:junit-jupiter-api:${Versions.junit}"
+    const val junitParams = "org.junit.jupiter:junit-jupiter-params:${Versions.junit}"
+    const val assertJ = "org.assertj:assertj-core:${Versions.assertJ}"
+    const val junitEngine = "org.junit.jupiter:junit-jupiter-engine:${Versions.junit}"
 }
