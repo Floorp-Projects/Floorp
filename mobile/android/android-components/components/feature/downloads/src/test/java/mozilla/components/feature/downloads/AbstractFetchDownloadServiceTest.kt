@@ -68,6 +68,7 @@ class AbstractFetchDownloadServiceTest {
 
         doReturn(broadcastManager).`when`(service).broadcastManager
         doReturn(testContext).`when`(service).context
+        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
     }
 
     @Test
@@ -80,7 +81,6 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -127,7 +127,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.verifyDownload(downloadJobState)
 
-        assertEquals(FAILED, downloadJobState.status)
+        assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
     }
 
     @Test
@@ -148,7 +148,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.verifyDownload(downloadJobState)
 
-        assertEquals(PAUSED, downloadJobState.status)
+        assertEquals(PAUSED, service.getDownloadJobStatus(downloadJobState))
     }
 
     @Test
@@ -169,7 +169,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.verifyDownload(downloadJobState)
 
-        assertNotEquals(FAILED, downloadJobState.status)
+        assertNotEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
     }
 
     @Test
@@ -190,7 +190,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.verifyDownload(downloadJobState)
 
-        assertNotEquals(FAILED, downloadJobState.status)
+        assertNotEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
     }
 
     @Test
@@ -211,7 +211,7 @@ class AbstractFetchDownloadServiceTest {
 
         service.verifyDownload(downloadJobState)
 
-        assertNotEquals(FAILED, downloadJobState.status)
+        assertNotEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
     }
 
     @Test
@@ -224,7 +224,6 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -250,7 +249,8 @@ class AbstractFetchDownloadServiceTest {
         }
 
         service.downloadJobs[providedDownload.value.id]?.job?.join()
-        assertEquals(PAUSED, service.downloadJobs[providedDownload.value.id]?.status)
+        val downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        assertEquals(PAUSED, service.getDownloadJobStatus(downloadJobState))
     }
 
     @Test
@@ -263,7 +263,6 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -292,8 +291,9 @@ class AbstractFetchDownloadServiceTest {
 
         service.downloadJobs[providedDownload.value.id]?.job?.join()
 
-        assertEquals(CANCELLED, service.downloadJobs[providedDownload.value.id]?.status)
-        assertTrue(service.downloadJobs[providedDownload.value.id]!!.downloadDeleted)
+        val downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        assertEquals(CANCELLED, service.getDownloadJobStatus(downloadJobState))
+        assertTrue(downloadJobState.downloadDeleted)
     }
 
     @Test
@@ -316,7 +316,6 @@ class AbstractFetchDownloadServiceTest {
             .fetch(Request("https://example.com/file.txt"))
         doReturn(resumeResponse).`when`(client)
             .fetch(Request("https://example.com/file.txt", headers = MutableHeaders("Range" to "bytes=1-")))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -327,8 +326,12 @@ class AbstractFetchDownloadServiceTest {
 
         val providedDownload = argumentCaptor<DownloadState>()
         verify(service).performDownload(providedDownload.capture())
-        service.downloadJobs[providedDownload.value.id]?.currentBytesCopied = 1
-        service.downloadJobs[providedDownload.value.id]?.status = PAUSED
+
+        // Simulate a pause
+        var downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        downloadJobState.currentBytesCopied = 1
+        service.setDownloadJobStatus(downloadJobState, PAUSED)
+        service.downloadJobs[providedDownload.value.id]?.job?.cancel()
 
         val resumeIntent = Intent(ACTION_RESUME).apply {
             setPackage(testContext.applicationContext.packageName)
@@ -343,9 +346,14 @@ class AbstractFetchDownloadServiceTest {
             assertEquals(NOTIFICATION, resumeFact.item)
         }
 
+        downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        assertEquals(ACTIVE, service.getDownloadJobStatus(downloadJobState))
+
+        // Make sure the download job is completed (break out of copyInChunks)
+        service.setDownloadJobStatus(downloadJobState, PAUSED)
+
         service.downloadJobs[providedDownload.value.id]?.job?.join()
 
-        assertEquals(ACTIVE, service.downloadJobs[providedDownload.value.id]?.status)
         verify(service).startDownloadJob(providedDownload.value.id)
     }
 
@@ -359,7 +367,6 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -371,7 +378,11 @@ class AbstractFetchDownloadServiceTest {
         val providedDownload = argumentCaptor<DownloadState>()
         verify(service).performDownload(providedDownload.capture())
         service.downloadJobs[providedDownload.value.id]?.job?.join()
-        service.downloadJobs[providedDownload.value.id]?.status = FAILED
+
+        // Simulate a failure
+        var downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        service.setDownloadJobStatus(downloadJobState, FAILED)
+        service.downloadJobs[providedDownload.value.id]?.job?.cancel()
 
         val tryAgainIntent = Intent(ACTION_TRY_AGAIN).apply {
             setPackage(testContext.applicationContext.packageName)
@@ -386,9 +397,14 @@ class AbstractFetchDownloadServiceTest {
             assertEquals(NOTIFICATION, tryAgainFact.item)
         }
 
+        downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        assertEquals(ACTIVE, service.getDownloadJobStatus(downloadJobState))
+
+        // Make sure the download job is completed (break out of copyInChunks)
+        service.setDownloadJobStatus(downloadJobState, PAUSED)
+
         service.downloadJobs[providedDownload.value.id]?.job?.join()
 
-        assertEquals(ACTIVE, service.downloadJobs[providedDownload.value.id]?.status)
         verify(service).startDownloadJob(providedDownload.value.id)
     }
 
@@ -402,7 +418,6 @@ class AbstractFetchDownloadServiceTest {
             Response.Body(mock())
         )
         doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
-        doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
 
         val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
             putDownloadExtra(download)
@@ -415,7 +430,8 @@ class AbstractFetchDownloadServiceTest {
         verify(service).performDownload(providedDownload.capture())
 
         service.downloadJobs[providedDownload.value.id]?.job?.join()
-        assertEquals(FAILED, service.downloadJobs[providedDownload.value.id]?.status)
+        val downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
     }
 
     @Test
