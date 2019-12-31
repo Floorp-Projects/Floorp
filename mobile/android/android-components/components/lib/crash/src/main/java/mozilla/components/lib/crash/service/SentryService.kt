@@ -7,6 +7,7 @@ package mozilla.components.lib.crash.service
 import android.content.Context
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import io.sentry.SentryClient
 import io.sentry.SentryClientFactory
 import io.sentry.android.AndroidSentryClientFactory
@@ -35,14 +36,21 @@ class SentryService(
     tags: Map<String, String> = emptyMap(),
     environment: String? = null,
     private val sendEventForNativeCrashes: Boolean = false,
-    clientFactory: SentryClientFactory = AndroidSentryClientFactory(context)
+    clientFactory: SentryClientFactory? = null
 ) : CrashReporterService {
-    private val client: SentryClient by lazy { SentryClientFactory.sentryClient(
+
+    // Fenix perf note: Sentry init may negatively impact cold startup so it's important this is lazily init.
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal val client: SentryClient by lazy { SentryClientFactory.sentryClient(
             Uri.parse(dsn).buildUpon()
                 .appendQueryParameter("uncaught.handler.enabled", "false")
                 .build()
                 .toString(),
-            clientFactory).apply {
+
+            // Fenix perf note: we initialize Android...Factory inside the lazy block to avoid
+            // calling the slow Logger.getLogger call on cold startup #7441
+            clientFactory ?: AndroidSentryClientFactory(context)
+        ).apply {
             this.environment = environment
             tags.forEach { entry ->
                 addTag(entry.key, entry.value)
