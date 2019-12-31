@@ -74,9 +74,7 @@ add_task(async function test_login_item() {
       let usernameInput = loginItem.shadowRoot.querySelector(
         "input[name='username']"
       );
-      let passwordInput = loginItem.shadowRoot.querySelector(
-        "input[name='password']"
-      );
+      let passwordInput = loginItem._passwordInput;
 
       let editButton = loginItem.shadowRoot.querySelector(".edit-button");
       editButton.click();
