@@ -2624,6 +2624,7 @@ const MediaRawData* TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
   const RefPtr<MediaRawData>& sample = track[aIndex];
   if (!aIndex || sample->mTimecode <= aExpectedDts + aFuzz ||
       sample->mTime <= aExpectedPts + aFuzz) {
+    MOZ_DIAGNOSTIC_ASSERT(sample->HasValidTime());
     return sample;
   }
 
