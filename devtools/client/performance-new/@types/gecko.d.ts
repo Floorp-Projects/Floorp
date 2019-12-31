@@ -39,6 +39,7 @@ declare namespace MockedExports {
     selectedTab: BrowserTab;
     selectedBrowser?: ChromeBrowser;
     messageManager: MessageManager;
+    ownerDocument?: ChromeDocument;
   }
 
   interface BrowserTab {
@@ -136,6 +137,11 @@ declare namespace MockedExports {
     };
   };
 
+  // TS-TODO
+  const CustomizableUIJSM: any;
+
+  const CustomizableWidgetsJSM: any;
+
   const Services: Services;
 
   // This class is needed by the Cc importing mechanism. e.g.
@@ -225,6 +231,19 @@ declare module "resource://gre/modules/AppConstants.jsm" {
 
 declare module "resource://gre/modules/ProfilerGetSymbols.jsm" {
   export = MockedExports.ProfilerGetSymbolsJSM;
+}
+
+declare module "resource://devtools/client/performance-new/popup/background.jsm.js" {
+  import * as Background from "devtools/client/performance-new/popup/background.jsm.js";
+  export = Background
+}
+
+declare module "resource:///modules/CustomizableUI.jsm" {
+  export = MockedExports.CustomizableUIJSM;
+}
+
+declare module "resource:///modules/CustomizableWidgets.jsm" {
+  export = MockedExports.CustomizableWidgetsJSM;
 }
 
 declare var ChromeUtils: MockedExports.ChromeUtils;

@@ -27,3 +27,19 @@ const browserLoader = BrowserLoader(...);
 const scope = this;
 scope.require = browserLoader.require;
 ```
+
+## Exports from a JSM
+
+TypeScript does not understand `EXPORTED_SYMBOLS` from the JSM for exports. However, we can get around this by secretly defining and using the `exports` object so that TypeScript reads the file like a CommonJS module.
+
+```js
+// Provide an exports object for the JSM to be properly read by TypeScript.
+/** @type {any} */ (this).exports = {};
+
+exports.ProfilerMenuButton = ProfilerMenuButton;
+
+// The following line confuses the linting which expects a static array expression.
+// for the exported symboles.
+// eslint-disable-next-line
+var EXPORTED_SYMBOLS = Object.keys(exports);
+```
