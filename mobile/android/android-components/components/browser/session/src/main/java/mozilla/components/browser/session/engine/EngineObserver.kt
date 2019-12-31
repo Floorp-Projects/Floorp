@@ -47,6 +47,10 @@ internal class EngineObserver(
             session.icon = null
         }
 
+        if (!isInScope(session.webAppManifest, url)) {
+            session.webAppManifest = null
+        }
+
         session.url = url
 
         // Meh, GeckoView doesn't notify us about recording devices no longer used when navigating away. As a
@@ -58,8 +62,6 @@ internal class EngineObserver(
             it.reject()
             true
         }
-
-        session.webAppManifest = null
     }
 
     private fun isHostEquals(sessionUrl: String, newUrl: String): Boolean {
@@ -67,6 +69,21 @@ internal class EngineObserver(
         val newUri = newUrl.toUri()
 
         return sessionUri.scheme == newUri.scheme && sessionUri.host == newUri.host
+    }
+
+    /**
+     * Checks that the [newUrl] is in scope of the web app manifest.
+     *
+     * https://www.w3.org/TR/appmanifest/#dfn-within-scope
+     */
+    private fun isInScope(manifest: WebAppManifest?, newUrl: String): Boolean {
+        val scope = manifest?.scope ?: manifest?.startUrl ?: return false
+        val scopeUri = scope.toUri()
+        val newUri = newUrl.toUri()
+
+        return isHostEquals(scope, newUrl) &&
+            scopeUri.port == newUri.port &&
+            newUri.path.orEmpty().startsWith(scopeUri.path.orEmpty())
     }
 
     override fun onLoadRequest(

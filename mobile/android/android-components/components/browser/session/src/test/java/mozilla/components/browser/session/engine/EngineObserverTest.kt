@@ -269,6 +269,42 @@ class EngineObserverTest {
     }
 
     @Test
+    fun engineObserverDoesNotClearWebAppManifestIfNewPageInStartUrlScope() {
+        val session = Session("https://www.mozilla.org")
+        val manifest = WebAppManifest(name = "Mozilla", startUrl = "https://www.mozilla.org")
+
+        val observer = EngineObserver(session)
+        observer.onWebAppManifestLoaded(manifest)
+
+        assertEquals(manifest, session.webAppManifest)
+
+        observer.onLocationChange("https://www.mozilla.org/hello.html")
+
+        assertEquals(manifest, session.webAppManifest)
+    }
+
+    @Test
+    fun engineObserverDoesNotClearWebAppManifestIfNewPageInScope() {
+        val session = Session("https://www.mozilla.org/hello/page1.html")
+        val manifest = WebAppManifest(
+            name = "Mozilla",
+            startUrl = "https://www.mozilla.org",
+            scope = "https://www.mozilla.org/hello/"
+        )
+
+        val observer = EngineObserver(session)
+        observer.onWebAppManifestLoaded(manifest)
+
+        assertEquals(manifest, session.webAppManifest)
+
+        observer.onLocationChange("https://www.mozilla.org/hello/page2.html")
+        assertEquals(manifest, session.webAppManifest)
+
+        observer.onLocationChange("https://www.mozilla.org/hello.html")
+        assertNull(session.webAppManifest)
+    }
+
+    @Test
     fun engineObserverPassingHitResult() {
         val session = Session("https://www.mozilla.org")
         val observer = EngineObserver(session)
