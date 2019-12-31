@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">הקטנת גודל גופן</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">הגדלת גודל גופן</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">כהה</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">ערכת צבעים כהה</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">חום כהה</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">ערכת צבעים חמה</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">בהיר</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ערכת צבעים בהירה</string>
+</resources>
