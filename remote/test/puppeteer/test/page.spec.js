@@ -377,7 +377,7 @@ module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHR
       else
         expect(message.type()).toEqual('warn');
     });
-    it_fails_ffox('should have location when fetch fails', async({page, server}) => {
+    it('should have location when fetch fails', async({page, server}) => {
       // The point of this test is to make sure that we report console messages from
       // Log domain: https://vanilla.aslushnikov.com/?Log.entryAdded
       await page.goto(server.EMPTY_PAGE);
@@ -407,7 +407,7 @@ module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHR
       });
     });
     // @see https://github.com/puppeteer/puppeteer/issues/3865
-    it_fails_ffox('should not throw when there are console messages in detached iframes', async({browser, page, server}) => {
+    it('should not throw when there are console messages in detached iframes', async({browser, page, server}) => {
       await page.goto(server.EMPTY_PAGE);
       await page.evaluate(async() => {
         // 1. Create a popup that Puppeteer is not connected to.
@@ -730,7 +730,7 @@ module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHR
       const result = await page.content();
       expect(result).toBe(`${doctype}${expectedOutput}`);
     });
-    it_fails_ffox('should respect timeout', async({page, server}) => {
+    it('should respect timeout', async({page, server}) => {
       const imgPath = '/img.png';
       // stall for image
       server.setRoute(imgPath, (req, res) => {});
@@ -738,7 +738,7 @@ module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHR
       await page.setContent(`<img src="${server.PREFIX + imgPath}"></img>`, {timeout: 1}).catch(e => error = e);
       expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
     });
-    it_fails_ffox('should respect default navigation timeout', async({page, server}) => {
+    it('should respect default navigation timeout', async({page, server}) => {
       page.setDefaultNavigationTimeout(1);
       const imgPath = '/img.png';
       // stall for image
@@ -747,7 +747,7 @@ module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHR
       await page.setContent(`<img src="${server.PREFIX + imgPath}"></img>`).catch(e => error = e);
       expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
     });
-    it_fails_ffox('should await resources to load', async({page, server}) => {
+    it('should await resources to load', async({page, server}) => {
       const imgPath = '/img.png';
       let imgResponse = null;
       server.setRoute(imgPath, (req, res) => imgResponse = res);
@@ -1074,7 +1074,7 @@ module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHR
       expect(await page.evaluate(() => result.onInput)).toEqual(['blue']);
       expect(await page.evaluate(() => result.onChange)).toEqual(['blue']);
     });
-    it_fails_ffox('should not throw when select causes navigation', async({page, server}) => {
+    it('should not throw when select causes navigation', async({page, server}) => {
       await page.goto(server.PREFIX + '/input/select.html');
       await page.$eval('select', select => select.addEventListener('input', () => window.location = '/empty.html'));
       await Promise.all([
@@ -1147,7 +1147,7 @@ module.exports.addTests = function({testRunner, expect, headless, puppeteer, CHR
       expect(error.message).toContain('Values must be strings');
     });
     // @see https://github.com/puppeteer/puppeteer/issues/3327
-    it_fails_ffox('should work when re-defining top-level Event class', async({page, server}) => {
+    it('should work when re-defining top-level Event class', async({page, server}) => {
       await page.goto(server.PREFIX + '/input/select.html');
       await page.evaluate(() => window.Event = null);
       await page.select('select', 'blue');

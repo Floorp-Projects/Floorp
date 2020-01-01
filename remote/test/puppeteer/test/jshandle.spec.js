@@ -81,7 +81,7 @@ module.exports.addTests = function({testRunner, expect, CHROME}) {
       const json = await aHandle.jsonValue();
       expect(json).toEqual({foo: 'bar'});
     });
-    it_fails_ffox('should not work with dates', async({page, server}) => {
+    it('should not work with dates', async({page, server}) => {
       const dateHandle = await page.evaluateHandle(() => new Date('2017-09-26T00:00:00.000Z'));
       const json = await dateHandle.jsonValue();
       expect(json).toEqual({});
