@@ -11,7 +11,7 @@
  */
 
 // Note: "persistent-usage-record" session type is unsupported yet, as
-// it's marked as "at risk" in the spec, and Chrome doesn't support it.
+// it's marked as "at risk" in the spec, and Chrome doesn't support it. 
 enum MediaKeySessionType {
   "temporary",
   "persistent-license",

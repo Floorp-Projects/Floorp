@@ -4890,12 +4890,6 @@
   value: 4096
   mirror: always
 
-# Whether Constructable Stylesheets are enabled in script.
-- name: layout.css.constructable-stylesheets.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Whether we get notified of history queries for visited even if unvisited.
 - name: layout.css.notify-of-unvisited
   type: RelaxedAtomicBool
