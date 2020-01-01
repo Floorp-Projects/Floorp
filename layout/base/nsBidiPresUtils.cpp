@@ -591,7 +591,13 @@ static bool IsBidiSplittable(nsIFrame* aFrame) {
 // Should this frame be treated as a leaf (e.g. when building mLogicalFrames)?
 static bool IsBidiLeaf(nsIFrame* aFrame) {
   nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
-  return !kid || !aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer);
+  if (kid) {
+    if (aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer) ||
+        RubyUtils::IsRubyBox(aFrame->Type())) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -1189,11 +1195,14 @@ void nsBidiPresUtils::TraverseFrames(nsIFrame* aCurrentFrame,
 
     char16_t controlChar = 0;
     char16_t overrideChar = 0;
-    if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
+    LayoutFrameType frameType = frame->Type();
+    if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer) ||
+        frameType == LayoutFrameType::Ruby) {
       if (!(frame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
         nsContainerFrame* c = static_cast<nsContainerFrame*>(frame);
         MOZ_ASSERT(c == do_QueryFrame(frame),
-                   "eBidiInlineContainer must be a nsContainerFrame subclass");
+                   "eBidiInlineContainer and ruby frame must be"
+                   " a nsContainerFrame subclass");
         c->DrainSelfOverflowList();
       }
 
@@ -1223,7 +1232,6 @@ void nsBidiPresUtils::TraverseFrames(nsIFrame* aCurrentFrame,
       aBpd->AppendFrame(frame, aBpd->mCurrentTraverseLine, content);
 
       // Append the content of the frame to the paragraph buffer
-      LayoutFrameType frameType = frame->Type();
       if (LayoutFrameType::Text == frameType) {
         if (content != aBpd->mPrevContent) {
           aBpd->mPrevContent = content;
@@ -1635,8 +1643,6 @@ void nsBidiPresUtils::RepositionRubyContentFrame(
   }
 
   // Reorder the children.
-  // XXX It currently doesn't work properly because we do not
-  // resolve frames inside ruby content frames.
   nscoord isize =
       ReorderFrames(childList.FirstChild(), childList.GetLength(), aFrameWM,
                     aFrame->GetSize(), aBorderPadding.IStart(aFrameWM));
@@ -1781,7 +1787,13 @@ nscoord nsBidiPresUtils::RepositionFrame(
   }
 
   nscoord icoord = 0;
-  if (!IsBidiLeaf(aFrame)) {
+  if (IsBidiLeaf(aFrame)) {
+    icoord +=
+        frameWM.IsOrthogonalTo(aContainerWM) ? aFrame->BSize() : frameISize;
+  } else if (RubyUtils::IsRubyBox(aFrame->Type())) {
+    icoord += RepositionRubyFrame(aFrame, aContinuationStates, aContainerWM,
+                                  borderPadding);
+  } else {
     bool reverseDir = aIsEvenLevel != frameWM.IsBidiLTR();
     icoord += reverseDir ? borderPadding.IEnd(frameWM)
                          : borderPadding.IStart(frameWM);
@@ -1796,12 +1808,6 @@ nscoord nsBidiPresUtils::RepositionFrame(
     }
     icoord += reverseDir ? borderPadding.IStart(frameWM)
                          : borderPadding.IEnd(frameWM);
-  } else if (RubyUtils::IsRubyBox(aFrame->Type())) {
-    icoord += RepositionRubyFrame(aFrame, aContinuationStates, aContainerWM,
-                                  borderPadding);
-  } else {
-    icoord +=
-        frameWM.IsOrthogonalTo(aContainerWM) ? aFrame->BSize() : frameISize;
   }
 
   // In the following variables, if aContainerReverseDir is true, i.e.
@@ -1827,7 +1833,7 @@ nscoord nsBidiPresUtils::RepositionFrame(
 void nsBidiPresUtils::InitContinuationStates(
     nsIFrame* aFrame, nsContinuationStates* aContinuationStates) {
   aContinuationStates->Insert(aFrame);
-  if (!IsBidiLeaf(aFrame) || RubyUtils::IsRubyBox(aFrame->Type())) {
+  if (!IsBidiLeaf(aFrame)) {
     // Continue for child frames
     for (nsIFrame* frame : aFrame->PrincipalChildList()) {
       InitContinuationStates(frame, aContinuationStates);
