@@ -11,7 +11,8 @@ import os.path
 from filecmp import dircmp
 from tempfile import mkdtemp
 from shutil import rmtree, copy2
-from StringIO import StringIO
+import six
+from six import StringIO
 from zipfile import ZipFile
 import mozunit
 
@@ -74,7 +75,7 @@ def symlinks_supported(path):
         # Add 1 for a trailing backslash if necessary, and 1 for the terminating
         # null character.
         volpath = ctypes.create_string_buffer(len(path) + 2)
-        rv = GetVolumePathName(path, volpath, len(volpath))
+        rv = GetVolumePathName(six.ensure_binary(path), volpath, len(volpath))
         if rv == 0:
             raise WinError()
 
@@ -92,7 +93,8 @@ def symlinks_supported(path):
 
 def _getfileinfo(path):
     """Return information for the given file. This only works on Windows."""
-    fh = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, None, OPEN_EXISTING, 0, None)
+    fh = CreateFile(six.ensure_binary(path), GENERIC_READ, FILE_SHARE_READ,
+                    None, OPEN_EXISTING, 0, None)
     if fh is None:
         raise WinError()
     info = BY_HANDLE_FILE_INFORMATION()
@@ -129,7 +131,7 @@ class _TreeDiff(dircmp):
         rv['diff_files'] += map(lambda l: basepath.format(l), dc.diff_files)
         rv['funny'] += map(lambda l: basepath.format(l), dc.common_funny)
         rv['funny'] += map(lambda l: basepath.format(l), dc.funny_files)
-        for subdir, _dc in dc.subdirs.iteritems():
+        for subdir, _dc in six.iteritems(dc.subdirs):
             self._fillDiff(_dc, rv, basepath.format(subdir + "/{0}"))
 
     def allResults(self, left, right):
@@ -305,7 +307,7 @@ class TestJarMaker(unittest.TestCase):
             ('hoge', 'foo', '2'): ('qux', 'foo', '2'),
             ('hoge', 'baz'): ('qux', 'baz'),
         }
-        for dest, src in expected_symlinks.iteritems():
+        for dest, src in six.iteritems(expected_symlinks):
             srcpath = os.path.join(self.srcdir, *src)
             destpath = os.path.join(self.builddir, 'chrome', 'test', 'dir',
                                     *dest)
