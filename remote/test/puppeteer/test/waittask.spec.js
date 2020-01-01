@@ -31,7 +31,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       await waitFor;
       expect(found).toBe(true);
     });
-    it('should wait for an xpath', async({page, server}) => {
+    it_fails_ffox('should wait for an xpath', async({page, server}) => {
       let found = false;
       const waitFor = page.waitFor('//div').then(() => found = true);
       await page.goto(server.EMPTY_PAGE);
@@ -424,7 +424,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(await waitForXPath).toBe(true);
       expect(divHidden).toBe(true);
     });
-    it('should return the element handle', async({page, server}) => {
+    it_fails_ffox('should return the element handle', async({page, server}) => {
       const waitForXPath = page.waitForXPath('//*[@class="zombo"]');
       await page.setContent(`<div class='zombo'>anything</div>`);
       expect(await page.evaluate(x => x.textContent, await waitForXPath)).toBe('anything');

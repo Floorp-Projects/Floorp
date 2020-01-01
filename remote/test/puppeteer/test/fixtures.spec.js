@@ -32,7 +32,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
       await new Promise(resolve => res.on('close', resolve));
       expect(dumpioData).toContain('message from dumpio');
     });
-    it('should dump browser process stderr', async({server}) => {
+    it_fails_ffox('should dump browser process stderr', async({server}) => {
       let dumpioData = '';
       const {spawn} = require('child_process');
       const options = Object.assign({}, defaultBrowserOptions, {dumpio: true});
@@ -49,7 +49,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
       else
         expect(dumpioData).toContain('DevTools listening on ws://');
     });
-    it('should close the browser when the node process closes', async({ server }) => {
+    it_fails_ffox('should close the browser when the node process closes', async({ server }) => {
       const {spawn, execSync} = require('child_process');
       const options = Object.assign({}, defaultBrowserOptions, {
         // Disable DUMPIO to cleanly read stdout.

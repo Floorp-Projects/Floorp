@@ -52,7 +52,7 @@ module.exports.addTests = function({testRunner, expect, product}) {
       });
       expect(screenshot).toBeGolden('screenshot-offscreen-clip.png');
     });
-    it('should run in parallel', async({page, server}) => {
+    it_fails_ffox('should run in parallel', async({page, server}) => {
       await page.setViewport({width: 500, height: 500});
       await page.goto(server.PREFIX + '/grid.html');
       const promises = [];
