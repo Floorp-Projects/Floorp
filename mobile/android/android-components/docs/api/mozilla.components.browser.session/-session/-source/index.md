@@ -11,6 +11,7 @@ Represents the origin of a session to describe how and why it was created.
 | Name | Summary |
 |---|---|
 | [ACTION_SEND](-a-c-t-i-o-n_-s-e-n-d.md) | Created to handle an ACTION_SEND (share) intent |
+| [ACTION_SEARCH](-a-c-t-i-o-n_-s-e-a-r-c-h.md) | Created to handle an ACTION_SEARCH and ACTION_WEB_SEARCH intent |
 | [ACTION_VIEW](-a-c-t-i-o-n_-v-i-e-w.md) | Created to handle an ACTION_VIEW intent |
 | [CUSTOM_TAB](-c-u-s-t-o-m_-t-a-b.md) | Created to handle a CustomTabs intent |
 | [HOME_SCREEN](-h-o-m-e_-s-c-r-e-e-n.md) | User interacted with the home screen |
