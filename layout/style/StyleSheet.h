@@ -52,7 +52,6 @@ class DocumentOrShadowRoot;
 class MediaList;
 class ShadowRoot;
 class SRIMetadata;
-struct CSSStyleSheetInit;
 }  // namespace dom
 
 enum class StyleSheetState : uint8_t {
@@ -92,10 +91,6 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
  public:
   StyleSheet(css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
              const dom::SRIMetadata& aIntegrity);
-
-  static already_AddRefed<StyleSheet> Constructor(const dom::GlobalObject&,
-                                                  const dom::CSSStyleSheetInit&,
-                                                  ErrorResult&);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheet)
@@ -359,8 +354,6 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   int32_t AddRule(const nsAString& aSelector, const nsAString& aBlock,
                   const dom::Optional<uint32_t>& aIndex,
                   nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
-  already_AddRefed<dom::Promise> Replace(const nsAString& aText, ErrorResult&);
-  void ReplaceSync(const nsAString& aText, ErrorResult&);
 
   // WebIDL miscellaneous bits
   inline dom::ParentObject GetParentObject() const;
@@ -484,8 +477,6 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   static bool RuleHasPendingChildSheet(css::Rule* aRule);
 
   StyleSheet* mParent;  // weak ref
-
-  RefPtr<dom::Document> mConstructorDocument;
 
   nsString mTitle;
 
