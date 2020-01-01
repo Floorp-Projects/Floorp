@@ -6,6 +6,8 @@ const { EnterprisePolicyTesting } = ChromeUtils.import(
 );
 
 add_task(async function testPolicyOverride() {
+  await waitForBalrogMigration();
+
   // Set up an arbitrary enterprise policy. Its existence should be sufficient
   // to disable heuristics.
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({

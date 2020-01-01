@@ -1,6 +1,8 @@
 "use strict";
 
 add_task(async function testUserInterference() {
+  await waitForBalrogMigration();
+
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
   let promise = waitForDoorhanger();
