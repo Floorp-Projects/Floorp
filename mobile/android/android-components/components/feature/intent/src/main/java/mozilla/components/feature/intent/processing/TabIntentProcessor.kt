@@ -83,28 +83,13 @@ class TabIntentProcessor(
         return if (searchQuery.isNullOrBlank()) {
             false
         } else {
-            resolveSearch(searchQuery, Source.ACTION_SEARCH)
+            if (searchQuery.isUrl()) {
+                val session = createSession(searchQuery, private = isPrivate, source = Source.ACTION_SEARCH)
+                loadUrlUseCase(searchQuery, session, LoadUrlFlags.external())
+            } else {
+                newTabSearchUseCase(searchQuery, Source.ACTION_SEARCH, openNewTab)
+            }
             true
-        }
-    }
-
-    private fun processWebSearchIntent(intent: SafeIntent): Boolean {
-        val searchQuery = intent.getStringExtra(SearchManager.QUERY)
-
-        return if (searchQuery.isNullOrBlank()) {
-            false
-        } else {
-            resolveSearch(searchQuery, Source.ACTION_WEB_SEARCH)
-            true
-        }
-    }
-
-    private fun resolveSearch(query: String, source: Source) {
-        if (query.isUrl()) {
-            val session = createSession(query, private = isPrivate, source = source)
-            loadUrlUseCase(query, session, LoadUrlFlags.external())
-        } else {
-            newTabSearchUseCase(query, source, openNewTab)
         }
     }
 
@@ -136,8 +121,7 @@ class TabIntentProcessor(
         return when (safeIntent.action) {
             ACTION_VIEW, ACTION_NDEF_DISCOVERED -> processViewIntent(safeIntent)
             ACTION_SEND -> processSendIntent(safeIntent)
-            ACTION_SEARCH -> processSearchIntent(safeIntent)
-            ACTION_WEB_SEARCH -> processWebSearchIntent(safeIntent)
+            ACTION_SEARCH, ACTION_WEB_SEARCH -> processSearchIntent(safeIntent)
             else -> false
         }
     }
