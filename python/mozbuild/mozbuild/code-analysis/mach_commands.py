@@ -63,7 +63,7 @@ def prompt_bool(prompt, limit=5):
     for _ in range(limit):
         try:
             return strtobool(raw_input(prompt + "[Y/N]\n"))
-        except ValueERROR:
+        except ValueError:
             print("ERROR! Please enter a valid option! Please use any of the following:"
                   " Y, N, True, False, 1, 0")
     return False
