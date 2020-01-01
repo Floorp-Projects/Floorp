@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, unicode_literals, print_function
+from __future__ import print_function
 
 import sys
 import hashlib
@@ -14,8 +14,7 @@ from mozbuild.util import DefinesAction
 from mozpack.packager.unpack import UnpackFinder
 from mozpack.files import DeflatedFile
 from collections import OrderedDict
-import six
-from six import StringIO
+from StringIO import StringIO
 import argparse
 import buildconfig
 
@@ -53,10 +52,9 @@ def find_dupes(source, allowed_dupes, bail=True):
     for p, f in UnpackFinder(source):
         md5 = hashlib.md5()
         content_size = 0
-        for buf in iter(functools.partial(f.open('rb').read, md5_chunk_size),
-                        b''):
-            md5.update(six.ensure_binary(buf))
-            content_size += len(six.ensure_binary(buf))
+        for buf in iter(functools.partial(f.open().read, md5_chunk_size), b''):
+            md5.update(buf)
+            content_size += len(buf)
         m = md5.digest()
         if m not in md5s:
             if isinstance(f, DeflatedFile):
@@ -69,7 +67,7 @@ def find_dupes(source, allowed_dupes, bail=True):
     total_compressed = 0
     num_dupes = 0
     unexpected_dupes = []
-    for m, (size, compressed, paths) in sorted(six.iteritems(md5s),
+    for m, (size, compressed, paths) in sorted(md5s.iteritems(),
                                                key=lambda x: x[1][1]):
         if len(paths) > 1:
             _compressed = ' (%d compressed)' % compressed if compressed != size else ''
