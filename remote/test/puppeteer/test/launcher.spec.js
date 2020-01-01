@@ -101,7 +101,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         }
       });
     });
-    describe('Puppeteer.launch', function() {
+    describe_fails_ffox('Puppeteer.launch', function() {
       it('should reject all promises when browser is closed', async() => {
         const browser = await puppeteer.launch(defaultBrowserOptions);
         const page = await browser.newPage();
@@ -281,7 +281,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         await browser.close();
       });
     });
-    describe('Puppeteer.connect', function() {
+    describe_fails_ffox('Puppeteer.connect', function() {
       it('should be able to connect multiple times to the same browser', async({server}) => {
         const originalBrowser = await puppeteer.launch(defaultBrowserOptions);
         const browser = await puppeteer.connect({
@@ -378,7 +378,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
     });
   });
 
-  describe('Browser target events', function() {
+  describe_fails_ffox('Browser target events', function() {
     it('should work', async({server}) => {
       const browser = await puppeteer.launch(defaultBrowserOptions);
       const events = [];
@@ -393,7 +393,7 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
     });
   });
 
-  describe('Browser.Events.disconnected', function() {
+  describe_fails_ffox('Browser.Events.disconnected', function() {
     it('should be emitted when: browser gets closed, disconnected or underlying websocket gets closed', async() => {
       const originalBrowser = await puppeteer.launch(defaultBrowserOptions);
       const browserWSEndpoint = originalBrowser.wsEndpoint();
