@@ -66,7 +66,7 @@ module.exports.addTests = function({testRunner, expect, FFOX}) {
       await textarea.press('b');
       expect(await page.evaluate(() => document.querySelector('textarea').value)).toBe('a');
     });
-    it_fails_ffox('ElementHandle.press should support |text| option', async({page, server}) => {
+    it('ElementHandle.press should support |text| option', async({page, server}) => {
       await page.goto(server.PREFIX + '/input/textarea.html');
       const textarea = await page.$('textarea');
       await textarea.press('a', {text: 'ё'});

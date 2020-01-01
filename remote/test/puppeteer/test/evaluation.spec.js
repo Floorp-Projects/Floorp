@@ -28,7 +28,7 @@ module.exports.addTests = function({testRunner, expect}) {
       const result = await page.evaluate(() => 7 * 3);
       expect(result).toBe(21);
     });
-    (bigint ? it_fails_ffox : xit)('should transfer BigInt', async({page, server}) => {
+    it('should transfer BigInt', async({page, server}) => {
       const result = await page.evaluate(a => a, BigInt(42));
       expect(result).toBe(BigInt(42));
     });
@@ -64,7 +64,7 @@ module.exports.addTests = function({testRunner, expect}) {
       await page.goto(server.PREFIX + '/global-var.html');
       expect(await page.evaluate('globalVar')).toBe(123);
     });
-    it_fails_ffox('should return undefined for objects with symbols', async({page, server}) => {
+    it('should return undefined for objects with symbols', async({page, server}) => {
       expect(await page.evaluate(() => [Symbol('foo4')])).toBe(undefined);
     });
     it('should work with function shorthands', async({page, server}) => {
@@ -134,7 +134,7 @@ module.exports.addTests = function({testRunner, expect}) {
       expect(result).not.toBe(object);
       expect(result).toEqual(object);
     });
-    (bigint ? it_fails_ffox : xit)('should return BigInt', async({page, server}) => {
+    it('should return BigInt', async({page, server}) => {
       const result = await page.evaluate(() => BigInt(42));
       expect(result).toBe(BigInt(42));
     });
@@ -173,7 +173,7 @@ module.exports.addTests = function({testRunner, expect}) {
       });
       expect(result).toBe(undefined);
     });
-    it_fails_ffox('should be able to throw a tricky error', async({page, server}) => {
+    it('should be able to throw a tricky error', async({page, server}) => {
       const windowHandle = await page.evaluateHandle(() => window);
       const errorText = await windowHandle.jsonValue().catch(e => e.message);
       const error = await page.evaluate(errorText => {
@@ -234,7 +234,7 @@ module.exports.addTests = function({testRunner, expect}) {
       const error = await executionContext.evaluate(() => null).catch(e => e);
       expect(error.message).toContain('navigation');
     });
-    it_fails_ffox('should not throw an error when evaluation does a navigation', async({page, server}) => {
+    it('should not throw an error when evaluation does a navigation', async({page, server}) => {
       await page.goto(server.PREFIX + '/one-style.html');
       const result = await page.evaluate(() => {
         window.location = '/empty.html';
@@ -242,7 +242,7 @@ module.exports.addTests = function({testRunner, expect}) {
       });
       expect(result).toEqual([42]);
     });
-    it_fails_ffox('should transfer 100Mb of data from page to node.js', async({page, server}) => {
+    it('should transfer 100Mb of data from page to node.js', async({page, server}) => {
       const a = await page.evaluate(() => Array(100 * 1024 * 1024 + 1).join('a'));
       expect(a.length).toBe(100 * 1024 * 1024);
     });
