@@ -39,7 +39,7 @@ module.exports.addTests = function({testRunner, expect, product}) {
       });
       expect(screenshot).toBeGolden('screenshot-clip-rect.png');
     });
-    it_fails_ffox('should clip elements to the viewport', async({page, server}) => {
+    it('should clip elements to the viewport', async({page, server}) => {
       await page.setViewport({width: 500, height: 500});
       await page.goto(server.PREFIX + '/grid.html');
       const screenshot = await page.screenshot({
@@ -52,7 +52,7 @@ module.exports.addTests = function({testRunner, expect, product}) {
       });
       expect(screenshot).toBeGolden('screenshot-offscreen-clip.png');
     });
-    it('should run in parallel', async({page, server}) => {
+    it_fails_ffox('should run in parallel', async({page, server}) => {
       await page.setViewport({width: 500, height: 500});
       await page.goto(server.PREFIX + '/grid.html');
       const promises = [];
@@ -92,13 +92,13 @@ module.exports.addTests = function({testRunner, expect, product}) {
         expect(screenshots[i]).toBeGolden(`grid-cell-${i}.png`);
       await Promise.all(pages.map(page => page.close()));
     });
-    it_fails_ffox('should allow transparency', async({page, server}) => {
+    it('should allow transparency', async({page, server}) => {
       await page.setViewport({ width: 100, height: 100 });
       await page.goto(server.EMPTY_PAGE);
       const screenshot = await page.screenshot({omitBackground: true});
       expect(screenshot).toBeGolden('transparent.png');
     });
-    it_fails_ffox('should render white background on jpeg file', async({page, server}) => {
+    it('should render white background on jpeg file', async({page, server}) => {
       await page.setViewport({ width: 100, height: 100 });
       await page.goto(server.EMPTY_PAGE);
       const screenshot = await page.screenshot({omitBackground: true, type: 'jpeg'});

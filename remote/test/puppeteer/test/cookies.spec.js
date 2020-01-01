@@ -51,7 +51,7 @@ module.exports.addTests = function({testRunner, expect}) {
       expect(cookies.length).toBe(1);
       expect(cookies[0].httpOnly).toBe(true);
     });
-    it_fails_ffox('should properly report "Strict" sameSite cookie', async({page, server}) => {
+    it('should properly report "Strict" sameSite cookie', async({page, server}) => {
       server.setRoute('/empty.html', (req, res) => {
         res.setHeader('Set-Cookie', ';SameSite=Strict');
         res.end();
@@ -61,7 +61,7 @@ module.exports.addTests = function({testRunner, expect}) {
       expect(cookies.length).toBe(1);
       expect(cookies[0].sameSite).toBe('Strict');
     });
-    it_fails_ffox('should properly report "Lax" sameSite cookie', async({page, server}) => {
+    it('should properly report "Lax" sameSite cookie', async({page, server}) => {
       server.setRoute('/empty.html', (req, res) => {
         res.setHeader('Set-Cookie', ';SameSite=Lax');
         res.end();
