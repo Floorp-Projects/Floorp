@@ -31,7 +31,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       await waitFor;
       expect(found).toBe(true);
     });
-    it('should wait for an xpath', async({page, server}) => {
+    it_fails_ffox('should wait for an xpath', async({page, server}) => {
       let found = false;
       const waitFor = page.waitFor('//div').then(() => found = true);
       await page.goto(server.EMPTY_PAGE);
@@ -114,7 +114,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       await page.evaluate(() => window.__FOO = 'hit');
       await watchdog;
     });
-    it_fails_ffox('should work with strict CSP policy', async({page, server}) => {
+    it('should work with strict CSP policy', async({page, server}) => {
       server.setCSP('/empty.html', 'script-src ' + server.PREFIX);
       await page.goto(server.EMPTY_PAGE);
       let error = null;
@@ -215,7 +215,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       await frame.waitForSelector('div');
     });
 
-    it_fails_ffox('should work with removed MutationObserver', async({page, server}) => {
+    it('should work with removed MutationObserver', async({page, server}) => {
       await page.evaluate(() => delete window.MutationObserver);
       const [handle] = await Promise.all([
         page.waitForSelector('.zombo'),
@@ -371,7 +371,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       await page.setContent(`<div class='zombo'>anything</div>`);
       expect(await page.evaluate(x => x.textContent, await waitForSelector)).toBe('anything');
     });
-    it_fails_ffox('should have correct stack trace for timeout', async({page, server}) => {
+    it('should have correct stack trace for timeout', async({page, server}) => {
       let error;
       await page.waitForSelector('.zombo', {timeout: 10}).catch(e => error = e);
       expect(error.stack).toContain('waittask.spec.js');
@@ -414,7 +414,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(waitError).toBeTruthy();
       expect(waitError.message).toContain('waitForFunction failed: frame got detached.');
     });
-    it('hidden should wait for display: none', async({page, server}) => {
+    it_fails_ffox('hidden should wait for display: none', async({page, server}) => {
       let divHidden = false;
       await page.setContent(`<div style='display: block;'></div>`);
       const waitForXPath = page.waitForXPath('//div', {hidden: true}).then(() => divHidden = true);
@@ -424,7 +424,7 @@ module.exports.addTests = function({testRunner, expect, product, puppeteer}) {
       expect(await waitForXPath).toBe(true);
       expect(divHidden).toBe(true);
     });
-    it('should return the element handle', async({page, server}) => {
+    it_fails_ffox('should return the element handle', async({page, server}) => {
       const waitForXPath = page.waitForXPath('//*[@class="zombo"]');
       await page.setContent(`<div class='zombo'>anything</div>`);
       expect(await page.evaluate(x => x.textContent, await waitForXPath)).toBe('anything');

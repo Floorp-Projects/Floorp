@@ -47,21 +47,12 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
 
   Vector<CatchFinallyRange, 0, JitAllocPolicy> catchFinallyRanges(alloc);
 
-  // Beginning bytecode location for loop
-  BytecodeLocation it(script_, script_->code());
-  BytecodeLocation next = it.next();
-
-  // End of bytecode location iteration range
-  BytecodeLocation end = script_->endLocation();
-
-  for (; it < end; it = next) {
+  for (const BytecodeLocation& it : AllBytecodesIterable(script_)) {
     JSOp op = it.getOp();
-    next = it.next();
     uint32_t offset = it.bytecodeToOffset(script_);
 
-    JitSpew(JitSpew_BaselineOp, "Analyzing op @ %d (end=%d): %s",
-            int(it.bytecodeToOffset(script_)), int(script_->length()),
-            CodeName[op]);
+    JitSpew(JitSpew_BaselineOp, "Analyzing op @ %u (end=%u): %s",
+            unsigned(offset), unsigned(script_->length()), CodeName[op]);
 
     // If this bytecode info has not yet been initialized, it's not reachable.
     if (!infos_[offset].initialized) {
@@ -110,13 +101,11 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
 
       case JSOP_TRY: {
         for (const JSTryNote& tn : script_->trynotes()) {
-          if (tn.start == offset + 1) {
-            uint32_t catchOffset = tn.start + tn.length;
-
-            if (tn.kind != JSTRY_FOR_IN) {
-              infos_[catchOffset].init(stackDepth);
-              infos_[catchOffset].jumpTarget = true;
-            }
+          if (tn.start == offset + 1 &&
+              (tn.kind == JSTRY_CATCH || tn.kind == JSTRY_FINALLY)) {
+            uint32_t catchOrFinallyOffset = tn.start + tn.length;
+            infos_[catchOrFinallyOffset].init(stackDepth);
+            infos_[catchOrFinallyOffset].jumpTarget = true;
           }
         }
 
@@ -177,21 +166,17 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
 
       uint32_t targetOffset = it.getJumpTargetOffset(script_);
 
-      // If this is a a backedge to an un-analyzed segment, analyze from there.
-      bool jumpBack =
-          (targetOffset < offset) && !infos_[targetOffset].initialized;
+      // If this is a backedge, the target JSOP_LOOPHEAD must have been analyzed
+      // already.
+      MOZ_ASSERT_IF(targetOffset < offset, infos_[targetOffset].initialized);
 
       infos_[targetOffset].init(newStackDepth);
       infos_[targetOffset].jumpTarget = true;
-
-      if (jumpBack) {
-        next = script_->offsetToLocation(targetOffset);
-      }
     }
     // Handle any fallthrough from this opcode.
     if (it.fallsThrough()) {
       BytecodeLocation fallthroughLoc = it.next();
-      MOZ_ASSERT(fallthroughLoc < end);
+      MOZ_ASSERT(fallthroughLoc.isInBounds(script_));
       uint32_t fallthroughOffset = fallthroughLoc.bytecodeToOffset(script_);
 
       infos_[fallthroughOffset].init(stackDepth);
@@ -202,6 +187,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
       }
     }
   }
+
   // Flag (reachable) resume offset instructions.
   for (uint32_t offset : script_->resumeOffsets()) {
     BytecodeInfo& info = infos_[offset];

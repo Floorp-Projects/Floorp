@@ -70,7 +70,7 @@ module.exports.addTests = function({testRunner, expect, puppeteer}) {
       await page.addScriptTag({url: server.PREFIX + '/modernizr.js'});
       expect(await page.evaluate(() => Modernizr.touchevents)).toBe(true);
     });
-    it_fails_ffox('should support landscape emulation', async({page, server}) => {
+    it('should support landscape emulation', async({page, server}) => {
       await page.goto(server.PREFIX + '/mobile.html');
       expect(await page.evaluate(() => screen.orientation.type)).toBe('portrait-primary');
       await page.setViewport(iPhoneLandscape.viewport);

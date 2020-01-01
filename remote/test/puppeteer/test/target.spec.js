@@ -109,7 +109,7 @@ module.exports.addTests = function({testRunner, expect, puppeteer}) {
       await page.goto(server.EMPTY_PAGE);
       expect((await changedTarget).url()).toBe(server.EMPTY_PAGE);
     });
-    it_fails_ffox('should not report uninitialized pages', async({page, server, context}) => {
+    it('should not report uninitialized pages', async({page, server, context}) => {
       let targetChanged = false;
       const listener = () => targetChanged = true;
       context.on('targetchanged', listener);
