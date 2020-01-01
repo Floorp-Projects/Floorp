@@ -59,17 +59,19 @@ linux1804-64-stylo-sequential/opt:
 linux1804-64-qr/opt:
     build-platform: linux64/opt
     test-sets:
-        - linux1804-tests
+        - awsy
+        - linux1804-qr-tests
 
 linux1804-64-shippable-qr/opt:
     build-platform: linux64-shippable/opt
     test-sets:
-        - linux1804-tests
+        - awsy
+        - linux1804-qr-tests
 
 linux1804-64-qr/debug:
     build-platform: linux64/debug
     test-sets:
-        - linux1804-tests
+        - linux1804-qr-tests
 
 linux1804-64-qr-asan/opt:
     build-platform: linux64-asan/opt
@@ -78,6 +80,7 @@ linux1804-64-qr-asan/opt:
 linux1804-64-ccov/opt:
     build-platform: linux64-ccov/opt
     test-sets:
+        - awsy
         - linux1804-tests
 
 linux64/debug:
@@ -150,26 +153,27 @@ linux64-qr/opt:
     test-sets:
         - linux-qr-tests
         - talos
-        - awsy
         - web-platform-tests
         - raptor-firefox
         - browsertime
         - raptor-fetch-firefox
+
 linux64-shippable-qr/opt:
     build-platform: linux64-shippable/opt
     test-sets:
         - linux-qr-tests
         - talos
-        - awsy
         - web-platform-tests
         - raptor-firefox
         - browsertime
         - raptor-fetch-firefox
+
 linux64-qr/debug:
     build-platform: linux64/debug
     test-sets:
         - linux-qr-tests
         - web-platform-tests
+
 linux64-asan-qr/opt:
     build-platform: linux64-asan/opt
     test-sets:
