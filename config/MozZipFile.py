@@ -2,8 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 import os
+import six
 import time
 import zipfile
 
@@ -20,7 +21,7 @@ class ZipFile(zipfile.ZipFile):
     def __init__(self, file, mode="r", compression=zipfile.ZIP_STORED,
                  lock=False):
         if lock:
-            assert isinstance(file, basestring)
+            assert isinstance(file, six.text_type)
             self.lockfile = lock_file(file + '.lck')
         else:
             self.lockfile = None
@@ -90,7 +91,7 @@ class ZipFile(zipfile.ZipFile):
                 # Couldn't optimize, sadly, just remember the old entry for removal
                 self._remove.append(self.filelist.pop(i))
         zipfile.ZipFile.writestr(self, zinfo, bytes)
-        self.filelist.sort(lambda l, r: cmp(l.header_offset, r.header_offset))
+        self.filelist.sort(key=lambda l: l.header_offset)
         if doSeek:
             self.fp.seek(self.end)
         self.end = self.fp.tell()
@@ -113,7 +114,7 @@ class ZipFile(zipfile.ZipFile):
             self.fp = open(self.filename, 'r+b')
         all = map(lambda zi: (zi, True), self.filelist) + \
             map(lambda zi: (zi, False), self._remove)
-        all.sort(lambda l, r: cmp(l[0].header_offset, r[0].header_offset))
+        all.sort(key=lambda l: l[0].header_offset)
         # empty _remove for multiple closes
         self._remove = []
 

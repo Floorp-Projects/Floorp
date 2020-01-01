@@ -8,7 +8,7 @@ processing jar.mn files.
 See the documentation for jar.mn on MDC for further details on the format.
 '''
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import sys
 import os
@@ -18,7 +18,7 @@ import six
 import logging
 from time import localtime
 from MozZipFile import ZipFile
-from cStringIO import StringIO
+from six import BytesIO
 
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.action.buildlist import addEntriesToListFile
@@ -43,7 +43,7 @@ class ZipEntry(object):
     def __init__(self, name, zipfile):
         self._zipfile = zipfile
         self._name = name
-        self._inner = StringIO()
+        self._inner = BytesIO()
 
     def write(self, content):
         '''Append the given content to this zip entry'''
@@ -59,7 +59,7 @@ class ZipEntry(object):
 
 def getModTime(aPath):
     if not os.path.isfile(aPath):
-        return 0
+        return localtime(0)
     mtime = os.stat(aPath).st_mtime
     return localtime(mtime)
 
@@ -325,7 +325,7 @@ class JarMaker(object):
         elif self.relativesrcdir:
             self.localedirs = \
                 self.generateLocaleDirs(self.relativesrcdir)
-        if isinstance(infile, basestring):
+        if isinstance(infile, six.text_type):
             logging.info('processing ' + infile)
             self.sourcedirs.append(_normpath(os.path.dirname(infile)))
         pp = self.pp.clone()
@@ -505,7 +505,7 @@ class JarMaker(object):
                 info = self.jarfile.getinfo(aPath)
                 return info.date_time
             except Exception:
-                return 0
+                return localtime(0)
 
         def getOutput(self, name):
             return ZipEntry(name, self.jarfile)
@@ -608,4 +608,5 @@ def main(args=None):
         infile = sys.stdin
     else:
         (infile, ) = args
+        infile = six.ensure_text(infile)
     jm.makeJar(infile, options.d)
