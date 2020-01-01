@@ -180,7 +180,7 @@ module.exports.addTests = function({testRunner, expect, puppeteer, CHROME}) {
       const response = await page.goto(server.EMPTY_PAGE);
       expect(response.ok()).toBe(true);
     });
-    it_fails_ffox('should work when navigating to data url', async({page, server}) => {
+    it('should work when navigating to data url', async({page, server}) => {
       const response = await page.goto('data:text/html,hello');
       expect(response.ok()).toBe(true);
     });
@@ -284,7 +284,7 @@ module.exports.addTests = function({testRunner, expect, puppeteer, CHROME}) {
       process.removeListener('warning', warningHandler);
       expect(warning).toBe(null);
     });
-    it_fails_ffox('should navigate to dataURL and fire dataURL requests', async({page, server}) => {
+    it('should navigate to dataURL and fire dataURL requests', async({page, server}) => {
       const requests = [];
       page.on('request', request => !utils.isFavicon(request) && requests.push(request));
       const dataURL = 'data:text/html,<div>yo</div>';
@@ -293,7 +293,7 @@ module.exports.addTests = function({testRunner, expect, puppeteer, CHROME}) {
       expect(requests.length).toBe(1);
       expect(requests[0].url()).toBe(dataURL);
     });
-    it_fails_ffox('should navigate to URL with hash and fire requests without hash', async({page, server}) => {
+    it('should navigate to URL with hash and fire requests without hash', async({page, server}) => {
       const requests = [];
       page.on('request', request => !utils.isFavicon(request) && requests.push(request));
       const response = await page.goto(server.EMPTY_PAGE + '#hash');
@@ -401,7 +401,7 @@ module.exports.addTests = function({testRunner, expect, puppeteer, CHROME}) {
       expect(response).toBe(null);
       expect(page.url()).toBe(server.PREFIX + '/replaced.html');
     });
-    it_fails_ffox('should work with DOM history.back()/history.forward()', async({page, server}) => {
+    it('should work with DOM history.back()/history.forward()', async({page, server}) => {
       await page.goto(server.EMPTY_PAGE);
       await page.setContent(`
         <a id=back onclick='javascript:goBack()'>back</a>
