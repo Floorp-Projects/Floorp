@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import shutil
+import six
 import subprocess
 import sys
 import time
@@ -978,6 +979,9 @@ class CCacheStats(object):
         return (all(v >= 0 for v in relative_values) and
                 any(v > 0 for v in relative_values))
 
+    def __bool__(self):
+        return self.__nonzero__()
+
     @staticmethod
     def _format_value(v):
         if v > CCacheStats.GiB:
@@ -1531,7 +1535,7 @@ class BuildDriver(MozbuildObject):
             # We'll just use an empty substs if there is no config.
             pass
         clobberer = Clobberer(self.topsrcdir, self.topobjdir, substs)
-        clobber_output = io.BytesIO()
+        clobber_output = six.StringIO()
         res = clobberer.maybe_do_clobber(os.getcwd(), auto_clobber,
                                          clobber_output)
         clobber_output.seek(0)
