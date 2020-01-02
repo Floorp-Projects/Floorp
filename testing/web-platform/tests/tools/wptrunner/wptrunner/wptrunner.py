@@ -7,16 +7,16 @@ from six import iteritems, itervalues
 
 from wptserve import sslutils
 
-import environment as env
-import products
-import testloader
-import wptcommandline
-import wptlogging
-import wpttest
+from . import environment as env
+from . import products
+from . import testloader
+from . import wptcommandline
+from . import wptlogging
+from . import wpttest
 from mozlog import capture, handlers
-from font import FontInstaller
-from testrunner import ManagerGroup
-from browsers.base import NullBrowser
+from .font import FontInstaller
+from .testrunner import ManagerGroup
+from .browsers.base import NullBrowser
 
 here = os.path.split(__file__)[0]
 
