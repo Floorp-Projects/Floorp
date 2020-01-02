@@ -438,11 +438,19 @@ class RequestListHeader extends Component {
    */
   shouldUpdateWidths() {
     const visibleColumns = this.getVisibleColumns();
-    const columnsData = this.props.columnsData;
     let totalPercent = 0;
 
     visibleColumns.forEach(col => {
-      totalPercent += columnsData.get(col.name).width;
+      const name = col.name;
+      const headerRef = this.refs[`${name}Header`];
+      // Get column width from style.
+      let widthFromStyle = 0;
+      // In case the column is in visibleColumns but has display:none
+      // we don't want to count its style.width into totalPercent.
+      if (headerRef.getBoundingClientRect().width > 0) {
+        widthFromStyle = headerRef.style.width.slice(0, -1);
+      }
+      totalPercent += +widthFromStyle; // + converts it to a number
     });
 
     // Do not update if total percent is from 99-101% or when it is 0
