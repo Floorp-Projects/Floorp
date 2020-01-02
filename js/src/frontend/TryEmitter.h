@@ -71,12 +71,13 @@ class MOZ_STACK_CLASS TryEmitter {
   // block and the finally block, and also to save/restore the return value
   // before/after the finally block.
   //
-  //     JSOP_TRY
+  //     JSOP_TRY offsetOf(jumpToEnd)
   //
   //     try_body...
   //
   //     JSOP_GOSUB finally
   //     JSOP_JUMPTARGET
+  //   jumpToEnd:
   //     JSOP_GOTO end:
   //
   //   catch:
@@ -135,11 +136,8 @@ class MOZ_STACK_CLASS TryEmitter {
   // The stack depth before emitting JSOP_TRY.
   int depth_;
 
-  // The source note index for SRC_TRY.
-  unsigned noteIndex_;
-
-  // The offset after JSOP_TRY.
-  BytecodeOffset tryStart_;
+  // The offset of the JSOP_TRY op.
+  BytecodeOffset tryOpOffset_;
 
   // JSOP_JUMPTARGET after the entire try-catch-finally block.
   JumpList catchAndFinallyJump_;
@@ -186,6 +184,10 @@ class MOZ_STACK_CLASS TryEmitter {
   }
   bool hasFinally() const {
     return kind_ == Kind::TryCatchFinally || kind_ == Kind::TryFinally;
+  }
+
+  BytecodeOffset offsetAfterTryOp() const {
+    return tryOpOffset_ + BytecodeOffsetDiff(JSOP_TRY_LENGTH);
   }
 
  public:

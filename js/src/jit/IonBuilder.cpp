@@ -1651,13 +1651,10 @@ AbortReasonOr<Ok> IonBuilder::traverseBytecode() {
   // See the "Control Flow handling in IonBuilder" comment in IonBuilder.h for
   // more information.
 
-  // IonBuilder's destructor is not called, so make sure pendingEdges_ and
-  // GSNCache are not holding onto malloc memory when we return.
+  // IonBuilder's destructor is not called, so make sure pendingEdges_ is not
+  // holding onto malloc memory when we return.
   pendingEdges_.emplace();
-  auto freeMemory = mozilla::MakeScopeExit([&] {
-    pendingEdges_.reset();
-    gsn.purge();
-  });
+  auto freeMemory = mozilla::MakeScopeExit([&] { pendingEdges_.reset(); });
 
   MOZ_TRY(startTraversingBlock(current));
 
@@ -3220,13 +3217,9 @@ AbortReasonOr<Ok> IonBuilder::visitTry() {
     return abort(AbortReason::Disable, "Try-catch during analysis");
   }
 
-  jssrcnote* sn = GetSrcNote(gsn, script(), pc);
-  MOZ_ASSERT(SN_TYPE(sn) == SRC_TRY);
-
   // Get the pc of the last instruction in the try block. It's a JSOP_GOTO to
   // jump over the catch block.
-  jsbytecode* endpc =
-      pc + GetSrcNoteOffset(sn, SrcNote::Try::EndOfTryJumpOffset);
+  jsbytecode* endpc = pc + GET_CODE_OFFSET(pc);
   MOZ_ASSERT(JSOp(*endpc) == JSOP_GOTO);
   MOZ_ASSERT(GET_JUMP_OFFSET(endpc) > 0);
 

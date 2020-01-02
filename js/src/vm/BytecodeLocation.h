@@ -87,6 +87,7 @@ class BytecodeLocation {
   uint32_t defCount() const;
 
   int32_t jumpOffset() const { return GET_JUMP_OFFSET(rawBytecode_); }
+  int32_t codeOffset() const { return GET_CODE_OFFSET(rawBytecode_); }
 
   PropertyName* getPropertyName(const JSScript* script) const;
 

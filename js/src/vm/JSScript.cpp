@@ -4623,18 +4623,16 @@ void JSScript::assertValidJumpTargets() const {
 
   // Check catch/finally blocks as jump targets.
   for (const JSTryNote& tn : trynotes()) {
-    jsbytecode* end = codeEnd();
-    jsbytecode* mainEntry = main();
-
-    jsbytecode* tryStart = offsetToPC(tn.start);
-    jsbytecode* tryPc = tryStart - 1;
     if (tn.kind != JSTRY_CATCH && tn.kind != JSTRY_FINALLY) {
       continue;
     }
 
+    jsbytecode* tryStart = offsetToPC(tn.start);
+    jsbytecode* tryPc = tryStart - JSOP_TRY_LENGTH;
     MOZ_ASSERT(JSOp(*tryPc) == JSOP_TRY);
+
     jsbytecode* tryTarget = tryStart + tn.length;
-    MOZ_ASSERT(mainEntry <= tryTarget && tryTarget < end);
+    MOZ_ASSERT(main() <= tryTarget && tryTarget < codeEnd());
     MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*tryTarget)));
   }
 }

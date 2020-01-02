@@ -95,7 +95,7 @@ BaselineInterpreterGenerator::BaselineInterpreterGenerator(JSContext* cx)
     : BaselineCodeGen(cx /* no handlerArgs */) {}
 
 bool BaselineCompilerHandler::init(JSContext* cx) {
-  if (!analysis_.init(alloc_, cx->caches().gsnCache)) {
+  if (!analysis_.init(alloc_)) {
     return false;
   }
 

@@ -36,7 +36,7 @@ struct CatchFinallyRange {
   }
 };
 
-bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
+bool BytecodeAnalysis::init(TempAllocator& alloc) {
   if (!infos_.growByUninitialized(script_->length())) {
     return false;
   }
@@ -101,7 +101,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
 
       case JSOP_TRY: {
         for (const JSTryNote& tn : script_->trynotes()) {
-          if (tn.start == offset + 1 &&
+          if (tn.start == offset + JSOP_TRY_LENGTH &&
               (tn.kind == JSTRY_CATCH || tn.kind == JSTRY_FINALLY)) {
             uint32_t catchOrFinallyOffset = tn.start + tn.length;
             infos_[catchOrFinallyOffset].init(stackDepth);
@@ -111,13 +111,8 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
 
         // Get the pc of the last instruction in the try block. It's a JSOP_GOTO
         // to jump over the catch/finally blocks.
-        jssrcnote* sn = GetSrcNote(gsn, script_, it.toRawBytecode());
-        MOZ_ASSERT(SN_TYPE(sn) == SRC_TRY);
-
-        BytecodeLocation endOfTryLoc(
-            script_,
-            it.toRawBytecode() +
-                GetSrcNoteOffset(sn, SrcNote::Try::EndOfTryJumpOffset));
+        BytecodeLocation endOfTryLoc(script_,
+                                     it.toRawBytecode() + it.codeOffset());
         MOZ_ASSERT(endOfTryLoc.is(JSOP_GOTO));
 
         BytecodeLocation afterTryLoc(

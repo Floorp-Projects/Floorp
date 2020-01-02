@@ -907,7 +907,7 @@ bool BytecodeParser::parse() {
         // same function: no more code will execute, and it does not matter what
         // is defined.
         for (const JSTryNote& tn : script_->trynotes()) {
-          if (tn.start == offset + 1) {
+          if (tn.start == offset + JSOP_TRY_LENGTH) {
             uint32_t catchOffset = tn.start + tn.length;
             if (tn.kind == JSTRY_CATCH) {
               if (!addJump(catchOffset, stackDepth, offsetStack, pc,
@@ -1402,25 +1402,18 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
   int i;
   switch (JOF_TYPE(cs->format)) {
     case JOF_BYTE:
-      // Scan the trynotes to find the associated catch block
-      // and make the try opcode look like a jump instruction
-      // with an offset. This simplifies code coverage analysis
-      // based on this disassembled output.
-      if (op == JSOP_TRY) {
-        for (const JSTryNote& tn : script->trynotes()) {
-          if (tn.kind == JSTRY_CATCH && tn.start == loc + 1) {
-            if (!sp->jsprintf(" %u (%+d)", unsigned(loc + tn.length + 1),
-                              int(tn.length + 1))) {
-              return 0;
-            }
-            break;
-          }
-        }
-      }
       break;
 
     case JOF_JUMP: {
       ptrdiff_t off = GET_JUMP_OFFSET(pc);
+      if (!sp->jsprintf(" %u (%+d)", unsigned(loc + int(off)), int(off))) {
+        return 0;
+      }
+      break;
+    }
+
+    case JOF_CODE_OFFSET: {
+      ptrdiff_t off = GET_CODE_OFFSET(pc);
       if (!sp->jsprintf(" %u (%+d)", unsigned(loc + int(off)), int(off))) {
         return 0;
       }
