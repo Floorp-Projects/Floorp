@@ -3073,15 +3073,6 @@ static MOZ_MUST_USE bool SrcNotes(JSContext* cx, HandleScript script,
         ++lineno;
         break;
 
-      case SRC_TRY:
-        MOZ_ASSERT(JSOp(script->code()[offset]) == JSOP_TRY);
-        if (!sp->jsprintf(" offset to jump %u",
-                          unsigned(GetSrcNoteOffset(
-                              sn, SrcNote::Try::EndOfTryJumpOffset)))) {
-          return false;
-        }
-        break;
-
       default:
         MOZ_ASSERT_UNREACHABLE("unrecognized srcnote");
     }

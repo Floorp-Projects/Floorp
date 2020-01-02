@@ -63,6 +63,7 @@ enum {
   JOF_LOOPHEAD = 20,     /* JSOP_LOOPHEAD, combines JOF_ICINDEX and JOF_UINT8 */
   JOF_BIGINT = 21,       /* uint32_t index for BigInt value */
   JOF_CLASS_CTOR = 22,   /* uint32_t atom index, sourceStart, sourceEnd */
+  JOF_CODE_OFFSET = 23,  /* int32_t bytecode offset */
   JOF_TYPEMASK = 0x001f, /* mask for above immediate types */
 
   JOF_NAME = 1 << 5,     /* name operation */
@@ -187,6 +188,14 @@ static MOZ_ALWAYS_INLINE int32_t GET_JUMP_OFFSET(jsbytecode* pc) {
 }
 
 static MOZ_ALWAYS_INLINE void SET_JUMP_OFFSET(jsbytecode* pc, int32_t off) {
+  SET_INT32(pc, off);
+}
+
+static MOZ_ALWAYS_INLINE int32_t GET_CODE_OFFSET(jsbytecode* pc) {
+  return GET_INT32(pc);
+}
+
+static MOZ_ALWAYS_INLINE void SET_CODE_OFFSET(jsbytecode* pc, int32_t off) {
   SET_INT32(pc, off);
 }
 

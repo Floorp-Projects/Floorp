@@ -45,7 +45,7 @@ class BytecodeAnalysis {
  public:
   explicit BytecodeAnalysis(TempAllocator& alloc, JSScript* script);
 
-  MOZ_MUST_USE bool init(TempAllocator& alloc, GSNCache& gsn);
+  MOZ_MUST_USE bool init(TempAllocator& alloc);
 
   BytecodeInfo& info(jsbytecode* pc) {
     uint32_t pcOffset = script_->pcToOffset(pc);
