@@ -511,19 +511,23 @@ var SessionHistoryInternal = {
       }
     }
 
-    if (entry.triggeringPrincipal_base64) {
-      shEntry.triggeringPrincipal = E10SUtils.deserializePrincipal(
-        entry.triggeringPrincipal_base64,
-        () => {
-          // Ensure that we have a null principal if we couldn't deserialize it.
-          // This won't always work however is safe to use.
-          debug(
-            "Couldn't deserialize the triggeringPrincipal, falling back to NullPrincipal"
-          );
-          return Services.scriptSecurityManager.createNullPrincipal({});
-        }
-      );
-    }
+    // Every load must have a triggeringPrincipal to load otherwise we prevent it,
+    // this code *must* always return a valid principal:
+    shEntry.triggeringPrincipal = E10SUtils.deserializePrincipal(
+      entry.triggeringPrincipal_base64,
+      () => {
+        // This callback fires when we failed to deserialize the principal (or we don't have one)
+        // and this ensures we always have a principal returned from this function.
+        // We must always have a triggering principal for a load to work.
+        // A null principal won't always work however is safe to use.
+        debug(
+          "Couldn't deserialize the triggeringPrincipal, falling back to NullPrincipal"
+        );
+        return Services.scriptSecurityManager.createNullPrincipal({});
+      }
+    );
+    // As both storagePrincipal and principalToInherit are both not required to load
+    // it's ok to keep these undefined when we don't have a previously defined principal.
     if (entry.storagePrincipalToInherit_base64) {
       shEntry.storagePrincipalToInherit = E10SUtils.deserializePrincipal(
         entry.storagePrincipalToInherit_base64
