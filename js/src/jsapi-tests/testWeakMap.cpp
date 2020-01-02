@@ -208,7 +208,8 @@ JSObject* newDelegate() {
   };
 
   static const js::ClassExtension delegateClassExtension = {
-      DelegateObjectMoved};
+      DelegateObjectMoved,  // objectMovedOp
+  };
 
   static const JSClass delegateClass = {
       "delegate",
