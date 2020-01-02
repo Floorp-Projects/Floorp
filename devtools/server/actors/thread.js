@@ -874,7 +874,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       if (this.dbg.replaying) {
         const offsets = findStepOffsets(frame);
         frame.setReplayingOnStep(onStep, offsets);
-      } else {
+      } else if (!this.sources.isFrameBlackBoxed(frame)) {
         frame.onStep = onStep;
       }
 
@@ -919,7 +919,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
             /* requireStepStart */ false
           );
           parentFrame.setReplayingOnStep(onStep, offsets);
-        } else {
+        } else if (!thread.sources.isFrameBlackBoxed(parentFrame)) {
           parentFrame.onStep = onStep;
         }
 
@@ -1115,7 +1115,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
               stepFrame.setReplayingOnStep(onStep, offsets);
             } else {
               stepFrame.waitingOnStep = true;
-              stepFrame.onStep = onStep;
+              if (!this.sources.isFrameBlackBoxed(stepFrame)) {
+                stepFrame.onStep = onStep;
+              }
               stepFrame.onPop = onPop;
             }
           }
