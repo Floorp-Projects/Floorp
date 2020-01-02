@@ -379,7 +379,7 @@ class RequestListContextMenu {
       id: "request-list-context-perf",
       label: L10N.getStr("netmonitor.context.perfTools"),
       accesskey: L10N.getStr("netmonitor.context.perfTools.accesskey"),
-      visible: requests.size > 0,
+      visible: requests.length > 0,
       click: () => openStatistics(true),
     });
 

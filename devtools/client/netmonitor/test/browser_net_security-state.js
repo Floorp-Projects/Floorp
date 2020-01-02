@@ -96,7 +96,7 @@ add_task(async function() {
 
     const expectedCount = Object.keys(EXPECTED_SECURITY_STATES).length;
     is(
-      store.getState().requests.requests.size,
+      store.getState().requests.requests.length,
       expectedCount,
       expectedCount + " events logged."
     );

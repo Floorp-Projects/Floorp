@@ -129,7 +129,7 @@ add_task(async function() {
   );
 
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     EXPECTED_REQUESTS.length,
     "All the page events should be recorded."
   );
@@ -143,7 +143,7 @@ add_task(async function() {
   );
   const expectedOrder = EXPECTED_REQUESTS.map(r => r.causeType).sort();
   expectedOrder.forEach((expectedCause, i) => {
-    const cause = getSortedRequests(store.getState()).get(i).cause.type;
+    const cause = getSortedRequests(store.getState())[i].cause.type;
     is(
       cause,
       expectedCause,

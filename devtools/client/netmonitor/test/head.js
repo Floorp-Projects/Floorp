@@ -1016,7 +1016,7 @@ function waitForRequestData(store, fields, id) {
     if (id) {
       item = getRequestById(store.getState(), id);
     } else {
-      item = getSortedRequests(store.getState()).get(0);
+      item = getSortedRequests(store.getState())[0];
     }
     if (!item) {
       return false;
@@ -1082,7 +1082,7 @@ function validateRequests(requests, monitor) {
   requests.forEach((spec, i) => {
     const { method, url, causeType, causeUri, stack } = spec;
 
-    const requestItem = getSortedRequests(store.getState()).get(i);
+    const requestItem = getSortedRequests(store.getState())[i];
     verifyRequestItemTarget(
       document,
       getDisplayedRequests(store.getState()),

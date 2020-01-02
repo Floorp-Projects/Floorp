@@ -90,7 +90,7 @@ const {
 
 function waitForRequestData(store, fields, i) {
   return waitUntil(() => {
-    const item = getSortedRequests(store.getState()).get(i);
+    const item = getSortedRequests(store.getState())[i];
     if (!item) {
       return false;
     }

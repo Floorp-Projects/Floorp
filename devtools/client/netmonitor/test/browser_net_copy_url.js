@@ -28,7 +28,7 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[0]
   );
 
-  const requestItem = getSortedRequests(store.getState()).get(0);
+  const requestItem = getSortedRequests(store.getState())[0];
 
   await waitForClipboardPromise(function setup() {
     getContextMenuItem(monitor, "request-list-context-copy-url").click();

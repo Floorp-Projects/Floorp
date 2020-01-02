@@ -150,8 +150,7 @@ add_task(async function() {
     // since copyPostData API needs to read these state.
     await waitUntil(() => {
       const { requests } = store.getState().requests;
-      const actIDs = [...requests.keys()];
-      const { formDataSections, requestPostData } = requests.get(actIDs[index]);
+      const { formDataSections, requestPostData } = requests[index];
       return formDataSections && requestPostData;
     });
     EventUtils.sendMouseEvent(

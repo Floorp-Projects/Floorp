@@ -53,7 +53,7 @@ function test() {
         "There shouldn't be any selected item in the requests menu."
       );
       is(
-        store.getState().requests.requests.size,
+        store.getState().requests.requests.length,
         1,
         "The requests menu should not be empty after the first request."
       );
@@ -63,7 +63,7 @@ function test() {
         "The network details panel should still be hidden after first request."
       );
 
-      const requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState())[0];
 
       is(
         typeof requestItem.id,
@@ -167,7 +167,7 @@ function test() {
     expectEvent(EVENTS.RECEIVED_REQUEST_HEADERS, async () => {
       await waitForRequestData(store, ["requestHeaders"]);
 
-      const requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState())[0];
 
       ok(
         requestItem.requestHeaders,
@@ -198,7 +198,7 @@ function test() {
     expectEvent(EVENTS.RECEIVED_REQUEST_COOKIES, async () => {
       await waitForRequestData(store, ["requestCookies"]);
 
-      const requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState())[0];
 
       ok(
         requestItem.requestCookies,
@@ -226,7 +226,7 @@ function test() {
     expectEvent(EVENTS.RECEIVED_RESPONSE_HEADERS, async () => {
       await waitForRequestData(store, ["responseHeaders"]);
 
-      const requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState())[0];
 
       ok(
         requestItem.responseHeaders,
@@ -255,7 +255,7 @@ function test() {
     expectEvent(EVENTS.RECEIVED_RESPONSE_COOKIES, async () => {
       await waitForRequestData(store, ["responseCookies"]);
 
-      const requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState())[0];
 
       ok(
         requestItem.responseCookies,
@@ -284,7 +284,7 @@ function test() {
         "headersSize",
       ]);
 
-      const requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState())[0];
 
       is(
         requestItem.httpVersion,
@@ -329,7 +329,7 @@ function test() {
         "mimeType",
       ]);
 
-      const requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState())[0];
 
       is(
         requestItem.transferredSize,
@@ -365,7 +365,7 @@ function test() {
     expectEvent(EVENTS.UPDATING_EVENT_TIMINGS, async () => {
       await waitForRequestData(store, ["eventTimings"]);
 
-      const requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState())[0];
 
       is(
         typeof requestItem.totalTime,
@@ -392,7 +392,7 @@ function test() {
     expectEvent(EVENTS.RECEIVED_EVENT_TIMINGS, async () => {
       await waitForRequestData(store, ["eventTimings"]);
 
-      const requestItem = getSortedRequests(store.getState()).get(0);
+      const requestItem = getSortedRequests(store.getState())[0];
 
       ok(
         requestItem.eventTimings,
@@ -455,7 +455,7 @@ function test() {
     tab.linkedBrowser.reload();
     await wait;
 
-    const requestItem = getSortedRequests(store.getState()).get(0);
+    const requestItem = getSortedRequests(store.getState())[0];
 
     if (!requestItem.requestHeaders) {
       connector.requestData(requestItem.id, "requestHeaders");

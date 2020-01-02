@@ -26,7 +26,7 @@ add_task(async function() {
   await wait;
 
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     2,
     "There were two requests due to redirect."
   );

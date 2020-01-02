@@ -44,7 +44,7 @@ add_task(async function() {
   });
   await wait;
 
-  let item = getSortedRequests(store.getState()).get(0);
+  let item = getSortedRequests(store.getState())[0];
 
   ok(item.requestHeadersAvailable, "headers are available for lazily fetching");
 
@@ -55,7 +55,7 @@ add_task(async function() {
   // Wait until requestHeaders packet gets updated.
   await waitForRequestData(store, ["requestHeaders"]);
 
-  item = getSortedRequests(store.getState()).get(0);
+  item = getSortedRequests(store.getState())[0];
   is(item.method, "POST", "The request has the right method");
   is(item.url, requestUrl, "The request has the right URL");
 

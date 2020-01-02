@@ -105,7 +105,7 @@ add_task(async function() {
     await verifyRequestItemTarget(
       document,
       getDisplayedRequests(store.getState()),
-      getSortedRequests(store.getState()).get(index),
+      getSortedRequests(store.getState())[index],
       request.method,
       request.uri,
       request.details

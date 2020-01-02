@@ -30,7 +30,7 @@ add_task(async function() {
     document.querySelectorAll(".request-list-item")[0]
   );
 
-  testShowLearnMore(getSortedRequests(store.getState()).get(0));
+  testShowLearnMore(getSortedRequests(store.getState())[0]);
 
   return teardown(monitor);
 

@@ -36,7 +36,7 @@ add_task(async function() {
 
   testRawHeaderToggleStyle(true);
 
-  testShowRawHeaders(getSortedRequests(store.getState()).get(0));
+  testShowRawHeaders(getSortedRequests(store.getState())[0]);
 
   EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersToggle("RESPONSE"));
   EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersToggle("REQUEST"));
