@@ -90,9 +90,9 @@ add_task(async function() {
   );
   let names = engines.map(obj => obj.engineName);
   Assert.deepEqual(names, ["lycos", "altavista", "aol"], "Correct order");
-  Assert.deepEqual(
-    engines[2].webExtension.locales,
-    ["en-US"],
+  Assert.equal(
+    engines[2].webExtension.locale,
+    "en-US",
     "Subsequent matches in applies to can override default"
   );
 
