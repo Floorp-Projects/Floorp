@@ -226,7 +226,7 @@ interface nsISearchService : nsISupports
    */
   void reInit([optional] in boolean skipRegionCheck);
   void reset();
-  Promise makeEnginesFromConfig(in jsval config);
+  Promise makeEngineFromConfig(in jsval config);
   Promise ensureBuiltinExtension(in AString id,
                                 [optional] in jsval locales);
 
