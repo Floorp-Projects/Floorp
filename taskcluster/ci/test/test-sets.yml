@@ -50,6 +50,7 @@ common-tests:
 
 web-platform-tests:
     - web-platform-tests
+    - web-platform-tests-crashtests
     - web-platform-tests-reftests
     - web-platform-tests-wdspec
 
@@ -474,6 +475,7 @@ windows-aarch64-tests:
     - mochitest-webgl2-ext
     - reftest
     - web-platform-tests
+    - web-platform-tests-crashtests
     - web-platform-tests-reftests
     - xpcshell
 
@@ -527,6 +529,7 @@ macosx1014-64-tests:
     - test-verify-gpu
     - test-verify-wpt
     - web-platform-tests
+    - web-platform-tests-crashtests
     - web-platform-tests-reftests
     - web-platform-tests-wdspec
     - xpcshell
@@ -573,6 +576,7 @@ android-x86_64-tests:
     - reftest
     - test-verify
     - web-platform-tests
+    - web-platform-tests-crashtests
     - web-platform-tests-reftests
     - xpcshell
 

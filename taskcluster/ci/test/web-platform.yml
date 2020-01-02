@@ -159,6 +159,29 @@ web-platform-tests-wdspec-headless:
                     - --test-type=wdspec
                     - --headless
 
+web-platform-tests-crashtests:
+    description: "Web platform crashtests run"
+    suite:
+        name: web-platform-tests-crashtests
+    schedules-component: web-platform-tests-crashtests
+    treeherder-symbol: W(Wc)
+    chunks: 1
+    mozharness:
+        extra-options:
+            - --test-type=crashtest
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try', 'mozilla-central']
+            .*-qr/.*: ['release', 'try']
+            default: built-projects
+    tier:
+        by-test-platform:
+            linux64-asan/opt: 2
+            windows10-aarch64.*: 2
+            .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
+            linux64-ccov/opt: 3
+            default: default
+
 test-verify-wpt:
     description: "Extra verification of web-platform tests modified on this push"
     suite:
