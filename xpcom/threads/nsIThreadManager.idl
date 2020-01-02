@@ -104,6 +104,7 @@ interface nsIThreadManager : nsISupports
    *   .currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
    * C++ callers should instead use NS_DispatchToMainThread.
    */
+  [optional_argc]
   void dispatchToMainThread(in nsIRunnable event, [optional] in uint32_t priority);
 
   /**
