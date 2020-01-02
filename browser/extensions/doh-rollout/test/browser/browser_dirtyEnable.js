@@ -1,8 +1,6 @@
 "use strict";
 
 add_task(async function testDirtyEnable() {
-  await waitForBalrogMigration();
-
   // Set up a failing environment, pre-set DoH to enabled, and verify that
   // when the add-on is enabled, it doesn't do anything - DoH remains turned on.
   setFailingHeuristics();
