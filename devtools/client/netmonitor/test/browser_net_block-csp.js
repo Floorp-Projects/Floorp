@@ -28,7 +28,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(1),
+    getSortedRequests(store.getState())[1],
     "GET",
     EXAMPLE_URL + "js_websocket-worker-test.js",
     {

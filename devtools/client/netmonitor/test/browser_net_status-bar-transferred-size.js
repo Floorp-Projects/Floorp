@@ -42,7 +42,7 @@ add_task(async () => {
   is(cachedItemsInUI, 1, "Number of cached requests displayed is correct");
 
   const state = store.getState();
-  const totalRequestsCount = state.requests.requests.size;
+  const totalRequestsCount = state.requests.requests.length;
   const requestsSummary = getDisplayedRequestsSummary(state);
   info(`Current requests: ${requestsSummary.count} of ${totalRequestsCount}.`);
 

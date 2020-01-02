@@ -59,7 +59,7 @@ add_task(async function() {
  */
 function assertRequestCount(store, count) {
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     count,
     "There should be correct number of requests"
   );

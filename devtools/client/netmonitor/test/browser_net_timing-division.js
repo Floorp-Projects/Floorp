@@ -47,7 +47,7 @@ add_task(async function() {
   minDivs.forEach(div => info(`Minute division: ${div.textContent}`));
 
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     2,
     "There should be only two requests made."
   );

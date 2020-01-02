@@ -33,7 +33,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(0),
+    getSortedRequests(store.getState())[0],
     "GET",
     CONTENT_TYPE_SJS + "?fmt=xml",
     {
@@ -48,7 +48,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(1),
+    getSortedRequests(store.getState())[1],
     "GET",
     CONTENT_TYPE_SJS + "?fmt=css",
     {
@@ -63,7 +63,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(2),
+    getSortedRequests(store.getState())[2],
     "GET",
     CONTENT_TYPE_SJS + "?fmt=js",
     {
@@ -78,7 +78,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(3),
+    getSortedRequests(store.getState())[3],
     "GET",
     CONTENT_TYPE_SJS + "?fmt=json",
     {
@@ -93,7 +93,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(4),
+    getSortedRequests(store.getState())[4],
     "GET",
     CONTENT_TYPE_SJS + "?fmt=bogus",
     {
@@ -108,7 +108,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(5),
+    getSortedRequests(store.getState())[5],
     "GET",
     TEST_IMAGE,
     {
@@ -124,7 +124,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(6),
+    getSortedRequests(store.getState())[6],
     "GET",
     CONTENT_TYPE_SJS + "?fmt=gzip",
     {

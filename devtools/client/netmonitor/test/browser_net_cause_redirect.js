@@ -41,7 +41,7 @@ add_task(async function() {
   await Promise.all(requests);
 
   EXPECTED_REQUESTS.forEach(({ status }, i) => {
-    const item = getSortedRequests(store.getState()).get(i);
+    const item = getSortedRequests(store.getState())[i];
 
     is(item.status, status, `Request #${i} has the expected status`);
 

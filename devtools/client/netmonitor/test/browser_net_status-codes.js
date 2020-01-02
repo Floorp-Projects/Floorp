@@ -123,7 +123,7 @@ add_task(async function() {
     info("Verifying requests contain correct information.");
     let index = 0;
     for (const request of REQUEST_DATA) {
-      const item = getSortedRequests(store.getState()).get(index);
+      const item = getSortedRequests(store.getState())[index];
       requestItems[index] = item;
 
       info("Verifying request #" + index);

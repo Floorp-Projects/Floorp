@@ -59,7 +59,7 @@ add_task(async function() {
     verifyRequestItemTarget(
       document,
       getDisplayedRequests(store.getState()),
-      getSortedRequests(store.getState()).get(index),
+      getSortedRequests(store.getState())[index],
       "GET",
       CONTENT_TYPE_SJS + "?fmt=json-long",
       {

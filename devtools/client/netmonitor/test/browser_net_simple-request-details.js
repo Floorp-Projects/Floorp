@@ -32,7 +32,7 @@ add_task(async function() {
     "There shouldn't be any selected item in the requests menu."
   );
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     1,
     "The requests menu should not be empty after the first request."
   );

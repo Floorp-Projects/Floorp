@@ -18,7 +18,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     0,
     "The requests menu should be empty."
   );
@@ -27,11 +27,11 @@ add_task(async function() {
   await performRequests(monitor, tab, 1);
 
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     1,
     "The beacon should be recorded."
   );
-  const request = getSortedRequests(store.getState()).get(0);
+  const request = getSortedRequests(store.getState())[0];
   is(request.method, "POST", "The method is correct.");
   ok(request.url.endsWith("beacon_request"), "The URL is correct.");
   is(request.status, "404", "The status is correct.");

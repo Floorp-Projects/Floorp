@@ -27,7 +27,7 @@ function sortWithClones(requests, sorter, a, b) {
     if (aOrigId === bId) {
       return +1;
     }
-    a = requests.get(aOrigId);
+    a = requests.find(item => item.id === aOrigId);
   }
 
   if (bId.endsWith("-clone")) {
@@ -35,7 +35,7 @@ function sortWithClones(requests, sorter, a, b) {
     if (bOrigId === aId) {
       return -1;
     }
-    b = requests.get(bOrigId);
+    b = requests.find(item => item.id === bOrigId);
   }
 
   const defaultSorter = () => false;
@@ -89,39 +89,27 @@ const getSortFn = createSelector(
 const getSortedRequests = createSelector(
   state => state.requests,
   getSortFn,
-  ({ requests }, sortFn) => {
-    const arr = [...requests.values()].sort(sortFn);
-    arr.get = index => arr[index];
-    arr.isEmpty = () => this.length == 0;
-    arr.size = arr.length;
-    return arr;
-  }
+  ({ requests }, sortFn) => [...requests].sort(sortFn)
 );
 
 const getDisplayedRequests = createSelector(
   state => state.requests,
   getFilterWithCloneFn,
   getSortFn,
-  ({ requests }, filterFn, sortFn) => {
-    const arr = [...requests.values()].filter(filterFn).sort(sortFn);
-    arr.get = index => arr[index];
-    arr.isEmpty = () => this.length == 0;
-    arr.size = arr.length;
-    return arr;
-  }
+  ({ requests }, filterFn, sortFn) => requests.filter(filterFn).sort(sortFn)
 );
 
 const getTypeFilteredRequests = createSelector(
   state => state.requests,
   getTypeFilterFn,
-  ({ requests }, filterFn) => [...requests.values()].filter(filterFn)
+  ({ requests }, filterFn) => requests.filter(filterFn)
 );
 
 const getDisplayedRequestsSummary = createSelector(
   getDisplayedRequests,
   state => state.requests.lastEndedMs - state.requests.firstStartedMs,
   (requests, totalMs) => {
-    if (requests.size == 0) {
+    if (requests.length === 0) {
       return { count: 0, bytes: 0, ms: 0 };
     }
 
@@ -144,7 +132,7 @@ const getDisplayedRequestsSummary = createSelector(
     );
 
     return {
-      count: requests.size,
+      count: requests.length,
       contentSize: totalBytes.contentSize,
       ms: totalMs,
       transferredSize: totalBytes.transferredSize,
@@ -155,7 +143,7 @@ const getDisplayedRequestsSummary = createSelector(
 const getSelectedRequest = createSelector(
   state => state.requests,
   ({ selectedId, requests }) =>
-    selectedId ? requests.get(selectedId) : undefined
+    selectedId ? requests.find(item => item.id === selectedId) : undefined
 );
 
 const isSelectedRequestVisible = createSelector(
@@ -166,7 +154,7 @@ const isSelectedRequestVisible = createSelector(
 );
 
 function getRequestById(state, id) {
-  return state.requests.requests.get(id);
+  return state.requests.requests.find(item => item.id === id);
 }
 
 function getDisplayedRequestById(state, id) {

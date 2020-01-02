@@ -49,7 +49,7 @@ async function throttleTest(actuallyThrottle) {
 
   await waitForRequestData(store, ["eventTimings"]);
 
-  const requestItem = getSortedRequests(store.getState()).get(0);
+  const requestItem = getSortedRequests(store.getState())[0];
   const reportedOneSecond = requestItem.eventTimings.timings.receive > 1000;
   if (actuallyThrottle) {
     ok(reportedOneSecond, "download reported as taking more than one second");
