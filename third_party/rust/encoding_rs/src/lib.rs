@@ -11,7 +11,7 @@
     feature = "cargo-clippy",
     allow(doc_markdown, inline_always, new_ret_no_self)
 )]
-#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.20")]
+#![doc(html_root_url = "https://docs.rs/encoding_rs/0.8.22")]
 
 //! encoding_rs is a Gecko-oriented Free Software / Open Source implementation
 //! of the [Encoding Standard](https://encoding.spec.whatwg.org/) in Rust.
@@ -4213,7 +4213,7 @@ impl Decoder {
     /// bytes taking into account the state of the decoder.
     ///
     /// Returns `None` if the decoder is not in a neutral state, including waiting
-    /// for the BOM or if the encoding is never Latin-byte-compatible.
+    /// for the BOM, or if the encoding is never Latin1-byte-compatible.
     ///
     /// Otherwise returns the index of the first byte whose unsigned value doesn't
     /// directly correspond to the decoded Unicode scalar value, or the length
@@ -5606,6 +5606,19 @@ mod tests {
                 encoder.encode_from_utf16(&[0xD83Du16, 0xDCA9u16], &mut dst[..13], true);
             assert_eq!(result, CoderResult::InputEmpty);
         }
+    }
+
+    #[test]
+    fn test_buffer_end_utf16be() {
+        let mut decoder = UTF_16BE.new_decoder_without_bom_handling();
+        let mut dest = [0u8; 4];
+
+        assert_eq!(
+            decoder.decode_to_utf8(&[0xD8, 0x00], &mut dest, false),
+            (CoderResult::InputEmpty, 2, 0, false)
+        );
+
+        let _ = decoder.decode_to_utf8(&[0xD8, 0x00], &mut dest, true);
     }
 
     #[test]
