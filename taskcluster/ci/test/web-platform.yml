@@ -48,7 +48,7 @@ web-platform-tests:
     chunks:
         by-test-platform:
             android.*: 18
-            linux64-asan/opt: 18
+            linux64-asan/opt: 24
             linux64-ccov/debug: 24
             linux64-ccov/opt: 24
             linux.*/debug: 18
