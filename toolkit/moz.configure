@@ -944,10 +944,10 @@ def remote_default(target, project, milestone):
     # TODO(ato): https://bugzil.la/1544393
     return project == 'browser' and milestone.is_nightly
 
-option('--disable-cdp', default=remote_default,
+option('--enable-cdp', default=remote_default,
        help='{Enable|Disable} remote agent')
 
-@depends('--disable-cdp')
+@depends('--enable-cdp')
 def remote(value):
     if value:
         return True
