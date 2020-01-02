@@ -468,7 +468,7 @@ void XPCJSRuntime::AssertInvalidWrappedJSNotInTable(
 #ifdef DEBUG
   if (!wrapper->IsValid()) {
     MOZ_ASSERT(!GetMultiCompartmentWrappedJSMap()->HasWrapper(wrapper));
-    if (!mGCIsRunning) {
+    if (!mGCIsRunning && !mDoingFinalization) {
       JSContext* cx = XPCJSContext::Get()->Context();
       JS_IterateCompartments(cx, wrapper, NotHasWrapperAssertionCallback);
     }
