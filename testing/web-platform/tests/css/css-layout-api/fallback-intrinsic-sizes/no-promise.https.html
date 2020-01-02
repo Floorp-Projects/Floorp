@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html class=reftest-wait>
-<link rel="help" href="https://drafts.css-houdini.org/css-layout-api/#invoke-a-layout-callback">
-<link rel="match" href="fallback-layout-fallback-ref.html">
-<meta name="assert" content="This test checks that a layout() class with a layout function that doesn't return a promise will fallback to block layout." />
+<link rel="help" href="https://drafts.css-houdini.org/css-layout-api/#invoke-an-intrinsic-sizes-callback">
+<link rel="match" href="fallback-ref.html">
+<meta name="assert" content="This test checks that a layout() class with an intrinsicSizes function that doesn't return a promise will fallback to block layout." />
 <style>
 .test {
   background: red;
   border: solid 2px;
-  width: 100px;
+  width: min-content;
 }
 
 .child {
@@ -30,8 +30,8 @@
 
 <script id="code" type="text/worklet">
 registerLayout('no-promise', class {
-  async intrinsicSizes() {}
-  layout() { return {autoBlockSize: 50}; }
+  intrinsicSizes() { return { minContentSize: 100 }; }
+  async layout() {}
 });
 </script>
 
