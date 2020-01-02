@@ -2,7 +2,7 @@
 
 # TwoStateButton
 
-`class TwoStateButton : `[`Button`](../-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuItemToolbar.kt#L101)
+`class TwoStateButton : `[`Button`](../-button/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuItemToolbar.kt#L103)
 
 A button that either shows an primary state or an secondary state based on the provided
 isInPrimaryState lambda.
