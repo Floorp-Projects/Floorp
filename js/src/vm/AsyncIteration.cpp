@@ -156,17 +156,17 @@ const JSClass AsyncGeneratorObject::class_ = {
 };
 
 const JSClassOps AsyncGeneratorObject::classOps_ = {
-    nullptr,                                  /* addProperty */
-    nullptr,                                  /* delProperty */
-    nullptr,                                  /* enumerate */
-    nullptr,                                  /* newEnumerate */
-    nullptr,                                  /* resolve */
-    nullptr,                                  /* mayResolve */
-    nullptr,                                  /* finalize */
-    nullptr,                                  /* call */
-    nullptr,                                  /* hasInstance */
-    nullptr,                                  /* construct */
-    CallTraceMethod<AbstractGeneratorObject>, /* trace */
+    nullptr,                                   // addProperty
+    nullptr,                                   // delProperty
+    nullptr,                                   // enumerate
+    nullptr,                                   // newEnumerate
+    nullptr,                                   // resolve
+    nullptr,                                   // mayResolve
+    nullptr,                                   // finalize
+    nullptr,                                   // call
+    nullptr,                                   // hasInstance
+    nullptr,                                   // construct
+    CallTraceMethod<AbstractGeneratorObject>,  // trace
 };
 
 // ES 2017 draft 9.1.13.

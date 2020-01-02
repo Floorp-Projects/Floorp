@@ -702,17 +702,18 @@ void FunctionDeclaration::trace(JSTracer* trc) {
 // ModuleObject
 
 /* static */ const JSClassOps ModuleObject::classOps_ = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate   */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve     */
-    nullptr, /* mayResolve  */
-    ModuleObject::finalize,
-    nullptr, /* call        */
-    nullptr, /* hasInstance */
-    nullptr, /* construct   */
-    ModuleObject::trace};
+    nullptr,                 // addProperty
+    nullptr,                 // delProperty
+    nullptr,                 // enumerate
+    nullptr,                 // newEnumerate
+    nullptr,                 // resolve
+    nullptr,                 // mayResolve
+    ModuleObject::finalize,  // finalize
+    nullptr,                 // call
+    nullptr,                 // hasInstance
+    nullptr,                 // construct
+    ModuleObject::trace,     // trace
+};
 
 /* static */ const JSClass ModuleObject::class_ = {
     "Module",

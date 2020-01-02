@@ -73,17 +73,18 @@ const JSClass FinalizationRecordVectorObject::class_ = {
     &classOps_, JS_NULL_CLASS_SPEC};
 
 const JSClassOps FinalizationRecordVectorObject::classOps_ = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate   */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve     */
-    nullptr, /* mayResolve  */
-    FinalizationRecordVectorObject::finalize,
-    nullptr, /* call        */
-    nullptr, /* hasInstance */
-    nullptr, /* construct   */
-    FinalizationRecordVectorObject::trace};
+    nullptr,                                   // addProperty
+    nullptr,                                   // delProperty
+    nullptr,                                   // enumerate
+    nullptr,                                   // newEnumerate
+    nullptr,                                   // resolve
+    nullptr,                                   // mayResolve
+    FinalizationRecordVectorObject::finalize,  // finalize
+    nullptr,                                   // call
+    nullptr,                                   // hasInstance
+    nullptr,                                   // construct
+    FinalizationRecordVectorObject::trace,     // trace
+};
 
 /* static */
 FinalizationRecordVectorObject* FinalizationRecordVectorObject::create(
@@ -173,17 +174,18 @@ const JSClass FinalizationGroupObject::protoClass_ = {
     &classSpec_};
 
 const JSClassOps FinalizationGroupObject::classOps_ = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate   */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve     */
-    nullptr, /* mayResolve  */
-    FinalizationGroupObject::finalize,
-    nullptr, /* call        */
-    nullptr, /* hasInstance */
-    nullptr, /* construct   */
-    FinalizationGroupObject::trace};
+    nullptr,                            // addProperty
+    nullptr,                            // delProperty
+    nullptr,                            // enumerate
+    nullptr,                            // newEnumerate
+    nullptr,                            // resolve
+    nullptr,                            // mayResolve
+    FinalizationGroupObject::finalize,  // finalize
+    nullptr,                            // call
+    nullptr,                            // hasInstance
+    nullptr,                            // construct
+    FinalizationGroupObject::trace,     // trace
+};
 
 const ClassSpec FinalizationGroupObject::classSpec_ = {
     GenericCreateConstructor<construct, 1, gc::AllocKind::FUNCTION>,

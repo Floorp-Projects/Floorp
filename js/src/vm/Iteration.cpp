@@ -1081,16 +1081,18 @@ void PropertyIteratorObject::finalize(JSFreeOp* fop, JSObject* obj) {
 }
 
 const JSClassOps PropertyIteratorObject::classOps_ = {
-    nullptr,           /* addProperty */
-    nullptr,           /* delProperty */
-    nullptr,           /* enumerate */
-    nullptr,           /* newEnumerate */
-    nullptr,           /* resolve */
-    nullptr,           /* mayResolve */
-    finalize, nullptr, /* call        */
-    nullptr,           /* hasInstance */
-    nullptr,           /* construct   */
-    trace};
+    nullptr,   // addProperty
+    nullptr,   // delProperty
+    nullptr,   // enumerate
+    nullptr,   // newEnumerate
+    nullptr,   // resolve
+    nullptr,   // mayResolve
+    finalize,  // finalize
+    nullptr,   // call
+    nullptr,   // hasInstance
+    nullptr,   // construct
+    trace,     // trace
+};
 
 const JSClass PropertyIteratorObject::class_ = {
     "Iterator", JSCLASS_HAS_PRIVATE | JSCLASS_BACKGROUND_FINALIZE,

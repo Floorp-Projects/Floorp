@@ -30,17 +30,19 @@ BEGIN_TEST(testSetProperty_InheritedGlobalSetter) {
 }
 
 const JSClass* getGlobalClass(void) override {
-  static const JSClassOps noResolveGlobalClassOps = {nullptr,  // add
-                                                     nullptr,  // delete
-                                                     nullptr,  // enumerate
-                                                     nullptr,  // newEnumerate
-                                                     nullptr,  // resolve
-                                                     nullptr,  // mayResolve
-                                                     nullptr,  // finalize
-                                                     nullptr,  // call
-                                                     nullptr,  // hasInstance
-                                                     nullptr,  // construct
-                                                     JS_GlobalObjectTraceHook};
+  static const JSClassOps noResolveGlobalClassOps = {
+      nullptr,                   // addProperty
+      nullptr,                   // delProperty
+      nullptr,                   // enumerate
+      nullptr,                   // newEnumerate
+      nullptr,                   // resolve
+      nullptr,                   // mayResolve
+      nullptr,                   // finalize
+      nullptr,                   // call
+      nullptr,                   // hasInstance
+      nullptr,                   // construct
+      JS_GlobalObjectTraceHook,  // trace
+  };
 
   static const JSClass noResolveGlobalClass = {
       "testSetProperty_InheritedGlobalSetter_noResolveGlobalClass",

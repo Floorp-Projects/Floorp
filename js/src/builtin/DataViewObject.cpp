@@ -983,17 +983,19 @@ JSObject* DataViewObject::CreatePrototype(JSContext* cx, JSProtoKey key) {
                                             &DataViewObject::protoClass_);
 }
 
-static const JSClassOps DataViewObjectClassOps = {nullptr, /* addProperty */
-                                                  nullptr, /* delProperty */
-                                                  nullptr, /* enumerate */
-                                                  nullptr, /* newEnumerate */
-                                                  nullptr, /* resolve */
-                                                  nullptr, /* mayResolve */
-                                                  nullptr, /* finalize */
-                                                  nullptr, /* call */
-                                                  nullptr, /* hasInstance */
-                                                  nullptr, /* construct */
-                                                  ArrayBufferViewObject::trace};
+static const JSClassOps DataViewObjectClassOps = {
+    nullptr,                       // addProperty
+    nullptr,                       // delProperty
+    nullptr,                       // enumerate
+    nullptr,                       // newEnumerate
+    nullptr,                       // resolve
+    nullptr,                       // mayResolve
+    nullptr,                       // finalize
+    nullptr,                       // call
+    nullptr,                       // hasInstance
+    nullptr,                       // construct
+    ArrayBufferViewObject::trace,  // trace
+};
 
 const ClassSpec DataViewObject::classSpec_ = {
     GenericCreateConstructor<DataViewObject::construct, 1,

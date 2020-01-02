@@ -16,7 +16,19 @@ static bool AddProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
   return true;
 }
 
-static const JSClassOps AddPropertyClassOps = {AddProperty};
+static const JSClassOps AddPropertyClassOps = {
+    AddProperty,  // addProperty
+    nullptr,      // delProperty
+    nullptr,      // enumerate
+    nullptr,      // newEnumerate
+    nullptr,      // resolve
+    nullptr,      // mayResolve
+    nullptr,      // finalize
+    nullptr,      // call
+    nullptr,      // hasInstance
+    nullptr,      // construct
+    nullptr,      // trace
+};
 
 static const JSClass AddPropertyClass = {"AddPropertyTester", 0,
                                          &AddPropertyClassOps};

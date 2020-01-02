@@ -3685,17 +3685,19 @@ static bool sandbox_resolve(JSContext* cx, HandleObject obj, HandleId id,
   return true;
 }
 
-static const JSClassOps sandbox_classOps = {nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            sandbox_enumerate,
-                                            sandbox_resolve,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            JS_GlobalObjectTraceHook};
+static const JSClassOps sandbox_classOps = {
+    nullptr,                   // addProperty
+    nullptr,                   // delProperty
+    nullptr,                   // enumerate
+    sandbox_enumerate,         // newEnumerate
+    sandbox_resolve,           // resolve
+    nullptr,                   // mayResolve
+    nullptr,                   // finalize
+    nullptr,                   // call
+    nullptr,                   // hasInstance
+    nullptr,                   // construct
+    JS_GlobalObjectTraceHook,  // trace
+};
 
 static const JSClass sandbox_class = {"sandbox", JSCLASS_GLOBAL_FLAGS,
                                       &sandbox_classOps};
@@ -4734,13 +4736,18 @@ class XDRBufferObject : public NativeObject {
 };
 
 /*static */ const JSClassOps XDRBufferObject::classOps_ = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate   */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve     */
-    nullptr, /* mayResolve  */
-    XDRBufferObject::finalize};
+    nullptr,                    // addProperty
+    nullptr,                    // delProperty
+    nullptr,                    // enumerate
+    nullptr,                    // newEnumerate
+    nullptr,                    // resolve
+    nullptr,                    // mayResolve
+    XDRBufferObject::finalize,  // finalize
+    nullptr,                    // call
+    nullptr,                    // hasInstance
+    nullptr,                    // construct
+    nullptr,                    // trace
+};
 
 /*static */ const JSClass XDRBufferObject::class_ = {
     "XDRBufferObject",
@@ -6470,8 +6477,17 @@ static bool CreateIsHTMLDDA(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   static const JSClassOps classOps = {
-      nullptr, nullptr, nullptr, nullptr,
-      nullptr, nullptr, nullptr, IsHTMLDDA_Call,
+      nullptr,         // addProperty
+      nullptr,         // delProperty
+      nullptr,         // enumerate
+      nullptr,         // newEnumerate
+      nullptr,         // resolve
+      nullptr,         // mayResolve
+      nullptr,         // finalize
+      IsHTMLDDA_Call,  // call
+      nullptr,         // hasInstance
+      nullptr,         // construct
+      nullptr,         // trace
   };
 
   static const JSClass cls = {
@@ -7206,13 +7222,18 @@ class StreamCacheEntryObject : public NativeObject {
 };
 
 const JSClassOps StreamCacheEntryObject::classOps_ = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    StreamCacheEntryObject::finalize};
+    nullptr,                           // addProperty
+    nullptr,                           // delProperty
+    nullptr,                           // enumerate
+    nullptr,                           // newEnumerate
+    nullptr,                           // resolve
+    nullptr,                           // mayResolve
+    StreamCacheEntryObject::finalize,  // finalize
+    nullptr,                           // call
+    nullptr,                           // hasInstance
+    nullptr,                           // construct
+    nullptr,                           // trace
+};
 
 const JSClass StreamCacheEntryObject::class_ = {
     "StreamCacheEntryObject",
@@ -9651,17 +9672,19 @@ static bool global_mayResolve(const JSAtomState& names, jsid id,
   return JS_MayResolveStandardClass(names, id, maybeObj);
 }
 
-static const JSClassOps global_classOps = {nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           global_enumerate,
-                                           global_resolve,
-                                           global_mayResolve,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           nullptr,
-                                           JS_GlobalObjectTraceHook};
+static const JSClassOps global_classOps = {
+    nullptr,                   // addProperty
+    nullptr,                   // delProperty
+    nullptr,                   // enumerate
+    global_enumerate,          // newEnumerate
+    global_resolve,            // resolve
+    global_mayResolve,         // mayResolve
+    nullptr,                   // finalize
+    nullptr,                   // call
+    nullptr,                   // hasInstance
+    nullptr,                   // construct
+    JS_GlobalObjectTraceHook,  // trace
+};
 
 static constexpr uint32_t DOM_PROTOTYPE_SLOT = JSCLASS_GLOBAL_SLOT_COUNT;
 static constexpr uint32_t DOM_GLOBAL_SLOTS = 1;

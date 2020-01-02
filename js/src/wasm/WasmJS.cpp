@@ -780,13 +780,19 @@ static JSObject* CreateWasmConstructor(JSContext* cx, JSProtoKey key) {
 // ============================================================================
 // WebAssembly.Module class and methods
 
-const JSClassOps WasmModuleObject::classOps_ = {nullptr, /* addProperty */
-                                                nullptr, /* delProperty */
-                                                nullptr, /* enumerate */
-                                                nullptr, /* newEnumerate */
-                                                nullptr, /* resolve */
-                                                nullptr, /* mayResolve */
-                                                WasmModuleObject::finalize};
+const JSClassOps WasmModuleObject::classOps_ = {
+    nullptr,                     // addProperty
+    nullptr,                     // delProperty
+    nullptr,                     // enumerate
+    nullptr,                     // newEnumerate
+    nullptr,                     // resolve
+    nullptr,                     // mayResolve
+    WasmModuleObject::finalize,  // finalize
+    nullptr,                     // call
+    nullptr,                     // hasInstance
+    nullptr,                     // construct
+    nullptr,                     // trace
+};
 
 const JSClass WasmModuleObject::class_ = {
     "WebAssembly.Module",
@@ -1324,17 +1330,19 @@ const Module& WasmModuleObject::module() const {
 // ============================================================================
 // WebAssembly.Instance class and methods
 
-const JSClassOps WasmInstanceObject::classOps_ = {nullptr, /* addProperty */
-                                                  nullptr, /* delProperty */
-                                                  nullptr, /* enumerate */
-                                                  nullptr, /* newEnumerate */
-                                                  nullptr, /* resolve */
-                                                  nullptr, /* mayResolve */
-                                                  WasmInstanceObject::finalize,
-                                                  nullptr, /* call */
-                                                  nullptr, /* hasInstance */
-                                                  nullptr, /* construct */
-                                                  WasmInstanceObject::trace};
+const JSClassOps WasmInstanceObject::classOps_ = {
+    nullptr,                       // addProperty
+    nullptr,                       // delProperty
+    nullptr,                       // enumerate
+    nullptr,                       // newEnumerate
+    nullptr,                       // resolve
+    nullptr,                       // mayResolve
+    WasmInstanceObject::finalize,  // finalize
+    nullptr,                       // call
+    nullptr,                       // hasInstance
+    nullptr,                       // construct
+    WasmInstanceObject::trace,     // trace
+};
 
 const JSClass WasmInstanceObject::class_ = {
     "WebAssembly.Instance",
@@ -1770,13 +1778,19 @@ uint32_t wasm::ExportedFunctionToFuncIndex(JSFunction* fun) {
 // ============================================================================
 // WebAssembly.Memory class and methods
 
-const JSClassOps WasmMemoryObject::classOps_ = {nullptr, /* addProperty */
-                                                nullptr, /* delProperty */
-                                                nullptr, /* enumerate */
-                                                nullptr, /* newEnumerate */
-                                                nullptr, /* resolve */
-                                                nullptr, /* mayResolve */
-                                                WasmMemoryObject::finalize};
+const JSClassOps WasmMemoryObject::classOps_ = {
+    nullptr,                     // addProperty
+    nullptr,                     // delProperty
+    nullptr,                     // enumerate
+    nullptr,                     // newEnumerate
+    nullptr,                     // resolve
+    nullptr,                     // mayResolve
+    WasmMemoryObject::finalize,  // finalize
+    nullptr,                     // call
+    nullptr,                     // hasInstance
+    nullptr,                     // construct
+    nullptr,                     // trace
+};
 
 const JSClass WasmMemoryObject::class_ = {
     "WebAssembly.Memory",
@@ -2133,17 +2147,19 @@ bool js::wasm::IsSharedWasmMemoryObject(JSObject* obj) {
 // ============================================================================
 // WebAssembly.Table class and methods
 
-const JSClassOps WasmTableObject::classOps_ = {nullptr, /* addProperty */
-                                               nullptr, /* delProperty */
-                                               nullptr, /* enumerate */
-                                               nullptr, /* newEnumerate */
-                                               nullptr, /* resolve */
-                                               nullptr, /* mayResolve */
-                                               WasmTableObject::finalize,
-                                               nullptr, /* call */
-                                               nullptr, /* hasInstance */
-                                               nullptr, /* construct */
-                                               WasmTableObject::trace};
+const JSClassOps WasmTableObject::classOps_ = {
+    nullptr,                    // addProperty
+    nullptr,                    // delProperty
+    nullptr,                    // enumerate
+    nullptr,                    // newEnumerate
+    nullptr,                    // resolve
+    nullptr,                    // mayResolve
+    WasmTableObject::finalize,  // finalize
+    nullptr,                    // call
+    nullptr,                    // hasInstance
+    nullptr,                    // construct
+    WasmTableObject::trace,     // trace
+};
 
 const JSClass WasmTableObject::class_ = {
     "WebAssembly.Table",
@@ -2520,17 +2536,19 @@ Table& WasmTableObject::table() const {
 // ============================================================================
 // WebAssembly.global class and methods
 
-const JSClassOps WasmGlobalObject::classOps_ = {nullptr, /* addProperty */
-                                                nullptr, /* delProperty */
-                                                nullptr, /* enumerate */
-                                                nullptr, /* newEnumerate */
-                                                nullptr, /* resolve */
-                                                nullptr, /* mayResolve */
-                                                WasmGlobalObject::finalize,
-                                                nullptr, /* call */
-                                                nullptr, /* hasInstance */
-                                                nullptr, /* construct */
-                                                WasmGlobalObject::trace};
+const JSClassOps WasmGlobalObject::classOps_ = {
+    nullptr,                     // addProperty
+    nullptr,                     // delProperty
+    nullptr,                     // enumerate
+    nullptr,                     // newEnumerate
+    nullptr,                     // resolve
+    nullptr,                     // mayResolve
+    WasmGlobalObject::finalize,  // finalize
+    nullptr,                     // call
+    nullptr,                     // hasInstance
+    nullptr,                     // construct
+    WasmGlobalObject::trace,     // trace
+};
 
 const JSClass WasmGlobalObject::class_ = {
     "WebAssembly.Global",
@@ -3731,13 +3749,18 @@ class ResolveResponseClosure : public NativeObject {
 };
 
 const JSClassOps ResolveResponseClosure::classOps_ = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    ResolveResponseClosure::finalize};
+    nullptr,                           // addProperty
+    nullptr,                           // delProperty
+    nullptr,                           // enumerate
+    nullptr,                           // newEnumerate
+    nullptr,                           // resolve
+    nullptr,                           // mayResolve
+    ResolveResponseClosure::finalize,  // finalize
+    nullptr,                           // call
+    nullptr,                           // hasInstance
+    nullptr,                           // construct
+    nullptr,                           // trace
+};
 
 const JSClass ResolveResponseClosure::class_ = {
     "WebAssembly ResolveResponseClosure",

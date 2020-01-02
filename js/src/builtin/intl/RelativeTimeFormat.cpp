@@ -36,13 +36,18 @@ using js::intl::IcuLocale;
 /**************** RelativeTimeFormat *****************/
 
 const JSClassOps RelativeTimeFormatObject::classOps_ = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    RelativeTimeFormatObject::finalize};
+    nullptr,                             // addProperty
+    nullptr,                             // delProperty
+    nullptr,                             // enumerate
+    nullptr,                             // newEnumerate
+    nullptr,                             // resolve
+    nullptr,                             // mayResolve
+    RelativeTimeFormatObject::finalize,  // finalize
+    nullptr,                             // call
+    nullptr,                             // hasInstance
+    nullptr,                             // construct
+    nullptr,                             // trace
+};
 
 const JSClass RelativeTimeFormatObject::class_ = {
     js_Object_str,

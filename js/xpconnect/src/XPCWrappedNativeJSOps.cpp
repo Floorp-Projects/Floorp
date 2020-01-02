@@ -656,8 +656,8 @@ static const JSClassOps XPC_WN_NoHelper_JSClassOps = {
     nullptr,                            // mayResolve
     XPC_WN_NoHelper_Finalize,           // finalize
     nullptr,                            // call
-    nullptr,                            // construct
     nullptr,                            // hasInstance
+    nullptr,                            // construct
     XPCWrappedNative::Trace,            // trace
 };
 
@@ -1098,8 +1098,8 @@ static const JSClassOps XPC_WN_Proto_JSClassOps = {
     nullptr,                                  // mayResolve
     XPC_WN_Proto_Finalize,                    // finalize
     nullptr,                                  // call
-    nullptr,                                  // construct
     nullptr,                                  // hasInstance
+    nullptr,                                  // construct
     nullptr,                                  // trace
 };
 
@@ -1187,8 +1187,8 @@ static const JSClassOps XPC_WN_Tearoff_JSClassOps = {
     nullptr,                            // mayResolve
     XPC_WN_TearOff_Finalize,            // finalize
     nullptr,                            // call
-    nullptr,                            // construct
     nullptr,                            // hasInstance
+    nullptr,                            // construct
     nullptr,                            // trace
 };
 

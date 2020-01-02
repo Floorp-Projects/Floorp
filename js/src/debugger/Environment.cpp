@@ -52,17 +52,17 @@ using mozilla::Nothing;
 using mozilla::Some;
 
 const JSClassOps DebuggerEnvironment::classOps_ = {
-    nullptr,                              /* addProperty */
-    nullptr,                              /* delProperty */
-    nullptr,                              /* enumerate   */
-    nullptr,                              /* newEnumerate */
-    nullptr,                              /* resolve     */
-    nullptr,                              /* mayResolve  */
-    nullptr,                              /* finalize    */
-    nullptr,                              /* call        */
-    nullptr,                              /* hasInstance */
-    nullptr,                              /* construct   */
-    CallTraceMethod<DebuggerEnvironment>, /* trace */
+    nullptr,                               // addProperty
+    nullptr,                               // delProperty
+    nullptr,                               // enumerate
+    nullptr,                               // newEnumerate
+    nullptr,                               // resolve
+    nullptr,                               // mayResolve
+    nullptr,                               // finalize
+    nullptr,                               // call
+    nullptr,                               // hasInstance
+    nullptr,                               // construct
+    CallTraceMethod<DebuggerEnvironment>,  // trace
 };
 
 const JSClass DebuggerEnvironment::class_ = {
