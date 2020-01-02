@@ -12,7 +12,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.MenuRes
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -126,7 +125,6 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), UserInteractionHandl
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        @MenuRes
         val menuRes = when (historyStore.state.mode) {
             HistoryFragmentState.Mode.Normal -> R.menu.library_menu
             is HistoryFragmentState.Mode.Editing -> R.menu.history_select_multi
