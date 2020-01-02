@@ -299,7 +299,8 @@ static const ClassSpec ArrayBufferObjectClassSpec = {
     arraybuffer_proto_properties};
 
 static const ClassExtension ArrayBufferObjectClassExtension = {
-    ArrayBufferObject::objectMoved};
+    ArrayBufferObject::objectMoved,  // objectMovedOp
+};
 
 const JSClass ArrayBufferObject::class_ = {
     "ArrayBuffer",
