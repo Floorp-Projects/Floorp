@@ -106,7 +106,8 @@ class CellColor {
 // heap extend either gc::Cell or gc::TenuredCell. If a type is always tenured,
 // prefer the TenuredCell class as base.
 //
-// The first word (a pointer or uintptr_t) of each Cell must reserve the low
+// The first word (a pointer or uintptr_t) of each Cell must reserve the low bit
+// for GC purposes. In addition to that, nursery Cells must reserve the low
 // Cell::ReservedBits bits for GC purposes. The remaining bits are available to
 // sub-classes and typically store a pointer to another gc::Cell.
 //
@@ -116,7 +117,7 @@ class CellColor {
 struct alignas(gc::CellAlignBytes) Cell {
  public:
   // The low bits of the first word of each Cell are reserved for GC flags.
-  static constexpr int ReservedBits = 2;
+  static constexpr int ReservedBits = 3;
   static constexpr uintptr_t RESERVED_MASK = BitMask(ReservedBits);
 
   // Indicates if the cell is currently a RelocationOverlay

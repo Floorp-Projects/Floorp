@@ -110,12 +110,17 @@ inline T MaybeForwarded(T t) {
 
 inline void RelocationOverlay::forwardTo(Cell* cell) {
   MOZ_ASSERT(!isForwarded());
+  MOZ_ASSERT((uintptr_t(cell) & Cell::RESERVED_MASK) == 0,
+             "preserving flags doesn't clobber any existing bits");
 
   // Preserve old flags because nursery may check them before checking
   // if this is a forwarded Cell.
   //
   // This is pretty terrible and we should find a better way to implement
-  // Cell::getTrackKind() that doesn't rely on this behavior.
+  // Cell::getTraceKind() that doesn't rely on this behavior.
+  //
+  // The copied over flags are only used for nursery Cells, when the Cell is
+  // tenured, these bits are never read and hence may contain any content.
   uintptr_t gcFlags = dataWithTag_ & Cell::RESERVED_MASK;
   dataWithTag_ = uintptr_t(cell) | gcFlags | Cell::FORWARD_BIT;
 }
