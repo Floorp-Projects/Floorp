@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,7 @@
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "ScreenHelperGTK.h"
 
 #include "gtkdrawing.h"
@@ -285,23 +286,21 @@ nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
   nsTArray<LookAndFeelInt> lookAndFeelIntCache =
       nsXPLookAndFeel::GetIntCacheImpl();
 
-  LookAndFeelInt lafInt;
-  lafInt.id = eIntID_SystemUsesDarkTheme;
-  lafInt.value = GetInt(eIntID_SystemUsesDarkTheme);
-  lookAndFeelIntCache.AppendElement(lafInt);
+  const IntID kIdsToCache[] = {eIntID_SystemUsesDarkTheme,
+                               eIntID_PrefersReducedMotion,
+                               eIntID_UseAccessibilityTheme};
 
-  LookAndFeelInt prefersReducedMotion;
-  prefersReducedMotion.id = eIntID_PrefersReducedMotion;
-  prefersReducedMotion.value = GetInt(eIntID_PrefersReducedMotion);
-
-  lookAndFeelIntCache.AppendElement(prefersReducedMotion);
+  for (IntID id : kIdsToCache) {
+    lookAndFeelIntCache.AppendElement(
+        LookAndFeelInt{id, {.value = GetInt(id)}});
+  }
 
   return lookAndFeelIntCache;
 }
 
 void nsLookAndFeel::SetIntCacheImpl(
     const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {
-  for (auto entry : aLookAndFeelIntCache) {
+  for (const auto& entry : aLookAndFeelIntCache) {
     switch (entry.id) {
       case eIntID_SystemUsesDarkTheme:
         mSystemUsesDarkTheme = entry.value;
@@ -309,6 +308,9 @@ void nsLookAndFeel::SetIntCacheImpl(
       case eIntID_PrefersReducedMotion:
         mPrefersReducedMotion = entry.value;
         mPrefersReducedMotionCached = true;
+        break;
+      case eIntID_UseAccessibilityTheme:
+        mHighContrast = entry.value;
         break;
     }
   }
@@ -757,6 +759,11 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = mSystemUsesDarkTheme;
       break;
     }
+    case eIntID_UseAccessibilityTheme: {
+      EnsureInit();
+      aResult = mHighContrast;
+      break;
+    }
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;
@@ -921,24 +928,38 @@ static bool IsGtkThemeCompatibleWithHTMLColors() {
   return HasGoodContrastVisibility(backgroundColor, black);
 }
 
-static void ConfigureContentGtkTheme() {
-  LOG(("ConfigureContentGtkTheme\n"));
-
+static nsCString GetGtkTheme() {
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+  nsCString ret;
   GtkSettings* settings = gtk_settings_get_for_screen(gdk_screen_get_default());
-  nsAutoCString contentThemeName;
+  char* themeName = nullptr;
+  g_object_get(settings, "gtk-theme-name", &themeName, nullptr);
+  if (themeName) {
+    ret.Assign(themeName);
+    g_free(themeName);
+  }
+  return ret;
+}
+
+void nsLookAndFeel::ConfigureContentGtkTheme() {
+  GtkSettings* settings = gtk_settings_get_for_screen(gdk_screen_get_default());
+
+  nsAutoCString themeOverride;
   mozilla::Preferences::GetCString("widget.content.gtk-theme-override",
-                                   contentThemeName);
-  if (!contentThemeName.IsEmpty()) {
-    LOG(
-        ("    widget.content.gtk-theme-override is set to %s, setting by "
-         "gtk-theme-name\n",
-         contentThemeName.get()));
-    g_object_set(settings, "gtk-theme-name", contentThemeName.get(), nullptr);
+                                   themeOverride);
+  if (!themeOverride.IsEmpty()) {
+      g_object_set(settings, "gtk-theme-name", themeOverride.get(),
+                   nullptr);
+    LOG(("ConfigureContentGtkTheme(%s)\n", themeOverride.get()));
+  } else {
+    LOG(("ConfigureContentGtkTheme(%s)\n", GetGtkTheme().get()));
   }
 
-  // Dark theme is active but user explicitly enables it so we're done now.
-  if (mozilla::Preferences::GetBool("widget.content.allow-gtk-dark-theme",
-                                    false)) {
+  // Dark theme is active but user explicitly enables it, or we're on
+  // high-contrast (in which case we prevent content to mess up with the colors
+  // of the page), so we're done now.
+  if (!themeOverride.IsEmpty() || mHighContrast ||
+      StaticPrefs::widget_content_allow_gtk_dark_theme()) {
     return;
   }
 
@@ -952,7 +973,7 @@ static void ConfigureContentGtkTheme() {
   }
 
   // ...and use a default Gtk theme as a fallback.
-  if (contentThemeName.IsEmpty() && !IsGtkThemeCompatibleWithHTMLColors()) {
+  if (!IsGtkThemeCompatibleWithHTMLColors()) {
     LOG(("    Non-compatible dark theme, default to Adwaita\n"));
     g_object_set(settings, "gtk-theme-name", "Adwaita", nullptr);
   }
@@ -1009,6 +1030,9 @@ void nsLookAndFeel::EnsureInit() {
     mSystemUsesDarkTheme =
         (RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(bg)) <
          RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(fg)));
+
+    mHighContrast = StaticPrefs::widget_content_gtk_high_contrast_enabled() &&
+                    GetGtkTheme().Find(NS_LITERAL_CSTRING("HighContrast")) >= 0;
   }
 
   // The label is not added to a parent widget, but shared for constructing
