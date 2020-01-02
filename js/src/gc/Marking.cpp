@@ -2570,6 +2570,7 @@ GCMarker::GCMarker(JSRuntime* rt)
       queuePos(0)
 #endif
 {
+  setTraceWeakEdges(false);
 }
 
 bool GCMarker::init(JSGCMode gcMode) {

@@ -96,16 +96,16 @@ class JS_PUBLIC_API JSTracer {
   JSTracer(JSRuntime* rt, TracerKindTag tag,
            WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
       : runtime_(rt),
-        weakMapAction_(weakTraceKind)
-#ifdef DEBUG
-        ,
-        checkEdges_(true)
-#endif
-        ,
+        weakMapAction_(weakTraceKind),
         tag_(tag),
         traceWeakEdges_(true),
+#ifdef DEBUG
+        checkEdges_(true),
+#endif
         canSkipJsids_(false) {
   }
+
+  void setTraceWeakEdges(bool value) { traceWeakEdges_ = value; }
 
 #ifdef DEBUG
   // Set whether to check edges are valid in debug builds.
@@ -113,15 +113,18 @@ class JS_PUBLIC_API JSTracer {
 #endif
 
  private:
-  JSRuntime* runtime_;
-  WeakMapTraceKind weakMapAction_;
+  JSRuntime* const runtime_;
+  const WeakMapTraceKind weakMapAction_;
+  const TracerKindTag tag_;
+
+  // Whether the tracer should trace weak edges. GCMarker sets this to false.
+  bool traceWeakEdges_;
+
 #ifdef DEBUG
   bool checkEdges_;
 #endif
 
  protected:
-  const TracerKindTag tag_;
-  bool traceWeakEdges_;
   bool canSkipJsids_;
 };
 
@@ -280,8 +283,6 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
   }
 
  protected:
-  void setTraceWeakEdges(bool value) { traceWeakEdges_ = value; }
-
   // If this is set to false, then the tracer will skip some jsids
   // to improve performance. This is needed for the cycle collector.
   void setCanSkipJsids(bool value) { canSkipJsids_ = value; }

@@ -84,19 +84,15 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
 /* static */
 void WeakRefObject::trace(JSTracer* trc, JSObject* obj) {
-  if (trc->isMarkingTracer()) {
-    return;
-  }
-
   WeakRefObject* weakRef = &obj->as<WeakRefObject>();
-  JSObject* target = weakRef->target();
-  if (!target) {
-    return;
-  }
 
-  MOZ_ALWAYS_TRUE(
-      TraceManuallyBarrieredWeakEdge(trc, &target, "WeakRefObject::target"));
-  weakRef->setPrivate(target);
+  if (trc->traceWeakEdges()) {
+    JSObject* target = weakRef->target();
+    if (target) {
+      TraceManuallyBarrieredEdge(trc, &target, "WeakRefObject::target");
+    }
+    weakRef->setPrivate(target);
+  }
 }
 
 /* static */

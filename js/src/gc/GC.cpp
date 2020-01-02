@@ -3691,7 +3691,9 @@ class CompartmentCheckTracer final : public JS::CallbackTracer {
       : JS::CallbackTracer(rt),
         src(nullptr),
         zone(nullptr),
-        compartment(nullptr) {}
+        compartment(nullptr) {
+    setTraceWeakEdges(false);
+  }
 
   Cell* src;
   JS::TraceKind srcKind;
