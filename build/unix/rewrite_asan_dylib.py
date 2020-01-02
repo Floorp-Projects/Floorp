@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function, unicode_literals
+
 import re
 import sys
 import os
@@ -20,7 +22,8 @@ DYLIB_NAME = 'libclang_rt.asan_osx_dynamic.dylib'
 
 
 def resolve_rpath(filename):
-    otoolOut = subprocess.check_output([substs['OTOOL'], '-l', filename])
+    otoolOut = subprocess.check_output([substs['OTOOL'], '-l', filename],
+                                       universal_newlines=True)
     currentCmd = None
 
     # The lines we need to find look like this:
@@ -62,7 +65,7 @@ def scan_directory(path):
 
             try:
                 otoolOut = subprocess.check_output(
-                    [substs['OTOOL'], '-L', filename])
+                    [substs['OTOOL'], '-L', filename], universal_newlines=True)
             except Exception:
                 # Errors are expected on non-mach executables, ignore them and continue
                 continue
