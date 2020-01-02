@@ -6,14 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["Connection"];
 
-const { Log } = ChromeUtils.import("chrome://remote/content/Log.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Log } = ChromeUtils.import("chrome://remote/content/Log.jsm");
 const { UnknownMethodError } = ChromeUtils.import(
   "chrome://remote/content/Error.jsm"
 );
+const { Protocol } = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 XPCOMUtils.defineLazyServiceGetter(
@@ -61,9 +62,14 @@ class Connection {
     this.sessions.set(session.id, session);
   }
 
-  send(message) {
-    log.trace(`<-(connection ${this.id}) ${JSON.stringify(message)}`);
-    this.transport.send(message);
+  send(body) {
+    const payload = JSON.stringify(
+      body,
+      Protocol.sanitize,
+      Log.verbose ? "\t" : undefined
+    );
+    log.trace(`<-(connection ${this.id}) ${payload}`);
+    this.transport.send(JSON.parse(payload));
   }
 
   /**
