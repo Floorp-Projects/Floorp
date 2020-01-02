@@ -891,8 +891,6 @@ Pk11Install_Platform_Generate(Pk11Install_Platform* _this,
                 if (errStr) {
                     tmp = PR_smprintf("%s: %s",
                                       Pk11Install_PlatformName_GetString(&_this->name), errStr);
-                    tmp = PR_smprintf("%s: %s",
-                                      Pk11Install_PlatformName_GetString(&_this->name), errStr);
                     PR_smprintf_free(errStr);
                     errStr = tmp;
                     goto loser;
