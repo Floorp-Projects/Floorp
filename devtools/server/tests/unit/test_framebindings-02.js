@@ -7,22 +7,13 @@
  * Check a frame actor's parent bindings.
  */
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_pause_frame();
-    },
-    { waitForFinish: true }
-  )
-);
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-function test_pause_frame() {
-  gThreadFront.once("paused", async function(packet) {
     const environment = await packet.frame.getEnvironment();
     let parentEnv = environment.parent;
     const bindings = parentEnv.bindings;
@@ -37,7 +28,7 @@ function test_pause_frame() {
     // Skip the global lexical scope.
     parentEnv = parentEnv.parent.parent;
     Assert.notEqual(parentEnv, undefined);
-    const objClient = gThreadFront.pauseGrip(parentEnv.object);
+    const objClient = threadFront.pauseGrip(parentEnv.object);
     const response = await objClient.getPrototypeAndProperties();
     Assert.equal(response.ownProperties.Object.value.getGrip().type, "object");
     Assert.equal(
@@ -46,12 +37,13 @@ function test_pause_frame() {
     );
     Assert.ok(!!response.ownProperties.Object.value.actorID);
 
-    await gThreadFront.resume();
-    threadFrontTestFinished();
-  });
+    await threadFront.resume();
+  })
+);
 
+function evalCode(debuggee) {
   /* eslint-disable */
-  gDebuggee.eval(
+  debuggee.eval(
     "(" +
       function() {
         function stopMe(number, bool, string, null_, undef, object) {

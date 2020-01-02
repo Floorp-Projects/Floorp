@@ -7,22 +7,13 @@
  * Check a frame actor's bindings property.
  */
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_pause_frame();
-    },
-    { waitForFinish: true }
-  )
-);
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-function test_pause_frame() {
-  gThreadFront.once("paused", async function(packet) {
     const environment = await packet.frame.getEnvironment();
     const bindings = environment.bindings;
     const args = bindings.arguments;
@@ -44,7 +35,7 @@ function test_pause_frame() {
     Assert.equal(vars.c.value.class, "Object");
     Assert.ok(!!vars.c.value.actor);
 
-    const objClient = gThreadFront.pauseGrip(vars.c.value);
+    const objClient = threadFront.pauseGrip(vars.c.value);
     const response = await objClient.getPrototypeAndProperties();
     Assert.equal(response.ownProperties.a.configurable, true);
     Assert.equal(response.ownProperties.a.enumerable, true);
@@ -57,19 +48,24 @@ function test_pause_frame() {
     Assert.equal(response.ownProperties.b.value.type, "undefined");
     Assert.equal(false, "class" in response.ownProperties.b.value);
 
-    await gThreadFront.resume();
-    threadFrontTestFinished();
-  });
+    await threadFront.resume();
+  })
+);
 
+function evalCode(debuggee) {
   /* eslint-disable */
-  gDebuggee.eval("(" + function () {
-    function stopMe(number, bool, string, null_, undef, object) {
-      var a = 1;
-      var b = true;
-      var c = { a: "a", b: undefined };
-      debugger;
-    }
-    stopMe(42, true, "nasu", null, undefined, { foo: "bar" });
-  } + ")()");
+  debuggee.eval(
+    "(" +
+      function() {
+        function stopMe(number, bool, string, null_, undef, object) {
+          var a = 1;
+          var b = true;
+          var c = { a: "a", b: undefined };
+          debugger;
+        }
+        stopMe(42, true, "nasu", null, undefined, { foo: "bar" });
+      } +
+      ")()"
+  );
   /* eslint-enable */
 }

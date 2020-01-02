@@ -7,31 +7,22 @@
  * Verify that we get a frame actor along with a debugger statement.
  */
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_pause_frame();
-    },
-    { waitForFinish: true }
-  )
-);
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-function test_pause_frame() {
-  gThreadFront.once("paused", function(packet) {
     Assert.ok(!!packet.frame);
     Assert.ok(!!packet.frame.actor);
     Assert.equal(packet.frame.displayName, "stopMe");
-    gThreadFront.resume().then(function() {
-      threadFrontTestFinished();
-    });
-  });
+    threadFront.resume();
+  })
+);
 
-  gDebuggee.eval(
+function evalCode(debuggee) {
+  debuggee.eval(
     "(" +
       function() {
         function stopMe() {
