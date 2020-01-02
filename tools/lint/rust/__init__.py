@@ -129,6 +129,11 @@ def lint(paths, config, fix=None, **lintargs):
     log = lintargs['log']
     paths = list(expand_exclusions(paths, config, lintargs['root']))
 
+    # An empty path array can occur when the user passes in `-n`. If we don't
+    # return early in this case, rustfmt will attempt to read stdin and hang.
+    if not paths:
+        return []
+
     binary = get_rustfmt_binary()
 
     if is_old_rustfmt(binary):
