@@ -67,7 +67,7 @@ add_task(async function() {
 
   let index = 0;
   for (const request of REQUEST_DATA) {
-    const item = getSortedRequests(store.getState()).get(index);
+    const item = getSortedRequests(store.getState())[index];
 
     info(`Verifying request #${index}`);
     await verifyRequestItemTarget(

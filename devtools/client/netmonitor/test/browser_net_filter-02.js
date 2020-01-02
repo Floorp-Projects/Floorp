@@ -307,18 +307,18 @@ add_task(async function() {
     const visibleItems = getDisplayedRequests(store.getState());
 
     is(
-      items.size,
+      items.length,
       visibility.length,
       "There should be a specific amount of items in the requests menu."
     );
     is(
-      visibleItems.size,
+      visibleItems.length,
       visibility.filter(e => e).length,
       "There should be a specific amount of visible items in the requests menu."
     );
 
     for (let i = 0; i < visibility.length; i++) {
-      const itemId = items.get(i).id;
+      const itemId = items[i].id;
       const shouldBeVisible = !!visibility[i];
       const isThere = visibleItems.some(r => r.id == itemId);
       is(
@@ -335,7 +335,7 @@ add_task(async function() {
           verifyRequestItemTarget(
             document,
             getDisplayedRequests(store.getState()),
-            getSortedRequests(store.getState()).get(i),
+            getSortedRequests(store.getState())[i],
             method,
             url,
             data

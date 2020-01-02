@@ -62,7 +62,7 @@ add_task(async function() {
   await waitForNetworkEvents(monitor, EXPECTED_REQUESTS.length);
 
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     EXPECTED_REQUESTS.length,
     "All the page events should be recorded."
   );

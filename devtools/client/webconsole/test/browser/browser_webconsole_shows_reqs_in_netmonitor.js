@@ -48,15 +48,15 @@ async function testNetmonitor(toolbox) {
     "devtools/client/netmonitor/src/selectors/index"
   );
 
-  await waitUntil(() => store.getState().requests.requests.size > 0);
+  await waitUntil(() => store.getState().requests.requests.length > 0);
 
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     1,
     "Network request appears in the network panel"
   );
 
-  const item = getSortedRequests(store.getState()).get(0);
+  const item = getSortedRequests(store.getState())[0];
   is(item.method, "GET", "The request method is correct.");
   is(item.url, TEST_PATH, "The request url is correct.");
 }

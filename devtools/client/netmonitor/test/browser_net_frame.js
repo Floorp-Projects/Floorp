@@ -192,7 +192,7 @@ add_task(async function() {
   await waitForNetworkEvents(monitor, REQUEST_COUNT);
 
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     REQUEST_COUNT,
     "All the page events should be recorded."
   );
@@ -212,7 +212,7 @@ add_task(async function() {
   let currentTop = 0;
   let currentSub = 0;
   for (let i = 0; i < REQUEST_COUNT; i++) {
-    const requestItem = getSortedRequests(store.getState()).get(i);
+    const requestItem = getSortedRequests(store.getState())[i];
 
     const itemUrl = requestItem.url;
     const itemCauseUri = requestItem.cause.loadingDocumentUri;

@@ -30,7 +30,7 @@ const {
 function Requests() {
   return {
     // Map with all requests (key = actor ID, value = request object)
-    requests: new Map(),
+    requests: [],
     // Selected request ID
     selectedId: null,
     preselectedId: null,
@@ -71,7 +71,9 @@ function requestsReducer(state = Requests(), action) {
     case SELECT_REQUEST: {
       // Selected request represents the last request that was clicked
       // before the context menu is shown
-      const clickedRequest = state.requests.get(action.id);
+      const clickedRequest = state.requests.find(
+        needle => needle.id === action.id
+      );
       return {
         ...state,
         clickedRequest,
@@ -89,7 +91,9 @@ function requestsReducer(state = Requests(), action) {
     }
 
     case RIGHT_CLICK_REQUEST: {
-      const clickedRequest = state.requests.get(action.id);
+      const clickedRequest = state.requests.find(
+        needle => needle.id === action.id
+      );
       return {
         ...state,
         clickedRequest,
@@ -149,7 +153,7 @@ function addRequest(state, action) {
     urlDetails: getUrlDetails(action.data.url),
   };
 
-  nextState.requests = mapSet(state.requests, newRequest.id, newRequest);
+  nextState.requests = [...state.requests, newRequest];
 
   // Update the started/ended timestamps.
   const { startedMs } = action.data;
@@ -172,22 +176,26 @@ function addRequest(state, action) {
 function updateRequest(state, action) {
   const { requests, lastEndedMs } = state;
 
-  let request = requests.get(action.id);
-  if (!request) {
+  const id = action.id;
+  const index = requests.findIndex(needle => needle.id === id);
+  if (index === -1) {
     return state;
   }
+  const request = requests[index];
 
-  request = {
+  const nextRequest = {
     ...request,
     ...processNetworkUpdates(action.data, request),
   };
   const requestEndTime =
-    request.startedMs +
-    (request.eventTimings ? request.eventTimings.totalTime : 0);
+    nextRequest.startedMs +
+    (nextRequest.eventTimings ? nextRequest.eventTimings.totalTime : 0);
 
+  const nextRequests = [...requests];
+  nextRequests[index] = nextRequest;
   return {
     ...state,
-    requests: mapSet(state.requests, action.id, request),
+    requests: nextRequests,
     lastEndedMs: requestEndTime > lastEndedMs ? requestEndTime : lastEndedMs,
   };
 }
@@ -199,7 +207,7 @@ function cloneRequest(state, id) {
     return state;
   }
 
-  const clonedRequest = requests.get(id);
+  const clonedRequest = requests.find(needle => needle.id === id);
   if (!clonedRequest) {
     return state;
   }
@@ -218,7 +226,7 @@ function cloneRequest(state, id) {
 
   return {
     ...state,
-    requests: mapSet(requests, newRequest.id, newRequest),
+    requests: [...requests, newRequest],
     selectedId: newRequest.id,
     preselectedId: id,
   };
@@ -234,38 +242,21 @@ function closeCustomRequest(state) {
     return state;
   }
 
-  const removedRequest = requests.get(selectedId);
+  const removedRequest = requests.find(needle => needle.id === selectedId);
 
   // If the custom request is already in the Map, select it immediately,
   // and reset `preselectedId` attribute.
-  const hasPreselectedId = preselectedId && requests.has(preselectedId);
+  const hasPreselectedId =
+    preselectedId && requests.find(needle => needle.id === preselectedId);
   return {
     ...state,
     // Only custom requests can be removed
-    [removedRequest && removedRequest.isCustom && "requests"]: mapDelete(
-      requests,
-      selectedId
+    [removedRequest && removedRequest.isCustom && "requests"]: requests.filter(
+      item => item.id !== selectedId
     ),
     preselectedId: hasPreselectedId ? null : preselectedId,
     selectedId: hasPreselectedId ? preselectedId : null,
   };
-}
-
-/**
- * Append new item into existing map and return new map.
- */
-function mapSet(map, key, value) {
-  const newMap = new Map(map);
-  return newMap.set(key, value);
-}
-
-/**
- * Remove an item from existing map and return new map.
- */
-function mapDelete(map, key) {
-  const newMap = new Map(map);
-  newMap.delete(key);
-  return newMap;
 }
 
 module.exports = {

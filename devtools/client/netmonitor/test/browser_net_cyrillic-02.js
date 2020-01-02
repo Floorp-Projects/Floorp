@@ -30,7 +30,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(0),
+    getSortedRequests(store.getState())[0],
     "GET",
     CYRILLIC_URL,
     {

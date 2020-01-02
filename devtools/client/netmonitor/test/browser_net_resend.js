@@ -27,7 +27,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
-  const origItemId = getSortedRequests(store.getState()).get(0).id;
+  const origItemId = getSortedRequests(store.getState())[0].id;
 
   store.dispatch(Actions.selectRequest(origItemId));
   await waitForRequestData(
@@ -36,7 +36,7 @@ add_task(async function() {
     origItemId
   );
 
-  let origItem = getSortedRequests(store.getState()).get(0);
+  let origItem = getSortedRequests(store.getState())[0];
 
   // add a new custom request cloned from selected request
 
@@ -63,7 +63,7 @@ add_task(async function() {
   // we must wait for both properties get updated before starting test.
   await waitUntil(() => {
     sentItem = getSelectedRequest(store.getState());
-    origItem = getSortedRequests(store.getState()).get(0);
+    origItem = getSortedRequests(store.getState())[0];
     return (
       sentItem &&
       sentItem.requestHeaders &&

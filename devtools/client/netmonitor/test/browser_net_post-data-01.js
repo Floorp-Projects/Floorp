@@ -37,7 +37,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(0),
+    getSortedRequests(store.getState())[0],
     "POST",
     SIMPLE_SJS + "?foo=bar&baz=42&type=urlencoded",
     {
@@ -52,7 +52,7 @@ add_task(async function() {
   verifyRequestItemTarget(
     document,
     getDisplayedRequests(store.getState()),
-    getSortedRequests(store.getState()).get(1),
+    getSortedRequests(store.getState())[1],
     "POST",
     SIMPLE_SJS + "?foo=bar&baz=42&type=multipart",
     {

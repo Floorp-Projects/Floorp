@@ -22,7 +22,7 @@ add_task(async function() {
     "https://example.com" + CORS_SJS_PATH + "?request_1"
   );
 
-  is(store.getState().requests.requests.size, 2, "Two events event logged.");
+  is(store.getState().requests.requests.length, 2, "Two events event logged.");
 
   await clickAndTestSecurityIcon();
 

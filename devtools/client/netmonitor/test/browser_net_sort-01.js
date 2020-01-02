@@ -228,7 +228,7 @@ add_task(async function() {
       verifyRequestItemTarget(
         document,
         getDisplayedRequests(store.getState()),
-        getSortedRequests(store.getState()).get(order[i]),
+        getSortedRequests(store.getState())[order[i]],
         "GET1",
         SORTING_SJS + "?index=1",
         {
@@ -246,7 +246,7 @@ add_task(async function() {
       verifyRequestItemTarget(
         document,
         getDisplayedRequests(store.getState()),
-        getSortedRequests(store.getState()).get(order[i + len]),
+        getSortedRequests(store.getState())[order[i + len]],
         "GET2",
         SORTING_SJS + "?index=2",
         {
@@ -264,7 +264,7 @@ add_task(async function() {
       verifyRequestItemTarget(
         document,
         getDisplayedRequests(store.getState()),
-        getSortedRequests(store.getState()).get(order[i + len * 2]),
+        getSortedRequests(store.getState())[order[i + len * 2]],
         "GET3",
         SORTING_SJS + "?index=3",
         {
@@ -282,7 +282,7 @@ add_task(async function() {
       verifyRequestItemTarget(
         document,
         getDisplayedRequests(store.getState()),
-        getSortedRequests(store.getState()).get(order[i + len * 3]),
+        getSortedRequests(store.getState())[order[i + len * 3]],
         "GET4",
         SORTING_SJS + "?index=4",
         {
@@ -300,7 +300,7 @@ add_task(async function() {
       verifyRequestItemTarget(
         document,
         getDisplayedRequests(store.getState()),
-        getSortedRequests(store.getState()).get(order[i + len * 4]),
+        getSortedRequests(store.getState())[order[i + len * 4]],
         "GET5",
         SORTING_SJS + "?index=5",
         {

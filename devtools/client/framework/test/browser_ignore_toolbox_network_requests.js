@@ -23,7 +23,7 @@ add_task(async function() {
   const { store } = monitor.panelWin;
 
   is(
-    store.getState().requests.requests.size,
+    store.getState().requests.requests.length,
     0,
     "No network requests appear in the network panel"
   );

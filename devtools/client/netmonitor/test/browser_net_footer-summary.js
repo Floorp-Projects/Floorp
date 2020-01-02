@@ -55,7 +55,7 @@ add_task(async function() {
 
   function testStatus() {
     const state = store.getState();
-    const totalRequestsCount = state.requests.requests.size;
+    const totalRequestsCount = state.requests.requests.length;
     const requestsSummary = getDisplayedRequestsSummary(state);
     info(
       `Current requests: ${requestsSummary.count} of ${totalRequestsCount}.`

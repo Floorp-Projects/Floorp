@@ -20,7 +20,7 @@ add_task(async function() {
   BrowserTestUtils.loadURI(tab.linkedBrowser, SIMPLE_URL);
   await wait;
 
-  const item = getSortedRequests(store.getState()).get(0);
+  const item = getSortedRequests(store.getState())[0];
   ok(
     item.responseHeadersAvailable,
     "headers are available for lazily fetching"
