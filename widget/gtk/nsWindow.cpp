@@ -4794,8 +4794,35 @@ void nsWindow::UpdateWindowDraggingRegion(
   }
 }
 
+// See subtract_corners_from_region() at gtk/gtkwindow.c
+// We need to subtract corners from toplevel window opaque region
+// to draw transparent corners of default Gtk titlebar.
+// Both implementations (cairo_region_t and wl_region) needs to be synced.
+static void SubtractTitlebarCorners(cairo_region_t* aRegion, int aX, int aY,
+                                    int aWindowWidth) {
+  cairo_rectangle_int_t rect = {aX, aY, TITLEBAR_SHAPE_MASK_HEIGHT,
+                                TITLEBAR_SHAPE_MASK_HEIGHT};
+  cairo_region_subtract_rectangle(aRegion, &rect);
+  rect = {
+      aX + aWindowWidth - TITLEBAR_SHAPE_MASK_HEIGHT,
+      aY,
+      TITLEBAR_SHAPE_MASK_HEIGHT,
+      TITLEBAR_SHAPE_MASK_HEIGHT,
+  };
+  cairo_region_subtract_rectangle(aRegion, &rect);
+}
+
 #ifdef MOZ_WAYLAND
-void nsWindow::UpdateOpaqueRegionWayland(cairo_region_t* aRegion) {
+static void SubtractTitlebarCorners(wl_region* aRegion, int aX, int aY,
+                                    int aWindowWidth) {
+  wl_region_subtract(aRegion, aX, aY, TITLEBAR_SHAPE_MASK_HEIGHT,
+                     TITLEBAR_SHAPE_MASK_HEIGHT);
+  wl_region_subtract(aRegion, aX + aWindowWidth - TITLEBAR_SHAPE_MASK_HEIGHT,
+                     aY, TITLEBAR_SHAPE_MASK_HEIGHT,
+                     TITLEBAR_SHAPE_MASK_HEIGHT);
+}
+
+void nsWindow::UpdateTopLevelOpaqueRegionWayland(bool aSubtractCorners) {
   wl_surface* surface = moz_gtk_widget_get_wl_surface(GTK_WIDGET(mShell));
   if (!surface) {
     return;
@@ -4803,27 +4830,34 @@ void nsWindow::UpdateOpaqueRegionWayland(cairo_region_t* aRegion) {
 
   GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(mShell));
   nsWaylandDisplay* waylandDisplay = WaylandDisplayGet(display);
+  struct wl_compositor* compositor = waylandDisplay->GetCompositor();
 
-  wl_region* wl_region = nullptr;
-  if (aRegion) {
-    struct wl_compositor* compositor = waylandDisplay->GetCompositor();
-    wl_region = wl_compositor_create_region(compositor);
-    int n_rects = cairo_region_num_rectangles(aRegion);
-    for (int i = 0; i < n_rects; i++) {
-      cairo_rectangle_int_t rect;
-      cairo_region_get_rectangle(aRegion, i, &rect);
-      wl_region_add(wl_region, rect.x, rect.y, rect.width, rect.height);
-    }
+  // Set opaque region to mShell. It's moved to mClientOffset.x/mClientOffset.y
+  // from origin as we need transparent shadows around a window.
+  wl_region* region = wl_compositor_create_region(compositor);
+  int x = DevicePixelsToGdkCoordRoundDown(mClientOffset.x);
+  int y = DevicePixelsToGdkCoordRoundDown(mClientOffset.y);
+  int width = DevicePixelsToGdkCoordRoundDown(mBounds.width);
+  int height = DevicePixelsToGdkCoordRoundDown(mBounds.height);
+  wl_region_add(region, x, y, width, height);
+  if (aSubtractCorners) {
+    SubtractTitlebarCorners(region, x, y, width);
   }
+  wl_surface_set_opaque_region(surface, region);
+  wl_region_destroy(region);
 
-  wl_surface_set_opaque_region(surface, wl_region);
-  if (wl_region) {
-    wl_region_destroy(wl_region);
+  // Set region to mozcontainer which does not have any offset
+  region = wl_compositor_create_region(compositor);
+  wl_region_add(region, 0, 0, width, height);
+  if (aSubtractCorners) {
+    SubtractTitlebarCorners(region, 0, 0, width);
   }
+  moz_container_set_opaque_region(mContainer, region);
 }
 #endif
 
-void nsWindow::UpdateOpaqueRegionGtk(cairo_region_t* aRegion) {
+static void GdkWindowSetOpaqueRegion(GdkWindow* aGdkWindow,
+                                     cairo_region_t* aRegion) {
   // Available as of GTK 3.10+
   static auto sGdkWindowSetOpaqueRegion =
       (void (*)(GdkWindow*, cairo_region_t*))dlsym(
@@ -4834,82 +4868,81 @@ void nsWindow::UpdateOpaqueRegionGtk(cairo_region_t* aRegion) {
     return;
   }
 
+  (*sGdkWindowSetOpaqueRegion)(aGdkWindow, aRegion);
+}
+
+void nsWindow::UpdateTopLevelOpaqueRegionGtk(bool aSubtractCorners) {
+  cairo_region_t* region = cairo_region_create();
+  int x = DevicePixelsToGdkCoordRoundDown(mClientOffset.x);
+  int y = DevicePixelsToGdkCoordRoundDown(mClientOffset.y);
+  int width = DevicePixelsToGdkCoordRoundDown(mBounds.width);
+  int height = DevicePixelsToGdkCoordRoundDown(mBounds.height);
+
+  cairo_rectangle_int_t rect = {x, y, width, height};
+  cairo_region_union_rectangle(region, &rect);
+
+  if (aSubtractCorners) {
+    SubtractTitlebarCorners(region, x, y, width);
+  }
+
   GdkWindow* window =
       (mDrawToContainer) ? gtk_widget_get_window(mShell) : mGdkWindow;
-  if (gdk_window_get_window_type(window) == GDK_WINDOW_TOPLEVEL) {
-    (*sGdkWindowSetOpaqueRegion)(window, aRegion);
+  MOZ_ASSERT(gdk_window_get_window_type(window) == GDK_WINDOW_TOPLEVEL);
+  GdkWindowSetOpaqueRegion(window, region);
+
+  cairo_region_destroy(region);
+}
+
+void nsWindow::UpdatePopupOpaqueRegion(
+    const LayoutDeviceIntRegion& aOpaqueRegion) {
+  cairo_region_t* region = nullptr;
+
+  if (!aOpaqueRegion.IsEmpty()) {
+    region = cairo_region_create();
+    for (auto iter = aOpaqueRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const LayoutDeviceIntRect& r = iter.Get();
+      cairo_rectangle_int_t rect = {r.x, r.y, r.width, r.height};
+      cairo_region_union_rectangle(region, &rect);
+    }
+  }
+
+  GdkWindow* window =
+      (mDrawToContainer) ? gtk_widget_get_window(mShell) : mGdkWindow;
+  GdkWindowSetOpaqueRegion(window, region);
+
+  if (region) {
+    cairo_region_destroy(region);
   }
 }
 
 void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
-  // Also don't set shape mask if we use transparency bitmap.
+  // Don't set shape mask if we use transparency bitmap.
   if (mTransparencyBitmapForTitlebar) {
     return;
   }
 
-  cairo_region_t* region = nullptr;
-
-  // We don't tweak opaque regions for non-toplevel windows (popup, panels etc.)
-  // as they can be transparent by gecko.
   if (mWindowType != eWindowType_toplevel) {
-    if (!aOpaqueRegion.IsEmpty()) {
-      region = cairo_region_create();
-      for (auto iter = aOpaqueRegion.RectIter(); !iter.Done(); iter.Next()) {
-        const LayoutDeviceIntRect& r = iter.Get();
-        cairo_rectangle_int_t rect = {r.x, r.y, r.width, r.height};
-        cairo_region_union_rectangle(region, &rect);
-      }
-    }
+    // We don't tweak opaque regions for non-toplevel windows
+    // (popup, panels etc.) as they can be transparent by gecko.
+    UpdatePopupOpaqueRegion(aOpaqueRegion);
   } else {
     // Gecko does not use transparent toplevel windows (see Bug 1469716),
     // however we need to make it transparent to draw round corners of
     // Gtk titlebar.
-    region = cairo_region_create();
-
-    GtkBorder decorationSize = {0, 0, 0, 0};
-    if (mCSDSupportLevel == CSD_SUPPORT_CLIENT &&
-        mSizeState == nsSizeMode_Normal) {
-      decorationSize = GetCSDDecorationSize(
-          gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP);
-    }
-
-    int width = DevicePixelsToGdkCoordRoundDown(mBounds.width);
-    int height = DevicePixelsToGdkCoordRoundDown(mBounds.height);
-
-    cairo_rectangle_int_t rect = {decorationSize.left, decorationSize.top,
-                                  width, height};
-    cairo_region_union_rectangle(region, &rect);
 
     // Subtract transparent corners which are used by
     // various Gtk themes for toplevel windows when titlebar
     // is rendered by gecko.
-    if (mDrawInTitlebar && !mIsPIPWindow && mSizeState == nsSizeMode_Normal &&
-        !mIsTiled) {
-      cairo_rectangle_int_t rect = {decorationSize.left, decorationSize.top,
-                                    TITLEBAR_SHAPE_MASK_HEIGHT,
-                                    TITLEBAR_SHAPE_MASK_HEIGHT};
-      cairo_region_subtract_rectangle(region, &rect);
-      rect = {
-          decorationSize.left + width - TITLEBAR_SHAPE_MASK_HEIGHT,
-          decorationSize.top,
-          TITLEBAR_SHAPE_MASK_HEIGHT,
-          TITLEBAR_SHAPE_MASK_HEIGHT,
-      };
-      cairo_region_subtract_rectangle(region, &rect);
+    bool drawTilebarCorners = (mDrawInTitlebar && !mIsPIPWindow) &&
+                              (mSizeState == nsSizeMode_Normal && !mIsTiled);
+    if (mIsX11Display) {
+      UpdateTopLevelOpaqueRegionGtk(drawTilebarCorners);
     }
-  }
-
-  if (mIsX11Display) {
-    UpdateOpaqueRegionGtk(region);
-  }
 #ifdef MOZ_WAYLAND
-  else {
-    UpdateOpaqueRegionWayland(region);
-  }
+    else {
+      UpdateTopLevelOpaqueRegionWayland(drawTilebarCorners);
+    }
 #endif
-
-  if (region) {
-    cairo_region_destroy(region);
   }
 }
 
@@ -7683,6 +7716,8 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
     float width = (float)DevicePixelsToGdkCoordRoundDown(mBounds.width);
     float height = (float)DevicePixelsToGdkCoordRoundDown(mBounds.height);
 
+    // TODO - compare mShell GdkWindow size and mContainer GdkWindow size
+    // instead of GetCSDDecorationSize() call.
     if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
       GtkBorder decorationSize = GetCSDDecorationSize(
           gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP);
