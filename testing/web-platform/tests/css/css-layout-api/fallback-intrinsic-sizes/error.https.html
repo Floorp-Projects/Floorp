@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html class=reftest-wait>
-<link rel="help" href="https://drafts.css-houdini.org/css-layout-api/#get-a-layout-class-instance">
-<link rel="match" href="fallback-layout-fallback-ref.html">
-<meta name="assert" content="This test checks that a layout() class with a throwing constructor will fallback to block layout." />
+<link rel="help" href="https://drafts.css-houdini.org/css-layout-api/#invoke-an-intrinsic-sizes-callback">
+<link rel="match" href="fallback-ref.html">
+<meta name="assert" content="This test checks that a layout() class with a throwing intrinsicSizes function will fallback to block layout." />
 <style>
 .test {
   background: red;
   border: solid 2px;
-  width: 100px;
+  width: min-content;
 }
 
 .float {
   float: left;
-  width: 50%;
   height: 100px;
+  width: 50%;
 }
 
 .fc {
@@ -21,9 +21,9 @@
   height: 100px;
 }
 
-@supports (display: layout(throwing-ctor)) {
+@supports (display: layout(throwing-intrinsic-sizes)) {
   .test {
-    display: layout(throwing-ctor);
+    display: layout(throwing-intrinsic-sizes);
     background: green;
   }
 }
@@ -31,16 +31,14 @@
 <script src="/common/reftest-wait.js"></script>
 <script src="/common/worklet-reftest.js"></script>
 
-<!-- This tests that when the "layout()" constructor fails, it will fallback to block layout. -->
 <div class="test">
   <div class="float"></div>
   <div class="fc"></div>
 </div>
 
 <script id="code" type="text/worklet">
-registerLayout('throwing-ctor', class {
-  constructor() { throw Error('fail!'); }
-  async intrinsicSizes() {}
+registerLayout('throwing-intrinsic-sizes', class {
+  async intrinsicSizes() { throw Error('fail!'); }
   async layout() {}
 });
 </script>
