@@ -184,6 +184,27 @@ to the running of the linter itself. If using ``--outgoing`` or ``--workdir``
 and one of these files was modified, the entire tree will be linted instead of
 just the modified files.
 
+Result definition
+-----------------
+
+When generating the list of results, the following values are available.
+
+.. csv-table::
+   :header: "Name", "Description", "Optional"
+   :widths: 20, 40, 10
+
+    "linter", "Name of the linter that flagged this error", ""
+    "path", "Path to the file containing the error", ""
+    "message", "Text describing the error", ""
+    "lineno", "Line number that contains the error", ""
+    "column", "Column containing the error", ""
+    "level", "Severity of the error, either 'warning' or 'error' (default 'error')", "Yes"
+    "hint", "Suggestion for fixing the error", "Yes"
+    "source", "Source code context of the error", "Yes"
+    "rule", "Name of the rule that was violated", "Yes"
+    "lineoffset", "Denotes an error spans multiple lines, of the form (<lineno offset>, <num lines>)", "Yes"
+    "diff", "A diff describing the changes that need to be made to the code", "Yes"
+
 
 Automated testing
 -----------------
