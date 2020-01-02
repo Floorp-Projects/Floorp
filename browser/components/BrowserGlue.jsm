@@ -2049,7 +2049,10 @@ BrowserGlue.prototype = {
     });
 
     Services.tm.idleDispatchToMainThread(() => {
-      let siteSpecific = Services.prefs.getBoolPref("browser.zoom.siteSpecific", false);
+      let siteSpecific = Services.prefs.getBoolPref(
+        "browser.zoom.siteSpecific",
+        false
+      );
       Services.telemetry.scalarSet("a11y.sitezoom", siteSpecific);
     });
 
