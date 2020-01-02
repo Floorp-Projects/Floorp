@@ -24,6 +24,11 @@ SOURCES += [
     'DownloadPlatform.cpp',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    LOCAL_INCLUDES += [
+        '/widget/windows',
+    ]
+
 EXTRA_JS_MODULES += [
     'DownloadCore.jsm',
     'DownloadIntegration.jsm',
