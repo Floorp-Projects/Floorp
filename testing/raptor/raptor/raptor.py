@@ -179,6 +179,13 @@ either Raptor or browsertime."""
             self.post_startup_delay = min(self.post_startup_delay, 3000)
             LOG.info("debug-mode enabled, reducing post-browser startup pause to %d ms"
                      % self.post_startup_delay)
+        # if using conditioned profiles in CI, reduce default browser-settle
+        # time down to 1 second, from 30
+        if not self.no_condprof and not self.config['run_local'] \
+                and post_startup_delay == 30000:
+            self.post_startup_delay = 1000
+            LOG.info("using conditioned profiles, so reducing post_startup_delay to %d ms"
+                     % self.post_startup_delay)
         LOG.info("main raptor init, config is: %s" % str(self.config))
 
         self.build_browser_profile()
