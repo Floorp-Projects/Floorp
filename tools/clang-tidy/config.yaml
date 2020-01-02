@@ -186,6 +186,8 @@ clang_checkers:
       - linux64
       - macosx64
     reliability: high
+    # Disable as the test does not support C++17 yet
+    publish: !!bool no
   - name: performance-inefficient-string-concatenation
     reliability: high
   - name: performance-inefficient-vector-operation
