@@ -24,17 +24,18 @@ int BarkWhenTracedClass::finalizeCount;
 int BarkWhenTracedClass::traceCount;
 
 static const JSClassOps BarkWhenTracedClassClassOps = {
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    BarkWhenTracedClass::finalize,
-    nullptr,
-    nullptr,
-    nullptr,
-    BarkWhenTracedClass::trace};
+    nullptr,                        // addProperty
+    nullptr,                        // delProperty
+    nullptr,                        // enumerate
+    nullptr,                        // newEnumerate
+    nullptr,                        // resolve
+    nullptr,                        // mayResolve
+    BarkWhenTracedClass::finalize,  // finalize
+    nullptr,                        // call
+    nullptr,                        // hasInstance
+    nullptr,                        // construct
+    BarkWhenTracedClass::trace,     // trace
+};
 
 const JSClass BarkWhenTracedClass::class_ = {"BarkWhenTracedClass",
                                              JSCLASS_FOREGROUND_FINALIZE,

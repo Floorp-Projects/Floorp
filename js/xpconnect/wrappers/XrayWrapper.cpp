@@ -1167,13 +1167,19 @@ static void ExpandoObjectFinalize(JSFreeOp* fop, JSObject* obj) {
   NS_RELEASE(principal);
 }
 
-const JSClassOps XrayExpandoObjectClassOps = {nullptr,
-                                              nullptr,
-                                              nullptr,
-                                              nullptr,
-                                              nullptr,
-                                              nullptr,
-                                              ExpandoObjectFinalize};
+const JSClassOps XrayExpandoObjectClassOps = {
+    nullptr,                // addProperty
+    nullptr,                // delProperty
+    nullptr,                // enumerate
+    nullptr,                // newEnumerate
+    nullptr,                // resolve
+    nullptr,                // mayResolve
+    ExpandoObjectFinalize,  // finalize
+    nullptr,                // call
+    nullptr,                // hasInstance
+    nullptr,                // construct
+    nullptr,                // trace
+};
 
 bool XrayTraits::expandoObjectMatchesConsumer(JSContext* cx,
                                               HandleObject expandoObject,

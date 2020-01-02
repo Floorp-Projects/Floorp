@@ -188,17 +188,17 @@ const JSClass AsyncFunctionGeneratorObject::class_ = {
 };
 
 const JSClassOps AsyncFunctionGeneratorObject::classOps_ = {
-    nullptr,                                  /* addProperty */
-    nullptr,                                  /* delProperty */
-    nullptr,                                  /* enumerate */
-    nullptr,                                  /* newEnumerate */
-    nullptr,                                  /* resolve */
-    nullptr,                                  /* mayResolve */
-    nullptr,                                  /* finalize */
-    nullptr,                                  /* call */
-    nullptr,                                  /* hasInstance */
-    nullptr,                                  /* construct */
-    CallTraceMethod<AbstractGeneratorObject>, /* trace */
+    nullptr,                                   // addProperty
+    nullptr,                                   // delProperty
+    nullptr,                                   // enumerate
+    nullptr,                                   // newEnumerate
+    nullptr,                                   // resolve
+    nullptr,                                   // mayResolve
+    nullptr,                                   // finalize
+    nullptr,                                   // call
+    nullptr,                                   // hasInstance
+    nullptr,                                   // construct
+    CallTraceMethod<AbstractGeneratorObject>,  // trace
 };
 
 AsyncFunctionGeneratorObject* AsyncFunctionGeneratorObject::create(

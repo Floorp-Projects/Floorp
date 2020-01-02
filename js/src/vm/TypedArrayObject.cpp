@@ -2137,17 +2137,17 @@ bool TypedArrayObject::getElements(JSContext* cx,
  */
 
 static const JSClassOps TypedArrayClassOps = {
-    nullptr,                      /* addProperty */
-    nullptr,                      /* delProperty */
-    nullptr,                      /* enumerate   */
-    nullptr,                      /* newEnumerate */
-    nullptr,                      /* resolve     */
-    nullptr,                      /* mayResolve  */
-    TypedArrayObject::finalize,   /* finalize    */
-    nullptr,                      /* call        */
-    nullptr,                      /* hasInstance */
-    nullptr,                      /* construct   */
-    ArrayBufferViewObject::trace, /* trace  */
+    nullptr,                       // addProperty
+    nullptr,                       // delProperty
+    nullptr,                       // enumerate
+    nullptr,                       // newEnumerate
+    nullptr,                       // resolve
+    nullptr,                       // mayResolve
+    TypedArrayObject::finalize,    // finalize
+    nullptr,                       // call
+    nullptr,                       // hasInstance
+    nullptr,                       // construct
+    ArrayBufferViewObject::trace,  // trace
 };
 
 static const ClassExtension TypedArrayClassExtension = {

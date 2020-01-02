@@ -50,17 +50,17 @@ void RealmInstrumentation::holderTrace(JSTracer* trc, JSObject* obj) {
 }
 
 static const JSClassOps InstrumentationHolderClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    RealmInstrumentation::holderFinalize,
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    RealmInstrumentation::holderTrace,
+    nullptr,                               // addProperty
+    nullptr,                               // delProperty
+    nullptr,                               // enumerate
+    nullptr,                               // newEnumerate
+    nullptr,                               // resolve
+    nullptr,                               // mayResolve
+    RealmInstrumentation::holderFinalize,  // finalize
+    nullptr,                               // call
+    nullptr,                               // hasInstance
+    nullptr,                               // construct
+    RealmInstrumentation::holderTrace,     // trace
 };
 
 static const JSClass InstrumentationHolderClass = {

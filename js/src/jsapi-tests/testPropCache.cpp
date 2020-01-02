@@ -15,7 +15,19 @@ static bool CounterAdd(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
   return true;
 }
 
-static const JSClassOps CounterClassOps = {CounterAdd};
+static const JSClassOps CounterClassOps = {
+    CounterAdd,  // addProperty
+    nullptr,     // delProperty
+    nullptr,     // enumerate
+    nullptr,     // newEnumerate
+    nullptr,     // resolve
+    nullptr,     // mayResolve
+    nullptr,     // finalize
+    nullptr,     // call
+    nullptr,     // hasInstance
+    nullptr,     // construct
+    nullptr,     // trace
+};
 
 static const JSClass CounterClass = {"Counter", /* name */
                                      0,         /* flags */

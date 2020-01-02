@@ -12,11 +12,19 @@
  * prevented.
  */
 BEGIN_TEST(testResolveRecursion) {
-  static const JSClassOps my_resolve_classOps = {nullptr,  // add
-                                                 nullptr,  // delete
-                                                 nullptr,  // enumerate
-                                                 nullptr,  // newEnumerate
-                                                 my_resolve};
+  static const JSClassOps my_resolve_classOps = {
+      nullptr,     // addProperty
+      nullptr,     // delProperty
+      nullptr,     // enumerate
+      nullptr,     // newEnumerate
+      my_resolve,  // resolve
+      nullptr,     // mayResolve
+      nullptr,     // finalize
+      nullptr,     // call
+      nullptr,     // hasInstance
+      nullptr,     // construct
+      nullptr,     // trace
+  };
 
   static const JSClass my_resolve_class = {"MyResolve", JSCLASS_HAS_PRIVATE,
                                            &my_resolve_classOps};
@@ -142,17 +150,19 @@ BEGIN_TEST(testResolveRecursion_InitStandardClasses) {
 }
 
 const JSClass* getGlobalClass() override {
-  static const JSClassOps myGlobalClassOps = {nullptr,  // add
-                                              nullptr,  // delete
-                                              nullptr,  // enumerate
-                                              nullptr,  // newEnumerate
-                                              my_resolve,
-                                              nullptr,  // mayResolve
-                                              nullptr,  // finalize
-                                              nullptr,  // call
-                                              nullptr,  // hasInstance
-                                              nullptr,  // construct
-                                              JS_GlobalObjectTraceHook};
+  static const JSClassOps myGlobalClassOps = {
+      nullptr,                   // addProperty
+      nullptr,                   // delProperty
+      nullptr,                   // enumerate
+      nullptr,                   // newEnumerate
+      my_resolve,                // resolve
+      nullptr,                   // mayResolve
+      nullptr,                   // finalize
+      nullptr,                   // call
+      nullptr,                   // hasInstance
+      nullptr,                   // construct
+      JS_GlobalObjectTraceHook,  // trace
+  };
 
   static const JSClass myGlobalClass = {
       "testResolveRecursion_InitStandardClasses_myGlobalClass",

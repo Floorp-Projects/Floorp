@@ -98,9 +98,19 @@ BEGIN_TEST(testNewObject_1) {
   CHECK(v.isInt32(N - 1));
 
   // With JSClass.construct.
-  static const JSClassOps clsOps = {nullptr, nullptr,      nullptr, nullptr,
-                                    nullptr, nullptr,      nullptr, nullptr,
-                                    nullptr, constructHook};
+  static const JSClassOps clsOps = {
+      nullptr,        // addProperty
+      nullptr,        // delProperty
+      nullptr,        // enumerate
+      nullptr,        // newEnumerate
+      nullptr,        // resolve
+      nullptr,        // mayResolve
+      nullptr,        // finalize
+      nullptr,        // call
+      nullptr,        // hasInstance
+      constructHook,  // construct
+      nullptr,        // trace
+  };
   static const JSClass cls = {"testNewObject_1", 0, &clsOps};
   JS::RootedObject ctor(cx, JS_NewObject(cx, &cls));
   CHECK(ctor);
@@ -145,7 +155,19 @@ BEGIN_TEST(testNewObject_IsMapObject) {
 }
 END_TEST(testNewObject_IsMapObject)
 
-static const JSClassOps Base_classOps = {};
+static const JSClassOps Base_classOps = {
+    nullptr,  // addProperty
+    nullptr,  // delProperty
+    nullptr,  // enumerate
+    nullptr,  // newEnumerate
+    nullptr,  // resolve
+    nullptr,  // mayResolve
+    nullptr,  // finalize
+    nullptr,  // call
+    nullptr,  // hasInstance
+    nullptr,  // construct
+    nullptr,  // trace
+};
 
 static const JSClass Base_class = {"Base",
                                    0,  // flags

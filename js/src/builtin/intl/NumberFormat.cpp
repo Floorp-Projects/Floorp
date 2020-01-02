@@ -66,13 +66,19 @@ using js::intl::IcuLocale;
 
 using JS::AutoStableStringChars;
 
-const JSClassOps NumberFormatObject::classOps_ = {nullptr, /* addProperty */
-                                                  nullptr, /* delProperty */
-                                                  nullptr, /* enumerate */
-                                                  nullptr, /* newEnumerate */
-                                                  nullptr, /* resolve */
-                                                  nullptr, /* mayResolve */
-                                                  NumberFormatObject::finalize};
+const JSClassOps NumberFormatObject::classOps_ = {
+    nullptr,                       // addProperty
+    nullptr,                       // delProperty
+    nullptr,                       // enumerate
+    nullptr,                       // newEnumerate
+    nullptr,                       // resolve
+    nullptr,                       // mayResolve
+    NumberFormatObject::finalize,  // finalize
+    nullptr,                       // call
+    nullptr,                       // hasInstance
+    nullptr,                       // construct
+    nullptr,                       // trace
+};
 
 const JSClass NumberFormatObject::class_ = {
     js_Object_str,

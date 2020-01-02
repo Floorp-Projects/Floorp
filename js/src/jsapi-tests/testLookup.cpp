@@ -74,7 +74,18 @@ bool document_resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
 }
 
 static const JSClassOps document_classOps = {
-    nullptr, nullptr, nullptr, nullptr, document_resolve, nullptr};
+    nullptr,           // addProperty
+    nullptr,           // delProperty
+    nullptr,           // enumerate
+    nullptr,           // newEnumerate
+    document_resolve,  // resolve
+    nullptr,           // mayResolve
+    nullptr,           // finalize
+    nullptr,           // call
+    nullptr,           // hasInstance
+    nullptr,           // construct
+    nullptr,           // trace
+};
 
 static const JSClass document_class = {"document", 0, &document_classOps};
 

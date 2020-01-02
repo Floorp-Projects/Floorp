@@ -352,17 +352,17 @@ SharedArrayBufferObject* SharedArrayBufferObject::createFromNewRawBuffer(
 }
 
 static const JSClassOps SharedArrayBufferObjectClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    SharedArrayBufferObject::Finalize,
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    nullptr, /* trace */
+    nullptr,                            // addProperty
+    nullptr,                            // delProperty
+    nullptr,                            // enumerate
+    nullptr,                            // newEnumerate
+    nullptr,                            // resolve
+    nullptr,                            // mayResolve
+    SharedArrayBufferObject::Finalize,  // finalize
+    nullptr,                            // call
+    nullptr,                            // hasInstance
+    nullptr,                            // construct
+    nullptr,                            // trace
 };
 
 static const JSFunctionSpec sharedarrray_functions[] = {JS_FS_END};

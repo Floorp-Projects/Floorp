@@ -366,17 +366,17 @@ static void ReadableByteStreamControllerFinalize(JSFreeOp* fop, JSObject* obj) {
 }
 
 static const JSClassOps ReadableByteStreamControllerClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    ReadableByteStreamControllerFinalize,
-    nullptr, /* call        */
-    nullptr, /* hasInstance */
-    nullptr, /* construct   */
-    nullptr, /* trace   */
+    nullptr,                               // addProperty
+    nullptr,                               // delProperty
+    nullptr,                               // enumerate
+    nullptr,                               // newEnumerate
+    nullptr,                               // resolve
+    nullptr,                               // mayResolve
+    ReadableByteStreamControllerFinalize,  // finalize
+    nullptr,                               // call
+    nullptr,                               // hasInstance
+    nullptr,                               // construct
+    nullptr,                               // trace
 };
 
 JS_STREAMS_CLASS_SPEC(ReadableByteStreamController, 0, SlotCount,
