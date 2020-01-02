@@ -155,7 +155,7 @@ class TestOrderedDefaultDict(unittest.TestCase):
 
         self.assertEqual(test['foo'], 1)
 
-        self.assertEqual(test.keys(), ['foo', 'bar'])
+        self.assertEqual(list(test), ['foo', 'bar'])
 
     def test_defaults(self):
         test = OrderedDefaultDict(bool, {'foo': 1})
@@ -164,7 +164,7 @@ class TestOrderedDefaultDict(unittest.TestCase):
 
         self.assertEqual(test['qux'], False)
 
-        self.assertEqual(test.keys(), ['foo', 'qux'])
+        self.assertEqual(list(test), ['foo', 'qux'])
 
 
 class TestKeyedDefaultDict(unittest.TestCase):
