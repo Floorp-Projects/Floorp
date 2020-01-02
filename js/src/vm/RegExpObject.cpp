@@ -165,17 +165,17 @@ void RegExpObject::trace(JSTracer* trc) {
 }
 
 static const JSClassOps RegExpObjectClassOps = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate */
-    nullptr, /* newEnumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    nullptr, /* finalize */
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    RegExpObject::trace,
+    nullptr,              // addProperty
+    nullptr,              // delProperty
+    nullptr,              // enumerate
+    nullptr,              // newEnumerate
+    nullptr,              // resolve
+    nullptr,              // mayResolve
+    nullptr,              // finalize
+    nullptr,              // call
+    nullptr,              // hasInstance
+    nullptr,              // construct
+    RegExpObject::trace,  // trace
 };
 
 static const ClassSpec RegExpObjectClassSpec = {

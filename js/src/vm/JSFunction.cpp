@@ -1202,13 +1202,17 @@ static const JSFunctionSpec function_methods[] = {
     JS_FS_END};
 
 static const JSClassOps JSFunctionClassOps = {
-    nullptr,                                /* addProperty */
-    nullptr,                                /* delProperty */
-    fun_enumerate, nullptr,                 /* newEnumerate */
-    fun_resolve,   fun_mayResolve, nullptr, /* finalize    */
-    nullptr,                                /* call        */
-    nullptr,       nullptr,                 /* construct   */
-    fun_trace,
+    nullptr,         // addProperty
+    nullptr,         // delProperty
+    fun_enumerate,   // enumerate
+    nullptr,         // newEnumerate
+    fun_resolve,     // resolve
+    fun_mayResolve,  // mayResolve
+    nullptr,         // finalize
+    nullptr,         // call
+    nullptr,         // hasInstance
+    nullptr,         // construct
+    fun_trace,       // trace
 };
 
 static const ClassSpec JSFunctionClassSpec = {

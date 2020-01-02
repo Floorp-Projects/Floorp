@@ -446,8 +446,18 @@ static const JSClass sCABIClass = {"CABI",
 // This exists to give said prototypes a class of "CType", and to provide
 // reserved slots for stashing various other prototype objects.
 static const JSClassOps sCTypeProtoClassOps = {
-    nullptr, nullptr, nullptr,           nullptr, nullptr,
-    nullptr, nullptr, ConstructAbstract, nullptr, ConstructAbstract};
+    nullptr,            // addProperty
+    nullptr,            // delProperty
+    nullptr,            // enumerate
+    nullptr,            // newEnumerate
+    nullptr,            // resolve
+    nullptr,            // mayResolve
+    nullptr,            // finalize
+    ConstructAbstract,  // call
+    nullptr,            // hasInstance
+    ConstructAbstract,  // construct
+    nullptr,            // trace
+};
 static const JSClass sCTypeProtoClass = {
     "CType", JSCLASS_HAS_RESERVED_SLOTS(CTYPEPROTO_SLOTS),
     &sCTypeProtoClassOps};
@@ -456,42 +466,55 @@ static const JSClass sCTypeProtoClass = {
 // of CTypes. This exists to give said prototypes a class of "CData".
 static const JSClass sCDataProtoClass = {"CData", 0};
 
-static const JSClassOps sCTypeClassOps = {nullptr,
-                                          nullptr,
-                                          nullptr,
-                                          nullptr,
-                                          nullptr,
-                                          nullptr,
-                                          CType::Finalize,
-                                          CType::ConstructData,
-                                          CType::HasInstance,
-                                          CType::ConstructData,
-                                          CType::Trace};
+static const JSClassOps sCTypeClassOps = {
+    nullptr,               // addProperty
+    nullptr,               // delProperty
+    nullptr,               // enumerate
+    nullptr,               // newEnumerate
+    nullptr,               // resolve
+    nullptr,               // mayResolve
+    CType::Finalize,       // finalize
+    CType::ConstructData,  // call
+    CType::HasInstance,    // hasInstance
+    CType::ConstructData,  // construct
+    CType::Trace,          // trace
+};
 static const JSClass sCTypeClass = {
     "CType",
     JSCLASS_HAS_RESERVED_SLOTS(CTYPE_SLOTS) | JSCLASS_FOREGROUND_FINALIZE,
     &sCTypeClassOps};
 
 static const JSClassOps sCDataClassOps = {
-    nullptr, nullptr,           nullptr,         nullptr,
-    nullptr, nullptr,           CData::Finalize, FunctionType::Call,
-    nullptr, FunctionType::Call};
+    nullptr,             // addProperty
+    nullptr,             // delProperty
+    nullptr,             // enumerate
+    nullptr,             // newEnumerate
+    nullptr,             // resolve
+    nullptr,             // mayResolve
+    CData::Finalize,     // finalize
+    FunctionType::Call,  // call
+    nullptr,             // hasInstance
+    FunctionType::Call,  // construct
+    nullptr,             // trace
+};
 static const JSClass sCDataClass = {
     "CData",
     JSCLASS_HAS_RESERVED_SLOTS(CDATA_SLOTS) | JSCLASS_FOREGROUND_FINALIZE,
     &sCDataClassOps};
 
-static const JSClassOps sCClosureClassOps = {nullptr,
-                                             nullptr,
-                                             nullptr,
-                                             nullptr,
-                                             nullptr,
-                                             nullptr,
-                                             CClosure::Finalize,
-                                             nullptr,
-                                             nullptr,
-                                             nullptr,
-                                             CClosure::Trace};
+static const JSClassOps sCClosureClassOps = {
+    nullptr,             // addProperty
+    nullptr,             // delProperty
+    nullptr,             // enumerate
+    nullptr,             // newEnumerate
+    nullptr,             // resolve
+    nullptr,             // mayResolve
+    CClosure::Finalize,  // finalize
+    nullptr,             // call
+    nullptr,             // hasInstance
+    nullptr,             // construct
+    CClosure::Trace,     // trace
+};
 static const JSClass sCClosureClass = {
     "CClosure",
     JSCLASS_HAS_RESERVED_SLOTS(CCLOSURE_SLOTS) | JSCLASS_FOREGROUND_FINALIZE,
@@ -508,13 +531,19 @@ static const JSClass sCDataFinalizerProtoClass = {"CDataFinalizer", 0};
  * Instances of CDataFinalizer have both private data (with type
  * |CDataFinalizer::Private|) and slots (see |CDataFinalizerSlots|).
  */
-static const JSClassOps sCDataFinalizerClassOps = {nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
-                                                   CDataFinalizer::Finalize};
+static const JSClassOps sCDataFinalizerClassOps = {
+    nullptr,                   // addProperty
+    nullptr,                   // delProperty
+    nullptr,                   // enumerate
+    nullptr,                   // newEnumerate
+    nullptr,                   // resolve
+    nullptr,                   // mayResolve
+    CDataFinalizer::Finalize,  // finalize
+    nullptr,                   // call
+    nullptr,                   // hasInstance
+    nullptr,                   // construct
+    nullptr,                   // trace
+};
 static const JSClass sCDataFinalizerClass = {
     "CDataFinalizer",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(CDATAFINALIZER_SLOTS) |
@@ -676,7 +705,18 @@ static const JSClass sInt64ProtoClass = {"Int64", 0};
 static const JSClass sUInt64ProtoClass = {"UInt64", 0};
 
 static const JSClassOps sInt64ClassOps = {
-    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, Int64Base::Finalize};
+    nullptr,              // addProperty
+    nullptr,              // delProperty
+    nullptr,              // enumerate
+    nullptr,              // newEnumerate
+    nullptr,              // resolve
+    nullptr,              // mayResolve
+    Int64Base::Finalize,  // finalize
+    nullptr,              // call
+    nullptr,              // hasInstance
+    nullptr,              // construct
+    nullptr,              // trace
+};
 
 static const JSClass sInt64Class = {
     "Int64",

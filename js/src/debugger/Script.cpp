@@ -58,17 +58,17 @@ using mozilla::Maybe;
 using mozilla::Some;
 
 const JSClassOps DebuggerScript::classOps_ = {
-    nullptr,                         /* addProperty */
-    nullptr,                         /* delProperty */
-    nullptr,                         /* enumerate   */
-    nullptr,                         /* newEnumerate */
-    nullptr,                         /* resolve     */
-    nullptr,                         /* mayResolve  */
-    nullptr,                         /* finalize    */
-    nullptr,                         /* call        */
-    nullptr,                         /* hasInstance */
-    nullptr,                         /* construct   */
-    CallTraceMethod<DebuggerScript>, /* trace */
+    nullptr,                          // addProperty
+    nullptr,                          // delProperty
+    nullptr,                          // enumerate
+    nullptr,                          // newEnumerate
+    nullptr,                          // resolve
+    nullptr,                          // mayResolve
+    nullptr,                          // finalize
+    nullptr,                          // call
+    nullptr,                          // hasInstance
+    nullptr,                          // construct
+    CallTraceMethod<DebuggerScript>,  // trace
 };
 
 const JSClass DebuggerScript::class_ = {

@@ -385,10 +385,18 @@ const ObjectOps ModuleEnvironmentObject::objectOps_ = {
     nullptr};
 
 const JSClassOps ModuleEnvironmentObject::classOps_ = {
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* enumerate */
-    ModuleEnvironmentObject::newEnumerate};
+    nullptr,                                // addProperty
+    nullptr,                                // delProperty
+    nullptr,                                // enumerate
+    ModuleEnvironmentObject::newEnumerate,  // newEnumerate
+    nullptr,                                // resolve
+    nullptr,                                // mayResolve
+    nullptr,                                // finalize
+    nullptr,                                // call
+    nullptr,                                // hasInstance
+    nullptr,                                // construct
+    nullptr,                                // trace
+};
 
 const JSClass ModuleEnvironmentObject::class_ = {
     "ModuleEnvironmentObject",

@@ -323,17 +323,19 @@ static void ForOfPIC_traceObject(JSTracer* trc, JSObject* obj) {
   }
 }
 
-static const JSClassOps ForOfPICClassOps = {nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            nullptr,
-                                            ForOfPIC_finalize,
-                                            nullptr, /* call        */
-                                            nullptr, /* hasInstance */
-                                            nullptr, /* construct   */
-                                            ForOfPIC_traceObject};
+static const JSClassOps ForOfPICClassOps = {
+    nullptr,               // addProperty
+    nullptr,               // delProperty
+    nullptr,               // enumerate
+    nullptr,               // newEnumerate
+    nullptr,               // resolve
+    nullptr,               // mayResolve
+    ForOfPIC_finalize,     // finalize
+    nullptr,               // call
+    nullptr,               // hasInstance
+    nullptr,               // construct
+    ForOfPIC_traceObject,  // trace
+};
 
 const JSClass ForOfPIC::class_ = {
     "ForOfPIC", JSCLASS_HAS_PRIVATE | JSCLASS_BACKGROUND_FINALIZE,

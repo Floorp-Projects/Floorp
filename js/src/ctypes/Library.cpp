@@ -36,7 +36,18 @@ static bool Declare(JSContext* cx, unsigned argc, Value* vp);
 *******************************************************************************/
 
 static const JSClassOps sLibraryClassOps = {
-    nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, Library::Finalize};
+    nullptr,            // addProperty
+    nullptr,            // delProperty
+    nullptr,            // enumerate
+    nullptr,            // newEnumerate
+    nullptr,            // resolve
+    nullptr,            // mayResolve
+    Library::Finalize,  // finalize
+    nullptr,            // call
+    nullptr,            // hasInstance
+    nullptr,            // construct
+    nullptr,            // trace
+};
 
 static const JSClass sLibraryClass = {
     "Library",
