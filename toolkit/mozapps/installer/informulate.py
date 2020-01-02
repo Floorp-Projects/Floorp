@@ -47,11 +47,11 @@ def main():
         'moz_pkg_platform': args.pkg_platform,
     })
 
-    with open(args.output_json, 'wb') as f:
+    with open(args.output_json, 'wt') as f:
         json.dump(all_key_value_pairs, f, indent=2, sort_keys=True)
         f.write('\n')
 
-    with open(args.buildhub_json, 'wb') as f:
+    with open(args.buildhub_json, 'wt') as f:
         build_time = datetime.datetime.strptime(build_id, '%Y%m%d%H%M%S')
         s = buildconfig.substs
         record = {
@@ -100,7 +100,7 @@ def main():
         json.dump(record, f, indent=2, sort_keys=True)
         f.write('\n')
 
-    with open(args.output_txt, 'wb') as f:
+    with open(args.output_txt, 'wt') as f:
         f.write('buildID={}\n'.format(build_id))
 
 

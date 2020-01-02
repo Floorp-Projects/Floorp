@@ -145,7 +145,7 @@ class UnpackFinder(BaseFinder):
         jar = JarReader(fileobj=file.open())
         self.compressed = max(self.compressed, jar.compression)
         if jar.last_preloaded:
-            jarlog = jar.entries.keys()
+            jarlog = list(jar.entries.keys())
             self.jarlogs[path] = jarlog[:jarlog.index(jar.last_preloaded) + 1]
         return jar
 
