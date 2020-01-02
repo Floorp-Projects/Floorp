@@ -1317,6 +1317,7 @@ CHUNK_SUITES_BLACKLIST = (
     'test-verify-gpu',
     'test-verify-wpt',
     'web-platform-tests',
+    'web-platform-tests-crashtests',
     'web-platform-tests-reftests',
     'web-platform-tests-wdspec',
     'xpcshell',

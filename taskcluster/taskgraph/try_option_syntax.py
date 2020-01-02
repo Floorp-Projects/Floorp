@@ -99,6 +99,7 @@ UNITTEST_ALIASES = {
     'web-platform-test': alias_prefix('web-platform-tests'),
     'web-platform-tests': alias_prefix('web-platform-tests'),
     'web-platform-tests-e10s': alias_prefix('web-platform-tests-e10s'),
+    'web-platform-tests-crashtests': alias_prefix('web-platform-tests-crashtests'),
     'web-platform-tests-reftests': alias_prefix('web-platform-tests-reftests'),
     'web-platform-tests-reftests-e10s': alias_prefix('web-platform-tests-reftests-e10s'),
     'web-platform-tests-wdspec': alias_prefix('web-platform-tests-wdspec'),

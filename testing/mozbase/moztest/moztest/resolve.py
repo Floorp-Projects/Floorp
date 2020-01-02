@@ -200,6 +200,13 @@ TEST_SUITES = {
         'task_regex': ['web-platform-tests($|.*(-1|[^0-9])$)',
                        'test-verify-wpt'],
     },
+    'web-platform-tests-crashtest': {
+        'aliases': ('wpt',),
+        'mach_command': 'web-platform-tests',
+        'kwargs': {'include': []},
+        'task_regex': ['web-platform-tests-crashtests($|.*(-1|[^0-9])$)',
+                       'test-verify-wpt'],
+    },
     'web-platform-tests-testharness': {
         'aliases': ('wpt',),
         'mach_command': 'web-platform-tests',
@@ -295,6 +302,7 @@ _test_subsuites = {
     ('mochitest', 'webgl2-ext'): 'mochitest-webgl2-ext',
     ('mochitest', 'webgl2-deqp'): 'mochitest-webgl2-deqp',
     ('web-platform-tests', 'testharness'): 'web-platform-tests-testharness',
+    ('web-platform-tests', 'crashtest'): 'web-platform-tests-crashtest',
     ('web-platform-tests', 'reftest'): 'web-platform-tests-reftest',
     ('web-platform-tests', 'wdspec'): 'web-platform-tests-wdspec',
 }
@@ -647,7 +655,7 @@ class TestResolver(MozbuildObject):
             for test_type, path, tests in manifest:
                 full_path = os.path.join(tests_root, path)
                 src_path = os.path.relpath(full_path, self.topsrcdir)
-                if test_type not in ["testharness", "reftest", "wdspec"]:
+                if test_type not in ["testharness", "reftest", "wdspec", "crashtest"]:
                     continue
                 for test in tests:
                     self._tests.append({
