@@ -3885,6 +3885,10 @@ bool js::UnmarkGrayShapeRecursively(Shape* shape) {
   return JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr(shape));
 }
 
+#ifdef DEBUG
+Cell* js::gc::UninlinedForwarded(const Cell* cell) { return Forwarded(cell); }
+#endif
+
 namespace js {
 namespace debug {
 
