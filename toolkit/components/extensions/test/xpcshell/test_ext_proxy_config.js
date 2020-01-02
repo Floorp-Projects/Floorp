@@ -220,8 +220,6 @@ add_task(async function test_browser_settings() {
       "network.proxy.ftp_port": 8080,
       "network.proxy.ssl": "www.mozilla.org",
       "network.proxy.ssl_port": 8080,
-      "network.proxy.socks": "www.mozilla.org",
-      "network.proxy.socks_port": 8080,
       "network.proxy.share_proxy_settings": true,
     },
     {
@@ -229,7 +227,7 @@ add_task(async function test_browser_settings() {
       http: "www.mozilla.org:8080",
       ftp: "www.mozilla.org:8080",
       ssl: "www.mozilla.org:8080",
-      socks: "www.mozilla.org:8080",
+      socks: "",
       httpProxyAll: true,
     }
   );
