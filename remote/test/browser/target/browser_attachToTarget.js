@@ -4,8 +4,6 @@
 "use strict";
 
 add_task(async function raisesWithoutArguments({ Target }, _, tab) {
-  await getDiscoveredTargets(Target);
-
   let errorThrown = false;
   try {
     await Target.attachToTarget();
@@ -16,8 +14,6 @@ add_task(async function raisesWithoutArguments({ Target }, _, tab) {
 });
 
 add_task(async function raisesWithUnknownTargetId({ Target }, _, tab) {
-  await getDiscoveredTargets(Target);
-
   let errorThrown = false;
   try {
     await Target.attachToTarget({ targetId: "-1" });
@@ -29,8 +25,6 @@ add_task(async function raisesWithUnknownTargetId({ Target }, _, tab) {
 
 add_task(
   async function attachPageTarget({ Target }) {
-    await getDiscoveredTargets(Target);
-
     const { targetInfo } = await openTab(Target);
 
     info("Attach new target");

@@ -5,8 +5,6 @@
 
 add_task(
   async function attachedPageTarget({ Target }) {
-    await getDiscoveredTargets(Target);
-
     const { targetInfo } = await openTab(Target);
 
     info("Attach new page target");

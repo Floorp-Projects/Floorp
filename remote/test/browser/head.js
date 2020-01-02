@@ -27,6 +27,9 @@ three things are exposed to the provided task like this:
 	  // tab is a fresh tab, destroyed after the test
 	});
 
+Also target discovery is getting enabled, which means that targetCreated,
+targetDestroyed, and targetInfoChanged events will be received by the client.
+
 add_plain_task() may be used to write test tasks without the implicit
 setup and teardown described above.
 */
@@ -34,40 +37,41 @@ setup and teardown described above.
 const add_plain_task = add_task.bind(this);
 
 this.add_task = function(taskFn, opts = {}) {
-  const { createTab = true } = opts;
+  const {
+    createTab = true, // By default run each test in its own tab
+  } = opts;
 
   const fn = async function() {
-    let client;
+    let client, tab, target;
+
     await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
     info("CDP server started");
 
     try {
       const CDP = await getCDP();
 
-      // By default run each test in its own tab
       if (createTab) {
-        const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+        tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
         const browsingContextId = tab.linkedBrowser.browsingContext.id;
 
-        client = await CDP({
-          target(list) {
-            return list.find(target => target.id === browsingContextId);
-          },
-        });
-        info("CDP client instantiated");
+        const targets = await CDP.List();
+        target = targets.find(target => target.id === browsingContextId);
+      }
 
-        await taskFn(client, CDP, tab);
+      client = await CDP({ target });
+      info("CDP client instantiated");
 
+      // Bug 1605722 - Workaround to not hang when waiting for Target events
+      await getDiscoveredTargets(client.Target);
+
+      await taskFn(client, CDP, tab);
+
+      if (createTab) {
         // taskFn may resolve within a tick after opening a new tab.
         // We shouldn't remove the newly opened tab in the same tick.
         // Wait for the next tick here.
         await TestUtils.waitForTick();
         BrowserTestUtils.removeTab(tab);
-      } else {
-        client = await CDP({});
-        info("CDP client instantiated");
-
-        await taskFn(client, CDP);
       }
     } catch (e) {
       // Display better error message with the server side stacktrace
@@ -159,6 +163,71 @@ function getTargets(CDP) {
       resolve(targets);
     });
   });
+}
+
+// Wait for all Target.targetCreated events. One for each tab, plus the one
+// for the main process target.
+async function getDiscoveredTargets(Target) {
+  return new Promise(resolve => {
+    const targets = [];
+
+    const unsubscribe = Target.targetCreated(target => {
+      targets.push(target);
+
+      if (targets.length >= gBrowser.tabs.length + 1) {
+        unsubscribe();
+        resolve(targets);
+      }
+    });
+
+    Target.setDiscoverTargets({ discover: true });
+  });
+}
+
+async function openTab(Target, options = {}) {
+  const { activate = false } = options;
+
+  info("Create a new tab and wait for the target to be created");
+  const targetCreated = Target.targetCreated();
+  const newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  const { targetInfo } = await targetCreated;
+
+  is(targetInfo.type, "page");
+
+  if (activate) {
+    await Target.activateTarget({
+      targetId: targetInfo.targetId,
+    });
+    info(`New tab with target id ${targetInfo.targetId} created and activated`);
+  } else {
+    info(`New tab with target id ${targetInfo.targetId} created`);
+  }
+
+  return { targetInfo, newTab };
+}
+
+async function openWindow(Target, options = {}) {
+  const { activate = false } = options;
+
+  info("Create a new window and wait for the target to be created");
+  const targetCreated = Target.targetCreated();
+  const newWindow = await BrowserTestUtils.openNewBrowserWindow();
+  const newTab = newWindow.gBrowser.selectedTab;
+  const { targetInfo } = await targetCreated;
+  is(targetInfo.type, "page");
+
+  if (activate) {
+    await Target.activateTarget({
+      targetId: targetInfo.targetId,
+    });
+    info(
+      `New window with target id ${targetInfo.targetId} created and activated`
+    );
+  } else {
+    info(`New window with target id ${targetInfo.targetId} created`);
+  }
+
+  return { targetInfo, newWindow, newTab };
 }
 
 /** Creates a data URL for the given source document. */
