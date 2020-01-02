@@ -30,12 +30,16 @@ import java.io.File
 import java.lang.IllegalStateException
 import kotlinx.coroutines.CompletableDeferred
 import mozilla.appservices.logins.MismatchedLockException
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.ServerPassword
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.whenever
 import org.mockito.Mockito.reset
+import java.lang.IllegalArgumentException
 
 @RunWith(AndroidJUnit4::class)
 class FennecMigratorTest {
@@ -807,5 +811,133 @@ class FennecMigratorTest {
 
         assertEquals(SettingsMigrationException::class, captor.value::class)
         assertEquals("Missing FHR pref value", captor.value.message)
+    }
+
+    @Test
+    fun `addon migration - no addons installed`() = runBlocking {
+        val engine: Engine = mock()
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(emptyList())
+        }
+
+        val crashReporter: CrashReporter = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateAddons(engine)
+            .setCoroutineContext(this.coroutineContext)
+            .build()
+
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Addons))
+            assertTrue(this.getValue(Migration.Addons).success)
+        }
+        verifyZeroInteractions(crashReporter)
+    }
+
+    @Test
+    fun `addon migration - successful migration`() = runBlocking {
+        val addon1: WebExtension = mock()
+        val addon2: WebExtension = mock()
+
+        val engine: Engine = mock()
+        val listSuccessCallback = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(listSuccessCallback.capture(), any())).thenAnswer {
+            listSuccessCallback.value.invoke(listOf(addon1, addon2))
+        }
+
+        val disableSuccessCallback = argumentCaptor<((WebExtension) -> Unit)>()
+        whenever(engine.disableWebExtension(any(), any(), disableSuccessCallback.capture(), any())).thenAnswer {
+            disableSuccessCallback.value.invoke(mock())
+        }
+
+        val crashReporter: CrashReporter = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateAddons(engine)
+            .setCoroutineContext(this.coroutineContext)
+            .build()
+
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Addons))
+            assertTrue(this.getValue(Migration.Addons).success)
+        }
+        verifyZeroInteractions(crashReporter)
+    }
+
+    @Test
+    fun `addon migration - failed to query installed addons`() = runBlocking {
+        val engine: Engine = mock()
+        val errorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(any(), errorCallback.capture())).thenAnswer {
+            errorCallback.value.invoke(IllegalArgumentException())
+        }
+
+        val crashReporter: CrashReporter = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateAddons(engine)
+            .setCoroutineContext(this.coroutineContext)
+            .build()
+
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Addons))
+            assertFalse(this.getValue(Migration.Addons).success)
+        }
+
+        val captor = argumentCaptor<Exception>()
+        verify(crashReporter).submitCaughtException(captor.capture())
+
+        assertEquals(AddonMigrationException::class, captor.value::class)
+        assertEquals("Failed to query installed add-ons: ${IllegalArgumentException::class}", captor.value.message)
+    }
+
+    @Test
+    fun `addon migration - failed to migrate some addons`() = runBlocking {
+        val addon1: WebExtension = mock()
+        val addon2: WebExtension = mock()
+        val addon3: WebExtension = mock()
+        val addon4: WebExtension = mock()
+
+        val engine: Engine = mock()
+        val listSuccessCallback = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(listSuccessCallback.capture(), any())).thenAnswer {
+            listSuccessCallback.value.invoke(listOf(addon1, addon2, addon3, addon4))
+        }
+
+        val addonCaptor = argumentCaptor<WebExtension>()
+        val disableSuccessCallback = argumentCaptor<((WebExtension) -> Unit)>()
+        val disableErrorCallback = argumentCaptor<((Throwable) -> Unit)>()
+        whenever(engine.disableWebExtension(
+            addonCaptor.capture(),
+            any(),
+            disableSuccessCallback.capture(),
+            disableErrorCallback.capture())
+        )
+        .thenAnswer {
+            if (addonCaptor.value == addon2 || addonCaptor.value == addon4) {
+                disableErrorCallback.value.invoke(IllegalArgumentException())
+            } else {
+                disableSuccessCallback.value.invoke(mock())
+            }
+        }
+
+        val crashReporter: CrashReporter = mock()
+        val migrator = FennecMigrator.Builder(testContext, crashReporter)
+            .migrateAddons(engine)
+            .setCoroutineContext(this.coroutineContext)
+            .build()
+
+        with(migrator.migrateAsync().await()) {
+            assertEquals(1, this.size)
+            assertTrue(this.containsKey(Migration.Addons))
+            assertFalse(this.getValue(Migration.Addons).success)
+        }
+
+        val captor = argumentCaptor<Exception>()
+        // We don't submit duplicate exceptions to Sentry, so should only have one invocation here
+        verify(crashReporter, times(1)).submitCaughtException(captor.capture())
+        assertEquals(FennecMigratorException.MigrateAddonsException::class, captor.value::class)
+        assertEquals(IllegalArgumentException::class, captor.value.cause!!::class)
     }
 }

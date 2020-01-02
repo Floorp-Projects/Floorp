@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
+import mozilla.components.concept.engine.Engine
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.sync.logins.AsyncLoginsStorage
@@ -70,6 +71,11 @@ sealed class Migration(val currentVersion: Int) {
      * Migrates all Fennec settings backed by SharedPreferences.
      */
     object Settings : Migration(currentVersion = 1)
+
+    /**
+     * Migrates / Disables all currently unsupported Add-ons.
+     */
+    object Addons : Migration(currentVersion = 1)
 }
 
 /**
@@ -128,6 +134,12 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
      * @param cause Original exception which caused the problem
      */
     class MigrateSettingsException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
+     * Unexpected exception while migrating addons.
+     * @param cause Original exception which caused the problem
+     */
+    class MigrateAddonsException(cause: Exception) : FennecMigratorException(cause)
 }
 
 /**
@@ -150,6 +162,7 @@ class FennecMigrator private constructor(
     private val loginsStorageKey: String?,
     private val sessionManager: SessionManager?,
     private val accountManager: FxaAccountManager?,
+    private val engine: Engine?,
     private val profile: FennecProfile?,
     private val fxaState: File?,
     private val browserDbName: String,
@@ -168,6 +181,7 @@ class FennecMigrator private constructor(
         private var loginsStorageKey: String? = null
         private var sessionManager: SessionManager? = null
         private var accountManager: FxaAccountManager? = null
+        private var engine: Engine? = null
 
         private val migrations: MutableList<VersionedMigration> = mutableListOf()
 
@@ -279,6 +293,18 @@ class FennecMigrator private constructor(
         }
 
         /**
+         * Enables Add-on migration.
+         *
+         * @param engine an instance of [Engine] use to query installed add-ons.
+         * @param version Version of the migration; defaults to the current version.
+         */
+        fun migrateAddons(engine: Engine, version: Int = Migration.Settings.currentVersion): Builder {
+            this.engine = engine
+            migrations.add(VersionedMigration(Migration.Addons, version))
+            return this
+        }
+
+        /**
          * Constructs a [FennecMigrator] based on the current configuration.
          */
         fun build(): FennecMigrator {
@@ -292,6 +318,7 @@ class FennecMigrator private constructor(
                 loginsStorageKey,
                 sessionManager,
                 accountManager,
+                engine,
                 fennecProfile,
                 fxaState,
                 browserDbName,
@@ -445,6 +472,7 @@ class FennecMigrator private constructor(
                 Migration.Gecko -> migrateGecko()
                 Migration.Logins -> migrateLogins()
                 Migration.Settings -> migrateSharedPrefs()
+                Migration.Addons -> migrateAddons()
             }
 
             results[versionedMigration.migration] = when (migrationResult) {
@@ -707,6 +735,45 @@ class FennecMigrator private constructor(
                 logger.debug("Migrated settings; telemetry=${success.telemetry}")
                 result
             }
+        }
+    }
+
+    @SuppressWarnings("TooGenericExceptionCaught", "NestedBlockDepth")
+    private suspend fun migrateAddons(): Result<AddonMigrationResult> {
+        return try {
+            logger.debug("Migrating add-ons...")
+            val result = AddonMigration.migrate(engine!!)
+            if (result is Result.Failure<AddonMigrationResult>) {
+                val migrationFailureWrapper = result.throwables.first() as AddonMigrationException
+                return when (val failure = migrationFailureWrapper.failure) {
+                    is AddonMigrationResult.Failure.FailedToQueryInstalledAddons -> {
+                        logger.error("Failed to query installed add-ons: $failure")
+                        crashReporter.submitCaughtException(migrationFailureWrapper)
+                        result
+                    }
+                    is AddonMigrationResult.Failure.FailedToMigrateAddons -> {
+                        logger.error("Failed to migrate add-ons: $failure")
+                        val recordedFailures = mutableSetOf<String>()
+                        failure.failedAddons.forEach { (_, exception) ->
+                            // Let's not spam Sentry and submit the same exception multiple times
+                            if (recordedFailures.add(exception.uniqueId())) {
+                                crashReporter.submitCaughtException(
+                                    FennecMigratorException.MigrateAddonsException(exception)
+                                )
+                            }
+                        }
+                        result
+                    }
+                }
+            } else {
+                logger.debug("Successfully migrated add-ons")
+                result
+            }
+        } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateAddonsException(e)
+            )
+            Result.Failure(e)
         }
     }
 }
