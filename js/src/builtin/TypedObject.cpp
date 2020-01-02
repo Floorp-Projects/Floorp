@@ -2227,15 +2227,15 @@ size_t InlineTypedObject::obj_moved(JSObject* dst, JSObject* src) {
  */
 
 const ObjectOps TypedObject::objectOps_ = {
-    TypedObject::obj_lookupProperty,
-    TypedObject::obj_defineProperty,
-    TypedObject::obj_hasProperty,
-    TypedObject::obj_getProperty,
-    TypedObject::obj_setProperty,
-    TypedObject::obj_getOwnPropertyDescriptor,
-    TypedObject::obj_deleteProperty,
-    nullptr, /* getElements */
-    nullptr, /* thisValue */
+    TypedObject::obj_lookupProperty,            // lookupProperty
+    TypedObject::obj_defineProperty,            // defineProperty
+    TypedObject::obj_hasProperty,               // hasProperty
+    TypedObject::obj_getProperty,               // getProperty
+    TypedObject::obj_setProperty,               // setProperty
+    TypedObject::obj_getOwnPropertyDescriptor,  // getOwnPropertyDescriptor
+    TypedObject::obj_deleteProperty,            // deleteProperty
+    nullptr,                                    // getElements
+    nullptr,                                    // funToString
 };
 
 #define DEFINE_TYPEDOBJ_CLASS(Name, Trace, Moved)                            \
