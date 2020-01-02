@@ -2,10 +2,46 @@
 rust:
     description: Reformat rust
     include:
-        - js/src/wasm/cranelift/
-        - testing/geckodriver/
-        - testing/mozbase/rust/
+        - build/workspace-hack/
+        - gfx/wr/peek-poke/peek-poke-derive/
+        - js/src/rust/shared/
+        - security/manager/ssl/osclientcerts/
+        - servo/components/size_of_test/
+        - servo/components/to_shmem_derive/
+        - testing/mozbase/rust/mozprofile/
+        - testing/mozbase/rust/mozversion/
         - testing/webdriver/
+        - testing/webdriver/
+        - toolkit/components/telemetry/fog/
+        - tools/fuzzing/rust/
+    exclude:
+        - dom/media/gtest/
+        - dom/webauthn/libudev-sys/
+        - gfx/wr/direct-composition/
+        - gfx/wr/peek-poke/
+        - gfx/wr/webrender_build/
+        - gfx/wr/wr_malloc_size_of/
+        - js/src/
+        - js/src/frontend/binast/
+        - js/src/wasm/cranelift/
+        - media/mp4parse-rust/mp4parse/
+        - media/mp4parse-rust/mp4parse_capi/
+        - media/mp4parse-rust/mp4parse_fallible/
+        - modules/libpref/init/static_prefs/
+        - servo/components/derive_common/
+        - servo/components/selectors/
+        - servo/components/servo_arc/
+        - servo/components/style/
+        - servo/components/style_derive/
+        - servo/components/style_traits/
+        - servo/components/to_shmem/
+        - servo/tests/unit/style/
+        - testing/geckodriver/
+        - testing/mozbase/rust/mozdevice/
+        - testing/mozbase/rust/mozrunner/
+        - testing/webdriver/
+        - xpcom/rust/gtest/bench-collections/
+        - xpcom/rust/xpcom/xpcom_macros/
     extensions:
         - rs
     support-files:
