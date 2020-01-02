@@ -1198,7 +1198,7 @@ class FlowGraphSummary {
         // because we only report offsets of entry points which have
         // valid incoming edges.
         for (const JSTryNote& tn : script->trynotes()) {
-          if (tn.start == r.frontOffset() + 1) {
+          if (tn.start == r.frontOffset() + JSOP_TRY_LENGTH) {
             uint32_t catchOffset = tn.start + tn.length;
             if (tn.kind == JSTRY_CATCH || tn.kind == JSTRY_FINALLY) {
               addEdge(lineno, column, catchOffset);

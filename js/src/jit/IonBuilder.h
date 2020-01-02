@@ -1201,7 +1201,6 @@ class IonBuilder : public MIRGenerator,
   uint32_t typeArrayHint;
   uint32_t* bytecodeTypeMap;
 
-  GSNCache gsn;
   jsbytecode* pc;
   jsbytecode* nextpc = nullptr;
 

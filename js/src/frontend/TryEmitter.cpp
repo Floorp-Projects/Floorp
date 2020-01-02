@@ -24,8 +24,7 @@ TryEmitter::TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind)
       kind_(kind),
       controlKind_(controlKind),
       depth_(0),
-      noteIndex_(0),
-      tryStart_(0)
+      tryOpOffset_(0)
 #ifdef DEBUG
       ,
       state_(State::Start)
@@ -49,14 +48,9 @@ bool TryEmitter::emitTry() {
   // uses this depth to properly unwind the stack and the scope chain.
   depth_ = bce_->bytecodeSection().stackDepth();
 
-  // Record the try location, then emit the try block.
-  if (!bce_->newSrcNote(SRC_TRY, &noteIndex_)) {
+  if (!bce_->emitN(JSOP_TRY, 4, &tryOpOffset_)) {
     return false;
   }
-  if (!bce_->emit1(JSOP_TRY)) {
-    return false;
-  }
-  tryStart_ = bce_->bytecodeSection().offset();
 
 #ifdef DEBUG
   state_ = State::Try;
@@ -75,12 +69,11 @@ bool TryEmitter::emitTryEnd() {
     }
   }
 
-  // Source note points to the jump at the end of the try block.
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::Try::EndOfTryJumpOffset,
-                              bce_->bytecodeSection().offset() - tryStart_ +
-                                  BytecodeOffsetDiff(JSOP_TRY_LENGTH))) {
-    return false;
-  }
+  // Patch the JSOP_TRY offset.
+  jsbytecode* trypc = bce_->bytecodeSection().code(tryOpOffset_);
+  BytecodeOffsetDiff offset = bce_->bytecodeSection().offset() - tryOpOffset_;
+  MOZ_ASSERT(*trypc == JSOP_TRY);
+  SET_CODE_OFFSET(trypc, offset.value());
 
   // Emit jump over catch and/or finally.
   if (!bce_->emitJump(JSOP_GOTO, &catchAndFinallyJump_)) {
@@ -276,7 +269,8 @@ bool TryEmitter::emitEnd() {
   // Add the try note last, to let post-order give us the right ordering
   // (first to last for a given nesting level, inner to outer by level).
   if (hasCatch()) {
-    if (!bce_->addTryNote(JSTRY_CATCH, depth_, tryStart_, tryEnd_.offset)) {
+    if (!bce_->addTryNote(JSTRY_CATCH, depth_, offsetAfterTryOp(),
+                          tryEnd_.offset)) {
       return false;
     }
   }
@@ -285,7 +279,7 @@ bool TryEmitter::emitEnd() {
   // trynote to catch exceptions (re)thrown from a catch block or
   // for the try{}finally{} case.
   if (hasFinally()) {
-    if (!bce_->addTryNote(JSTRY_FINALLY, depth_, tryStart_,
+    if (!bce_->addTryNote(JSTRY_FINALLY, depth_, offsetAfterTryOp(),
                           finallyStart_.offset)) {
       return false;
     }

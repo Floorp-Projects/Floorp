@@ -38,16 +38,6 @@ namespace js {
 
 class SrcNote {
  public:
-  // SRC_TRY: Source note for JSOP_TRY.
-  class Try {
-   public:
-    enum Fields {
-      // The offset of the JSOP_GOTO at the end of the try block from
-      // JSOP_TRY.
-      EndOfTryJumpOffset,
-      Count
-    };
-  };
   // SRC_COLSPAN: Source note for arbitrary ops.
   class ColSpan {
    public:
@@ -73,16 +63,16 @@ class SrcNote {
 #define FOR_EACH_SRC_NOTE_TYPE(M)                                                                  \
     M(SRC_NULL,         "null",        0)  /* Terminates a note vector. */                         \
     M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
-    M(SRC_TRY,          "try",         SrcNote::Try::Count) \
     /* All notes above here are "gettable".  See SN_IS_GETTABLE below. */                          \
     M(SRC_COLSPAN,      "colspan",     SrcNote::ColSpan::Count) \
     M(SRC_NEWLINE,      "newline",     0)  /* Bytecode follows a source newline. */                \
     M(SRC_SETLINE,      "setline",     SrcNote::SetLine::Count) \
     M(SRC_BREAKPOINT,   "breakpoint",  0)  /* Bytecode is a recommended breakpoint. */             \
     M(SRC_STEP_SEP,     "step-sep",    0)  /* Bytecode is the first in a new steppable area. */    \
+    M(SRC_UNUSED7,      "unused",      0) \
     M(SRC_XDELTA,       "xdelta",      0)  /* 8-15 (0b1xxx) are for extended delta notes. */
-    // Note: need to add a new source note? Consider bumping SRC_XDELTA to 12-15
-    // and change SN_XDELTA_BITS from 7 to 6.
+    // Note: need to add a new source note? If there's no SRC_UNUSED* note left,
+    // consider bumping SRC_XDELTA to 12-15 and change SN_XDELTA_BITS from 7 to 6.
 // clang-format on
 
 enum SrcNoteType {
@@ -91,7 +81,7 @@ enum SrcNoteType {
 #undef DEFINE_SRC_NOTE_TYPE
 
       SRC_LAST,
-  SRC_LAST_GETTABLE = SRC_TRY
+  SRC_LAST_GETTABLE = SRC_ASSIGNOP
 };
 
 static_assert(SRC_XDELTA == 8, "SRC_XDELTA should be 8");

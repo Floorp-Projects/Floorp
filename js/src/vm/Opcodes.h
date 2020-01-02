@@ -2270,15 +2270,19 @@
     /*
      * This no-op appears at the top of the bytecode for a 'TryStatement'.
      *
+     * The jumpAtEndOffset operand is the offset (relative to the current op) of
+     * the JSOP_GOTO at the end of the try-block body. This is used by bytecode
+     * analysis and JIT compilation.
+     *
      * Location information for catch/finally blocks is stored in a side table,
      * 'script->trynotes()'.
      *
      *   Category: Statements
      *   Type: Exception Handling
-     *   Operands:
+     *   Operands: int32_t jumpAtEndOffset
      *   Stack: =>
      */ \
-    MACRO(JSOP_TRY, "try", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(JSOP_TRY, "try", NULL, 5, 0, 0, JOF_CODE_OFFSET) \
     /*
      * No-op used by the exception unwinder to determine the correct
      * environment to unwind to when performing IteratorClose due to
