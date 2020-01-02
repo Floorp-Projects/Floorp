@@ -30,6 +30,10 @@ select {
   padding-bottom: 5px;
 }
 
+form label[class="container"] select {
+  min-width: 0;
+}
+
 form label,
 form div {
   /* Positioned so that the .label-text and .error-text children will be
