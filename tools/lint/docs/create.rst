@@ -276,6 +276,7 @@ linted. In the case of ``flake8``, it might look like:
     from distutils.spawn import find_executable
 
     def setup(root, **lintargs):
+        # This is a simple example. Please look at the actual source for better examples.
         if not find_executable('flake8'):
             subprocess.call(['pip', 'install', 'flake8'])
 
@@ -286,3 +287,34 @@ be performed.
 The setup functions can also be called explicitly by running ``mach lint
 --setup``. This will only perform setup and not perform any linting. It is
 mainly useful for other tools like ``mach bootstrap`` to call into.
+
+
+Adding the linter to the CI
+---------------------------
+
+First, the job will have to be declared in Taskcluster.
+
+This should be done in the `mozlint Taskcluster configuration <https://searchfox.org/mozilla-central/source/taskcluster/ci/source-test/mozlint.yml>`_.
+You will need to define a symbol, how it is executed and on what kind of change.
+
+For example, for flake8, the configuration is the following:
+
+.. code-block:: yaml
+
+    py-flake8:
+        description: flake8 run over the gecko codebase
+        treeherder:
+            symbol: py(f8)
+        run:
+            mach: lint -l flake8 -f treeherder -f json:/builds/worker/mozlint.json
+        when:
+            files-changed:
+                - '**/*.py'
+                - '**/.flake8'
+                # moz.configure files are also Python files.
+                - '**/*.configure'
+
+If the linter requires an external program, you will have to install it in the `setup script <https://searchfox.org/mozilla-central/source/taskcluster/docker/lint/system-setup.sh>`_
+and maybe install the necessary files in the `Docker configuration <https://searchfox.org/mozilla-central/source/taskcluster/docker/lint/Dockerfile>`_.
+
+
