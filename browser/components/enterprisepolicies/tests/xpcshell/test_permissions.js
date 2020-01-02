@@ -210,3 +210,22 @@ add_task(async function test_change_permission() {
     Ci.nsIPermissionManager.EXPIRE_SESSION
   );
 });
+
+add_task(async function test_setup_trackingprotection() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      EnableTrackingProtection: {
+        Exceptions: ["https://www.allow.com"],
+      },
+    },
+  });
+  equal(
+    Services.policies.status,
+    Ci.nsIEnterprisePolicies.ACTIVE,
+    "Engine is active"
+  );
+});
+
+add_task(async function test_trackingprotection() {
+  checkPermission("allow.com", "ALLOW", "trackingprotection");
+});
