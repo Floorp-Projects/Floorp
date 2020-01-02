@@ -72,6 +72,16 @@ JOB_SCHEMA = Schema(
     }
 )
 
+#: The schema for validating application data.
+APP_SCHEMA = Schema(
+    {
+        Required("application"): {
+            Required("name"): str,
+            Required("version"): str,
+        }
+    }
+)
+
 PERFHERDER_SCHEMA = Path("/", "builds", "worker", "performance-artifact-schema.json")
 with PERFHERDER_SCHEMA.open() as f:
     PERFHERDER_SCHEMA = json.loads(f.read())
@@ -97,13 +107,14 @@ def run_command(log, cmd):
         return e.returncode, e.output
 
 
-def append_result(log, suites, test_name, name, result):
+def append_result(log, suites, test_name, app_name, name, result):
     """Appends a ``name`` metrics result in the ``test_name`` suite.
 
     Args:
         log: The structlog logger instance.
         suites: A mapping containing the suites.
         test_name: The name of the test.
+        app_name: The name of the browser application used in the test.
         name: The name of the metrics.
         result: The value to append.
     """
@@ -116,7 +127,10 @@ def append_result(log, suites, test_name, name, result):
         log.error("%s" % result)
         result = 0
     if test_name not in suites:
-        suites[test_name] = {"name": test_name, "subtests": {}}
+        # TODO: Once Bug 1593198 lands, perfherder will recognize the 'application'; then
+        # it won't be necessary anymore to have the application name added to 'extraOptions'.
+        # So when Bug 1593198 lands, remove the 'extraOptions' key below.
+        suites[test_name] = {"name": test_name, "subtests": {}, "extraOptions": [app_name]}
 
     subtests = suites[test_name]["subtests"]
     if name not in subtests:
@@ -162,6 +176,34 @@ def get_suite(suite):
     return suite
 
 
+def read_json(json_path, schema):
+    """Read the given json file and verify against the provided schema.
+
+    Args:
+        json_path: Filename and path of json file to parse.
+        schema: Schema to validate the json file against.
+
+    Returns:
+        The read json content (dictionary).
+    """
+    try:
+        with open(str(json_path), "r") as f:
+            read_json = json.load(f)
+    except Exception as e:
+        log.error(
+            "Could not read json file: %s" % e, path=json_path, exc_info=True
+        )
+        return 1
+    log.info("Loaded json from file", path=json_path, read_json=read_json)
+
+    try:
+        schema(read_json)
+    except Exception as e:
+        log.error("Failed to parse json: %s" % e)
+        return 1
+    return read_json
+
+
 def main(log, args):
     """Run visualmetrics.py in parallel.
 
@@ -196,22 +238,12 @@ def main(log, args):
         )
         return 1
     log.info("Extracted browsertime results", path=args.browsertime_results)
-    jobs_json_path = results_path / "browsertime-results" / "jobs.json"
-    try:
-        with open(str(jobs_json_path), "r") as f:
-            jobs_json = json.load(f)
-    except Exception as e:
-        log.error(
-            "Could not read jobs.json file: %s" % e, path=jobs_json_path, exc_info=True
-        )
-        return 1
 
-    log.info("Loaded jobs.json from file", path=jobs_json_path, jobs_json=jobs_json)
-    try:
-        JOB_SCHEMA(jobs_json)
-    except Exception as e:
-        log.error("Failed to parse jobs.json: %s" % e)
-        return 1
+    jobs_json_path = results_path / "browsertime-results" / "jobs.json"
+    jobs_json = read_json(jobs_json_path, JOB_SCHEMA)
+
+    app_json_path = results_path / "browsertime-results" / "application.json"
+    app_json = read_json(app_json_path, APP_SCHEMA)
 
     try:
         downloaded_jobs, failed_downloads = download_inputs(log, jobs_json["jobs"])
@@ -246,11 +278,14 @@ def main(log, args):
                 # Python 3.5 requires a str object (not 3.6+)
                 res = json.loads(res.decode("utf8"))
                 for name, value in res.items():
-                    append_result(log, suites, job.test_name, name, value)
+                    append_result(log, suites, job.test_name, app_json["application"]["name"],
+                                  name, value)
 
     suites = [get_suite(suite) for suite in suites.values()]
+
     perf_data = {
         "framework": {"name": "browsertime"},
+        "application": app_json["application"],
         "type": "vismet",
         "suites": suites,
     }
