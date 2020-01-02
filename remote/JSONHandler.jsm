@@ -60,7 +60,7 @@ class JSONHandler {
       const body = this.routes[request.path]();
       const payload = JSON.stringify(
         body,
-        sanitise,
+        Protocol.sanitize,
         Log.verbose ? "\t" : undefined
       );
 
@@ -78,12 +78,4 @@ class JSONHandler {
   get QueryInterface() {
     return ChromeUtils.generateQI([Ci.nsIHttpRequestHandler]);
   }
-}
-
-// Filters out null and empty strings
-function sanitise(key, value) {
-  if (value === null || (typeof value == "string" && value.length == 0)) {
-    return undefined;
-  }
-  return value;
 }
