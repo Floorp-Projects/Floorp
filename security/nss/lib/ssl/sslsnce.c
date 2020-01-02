@@ -1779,8 +1779,8 @@ ssl_GetSelfEncryptKeyPair(SECKEYPublicKey **pubKey,
         return SECFailure;
     }
 
-    SECKEYPublicKey *pubKeyCopy;
-    SECKEYPrivateKey *privKeyCopy;
+    SECKEYPublicKey *pubKeyCopy = NULL;
+    SECKEYPrivateKey *privKeyCopy = NULL;
     PRBool noKey = PR_FALSE;
 
     PR_RWLock_Rlock(ssl_self_encrypt_key_pair.lock);
