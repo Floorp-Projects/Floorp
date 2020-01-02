@@ -119,7 +119,7 @@ function waitFor(eventType, count) {
 
 function RunAfterProcessedQueuedInputEvents(aCallback) {
   let tm = SpecialPowers.Services.tm;
-  tm.dispatchToMainThread(aCallback, SpecialPowers.Ci.nsIRunnablePriority.PRIORITY_INPUT);
+  tm.dispatchToMainThread(aCallback, SpecialPowers.Ci.nsIRunnablePriority.PRIORITY_INPUT_HIGH);
 }
 
 function* test(testDriver) {

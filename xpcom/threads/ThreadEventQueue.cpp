@@ -85,7 +85,7 @@ bool ThreadEventQueue<InnerQueueT>::PutEventInternal(
         runnablePrio->GetPriority(&prio);
         if (prio == nsIRunnablePriority::PRIORITY_HIGH) {
           aPriority = EventQueuePriority::High;
-        } else if (prio == nsIRunnablePriority::PRIORITY_INPUT) {
+        } else if (prio == nsIRunnablePriority::PRIORITY_INPUT_HIGH) {
           aPriority = EventQueuePriority::Input;
         } else if (prio == nsIRunnablePriority::PRIORITY_MEDIUMHIGH) {
           aPriority = EventQueuePriority::MediumHigh;
