@@ -1004,7 +1004,7 @@ const JSClassOps MappedArgumentsObject::classOps_ = {
 };
 
 const js::ClassExtension MappedArgumentsObject::classExt_ = {
-    ArgumentsObject::objectMoved /* objectMovedOp */
+    ArgumentsObject::objectMoved,  // objectMovedOp
 };
 
 const ObjectOps MappedArgumentsObject::objectOps_ = {
@@ -1041,7 +1041,7 @@ const JSClassOps UnmappedArgumentsObject::classOps_ = {
 };
 
 const js::ClassExtension UnmappedArgumentsObject::classExt_ = {
-    ArgumentsObject::objectMoved /* objectMovedOp */
+    ArgumentsObject::objectMoved,  // objectMovedOp
 };
 
 const JSClass UnmappedArgumentsObject::class_ = {

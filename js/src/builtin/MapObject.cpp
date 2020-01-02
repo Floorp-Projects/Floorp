@@ -139,7 +139,8 @@ static const JSClassOps MapIteratorObjectClassOps = {
 };
 
 static const ClassExtension MapIteratorObjectClassExtension = {
-    MapIteratorObject::objectMoved};
+    MapIteratorObject::objectMoved,  // objectMovedOp
+};
 
 const JSClass MapIteratorObject::class_ = {
     "Map Iterator",
@@ -928,7 +929,8 @@ static const JSClassOps SetIteratorObjectClassOps = {
 };
 
 static const ClassExtension SetIteratorObjectClassExtension = {
-    SetIteratorObject::objectMoved};
+    SetIteratorObject::objectMoved,  // objectMovedOp
+};
 
 const JSClass SetIteratorObject::class_ = {
     "Set Iterator",

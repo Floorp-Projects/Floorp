@@ -460,7 +460,7 @@ static const JSClassOps SandboxClassOps = {
 };
 
 static const js::ClassExtension SandboxClassExtension = {
-    sandbox_moved /* objectMovedOp */
+    sandbox_moved,  // objectMovedOp
 };
 
 static const JSClass SandboxClass = {

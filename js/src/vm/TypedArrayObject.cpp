@@ -2151,7 +2151,7 @@ static const JSClassOps TypedArrayClassOps = {
 };
 
 static const ClassExtension TypedArrayClassExtension = {
-    TypedArrayObject::objectMoved,
+    TypedArrayObject::objectMoved,  // objectMovedOp
 };
 
 static const JSPropertySpec
