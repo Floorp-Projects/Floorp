@@ -11,6 +11,7 @@ add_task(async function() {
   // generate file:// URI for JSON file and load in new tab
   const dir = getChromeDir(getResolvedURI(gTestPath));
   dir.append(TEST_JSON_FILE);
+  dir.normalize();
   const uri = Services.io.newFileURI(dir);
   const tab = await addJsonViewTab(uri.spec);
 
