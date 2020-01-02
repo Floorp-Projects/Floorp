@@ -102,7 +102,8 @@ def _install_host_utils(build_obj):
     installed = False
     host_platform = _get_host_platform()
     if host_platform:
-        path = os.path.join(MANIFEST_PATH, host_platform, 'hostutils.manifest')
+        path = os.path.join(build_obj.topsrcdir, MANIFEST_PATH)
+        path = os.path.join(path, host_platform, 'hostutils.manifest')
         _get_tooltool_manifest(build_obj.substs, path, EMULATOR_HOME_DIR,
                                'releng.manifest')
         _tooltool_fetch(build_obj.substs)
@@ -143,7 +144,8 @@ def _maybe_update_host_utils(build_obj):
     if host_platform:
         # Extract tooltool file name from manifest, something like:
         #     "filename": "host-utils-58.0a1.en-US-linux-x86_64.tar.gz",
-        manifest_path = os.path.join(MANIFEST_PATH, host_platform, 'hostutils.manifest')
+        path = os.path.join(build_obj.topsrcdir, MANIFEST_PATH)
+        manifest_path = os.path.join(path, host_platform, 'hostutils.manifest')
         with open(manifest_path, 'r') as f:
             for line in f.readlines():
                 m = re.search('.*\"(host-utils-.*)\"', line)
