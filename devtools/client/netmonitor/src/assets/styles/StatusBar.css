@@ -13,6 +13,7 @@
   margin-inline-end: 10px;
   /* Status bar has just one line so, don't wrap labels */
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .status-bar-label:not(:first-of-type)::before {
