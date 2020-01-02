@@ -229,7 +229,6 @@ class Connection {
       const result = await session.execute(id, domain, command, params);
       this.onResult(id, result, sessionId);
     } catch (e) {
-      log.warn(e);
       this.onError(packet.id, e, packet.sessionId);
     }
   }
