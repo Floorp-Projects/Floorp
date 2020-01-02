@@ -715,6 +715,9 @@ class WindowsDllDetourPatcher final : public WindowsDllPatcherBase<VMPolicy> {
     *aOutTramp = nullptr;
 
     Trampoline<MMPolicyT>& tramp = aTramp;
+    if (!tramp) {
+      return;
+    }
 
     // The beginning of the trampoline contains two pointer-width slots:
     // [0]: |this|, so that we know whether the trampoline belongs to us;
