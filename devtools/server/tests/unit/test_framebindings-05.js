@@ -8,26 +8,17 @@
  * Check the environment bindings of a |with| in global scope.
  */
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_pause_frame();
-    },
-    { waitForFinish: true }
-  )
-);
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-function test_pause_frame() {
-  gThreadFront.once("paused", async function(packet) {
     const env = await packet.frame.getEnvironment();
     Assert.notEqual(env, undefined);
 
-    const objClient = gThreadFront.pauseGrip(env.object);
+    const objClient = threadFront.pauseGrip(env.object);
     let response = await objClient.getPrototypeAndProperties();
     Assert.equal(response.ownProperties.PI.value, Math.PI);
     Assert.equal(response.ownProperties.cos.value.getGrip().type, "object");
@@ -38,7 +29,7 @@ function test_pause_frame() {
     const parentEnv = env.parent.parent;
     Assert.notEqual(parentEnv, undefined);
 
-    const parentClient = gThreadFront.pauseGrip(parentEnv.object);
+    const parentClient = threadFront.pauseGrip(parentEnv.object);
     response = await parentClient.getPrototypeAndProperties();
     Assert.equal(response.ownProperties.a.value, Math.PI * 100);
     Assert.equal(response.ownProperties.r.value, 10);
@@ -49,11 +40,12 @@ function test_pause_frame() {
     );
     Assert.ok(!!response.ownProperties.Object.value.actorID);
 
-    await gThreadFront.resume();
-    threadFrontTestFinished();
-  });
+    await threadFront.resume();
+  })
+);
 
-  gDebuggee.eval(
+function evalCode(debuggee) {
+  debuggee.eval(
     "var a, r = 10;\n" +
       "with (Math) {\n" +
       "  a = PI * r * r;\n" +
