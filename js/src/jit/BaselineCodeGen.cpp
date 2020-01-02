@@ -962,14 +962,18 @@ void BaselineInterpreterCodeGen::loadScriptGCThing(ScriptGCThingType type,
       static_assert(uintptr_t(TraceKind::Object) == 0,
                     "Unexpected tag bits for object GCCellPtr");
       break;
-    case ScriptGCThingType::Scope:
     case ScriptGCThingType::BigInt:
+      // Use xorPtr with a 32-bit immediate because it's more efficient than
+      // andPtr on 64-bit.
+      static_assert(uintptr_t(TraceKind::BigInt) == 1,
+                    "Unexpected tag bits for BigInt GCCellPtr");
+      masm.xorPtr(Imm32(1), dest);
+      break;
+    case ScriptGCThingType::Scope:
       // Use xorPtr with a 32-bit immediate because it's more efficient than
       // andPtr on 64-bit.
       static_assert(uintptr_t(TraceKind::Scope) >= JS::OutOfLineTraceKindMask,
                     "Expected Scopes to have OutOfLineTraceKindMask tag");
-      static_assert(uintptr_t(TraceKind::BigInt) >= JS::OutOfLineTraceKindMask,
-                    "Expected BigInts to have OutOfLineTraceKindMask tag");
       masm.xorPtr(Imm32(JS::OutOfLineTraceKindMask), dest);
       break;
   }
