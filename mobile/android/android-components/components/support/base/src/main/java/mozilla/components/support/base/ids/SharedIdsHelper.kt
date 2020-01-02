@@ -4,8 +4,11 @@
 
 package mozilla.components.support.base.ids
 
+import android.app.Notification
+import android.app.NotificationManager
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import androidx.core.app.NotificationManagerCompat
 
 // If the tag is not used again in one week then clear the id
 private const val ID_LIFETIME: Long = 1000 * 60 * 60 * 24 * 7
@@ -38,4 +41,42 @@ object SharedIdsHelper {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun clear(context: Context) = ids.clear(context)
+}
+
+/**
+ * Post a notification to be shown in the status bar.
+ *
+ * Uses a unique [String] tag instead of an [Int] id like [NotificationManager.notify].
+ * This will replace the previous notification with the same tag. See also: [SharedIdsHelper] for more details.
+ */
+fun NotificationManager.notify(context: Context, tag: String, notification: Notification) {
+    notify(tag, SharedIdsHelper.getIdForTag(context, tag), notification)
+}
+
+/**
+ * Post a notification to be shown in the status bar.
+ *
+ * Uses a unique [String] tag instead of an [Int] id like [NotificationManagerCompat.notify].
+ * This will replace the previous notification with the same tag. See also: [SharedIdsHelper] for more details.
+ */
+fun NotificationManagerCompat.notify(context: Context, tag: String, notification: Notification) {
+    notify(tag, SharedIdsHelper.getIdForTag(context, tag), notification)
+}
+
+/**
+ * Cancel a previously shown notification.
+ *
+ * Uses a unique [String] tag instead of an [Int] id like [NotificationManager.cancel].
+ */
+fun NotificationManager.cancel(context: Context, tag: String) {
+    cancel(tag, SharedIdsHelper.getIdForTag(context, tag))
+}
+
+/**
+ * Cancel a previously shown notification.
+ *
+ * Uses a unique [String] tag instead of an [Int] id like [NotificationManagerCompat.cancel].
+ */
+fun NotificationManagerCompat.cancel(context: Context, tag: String) {
+    cancel(tag, SharedIdsHelper.getIdForTag(context, tag))
 }
