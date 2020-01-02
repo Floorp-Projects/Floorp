@@ -699,6 +699,9 @@ var Policies = {
           param.Locked
         );
       }
+      if ("Exceptions" in param) {
+        addAllowDenyPermissions("trackingprotection", param.Exceptions);
+      }
     },
   },
 
