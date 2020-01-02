@@ -2753,8 +2753,7 @@ static void HardwareTooOldForWR(FeatureState& aFeature) {
 }
 
 static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
-                                           int32_t aDeviceId, bool aHasBattery,
-                                           int64_t aScreenPixels,
+                                           int32_t aDeviceId,
                                            bool* aOutGuardedByQualifiedPref) {
   // 0x6c0 is the lowest Fermi device id. Unfortunately some Tesla
   // devices that don't support D3D 10.1 have higher deviceIDs. They
@@ -2772,41 +2771,12 @@ static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
 
 #  if defined(XP_WIN)
   // Nvidia devices with device id >= 0x6c0 got WR in release Firefox 67.
-  if (aHasBattery) {
-    // If we have a battery, we currently disallow screens larger than 1080p.
-    // Otherwise they can be turned on with the qualified pref.
-    const int64_t kMaxPixelsBattery = 1920 * 1200;  // WUXGA
-    if (aScreenPixels <= 0) {
-      aFeature.Disable(
-          FeatureStatus::BlockedScreenUnknown, "Screen size unknown",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
-    } else if (aScreenPixels > kMaxPixelsBattery) {
-      aFeature.Disable(FeatureStatus::BlockedHasBattery, "Has battery",
-                       NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
-    } else {  // <= kMaxPixelsBattery
-#    if defined(EARLY_BETA_OR_EARLIER)
-      // Battery and small screen, it should be on by default in early beta and
-      // nightly.
-      *aOutGuardedByQualifiedPref = false;
-#    endif
-    }
-  } else {
-    // No battery, it should be on by default.
-    *aOutGuardedByQualifiedPref = false;
-  }
+  *aOutGuardedByQualifiedPref = false;
 #  elif defined(NIGHTLY_BUILD)
   // Qualify on Linux Nightly, but leave *aOutGuardedByQualifiedPref as true
   // to indicate users on release don't have it yet, and it's still guarded
   // by the qualified pref.
-
-  // aHasBattery is only ever true on Windows, we don't check it on other
-  // platforms.
-  MOZ_ASSERT(!aHasBattery);
 #  else
-  // aHasBattery is only ever true on Windows, we don't check it on other
-  // platforms.
-  MOZ_ASSERT(!aHasBattery);
-
   // Disqualify everywhere else
   aFeature.Disable(
       FeatureStatus::BlockedReleaseChannelNvidia, "Release channel and Nvidia",
@@ -2815,8 +2785,7 @@ static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
 }
 
 static void UpdateWRQualificationForAMD(FeatureState& aFeature,
-                                        int32_t aDeviceId, bool aHasBattery,
-                                        int64_t aScreenPixels,
+                                        int32_t aDeviceId,
                                         bool* aOutGuardedByQualifiedPref) {
   // AMD deviceIDs are not very well ordered. This
   // condition is based off the information in gpu-db
@@ -2839,46 +2808,12 @@ static void UpdateWRQualificationForAMD(FeatureState& aFeature,
 
 #  if defined(XP_WIN)
   // These devices got WR in release Firefox 68.
-  if (aHasBattery) {
-    // If we have a battery, we only allow the user to be qualified on nightly,
-    // for 1080p or smaller screens. For larger screens, it remains disabled by
-    // default.
-    const int64_t kMaxPixelsBattery = 1920 * 1200;  // WUXGA
-    if (aScreenPixels <= 0) {
-      aFeature.Disable(
-          FeatureStatus::BlockedScreenUnknown, "Screen size unknown",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
-    } else if (aScreenPixels <= kMaxPixelsBattery) {
-#    ifdef NIGHTLY_BUILD
-      // Battery and small screen, it should be on by default in nightly.
-      *aOutGuardedByQualifiedPref = false;
-#    else
-      aFeature.Disable(
-          FeatureStatus::BlockedReleaseChannelBattery,
-          "Release channel and battery",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_BATTERY"));
-#    endif  // !NIGHTLY_BUILD
-    } else {
-      aFeature.Disable(FeatureStatus::BlockedHasBattery, "Has battery",
-                       NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
-    }
-  } else {
-    // No battery, it should be on by default.
-    *aOutGuardedByQualifiedPref = false;
-  }
+  *aOutGuardedByQualifiedPref = false;
 #  elif defined(NIGHTLY_BUILD)
   // Qualify on Linux Nightly, but leave *aOutGuardedByQualifiedPref as true
   // to indicate users on release don't have it yet, and it's still guarded
   // by the qualified pref.
-
-  // aHasBattery is only ever true on Windows, we don't check it on other
-  // platforms.
-  MOZ_ASSERT(!aHasBattery);
 #  else
-  // aHasBattery is only ever true on Windows, we don't check it on other
-  // platforms.
-  MOZ_ASSERT(!aHasBattery);
-
   // Disqualify everywhere else
   aFeature.Disable(FeatureStatus::BlockedReleaseChannelAMD,
                    "Release channel and AMD",
@@ -2887,7 +2822,7 @@ static void UpdateWRQualificationForAMD(FeatureState& aFeature,
 }
 
 static void UpdateWRQualificationForIntel(FeatureState& aFeature,
-                                          int32_t aDeviceId, bool aHasBattery,
+                                          int32_t aDeviceId,
                                           int64_t aScreenPixels,
                                           bool* aOutGuardedByQualifiedPref) {
   const uint16_t supportedDevices[] = {
@@ -2988,28 +2923,8 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
   // Performance is not great on 4k screens with WebRender.
   // Disable it for now on all release platforms, and also on Linux
   // nightly. We only allow it on Windows nightly.
-  //
-  // Additionally, if we have a battery, we add a further restriction
-  // that it cannot be larger than a 1080p screen.
-  const int64_t kMaxPixelsBattery = 1920 * 1200;  // WUXGA
 #  if defined(XP_WIN) && defined(NIGHTLY_BUILD)
-  // Windows nightly, only check for battery screen size restrictions.
-  if (aHasBattery) {
-    if (aScreenPixels <= 0) {
-      aFeature.Disable(
-          FeatureStatus::BlockedScreenUnknown, "Screen size unknown",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
-      return;
-    }
-    if (aScreenPixels > kMaxPixelsBattery) {
-      aFeature.Disable(FeatureStatus::BlockedHasBattery, "Has battery",
-                       NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
-      return;
-    }
-
-    // Battery and small screen, it should be on by default in nightly.
-    *aOutGuardedByQualifiedPref = false;
-  }
+  // Windows nightly, so don't do screen size checks
 #  else
   // Windows release, Linux nightly, Linux release. Do screen size
   // checks. (macOS is still completely blocked by the blocklist).
@@ -3032,29 +2947,6 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
     aFeature.Disable(FeatureStatus::BlockedScreenUnknown, "Screen size unknown",
                      NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
     return;
-  }
-  if (aHasBattery) {
-#    ifndef XP_WIN
-    // aHasBattery is only ever true on Windows, we don't check it on other
-    // platforms.
-    MOZ_ASSERT(false);
-#    endif
-    if (aScreenPixels <= kMaxPixelsBattery) {
-#    ifdef NIGHTLY_BUILD
-      // Battery and small screen, it should be on by default in nightly.
-      *aOutGuardedByQualifiedPref = false;
-#    else
-      aFeature.Disable(
-          FeatureStatus::BlockedReleaseChannelBattery,
-          "Release channel and battery",
-          NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_BATTERY"));
-      return;
-#    endif  // !NIGHTLY_BUILD
-    } else {
-      aFeature.Disable(FeatureStatus::BlockedHasBattery, "Has battery",
-                       NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
-      return;
-    }
   }
 #  endif
 
@@ -3122,16 +3014,13 @@ static FeatureState& WebRenderHardwareQualificationStatus(
 
   if (adapterVendorID == u"0x10de") {  // Nvidia
     UpdateWRQualificationForNvidia(featureWebRenderQualified, deviceID,
-                                   aHasBattery, aScreenPixels,
                                    aOutGuardedByQualifiedPref);
   } else if (adapterVendorID == u"0x1002") {  // AMD
     UpdateWRQualificationForAMD(featureWebRenderQualified, deviceID,
-                                aHasBattery, aScreenPixels,
                                 aOutGuardedByQualifiedPref);
   } else if (adapterVendorID == u"0x8086") {  // Intel
     UpdateWRQualificationForIntel(featureWebRenderQualified, deviceID,
-                                  aHasBattery, aScreenPixels,
-                                  aOutGuardedByQualifiedPref);
+                                  aScreenPixels, aOutGuardedByQualifiedPref);
   } else {
     featureWebRenderQualified.Disable(
         FeatureStatus::BlockedVendorUnsupported, "Unsupported vendor",
@@ -3143,6 +3032,35 @@ static FeatureState& WebRenderHardwareQualificationStatus(
     // this population must still be guarded by the qualified pref.
     MOZ_ASSERT(*aOutGuardedByQualifiedPref);
     return featureWebRenderQualified;
+  }
+
+  // We leave checking the battery for last because we would like to know
+  // which users were denied WebRender only because they have a battery.
+  if (aHasBattery) {
+#  ifndef XP_WIN
+    // aHasBattery is only ever true on Windows, we don't check it on other
+    // platforms.
+    MOZ_ASSERT(false);
+#  endif
+    // We never released WR to the battery populations, so let's keep the pref
+    // guard for these populations. That way we can do a gradual rollout to
+    // the battery population using the pref.
+    *aOutGuardedByQualifiedPref = true;
+
+    // if we have a battery, ignore it if the screen is small enough.
+    const int64_t kMaxPixelsBattery = 1920 * 1200;  // WUXGA
+    if (aScreenPixels > 0 && aScreenPixels <= kMaxPixelsBattery) {
+#  ifndef NIGHTLY_BUILD
+      featureWebRenderQualified.Disable(
+          FeatureStatus::BlockedReleaseChannelBattery,
+          "Release channel and battery",
+          NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_BATTERY"));
+#  endif  // !NIGHTLY_BUILD
+    } else {
+      featureWebRenderQualified.Disable(
+          FeatureStatus::BlockedHasBattery, "Has battery",
+          NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
+    }
   }
 #endif
   return featureWebRenderQualified;
