@@ -56,7 +56,7 @@ async function addJsonViewTab(
 
   // The `tabAdded` promise resolves when the JSON Viewer starts loading.
   // This is usually what we want, however, it never resolves for unrecognized
-  // content types that trigger a download, nor for symlink file URIs.
+  // content types that trigger a download.
   // On the other hand, `tabLoaded` always resolves, but not until the document
   // is fully loaded, which is too late if `docReadyState !== "complete"`.
   // Therefore, we race both promises.
