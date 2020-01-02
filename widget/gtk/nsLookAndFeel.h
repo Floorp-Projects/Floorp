@@ -21,18 +21,18 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   virtual ~nsLookAndFeel();
 
   void NativeInit() final;
-  virtual void RefreshImpl() override;
-  virtual nsresult NativeGetColor(ColorID aID, nscolor& aResult) override;
-  virtual nsresult GetIntImpl(IntID aID, int32_t& aResult) override;
-  virtual nsresult GetFloatImpl(FloatID aID, float& aResult) override;
-  virtual bool GetFontImpl(FontID aID, nsString& aFontName,
-                           gfxFontStyle& aFontStyle) override;
+  void RefreshImpl() override;
+  nsresult NativeGetColor(ColorID aID, nscolor& aResult) override;
+  nsresult GetIntImpl(IntID aID, int32_t& aResult) override;
+  nsresult GetFloatImpl(FloatID aID, float& aResult) override;
+  bool GetFontImpl(FontID aID, nsString& aFontName,
+                   gfxFontStyle& aFontStyle) override;
 
-  virtual char16_t GetPasswordCharacterImpl() override;
-  virtual bool GetEchoPasswordImpl() override;
+  char16_t GetPasswordCharacterImpl() override;
+  bool GetEchoPasswordImpl() override;
 
-  virtual nsTArray<LookAndFeelInt> GetIntCacheImpl() override;
-  virtual void SetIntCacheImpl(
+  nsTArray<LookAndFeelInt> GetIntCacheImpl() override;
+  void SetIntCacheImpl(
       const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) override;
 
   bool IsCSDAvailable() const { return mCSDAvailable; }
@@ -101,10 +101,12 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   bool mCSDCloseButton = false;
   bool mCSDReversedPlacement = false;
   bool mSystemUsesDarkTheme = false;
+  bool mHighContrast = false;
   bool mInitialized = false;
   bool mPrefersReducedMotionCached = false;
 
   void EnsureInit();
+  void ConfigureContentGtkTheme();
 
  private:
   nsresult InitCellHighlightColors();
