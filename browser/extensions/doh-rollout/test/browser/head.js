@@ -63,17 +63,6 @@ function setFailingHeuristics() {
   Preferences.set(prefs.MOCK_HEURISTICS_PREF, fakeFailingHeuristics);
 }
 
-async function waitForBalrogMigration() {
-  await BrowserTestUtils.waitForCondition(() => {
-    return Preferences.get(prefs.DOH_BALROG_MIGRATION_PREF, false);
-  });
-  is(
-    Preferences.get(prefs.DOH_BALROG_MIGRATION_PREF, false),
-    true,
-    "Balrog migration is complete and pref is set."
-  );
-}
-
 async function restartAddon() {
   let addon = await AddonManager.getAddonByID(ADDON_ID);
   await addon.reload();
