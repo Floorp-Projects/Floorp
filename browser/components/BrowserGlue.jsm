@@ -2048,6 +2048,11 @@ BrowserGlue.prototype = {
       this._recordDataSanitizationPrefs();
     });
 
+    Services.tm.idleDispatchToMainThread(() => {
+      let siteSpecific = Services.prefs.getBoolPref("browser.zoom.siteSpecific", false);
+      Services.telemetry.scalarSet("a11y.sitezoom", siteSpecific);
+    });
+
     // Load the Login Manager data from disk off the main thread, some time
     // after startup.  If the data is required before this runs, for example
     // because a restored page contains a password field, it will be loaded on
