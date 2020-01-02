@@ -3,22 +3,13 @@
 
 "use strict";
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_banana_environment();
-    },
-    { waitForFinish: true }
-  )
-);
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-function test_banana_environment() {
-  gThreadFront.once("paused", async function(packet) {
     const env = await packet.frame.getEnvironment();
     equal(env.type, "function");
     equal(env.function.name, "banana3");
@@ -35,11 +26,12 @@ function test_banana_environment() {
     equal(parent.type, "function");
     equal(parent.function.name, "banana");
 
-    await gThreadFront.resume();
-    threadFrontTestFinished();
-  });
+    await threadFront.resume();
+  })
+);
 
-  gDebuggee.eval(
+function evalCode(debuggee) {
+  debuggee.eval(
     "function banana(x) {\n" +
       "  return function banana2(y) {\n" +
       "    return function banana3(z) {\n" +

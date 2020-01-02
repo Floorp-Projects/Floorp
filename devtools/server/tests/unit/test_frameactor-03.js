@@ -8,34 +8,26 @@
  * Verify that a frame actor is properly expired when the frame goes away.
  */
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_pause_frame();
-    },
-    { waitForFinish: true }
-  )
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet1 = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
+
+    threadFront.resume();
+    const packet2 = await waitForPause(threadFront);
+
+    const poppedFrames = packet2.poppedFrames;
+    Assert.equal(typeof poppedFrames, typeof []);
+    Assert.ok(poppedFrames.includes(packet1.frame.actorID));
+
+    threadFront.resume();
+  })
 );
 
-function test_pause_frame() {
-  gThreadFront.once("paused", function(packet1) {
-    gThreadFront.once("paused", function(packet2) {
-      const poppedFrames = packet2.poppedFrames;
-      Assert.equal(typeof poppedFrames, typeof []);
-      Assert.ok(poppedFrames.includes(packet1.frame.actorID));
-      gThreadFront.resume().then(function() {
-        threadFrontTestFinished();
-      });
-    });
-    gThreadFront.resume();
-  });
-
-  gDebuggee.eval(
+function evalCode(debuggee) {
+  debuggee.eval(
     "(" +
       function() {
         function stopMe() {
