@@ -4,8 +4,6 @@
 "use strict";
 
 add_task(async function raisesWithoutArguments({ Target }, _, tab) {
-  await getDiscoveredTargets(Target);
-
   let exceptionThrown = false;
   try {
     await Target.closeTarget();
@@ -16,8 +14,6 @@ add_task(async function raisesWithoutArguments({ Target }, _, tab) {
 });
 
 add_task(async function raisesWithUnknownTargetId({ Target }, _, tab) {
-  await getDiscoveredTargets(Target);
-
   let exceptionThrown = false;
   try {
     await Target.closeTarget({ targetId: "-1" });
@@ -28,7 +24,6 @@ add_task(async function raisesWithUnknownTargetId({ Target }, _, tab) {
 });
 
 add_task(async function triggersTargetDestroyed({ Target }, _, tab) {
-  await getDiscoveredTargets(Target);
   const { targetInfo, newTab } = await openTab(Target);
 
   const tabClosed = BrowserTestUtils.waitForEvent(newTab, "TabClose");

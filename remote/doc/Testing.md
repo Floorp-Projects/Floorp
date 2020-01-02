@@ -53,6 +53,9 @@ Before the task is run, the `nsIRemoteAgent` listener is started
 and a [CDP client] is connected.  You will use this CDP client for
 interacting with the agent just as any other CDP client would.
 
+Also target discovery is getting enabled, which means that targetCreated,
+targetDestroyed, and targetInfoChanged events will be received by the client.
+
 The task function you provide in your test will be called with the
 three arguments `client`, `CDP`, and `tab`:
 
