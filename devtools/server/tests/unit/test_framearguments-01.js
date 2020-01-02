@@ -7,22 +7,13 @@
  * Check a frame actor's arguments property.
  */
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_pause_frame();
-    },
-    { waitForFinish: true }
-  )
-);
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-function test_pause_frame() {
-  gThreadFront.once("paused", function(packet) {
     const args = packet.frame.arguments;
     Assert.equal(args.length, 6);
     Assert.equal(args[0], 42);
@@ -34,12 +25,12 @@ function test_pause_frame() {
     Assert.equal(args[5].class, "Object");
     Assert.ok(!!args[5].actor);
 
-    gThreadFront.resume().then(function() {
-      threadFrontTestFinished();
-    });
-  });
+    await threadFront.resume();
+  })
+);
 
-  gDebuggee.eval(
+function evalCode(debuggee) {
+  debuggee.eval(
     "(" +
       function() {
         function stopMe(number, bool, string, null_, undef, object) {

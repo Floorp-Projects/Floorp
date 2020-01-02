@@ -8,84 +8,66 @@
  * Test exceptions inside black boxed sources.
  */
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_black_box();
-    },
-    { waitForFinish: true }
-  )
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
+
+    const { error } = await threadFront.getSources();
+    Assert.ok(!error, "Should not get an error: " + error);
+
+    const sourceFront = await getSource(threadFront, BLACK_BOXED_URL);
+    await blackBox(sourceFront);
+    threadFront.pauseOnExceptions(true, false);
+
+    threadFront.resume();
+    const packet = await waitForPause(threadFront);
+    const source = await getSourceById(threadFront, packet.frame.where.actor);
+
+    Assert.equal(
+      source.url,
+      SOURCE_URL,
+      "We shouldn't pause while in the black boxed source."
+    );
+    await threadFront.resume();
+  })
 );
 
 const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
-function test_black_box() {
-  gThreadFront.once("paused", test_black_box_exception);
-
+function evalCode(debuggee) {
   /* eslint-disable no-multi-spaces, no-unreachable, no-undef */
+  // prettier-ignore
   Cu.evalInSandbox(
     "" +
-      function doStuff(k) {
-        // line 1
+      function doStuff(k) {           // line 1
         throw new Error("error msg"); // line 2
-        k(100); // line 3
-      }, // line 4
-    gDebuggee,
+        k(100);                       // line 3
+      },                              // line 4
+    debuggee,
     "1.8",
     BLACK_BOXED_URL,
     1
   );
-
+  // prettier-ignore
   Cu.evalInSandbox(
     "" +
-    function runTest() {
-      // line 1
-      doStuff(
-        // line 2
-        function(n) {
-          // line 3
-          debugger; // line 4
-        } // line 5
-      ); // line 6
-    } + // line 7
-    "\ndebugger;\n" + // line 8
+    function runTest() { // line 1
+      doStuff(           // line 2
+        function(n) {    // line 3
+          debugger;      // line 4
+        }                // line 5
+      );                 // line 6
+    } +                  // line 7
+    "\ndebugger;\n" +    // line 8
       "try { runTest() } catch (ex) { }", // line 9
-    gDebuggee,
+    debuggee,
     "1.8",
     SOURCE_URL,
     1
   );
   /* eslint-enable no-multi-spaces, no-unreachable, no-undef */
-}
-
-function test_black_box_exception() {
-  gThreadFront.getSources().then(async function({ error, sources }) {
-    Assert.ok(!error, "Should not get an error: " + error);
-    const sourceFront = await getSource(gThreadFront, BLACK_BOXED_URL);
-    await blackBox(sourceFront);
-    gThreadFront.pauseOnExceptions(true, false);
-
-    gThreadFront.once("paused", async function(packet) {
-      const source = await getSourceById(
-        gThreadFront,
-        packet.frame.where.actor
-      );
-
-      Assert.equal(
-        source.url,
-        SOURCE_URL,
-        "We shouldn't pause while in the black boxed source."
-      );
-      await gThreadFront.resume();
-      threadFrontTestFinished();
-    });
-
-    gThreadFront.resume();
-  });
 }
