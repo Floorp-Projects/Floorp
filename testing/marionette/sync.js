@@ -227,6 +227,8 @@ function TimedPromise(
   }
 
   return new Promise((resolve, reject) => {
+    let trace;
+
     // Reject only if |throws| is given.  Otherwise it is assumed that
     // the user is OK with the promise timing out.
     let bail = () => {
@@ -234,11 +236,12 @@ function TimedPromise(
         let err = new throws();
         reject(err);
       } else {
-        log.warn(`TimedPromise timed out after ${timeout} ms`, stack());
+        log.warn(`TimedPromise timed out after ${timeout} ms`, trace);
         resolve();
       }
     };
 
+    trace = stack();
     timer.initWithCallback({ notify: bail }, timeout, TYPE_ONE_SHOT);
 
     try {
