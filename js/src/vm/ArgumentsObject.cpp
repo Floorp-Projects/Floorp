@@ -1008,8 +1008,16 @@ const js::ClassExtension MappedArgumentsObject::classExt_ = {
 };
 
 const ObjectOps MappedArgumentsObject::objectOps_ = {
-    nullptr, /* lookupProperty */
-    MappedArgumentsObject::obj_defineProperty};
+    nullptr,                                    // lookupProperty
+    MappedArgumentsObject::obj_defineProperty,  // defineProperty
+    nullptr,                                    // hasProperty
+    nullptr,                                    // getProperty
+    nullptr,                                    // setProperty
+    nullptr,                                    // getOwnPropertyDescriptor
+    nullptr,                                    // deleteProperty
+    nullptr,                                    // getElements
+    nullptr,                                    // funToString
+};
 
 const JSClass MappedArgumentsObject::class_ = {
     "Arguments",

@@ -374,15 +374,17 @@ const JSClass VarEnvironmentObject::class_ = {
 /*****************************************************************************/
 
 const ObjectOps ModuleEnvironmentObject::objectOps_ = {
-    ModuleEnvironmentObject::lookupProperty,
-    nullptr, /* defineProperty */
-    ModuleEnvironmentObject::hasProperty,
-    ModuleEnvironmentObject::getProperty,
-    ModuleEnvironmentObject::setProperty,
-    ModuleEnvironmentObject::getOwnPropertyDescriptor,
-    ModuleEnvironmentObject::deleteProperty,
-    nullptr, /* getElements */
-    nullptr};
+    ModuleEnvironmentObject::lookupProperty,  // lookupProperty
+    nullptr,                                  // defineProperty
+    ModuleEnvironmentObject::hasProperty,     // hasProperty
+    ModuleEnvironmentObject::getProperty,     // getProperty
+    ModuleEnvironmentObject::setProperty,     // setProperty
+    ModuleEnvironmentObject::
+        getOwnPropertyDescriptor,             // getOwnPropertyDescriptor
+    ModuleEnvironmentObject::deleteProperty,  // deleteProperty
+    nullptr,                                  // getElements
+    nullptr,                                  // funToString
+};
 
 const JSClassOps ModuleEnvironmentObject::classOps_ = {
     nullptr,                                // addProperty
@@ -812,15 +814,15 @@ static bool with_DeleteProperty(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 static const ObjectOps WithEnvironmentObjectOps = {
-    with_LookupProperty,
-    with_DefineProperty,
-    with_HasProperty,
-    with_GetProperty,
-    with_SetProperty,
-    with_GetOwnPropertyDescriptor,
-    with_DeleteProperty,
-    nullptr, /* getElements */
-    nullptr,
+    with_LookupProperty,            // lookupProperty
+    with_DefineProperty,            // defineProperty
+    with_HasProperty,               // hasProperty
+    with_GetProperty,               // getProperty
+    with_SetProperty,               // setProperty
+    with_GetOwnPropertyDescriptor,  // getOwnPropertyDescriptor
+    with_DeleteProperty,            // deleteProperty
+    nullptr,                        // getElements
+    nullptr,                        // funToString
 };
 
 const JSClass WithEnvironmentObject::class_ = {
@@ -1234,15 +1236,15 @@ static bool lexicalError_DeleteProperty(JSContext* cx, HandleObject obj,
 }
 
 static const ObjectOps RuntimeLexicalErrorObjectObjectOps = {
-    lexicalError_LookupProperty,
-    nullptr, /* defineProperty */
-    lexicalError_HasProperty,
-    lexicalError_GetProperty,
-    lexicalError_SetProperty,
-    lexicalError_GetOwnPropertyDescriptor,
-    lexicalError_DeleteProperty,
-    nullptr, /* getElements */
-    nullptr, /* this */
+    lexicalError_LookupProperty,            // lookupProperty
+    nullptr,                                // defineProperty
+    lexicalError_HasProperty,               // hasProperty
+    lexicalError_GetProperty,               // getProperty
+    lexicalError_SetProperty,               // setProperty
+    lexicalError_GetOwnPropertyDescriptor,  // getOwnPropertyDescriptor
+    lexicalError_DeleteProperty,            // deleteProperty
+    nullptr,                                // getElements
+    nullptr,                                // funToString
 };
 
 const JSClass RuntimeLexicalErrorObject::class_ = {
