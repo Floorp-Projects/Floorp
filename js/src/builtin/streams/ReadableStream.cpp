@@ -22,8 +22,8 @@
 #include "builtin/streams/ReadableStreamInternals.h"  // js::ReadableStreamCancel
 #include "builtin/streams/ReadableStreamOperations.h"  // js::ReadableStream{PipeTo,Tee}
 #include "builtin/streams/ReadableStreamReader.h"  // js::CreateReadableStreamDefaultReader, js::ForAuthorCodeBool
-#include "builtin/streams/WritableStream.h"        // js::WritableStream
-#include "js/CallArgs.h"  // JS::CallArgs{,FromVp}
+#include "builtin/streams/WritableStream.h"  // js::WritableStream
+#include "js/CallArgs.h"                     // JS::CallArgs{,FromVp}
 #include "js/Class.h"  // JSCLASS_PRIVATE_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
 #include "js/Conversions.h"  // JS::ToBoolean
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_FN, JS_PSG, JS_{FS,PS}_END
@@ -37,7 +37,7 @@
 #include "vm/Runtime.h"           // JSAtomState
 #include "vm/StringType.h"        // js::EqualStrings, js::ToString
 
-#include "vm/Compartment-inl.h"  // js::UnwrapAndTypeCheck{Argument,This}
+#include "vm/Compartment-inl.h"   // js::UnwrapAndTypeCheck{Argument,This}
 #include "vm/JSObject-inl.h"      // js::NewBuiltinClassInstance
 #include "vm/NativeObject-inl.h"  // js::ThrowIfNotConstructing
 
