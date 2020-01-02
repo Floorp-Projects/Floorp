@@ -7,6 +7,23 @@
 
 # The following section contains the accessibility scalars.
 a11y:
+  sitezoom:
+    bug_numbers:
+      - 1590485
+    description: >
+      Boolean tracking if the user has the site-specific zoom enabled or disabled.
+    expires: "78"
+    kind: boolean
+    notification_emails:
+      - accessibility@mozilla.com
+      - mreschenberg@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+    keyed: false
+
   backplate:
     bug_numbers:
       - 1539212
