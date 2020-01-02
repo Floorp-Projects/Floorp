@@ -1125,7 +1125,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         case "finish":
           if (rewinding) {
             let olderFrame = stepFrame.older;
-            while (olderFrame && !olderFrame.script) {
+            while (
+              olderFrame &&
+              (!olderFrame.script || this.sources.isFrameBlackBoxed(olderFrame))
+            ) {
               olderFrame = olderFrame.older;
             }
             if (olderFrame) {
