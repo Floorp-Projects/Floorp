@@ -343,13 +343,23 @@ inline StoreBuffer* Cell::storeBuffer() const {
   return chunk()->trailer.storeBuffer;
 }
 
+#ifdef DEBUG
+extern Cell* UninlinedForwarded(const Cell* cell);
+#endif
+
 inline JS::TraceKind Cell::getTraceKind() const {
   if (isTenured()) {
+    MOZ_ASSERT_IF(isForwarded(), UninlinedForwarded(this)->getTraceKind() ==
+                                     asTenured().getTraceKind());
     return asTenured().getTraceKind();
   }
   if (nurseryCellIsString()) {
+    MOZ_ASSERT_IF(isForwarded(), UninlinedForwarded(this)->getTraceKind() ==
+                                     JS::TraceKind::String);
     return JS::TraceKind::String;
   }
+  MOZ_ASSERT_IF(isForwarded(), UninlinedForwarded(this)->getTraceKind() ==
+                                   JS::TraceKind::Object);
   return JS::TraceKind::Object;
 }
 
