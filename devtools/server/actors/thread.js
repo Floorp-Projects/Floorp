@@ -894,15 +894,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         return undefined;
       }
 
-      if (thread.sources.isFrameBlackBoxed(this)) {
-        return undefined;
-      }
-
       // Note that we're popping this frame; we need to watch for
       // subsequent step events on its caller.
       this.reportedPop = true;
 
-      if (steppingType != "finish") {
+      if (steppingType != "finish" && !thread.sources.isFrameBlackBoxed(this)) {
         return pauseAndRespond(this, packet =>
           thread.createCompletionGrip(packet, completion)
         );
@@ -993,7 +989,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // Continue if:
     // 1. the location is not a valid breakpoint position
-    // 2. the source is not blackboxed
+    // 2. the source is blackboxed
     // 3. we have not moved since the last pause
     if (
       !meta.isBreakpoint ||
