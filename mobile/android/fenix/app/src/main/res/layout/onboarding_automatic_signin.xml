@@ -33,7 +33,7 @@
         android:padding="10dp"
         android:text="@string/onboarding_firefox_account_auto_signin_confirm"
         android:textAllCaps="false"
-        android:textColor="?neutral"
+        android:textColor="@color/onboarding_card_button_text_dark"
         android:textSize="14sp"
         android:textStyle="bold"
         app:backgroundTint="@color/onboarding_card_button_background_dark" />
