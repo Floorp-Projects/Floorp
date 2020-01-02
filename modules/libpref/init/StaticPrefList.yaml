@@ -8059,6 +8059,19 @@
   value: false
   mirror: always
 
+# Whether to allow gtk dark themes in content.
+- name: widget.content.allow-gtk-dark-theme
+  type: bool
+  value: false
+  mirror: always
+
+# Whether to use gtk high contrast themes to disable content styling like on
+# windows high contrast mode.
+- name: widget.content.gtk-high-contrast.enabled
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "xul."
 #---------------------------------------------------------------------------
