@@ -390,7 +390,7 @@ var PdfjsChromeUtils = {
       data.message,
       "pdfjs-fallback",
       null,
-      notificationBox.PRIORITY_INFO_LOW,
+      notificationBox.PRIORITY_WARNING_LOW,
       buttons,
       function eventsCallback(eventType) {
         // Currently there is only one event "removed" but if there are any other
