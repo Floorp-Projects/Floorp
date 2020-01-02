@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import codecs
 import re
+import six
 import sys
 
 if sys.version_info[0] == 3:
@@ -53,7 +54,7 @@ class DotProperties:
         if not prefix.endswith('.'):
             prefix = prefix + '.'
         indexes = []
-        for k, v in self._properties.iteritems():
+        for k, v in six.iteritems(self._properties):
             if not k.startswith(prefix):
                 continue
             key = k[len(prefix):]
@@ -74,7 +75,8 @@ class DotProperties:
         if not prefix.endswith('.'):
             prefix = prefix + '.'
 
-        D = dict((k[len(prefix):], v) for k, v in self._properties.iteritems()
+        D = dict((k[len(prefix):], v) for k, v
+                 in six.iteritems(self._properties)
                  if k.startswith(prefix) and '.' not in k[len(prefix):])
 
         for required_key in required_keys:
