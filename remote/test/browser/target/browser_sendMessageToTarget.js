@@ -4,7 +4,6 @@
 "use strict";
 
 add_task(async function sendToAttachedTarget({ Target }) {
-  await getDiscoveredTargets(Target);
   const { targetInfo } = await openTab(Target);
 
   const attachedToTarget = Target.attachedToTarget();

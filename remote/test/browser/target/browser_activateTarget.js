@@ -4,8 +4,6 @@
 "use strict";
 
 add_task(async function raisesWithoutArguments({ Target }, _, tab) {
-  await getDiscoveredTargets(Target);
-
   let errorThrown = false;
   try {
     await Target.activateTarget();
@@ -16,8 +14,6 @@ add_task(async function raisesWithoutArguments({ Target }, _, tab) {
 });
 
 add_task(async function raisesWithUnknownTargetId({ Target }, _, tab) {
-  await getDiscoveredTargets(Target);
-
   let errorThrown = false;
   try {
     await Target.activateTarget({ targetId: "-1" });

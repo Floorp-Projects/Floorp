@@ -10,25 +10,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-// Wait for all Target.targetCreated events. One for each tab, plus the one
-// for the main process target.
-async function getDiscoveredTargets(Target) {
-  return new Promise(resolve => {
-    const targets = [];
-
-    const unsubscribe = Target.targetCreated(target => {
-      targets.push(target);
-
-      if (targets.length >= gBrowser.tabs.length + 1) {
-        unsubscribe();
-        resolve(targets);
-      }
-    });
-
-    Target.setDiscoverTargets({ discover: true });
-  });
-}
-
 async function openTab(Target) {
   info("Create a new tab and wait for the target to be created");
 
