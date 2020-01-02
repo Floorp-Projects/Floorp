@@ -2067,7 +2067,7 @@ MessageChannel::MessageTask::GetPriority(uint32_t* aPriority) {
       *aPriority = PRIORITY_NORMAL;
       break;
     case Message::INPUT_PRIORITY:
-      *aPriority = PRIORITY_INPUT;
+      *aPriority = PRIORITY_INPUT_HIGH;
       break;
     case Message::HIGH_PRIORITY:
       *aPriority = PRIORITY_HIGH;
