@@ -6,6 +6,19 @@
 
 var EXPORTED_SYMBOLS = ["Protocol"];
 
+/**
+ * Sanitizes outgoing JSON payloads by filtering out null and empty
+ * strings in values.
+ *
+ * Used as replacer for JSON.stringify.
+ */
+function sanitize(key, value) {
+  if (value === null || (typeof value == "string" && value.length == 0)) {
+    return undefined;
+  }
+  return value;
+}
+
 // TODO(ato): We send back a description of the protocol
 // when the user makes the initial HTTP request,
 // but the following is pure fiction.
@@ -17357,4 +17370,4 @@ const Description = {
     }
 };
 
-const Protocol = {Description};
+const Protocol = {Description, sanitize};
