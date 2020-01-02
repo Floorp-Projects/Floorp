@@ -198,7 +198,6 @@ android {
     }
 
     lintOptions {
-        baseline file("lint-baseline.xml")
         lintConfig file("lint.xml")
     }
 
