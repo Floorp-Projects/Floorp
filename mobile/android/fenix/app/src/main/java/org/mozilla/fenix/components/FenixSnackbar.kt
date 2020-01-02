@@ -32,11 +32,7 @@ class FenixSnackbar private constructor(
     init {
         view.background = null
 
-        view.snackbar_layout.background = if (isError) {
-            AppCompatResources.getDrawable(context, R.drawable.fenix_snackbar_error_background)
-        } else {
-            AppCompatResources.getDrawable(context, R.drawable.fenix_snackbar_background)
-        }
+        setAppropriateBackground(isError)
 
         content.snackbar_btn.increaseTapArea(actionButtonIncreaseDps)
 
@@ -49,8 +45,20 @@ class FenixSnackbar private constructor(
         )
     }
 
+    fun setAppropriateBackground(isError: Boolean) {
+        view.snackbar_layout.background = if (isError) {
+            AppCompatResources.getDrawable(context, R.drawable.fenix_snackbar_error_background)
+        } else {
+            AppCompatResources.getDrawable(context, R.drawable.fenix_snackbar_background)
+        }
+    }
+
     fun setText(text: String) = this.apply {
         view.snackbar_text.text = text
+    }
+
+    fun setLength(duration: Int) = this.apply {
+        this.duration = duration
     }
 
     fun setAction(text: String, action: () -> Unit) = this.apply {
@@ -87,6 +95,28 @@ class FenixSnackbar private constructor(
             val callback = FenixSnackbarCallback(content)
             return FenixSnackbar(parent, content, callback, isError).also {
                 it.duration = duration
+            }
+        }
+
+        /**
+         * Considers BrowserToolbar for padding when making snackbar
+         */
+        fun makeWithToolbarPadding(
+            view: View,
+            duration: Int = LENGTH_LONG,
+            isError: Boolean = false
+        ): FenixSnackbar {
+            val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
+            val toolbarHeight = view.context.resources
+                .getDimensionPixelSize(R.dimen.browser_toolbar_height)
+
+            return make(view, duration, isError).apply {
+                this.view.setPadding(
+                    0,
+                    0,
+                    0,
+                    if (shouldUseBottomToolbar) toolbarHeight else 0
+                )
             }
         }
 
@@ -145,37 +175,5 @@ private class FenixSnackbarCallback(
         private const val defaultYTranslation = 0f
         private const val animateInDuration = 200L
         private const val animateOutDuration = 150L
-    }
-}
-
-/**
- * This snackbar presenter should be used when displaying a snackbar that will appear in
- * the BrowserFragment as it takes into account the position of the BrowserToolbar
- */
-class BrowserSnackbarPresenter(
-    private val view: View
-) {
-    fun present(
-        text: String,
-        length: Int = FenixSnackbar.LENGTH_LONG,
-        action: (() -> Unit)? = null,
-        actionName: String? = null,
-        isError: Boolean = false
-    ) {
-        val shouldUseBottomToolbar = view.context.settings().shouldUseBottomToolbar
-        val toolbarHeight = view.context.resources
-            .getDimensionPixelSize(R.dimen.browser_toolbar_height)
-
-        FenixSnackbar.make(view, length, isError).apply {
-            if (action != null && actionName != null) setAction(actionName, action)
-            setText(text)
-            view.setPadding(
-                0,
-                0,
-                0,
-                if (shouldUseBottomToolbar) toolbarHeight else 0
-            )
-            show()
-        }
     }
 }

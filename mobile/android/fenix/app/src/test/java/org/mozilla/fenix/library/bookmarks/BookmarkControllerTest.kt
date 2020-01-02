@@ -29,7 +29,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.components.BrowserSnackbarPresenter
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
@@ -41,7 +41,7 @@ class BookmarkControllerTest {
 
     private val context: Context = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
-    private val snackbarPresenter: BrowserSnackbarPresenter = mockk(relaxed = true)
+    private val snackbar: FenixSnackbar = mockk(relaxed = true)
     private val deleteBookmarkNodes: (Set<BookmarkNode>, Event) -> Unit = mockk(relaxed = true)
     private val invokePendingDeletion: () -> Unit = mockk(relaxed = true)
 
@@ -90,7 +90,7 @@ class BookmarkControllerTest {
         controller = DefaultBookmarkController(
             context = homeActivity,
             navController = navController,
-            snackbarPresenter = snackbarPresenter,
+            snackbar = snackbar,
             deleteBookmarkNodes = deleteBookmarkNodes,
             invokePendingDeletion = invokePendingDeletion
         )
@@ -165,7 +165,8 @@ class BookmarkControllerTest {
         controller.handleBookmarkSelected(root)
 
         verify {
-            snackbarPresenter.present(errorMessage, any(), any(), any())
+            snackbar.setText(errorMessage)
+            snackbar.show()
         }
     }
 
@@ -180,7 +181,8 @@ class BookmarkControllerTest {
 
         verifyOrder {
             ClipData.newPlainText(item.url, item.url)
-            snackbarPresenter.present(urlCopiedMessage, any(), any(), any())
+            snackbar.setText(urlCopiedMessage)
+            snackbar.show()
         }
     }
 

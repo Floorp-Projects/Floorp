@@ -88,7 +88,6 @@ class DeleteAndQuitTest {
         verifyOrder {
             snackbar.show()
             removeAllTabsUseCases.invoke()
-            snackbar.dismiss()
             activity.finish()
         }
 
@@ -140,8 +139,6 @@ class DeleteAndQuitTest {
             engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
 
             historyStorage
-
-            snackbar.dismiss()
 
             activity.finish()
         }

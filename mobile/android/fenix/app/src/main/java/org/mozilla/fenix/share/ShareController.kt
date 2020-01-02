@@ -22,7 +22,7 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.BrowserSnackbarPresenter
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -53,7 +53,7 @@ interface ShareController {
  * @param context [Context] used for various Android interactions.
  * @param shareData the list of [ShareData]s that can be shared.
  * @param sendTabUseCases instance of [SendTabUseCases] which allows sending tabs to account devices.
- * @param snackbarPresenter - instance of [BrowserSnackbarPresenter] for displaying styled snackbars
+ * @param snackbar - instance of [FenixSnackbar] for displaying styled snackbars
  * @param navController - [NavController] used for navigation.
  * @param dismiss - callback signalling sharing can be closed.
  */
@@ -62,7 +62,7 @@ class DefaultShareController(
     private val context: Context,
     private val shareData: List<ShareData>,
     private val sendTabUseCases: SendTabUseCases,
-    private val snackbarPresenter: BrowserSnackbarPresenter,
+    private val snackbar: FenixSnackbar,
     private val navController: NavController,
     private val dismiss: (ShareController.Result) -> Unit
 ) : ShareController {
@@ -89,7 +89,8 @@ class DefaultShareController(
             context.startActivity(intent)
             ShareController.Result.SUCCESS
         } catch (e: SecurityException) {
-            snackbarPresenter.present(context.getString(R.string.share_error_snackbar))
+            snackbar.setText(context.getString(R.string.share_error_snackbar))
+            snackbar.show()
             ShareController.Result.SHARE_ERROR
         }
         dismiss(result)
@@ -111,7 +112,8 @@ class DefaultShareController(
 
     override fun handleSignIn() {
         context.metrics.track(Event.SignInToSendTab)
-        val directions = ShareFragmentDirections.actionShareFragmentToTurnOnSyncFragment()
+        val directions =
+            ShareFragmentDirections.actionShareFragmentToTurnOnSyncFragment(padSnackbar = true)
         navController.nav(R.id.shareFragment, directions)
         dismiss(ShareController.Result.DISMISSED)
     }
@@ -132,21 +134,20 @@ class DefaultShareController(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun showSuccess() {
-        snackbarPresenter.present(
-            getSuccessMessage(),
-            Snackbar.LENGTH_SHORT
-        )
+        snackbar.apply {
+            setText(getSuccessMessage())
+            setLength(Snackbar.LENGTH_SHORT)
+            show()
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun showFailureWithRetryOption(operation: () -> Unit) {
-        snackbarPresenter.present(
-            text = context.getString(R.string.sync_sent_tab_error_snackbar),
-            length = Snackbar.LENGTH_LONG,
-            action = operation,
-            actionName = context.getString(R.string.sync_sent_tab_error_snackbar_action),
-            isError = true
-        )
+        snackbar.setText(context.getString(R.string.sync_sent_tab_error_snackbar))
+        snackbar.setLength(Snackbar.LENGTH_LONG)
+        snackbar.setAction(context.getString(R.string.sync_sent_tab_error_snackbar_action), operation)
+        snackbar.setAppropriateBackground(true)
+        snackbar.show()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

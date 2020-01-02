@@ -18,13 +18,15 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.BrowserSnackbarPresenter
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 
 @SuppressWarnings("TooManyFunctions")
 class TurnOnSyncFragment : Fragment(), AccountObserver {
+
+    private val safeArguments get() = requireNotNull(arguments)
+    private val args get() = TurnOnSyncFragmentArgs.fromBundle(safeArguments)
 
     private val signInClickListener = View.OnClickListener {
         requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
@@ -74,9 +76,19 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
     }
 
     override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
-        BrowserSnackbarPresenter(requireView()).present(
-            text = requireContext().getString(R.string.sync_syncing_in_progress),
-            length = FenixSnackbar.LENGTH_SHORT
-        )
+        val snackbarText = requireContext().getString(R.string.sync_syncing_in_progress)
+        val snackbarLength = FenixSnackbar.LENGTH_SHORT
+
+        // Since the snackbar can be presented in BrowserFragment or in SettingsFragment we must
+        // base our display method on the padSnackbar argument
+        if (args.padSnackbar) {
+            FenixSnackbar.makeWithToolbarPadding(requireView(), snackbarLength)
+                .setText(snackbarText)
+                .show()
+        } else {
+            FenixSnackbar.make(requireView(), snackbarLength)
+                .setText(snackbarText)
+                .show()
+        }
     }
 }

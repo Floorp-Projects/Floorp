@@ -38,7 +38,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.BrowserSnackbarPresenter
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.bookmarkStorage
@@ -87,7 +87,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
             bookmarksController = DefaultBookmarkController(
                 context = context!!,
                 navController = findNavController(),
-                snackbarPresenter = BrowserSnackbarPresenter(view),
+                snackbar = FenixSnackbar.make(view, FenixSnackbar.LENGTH_LONG),
                 deleteBookmarkNodes = ::deleteMulti,
                 invokePendingDeletion = ::invokePendingDeletion
             ),

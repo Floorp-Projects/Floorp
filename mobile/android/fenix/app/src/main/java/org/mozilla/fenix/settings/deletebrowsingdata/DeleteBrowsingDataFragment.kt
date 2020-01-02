@@ -146,7 +146,7 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
 
         updateItemCounts()
 
-        FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_SHORT)
+        FenixSnackbar.makeWithToolbarPadding(requireView(), FenixSnackbar.LENGTH_SHORT)
             .setText(resources.getString(R.string.preferences_delete_browsing_data_snackbar))
             .show()
 

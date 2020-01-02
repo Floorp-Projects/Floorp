@@ -64,7 +64,6 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
 import org.mozilla.fenix.components.FenixSnackbar
-import org.mozilla.fenix.components.BrowserSnackbarPresenter
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
@@ -160,7 +159,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             // browsing data on quit" is activated). After the deletion is over, the snackbar
             // is dismissed.
             val snackbar: FenixSnackbar? = requireActivity().getRootView()?.let { v ->
-                FenixSnackbar.make(v, Snackbar.LENGTH_INDEFINITE)
+                FenixSnackbar.makeWithToolbarPadding(v)
                     .setText(v.context.getString(R.string.deleting_browsing_data_in_progress))
             }
 
@@ -283,12 +282,10 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                         download = download,
                         tryAgain = downloadFeature::tryAgain,
                         onCannotOpenFile = {
-                            BrowserSnackbarPresenter(view).present(
-                                text = context.getString(R.string.mozac_feature_downloads_could_not_open_file),
-                                length = Snackbar.LENGTH_SHORT
-                            )
+                            FenixSnackbar.makeWithToolbarPadding(view, Snackbar.LENGTH_SHORT)
+                                .setText(context.getString(R.string.mozac_feature_downloads_could_not_open_file))
+                                .show()
                         }
-
                     )
                     dialog.show()
                 }
@@ -520,9 +517,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     @CallSuper
     override fun onBackPressed(): Boolean {
         return findInPageIntegration.onBackPressed() ||
-                fullScreenFeature.onBackPressed() ||
-                sessionFeature.onBackPressed() ||
-                removeSessionIfNeeded()
+            fullScreenFeature.onBackPressed() ||
+            sessionFeature.onBackPressed() ||
+            removeSessionIfNeeded()
     }
 
     /**
@@ -703,17 +700,16 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 requireComponents.analytics.metrics.track(Event.AddBookmark)
 
                 view?.let { view ->
-                    BrowserSnackbarPresenter(view).present(
-                        text = getString(R.string.bookmark_saved_snackbar),
-                        action = { nav(
-                            R.id.browserFragment,
-                            BrowserFragmentDirections.actionBrowserFragmentToBookmarkEditFragment(
-                                guid
-                            ))
-                        },
-                        actionName = getString(R.string.edit_bookmark_snackbar_action),
-                        length = Snackbar.LENGTH_LONG
-                    )
+                    FenixSnackbar.makeWithToolbarPadding(view)
+                        .setText(getString(R.string.bookmark_saved_snackbar))
+                        .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
+                            nav(
+                                R.id.browserFragment,
+                                BrowserFragmentDirections.actionBrowserFragmentToBookmarkEditFragment(
+                                    guid
+                                ))
+                        }
+                        .show()
                 }
             }
         }

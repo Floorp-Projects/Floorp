@@ -444,6 +444,10 @@
         android:id="@+id/turnOnSyncFragment"
         android:name="org.mozilla.fenix.settings.account.TurnOnSyncFragment"
         android:label="@string/preferences_sync">
+        <argument
+            android:name="padSnackbar"
+            app:argType="boolean"
+            android:defaultValue="false" />
         <action
             android:id="@+id/action_turnOnSyncFragment_to_pairFragment"
             app:destination="@id/pairFragment" />
@@ -555,7 +559,8 @@
             android:id="@+id/action_shareFragment_to_turnOnSyncFragment"
             app:destination="@+id/turnOnSyncFragment"
             app:popUpTo="@id/shareFragment"
-            app:popUpToInclusive="true" />
+            app:popUpToInclusive="true" >
+        </action>
         <action
             android:id="@+id/action_shareFragment_to_accountProblemFragment"
             app:destination="@id/accountProblemFragment" />

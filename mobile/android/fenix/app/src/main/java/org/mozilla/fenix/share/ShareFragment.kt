@@ -21,7 +21,7 @@ import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.BrowserSnackbarPresenter
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.requireComponents
 
@@ -65,7 +65,7 @@ class ShareFragment : AppCompatDialogFragment() {
             DefaultShareController(
                 context = requireContext(),
                 shareData = shareData,
-                snackbarPresenter = BrowserSnackbarPresenter(requireActivity().getRootView()!!),
+                snackbar = FenixSnackbar.makeWithToolbarPadding(requireActivity().getRootView()!!),
                 navController = findNavController(),
                 sendTabUseCases = SendTabUseCases(accountManager)
             ) { result ->
