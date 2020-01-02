@@ -19,8 +19,17 @@ static bool windowProxy_defineProperty(JSContext* cx, JS::HandleObject obj,
   return NativeDefineProperty(cx, obj.as<js::NativeObject>(), id, desc, result);
 }
 
-static const js::ObjectOps windowProxy_objectOps = {nullptr,
-                                                    windowProxy_defineProperty};
+static const js::ObjectOps windowProxy_objectOps = {
+    nullptr,                     // lookupProperty
+    windowProxy_defineProperty,  // defineProperty
+    nullptr,                     // hasProperty
+    nullptr,                     // getProperty
+    nullptr,                     // setProperty
+    nullptr,                     // getOwnPropertyDescriptor
+    nullptr,                     // deleteProperty
+    nullptr,                     // getElements
+    nullptr,                     // funToString
+};
 
 static const JSClass windowProxy_class = {
     "WindowProxy", 0, nullptr, nullptr, nullptr, &windowProxy_objectOps};
