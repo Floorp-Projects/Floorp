@@ -70,6 +70,8 @@ class MediaFeature(
     }
 
     companion object {
+        const val NOTIFICATION_TAG = "mozac.feature.media.foreground-service"
+        const val PENDING_INTENT_TAG = "mozac.feature.media.pendingintent"
         const val ACTION_SWITCH_TAB = "mozac.feature.media.SWITCH_TAB"
         const val EXTRA_TAB_ID = "mozac.feature.media.TAB_ID"
     }

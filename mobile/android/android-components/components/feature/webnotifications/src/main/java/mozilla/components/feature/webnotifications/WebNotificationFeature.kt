@@ -19,11 +19,13 @@ import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webnotifications.WebNotification
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
+import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.base.log.logger.Logger
 import java.lang.UnsupportedOperationException
 
 private const val NOTIFICATION_CHANNEL_ID = "mozac.feature.webnotifications.generic.channel"
 private const val NOTIFICATION_ID = 1
+private const val PENDING_INTENT_TAG = "mozac.feature.webnotifications.generic.pendingintent"
 
 /**
  * Feature implementation for configuring and displaying web notifications to the user.
@@ -49,7 +51,6 @@ class WebNotificationFeature(
     private val activityClass: Class<out Activity>?
 ) : WebNotificationDelegate {
     private val logger = Logger("WebNotificationFeature")
-    private var pendingRequestId = 0
     private val notificationManager = context.getSystemService<NotificationManager>()
     private val nativeNotificationBridge = NativeNotificationBridge(browserIcons, smallIcon)
 
@@ -65,10 +66,10 @@ class WebNotificationFeature(
         ensureNotificationGroupAndChannelExists()
         notificationManager?.cancel(webNotification.tag, NOTIFICATION_ID)
 
-        pendingRequestId++
         GlobalScope.launch(Dispatchers.IO) {
             val notification = nativeNotificationBridge.convertToAndroidNotification(
-                webNotification, context, NOTIFICATION_CHANNEL_ID, activityClass, pendingRequestId)
+                webNotification, context, NOTIFICATION_CHANNEL_ID, activityClass,
+                SharedIdsHelper.getNextIdForTag(context, PENDING_INTENT_TAG))
             notificationManager?.notify(webNotification.tag, NOTIFICATION_ID, notification)
         }
     }

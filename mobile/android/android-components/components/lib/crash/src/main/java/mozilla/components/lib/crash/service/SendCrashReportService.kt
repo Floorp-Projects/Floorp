@@ -20,9 +20,9 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
 import mozilla.components.lib.crash.notification.CrashNotification
+import mozilla.components.lib.crash.notification.NOTIFICATION_ID
 import mozilla.components.lib.crash.notification.NOTIFICATION_TAG
-import mozilla.components.support.base.ids.NotificationIds
-import mozilla.components.support.base.ids.cancel
+import mozilla.components.support.base.ids.SharedIdsHelper
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -43,11 +43,11 @@ class SendCrashReportService : Service() {
                     .setProgress(0, 0, true)
                     .build()
 
-            val notificationId = NotificationIds.getIdForTag(this, NOTIFICATION_TAG)
+            val notificationId = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
             startForeground(notificationId, notification)
         }
 
-        NotificationManagerCompat.from(this).cancel(this, NOTIFICATION_TAG)
+        NotificationManagerCompat.from(this).cancel(NOTIFICATION_TAG, NOTIFICATION_ID)
         crashReporter.submitReport(Crash.fromIntent(intent))
         stopSelf()
 
