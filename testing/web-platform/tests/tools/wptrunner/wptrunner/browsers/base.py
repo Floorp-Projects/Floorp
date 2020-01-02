@@ -3,6 +3,7 @@ import platform
 import socket
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
+from six import iteritems
 
 from ..wptcommandline import require_arg  # noqa: F401
 
@@ -223,5 +224,5 @@ class ExecutorBrowser(object):
     up the browser from the runner process.
     """
     def __init__(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in iteritems(kwargs):
             setattr(self, k, v)
