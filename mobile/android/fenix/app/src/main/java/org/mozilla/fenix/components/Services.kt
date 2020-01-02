@@ -6,6 +6,7 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import androidx.navigation.NavController
+import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,7 +20,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.test.Mockable
@@ -52,7 +52,7 @@ class Services(
             context,
             interceptLinkClicks = true,
             launchInApp = {
-                context.settings().preferences.getBoolean(
+                PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
                     context.getPreferenceKey(R.string.pref_key_open_links_in_external_app), false)
             }
         )

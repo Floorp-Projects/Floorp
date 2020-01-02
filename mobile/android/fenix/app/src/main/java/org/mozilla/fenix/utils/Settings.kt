@@ -417,4 +417,9 @@ class Settings private constructor(
 
             return false
         }
+
+    var openLinksInExternalApp by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_open_links_in_external_app),
+        default = false
+    )
 }
