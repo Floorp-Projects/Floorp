@@ -21,12 +21,16 @@ interface nsIRunnable : nsISupports
 [scriptable, uuid(e75aa42a-80a9-11e6-afb5-e89d87348e2c)]
 interface nsIRunnablePriority : nsISupports
 {
-    const unsigned short PRIORITY_NORMAL = 0;
-    const unsigned short PRIORITY_INPUT = 1;
-    const unsigned short PRIORITY_HIGH = 2;
-    const unsigned short PRIORITY_MEDIUMHIGH = 3;
-    const unsigned short PRIORITY_IDLE = 4;
-    const unsigned short PRIORITY_DEFERRED_TIMERS = 5;
+    const unsigned short PRIORITY_IDLE = 0;
+    const unsigned short PRIORITY_DEFERRED_TIMERS = 1;
+    // INPUT_LOW isn't supposed to be used directly.
+    // const unsigned short PRIORITY_INPUT_LOW = 2;
+    // HIGH_LOW isn't supposed to be used directly.
+    // const unsigned short PRIORITY_HIGH_LOW = 3;
+    const unsigned short PRIORITY_NORMAL = 4;
+    const unsigned short PRIORITY_MEDIUMHIGH = 5;
+    const unsigned short PRIORITY_INPUT_HIGH = 6;
+    const unsigned short PRIORITY_HIGH = 7;
     readonly attribute unsigned long priority;
 };
 
