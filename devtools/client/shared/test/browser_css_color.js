@@ -104,9 +104,7 @@ function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
     ok(!rgbFail, "color " + rgba + " matches target. Type: " + type);
     if (rgbFail) {
       info(
-        `target: ${JSON.stringify(
-          target
-        )}, color: [r: ${r}, g: ${g}, b: ${b}, a: ${a}]`
+        `target: ${target.toSource()}, color: [r: ${r}, g: ${g}, b: ${b}, a: ${a}]`
       );
     }
 

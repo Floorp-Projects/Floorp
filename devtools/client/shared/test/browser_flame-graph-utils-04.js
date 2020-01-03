@@ -26,7 +26,7 @@ function performTest() {
   ok(out, "Some data was outputted properly");
   is(out.length, PALLETTE_SIZE, "The outputted length is correct.");
 
-  info("Got flame graph data:\n" + JSON.stringify(out) + "\n");
+  info("Got flame graph data:\n" + out.toSource() + "\n");
 
   for (let i = 0; i < out.length; i++) {
     const found = out[i];
