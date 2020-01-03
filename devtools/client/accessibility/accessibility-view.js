@@ -93,6 +93,11 @@ AccessibilityView.prototype = {
     this.mainFrame = ReactDOM.render(provider, container);
   },
 
+  destroy() {
+    const container = document.getElementById("content");
+    ReactDOM.unmountComponentAtNode(container);
+  },
+
   async selectAccessible(walker, accessible) {
     await this.store.dispatch(select(walker, accessible));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_INSPECTED);
