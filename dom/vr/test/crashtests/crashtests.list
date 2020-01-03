@@ -1,0 +1,1 @@
+pref(dom.vr.always_support_vr,true) load enumerate_vr_on_dying_window.html

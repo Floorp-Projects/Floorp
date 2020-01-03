@@ -1519,7 +1519,7 @@ void Navigator::FinishGetVRDisplays(bool isWebVRSupportedInwindow, Promise* p) {
   // response, it's possible that the Window can be torn down before this
   // call. In that case, the Window's cyclic references to VR objects are
   // also torn down and should not be recreated via
-  // NotifyVREventListenerAdded.
+  // NotifyHasXRSession.
   nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
   if (win->IsDying()) {
     // The Window has been torn down, so there is no further work that can
@@ -1563,7 +1563,7 @@ void Navigator::GetActiveVRDisplays(
    * GetActiveVRDisplays should only enumerate displays that
    * are already active without causing any other hardware to be
    * activated.
-   * We must not call nsGlobalWindow::NotifyVREventListenerAdded here,
+   * We must not call nsGlobalWindow::NotifyHasXRSession here,
    * as that would cause enumeration and activation of other VR hardware.
    * Activating VR hardware is intrusive to the end user, as it may
    * involve physically powering on devices that the user did not
@@ -1608,7 +1608,7 @@ void Navigator::NotifyActiveVRDisplaysChanged() {
 VRServiceTest* Navigator::RequestVRServiceTest() {
   // Ensure that the Mock VR devices are not released prematurely
   nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(mWindow);
-  win->NotifyVREventListenerAdded();
+  win->NotifyHasXRSession();
 
   if (!mVRServiceTest) {
     mVRServiceTest = VRServiceTest::CreateTestService(mWindow);
