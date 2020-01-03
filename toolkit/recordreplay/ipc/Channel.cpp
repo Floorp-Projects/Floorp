@@ -34,18 +34,20 @@ static void GetSocketAddress(struct sockaddr_un* addr,
 
 namespace parent {
 
-void OpenChannel(base::ProcessId aMiddlemanPid, uint32_t aChannelId,
+void OpenChannel(base::ProcessId aProcessId, uint32_t aChannelId,
                  ipc::FileDescriptor* aConnection) {
-  MOZ_RELEASE_ASSERT(IsMiddleman() || XRE_IsParentProcess());
-
   int connectionFd = socket(AF_UNIX, SOCK_STREAM, 0);
   MOZ_RELEASE_ASSERT(connectionFd > 0);
 
   struct sockaddr_un addr;
-  GetSocketAddress(&addr, aMiddlemanPid, aChannelId);
+  GetSocketAddress(&addr, aProcessId, aChannelId);
+  DirectDeleteFile(addr.sun_path);
 
   int rv = bind(connectionFd, (sockaddr*)&addr, SUN_LEN(&addr));
-  MOZ_RELEASE_ASSERT(rv >= 0);
+  if (rv < 0) {
+    Print("Error: bind() failed [errno %d], crashing...\n", errno);
+    MOZ_CRASH("OpenChannel");
+  }
 
   *aConnection = ipc::FileDescriptor(connectionFd);
   close(connectionFd);
@@ -53,62 +55,49 @@ void OpenChannel(base::ProcessId aMiddlemanPid, uint32_t aChannelId,
 
 }  // namespace parent
 
-static void InitializeSimulatedDelayState();
-
 struct HelloMessage {
   int32_t mMagic;
 };
 
-Channel::Channel(size_t aId, bool aMiddlemanRecording,
-                 const MessageHandler& aHandler)
+Channel::Channel(size_t aId, Kind aKind, const MessageHandler& aHandler,
+                 base::ProcessId aParentPid)
     : mId(aId),
+      mKind(aKind),
       mHandler(aHandler),
       mInitialized(false),
       mConnectionFd(0),
       mFd(0),
-      mMessageBuffer(nullptr),
-      mMessageBytes(0),
-      mSimulateDelays(false) {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+      mMessageBytes(0) {
+  MOZ_RELEASE_ASSERT(!IsRecordingOrReplaying() || AreThreadEventsPassedThrough());
 
-  if (IsRecordingOrReplaying()) {
-    MOZ_RELEASE_ASSERT(AreThreadEventsPassedThrough());
-
-    mFd = socket(AF_UNIX, SOCK_STREAM, 0);
-    MOZ_RELEASE_ASSERT(mFd > 0);
-
-    struct sockaddr_un addr;
-    GetSocketAddress(&addr, child::MiddlemanProcessId(), mId);
-
-    int rv = HANDLE_EINTR(connect(mFd, (sockaddr*)&addr, SUN_LEN(&addr)));
-    MOZ_RELEASE_ASSERT(rv >= 0);
-
-    DirectDeleteFile(addr.sun_path);
-  } else {
-    MOZ_RELEASE_ASSERT(IsMiddleman());
-
+  if (IsParent()) {
     ipc::FileDescriptor connection;
-    if (aMiddlemanRecording) {
-      // When starting the recording child process we have not done enough
-      // initialization to ask for a channel from the parent, but have also not
-      // started the sandbox so we can do it ourselves.
-      parent::OpenChannel(base::GetCurrentProcId(), mId, &connection);
-    } else {
+    if (aKind == Kind::MiddlemanReplay) {
+      // The middleman is sandboxed at this point and the parent must open
+      // the channel on our behalf.
       dom::ContentChild::GetSingleton()->SendOpenRecordReplayChannel(
-          mId, &connection);
+          aId, &connection);
       MOZ_RELEASE_ASSERT(connection.IsValid());
+    } else {
+      parent::OpenChannel(base::GetCurrentProcId(), aId, &connection);
     }
 
     mConnectionFd = connection.ClonePlatformHandle().release();
     int rv = listen(mConnectionFd, 1);
     MOZ_RELEASE_ASSERT(rv >= 0);
+  } else {
+    MOZ_RELEASE_ASSERT(aParentPid);
+    mFd = socket(AF_UNIX, SOCK_STREAM, 0);
+    MOZ_RELEASE_ASSERT(mFd > 0);
+
+    struct sockaddr_un addr;
+    GetSocketAddress(&addr, aParentPid, aId);
+
+    int rv = HANDLE_EINTR(connect(mFd, (sockaddr*)&addr, SUN_LEN(&addr)));
+    MOZ_RELEASE_ASSERT(rv >= 0);
+
+    DirectDeleteFile(addr.sun_path);
   }
-
-  // Simulate message delays in channels used to communicate with a replaying
-  // process.
-  mSimulateDelays = IsMiddleman() ? !aMiddlemanRecording : IsReplaying();
-
-  InitializeSimulatedDelayState();
 
   Thread::SpawnNonRecordedThread(ThreadMain, this);
 }
@@ -119,15 +108,7 @@ void Channel::ThreadMain(void* aChannelArg) {
 
   static const int32_t MagicValue = 0x914522b9;
 
-  if (IsRecordingOrReplaying()) {
-    HelloMessage msg;
-
-    int rv = HANDLE_EINTR(recv(channel->mFd, &msg, sizeof(msg), MSG_WAITALL));
-    MOZ_RELEASE_ASSERT(rv == sizeof(msg));
-    MOZ_RELEASE_ASSERT(msg.mMagic == MagicValue);
-  } else {
-    MOZ_RELEASE_ASSERT(IsMiddleman());
-
+  if (channel->IsParent()) {
     channel->mFd = HANDLE_EINTR(accept(channel->mConnectionFd, nullptr, 0));
     MOZ_RELEASE_ASSERT(channel->mFd > 0);
 
@@ -136,14 +117,24 @@ void Channel::ThreadMain(void* aChannelArg) {
 
     int rv = HANDLE_EINTR(send(channel->mFd, &msg, sizeof(msg), 0));
     MOZ_RELEASE_ASSERT(rv == sizeof(msg));
-  }
+  } else {
+    HelloMessage msg;
 
-  channel->mStartTime = channel->mAvailableTime = TimeStamp::Now();
+    int rv = HANDLE_EINTR(recv(channel->mFd, &msg, sizeof(msg), MSG_WAITALL));
+    MOZ_RELEASE_ASSERT(rv == sizeof(msg));
+    MOZ_RELEASE_ASSERT(msg.mMagic == MagicValue);
+  }
 
   {
     MonitorAutoLock lock(channel->mMonitor);
     channel->mInitialized = true;
     channel->mMonitor.Notify();
+
+    auto& pending = channel->mPendingData;
+    if (!pending.empty()) {
+      channel->SendRaw(pending.begin(), pending.length());
+      pending.clear();
+    }
   }
 
   while (true) {
@@ -155,103 +146,24 @@ void Channel::ThreadMain(void* aChannelArg) {
   }
 }
 
-// Simulated one way latency between middleman and replaying children, in ms.
-static size_t gSimulatedLatency;
-
-// Simulated bandwidth for data transferred between middleman and replaying
-// children, in bytes/ms.
-static size_t gSimulatedBandwidth;
-
-static size_t LoadEnvValue(const char* aEnv) {
-  const char* value = getenv(aEnv);
-  if (value && value[0]) {
-    int n = atoi(value);
-    return n >= 0 ? n : 0;
-  }
-  return 0;
-}
-
-static void InitializeSimulatedDelayState() {
-  // In preparation for shifting computing resources into the cloud when
-  // debugging a recorded execution (see bug 1547081), we need to be able to
-  // test expected performance when there is a significant distance between the
-  // user's machine (running the UI, middleman, and recording process) and
-  // machines in the cloud (running replaying processes). To assess this
-  // expected performance, the environment variables below can be used to
-  // specify the one-way latency and bandwidth to simulate for connections
-  // between the middleman and replaying processes.
-  //
-  // This simulation is approximate: the bandwidth tracked is per connection
-  // instead of the total across all connections, and network restrictions are
-  // not yet simulated when transferring graphics data.
-  //
-  // If there are multiple channels then we will do this initialization multiple
-  // times, so this needs to be idempotent.
-  gSimulatedLatency = LoadEnvValue("MOZ_RECORD_REPLAY_SIMULATED_LATENCY");
-  gSimulatedBandwidth = LoadEnvValue("MOZ_RECORD_REPLAY_SIMULATED_BANDWIDTH");
-}
-
-static bool MessageSubjectToSimulatedDelay(MessageType aType) {
-  switch (aType) {
-    // Middleman call messages are not subject to delays. When replaying
-    // children are in the cloud they will use a local process to perform
-    // middleman calls.
-    case MessageType::MiddlemanCallResponse:
-    case MessageType::MiddlemanCallRequest:
-    case MessageType::ResetMiddlemanCalls:
-    // Don't call system functions when we're in the process of crashing.
-    case MessageType::BeginFatalError:
-    case MessageType::FatalError:
-      return false;
-    default:
-      return true;
-  }
-}
-
 void Channel::SendMessage(Message&& aMsg) {
-  // Block until the channel is initialized.
-  if (!mInitialized) {
-    MonitorAutoLock lock(mMonitor);
-    while (!mInitialized) {
-      mMonitor.Wait();
-    }
-  }
-
   PrintMessage("SendMsg", aMsg);
+  SendMessageData((const char*)&aMsg, aMsg.mSize);
+}
 
-  if (gSimulatedLatency && gSimulatedBandwidth && mSimulateDelays &&
-      MessageSubjectToSimulatedDelay(aMsg.mType)) {
-    AutoEnsurePassThroughThreadEvents pt;
+void Channel::SendMessageData(const char* aData, size_t aSize) {
+  MonitorAutoLock lock(mMonitor);
 
-    // Find the time this message will start sending.
-    TimeStamp sendTime = TimeStamp::Now();
-    if (sendTime < mAvailableTime) {
-      sendTime = mAvailableTime;
-    }
-
-    // Find the time spent sending the message over the channel.
-    size_t sendDurationMs = aMsg.mSize / gSimulatedBandwidth;
-    mAvailableTime = sendTime + TimeDuration::FromMilliseconds(sendDurationMs);
-
-    // The receive time of the message is the time the message finishes sending
-    // plus the connection latency.
-    TimeStamp receiveTime =
-        mAvailableTime + TimeDuration::FromMilliseconds(gSimulatedLatency);
-
-    aMsg.mReceiveTime = (receiveTime - mStartTime).ToMilliseconds();
+  if (mInitialized) {
+    SendRaw(aData, aSize);
+  } else {
+    mPendingData.append(aData, aSize);
   }
+}
 
-  // Send messages atomically, except when crashing.
-  Maybe<MonitorAutoLock> lock;
-  if (aMsg.mType != MessageType::BeginFatalError &&
-      aMsg.mType != MessageType::FatalError) {
-    lock.emplace(mMonitor);
-  }
-
-  const char* ptr = (const char*)&aMsg;
-  size_t nbytes = aMsg.mSize;
-  while (nbytes) {
-    int rv = HANDLE_EINTR(send(mFd, ptr, nbytes, 0));
+void Channel::SendRaw(const char* aData, size_t aSize) {
+  while (aSize) {
+    int rv = HANDLE_EINTR(send(mFd, aData, aSize, 0));
     if (rv < 0) {
       // If the other side of the channel has crashed, don't send the message.
       // Avoid crashing in this process too, so that we don't generate another
@@ -259,22 +171,20 @@ void Channel::SendMessage(Message&& aMsg) {
       MOZ_RELEASE_ASSERT(errno == EPIPE);
       return;
     }
-    ptr += rv;
-    nbytes -= rv;
+    aData += rv;
+    aSize -= rv;
   }
 }
 
 Message::UniquePtr Channel::WaitForMessage() {
-  if (!mMessageBuffer) {
-    mMessageBuffer = (MessageBuffer*)AllocateMemory(sizeof(MessageBuffer),
-                                                    MemoryKind::Generic);
-    mMessageBuffer->appendN(0, PageSize);
+  if (mMessageBuffer.empty()) {
+    mMessageBuffer.appendN(0, PageSize);
   }
 
   size_t messageSize = 0;
   while (true) {
     if (mMessageBytes >= sizeof(Message)) {
-      Message* msg = (Message*)mMessageBuffer->begin();
+      Message* msg = (Message*)mMessageBuffer.begin();
       messageSize = msg->mSize;
       MOZ_RELEASE_ASSERT(messageSize >= sizeof(Message));
       if (mMessageBytes >= messageSize) {
@@ -283,50 +193,59 @@ Message::UniquePtr Channel::WaitForMessage() {
     }
 
     // Make sure the buffer is large enough for the entire incoming message.
-    if (messageSize > mMessageBuffer->length()) {
-      mMessageBuffer->appendN(0, messageSize - mMessageBuffer->length());
+    if (messageSize > mMessageBuffer.length()) {
+      mMessageBuffer.appendN(0, messageSize - mMessageBuffer.length());
     }
 
     ssize_t nbytes =
-        HANDLE_EINTR(recv(mFd, &mMessageBuffer->begin()[mMessageBytes],
-                          mMessageBuffer->length() - mMessageBytes, 0));
-    if (nbytes < 0) {
-      MOZ_RELEASE_ASSERT(errno == EAGAIN);
+        HANDLE_EINTR(recv(mFd, &mMessageBuffer.begin()[mMessageBytes],
+                          mMessageBuffer.length() - mMessageBytes, 0));
+    if (nbytes < 0 && errno == EAGAIN) {
       continue;
-    } else if (nbytes == 0) {
-      // The other side of the channel has shut down.
-      if (IsMiddleman()) {
-        return nullptr;
-      }
-      PrintSpew("Channel disconnected, exiting...\n");
-      _exit(0);
     }
 
+    if (nbytes == 0 || (nbytes < 0 && errno == ECONNRESET)) {
+      // The other side of the channel has shut down.
+      if (ExitProcessOnDisconnect()) {
+        PrintSpew("Channel disconnected, exiting...\n");
+        _exit(0);
+      } else {
+        // Returning null will shut down the channel.
+        PrintSpew("Channel disconnected, shutting down thread.\n");
+        return nullptr;
+      }
+    }
+
+    MOZ_RELEASE_ASSERT(nbytes > 0);
     mMessageBytes += nbytes;
   }
 
-  Message::UniquePtr res = ((Message*)mMessageBuffer->begin())->Clone();
+  Message::UniquePtr res = ((Message*)mMessageBuffer.begin())->Clone();
 
   // Remove the message we just received from the incoming buffer.
   size_t remaining = mMessageBytes - messageSize;
   if (remaining) {
-    memmove(mMessageBuffer->begin(), &mMessageBuffer->begin()[messageSize],
+    memmove(mMessageBuffer.begin(), &mMessageBuffer[messageSize],
             remaining);
   }
   mMessageBytes = remaining;
 
-  // If there is a simulated delay on the message, wait until it completes.
-  if (res->mReceiveTime) {
-    TimeStamp receiveTime =
-        mStartTime + TimeDuration::FromMilliseconds(res->mReceiveTime);
-    while (receiveTime > TimeStamp::Now()) {
-      MonitorAutoLock lock(mMonitor);
-      mMonitor.WaitUntil(receiveTime);
-    }
-  }
-
   PrintMessage("RecvMsg", *res);
   return res;
+}
+
+void Channel::ExitIfNotInitializedBefore(const TimeStamp& aDeadline) {
+  MOZ_RELEASE_ASSERT(IsParent());
+
+  MonitorAutoLock lock(mMonitor);
+  while (!mInitialized) {
+    if (TimeStamp::Now() >= aDeadline) {
+      PrintSpew("Timed out waiting for channel initialization, exiting...\n");
+      _exit(0);
+    }
+
+    mMonitor.WaitUntil(aDeadline);
+  }
 }
 
 void Channel::PrintMessage(const char* aPrefix, const Message& aMsg) {
@@ -349,13 +268,19 @@ void Channel::PrintMessage(const char* aPrefix, const Message& aMsg) {
           nsDependentSubstring(nmsg.Buffer(), nmsg.BufferSize()));
       break;
     }
+    case MessageType::RecordingData: {
+      const auto& nmsg = static_cast<const RecordingDataMessage&>(aMsg);
+      data = nsPrintfCString("Start %llu Size %lu", nmsg.mTag,
+                             nmsg.BinaryDataSize());
+      break;
+    }
     default:
       break;
   }
   const char* kind =
       IsMiddleman() ? "Middleman" : (IsRecording() ? "Recording" : "Replaying");
-  PrintSpew("%s%s:%d %s %s\n", kind, aPrefix, (int)mId, aMsg.TypeString(),
-            data.get());
+  PrintSpew("%s%s:%lu:%lu %s %s\n", kind, aPrefix, mId, aMsg.mForkId,
+            aMsg.TypeString(), data.get());
 }
 
 }  // namespace recordreplay

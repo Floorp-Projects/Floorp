@@ -159,28 +159,6 @@ static bool AlwaysForwardMessage(const IPC::Message& aMessage) {
   return type == dom::PBrowser::Msg_Destroy__ID;
 }
 
-static bool gMainThreadIsWaitingForIPDLReply = false;
-
-bool MainThreadIsWaitingForIPDLReply() {
-  return gMainThreadIsWaitingForIPDLReply;
-}
-
-// Helper for places where the main thread will block while waiting on a
-// synchronous IPDL reply from a child process. Incoming messages from the
-// child must be handled immediately.
-struct MOZ_RAII AutoMarkMainThreadWaitingForIPDLReply {
-  AutoMarkMainThreadWaitingForIPDLReply() {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    MOZ_RELEASE_ASSERT(!gMainThreadIsWaitingForIPDLReply);
-    ResumeBeforeWaitingForIPDLReply();
-    gMainThreadIsWaitingForIPDLReply = true;
-  }
-
-  ~AutoMarkMainThreadWaitingForIPDLReply() {
-    gMainThreadIsWaitingForIPDLReply = false;
-  }
-};
-
 static void BeginShutdown() {
   // If there is a channel error or anything that could result from the child
   // crashing, cleanly shutdown this process so that we don't generate a
@@ -301,10 +279,7 @@ class MiddlemanProtocol : public ipc::IToplevelProtocol {
         "StaticMaybeSendSyncMessage", StaticMaybeSendSyncMessage, this));
 
     if (mSide == ipc::ChildSide) {
-      AutoMarkMainThreadWaitingForIPDLReply blocked;
-      while (!mSyncMessageReply) {
-        MOZ_CRASH("NYI");
-      }
+      MOZ_CRASH("NYI");
     } else {
       MonitorAutoLock lock(*gMonitor);
 
