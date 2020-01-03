@@ -340,9 +340,7 @@ nsIContent* nsResizerFrame::GetContentToResize(mozilla::PresShell* aPresShell,
     }
 
     // don't allow resizing windows in content shells
-    nsCOMPtr<nsIDocShellTreeItem> dsti =
-        aPresShell->GetPresContext()->GetDocShell();
-    if (!dsti || dsti->ItemType() != nsIDocShellTreeItem::typeChrome) {
+    if (aPresShell->GetPresContext()->IsChrome()) {
       // don't allow resizers in content shells, except for the viewport
       // scrollbar which doesn't have a parent
       nsIContent* nonNativeAnon =
