@@ -3014,8 +3014,8 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
         let el = this.curBrowser.seenEls.get(webEl, win);
         rect = el.getBoundingClientRect();
       } else if (full) {
-        let clientRect = win.document.documentElement.getBoundingClientRect();
-        rect = new win.DOMRect(0, 0, clientRect.width, clientRect.height);
+        const docEl = win.document.documentElement;
+        rect = new DOMRect(0, 0, docEl.scrollWidth, docEl.scrollHeight);
       } else {
         // viewport
         rect = new win.DOMRect(

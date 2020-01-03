@@ -1663,8 +1663,8 @@ function getScreenshotRect({ el, full = true, scroll = true } = {}) {
     }
     rect = getElementRect(el);
   } else if (full) {
-    let clientRect = win.document.documentElement.getBoundingClientRect();
-    rect = new DOMRect(0, 0, clientRect.width, clientRect.height);
+    const docEl = win.document.documentElement;
+    rect = new DOMRect(0, 0, docEl.scrollWidth, docEl.scrollHeight);
   } else {
     // viewport
     rect = new DOMRect(
