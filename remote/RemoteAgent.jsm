@@ -76,9 +76,7 @@ class RemoteAgentClass {
       this.server.registerPathHandler(target.path, target);
     });
     this.targets.on("target-destroyed", (eventName, target) => {
-      // TODO: removes the entry added by registerPathHandler,
-      // but we should instead have nsIHttpServer.unregisterPathHandler
-      delete this.server._handler._overridePaths[target.path];
+      this.server.registerPathHandler(target.path, null);
     });
 
     return this.asyncListen(host, port);
