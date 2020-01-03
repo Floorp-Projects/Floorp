@@ -77,10 +77,13 @@ const {
  * the devtools panel. By forcing a theme here, we're unaffected by
  * the devtools setting when we show the popup.
  */
-document.documentElement.setAttribute(
-  "force-theme",
-  window.gIsDarkMode ? "dark" : "light"
-);
+{
+  const popupWindow = /** @type {PopupWindow} */ (window);
+  document.documentElement.setAttribute(
+    "force-theme",
+    popupWindow.gIsDarkMode ? "dark" : "light"
+  );
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   gInit();
