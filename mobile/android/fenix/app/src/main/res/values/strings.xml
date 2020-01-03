@@ -426,6 +426,8 @@
     <string name="collection_rename">Rename collection</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Open tabs</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Remove</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->

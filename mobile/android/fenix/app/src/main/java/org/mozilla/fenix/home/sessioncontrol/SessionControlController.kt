@@ -17,13 +17,16 @@ import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.TabCollectionStorage
+import org.mozilla.fenix.components.TopSiteStorage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -83,6 +86,11 @@ interface SessionControlController {
     fun handleDeleteCollectionTapped(collection: TabCollection)
 
     /**
+     * @see [TopSiteInteractor.onOpenInPrivateTabClicked]
+     */
+    fun handleOpenInPrivateTabClicked(topSite: TopSite)
+
+    /**
      * @see [TabSessionInteractor.onPauseMediaClicked]
      */
     fun handlePauseMediaClicked()
@@ -96,6 +104,11 @@ interface SessionControlController {
      * @see [TabSessionInteractor.onPrivateBrowsingLearnMoreClicked]
      */
     fun handlePrivateBrowsingLearnMoreClicked()
+
+    /**
+     * @see [TopSiteInteractor.onRemoveTopSiteClicked]
+     */
+    fun handleRemoveTopSiteClicked(topSite: TopSite)
 
     /**
      * @see [CollectionInteractor.onRenameCollectionTapped]
@@ -133,7 +146,7 @@ interface SessionControlController {
     fun handleToggleCollectionExpanded(collection: TabCollection, expand: Boolean)
 }
 
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "LargeClass")
 class DefaultSessionControlController(
     private val activity: HomeActivity,
     private val store: HomeFragmentStore,
@@ -156,6 +169,8 @@ class DefaultSessionControlController(
         get() = activity.components.core.sessionManager
     private val tabCollectionStorage: TabCollectionStorage
         get() = activity.components.core.tabCollectionStorage
+    private val topSiteStorage: TopSiteStorage
+        get() = activity.components.core.topSiteStorage
 
     override fun handleCloseTab(sessionId: String) {
         closeTab.invoke(sessionId)
@@ -244,6 +259,17 @@ class DefaultSessionControlController(
         showDeleteCollectionPrompt(collection)
     }
 
+    override fun handleOpenInPrivateTabClicked(topSite: TopSite) {
+        with(activity) {
+            browsingModeManager.mode = BrowsingMode.Private
+            openToBrowserAndLoad(
+                searchTermOrURL = topSite.url,
+                newTab = true,
+                from = BrowserDirection.FromHome
+            )
+        }
+    }
+
     override fun handlePauseMediaClicked() {
         MediaStateMachine.state.pauseIfPlaying()
     }
@@ -259,6 +285,12 @@ class DefaultSessionControlController(
             newTab = true,
             from = BrowserDirection.FromHome
         )
+    }
+
+    override fun handleRemoveTopSiteClicked(topSite: TopSite) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            topSiteStorage.removeTopSite(topSite)
+        }
     }
 
     override fun handleRenameCollectionTapped(collection: TabCollection) {
