@@ -172,7 +172,7 @@ def add_try_task_duplicates(taskgraph, label_to_taskid, parameters, graph_config
     rebuild = try_config.get('rebuild')
     if rebuild:
         for task in taskgraph.tasks.itervalues():
-            if task.label in self.try_config.get('tasks', []):
+            if task.label in try_config.get('tasks', []):
                 task.attributes['task_duplicates'] = rebuild
     return taskgraph, label_to_taskid
 
