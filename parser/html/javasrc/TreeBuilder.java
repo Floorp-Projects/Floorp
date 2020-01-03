@@ -719,8 +719,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     tokenizer.setState(Tokenizer.DATA);
                 }
             }
-            contextName = null;
-            contextNode = null;
         } else {
             mode = INITIAL;
             // If we are viewing XML source, put a foreign element permanently
@@ -1631,6 +1629,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     public final void endTokenization() throws SAXException {
         formPointer = null;
         headPointer = null;
+        contextName = null;
+        contextNode = null;
         templateModeStack = null;
         if (stack != null) {
             while (currentPtr > -1) {
