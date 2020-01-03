@@ -815,6 +815,7 @@ bool ExceptionHandler::Setup(bool install_handler) {
   // exception ports for it to monitor.
   if (result == KERN_SUCCESS && !mozilla::recordreplay::IsReplaying()) {
     // Install the handler in its own thread, detached as we won't be joining.
+    mozilla::recordreplay::AutoPassThroughThreadEvents pt;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
