@@ -633,13 +633,18 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 f.write(json.dumps({"jobs": video_jobs}))
 
             # file that will contain browser application data so vismet task can grab it
-            # and use it inside its perfherder data output
+            # and use it inside its perfherder data output; at this point the version is
+            # not available for all apps/browsers so if it doesn't exist just set it to 'n/a'
+            if self.browser_version is None:
+                self.browser_version = "n/a"
+
             app_data = {
                 'application': {
                     'name': self.browser_name,
                     'version': self.browser_version,
                 },
             }
+
             app_file = os.path.join(self.result_dir(), "application.json")
             LOG.info("Writing application data {} into {}".format(app_data, app_file))
             with open(app_file, "w") as f:
