@@ -38,12 +38,6 @@
 - (nsCOMPtr<nsITouchBarInputCallback>)callback {
   return mCallback;
 }
-- (RefPtr<Document>)document {
-  return mDocument;
-}
-- (BOOL)isIconPositionSet {
-  return mIsIconPositionSet;
-}
 - (NSMutableArray<TouchBarInput*>*)children {
   return mChildren;
 }
@@ -100,18 +94,6 @@
   mCallback = aCallback;
 }
 
-- (void)setDocument:(RefPtr<Document>)aDocument {
-  if (mIcon) {
-    mIcon->Destroy();
-    mIcon = nil;
-  }
-  mDocument = aDocument;
-}
-
-- (void)setIconPositionSet:(BOOL)aIsIconPositionSet {
-  mIsIconPositionSet = aIsIconPositionSet;
-}
-
 - (void)setChildren:(NSMutableArray<TouchBarInput*>*)aChildren {
   [aChildren retain];
   for (TouchBarInput* child in mChildren) {
@@ -129,7 +111,6 @@
          callback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback
             color:(uint32_t)aColor
          disabled:(BOOL)aDisabled
-         document:(RefPtr<Document>)aDocument
          children:(nsCOMPtr<nsIArray>)aChildren {
   if (self = [super init]) {
     [self setKey:aKey];
@@ -137,8 +118,6 @@
     [self setImageURI:aImageURI];
     [self setType:aType];
     [self setCallback:aCallback];
-    [self setDocument:aDocument];
-    [self setIconPositionSet:false];
     [self setDisabled:aDisabled];
     if (aColor) {
       [self setColor:[NSColor colorWithDisplayP3Red:((aColor >> 16) & 0xFF) / 255.0
@@ -210,12 +189,6 @@
     return nil;
   }
 
-  RefPtr<Document> document;
-  rv = aInput->GetDocument(getter_AddRefs(document));
-  if (NS_FAILED(rv)) {
-    return nil;
-  }
-
   nsCOMPtr<nsIArray> children;
   rv = aInput->GetChildren(getter_AddRefs(children));
   if (NS_FAILED(rv)) {
@@ -229,18 +202,16 @@
                   callback:callback
                      color:colorInt
                   disabled:(BOOL)disabled
-                  document:document
                   children:children];
 }
 
 - (void)releaseJSObjects {
   if (mIcon) {
-    mIcon->ReleaseJSObjects();
+    mIcon->Destroy();
+    mIcon = nil;
   }
-
   [self setCallback:nil];
   [self setImageURI:nil];
-  [self setDocument:nil];
   for (TouchBarInput* child in mChildren) {
     [child releaseJSObjects];
   }

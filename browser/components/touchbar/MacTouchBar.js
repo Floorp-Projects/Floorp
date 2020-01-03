@@ -313,6 +313,13 @@ class TouchBarHelper {
     return BrowserWindowTracker.getTopWindow();
   }
 
+  get document() {
+    if (!TouchBarHelper.window) {
+      return null;
+    }
+    return TouchBarHelper.window.document;
+  }
+
   get isUrlbarFocused() {
     if (!TouchBarHelper.window || !TouchBarHelper.window.gURLBar) {
       return false;
@@ -559,12 +566,6 @@ class TouchBarInput {
   }
   set image(image) {
     this._image = image;
-  }
-  // Required as context to load our input icons.
-  get document() {
-    return BrowserWindowTracker.getTopWindow()
-      ? BrowserWindowTracker.getTopWindow().document
-      : null;
   }
   get type() {
     return this._type == "" ? "button" : this._type;

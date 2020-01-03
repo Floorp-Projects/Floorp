@@ -26,10 +26,8 @@ class imgRequestProxy;
 
 class nsTouchBarInputIcon : public nsIconLoaderObserver {
  public:
-  explicit nsTouchBarInputIcon(
-      RefPtr<Document> aDocument, NSButton* aButton,
-      NSSharingServicePickerTouchBarItem* aShareScrubber = nil,
-      NSPopoverTouchBarItem* aPopoverItem = nil);
+  explicit nsTouchBarInputIcon(RefPtr<Document> aDocument,
+                               TouchBarInput* aInput, NSTouchBarItem* aItem);
 
  private:
   virtual ~nsTouchBarInputIcon();
@@ -49,7 +47,7 @@ class nsTouchBarInputIcon : public nsIconLoaderObserver {
   // this from happening.
   void Destroy();
 
-  void ReleaseJSObjects() { mDocument = nil; }
+  void ReleaseJSObjects();
 
  protected:
   RefPtr<Document> mDocument;
