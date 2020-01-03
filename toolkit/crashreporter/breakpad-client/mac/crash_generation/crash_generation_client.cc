@@ -40,13 +40,14 @@ bool CrashGenerationClient::RequestDumpForException(
     int exception_type,
     int exception_code,
     int exception_subcode,
-    mach_port_t crashing_thread) {
+    mach_port_t crashing_thread,
+    mach_port_t crashing_task) {
   // The server will send a message to this port indicating that it
   // has finished its work.
   ReceivePort acknowledge_port;
 
   MachSendMessage message(kDumpRequestMessage);
-  message.AddDescriptor(mach_task_self());            // this task
+  message.AddDescriptor(crashing_task);               // crashing task
   message.AddDescriptor(crashing_thread);             // crashing thread
   message.AddDescriptor(MACH_PORT_NULL);              // handler thread
   message.AddDescriptor(acknowledge_port.GetPort());  // message receive port
