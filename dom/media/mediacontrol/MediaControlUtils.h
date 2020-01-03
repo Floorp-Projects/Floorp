@@ -78,11 +78,23 @@ inline const char* ToPlaybackStateEventStr(
   }
 }
 
-BrowsingContext* GetAliveTopBrowsingContext(BrowsingContext* aBC);
+inline const char* ToControlledMediaStateStr(ControlledMediaState aState) {
+  switch (aState) {
+    case ControlledMediaState::eStarted:
+      return "started";
+    case ControlledMediaState::ePlayed:
+      return "played";
+    case ControlledMediaState::ePaused:
+      return "paused";
+    case ControlledMediaState::eStopped:
+      return "stopped";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid media state.");
+      return "Unknown";
+  }
+}
 
-void NotifyMediaStarted(uint64_t aWindowID);
-void NotifyMediaStopped(uint64_t aWindowID);
-void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible);
+BrowsingContext* GetAliveTopBrowsingContext(BrowsingContext* aBC);
 
 }  // namespace dom
 }  // namespace mozilla

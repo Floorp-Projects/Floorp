@@ -146,10 +146,6 @@ using namespace mozilla::dom::HTMLMediaElement_Binding;
 namespace mozilla {
 namespace dom {
 
-extern void NotifyMediaStarted(uint64_t aWindowID);
-extern void NotifyMediaStopped(uint64_t aWindowID);
-extern void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible);
-
 using AudibleState = AudioChannelService::AudibleState;
 
 // Number of milliseconds between progress events as defined by spec
@@ -1468,9 +1464,6 @@ class HTMLMediaElement::AudioChannelAgentCallback final
 
     mIsOwnerAudible = newAudibleState;
     mAudioChannelAgent->NotifyStartedAudible(mIsOwnerAudible, aReason);
-    NotifyMediaAudibleChanged(
-        mAudioChannelAgent->WindowID(),
-        mIsOwnerAudible == AudioChannelService::AudibleState::eAudible);
   }
 
   void Shutdown() {
@@ -1523,11 +1516,6 @@ class HTMLMediaElement::AudioChannelAgentCallback final
             mAudioChannelAgent->NotifyStartedPlaying(IsOwnerAudible())))) {
       return;
     }
-
-    NotifyMediaStarted(mAudioChannelAgent->WindowID());
-    NotifyMediaAudibleChanged(
-        mAudioChannelAgent->WindowID(),
-        mIsOwnerAudible == AudioChannelService::AudibleState::eAudible);
     mAudioChannelAgent->PullInitialUpdate();
   }
 
@@ -1535,7 +1523,6 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     MOZ_ASSERT(mAudioChannelAgent);
     MOZ_ASSERT(mAudioChannelAgent->IsPlayingStarted());
     mAudioChannelAgent->NotifyStoppedPlaying();
-    NotifyMediaStopped(mAudioChannelAgent->WindowID());
     // If we have started audio capturing before, we have to tell media element
     // to clear the output capturing track.
     mOwner->AudioCaptureTrackChange(false);

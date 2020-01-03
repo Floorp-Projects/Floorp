@@ -5,18 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaControlUtils.h"
-#include "MediaControlService.h"
 
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/ContentChild.h"
-#include "nsGlobalWindowOuter.h"
 
 mozilla::LazyLogModule gMediaControlLog("MediaControl");
-
-#undef LOG
-#define LOG(msg, ...)                        \
-  MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
-          ("MediaControlUtils, " msg, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
@@ -30,65 +22,6 @@ BrowsingContext* GetAliveTopBrowsingContext(BrowsingContext* aBC) {
     return nullptr;
   }
   return aBC;
-}
-
-static BrowsingContext* GetTopBrowsingContextByWindowID(uint64_t aWindowID) {
-  RefPtr<nsGlobalWindowOuter> window =
-      nsGlobalWindowOuter::GetOuterWindowWithId(aWindowID);
-  if (!window) {
-    return nullptr;
-  }
-
-  return GetAliveTopBrowsingContext(window->GetBrowsingContext());
-}
-
-static void NotifyMediaActiveChanged(const RefPtr<BrowsingContext>& aBc,
-                                     bool aActive) {
-  if (XRE_IsContentProcess()) {
-    ContentChild* contentChild = ContentChild::GetSingleton();
-    Unused << contentChild->SendNotifyMediaActiveChanged(aBc, aActive);
-  } else {
-    RefPtr<MediaController> controller =
-        MediaControlService::GetService()->GetOrCreateControllerById(aBc->Id());
-    controller->NotifyMediaActiveChanged(aActive);
-  }
-}
-
-void NotifyMediaStarted(uint64_t aWindowID) {
-  RefPtr<BrowsingContext> bc = GetTopBrowsingContextByWindowID(aWindowID);
-  if (!bc) {
-    return;
-  }
-  LOG("Notify media started in BC %" PRId64, bc->Id());
-  NotifyMediaActiveChanged(bc, true);
-}
-
-void NotifyMediaStopped(uint64_t aWindowID) {
-  RefPtr<BrowsingContext> bc = GetTopBrowsingContextByWindowID(aWindowID);
-  if (!bc) {
-    return;
-  }
-  LOG("Notify media stopped in BC %" PRId64, bc->Id());
-  NotifyMediaActiveChanged(bc, false);
-}
-
-void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible) {
-  RefPtr<BrowsingContext> bc = GetTopBrowsingContextByWindowID(aWindowID);
-  if (!bc) {
-    return;
-  }
-  LOG("Notify media became %s in BC %" PRId64,
-      aAudible ? "audible" : "inaudible", bc->Id());
-  if (XRE_IsContentProcess()) {
-    ContentChild* contentChild = ContentChild::GetSingleton();
-    Unused << contentChild->SendNotifyMediaAudibleChanged(bc, aAudible);
-  } else {
-    RefPtr<MediaController> controller =
-        MediaControlService::GetService()->GetControllerById(bc->Id());
-    if (controller) {
-      controller->NotifyMediaAudibleChanged(aAudible);
-    }
-  }
 }
 
 }  // namespace dom
