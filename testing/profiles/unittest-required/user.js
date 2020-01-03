@@ -119,7 +119,6 @@ user_pref("extensions.update.background.url", "http://{server}/extensions-dummy/
 user_pref("extensions.update.url", "http://{server}/extensions-dummy/updateURL");
 // Make sure opening about:addons won't hit the network
 user_pref("extensions.webservice.discoverURL", "http://{server}/extensions-dummy/discoveryURL");
-user_pref("extensions.privatebrowsing.notification", true);
 user_pref("findbar.highlightAll", false);
 user_pref("findbar.modalHighlight", false);
 // Existing tests assume there is no font size inflation.
