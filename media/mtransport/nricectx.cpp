@@ -254,8 +254,8 @@ nsresult NrIceTurnServer::ToNicerTurnStruct(nr_ice_turn_server* server) const {
   // C++03 23.2.4, Paragraph 1 stipulates that the elements
   // in std::vector must be contiguous, and can therefore be
   // used as input to functions expecting C arrays.
-  int r = r_data_create(&server->password, const_cast<UCHAR*>(&password_[0]),
-                        password_.size());
+  const UCHAR* data = password_.empty() ? nullptr : &password_[0];
+  int r = r_data_create(&server->password, data, password_.size());
   if (r) {
     RFREE(server->username);
     return NS_ERROR_OUT_OF_MEMORY;
