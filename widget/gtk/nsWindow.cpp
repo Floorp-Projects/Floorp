@@ -4844,6 +4844,7 @@ void nsWindow::UpdateTopLevelOpaqueRegionWayland(bool aSubtractCorners) {
     SubtractTitlebarCorners(region, x, y, width);
   }
   wl_surface_set_opaque_region(surface, region);
+  wl_surface_commit(surface);
   wl_region_destroy(region);
 
   // Set region to mozcontainer which does not have any offset
