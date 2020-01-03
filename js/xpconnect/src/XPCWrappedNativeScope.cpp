@@ -383,10 +383,7 @@ void XPCWrappedNativeScope::SystemIsBeingShutDown() {
     }
     for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
       auto entry = static_cast<Native2WrappedNativeMap::Entry*>(i.Get());
-      XPCWrappedNative* wrapper = entry->value;
-      if (wrapper->IsValid()) {
-        wrapper->SystemIsBeingShutDown();
-      }
+      entry->value->SystemIsBeingShutDown();
       i.Remove();
     }
 
