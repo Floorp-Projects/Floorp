@@ -1346,8 +1346,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(
     case NOTHING: {
       ParentLayerPoint point = GetFirstTouchPoint(aEvent);
       mStartTouch = GetFirstExternalTouchPoint(aEvent);
-      mX.StartTouch(point.x, aEvent.mTime);
-      mY.StartTouch(point.y, aEvent.mTime);
+      StartTouch(point, aEvent.mTime);
       if (RefPtr<GeckoContentController> controller =
               GetGeckoContentController()) {
         MOZ_ASSERT(GetCurrentTouchBlock());
@@ -1553,8 +1552,7 @@ nsEventStatus AsyncPanZoomController::OnScaleBegin(
   // If zooming is not allowed, this is a two-finger pan.
   // Start tracking panning distance and velocity.
   if (!mZoomConstraints.mAllowZoom) {
-    mX.StartTouch(aEvent.mLocalFocusPoint.x, aEvent.mTime);
-    mY.StartTouch(aEvent.mLocalFocusPoint.y, aEvent.mTime);
+    StartTouch(aEvent.mLocalFocusPoint, aEvent.mTime);
   }
 
   // For platforms that don't support APZ zooming, dispatch a message to the
@@ -1763,8 +1761,7 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
   if (aEvent.mLocalFocusPoint != PinchGestureInput::BothFingersLifted()) {
     if (mZoomConstraints.mAllowZoom) {
       mPanDirRestricted = false;
-      mX.StartTouch(aEvent.mLocalFocusPoint.x, aEvent.mTime);
-      mY.StartTouch(aEvent.mLocalFocusPoint.y, aEvent.mTime);
+      StartTouch(aEvent.mLocalFocusPoint, aEvent.mTime);
       SetState(TOUCHING);
     } else {
       // If zooming isn't allowed, StartTouch() was already called
@@ -2467,8 +2464,7 @@ nsEventStatus AsyncPanZoomController::OnPanMayBegin(
     const PanGestureInput& aEvent) {
   APZC_LOG("%p got a pan-maybegin in state %d\n", this, mState);
 
-  mX.StartTouch(aEvent.mLocalPanStartPoint.x, aEvent.mTime);
-  mY.StartTouch(aEvent.mLocalPanStartPoint.y, aEvent.mTime);
+  StartTouch(aEvent.mLocalPanStartPoint, aEvent.mTime);
   MOZ_ASSERT(GetCurrentPanGestureBlock());
   GetCurrentPanGestureBlock()->GetOverscrollHandoffChain()->CancelAnimations();
 
@@ -2494,8 +2490,7 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(
     CancelAnimation();
   }
 
-  mX.StartTouch(aEvent.mLocalPanStartPoint.x, aEvent.mTime);
-  mY.StartTouch(aEvent.mLocalPanStartPoint.y, aEvent.mTime);
+  StartTouch(aEvent.mLocalPanStartPoint, aEvent.mTime);
 
   if (GetAxisLockMode() == FREE) {
     SetState(PANNING);
@@ -3518,6 +3513,12 @@ void AsyncPanZoomController::RecordScrollPayload(const TimeStamp& aTimeStamp) {
     mScrollPayload = Some(
         CompositionPayload{CompositionPayloadType::eAPZScroll, aTimeStamp});
   }
+}
+
+void AsyncPanZoomController::StartTouch(const ParentLayerPoint& aPoint, uint32_t aTime) {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  mX.StartTouch(aPoint.x, aTime);
+  mY.StartTouch(aPoint.y, aTime);
 }
 
 void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
