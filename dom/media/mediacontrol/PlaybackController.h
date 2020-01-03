@@ -47,7 +47,7 @@ class MOZ_STACK_CLASS PlaybackController {
   void SeekTo();
 
  private:
-  RefPtr<nsPIDOMWindowOuter> mWindow;
+  RefPtr<BrowsingContext> mBC;
 };
 
 class MediaActionHandler {

@@ -18,11 +18,7 @@ namespace dom {
 
 PlaybackController::PlaybackController(BrowsingContext* aContext) {
   MOZ_ASSERT(aContext);
-  // TODO : Because of bug 1593826, now we can't ganrantee that we always have
-  // the outer window. In the ideal situation, we should always provide a
-  // correct browsing context which has an outer window, this would be fixed in
-  // bug 1593826.
-  mWindow = aContext->GetDOMWindow();
+  mBC = aContext;
 }
 
 void PlaybackController::Play() {
@@ -40,18 +36,22 @@ void PlaybackController::Play() {
    */
   // Our default behavior is to play all media elements within this window and
   // its children.
-  if (mWindow) {
-    LOG("Handle 'play' in default behavior");
-    mWindow->SetMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED);
+  LOG("Handle 'play' in default behavior");
+  RefPtr<ContentControlKeyEventReceiver> receiver =
+      ContentControlKeyEventReceiver::Get(mBC);
+  if (receiver) {
+    receiver->OnKeyPressed(MediaControlKeysEvent::ePlay);
   }
 };
 
 void PlaybackController::Pause() {
   // TODO : same as Play(), we would provide default action handling if current
   // media session doesn't have an action handler.
-  if (mWindow) {
-    LOG("Handle 'pause' in default behavior");
-    mWindow->SetMediaSuspend(nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE);
+  LOG("Handle 'pause' in default behavior");
+  RefPtr<ContentControlKeyEventReceiver> receiver =
+      ContentControlKeyEventReceiver::Get(mBC);
+  if (receiver) {
+    receiver->OnKeyPressed(MediaControlKeysEvent::ePause);
   }
 }
 
@@ -83,9 +83,11 @@ void PlaybackController::SkipAd() {
 void PlaybackController::Stop() {
   // TODO : same as Play(), we would provide default action handling if current
   // media session doesn't have an action handler.
-  if (mWindow) {
-    LOG("Handle 'stop' in default behavior");
-    mWindow->SetMediaSuspend(nsISuspendedTypes::SUSPENDED_STOP_DISPOSABLE);
+  LOG("Handle 'stop' in default behavior");
+  RefPtr<ContentControlKeyEventReceiver> receiver =
+      ContentControlKeyEventReceiver::Get(mBC);
+  if (receiver) {
+    receiver->OnKeyPressed(MediaControlKeysEvent::eStop);
   }
 }
 
