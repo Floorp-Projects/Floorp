@@ -9,7 +9,7 @@
 
   <script type="text/javascript">
     function messageListener(event) {
-      let message = eval(event.data);
+      let message = event.data;
 
       dump("got message " + JSON.stringify(message) + "\n");
       if (message.source == "parent") {

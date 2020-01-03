@@ -43,7 +43,7 @@ function redirectURL(hops) {
     hops[0].server +
     corsServerPath +
     "?hop=1&hops=" +
-    encodeURIComponent(hops.toSource())
+    encodeURIComponent(JSON.stringify(hops))
   );
 }
 
