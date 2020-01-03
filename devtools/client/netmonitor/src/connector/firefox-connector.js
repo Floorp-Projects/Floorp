@@ -83,8 +83,19 @@ class FirefoxConnector {
       this.tabTarget.on("will-navigate", this.willNavigate);
       this.tabTarget.on("navigate", this.navigate);
 
-      // Initialize Emulation front for network throttling.
-      this.emulationFront = await this.tabTarget.getFront("emulation");
+      // Initialize Responsive Emulation front for network throttling.
+      try {
+        this.responsiveFront = await this.tabTarget.getFront("responsive");
+      } catch (e) {
+        console.error(e);
+      }
+
+      // Bug 1606852: For backwards compatibility, we need to get the emulation actor. The Responsive
+      // actor is only available in Firefox 73 or newer. We can remove this call when Firefox 73
+      // is on release.
+      if (!this.responsiveFront) {
+        this.responsiveFront = await this.tabTarget.getFront("emulation");
+      }
     }
 
     // Displaying cache events is only intended for the UI panel.
@@ -100,9 +111,9 @@ class FirefoxConnector {
 
     this.removeListeners();
 
-    if (this.emulationFront) {
-      this.emulationFront.destroy();
-      this.emulationFront = null;
+    if (this.responsiveFront) {
+      this.responsiveFront.destroy();
+      this.responsiveFront = null;
     }
 
     if (this.webSocketFront) {
@@ -474,11 +485,11 @@ class FirefoxConnector {
 
   async updateNetworkThrottling(enabled, profile) {
     if (!enabled) {
-      await this.emulationFront.clearNetworkThrottling();
+      await this.responsiveFront.clearNetworkThrottling();
     } else {
       const data = throttlingProfiles.find(({ id }) => id == profile);
       const { download, upload, latency } = data;
-      await this.emulationFront.setNetworkThrottling({
+      await this.responsiveFront.setNetworkThrottling({
         downloadThroughput: download,
         uploadThroughput: upload,
         latency,
