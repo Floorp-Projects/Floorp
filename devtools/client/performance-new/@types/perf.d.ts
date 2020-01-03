@@ -362,6 +362,7 @@ export interface PerformancePref {
  */
 export interface PopupWindow extends Window {
   gResizePopup?: (height: number) => void;
+  gIsDarkMode?: boolean;
 }
 
 /**
