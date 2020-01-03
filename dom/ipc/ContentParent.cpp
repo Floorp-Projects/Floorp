@@ -5924,7 +5924,7 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaStateChanged(
   MOZ_ASSERT(!aContext->GetParent(), "Should be top level browsing context!");
   RefPtr<MediaController> controller =
       service->GetOrCreateControllerById(aContext->Id());
-  // TODO : implementation in following patches.
+  controller->NotifyMediaStateChanged(aState);
   return IPC_OK();
 }
 
