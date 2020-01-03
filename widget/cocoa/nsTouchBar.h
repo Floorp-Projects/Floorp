@@ -36,10 +36,11 @@
 
 /**
  * Stores buttons displayed in a NSScrollView. They must be stored separately
- * because they are generic NSButtons and not NSTouchBarItems. As such, they
+ * because they are untethered from the nsTouchBar. As such, they
  * cannot be retrieved with [NSTouchBar itemForIdentifier].
  */
-@property(strong) NSMutableDictionary<NSTouchBarItemIdentifier, NSButton*>* scrollViewButtons;
+@property(strong)
+    NSMutableDictionary<NSTouchBarItemIdentifier, NSCustomTouchBarItem*>* scrollViewButtons;
 
 /**
  * Returns an instance of nsTouchBar based on implementation details
@@ -93,8 +94,9 @@
 /**
  * Update or create various subclasses of TouchBarItem.
  */
-- (void)updateButton:(NSButton*)aButton withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
-- (void)updateMainButton:(NSButton*)aMainButton
+- (void)updateButton:(NSCustomTouchBarItem*)aButton
+      withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
+- (void)updateMainButton:(NSCustomTouchBarItem*)aMainButton
           withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 - (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem
        withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;

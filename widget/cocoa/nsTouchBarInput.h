@@ -12,6 +12,15 @@
 
 using namespace mozilla::dom;
 
+enum class TouchBarInputBaseType : uint8_t {
+  kButton,
+  kLabel,
+  kMainButton,
+  kPopover,
+  kScrollView,
+  kScrubber
+};
+
 class nsTouchBarInputIcon;
 
 /**
@@ -23,6 +32,7 @@ class nsTouchBarInputIcon;
   nsCOMPtr<nsIURI> mImageURI;
   RefPtr<nsTouchBarInputIcon> mIcon;
   NSString* mType;
+  TouchBarInputBaseType mBaseType;
   NSColor* mColor;
   BOOL mDisabled;
   nsCOMPtr<nsITouchBarInputCallback> mCallback;
@@ -36,6 +46,7 @@ class nsTouchBarInputIcon;
 - (nsCOMPtr<nsIURI>)imageURI;
 - (RefPtr<nsTouchBarInputIcon>)icon;
 - (NSString*)type;
+- (TouchBarInputBaseType)baseType;
 - (NSColor*)color;
 - (BOOL)isDisabled;
 - (NSTouchBarItemIdentifier)nativeIdentifier;
