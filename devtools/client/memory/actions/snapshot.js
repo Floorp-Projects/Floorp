@@ -399,7 +399,7 @@ const fetchIndividuals = (exports.fetchIndividuals = function(
       labelDisplay = getState().labelDisplay;
       assert(
         labelDisplay && labelDisplay.breakdown && labelDisplay.breakdown.by,
-        `Should have a breakdown to label nodes with, got: ${JSON.stringify(
+        `Should have a breakdown to label nodes with, got: ${uneval(
           labelDisplay
         )}`
       );
@@ -617,7 +617,7 @@ const fetchDominatorTree = (exports.fetchDominatorTree = TaskCache.declareCachea
         display = getState().labelDisplay;
         assert(
           display && display.breakdown,
-          `Should have a breakdown to describe nodes with, got: ${JSON.stringify(
+          `Should have a breakdown to describe nodes with, got: ${uneval(
             display
           )}`
         );

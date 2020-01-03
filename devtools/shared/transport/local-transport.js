@@ -47,9 +47,9 @@ LocalDebuggerTransport.prototype = {
     if (flags.wantLogging) {
       // Check 'from' first, as 'echo' packets have both.
       if (packet.from) {
-        dumpn("Packet " + serial + " sent from " + JSON.stringify(packet.from));
+        dumpn("Packet " + serial + " sent from " + uneval(packet.from));
       } else if (packet.to) {
-        dumpn("Packet " + serial + " sent to " + JSON.stringify(packet.to));
+        dumpn("Packet " + serial + " sent to " + uneval(packet.to));
       }
     }
     this._deepFreeze(packet);

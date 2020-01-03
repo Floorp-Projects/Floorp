@@ -14,8 +14,8 @@ add_task(function() {
   } = require("devtools/shared/performance/recording-utils");
   const output = getProfileThreadFromAllocations(TEST_DATA);
   equal(
-    JSON.stringify(output),
-    JSON.stringify(EXPECTED_OUTPUT),
+    output.toSource(),
+    EXPECTED_OUTPUT.toSource(),
     "The output is correct."
   );
 });
