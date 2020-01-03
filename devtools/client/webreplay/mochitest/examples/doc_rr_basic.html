@@ -14,7 +14,7 @@ function f() {
     window.setTimeout(recordingFinished);
     return;
   }
-  window.setTimeout(f, 1);
+  window.setTimeout(f, 100);
 }
 function updateNumber() {
   number++;
@@ -31,6 +31,6 @@ function testStepping2() {
   c++;
   c--;
 }
-window.setTimeout(f, 1);
+window.setTimeout(f, 100);
 </script>
 </html>

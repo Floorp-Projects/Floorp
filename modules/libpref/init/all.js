@@ -853,6 +853,7 @@ pref("devtools.recordreplay.includeSystemScripts", false);
 pref("devtools.recordreplay.logging", false);
 pref("devtools.recordreplay.loggingFull", false);
 pref("devtools.recordreplay.fastLogpoints", false);
+pref("devtools.recordreplay.cloudServer", "");
 
 // Preferences for the new performance panel.
 // This pref configures the base URL for the profiler.firefox.com instance to

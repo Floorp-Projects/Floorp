@@ -48,6 +48,8 @@ namespace recordreplay {
   Macro(InternalEndOrderedAtomicAccess, (), ())                                \
   Macro(InternalBeginPassThroughThreadEvents, (), ())                          \
   Macro(InternalEndPassThroughThreadEvents, (), ())                            \
+  Macro(InternalBeginPassThroughThreadEventsWithLocalReplay, (), ())           \
+  Macro(InternalEndPassThroughThreadEventsWithLocalReplay, (), ())             \
   Macro(InternalBeginDisallowThreadEvents, (), ())                             \
   Macro(InternalEndDisallowThreadEvents, (), ())                               \
   Macro(InternalRecordReplayBytes, (void* aData, size_t aSize),                \
@@ -92,7 +94,10 @@ FOR_EACH_INTERFACE_VOID(DECLARE_SYMBOL_VOID)
 static void* LoadSymbol(const char* aName) {
 #ifdef ENABLE_RECORD_REPLAY
   void* rv = dlsym(RTLD_DEFAULT, aName);
-  MOZ_RELEASE_ASSERT(rv);
+  if (!rv) {
+    fprintf(stderr, "Record/Replay LoadSymbol failed: %s\n", aName);
+    MOZ_CRASH("LoadSymbol");
+  }
   return rv;
 #else
   return nullptr;
