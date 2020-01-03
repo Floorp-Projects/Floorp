@@ -27,7 +27,7 @@ const setCensusDisplay = (exports.setCensusDisplay = function(display) {
       display.breakdown &&
       display.breakdown.by,
     "Breakdowns must be an object with a `by` property, attempted to set: " +
-      JSON.stringify(display)
+      uneval(display)
   );
 
   return {
