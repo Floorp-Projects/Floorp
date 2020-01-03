@@ -7,8 +7,10 @@
 #include "MediaControlUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/StaticPtr.h"
 #include "nsDataHashtable.h"
+#include "nsGlobalWindowOuter.h"
 
 namespace mozilla {
 namespace dom {
@@ -94,7 +96,22 @@ void ContentMediaController::NotifyMediaStateChanged(
   if (!mListeners.Contains(aMedia)) {
     return;
   }
-  // TODO : implement in following patches.
+
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(mTopLevelBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  LOG("Notify media %s in BC %" PRId64, ToControlledMediaStateStr(aState),
+      bc->Id());
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyMediaStateChanged(bc, aState);
+  } else {
+    // Currently this only happen when we disable e10s, otherwise all controlled
+    // media would be run in the content process.
+    // TODO : implementation in following patches.
+  }
 }
 
 void ContentMediaController::NotifyAudibleStateChanged(
@@ -103,7 +120,26 @@ void ContentMediaController::NotifyAudibleStateChanged(
   if (!mListeners.Contains(aMedia)) {
     return;
   }
-  // TODO : implement in following patches.
+
+  RefPtr<BrowsingContext> bc = BrowsingContext::Get(mTopLevelBrowsingContextId);
+  if (!bc || bc->IsDiscarded()) {
+    return;
+  }
+
+  LOG("Notify media became %s in BC %" PRId64,
+      aAudible ? "audible" : "inaudible", bc->Id());
+  if (XRE_IsContentProcess()) {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    Unused << contentChild->SendNotifyMediaAudibleChanged(bc, aAudible);
+  } else {
+    // Currently this only happen when we disable e10s, otherwise all controlled
+    // media would be run in the content process.
+    RefPtr<MediaController> controller =
+        MediaControlService::GetService()->GetControllerById(bc->Id());
+    if (controller) {
+      controller->NotifyMediaAudibleChanged(aAudible);
+    }
+  }
 }
 
 void ContentMediaController::OnKeyPressed(MediaControlKeysEvent aEvent) {

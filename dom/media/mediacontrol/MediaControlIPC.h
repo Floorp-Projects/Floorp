@@ -9,6 +9,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 
+#include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/MediaControlKeysEvent.h"
 
 namespace IPC {
@@ -18,6 +19,14 @@ struct ParamTraits<mozilla::dom::MediaControlKeysEvent>
           mozilla::dom::MediaControlKeysEvent,
           mozilla::dom::MediaControlKeysEvent::ePlay,
           mozilla::dom::MediaControlKeysEvent::eStop> {};
+
+template <>
+struct ParamTraits<mozilla::dom::ControlledMediaState>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::dom::ControlledMediaState,
+          mozilla::dom::ControlledMediaState::eStarted,
+          mozilla::dom::ControlledMediaState::eStopped> {};
+
 }  // namespace IPC
 
 #endif  // mozilla_MediaControlIPC_hh
