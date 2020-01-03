@@ -15,9 +15,11 @@ import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
+import mozilla.components.support.test.ext.isLazyInitialized
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -254,5 +256,15 @@ class SentryServiceTest {
             assertTrue(sentryBreadCrumb.type == testType.toSentryBreadcrumbType())
             assertTrue(sentryBreadCrumb.timestamp.compareTo(testDate) == 0)
         }
+    }
+
+    @Test
+    fun `SentryService#client is lazily instantiated (for Fenix perf reasons)`() {
+        val service = SentryService(
+            testContext,
+            "https://not:real6@sentry.prod.example.net/405"
+        )
+
+        assertFalse(service::client.isLazyInitialized)
     }
 }
