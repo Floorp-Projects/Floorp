@@ -4325,11 +4325,15 @@ void AsyncPanZoomController::ReportCheckerboard(const TimeStamp& aSampleTime) {
   bool forTelemetry = Telemetry::CanRecordExtended();
   uint32_t magnitude = GetCheckerboardMagnitude();
 
+  // IsInTransformingState() acquires the APZC lock and thus needs to
+  // be called before acquiring mCheckerboardEventLock.
+  bool inTransformingState = IsInTransformingState();
+
   MutexAutoLock lock(mCheckerboardEventLock);
   if (!mCheckerboardEvent && (recordTrace || forTelemetry)) {
     mCheckerboardEvent = MakeUnique<CheckerboardEvent>(recordTrace);
   }
-  mPotentialCheckerboardTracker.InTransform(IsTransformingState(mState));
+  mPotentialCheckerboardTracker.InTransform(inTransformingState);
   if (magnitude) {
     mPotentialCheckerboardTracker.CheckerboardSeen();
   }
@@ -5118,6 +5122,11 @@ void AsyncPanZoomController::DispatchStateChangeNotification(
 #endif
     }
   }
+}
+
+bool AsyncPanZoomController::IsInTransformingState() const {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  return IsTransformingState(mState);
 }
 
 bool AsyncPanZoomController::IsTransformingState(PanZoomState aState) {
