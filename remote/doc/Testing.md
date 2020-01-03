@@ -108,7 +108,7 @@ Puppeteer tests
 ---------------
 
 In addition to our own Firefox-specific tests, we run the upstream
-[Puppeteer test suite] against our implementation to track progress
+[Puppeteer test suite] against our implementation to [track progress]
 towards achieving full [Puppeteer support] in Firefox.
 
 These tests are vendored under _remote/test/puppeteer/_ and are
@@ -121,5 +121,48 @@ a Tier-3 class test job they’re not automatically scheduled.
 To schedule the tests, look for `source-test-remote-puppeteer` in
 `./mach try fuzzy`.
 
+The tests are written in the behaviour-driven testing framework
+[Mocha], which doesn’t support selecting tests by file path like
+other harnesses.  It does however come with a myriad of flags to
+narrow down the selection a bit: some of the most useful ones include
+[`--grep`], [`--ignore`], and [`--file`].
+
+Perhaps the most useful trick is to rename the `describe()` or
+`it()` functions to `fdescribe()` and `fit()`, respectively, in
+order to run a specific subset of tests.  This does however force
+you to edit the test files manually.
+
+A real-world example:
+
+```diff
+diff --git a/remote/test/puppeteer/test/frame.spec.js b/remote/test/puppeteer/test/frame.spec.js
+index 58e57934a7b8..0531d49d7a12 100644
+--- a/remote/test/puppeteer/test/frame.spec.js
++++ b/remote/test/puppeteer/test/frame.spec.js
+@@ -48,7 +48,7 @@ module.exports.addTests = function({testRunner, expect}) {
+     });
+   });
+
+-  describe('Frame.evaluateHandle', function() {
++  fdescribe('Frame.evaluateHandle', function() {
+     it('should work', async({page, server}) => {
+       await page.goto(server.EMPTY_PAGE);
+       const mainFrame = page.mainFrame();
+@@ -58,7 +58,7 @@ module.exports.addTests = function({testRunner, expect}) {
+   });
+
+   describe('Frame.evaluate', function() {
+-    it('should throw for detached frames', async({page, server}) => {
++    fit('should throw for detached frames', async({page, server}) => {
+       const frame1 = await utils.attachFrame(page, 'frame1', server.EMPTY_PAGE);
+       await utils.detachFrame(page, 'frame1');
+       let error = null;
+```
+
 [Puppeteer test suite]: https://github.com/GoogleChrome/puppeteer/tree/master/test
+[track progress]: https://docs.google.com/spreadsheets/d/1GZ4yO2-NGD6kbsT7aMlUPUpUqTaASpqNxJGKhOQ-_BM/edit#gid=0
 [Puppeteer support]: https://bugzilla.mozilla.org/show_bug.cgi?id=puppeteer
+[Mocha]: https://mochajs.org/
+[`--grep`]: https://mochajs.org/#-grep-regexp-g-regexp
+[`--ignore`]: https://mochajs.org/#-ignore-filedirectoryglob
+[`--file`]: https://mochajs.org/#-file-filedirectoryglob
