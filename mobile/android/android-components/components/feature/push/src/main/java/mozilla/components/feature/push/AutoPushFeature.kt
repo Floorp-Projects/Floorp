@@ -116,7 +116,7 @@ class AutoPushFeature(
      * Starts the push feature and initialization work needed.
      */
     override fun initialize() {
-        // Starts the push feature.
+        // Starts the push feature so that we receive messages if the service is not already started (safe call).
         service.start(context)
 
         // Starts verification of push subscription endpoints.
@@ -128,8 +128,6 @@ class AutoPushFeature(
      * This should only be done on an account logout or app data deletion.
      */
     override fun shutdown() {
-        service.stop()
-
         DeliveryManager.with(connection) {
             scope.launch {
                 unsubscribeAll()

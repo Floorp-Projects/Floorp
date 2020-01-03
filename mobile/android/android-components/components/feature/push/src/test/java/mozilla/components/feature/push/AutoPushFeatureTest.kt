@@ -101,7 +101,6 @@ class AutoPushFeatureTest {
             it.shutdown()
         }
 
-        verify(service).stop()
         verify(connection).unsubscribeAll()
     }
 
