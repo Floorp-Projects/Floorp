@@ -6,7 +6,7 @@
 
 | Name | Summary |
 |---|---|
-| [NotificationIds](-notification-ids/index.md) | `object NotificationIds`<br>Helper for component and app code to use unique notification ids without conflicts. |
+| [SharedIdsHelper](-shared-ids-helper/index.md) | `object SharedIdsHelper`<br>Helper for component and app code to use unique notification ids without conflicts. |
 
 ### Extensions for External Classes
 

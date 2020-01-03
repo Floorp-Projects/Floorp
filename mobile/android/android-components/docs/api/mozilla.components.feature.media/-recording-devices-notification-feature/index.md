@@ -2,7 +2,7 @@
 
 # RecordingDevicesNotificationFeature
 
-`class RecordingDevicesNotificationFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/RecordingDevicesNotificationFeature.kt#L27)
+`class RecordingDevicesNotificationFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/media/src/main/java/mozilla/components/feature/media/RecordingDevicesNotificationFeature.kt#L28)
 
 Feature for displaying an ongoing notification while recording devices (camera, microphone) are used.
 

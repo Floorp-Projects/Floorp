@@ -406,7 +406,6 @@
 | [mozilla.components.browser.engine.system.NestedWebView](../mozilla.components.browser.engine.system/-nested-web-view/index.md) | WebView that supports nested scrolls (for using in a CoordinatorLayout). |
 | [mozilla.components.service.glean.private.NoExtraKeys](../mozilla.components.service.glean.private/-no-extra-keys.md) |  |
 | [mozilla.components.service.sync.logins.NoSuchRecordException](../mozilla.components.service.sync.logins/-no-such-record-exception.md) | This is thrown if `update()` is performed with a record whose ID does not exist. |
-| [mozilla.components.support.base.ids.NotificationIds](../mozilla.components.support.base.ids/-notification-ids/index.md) | Helper for component and app code to use unique notification ids without conflicts. |
 | [androidx.core.app.NotificationManagerCompat](../mozilla.components.support.base.ids/androidx.core.app.-notification-manager-compat/index.md) (extensions in package mozilla.components.support.base.ids) |  |
 | [mozilla.components.concept.sync.OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md) | Facilitates testing consumers of FirefoxAccount. |
 | [mozilla.components.concept.sync.OAuthScopedKey](../mozilla.components.concept.sync/-o-auth-scoped-key/index.md) | Scoped key data. |
@@ -550,6 +549,7 @@
 | [mozilla.components.feature.prompts.share.ShareDelegate](../mozilla.components.feature.prompts.share/-share-delegate/index.md) | Delegate to display a share prompt. |
 | [mozilla.components.service.fxa.sharing.ShareableAccount](../mozilla.components.service.fxa.sharing/-shareable-account/index.md) | Data structure describing an FxA account within another package that may be used to sign-in. |
 | [mozilla.components.service.fxa.sharing.ShareableAuthInfo](../mozilla.components.service.fxa.sharing/-shareable-auth-info/index.md) | Data structure describing FxA and Sync credentials necessary to share an FxA account. |
+| [mozilla.components.support.base.ids.SharedIdsHelper](../mozilla.components.support.base.ids/-shared-ids-helper/index.md) | Helper for component and app code to use unique notification ids without conflicts. |
 | [mozilla.components.support.base.utils.SharedPreferencesCache](../mozilla.components.support.base.utils/-shared-preferences-cache/index.md) | An abstract wrapper around [SharedPreferences](#) which facilitates caching of [T](../mozilla.components.support.base.utils/-shared-preferences-cache/index.md#T) objects. |
 | [mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider](../mozilla.components.browser.domains.autocomplete/-shipped-domains-provider/index.md) | Provides autocomplete functionality for domains based on provided list of assets (see [Domains](../mozilla.components.browser.domains/-domains/index.md)). |
 | [mozilla.components.browser.menu.item.SimpleBrowserMenuItem](../mozilla.components.browser.menu.item/-simple-browser-menu-item/index.md) | A simple browser menu item displaying text. |
