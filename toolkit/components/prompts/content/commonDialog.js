@@ -40,6 +40,9 @@ function commonDialogOnLoad() {
     focusTarget: window,
   };
 
+  // limit the dialog to the screen width
+  document.getElementById("filler").maxWidth = screen.availWidth;
+
   Dialog = new CommonDialog(args, ui);
   document.addEventListener("dialogaccept", function() {
     Dialog.onButton0();
