@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1453693
     if (navigator.platform.indexOf("Mac") === 0) {
       await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
     }
-    win = window.open("file_bug1453693.html", "", "width=300, height=300");
+    win = window.open("file_focus_shadow_dom.html", "", "width=300, height=300");
   }
 
   function didRunTests() {
