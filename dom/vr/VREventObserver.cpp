@@ -157,12 +157,19 @@ void VREventObserver::NotifyVRDisplayPresentChange(uint32_t aDisplayID) {
 
 void VREventObserver::NotifyPresentationGenerationChanged(uint32_t aDisplayID) {
   if (mWindow && mWindow->IsCurrentInnerWindow()) {
-    mWindow->NotifyPresentationGenerationChanged(aDisplayID);
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+    mWindow->NotifyPresentationGenerationChanged(aDisplayID);
   }
 }
 
 void VREventObserver::NotifyEnumerationCompleted() {}
+
+void VREventObserver::NotifyDetectRuntimesCompleted() {
+  if (mWindow && mWindow->IsCurrentInnerWindow()) {
+    MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+    mWindow->NotifyDetectXRRuntimesCompleted();
+  }
+}
 
 }  // namespace dom
 }  // namespace mozilla
