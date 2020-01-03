@@ -446,7 +446,9 @@ enum class Protocol {
  * The subscription information from AutoPush that can be used to send push messages to other devices.
  */
 data class AutoPushSubscription(
+    @Deprecated("There is no longer a use case for the type param. All subscriptions will be received.")
     val type: PushType,
+    val scope: String,
     val endpoint: String,
     val publicKey: String,
     val authKey: String
@@ -470,10 +472,13 @@ data class PushConfig(
 /**
  * A helper to convert the internal data class.
  */
-internal fun SubscriptionResponse.toPushSubscription(): AutoPushSubscription {
-    val type = DeliveryManager.serviceForChannelId(channelID)!!
+internal fun SubscriptionResponse.toPushSubscription(info: Info? = null): AutoPushSubscription {
+    val type = DeliveryManager.serviceForChannelId(channelID)
+    val scope = info?.scope.orEmpty()
+
     return AutoPushSubscription(
         type = type,
+        scope = scope,
         endpoint = subscriptionInfo.endpoint,
         authKey = subscriptionInfo.keys.auth,
         publicKey = subscriptionInfo.keys.p256dh
