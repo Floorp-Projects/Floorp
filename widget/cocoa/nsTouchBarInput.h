@@ -36,8 +36,6 @@ class nsTouchBarInputIcon;
   NSColor* mColor;
   BOOL mDisabled;
   nsCOMPtr<nsITouchBarInputCallback> mCallback;
-  RefPtr<Document> mDocument;
-  BOOL mIsIconPositionSet;
   NSMutableArray<TouchBarInput*>* mChildren;
 }
 
@@ -51,8 +49,6 @@ class nsTouchBarInputIcon;
 - (BOOL)isDisabled;
 - (NSTouchBarItemIdentifier)nativeIdentifier;
 - (nsCOMPtr<nsITouchBarInputCallback>)callback;
-- (RefPtr<Document>)document;
-- (BOOL)isIconPositionSet;
 - (NSMutableArray<TouchBarInput*>*)children;
 - (void)setKey:(NSString*)aKey;
 - (void)setTitle:(NSString*)aTitle;
@@ -62,8 +58,6 @@ class nsTouchBarInputIcon;
 - (void)setColor:(NSColor*)aColor;
 - (void)setDisabled:(BOOL)aDisabled;
 - (void)setCallback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback;
-- (void)setDocument:(RefPtr<Document>)aDocument;
-- (void)setIconPositionSet:(BOOL)aIsIconPositionSet;
 - (void)setChildren:(NSMutableArray<TouchBarInput*>*)aChildren;
 
 - (id)initWithKey:(NSString*)aKey
@@ -73,7 +67,6 @@ class nsTouchBarInputIcon;
          callback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback
             color:(uint32_t)aColor
          disabled:(BOOL)aDisabled
-         document:(RefPtr<Document>)aDocument
          children:(nsCOMPtr<nsIArray>)aChildren;
 
 - (TouchBarInput*)initWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput;

@@ -115,6 +115,11 @@
  */
 - (void)touchBarAction:(id)aSender;
 
+/**
+ * Helper function to initialize a new nsTouchBarInputIcon and load an icon.
+ */
+- (void)loadIconForInput:(TouchBarInput*)aInput forItem:(NSTouchBarItem*)aItem;
+
 - (NSArray*)itemsForSharingServicePickerTouchBarItem:
     (NSSharingServicePickerTouchBarItem*)aPickerTouchBarItem;
 
