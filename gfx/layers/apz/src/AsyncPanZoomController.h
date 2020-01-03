@@ -1049,6 +1049,8 @@ class AsyncPanZoomController {
   ExternalPoint mStartTouch;
 
   Maybe<CompositionPayload> mCompositedScrollPayload;
+
+  // Accessing mScrollPayload needs to be protected by mRecursiveMutex
   Maybe<CompositionPayload> mScrollPayload;
 
   friend class Axis;
