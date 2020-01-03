@@ -1982,11 +1982,6 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateReplayingProcess(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  if (recordreplay::parent::UseCloudForReplayingProcesses()) {
-    recordreplay::parent::CreateReplayingCloudProcess(Pid(), aChannelId);
-    return IPC_OK();
-  }
-
   while (aChannelId >= mReplayingChildren.length()) {
     if (!mReplayingChildren.append(nullptr)) {
       return IPC_FAIL_NO_REASON(this);
@@ -2001,22 +1996,12 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateReplayingProcess(
       Pid(), aChannelId, NS_ConvertUTF16toUTF8(mRecordingFile).get(),
       /* aRecording = */ false, extraArgs);
 
-  GeckoChildProcessHost* child =
+  mReplayingChildren[aChannelId] =
       new GeckoChildProcessHost(GeckoProcessType_Content);
-  mReplayingChildren[aChannelId] = child;
-  if (!child->LaunchAndWaitForProcessHandle(extraArgs)) {
+  if (!mReplayingChildren[aChannelId]->LaunchAndWaitForProcessHandle(
+          extraArgs)) {
     return IPC_FAIL_NO_REASON(this);
   }
-
-  // Replaying processes can fork themselves, and we can get crashes for
-  // them that correspond with one of those forked processes. When the crash
-  // reporter tries to read exception time annotations for one of these crashes,
-  // it hangs because the original replaying process hasn't actually crashed.
-  // Workaround this by removing the file descriptor for exception time
-  // annotations in replaying processes, so that the crash reporter will not
-  // attempt to read them.
-  ProcessId pid = base::GetProcId(child->GetChildProcessHandle());
-  CrashReporter::DeregisterChildCrashAnnotationFileDescriptor(pid);
 
   return IPC_OK();
 }

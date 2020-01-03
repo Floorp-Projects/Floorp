@@ -12,8 +12,9 @@
 namespace mozilla {
 namespace recordreplay {
 
-// BufferStream is a simplified form of Stream from Recording.h, allowing
-// reading or writing to a stream of data backed by an in memory buffer.
+// BufferStream provides similar functionality to Stream in File.h, allowing
+// reading or writing to a stream of data backed by an in memory buffer instead
+// of data stored on disk.
 class BufferStream {
   InfallibleVector<char>* mOutput;
 

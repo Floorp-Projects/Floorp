@@ -617,14 +617,11 @@ class WebReplayPlayer extends Component {
     const atPausedLocation =
       pausedMessage && sameLocation(pausedMessage, message);
 
-    let frameLocation = "";
-    if (message.frame) {
-      const { source, line, column } = message.frame;
-      const filename = source.split("/").pop();
-      frameLocation = `${filename}:${line}`;
-      if (column > 100) {
-        frameLocation += `:${column}`;
-      }
+    const { source, line, column } = message.frame;
+    const filename = source.split("/").pop();
+    let frameLocation = `${filename}:${line}`;
+    if (column > 100) {
+      frameLocation += `:${column}`;
     }
 
     return dom.a({

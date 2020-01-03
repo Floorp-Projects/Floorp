@@ -47,6 +47,8 @@ void Assembler::Advance(size_t aSize) {
   mCursor += aSize;
 }
 
+static const size_t JumpBytes = 17;
+
 uint8_t* Assembler::Current() {
   // Reallocate the buffer if there is not enough space. We need enough for the
   // maximum space used by any of the assembling functions, as well as for a
@@ -55,9 +57,9 @@ uint8_t* Assembler::Current() {
     MOZ_RELEASE_ASSERT(mCanAllocateStorage);
 
     // Allocate some writable, executable memory.
-    static const size_t BufferSize = PageSize * 32;
-    uint8_t* buffer = new uint8_t[BufferSize];
-    UnprotectExecutableMemory(buffer, BufferSize);
+    static const size_t BufferSize = PageSize;
+    uint8_t* buffer = new uint8_t[PageSize];
+    UnprotectExecutableMemory(buffer, PageSize);
 
     if (mCursor) {
       // Patch a jump for fallthrough from the last allocation.
@@ -79,20 +81,16 @@ static void Push16(uint8_t** aIp, uint16_t aValue) {
   (*aIp) += 4;
 }
 
-static void PushImmediateAtIp(uint8_t** aIp, void* aValue) {
+/* static */
+void Assembler::PatchJump(uint8_t* aIp, void* aTarget) {
   // Push the target literal onto the stack, 2 bytes at a time. This is
   // apparently the best way of getting an arbitrary 8 byte literal onto the
   // stack, as 4 byte literals we push will be sign extended to 8 bytes.
-  size_t nvalue = reinterpret_cast<size_t>(aValue);
-  Push16(aIp, nvalue >> 48);
-  Push16(aIp, nvalue >> 32);
-  Push16(aIp, nvalue >> 16);
-  Push16(aIp, nvalue);
-}
-
-/* static */
-void Assembler::PatchJump(uint8_t* aIp, void* aTarget) {
-  PushImmediateAtIp(&aIp, aTarget);
+  size_t ntarget = reinterpret_cast<size_t>(aTarget);
+  Push16(&aIp, ntarget >> 48);
+  Push16(&aIp, ntarget >> 32);
+  Push16(&aIp, ntarget >> 16);
+  Push16(&aIp, ntarget);
   *aIp = 0xC3;  // ret
 }
 
@@ -100,20 +98,6 @@ void Assembler::Jump(void* aTarget) {
   PatchJump(Current(), aTarget);
   mJumps.emplaceBack(Current(), (uint8_t*)aTarget);
   Advance(JumpBytes);
-}
-
-void Assembler::PushImmediate(void* aValue) {
-  uint8_t* ip = Current();
-  PushImmediateAtIp(&ip, aValue);
-  Advance(PushImmediateBytes);
-}
-
-void Assembler::Return() {
-  NewInstruction(0xC3);
-}
-
-void Assembler::Breakpoint() {
-  NewInstruction(0xCC);
 }
 
 static uint8_t OppositeJump(uint8_t aOpcode) {
@@ -172,23 +156,9 @@ void Assembler::CompareRaxWithTopOfStack() {
   NewInstruction(0x48, 0x39, 0x04, 0x24);
 }
 
-void Assembler::CompareTopOfStackWithRax() {
-  NewInstruction(0x48, 0x3B, 0x04, 0x24);
-}
-
 void Assembler::PushRbx() { NewInstruction(0x53); }
 
 void Assembler::PopRbx() { NewInstruction(0x5B); }
-
-void Assembler::PopRegister(/*ud_type*/ int aRegister) {
-  MOZ_RELEASE_ASSERT(aRegister == NormalizeRegister(aRegister));
-
-  if (aRegister <= UD_R_RDI) {
-    NewInstruction(0x58 + aRegister - UD_R_RAX);
-  } else {
-    NewInstruction(0x41, 0x58 + aRegister - UD_R_R8);
-  }
-}
 
 void Assembler::StoreRbxToRax(size_t aWidth) {
   switch (aWidth) {

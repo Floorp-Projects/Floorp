@@ -37,11 +37,19 @@ ChildProcessInfo* GetActiveChild();
 // Get a child process by its ID.
 ChildProcessInfo* GetChildProcess(size_t aId);
 
-// Spawn a new replaying child process with the specified ID.
-void SpawnReplayingChild(size_t aId);
+// Spawn a new replaying child process, returning its ID.
+size_t SpawnReplayingChild();
 
 // Specify the current active child.
 void SetActiveChild(ChildProcessInfo* aChild);
+
+// Return whether the middleman's main thread is blocked waiting on a
+// synchronous IPDL reply from the recording child.
+bool MainThreadIsWaitingForIPDLReply();
+
+// If necessary, resume execution in the child before the main thread begins
+// to block while waiting on an IPDL reply from the child.
+void ResumeBeforeWaitingForIPDLReply();
 
 // Immediately forward any sync child->parent IPDL message. These are sent on
 // the main thread, which might be blocked waiting for a response from the
@@ -55,12 +63,9 @@ void InitializeForwarding();
 // Terminate all children and kill this process.
 void Shutdown();
 
-// All data in the recording.
-extern StaticInfallibleVector<char> gRecordingContents;
-
 // Monitor used for synchronizing between the main and channel or message loop
 // threads.
-extern Monitor* gMonitor;
+static Monitor* gMonitor;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Graphics
@@ -151,29 +156,67 @@ class ChildProcessInfo {
   // Whether this process is recording.
   bool mRecording = false;
 
+  // Whether the process is currently paused.
+  bool mPaused = false;
+
+  // Flags for whether we have received messages from the child indicating it
+  // is crashing.
+  bool mHasBegunFatalError = false;
+  bool mHasFatalError = false;
+
+  // Whether the child might be rewinding and can't receive ping messages.
+  bool mMightRewind = false;
+
+  // Whether the child is considered to be hanged and has been instructed to
+  // crash.
+  bool mSentTerminateMessage = false;
+
+  // The last time we send a ping or terminate message.
+  TimeStamp mLastPingTime;
+
+  struct PingInfo {
+    uint32_t mId;
+    uint64_t mProgress;
+
+    explicit PingInfo(uint32_t aId) : mId(aId), mProgress(0) {}
+  };
+
+  // Information about all pings we have sent since they were reset.
+  InfallibleVector<PingInfo> mPings;
+
   void OnIncomingMessage(const Message& aMsg);
 
   static void MaybeProcessPendingMessageRunnable();
-  static void ReceiveChildMessageOnMainThread(size_t aChildId,
-                                              Message::UniquePtr aMsg);
+  void ReceiveChildMessageOnMainThread(Message::UniquePtr aMsg);
 
-  void OnCrash(size_t aForkId, const char* aWhy);
+  bool IsHanged();
+  void OnPingResponse(const PingResponseMessage& aMsg);
+  void OnCrash(const char* aWhy);
   void LaunchSubprocess(
-      size_t aId, const Maybe<RecordingProcessData>& aRecordingProcessData);
+      const Maybe<RecordingProcessData>& aRecordingProcessData);
 
  public:
   explicit ChildProcessInfo(
-      size_t aId, const Maybe<RecordingProcessData>& aRecordingProcessData);
+      const Maybe<RecordingProcessData>& aRecordingProcessData);
   ~ChildProcessInfo();
 
   size_t GetId() { return mChannel->GetId(); }
   bool IsRecording() { return mRecording; }
+  bool IsPaused() { return mPaused; }
+  bool HasCrashed() { return mHasFatalError; }
 
   // Send a message over the underlying channel.
   void SendMessage(Message&& aMessage);
 
+  // Handle incoming messages from this process (and no others) until it pauses.
+  // The return value is null if it is already paused, otherwise the message
+  // which caused it to pause.
+  void WaitUntilPaused();
+
   static void SetIntroductionMessage(IntroductionMessage* aMessage);
-  static void MaybeProcessNextMessage();
+
+  void ResetPings(bool aMightRewind);
+  void MaybePing();
 };
 
 }  // namespace parent
