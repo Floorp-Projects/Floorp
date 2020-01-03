@@ -44,7 +44,7 @@ function loadIframe() {
     source: "parent",
     href: origin + basePath + "iframe2.html"
   };
-  iframe.contentWindow.postMessage(message.toSource(), "*");
+  iframe.contentWindow.postMessage(message, "*");
 }
 
 function loadThirdPartyIframe() {
@@ -52,7 +52,7 @@ function loadThirdPartyIframe() {
     source: "parent",
     href: thirdPartyOrigin + basePath + "iframe2.html"
   }
-  iframe.contentWindow.postMessage(message.toSource(), "*");
+  iframe.contentWindow.postMessage(message, "*");
 }
 
 function runTest(aExpectedResponses) {
