@@ -107,6 +107,10 @@ void VRManager::ManagerInit() {
 VRManager::VRManager()
     : mState(VRManagerState::Disabled),
       mAccumulator100ms(0.0f),
+      mRuntimeDetectionRequested(false),
+      mRuntimeDetectionCompleted(false),
+      mEnumerationRequested(false),
+      mEnumerationCompleted(false),
       mVRDisplaysRequested(false),
       mVRDisplaysRequestedNonFocus(false),
       mVRControllersRequested(false),
@@ -116,7 +120,7 @@ VRManager::VRManager()
       mCurrentSubmitTask(nullptr),
       mLastSubmittedFrameId(0),
       mLastStartedFrame(0),
-      mEnumerationCompleted(false),
+      mRuntimeSupportFlags(VRDisplayCapabilityFlags::Cap_None),
       mAppPaused(false),
       mShmem(nullptr),
       mHapticPulseRemaining{},
@@ -172,6 +176,15 @@ void VRManager::OpenShmem() {
   } else {
     mShmem->ClearShMem();
   }
+
+  // Reset local information for new connection
+  mDisplayInfo.Clear();
+  mLastUpdateDisplayInfo.Clear();
+  mFrameStarted = false;
+  mBrowserState.Clear();
+  mLastSensorState.Clear();
+  mEnumerationCompleted = false;
+  mDisplayInfo.mGroupMask = kVRGroupContent;
 }
 
 void VRManager::CloseShmem() {
@@ -206,7 +219,10 @@ void VRManager::AddLayer(VRLayerParent* aLayer) {
   }
 
   // Ensure that the content process receives the change immediately
-  RefreshVRDisplays();
+  if (mState != VRManagerState::Enumeration &&
+      mState != VRManagerState::RuntimeDetection) {
+    DispatchVRDisplayInfoUpdate();
+  }
 }
 
 void VRManager::RemoveLayer(VRLayerParent* aLayer) {
@@ -220,7 +236,10 @@ void VRManager::RemoveLayer(VRLayerParent* aLayer) {
   }
 
   // Ensure that the content process receives the change immediately
-  RefreshVRDisplays();
+  if (mState != VRManagerState::Enumeration &&
+      mState != VRManagerState::RuntimeDetection) {
+    DispatchVRDisplayInfoUpdate();
+  }
 }
 
 void VRManager::AddVRManagerParent(VRManagerParent* aVRManagerParent) {
@@ -422,9 +441,7 @@ void VRManager::Run100msTasks() {
   mServiceHost->Refresh();
   CheckForPuppetCompletion();
 #endif
-  RefreshVRDisplays();
-  CheckForInactiveTimeout();
-  CheckForShutdown();
+  ProcessManagerState();
 }
 
 void VRManager::ProcessTelemetryEvent() {
@@ -461,7 +478,9 @@ void VRManager::ProcessTelemetryEvent() {
 void VRManager::CheckForInactiveTimeout() {
   // Shut down the VR devices when not in use
   if (mVRDisplaysRequested || mVRDisplaysRequestedNonFocus ||
-      mVRControllersRequested) {
+      mVRControllersRequested || mEnumerationRequested ||
+      mRuntimeDetectionRequested || mState == VRManagerState::Enumeration ||
+      mState == VRManagerState::RuntimeDetection) {
     // We are using a VR device, keep it alive
     mLastActiveTime = TimeStamp::Now();
   } else if (mLastActiveTime.IsNull()) {
@@ -482,8 +501,7 @@ void VRManager::CheckForInactiveTimeout() {
 
 void VRManager::CheckForShutdown() {
   // Check for remote end shutdown
-  if (mState != VRManagerState::Disabled && mState != VRManagerState::Idle &&
-      mDisplayInfo.mDisplayState.shutdown) {
+  if (mDisplayInfo.mDisplayState.shutdown) {
     Shutdown();
   }
 }
@@ -542,144 +560,310 @@ void VRManager::StartFrame() {
   DispatchVRDisplayInfoUpdate();
 }
 
-void VRManager::EnumerateVRDisplays() {
+void VRManager::DetectRuntimes() {
+  if (mState == VRManagerState::RuntimeDetection) {
+    // Runtime detection has already been started.
+    // This additional request will also receive the
+    // result from the first request.
+    return;
+  }
+
+  // Detect XR runtimes to determine if they are
+  // capable of supporting VR or AR sessions, while
+  // avoiding activating any XR devices or persistent
+  // background software.
+  if (mRuntimeDetectionCompleted) {
+    // We have already detected runtimes, so we can
+    // immediately respond with the same results.
+    // This will require the user to restart the browser
+    // after installing or removing an XR device
+    // runtime.
+    DispatchRuntimeCapabilitiesUpdate();
+    return;
+  }
+  mRuntimeDetectionRequested = true;
+  ProcessManagerState();
+}
+
+void VRManager::EnumerateDevices() {
+  if (mState == VRManagerState::Enumeration) {
+    // Enumeration has already been started.
+    // This additional request will also receive the
+    // result from the first request.
+    return;
+  }
+  // Activate XR runtimes and enumerate XR devices.
+  mEnumerationRequested = true;
+  ProcessManagerState();
+}
+
+void VRManager::ProcessManagerState() {
+  switch (mState) {
+    case VRManagerState::Disabled:
+      ProcessManagerState_Disabled();
+      break;
+    case VRManagerState::Idle:
+      ProcessManagerState_Idle();
+      break;
+    case VRManagerState::RuntimeDetection:
+      ProcessManagerState_DetectRuntimes();
+      break;
+    case VRManagerState::Enumeration:
+      ProcessManagerState_Enumeration();
+      break;
+    case VRManagerState::Active:
+      ProcessManagerState_Active();
+      break;
+    case VRManagerState::Stopping:
+      ProcessManagerState_Stopping();
+      break;
+  }
+  CheckForInactiveTimeout();
+  CheckForShutdown();
+}
+
+void VRManager::ProcessManagerState_Disabled() {
+  MOZ_ASSERT(mState == VRManagerState::Disabled);
+
   if (!StaticPrefs::dom_vr_enabled()) {
     return;
   }
 
-  if (mState == VRManagerState::Disabled) {
+  if (mRuntimeDetectionRequested || mEnumerationRequested ||
+      mVRDisplaysRequested) {
     StartTasks();
     mState = VRManagerState::Idle;
   }
-
-  if (mState == VRManagerState::Idle) {
-    /**
-     * Throttle the rate of enumeration to the interval set in
-     * VRDisplayEnumerateInterval
-     */
-    if (!mLastDisplayEnumerationTime.IsNull()) {
-      TimeDuration duration = TimeStamp::Now() - mLastDisplayEnumerationTime;
-      if (duration.ToMilliseconds() <
-          StaticPrefs::dom_vr_display_enumerate_interval()) {
-        return;
-      }
-    }
-
-    if (!mEarliestRestartTime.IsNull() &&
-        mEarliestRestartTime > TimeStamp::Now()) {
-      // When the VR Service shuts down it informs us of how long we
-      // must wait until we can re-start it.
-      // We must wait until mEarliestRestartTime before attempting
-      // to enumerate again.
-      return;
-    }
-
-    /**
-     * If we get this far, don't try again until
-     * the VRDisplayEnumerateInterval elapses
-     */
-    mLastDisplayEnumerationTime = TimeStamp::Now();
-
-    OpenShmem();
-
-    /**
-     * We must start the VR Service thread
-     * and VR Process before enumeration.
-     * We don't want to start this until we will
-     * actualy enumerate, to avoid continuously
-     * re-launching the thread/process when
-     * no hardware is found or a VR software update
-     * is in progress
-     */
-#if !defined(MOZ_WIDGET_ANDROID)
-    mServiceHost->StartService();
-#endif
-    if (mShmem) {
-      mDisplayInfo.Clear();
-      mLastUpdateDisplayInfo.Clear();
-      mFrameStarted = false;
-      mBrowserState.Clear();
-      mLastSensorState.Clear();
-      mEnumerationCompleted = false;
-      mDisplayInfo.mGroupMask = kVRGroupContent;
-      // We must block until enumeration has completed in order
-      // to signal that the WebVR promise should be resolved at the
-      // right time.
-#if defined(MOZ_WIDGET_ANDROID)
-      // In Android, we need to make sure calling
-      // GeckoVRManager::SetExternalContext() from an external VR service
-      // before doing enumeration.
-      if (!mShmem->GetExternalShmem()) {
-        mShmem->CreateShMemForAndroid();
-      }
-      if (mShmem->GetExternalShmem()) {
-        mState = VRManagerState::Enumeration;
-      }
-#else
-      mState = VRManagerState::Enumeration;
-#endif  // MOZ_WIDGET_ANDROID
-    }
-  }  // if (mState == VRManagerState::Idle)
-
-  if (mState == VRManagerState::Enumeration) {
-    MOZ_ASSERT(mShmem != nullptr);
-
-    PullState();
-    if (mEnumerationCompleted) {
-      if (mDisplayInfo.mDisplayState.isConnected) {
-        mDisplayInfo.mDisplayID = VRManager::AllocateDisplayID();
-        mState = VRManagerState::Active;
-      } else {
-        Shutdown();
-      }
-    }
-  }  // if (mState == VRManagerState::Enumeration)
 }
 
-void VRManager::RefreshVRDisplays(bool aMustDispatch) {
-  uint32_t previousDisplayID = mDisplayInfo.GetDisplayID();
-
+void VRManager::ProcessManagerState_Stopping() {
+  MOZ_ASSERT(mState == VRManagerState::Stopping);
+  PullState();
   /**
-   * If we aren't viewing WebVR content, don't enumerate
-   * new hardware, as it will cause some devices to power on
-   * or interrupt other VR activities.
+   * In the case of Desktop, the VRService shuts itself down.
+   * Before it's finished stopping, it sets a flag in the ShMem
+   * to let VRManager know that it's done.  VRManager watches for
+   * this flag and transitions out of the VRManagerState::Stopping
+   * state to VRManagerState::Idle.
    */
-  if (mVRDisplaysRequested || aMustDispatch) {
-    EnumerateVRDisplays();
-  }
-  if (mState == VRManagerState::Enumeration) {
-    // If we are enumerating VR Displays, do not dispatch
-    // updates until the enumeration has completed.
+#if defined(MOZ_WIDGET_ANDROID)
+  // On Android, the VR service never actually shuts
+  // down or requests VRManager to stop.
+  Shutdown();
+#endif  // defined(MOZ_WIDGET_ANDROID)
+}
+
+void VRManager::ProcessManagerState_Idle_StartEnumeration() {
+  MOZ_ASSERT(mState == VRManagerState::Idle);
+
+  if (!mEarliestRestartTime.IsNull() &&
+      mEarliestRestartTime > TimeStamp::Now()) {
+    // When the VR Service shuts down it informs us of how long we
+    // must wait until we can re-start it.
+    // We must wait until mEarliestRestartTime before attempting
+    // to enumerate again.
     return;
   }
-  bool changed = false;
 
-  if (previousDisplayID != mDisplayInfo.GetDisplayID()) {
-    changed = true;
+  /**
+   * Throttle the rate of enumeration to the interval set in
+   * VRDisplayEnumerateInterval
+   */
+  if (!mLastDisplayEnumerationTime.IsNull()) {
+    TimeDuration duration = TimeStamp::Now() - mLastDisplayEnumerationTime;
+    if (duration.ToMilliseconds() <
+        StaticPrefs::dom_vr_display_enumerate_interval()) {
+      return;
+    }
   }
 
-  if (mState == VRManagerState::Active &&
-      mDisplayInfo != mLastUpdateDisplayInfo) {
-    // This display's info has changed
-    changed = true;
+  /**
+   * If we get this far, don't try again until
+   * the VRDisplayEnumerateInterval elapses
+   */
+  mLastDisplayEnumerationTime = TimeStamp::Now();
+
+  OpenShmem();
+
+  mEnumerationRequested = false;
+  // We must block until enumeration has completed in order
+  // to signal that the WebVR promise should be resolved at the
+  // right time.
+#if defined(MOZ_WIDGET_ANDROID)
+  // In Android, we need to make sure calling
+  // GeckoVRManager::SetExternalContext() from an external VR service
+  // before doing enumeration.
+  if (!mShmem->GetExternalShmem()) {
+    mShmem->CreateShMemForAndroid();
+  }
+  if (mShmem->GetExternalShmem()) {
+    mState = VRManagerState::Enumeration;
+  } else {
+    // Not connected to shmem, so no devices to enumerate.
+    mDisplayInfo.Clear();
+    DispatchVRDisplayInfoUpdate();
+  }
+#else
+
+  PushState();
+
+  /**
+   * We must start the VR Service thread
+   * and VR Process before enumeration.
+   * We don't want to start this until we will
+   * actualy enumerate, to avoid continuously
+   * re-launching the thread/process when
+   * no hardware is found or a VR software update
+   * is in progress
+   */
+  mServiceHost->StartService();
+  mState = VRManagerState::Enumeration;
+#endif  // MOZ_WIDGET_ANDROID
+}
+
+void VRManager::ProcessManagerState_Idle_StartRuntimeDetection() {
+  MOZ_ASSERT(mState == VRManagerState::Idle);
+
+  OpenShmem();
+  mBrowserState.detectRuntimesOnly = true;
+  mRuntimeDetectionRequested = false;
+
+  // We must block until enumeration has completed in order
+  // to signal that the WebVR promise should be resolved at the
+  // right time.
+#if defined(MOZ_WIDGET_ANDROID)
+  // In Android, we need to make sure calling
+  // GeckoVRManager::SetExternalContext() from an external VR service
+  // before doing enumeration.
+  if (!mShmem->GetExternalShmem()) {
+    mShmem->CreateShMemForAndroid();
+  }
+  if (mShmem->GetExternalShmem()) {
+    mState = VRManagerState::RuntimeDetection;
+  } else {
+    // Not connected to shmem, so no runtimes to detect.
+    mRuntimeSupportFlags = VRDisplayCapabilityFlags::Cap_None;
+    mRuntimeDetectionCompleted = true;
+    DispatchRuntimeCapabilitiesUpdate();
+  }
+#else
+
+  PushState();
+
+  /**
+   * We must start the VR Service thread
+   * and VR Process before enumeration.
+   * We don't want to start this until we will
+   * actualy enumerate, to avoid continuously
+   * re-launching the thread/process when
+   * no hardware is found or a VR software update
+   * is in progress
+   */
+  mServiceHost->StartService();
+  mState = VRManagerState::RuntimeDetection;
+#endif  // MOZ_WIDGET_ANDROID
+}
+
+void VRManager::ProcessManagerState_Idle() {
+  MOZ_ASSERT(mState == VRManagerState::Idle);
+
+  if (!mRuntimeDetectionCompleted) {
+    // Check if we should start detecting runtimes
+    // We must alwasy detect runtimes before doing anything
+    // else with the VR process.
+    // This will happen only once per browser startup.
+    if (mRuntimeDetectionRequested || mEnumerationRequested) {
+      ProcessManagerState_Idle_StartRuntimeDetection();
+    }
+    return;
   }
 
-  if (changed || aMustDispatch) {
+  // Check if we should start activating enumerating XR hardware
+  if (mRuntimeDetectionCompleted &&
+      (mVRDisplaysRequested || mEnumerationRequested)) {
+    ProcessManagerState_Idle_StartEnumeration();
+  }
+}
+
+void VRManager::ProcessManagerState_DetectRuntimes() {
+  MOZ_ASSERT(mState == VRManagerState::RuntimeDetection);
+  MOZ_ASSERT(mShmem != nullptr);
+
+  PullState();
+  if (mEnumerationCompleted) {
+    /**
+     * When mBrowserState.detectRuntimesOnly is set, the
+     * VRService and VR process will shut themselves down
+     * automatically after detecting runtimes.
+     * mEnumerationCompleted is also used in this case,
+     * but to mean "enumeration of runtimes" not
+     * "enumeration of VR devices".
+     *
+     * We set mState to `VRManagerState::Stopping`
+     * to make sure that we don't try to do anything
+     * else with the active VRService until it has stopped.
+     * We must start another one when an XR session will be
+     * requested.
+     *
+     * This logic is optimized for the WebXR design, but still
+     * works for WebVR so it can continue to function until
+     * deprecated and removed.
+     */
+    mState = VRManagerState::Stopping;
+    mRuntimeSupportFlags = mDisplayInfo.mDisplayState.capabilityFlags &
+                           (VRDisplayCapabilityFlags::Cap_ImmersiveVR |
+                            VRDisplayCapabilityFlags::Cap_ImmersiveAR);
+    mRuntimeDetectionCompleted = true;
+    DispatchRuntimeCapabilitiesUpdate();
+  }
+}
+
+void VRManager::ProcessManagerState_Enumeration() {
+  MOZ_ASSERT(mState == VRManagerState::Enumeration);
+  MOZ_ASSERT(mShmem != nullptr);
+
+  PullState();
+  if (mEnumerationCompleted) {
+    if (mDisplayInfo.mDisplayState.isConnected) {
+      mDisplayInfo.mDisplayID = VRManager::AllocateDisplayID();
+      mState = VRManagerState::Active;
+    } else {
+      mDisplayInfo.Clear();
+      mState = VRManagerState::Stopping;
+    }
+    DispatchVRDisplayInfoUpdate();
+  }
+}
+
+void VRManager::ProcessManagerState_Active() {
+  MOZ_ASSERT(mState == VRManagerState::Active);
+
+  if (mDisplayInfo != mLastUpdateDisplayInfo) {
+    // While the display is active, send continuous updates
     DispatchVRDisplayInfoUpdate();
   }
 }
 
 void VRManager::DispatchVRDisplayInfoUpdate() {
-  // This could be simplified further by only supporting one display
-  nsTArray<VRDisplayInfo> displayUpdates;
-  if (mState == VRManagerState::Active) {
-    MOZ_ASSERT(mDisplayInfo.mDisplayID != 0);
-    displayUpdates.AppendElement(mDisplayInfo);
-  }
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
-    Unused << iter.Get()->GetKey()->SendUpdateDisplayInfo(displayUpdates);
+    Unused << iter.Get()->GetKey()->SendUpdateDisplayInfo(mDisplayInfo);
   }
   mLastUpdateDisplayInfo = mDisplayInfo;
+}
+
+void VRManager::DispatchRuntimeCapabilitiesUpdate() {
+  VRDisplayCapabilityFlags flags = mRuntimeSupportFlags;
+  if (StaticPrefs::dom_vr_always_support_vr()) {
+    flags |= VRDisplayCapabilityFlags::Cap_ImmersiveVR;
+  }
+
+  if (StaticPrefs::dom_vr_always_support_ar()) {
+    flags |= VRDisplayCapabilityFlags::Cap_ImmersiveAR;
+  }
+
+  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
+    Unused << iter.Get()->GetKey()->SendUpdateRuntimeCapabilities(flags);
+  }
 }
 
 void VRManager::StopAllHaptics() {
@@ -898,11 +1082,31 @@ void VRManager::Shutdown() {
   StopPresentation();
   CancelCurrentSubmitTask();
   ShutdownSubmitThread();
+
   mDisplayInfo.Clear();
   mEnumerationCompleted = false;
 
+  if (mState == VRManagerState::RuntimeDetection) {
+    /**
+     * We have failed to detect runtimes before shutting down.
+     * Ensure that promises are resolved
+     *
+     * This call to DispatchRuntimeCapabilitiesUpdate will only
+     * happen when we have failed to detect runtimes. In that case,
+     * mRuntimeSupportFlags will be 0 and send the correct message
+     * to the content process.
+     *
+     * When we are successful, we store the result in mRuntimeSupportFlags
+     * and never try again unless the browser is restarted. mRuntimeSupportFlags
+     * is never reset back to 0 in that case but we will never re-enter the
+     * VRManagerState::RuntimeDetection state and hit this code path again.
+     */
+    DispatchRuntimeCapabilitiesUpdate();
+  }
+
   if (mState == VRManagerState::Enumeration) {
-    // Ensure that enumeration promises are resolved
+    // We have failed to enumerate VR devices before shutting down.
+    // Ensure that promises are resolved
     DispatchVRDisplayInfoUpdate();
   }
 

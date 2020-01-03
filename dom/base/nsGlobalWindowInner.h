@@ -368,7 +368,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   // Inner windows only.
   virtual void SetHasGamepadEventListener(bool aHasGamepad = true) override;
-  void NotifyVREventListenerAdded();
+  void NotifyHasXRSession();
   bool HasUsedVR() const;
   bool IsVRContentDetected() const;
   bool IsVRContentPresenting() const;
@@ -521,6 +521,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // Inner windows only.
   // Called to inform that the set of active VR displays has changed.
   void NotifyActiveVRDisplaysChanged();
+  void NotifyDetectXRRuntimesCompleted();
   void NotifyPresentationGenerationChanged(uint32_t aDisplayID);
 
   void DispatchVRDisplayActivate(uint32_t aDisplayID,
@@ -1273,11 +1274,16 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // Indicates whether this window wants gamepad input events
   bool mHasGamepad : 1;
 
-  // Indicates whether this window wants VR events
-  bool mHasVREvents : 1;
+  // Indicates whether this window has content that has an XR session
+  // An XR session results in enumeration and activation of XR devices.
+  bool mHasXRSession : 1;
 
   // Indicates whether this window wants VRDisplayActivate events
   bool mHasVRDisplayActivateEvents : 1;
+
+  // Indicates that a request for XR runtime detection has been
+  // requested, but has not yet been resolved
+  bool mXRRuntimeDetectionInFlight : 1;
 
   // Indicates that an XR permission request has been requested
   // but has not yet been resolved.

@@ -89,6 +89,7 @@ add_task(async function setup() {
     set: [
       ["media.navigator.permission.fake", true],
       ["media.navigator.permission.force", true],
+      ["dom.vr.always_support_vr", true],
     ],
   });
 });
