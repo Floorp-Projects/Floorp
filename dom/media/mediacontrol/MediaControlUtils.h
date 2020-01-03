@@ -78,6 +78,8 @@ inline const char* ToPlaybackStateEventStr(
   }
 }
 
+BrowsingContext* GetAliveTopBrowsingContext(BrowsingContext* aBC);
+
 void NotifyMediaStarted(uint64_t aWindowID);
 void NotifyMediaStopped(uint64_t aWindowID);
 void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible);
