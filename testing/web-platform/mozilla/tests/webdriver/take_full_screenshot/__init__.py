@@ -1,7 +1,8 @@
 def document_dimensions(session):
     return tuple(session.execute_script("""
-        let {devicePixelRatio} = window;
-        let {width, height} = document.documentElement.getBoundingClientRect();
+        const {devicePixelRatio} = window;
+        const width = document.documentElement.scrollWidth;
+        const height = document.documentElement.scrollHeight;
 
         return [Math.floor(width * devicePixelRatio), Math.floor(height * devicePixelRatio)];
         """))

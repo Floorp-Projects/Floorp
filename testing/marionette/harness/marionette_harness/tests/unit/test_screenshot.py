@@ -218,7 +218,10 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
     @property
     def scroll_dimensions(self):
         return tuple(self.marionette.execute_script("""
-            return [document.body.scrollWidth, document.body.scrollHeight]
+            return [
+              document.documentElement.scrollWidth,
+              document.documentElement.scrollHeight
+            ];
             """))
 
     def test_capture_tab_already_closed(self):
@@ -266,18 +269,18 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
                          self.get_image_dimensions(screenshot))
         self.assertGreater(self.page_y_offset, 0)
 
-    def test_capture_html_document_element(self):
+    def test_capture_full_html_document_element(self):
         self.marionette.navigate(long)
         screenshot = self.marionette.screenshot()
         self.assert_png(screenshot)
         self.assertEqual(self.scale(self.scroll_dimensions),
                          self.get_image_dimensions(screenshot))
 
-    def test_capture_svg_document_element(self):
+    def test_capture_full_svg_document_element(self):
         self.marionette.navigate(svg)
         screenshot = self.marionette.screenshot()
         self.assert_png(screenshot)
-        self.assertEqual(self.scale(self.get_element_dimensions(self.document_element)),
+        self.assertEqual(self.scale(self.scroll_dimensions),
                          self.get_image_dimensions(screenshot))
 
     def test_capture_viewport(self):
