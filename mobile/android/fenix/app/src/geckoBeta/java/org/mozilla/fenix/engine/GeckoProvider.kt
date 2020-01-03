@@ -40,7 +40,7 @@ object GeckoProvider {
             .debugLogging(Config.channel.isDebug)
             .build()
 
-        Experiments.withExperiment("webrender-performance-comparisson-experiment") {
+        Experiments.withExperiment("webrender-performance-comparison-experiment") {
           branchName ->
             if (branchName == "disable_webrender") {
               runtimeSettings.extras.putInt("forcedisablewebrender", 1)
