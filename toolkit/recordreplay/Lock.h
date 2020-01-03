@@ -10,7 +10,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Types.h"
 
-#include "Recording.h"
+#include "File.h"
 
 namespace mozilla {
 namespace recordreplay {
@@ -29,8 +29,11 @@ class Lock {
   // Unique ID for this lock.
   size_t mId;
 
+  // When replaying, any thread owning this lock as part of the recording.
+  Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve> mOwner;
+
  public:
-  explicit Lock(size_t aId) : mId(aId) { MOZ_ASSERT(aId); }
+  explicit Lock(size_t aId) : mId(aId), mOwner(0) { MOZ_ASSERT(aId); }
 
   size_t Id() { return mId; }
 
@@ -38,26 +41,26 @@ class Lock {
   // records the acquire in the lock's acquire order stream. When replaying,
   // this is called before the lock has been acquired, and blocks the thread
   // until it is next in line to acquire the lock.
-  void Enter(NativeLock* aNativeLock);
+  void Enter();
 
   // This is called before releasing the lock, allowing the next owner to
   // acquire it while replaying.
-  void Exit(NativeLock* aNativeLock);
+  void Exit();
 
   // Create a new Lock corresponding to a native lock, with a fresh ID.
-  static void New(NativeLock* aNativeLock);
+  static void New(void* aNativeLock);
 
   // Destroy any Lock associated with a native lock.
-  static void Destroy(NativeLock* aNativeLock);
+  static void Destroy(void* aNativeLock);
 
   // Get the recorded Lock for a native lock if there is one, otherwise null.
-  static Lock* Find(NativeLock* aNativeLock);
+  static Lock* Find(void* aNativeLock);
 
   // Initialize locking state.
   static void InitializeLocks();
 
   // Note that new data has been read into a lock's acquires stream.
-  static void LockAcquiresUpdated(size_t aLockId);
+  static void LockAquiresUpdated(size_t aLockId);
 };
 
 }  // namespace recordreplay

@@ -371,7 +371,6 @@ bool ExceptionHandler::WriteMinidumpWithException(
     int exception_subcode,
     breakpad_ucontext_t* task_context,
     mach_port_t thread_name,
-    mach_port_t task_name,
     bool exit_after_write,
     bool report_current_thread) {
   bool result = false;
@@ -406,8 +405,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
           exception_type,
           exception_code,
           exception_subcode,
-          thread_name,
-          task_name);
+          thread_name);
       if (result && exit_after_write) {
         _exit(exception_type);
       }
@@ -567,7 +565,7 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
         // Write out the dump and save the result for later retrieval
         self->last_minidump_write_result_ =
           self->WriteMinidumpWithException(exception_type, exception_code,
-                                           0, NULL, thread, mach_task_self(),
+                                           0, NULL, thread,
                                            false, false);
 
 #if USE_PROTECTED_ALLOCATIONS
@@ -603,7 +601,7 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
           // Generate the minidump with the exception data.
           self->WriteMinidumpWithException(receive.exception, receive.code[0],
                                            subcode, NULL, receive.thread.name,
-                                           mach_task_self(),  true, false);
+                                           true, false);
 
 #if USE_PROTECTED_ALLOCATIONS
           // This may have become protected again within
@@ -655,7 +653,6 @@ void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
       0,
       static_cast<breakpad_ucontext_t*>(uc),
       mach_thread_self(),
-      mach_task_self(),
       true,
       true);
 #if USE_PROTECTED_ALLOCATIONS
@@ -668,14 +665,13 @@ void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
 bool ExceptionHandler::WriteForwardedExceptionMinidump(int exception_type,
 						       int exception_code,
 						       int exception_subcode,
-						       mach_port_t thread,
-						       mach_port_t task)
+						       mach_port_t thread)
 {
   if (!gProtectedData.handler) {
     return false;
   }
   return gProtectedData.handler->WriteMinidumpWithException(exception_type, exception_code,
-							    exception_subcode, NULL, thread, task,
+							    exception_subcode, NULL, thread,
 							    /* exit_after_write = */ false,
 							    /* report_current_thread = */ true);
 }
@@ -815,7 +811,6 @@ bool ExceptionHandler::Setup(bool install_handler) {
   // exception ports for it to monitor.
   if (result == KERN_SUCCESS && !mozilla::recordreplay::IsReplaying()) {
     // Install the handler in its own thread, detached as we won't be joining.
-    mozilla::recordreplay::AutoPassThroughThreadEvents pt;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);

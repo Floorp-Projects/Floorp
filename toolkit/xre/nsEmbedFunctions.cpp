@@ -290,7 +290,7 @@ XRE_SetRemoteExceptionHandler(const char* aPipe /*= 0*/,
 XRE_SetRemoteExceptionHandler(const char* aPipe /*= 0*/)
 #endif
 {
-  recordreplay::AutoPassThroughThreadEventsWithLocalReplay pt;
+  recordreplay::AutoPassThroughThreadEvents pt;
 #if defined(XP_WIN)
   return CrashReporter::SetRemoteExceptionHandler(nsDependentCString(aPipe),
                                                   aCrashTimeAnnotationFile);
@@ -435,7 +435,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 
   const char* const mach_port_name = aArgv[--aArgc];
 
-  Maybe<recordreplay::AutoPassThroughThreadEventsWithLocalReplay> pt;
+  Maybe<recordreplay::AutoPassThroughThreadEvents> pt;
   pt.emplace();
 
   const int kTimeoutMs = 1000;

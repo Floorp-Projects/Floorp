@@ -166,10 +166,6 @@ void UpdateGraphicsAfterPaint(const PaintMessage& aMsg) {
 }
 
 void UpdateGraphicsAfterRepaint(const nsACString& aImageData) {
-  if (!gGraphics) {
-    InitGraphicsSandbox();
-  }
-
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), aImageData);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));

@@ -147,28 +147,6 @@ struct MOZ_RAII AutoEnsurePassThroughThreadEvents {
   bool mPassedThrough;
 };
 
-// Mark a region where thread events are passed through when locally replaying.
-// Replaying processes can run either on a local machine as a content process
-// associated with a firefox parent process, or on remote machines in the cloud.
-// We want local replaying processes to be able to interact with the system so
-// that they can connect with the parent process and e.g. report crashes.
-// We also want to avoid such interaction when replaying in the cloud, as there
-// won't be a parent process to connect to. Using these methods allows us to
-// handle both of these cases without changing the calling code's control flow.
-static inline void BeginPassThroughThreadEventsWithLocalReplay();
-static inline void EndPassThroughThreadEventsWithLocalReplay();
-
-// RAII class for regions where thread events are passed through when replaying
-// locally.
-struct MOZ_RAII AutoPassThroughThreadEventsWithLocalReplay {
-  AutoPassThroughThreadEventsWithLocalReplay() {
-    BeginPassThroughThreadEventsWithLocalReplay();
-  }
-  ~AutoPassThroughThreadEventsWithLocalReplay() {
-    EndPassThroughThreadEventsWithLocalReplay();
-  }
-};
-
 // Mark a region where thread events are not allowed to occur. The process will
 // crash immediately if an event does happen.
 static inline void BeginDisallowThreadEvents();
@@ -378,10 +356,6 @@ MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(BeginPassThroughThreadEvents, (), ())
 MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(EndPassThroughThreadEvents, (), ())
 MOZ_MAKE_RECORD_REPLAY_WRAPPER(AreThreadEventsPassedThrough, bool, false, (),
                                ())
-MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(BeginPassThroughThreadEventsWithLocalReplay,
-                                    (), ())
-MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(EndPassThroughThreadEventsWithLocalReplay,
-                                    (), ())
 MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(BeginDisallowThreadEvents, (), ())
 MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(EndDisallowThreadEvents, (), ())
 MOZ_MAKE_RECORD_REPLAY_WRAPPER(AreThreadEventsDisallowed, bool, false, (), ())

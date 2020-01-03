@@ -15,6 +15,7 @@
 #include "js/JSON.h"
 #include "js/PropertySpec.h"
 #include "ChildInternal.h"
+#include "MemorySnapshot.h"
 #include "ParentInternal.h"
 #include "nsImportModule.h"
 #include "rrIControl.h"
@@ -44,37 +45,27 @@ static JSObject* RequireObject(JSContext* aCx, HandleValue aValue) {
   return &aValue.toObject();
 }
 
-static bool RequireNumber(JSContext* aCx, HandleValue aValue, size_t* aNumber) {
+static parent::ChildProcessInfo* GetChildById(JSContext* aCx,
+                                              const Value& aValue,
+                                              bool aAllowUnpaused = false) {
   if (!aValue.isNumber()) {
-    JS_ReportErrorASCII(aCx, "Expected number");
-    return false;
-  }
-  *aNumber = aValue.toNumber();
-  return true;
-}
-
-static parent::ChildProcessInfo* ToChildProcess(JSContext* aCx,
-                                                HandleValue aRootValue,
-                                                HandleValue aForkValue,
-                                                size_t* aForkId) {
-  size_t rootId;
-  if (!RequireNumber(aCx, aRootValue, &rootId) ||
-      !RequireNumber(aCx, aForkValue, aForkId)) {
+    JS_ReportErrorASCII(aCx, "Expected child ID");
     return nullptr;
   }
-  parent::ChildProcessInfo* child = parent::GetChildProcess(rootId);
+  parent::ChildProcessInfo* child = parent::GetChildProcess(aValue.toNumber());
   if (!child) {
     JS_ReportErrorASCII(aCx, "Bad child ID");
     return nullptr;
   }
+  if (child->HasCrashed()) {
+    JS_ReportErrorASCII(aCx, "Child has crashed");
+    return nullptr;
+  }
+  if (!aAllowUnpaused && !child->IsPaused()) {
+    JS_ReportErrorASCII(aCx, "Child is unpaused");
+    return nullptr;
+  }
   return child;
-}
-
-static parent::ChildProcessInfo* ToChildProcess(JSContext* aCx,
-                                                HandleValue aRootValue) {
-  RootedValue forkValue(aCx, Int32Value(0));
-  size_t forkId;
-  return ToChildProcess(aCx, aRootValue, forkValue, &forkId);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,45 +96,21 @@ void SetupMiddlemanControl(const Maybe<size_t>& aRecordingChildId) {
   }
 }
 
-static void ForwardManifestFinished(parent::ChildProcessInfo* aChild,
-                                    size_t aForkId, const char16_t* aBuffer,
-                                    size_t aBufferSize) {
+void ForwardManifestFinished(parent::ChildProcessInfo* aChild,
+                             const Message& aMsg) {
   MOZ_RELEASE_ASSERT(gControl);
+  const auto& nmsg = static_cast<const ManifestFinishedMessage&>(aMsg);
 
   AutoSafeJSContext cx;
   JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
 
   RootedValue value(cx);
-  if (aBufferSize && !JS_ParseJSON(cx, aBuffer, aBufferSize, &value)) {
+  if (nmsg.BufferSize() &&
+      !JS_ParseJSON(cx, nmsg.Buffer(), nmsg.BufferSize(), &value)) {
     MOZ_CRASH("ForwardManifestFinished");
   }
 
-  if (NS_FAILED(gControl->ManifestFinished(aChild->GetId(), aForkId, value))) {
-    MOZ_CRASH("ForwardManifestFinished");
-  }
-}
-
-void ForwardManifestFinished(parent::ChildProcessInfo* aChild,
-                             const ManifestFinishedMessage& aMsg) {
-  ForwardManifestFinished(aChild, aMsg.mForkId, aMsg.Buffer(),
-                          aMsg.BufferSize());
-}
-
-void ForwardUnhandledDivergence(parent::ChildProcessInfo* aChild,
-                                const UnhandledDivergenceMessage& aMsg) {
-  char16_t buf[] = u"{\"unhandledDivergence\":true}";
-  ForwardManifestFinished(aChild, aMsg.mForkId, buf, ArrayLength(buf) - 1);
-}
-
-void ForwardPingResponse(parent::ChildProcessInfo* aChild,
-                         const PingResponseMessage& aMsg) {
-  MOZ_RELEASE_ASSERT(gControl);
-
-  AutoSafeJSContext cx;
-  JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
-
-  if (NS_FAILED(gControl->PingResponse(aChild->GetId(), aMsg.mForkId, aMsg.mId,
-                                       aMsg.mProgress))) {
+  if (NS_FAILED(gControl->ManifestFinished(aChild->GetId(), value))) {
     MOZ_CRASH("ForwardManifestFinished");
   }
 }
@@ -170,13 +137,17 @@ void AfterSaveRecording() {
   }
 }
 
-bool RecoverFromCrash(size_t aRootId, size_t aForkId) {
+bool RecoverFromCrash(parent::ChildProcessInfo* aChild) {
   MOZ_RELEASE_ASSERT(gControl);
 
   AutoSafeJSContext cx;
   JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
 
-  return !NS_FAILED(gControl->ChildCrashed(aRootId, aForkId));
+  if (NS_FAILED(gControl->ChildCrashed(aChild->GetId()))) {
+    return false;
+  }
+
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -239,21 +210,15 @@ static bool Middleman_SpawnReplayingChild(JSContext* aCx, unsigned aArgc,
                                           Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  if (!args.get(0).isNumber()) {
-    JS_ReportErrorASCII(aCx, "Expected numeric argument");
-    return false;
-  }
-
-  size_t id = args.get(0).toNumber();
-  parent::SpawnReplayingChild(id);
-  args.rval().setUndefined();
+  size_t id = parent::SpawnReplayingChild();
+  args.rval().setInt32(id);
   return true;
 }
 
 static bool Middleman_SendManifest(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  RootedObject manifestObject(aCx, RequireObject(aCx, args.get(2)));
+  RootedObject manifestObject(aCx, RequireObject(aCx, args.get(1)));
   if (!manifestObject) {
     return false;
   }
@@ -264,40 +229,34 @@ static bool Middleman_SendManifest(JSContext* aCx, unsigned aArgc, Value* aVp) {
     return false;
   }
 
-  size_t forkId;
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0),
-                                                   args.get(1), &forkId);
+  parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0));
   if (!child) {
     return false;
   }
 
+  bool mightRewind = ToBoolean(args.get(2));
+
   ManifestStartMessage* msg = ManifestStartMessage::New(
-      forkId, manifestBuffer.begin(), manifestBuffer.length());
+      manifestBuffer.begin(), manifestBuffer.length());
   child->SendMessage(std::move(*msg));
   free(msg);
+
+  child->ResetPings(mightRewind);
 
   args.rval().setUndefined();
   return true;
 }
 
-static bool Middleman_Ping(JSContext* aCx, unsigned aArgc, Value* aVp) {
+static bool Middleman_MaybePing(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  size_t forkId;
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0),
-                                                   args.get(1), &forkId);
+  parent::ChildProcessInfo* child =
+      GetChildById(aCx, args.get(0), /* aAllowUnpaused */ true);
   if (!child) {
     return false;
   }
 
-  size_t pingId;
-  if (!RequireNumber(aCx, args.get(2), &pingId)) {
-    return false;
-  }
-
-  child->SendMessage(PingMessage(forkId, pingId));
-
-  args.rval().setUndefined();
+  child->MaybePing();
   return true;
 }
 
@@ -368,34 +327,30 @@ static bool Middleman_InRepaintStressMode(JSContext* aCx, unsigned aArgc,
   return true;
 }
 
-static bool Middleman_CreateCheckpointInRecording(JSContext* aCx,
-                                                  unsigned aArgc, Value* aVp) {
+// Recording children can idle indefinitely while waiting for input, without
+// creating a checkpoint. If this might be a problem, this method induces the
+// child to create a new checkpoint and pause.
+static void MaybeCreateCheckpointInChild(parent::ChildProcessInfo* aChild) {
+  if (aChild->IsRecording() && !aChild->IsPaused()) {
+    aChild->SendMessage(CreateCheckpointMessage());
+  }
+}
+
+static bool Middleman_WaitUntilPaused(JSContext* aCx, unsigned aArgc,
+                                      Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0));
+  parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0),
+                                                 /* aAllowUnpaused = */ true);
   if (!child) {
     return false;
   }
 
-  if (!child->IsRecording()) {
-    JS_ReportErrorASCII(aCx, "Need recording child");
-    return false;
+  if (ToBoolean(args.get(1))) {
+    MaybeCreateCheckpointInChild(child);
   }
 
-  // Recording children can idle indefinitely while waiting for input, without
-  // creating a checkpoint. If this might be a problem, this method induces the
-  // child to create a new checkpoint and pause.
-  child->SendMessage(CreateCheckpointMessage());
-
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool Middleman_MaybeProcessNextMessage(JSContext* aCx, unsigned aArgc,
-                                              Value* aVp) {
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  parent::ChildProcessInfo::MaybeProcessNextMessage();
+  child->WaitUntilPaused();
 
   args.rval().setUndefined();
   return true;
@@ -419,78 +374,6 @@ static bool Middleman_Atomize(JSContext* aCx, unsigned aArgc, Value* aVp) {
   }
 
   args.rval().setString(atom);
-  return true;
-}
-
-static bool Middleman_Terminate(JSContext* aCx, unsigned aArgc, Value* aVp) {
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  size_t forkId;
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0),
-                                                   args.get(1), &forkId);
-  if (!child) {
-    return false;
-  }
-
-  child->SendMessage(TerminateMessage(forkId));
-
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool Middleman_CrashHangedChild(JSContext* aCx, unsigned aArgc,
-                                       Value* aVp) {
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  size_t forkId;
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0),
-                                                   args.get(1), &forkId);
-  if (!child) {
-    return false;
-  }
-
-  // Try to get the child to crash, so that we can get a minidump.
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::RecordReplayHang, true);
-  child->SendMessage(CrashMessage(forkId));
-
-  args.rval().setUndefined();
-  return true;
-}
-
-static bool Middleman_RecordingLength(JSContext* aCx, unsigned aArgc,
-                                      Value* aVp) {
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-  args.rval().setNumber((double)parent::gRecordingContents.length());
-  return true;
-}
-
-static bool Middleman_UpdateRecording(JSContext* aCx, unsigned aArgc,
-                                      Value* aVp) {
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  size_t forkId;
-  parent::ChildProcessInfo* child = ToChildProcess(aCx, args.get(0),
-                                                   args.get(1), &forkId);
-  if (!child) {
-    return false;
-  }
-
-  if (!args.get(2).isNumber()) {
-    JS_ReportErrorASCII(aCx, "Expected numeric argument");
-    return false;
-  }
-
-  size_t start = args.get(2).toNumber();
-
-  if (start < parent::gRecordingContents.length()) {
-    UniquePtr<Message> msg(RecordingDataMessage::New(
-        forkId, start, parent::gRecordingContents.begin() + start,
-        parent::gRecordingContents.length() - start));
-    child->SendMessage(std::move(*msg));
-  }
-
-  args.rval().setUndefined();
   return true;
 }
 
@@ -761,23 +644,6 @@ static bool FetchContent(JSContext* aCx, HandleString aURL,
 // Recording/Replaying Methods
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool RecordReplay_Fork(JSContext* aCx, unsigned aArgc, Value* aVp) {
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  if (!args.get(0).isNumber()) {
-    JS_ReportErrorASCII(aCx, "Expected numeric argument");
-    return false;
-  }
-
-  size_t id = args.get(0).toNumber();
-  if (!ForkProcess()) {
-    child::RegisterFork(id);
-  }
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool RecordReplay_ChildId(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
@@ -789,6 +655,13 @@ static bool RecordReplay_AreThreadEventsDisallowed(JSContext* aCx,
                                                    unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
   args.rval().setBoolean(AreThreadEventsDisallowed());
+  return true;
+}
+
+static bool RecordReplay_NewSnapshot(JSContext* aCx, unsigned aArgc,
+                                     Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  args.rval().setBoolean(NewSnapshot());
   return true;
 }
 
@@ -885,6 +758,27 @@ static bool RecordReplay_ResumeExecution(JSContext* aCx, unsigned aArgc,
   return true;
 }
 
+static bool RecordReplay_RestoreSnapshot(JSContext* aCx, unsigned aArgc,
+                                         Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (!args.get(0).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Bad checkpoint ID");
+    return false;
+  }
+
+  size_t numSnapshots = args.get(0).toNumber();
+  if (numSnapshots >= NumSnapshots()) {
+    JS_ReportErrorASCII(aCx, "Haven't saved enough checkpoints");
+    return false;
+  }
+
+  RestoreSnapshotAndResume(numSnapshots);
+
+  JS_ReportErrorASCII(aCx, "Unreachable!");
+  return false;
+}
+
 // The total amount of time this process has spent idling.
 static double gIdleTimeTotal;
 
@@ -927,16 +821,6 @@ static bool RecordReplay_FlushRecording(JSContext* aCx, unsigned aArgc,
   return true;
 }
 
-static bool RecordReplay_FlushExternalCalls(JSContext* aCx, unsigned aArgc,
-                                            Value* aVp) {
-  CallArgs args = CallArgsFromVp(aArgc, aVp);
-
-  FlushExternalCalls();
-
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool RecordReplay_SetMainChild(JSContext* aCx, unsigned aArgc,
                                       Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
@@ -973,18 +857,38 @@ static bool RecordReplay_GetContent(JSContext* aCx, unsigned aArgc,
 static bool RecordReplay_Repaint(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-  nsCString data;
+  nsString data;
   if (!child::Repaint(data)) {
     args.rval().setNull();
     return true;
   }
 
-  JSString* str = JS_NewStringCopyN(aCx, data.BeginReading(), data.Length());
+  JSString* str = JS_NewUCStringCopyN(aCx, data.BeginReading(), data.Length());
   if (!str) {
     return false;
   }
 
   args.rval().setString(str);
+  return true;
+}
+
+static bool RecordReplay_MemoryUsage(JSContext* aCx, unsigned aArgc,
+                                     Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (!args.get(0).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Bad memory kind");
+    return false;
+  }
+
+  size_t kind = args.get(0).toNumber();
+
+  if (kind >= (size_t)MemoryKind::Count) {
+    JS_ReportErrorASCII(aCx, "Memory kind out of range");
+    return false;
+  }
+
+  args.rval().setDouble(GetMemoryUsage((MemoryKind)kind));
   return true;
 }
 
@@ -1020,6 +924,8 @@ enum ChangeFrameKind {
 };
 
 struct ScriptHitInfo {
+  typedef AllocPolicy<MemoryKind::ScriptHits> AllocPolicy;
+
   // Information about a location where a script offset has been hit.
   struct ScriptHit {
     uint32_t mFrameIndex : 16;
@@ -1034,7 +940,12 @@ struct ScriptHitInfo {
 
   static_assert(sizeof(ScriptHit) == 8, "Unexpected size");
 
-  typedef InfallibleVector<ScriptHit> ScriptHitVector;
+  struct ScriptHitChunk {
+    ScriptHit mHits[7];
+    ScriptHitChunk* mPrevious;
+  };
+
+  ScriptHitChunk* mFreeChunk;
 
   struct ScriptHitKey {
     uint32_t mScript;
@@ -1055,7 +966,7 @@ struct ScriptHitInfo {
     }
   };
 
-  typedef HashMap<ScriptHitKey, ScriptHitVector*, ScriptHitKey>
+  typedef HashMap<ScriptHitKey, ScriptHitChunk*, ScriptHitKey, AllocPolicy>
       ScriptHitMap;
 
   struct AnyScriptHit {
@@ -1068,26 +979,30 @@ struct ScriptHitInfo {
         : mScript(aScript), mFrameIndex(aFrameIndex), mProgress(aProgress) {}
   };
 
-  typedef InfallibleVector<AnyScriptHit, 128> AnyScriptHitVector;
+  typedef InfallibleVector<AnyScriptHit, 128, AllocPolicy> AnyScriptHitVector;
 
   struct CheckpointInfo {
     ScriptHitMap mTable;
     AnyScriptHitVector mChangeFrames[NumChangeFrameKinds];
   };
 
-  InfallibleVector<CheckpointInfo*, 1024> mInfo;
+  InfallibleVector<CheckpointInfo*, 1024, AllocPolicy> mInfo;
+
+  ScriptHitInfo() : mFreeChunk(nullptr) {}
 
   CheckpointInfo* GetInfo(uint32_t aCheckpoint) {
     while (aCheckpoint >= mInfo.length()) {
       mInfo.append(nullptr);
     }
     if (!mInfo[aCheckpoint]) {
-      mInfo[aCheckpoint] = new CheckpointInfo();
+      void* mem =
+          AllocateMemory(sizeof(CheckpointInfo), MemoryKind::ScriptHits);
+      mInfo[aCheckpoint] = new (mem) CheckpointInfo();
     }
     return mInfo[aCheckpoint];
   }
 
-  ScriptHitVector* FindHits(uint32_t aCheckpoint, uint32_t aScript,
+  ScriptHitChunk* FindHits(uint32_t aCheckpoint, uint32_t aScript,
                            uint32_t aOffset) {
     CheckpointInfo* info = GetInfo(aCheckpoint);
 
@@ -1102,12 +1017,40 @@ struct ScriptHitInfo {
 
     ScriptHitKey key(aScript, aOffset);
     ScriptHitMap::AddPtr p = info->mTable.lookupForAdd(key);
-    if (!p && !info->mTable.add(p, key, new ScriptHitVector())) {
+    if (!p && !info->mTable.add(p, key, NewChunk(nullptr))) {
       MOZ_CRASH("ScriptHitInfo::AddHit");
     }
 
-    ScriptHitVector* hits = p->value();
-    hits->append(ScriptHit(aFrameIndex, aProgress));
+    ScriptHitChunk* chunk = p->value();
+    p->value() = AddHit(chunk, ScriptHit(aFrameIndex, aProgress));
+  }
+
+  ScriptHitChunk* AddHit(ScriptHitChunk* aChunk, const ScriptHit& aHit) {
+    for (int i = ArrayLength(aChunk->mHits) - 1; i >= 0; i--) {
+      if (!aChunk->mHits[i].mProgress) {
+        aChunk->mHits[i] = aHit;
+        return aChunk;
+      }
+    }
+    ScriptHitChunk* newChunk = NewChunk(aChunk);
+    newChunk->mHits[ArrayLength(newChunk->mHits) - 1] = aHit;
+    return newChunk;
+  }
+
+  ScriptHitChunk* NewChunk(ScriptHitChunk* aPrevious) {
+    if (!mFreeChunk) {
+      void* mem = AllocateMemory(PageSize, MemoryKind::ScriptHits);
+      ScriptHitChunk* chunks = reinterpret_cast<ScriptHitChunk*>(mem);
+      size_t numChunks = PageSize / sizeof(ScriptHitChunk);
+      for (size_t i = 0; i < numChunks - 1; i++) {
+        chunks[i].mPrevious = &chunks[i + 1];
+      }
+      mFreeChunk = chunks;
+    }
+    ScriptHitChunk* result = mFreeChunk;
+    mFreeChunk = mFreeChunk->mPrevious;
+    result->mPrevious = aPrevious;
+    return result;
   }
 
   void AddChangeFrame(uint32_t aCheckpoint, uint32_t aWhich, uint32_t aScript,
@@ -1133,7 +1076,8 @@ static JSString* gBreakpointAtom;
 static JSString* gExitAtom;
 
 static void InitializeScriptHits() {
-  gScriptHits = new ScriptHitInfo();
+  void* mem = AllocateMemory(sizeof(ScriptHitInfo), MemoryKind::ScriptHits);
+  gScriptHits = new (mem) ScriptHitInfo();
 
   AutoSafeJSContext cx;
   JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
@@ -1311,20 +1255,23 @@ static bool RecordReplay_FindScriptHits(JSContext* aCx, unsigned aArgc,
 
   RootedValueVector values(aCx);
 
-  ScriptHitInfo::ScriptHitVector* hits =
+  ScriptHitInfo::ScriptHitChunk* chunk =
       gScriptHits ? gScriptHits->FindHits(checkpoint, script, offset) : nullptr;
-  if (hits) {
-    for (const auto& hit : *hits) {
-      RootedObject hitObject(aCx, JS_NewObject(aCx, nullptr));
-      if (!hitObject ||
-          !JS_DefineProperty(aCx, hitObject, "progress",
-                             (double)hit.mProgress, JSPROP_ENUMERATE) ||
-          !JS_DefineProperty(aCx, hitObject, "frameIndex", hit.mFrameIndex,
-                             JSPROP_ENUMERATE) ||
-          !values.append(ObjectValue(*hitObject))) {
-        return false;
+  while (chunk) {
+    for (const auto& hit : chunk->mHits) {
+      if (hit.mProgress) {
+        RootedObject hitObject(aCx, JS_NewObject(aCx, nullptr));
+        if (!hitObject ||
+            !JS_DefineProperty(aCx, hitObject, "progress",
+                               (double)hit.mProgress, JSPROP_ENUMERATE) ||
+            !JS_DefineProperty(aCx, hitObject, "frameIndex", hit.mFrameIndex,
+                               JSPROP_ENUMERATE) ||
+            !values.append(ObjectValue(*hitObject))) {
+          return false;
+        }
       }
     }
+    chunk = chunk->mPrevious;
   }
 
   JSObject* array = JS::NewArrayObject(aCx, values);
@@ -1423,28 +1370,22 @@ static bool RecordReplay_FindChangeFrames(JSContext* aCx, unsigned aArgc,
 static const JSFunctionSpec gMiddlemanMethods[] = {
     JS_FN("registerReplayDebugger", Middleman_RegisterReplayDebugger, 1, 0),
     JS_FN("canRewind", Middleman_CanRewind, 0, 0),
-    JS_FN("spawnReplayingChild", Middleman_SpawnReplayingChild, 1, 0),
+    JS_FN("spawnReplayingChild", Middleman_SpawnReplayingChild, 0, 0),
     JS_FN("sendManifest", Middleman_SendManifest, 3, 0),
-    JS_FN("ping", Middleman_Ping, 3, 0),
+    JS_FN("maybePing", Middleman_MaybePing, 1, 0),
     JS_FN("hadRepaint", Middleman_HadRepaint, 1, 0),
     JS_FN("restoreMainGraphics", Middleman_RestoreMainGraphics, 0, 0),
     JS_FN("clearGraphics", Middleman_ClearGraphics, 0, 0),
     JS_FN("inRepaintStressMode", Middleman_InRepaintStressMode, 0, 0),
-    JS_FN("createCheckpointInRecording", Middleman_CreateCheckpointInRecording,
-          1, 0),
-    JS_FN("maybeProcessNextMessage", Middleman_MaybeProcessNextMessage, 0, 0),
+    JS_FN("waitUntilPaused", Middleman_WaitUntilPaused, 1, 0),
     JS_FN("atomize", Middleman_Atomize, 1, 0),
-    JS_FN("terminate", Middleman_Terminate, 2, 0),
-    JS_FN("crashHangedChild", Middleman_CrashHangedChild, 2, 0),
-    JS_FN("recordingLength", Middleman_RecordingLength, 0, 0),
-    JS_FN("updateRecording", Middleman_UpdateRecording, 3, 0),
     JS_FS_END};
 
 static const JSFunctionSpec gRecordReplayMethods[] = {
-    JS_FN("fork", RecordReplay_Fork, 1, 0),
     JS_FN("childId", RecordReplay_ChildId, 0, 0),
     JS_FN("areThreadEventsDisallowed", RecordReplay_AreThreadEventsDisallowed,
           0, 0),
+    JS_FN("newSnapshot", RecordReplay_NewSnapshot, 0, 0),
     JS_FN("divergeFromRecording", RecordReplay_DivergeFromRecording, 0, 0),
     JS_FN("progressCounter", RecordReplay_ProgressCounter, 0, 0),
     JS_FN("setProgressCounter", RecordReplay_SetProgressCounter, 1, 0),
@@ -1452,12 +1393,13 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
           RecordReplay_ShouldUpdateProgressCounter, 1, 0),
     JS_FN("manifestFinished", RecordReplay_ManifestFinished, 1, 0),
     JS_FN("resumeExecution", RecordReplay_ResumeExecution, 0, 0),
+    JS_FN("restoreSnapshot", RecordReplay_RestoreSnapshot, 1, 0),
     JS_FN("currentExecutionTime", RecordReplay_CurrentExecutionTime, 0, 0),
     JS_FN("flushRecording", RecordReplay_FlushRecording, 0, 0),
-    JS_FN("flushExternalCalls", RecordReplay_FlushExternalCalls, 0, 0),
     JS_FN("setMainChild", RecordReplay_SetMainChild, 0, 0),
     JS_FN("getContent", RecordReplay_GetContent, 1, 0),
     JS_FN("repaint", RecordReplay_Repaint, 0, 0),
+    JS_FN("memoryUsage", RecordReplay_MemoryUsage, 0, 0),
     JS_FN("isScanningScripts", RecordReplay_IsScanningScripts, 0, 0),
     JS_FN("setScanningScripts", RecordReplay_SetScanningScripts, 1, 0),
     JS_FN("getFrameDepth", RecordReplay_GetFrameDepth, 0, 0),
