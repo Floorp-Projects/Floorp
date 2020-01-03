@@ -28,6 +28,14 @@ namespace recordreplay {
 // checkpoint has an ID, which monotonically increases during the execution.
 // Checkpoints form a basis for identifying a particular point in execution,
 // and in allowing replaying processes to rewind themselves.
+//
+// In a replaying process, snapshots can be taken that retain enough information
+// to restore the contents of heap memory and thread stacks at the point the
+// snapshot was taken. Snapshots are usually taken when certain checkpoints are
+// reached, but they can be taken at other points as well.
+//
+// See MemorySnapshot.h and ThreadSnapshot.h for information on how snapshots
+// are represented.
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -42,7 +50,7 @@ namespace recordreplay {
 // 3. The replay logic can inspect the process state, diverge from the recording
 //    by calling DivergeFromRecording, and eventually can unpause the main
 //    thread and allow execution to resume by calling ResumeExecution
-//    (if DivergeFromRecording was not called).
+//    (if DivergeFromRecording was not called) or RestoreSnapshotAndResume.
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,8 +65,9 @@ namespace recordreplay {
 // After this is called, some thread events will happen as if events were
 // passed through, but other events that require interacting with the system
 // will trigger an unhandled divergence from the recording via
-// EnsureNotDivergedFromRecording. The debugger will recognize this rewind and
-// play back in a way that restores the state when DivergeFromRecording() was
+// EnsureNotDivergedFromRecording, causing the process to rewind to the most
+// recent snapshot. The debugger will recognize this rewind and play
+// back in a way that restores the state when DivergeFromRecording() was
 // called, but without performing the later operation that triggered the
 // rewind.
 ///////////////////////////////////////////////////////////////////////////////
@@ -70,10 +79,10 @@ static const size_t FirstCheckpointId = 1;
 // Initialize state needed for rewinding.
 void InitializeRewindState();
 
-// Invoke a callback on the main thread, and pause it until ResumeExecution is
-// called. When the main thread is not paused, this must be called on the main
-// thread itself. When the main thread is already paused, this may be called
-// from any thread.
+// Invoke a callback on the main thread, and pause it until ResumeExecution or
+// RestoreSnapshotAndResume are called. When the main thread is not paused,
+// this must be called on the main thread itself. When the main thread is
+// already paused, this may be called from any thread.
 void PauseMainThreadAndInvokeCallback(const std::function<void()>& aCallback);
 
 // Return whether the main thread should be paused. This does not necessarily
@@ -84,32 +93,45 @@ bool MainThreadShouldPause();
 // longer needs to pause.
 void PauseMainThreadAndServiceCallbacks();
 
+// Return how many snapshots have been taken.
+size_t NumSnapshots();
+
 // Get the ID of the most recently encountered checkpoint.
 size_t GetLastCheckpoint();
 
-// Fork a new processs from this one. Returns true if this is the original
-// process, or false if this is the fork.
-bool ForkProcess();
+// When paused at a breakpoint or at a checkpoint, restore a snapshot that
+// was saved earlier. aNumSnapshots is the number of snapshots to skip over
+// when restoring.
+void RestoreSnapshotAndResume(size_t aNumSnapshots);
 
 // When paused at a breakpoint or at a checkpoint, unpause and proceed with
 // execution.
 void ResumeExecution();
 
-// Allow execution after this point to diverge from the recording.
+// Allow execution after this point to diverge from the recording. Execution
+// will remain diverged until an earlier snapshot is restored.
+//
+// If an unhandled divergence occurs (see the 'Recording Divergence' comment
+// in ProcessRewind.h) then the process rewinds to the most recent snapshot.
 void DivergeFromRecording();
 
 // After a call to DivergeFromRecording(), this may be called to prevent future
-// unhandled divergence from following the normal bailouot path
+// unhandled divergence from causing earlier snapshots to be restored
 // (the process will immediately crash instead). This state lasts until a new
-// call to DivergeFromRecording.
+// call to DivergeFromRecording, or to an explicit restore of an earlier
+// snapshot.
 void DisallowUnhandledDivergeFromRecording();
 
 // Make sure that execution has not diverged from the recording after a call to
-// DivergeFromRecording.
-void EnsureNotDivergedFromRecording(const Maybe<int>& aCallId);
+// DivergeFromRecording, by rewinding to the last snapshot if so.
+void EnsureNotDivergedFromRecording();
 
 // Note a checkpoint at the current execution position.
 void NewCheckpoint();
+
+// Create a new snapshot that can be restored later. This method returns true
+// if the snapshot was just taken, and false if it was just restored.
+bool NewSnapshot();
 
 }  // namespace recordreplay
 }  // namespace mozilla

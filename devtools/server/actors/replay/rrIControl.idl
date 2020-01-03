@@ -11,10 +11,8 @@
 interface rrIControl : nsISupports {
   void Initialize(in jsval recordingChildId);
   void ConnectDebugger(in jsval replayDebugger);
-  void ManifestFinished(in long rootId, in long forkId, in jsval response);
-  void PingResponse(in long rootId, in long forkId, in long pingId,
-                    in long progress);
+  void ManifestFinished(in long childId, in jsval response);
   void BeforeSaveRecording();
   void AfterSaveRecording();
-  void ChildCrashed(in long rootId, in long forkId);
+  void ChildCrashed(in long childId);
 };

@@ -11,21 +11,20 @@ PromiseTestUtils.whitelistRejectionsGlobally(/Unknown source actor/);
 
 // Test interaction of breakpoints with debugger statements.
 add_task(async function() {
-  const dbg = await attachRecordingDebugger("doc_debugger_statements.html");
-  await resume(dbg);
-
-  invokeInTab("foo");
+  const dbg = await attachRecordingDebugger("doc_debugger_statements.html", {
+    skipInterrupt: true,
+  });
 
   await waitForPaused(dbg);
   const pauseLine = getVisibleSelectedFrameLine(dbg);
-  ok(pauseLine == 7, "Paused at first debugger statement");
+  ok(pauseLine == 6, "Paused at first debugger statement");
 
-  await addBreakpoint(dbg, "doc_debugger_statements.html", 8);
+  await addBreakpoint(dbg, "doc_debugger_statements.html", 7);
+  await resumeToLine(dbg, 7);
   await resumeToLine(dbg, 8);
-  await resumeToLine(dbg, 9);
   await dbg.actions.removeAllBreakpoints(getContext(dbg));
-  await rewindToLine(dbg, 7);
-  await resumeToLine(dbg, 9);
+  await rewindToLine(dbg, 6);
+  await resumeToLine(dbg, 8);
 
   await shutdownDebugger(dbg);
 });

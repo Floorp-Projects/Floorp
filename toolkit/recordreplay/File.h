@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_recordreplay_Recording_h
-#define mozilla_recordreplay_Recording_h
+#ifndef mozilla_recordreplay_File_h
+#define mozilla_recordreplay_File_h
 
 #include "InfallibleVector.h"
 #include "ProcessRecordReplay.h"
@@ -14,28 +14,30 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/RecordReplay.h"
 #include "mozilla/UniquePtr.h"
-#include "nsString.h"
 
 namespace mozilla {
 namespace recordreplay {
 
-// Representation of the recording which is written to by recording processes
-// and read from by replaying processes. The recording encapsulates a set of
-// streams of data. While recording, these streams grow independently from one
-// another, and when the recording is flushed the streams contents are collated
-// into a single stream of bytes which can be saved to disk or sent to other
-// processes via IPC or network connections.
+// Structure managing file I/O. Each file contains an index for a set of named
+// streams, whose contents are compressed and interleaved throughout the file.
+// Additionally, we directly manage the file handle and all associated memory.
+// This makes it easier to restore memory snapshots without getting confused
+// about the state of the file handles which the process has opened. Data
+// written and read from files is automatically compressed with LZ4.
 //
-// Data in the recording is automatically compressed with LZ4. The Recording
-// object is threadsafe for simultaneous read/read and write/write accesses.
+// Files are used internally for any disk accesses which the record/replay
+// infrastructure needs to make. Currently, this is only for accessing the
+// recording file.
+//
+// File is threadsafe for simultaneous read/read and write/write accesses.
 // Stream is not threadsafe.
 
-// A location of a chunk of a stream within a recording.
+// A location of a chunk of a stream within a file.
 struct StreamChunkLocation {
-  // Offset into the recording of the start of the chunk.
+  // Offset into the file of the start of the chunk.
   uint64_t mOffset;
 
-  // Compressed size of the chunk, as stored in the recording.
+  // Compressed (stored) size of the chunk.
   uint32_t mCompressedSize;
 
   // Decompressed size of the chunk.
@@ -48,48 +50,34 @@ struct StreamChunkLocation {
   uint64_t mStreamPos;
 };
 
-enum class StreamName {
-  // Per-thread list of events.
-  Event,
+enum class StreamName { Main, Lock, Event, Count };
 
-  // Per-lock list of threads in acquire order.
-  Lock,
-
-  // Single stream containing endpoints of recording after flushing.
-  Endpoint,
-
-  // Single stream describing recording sections to skip for local replay;.
-  LocalReplaySkip,
-
-  Count
-};
-
-class Recording;
+class File;
 class RecordingEventSection;
 
 class Stream {
-  friend class Recording;
+  friend class File;
   friend class RecordingEventSection;
 
-  // Recording this stream belongs to.
-  Recording* mRecording;
+  // File this stream belongs to.
+  File* mFile;
 
   // Prefix name for this stream.
   StreamName mName;
 
-  // Index which, when combined with mName, uniquely identifies this stream in
-  // the recording.
+  // Index which, when combined to mName, uniquely identifies this stream in
+  // the file.
   size_t mNameIndex;
 
-  // All chunks of data in the stream.
+  // When writing, all chunks that have been flushed to disk. When reading, all
+  // chunks in the entire stream.
   InfallibleVector<StreamChunkLocation> mChunks;
 
   // Data buffer.
   UniquePtr<char[]> mBuffer;
 
   // The maximum number of bytes to buffer before compressing and writing to
-  // the recording, and the maximum number of bytes that can be decompressed at
-  // once.
+  // disk, and the maximum number of bytes that can be decompressed at once.
   static const size_t BUFFER_MAX = 1024 * 1024;
 
   // The capacity of mBuffer, at most BUFFER_MAX.
@@ -119,15 +107,15 @@ class Stream {
   // writing, this equals mChunks.length().
   size_t mChunkIndex;
 
+  // When writing, the number of chunks in this stream when the file was last
+  // flushed.
+  size_t mFlushedChunks;
+
   // Whether there is a RecordingEventSection instance active for this stream.
   bool mInRecordingEventSection;
 
-  // When replaying and MOZ_REPLAYING_DUMP_EVENTS is set, this describes all
-  // events in the stream we have replayed so far.
-  InfallibleVector<char*> mEvents;
-
-  Stream(Recording* aRecording, StreamName aName, size_t aNameIndex)
-      : mRecording(aRecording),
+  Stream(File* aFile, StreamName aName, size_t aNameIndex)
+      : mFile(aFile),
         mName(aName),
         mNameIndex(aNameIndex),
         mBuffer(nullptr),
@@ -141,6 +129,7 @@ class Stream {
         mInputBallastSize(0),
         mLastEvent((ThreadEvent)0),
         mChunkIndex(0),
+        mFlushedChunks(0),
         mInRecordingEventSection(false) {}
 
  public:
@@ -177,7 +166,7 @@ class Stream {
 
   // Note a new thread event for this stream, and make sure it is the same
   // while replaying as it was while recording.
-  void RecordOrReplayThreadEvent(ThreadEvent aEvent, const char* aExtra = nullptr);
+  void RecordOrReplayThreadEvent(ThreadEvent aEvent);
 
   // Replay a thread event without requiring it to be a specific event.
   ThreadEvent ReplayThreadEvent();
@@ -200,12 +189,9 @@ class Stream {
   const char* ReadInputString();
 
   static size_t BallastMaxSize();
-
-  void PushEvent(const char* aEvent);
-  void DumpEvents();
 };
 
-class Recording {
+class File {
  public:
   enum Mode { WRITE, READ };
 
@@ -213,53 +199,70 @@ class Recording {
   friend class RecordingEventSection;
 
  private:
-  // Whether this recording is for writing or reading.
-  Mode mMode = READ;
+  // Open file handle, or 0 if closed.
+  FileHandle mFd;
 
-  // When writing, all contents that have been flushed so far. When reading,
-  // all known contents. When writing, existing parts of the recording are not
-  // modified: the recording can only grow.
-  InfallibleVector<uint8_t> mContents;
+  // Whether this file is open for writing or reading.
+  Mode mMode;
 
-  // All streams in this recording, indexed by stream name and name index.
+  // When writing, the current offset into the file.
+  uint64_t mWriteOffset;
+
+  // The offset of the last index read or written to the file.
+  uint64_t mLastIndexOffset;
+
+  // All streams in this file, indexed by stream name and name index.
   typedef InfallibleVector<UniquePtr<Stream>> StreamVector;
   StreamVector mStreams[(size_t)StreamName::Count];
 
-  // Lock protecting access to this recording.
+  // Lock protecting access to this file.
   SpinLock mLock;
 
-  // When writing, lock for synchronizing flushes (writer) with other threads
-  // writing to streams in this recording (readers).
+  // When writing, lock for synchronizing file flushes (writer) with other
+  // threads writing to streams in this file (readers).
   ReadWriteSpinLock mStreamLock;
 
+  void Clear() {
+    mFd = 0;
+    mMode = READ;
+    mWriteOffset = 0;
+    mLastIndexOffset = 0;
+    for (auto& vector : mStreams) {
+      vector.clear();
+    }
+    PodZero(&mLock);
+    PodZero(&mStreamLock);
+  }
+
  public:
-  Recording();
+  File() { Clear(); }
+  ~File() { Close(); }
 
-  bool IsWriting() const { return mMode == WRITE; }
-  bool IsReading() const { return mMode == READ; }
+  bool Open(const char* aName, Mode aMode);
+  void Close();
 
-  const uint8_t* Data() const { return mContents.begin(); }
-  size_t Size() const { return mContents.length(); }
+  bool OpenForWriting() const { return mFd && mMode == WRITE; }
+  bool OpenForReading() const { return mFd && mMode == READ; }
 
-  // Get or create a stream in this recording.
   Stream* OpenStream(StreamName aName, size_t aNameIndex);
 
-  // When reading, append additional contents to this recording.
-  // aUpdatedStreams is optional and filled in with streams whose contents have
-  // changed, and may have duplicates.
-  void NewContents(const uint8_t* aContents, size_t aSize,
-                   InfallibleVector<Stream*>* aUpdatedStreams);
-
-  // Prevent/allow other threads to write to streams in this recording.
+  // Prevent/allow other threads to write to streams in this file.
   void PreventStreamWrites() { mStreamLock.WriteLock(); }
   void AllowStreamWrites() { mStreamLock.WriteUnlock(); }
 
-  // Flush all streams to the recording.
-  void Flush();
+  // Flush any changes since the last Flush() call to disk, returning whether
+  // there were such changes.
+  bool Flush();
+
+  enum class ReadIndexResult { InvalidFile, EndOfFile, FoundIndex };
+
+  // Read any data added to the file by a Flush() call. aUpdatedStreams is
+  // optional and filled in with streams whose contents have changed, and may
+  // have duplicates.
+  ReadIndexResult ReadNextIndex(InfallibleVector<Stream*>* aUpdatedStreams);
 
  private:
-  StreamChunkLocation WriteChunk(StreamName aName, size_t aNameIndex,
-                                 const char* aStart, size_t aCompressedSize,
+  StreamChunkLocation WriteChunk(const char* aStart, size_t aCompressedSize,
                                  size_t aDecompressedSize, uint64_t aStreamPos,
                                  bool aTakeLock);
   void ReadChunk(char* aDest, const StreamChunkLocation& aChunk);
@@ -268,4 +271,4 @@ class Recording {
 }  // namespace recordreplay
 }  // namespace mozilla
 
-#endif  // mozilla_recordreplay_Recording_h
+#endif  // mozilla_recordreplay_File_h

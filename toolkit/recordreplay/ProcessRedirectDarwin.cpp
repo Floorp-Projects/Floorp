@@ -10,31 +10,29 @@
 
 #include "HashTable.h"
 #include "Lock.h"
+#include "MemorySnapshot.h"
 #include "ProcessRecordReplay.h"
 #include "ProcessRewind.h"
 #include "base/eintr_wrapper.h"
 
-#include <bsm/audit.h>
-#include <bsm/audit_session.h>
-#include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <signal.h>
+
+#include <bsm/audit.h>
+#include <bsm/audit_session.h>
 #include <mach/clock.h>
 #include <mach/mach.h>
 #include <mach/mach_time.h>
 #include <mach/mach_vm.h>
 #include <mach/vm_map.h>
-#include <mach-o/loader.h>
-#include <signal.h>
 #include <sys/attr.h>
 #include <sys/event.h>
 #include <sys/mman.h>
 #include <sys/mount.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <sys/syscall.h>
 #include <sys/time.h>
-#include <sys/utsname.h>
 #include <time.h>
 
 #include <Carbon/Carbon.h>
@@ -57,6 +55,8 @@ namespace recordreplay {
   MACRO(lseek)                              \
   MACRO(mach_absolute_time)                 \
   MACRO(mmap)                               \
+  MACRO(mprotect)                           \
+  MACRO(munmap)                             \
   MACRO(objc_msgSend)                       \
   MACRO(open)                               \
   MACRO(OSSpinLockLock)                     \
@@ -71,7 +71,6 @@ namespace recordreplay {
   MACRO(pthread_mutex_lock)                 \
   MACRO(pthread_mutex_trylock)              \
   MACRO(pthread_mutex_unlock)               \
-  MACRO(pthread_self)                       \
   MACRO(read)                               \
   MACRO(start_wqthread)                     \
   MACRO(write)
@@ -178,15 +177,17 @@ static void InitializeStaticClasses() {
 // Capture an Objective C or CoreFoundation input to a call, which may come
 // either from another middleman call, or from static data in the replaying
 // process.
-static void EX_ObjCInput(ExternalCallContext& aCx, id* aThingPtr) {
-  MOZ_RELEASE_ASSERT(aCx.AccessInput());
+static void MM_ObjCInput(MiddlemanCallContext& aCx, id* aThingPtr) {
+  MOZ_RELEASE_ASSERT(aCx.AccessPreface());
 
-  if (EX_SystemInput(aCx, (const void**)aThingPtr)) {
+  if (MM_SystemInput(aCx, (const void**)aThingPtr)) {
     // This value came from a previous middleman call.
     return;
   }
 
-  if (aCx.mPhase == ExternalCallPhase::SaveInput) {
+  MOZ_RELEASE_ASSERT(aCx.AccessInput());
+
+  if (aCx.mPhase == MiddlemanCallPhase::ReplayInput) {
     // Try to determine where this object came from.
 
     // Watch for messages sent to particular classes.
@@ -207,16 +208,16 @@ static void EX_ObjCInput(ExternalCallContext& aCx, id* aThingPtr) {
     // pointer could have originated from the recording and its address may not
     // be mapped. In this case we would rather gracefully recover and fail to
     // paint, instead of crashing.
-    Dl_info info;
-    if (dladdr(*aThingPtr, &info) != 0) {
+    if (MemoryRangeIsTracked(*aThingPtr, sizeof(CFConstantString))) {
       CFConstantString* str = (CFConstantString*)*aThingPtr;
       if (str->mClass == gCFConstantStringClass &&
           str->mLength <= 4096 &&  // Sanity check.
-          dladdr(str->mData, &info) != 0) {
+          MemoryRangeIsTracked(str->mData, str->mLength)) {
         InfallibleVector<UniChar> buffer;
+        NS_ConvertUTF8toUTF16 converted(str->mData, str->mLength);
         aCx.WriteInputScalar((size_t)ObjCInputKind::ConstantString);
         aCx.WriteInputScalar(str->mLength);
-        aCx.WriteInputBytes(str->mData, str->mLength);
+        aCx.WriteInputBytes(converted.get(), str->mLength * sizeof(UniChar));
         return;
       }
     }
@@ -235,25 +236,8 @@ static void EX_ObjCInput(ExternalCallContext& aCx, id* aThingPtr) {
     }
     case ObjCInputKind::ConstantString: {
       size_t len = aCx.ReadInputScalar();
-      UniquePtr<char[]> cstring(new char[len]);
-      aCx.ReadInputBytes(cstring.get(), len);
-
-      // When replaying in the cloud, external string references are generated
-      // on the fly and don't have correct contents. Parse the contents we are
-      // given so we can do a dynamic lookup and generate the right string.
-      static const char cloudPrefix[] = "RECORD_REPLAY_STRING:";
-      if (len >= sizeof(cloudPrefix) &&
-          !memcmp(cstring.get(), cloudPrefix, sizeof(cloudPrefix))) {
-        MOZ_RELEASE_ASSERT(cstring.get()[len - 1] == 0);
-        void* ptr = dlsym(RTLD_DEFAULT, cstring.get() + strlen(cloudPrefix));
-        MOZ_RELEASE_ASSERT(ptr);
-        *aThingPtr = (id)*(CFStringRef*)ptr;
-        break;
-      }
-
-      NS_ConvertUTF8toUTF16 converted(cstring.get(), len);
       UniquePtr<UniChar[]> contents(new UniChar[len]);
-      memcpy(contents.get(), converted.get(), len * sizeof(UniChar));
+      aCx.ReadInputBytes(contents.get(), len * sizeof(UniChar));
       *aThingPtr = (id)CFStringCreateWithCharacters(kCFAllocatorDefault,
                                                     contents.get(), len);
       break;
@@ -264,48 +248,52 @@ static void EX_ObjCInput(ExternalCallContext& aCx, id* aThingPtr) {
 }
 
 template <size_t Argument>
-static void EX_CFTypeArg(ExternalCallContext& aCx) {
-  if (aCx.AccessInput()) {
+static void MM_CFTypeArg(MiddlemanCallContext& aCx) {
+  if (aCx.AccessPreface()) {
     auto& object = aCx.mArguments->Arg<Argument, id>();
-    EX_ObjCInput(aCx, &object);
+    MM_ObjCInput(aCx, &object);
   }
 }
 
-static void EX_CFTypeOutput(ExternalCallContext& aCx, CFTypeRef* aOutput,
+static void MM_CFTypeOutput(MiddlemanCallContext& aCx, CFTypeRef* aOutput,
                             bool aOwnsReference) {
-  EX_SystemOutput(aCx, (const void**)aOutput);
+  MM_SystemOutput(aCx, (const void**)aOutput);
 
-  const void* value = *aOutput;
-  if (value && aCx.mPhase == ExternalCallPhase::SaveOutput && !IsReplaying()) {
-    if (!aOwnsReference) {
-      CFRetain(value);
+  if (*aOutput) {
+    switch (aCx.mPhase) {
+      case MiddlemanCallPhase::MiddlemanOutput:
+        if (!aOwnsReference) {
+          CFRetain(*aOutput);
+        }
+        break;
+      case MiddlemanCallPhase::MiddlemanRelease:
+        CFRelease(*aOutput);
+        break;
+      default:
+        break;
     }
-    aCx.mReleaseCallbacks->append([=]() { CFRelease(value); });
   }
 }
 
 // For APIs using the 'Get' rule: no reference is held on the returned value.
-static void EX_CFTypeRval(ExternalCallContext& aCx) {
+static void MM_CFTypeRval(MiddlemanCallContext& aCx) {
   auto& rval = aCx.mArguments->Rval<CFTypeRef>();
-  EX_CFTypeOutput(aCx, &rval, /* aOwnsReference = */ false);
+  MM_CFTypeOutput(aCx, &rval, /* aOwnsReference = */ false);
 }
 
 // For APIs using the 'Create' rule: a reference is held on the returned
 // value which must be released.
-static void EX_CreateCFTypeRval(ExternalCallContext& aCx) {
+static void MM_CreateCFTypeRval(MiddlemanCallContext& aCx) {
   auto& rval = aCx.mArguments->Rval<CFTypeRef>();
-  EX_CFTypeOutput(aCx, &rval, /* aOwnsReference = */ true);
+  MM_CFTypeOutput(aCx, &rval, /* aOwnsReference = */ true);
 }
 
 template <size_t Argument>
-static void EX_CFTypeOutputArg(ExternalCallContext& aCx) {
-  auto& arg = aCx.mArguments->Arg<Argument, const void**>();
+static void MM_CFTypeOutputArg(MiddlemanCallContext& aCx) {
+  MM_WriteBufferFixedSize<Argument, sizeof(const void*)>(aCx);
 
-  if (aCx.mPhase == ExternalCallPhase::RestoreInput) {
-    arg = (const void**) aCx.AllocateBytes(sizeof(const void*));
-  }
-
-  EX_CFTypeOutput(aCx, arg, /* aOwnsReference = */ false);
+  auto arg = aCx.mArguments->Arg<Argument, const void**>();
+  MM_CFTypeOutput(aCx, arg, /* aOwnsReference = */ false);
 }
 
 static void SendMessageToObject(const void* aObject, const char* aMessage) {
@@ -316,16 +304,21 @@ static void SendMessageToObject(const void* aObject, const char* aMessage) {
 }
 
 // For APIs whose result will be released by the middleman's autorelease pool.
-static void EX_AutoreleaseCFTypeRval(ExternalCallContext& aCx) {
-  auto& rvalReference = aCx.mArguments->Rval<const void*>();
-  EX_SystemOutput(aCx, &rvalReference);
-  const void* rval = rvalReference;
+static void MM_AutoreleaseCFTypeRval(MiddlemanCallContext& aCx) {
+  auto& rval = aCx.mArguments->Rval<const void*>();
+  MM_SystemOutput(aCx, &rval);
 
-  if (rval && aCx.mPhase == ExternalCallPhase::SaveOutput && !IsReplaying()) {
-    SendMessageToObject(rval, "retain");
-    aCx.mReleaseCallbacks->append([=]() {
+  if (rval) {
+    switch (aCx.mPhase) {
+      case MiddlemanCallPhase::MiddlemanOutput:
+        SendMessageToObject(rval, "retain");
+        break;
+      case MiddlemanCallPhase::MiddlemanRelease:
         SendMessageToObject(rval, "autorelease");
-      });
+        break;
+      default:
+        break;
+    }
   }
 }
 
@@ -333,11 +326,11 @@ static void EX_AutoreleaseCFTypeRval(ExternalCallContext& aCx) {
 // that value, this associates the call with its own input value so that this
 // will be treated as a dependent for any future calls using the value.
 template <size_t Argument>
-static void EX_UpdateCFTypeArg(ExternalCallContext& aCx) {
+static void MM_UpdateCFTypeArg(MiddlemanCallContext& aCx) {
   auto arg = aCx.mArguments->Arg<Argument, const void*>();
 
-  EX_CFTypeArg<Argument>(aCx);
-  EX_SystemOutput(aCx, &arg, /* aUpdating = */ true);
+  MM_CFTypeArg<Argument>(aCx);
+  MM_SystemOutput(aCx, &arg, /* aUpdating = */ true);
 }
 
 template <int Error = EAGAIN>
@@ -345,56 +338,6 @@ static PreambleResult Preamble_SetError(CallArguments* aArguments) {
   aArguments->Rval<ssize_t>() = -1;
   errno = Error;
   return PreambleResult::Veto;
-}
-
-#define ForEachFixedInputAddress(Macro)                 \
-  Macro(kCFTypeArrayCallBacks)                          \
-  Macro(kCFTypeDictionaryKeyCallBacks)                  \
-  Macro(kCFTypeDictionaryValueCallBacks)
-
-#define ForEachFixedInput(Macro)                \
-  Macro(kCFAllocatorDefault)                    \
-  Macro(kCFAllocatorNull)
-
-enum class FixedInput {
-#define DefineEnum(Name) Name,
-  ForEachFixedInputAddress(DefineEnum)
-  ForEachFixedInput(DefineEnum)
-#undef DefineEnum
-};
-
-static const void* GetFixedInput(FixedInput aWhich) {
-  switch (aWhich) {
-#define FetchEnumAddress(Name) case FixedInput::Name: return &Name;
-    ForEachFixedInputAddress(FetchEnumAddress)
-#undef FetchEnumAddress
-#define FetchEnum(Name) case FixedInput::Name: return Name;
-    ForEachFixedInput(FetchEnum)
-#undef FetchEnum
-  }
-  MOZ_CRASH("Unknown fixed input");
-  return nullptr;
-}
-
-template <size_t Arg, FixedInput Which>
-static void EX_RequireFixed(ExternalCallContext& aCx) {
-  auto& arg = aCx.mArguments->Arg<Arg, const void*>();
-
-  if (aCx.AccessInput()) {
-    const void* value = GetFixedInput(Which);
-    if (aCx.mPhase == ExternalCallPhase::SaveInput) {
-      MOZ_RELEASE_ASSERT(arg == value ||
-                         (Which == FixedInput::kCFAllocatorDefault &&
-                          arg == nullptr));
-    } else {
-      arg = value;
-    }
-  }
-}
-
-template <size_t Arg>
-static void EX_RequireDefaultAllocator(ExternalCallContext& aCx) {
-  EX_RequireFixed<0, FixedInput::kCFAllocatorDefault>(aCx);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -435,6 +378,15 @@ static PreambleResult MiddlemanPreamble_sendmsg(CallArguments* aArguments) {
   return PreambleResult::Veto;
 }
 
+static PreambleResult Preamble_mprotect(CallArguments* aArguments) {
+  // Ignore any mprotect calls that occur after taking a snapshot.
+  if (!NumSnapshots()) {
+    return PreambleResult::PassThrough;
+  }
+  aArguments->Rval<ssize_t>() = 0;
+  return PreambleResult::Veto;
+}
+
 static PreambleResult Preamble_mmap(CallArguments* aArguments) {
   auto& address = aArguments->Arg<0, void*>();
   auto& size = aArguments->Arg<1, size_t>();
@@ -445,29 +397,62 @@ static PreambleResult Preamble_mmap(CallArguments* aArguments) {
 
   MOZ_RELEASE_ASSERT(address == PageBase(address));
 
-  bool mappingFile = !(flags & MAP_ANON) && !AreThreadEventsPassedThrough();
-  if (IsReplaying() && mappingFile) {
-    flags |= MAP_ANON;
-    prot |= PROT_WRITE;
-    fd = 0;
-    offset = 0;
+  // Make sure that fixed mappings do not interfere with snapshot state.
+  if (flags & MAP_FIXED) {
+    CheckFixedMemory(address, RoundupSizeToPageBoundary(size));
   }
 
-  if (IsReplaying() && !AreThreadEventsPassedThrough()) {
-    flags &= ~MAP_SHARED;
-    flags |= MAP_PRIVATE;
+  void* memory = nullptr;
+  if ((flags & MAP_ANON) ||
+      (IsReplaying() && !AreThreadEventsPassedThrough())) {
+    // Get an anonymous mapping for the result.
+    if (flags & MAP_FIXED) {
+      // For fixed allocations, make sure this memory region is mapped and zero.
+      if (!NumSnapshots()) {
+        // Make sure this memory region is writable.
+        CallFunction<int>(gOriginal_mprotect, address, size,
+                          PROT_READ | PROT_WRITE | PROT_EXEC);
+      }
+      memset(address, 0, size);
+      memory = address;
+    } else {
+      memory = AllocateMemoryTryAddress(
+          address, RoundupSizeToPageBoundary(size), MemoryKind::Tracked);
+    }
+  } else {
+    // We have to call mmap itself, which can change memory protection flags
+    // for memory that is already allocated. If we haven't taken a snapshot
+    // then this is no problem, but after taking a snapshot we have to make
+    // sure that protection flags are what we expect them to be.
+    int newProt = NumSnapshots() ? (PROT_READ | PROT_EXEC) : prot;
+    memory = CallFunction<void*>(gOriginal_mmap, address, size, newProt, flags,
+                                 fd, offset);
+
+    if (flags & MAP_FIXED) {
+      MOZ_RELEASE_ASSERT(memory == address);
+      RestoreWritableFixedMemory(memory, RoundupSizeToPageBoundary(size));
+    } else if (memory && memory != (void*)-1) {
+      RegisterAllocatedMemory(memory, RoundupSizeToPageBoundary(size),
+                              MemoryKind::Tracked);
+    }
   }
 
-  void* memory = CallFunction<void*>(gOriginal_mmap, address, size, prot, flags,
-                                     fd, offset);
-
-  if (mappingFile) {
+  if (!(flags & MAP_ANON) && !AreThreadEventsPassedThrough()) {
     // Include the data just mapped in the recording.
     MOZ_RELEASE_ASSERT(memory && memory != (void*)-1);
     RecordReplayBytes(memory, size);
   }
 
   aArguments->Rval<void*>() = memory;
+  return PreambleResult::Veto;
+}
+
+static PreambleResult Preamble_munmap(CallArguments* aArguments) {
+  auto& address = aArguments->Arg<0, void*>();
+  auto& size = aArguments->Arg<1, size_t>();
+
+  DeallocateMemory(address, size, MemoryKind::Tracked);
+  aArguments->Rval<ssize_t>() = 0;
   return PreambleResult::Veto;
 }
 
@@ -541,12 +526,27 @@ static PreambleResult MiddlemanPreamble_fcntl(CallArguments* aArguments) {
   return PreambleResult::Veto;
 }
 
-// Record/replay a variety of sysctl-like functions.
-template <size_t BufferArg>
-static void RR_sysctl(Stream& aEvents, CallArguments* aArguments,
-                      ErrorType* aError) {
-  auto& old = aArguments->Arg<BufferArg, void*>();
-  auto& oldlenp = aArguments->Arg<BufferArg + 1, size_t*>();
+static PreambleResult Preamble___disable_threadsignal(
+    CallArguments* aArguments) {
+  // __disable_threadsignal is called when a thread finishes. During replay a
+  // terminated thread can cause problems such as changing access bits on
+  // tracked memory behind the scenes.
+  //
+  // Ideally, threads will never try to finish when we are replaying, since we
+  // are supposed to have control over all threads in the system and only spawn
+  // threads which will run forever. Unfortunately, GCD might have already
+  // spawned threads before we were able to install our redirections, so use a
+  // fallback here to keep these threads from terminating.
+  if (IsReplaying()) {
+    Thread::WaitForeverNoIdle();
+  }
+  return PreambleResult::PassThrough;
+}
+
+static void RR___sysctl(Stream& aEvents, CallArguments* aArguments,
+                        ErrorType* aError) {
+  auto& old = aArguments->Arg<2, void*>();
+  auto& oldlenp = aArguments->Arg<3, size_t*>();
 
   aEvents.CheckInput((old ? 1 : 0) | (oldlenp ? 2 : 0));
   if (oldlenp) {
@@ -555,15 +555,6 @@ static void RR_sysctl(Stream& aEvents, CallArguments* aArguments,
   if (old) {
     aEvents.RecordOrReplayBytes(old, *oldlenp);
   }
-}
-
-static PreambleResult Preamble_sysctlbyname(CallArguments* aArguments) {
-  auto name = aArguments->Arg<0, const char*>();
-
-  // Include the environment variable being checked in an assertion, to make it
-  // easier to debug recording mismatches involving sysctlbyname.
-  RecordReplayAssert("sysctlbyname %s", name);
-  return PreambleResult::Redirect;
 }
 
 static PreambleResult Preamble___workq_kernreturn(CallArguments* aArguments) {
@@ -596,27 +587,15 @@ static PreambleResult Preamble_start_wqthread(CallArguments* aArguments) {
 // pthreads redirections
 ///////////////////////////////////////////////////////////////////////////////
 
-void DirectLockMutex(pthread_mutex_t* aMutex, bool aPassThroughEvents) {
-  Maybe<AutoPassThroughThreadEvents> pt;
-  if (aPassThroughEvents) {
-    pt.emplace();
-  }
+static void DirectLockMutex(pthread_mutex_t* aMutex) {
+  AutoPassThroughThreadEvents pt;
   ssize_t rv = CallFunction<ssize_t>(gOriginal_pthread_mutex_lock, aMutex);
-  if (rv != 0) {
-    Print("CRASH DirectLockMutex %d %d\n", rv, errno);
-  }
   MOZ_RELEASE_ASSERT(rv == 0);
 }
 
-void DirectUnlockMutex(pthread_mutex_t* aMutex, bool aPassThroughEvents) {
-  Maybe<AutoPassThroughThreadEvents> pt;
-  if (aPassThroughEvents) {
-    pt.emplace();
-  }
+static void DirectUnlockMutex(pthread_mutex_t* aMutex) {
+  AutoPassThroughThreadEvents pt;
   ssize_t rv = CallFunction<ssize_t>(gOriginal_pthread_mutex_unlock, aMutex);
-  if (rv != 0) {
-    Print("CRASH DirectUnlockMutex %d %d\n", rv, errno);
-  }
   MOZ_RELEASE_ASSERT(rv == 0);
 }
 
@@ -629,7 +608,7 @@ static ssize_t WaitForCvar(pthread_mutex_t* aMutex, pthread_cond_t* aCond,
   if (!lock) {
     if (IsReplaying() && !AreThreadEventsPassedThrough()) {
       Thread* thread = Thread::Current();
-      if (thread->MaybeWaitForFork(
+      if (thread->MaybeWaitForSnapshot(
               [=]() { pthread_mutex_unlock(aMutex); })) {
         // We unlocked the mutex while the thread idled, so don't wait on the
         // condvar: the state the thread is waiting on may have changed and it
@@ -656,8 +635,8 @@ static ssize_t WaitForCvar(pthread_mutex_t* aMutex, pthread_cond_t* aCond,
   } else {
     DirectUnlockMutex(aMutex);
   }
-  lock->Exit(aMutex);
-  lock->Enter(aMutex);
+  lock->Exit();
+  lock->Enter();
   if (IsReplaying()) {
     DirectLockMutex(aMutex);
   }
@@ -772,7 +751,7 @@ static PreambleResult Preamble_pthread_mutex_lock(CallArguments* aArguments) {
 
   Lock* lock = Lock::Find(mutex);
   if (!lock) {
-    AutoEnsurePassThroughThreadEvents pt;
+    AutoEnsurePassThroughThreadEventsUseStackPointer pt;
     aArguments->Rval<ssize_t>() =
         CallFunction<ssize_t>(gOriginal_pthread_mutex_lock, mutex);
     return PreambleResult::Veto;
@@ -785,7 +764,7 @@ static PreambleResult Preamble_pthread_mutex_lock(CallArguments* aArguments) {
   rv = RecordReplayValue(rv);
   MOZ_RELEASE_ASSERT(rv == 0 || rv == EDEADLK);
   if (rv == 0) {
-    lock->Enter(mutex);
+    lock->Enter();
     if (IsReplaying()) {
       DirectLockMutex(mutex);
     }
@@ -813,7 +792,7 @@ static PreambleResult Preamble_pthread_mutex_trylock(
   rv = RecordReplayValue(rv);
   MOZ_RELEASE_ASSERT(rv == 0 || rv == EBUSY);
   if (rv == 0) {
-    lock->Enter(mutex);
+    lock->Enter();
     if (IsReplaying()) {
       DirectLockMutex(mutex);
     }
@@ -827,140 +806,15 @@ static PreambleResult Preamble_pthread_mutex_unlock(CallArguments* aArguments) {
 
   Lock* lock = Lock::Find(mutex);
   if (!lock) {
-    AutoEnsurePassThroughThreadEvents pt;
+    AutoEnsurePassThroughThreadEventsUseStackPointer pt;
     aArguments->Rval<ssize_t>() =
         CallFunction<ssize_t>(gOriginal_pthread_mutex_unlock, mutex);
     return PreambleResult::Veto;
   }
-  lock->Exit(mutex);
+  lock->Exit();
   DirectUnlockMutex(mutex);
   aArguments->Rval<ssize_t>() = 0;
   return PreambleResult::Veto;
-}
-
-static PreambleResult Preamble_pthread_getspecific(CallArguments* aArguments) {
-  if (IsReplaying()) {
-    Thread* thread = Thread::Current();
-    if (thread && !thread->IsMainThread()) {
-      auto key = aArguments->Arg<0, pthread_key_t>();
-      void** ptr = thread->GetOrCreateStorage(key);
-      aArguments->Rval<void*>() = *ptr;
-      return PreambleResult::Veto;
-    }
-  }
-  return PreambleResult::PassThrough;
-}
-
-static PreambleResult Preamble_pthread_setspecific(CallArguments* aArguments) {
-  if (IsReplaying()) {
-    Thread* thread = Thread::Current();
-    if (thread && !thread->IsMainThread()) {
-      auto key = aArguments->Arg<0, pthread_key_t>();
-      auto value = aArguments->Arg<1, void*>();
-      void** ptr = thread->GetOrCreateStorage(key);
-      *ptr = value;
-      aArguments->Rval<ssize_t>() = 0;
-      return PreambleResult::Veto;
-    }
-  }
-  return PreambleResult::PassThrough;
-}
-
-static PreambleResult Preamble_pthread_self(CallArguments* aArguments) {
-  if (IsReplaying() && !AreThreadEventsPassedThrough()) {
-    Thread* thread = Thread::Current();
-    if (!thread->IsMainThread()) {
-      aArguments->Rval<pthread_t>() = thread->NativeId();
-      return PreambleResult::Veto;
-    }
-  }
-  return PreambleResult::PassThrough;
-}
-
-static void*
-GetTLVTemplate(void* aPtr, size_t* aTemplateSize, size_t* aTotalSize) {
-  void* tlvTemplate;
-  *aTemplateSize = 0;
-  *aTotalSize = 0;
-
-  Dl_info info;
-  dladdr(aPtr, &info);
-  mach_header_64* header = (mach_header_64*) info.dli_fbase;
-  MOZ_RELEASE_ASSERT(header->magic == MH_MAGIC_64);
-
-  uint32_t offset = sizeof(mach_header_64);
-  for (size_t i = 0; i < header->ncmds; i++) {
-    load_command* cmd = (load_command*) ((uint8_t*)header + offset);
-    if (LC_SEGMENT_64 == (cmd->cmd & ~LC_REQ_DYLD)) {
-      segment_command_64* ncmd = (segment_command_64*) cmd;
-      section_64* sect = (section_64*) (ncmd + 1);
-      for (size_t i = 0; i < ncmd->nsects; i++, sect++) {
-        switch (sect->flags & SECTION_TYPE) {
-        case S_THREAD_LOCAL_REGULAR:
-          MOZ_RELEASE_ASSERT(!*aTotalSize);
-          tlvTemplate = (uint8_t*)header + sect->addr;
-          *aTemplateSize += sect->size;
-          *aTotalSize += sect->size;
-          break;
-        case S_THREAD_LOCAL_ZEROFILL:
-          *aTotalSize += sect->size;
-          break;
-        }
-      }
-    }
-    offset += cmd->cmdsize;
-  }
-
-  return tlvTemplate;
-}
-
-static void*
-GetTLVAddressFunction() {
-  Dl_info info;
-  dladdr(BitwiseCast<void*>(GetTLVAddressFunction), &info);
-  mach_header_64* header = (mach_header_64*) info.dli_fbase;
-  MOZ_RELEASE_ASSERT(header->magic == MH_MAGIC_64);
-
-  uint32_t offset = sizeof(mach_header_64);
-  for (size_t i = 0; i < header->ncmds; i++) {
-    load_command* cmd = (load_command*) ((uint8_t*)header + offset);
-    if (LC_SEGMENT_64 == (cmd->cmd & ~LC_REQ_DYLD)) {
-      segment_command_64* ncmd = (segment_command_64*) cmd;
-      section_64* sect = (section_64*) (ncmd + 1);
-      for (size_t i = 0; i < ncmd->nsects; i++, sect++) {
-        switch (sect->flags & SECTION_TYPE) {
-        case S_THREAD_LOCAL_VARIABLES:
-          tlv_descriptor* desc = (tlv_descriptor*) ((uint8_t*)header + sect->addr);
-          MOZ_RELEASE_ASSERT(desc->thunk);
-          return BitwiseCast<void*>(desc->thunk);
-        }
-      }
-    }
-    offset += cmd->cmdsize;
-  }
-
-  MOZ_CRASH("Couldn't find tlv_get_addr");
-}
-
-static PreambleResult Preamble_tlv_get_addr(CallArguments* aArguments) {
-  if (IsReplaying()) {
-    Thread* thread = Thread::Current();
-    if (thread && !thread->IsMainThread()) {
-      auto desc = aArguments->Arg<0, tlv_descriptor*>();
-      void** ptr = thread->GetOrCreateStorage(desc->key);
-      if (!(*ptr)) {
-        size_t templateSize, totalSize;
-        void* tlvTemplate = GetTLVTemplate(desc, &templateSize, &totalSize);
-        MOZ_RELEASE_ASSERT(desc->offset < totalSize);
-        void* memory = DirectAllocateMemory(totalSize);
-        memcpy(memory, tlvTemplate, templateSize);
-        *ptr = memory;
-      }
-      aArguments->Rval<void*>() = ((uint8_t*)*ptr) + desc->offset;
-      return PreambleResult::Veto;
-    }
-  }
-  return PreambleResult::PassThrough;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1015,57 +869,79 @@ static PreambleResult Preamble_gmtime(CallArguments* aArguments) {
   return PreambleResult::Veto;
 }
 
-static void RR_host_info_or_statistics(Stream& aEvents,
-                                       CallArguments* aArguments,
-                                       ErrorType* aError) {
-  RR_ScalarRval(aEvents, aArguments, aError);
-  auto buf = aArguments->Arg<2, int*>();
-  auto size = aArguments->Arg<3, mach_msg_type_number_t*>();
-
-  aEvents.RecordOrReplayValue(size);
-  aEvents.RecordOrReplayBytes(buf, *size * sizeof(int));
+static PreambleResult Preamble_mach_absolute_time(CallArguments* aArguments) {
+  // This function might be called through OSSpinLock while setting
+  // gTlsThreadKey.
+  Thread* thread = Thread::GetByStackPointer(&thread);
+  if (!thread || thread->PassThroughEvents()) {
+    aArguments->Rval<uint64_t>() =
+        CallFunction<uint64_t>(gOriginal_mach_absolute_time);
+    return PreambleResult::Veto;
+  }
+  return PreambleResult::Redirect;
 }
 
-static void RR_readdir(Stream& aEvents, CallArguments* aArguments,
-                       ErrorType* aError) {
-  auto& rval = aArguments->Rval<dirent*>();
-  size_t nbytes = 0;
-  if (IsRecording() && rval) {
-    nbytes = offsetof(dirent, d_name) + strlen(rval->d_name) + 1;
-  }
-  aEvents.RecordOrReplayValue(&nbytes);
-  if (IsReplaying()) {
-    rval = nbytes ? (dirent*)NewLeakyArray<char>(nbytes) : nullptr;
-  }
-  if (nbytes) {
-    aEvents.RecordOrReplayBytes(rval, nbytes);
-  }
+static PreambleResult Preamble_mach_vm_allocate(CallArguments* aArguments) {
+  auto& address = aArguments->Arg<1, void**>();
+  auto& size = aArguments->Arg<2, size_t>();
+  *address = AllocateMemory(size, MemoryKind::Tracked);
+  aArguments->Rval<size_t>() = KERN_SUCCESS;
+  return PreambleResult::Veto;
 }
 
-static PreambleResult Preamble_mach_thread_self(CallArguments* aArguments) {
-  if (IsReplaying() && !AreThreadEventsPassedThrough()) {
-    Thread* thread = Thread::Current();
-    if (!thread->IsMainThread()) {
-      aArguments->Rval<uintptr_t>() = thread->GetMachId();
-      return PreambleResult::Veto;
-    }
-  }
-  return PreambleResult::PassThrough;
+static PreambleResult Preamble_mach_vm_deallocate(CallArguments* aArguments) {
+  auto& address = aArguments->Arg<1, void*>();
+  auto& size = aArguments->Arg<2, size_t>();
+  DeallocateMemory(address, size, MemoryKind::Tracked);
+  aArguments->Rval<size_t>() = KERN_SUCCESS;
+  return PreambleResult::Veto;
 }
 
-static void RR_task_threads(Stream& aEvents, CallArguments* aArguments,
-                            ErrorType* aError) {
-  RR_ScalarRval(aEvents, aArguments, aError);
-
-  auto& buf = aArguments->Arg<1, void**>();
-  auto& count = aArguments->Arg<2, mach_msg_type_number_t*>();
-
-  aEvents.RecordOrReplayValue(count);
-
-  if (IsReplaying()) {
-    *buf = NewLeakyArray<void*>(*count);
+static PreambleResult Preamble_mach_vm_map(CallArguments* aArguments) {
+  if (IsRecording()) {
+    return PreambleResult::PassThrough;
+  } else if (AreThreadEventsPassedThrough()) {
+    // We should only reach this at startup, when initializing the graphics
+    // shared memory block.
+    MOZ_RELEASE_ASSERT(!NumSnapshots());
+    return PreambleResult::PassThrough;
   }
-  aEvents.RecordOrReplayBytes(*buf, *count * sizeof(void*));
+
+  auto size = aArguments->Arg<2, size_t>();
+  auto address = aArguments->Arg<1, void**>();
+
+  *address = AllocateMemory(size, MemoryKind::Tracked);
+  aArguments->Rval<size_t>() = KERN_SUCCESS;
+  return PreambleResult::Veto;
+}
+
+static PreambleResult Preamble_mach_vm_protect(CallArguments* aArguments) {
+  // Ignore any mach_vm_protect calls that occur after taking a snapshot, as
+  // for mprotect.
+  if (!NumSnapshots()) {
+    return PreambleResult::PassThrough;
+  }
+  aArguments->Rval<size_t>() = KERN_SUCCESS;
+  return PreambleResult::Veto;
+}
+
+static PreambleResult Preamble_vm_purgable_control(CallArguments* aArguments) {
+  // Never allow purging of volatile memory, to simplify memory snapshots.
+  auto& state = aArguments->Arg<3, int*>();
+  *state = VM_PURGABLE_NONVOLATILE;
+  aArguments->Rval<size_t>() = KERN_SUCCESS;
+  return PreambleResult::Veto;
+}
+
+static PreambleResult Preamble_vm_copy(CallArguments* aArguments) {
+  // Asking the kernel to copy memory doesn't work right if the destination is
+  // non-writable, so do the copy manually.
+  auto& src = aArguments->Arg<1, void*>();
+  auto& size = aArguments->Arg<2, size_t>();
+  auto& dest = aArguments->Arg<3, void*>();
+  memcpy(dest, src, size);
+  aArguments->Rval<size_t>() = KERN_SUCCESS;
+  return PreambleResult::Veto;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1162,20 +1038,22 @@ static void RR_objc_msgSend(Stream& aEvents, CallArguments* aArguments,
     aEvents.RecordOrReplayValue(&len);
     aEvents.RecordOrReplayBytes(aArguments->Arg<2, void*>(),
                                 len * sizeof(wchar_t));
-
-    // Save the length so that EX_NSStringGetCharacters can recover it when
-    // saving output while replaying.
-    Thread::Current()->mRedirectionValue = len;
   }
 
   if (!strcmp(message, "UTF8String") ||
       !strcmp(message, "cStringUsingEncoding:")) {
-    RR_CStringRval(aEvents, aArguments, aError);
+    auto& rval = aArguments->Rval<char*>();
+    size_t len = IsRecording() ? strlen(rval) : 0;
+    aEvents.RecordOrReplayValue(&len);
+    if (IsReplaying()) {
+      rval = NewLeakyArray<char>(len + 1);
+    }
+    aEvents.RecordOrReplayBytes(rval, len + 1);
   }
 }
 
-static void EX_Alloc(ExternalCallContext& aCx) {
-  if (aCx.mPhase == ExternalCallPhase::RestoreInput) {
+static void MM_Alloc(MiddlemanCallContext& aCx) {
+  if (aCx.mPhase == MiddlemanCallPhase::MiddlemanInput) {
     // Refuse to allocate NSAutoreleasePools in the middleman: the order in
     // which middleman calls happen does not guarantee the pools will be
     // created and released in LIFO order, as the pools require. Instead,
@@ -1188,16 +1066,16 @@ static void EX_Alloc(ExternalCallContext& aCx) {
     }
   }
 
-  EX_CreateCFTypeRval(aCx);
+  MM_CreateCFTypeRval(aCx);
 }
 
-static void EX_PerformSelector(ExternalCallContext& aCx) {
-  EX_CString<2>(aCx);
-  EX_CFTypeArg<3>(aCx);
+static void MM_PerformSelector(MiddlemanCallContext& aCx) {
+  MM_CString<2>(aCx);
+  MM_CFTypeArg<3>(aCx);
 
   // The behavior of performSelector:withObject: varies depending on the
   // selector used, so use a whitelist here.
-  if (aCx.mPhase == ExternalCallPhase::SaveInput) {
+  if (aCx.mPhase == MiddlemanCallPhase::ReplayPreface) {
     auto str = aCx.mArguments->Arg<2, const char*>();
     if (strcmp(str, "appearanceNamed:")) {
       aCx.MarkAsFailed();
@@ -1205,249 +1083,223 @@ static void EX_PerformSelector(ExternalCallContext& aCx) {
     }
   }
 
-  EX_AutoreleaseCFTypeRval(aCx);
+  MM_AutoreleaseCFTypeRval(aCx);
 }
 
-static void EX_DictionaryWithObjectsAndKeys(ExternalCallContext& aCx) {
-  if (aCx.AccessInput()) {
-    size_t numArgs = 0;
-    if (aCx.mPhase == ExternalCallPhase::SaveInput) {
-      // Advance through the arguments until there is a null value. If there
-      // are too many arguments for the underlying CallArguments, we will
-      // safely crash when we hit their extent.
-      for (numArgs = 2;; numArgs += 2) {
-        auto& value = aCx.mArguments->Arg<id>(numArgs);
-        if (!value) {
-          break;
-        }
-      }
-    }
-    aCx.ReadOrWriteInputBytes(&numArgs, sizeof(numArgs));
+static void MM_DictionaryWithObjectsAndKeys(MiddlemanCallContext& aCx) {
+  // Copy over all possible stack arguments.
+  MM_StackArgumentData<CallArguments::NumStackArguments * sizeof(size_t)>(aCx);
 
-    for (size_t i = 0; i < numArgs; i += 2) {
+  if (aCx.AccessPreface()) {
+    // Advance through the arguments until there is a null value. If there are
+    // too many arguments for the underlying CallArguments, we will safely
+    // crash when we hit their extent.
+    for (size_t i = 2;; i += 2) {
       auto& value = aCx.mArguments->Arg<id>(i);
+      if (!value) {
+        break;
+      }
       auto& key = aCx.mArguments->Arg<id>(i + 1);
-      EX_ObjCInput(aCx, &value);
-      EX_ObjCInput(aCx, &key);
+      MM_ObjCInput(aCx, &value);
+      MM_ObjCInput(aCx, &key);
     }
   }
 
-  EX_AutoreleaseCFTypeRval(aCx);
+  MM_AutoreleaseCFTypeRval(aCx);
 }
 
-static void EX_DictionaryWithObjects(ExternalCallContext& aCx) {
-  EX_Buffer<2, 4, const void*, false>(aCx);
-  EX_Buffer<3, 4, const void*, false>(aCx);
+static void MM_DictionaryWithObjects(MiddlemanCallContext& aCx) {
+  MM_Buffer<2, 4, const void*>(aCx);
+  MM_Buffer<3, 4, const void*>(aCx);
 
-  if (aCx.AccessInput()) {
+  if (aCx.AccessPreface()) {
     auto objects = aCx.mArguments->Arg<2, const void**>();
     auto keys = aCx.mArguments->Arg<3, const void**>();
     auto count = aCx.mArguments->Arg<4, CFIndex>();
 
     for (CFIndex i = 0; i < count; i++) {
-      EX_ObjCInput(aCx, (id*)&objects[i]);
-      EX_ObjCInput(aCx, (id*)&keys[i]);
+      MM_ObjCInput(aCx, (id*)&objects[i]);
+      MM_ObjCInput(aCx, (id*)&keys[i]);
     }
   }
 
-  EX_AutoreleaseCFTypeRval(aCx);
+  MM_AutoreleaseCFTypeRval(aCx);
 }
 
-static void EX_NSStringGetCharacters(ExternalCallContext& aCx) {
+static void MM_NSStringGetCharacters(MiddlemanCallContext& aCx) {
   auto string = aCx.mArguments->Arg<0, CFStringRef>();
   auto& buffer = aCx.mArguments->Arg<2, void*>();
 
-  if (aCx.mPhase == ExternalCallPhase::RestoreInput) {
+  if (aCx.mPhase == MiddlemanCallPhase::MiddlemanInput) {
     size_t len = CFStringGetLength(string);
     buffer = aCx.AllocateBytes(len * sizeof(UniChar));
   }
 
   if (aCx.AccessOutput()) {
-    size_t len = 0;
-    if (aCx.mPhase == ExternalCallPhase::SaveOutput) {
-      if (IsReplaying()) {
-        len = Thread::Current()->mRedirectionValue;
-      } else {
-        len = CFStringGetLength(string);
-      }
-    }
+    size_t len = (aCx.mPhase == MiddlemanCallPhase::MiddlemanOutput)
+                     ? CFStringGetLength(string)
+                     : 0;
     aCx.ReadOrWriteOutputBytes(&len, sizeof(len));
+    if (aCx.mReplayOutputIsOld) {
+      buffer = aCx.AllocateBytes(len * sizeof(UniChar));
+    }
     aCx.ReadOrWriteOutputBytes(buffer, len * sizeof(UniChar));
   }
 }
 
 struct ObjCMessageInfo {
   const char* mMessage;
-  ExternalCallFn mExternalCall;
+  MiddlemanCallFn mMiddlemanCall;
   bool mUpdatesObject;
 };
 
 // All Objective C messages that can be called in the middleman, and hooks for
 // capturing any inputs and outputs other than the object, message, and scalar
 // arguments / return values.
-static ObjCMessageInfo gObjCExternalCallMessages[] = {
+static ObjCMessageInfo gObjCMiddlemanCallMessages[] = {
     // Generic
-    {"alloc", EX_Alloc},
-    {"init", EX_AutoreleaseCFTypeRval},
-    {"performSelector:withObject:", EX_PerformSelector},
-    {"release", EX_SkipExecuting},
-    {"respondsToSelector:", EX_CString<2>},
+    {"alloc", MM_Alloc},
+    {"init", MM_AutoreleaseCFTypeRval},
+    {"performSelector:withObject:", MM_PerformSelector},
+    {"release", MM_SkipInMiddleman},
+    {"respondsToSelector:", MM_CString<2>},
 
     // NSAppearance
     {"_drawInRect:context:options:",
-     EX_Compose<EX_StackArgumentData<sizeof(CGRect)>, EX_CFTypeArg<2>,
-                EX_CFTypeArg<3>>},
+     MM_Compose<MM_StackArgumentData<sizeof(CGRect)>, MM_CFTypeArg<2>,
+                MM_CFTypeArg<3>>},
 
     // NSAutoreleasePool
-    {"drain", EX_SkipExecuting},
+    {"drain", MM_SkipInMiddleman},
 
     // NSArray
     {"count"},
-    {"objectAtIndex:", EX_Compose<EX_ScalarArg<2>, EX_AutoreleaseCFTypeRval>},
+    {"objectAtIndex:", MM_AutoreleaseCFTypeRval},
 
     // NSBezierPath
-    {"addClip", EX_NoOp, true},
-    {"bezierPathWithRoundedRect:xRadius:yRadius:",
-     EX_Compose<EX_StackArgumentData<sizeof(CGRect)>,
-                EX_FloatArg<0>, EX_FloatArg<1>, EX_AutoreleaseCFTypeRval>},
+    {"addClip", MM_NoOp, true},
+    {"bezierPathWithRoundedRect:xRadius:yRadius:", MM_AutoreleaseCFTypeRval},
 
     // NSCell
     {"drawFocusRingMaskWithFrame:inView:",
-     EX_Compose<EX_CFTypeArg<2>, EX_StackArgumentData<sizeof(CGRect)>>},
+     MM_Compose<MM_CFTypeArg<2>, MM_StackArgumentData<sizeof(CGRect)>>},
     {"drawWithFrame:inView:",
-     EX_Compose<EX_CFTypeArg<2>, EX_StackArgumentData<sizeof(CGRect)>>},
-    {"initTextCell:", EX_Compose<EX_CFTypeArg<2>, EX_AutoreleaseCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<2>, MM_StackArgumentData<sizeof(CGRect)>>},
+    {"initTextCell:", MM_Compose<MM_CFTypeArg<2>, MM_AutoreleaseCFTypeRval>},
     {"initTextCell:pullsDown:",
-     EX_Compose<EX_CFTypeArg<2>, EX_ScalarArg<3>, EX_AutoreleaseCFTypeRval>},
-    {"setAllowsMixedState:", EX_ScalarArg<2>, true},
-    {"setBezeled:", EX_ScalarArg<2>, true},
-    {"setBezelStyle:", EX_ScalarArg<2>, true},
-    {"setButtonType:", EX_ScalarArg<2>, true},
-    {"setControlSize:", EX_ScalarArg<2>, true},
-    {"setControlTint:", EX_ScalarArg<2>, true},
-    {"setCriticalValue:", EX_FloatArg<0>, true},
-    {"setDoubleValue:", EX_FloatArg<0>, true},
-    {"setEditable:", EX_ScalarArg<2>, true},
-    {"setEnabled:", EX_ScalarArg<2>, true},
-    {"setFocusRingType:", EX_ScalarArg<2>, true},
-    {"setHighlighted:", EX_ScalarArg<2>, true},
-    {"setHighlightsBy:", EX_ScalarArg<2>, true},
-    {"setHorizontal:", EX_ScalarArg<2>, true},
-    {"setIndeterminate:", EX_ScalarArg<2>, true},
-    {"setMax:", EX_FloatArg<0>, true},
-    {"setMaxValue:", EX_FloatArg<0>, true},
-    {"setMinValue:", EX_FloatArg<0>, true},
-    {"setPlaceholderString:", EX_CFTypeArg<2>, true},
-    {"setPullsDown:", EX_ScalarArg<2>, true},
-    {"setShowsFirstResponder:", EX_ScalarArg<2>, true},
-    {"setState:", EX_ScalarArg<2>, true},
-    {"setValue:", EX_FloatArg<0>, true},
-    {"setWarningValue:", EX_FloatArg<0>, true},
+     MM_Compose<MM_CFTypeArg<2>, MM_AutoreleaseCFTypeRval>},
+    {"setAllowsMixedState:", MM_NoOp, true},
+    {"setBezeled:", MM_NoOp, true},
+    {"setBezelStyle:", MM_NoOp, true},
+    {"setButtonType:", MM_NoOp, true},
+    {"setControlSize:", MM_NoOp, true},
+    {"setControlTint:", MM_NoOp, true},
+    {"setCriticalValue:", MM_NoOp, true},
+    {"setDoubleValue:", MM_NoOp, true},
+    {"setEditable:", MM_NoOp, true},
+    {"setEnabled:", MM_NoOp, true},
+    {"setFocusRingType:", MM_NoOp, true},
+    {"setHighlighted:", MM_NoOp, true},
+    {"setHighlightsBy:", MM_NoOp, true},
+    {"setHorizontal:", MM_NoOp, true},
+    {"setIndeterminate:", MM_NoOp, true},
+    {"setMax:", MM_NoOp, true},
+    {"setMaxValue:", MM_NoOp, true},
+    {"setMinValue:", MM_NoOp, true},
+    {"setPlaceholderString:", MM_NoOp, true},
+    {"setPullsDown:", MM_NoOp, true},
+    {"setShowsFirstResponder:", MM_NoOp, true},
+    {"setState:", MM_NoOp, true},
+    {"setValue:", MM_NoOp, true},
+    {"setWarningValue:", MM_NoOp, true},
     {"showsFirstResponder"},
 
     // NSColor
     {"alphaComponent"},
     {"colorWithDeviceRed:green:blue:alpha:",
-     EX_Compose<EX_FloatArg<0>, EX_FloatArg<1>, EX_FloatArg<2>,
-                EX_StackArgumentData<sizeof(CGFloat)>,
-                EX_AutoreleaseCFTypeRval>},
+     MM_Compose<MM_StackArgumentData<sizeof(CGFloat)>,
+                MM_AutoreleaseCFTypeRval>},
     {"currentControlTint"},
-    {"set", EX_NoOp, true},
+    {"set", MM_NoOp, true},
 
     // NSDictionary
-    {"dictionaryWithObjectsAndKeys:", EX_DictionaryWithObjectsAndKeys},
-    {"dictionaryWithObjects:forKeys:count:", EX_DictionaryWithObjects},
-    {"mutableCopy", EX_AutoreleaseCFTypeRval},
-    {"setObject:forKey:", EX_Compose<EX_CFTypeArg<2>, EX_CFTypeArg<3>>, true},
+    {"dictionaryWithObjectsAndKeys:", MM_DictionaryWithObjectsAndKeys},
+    {"dictionaryWithObjects:forKeys:count:", MM_DictionaryWithObjects},
+    {"mutableCopy", MM_AutoreleaseCFTypeRval},
+    {"setObject:forKey:", MM_Compose<MM_CFTypeArg<2>, MM_CFTypeArg<3>>, true},
 
     // NSFont
-    {"boldSystemFontOfSize:",
-     EX_Compose<EX_FloatArg<0>, EX_AutoreleaseCFTypeRval>},
-    {"controlContentFontOfSize:",
-     EX_Compose<EX_FloatArg<0>, EX_AutoreleaseCFTypeRval>},
-    {"familyName", EX_AutoreleaseCFTypeRval},
-    {"fontDescriptor", EX_AutoreleaseCFTypeRval},
-    {"menuBarFontOfSize:",
-     EX_Compose<EX_FloatArg<0>, EX_AutoreleaseCFTypeRval>},
+    {"boldSystemFontOfSize:", MM_AutoreleaseCFTypeRval},
+    {"controlContentFontOfSize:", MM_AutoreleaseCFTypeRval},
+    {"familyName", MM_AutoreleaseCFTypeRval},
+    {"fontDescriptor", MM_AutoreleaseCFTypeRval},
+    {"menuBarFontOfSize:", MM_AutoreleaseCFTypeRval},
     {"pointSize"},
     {"smallSystemFontSize"},
-    {"systemFontOfSize:",
-     EX_Compose<EX_FloatArg<0>, EX_AutoreleaseCFTypeRval>},
-    {"toolTipsFontOfSize:",
-     EX_Compose<EX_FloatArg<0>, EX_AutoreleaseCFTypeRval>},
-    {"userFontOfSize:",
-     EX_Compose<EX_FloatArg<0>, EX_AutoreleaseCFTypeRval>},
+    {"systemFontOfSize:", MM_AutoreleaseCFTypeRval},
+    {"toolTipsFontOfSize:", MM_AutoreleaseCFTypeRval},
+    {"userFontOfSize:", MM_AutoreleaseCFTypeRval},
 
     // NSFontManager
     {"availableMembersOfFontFamily:",
-     EX_Compose<EX_CFTypeArg<2>, EX_AutoreleaseCFTypeRval>},
-    {"sharedFontManager", EX_AutoreleaseCFTypeRval},
+     MM_Compose<MM_CFTypeArg<2>, MM_AutoreleaseCFTypeRval>},
+    {"sharedFontManager", MM_AutoreleaseCFTypeRval},
 
     // NSGraphicsContext
-    {"currentContext", EX_AutoreleaseCFTypeRval},
+    {"currentContext", MM_AutoreleaseCFTypeRval},
     {"graphicsContextWithGraphicsPort:flipped:",
-     EX_Compose<EX_CFTypeArg<2>, EX_ScalarArg<3>, EX_AutoreleaseCFTypeRval>},
-    {"graphicsPort", EX_AutoreleaseCFTypeRval},
+     MM_Compose<MM_CFTypeArg<2>, MM_AutoreleaseCFTypeRval>},
+    {"graphicsPort", MM_AutoreleaseCFTypeRval},
     {"restoreGraphicsState"},
     {"saveGraphicsState"},
-    {"setCurrentContext:", EX_CFTypeArg<2>},
+    {"setCurrentContext:", MM_CFTypeArg<2>},
 
     // NSNumber
-    {"numberWithBool:", EX_Compose<EX_ScalarArg<2>, EX_AutoreleaseCFTypeRval>},
+    {"numberWithBool:", MM_AutoreleaseCFTypeRval},
     {"unsignedIntValue"},
 
     // NSString
-    {"getCharacters:", EX_NSStringGetCharacters},
-    {"hasSuffix:", EX_CFTypeArg<2>},
-    {"isEqualToString:", EX_CFTypeArg<2>},
+    {"getCharacters:", MM_NSStringGetCharacters},
+    {"hasSuffix:", MM_CFTypeArg<2>},
+    {"isEqualToString:", MM_CFTypeArg<2>},
     {"length"},
-    {"rangeOfString:options:", EX_Compose<EX_CFTypeArg<2>, EX_ScalarArg<3>>},
+    {"rangeOfString:options:", MM_CFTypeArg<2>},
     {"stringWithCharacters:length:",
-     EX_Compose<EX_Buffer<2, 3, UniChar>, EX_AutoreleaseCFTypeRval>},
+     MM_Compose<MM_Buffer<2, 3, UniChar>, MM_AutoreleaseCFTypeRval>},
 
     // NSWindow
-    {"coreUIRenderer", EX_AutoreleaseCFTypeRval},
+    {"coreUIRenderer", MM_AutoreleaseCFTypeRval},
 
     // UIFontDescriptor
     {"symbolicTraits"},
 };
 
-static void EX_objc_msgSend(ExternalCallContext& aCx) {
-  EX_CString<1>(aCx);
-  auto& message = aCx.mArguments->Arg<1, const char*>();
+static void MM_objc_msgSend(MiddlemanCallContext& aCx) {
+  auto message = aCx.mArguments->Arg<1, const char*>();
 
-  if (aCx.mPhase == ExternalCallPhase::RestoreInput) {
-    message = (const char*) sel_registerName(message);
-  }
-
-  for (const ObjCMessageInfo& info : gObjCExternalCallMessages) {
+  for (const ObjCMessageInfo& info : gObjCMiddlemanCallMessages) {
     if (!strcmp(info.mMessage, message)) {
       if (info.mUpdatesObject) {
-        EX_UpdateCFTypeArg<0>(aCx);
+        MM_UpdateCFTypeArg<0>(aCx);
       } else {
-        EX_CFTypeArg<0>(aCx);
+        MM_CFTypeArg<0>(aCx);
       }
-      if (info.mExternalCall && !aCx.mFailed) {
-        info.mExternalCall(aCx);
+      if (info.mMiddlemanCall && !aCx.mFailed) {
+        info.mMiddlemanCall(aCx);
       }
-      if (aCx.mFailed && HasDivergedFromRecording()) {
-        PrintSpew("Middleman message failure: %s\n", message);
-        if (child::CurrentRepaintCannotFail()) {
-          child::ReportFatalError("Middleman message failure: %s\n", message);
-        }
+      if (child::CurrentRepaintCannotFail() && aCx.mFailed) {
+        child::ReportFatalError(Nothing(), "Middleman message failure: %s\n",
+                                message);
       }
       return;
     }
   }
 
-  if (aCx.mPhase == ExternalCallPhase::SaveInput) {
+  if (aCx.mPhase == MiddlemanCallPhase::ReplayPreface) {
     aCx.MarkAsFailed();
-    if (HasDivergedFromRecording()) {
-      PrintSpew("Middleman message failure: %s\n", message);
-      if (child::CurrentRepaintCannotFail()) {
-        child::ReportFatalError("Could not perform middleman message: %s\n",
-                                message);
-      }
+    if (child::CurrentRepaintCannotFail()) {
+      child::ReportFatalError(
+          Nothing(), "Could not perform middleman message: %s\n", message);
     }
   }
 }
@@ -1456,32 +1308,37 @@ static void EX_objc_msgSend(ExternalCallContext& aCx) {
 // Cocoa redirections
 ///////////////////////////////////////////////////////////////////////////////
 
-static void EX_CFArrayCreate(ExternalCallContext& aCx) {
-  EX_RequireDefaultAllocator<0>(aCx);
-  EX_Buffer<1, 2, const void*, false>(aCx);
-  EX_RequireFixed<3, FixedInput::kCFTypeArrayCallBacks>(aCx);
+static void MM_CFArrayCreate(MiddlemanCallContext& aCx) {
+  MM_Buffer<1, 2, const void*>(aCx);
 
-  if (aCx.AccessInput()) {
+  if (aCx.AccessPreface()) {
     auto values = aCx.mArguments->Arg<1, const void**>();
     auto numValues = aCx.mArguments->Arg<2, CFIndex>();
+    auto& callbacks = aCx.mArguments->Arg<3, const CFArrayCallBacks*>();
+
+    // For now we only support creating arrays with CFType elements.
+    if (aCx.mPhase == MiddlemanCallPhase::MiddlemanInput) {
+      callbacks = &kCFTypeArrayCallBacks;
+    } else {
+      MOZ_RELEASE_ASSERT(callbacks == &kCFTypeArrayCallBacks);
+    }
 
     for (CFIndex i = 0; i < numValues; i++) {
-      EX_ObjCInput(aCx, (id*)&values[i]);
+      MM_ObjCInput(aCx, (id*)&values[i]);
     }
   }
 
-  EX_CreateCFTypeRval(aCx);
+  MM_CreateCFTypeRval(aCx);
 }
 
-static void EX_CFArrayGetValueAtIndex(ExternalCallContext& aCx) {
-  EX_CFTypeArg<0>(aCx);
-  EX_ScalarArg<1>(aCx);
+static void MM_CFArrayGetValueAtIndex(MiddlemanCallContext& aCx) {
+  MM_CFTypeArg<0>(aCx);
 
   auto array = aCx.mArguments->Arg<0, id>();
 
   // We can't probe the array to see what callbacks it uses, so look at where
   // it came from to see whether its elements should be treated as CFTypes.
-  ExternalCall* call = LookupExternalCall(array);
+  MiddlemanCall* call = LookupMiddlemanCall(array);
   bool isCFTypeRval = false;
   if (call) {
     const char* name = GetRedirection(call->mCallId).mName;
@@ -1493,7 +1350,7 @@ static void EX_CFArrayGetValueAtIndex(ExternalCallContext& aCx) {
   }
 
   if (isCFTypeRval) {
-    EX_CFTypeRval(aCx);
+    MM_CFTypeRval(aCx);
   }
 }
 
@@ -1511,54 +1368,56 @@ static void RR_CFDataGetBytePtr(Stream& aEvents, CallArguments* aArguments,
     rval = NewLeakyArray<UInt8>(len);
   }
   aEvents.RecordOrReplayBytes(rval, len);
-
-  // Save the length so that EX_CFDataGetBytePtr can recover it when saving
-  // output while replaying.
-  Thread::Current()->mRedirectionValue = len;
 }
 
-static void EX_CFDataGetBytePtr(ExternalCallContext& aCx) {
-  EX_CFTypeArg<0>(aCx);
+static void MM_CFDataGetBytePtr(MiddlemanCallContext& aCx) {
+  MM_CFTypeArg<0>(aCx);
 
   auto data = aCx.mArguments->Arg<0, CFDataRef>();
   auto& buffer = aCx.mArguments->Rval<void*>();
 
   if (aCx.AccessOutput()) {
-    size_t len = 0;
-    if (aCx.mPhase == ExternalCallPhase::SaveOutput) {
-      if (IsReplaying()) {
-        len = Thread::Current()->mRedirectionValue;
-      } else {
-        len = CFDataGetLength(data);
-      }
-    }
+    size_t len = (aCx.mPhase == MiddlemanCallPhase::MiddlemanOutput)
+                     ? CFDataGetLength(data)
+                     : 0;
     aCx.ReadOrWriteOutputBytes(&len, sizeof(len));
-    if (aCx.mPhase == ExternalCallPhase::RestoreOutput) {
+    if (aCx.mPhase == MiddlemanCallPhase::ReplayOutput) {
       buffer = aCx.AllocateBytes(len);
     }
     aCx.ReadOrWriteOutputBytes(buffer, len);
   }
 }
 
-static void EX_CFDictionaryCreate(ExternalCallContext& aCx) {
-  EX_RequireDefaultAllocator<0>(aCx);
-  EX_Buffer<1, 3, const void*, false>(aCx);
-  EX_Buffer<2, 3, const void*, false>(aCx);
-  EX_RequireFixed<4, FixedInput::kCFTypeDictionaryKeyCallBacks>(aCx);
-  EX_RequireFixed<5, FixedInput::kCFTypeDictionaryValueCallBacks>(aCx);
+static void MM_CFDictionaryCreate(MiddlemanCallContext& aCx) {
+  MM_Buffer<1, 3, const void*>(aCx);
+  MM_Buffer<2, 3, const void*>(aCx);
 
-  if (aCx.AccessInput()) {
+  if (aCx.AccessPreface()) {
     auto keys = aCx.mArguments->Arg<1, const void**>();
     auto values = aCx.mArguments->Arg<2, const void**>();
     auto numValues = aCx.mArguments->Arg<3, CFIndex>();
+    auto& keyCallbacks =
+        aCx.mArguments->Arg<4, const CFDictionaryKeyCallBacks*>();
+    auto& valueCallbacks =
+        aCx.mArguments->Arg<5, const CFDictionaryValueCallBacks*>();
+
+    // For now we only support creating dictionaries with CFType keys and
+    // values.
+    if (aCx.mPhase == MiddlemanCallPhase::MiddlemanInput) {
+      keyCallbacks = &kCFTypeDictionaryKeyCallBacks;
+      valueCallbacks = &kCFTypeDictionaryValueCallBacks;
+    } else {
+      MOZ_RELEASE_ASSERT(keyCallbacks == &kCFTypeDictionaryKeyCallBacks);
+      MOZ_RELEASE_ASSERT(valueCallbacks == &kCFTypeDictionaryValueCallBacks);
+    }
 
     for (CFIndex i = 0; i < numValues; i++) {
-      EX_ObjCInput(aCx, (id*)&keys[i]);
-      EX_ObjCInput(aCx, (id*)&values[i]);
+      MM_ObjCInput(aCx, (id*)&keys[i]);
+      MM_ObjCInput(aCx, (id*)&values[i]);
     }
   }
 
-  EX_CreateCFTypeRval(aCx);
+  MM_CreateCFTypeRval(aCx);
 }
 
 static void DummyCFNotificationCallback(CFNotificationCenterRef aCenter,
@@ -1617,17 +1476,14 @@ static size_t CFNumberTypeBytes(CFNumberType aType) {
   }
 }
 
-static void EX_CFNumberCreate(ExternalCallContext& aCx) {
-  EX_RequireDefaultAllocator<0>(aCx);
-  EX_ScalarArg<1>(aCx);
-
-  if (aCx.AccessInput()) {
+static void MM_CFNumberCreate(MiddlemanCallContext& aCx) {
+  if (aCx.AccessPreface()) {
     auto numberType = aCx.mArguments->Arg<1, CFNumberType>();
     auto& valuePtr = aCx.mArguments->Arg<2, void*>();
-    aCx.ReadOrWriteInputBuffer(&valuePtr, CFNumberTypeBytes(numberType));
+    aCx.ReadOrWritePrefaceBuffer(&valuePtr, CFNumberTypeBytes(numberType));
   }
 
-  EX_CreateCFTypeRval(aCx);
+  MM_CreateCFTypeRval(aCx);
 }
 
 static void RR_CFNumberGetValue(Stream& aEvents, CallArguments* aArguments,
@@ -1639,9 +1495,8 @@ static void RR_CFNumberGetValue(Stream& aEvents, CallArguments* aArguments,
   aEvents.RecordOrReplayBytes(value, CFNumberTypeBytes(type));
 }
 
-static void EX_CFNumberGetValue(ExternalCallContext& aCx) {
-  EX_CFTypeArg<0>(aCx);
-  EX_ScalarArg<1>(aCx);
+static void MM_CFNumberGetValue(MiddlemanCallContext& aCx) {
+  MM_CFTypeArg<0>(aCx);
 
   auto& buffer = aCx.mArguments->Arg<2, void*>();
   auto type = aCx.mArguments->Arg<1, CFNumberType>();
@@ -1692,37 +1547,31 @@ static void RR_CGBitmapContextCreateWithData(Stream& aEvents,
 
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
 
-  // When replaying, EX_CGBitmapContextCreateWithData will take care of
-  // updating gContextData with the right context pointer.
+  // When replaying, MM_CGBitmapContextCreateWithData will take care of
+  // updating gContextData with the right context pointer (after being mangled
+  // in MM_SystemOutput).
   if (IsRecording()) {
     gContextData.emplaceBack(rval, data, height * bytesPerRow);
   }
 }
 
-static void EX_CGBitmapContextCreateWithData(ExternalCallContext& aCx) {
-  EX_ScalarArg<1>(aCx);
-  EX_ScalarArg<2>(aCx);
-  EX_ScalarArg<3>(aCx);
-  EX_ScalarArg<4>(aCx);
-  EX_CFTypeArg<5>(aCx);
-  EX_ScalarArg<6>(aCx);
-  EX_CreateCFTypeRval(aCx);
+static void MM_CGBitmapContextCreateWithData(MiddlemanCallContext& aCx) {
+  MM_CFTypeArg<5>(aCx);
+  MM_StackArgumentData<3 * sizeof(size_t)>(aCx);
+  MM_CreateCFTypeRval(aCx);
 
   auto& data = aCx.mArguments->Arg<0, void*>();
   auto height = aCx.mArguments->Arg<2, size_t>();
   auto bytesPerRow = aCx.mArguments->Arg<4, size_t>();
   auto rval = aCx.mArguments->Rval<CGContextRef>();
 
-  if (aCx.mPhase == ExternalCallPhase::RestoreInput) {
+  if (aCx.mPhase == MiddlemanCallPhase::MiddlemanInput) {
     data = aCx.AllocateBytes(height * bytesPerRow);
-
-    auto& releaseCallback = aCx.mArguments->Arg<7, void*>();
-    auto& releaseInfo = aCx.mArguments->Arg<8, void*>();
-    releaseCallback = nullptr;
-    releaseInfo = nullptr;
   }
 
-  if (aCx.AccessOutput()) {
+  if ((aCx.mPhase == MiddlemanCallPhase::ReplayPreface &&
+       !HasDivergedFromRecording()) ||
+      (aCx.AccessOutput() && !aCx.mReplayOutputIsOld)) {
     gContextData.emplaceBack(rval, data, height * bytesPerRow);
   }
 }
@@ -1743,7 +1592,7 @@ static void RR_FlushCGContext(Stream& aEvents, CallArguments* aArguments,
 }
 
 template <size_t ContextArgument>
-static void EX_FlushCGContext(ExternalCallContext& aCx) {
+static void MM_FlushCGContext(MiddlemanCallContext& aCx) {
   auto context = aCx.mArguments->Arg<ContextArgument, CGContextRef>();
 
   // Update the contents of the target buffer in the middleman process to match
@@ -1751,18 +1600,12 @@ static void EX_FlushCGContext(ExternalCallContext& aCx) {
   if (aCx.AccessInput()) {
     for (int i = gContextData.length() - 1; i >= 0; i--) {
       if (context == gContextData[i].mContext) {
-        // The initial context data is not used to characterize the call,
-        // such that two calls with different context data and otherwise
-        // identical inputs will use the same output. This avoids performing
-        // calls in external processes when Gecko drawing routines will not be
-        // using all of the output of the drawn context, but is unsound.
         aCx.ReadOrWriteInputBytes(gContextData[i].mData,
-                                  gContextData[i].mDataSize,
-                                  /* aExcludeInput */ true);
+                                  gContextData[i].mDataSize);
         return;
       }
     }
-    MOZ_CRASH("EX_FlushCGContext");
+    MOZ_CRASH("MM_FlushCGContext");
   }
 
   // After performing the call, the buffer in the replaying process is updated
@@ -1775,7 +1618,7 @@ static void EX_FlushCGContext(ExternalCallContext& aCx) {
         return;
       }
     }
-    MOZ_CRASH("EX_FlushCGContext");
+    MOZ_CRASH("MM_FlushCGContext");
   }
 }
 
@@ -1803,9 +1646,9 @@ static void ReleaseDataCallback(void*, const void* aData, size_t) {
   free((void*)aData);
 }
 
-static void EX_CGDataProviderCreateWithData(ExternalCallContext& aCx) {
-  EX_Buffer<1, 2>(aCx);
-  EX_CreateCFTypeRval(aCx);
+static void MM_CGDataProviderCreateWithData(MiddlemanCallContext& aCx) {
+  MM_Buffer<1, 2>(aCx);
+  MM_CreateCFTypeRval(aCx);
 
   auto& info = aCx.mArguments->Arg<0, void*>();
   auto& data = aCx.mArguments->Arg<1, const void*>();
@@ -1816,7 +1659,7 @@ static void EX_CGDataProviderCreateWithData(ExternalCallContext& aCx) {
   // Make a copy of the data that won't be released the next time middleman
   // calls are reset, in case CoreGraphics decides to hang onto the data
   // provider after that point.
-  if (aCx.mPhase == ExternalCallPhase::RestoreInput) {
+  if (aCx.mPhase == MiddlemanCallPhase::MiddlemanInput) {
     void* newData = malloc(size);
     memcpy(newData, data, size);
     data = newData;
@@ -1824,7 +1667,7 @@ static void EX_CGDataProviderCreateWithData(ExternalCallContext& aCx) {
   }
 
   // Immediately release the data in the replaying process.
-  if (aCx.mPhase == ExternalCallPhase::SaveInput && releaseData) {
+  if (aCx.mPhase == MiddlemanCallPhase::ReplayInput && releaseData) {
     releaseData(info, data, size);
   }
 }
@@ -1901,37 +1744,27 @@ static PreambleResult Preamble_CGPathApply(CallArguments* aArguments) {
 
   CGPathApplyWithData(pathData, info, function);
 
-  Thread* thread = Thread::Current();
-  thread->mRedirectionData.clear();
-  thread->mRedirectionData.append(pathData.begin(), len);
-
   return PreambleResult::Veto;
 }
 
-static void EX_CGPathApply(ExternalCallContext& aCx) {
-  EX_CFTypeArg<0>(aCx);
-  EX_SkipExecuting(aCx);
+static void MM_CGPathApply(MiddlemanCallContext& aCx) {
+  MM_CFTypeArg<0>(aCx);
+  MM_SkipInMiddleman(aCx);
 
   if (aCx.AccessOutput()) {
     InfallibleVector<char> pathData;
-    if (aCx.mPhase == ExternalCallPhase::SaveOutput) {
-      if (IsReplaying()) {
-        Thread* thread = Thread::Current();
-        pathData.append(thread->mRedirectionData.begin(),
-                        thread->mRedirectionData.length());
-      } else {
-        auto path = aCx.mArguments->Arg<0, CGPathRef>();
-        GetCGPathData(path, pathData);
-      }
+    if (IsMiddleman()) {
+      auto path = aCx.mArguments->Arg<0, CGPathRef>();
+      GetCGPathData(path, pathData);
     }
     size_t len = pathData.length();
     aCx.ReadOrWriteOutputBytes(&len, sizeof(len));
-    if (aCx.mPhase == ExternalCallPhase::RestoreOutput) {
+    if (IsReplaying()) {
       pathData.appendN(0, len);
     }
     aCx.ReadOrWriteOutputBytes(pathData.begin(), len);
 
-    if (aCx.mPhase == ExternalCallPhase::RestoreOutput) {
+    if (IsReplaying()) {
       auto& data = aCx.mArguments->Arg<1, void*>();
       auto& function = aCx.mArguments->Arg<2, CGPathApplierFunction>();
       CGPathApplyWithData(pathData, data, function);
@@ -1966,32 +1799,26 @@ static void RR_CTRunGetElements(Stream& aEvents, CallArguments* aArguments,
     rval = NewLeakyArray<ElemType>(count);
   }
   aEvents.RecordOrReplayBytes(rval, count * sizeof(ElemType));
-
-  Thread::Current()->mRedirectionValue = count;
 }
 
 template <typename ElemType, void (*GetElemsFn)(CTRunRef, CFRange, ElemType*)>
-static void EX_CTRunGetElements(ExternalCallContext& aCx) {
-  EX_CFTypeArg<0>(aCx);
+static void MM_CTRunGetElements(MiddlemanCallContext& aCx) {
+  MM_CFTypeArg<0>(aCx);
 
   if (aCx.AccessOutput()) {
     auto run = aCx.mArguments->Arg<0, CTRunRef>();
     auto& rval = aCx.mArguments->Rval<ElemType*>();
 
     size_t count = 0;
-    if (aCx.mPhase == ExternalCallPhase::SaveOutput) {
-      if (IsReplaying()) {
-        count = Thread::Current()->mRedirectionValue;
-      } else {
-        count = CTRunGetGlyphCount(run);
-        if (!rval) {
-          rval = (ElemType*)aCx.AllocateBytes(count * sizeof(ElemType));
-          GetElemsFn(run, CFRangeMake(0, 0), rval);
-        }
+    if (IsMiddleman()) {
+      count = CTRunGetGlyphCount(run);
+      if (!rval) {
+        rval = (ElemType*)aCx.AllocateBytes(count * sizeof(ElemType));
+        GetElemsFn(run, CFRangeMake(0, 0), rval);
       }
     }
     aCx.ReadOrWriteOutputBytes(&count, sizeof(count));
-    if (aCx.mPhase == ExternalCallPhase::RestoreOutput) {
+    if (IsReplaying()) {
       rval = (ElemType*)aCx.AllocateBytes(count * sizeof(ElemType));
     }
     aCx.ReadOrWriteOutputBytes(rval, count * sizeof(ElemType));
@@ -2005,7 +1832,7 @@ static PreambleResult Preamble_OSSpinLockLock(CallArguments* aArguments) {
   // and can end up calling other recorded functions like mach_absolute_time,
   // so make sure events are passed through here. Note that we don't have to
   // redirect OSSpinLockUnlock, as it doesn't have these issues.
-  AutoEnsurePassThroughThreadEvents pt;
+  AutoEnsurePassThroughThreadEventsUseStackPointer pt;
   CallFunction<void>(gOriginal_OSSpinLockLock, lock);
 
   return PreambleResult::Veto;
@@ -2020,8 +1847,8 @@ struct SystemRedirection {
   const char* mName;
   SaveOutputFn mSaveOutput;
   PreambleFn mPreamble;
-  ExternalCallFn mExternalCall;
-  PreambleFn mExternalPreamble;
+  MiddlemanCallFn mMiddlemanCall;
+  PreambleFn mMiddlemanPreamble;
 };
 
 // Specify every library function that is redirected by looking up its address
@@ -2035,7 +1862,9 @@ static SystemRedirection gSystemRedirections[] = {
      nullptr, nullptr, Preamble_WaitForever},
     {"kevent64",
      RR_SaveRvalHadErrorNegative<RR_WriteBuffer<3, 4, struct kevent64_s>>},
+    {"mprotect", nullptr, Preamble_mprotect},
     {"mmap", nullptr, Preamble_mmap},
+    {"munmap", nullptr, Preamble_munmap},
     {"read", RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>, nullptr,
      nullptr, Preamble_SetError<EIO>},
     {"__read_nocancel",
@@ -2064,11 +1893,6 @@ static SystemRedirection gSystemRedirections[] = {
     {"access", RR_SaveRvalHadErrorNegative, nullptr, nullptr,
      Preamble_SetError<EACCES>},
     {"lseek", RR_SaveRvalHadErrorNegative},
-    {"select$DARWIN_EXTSN",
-     RR_SaveRvalHadErrorNegative<RR_Compose<RR_OutParam<1, fd_set>,
-                                            RR_OutParam<2, fd_set>,
-                                            RR_OutParam<3, fd_set>>>,
-     nullptr, nullptr, Preamble_WaitForever},
     {"socketpair",
      RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<3, 2 * sizeof(int)>>},
     {"fileport_makeport",
@@ -2122,7 +1946,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"getrusage",
      RR_SaveRvalHadErrorNegative<
          RR_WriteBufferFixedSize<1, sizeof(struct rusage)>>,
-     nullptr, nullptr, Preamble_SetError},
+     nullptr, nullptr, Preamble_PassThrough},
     {"__getrlimit", RR_SaveRvalHadErrorNegative<
                         RR_WriteBufferFixedSize<1, sizeof(struct rlimit)>>},
     {"__setrlimit", RR_SaveRvalHadErrorNegative},
@@ -2135,17 +1959,13 @@ static SystemRedirection gSystemRedirections[] = {
     {"sigaction",
      RR_SaveRvalHadErrorNegative<
          RR_WriteOptionalBufferFixedSize<2, sizeof(struct sigaction)>>},
-    {"signal", RR_ScalarRval},
     {"__pthread_sigmask",
      RR_SaveRvalHadErrorNegative<
          RR_WriteOptionalBufferFixedSize<2, sizeof(sigset_t)>>},
     {"__fsgetpath", RR_SaveRvalHadErrorNegative<RR_WriteBuffer<0, 1>>},
-    {"sysconf", RR_ScalarRval},
-    {"__sysctl", RR_SaveRvalHadErrorNegative<RR_sysctl<2>>},
-    {"sysctl", RR_SaveRvalHadErrorNegative<RR_sysctl<2>>},
-    {"sysctlbyname", RR_SaveRvalHadErrorNegative<RR_sysctl<1>>, Preamble_sysctlbyname},
+    {"__disable_threadsignal", nullptr, Preamble___disable_threadsignal},
+    {"__sysctl", RR_SaveRvalHadErrorNegative<RR___sysctl>},
     {"__mac_syscall", RR_SaveRvalHadErrorNegative},
-    {"syscall", RR_SaveRvalHadErrorNegative},
     {"getaudit_addr",
      RR_SaveRvalHadErrorNegative<
          RR_WriteBufferFixedSize<0, sizeof(auditinfo_addr_t)>>},
@@ -2165,41 +1985,31 @@ static SystemRedirection gSystemRedirections[] = {
     {"__getlogin", RR_SaveRvalHadErrorNegative<RR_WriteBuffer<0, 1>>},
     {"__workq_kernreturn", nullptr, Preamble___workq_kernreturn},
     {"start_wqthread", nullptr, Preamble_start_wqthread},
-    {"isatty", RR_SaveRvalHadErrorZero},
 
     /////////////////////////////////////////////////////////////////////////////
     // PThreads interfaces
     /////////////////////////////////////////////////////////////////////////////
 
-    {"pthread_atfork", nullptr, Preamble_Veto<0>},
     {"pthread_cond_wait", nullptr, Preamble_pthread_cond_wait},
     {"pthread_cond_timedwait", nullptr, Preamble_pthread_cond_timedwait},
     {"pthread_cond_timedwait_relative_np", nullptr,
      Preamble_pthread_cond_timedwait_relative_np},
     {"pthread_create", nullptr, Preamble_pthread_create},
-    {"pthread_get_stacksize_np", nullptr, Preamble_PassThrough},
-    {"pthread_get_stackaddr_np", nullptr, Preamble_PassThrough},
     {"pthread_join", nullptr, Preamble_pthread_join},
     {"pthread_mutex_init", nullptr, Preamble_pthread_mutex_init},
     {"pthread_mutex_destroy", nullptr, Preamble_pthread_mutex_destroy},
     {"pthread_mutex_lock", nullptr, Preamble_pthread_mutex_lock},
     {"pthread_mutex_trylock", nullptr, Preamble_pthread_mutex_trylock},
     {"pthread_mutex_unlock", nullptr, Preamble_pthread_mutex_unlock},
-    {"pthread_getspecific", nullptr, Preamble_pthread_getspecific},
-    {"pthread_setspecific", nullptr, Preamble_pthread_setspecific},
-    {"pthread_self", nullptr, Preamble_pthread_self},
-    {"tlv_get_addr", nullptr, Preamble_tlv_get_addr},
 
     /////////////////////////////////////////////////////////////////////////////
     // C library functions
     /////////////////////////////////////////////////////////////////////////////
 
-    {"closedir"},
     {"dlclose", nullptr, Preamble_Veto<0>},
     {"dlopen", nullptr, Preamble_PassThrough},
     {"dlsym", nullptr, Preamble_PassThrough},
     {"fclose", RR_SaveRvalHadErrorNegative},
-    {"fprintf", RR_SaveRvalHadErrorNegative},
     {"fopen", RR_SaveRvalHadErrorZero},
     {"fread", RR_Compose<RR_ScalarRval, RR_fread>},
     {"fseek", RR_SaveRvalHadErrorNegative},
@@ -2222,53 +2032,39 @@ static SystemRedirection gSystemRedirections[] = {
     {"strftime", RR_Compose<RR_ScalarRval, RR_WriteBufferViaRval<0, 1, 1>>},
     {"arc4random", RR_ScalarRval, nullptr, nullptr, Preamble_PassThrough},
     {"arc4random_buf", RR_WriteBuffer<0, 1>},
-    {"bootstrap_look_up", RR_WriteBufferFixedSize<2, sizeof(mach_port_t)>},
-    {"clock_gettime", RR_Compose<RR_ScalarRval, RR_OutParam<1, timespec>>},
-    {"clock_get_time",
-     RR_Compose<RR_ScalarRval, RR_OutParam<1, mach_timespec_t>>},
-    {"host_get_clock_service",
-     RR_Compose<RR_ScalarRval, RR_OutParam<2, clock_serv_t>>},
-    {"host_info", RR_host_info_or_statistics},
-    {"host_statistics", RR_host_info_or_statistics},
-    {"mach_absolute_time", RR_ScalarRval, nullptr, nullptr,
+    {"mach_absolute_time", RR_ScalarRval, Preamble_mach_absolute_time, nullptr,
      Preamble_PassThrough},
-    {"mach_host_self", RR_ScalarRval},
     {"mach_msg", RR_Compose<RR_ScalarRval, RR_WriteBuffer<0, 3>>, nullptr,
      nullptr, Preamble_WaitForever},
-    {"mach_port_allocate",
-     RR_Compose<RR_ScalarRval, RR_OutParam<2, mach_port_t>>},
-    {"mach_port_deallocate", RR_ScalarRval, nullptr, nullptr, Preamble_Veto<0>},
-    {"mach_port_insert_right", RR_ScalarRval},
-    {"mach_thread_self", nullptr, Preamble_mach_thread_self},
     {"mach_timebase_info",
-     RR_Compose<RR_ScalarRval, RR_OutParam<0, mach_timebase_info_data_t>>},
-    {"mach_vm_region", nullptr, Preamble_VetoIfNotPassedThrough<KERN_FAILURE>},
-    {"opendir$INODE64", RR_ScalarRval},
+     RR_Compose<RR_ScalarRval,
+                RR_WriteBufferFixedSize<0, sizeof(mach_timebase_info_data_t)>>},
+    {"mach_vm_allocate", nullptr, Preamble_mach_vm_allocate},
+    {"mach_vm_deallocate", nullptr, Preamble_mach_vm_deallocate},
+    {"mach_vm_map", nullptr, Preamble_mach_vm_map},
+    {"mach_vm_protect", nullptr, Preamble_mach_vm_protect},
     {"rand", RR_ScalarRval},
-    {"readdir$INODE64", RR_readdir},
     {"realpath",
      RR_SaveRvalHadErrorZero<RR_Compose<
          RR_CStringRval, RR_WriteOptionalBufferFixedSize<1, PATH_MAX>>>},
     {"realpath$DARWIN_EXTSN",
      RR_SaveRvalHadErrorZero<RR_Compose<
          RR_CStringRval, RR_WriteOptionalBufferFixedSize<1, PATH_MAX>>>},
-    {"sandbox_init", RR_ScalarRval},
-    {"sandbox_init_with_parameters", RR_ScalarRval},
-    {"srand"},
-    {"task_threads", RR_task_threads},
-    {"task_get_special_port",
-     RR_Compose<RR_ScalarRval, RR_OutParam<2, mach_port_t>>},
-    {"task_set_special_port", RR_ScalarRval},
-    {"task_swap_exception_ports", RR_ScalarRval}, // Ignore out parameters
-    {"time", RR_Compose<RR_ScalarRval, RR_OutParam<0, time_t>>},
-    {"uname", RR_SaveRvalHadErrorNegative<RR_OutParam<0, utsname>>},
-    {"vm_allocate", nullptr, Preamble_VetoIfNotPassedThrough<KERN_FAILURE>},
-    {"vm_copy", nullptr, Preamble_PassThrough},
+
+    // By passing through events when initializing the sandbox, we ensure both
+    // that we actually initialize the process sandbox while replaying as well
+    // as while recording, and that any activity in these calls does not
+    // interfere with the replay.
+    {"sandbox_init", nullptr, Preamble_PassThrough},
+    {"sandbox_init_with_parameters", nullptr, Preamble_PassThrough},
+
+    // Make sure events are passed through here so that replaying processes can
+    // inspect their own threads.
+    {"task_threads", nullptr, Preamble_PassThrough},
+
+    {"vm_copy", nullptr, Preamble_vm_copy},
+    {"vm_purgable_control", nullptr, Preamble_vm_purgable_control},
     {"tzset"},
-    {"_dyld_register_func_for_add_image"},
-    {"_dyld_register_func_for_remove_image"},
-    {"setjmp", nullptr, Preamble_VetoIfNotPassedThrough<0>},
-    {"longjmp", nullptr, Preamble_NYI},
 
     /////////////////////////////////////////////////////////////////////////////
     // Gecko functions
@@ -2288,7 +2084,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"method_exchangeImplementations"},
     {"objc_autoreleasePoolPop"},
     {"objc_autoreleasePoolPush", RR_ScalarRval},
-    {"objc_msgSend", RR_objc_msgSend, Preamble_objc_msgSend, EX_objc_msgSend},
+    {"objc_msgSend", RR_objc_msgSend, Preamble_objc_msgSend, MM_objc_msgSend},
 
     /////////////////////////////////////////////////////////////////////////////
     // Cocoa and CoreFoundation library functions
@@ -2296,15 +2092,14 @@ static SystemRedirection gSystemRedirections[] = {
 
     {"AcquireFirstMatchingEventInQueue", RR_ScalarRval},
     {"CFArrayAppendValue"},
-    {"CFArrayCreate", RR_ScalarRval, nullptr, EX_CFArrayCreate},
+    {"CFArrayCreate", RR_ScalarRval, nullptr, MM_CFArrayCreate},
     {"CFArrayCreateMutable", RR_ScalarRval},
-    {"CFArrayGetCount", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
+    {"CFArrayGetCount", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CFArrayGetValueAtIndex", RR_ScalarRval, nullptr,
-     EX_CFArrayGetValueAtIndex},
+     MM_CFArrayGetValueAtIndex},
     {"CFArrayRemoveValueAtIndex"},
     {"CFAttributedStringCreate", RR_ScalarRval, nullptr,
-     EX_Compose<EX_RequireDefaultAllocator<0>,
-                EX_CFTypeArg<1>, EX_CFTypeArg<2>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<1>, MM_CFTypeArg<2>, MM_CreateCFTypeRval>},
     {"CFBundleCopyExecutableURL", RR_ScalarRval},
     {"CFBundleCopyInfoDictionaryForURL", RR_ScalarRval},
     {"CFBundleCreate", RR_ScalarRval},
@@ -2317,38 +2112,27 @@ static SystemRedirection gSystemRedirections[] = {
     {"CFBundleGetInfoDictionary", RR_ScalarRval},
     {"CFBundleGetMainBundle", RR_ScalarRval},
     {"CFBundleGetValueForInfoDictionaryKey", RR_ScalarRval},
-    {"CFDataAppendBytes"},
-    {"CFDataCreateMutable", RR_ScalarRval},
-    {"CFDataGetBytePtr", RR_CFDataGetBytePtr, nullptr, EX_CFDataGetBytePtr},
-    {"CFDataGetLength", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
+    {"CFDataGetBytePtr", RR_CFDataGetBytePtr, nullptr, MM_CFDataGetBytePtr},
+    {"CFDataGetLength", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CFDateFormatterCreate", RR_ScalarRval},
     {"CFDateFormatterGetFormat", RR_ScalarRval},
     {"CFDictionaryAddValue", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_CFTypeArg<1>, EX_CFTypeArg<2>>},
-    {"CFDictionaryCreate", RR_ScalarRval, nullptr, EX_CFDictionaryCreate},
-    {"CFDictionaryCreateMutable", RR_ScalarRval, nullptr,
-     EX_Compose<EX_RequireDefaultAllocator<0>,
-                EX_ScalarArg<1>,
-                EX_RequireFixed<2,
-                    FixedInput::kCFTypeDictionaryKeyCallBacks>,
-                EX_RequireFixed<3,
-                    FixedInput::kCFTypeDictionaryValueCallBacks>,
-                EX_CreateCFTypeRval>},
+     MM_Compose<MM_UpdateCFTypeArg<0>, MM_CFTypeArg<1>, MM_CFTypeArg<2>>},
+    {"CFDictionaryCreate", RR_ScalarRval, nullptr, MM_CFDictionaryCreate},
+    {"CFDictionaryCreateMutable", RR_ScalarRval, nullptr, MM_CreateCFTypeRval},
     {"CFDictionaryCreateMutableCopy", RR_ScalarRval, nullptr,
-     EX_Compose<EX_RequireDefaultAllocator<0>,
-                EX_ScalarArg<1>, EX_CFTypeArg<2>, EX_CreateCFTypeRval>},
-    {"CFDictionaryGetTypeID", RR_ScalarRval, nullptr, EX_NoOp},
+     MM_Compose<MM_CFTypeArg<2>, MM_CreateCFTypeRval>},
     {"CFDictionaryGetValue", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>, EX_CFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>, MM_CFTypeRval>},
     {"CFDictionaryGetValueIfPresent",
      RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<2, sizeof(const void*)>>,
      nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>, EX_CFTypeOutputArg<2>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>, MM_CFTypeOutputArg<2>>},
     {"CFDictionaryReplaceValue", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_CFTypeArg<1>, EX_CFTypeArg<2>>},
+     MM_Compose<MM_UpdateCFTypeArg<0>, MM_CFTypeArg<1>, MM_CFTypeArg<2>>},
     {"CFEqual", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>>},
-    {"CFGetTypeID", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>>},
+    {"CFGetTypeID", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CFLocaleCopyCurrent", RR_ScalarRval},
     {"CFLocaleCopyPreferredLanguages", RR_ScalarRval},
     {"CFLocaleCreate", RR_ScalarRval},
@@ -2357,21 +2141,18 @@ static SystemRedirection gSystemRedirections[] = {
      Preamble_CFNotificationCenterAddObserver},
     {"CFNotificationCenterGetLocalCenter", RR_ScalarRval},
     {"CFNotificationCenterRemoveObserver"},
-    {"CFNumberCreate", RR_ScalarRval, nullptr, EX_CFNumberCreate},
-    {"CFNumberGetTypeID", RR_ScalarRval, nullptr, EX_NoOp},
+    {"CFNumberCreate", RR_ScalarRval, nullptr, MM_CFNumberCreate},
     {"CFNumberGetValue", RR_Compose<RR_ScalarRval, RR_CFNumberGetValue>,
-     nullptr, EX_CFNumberGetValue},
-    {"CFNumberIsFloatType", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
+     nullptr, MM_CFNumberGetValue},
+    {"CFNumberIsFloatType", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CFPreferencesAppValueIsForced", RR_ScalarRval},
     {"CFPreferencesCopyAppValue", RR_ScalarRval},
     {"CFPreferencesCopyValue", RR_ScalarRval},
     {"CFPropertyListCreateFromXMLData", RR_ScalarRval},
-    {"CFPropertyListCreateWithData", RR_ScalarRval},
     {"CFPropertyListCreateWithStream", RR_ScalarRval},
     {"CFReadStreamClose"},
     {"CFReadStreamCreateWithFile", RR_ScalarRval},
     {"CFReadStreamOpen", RR_ScalarRval},
-    {"CFReadStreamRead", RR_Compose<RR_ScalarRval, RR_WriteBuffer<1, 2>>},
 
     // Don't handle release/retain calls explicitly in the middleman:
     // all resources will be cleaned up when its calls are reset.
@@ -2387,19 +2168,14 @@ static SystemRedirection gSystemRedirections[] = {
     {"CFRunLoopWakeUp"},
     {"CFStringAppendCharacters"},
     {"CFStringCompare", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>>},
     {"CFStringCreateArrayBySeparatingStrings", RR_ScalarRval},
     {"CFStringCreateMutable", RR_ScalarRval},
     {"CFStringCreateWithBytes", RR_ScalarRval, nullptr,
-     EX_Compose<EX_RequireDefaultAllocator<0>,
-                EX_Buffer<1, 2>, EX_ScalarArg<3>, EX_ScalarArg<4>,
-                EX_CreateCFTypeRval>},
+     MM_Compose<MM_Buffer<1, 2>, MM_CreateCFTypeRval>},
     {"CFStringCreateWithBytesNoCopy", RR_ScalarRval},
     {"CFStringCreateWithCharactersNoCopy", RR_ScalarRval, nullptr,
-     EX_Compose<EX_RequireDefaultAllocator<0>,
-                EX_Buffer<1, 2, UniChar>,
-                EX_RequireFixed<3, FixedInput::kCFAllocatorNull>,
-                EX_CreateCFTypeRval>},
+     MM_Compose<MM_Buffer<1, 2, UniChar>, MM_CreateCFTypeRval>},
     {"CFStringCreateWithCString", RR_ScalarRval},
     {"CFStringCreateWithFormat", RR_ScalarRval},
     {"CFStringGetBytes",
@@ -2413,16 +2189,13 @@ static SystemRedirection gSystemRedirections[] = {
      // We also need to specify the argument register with the range's length
      // here.
      RR_WriteBuffer<3, 2, UniChar>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>,
-                EX_ScalarArg<1>,
-                EX_WriteBuffer<3, 2, UniChar>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_WriteBuffer<3, 2, UniChar>>},
     {"CFStringGetCString", RR_Compose<RR_ScalarRval, RR_WriteBuffer<1, 2>>},
     {"CFStringGetCStringPtr", nullptr, Preamble_VetoIfNotPassedThrough<0>},
     {"CFStringGetIntValue", RR_ScalarRval},
-    {"CFStringGetLength", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
+    {"CFStringGetLength", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CFStringGetMaximumSizeForEncoding", RR_ScalarRval},
     {"CFStringHasPrefix", RR_ScalarRval},
-    {"CFStringGetTypeID", RR_ScalarRval, nullptr, EX_NoOp},
     {"CFStringTokenizerAdvanceToNextToken", RR_ScalarRval},
     {"CFStringTokenizerCreate", RR_ScalarRval},
     {"CFStringTokenizerGetCurrentTokenRange", RR_ComplexScalarRval},
@@ -2434,276 +2207,236 @@ static SystemRedirection gSystemRedirections[] = {
      RR_Compose<RR_ScalarRval, RR_WriteBuffer<2, 3>>},
     {"CFURLGetFSRef",
      RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<1, sizeof(FSRef)>>},
-    {"CFUUIDCreate", RR_ScalarRval, nullptr,
-     EX_Compose<EX_RequireDefaultAllocator<0>, EX_CreateCFTypeRval>},
+    {"CFUUIDCreate", RR_ScalarRval, nullptr, MM_CreateCFTypeRval},
     {"CFUUIDCreateString", RR_ScalarRval},
-    {"CFUUIDGetUUIDBytes", RR_ComplexScalarRval, nullptr, EX_CFTypeArg<0>},
-    {"CGAffineTransformConcat",
-     RR_OversizeRval<sizeof(CGAffineTransform)>, nullptr,
-     EX_Compose<EX_StackArgumentData<2 * sizeof(CGAffineTransform)>,
-                EX_OversizeRval<CGAffineTransform>>},
-    {"CGAffineTransformInvert",
-     RR_OversizeRval<sizeof(CGAffineTransform)>, nullptr,
-     EX_Compose<EX_StackArgumentData<sizeof(CGAffineTransform)>,
-                EX_OversizeRval<CGAffineTransform>>},
-    {"CGAffineTransformMakeScale",
-     RR_OversizeRval<sizeof(CGAffineTransform)>, nullptr,
-     EX_Compose<EX_FloatArg<0>,
-                EX_FloatArg<1>,
-                EX_OversizeRval<CGAffineTransform>>},
+    {"CFUUIDGetUUIDBytes", RR_ComplexScalarRval, nullptr, MM_CFTypeArg<0>},
+    {"CGAffineTransformConcat", RR_OversizeRval<sizeof(CGAffineTransform)>},
     {"CGBitmapContextCreateImage", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CGBitmapContextCreateWithData",
      RR_Compose<RR_ScalarRval, RR_CGBitmapContextCreateWithData>, nullptr,
-     EX_CGBitmapContextCreateWithData},
+     MM_CGBitmapContextCreateWithData},
     {"CGBitmapContextGetBytesPerRow", RR_ScalarRval},
     {"CGBitmapContextGetHeight", RR_ScalarRval},
     {"CGBitmapContextGetWidth", RR_ScalarRval},
     {"CGColorRelease", RR_ScalarRval},
     {"CGColorSpaceCopyICCProfile", RR_ScalarRval},
     {"CGColorSpaceCreateDeviceGray", RR_ScalarRval, nullptr,
-     EX_CreateCFTypeRval},
+     MM_CreateCFTypeRval},
     {"CGColorSpaceCreateDeviceRGB", RR_ScalarRval, nullptr,
-     EX_CreateCFTypeRval},
+     MM_CreateCFTypeRval},
     {"CGColorSpaceCreatePattern", RR_ScalarRval},
     {"CGColorSpaceRelease", RR_ScalarRval, nullptr, nullptr, Preamble_Veto<0>},
     {"CGContextAddPath", nullptr, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>>},
     {"CGContextBeginTransparencyLayerWithRect", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_StackArgumentData<sizeof(CGRect)>,
-                EX_CFTypeArg<1>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_StackArgumentData<sizeof(CGRect)>,
+                MM_CFTypeArg<1>>},
     {"CGContextClipToRect", nullptr, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_StackArgumentData<sizeof(CGRect)>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_StackArgumentData<sizeof(CGRect)>>},
     {"CGContextClipToRects", nullptr, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_Buffer<1, 2, CGRect>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_Buffer<1, 2, CGRect>>},
     {"CGContextConcatCTM", nullptr, nullptr,
-     EX_Compose<EX_CFTypeArg<0>,
-                EX_StackArgumentData<sizeof(CGAffineTransform)>>},
+     MM_Compose<MM_CFTypeArg<0>,
+                MM_StackArgumentData<sizeof(CGAffineTransform)>>},
     {"CGContextDrawImage", RR_FlushCGContext<0>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_StackArgumentData<sizeof(CGRect)>,
-                EX_CFTypeArg<1>, EX_FlushCGContext<0>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_StackArgumentData<sizeof(CGRect)>,
+                MM_CFTypeArg<1>, MM_FlushCGContext<0>>},
     {"CGContextDrawLinearGradient", RR_FlushCGContext<0>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>,
-                EX_StackArgumentData<2 * sizeof(CGPoint)>,
-                EX_ScalarArg<2>,
-                EX_FlushCGContext<0>>},
-    {"CGContextEndTransparencyLayer", nullptr, nullptr, EX_UpdateCFTypeArg<0>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>,
+                MM_StackArgumentData<2 * sizeof(CGPoint)>,
+                MM_FlushCGContext<0>>},
+    {"CGContextEndTransparencyLayer", nullptr, nullptr, MM_CFTypeArg<0>},
     {"CGContextFillPath", RR_FlushCGContext<0>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_FlushCGContext<0>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_FlushCGContext<0>>},
     {"CGContextFillRect", RR_FlushCGContext<0>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_StackArgumentData<sizeof(CGRect)>,
-                EX_FlushCGContext<0>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_StackArgumentData<sizeof(CGRect)>,
+                MM_FlushCGContext<0>>},
     {"CGContextGetClipBoundingBox", RR_OversizeRval<sizeof(CGRect)>},
     {"CGContextGetCTM", RR_OversizeRval<sizeof(CGAffineTransform)>},
     {"CGContextGetType", RR_ScalarRval},
     {"CGContextGetUserSpaceToDeviceSpaceTransform",
      RR_OversizeRval<sizeof(CGAffineTransform)>, nullptr,
-     EX_Compose<EX_CFTypeArg<1>, EX_OversizeRval<CGAffineTransform>>},
+     MM_Compose<MM_CFTypeArg<1>, MM_OversizeRval<sizeof(CGAffineTransform)>>},
     {"CGContextRestoreGState", nullptr, Preamble_CGContextRestoreGState,
-     EX_UpdateCFTypeArg<0>},
-    {"CGContextRotateCTM", nullptr, nullptr,
-     EX_Compose<EX_FloatArg<0>, EX_UpdateCFTypeArg<0>>},
-    {"CGContextSaveGState", nullptr, nullptr, EX_UpdateCFTypeArg<0>},
+     MM_UpdateCFTypeArg<0>},
+    {"CGContextRotateCTM", nullptr, nullptr, MM_UpdateCFTypeArg<0>},
+    {"CGContextSaveGState", nullptr, nullptr, MM_UpdateCFTypeArg<0>},
     {"CGContextSetAllowsFontSubpixelPositioning", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_ScalarArg<1>>},
+     MM_UpdateCFTypeArg<0>},
     {"CGContextSetAllowsFontSubpixelQuantization", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_ScalarArg<1>>},
-    {"CGContextSetAlpha", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_FloatArg<1>>},
+     MM_UpdateCFTypeArg<0>},
+    {"CGContextSetAlpha", nullptr, nullptr, MM_UpdateCFTypeArg<0>},
     {"CGContextSetBaseCTM", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>,
-                EX_StackArgumentData<sizeof(CGAffineTransform)>>},
+     MM_Compose<MM_UpdateCFTypeArg<0>,
+                MM_StackArgumentData<sizeof(CGAffineTransform)>>},
     {"CGContextSetCTM", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>,
-                EX_StackArgumentData<sizeof(CGAffineTransform)>>},
-    {"CGContextSetGrayFillColor", nullptr, nullptr,
-     EX_Compose<EX_FloatArg<0>, EX_FloatArg<1>, EX_UpdateCFTypeArg<0>>},
+     MM_Compose<MM_UpdateCFTypeArg<0>,
+                MM_StackArgumentData<sizeof(CGAffineTransform)>>},
+    {"CGContextSetGrayFillColor", nullptr, nullptr, MM_UpdateCFTypeArg<0>},
     {"CGContextSetRGBFillColor", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>,
-                EX_FloatArg<0>, EX_FloatArg<1>, EX_FloatArg<2>,
-                EX_StackArgumentData<sizeof(CGFloat)>>},
+     MM_Compose<MM_UpdateCFTypeArg<0>, MM_StackArgumentData<sizeof(CGFloat)>>},
     {"CGContextSetRGBStrokeColor", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>,
-                EX_FloatArg<0>, EX_FloatArg<1>, EX_FloatArg<2>,
-                EX_StackArgumentData<sizeof(CGFloat)>>},
-    {"CGContextSetShouldAntialias", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_ScalarArg<1>>},
-    {"CGContextSetShouldSmoothFonts", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_ScalarArg<1>>},
+     MM_Compose<MM_UpdateCFTypeArg<0>, MM_StackArgumentData<sizeof(CGFloat)>>},
+    {"CGContextSetShouldAntialias", nullptr, nullptr, MM_UpdateCFTypeArg<0>},
+    {"CGContextSetShouldSmoothFonts", nullptr, nullptr, MM_UpdateCFTypeArg<0>},
     {"CGContextSetShouldSubpixelPositionFonts", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_ScalarArg<1>>},
+     MM_UpdateCFTypeArg<0>},
     {"CGContextSetShouldSubpixelQuantizeFonts", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_ScalarArg<1>>},
-    {"CGContextSetTextDrawingMode", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_ScalarArg<1>>},
+     MM_UpdateCFTypeArg<0>},
+    {"CGContextSetTextDrawingMode", nullptr, nullptr, MM_UpdateCFTypeArg<0>},
     {"CGContextSetTextMatrix", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>,
-                EX_StackArgumentData<sizeof(CGAffineTransform)>>},
-    {"CGContextScaleCTM", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_FloatArg<0>, EX_FloatArg<1>>},
+     MM_Compose<MM_UpdateCFTypeArg<0>,
+                MM_StackArgumentData<sizeof(CGAffineTransform)>>},
+    {"CGContextScaleCTM", nullptr, nullptr, MM_UpdateCFTypeArg<0>},
     {"CGContextStrokeLineSegments", RR_FlushCGContext<0>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_Buffer<1, 2, CGPoint>,
-                EX_FlushCGContext<0>>},
-    {"CGContextTranslateCTM", nullptr, nullptr,
-     EX_Compose<EX_UpdateCFTypeArg<0>, EX_FloatArg<0>, EX_FloatArg<1>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_Buffer<1, 2, CGPoint>,
+                MM_FlushCGContext<0>>},
+    {"CGContextTranslateCTM", nullptr, nullptr, MM_UpdateCFTypeArg<0>},
     {"CGDataProviderCreateWithData",
      RR_Compose<RR_ScalarRval, RR_CGDataProviderCreateWithData>, nullptr,
-     EX_CGDataProviderCreateWithData},
+     MM_CGDataProviderCreateWithData},
     {"CGDataProviderRelease", nullptr, nullptr, nullptr, Preamble_Veto<0>},
     {"CGDisplayCopyColorSpace", RR_ScalarRval},
     {"CGDisplayIOServicePort", RR_ScalarRval},
     {"CGEventSourceCounterForEventType", RR_ScalarRval},
     {"CGFontCopyTableForTag", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_ScalarArg<1>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CGFontCopyTableTags", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CGFontCopyVariations", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CGFontCreateCopyWithVariations", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>, MM_CreateCFTypeRval>},
     {"CGFontCreateWithDataProvider", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CGFontCreateWithFontName", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CGFontCreateWithPlatformFont", RR_ScalarRval},
-    {"CGFontGetAscent", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
-    {"CGFontGetCapHeight", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
-    {"CGFontGetDescent", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
+    {"CGFontGetAscent", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
+    {"CGFontGetCapHeight", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
+    {"CGFontGetDescent", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CGFontGetFontBBox", RR_OversizeRval<sizeof(CGRect)>, nullptr,
-     EX_Compose<EX_CFTypeArg<1>, EX_OversizeRval<CGRect>>},
+     MM_Compose<MM_CFTypeArg<1>, MM_OversizeRval<sizeof(CGRect)>>},
     {"CGFontGetGlyphAdvances",
      RR_Compose<RR_ScalarRval, RR_WriteBuffer<3, 2, int>>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_Buffer<1, 2, CGGlyph>,
-                EX_WriteBuffer<3, 2, int>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_Buffer<1, 2, CGGlyph>,
+                MM_WriteBuffer<3, 2, int>>},
     {"CGFontGetGlyphBBoxes",
      RR_Compose<RR_ScalarRval, RR_WriteBuffer<3, 2, CGRect>>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_Buffer<1, 2, CGGlyph>,
-                EX_WriteBuffer<3, 2, CGRect>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_Buffer<1, 2, CGGlyph>,
+                MM_WriteBuffer<3, 2, CGRect>>},
     {"CGFontGetGlyphPath", RR_ScalarRval},
-    {"CGFontGetLeading", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
-    {"CGFontGetUnitsPerEm", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
-    {"CGFontGetXHeight", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
+    {"CGFontGetLeading", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
+    {"CGFontGetUnitsPerEm", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
+    {"CGFontGetXHeight", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CGGradientCreateWithColorComponents", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_Buffer<1, 3, CGFloat>,
-                EX_Buffer<2, 3, CGFloat>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_Buffer<1, 3, CGFloat>,
+                MM_Buffer<2, 3, CGFloat>, MM_CreateCFTypeRval>},
     {"CGImageGetHeight", RR_ScalarRval},
     {"CGImageGetWidth", RR_ScalarRval},
     {"CGImageRelease", RR_ScalarRval, nullptr, nullptr, Preamble_Veto<0>},
     {"CGMainDisplayID", RR_ScalarRval},
     {"CGPathAddPath"},
-    {"CGPathApply", nullptr, Preamble_CGPathApply, EX_CGPathApply},
+    {"CGPathApply", nullptr, Preamble_CGPathApply, MM_CGPathApply},
     {"CGPathContainsPoint", RR_ScalarRval},
     {"CGPathCreateMutable", RR_ScalarRval},
     {"CGPathCreateWithRoundedRect", RR_ScalarRval, nullptr,
-     EX_Compose<EX_StackArgumentData<sizeof(CGRect)>,
-                EX_FloatArg<0>, EX_FloatArg<1>,
-                EX_InParam<0, CGAffineTransform>,
-                EX_CreateCFTypeRval>},
+     MM_Compose<MM_StackArgumentData<sizeof(CGRect)>,
+                MM_BufferFixedSize<0, sizeof(CGAffineTransform)>,
+                MM_CreateCFTypeRval>},
     {"CGPathGetBoundingBox", RR_OversizeRval<sizeof(CGRect)>},
     {"CGPathGetCurrentPoint", RR_ComplexFloatRval},
     {"CGPathIsEmpty", RR_ScalarRval},
-    {"CGRectApplyAffineTransform", RR_OversizeRval<sizeof(CGRect)>, nullptr,
-     EX_Compose<EX_StackArgumentData<sizeof(CGRect) +
-                                     sizeof(CGAffineTransform)>,
-                EX_OversizeRval<CGRect>>},
     {"CGSSetDebugOptions", RR_ScalarRval},
     {"CGSShutdownServerConnections"},
     {"CTFontCopyFamilyName", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CTFontCopyFeatures", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CTFontCopyFontDescriptor", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CTFontCopyGraphicsFont", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CTFontCopyTable", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_ScalarArg<1>, EX_ScalarArg<2>,
-                EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CTFontCopyVariationAxes", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CTFontCreateForString", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>,
-                EX_ScalarArg<2>, EX_ScalarArg<3>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>, MM_CreateCFTypeRval>},
     {"CTFontCreatePathForGlyph", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>,
-                EX_ScalarArg<1>,
-                EX_InParam<2, CGAffineTransform>,
-                EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>,
+                MM_BufferFixedSize<2, sizeof(CGAffineTransform)>,
+                MM_CreateCFTypeRval>},
     {"CTFontCreateWithFontDescriptor", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>,
-                EX_FloatArg<0>,
-                EX_InParam<1, CGAffineTransform>,
-                EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>,
+                MM_BufferFixedSize<1, sizeof(CGAffineTransform)>,
+                MM_CreateCFTypeRval>},
     {"CTFontCreateWithGraphicsFont", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>,
-                EX_FloatArg<0>,
-                EX_InParam<1, CGAffineTransform>,
-                EX_CFTypeArg<2>,
-                EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>,
+                MM_BufferFixedSize<1, sizeof(CGAffineTransform)>,
+                MM_CFTypeArg<2>, MM_CreateCFTypeRval>},
     {"CTFontCreateWithName", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>,
-                EX_FloatArg<0>,
-                EX_InParam<1, CGAffineTransform>,
-                EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>,
+                MM_BufferFixedSize<1, sizeof(CGAffineTransform)>,
+                MM_CreateCFTypeRval>},
     {"CTFontDescriptorCopyAttribute", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>, MM_CreateCFTypeRval>},
     {"CTFontDescriptorCreateCopyWithAttributes", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>, MM_CreateCFTypeRval>},
     {"CTFontDescriptorCreateMatchingFontDescriptors", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>, MM_CreateCFTypeRval>},
     {"CTFontDescriptorCreateWithAttributes", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CTFontDrawGlyphs", RR_FlushCGContext<4>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<4>, EX_Buffer<1, 3, CGGlyph>,
-                EX_Buffer<2, 3, CGPoint>, EX_FlushCGContext<4>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<4>, MM_Buffer<1, 3, CGGlyph>,
+                MM_Buffer<2, 3, CGPoint>, MM_FlushCGContext<4>>},
     {"CTFontGetAdvancesForGlyphs",
      RR_Compose<RR_FloatRval, RR_WriteOptionalBuffer<3, 4, CGSize>>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_ScalarArg<1>,
-                EX_Buffer<2, 4, CGGlyph>,
-                EX_WriteBuffer<3, 4, CGSize>>},
-    {"CTFontGetAscent", RR_FloatRval, nullptr, EX_CFTypeArg<0>},
+     MM_Compose<MM_CFTypeArg<0>, MM_Buffer<2, 4, CGGlyph>,
+                MM_WriteBuffer<3, 4, CGSize>>},
+    {"CTFontGetAscent", RR_FloatRval, nullptr, MM_CFTypeArg<0>},
     {"CTFontGetBoundingBox", RR_OversizeRval<sizeof(CGRect)>, nullptr,
-     EX_Compose<EX_CFTypeArg<1>, EX_OversizeRval<CGRect>>},
+     MM_Compose<MM_CFTypeArg<1>, MM_OversizeRval<sizeof(CGRect)>>},
     {"CTFontGetBoundingRectsForGlyphs",
      // Argument indexes here are off by one due to the oversize rval.
      RR_Compose<RR_OversizeRval<sizeof(CGRect)>,
                 RR_WriteOptionalBuffer<4, 5, CGRect>>,
      nullptr,
-     EX_Compose<EX_CFTypeArg<1>, EX_ScalarArg<2>,
-                EX_Buffer<3, 5, CGGlyph>,
-                EX_OversizeRval<CGRect>, EX_WriteBuffer<4, 5, CGRect>>},
-    {"CTFontGetCapHeight", RR_FloatRval, nullptr, EX_CFTypeArg<0>},
-    {"CTFontGetDescent", RR_FloatRval, nullptr, EX_CFTypeArg<0>},
-    {"CTFontGetGlyphCount", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
+     MM_Compose<MM_CFTypeArg<1>, MM_Buffer<3, 5, CGGlyph>,
+                MM_OversizeRval<sizeof(CGRect)>, MM_WriteBuffer<4, 5, CGRect>>},
+    {"CTFontGetCapHeight", RR_FloatRval, nullptr, MM_CFTypeArg<0>},
+    {"CTFontGetDescent", RR_FloatRval, nullptr, MM_CFTypeArg<0>},
+    {"CTFontGetGlyphCount", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CTFontGetGlyphsForCharacters",
      RR_Compose<RR_ScalarRval, RR_WriteBuffer<2, 3, CGGlyph>>, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_Buffer<1, 3, UniChar>,
-                EX_WriteBuffer<2, 3, CGGlyph>>},
-    {"CTFontGetLeading", RR_FloatRval, nullptr, EX_CFTypeArg<0>},
-    {"CTFontGetSize", RR_FloatRval, nullptr, EX_CFTypeArg<0>},
-    {"CTFontGetSymbolicTraits", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
-    {"CTFontGetUnderlinePosition", RR_FloatRval, nullptr, EX_CFTypeArg<0>},
-    {"CTFontGetUnderlineThickness", RR_FloatRval, nullptr, EX_CFTypeArg<0>},
-    {"CTFontGetUnitsPerEm", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
-    {"CTFontGetXHeight", RR_FloatRval, nullptr, EX_CFTypeArg<0>},
+     MM_Compose<MM_CFTypeArg<0>, MM_Buffer<1, 3, UniChar>,
+                MM_WriteBuffer<2, 3, CGGlyph>>},
+    {"CTFontGetLeading", RR_FloatRval, nullptr, MM_CFTypeArg<0>},
+    {"CTFontGetSize", RR_FloatRval, nullptr, MM_CFTypeArg<0>},
+    {"CTFontGetSymbolicTraits", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
+    {"CTFontGetUnderlinePosition", RR_FloatRval, nullptr, MM_CFTypeArg<0>},
+    {"CTFontGetUnderlineThickness", RR_FloatRval, nullptr, MM_CFTypeArg<0>},
+    {"CTFontGetUnitsPerEm", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
+    {"CTFontGetXHeight", RR_FloatRval, nullptr, MM_CFTypeArg<0>},
     {"CTFontManagerCopyAvailableFontFamilyNames", RR_ScalarRval},
     {"CTFontManagerRegisterFontsForURLs", RR_ScalarRval},
     {"CTFontManagerSetAutoActivationSetting"},
     {"CTLineCreateWithAttributedString", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CreateCFTypeRval>},
     {"CTLineGetGlyphRuns", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeRval>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeRval>},
     {"CTRunGetAttributes", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeRval>},
-    {"CTRunGetGlyphCount", RR_ScalarRval, nullptr, EX_CFTypeArg<0>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeRval>},
+    {"CTRunGetGlyphCount", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CTRunGetGlyphsPtr", RR_CTRunGetElements<CGGlyph, CTRunGetGlyphs>, nullptr,
-     EX_CTRunGetElements<CGGlyph, CTRunGetGlyphs>},
+     MM_CTRunGetElements<CGGlyph, CTRunGetGlyphs>},
     {"CTRunGetPositionsPtr", RR_CTRunGetElements<CGPoint, CTRunGetPositions>,
-     nullptr, EX_CTRunGetElements<CGPoint, CTRunGetPositions>},
+     nullptr, MM_CTRunGetElements<CGPoint, CTRunGetPositions>},
     {"CTRunGetStringIndicesPtr",
      RR_CTRunGetElements<CFIndex, CTRunGetStringIndices>, nullptr,
-     EX_CTRunGetElements<CFIndex, CTRunGetStringIndices>},
-    {"CTRunGetStringRange", RR_ComplexScalarRval, nullptr, EX_CFTypeArg<0>},
+     MM_CTRunGetElements<CFIndex, CTRunGetStringIndices>},
+    {"CTRunGetStringRange", RR_ComplexScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CTRunGetTypographicBounds",
      // Argument indexes are off by one here as the CFRange argument uses two
      // slots.
@@ -2712,12 +2445,12 @@ static SystemRedirection gSystemRedirections[] = {
                 RR_WriteOptionalBufferFixedSize<4, sizeof(CGFloat)>,
                 RR_WriteOptionalBufferFixedSize<5, sizeof(CGFloat)>>,
      nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_ScalarArg<1>, EX_ScalarArg<2>,
-                EX_OutParam<3, CGFloat>, EX_OutParam<4, CGFloat>,
-                EX_OutParam<5, CGFloat>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_WriteBufferFixedSize<3, sizeof(CGFloat)>,
+                MM_WriteBufferFixedSize<4, sizeof(CGFloat)>,
+                MM_WriteBufferFixedSize<5, sizeof(CGFloat)>>},
     {"CUIDraw", nullptr, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeArg<1>, EX_CFTypeArg<2>,
-                EX_StackArgumentData<sizeof(CGRect)>>},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeArg<1>, MM_CFTypeArg<2>,
+                MM_StackArgumentData<sizeof(CGRect)>>},
     {"FSCompareFSRefs", RR_ScalarRval},
     {"FSGetVolumeInfo",
      RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<5, sizeof(HFSUniStr255)>,
@@ -2738,70 +2471,58 @@ static SystemRedirection gSystemRedirections[] = {
      RR_Compose<RR_WriteOptionalBufferFixedSize<4, sizeof(HIRect)>,
                 RR_ScalarRval>,
      nullptr,
-     EX_Compose<EX_InParam<0, HIRect>,
-                EX_InParam<1, HIThemeButtonDrawInfo>,
-                EX_UpdateCFTypeArg<2>,
-                EX_ScalarArg<3>,
-                EX_OutParam<4, HIRect>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIRect)>,
+                MM_BufferFixedSize<1, sizeof(HIThemeButtonDrawInfo)>,
+                MM_UpdateCFTypeArg<2>,
+                MM_WriteBufferFixedSize<4, sizeof(HIRect)>>},
     {"HIThemeDrawFrame", RR_ScalarRval, nullptr,
-     EX_Compose<EX_InParam<0, HIRect>,
-                EX_InParam<1, HIThemeFrameDrawInfo>,
-                EX_UpdateCFTypeArg<2>,
-                EX_ScalarArg<3>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIRect)>,
+                MM_BufferFixedSize<1, sizeof(HIThemeFrameDrawInfo)>,
+                MM_UpdateCFTypeArg<2>>},
     {"HIThemeDrawGroupBox", RR_ScalarRval, nullptr,
-     EX_Compose<EX_InParam<0, HIRect>,
-                EX_InParam<1, HIThemeGroupBoxDrawInfo>,
-                EX_UpdateCFTypeArg<2>,
-                EX_ScalarArg<3>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIRect)>,
+                MM_BufferFixedSize<1, sizeof(HIThemeGroupBoxDrawInfo)>,
+                MM_UpdateCFTypeArg<2>>},
     {"HIThemeDrawGrowBox", RR_ScalarRval, nullptr,
-     EX_Compose<EX_InParam<0, HIPoint>,
-                EX_InParam<1, HIThemeGrowBoxDrawInfo>,
-                EX_UpdateCFTypeArg<2>,
-                EX_ScalarArg<3>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIPoint)>,
+                MM_BufferFixedSize<1, sizeof(HIThemeGrowBoxDrawInfo)>,
+                MM_UpdateCFTypeArg<2>>},
     {"HIThemeDrawMenuBackground", RR_ScalarRval, nullptr,
-     EX_Compose<EX_InParam<0, HIRect>,
-                EX_InParam<1, HIThemeMenuDrawInfo>,
-                EX_UpdateCFTypeArg<2>,
-                EX_ScalarArg<3>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIRect)>,
+                MM_BufferFixedSize<1, sizeof(HIThemeMenuDrawInfo)>,
+                MM_UpdateCFTypeArg<2>>},
     {"HIThemeDrawMenuItem",
      RR_Compose<RR_WriteOptionalBufferFixedSize<5, sizeof(HIRect)>,
                 RR_ScalarRval>,
      nullptr,
-     EX_Compose<EX_InParam<0, HIRect>,
-                EX_InParam<1, HIRect>,
-                EX_InParam<2, HIThemeMenuItemDrawInfo>,
-                EX_UpdateCFTypeArg<3>,
-                EX_ScalarArg<4>,
-                EX_OutParam<5, HIRect>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIRect)>,
+                MM_BufferFixedSize<1, sizeof(HIRect)>,
+                MM_BufferFixedSize<2, sizeof(HIThemeMenuItemDrawInfo)>,
+                MM_UpdateCFTypeArg<3>,
+                MM_WriteBufferFixedSize<5, sizeof(HIRect)>>},
     {"HIThemeDrawMenuSeparator", RR_ScalarRval, nullptr,
-     EX_Compose<EX_InParam<0, HIRect>,
-                EX_InParam<1, HIRect>,
-                EX_InParam<2, HIThemeMenuItemDrawInfo>,
-                EX_UpdateCFTypeArg<3>,
-                EX_ScalarArg<4>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIRect)>,
+                MM_BufferFixedSize<1, sizeof(HIRect)>,
+                MM_BufferFixedSize<2, sizeof(HIThemeMenuItemDrawInfo)>,
+                MM_UpdateCFTypeArg<3>>},
     {"HIThemeDrawSeparator", RR_ScalarRval, nullptr,
-     EX_Compose<EX_InParam<0, HIRect>,
-                EX_InParam<1, HIThemeSeparatorDrawInfo>,
-                EX_UpdateCFTypeArg<2>,
-                EX_ScalarArg<3>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIRect)>,
+                MM_BufferFixedSize<1, sizeof(HIThemeSeparatorDrawInfo)>,
+                MM_UpdateCFTypeArg<2>>},
     {"HIThemeDrawTabPane", RR_ScalarRval, nullptr,
-     EX_Compose<EX_InParam<0, HIRect>,
-                EX_InParam<1, HIThemeTabPaneDrawInfo>,
-                EX_UpdateCFTypeArg<2>,
-                EX_ScalarArg<3>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIRect)>,
+                MM_BufferFixedSize<1, sizeof(HIThemeTabPaneDrawInfo)>,
+                MM_UpdateCFTypeArg<2>>},
     {"HIThemeDrawTrack", RR_ScalarRval, nullptr,
-     EX_Compose<EX_InParam<0, HIThemeTrackDrawInfo>,
-                EX_InParam<1, HIRect>,
-                EX_UpdateCFTypeArg<2>,
-                EX_ScalarArg<3>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIThemeTrackDrawInfo)>,
+                MM_BufferFixedSize<1, sizeof(HIRect)>, MM_UpdateCFTypeArg<2>>},
     {"HIThemeGetGrowBoxBounds",
      RR_Compose<RR_ScalarRval, RR_WriteBufferFixedSize<2, sizeof(HIRect)>>,
      nullptr,
-     EX_Compose<EX_InParam<0, HIPoint>,
-                EX_InParam<1, HIThemeGrowBoxDrawInfo>,
-                EX_OutParam<2, HIRect>>},
-    {"HIThemeSetFill", RR_ScalarRval, nullptr,
-     EX_Compose<EX_ScalarArg<0>, EX_UpdateCFTypeArg<2>, EX_ScalarArg<3>>},
+     MM_Compose<MM_BufferFixedSize<0, sizeof(HIPoint)>,
+                MM_BufferFixedSize<1, sizeof(HIThemeGrowBoxDrawInfo)>,
+                MM_WriteBufferFixedSize<2, sizeof(HIRect)>>},
+    {"HIThemeSetFill", RR_ScalarRval, nullptr, MM_UpdateCFTypeArg<2>},
     {"IORegistryEntrySearchCFProperty", RR_ScalarRval},
     {"LSCopyAllHandlersForURLScheme", RR_ScalarRval},
     {"LSCopyApplicationForMIMEType",
@@ -2825,10 +2546,10 @@ static SystemRedirection gSystemRedirections[] = {
      RR_Compose<RR_ScalarRval,
                 RR_WriteOptionalBufferFixedSize<2, sizeof(CFErrorRef)>>},
     {"NSClassFromString", RR_ScalarRval, nullptr,
-     EX_Compose<EX_CFTypeArg<0>, EX_CFTypeRval>},
-    {"NSRectFill", nullptr, nullptr, EX_NoOp},
+     MM_Compose<MM_CFTypeArg<0>, MM_CFTypeRval>},
+    {"NSRectFill", nullptr, nullptr, MM_NoOp},
     {"NSSearchPathForDirectoriesInDomains", RR_ScalarRval},
-    {"NSSetFocusRingStyle", nullptr, nullptr, EX_NoOp},
+    {"NSSetFocusRingStyle", nullptr, nullptr, MM_NoOp},
     {"NSTemporaryDirectory", RR_ScalarRval},
     {"OSSpinLockLock", nullptr, Preamble_OSSpinLockLock},
     {"PMCopyPageFormat", RR_ScalarRval},
@@ -2952,15 +2673,9 @@ Redirection& GetRedirection(size_t aCallId) {
 // Get the instruction pointer to use as the address of the base function for a
 // redirection.
 static uint8_t* FunctionStartAddress(Redirection& aRedirection) {
-  if (!strcmp(aRedirection.mName, "tlv_get_addr")) {
-    return (uint8_t*) GetTLVAddressFunction();
-  }
-
   uint8_t* addr =
       static_cast<uint8_t*>(dlsym(RTLD_DEFAULT, aRedirection.mName));
-  if (!addr) {
-    return nullptr;
-  }
+  if (!addr) return nullptr;
 
   if (addr[0] == 0xFF && addr[1] == 0x25) {
     return *(uint8_t**)(addr + 6 + *reinterpret_cast<int32_t*>(addr + 2));
@@ -2988,8 +2703,8 @@ void EarlyInitializeRedirections() {
     redirection.mName = systemRedirection.mName;
     redirection.mSaveOutput = systemRedirection.mSaveOutput;
     redirection.mPreamble = systemRedirection.mPreamble;
-    redirection.mExternalCall = systemRedirection.mExternalCall;
-    redirection.mExternalPreamble = systemRedirection.mExternalPreamble;
+    redirection.mMiddlemanCall = systemRedirection.mMiddlemanCall;
+    redirection.mMiddlemanPreamble = systemRedirection.mMiddlemanPreamble;
 
     redirection.mBaseFunction = FunctionStartAddress(redirection);
     redirection.mOriginalFunction = redirection.mBaseFunction;
@@ -3047,51 +2762,6 @@ void LateInitializeRedirections() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Platform Symbols
-///////////////////////////////////////////////////////////////////////////////
-
-// Platform symbols are exported and used when we will be replaying recordings
-// on another platform. Special constants which can be passed to system library
-// functions are described here and read by the linker managing the replay,
-// so that those constants can be converted to appropriate values on the host
-// platform.
-
-struct PlatformSymbol {
-  const char* mName;
-  uint32_t mValue;
-};
-
-#define NewPlatformSymbol(Name) { #Name, Name }
-
-extern "C" {
-
-MOZ_EXPORT PlatformSymbol RecordReplayInterface_PlatformSymbols[] = {
-  NewPlatformSymbol(PROT_READ),
-  NewPlatformSymbol(PROT_WRITE),
-  NewPlatformSymbol(PROT_EXEC),
-  NewPlatformSymbol(MAP_FIXED),
-  NewPlatformSymbol(MAP_PRIVATE),
-  NewPlatformSymbol(MAP_ANON),
-  NewPlatformSymbol(MAP_NORESERVE),
-  NewPlatformSymbol(PTHREAD_MUTEX_NORMAL),
-  NewPlatformSymbol(PTHREAD_MUTEX_RECURSIVE),
-  NewPlatformSymbol(PTHREAD_CREATE_JOINABLE),
-  NewPlatformSymbol(PTHREAD_CREATE_DETACHED),
-  NewPlatformSymbol(SYS_thread_selfid),
-  NewPlatformSymbol(_SC_PAGESIZE),
-  NewPlatformSymbol(_SC_NPROCESSORS_CONF),
-  NewPlatformSymbol(RLIMIT_AS),
-  NewPlatformSymbol(ETIMEDOUT),
-  NewPlatformSymbol(EINTR),
-  NewPlatformSymbol(EPIPE),
-  NewPlatformSymbol(EAGAIN),
-  NewPlatformSymbol(ECONNRESET),
-  { nullptr, 0 },
-};
-
-} // extern "C"
-
-///////////////////////////////////////////////////////////////////////////////
 // Direct system call API
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -3100,8 +2770,8 @@ const char* SymbolNameRaw(void* aPtr) {
   return (dladdr(aPtr, &info) && info.dli_sname) ? info.dli_sname : "???";
 }
 
-void* DirectAllocateMemory(size_t aSize) {
-  void* res = CallFunction<void*>(gOriginal_mmap, nullptr, aSize,
+void* DirectAllocateMemory(void* aAddress, size_t aSize) {
+  void* res = CallFunction<void*>(gOriginal_mmap, aAddress, aSize,
                                   PROT_READ | PROT_WRITE | PROT_EXEC,
                                   MAP_ANON | MAP_PRIVATE, -1, 0);
   MOZ_RELEASE_ASSERT(res && res != (void*)-1);
@@ -3109,13 +2779,23 @@ void* DirectAllocateMemory(size_t aSize) {
 }
 
 void DirectDeallocateMemory(void* aAddress, size_t aSize) {
-  ssize_t rv = munmap(aAddress, aSize);
+  ssize_t rv = CallFunction<int>(gOriginal_munmap, aAddress, aSize);
   MOZ_RELEASE_ASSERT(rv >= 0);
 }
 
-void DirectMakeInaccessible(void* aAddress, size_t aSize) {
-  ssize_t rv = mprotect(aAddress, aSize, PROT_NONE);
-  MOZ_RELEASE_ASSERT(rv == 0);
+void DirectWriteProtectMemory(void* aAddress, size_t aSize, bool aExecutable,
+                              bool aIgnoreFailures /* = false */) {
+  ssize_t rv = CallFunction<int>(gOriginal_mprotect, aAddress, aSize,
+                                 PROT_READ | (aExecutable ? PROT_EXEC : 0));
+  MOZ_RELEASE_ASSERT(aIgnoreFailures || rv == 0);
+}
+
+void DirectUnprotectMemory(void* aAddress, size_t aSize, bool aExecutable,
+                           bool aIgnoreFailures /* = false */) {
+  ssize_t rv =
+      CallFunction<int>(gOriginal_mprotect, aAddress, aSize,
+                        PROT_READ | PROT_WRITE | (aExecutable ? PROT_EXEC : 0));
+  MOZ_RELEASE_ASSERT(aIgnoreFailures || rv == 0);
 }
 
 void DirectSeekFile(FileHandle aFd, uint64_t aOffset) {
@@ -3155,6 +2835,9 @@ void DirectPrint(const char* aString) {
 }
 
 size_t DirectRead(FileHandle aFd, void* aData, size_t aSize) {
+  // Clear the memory in case it is write protected by the memory snapshot
+  // mechanism.
+  memset(aData, 0, aSize);
   ssize_t rv =
       HANDLE_EINTR(CallFunction<int>(gOriginal_read, aFd, aData, aSize));
   MOZ_RELEASE_ASSERT(rv >= 0);
@@ -3169,39 +2852,32 @@ void DirectCreatePipe(FileHandle* aWriteFd, FileHandle* aReadFd) {
   *aReadFd = fds[0];
 }
 
-static double gNsPerTick;
+static double gAbsoluteToNanosecondsRate;
 
 void InitializeCurrentTime() {
-  mach_timebase_info_data_t info;
-  mach_timebase_info(&info);
-  gNsPerTick = (double)info.numer / info.denom;
+  AbsoluteTime time = {1000000, 0};
+  Nanoseconds rate = AbsoluteToNanoseconds(time);
+  MOZ_RELEASE_ASSERT(!rate.hi);
+  gAbsoluteToNanosecondsRate = rate.lo / 1000000.0;
 }
 
 double CurrentTime() {
   return CallFunction<int64_t>(gOriginal_mach_absolute_time) *
-         gNsPerTick / 1000.0;
+         gAbsoluteToNanosecondsRate / 1000.0;
 }
 
-NativeThreadId DirectSpawnThread(void (*aFunction)(void*), void* aArgument,
-                                 void* aStackBase, size_t aStackSize) {
-  MOZ_RELEASE_ASSERT(!IsRecordingOrReplaying() ||
-                     AreThreadEventsPassedThrough());
+void DirectSpawnThread(void (*aFunction)(void*), void* aArgument) {
+  MOZ_RELEASE_ASSERT(IsMiddleman() || AreThreadEventsPassedThrough());
 
   pthread_attr_t attr;
   int rv = pthread_attr_init(&attr);
   MOZ_RELEASE_ASSERT(rv == 0);
 
-  if (aStackBase) {
-    rv = pthread_attr_setstack(&attr, aStackBase, aStackSize);
-    MOZ_RELEASE_ASSERT(rv == 0);
-  }
+  rv = pthread_attr_setstacksize(&attr, 2 * 1024 * 1024);
+  MOZ_RELEASE_ASSERT(rv == 0);
 
   rv = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
   MOZ_RELEASE_ASSERT(rv == 0);
-
-  if (!gOriginal_pthread_create) {
-    gOriginal_pthread_create = BitwiseCast<void*>(pthread_create);
-  }
 
   pthread_t pthread;
   rv = CallFunction<int>(gOriginal_pthread_create, &pthread, &attr,
@@ -3210,12 +2886,6 @@ NativeThreadId DirectSpawnThread(void (*aFunction)(void*), void* aArgument,
 
   rv = pthread_attr_destroy(&attr);
   MOZ_RELEASE_ASSERT(rv == 0);
-
-  return pthread;
-}
-
-NativeThreadId DirectCurrentThread() {
-  return CallFunction<pthread_t>(gOriginal_pthread_self);
 }
 
 }  // namespace recordreplay

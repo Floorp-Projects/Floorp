@@ -6,19 +6,32 @@
 
 #include "ProcessRewind.h"
 
+#include "nsString.h"
 #include "ipc/ChildInternal.h"
 #include "ipc/ParentInternal.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/StaticMutex.h"
 #include "InfallibleVector.h"
+#include "MemorySnapshot.h"
 #include "Monitor.h"
 #include "ProcessRecordReplay.h"
+#include "ThreadSnapshot.h"
 
 namespace mozilla {
 namespace recordreplay {
 
 // The most recent checkpoint which was encountered.
 static size_t gLastCheckpoint = InvalidCheckpointId;
+
+// Information about the current rewinding state. The contents of this structure
+// are in untracked memory.
+struct RewindInfo {
+  // Thread stacks for snapshots which have been saved.
+  InfallibleVector<AllSavedThreadStacks, 1024, AllocPolicy<MemoryKind::Generic>>
+      mSnapshots;
+};
+
+static RewindInfo* gRewindInfo;
 
 // Lock for managing pending main thread callbacks.
 static Monitor* gMainThreadCallbackMonitor;
@@ -28,7 +41,92 @@ static Monitor* gMainThreadCallbackMonitor;
 static StaticInfallibleVector<std::function<void()>> gMainThreadCallbacks;
 
 void InitializeRewindState() {
+  MOZ_RELEASE_ASSERT(gRewindInfo == nullptr);
+  void* memory = AllocateMemory(sizeof(RewindInfo), MemoryKind::Generic);
+  gRewindInfo = new (memory) RewindInfo();
+
   gMainThreadCallbackMonitor = new Monitor();
+}
+
+void RestoreSnapshotAndResume(size_t aNumSnapshots) {
+  MOZ_RELEASE_ASSERT(IsReplaying());
+  MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
+  MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
+  MOZ_RELEASE_ASSERT(aNumSnapshots < gRewindInfo->mSnapshots.length());
+
+  // Make sure we don't lose pending main thread callbacks due to rewinding.
+  {
+    MonitorAutoLock lock(*gMainThreadCallbackMonitor);
+    MOZ_RELEASE_ASSERT(gMainThreadCallbacks.empty());
+  }
+
+  Thread::WaitForIdleThreads();
+
+  double start = CurrentTime();
+
+  {
+    // Rewind heap memory to the target snapshot.
+    AutoDisallowMemoryChanges disallow;
+    RestoreMemoryToLastSnapshot();
+    for (size_t i = 0; i < aNumSnapshots; i++) {
+      gRewindInfo->mSnapshots.back().ReleaseContents();
+      gRewindInfo->mSnapshots.popBack();
+      RestoreMemoryToLastDiffSnapshot();
+    }
+  }
+
+  FixupFreeRegionsAfterRewind();
+
+  double end = CurrentTime();
+  PrintSpew("Restore %.2fs\n", (end - start) / 1000000.0);
+
+  // Finally, let threads restore themselves to their stacks at the snapshot
+  // we are rewinding to.
+  RestoreAllThreads(gRewindInfo->mSnapshots.back());
+  Unreachable();
+}
+
+bool NewSnapshot() {
+  if (IsRecording()) {
+    return true;
+  }
+
+  Thread::WaitForIdleThreads();
+
+  PrintSpew("Saving snapshot...\n");
+
+  double start = CurrentTime();
+
+  // Record either the first or a subsequent diff memory snapshot.
+  if (gRewindInfo->mSnapshots.empty()) {
+    TakeFirstMemorySnapshot();
+  } else {
+    TakeDiffMemorySnapshot();
+  }
+  gRewindInfo->mSnapshots.emplaceBack();
+
+  double end = CurrentTime();
+
+  bool reached = true;
+
+  // Save all thread stacks for the snapshot. If we rewind here from a
+  // later point of execution then this will return false.
+  if (SaveAllThreads(gRewindInfo->mSnapshots.back())) {
+    PrintSpew("Saved snapshot %.2fs\n", (end - start) / 1000000.0);
+  } else {
+    PrintSpew("Restored snapshot\n");
+
+    reached = false;
+
+    // After restoring, make sure all threads have updated their stacks
+    // before letting any of them resume execution. Threads might have
+    // pointers into each others' stacks.
+    WaitForIdleThreadsToRestoreTheirStacks();
+  }
+
+  Thread::ResumeIdleThreads();
+
+  return reached;
 }
 
 void NewCheckpoint() {
@@ -49,18 +147,21 @@ void DivergeFromRecording() {
   Thread* thread = Thread::Current();
   MOZ_RELEASE_ASSERT(thread->IsMainThread());
 
-  gUnhandledDivergeAllowed = true;
-
   if (!thread->HasDivergedFromRecording()) {
+    // Reset middleman call state whenever we first diverge from the recording.
+    child::SendResetMiddlemanCalls();
+
     thread->DivergeFromRecording();
 
     // Direct all other threads to diverge from the recording as well.
     Thread::WaitForIdleThreads();
-    for (size_t i = MainThreadId + 1; i <= MaxThreadId; i++) {
+    for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
       Thread::GetById(i)->SetShouldDivergeFromRecording();
     }
     Thread::ResumeIdleThreads();
   }
+
+  gUnhandledDivergeAllowed = true;
 }
 
 extern "C" {
@@ -77,17 +178,27 @@ void DisallowUnhandledDivergeFromRecording() {
   gUnhandledDivergeAllowed = false;
 }
 
-void EnsureNotDivergedFromRecording(const Maybe<int>& aCallId) {
+void EnsureNotDivergedFromRecording() {
+  // If we have diverged from the recording and encounter an operation we can't
+  // handle, rewind to the last snapshot.
   AssertEventsAreNotPassedThrough();
   if (HasDivergedFromRecording()) {
     MOZ_RELEASE_ASSERT(gUnhandledDivergeAllowed);
 
-    PrintSpew("Unhandled recording divergence: %s\n",
-              aCallId.isSome() ? GetRedirection(aCallId.ref()).mName : "");
+    // Crash instead of rewinding if a repaint is about to fail and is not
+    // allowed.
+    if (child::CurrentRepaintCannotFail()) {
+      MOZ_CRASH("Recording divergence while repainting");
+    }
 
-    child::ReportUnhandledDivergence();
+    PrintSpew("Unhandled recording divergence, restoring snapshot...\n");
+    RestoreSnapshotAndResume(0);
     Unreachable();
   }
+}
+
+size_t NumSnapshots() {
+  return gRewindInfo ? gRewindInfo->mSnapshots.length() : 0;
 }
 
 size_t GetLastCheckpoint() { return gLastCheckpoint; }
@@ -127,10 +238,12 @@ void PauseMainThreadAndServiceCallbacks() {
     }
   }
 
-  // We shouldn't resume the main thread while it still has callbacks.
+  // As for RestoreSnapshotAndResume, we shouldn't resume the main thread
+  // while it still has callbacks to execute.
   MOZ_RELEASE_ASSERT(gMainThreadCallbacks.empty());
 
-  // If we diverge from the recording we can't resume normal execution.
+  // If we diverge from the recording the only way we can get back to resuming
+  // normal execution is to rewind to a snapshot prior to the divergence.
   MOZ_RELEASE_ASSERT(!HasDivergedFromRecording());
 
   gMainThreadIsPaused = false;
@@ -153,38 +266,6 @@ void ResumeExecution() {
   MonitorAutoLock lock(*gMainThreadCallbackMonitor);
   gMainThreadShouldPause = false;
   gMainThreadCallbackMonitor->Notify();
-}
-
-bool ForkProcess() {
-  MOZ_RELEASE_ASSERT(IsReplaying());
-
-  Thread::WaitForIdleThreads();
-
-  // Before forking all other threads need to release any locks they are
-  // holding. After the fork the new process will only have a main thread and
-  // will not be able to acquire any lock held at the time of the fork.
-  Thread::OperateOnIdleThreadLocks(Thread::OwnedLockState::NeedRelease);
-
-  AutoEnsurePassThroughThreadEvents pt;
-  pid_t pid = fork();
-
-  if (pid > 0) {
-    Thread::OperateOnIdleThreadLocks(Thread::OwnedLockState::NeedAcquire);
-    Thread::ResumeIdleThreads();
-    return true;
-  }
-
-  Print("FORKED %d\n", getpid());
-
-  if (TestEnv("MOZ_REPLAYING_WAIT_AT_FORK")) {
-    BusyWait();
-  }
-
-  ResetPid();
-
-  Thread::RespawnAllThreadsAfterFork();
-  Thread::ResumeIdleThreads();
-  return false;
 }
 
 }  // namespace recordreplay

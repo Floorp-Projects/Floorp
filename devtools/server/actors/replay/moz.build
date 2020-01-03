@@ -9,8 +9,6 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'connection-worker.js',
-    'connection.js',
     'control.js',
     'debugger.js',
     'graphics.js',
@@ -21,7 +19,6 @@ DevToolsModules(
 XPIDL_MODULE = 'devtools_rr'
 
 XPIDL_SOURCES = [
-    'rrIConnection.idl',
     'rrIControl.idl',
     'rrIGraphics.idl',
     'rrIReplay.idl',
