@@ -36,11 +36,23 @@ interface nsITouchBarInput : nsISupports
   /**
    * The type of the input.
    * Takes one of:
-   *   `button`: A standard button.
-   *             If an image is available, only the image is displayed.
-   *   `mainButton`: An extra-wide button. Displays both the image and title.
-   *   `scrubber`: A Scrubber element. Not yet implemented, except in the
-   *               case of Apple's pre-built Share scrubber.
+   *   `button`:
+   *     A standard button.
+   *     If an image is available, only the image is displayed.
+   *   `mainButton`:
+   *     An extra-wide button. Displays both the image and title.
+   *   `scrubber`:
+   *     A Scrubber element. Not yet implemented, except in the case of Apple's
+   *     pre-built Share scrubber.
+   *   `popover`:
+   *     An element that displays a new instance of nsTouchBar when tapped.
+   *     The elements in the new Touch Bar should be defined in the
+   *     input's `children` property.
+   *   `label`:
+   *     A text label.
+   *   `scrollView`:
+   *     Contains several buttons, defined in the input's `children` property.
+   *     The user can scroll through the buttons.
    */
   attribute AString type;
 
