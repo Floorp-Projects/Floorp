@@ -70,6 +70,11 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (JS_IsDeadWrapper(wrappedWeakRef)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+    return false;
+  }
+
   // Add an entry to the per-zone maps from target JS object to a list of weak
   // ref objects.
   gc::GCRuntime* gc = &cx->runtime()->gc;
