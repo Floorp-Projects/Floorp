@@ -309,23 +309,13 @@ static const uint32_t kInputIconSize = 16;
   }
 
   NSButton* button = (NSButton*)[aButton view];
-
   button.title = [input title];
-  if (![input isIconPositionSet]) {
-    [button setImagePosition:NSImageOnly];
-    [input setIconPositionSet:true];
-  }
-
   if ([input imageURI]) {
-    RefPtr<nsTouchBarInputIcon> icon = [input icon];
-    if (!icon) {
-      icon = new nsTouchBarInputIcon([input document], button);
-      [input setIcon:icon];
-    }
-    icon->SetupIcon([input imageURI]);
+    [button setImagePosition:NSImageOnly];
+    [self loadIconForInput:input forItem:aButton];
   }
-  [button setEnabled:![input isDisabled]];
 
+  [button setEnabled:![input isDisabled]];
   if ([input color]) {
     button.bezelColor = [input color];
   }
@@ -345,6 +335,7 @@ static const uint32_t kInputIconSize = 16;
     return;
   }
 
+  [self updateButton:aMainButton withIdentifier:aIdentifier];
   NSButton* button = (NSButton*)[aMainButton view];
 
   // If empty, string is still being localized. Display a blank input instead.
@@ -354,10 +345,6 @@ static const uint32_t kInputIconSize = 16;
     [button setImagePosition:NSImageLeft];
   }
   button.imageHugsTitle = YES;
-  [input setIconPositionSet:true];
-
-  [self updateButton:aMainButton withIdentifier:aIdentifier];
-
   [button.widthAnchor constraintGreaterThanOrEqualToConstant:MAIN_BUTTON_WIDTH].active = YES;
   [button setContentHuggingPriority:1.0 forOrientation:NSLayoutConstraintOrientationHorizontal];
 }
@@ -375,12 +362,7 @@ static const uint32_t kInputIconSize = 16;
 
   aPopoverItem.showsCloseButton = YES;
   if ([input imageURI]) {
-    RefPtr<nsTouchBarInputIcon> icon = [input icon];
-    if (!icon) {
-      icon = new nsTouchBarInputIcon([input document], nil, nil, aPopoverItem);
-      [input setIcon:icon];
-    }
-    icon->SetupIcon([input imageURI]);
+    [self loadIconForInput:input forItem:aPopoverItem];
   } else if ([input title]) {
     aPopoverItem.collapsedRepresentationLabel = [input title];
   }
@@ -487,14 +469,8 @@ static const uint32_t kInputIconSize = 16;
   // buttonImage needs to be set to nil while we wait for our icon to load.
   // Otherwise, the default Apple share icon is automatically loaded.
   servicesItem.buttonImage = nil;
-  if ([input imageURI]) {
-    RefPtr<nsTouchBarInputIcon> icon = [input icon];
-    if (!icon) {
-      icon = new nsTouchBarInputIcon([input document], nil, servicesItem);
-      [input setIcon:icon];
-    }
-    icon->SetupIcon([input imageURI]);
-  }
+
+  [self loadIconForInput:input forItem:servicesItem];
 
   servicesItem.delegate = self;
   return servicesItem;
@@ -535,6 +511,24 @@ static const uint32_t kInputIconSize = 16;
     return;
   }
   callback->OnCommand();
+}
+
+- (void)loadIconForInput:(TouchBarInput*)aInput forItem:(NSTouchBarItem*)aItem {
+  if (!aInput || ![aInput imageURI] || !aItem) {
+    return;
+  }
+
+  RefPtr<nsTouchBarInputIcon> icon = [aInput icon];
+  if (!icon && mTouchBarHelper) {
+    RefPtr<Document> document;
+    nsresult rv = mTouchBarHelper->GetDocument(getter_AddRefs(document));
+    if (NS_FAILED(rv) || !document) {
+      return;
+    }
+    icon = new nsTouchBarInputIcon(document, aInput, aItem);
+    [aInput setIcon:icon];
+  }
+  icon->SetupIcon([aInput imageURI]);
 }
 
 - (void)releaseJSObjects {
