@@ -2,23 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root {
-  min-width: 29em;
-}
-
-#dialogGrid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-}
-
-.dialogRow:not([hidden]) {
-  display: contents;
-}
-
-#iconContainer {
-  align-self: start;
-}
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 
 #infoContainer {
   max-width: 45em;
@@ -33,5 +17,6 @@
 }
 
 #loginLabel, #password1Label {
-  text-align: end;
+  text-align: right;
 }
+
