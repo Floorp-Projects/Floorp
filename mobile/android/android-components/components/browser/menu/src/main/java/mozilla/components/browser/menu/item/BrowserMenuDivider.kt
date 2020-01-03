@@ -15,6 +15,8 @@ import mozilla.components.browser.menu.R
 class BrowserMenuDivider : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 
+    override val interactiveCount: () -> Int = { 0 }
+
     override fun getLayoutResource() = R.layout.mozac_browser_menu_item_divider
 
     override fun bind(menu: BrowserMenu, view: View) = Unit

@@ -20,6 +20,7 @@ internal class BrowserMenuAdapter(
     var menu: BrowserMenu? = null
 
     internal val visibleItems = items.filter { it.visible() }
+    internal val interactiveCount = visibleItems.sumBy { it.interactiveCount() }
     private val inflater = LayoutInflater.from(context)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =

@@ -24,6 +24,8 @@ class BrowserMenuItemToolbar(
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 
+    override val interactiveCount: () -> Int = { items.size }
+
     override fun getLayoutResource() = R.layout.mozac_browser_menu_item_toolbar
 
     override fun bind(menu: BrowserMenu, view: View) {

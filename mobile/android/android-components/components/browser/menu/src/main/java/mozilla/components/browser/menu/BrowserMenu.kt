@@ -13,6 +13,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.PopupWindow
 import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -56,6 +57,13 @@ class BrowserMenu internal constructor(
             }
             adapter = this@BrowserMenu.adapter
         }
+
+        menuList?.setAccessibilityDelegate(object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(host: View?, info: AccessibilityNodeInfo?) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info?.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(adapter.interactiveCount, 0, false)
+            }
+        })
 
         return PopupWindow(
             view,
