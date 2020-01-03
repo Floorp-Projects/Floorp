@@ -30,10 +30,10 @@ const {
   Services,
   pointEquals,
   pointToString,
+  positionToString,
   findClosestPoint,
   pointArrayIncludes,
   pointPrecedes,
-  positionEquals,
   positionSubsumes,
   setInterval,
 } = sandbox;
@@ -45,118 +45,134 @@ const FirstCheckpointId = 1;
 //
 // This section describes the strategy used for managing child processes so that
 // we can be responsive to user interactions. There is at most one recording
-// child process, and one or more replaying child processes.
+// child process, and any number of replaying child processes.
 //
-// The recording child cannot rewind: it only runs forward and adds new data to
-// the recording. If we are paused or trying to pause at a place within the
-// recording, then the recording child is also paused.
+// When the user is not viewing old parts of the recording, they will interact
+// with the recording process. The recording process only runs forward and adds
+// new data to the recording which the replaying processes can consume.
 //
-// To manage the replaying children, we identify a set of checkpoints that will
-// be saved by some replaying child. The duration between saved checkpoints
-// should be roughly equal, and they must be sufficiently closely spaced that
-// any point in the recording can be quickly reached by some replaying child
-// restoring the previous saved checkpoint and then running forward to the
-// target point.
+// Replaying processes can be created in two ways: we can spawn a replaying
+// process at the beginning of the recording, or we can ask an existing
+// replaying process to fork, which creates a new replaying process at the same
+// point in the recording.
 //
-// As we identify the saved checkpoints, each is assigned to some replaying
-// child, which is responsible for both saving that checkpoint and for scanning
-// the contents of the recording from that checkpoint until the next saved
-// checkpoint.
+// Replaying processes fit into one of the following categories:
 //
-// When adding new data to the recording, replaying children will scan and save
-// the regions and checkpoints they are responsible for, and will otherwise play
-// forward as far as they can in the recording. We always want to have one or
-// more replaying children that are at far end of the recording and able to
-// start scanning/saving as the recording grows. In order to ensure this,
-// consider the following:
+// * Root children are spawned at the beginning of the recording. They stop at
+//   the first checkpoint and coordinate communication with other processes that
+//   have been forked from them.
 //
-// - Replaying must be faster than recording. While recording there is idle time
-//   as we wait for user input, timers, etc. that is not present while
-//   replaying. Suppose that replaying speed is F times the recording speed.
-//   F must be less than one.
+// * Trunk children are forked from the root child. They run through the
+//   recording and periodically fork off new branches. There is only one trunk
+//   for each root child.
 //
-// - Scanning and saving a section of the recording is slower than recording.
-//   Both of these have a lot of overhead, and suppose that scanning is S times
-//   the recording speed. S will be more than one.
+// * Branch children are forked from trunk or other branch children. They run
+//   forward to a specific point in the recording, and then sit idle while they
+//   periodically fork off new leaves.
 //
-// - When there is more than one replaying child, each child can divide its time
-//   between scanning/saving and simply replaying. We want its average speed to
-//   match that of the recording. If there are N replaying children, each child
-//   scans 1/N of the recording, so the average speed compared to the recording
-//   is S/N + F*(N-1)/N. We want this term to be one or slightly less.
+// * Leaf children are forked from branches. They run through a part of the
+//   recording and can perform actions such as scanning the recording or
+//   performing operations at different points in the recording.
 //
-// For example, if F = 0.75 and S = 3, then replaying is 33% faster than
-// recording, and scanning is three times slower than recording. If N = 4,
-// the average speed is 3/4 + 0.75*3/4 = 1.31 times that of recording, which
-// will cause the replaying processes to fall further and further behind the
-// recording. If N = 12, the average speed is 3/12 + 0.75*11/12 = 0.94 times
-// that of the recording, which will allow the replaying processes to keep up
-// with the recording.
+// During startup, we will spawn a single trunk child which runs through the
+// recording and forks a branch child at certain saved checkpoints. The saved
+// checkpoints are spaced so that they aren't far apart. Each branch child forks
+// a leaf child which scans the recording from that branch's saved checkpoint up
+// to the next saved checkpoint, and then sits idle and responds to queries
+// about the scanned region. Other leaf children can be forked from the
+// branches, allowing us to quickly perform tasks anywhere in the recording once
+// all the branches are in place.
 //
-// Eventually we'll want to do this analysis dynamically to scale up or throttle
-// back the number of active replaying processes. For now, though, we rely on
-// a fixed number of replaying processes, and hope that it is enough.
+// The number of leaves which can simultaneously be operating has a small
+// limit to avoid overloading the system. Tasks requiring new children are
+// placed in a queue and resolved in priority order.
 
 ////////////////////////////////////////////////////////////////////////////////
 // Child Processes
 ////////////////////////////////////////////////////////////////////////////////
 
+// Get a unique ID for a child process.
+function processId(rootId, forkId) {
+  return forkId ? `#${rootId}:${forkId}` : `#${rootId}`;
+}
+
+// Child which is always at the end of the recording. When there is a recording
+// child this is it, and when we are replaying an old execution this is a
+// replaying child that doesn't fork and is used like a recording child.
+let gMainChild;
+
+// All child processes, indexed by their ID.
+const gChildren = new Map();
+
+// All child processes that are currently unpaused.
+const gUnpausedChildren = new Set();
+
 // Information about a child recording or replaying process.
-function ChildProcess(id, recording) {
-  this.id = id;
+function ChildProcess(rootId, forkId, recording, recordingLength) {
+  // ID for the root recording/replaying process this is associated with.
+  this.rootId = rootId;
+
+  // ID for the particular fork of the root this process represents, or zero if
+  // not forked.
+  this.forkId = forkId;
+
+  // Unique ID for this process.
+  this.id = processId(rootId, forkId);
+  gChildren.set(this.id, this);
 
   // Whether this process is recording.
   this.recording = recording;
 
+  // How much of the recording is available to this process.
+  this.recordingLength = recordingLength;
+
   // Whether this process is paused.
   this.paused = false;
+  gUnpausedChildren.add(this);
 
   // The last point we paused at.
   this.lastPausePoint = null;
 
-  // Last reported memory usage for this child.
-  this.lastMemoryUsage = null;
+  // Whether this child has terminated and is unusable.
+  this.terminated = false;
 
-  // All checkpoints which this process has saved or will save, which is a
-  // subset of all the saved checkpoints.
-  this.savedCheckpoints = new Set(recording ? [] : [FirstCheckpointId]);
+  // The last time a ping message was sent to the process.
+  this.lastPingTime = Date.now();
 
-  // All saved checkpoints whose region of the recording has been scanned or is
-  // in the process of being scanned by this child.
-  this.scannedCheckpoints = new Set();
+  // All pings we have sent since they were reset for this process.
+  this.pings = [];
 
-  // All snapshots which this child has taken.
-  this.snapshots = [];
-
-  // Whether this child has diverged from the recording and cannot run forward.
-  this.divergedFromRecording = false;
-
-  // Whether this child has crashed and is unusable.
-  this.crashed = false;
-
-  // Any manifest which is currently being executed. Child processes initially
-  // have a manifest to run forward to the first checkpoint.
-  this.manifest = {
-    onFinished: ({ point }) => {
-      if (this == gMainChild) {
-        getCheckpointInfo(FirstCheckpointId).point = point;
-        Services.tm.dispatchToMainThread(
-          recording ? maybeResumeRecording : setMainChild
-        );
-      } else {
-        this.snapshots.push(checkpointExecutionPoint(FirstCheckpointId));
-      }
+  // Manifests queued up for this child. If the child is unpaused, the first one
+  // is currently being processed. Child processes initially have a manifest to
+  // run forward to the first checkpoint.
+  this.manifests = [
+    {
+      manifest: {},
+      onFinished: ({ point }) => {
+        if (this == gMainChild) {
+          getCheckpointInfo(FirstCheckpointId).point = point;
+          Services.tm.dispatchToMainThread(
+            recording ? maybeResumeRecording : setMainChild
+          );
+        }
+      },
     },
-  };
-
-  // The time the manifest was sent to the child.
-  this.manifestSendTime = Date.now();
-
-  // Any async manifest which this child has partially processed.
-  this.asyncManifest = null;
+  ];
 }
 
+const PingIntervalSeconds = 2;
+const MaxStalledPings = 10;
+let gNextPingId = 1;
+
 ChildProcess.prototype = {
+  // Stop this child.
+  terminate() {
+    gChildren.delete(this.id);
+    gUnpausedChildren.delete(this);
+    RecordReplayControl.terminate(this.rootId, this.forkId);
+    this.terminated = true;
+  },
+
   // Get the execution point where this child is currently paused.
   pausePoint() {
     assert(this.paused);
@@ -171,53 +187,65 @@ ChildProcess.prototype = {
   },
 
   // Send a manifest to paused child to execute. The child unpauses while
-  // executing the manifest, and pauses again when it finishes. Manifests have
-  // the following properties:
-  //
-  // contents: The JSON object to send to the child describing the operation.
-  // onFinished: A callback which is called after the manifest finishes with the
-  //   manifest's result.
-  // destination: An optional destination where the child will end up.
-  // expectedDuration: Optional estimate of the time needed to run the manifest.
-  // mightRewind: Flag that must be set if the child might restore a snapshot
-  //   while processing the manifest.
-  sendManifest(manifest) {
-    assert(!this.crashed);
-    assert(this.paused);
-    this.paused = false;
-    this.manifest = manifest;
-    this.manifestSendTime = Date.now();
+  // executing the manifest, and pauses again when it finishes. This returns a
+  // promise that resolves with the manifest's result when it finishes.
+  // If specified, onFinishedCallback will be invoked with the manifest
+  // result as well.
+  sendManifest(manifest, onFinishedCallback) {
+    assert(!this.terminated);
+    return new Promise(resolve => {
+      this.manifests.push({
+        manifest,
+        onFinished(response) {
+          if (onFinishedCallback) {
+            onFinishedCallback(response);
+          }
+          resolve(response);
+        },
+      });
 
-    const { contents, mightRewind } = manifest;
-
-    dumpv(`SendManifest #${this.id} ${stringify(contents)}`);
-    RecordReplayControl.sendManifest(this.id, contents, mightRewind);
+      if (this.paused) {
+        this._startNextManifest();
+      }
+    });
   },
 
   // Called when the child's current manifest finishes.
   manifestFinished(response) {
+    dumpv(`ManifestFinished ${this.id} ${stringify(response)}`);
+
     assert(!this.paused);
+    this.paused = true;
+    gUnpausedChildren.delete(this);
+    const { onFinished } = this.manifests.shift();
+
     if (response) {
       if (response.point) {
         this.lastPausePoint = response.point;
       }
-      if (response.memoryUsage) {
-        this.lastMemoryUsage = response.memoryUsage;
-      }
       if (response.exception) {
         ThrowError(response.exception);
       }
-      if (response.restoredSnapshot) {
-        assert(this.manifest.mightRewind);
-      }
     }
-    this.paused = true;
-    this.manifest.onFinished(response);
-    this.manifest = null;
-    maybeDumpStatistics();
+    onFinished(response);
 
-    if (this != gMainChild) {
-      pokeChildSoon(this);
+    this._startNextManifest();
+  },
+
+  // Send this child the next manifest in its queue, if there is one.
+  _startNextManifest() {
+    assert(this.paused);
+
+    if (this.manifests.length) {
+      const { manifest } = this.manifests[0];
+      dumpv(`SendManifest ${this.id} ${stringify(manifest)}`);
+      RecordReplayControl.sendManifest(this.rootId, this.forkId, manifest);
+      this.paused = false;
+      gUnpausedChildren.add(this);
+
+      // Reset pings when sending a new manifest.
+      this.pings.length = 0;
+      this.lastPingTime = Date.now();
     }
   },
 
@@ -228,115 +256,127 @@ ChildProcess.prototype = {
     if (this.paused) {
       return;
     }
-    RecordReplayControl.waitUntilPaused(this.id, maybeCreateCheckpoint);
-    assert(this.paused || this.crashed);
+    dumpv(`WaitUntilPaused ${this.id}`);
+    if (maybeCreateCheckpoint) {
+      assert(this.recording && !this.forkId);
+      RecordReplayControl.createCheckpointInRecording(this.rootId);
+    }
+    while (!this.paused) {
+      this.maybePing();
+      RecordReplayControl.maybeProcessNextMessage();
+    }
+    dumpv(`WaitUntilPaused Done`);
+    assert(this.paused || this.terminated);
   },
 
-  // Add a checkpoint for this child to save.
-  addSavedCheckpoint(checkpoint) {
-    dumpv(`AddSavedCheckpoint #${this.id} ${checkpoint}`);
-    this.savedCheckpoints.add(checkpoint);
-  },
+  // Hang Detection
+  //
+  // Replaying processes will be terminated if no execution progress has been
+  // made for some number of seconds. This generates a crash report for
+  // diagnosis and allows another replaying process to be spawned in its place.
+  // We detect that no progress is being made by periodically sending ping
+  // messages to the replaying process, and comparing the progress values
+  // returned by them. The ping messages are sent at least PingIntervalSeconds
+  // apart, and the process is considered hanged if at any point the last
+  // MaxStalledPings ping messages either did not respond or responded with the
+  // same progress value.
+  //
+  // Dividing our accounting between different ping messages avoids treating
+  // processes as hanged when the computer wakes up after sleeping: no pings
+  // will be sent while the computer is sleeping and processes are suspended,
+  // so the computer will need to be awake for some time before any processes
+  // are marked as hanged (before which they will hopefully be able to make
+  // progress).
+  isHanged() {
+    if (this.pings.length < MaxStalledPings) {
+      return false;
+    }
 
-  // Get the checkpoints which the child must save in the range [start, end].
-  savedCheckpointsInRange(start, end) {
-    const rv = [];
-    for (let i = start; i <= end; i++) {
-      if (this.savedCheckpoints.has(i)) {
-        rv.push(i);
+    const firstIndex = this.pings.length - MaxStalledPings;
+    const firstValue = this.pings[firstIndex].progress;
+    if (!firstValue) {
+      // The child hasn't responded to any of the pings.
+      return true;
+    }
+
+    for (let i = firstIndex; i < this.pings.length; i++) {
+      if (this.pings[i].progress && this.pings[i].progress != firstValue) {
+        return false;
       }
     }
-    return rv;
+
+    return true;
   },
 
-  // Get the locations of snapshots for saved checkpoints which the child must
-  // save when running forward to endpoint.
-  getSnapshotsForSavedCheckpoints(endpoint) {
-    assert(pointPrecedes(this.pausePoint(), endpoint));
-    return this.savedCheckpointsInRange(
-      this.pausePoint().checkpoint + 1,
-      endpoint.checkpoint
-    ).map(checkpointExecutionPoint);
-  },
-
-  // Get the point of the last snapshot which was taken.
-  lastSnapshot() {
-    return this.snapshots[this.snapshots.length - 1];
-  },
-
-  // Get an estimate of the amount of time required for this child to reach an
-  // execution point.
-  timeToReachPoint(point) {
-    let startDelay = 0;
-    let startPoint = this.lastPausePoint;
-    if (!startPoint) {
-      startPoint = checkpointExecutionPoint(FirstCheckpointId);
+  maybePing() {
+    assert(!this.paused);
+    if (this.recording) {
+      return;
     }
-    if (!this.paused) {
-      if (this.manifest.expectedDuration) {
-        const elapsed = Date.now() - this.manifestSendTime;
-        if (elapsed < this.manifest.expectedDuration) {
-          startDelay = this.manifest.expectedDuration - elapsed;
-        }
-      }
-      if (this.manifest.destination) {
-        startPoint = this.manifest.destination;
-      }
+
+    const now = Date.now();
+    if (now < this.lastPingTime + PingIntervalSeconds * 1000) {
+      return;
     }
-    let startCheckpoint;
-    if (this.snapshots.length) {
-      let snapshotIndex = this.snapshots.length - 1;
-      while (pointPrecedes(point, this.snapshots[snapshotIndex])) {
-        snapshotIndex--;
-      }
-      startCheckpoint = this.snapshots[snapshotIndex].checkpoint;
+
+    if (this.isHanged()) {
+      // Try to get the child to crash, so that we can get a minidump.
+      RecordReplayControl.crashHangedChild(this.rootId, this.forkId);
     } else {
-      // Children which just started haven't taken snapshots.
-      startCheckpoint = FirstCheckpointId;
+      const id = gNextPingId++;
+      RecordReplayControl.ping(this.rootId, this.forkId, id);
+      this.pings.push({ id });
     }
-    return (
-      startDelay + checkpointRangeDuration(startCheckpoint, point.checkpoint)
+  },
+
+  pingResponse(id, progress) {
+    for (const entry of this.pings) {
+      if (entry.id == id) {
+        entry.progress = progress;
+        break;
+      }
+    }
+  },
+
+  updateRecording() {
+    RecordReplayControl.updateRecording(
+      this.rootId,
+      this.forkId,
+      this.recordingLength
     );
+    this.recordingLength = RecordReplayControl.recordingLength();
   },
 };
 
-// Child which is always at the end of the recording. When there is a recording
-// child this is it, and when we are replaying an old execution this is a
-// replaying child that is unable to rewind and is used in the same way as the
-// recording child.
-let gMainChild;
-
-// Replaying children available for exploring the interior of the recording,
-// indexed by their ID.
-const gReplayingChildren = [];
-
-function lookupChild(id) {
-  if (id == gMainChild.id) {
-    return gMainChild;
+// eslint-disable-next-line no-unused-vars
+function ManifestFinished(rootId, forkId, response) {
+  try {
+    const child = gChildren.get(processId(rootId, forkId));
+    if (child) {
+      child.manifestFinished(response);
+    }
+  } catch (e) {
+    dump(`ERROR: ManifestFinished threw exception: ${e} ${e.stack}\n`);
   }
-  return gReplayingChildren[id];
 }
 
-function closestChild(point) {
-  let minChild = null,
-    minTime = Infinity;
-  for (const child of gReplayingChildren) {
+// eslint-disable-next-line no-unused-vars
+function PingResponse(rootId, forkId, pingId, progress) {
+  try {
+    const child = gChildren.get(processId(rootId, forkId));
     if (child) {
-      const time = child.timeToReachPoint(point);
-      if (time < minTime) {
-        minChild = child;
-        minTime = time;
-      }
+      child.pingResponse(pingId, progress);
     }
+  } catch (e) {
+    dump(`ERROR: PingResponse threw exception: ${e} ${e.stack}\n`);
   }
-  return minChild;
 }
 
 // The singleton ReplayDebugger, or undefined if it doesn't exist.
 let gDebugger;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Asynchronous Manifests
+// Child Management
 ////////////////////////////////////////////////////////////////////////////////
 
 // Priority levels for asynchronous manifests.
@@ -346,144 +386,216 @@ const Priority = {
   LOW: 2,
 };
 
-// Asynchronous manifest worklists.
-const gAsyncManifests = [new Set(), new Set(), new Set()];
+// The singleton root child, if any.
+let gRootChild;
 
-// Send a manifest asynchronously, returning a promise that resolves when the
-// manifest has been finished. Async manifests have the following properties:
-//
-// shouldSkip: Callback invoked before sending the manifest. Returns true if the
-//   manifest should not be sent, and the promise resolved immediately.
-//
-// contents: Callback invoked with the executing child when it is being sent.
-//   Returns the contents to send to the child.
-//
-// onFinished: Callback invoked with the executing child and manifest response
-//   after the manifest finishes.
-//
-// point: Optional point which the associated child must reach before sending
-//   the manifest.
-//
-// snapshot: Optional point at which the associated child should take a snapshot
-//   while heading to the point.
-//
-// scanCheckpoint: If the manifest relies on scan data, the saved checkpoint
-//   whose range the child must have scanned. Such manifests do not have side
-//   effects in the child, and can be sent to the active child.
-//
-// priority: Optional priority for this manifest. Default is HIGH.
-//
-// destination: An optional destination where the child will end up.
-//
-// expectedDuration: Optional estimate of the time needed to run the manifest.
-//
-// mightRewind: Flag that must be set if the child might restore a snapshot
-//   while processing the manifest.
-function sendAsyncManifest(manifest) {
-  pokeChildrenSoon();
+// The singleton trunk child, if any.
+let gTrunkChild;
+
+// All branch children available for creating new leaves, in order.
+const gBranchChildren = [];
+
+// ID for the next fork we create.
+let gNextForkId = 1;
+
+// Fork a replaying child, returning the new one.
+function forkChild(child) {
+  const forkId = gNextForkId++;
+  const newChild = new ChildProcess(
+    child.rootId,
+    forkId,
+    false,
+    child.recordingLength
+  );
+
+  dumpv(`Forking ${child.id} -> ${newChild.id}`);
+
+  child.sendManifest({ kind: "fork", id: forkId });
+  return newChild;
+}
+
+// Immediately create a new leaf child and take it to endpoint, by forking the
+// closest branch child to endpoint. onFinished will be called when the child
+// reaches the endpoint.
+function newLeafChild(endpoint, onFinished = () => {}) {
+  assert(
+    !pointPrecedes(checkpointExecutionPoint(gLastSavedCheckpoint), endpoint)
+  );
+
+  let entry;
+  for (let i = gBranchChildren.length - 1; i >= 0; i--) {
+    entry = gBranchChildren[i];
+    if (!pointPrecedes(endpoint, entry.point)) {
+      break;
+    }
+  }
+
+  const child = forkChild(entry.child);
+  if (pointEquals(endpoint, entry.point)) {
+    onFinished(child);
+  } else {
+    child.sendManifest({ kind: "runToPoint", endpoint }, () =>
+      onFinished(child)
+    );
+  }
+  return child;
+}
+
+// How many leaf children we can have running simultaneously.
+const MaxRunningLeafChildren = 4;
+
+// How many leaf children are currently running.
+let gNumRunningLeafChildren = 0;
+
+// Resolve hooks for tasks waiting on a new leaf child, organized by priority.
+const gChildWaiters = [[], [], []];
+
+// Asynchronously create a new leaf child and take it to endpoint, respecting
+// the limits on the maximum number of running leaves and returning the new
+// child when it reaches the endpoint.
+async function ensureLeafChild(endpoint, priority = Priority.HIGH) {
+  if (gNumRunningLeafChildren < MaxRunningLeafChildren) {
+    gNumRunningLeafChildren++;
+  } else {
+    await new Promise(resolve => gChildWaiters[priority].push(resolve));
+  }
+
   return new Promise(resolve => {
-    manifest.resolve = resolve;
-    const priority = manifest.priority || Priority.HIGH;
-    gAsyncManifests[priority].add(manifest);
+    newLeafChild(endpoint, child => resolve(child));
   });
 }
 
-// Pick the best async manifest for a child to process.
-function pickAsyncManifest(child, priority) {
-  const worklist = gAsyncManifests[priority];
+// After a leaf child becomes idle and/or is about to be terminated, mark it ass
+// no longer running and continue any task waiting on a new leaf.
+function stopRunningLeafChild() {
+  gNumRunningLeafChildren--;
 
-  let best = null,
-    bestTime = Infinity;
-  for (const manifest of worklist) {
-    // Prune any manifests that can be skipped.
-    if (manifest.shouldSkip()) {
-      manifest.resolve();
-      worklist.delete(manifest);
-      continue;
-    }
-
-    // Manifests relying on scan data can be handled by any child, at any point.
-    // These are the best ones to pick.
-    if (manifest.scanCheckpoint) {
-      if (child.scannedCheckpoints.has(manifest.scanCheckpoint)) {
-        assert(!manifest.point);
-        best = manifest;
-        break;
-      } else {
-        continue;
+  if (gNumRunningLeafChildren < MaxRunningLeafChildren) {
+    for (const waiters of gChildWaiters) {
+      if (waiters.length) {
+        const resolve = waiters.shift();
+        gNumRunningLeafChildren++;
+        resolve();
       }
     }
-
-    // The active child cannot process other asynchronous manifests which don't
-    // rely on scan data, as they can move the child or have other side effects.
-    if (child == gActiveChild) {
-      continue;
-    }
-
-    // Pick the manifest which requires the least amount of travel time.
-    assert(manifest.point);
-    const time = child.timeToReachPoint(manifest.point);
-    if (time < bestTime) {
-      best = manifest;
-      bestTime = time;
-    }
   }
-
-  if (best) {
-    worklist.delete(best);
-  }
-
-  return best;
 }
 
-function processAsyncManifest(child) {
-  // If the child has partially processed a manifest, continue with it.
-  let manifest = child.asyncManifest;
-  child.asyncManifest = null;
+// Terminate a running leaf child that is no longer needed.
+function terminateRunningLeafChild(child) {
+  stopRunningLeafChild();
 
-  if (manifest && child == gActiveChild) {
-    // After a child becomes the active child, it gives up on any in progress
-    // async manifest it was processing.
-    sendAsyncManifest(manifest);
-    manifest = null;
+  dumpv(`Terminate ${child.id}`);
+  child.terminate();
+}
+
+// The next ID to use for a root replaying process.
+let gNextRootId = 1;
+
+// Spawn the single trunk child.
+function spawnTrunkChild() {
+  if (!RecordReplayControl.canRewind()) {
+    return;
   }
 
-  if (!manifest) {
-    for (const priority of Object.values(Priority)) {
-      manifest = pickAsyncManifest(child, priority);
-      if (manifest) {
-        break;
-      }
-    }
-    if (!manifest) {
-      return false;
-    }
+  const id = gNextRootId++;
+  RecordReplayControl.spawnReplayingChild(id);
+  gRootChild = new ChildProcess(
+    id,
+    0,
+    false,
+    RecordReplayControl.recordingLength()
+  );
+
+  gTrunkChild = forkChild(gRootChild);
+
+  // We should be at the beginning of the recording, and don't have enough space
+  // to create any branches yet.
+  assert(gLastSavedCheckpoint == InvalidCheckpointId);
+}
+
+function forkBranchChild(lastSavedCheckpoint, nextSavedCheckpoint) {
+  if (!RecordReplayControl.canRewind()) {
+    return;
   }
 
-  child.asyncManifest = manifest;
+  // The recording is flushed and the trunk child updated every time we add
+  // a saved checkpoint, so the child we fork here will have the recording
+  // contents up to the next saved checkpoint. Branch children are only able to
+  // run up to the next saved checkpoint.
+  gTrunkChild.updateRecording();
 
-  if (
-    manifest.point &&
-    maybeReachPoint(child, manifest.point, manifest.snapshot)
-  ) {
-    // The manifest has been partially processed.
-    return true;
-  }
+  const child = forkChild(gTrunkChild);
+  const point = checkpointExecutionPoint(lastSavedCheckpoint);
+  gBranchChildren.push({ child, point });
 
-  child.sendManifest({
-    contents: manifest.contents(child),
-    onFinished: data => {
-      child.asyncManifest = null;
-      manifest.onFinished(child, data);
-      manifest.resolve();
-    },
-    destination: manifest.destination,
-    expectedDuration: manifest.expectedDuration,
-    mightRewind: manifest.mightRewind,
+  const endpoint = checkpointExecutionPoint(nextSavedCheckpoint);
+  gTrunkChild.sendManifest({
+    kind: "runToPoint",
+    endpoint,
+
+    // External calls are flushed in the trunk child so that external calls
+    // from throughout the recording will be cached in the root child.
+    flushExternalCalls: true,
   });
-
-  return true;
 }
+
+// eslint-disable-next-line no-unused-vars
+function Initialize(recordingChildId) {
+  try {
+    if (recordingChildId != undefined) {
+      assert(recordingChildId == 0);
+      gMainChild = new ChildProcess(recordingChildId, 0, true);
+    } else {
+      // If there is no recording child, spawn a replaying child in its place.
+      const id = gNextRootId++;
+      RecordReplayControl.spawnReplayingChild(id);
+      gMainChild = new ChildProcess(
+        id,
+        0,
+        false,
+        RecordReplayControl.recordingLength
+      );
+    }
+    gActiveChild = gMainChild;
+    return gControl;
+  } catch (e) {
+    dump(`ERROR: Initialize threw exception: ${e}\n`);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// PromiseMap
+////////////////////////////////////////////////////////////////////////////////
+
+// Map from arbitrary keys to promises that resolve when any associated work is
+// complete. This is used to avoid doing redundant work in different async
+// tasks.
+function PromiseMap() {
+  this.map = new Map();
+}
+
+PromiseMap.prototype = {
+  // Returns either { promise } or { promise, resolve }. If resolve is included
+  // then the caller is responsible for invoking it later.
+  get(key) {
+    let promise = this.map.get(key);
+    if (promise) {
+      return { promise };
+    }
+
+    let resolve;
+    promise = new Promise(r => {
+      resolve = r;
+    });
+    this.map.set(key, promise);
+    return { promise, resolve };
+  },
+
+  set(key, value) {
+    this.map.set(key, value);
+  },
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Application State
@@ -505,15 +617,6 @@ function CheckpointInfo() {
 
   // Whether the checkpoint is saved.
   this.saved = false;
-
-  // If the checkpoint is saved, the time it was assigned to a child.
-  this.assignTime = null;
-
-  // If the checkpoint is saved and scanned, the time it finished being scanned.
-  this.scanTime = null;
-
-  // If the checkpoint is saved and scanned, the duration of the scan.
-  this.scanDuration = null;
 
   // If the checkpoint is saved, any debugger statement hits in its region.
   this.debuggerStatements = [];
@@ -543,37 +646,33 @@ function timeSinceCheckpoint(id) {
   return checkpointRangeDuration(id, gCheckpoints.length);
 }
 
-// How much execution time is captured by a saved checkpoint.
-function timeForSavedCheckpoint(id) {
-  return checkpointRangeDuration(id, nextSavedCheckpoint(id));
-}
-
-// The checkpoint up to which the recording runs.
-let gLastFlushCheckpoint = InvalidCheckpointId;
-
 // How often we want to flush the recording.
 const FlushMs = 0.5 * 1000;
 
-// ID of the last replaying child we picked for saving a checkpoint.
-let gLastPickedChildId = 0;
+// The most recent saved checkpoint. The recording is flushed at every saved
+// checkpoint.
+let gLastSavedCheckpoint = InvalidCheckpointId;
+const gSavedCheckpointWaiters = [];
 
 function addSavedCheckpoint(checkpoint) {
-  getCheckpointInfo(checkpoint).saved = true;
-  getCheckpointInfo(checkpoint).assignTime = Date.now();
-
-  if (RecordReplayControl.canRewind()) {
-    // Use a round robin approach when picking children for saving checkpoints.
-    let child;
-    while (true) {
-      gLastPickedChildId = (gLastPickedChildId + 1) % gReplayingChildren.length;
-      child = gReplayingChildren[gLastPickedChildId];
-      if (child) {
-        break;
-      }
-    }
-
-    child.addSavedCheckpoint(checkpoint);
+  assert(checkpoint >= gLastSavedCheckpoint);
+  if (checkpoint == gLastSavedCheckpoint) {
+    return;
   }
+
+  if (gLastSavedCheckpoint != InvalidCheckpointId) {
+    forkBranchChild(gLastSavedCheckpoint, checkpoint);
+  }
+
+  getCheckpointInfo(checkpoint).saved = true;
+  gLastSavedCheckpoint = checkpoint;
+
+  gSavedCheckpointWaiters.forEach(resolve => resolve());
+  gSavedCheckpointWaiters.length = 0;
+}
+
+function waitForSavedCheckpoint() {
+  return new Promise(resolve => gSavedCheckpointWaiters.push(resolve));
 }
 
 function addCheckpoint(checkpoint, duration) {
@@ -581,75 +680,14 @@ function addCheckpoint(checkpoint, duration) {
   getCheckpointInfo(checkpoint).duration = duration;
 }
 
-// Bring a child to the specified execution point, sending it one or more
-// manifests if necessary. Returns true if the child has not reached the point
-// yet but some progress was made, or false if the child is at the point.
-// Snapshot specifies any point at which a snapshot should be taken.
-function maybeReachPoint(child, endpoint, snapshot) {
-  if (
-    pointEquals(child.pausePoint(), endpoint) &&
-    !child.divergedFromRecording
-  ) {
-    return false;
-  }
-
-  if (pointPrecedes(endpoint, child.pausePoint())) {
-    restoreSnapshotPriorTo(endpoint);
-    return true;
-  }
-
-  if (child.divergedFromRecording) {
-    restoreSnapshotPriorTo(child.pausePoint());
-    return true;
-  }
-
-  const snapshotPoints = child.getSnapshotsForSavedCheckpoints(endpoint);
-  if (
-    snapshot &&
-    pointPrecedes(child.pausePoint(), snapshot) &&
-    !pointArrayIncludes(snapshotPoints, snapshot)
-  ) {
-    snapshotPoints.push(snapshot);
-  }
-
-  child.sendManifest({
-    contents: { kind: "runToPoint", endpoint, snapshotPoints },
-    onFinished() {
-      child.snapshots.push(...snapshotPoints);
-    },
-    destination: endpoint,
-    expectedDuration: checkpointRangeDuration(
-      child.pausePoint().checkpoint,
-      endpoint.checkpoint
-    ),
-  });
-
-  return true;
-
-  // Send the child to its most recent saved checkpoint at or before target.
-  function restoreSnapshotPriorTo(target) {
-    let numSnapshots = 0;
-    while (pointPrecedes(target, child.lastSnapshot())) {
-      numSnapshots++;
-      child.snapshots.pop();
-    }
-    child.sendManifest({
-      contents: { kind: "restoreSnapshot", numSnapshots },
-      onFinished({ restoredSnapshot }) {
-        assert(restoredSnapshot);
-        child.divergedFromRecording = false;
-      },
-      destination: child.lastSnapshot(),
-      mightRewind: true,
-    });
-  }
-}
-
 function nextSavedCheckpoint(checkpoint) {
-  assert(gCheckpoints[checkpoint].saved);
-  // eslint-disable-next-line no-empty
-  while (!gCheckpoints[++checkpoint].saved) {}
-  return checkpoint;
+  assert(checkpoint == InvalidCheckpointId || gCheckpoints[checkpoint].saved);
+  while (++checkpoint < gCheckpoints.length) {
+    if (gCheckpoints[checkpoint].saved) {
+      return checkpoint;
+    }
+  }
+  return undefined;
 }
 
 function forSavedCheckpointsInRange(start, end, callback) {
@@ -667,7 +705,7 @@ function forSavedCheckpointsInRange(start, end, callback) {
 }
 
 function forAllSavedCheckpoints(callback) {
-  forSavedCheckpointsInRange(FirstCheckpointId, gLastFlushCheckpoint, callback);
+  forSavedCheckpointsInRange(FirstCheckpointId, gLastSavedCheckpoint, callback);
 }
 
 function getSavedCheckpoint(checkpoint) {
@@ -682,51 +720,6 @@ function checkpointExecutionPoint(checkpoint) {
   return gCheckpoints[checkpoint].point;
 }
 
-// Check to see if an idle replaying child can make any progress.
-function pokeChild(child) {
-  assert(child != gMainChild);
-
-  if (!child.paused) {
-    return;
-  }
-
-  if (processAsyncManifest(child)) {
-    return;
-  }
-
-  if (child == gActiveChild) {
-    sendActiveChildToPausePoint();
-    return;
-  }
-
-  // If there is nothing to do, run forward to the end of the recording.
-  if (gLastFlushCheckpoint) {
-    maybeReachPoint(child, checkpointExecutionPoint(gLastFlushCheckpoint));
-  }
-}
-
-function pokeChildSoon(child) {
-  Services.tm.dispatchToMainThread(() => pokeChild(child));
-}
-
-let gPendingPokeChildren = false;
-
-function pokeChildren() {
-  gPendingPokeChildren = false;
-  for (const child of gReplayingChildren) {
-    if (child) {
-      pokeChild(child);
-    }
-  }
-}
-
-function pokeChildrenSoon() {
-  if (!gPendingPokeChildren) {
-    Services.tm.dispatchToMainThread(() => pokeChildren());
-    gPendingPokeChildren = true;
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Search State
 ////////////////////////////////////////////////////////////////////////////////
@@ -738,64 +731,46 @@ const gBreakpoints = [];
 //
 // Scanning a section of the recording between two neighboring saved checkpoints
 // allows the execution points for each script breakpoint position to be queried
-// by sending a manifest to the child which performed the scan.
+// by sending a manifest to the child which performed the scan. Scanning is done
+// using leaf children. When the child has finished scanning, it is marked as no
+// longer running and remains idle remains idle while it responds to queries on
+// the scanned data.
 
-function findScanChild(checkpoint, requireComplete) {
-  for (const child of gReplayingChildren) {
-    if (child && child.scannedCheckpoints.has(checkpoint)) {
-      if (
-        requireComplete &&
-        !child.paused &&
-        child.manifest.contents.kind == "scanRecording" &&
-        child.lastPausePoint.checkpoint == checkpoint
-      ) {
-        continue;
-      }
-      return child;
-    }
-  }
-  return null;
-}
+// Map from saved checkpoints to the leaf child responsible for scanning that saved
+// checkpoint's region.
+const gSavedCheckpointChildren = new PromiseMap();
 
-// Ensure the region for a saved checkpoint has been scanned by some child.
+// Set of saved checkpoints which have finished scanning.
+const gScannedSavedCheckpoints = new Set();
+
+// Ensure the region for a saved checkpoint has been scanned by some child, and
+// return that child.
 async function scanRecording(checkpoint) {
-  assert(checkpoint < gLastFlushCheckpoint);
+  assert(gCheckpoints[checkpoint].saved);
+  if (checkpoint == gLastSavedCheckpoint) {
+    await waitForSavedCheckpoint();
+  }
 
-  const child = findScanChild(checkpoint);
-  if (child) {
-    return;
+  const { promise, resolve } = gSavedCheckpointChildren.get(checkpoint);
+  if (!resolve) {
+    return promise;
   }
 
   const endpoint = checkpointExecutionPoint(nextSavedCheckpoint(checkpoint));
-  let snapshotPoints = null;
-  await sendAsyncManifest({
-    shouldSkip: () => !!findScanChild(checkpoint),
-    contents(child) {
-      child.scannedCheckpoints.add(checkpoint);
-      snapshotPoints = child.getSnapshotsForSavedCheckpoints(endpoint);
-      return {
-        kind: "scanRecording",
-        endpoint,
-        snapshotPoints,
-      };
-    },
-    onFinished(child, { duration }) {
-      child.snapshots.push(...snapshotPoints);
-      const info = getCheckpointInfo(checkpoint);
-      if (!info.scanTime) {
-        info.scanTime = Date.now();
-        info.scanDuration = duration;
-      }
-      if (gDebugger) {
-        gDebugger._callOnPositionChange();
-      }
-    },
-    point: checkpointExecutionPoint(checkpoint),
-    destination: endpoint,
-    expectedDuration: checkpointRangeDuration(checkpoint, endpoint) * 5,
-  });
+  const child = await ensureLeafChild(checkpointExecutionPoint(checkpoint));
+  await child.sendManifest({ kind: "scanRecording", endpoint });
 
-  assert(findScanChild(checkpoint));
+  stopRunningLeafChild();
+
+  gScannedSavedCheckpoints.add(checkpoint);
+
+  // Update the unscanned regions in the UI.
+  if (gDebugger) {
+    gDebugger._callOnPositionChange();
+  }
+
+  resolve(child);
+  return child;
 }
 
 function unscannedRegions() {
@@ -813,12 +788,12 @@ function unscannedRegions() {
   }
 
   forAllSavedCheckpoints(checkpoint => {
-    if (!findScanChild(checkpoint, /* requireComplete */ true)) {
+    if (!gScannedSavedCheckpoints.has(checkpoint)) {
       addRegion(checkpoint, nextSavedCheckpoint(checkpoint));
     }
   });
 
-  const lastFlush = gLastFlushCheckpoint || FirstCheckpointId;
+  const lastFlush = gLastSavedCheckpoint || FirstCheckpointId;
   if (lastFlush != gRecordingEndpoint) {
     addRegion(lastFlush, gMainChild.lastPausePoint.checkpoint);
   }
@@ -826,9 +801,9 @@ function unscannedRegions() {
   return result;
 }
 
-// Map from saved checkpoints to information about breakpoint hits within the
-// range of that checkpoint.
-const gHitSearches = new Map();
+// Map from saved checkpoints and positions to the breakpoint hits for that
+// position within the range of the checkpoint.
+const gHitSearches = new PromiseMap();
 
 // Only hits on script locations (Break and OnStep positions) can be found by
 // scanning the recording.
@@ -843,54 +818,23 @@ async function findHits(checkpoint, position) {
   assert(canFindHits(position));
   assert(gCheckpoints[checkpoint].saved);
 
-  if (!gHitSearches.has(checkpoint)) {
-    gHitSearches.set(checkpoint, []);
+  const key = `${checkpoint}:${positionToString(position)}`;
+  const { promise, resolve } = gHitSearches.get(key);
+  if (!resolve) {
+    return promise;
   }
 
-  // Check if we already have the hits.
-  let hits = findExisting();
-  if (hits) {
-    return hits;
-  }
-
-  await scanRecording(checkpoint);
   const endpoint = nextSavedCheckpoint(checkpoint);
-  await sendAsyncManifest({
-    shouldSkip: () => !!findExisting(),
-    contents() {
-      return {
-        kind: "findHits",
-        position,
-        startpoint: checkpoint,
-        endpoint,
-      };
-    },
-    onFinished(_, hits) {
-      if (!gHitSearches.has(checkpoint)) {
-        gHitSearches.set(checkpoint, []);
-      }
-      const checkpointHits = gHitSearches.get(checkpoint);
-      checkpointHits.push({ position, hits });
-    },
-    scanCheckpoint: checkpoint,
+  const child = await scanRecording(checkpoint);
+  const hits = await child.sendManifest({
+    kind: "findHits",
+    position,
+    startpoint: checkpoint,
+    endpoint,
   });
 
-  hits = findExisting();
-  assert(hits);
+  resolve(hits);
   return hits;
-
-  function findExisting() {
-    const checkpointHits = gHitSearches.get(checkpoint);
-    if (!checkpointHits) {
-      return null;
-    }
-    const entry = checkpointHits.find(
-      ({ position: existingPosition, hits }) => {
-        return positionEquals(position, existingPosition);
-      }
-    );
-    return entry ? entry.hits : null;
-  }
 }
 
 // Asynchronously find all hits on a breakpoint's position.
@@ -913,10 +857,10 @@ async function findBreakpointHits(checkpoint, position) {
 // execution points for any direct callees of the frame.
 
 // Map from point strings to the steps which contain them.
-const gFrameSteps = new Map();
+const gFrameSteps = new PromiseMap();
 
 // Map from frame entry point strings to the parent frame's entry point.
-const gParentFrames = new Map();
+const gParentFrames = new PromiseMap();
 
 // Find all the steps in the frame which point is part of. This returns a
 // promise that resolves with the steps that were found.
@@ -931,9 +875,9 @@ async function findFrameSteps(point) {
       point.position.kind == "OnPop"
   );
 
-  let steps = findExisting();
-  if (steps) {
-    return steps;
+  const { promise, resolve } = gFrameSteps.get(pointToString(point));
+  if (!resolve) {
+    return promise;
   }
 
   // Gather information which the child which did the scan can use to figure out
@@ -944,59 +888,44 @@ async function findFrameSteps(point) {
   });
 
   const checkpoint = getSavedCheckpoint(point.checkpoint);
-  await scanRecording(checkpoint);
-  await sendAsyncManifest({
-    shouldSkip: () => !!findExisting(),
-    contents: () => ({ kind: "findFrameSteps", targetPoint: point, ...info }),
-    onFinished: (_, steps) => {
-      for (const p of steps) {
-        if (p.position.frameIndex == point.position.frameIndex) {
-          gFrameSteps.set(pointToString(p), steps);
-        } else {
-          assert(p.position.kind == "EnterFrame");
-          gParentFrames.set(pointToString(p), steps[0]);
-        }
-      }
-    },
-    scanCheckpoint: checkpoint,
+  const child = await scanRecording(checkpoint);
+  const steps = await child.sendManifest({
+    kind: "findFrameSteps",
+    targetPoint: point,
+    ...info,
   });
 
-  steps = findExisting();
-  assert(steps);
-  return steps;
-
-  function findExisting() {
-    return gFrameSteps.get(pointToString(point));
+  for (const p of steps) {
+    if (p.position.frameIndex == point.position.frameIndex) {
+      gFrameSteps.set(pointToString(p), steps);
+    } else {
+      assert(p.position.kind == "EnterFrame");
+      gParentFrames.set(pointToString(p), steps[0]);
+    }
   }
+
+  resolve(steps);
+  return steps;
 }
 
 async function findParentFrameEntryPoint(point) {
   assert(point.position.kind == "EnterFrame");
   assert(point.position.frameIndex > 0);
 
-  let parentPoint = findExisting();
-  if (parentPoint) {
-    return parentPoint;
+  const { promise, resolve } = gParentFrames.get(pointToString(point));
+  if (!resolve) {
+    return promise;
   }
 
   const checkpoint = getSavedCheckpoint(point.checkpoint);
-  await scanRecording(checkpoint);
-  await sendAsyncManifest({
-    shouldSkip: () => !!findExisting(),
-    contents: () => ({ kind: "findParentFrameEntryPoint", point }),
-    onFinished: (_, { parentPoint }) => {
-      gParentFrames.set(pointToString(point), parentPoint);
-    },
-    scanCheckpoint: checkpoint,
+  const child = await scanRecording(checkpoint);
+  const { parentPoint } = await child.sendManifest({
+    kind: "findParentFrameEntryPoint",
+    point,
   });
 
-  parentPoint = findExisting();
-  assert(parentPoint);
+  resolve(parentPoint);
   return parentPoint;
-
-  function findExisting() {
-    return gParentFrames.get(pointToString(point));
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1010,12 +939,7 @@ const gQueuedPauseData = new Set();
 // shown differently in the UI.
 const gCachedPoints = new Map();
 
-async function queuePauseData({
-  point,
-  snapshot,
-  trackCached,
-  shouldSkip: shouldSkipCallback,
-}) {
+async function queuePauseData({ point, trackCached }) {
   if (gQueuedPauseData.has(pointToString(point))) {
     return;
   }
@@ -1023,29 +947,11 @@ async function queuePauseData({
 
   await waitForFlushed(point.checkpoint);
 
-  await sendAsyncManifest({
-    shouldSkip() {
-      if (maybeGetPauseData(point)) {
-        return true;
-      }
+  const child = await ensureLeafChild(point, Priority.LOW);
+  const data = await child.sendManifest({ kind: "getPauseData" });
 
-      return shouldSkipCallback && shouldSkipCallback();
-    },
-    contents() {
-      return { kind: "getPauseData" };
-    },
-    onFinished(child, data) {
-      if (!data.restoredSnapshot) {
-        addPauseData(point, data, trackCached);
-        child.divergedFromRecording = true;
-      }
-    },
-    point,
-    snapshot,
-    expectedDuration: 250,
-    priority: Priority.LOW,
-    mightRewind: true,
-  });
+  addPauseData(point, data, trackCached);
+  terminateRunningLeafChild(child);
 }
 
 function addPauseData(point, data, trackCached) {
@@ -1082,13 +988,8 @@ const PauseModes = {
   // recording. gPausePoint is the last point the main child reached.
   RUNNING: "RUNNING",
 
-  // gActiveChild is a replaying child paused at gPausePoint.
+  // gActiveChild is a replaying child paused or being taken to gPausePoint.
   PAUSED: "PAUSED",
-
-  // gActiveChild is a replaying child being taken to gPausePoint. The debugger
-  // is considered to be paused, but interacting with the child must wait until
-  // it arrives.
-  ARRIVING: "ARRIVING",
 
   // gActiveChild is null, and we are looking for the last breakpoint hit prior
   // to or following gPausePoint, at which we will pause.
@@ -1099,12 +1000,10 @@ const PauseModes = {
 // Current pause mode.
 let gPauseMode = PauseModes.RUNNING;
 
-// In PAUSED or ARRIVING modes, the point we are paused at or sending the active
-// child to.
+// In PAUSED mode, the point we are paused at or sending the active child to.
 let gPausePoint = null;
 
 // In PAUSED mode, any debugger requests that have been sent to the child.
-// In ARRIVING mode, the requests must be sent once the child arrives.
 const gDebuggerRequests = [];
 
 function addDebuggerRequest(request) {
@@ -1116,88 +1015,43 @@ function addDebuggerRequest(request) {
 
 function setPauseState(mode, point, child) {
   assert(mode);
-  const idString = child ? ` #${child.id}` : "";
+  const idString = child ? ` ${child.id}` : "";
   dumpv(`SetPauseState ${mode} ${JSON.stringify(point)}${idString}`);
+
+  if (gActiveChild && gActiveChild != gMainChild && gActiveChild != child) {
+    terminateRunningLeafChild(gActiveChild);
+  }
 
   gPauseMode = mode;
   gPausePoint = point;
   gActiveChild = child;
 
-  if (mode == PauseModes.ARRIVING) {
+  if (mode == PauseModes.PAUSED) {
     simulateNearbyNavigation();
   }
-
-  pokeChildrenSoon();
 }
 
 // Mark the debugger as paused, and asynchronously send a child to the pause
 // point.
 function setReplayingPauseTarget(point) {
   assert(!gDebuggerRequests.length);
-  setPauseState(PauseModes.ARRIVING, point, closestChild(point.checkpoint));
+
+  const child = newLeafChild(point);
+  setPauseState(PauseModes.PAUSED, point, child);
 
   gDebugger._onPause();
-
   findFrameSteps(point);
 }
 
-function sendActiveChildToPausePoint() {
-  assert(gActiveChild.paused);
+// Synchronously bring a new leaf child to the current pause point.
+function bringNewReplayingChildToPausePoint() {
+  const child = newLeafChild(gPausePoint);
+  setPauseState(PauseModes.PAUSED, gPausePoint, child);
 
-  switch (gPauseMode) {
-    case PauseModes.PAUSED:
-      assert(pointEquals(gActiveChild.pausePoint(), gPausePoint));
-      return;
-
-    case PauseModes.ARRIVING:
-      if (pointEquals(gActiveChild.pausePoint(), gPausePoint)) {
-        setPauseState(PauseModes.PAUSED, gPausePoint, gActiveChild);
-
-        // Send any debugger requests the child is considered to have received.
-        if (gDebuggerRequests.length) {
-          const child = gActiveChild;
-          child.sendManifest({
-            contents: {
-              kind: "batchDebuggerRequest",
-              requests: gDebuggerRequests.map(r => r.request),
-            },
-            onFinished(finishData) {
-              if (finishData.divergedFromRecording) {
-                child.divergedFromRecording = true;
-              }
-            },
-          });
-        }
-      } else {
-        maybeReachPoint(gActiveChild, gPausePoint);
-      }
-      return;
-
-    default:
-      ThrowError(`Unexpected pause mode: ${gPauseMode}`);
-  }
-}
-
-function waitUntilPauseFinishes() {
-  assert(gActiveChild);
-
-  if (gActiveChild == gMainChild) {
-    gActiveChild.waitUntilPaused(true);
-    return;
-  }
-
-  while (gPauseMode != PauseModes.PAUSED) {
-    gActiveChild.waitUntilPaused();
-    pokeChild(gActiveChild);
-  }
-
-  gActiveChild.waitUntilPaused();
-}
-
-// Synchronously send a child to the specific point and pause.
-function pauseReplayingChild(child, point) {
-  setPauseState(PauseModes.ARRIVING, point, child);
-  waitUntilPauseFinishes();
+  child.sendManifest({
+    kind: "batchDebuggerRequest",
+    requests: gDebuggerRequests.map(r => r.request),
+  });
 }
 
 // Find the point where the debugger should pause when running forward or
@@ -1216,7 +1070,7 @@ async function resumeTarget(point, forward, breakpoints) {
 
   let checkpoint = startCheckpoint;
   for (; ; forward ? checkpoint++ : checkpoint--) {
-    if ([InvalidCheckpointId, gLastFlushCheckpoint].includes(checkpoint)) {
+    if ([InvalidCheckpointId, gLastSavedCheckpoint].includes(checkpoint)) {
       return null;
     }
 
@@ -1315,7 +1169,6 @@ function resume(forward) {
     null
   );
   finishResume();
-  pokeChildren();
 }
 
 // Synchronously bring the active child to the specified execution point.
@@ -1336,7 +1189,8 @@ const MaxCrashes = 4;
 let gNumCrashes = 0;
 
 // eslint-disable-next-line no-unused-vars
-function ChildCrashed(id) {
+function ChildCrashed(rootId, forkId) {
+  const id = processId(rootId, forkId);
   dumpv(`Child Crashed: ${id}`);
 
   // In principle we can recover when any replaying child process crashes.
@@ -1349,7 +1203,7 @@ function ChildCrashed(id) {
   //
   // - It is the active child, and is paused at gPausePoint. It must have
   //   crashed while processing a debugger request, which is unlikely.
-  const child = gReplayingChildren[id];
+  const child = gChildren.get(id);
   if (
     !child ||
     !child.manifest ||
@@ -1362,35 +1216,10 @@ function ChildCrashed(id) {
     ThrowError("Too many crashes");
   }
 
-  delete gReplayingChildren[id];
-  child.crashed = true;
+  child.terminate();
 
-  // Spawn a new child to replace the one which just crashed.
-  const newChild = spawnReplayingChild();
-  pokeChildSoon(newChild);
-
-  // The new child should save the same checkpoints as the old one.
-  for (const checkpoint of child.savedCheckpoints) {
-    newChild.addSavedCheckpoint(checkpoint);
-  }
-
-  // Any regions the old child scanned need to be rescanned.
-  for (const checkpoint of child.scannedCheckpoints) {
-    scanRecording(checkpoint);
-  }
-
-  // Requeue any async manifest the child was processing.
-  if (child.asyncManifest) {
-    sendAsyncManifest(child.asyncManifest);
-  }
-
-  // If the active child crashed while heading to the pause point, pick another
-  // child to head to the pause point.
-  if (child == gActiveChild) {
-    assert(gPauseMode == PauseModes.ARRIVING);
-    gActiveChild = closestChild(gPausePoint.checkpoint);
-    pokeChildSoon(gActiveChild);
-  }
+  // Crash recovery does not yet deal with fork based rewinding.
+  ThrowError("Fork based crash recovery NYI");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1438,6 +1267,7 @@ async function findFrameEntryPoint(point) {
   return steps[1];
 }
 
+// eslint-disable-next-line complexity
 async function simulateSteppingNavigation(point, count, frameCount, last) {
   if (!count || !point.position) {
     return;
@@ -1484,7 +1314,9 @@ async function simulateSteppingNavigation(point, count, frameCount, last) {
 
         const np = await findFrameEntryPoint(p);
         queuePauseData({ point: np, snapshot: steps[0] });
-        findHits(getSavedCheckpoint(point.checkpoint), np.position);
+        if (canFindHits(np.position)) {
+          findHits(getSavedCheckpoint(point.checkpoint), np.position);
+        }
         simulateSteppingNavigation(np, count - 1, frameCount - 1, "stepIn");
         break;
       }
@@ -1509,7 +1341,9 @@ async function simulateSteppingNavigation(point, count, frameCount, last) {
         // When stepping out we will stop at the next breakpoint site,
         // and do not need a point that is a stepping target.
         queuePauseData({ point: p, snapshot: parentSteps[0] });
-        findHits(getSavedCheckpoint(point.checkpoint), p.position);
+        if (canFindHits(p.position)) {
+          findHits(getSavedCheckpoint(point.checkpoint), p.position);
+        }
         simulateSteppingNavigation(p, count - 1, frameCount - 1, "stepOut");
         break;
       }
@@ -1560,29 +1394,19 @@ async function evaluateLogpoint({
   fast,
 }) {
   assert(point);
-  await sendAsyncManifest({
-    shouldSkip: () => false,
-    contents() {
-      return { kind: "hitLogpoint", text, condition, fast };
-    },
-    onFinished(child, { result, resultData, restoredSnapshot }) {
-      if (restoredSnapshot) {
-        callback(point, ["Recording divergence evaluating logpoint"]);
-      } else {
-        if (result) {
-          callback(point, result, resultData);
-        }
-        if (!fast) {
-          child.divergedFromRecording = true;
-        }
-      }
-    },
-    point,
-    snapshot,
-    expectedDuration: 250,
-    priority: Priority.MEDIUM,
-    mightRewind: true,
+
+  const child = await ensureLeafChild(point, Priority.MEDIUM);
+  const { result, resultData } = await child.sendManifest({
+    kind: "hitLogpoint",
+    text,
+    condition,
+    fast,
   });
+  terminateRunningLeafChild(child);
+
+  if (result) {
+    callback(point, result, resultData);
+  }
 }
 
 // Asynchronously invoke a logpoint's callback with all results from hitting
@@ -1654,28 +1478,25 @@ async function findLogpointHits(
 // have a way to remove old event logpoints from the client.
 const gLoggedEvents = [];
 
-const gEventFrameEntryPoints = new Map();
+const gEventFrameEntryPoints = new PromiseMap();
 
 async function findEventFrameEntry(checkpoint, progress) {
-  if (gEventFrameEntryPoints.has(progress)) {
-    return gEventFrameEntryPoints.get(progress);
+  const { promise, resolve } = gEventFrameEntryPoints.get(progress);
+  if (!resolve) {
+    return promise;
   }
 
   const savedCheckpoint = getSavedCheckpoint(checkpoint);
-  await scanRecording(savedCheckpoint);
-  await sendAsyncManifest({
-    shouldSkip: () => gEventFrameEntryPoints.has(progress),
-    contents: () => ({ kind: "findEventFrameEntry", checkpoint, progress }),
-    onFinished: (_, { rv }) => gEventFrameEntryPoints.set(progress, rv),
-    scanCheckpoint: savedCheckpoint,
+  const child = await scanRecording(savedCheckpoint);
+  const { rv } = await child.sendManifest({
+    kind: "findEventFrameEntry",
+    checkpoint,
+    progress,
   });
 
-  const point = gEventFrameEntryPoints.get(progress);
-  if (!point) {
-    return null;
-  }
-
-  return findFrameEntryPoint(point);
+  const point = await findFrameEntryPoint(rv);
+  resolve(point);
+  return point;
 }
 
 async function findEventLogpointHits(checkpoint, event, callback) {
@@ -1768,8 +1589,8 @@ function maybeResumeRecording() {
   }
 
   if (
-    !gLastFlushCheckpoint ||
-    timeSinceCheckpoint(gLastFlushCheckpoint) >= FlushMs
+    !gLastSavedCheckpoint ||
+    timeSinceCheckpoint(gLastSavedCheckpoint) >= FlushMs
   ) {
     ensureFlushed();
   }
@@ -1783,13 +1604,13 @@ function maybeResumeRecording() {
     }
     return;
   }
-  gMainChild.sendManifest({
-    contents: {
+  gMainChild.sendManifest(
+    {
       kind: "resume",
       breakpoints: gBreakpoints,
-      pauseOnDebuggerStatement: true,
+      pauseOnDebuggerStatement: !!gDebugger,
     },
-    onFinished(response) {
+    response => {
       handleResumeManifestResponse(response);
 
       gPausePoint = gMainChild.pausePoint();
@@ -1798,15 +1619,15 @@ function maybeResumeRecording() {
       } else {
         Services.tm.dispatchToMainThread(maybeResumeRecording);
       }
-    },
-  });
+    }
+  );
 }
 
 // Resolve callbacks for any promises waiting on the recording to be flushed.
 const gFlushWaiters = [];
 
 function waitForFlushed(checkpoint) {
-  if (checkpoint < gLastFlushCheckpoint) {
+  if (checkpoint < gLastSavedCheckpoint) {
     return undefined;
   }
   return new Promise(resolve => {
@@ -1822,36 +1643,32 @@ function ensureFlushed() {
 
   gLastFlushTime = Date.now();
 
-  if (gLastFlushCheckpoint == gMainChild.pauseCheckpoint()) {
+  if (gLastSavedCheckpoint == gMainChild.pauseCheckpoint()) {
     return;
   }
 
   if (gMainChild.recording) {
-    gMainChild.sendManifest({
-      contents: { kind: "flushRecording" },
-      onFinished() {},
-    });
+    gMainChild.sendManifest({ kind: "flushRecording" });
     gMainChild.waitUntilPaused();
   }
 
-  const oldFlushCheckpoint = gLastFlushCheckpoint || FirstCheckpointId;
-  gLastFlushCheckpoint = gMainChild.pauseCheckpoint();
-
   // We now have a usable recording for replaying children, so spawn them if
   // necessary.
-  if (gReplayingChildren.length == 0) {
-    spawnReplayingChildren();
+  if (!gTrunkChild) {
+    spawnTrunkChild();
   }
+
+  const oldSavedCheckpoint = gLastSavedCheckpoint || FirstCheckpointId;
+  addSavedCheckpoint(gMainChild.pauseCheckpoint());
 
   // Checkpoints where the recording was flushed to disk are saved. This allows
   // the recording to be scanned as soon as it has been flushed.
-  addSavedCheckpoint(gLastFlushCheckpoint);
 
   // Flushing creates a new region of the recording for replaying children
   // to scan.
   forSavedCheckpointsInRange(
-    oldFlushCheckpoint,
-    gLastFlushCheckpoint,
+    oldSavedCheckpoint,
+    gLastSavedCheckpoint,
     checkpoint => {
       scanRecording(checkpoint);
 
@@ -1870,8 +1687,6 @@ function ensureFlushed() {
     waiter();
   }
   gFlushWaiters.length = 0;
-
-  pokeChildren();
 }
 
 const CheckFlushMs = 1000;
@@ -1883,15 +1698,15 @@ setInterval(() => {
   if (
     elapsed > CheckFlushMs &&
     gMainChild.lastPausePoint &&
-    gMainChild.lastPausePoint.checkpoint != gLastFlushCheckpoint
+    gMainChild.lastPausePoint.checkpoint != gLastSavedCheckpoint
   ) {
     ensureFlushed();
   }
 
   // Ping children that are executing manifests to ensure they haven't hanged.
-  for (const child of gReplayingChildren) {
-    if (child) {
-      RecordReplayControl.maybePing(child.id);
+  for (const child of gUnpausedChildren) {
+    if (!child.recording) {
+      child.maybePing();
     }
   }
 }, 1000);
@@ -1911,73 +1726,12 @@ function AfterSaveRecording() {
 
 let gRecordingEndpoint;
 
-function setMainChild() {
+async function setMainChild() {
   assert(!gMainChild.recording);
 
-  gMainChild.sendManifest({
-    contents: { kind: "setMainChild" },
-    onFinished({ endpoint }) {
-      gRecordingEndpoint = endpoint;
-      Services.tm.dispatchToMainThread(maybeResumeRecording);
-    },
-  });
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Child Management
-////////////////////////////////////////////////////////////////////////////////
-
-function spawnReplayingChild() {
-  const id = RecordReplayControl.spawnReplayingChild();
-  const child = new ChildProcess(id, false);
-  gReplayingChildren[id] = child;
-  return child;
-}
-
-// How many replaying children to spawn. This should be a pref instead...
-const NumReplayingChildren = 4;
-
-function spawnReplayingChildren() {
-  if (RecordReplayControl.canRewind()) {
-    for (let i = 0; i < NumReplayingChildren; i++) {
-      spawnReplayingChild();
-    }
-  }
-  addSavedCheckpoint(FirstCheckpointId);
-}
-
-// eslint-disable-next-line no-unused-vars
-function Initialize(recordingChildId) {
-  try {
-    if (recordingChildId != undefined) {
-      gMainChild = new ChildProcess(recordingChildId, true);
-    } else {
-      // If there is no recording child, we have now initialized enough state
-      // that we can start spawning replaying children.
-      const id = RecordReplayControl.spawnReplayingChild();
-      gMainChild = new ChildProcess(id, false);
-      spawnReplayingChildren();
-    }
-    gActiveChild = gMainChild;
-    return gControl;
-  } catch (e) {
-    dump(`ERROR: Initialize threw exception: ${e}\n`);
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function ManifestFinished(id, response) {
-  try {
-    dumpv(`ManifestFinished #${id} ${stringify(response)}`);
-    const child = lookupChild(id);
-    if (child) {
-      child.manifestFinished(response);
-    } else {
-      // Ignore messages from child processes that we have marked as crashed.
-    }
-  } catch (e) {
-    dump(`ERROR: ManifestFinished threw exception: ${e} ${e.stack}\n`);
-  }
+  const { endpoint } = await gMainChild.sendManifest({ kind: "setMainChild" });
+  gRecordingEndpoint = endpoint;
+  Services.tm.dispatchToMainThread(maybeResumeRecording);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1994,7 +1748,7 @@ const gControl = {
     if (gActiveChild && gActiveChild == gMainChild) {
       return gActiveChild.paused ? gActiveChild.pausePoint() : null;
     }
-    if (gPauseMode == PauseModes.PAUSED || gPauseMode == PauseModes.ARRIVING) {
+    if (gPauseMode == PauseModes.PAUSED) {
       return gPausePoint;
     }
     return null;
@@ -2080,54 +1834,41 @@ const gControl = {
       if (point.position) {
         // We can only flush the recording at checkpoints, so we need to send the
         // main child forward and pause/flush ASAP.
-        gMainChild.sendManifest({
-          contents: {
+        gMainChild.sendManifest(
+          {
             kind: "resume",
             breakpoints: [],
             pauseOnDebuggerStatement: false,
           },
-          onFinished(response) {
-            handleResumeManifestResponse(response);
-          },
-        });
+          handleResumeManifestResponse
+        );
         gMainChild.waitUntilPaused(true);
       }
 
       ensureFlushed();
-      const child = closestChild(point);
-      pauseReplayingChild(child, point);
+      bringNewReplayingChildToPausePoint();
     }
   },
 
   // Synchronously send a debugger request to a paused active child, returning
   // the response.
   sendRequest(request) {
-    waitUntilPauseFinishes();
-
     let data;
-    gActiveChild.sendManifest({
-      contents: { kind: "debuggerRequest", request },
-      onFinished(finishData) {
+    gActiveChild.sendManifest(
+      { kind: "debuggerRequest", request },
+      finishData => {
         data = finishData;
-      },
-      mightRewind: true,
-    });
-    gActiveChild.waitUntilPaused();
-
-    if (data.restoredSnapshot) {
-      // The child had an unhandled recording diverge and restored an earlier
-      // checkpoint. Restore the child to the point it should be paused at and
-      // fill its paused state back in by resending earlier debugger requests.
-      pauseReplayingChild(gActiveChild, gPausePoint);
-      return { unhandledDivergence: true };
+      }
+    );
+    while (!data) {
+      gActiveChild.waitUntilPaused();
     }
 
-    if (data.divergedFromRecording) {
-      // Remember whether the child diverged from the recording.
-      gActiveChild.divergedFromRecording = true;
+    if (data.unhandledDivergence) {
+      bringNewReplayingChildToPausePoint();
+    } else {
+      addDebuggerRequest(request);
     }
-
-    addDebuggerRequest(request);
     return data.response;
   },
 
@@ -2137,12 +1878,12 @@ const gControl = {
   sendRequestMainChild(request) {
     gMainChild.waitUntilPaused(true);
     let data;
-    gMainChild.sendManifest({
-      contents: { kind: "debuggerRequest", request },
-      onFinished(finishData) {
+    gMainChild.sendManifest(
+      { kind: "debuggerRequest", request },
+      finishData => {
         data = finishData;
-      },
-    });
+      }
+    );
     gMainChild.waitUntilPaused();
     assert(!data.divergedFromRecording);
     return data.response;
@@ -2169,13 +1910,17 @@ const gControl = {
   },
 
   getPauseDataAndRepaint() {
-    // If the child has not arrived at the pause point yet, see if there is
-    // cached pause data for this point already which we can immediately return.
-    if (gPauseMode == PauseModes.ARRIVING && !gDebuggerRequests.length) {
+    // Use cached pause data if possible, which we can immediately return
+    // without waiting for the child to arrive at the pause point.
+    if (!gDebuggerRequests.length) {
       const data = maybeGetPauseData(gPausePoint);
       if (data) {
         // After the child pauses, it will need to generate the pause data so
         // that any referenced objects will be instantiated.
+        gActiveChild.sendManifest({
+          kind: "debuggerRequest",
+          request: { type: "pauseData" },
+        });
         addDebuggerRequest({ type: "pauseData" });
         RecordReplayControl.hadRepaint(data.paintData);
         return data;
@@ -2183,7 +1928,7 @@ const gControl = {
     }
     gControl.maybeSwitchToReplayingChild();
     const data = gControl.sendRequest({ type: "pauseData" });
-    if (data.unhandledDivergence) {
+    if (!data) {
       RecordReplayControl.clearGraphics();
     } else {
       addPauseData(gPausePoint, data, /* trackCached */ true);
@@ -2211,71 +1956,6 @@ const gControl = {
     return false;
   },
 };
-
-///////////////////////////////////////////////////////////////////////////////
-// Statistics
-///////////////////////////////////////////////////////////////////////////////
-
-let lastDumpTime = Date.now();
-
-function maybeDumpStatistics() {
-  const now = Date.now();
-  if (now - lastDumpTime < 5000) {
-    return;
-  }
-  lastDumpTime = now;
-
-  let delayTotal = 0;
-  let unscannedTotal = 0;
-  let timeTotal = 0;
-  let scanDurationTotal = 0;
-
-  forAllSavedCheckpoints(checkpoint => {
-    const checkpointTime = timeForSavedCheckpoint(checkpoint);
-    const info = getCheckpointInfo(checkpoint);
-
-    timeTotal += checkpointTime;
-    if (info.scanTime) {
-      delayTotal += checkpointTime * (info.scanTime - info.assignTime);
-      scanDurationTotal += info.scanDuration;
-    } else {
-      unscannedTotal += checkpointTime;
-    }
-  });
-
-  const memoryUsage = [];
-  let totalSaved = 0;
-
-  for (const child of gReplayingChildren) {
-    if (!child) {
-      continue;
-    }
-    totalSaved += child.savedCheckpoints.size;
-    if (!child.lastMemoryUsage) {
-      continue;
-    }
-    for (const [name, value] of Object.entries(child.lastMemoryUsage)) {
-      if (!memoryUsage[name]) {
-        memoryUsage[name] = 0;
-      }
-      memoryUsage[name] += value;
-    }
-  }
-
-  const delay = delayTotal / timeTotal;
-  const overhead = scanDurationTotal / (timeTotal - unscannedTotal);
-
-  dumpv(`Statistics:`);
-  dumpv(`Total recording time: ${timeTotal}`);
-  dumpv(`Unscanned fraction: ${unscannedTotal / timeTotal}`);
-  dumpv(`Average scan delay: ${delay}`);
-  dumpv(`Average scanning overhead: ${overhead}`);
-
-  dumpv(`Saved checkpoints: ${totalSaved}`);
-  for (const [name, value] of Object.entries(memoryUsage)) {
-    dumpv(`Memory ${name}: ${value}`);
-  }
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utilities
@@ -2335,4 +2015,5 @@ var EXPORTED_SYMBOLS = [
   "BeforeSaveRecording",
   "AfterSaveRecording",
   "ChildCrashed",
+  "PingResponse",
 ];

@@ -7,7 +7,7 @@
 #include "ProcessRedirect.h"
 
 #include "InfallibleVector.h"
-#include "MiddlemanCall.h"
+#include "ExternalCall.h"
 #include "ipc/ChildInternal.h"
 #include "ipc/ParentInternal.h"
 #include "mozilla/Sprintf.h"
@@ -92,23 +92,22 @@ __attribute__((used)) int RecordReplayInterceptCall(int aCallId,
     // After we have diverged from the recording, we can't access the thread's
     // recording anymore.
 
-    // If the redirection has a middleman preamble hook, call it to see if it
-    // can handle this call. The middleman preamble hook is separate from the
+    // If the redirection has an external preamble hook, call it to see if it
+    // can handle this call. The external preamble hook is separate from the
     // normal preamble hook because entering the RecordingEventSection can
     // cause the current thread to diverge from the recording; testing for
     // HasDivergedFromRecording() does not work reliably in the normal preamble.
-    if (redirection.mMiddlemanPreamble) {
-      if (CallPreambleHook(redirection.mMiddlemanPreamble, aCallId,
+    if (redirection.mExternalPreamble) {
+      if (CallPreambleHook(redirection.mExternalPreamble, aCallId,
                            aArguments)) {
         return 0;
       }
     }
 
-    // If the redirection has a middleman call hook, try to perform the call in
-    // the middleman instead.
-    if (redirection.mMiddlemanCall) {
-      if (SendCallToMiddleman(aCallId, aArguments,
-                              /* aPopulateOutput = */ true)) {
+    // If the redirection has an external call hook, try to get its result
+    // from another process.
+    if (redirection.mExternalCall) {
+      if (OnExternalCall(aCallId, aArguments, /* aPopulateOutput = */ true)) {
         return 0;
       }
     }
@@ -116,14 +115,13 @@ __attribute__((used)) int RecordReplayInterceptCall(int aCallId,
     if (child::CurrentRepaintCannotFail()) {
       // EnsureNotDivergedFromRecording is going to force us to crash, so fail
       // earlier with a more helpful error message.
-      child::ReportFatalError(Nothing(),
-                              "Could not perform middleman call: %s\n",
+      child::ReportFatalError("Could not perform external call: %s\n",
                               redirection.mName);
     }
 
     // Calling any redirection which performs the standard steps will cause
     // debugger operations that have diverged from the recording to fail.
-    EnsureNotDivergedFromRecording();
+    EnsureNotDivergedFromRecording(Some(aCallId));
     Unreachable();
   }
 
@@ -149,11 +147,11 @@ __attribute__((used)) int RecordReplayInterceptCall(int aCallId,
     redirection.mSaveOutput(thread->Events(), aArguments, &error);
   }
 
-  // Save information about any potential middleman calls encountered if we
-  // haven't diverged from the recording, in case we diverge and later calls
+  // Save information about any external calls encountered if we haven't
+  // diverged from the recording, in case we diverge and later calls
   // access data produced by this one.
-  if (IsReplaying() && redirection.mMiddlemanCall) {
-    (void)SendCallToMiddleman(aCallId, aArguments, /* aDiverged = */ false);
+  if (IsReplaying() && redirection.mExternalCall) {
+    (void)OnExternalCall(aCallId, aArguments, /* aDiverged = */ false);
   }
 
   RestoreError(error);
@@ -170,8 +168,13 @@ extern size_t RecordReplayRedirectCall(...);
 __asm(
     "_RecordReplayRedirectCall:"
 
-    // Make space for a CallArguments struct on the stack.
-    "subq $616, %rsp;"
+    // Save rbp for backtraces.
+    "pushq %rbp;"
+    "movq %rsp, %rbp;"
+
+    // Make space for a CallArguments struct on the stack, with a little extra
+    // space for alignment.
+    "subq $624, %rsp;"
 
     // Fill in the structure's contents.
     "movq %rdi, 0(%rsp);"
@@ -194,7 +197,7 @@ __asm(
     // Save stack arguments into the structure.
     "_RecordReplayRedirectCall_Loop:"
     "subq $1, %rsi;"
-    "movq 624(%rsp, %rsi, 8), %rdx;"  // Ignore the return ip on the stack.
+    "movq 640(%rsp, %rsi, 8), %rdx;"  // Ignore the rip/rbp saved on stack.
     "movq %rdx, 104(%rsp, %rsi, 8);"
     "testq %rsi, %rsi;"
     "jne _RecordReplayRedirectCall_Loop;"
@@ -223,7 +226,8 @@ __asm(
     "movsd 56(%rsp), %xmm1;"
     "movsd 64(%rsp), %xmm2;"
     "movq 72(%rsp), %rax;"
-    "addq $616, %rsp;"
+    "addq $624, %rsp;"
+    "popq %rbp;"
     "jmpq *%rax;"
 
     // The message has been recorded/replayed.
@@ -235,9 +239,10 @@ __asm(
     "movsd 96(%rsp), %xmm1;"
 
     // Pop the structure from the stack.
-    "addq $616, %rsp;"
+    "addq $624, %rsp;"
 
     // Return to caller.
+    "popq %rbp;"
     "ret;");
 
 // Call a function address with the specified arguments.
@@ -246,10 +251,15 @@ extern void RecordReplayInvokeCallRaw(CallArguments* aArguments, void* aFnPtr);
 __asm(
     "_RecordReplayInvokeCallRaw:"
 
+    // Save rbp for backtraces.
+    "pushq %rbp;"
+    "movq %rsp, %rbp;"
+
     // Save function pointer in rax.
     "movq %rsi, %rax;"
 
-    // Save arguments on the stack. This also aligns the stack.
+    // Save arguments on the stack, with a second copy for alignment.
+    "push %rdi;"
     "push %rdi;"
 
     // Count how many stack arguments we need to copy.
@@ -286,11 +296,13 @@ __asm(
 
     // Save any return values to the arguments.
     "pop %rdi;"
+    "pop %rdi;"
     "movq %rax, 72(%rdi);"
     "movq %rdx, 80(%rdi);"
     "movsd %xmm0, 88(%rdi);"
     "movsd %xmm1, 96(%rdi);"
 
+    "popq %rbp;"
     "ret;");
 
 }  // extern "C"
@@ -468,7 +480,9 @@ static uint8_t* MaybeInternalJumpTarget(uint8_t* aIpStart, uint8_t* aIpEnd) {
         // For these functions, there is a syscall near the beginning which
         // other system threads might be inside.
         strstr(startName, "__workq_kernreturn") ||
-        strstr(startName, "kevent64")) {
+        strstr(startName, "kevent64") ||
+        // Workaround suspected udis86 bug when disassembling this function.
+        strstr(startName, "CGAffineTransformMakeScale")) {
       PrintRedirectSpew("Failed [%p]: Vetoed by annotation\n", aIpEnd - 1);
       return aIpEnd - 1;
     }
@@ -498,7 +512,8 @@ static void UnknownInstruction(const char* aName, uint8_t* aIp,
   for (size_t i = 0; i < aNbytes; i++) {
     byteData.AppendPrintf(" %d", (int)aIp[i]);
   }
-  RedirectFailure("Unknown instruction in %s:%s", aName, byteData.get());
+  RedirectFailure("Unknown instruction in %s [%p]:%s", aName, aIp,
+                  byteData.get());
 }
 
 // Try to emit instructions to |aAssembler| with equivalent behavior to any
@@ -541,14 +556,21 @@ static bool CopySpecialInstruction(uint8_t* aIp, ud_t* aUd, size_t aNbytes,
       }
       return true;
     }
-    if (op->type == UD_OP_MEM && op->base == UD_R_RIP && !op->index &&
-        op->offset == 32) {
-      // jmp *$offset32(%rip)
-      uint8_t* addr = aIp + aNbytes + op->lval.sdword;
-      aAssembler.MoveImmediateToRax(addr);
-      aAssembler.LoadRax(8);
-      aAssembler.JumpToRax();
-      return true;
+    if (op->type == UD_OP_MEM && !op->index) {
+      if (op->base == UD_R_RIP) {
+        if (op->offset == 32) {
+          // jmp *$offset32(%rip)
+          uint8_t* addr = aIp + aNbytes + op->lval.sdword;
+          aAssembler.MoveImmediateToRax(addr);
+          aAssembler.LoadRax(8);
+          aAssembler.JumpToRax();
+          return true;
+        }
+      } else {
+        // Non-IP relative call or jump.
+        aAssembler.CopyInstruction(aIp, aNbytes);
+        return true;
+      }
     }
   }
 
@@ -628,6 +650,24 @@ static bool CopySpecialInstruction(uint8_t* aIp, ud_t* aUd, size_t aNbytes,
       aAssembler.MoveImmediateToRax(addr);
       aAssembler.LoadRax(8);
       aAssembler.CompareRaxWithTopOfStack();
+      aAssembler.PopRax();
+      aAssembler.PopRax();
+      return true;
+    }
+    if (dst->type == UD_OP_MEM && src->type == UD_OP_REG &&
+        dst->base == UD_R_RIP && !dst->index && dst->offset == 32) {
+      // cmpq reg, $offset32(%rip)
+      int reg = Assembler::NormalizeRegister(src->base);
+      if (!reg) {
+        return false;
+      }
+      uint8_t* addr = aIp + aNbytes + dst->lval.sdword;
+      aAssembler.PushRax();
+      aAssembler.MoveRegisterToRax(reg);
+      aAssembler.PushRax();
+      aAssembler.MoveImmediateToRax(addr);
+      aAssembler.LoadRax(8);
+      aAssembler.CompareTopOfStackWithRax();
       aAssembler.PopRax();
       aAssembler.PopRax();
       return true;
@@ -731,11 +771,37 @@ static uint8_t* CopyInstructions(const char* aName, uint8_t* aIpStart,
   return ip;
 }
 
+static bool PreserveCallerSaveRegisters(const char* aName) {
+  // LLVM assumes that the call made when getting thread local variables will
+  // preserve registers that are normally caller save. It's not clear what ABI
+  // is actually assumed for this function so preserve all possible registers.
+  return !strcmp(aName, "tlv_get_addr");
+}
+
 // Generate code to set %rax and enter RecordReplayRedirectCall.
 static uint8_t* GenerateRedirectStub(Assembler& aAssembler, size_t aCallId) {
   uint8_t* newFunction = aAssembler.Current();
-  aAssembler.MoveImmediateToRax((void*)aCallId);
-  aAssembler.Jump(BitwiseCast<void*>(RecordReplayRedirectCall));
+  if (PreserveCallerSaveRegisters(GetRedirection(aCallId).mName)) {
+    static int registers[] = {
+      UD_R_RDI, UD_R_RDI /* for alignment */, UD_R_RSI, UD_R_RDX, UD_R_RCX,
+      UD_R_R8, UD_R_R9, UD_R_R10, UD_R_R11,
+    };
+    for (size_t i = 0; i < ArrayLength(registers); i++) {
+      aAssembler.MoveRegisterToRax(registers[i]);
+      aAssembler.PushRax();
+    }
+    aAssembler.MoveImmediateToRax((void*)aCallId);
+    uint8_t* after = aAssembler.Current() + PushImmediateBytes + JumpBytes;
+    aAssembler.PushImmediate(after);
+    aAssembler.Jump(BitwiseCast<void*>(RecordReplayRedirectCall));
+    for (int i = ArrayLength(registers) - 1; i >= 0; i--) {
+      aAssembler.PopRegister(registers[i]);
+    }
+    aAssembler.Return();
+  } else {
+    aAssembler.MoveImmediateToRax((void*)aCallId);
+    aAssembler.Jump(BitwiseCast<void*>(RecordReplayRedirectCall));
+  }
   return newFunction;
 }
 
@@ -755,8 +821,8 @@ static void Redirect(size_t aCallId, Redirection& aRedirection,
 
   if (!functionStart) {
     if (aFirstPass) {
-      PrintSpew("Could not find symbol %s for redirecting.\n",
-                aRedirection.mName);
+      PrintRedirectSpew("Could not find symbol %s for redirecting.\n",
+                        aRedirection.mName);
     }
     return;
   }

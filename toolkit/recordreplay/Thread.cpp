@@ -12,7 +12,6 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/ThreadLocal.h"
 #include "ChunkAllocator.h"
-#include "MemorySnapshot.h"
 #include "ProcessRewind.h"
 #include "SpinLock.h"
 #include "ThreadSnapshot.h"
@@ -24,21 +23,8 @@ namespace recordreplay {
 // Thread Organization
 ///////////////////////////////////////////////////////////////////////////////
 
-static MOZ_THREAD_LOCAL(Thread*) gTlsThreadKey;
-
 /* static */
 Monitor* Thread::gMonitor;
-
-/* static */
-Thread* Thread::Current() {
-  MOZ_ASSERT(IsRecordingOrReplaying());
-  Thread* thread = gTlsThreadKey.get();
-  if (!thread && IsReplaying()) {
-    // Disable system threads when replaying.
-    WaitForeverNoIdle();
-  }
-  return thread;
-}
 
 /* static */
 bool Thread::CurrentIsMainThread() {
@@ -47,27 +33,23 @@ bool Thread::CurrentIsMainThread() {
 }
 
 void Thread::BindToCurrent() {
-  MOZ_ASSERT(!mStackBase);
-  gTlsThreadKey.set(this);
+  pthread_t self = DirectCurrentThread();
+  size_t size = pthread_get_stacksize_np(self);
+  uint8_t* base = (uint8_t*)pthread_get_stackaddr_np(self) - size;
 
-  mNativeId = pthread_self();
-  size_t size = pthread_get_stacksize_np(mNativeId);
-  uint8_t* base = (uint8_t*)pthread_get_stackaddr_np(mNativeId) - size;
-
-  // Lock if we will be notifying later on. We don't do this for the main
-  // thread because we haven't initialized enough state yet that we can use
-  // a monitor.
-  Maybe<MonitorAutoLock> lock;
-  if (mId != MainThreadId) {
-    lock.emplace(*gMonitor);
+  if (IsMainThread()) {
+    mStackBase = base;
+    mStackSize = size;
+  } else {
+    MOZ_RELEASE_ASSERT(base == mStackBase);
+    MOZ_RELEASE_ASSERT(size == mStackSize);
   }
 
-  mStackBase = base;
-  mStackSize = size;
+  if (!IsMainThread() && !mMachId) {
+    MOZ_RELEASE_ASSERT(this == Current());
+    MOZ_RELEASE_ASSERT(!AreThreadEventsPassedThrough());
 
-  // Notify WaitUntilInitialized if it is waiting for this thread to start.
-  if (mId != MainThreadId) {
-    gMonitor->NotifyAll();
+    mMachId = RecordReplayValue(IsRecording() ? mach_thread_self() : 0);
   }
 }
 
@@ -76,14 +58,14 @@ static Thread* gThreads;
 
 /* static */
 Thread* Thread::GetById(size_t aId) {
-  MOZ_ASSERT(aId);
-  MOZ_ASSERT(aId <= MaxThreadId);
+  MOZ_RELEASE_ASSERT(aId);
+  MOZ_RELEASE_ASSERT(aId <= MaxThreadId);
   return &gThreads[aId];
 }
 
 /* static */
 Thread* Thread::GetByNativeId(NativeThreadId aNativeId) {
-  for (size_t id = MainThreadId; id <= MaxRecordedThreadId; id++) {
+  for (size_t id = MainThreadId; id <= MaxThreadId; id++) {
     Thread* thread = GetById(id);
     if (thread->mNativeId == aNativeId) {
       return thread;
@@ -92,47 +74,71 @@ Thread* Thread::GetByNativeId(NativeThreadId aNativeId) {
   return nullptr;
 }
 
+static uint8_t* gThreadStackMemory = nullptr;
+
+static const size_t ThreadStackSize = 2 * 1024 * 1024;
+
 /* static */
-Thread* Thread::GetByStackPointer(void* aSp) {
+Thread* Thread::Current() {
+  MOZ_ASSERT(IsRecordingOrReplaying());
+
   if (!gThreads) {
     return nullptr;
   }
-  for (size_t i = MainThreadId; i <= MaxThreadId; i++) {
-    Thread* thread = &gThreads[i];
-    if (MemoryContains(thread->mStackBase, thread->mStackSize, aSp)) {
-      return thread;
+
+  uint8_t* ptr = (uint8_t*)&ptr;
+  Thread* mainThread = GetById(MainThreadId);
+  if (MemoryContains(mainThread->mStackBase, mainThread->mStackSize, ptr)) {
+    return mainThread;
+  }
+
+  if (ptr >= gThreadStackMemory) {
+    size_t id = MainThreadId + 1 + (ptr - gThreadStackMemory) / ThreadStackSize;
+    if (id <= MaxThreadId) {
+      return GetById(id);
     }
   }
+
   return nullptr;
 }
 
+static int gWaitForeverFd;
+
 /* static */
 void Thread::InitializeThreads() {
+  FileHandle writeFd, readFd;
+  DirectCreatePipe(&writeFd, &readFd);
+  gWaitForeverFd = readFd;
+
   gThreads = new Thread[MaxThreadId + 1];
+
+  size_t nbytes = (MaxThreadId - MainThreadId) * ThreadStackSize;
+  gThreadStackMemory = (uint8_t*) DirectAllocateMemory(nbytes);
+
   for (size_t i = MainThreadId; i <= MaxThreadId; i++) {
     Thread* thread = &gThreads[i];
     PodZero(thread);
     new (thread) Thread();
 
     thread->mId = i;
+    thread->mEvents = gRecording->OpenStream(StreamName::Event, i);
 
-    if (i <= MaxRecordedThreadId) {
-      thread->mEvents = gRecordingFile->OpenStream(StreamName::Event, i);
+    if (i == MainThreadId) {
+      thread->BindToCurrent();
+      thread->mNativeId = DirectCurrentThread();
+    } else {
+      thread->mStackBase = gThreadStackMemory + (i - MainThreadId - 1) * ThreadStackSize;
+      thread->mStackSize = ThreadStackSize - PageSize * 2;
+
+      // Make some memory between thread stacks inaccessible so that breakpad
+      // can tell the different thread stacks apart.
+      DirectMakeInaccessible(thread->mStackBase + ThreadStackSize - PageSize,
+                             PageSize);
+
+      thread->SetPassThrough(true);
     }
 
     DirectCreatePipe(&thread->mNotifyfd, &thread->mIdlefd);
-  }
-
-  if (!gTlsThreadKey.init()) {
-    MOZ_CRASH();
-  }
-}
-
-/* static */
-void Thread::WaitUntilInitialized(Thread* aThread) {
-  MonitorAutoLock lock(*gMonitor);
-  while (!aThread->mStackBase) {
-    gMonitor->Wait();
   }
 }
 
@@ -143,7 +149,18 @@ void Thread::ThreadMain(void* aArgument) {
   Thread* thread = (Thread*)aArgument;
   MOZ_ASSERT(thread->mId > MainThreadId);
 
+  // mMachId is set in BindToCurrent, which already ran if we forked and then
+  // respawned this thread.
+  bool forked = !!thread->mMachId;
+
+  thread->SetPassThrough(false);
   thread->BindToCurrent();
+
+  if (forked) {
+    AutoPassThroughThreadEvents pt;
+    thread->ReleaseOrAcquireOwnedLocks(OwnedLockState::NeedAcquire);
+    RestoreThreadStack(thread->Id());
+  }
 
   while (true) {
     // Wait until this thread has been given a start routine.
@@ -157,11 +174,7 @@ void Thread::ThreadMain(void* aArgument) {
       Wait();
     }
 
-    {
-      Maybe<AutoPassThroughThreadEvents> pt;
-      if (!thread->IsRecordedThread()) pt.emplace();
-      thread->mStart(thread->mStartArg);
-    }
+    thread->mStart(thread->mStartArg);
 
     MonitorAutoLock lock(*gMonitor);
 
@@ -179,44 +192,45 @@ void Thread::ThreadMain(void* aArgument) {
 void Thread::SpawnAllThreads() {
   MOZ_ASSERT(AreThreadEventsPassedThrough());
 
-  InitializeThreadSnapshots(MaxRecordedThreadId + 1);
+  InitializeThreadSnapshots();
 
   gMonitor = new Monitor();
 
   // All Threads are spawned up front. This allows threads to be scanned
   // (e.g. in ReplayUnlock) without worrying about racing with other threads
   // being spawned.
-  for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
-    SpawnThread(GetById(i));
+  for (size_t i = MainThreadId + 1; i <= MaxThreadId; i++) {
+    // mNativeId reflects the ID when the original process started, ignoring
+    // any IDs of threads that are respawned after forking.
+    Thread* thread = GetById(i);
+    thread->mNativeId = SpawnThread(thread);
   }
 }
 
-// The number of non-recorded threads that have been spawned.
-static Atomic<size_t, SequentiallyConsistent, Behavior::DontPreserve>
-    gNumNonRecordedThreads;
-
 /* static */
-Thread* Thread::SpawnNonRecordedThread(Callback aStart, void* aArgument) {
-  if (IsMiddleman()) {
-    DirectSpawnThread(aStart, aArgument);
-    return nullptr;
-  }
-
-  size_t id = MaxRecordedThreadId + ++gNumNonRecordedThreads;
-  MOZ_RELEASE_ASSERT(id <= MaxThreadId);
-
-  Thread* thread = GetById(id);
-  thread->mStart = aStart;
-  thread->mStartArg = aArgument;
-
-  SpawnThread(thread);
-  return thread;
+void Thread::SpawnNonRecordedThread(Callback aStart, void* aArgument) {
+  DirectSpawnThread(aStart, aArgument, nullptr, 0);
 }
 
 /* static */
-void Thread::SpawnThread(Thread* aThread) {
-  DirectSpawnThread(ThreadMain, aThread);
-  WaitUntilInitialized(aThread);
+void Thread::RespawnAllThreadsAfterFork() {
+  MOZ_ASSERT(AreThreadEventsPassedThrough());
+  for (size_t id = MainThreadId; id <= MaxThreadId; id++) {
+    Thread* thread = GetById(id);
+    DirectCloseFile(thread->mNotifyfd);
+    DirectCloseFile(thread->mIdlefd);
+    DirectCreatePipe(&thread->mNotifyfd, &thread->mIdlefd);
+    if (!thread->IsMainThread()) {
+      SaveThreadStack(id);
+      SpawnThread(thread);
+    }
+  }
+}
+
+/* static */
+NativeThreadId Thread::SpawnThread(Thread* aThread) {
+  return DirectSpawnThread(ThreadMain, aThread, aThread->mStackBase,
+                           aThread->mStackSize);
 }
 
 /* static */
@@ -233,16 +247,16 @@ NativeThreadId Thread::StartThread(Callback aStart, void* aArgument,
   size_t id = 0;
   if (IsRecording()) {
     // Look for an idle thread.
-    for (id = MainThreadId + 1; id <= MaxRecordedThreadId; id++) {
+    for (id = MainThreadId + 1; id <= MaxThreadId; id++) {
       Thread* targetThread = Thread::GetById(id);
       if (!targetThread->mStart && !targetThread->mNeedsJoin) {
         break;
       }
     }
-    if (id >= MaxRecordedThreadId) {
-      child::ReportFatalError(Nothing(), "Too many threads");
+    if (id > MaxThreadId) {
+      child::ReportFatalError("Too many threads");
     }
-    MOZ_RELEASE_ASSERT(id <= MaxRecordedThreadId);
+    MOZ_RELEASE_ASSERT(id <= MaxThreadId);
   }
   thread->Events().RecordOrReplayThreadEvent(ThreadEvent::CreateThread);
   thread->Events().RecordOrReplayScalar(&id);
@@ -269,7 +283,7 @@ NativeThreadId Thread::StartThread(Callback aStart, void* aArgument,
 void Thread::Join() {
   MOZ_ASSERT(!AreThreadEventsPassedThrough());
 
-  EnsureNotDivergedFromRecording();
+  EnsureNotDivergedFromRecording(Nothing());
 
   while (true) {
     MonitorAutoLock lock(*gMonitor);
@@ -280,6 +294,62 @@ void Thread::Join() {
     }
     gMonitor->Wait();
   }
+}
+
+void Thread::AddOwnedLock(NativeLock* aNativeLock) {
+  mOwnedLocks.append(aNativeLock);
+}
+
+void Thread::RemoveOwnedLock(NativeLock* aNativeLock) {
+  for (int i = mOwnedLocks.length() - 1; i >= 0; i--) {
+    if (mOwnedLocks[i] == aNativeLock) {
+      mOwnedLocks.erase(&mOwnedLocks[i]);
+      return;
+    }
+  }
+  MOZ_CRASH("RemoveOwnedLock");
+}
+
+void Thread::ReleaseOrAcquireOwnedLocks(OwnedLockState aState) {
+  MOZ_RELEASE_ASSERT(aState != OwnedLockState::None);
+  for (NativeLock* lock : mOwnedLocks) {
+    if (aState == OwnedLockState::NeedRelease) {
+      DirectUnlockMutex(lock, /* aPassThroughEvents */ false);
+    } else {
+      DirectLockMutex(lock, /* aPassThroughEvents */ false);
+    }
+  }
+}
+
+void** Thread::GetOrCreateStorage(uintptr_t aKey) {
+  for (StorageEntry** pentry = &mStorageEntries; *pentry; pentry = &(*pentry)->mNext) {
+    StorageEntry* entry = *pentry;
+    if (entry->mKey == aKey) {
+      // Put this at the front of the list.
+      *pentry = entry->mNext;
+      entry->mNext = mStorageEntries;
+      mStorageEntries = entry;
+      return &entry->mData;
+    }
+  }
+  StorageEntry* entry = (StorageEntry*) AllocateStorage(sizeof(StorageEntry));
+  entry->mKey = aKey;
+  entry->mData = 0;
+  entry->mNext = mStorageEntries;
+  mStorageEntries = entry;
+  return &entry->mData;
+}
+
+uint8_t* Thread::AllocateStorage(size_t aSize) {
+  // malloc uses TLS, so go directly to the system to allocate TLS storage.
+  if (mStorageCursor + aSize >= mStorageLimit) {
+    size_t nbytes = std::max(aSize, PageSize);
+    mStorageCursor = (uint8_t*) DirectAllocateMemory(nbytes);
+    mStorageLimit = mStorageCursor + nbytes;
+  }
+  uint8_t* res = mStorageCursor;
+  mStorageCursor += aSize;
+  return res;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -342,14 +412,14 @@ void Thread::WaitForIdleThreads() {
   MOZ_RELEASE_ASSERT(CurrentIsMainThread());
 
   MonitorAutoLock lock(*gMonitor);
-  for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
+  for (size_t i = MainThreadId + 1; i <= MaxThreadId; i++) {
     Thread* thread = GetById(i);
     thread->mShouldIdle = true;
     thread->mUnrecordedWaitNotified = false;
   }
   while (true) {
     bool done = true;
-    for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
+    for (size_t i = MainThreadId + 1; i <= MaxThreadId; i++) {
       Thread* thread = GetById(i);
       if (!thread->mIdle) {
         done = false;
@@ -392,16 +462,27 @@ void Thread::WaitForIdleThreads() {
 }
 
 /* static */
-void Thread::ResumeSingleIdleThread(size_t aId) {
-  GetById(aId)->mShouldIdle = false;
-  Notify(aId);
+void Thread::OperateOnIdleThreadLocks(OwnedLockState aState) {
+  MOZ_RELEASE_ASSERT(CurrentIsMainThread());
+  MOZ_RELEASE_ASSERT(aState != OwnedLockState::None);
+  for (size_t i = MainThreadId + 1; i <= MaxThreadId; i++) {
+    Thread* thread = GetById(i);
+    if (thread->mOwnedLocks.length()) {
+      thread->mOwnedLockState = aState;
+      Notify(i);
+      while (thread->mOwnedLockState != OwnedLockState::None) {
+        WaitNoIdle();
+      }
+    }
+  }
 }
 
 /* static */
 void Thread::ResumeIdleThreads() {
   MOZ_RELEASE_ASSERT(CurrentIsMainThread());
-  for (size_t i = MainThreadId + 1; i <= MaxRecordedThreadId; i++) {
-    ResumeSingleIdleThread(i);
+  for (size_t i = MainThreadId + 1; i <= MaxThreadId; i++) {
+    GetById(i)->mShouldIdle = false;
+    Notify(i);
   }
 }
 
@@ -430,7 +511,7 @@ void Thread::NotifyUnrecordedWait(
   }
 }
 
-bool Thread::MaybeWaitForSnapshot(
+bool Thread::MaybeWaitForFork(
     const std::function<void()>& aReleaseCallback) {
   MOZ_RELEASE_ASSERT(!PassThroughEvents());
   if (IsMainThread()) {
@@ -475,7 +556,7 @@ void Thread::Wait() {
   thread->SetPassThrough(true);
   int stackSeparator = 0;
   if (!SaveThreadState(thread->Id(), &stackSeparator)) {
-    // We just restored a checkpoint, notify the main thread since it is waiting
+    // We just installed a stack, notify the main thread since it is waiting
     // for all threads to restore their stacks.
     Notify(MainThreadId);
   }
@@ -487,15 +568,15 @@ void Thread::Wait() {
   }
 
   do {
+    // Release or reacquire owned locks if the main thread asked us to.
+    if (thread->mOwnedLockState != OwnedLockState::None) {
+      thread->ReleaseOrAcquireOwnedLocks(thread->mOwnedLockState);
+      thread->mOwnedLockState = OwnedLockState::None;
+      Notify(MainThreadId);
+    }
+
     // Do the actual waiting for another thread to notify this one.
     WaitNoIdle();
-
-    // Rewind this thread if the main thread told us to do so. The main
-    // thread is responsible for rewinding its own stack.
-    if (ShouldRestoreThreadStack(thread->Id())) {
-      RestoreThreadStack(thread->Id());
-      Unreachable();
-    }
   } while (thread->mShouldIdle);
 
   thread->mIdle = false;
@@ -512,11 +593,9 @@ void Thread::WaitForever() {
 
 /* static */
 void Thread::WaitForeverNoIdle() {
-  FileHandle writeFd, readFd;
-  DirectCreatePipe(&writeFd, &readFd);
   while (true) {
     uint8_t data;
-    DirectRead(readFd, &data, 1);
+    DirectRead(gWaitForeverFd, &data, 1);
   }
 }
 
@@ -529,7 +608,7 @@ void Thread::Notify(size_t aId) {
 /* static */
 size_t Thread::TotalEventProgress() {
   size_t result = 0;
-  for (size_t id = MainThreadId; id <= MaxRecordedThreadId; id++) {
+  for (size_t id = MainThreadId; id <= MaxThreadId; id++) {
     Thread* thread = GetById(id);
 
     // Accessing the stream position here is racy. The returned value is used to
