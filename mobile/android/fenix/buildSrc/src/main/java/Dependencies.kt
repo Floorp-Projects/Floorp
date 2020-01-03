@@ -6,9 +6,6 @@ object Versions {
     const val kotlin = "1.3.30"
     const val coroutines = "1.3.3"
     const val android_gradle_plugin = "3.5.0"
-    const val rxAndroid = "2.1.0"
-    const val rxKotlin = "2.3.0"
-    const val rxBindings = "3.0.0-alpha2"
     const val sentry = "1.7.10"
     const val leakcanary = "2.0"
     const val leanplum = "5.2.3"
@@ -45,7 +42,6 @@ object Versions {
 
     const val mozilla_glean = "19.0.0"
 
-    const val autodispose = "1.1.0"
     const val adjust = "4.18.3"
     const val installreferrer = "1.0"
 
@@ -79,10 +75,6 @@ object Deps {
     const val allopen = "org.jetbrains.kotlin:kotlin-allopen:${Versions.kotlin}"
     const val osslicenses_plugin = "com.google.android.gms:oss-licenses-plugin:${Versions.osslicenses_plugin}"
     const val osslicenses_library = "com.google.android.gms:play-services-oss-licenses:${Versions.osslicenses_library}"
-
-    const val rxKotlin = "io.reactivex.rxjava2:rxkotlin:${Versions.rxKotlin}"
-    const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
-    const val rxBindings = "com.jakewharton.rxbinding3:rxbinding:${Versions.rxBindings}"
 
     const val mozilla_concept_engine = "org.mozilla.components:concept-engine:${Versions.mozilla_android_components}"
     const val mozilla_concept_push = "org.mozilla.components:concept-push:${Versions.mozilla_android_components}"
@@ -183,11 +175,6 @@ object Deps {
     const val androidx_work_ktx = "androidx.work:work-runtime-ktx:${Versions.androidx_work}"
     const val androidx_work_testing = "androidx.work:work-testing:${Versions.androidx_work}"
     const val google_material = "com.google.android.material:material:${Versions.google_material}"
-
-    const val autodispose = "com.uber.autodispose:autodispose:${Versions.autodispose}"
-    const val autodispose_android = "com.uber.autodispose:autodispose-android:${Versions.autodispose}"
-    const val autodispose_android_aac = "com.uber.autodispose:autodispose-android-archcomponents:${Versions.autodispose}"
-    const val autodispose_android_aac_test = "com.uber.autodispose:autodispose-android-archcomponents-test:${Versions.autodispose}"
 
     const val adjust = "com.adjust.sdk:adjust-android:${Versions.adjust}"
     const val installreferrer = "com.android.installreferrer:installreferrer:${Versions.installreferrer}"

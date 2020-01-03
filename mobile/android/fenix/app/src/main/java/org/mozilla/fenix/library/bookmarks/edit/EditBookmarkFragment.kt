@@ -10,25 +10,34 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
-import com.jakewharton.rxbinding3.widget.textChanges
-import com.uber.autodispose.AutoDispose
-import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.functions.BiFunction
-import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.fragment_edit_bookmark.*
+import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkNameEdit
+import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkParentFolderSelector
+import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkUrlEdit
+import kotlinx.android.synthetic.main.fragment_edit_bookmark.bookmarkUrlLabel
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.UrlParseFailed
 import mozilla.components.concept.storage.BookmarkInfo
@@ -36,6 +45,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.ktx.android.view.toScope
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -47,11 +57,13 @@ import org.mozilla.fenix.ext.setToolbarColors
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
-import java.util.concurrent.TimeUnit
 
 /**
  * Menu to edit the name, URL, and location of a bookmark item.
  */
+@FlowPreview
+@ExperimentalCoroutinesApi
+@InternalCoroutinesApi // Cannot use collect as a lambda due to Kotlin SAM conversion issue
 class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
 
     private lateinit var guidToEdit: String
@@ -118,7 +130,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                 }
             }
 
-        updateBookmarkFromObservableInput()
+        updateBookmarkFromTextChanges()
     }
 
     private fun initToolbar() {
@@ -139,21 +151,29 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
         bookmarkUrlEdit.hideKeyboard()
     }
 
-    private fun updateBookmarkFromObservableInput() {
-        Observable.combineLatest(
-            bookmarkNameEdit.textChanges().skipInitialValue(),
-            bookmarkUrlEdit.textChanges().skipInitialValue(),
-            BiFunction { name: CharSequence, url: CharSequence ->
-                Pair(name.toString(), url.toString())
-            })
-            .filter { (name) -> name.isNotBlank() }
-            .debounce(debouncePeriodInMs, TimeUnit.MILLISECONDS)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .`as`(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(this@EditBookmarkFragment)))
-            .subscribe { (name, url) ->
-                updateBookmarkNode(name, url)
+    private fun updateBookmarkFromTextChanges() {
+        fun EditText.observe() = channelFlow {
+            this@observe.doOnTextChanged { text, _, _, _ ->
+                runBlocking { send(text.toString()) }
             }
+            awaitClose()
+        }
+
+        val nameText = bookmarkNameEdit.observe()
+        val urlText = bookmarkUrlEdit.observe()
+
+        bookmarkNameEdit.toScope().launch {
+            nameText.combine(urlText) { name, url -> name to url }
+                .drop(1)
+                .filter { (name) -> name.isNotBlank() }
+                .debounce(timeoutMillis = debouncePeriodInMs)
+                // TODO convert collect to lambda when Kotlin SAM conversions are supported
+                .collect(object : FlowCollector<Pair<String, String>> {
+                    override suspend fun emit(value: Pair<String, String>) {
+                        updateBookmarkNode(value.first, value.second)
+                    }
+                })
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

@@ -374,13 +374,6 @@ dependencies {
     implementation Deps.androidx_constraintlayout
     implementation Deps.androidx_coordinatorlayout
 
-    implementation Deps.rxAndroid
-    implementation Deps.rxKotlin
-    implementation Deps.rxBindings
-    implementation Deps.autodispose
-    implementation Deps.autodispose_android
-    implementation Deps.autodispose_android_aac
-
     implementation Deps.sentry
     implementation Deps.leanplum
     implementation Deps.osslicenses_library
@@ -467,8 +460,6 @@ dependencies {
     implementation Deps.androidx_transition
     implementation Deps.androidx_work_ktx
     implementation Deps.google_material
-
-    implementation Deps.autodispose
 
     implementation Deps.lottie
 

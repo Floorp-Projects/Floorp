@@ -12,7 +12,6 @@ import android.os.StrictMode
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.getSystemService
-import io.reactivex.plugins.RxJavaPlugins
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -81,7 +80,6 @@ open class FenixApplication : Application() {
             val megazordSetup = setupMegazord()
 
             setDayNightTheme()
-            registerRxExceptionHandling()
             enableStrictMode()
 
             // Make sure the engine is initialized and ready to use.
@@ -149,12 +147,6 @@ open class FenixApplication : Application() {
             components.core.bookmarksStorage.runMaintenance()
         }
         settings().lastPlacesStorageMaintenance = System.currentTimeMillis()
-    }
-
-    private fun registerRxExceptionHandling() {
-        RxJavaPlugins.setErrorHandler {
-            throw it.cause ?: it
-        }
     }
 
     protected open fun setupLeakCanary() {
