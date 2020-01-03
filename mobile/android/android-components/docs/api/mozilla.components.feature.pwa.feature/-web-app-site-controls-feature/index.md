@@ -2,7 +2,7 @@
 
 # WebAppSiteControlsFeature
 
-`class WebAppSiteControlsFeature : LifecycleObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/feature/WebAppSiteControlsFeature.kt#L36)
+`class WebAppSiteControlsFeature : LifecycleObserver` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/feature/WebAppSiteControlsFeature.kt#L34)
 
 Displays site controls notification for fullscreen web apps.
 

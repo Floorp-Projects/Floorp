@@ -2,7 +2,7 @@
 
 # cancel
 
-`fun <ERROR CLASS>.cancel(context: <ERROR CLASS>, tag: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/ids/NotificationIds.kt#L64)
+`fun <ERROR CLASS>.cancel(context: <ERROR CLASS>, tag: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/ids/SharedIdsHelper.kt#L71)
 
 Cancel a previously shown notification.
 

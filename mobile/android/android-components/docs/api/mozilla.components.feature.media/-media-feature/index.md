@@ -32,6 +32,8 @@ This feature should get initialized globally once on app start and requires a st
 |---|---|
 | [ACTION_SWITCH_TAB](-a-c-t-i-o-n_-s-w-i-t-c-h_-t-a-b.md) | `const val ACTION_SWITCH_TAB: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [EXTRA_TAB_ID](-e-x-t-r-a_-t-a-b_-i-d.md) | `const val EXTRA_TAB_ID: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [NOTIFICATION_TAG](-n-o-t-i-f-i-c-a-t-i-o-n_-t-a-g.md) | `const val NOTIFICATION_TAG: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [PENDING_INTENT_TAG](-p-e-n-d-i-n-g_-i-n-t-e-n-t_-t-a-g.md) | `const val PENDING_INTENT_TAG: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Extension Functions
 
