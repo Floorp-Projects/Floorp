@@ -76,6 +76,8 @@
     <string name="browser_menu_desktop_site">Verze pro počítač</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Přidat na plochu</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Nainstalovat</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Najít na stránce</string>
     <!-- Browser menu button that creates a private tab -->
@@ -214,7 +216,7 @@
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Našeptávat vyhledávání</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
-    <string name="preferences_show_search_suggestions_in_private">Zobrazit v anonymním prohlížení</string>
+    <string name="preferences_show_search_suggestions_in_private">Našeptávat také v anonymním prohlížení</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
     <string name="preferences_show_clipboard_suggestions">Našeptávat zkopírovaný text</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->

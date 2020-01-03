@@ -71,6 +71,8 @@
     <string name="browser_menu_desktop_site">Työpöytäsivusto</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Lisää aloitusnäytölle</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Asenna</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Etsi sivulta</string>
     <!-- Browser menu button that creates a private tab -->
@@ -104,8 +106,10 @@
     <string name="search_shortcuts_button">Oikopolut</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Hakukoneasetukset</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Hae hakukoneella</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Tällä kertaa käytä hakuun:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Täytä linkki leikepöydältä</string>
 
@@ -877,11 +881,13 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_option">Tavallinen</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Normaali (suositeltu)</string>
+    <string name="preference_enhanced_tracking_protection_standard">Tavallinen (suositeltu)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Tasapainoa suojauksen ja suorituskyvyn välillä.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_2">Sivut latautuvat normaalisti, mutta vähemmän seuraimia estetään.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Mitä tavallinen seurannan suojaus estää</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Tiukka</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
@@ -892,6 +898,8 @@
     <string name="preference_enhanced_tracking_protection_strict_recommended">Tiukka (suositeltu)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Vahvempi suojaus, mutta jotkin sivustot tai sisällöt voivat rikkoutua.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Mitä tiukka seurannan suojaus estää</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Estetty</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -933,6 +941,17 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Avoimen lähdekoodin kirjastot</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Tuki</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Tietosuojakäytäntö</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Tunne oikeutesi</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Lisenssitiedot</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Käyttämämme kirjastot</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 välilehti</string>

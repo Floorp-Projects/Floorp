@@ -23,6 +23,14 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">ਤੁਸੀਂ ਪ੍ਰਾਈਵੇਟ ਸ਼ੈਸ਼ਨ ‘ਚ ਹੋ</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">¶
+         ਜਦੋਂ ਤੁਸੀਂ ਐਪ ਤੋਂ ਬਾਹਰ ਜਾਂਦੇ ਹੋ ਜਾਂ ਸਾਰੀਆਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰਦੇ ਹੋ ਤਾਂ %1$s ਤੁਹਾਡੀ ਖੋਜ ਅਤੇ ਬਰਾਊਜ਼ਿੰਗ ਅਤੀਤ ਨੂੰ ਸਾਫ ਕਰਦਾ ਹੈ। ਹਾਲਾਂਕਿ ਇਹ ਤੁਹਾਨੂੰ ਵੈਬਸਾਈਟਾਂ ਜਾਂ ਤੁਹਾਡੇ ਇੰਟਰਨੈੱਟ ਦੇਣ ਵਾਲੇ ਲਈ ਅਣਪਛਾਤਾ ਨਹੀਂ ਬਣਾਉਂਦਾ, ਪਰ ਇਸ ਨਾਲ
+        ਇਸ ਡਿਵਾਈਸ ਨੂੰ ਵਰਤੇ ਵਾਲੇ ਕਿਸੇ ਤੋਂ ਵੀ ਤੁਹਾਡੇ ਵਲੋਂ ਆਨਲਾਈਨ ਕੀਤੇ ਨੂੰ ਪ੍ਰਾਈਵੇਟ ਰੱਖਣਾ ਹੋਰ ਸੌਖਾ ਹੋ ਜਾਂਦਾ ਹੈ।
+    
+    
+    </string>
     <string name="private_browsing_common_myths">
        ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਬਾਰੇ ਆਮ ਫ਼ਰਜ਼ੀ ਗੱਲਾਂ
     </string>
@@ -70,6 +78,8 @@
     <string name="browser_menu_desktop_site">ਡੈਸਕਟਾਪ ਸਾਈਟ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">ਮੁੱਖ ਸਕਰੀਨ ‘ਤੇ ਜੋੜੋ</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">ਇੰਸਟਾਲ ਕਰੋ</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ਸਫ਼ੇ ‘ਚ ਲੱਭੋ</string>
     <!-- Browser menu button that creates a private tab -->
@@ -122,6 +132,8 @@
     <string name="search_suggestions_onboarding_do_not_allow_button">ਇਜਾਜ਼ਤ ਨਾ ਦਿਓ</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">ਪ੍ਰਾਈਵੇਟ ਸ਼ੈਸ਼ਨਾਂ ਵਿੱਚ ਖੋਜ ਸੁਝਾਆਵਾਂ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s ਤੁਹਾਡੇ ਵਲੋਂ ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚ ਲਿਖੀ ਹਰ ਚੀਜ਼ ਨੂੰ ਤੁਹਾਡੇ ਮੂਲ ਖੋਜ ਇੰਜਣ ਨਾਲ ਸਾਂਝਾ ਕਰੇਗਾ।</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">ਹੋਰ ਜਾਣੋ</string>
 
@@ -935,6 +947,8 @@
     <string name="etp_tracking_content_title">ਸਮੱਗਰੀ ਟਰੈਕ ਕਰਨ ਵਾਲੇ</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">ਬਾਹਰੀ ਇਸ਼ਤਿਹਾਰ, ਵਿਡੀਓ ਅਤੇ ਹੋਰ ਸਮੱਗਰੀ ਨੂੰ ਰੋਕਦਾ ਹੈ, ਜਿਸ ‘ਚ ਟਰੈਕ ਕਰਨ ਵਾਲਾ ਕੋਡ ਹੁੰਦਾ ਹੈ। ਕੁਝ ਵੈੱਬਸਾਈਟਾਂ ਦਾ ਕੰਮਕਾਜ ਪ੍ਰਭਾਵਿਤ ਹੋ ਸਕਦਾ ਹੈ।</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message_2">%s ਨੇ ਇਸ ਸਾਈਟ ਉੱਤੇ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਈ ਹੈ, ਜਦੋਂ ਢਾਲ ਵੈਂਗਣੀ ਹੁੰਦੀ ਹੈ। ਕਿਸ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਈ ਹੈ, ਇਹ ਵੇਖਣ ਲਈ ਇਸ ਨੂੰ ਛੂਹੋ।</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ਇਸ ਸਾਈਟ ਲਈ ਸੁਰੱਖਿਆ ਚਾਲੂ ਹੈ</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1061,6 +1075,8 @@
     <string name="logins_biometric_prompt_message">ਆਪਣੇ ਸੰਭਾਲੇ ਲਾਗਇਨ ਵੇਖਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">ਆਪਣੇ ਲਾਗਇਨ ਅਤੇ ਪਾਸਵਰਡ ਸੁਰੱਖਿਅਤ ਕਰੋ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">ਆਪਣੇ ਲਾਗਇਨਾਂ ਅਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਤੁਹਾਡੇ ਡਿਵਾਈਸ ਨੂੰ ਰੱਖਣ ਵਾਲੇ ਕਿਸੇ ਦੀ ਪਹੁੰਚ ਤੋਂ ਸੁਰੱਖਿਅਤ ਰੱਖਣ ਲਈ ਡਿਵਾਈਸ ਲਾਕ ਪੈਟਰਨ, ਪਿੰਨ ਜਾਂ ਪਾਸਵਰਡ ਸੈਟ ਅੱਪ ਕਰੋ।</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">ਬਾਅਦ \'ਚ</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1069,6 +1085,9 @@
     <string name="logins_biometric_prompt_message_pin">ਆਪਣੇ ਡਿਵਾਈਸ ਨੂੰ ਅਣ-ਲਾਕ ਕਰੋ</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">ਸਾਰੀਆਂ ਵੈੱਬਸਾਈਟਾਂ ਉੱਤੇ ਜ਼ੂਮ ਕਰੋ</string>
+
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">ਚੂੰਢੀ ਭਰਨ ਤੇ ਜ਼ੂਮ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣ ਲਈ ਸਮਰੱਥ ਕਰੋ, ਭਾਵੇਂ ਵੈੱਬਸਾਈਟਾਂ ਇਸ ਸੰਕੇਤ ਤੋਂ ਰੋਕਦੀਆਂ ਹੋਣ।</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ਖੋਜ ਇੰਜਣ ਜੋੜੋ</string>
@@ -1089,11 +1108,21 @@
     <string name="search_add_custom_engine_name_hint">ਨਾਂ</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ਵਰਤਣ ਲਈ ਖੋਜ ਸਤਰ</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">“%s” ਨਾਲ ਕਿਊਰੀ ਨੂੰ ਤਬਦੀਲ ਕਰੋ। ਮਿਸਾਲ ਵਜੋਂ:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ਹੋਰ ਜਾਣੋ</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">ਖੋਜ ਇੰਜਣ ਨਾਂ ਦਿਓ</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">“%s” ਨਾਂ ਨਾਲ ਇੰਜਣ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ।</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">ਖੋਜ ਸਤਰ ਦਿਓ</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">ਉਹ ਮਿਲਦੀ ਸਤਰ ਦੀ ਜਾਂਚ ਕਰੋ, ਜਿਵੇਂ ਮਿਸਾਲ ਰੂਪ ਵਿੱਚ</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">“%s” ਨਾਲ ਕਨੈਕਟ ਕਰਨ ਦੌਰਾਨ ਗ਼ਲਤੀ</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">%s ਬਣਾਇਆ</string>
     <!-- Text shown when a user successfully edits a custom search engine -->

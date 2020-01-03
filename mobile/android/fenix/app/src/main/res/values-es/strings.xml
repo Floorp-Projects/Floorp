@@ -2,9 +2,6 @@
 <resources>
 
 
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (privado)</string>
-
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Más opciones</string>
@@ -15,8 +12,6 @@
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">Buscar o ingresar dirección</string>
 
-    <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header">No hay pestañas abiertas</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Las pestañas abiertas aparecerán aquí.</string>
 
@@ -25,11 +20,15 @@
     <string name="private_browsing_title">Estás en una sesión privada</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">%1$s limpia tu historial de búsqueda y navegación cuando cierras una sesión privada
-        Aunque no te hace anónimo para los sitios web o proveedor de servicios de Internet, 
-        te ayuda a mantener en privado lo que haces en línea frente a cualquier otra persona que use este dispositivo. \n\nMitos comunes sobre la navegación privada
+    <string name="private_browsing_placeholder_description">%1$s limpia tu historial de búsqueda y navegación cuando cierras la aplicación o todas las pestañas privadas. Aunque no te hace anónimo para los sitios web o proveedores de servicios de Internet, 
+        te ayuda a mantener en privado lo que haces en línea frente a cualquier otra persona que use este dispositivo.
+
         
     </string>
+    <string name="private_browsing_common_myths">
+       Mitos comunes sobre la navegación privada
+
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Eliminar sesión</string>
 
@@ -43,9 +42,9 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">Abrir nueva pestaña</string>
+    <string name="home_screen_shortcut_open_new_tab_2">Nueva pestaña</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">Abrir una nueva pestaña privada</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nueva pestaña privada</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -98,7 +97,7 @@
     <string name="search_shortcuts_button">Atajos</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Configuración del buscador</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
     <string name="search_shortcuts_search_with">Buscar con</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Pegar enlace del portapapeles</string>
@@ -118,7 +117,9 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Acerca de</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Buscador</string>
+    <string name="preferences_default_search_engine">Buscador predeterminado</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Buscar</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Ayuda</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -142,6 +143,8 @@
     <string name="preferences_category_privacy">Privacidad</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Permisos del sitio</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Abrir enlaces en una pestaña privada</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Agregar acceso directo a la navegación privada</string>
     <!-- Preference for accessibility -->
@@ -170,6 +173,8 @@
     <string name="developer_tools_category">Herramientas de desarrollo</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Depuración remota vía USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Mostrar atajos de teclado para búsquedas</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Mostrar sugerencias de búsqueda</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -190,6 +195,8 @@
     <string name="preferences_sync_history">Historial</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Marcadores</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Inicios de sesión</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Cerrar sesión</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -240,8 +247,11 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Desactivar para todos los sitios</string>
 
-    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">Las excepciones te permiten deshabilitar la protección contra rastreo para los sitios seleccionados. \n\nSaber más</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Las excepciones te permiten deshabilitar la protección contra rastreo para los sitios seleccionados.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Más información</string>
+
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Desactivado de forma geneal, ve a Ajustes para activarlo.</string>
 
@@ -293,27 +303,6 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Seguir el tema del dispositivo</string>
 
-    <!-- Quick Action Sheet -->
-    <!-- Button in the browser chrome to share the current page -->
-    <string name="quick_action_share">Compartir</string>
-    <!-- Button in the browser chrome to download the current page -->
-    <string name="quick_action_download">Descargar</string>
-    <!-- Button in the browser chrome in the browser to bookmark the current page -->
-    <string name="quick_action_bookmark">Agregar página a marcadores</string>
-    <!-- Button in the browser chrome in the browser to edit the bookmark of the current page -->
-    <string name="quick_action_bookmark_edit">Editar marcador</string>
-    <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
-    <string name="quick_action_read">Leer</string>
-    <!-- Button in the browser chrome to exit reader mode -->
-    <string name="quick_action_read_close">Cerrar</string>
-    <!-- Button in the browser chrome to open the current page in an external app -->
-    <string name="quick_action_open_app_link">Abrir en la aplicación</string>
-    <!-- Button in the browser chrome to configure reader mode appearance e.g. the used font type and size -->
-    <string name="quick_action_read_appearance">Apariencia</string>
-    <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
-        with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
-    <string name="quick_action_sheet_handle">Acciones rápidas</string>
-
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
     <string name="library_sessions">Sesiones</string>
@@ -355,6 +344,8 @@
     <string name="add_tab">Añadir pestaña</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Cerrar pestaña</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Cerrar pestaña %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Abrir menú de pestañas</string>
     <!-- Open tabs menu item to close all tabs -->
@@ -514,6 +505,8 @@
     <string name="clear_permission">Borrar permiso</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Borrar permisos en todos los sitios</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Reproducción automática</string>
     <!-- Preference for altering the camera access for all websites -->
     <string name="preference_phone_feature_camera">Cámara</string>
     <!-- Preference for altering the microphone access for all websites -->
@@ -536,6 +529,15 @@
     <string name="tracking_protection_on">Activado</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Desactivado</string>
+
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Video y audio bloqueados</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Video y audio permitidos</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Activado</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Desactivado</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -594,6 +596,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Enviar y compartir</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Compartir</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Compartir</string>
@@ -619,6 +623,15 @@
     <!-- Share error message -->
     <string name="share_error_snackbar">No se puede compartir con esta aplicación</string>
 
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Enviar al dispositivo</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">No hay dispositivos conectados</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Saber más sobre el envío de pestañas…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Conectar otro dispositivo…</string>
+
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
     <string name="notification_pbm_channel_name">Sesión de navegación privada</string>
@@ -638,6 +651,14 @@
 
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Pestañas eliminadas</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Pestaña cerrada</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Pestañas cerradas</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Pestaña privada cerrada</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Pestañas privadas cerradas</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Pestañas privadas eliminadas</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
@@ -731,6 +752,9 @@
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Se eliminaron los datos de navegación</string>
 
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Eliminando datos de navegación…</string>
+
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -804,6 +828,10 @@
     <string name="sync_sent_tabs_snackbar">¡Pestañas enviadas!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">¡Pestaña enviada!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Imposible enviar</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">REINTENTAR</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Escanear el código</string>
     <!-- Instructions on how to access pairing -->
@@ -840,8 +868,14 @@
     <string name="preference_enhanced_tracking_protection_standard">Estándar (recomendada)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Equilibrada para protección y rendimiento.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Las páginas se cargarán normalmente, pero se bloquearán menos rastreadores.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricta</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Estricta (predeterminada)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Mayor protección contra rasteo y mejor rendimiento, pero puede que algunos sitios no funcionen correctamente.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Estricta (recomendada)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -869,7 +903,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Bloquea la carga de anuncios externos, videos y contenido que incluye código de seguimiento. Puede afectar a algunas funciones del sitio web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Cuando el escudo cambia de color, %s está bloqueando los rastreadores en un sitio web. Haz clic en él para ver qué está bloqueando.</string>
+    <string name="etp_onboarding_message_2">Cuando el escudo es morado, %s está bloqueando rastreadores en ese sitio. Selecciónalo para ver qué ha bloqueado.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Las protecciones están activadas para este sitio</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -907,4 +941,76 @@
     <string name="add_to_homescreen_add">Agregar</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nombre del acceso directo</string>
-</resources>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Inicios de sesión y contraseñas</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Guardar inicios de sesión y contraseñas</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Pedir permiso para guardar</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">No guardar nunca</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Autocompletar</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Sincronizar inicios de sesión</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Activado</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Desactivado</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Reconectar</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Iniciar sesión en Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Inicios de sesión guardados</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Excepciones</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Aquí aparecerán los inicios de sesión y las contraseñas que no se guardan.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">No se guardarán los inicios de sesión y las contraseñas para estos sitios.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Buscar inicios de sesión</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Alfabéticamente</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Usados recientemente</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Sitio</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Nombre de usuario</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Contraseña</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Vuelve a introducir tu PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Desbloquea para ver tus inicios de sesión guardados</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Esta conexión no es segura. Los inicios de sesión ingresados aquí podrían verse comprometidos.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Más información</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">¿Quieres que %s guarde este inicio de sesión?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Guardar</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">No guardar</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Contraseña copiada al portapapeles</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Nombre de usuario copiado al portapapeles</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Sitio copiado al portapapeles</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Copiar contraseña</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Copiar nombre de usuario</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Copiar sitio</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Mostrar contraseña</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Ocultar contraseña</string>
+
+    </resources>

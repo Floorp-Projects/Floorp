@@ -1,262 +1,255 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_2">Privé Firefox Preview</string>
-
+    <string name="app_name_private_2">Privee Firefox Preview</string>
     <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
-    <string name="app_name_private_3">Firefox Preview (Privé)</string>
+    <string name="app_name_private_3">Firefox Preview (Privee)</string>
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
-    <string name="content_description_menu">Meer opties</string>
+    <string name="content_description_menu">Mear opsjes</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">Privénavigatie inschakelen</string>
+    <string name="content_description_private_browsing_button">Priveenavigaasje ynskeakelje</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_disable_private_browsing_button">Privénavigatie uitschakelen</string>
+    <string name="content_description_disable_private_browsing_button">Priveenavigaasje útskeakelje</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="search_hint">Voer zoekterm of adres in</string>
-
-
+    <string name="search_hint">Fier sykterm of adres yn</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_open_tabs_header_2">Geen open tabbladen</string>
+    <string name="no_open_tabs_header_2">Gjin iepen ljepblêden</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_open_tabs_description">Uw geopende tabbladen worden hier weergegeven.</string>
+    <string name="no_open_tabs_description">Jo iepene ljepblêden wurde hjir werjûn.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">U bevindt zich in een privésessie</string>
+    <string name="private_browsing_title">Jo binne yn in priveesesje</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description">
-         %1$s wist uw zoek- en browsergeschiedenis zodra u de toepassing afsluit of alle privétabbladen sluit. Hoewel privénavigatie u niet anoniem maakt voor websites of uw internetprovider, maakt dit het
-        makkelijker om wat u online doet privé te houden ten opzichte van anderen die dit apparaat gebruiken.
+         %1$s wist jo syk- en browserskiednis sa gau as jo de tapassing ôfslute of alle priveenavigaasjeljepblêden en -finsters slute. Hoewol priveenavigaasje jo net anonym makket foar websites of jo ynternetprovider, makket dit it
+        makliker om wat jo online dogge privee te hâlden tsjinoer oaren dy\'t dizze kompjûter brûke.
     
     </string>
     <string name="private_browsing_common_myths">
        
-       Veelgehoorde mythes over privénavigatie
+       Faaks hearde myten oer priveenavigaasje
     
     </string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Sessie verwijderen</string>
+    <string name="private_browsing_delete_session">Sesje fuortsmite</string>
 
     <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">Voeg een snelkoppeling toe om privétabbladen vanuit uw startscherm te openen.</string>
+    <string name="cfr_message">Foegje in fluchtoets ta om priveeljepblêden fan jo startskerm út te iepenjen.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Snelkoppeling toevoegen</string>
+    <string name="cfr_pos_button_text">Fluchtoets tafoegje</string>
     <!-- Text for the negative button -->
-    <string name="cfr_neg_button_text">Nee, bedankt</string>
+    <string name="cfr_neg_button_text">Nee, tankewol</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab_2">Nieuw tabblad</string>
+    <string name="home_screen_shortcut_open_new_tab_2">Nij ljepblêd</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab_2">Nieuw privétabblad</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nij priveeljepblêd</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Open tabbladen</string>
+    <string name="browser_tabs_button">Iepen ljeplêden</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
-    <string name="browser_menu_back">Terug</string>
+    <string name="browser_menu_back">Tebek</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
-    <string name="browser_menu_forward">Vooruit</string>
+    <string name="browser_menu_forward">Foarút</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
-    <string name="browser_menu_refresh">Vernieuwen</string>
+    <string name="browser_menu_refresh">Fernije</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
-    <string name="browser_menu_stop">Stoppen</string>
+    <string name="browser_menu_stop">Stopje</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Bladwijzer maken</string>
+    <string name="browser_menu_bookmark">Blêdwizer meitsje</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">Bladwijzer bewerken</string>
+    <string name="browser_menu_edit_bookmark">Blêdwizer bewurkje</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Help</string>
     <!-- Browser menu button that sends a to a the what's new article -->
-    <string name="browser_menu_whats_new">Wat is er nieuw</string>
+    <string name="browser_menu_whats_new">Wat is der nij</string>
     <!-- Browser menu button that opens the settings menu -->
-    <string name="browser_menu_settings">Instellingen</string>
+    <string name="browser_menu_settings">Ynstellingen</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_your_library">Uw bibliotheek</string>
+    <string name="browser_menu_your_library">Jo biblioteek</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Desktopwebsite</string>
+
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
-    <string name="browser_menu_add_to_homescreen">Toevoegen aan startscherm</string>
+    <string name="browser_menu_add_to_homescreen">Tafoegje oan startskerm</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Installeren</string>
+    <string name="browser_menu_install_on_homescreen">Ynstallearje</string>
     <!-- Browser menu button that opens the find in page menu -->
-    <string name="browser_menu_find_in_page">Zoeken op pagina</string>
+    <string name="browser_menu_find_in_page">Sykje op side</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Privétabblad</string>
+    <string name="browser_menu_private_tab">Priveeljepblêd</string>
     <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Nieuw tabblad</string>
+    <string name="browser_menu_new_tab">Nij ljepblêd</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection">In collectie opslaan</string>
+    <string name="browser_menu_save_to_collection">Yn kolleksje bewarje</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Websiteprobleem melden</string>
+    <string name="browser_menu_report_issue">Websiteprobleem melde</string>
     <!-- Browser menu button that open a share menu to share the current site -->
-    <string name="browser_menu_share">Delen</string>
+    <string name="browser_menu_share">Diele</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Delen met…</string>
+    <string name="menu_share_with">Diele mei…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_open_in_fenix">Openen in %1$s</string>
+    <string name="browser_menu_open_in_fenix">Iepenje yn %1$s</string>
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_powered_by">MOGELIJK GEMAAKT DOOR %1$s</string>
-
+    <string name="browser_menu_powered_by">MOOGLIK MAKKE TROCH %1$s</string>
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_powered_by2">Mogelijk gemaakt door %1$s</string>
-
+    <string name="browser_menu_powered_by2">Mooglik makke troch %1$s</string>
     <!-- Browser menu button to put the the current page in reader mode -->
-    <string name="browser_menu_read">Lezerweergave</string>
+    <string name="browser_menu_read">Lêzerwerjefte</string>
     <!-- Browser menu button to open the current page in an external app -->
-    <string name="browser_menu_open_app_link">Openen in app</string>
+    <string name="browser_menu_open_app_link">Iepenje yn app</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Vormgeving</string>
+    <string name="browser_menu_read_appearance">Uterlik</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
-    <string name="search_scan_button">Scannen</string>
+    <string name="search_scan_button">Skanne</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Snelkoppelingen</string>
+    <string name="search_shortcuts_button">Fluchkeppelingen</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-    <string name="search_shortcuts_engine_settings">Instellingen zoekmachine</string>
+    <string name="search_shortcuts_engine_settings">Ynstellingen sykmasine</string>
     <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Zoeken met</string>
+    <string name="search_shortcuts_search_with">Sykje mei</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">Deze keer zoeken met:</string>
+    <string name="search_shortcuts_search_with_2">Diskear sykje mei:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
-    <string name="awesomebar_clipboard_title">Koppeling vanaf klembord invullen</string>
-
+    <string name="awesomebar_clipboard_title">Keppeling fan klamboerd ôf ynfolje</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
-    <string name="search_suggestions_onboarding_allow_button">Toestaan</string>
+    <string name="search_suggestions_onboarding_allow_button">Tastean</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
-    <string name="search_suggestions_onboarding_do_not_allow_button">Niet toestaan</string>
+    <string name="search_suggestions_onboarding_do_not_allow_button">Net tastean</string>
     <!-- Search suggestion onboarding hint title text -->
-    <string name="search_suggestions_onboarding_title">Zoeksuggesties toestaan in privésessies?</string>
+    <string name="search_suggestions_onboarding_title">Syksuggestjes tastean yn priveefinsters?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
-    <string name="search_suggestions_onboarding_text">%s zal alles wat u in de adresbalk intypt met uw standaardzoekmachine delen.</string>
+    <string name="search_suggestions_onboarding_text">%1$s sil alles wat jo yn de adresbalke yntype mei jo standert sykmasine diele.</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">Meer info</string>
+    <string name="search_suggestions_onboarding_learn_more_link">Mear ynfo</string>
 
     <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
-    <string name="search_widget_text_short">Zoeken</string>
+    <string name="search_widget_text_short">Sykje</string>
     <!-- Text preview for larger sized widgets -->
-    <string name="search_widget_text_long">Zoeken op het web</string>
+    <string name="search_widget_text_long">Sykje op it web</string>
 
     <!-- Preferences -->
     <!-- Title for the settings page-->
-    <string name="settings">Instellingen</string>
+    <string name="settings">Ynstellingen</string>
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Basisinstellingen</string>
+    <string name="preferences_category_basics">Basisynstellingen</string>
     <!-- Preference category for all links about Fenix -->
-    <string name="preferences_category_about">Over</string>
+    <string name="preferences_category_about">Oer</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_default_search_engine">Standaardzoekmachine</string>
+    <string name="preferences_default_search_engine">Standertsykmasine</string>
     <!-- Preference for settings related to Search -->
-    <string name="preferences_search">Zoeken</string>
+    <string name="preferences_search">Sykje</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Adresbalk</string>
+    <string name="preferences_search_address_bar">Adresbalke</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Help</string>
     <!-- Preference link to rating Fenix on the Play Store -->
-    <string name="preferences_rate">Waarderen op Google Play</string>
+    <string name="preferences_rate">Wurdearje op Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Feedback geven</string>
+    <string name="preferences_feedback">Kommentaar jaan</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="preferences_about">Over %1$s</string>
+    <string name="preferences_about">Oer %1$s</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Uw rechten</string>
+    <string name="preferences_your_rights">Jo rjochten</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Wachtwoorden</string>
+    <string name="preferences_passwords">Wachtwurden</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Creditcards en adressen</string>
+    <string name="preferences_credit_cards_addresses">Kredytkaarten en adressen</string>
     <!-- Preference for settings related to changing the default browser -->
-    <string name="preferences_set_as_default_browser">Als standaardbrowser instellen</string>
+    <string name="preferences_set_as_default_browser">As standertbrowser ynstelle</string>
     <!-- Preference category for advanced settings -->
-    <string name="preferences_category_advanced">Geavanceerd</string>
+    <string name="preferences_category_advanced">Avansearre</string>
     <!-- Preference category for privacy settings -->
     <string name="preferences_category_privacy">Privacy</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Websitemachtigingen</string>
     <!-- Preference for opening links in a private tab-->
-    <string name="preferences_open_links_in_a_private_tab">Koppelingen openen in een privétabblad</string>
+    <string name="preferences_open_links_in_a_private_tab">Keppelingen iepenje yn in priveeljepblêd</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">Snelkoppeling naar privénavigatie toevoegen</string>
+    <string name="preferences_add_private_browsing_shortcut">Fluchkeppeling nei priveenavigaasje tafoegje</string>
     <!-- Preference for accessibility -->
-    <string name="preferences_accessibility">Toegankelijkheid</string>
+    <string name="preferences_accessibility">Tagonklikheid</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Account</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Aanmelden</string>
+    <string name="preferences_sign_in">Oanmelde</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Werkbalk</string>
+    <string name="preferences_toolbar">Arkbalke</string>
     <!-- Preference for changing default theme to dark or light mode -->
-    <string name="preferences_theme">Thema</string>
+    <string name="preferences_theme">Tema</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Synchroniseer bladwijzers, geschiedenis en meer met uw Firefox-account</string>
+    <string name="preferences_sign_in_description">Syngronisearje blêdwizers, skiednis en mear mei jo Firefox-account</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox-account</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
-    <string name="preferences_account_sync_error">Verbind opnieuw om de synchronisatie te hervatten</string>
+    <string name="preferences_account_sync_error">Ferbyn opnij om de syngronisaasje te ferfetsjen</string>
     <!-- Preference for language -->
     <string name="preferences_language">Taal</string>
     <!-- Preference for data choices -->
-    <string name="preferences_data_choices">Gegevenskeuzes</string>
+    <string name="preferences_data_choices">Gegevenskarren</string>
     <!-- Preference for data collection -->
-    <string name="preferences_data_collection">Gegevensverzameling</string>
+    <string name="preferences_data_collection">Gegevenssamling</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Privacyverklaring</string>
+    <string name="preferences_privacy_link">Privacyferklearring</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Ontwikkelaarshulpmiddelen</string>
+    <string name="developer_tools_category">Untwikkelersark</string>
     <!-- Preference for developers -->
-    <string name="preferences_remote_debugging">Remote debugging via USB</string>
+    <string name="preferences_remote_debugging">Remote debugging fia USB</string>
     <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">Zoeksnelkoppelingen tonen</string>
+    <string name="preferences_show_search_shortcuts">Sykfluchkeppelingen toane</string>
     <!-- Preference title for switch preference to show search suggestions -->
-    <string name="preferences_show_search_suggestions">Zoeksuggesties tonen</string>
+    <string name="preferences_show_search_suggestions">Syksuggesjes toane</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
-    <string name="preferences_show_search_suggestions_in_private">Tonen in privésessies</string>
+    <string name="preferences_show_search_suggestions_in_private">Toane yn priveesesjes</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
-    <string name="preferences_show_clipboard_suggestions">Klembordsuggesties tonen</string>
+    <string name="preferences_show_clipboard_suggestions">Klamboerdsuggestjes toane</string>
     <!-- Preference title for switch preference to suggest browsing history when searching -->
-    <string name="preferences_search_browsing_history">Navigatiegeschiedenis doorzoeken</string>
+    <string name="preferences_search_browsing_history">Navigaasjeskiednis trochsykje</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
-    <string name="preferences_search_bookmarks">Bladwijzers doorzoeken</string>
+    <string name="preferences_search_bookmarks">Blêdwizers trochsykje</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">Accountinstellingen</string>
+    <string name="preferences_account_settings">Accountynstellingen</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
-    <string name="preferences_sync_now">Nu synchroniseren</string>
+    <string name="preferences_sync_now">No syngronisearje</string>
     <!-- Preference category for sync -->
-    <string name="preferences_sync_category">Kies wat u wilt synchroniseren</string>
+    <string name="preferences_sync_category">Kies wat jo syngronisearje wolle</string>
     <!-- Preference for syncing history -->
-    <string name="preferences_sync_history">Geschiedenis</string>
+    <string name="preferences_sync_history">Skiednis</string>
     <!-- Preference for syncing bookmarks -->
-    <string name="preferences_sync_bookmarks">Bladwijzers</string>
+    <string name="preferences_sync_bookmarks">Blêdwizers</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Aanmeldingen</string>
+    <string name="preferences_sync_logins">Oanmeldingen</string>
     <!-- Preference for signing out -->
-    <string name="preferences_sign_out">Afmelden</string>
+    <string name="preferences_sign_out">Ofmelde</string>
     <!-- Preference displays and allows changing current FxA device name -->
-    <string name="preferences_sync_device_name">Apparaatnaam</string>
+    <string name="preferences_sync_device_name">Apparaatnamme</string>
     <!-- Text shown when user enters empty device name -->
-    <string name="empty_device_name_error">Apparaatnaam mag niet leeg zijn.</string>
+    <string name="empty_device_name_error">Apparaatnamme mei net leech wêze.</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing_in_progress">Synchroniseren…</string>
+    <string name="sync_syncing_in_progress">Syngronisearje…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
-    <string name="sync_failed_summary">Synchronisatie mislukt. Laatste succes: %s</string>
+    <string name="sync_failed_summary">Syngronisaasje mislearre. Lêste sukses: %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_failed_never_synced_summary">Synchronisatie mislukt. Laatst gesynchroniseerd: nooit</string>
+    <string name="sync_failed_never_synced_summary">Syngronisaasje mislearre. Lêst syngronisearre: nea</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
-    <string name="sync_last_synced_summary">Laatst gesynchroniseerd: %s</string>
+    <string name="sync_last_synced_summary">Lêst syngronisearre: %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_never_synced_summary">Laatst gesynchroniseerd: nooit</string>
-
+    <string name="sync_never_synced_summary">Lêst syngronisearre: nea</string>
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
@@ -264,870 +257,863 @@
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_name">Ontvangen tabbladen</string>
+    <string name="fxa_received_tab_channel_name">Untfongen ljepblêden</string>
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_description">Meldingen voor tabbladen ontvangen van andere Firefox-apparaten.</string>
+    <string name="fxa_received_tab_channel_description">Meldingen foar ljepblêden ûntfongen fan oare Firefox-apparaten.</string>
     <!--  The body for these is the URL of the tab received  -->
-    <string name="fxa_tab_received_notification_name">Tabblad ontvangen</string>
+    <string name="fxa_tab_received_notification_name">Ljepblêd ûntfongen</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Tabbladen ontvangen</string>
+    <string name="fxa_tabs_received_notification_name">Ljepblêden ûntfongen</string>
     <!-- %s is the device name -->
-    <string name="fxa_tab_received_from_notification_name">Tabblad van %s</string>
+    <string name="fxa_tab_received_from_notification_name">Ljepblêd fan %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Bescherming tegen volgen</string>
+    <string name="preferences_tracking_protection_settings">Beskerming tsjin folgjen</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Bescherming tegen volgen</string>
+    <string name="preferences_tracking_protection">Beskerming tsjin folgjen</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Inhoud en scripts die u online volgen blokkeren</string>
+    <string name="preferences_tracking_protection_description">Ynhâld en skripts dy\'t jo online folgje blokkearje</string>
     <!-- Preference for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions">Uitzonderingen</string>
+    <string name="preferences_tracking_protection_exceptions">Utsûnderingen</string>
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Bescherming tegen volgen is uit voor deze websites</string>
+    <string name="preferences_tracking_protection_exceptions_description">Beskerming tsjin folgjen is út foar dizze websites</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
-    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Inschakelen voor alle websites</string>
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Ynskeakelje foar alle websites</string>
     <!-- Text displayed when there are no exceptions -->
-    <string name="exceptions_empty_message_description">Met uitzonderingen kunt u bescherming tegen volgen voor geselecteerde websites uitschakelen.</string>
+    <string name="exceptions_empty_message_description">Mei útsûnderingen kinne jo beskerming tsjin folgjen foar selektearre websites útskeakelje.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message_learn_more_link">Meer info</string>
+    <string name="exceptions_empty_message_learn_more_link">Mear ynfo</string>
 
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Globaal uitgeschakeld, ga naar Instellingen om in te schakelen.</string>
+    <string name="preferences_tracking_protection_turned_off_globally">Globaal útskeakele, gean nei Ynstellingen om it yn te skeakeljen.</string>
 
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
-    <string name="preference_usage_data">Gebruiks- en technische gegevens</string>
+    <string name="preference_usage_data">Gebrûks- en technyske gegevens</string>
     <!-- Preference description for usage and technical data collection -->
-    <string name="preferences_usage_data_description">Deelt gegevens over prestaties, gebruik, hardware en aanpassingen van uw browser met Mozilla om %1$s te helpen verbeteren</string>
+    <string name="preferences_usage_data_description">Dielt gegevens oer prestaasjes, gebrûk, hardware en oanpassingen fan jo browser mei Mozilla om %1$s te helpen ferbetterjen</string>
     <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Experimenten</string>
+    <string name="preference_experiments">Eksperiminten</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Hiermee kan Mozilla gegevens installeren en verzamelen voor experimentele functies</string>
+    <string name="preference_experiments_summary">Hjirmei kin Mozilla gegevens ynstallearje en sammelje foar eksperimintele funksjes</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Crashreporter</string>
+    <string name="preferences_crash_reporter">Ungelokrapportearder</string>
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Mozilla-locatieservice</string>
+    <string name="preferences_mozilla_location_service">Mozilla-lokaasjetsjinst</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">%s-gezondheidsrapport</string>
+    <string name="preferences_fenix_health_report">%s-sûnensrapport</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Sync inschakelen</string>
+    <string name="preferences_sync">Sync ynskeakelje</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Koppelingscode scannen in desktop-Firefox</string>
+    <string name="preferences_sync_pair">Keppelingskoade scanne yn desktop-Firefox</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Aanmelden</string>
+    <string name="preferences_sync_sign_in">Oanmelde</string>
     <!-- Preference for reconnecting to FxA sync -->
-    <string name="preferences_sync_sign_in_to_reconnect">Aanmelden om opnieuw te verbinden</string>
+    <string name="preferences_sync_sign_in_to_reconnect">Oanmelde om opnij te ferbinen</string>
     <!-- Preference for removing FxA account -->
-    <string name="preferences_sync_remove_account">Account verwijderen</string>
+    <string name="preferences_sync_remove_account">Account fuortsmite</string>
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions"><![CDATA[Ga naar <b>firefox.com/pair</b> in Firefox op uw computer om uw QR-code te verkrijgen.]]></string>
+    <string name="pair_instructions"><![CDATA[Gean nei <b>firefox.com/pair</b> yn Firefox op jo kompjûter om jo QR-koade te krijen.]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Camera openen</string>
+    <string name="pair_open_camera">Kamera iepenje</string>
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Annuleren</string>
+    <string name="pair_cancel">Annulearje</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
-    <string name="preference_top_toolbar">Boven</string>
+    <string name="preference_top_toolbar">Boppe</string>
     <!-- Preference for using bottom toolbar -->
-    <string name="preference_bottom_toolbar">Onder</string>
+    <string name="preference_bottom_toolbar">Under</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
-    <string name="preference_light_theme">Licht</string>
+    <string name="preference_light_theme">Ljocht</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">Donker</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->
-    <string name="preference_auto_battery_theme">Ingesteld door Batterijbesparing</string>
+    <string name="preference_auto_battery_theme">Ynsteld troch Batterijbesparing</string>
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">Apparaatthema volgen</string>
+    <string name="preference_follow_device_theme">Apparaattema folgje</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Sessies</string>
+    <string name="library_sessions">Sesjes</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Schermafbeeldingen</string>
+    <string name="library_screenshots">Skermôfbyldingen</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Downloads</string>
     <!-- Option in library to open Bookmarks page -->
-    <string name="library_bookmarks">Bladwijzers</string>
+    <string name="library_bookmarks">Blêdwizers</string>
     <!-- Option in library to open Desktop Bookmarks root page -->
-    <string name="library_desktop_bookmarks_root">Desktopbladwijzers</string>
+    <string name="library_desktop_bookmarks_root">Desktopblêdwizers</string>
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
-    <string name="library_desktop_bookmarks_menu">Bladwijzermenu</string>
+    <string name="library_desktop_bookmarks_menu">Blêdwizermenu</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
-    <string name="library_desktop_bookmarks_toolbar">Bladwijzerwerkbalk</string>
+    <string name="library_desktop_bookmarks_toolbar">Blêdwizerarkbalke</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
-    <string name="library_desktop_bookmarks_unfiled">Andere bladwijzers</string>
+    <string name="library_desktop_bookmarks_unfiled">Oare blêdwizers</string>
     <!-- Option in Library to open History page -->
-    <string name="library_history">Geschiedenis</string>
+    <string name="library_history">Skiednis</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Leeslijst</string>
-
-
+    <string name="library_reading_list">Lêslist</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Zoeken</string>
+    <string name="library_search">Sykje</string>
     <!-- Library Page Title -->
-    <string name="library_title">Bibliotheek</string>
+    <string name="library_title">Biblioteek</string>
     <!-- Settings Page Title -->
-    <string name="settings_title">Instellingen</string>
+    <string name="settings_title">Ynstellingen</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Menu Geschiedenis-item</string>
+    <string name="content_description_history_menu">Menu Skiednis-item</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
-    <string name="content_description_close_button">Sluiten</string>
+    <string name="content_description_close_button">Slute</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
-    <string name="tab_header_label">Open tabbladen</string>
+    <string name="tab_header_label">Iepen ljeplêden</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Privésessie</string>
+    <string name="tabs_header_private_title">Priveesesje</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_tabs_title">Privétabbladen</string>
+    <string name="tabs_header_private_tabs_title">Priveeljepblêden</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
-    <string name="add_tab">Tabblad toevoegen</string>
+    <string name="add_tab">Ljepblêd tafoegje</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
-    <string name="close_tab">Tabblad sluiten</string>
+    <string name="close_tab">Ljepblêd slute</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
-    <string name="close_tab_title">Tabblad %s sluiten</string>
+    <string name="close_tab_title">Ljepblêden %s slute</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
-    <string name="open_tabs_menu">Menu Open tabbladen</string>
+    <string name="open_tabs_menu">Menu Iepen ljepblêden</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Alle tabbladen sluiten</string>
+    <string name="tabs_menu_close_all_tabs">Alle ljepblêden slute</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Tabbladen delen</string>
+    <string name="tabs_menu_share_tabs">Ljepblêden diele</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection">In collectie opslaan</string>
+    <string name="tabs_menu_save_to_collection">Yn kolleksje bewarje</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Tabbladmenu</string>
+    <string name="tab_menu">Ljepblêdmenu</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Tabblad delen</string>
+    <string name="tab_share">Ljepblêd diele</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Verwijderen</string>
+    <string name="current_session_delete">Fuortsmite</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Opslaan</string>
+    <string name="current_session_save">Bewarje</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Delen</string>
+    <string name="current_session_share">Diele</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Afbeelding Huidige sessie</string>
+    <string name="current_session_image">Ofbylding Aktuele sesje</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">In collectie opslaan</string>
+    <string name="save_to_collection">Yn kolleksje bewarje</string>
     <!-- Text for the menu button to delete a collection -->
-    <string name="collection_delete">Collectie verwijderen</string>
+    <string name="collection_delete">Kolleksje fuortsmite</string>
     <!-- Text for the menu button to rename a collection -->
-    <string name="collection_rename">Naam collectie wijzigen</string>
+    <string name="collection_rename">Namme kolleksje wizigje</string>
     <!-- Text for the button to open tabs of the selected collection -->
-    <string name="collection_open_tabs">Tabbladen openen</string>
-
+    <string name="collection_open_tabs">Ljepblêden iepenje</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
-    <string name="history_delete_all">Geschiedenis verwijderen</string>
+    <string name="history_delete_all">Skiednis wiskje</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Weet u zeker dat u uw geschiedenis wilt verwijderen?</string>
+    <string name="history_delete_all_dialog">Binne jo wis dat jo jo skiednis wiskje wolle?</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Wissen</string>
+    <string name="history_clear_dialog">Wiskje</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Verwijderen</string>
+    <string name="history_delete_item">Fuortsmite</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
-    <string name="history_multi_select_title">%1$d geselecteerd</string>
+    <string name="history_multi_select_title">%1$d selektearre</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">%1$d items verwijderen</string>
+    <string name="history_delete_some">%1$d items fuortsmite</string>
     <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">Laatste 24 uur</string>
+    <string name="history_24_hours">Lêste 24 oer</string>
     <!-- Text for the header that groups the history the past 7 days -->
-    <string name="history_7_days">Afgelopen 7 dagen</string>
+    <string name="history_7_days">Ofrûne 7 dagen</string>
     <!-- Text for the header that groups the history the past 30 days -->
-    <string name="history_30_days">Afgelopen 30 dagen</string>
+    <string name="history_30_days">Ofrûne 30 dagen</string>
     <!-- Text for the header that groups the history older than the last month -->
-    <string name="history_older">Ouder</string>
+    <string name="history_older">Alder</string>
     <!-- Text shown when no history exists -->
-    <string name="history_empty_message">Geen geschiedenis hier</string>
+    <string name="history_empty_message">Gjin skiednis hjir</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
-    <string name="tab_crash_title_2">Sorry. %1$s kan die pagina niet laden.</string>
+    <string name="tab_crash_title_2">Sorry. %1$s kin dy side net lade.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">U kunt hieronder proberen dit tabblad te herstellen of te sluiten.</string>
+    <string name="tab_crash_description">Jo kinne hjirûnder probearje dit ljepblêd te werstellen of te sluten.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
-    <string name="tab_crash_send_report">Crashrapport naar Mozilla verzenden</string>
+    <string name="tab_crash_send_report">Ungelokrapport nei Mozilla ferstjoere</string>
     <!-- Close tab button text on the tab crash page -->
-    <string name="tab_crash_close">Tabblad sluiten</string>
+    <string name="tab_crash_close">Ljepblêd slute</string>
     <!-- Restore tab button text on the tab crash page -->
-    <string name="tab_crash_restore">Tabblad herstellen</string>
+    <string name="tab_crash_restore">Ljepblêd werombringe</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Sessie-opties</string>
+    <string name="content_description_session_menu">Sesje-opsjes</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Sessie delen</string>
+    <string name="content_description_session_share">Sesje diele</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Bladwijzermenu</string>
+    <string name="bookmark_menu_content_description">Blêdwizermenu</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Bladwijzer bewerken</string>
+    <string name="bookmark_edit">Blêdwizer bewurkje</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Map selecteren</string>
+    <string name="bookmark_select_folder">Map selektearje</string>
     <!-- Screen title for adding a bookmarks folder -->
-    <string name="bookmark_add_folder">Map toevoegen</string>
+    <string name="bookmark_add_folder">Map tafoegje</string>
     <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Bladwijzer gemaakt.</string>
+    <string name="bookmark_created_snackbar">Blêdwizer oanmakke.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_saved_snackbar">Bladwijzer opgeslagen!</string>
+    <string name="bookmark_saved_snackbar">Blêdwizer bewarre!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
-    <string name="edit_bookmark_snackbar_action">BEWERKEN</string>
+    <string name="edit_bookmark_snackbar_action">BEWURKJE</string>
     <!-- Bookmark overflow menu edit button -->
-    <string name="bookmark_menu_edit_button">Bewerken</string>
+    <string name="bookmark_menu_edit_button">Bewurkje</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Selecteren</string>
+    <string name="bookmark_menu_select_button">Selektearje</string>
     <!-- Bookmark overflow menu copy button -->
-    <string name="bookmark_menu_copy_button">Kopiëren</string>
+    <string name="bookmark_menu_copy_button">Kopiearje</string>
     <!-- Bookmark overflow menu share button -->
-    <string name="bookmark_menu_share_button">Delen</string>
+    <string name="bookmark_menu_share_button">Diele</string>
     <!-- Bookmark overflow menu open in new tab button -->
-    <string name="bookmark_menu_open_in_new_tab_button">Openen in nieuw tabblad</string>
+    <string name="bookmark_menu_open_in_new_tab_button">Iepenje yn nij ljepblêd</string>
     <!-- Bookmark overflow menu open in private tab button -->
-    <string name="bookmark_menu_open_in_private_tab_button">Openen in privétabblad</string>
+    <string name="bookmark_menu_open_in_private_tab_button">Iepenje yn priveeljepblêd</string>
     <!-- Bookmark overflow menu delete button -->
-    <string name="bookmark_menu_delete_button">Verwijderen</string>
+    <string name="bookmark_menu_delete_button">Fuortsmite</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
-    <string name="bookmarks_multi_select_title">%1$d geselecteerd</string>
+    <string name="bookmarks_multi_select_title">%1$d selektearre</string>
     <!-- Bookmark editing screen title -->
-    <string name="edit_bookmark_fragment_title">Bladwijzer bewerken</string>
+    <string name="edit_bookmark_fragment_title">Blêdwizer bewurkje</string>
     <!-- Bookmark folder editing screen title -->
-    <string name="edit_bookmark_folder_fragment_title">Map bewerken</string>
+    <string name="edit_bookmark_folder_fragment_title">Map bewurkje</string>
     <!-- Bookmark sign in button message -->
-    <string name="bookmark_sign_in_button">Meld u aan om gesynchroniseerde bladwijzers te bekijken</string>
+    <string name="bookmark_sign_in_button">Meld jo oan om syngronisearre blêdwizers te besjen</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
     <!-- Bookmark FOLDER editing field label -->
     <string name="bookmark_folder_label">MAP</string>
     <!-- Bookmark NAME editing field label -->
-    <string name="bookmark_name_label">NAAM</string>
+    <string name="bookmark_name_label">NAMME</string>
     <!-- Bookmark add folder screen title -->
-    <string name="bookmark_add_folder_fragment_label">Map toevoegen</string>
+    <string name="bookmark_add_folder_fragment_label">Map tafoegje</string>
     <!-- Bookmark select folder screen title -->
-    <string name="bookmark_select_folder_fragment_label">Map selecteren</string>
+    <string name="bookmark_select_folder_fragment_label">Map selektearje</string>
     <!-- Bookmark editing error missing title -->
-    <string name="bookmark_empty_title_error">Moet een titel hebben</string>
+    <string name="bookmark_empty_title_error">Moat in titel hawwe</string>
     <!-- Bookmark editing error missing or improper URL -->
-    <string name="bookmark_invalid_url_error">Ongeldige URL</string>
+    <string name="bookmark_invalid_url_error">Unjildige URL</string>
     <!-- Bookmark screen message for empty bookmarks folder -->
-    <string name="bookmarks_empty_message">Geen bladwijzers hier</string>
+    <string name="bookmarks_empty_message">Gjin blêdwizers hjir</string>
     <!-- Bookmark snackbar message on deletion
      The first parameter is the host part of the URL of the bookmark deleted, if any -->
-    <string name="bookmark_deletion_snackbar_message">%1$s verwijderd</string>
+    <string name="bookmark_deletion_snackbar_message">%1$s fuortsmiten</string>
     <!-- Bookmark snackbar message on deleting multiple bookmarks -->
-    <string name="bookmark_deletion_multiple_snackbar_message">Geselecteerde bladwijzers worden verwijderd</string>
+    <string name="bookmark_deletion_multiple_snackbar_message">Selektearre blêdwizers wurde fuortsmiten</string>
     <!-- Bookmark undo button for deletion snackbar action -->
-    <string name="bookmark_undo_deletion">ONGEDAAN MAKEN</string>
+    <string name="bookmark_undo_deletion">UNGEDIEN MEITSJE</string>
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
-    <string name="permissions_header">Toestemmingen</string>
+    <string name="permissions_header">Tastimmingen</string>
     <!-- Button label that take the user to the Android App setting -->
-    <string name="phone_feature_go_to_settings">Naar Instellingen</string>
+    <string name="phone_feature_go_to_settings">Nei Ynstellingen</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
         to give users access to site specific information / settings. For example:
         Secure settings status and a button to modify site permissions -->
-    <string name="quick_settings_sheet">Snelle instellingen</string>
+    <string name="quick_settings_sheet">Flugge ynstellingen</string>
     <!-- Label that indicates that this option it the recommended one -->
-    <string name="phone_feature_recommended">Aanbevolen</string>
+    <string name="phone_feature_recommended">Oanrekommandearre</string>
     <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">Websitetoestemmingen beheren</string>
+    <string name="quick_settings_sheet_manage_site_permissions">Websitetastimmingen beheare</string>
     <!-- Button label for clearing all the information of site permissions-->
-    <string name="clear_permissions">Toestemmingen wissen</string>
+    <string name="clear_permissions">Tastimmingen wiskje</string>
     <!-- Button label for clearing a site permission-->
-    <string name="clear_permission">Toestemming wissen</string>
+    <string name="clear_permission">Tastimming wiskje</string>
     <!-- Button label for clearing all the information on all sites-->
-    <string name="clear_permissions_on_all_sites">Toestemmingen op alle websites wissen</string>
+    <string name="clear_permissions_on_all_sites">Tastimmingen op alle websites wiskje</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
-    <string name="preference_browser_feature_autoplay">Automatisch afspelen</string>
+    <string name="preference_browser_feature_autoplay">Automatysk ôfspylje</string>
     <!-- Preference for altering the camera access for all websites -->
-    <string name="preference_phone_feature_camera">Camera</string>
+    <string name="preference_phone_feature_camera">Kamera</string>
     <!-- Preference for altering the microphone access for all websites -->
-    <string name="preference_phone_feature_microphone">Microfoon</string>
+    <string name="preference_phone_feature_microphone">Mikrofoan</string>
     <!-- Preference for altering the location access for all websites -->
-    <string name="preference_phone_feature_location">Locatie</string>
+    <string name="preference_phone_feature_location">Lokaasje</string>
     <!-- Preference for altering the notification access for all websites -->
-    <string name="preference_phone_feature_notification">Notificatie</string>
+    <string name="preference_phone_feature_notification">Notifikaasje</string>
     <!-- Label that indicates that a permission must be asked always -->
-    <string name="preference_option_phone_feature_ask_to_allow">Vragen om toestemming</string>
+    <string name="preference_option_phone_feature_ask_to_allow">Freegje om tastimming</string>
     <!-- Label that indicates that a permission must be blocked -->
-    <string name="preference_option_phone_feature_blocked">Geblokkeerd</string>
+    <string name="preference_option_phone_feature_blocked">Blokkearre</string>
     <!-- Label that indicates that a permission must be allowed -->
-    <string name="preference_option_phone_feature_allowed">Toegestaan</string>
+    <string name="preference_option_phone_feature_allowed">Tastien</string>
     <!--Label that indicates a permission is by the Android OS-->
-    <string name="phone_feature_blocked_by_android">Geblokkeerd door Android</string>
+    <string name="phone_feature_blocked_by_android">Blokkeare troch Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
-    <string name="preference_exceptions">Uitzonderingen</string>
+    <string name="preference_exceptions">Utsûnderingen</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Aan</string>
+    <string name="tracking_protection_on">Oan</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
-    <string name="tracking_protection_off">Uit</string>
-
+    <string name="tracking_protection_off">Ut</string>
     <!-- Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">Video en audio geblokkeerd</string>
+    <string name="preference_option_autoplay_blocked">Fideo en audio blokkearre</string>
     <!-- Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">Video en audio toegestaan</string>
-
+    <string name="preference_option_autoplay_allowed">Fideo en audio tastien</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
-    <string name="delete_browsing_data_quit_on">Aan</string>
+    <string name="delete_browsing_data_quit_on">Oan</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
-    <string name="delete_browsing_data_quit_off">Uit</string>
+    <string name="delete_browsing_data_quit_off">Ut</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="collections_description">Verzamel de dingen die belangrijk voor u zijn. Sla eerst geopende tabbladen op in een nieuwe collectie.</string>
+    <string name="collections_description">Sammelje de dingen dy\'t wichtich foar jo binne. Bewarje earst iepen ljepblêden yn in nije kolleksje.</string>
     <!-- Collections header on home fragment -->
-    <string name="collections_header">Collecties</string>
+    <string name="collections_header">Kolleksjes</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
-    <string name="collection_menu_button_content_description">Collectiesmenu</string>
+    <string name="collection_menu_button_content_description">Kolleksjesmenu</string>
     <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header">Geen collecties</string>
+    <string name="no_collections_header">Gjin kolleksjes</string>
     <!-- No Open Tabs Message Description -->
-    <string name="no_collections_description">Uw collecties worden hier getoond.</string>
+    <string name="no_collections_description">Jo kolleksjes wurde hjir toand.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
-    <string name="create_collection_select_tabs">Tabbladen selecteren</string>
+    <string name="create_collection_select_tabs">Ljepblêden selektearje</string>
     <!-- Title for the "select collection" step of the collection creator -->
-    <string name="create_collection_select_collection">Collectie selecteren</string>
+    <string name="create_collection_select_collection">Kolleksje selektearje</string>
     <!-- Title for the "name collection" step of the collection creator -->
-    <string name="create_collection_name_collection">Naam geven aan collectie</string>
+    <string name="create_collection_name_collection">Namme jaan oan kolleksje</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
-    <string name="create_collection_add_new_collection">Nieuwe collectie toevoegen</string>
+    <string name="create_collection_add_new_collection">Nije kolleksje tafoegje</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
-    <string name="create_collection_select_all">Alles selecteren</string>
+    <string name="create_collection_select_all">Alles selektearje</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
-    <string name="create_collection_deselect_all">Alles deselecteren</string>
+    <string name="create_collection_deselect_all">Alle deselektearje</string>
     <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
-    <string name="create_collection_save_to_collection_empty">Selecteer tabbladen om op te slaan</string>
+    <string name="create_collection_save_to_collection_empty">Selektearje ljepblêden om te bewarjen</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
      %d is a placeholder for the number of tabs selected. -->
-    <string name="create_collection_save_to_collection_tabs_selected">%d tabbladen geselecteerd</string>
+    <string name="create_collection_save_to_collection_tabs_selected">%d ljepblêden selektearre</string>
     <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
     %d is a placeholder for the number of tabs selected. -->
-    <string name="create_collection_save_to_collection_tab_selected">%d tabblad geselecteerd</string>
+    <string name="create_collection_save_to_collection_tab_selected">%d ljepblêd selektearre</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
-    <string name="create_collection_tabs_saved">Tabbladen opgeslagen!</string>
+    <string name="create_collection_tabs_saved">Ljepblêden bewarre!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
-    <string name="create_collection_tab_saved">Tabblad opgeslagen!</string>
+    <string name="create_collection_tab_saved">Ljepblêd bewarre!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
-    <string name="create_collection_close">Sluiten</string>
+    <string name="create_collection_close">Slute</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
-    <string name="create_collection_save">Opslaan</string>
+    <string name="create_collection_save">Bewarje</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
-    <string name="create_collection_default_name">Collectie %d</string>
+    <string name="create_collection_default_name">Kolleksjes %d</string>
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">Verzenden en delen</string>
+    <string name="share_header">Ferstjoere en diele</string>
     <!-- Share screen header -->
-    <string name="share_header_2">Delen</string>
+    <string name="share_header_2">Diele</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
-    <string name="share_button_content_description">Delen</string>
+    <string name="share_button_content_description">Diele</string>
     <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Een koppeling delen</string>
+    <string name="share_link_subheader">In keppeling diele</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
-    <string name="share_device_subheader">Verzenden naar apparaat</string>
+    <string name="share_device_subheader">Ferstjoere nei apparaat</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Aanmelden bij Sync</string>
+    <string name="sync_sign_in">Oanmelde by Sync</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
-    <string name="sync_send_to_all">Verzenden naar alle apparaten</string>
+    <string name="sync_send_to_all">Ferstjoere nei alle apparaten</string>
     <!-- An option from the share dialog to reconnect to sync -->
-    <string name="sync_reconnect">Opnieuw verbinden met Sync</string>
+    <string name="sync_reconnect">Opnij ferbine mei Sync</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">Offline</string>
     <!-- An option to connect additional devices -->
-    <string name="sync_connect_device">Nog een apparaat koppelen</string>
+    <string name="sync_connect_device">Noch in apparaat keppelje</string>
     <!-- The dialog text shown when additional devices are not available -->
-    <string name="sync_connect_device_dialog">Meld u aan bij Firefox op ten minste één ander apparaat om een tabblad te verzenden.</string>
-
+    <string name="sync_connect_device_dialog">Meld jo oan by Firefox op op syn minst ien oar apparaat om in ljepblêd te ferstjoeren.</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Begrepen</string>
-
     <!-- Share error message -->
-    <string name="share_error_snackbar">Kan niet met deze app delen</string>
-
+    <string name="share_error_snackbar">Kin net mei dizze app diele</string>
     <!-- Add new device screen title -->
-    <string name="sync_add_new_device_title">Verzenden naar apparaat</string>
+    <string name="sync_add_new_device_title">Ferstjoere nei apparaat</string>
     <!-- Text for the warning message on the Add new device screen -->
-    <string name="sync_add_new_device_message">Geen apparaten verbonden</string>
+    <string name="sync_add_new_device_message">Gjin apparaten ferbûn</string>
+
     <!-- Text for the button to learn about sending tabs -->
-    <string name="sync_add_new_device_learn_button">Meer info over het verzenden van tabbladen…</string>
+    <string name="sync_add_new_device_learn_button">Mear ynfo oer it ferstjoeren fan ljepblêden…</string>
     <!-- Text for the button to connect another device -->
-    <string name="sync_add_new_device_connect_button">Een ander apparaat verbinden…</string>
+    <string name="sync_add_new_device_connect_button">In oar apparaat ferbine…</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Privénavigatiesessie</string>
+    <string name="notification_pbm_channel_name">Priveenavigaasjesesje</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Privétabbladen verwijderen</string>
+    <string name="notification_pbm_delete_text">Priveeljepblêden fuortsmite</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text_2">Privétabbladen sluiten</string>
+    <string name="notification_pbm_delete_text_2">Priveeljepblêden slute</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Openen</string>
+    <string name="notification_pbm_action_open">Iepenje</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Verwijderen en openen</string>
+    <string name="notification_pbm_action_delete_and_open">Fuortsmite en iepenje</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Mogelijk gemaakt door</string>
+    <string name="notification_powered_by_channel_name">Mooglik makke troch</string>
     <!-- Text shown in snackbar when user deletes a collection -->
-    <string name="snackbar_collection_deleted">Collectie verwijderd</string>
+    <string name="snackbar_collection_deleted">Kolleksje fuortmsiten</string>
     <!-- Text shown in snackbar when user renames a collection -->
-    <string name="snackbar_collection_renamed">Collectie hernoemd</string>
+    <string name="snackbar_collection_renamed">Kolleksje omneamd</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Tabblad verwijderd</string>
+    <string name="snackbar_tab_deleted">Ljepblêd fuortsmiten</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Tabbladen verwijderd</string>
+    <string name="snackbar_tabs_deleted">Ljepblêden fuortsmiten</string>
     <!-- Text shown in snackbar when user closes a tab -->
-    <string name="snackbar_tab_closed">Tabblad gesloten</string>
+    <string name="snackbar_tab_closed">Ljepblêd sluten</string>
     <!-- Text shown in snackbar when user closes all tabs -->
-    <string name="snackbar_tabs_closed">Tabbladen gesloten</string>
+    <string name="snackbar_tabs_closed">Ljepblêden sluten</string>
     <!-- Text shown in snackbar when user closes a private tab -->
-    <string name="snackbar_private_tab_closed">Privétabblad gesloten</string>
+    <string name="snackbar_private_tab_closed">Priveeljepblêd sluten</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
-    <string name="snackbar_private_tabs_closed">Privétabbladen gesloten</string>
+    <string name="snackbar_private_tabs_closed">Priveeljepblêden sluten</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Privétabbladen verwijderd</string>
+    <string name="snackbar_private_tabs_deleted">Priveeljepblêd fuortsmiten</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
-    <string name="snackbar_deleted_undo">ONGEDAAN MAKEN</string>
+    <string name="snackbar_deleted_undo">UNGEDIEN MEITSJE</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">Ongedaan maken</string>
+    <string name="a11y_dialog_deleted_undo">Ungedien meitsje</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Bevestigen</string>
+    <string name="a11y_dialog_deleted_confirm">Befêstigje</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
-    <string name="qr_scanner_confirmation_dialog_message">%1$s toestaan om %2$s te openen</string>
+    <string name="qr_scanner_confirmation_dialog_message">%1$s tastean om %2$s te iepenjen</string>
     <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
-    <string name="qr_scanner_dialog_positive">TOESTAAN</string>
+    <string name="qr_scanner_dialog_positive">TASTEAN</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
-    <string name="qr_scanner_dialog_negative">WEIGEREN</string>
+    <string name="qr_scanner_dialog_negative">WEGERJE</string>
+
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
-    <string name="tab_collection_dialog_message">Weet u zeker dat u %1$s wilt verwijderen?</string>
+    <string name="tab_collection_dialog_message">Binne jo wis dat jo %1$s fuortsmite wolle?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
-    <string name="tab_collection_dialog_positive">Verwijderen</string>
+    <string name="tab_collection_dialog_positive">Fuortsmite</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Annuleren</string>
+    <string name="tab_collection_dialog_negative">Annulearje</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
-    <string name="full_screen_notification">Volledig scherm wordt geopend</string>
+    <string name="full_screen_notification">Folslein skerm wurdt iepene</string>
     <!-- Message for copying the URL via long press on the toolbar -->
-    <string name="url_copied">URL gekopieerd</string>
+    <string name="url_copied">URL kopiearre</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">Pa’s wijze lynx bezag vroom het fikse aquaduct. Pa’s wijze lynx bezag vroom het fikse aquaduct. Pa’s wijze lynx bezag vroom het fikse aquaduct. Pa’s wijze lynx bezag vroom het fikse aquaduct.</string>
+    <string name="accessibility_text_size_sample_text">De rappe brune foks springt oer de loaie hûn. De rappe brune foks springt oer de loaie hûn. De rappe brune foks springt oer de loaie hûn. De rappe brune foks springt oer de loaie hûn.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
-    <string name="preference_accessibility_text_size_summary">Tekst op websites groter of kleiner maken</string>
+    <string name="preference_accessibility_text_size_summary">Tekst op websites grutter of lytser meitsje</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
-    <string name="preference_accessibility_font_size_title">Lettergrootte</string>
+    <string name="preference_accessibility_font_size_title">Lettergrutte</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size">Automatische lettergrootte</string>
+    <string name="preference_accessibility_auto_size">Automatyske lettergrutte</string>
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">De lettergrootte wordt afgestemd op uw Android-instellingen. Schakel dit uit om hier de lettergrootte zelf te beheren.</string>
+    <string name="preference_accessibility_auto_size_summary">De lettergrutte wurdt ôfstimd op jo Android-ynstellingen. Skeakelje dit út om hjir de lettergrutte sels te behearen.</string>
 
     <!-- Title for the Delete browsing data preference -->
-    <string name="preferences_delete_browsing_data">Navigatiegegevens verwijderen</string>
+    <string name="preferences_delete_browsing_data">Navigaasjegegevens fuortsmite</string>
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title">Open tabbladen</string>
+    <string name="preferences_delete_browsing_data_tabs_title">Iepen ljeplêden</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
-    <string name="preferences_delete_browsing_data_tabs_subtitle">%d tabbladen</string>
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d ljepblêden</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Navigatiegeschiedenis en websitegegevens</string>
+    <string name="preferences_delete_browsing_data_browsing_data_title">Navigaasjeskiednis en websitegegevens</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d adressen</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Geschiedenis</string>
+    <string name="preferences_delete_browsing_data_browsing_history_title">Skiednis</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d pagina’s</string>
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d siden</string>
     <!-- Title for the collections item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_collections_title">Collecties</string>
+    <string name="preferences_delete_browsing_data_collections_title">Kolleksjes</string>
     <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
         number of collections that will be deleted -->
-    <string name="preferences_delete_browsing_data_collections_subtitle">%d collecties</string>
+    <string name="preferences_delete_browsing_data_collections_subtitle">%d kolleksjes</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookies</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">U wordt bij de meeste websites afgemeld</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Jo wurde by de measte websites ôfmeld</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cached_files">Gebufferde afbeeldingen en bestanden</string>
+    <string name="preferences_delete_browsing_data_cached_files">Buffere ôfbyldingen en bestannen</string>
+
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cached_files_subtitle">Maakt opslagruimte vrij</string>
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Meitsje ûnthâldromte frij</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Websitemachtigingen</string>
     <!-- Text for the button to delete browsing data -->
-    <string name="preferences_delete_browsing_data_button">Navigatiegegevens verwijderen</string>
-
+    <string name="preferences_delete_browsing_data_button">Navigaasjegegevens fuortsmite</string>
     <!-- Title for the Delete browsing data on quit preference -->
-    <string name="preferences_delete_browsing_data_on_quit">Navigatiegegevens verwijderen bij afsluiten</string>
+    <string name="preferences_delete_browsing_data_on_quit">Navigaasjegegevens fuortsmite by ôfsluten</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Verwijdert automatisch navigatiegegevens wanneer u in het hoofdmenu ‘Afsluiten’ selecteert</string>
+    <string name="preference_summary_delete_browsing_data_on_quit">Smyt automatysk navigaasjegegevens fuort wannear\'t jo yn it haadmenu ‘Ofslute’ selektearje</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">Verwijdert automatisch navigatiegegevens wanneer u in het hoofdmenu ‘Afsluiten’ selecteert</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Smyt automatysk navigaasjegegevens fuort wannear\'t jo yn it haadmenu ‘Ofslute’ selektearje</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
-    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Navigatiegeschiedenis</string>
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Navigaasjeskiednis</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
-    <string name="delete_browsing_data_on_quit_action">Afsluiten</string>
+    <string name="delete_browsing_data_on_quit_action">Ofslute</string>
 
     <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Hierdoor worden al uw navigatiegegevens verwijderd.</string>
+    <string name="delete_browsing_data_prompt_message">Hjirtroch wurde al jo navigaasjegegevens fuortsmiten.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
-    <string name="delete_browsing_data_prompt_message_3">%s verwijdert de geselecteerde navigatiegegevens.</string>
+    <string name="delete_browsing_data_prompt_message_3">%s smyt de selektearre navigaasjegegevens fuort.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
-    <string name="delete_browsing_data_prompt_cancel">Annuleren</string>
+    <string name="delete_browsing_data_prompt_cancel">Annulearje</string>
     <!-- Text for the allow button for the data deletion dialog -->
-    <string name="delete_browsing_data_prompt_allow">Verwijderen</string>
+    <string name="delete_browsing_data_prompt_allow">Fuortsmite</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
-    <string name="preferences_delete_browsing_data_snackbar">Navigatiegegevens verwijderd</string>
-
+    <string name="preferences_delete_browsing_data_snackbar">Navigaasjegegevens fuortsmiten</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
-    <string name="deleting_browsing_data_in_progress">Navigatiegegevens verwijderen…</string>
+    <string name="deleting_browsing_data_in_progress">Navigaasjegegevens fuortsmite…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Welkom bij %s!</string>
+    <string name="onboarding_header">Wolkom by %s!</string>
     <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Hebt u al een account?</string>
+    <string name="onboarding_fxa_section_header">Hawwe jo al in account?</string>
     <!-- text for the Firefox Preview feature section header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Maak kennis met %s</string>
+    <string name="onboarding_feature_section_header">Kom yn \'e kunde mei %s</string>
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Kies uw thema</string>
+    <string name="onboarding_theme_picker_header">Kies jo tema</string>
     <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description">Probeer het donkere thema: zachter voor uw batterij en uw ogen.</string>
+    <string name="onboarding_theme_picker_description">Probearje it donkere tema: sêfter foar jo batterij en jo eagen.</string>
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Haal het meeste uit %s.</string>
+    <string name="onboarding_firefox_account_header">Haal it measte út %s.</string>
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">U bent op een andere Firefox-browser op deze telefoon aangemeld als %s. Wilt u zich aanmelden met deze account?</string>
+    <string name="onboarding_firefox_account_auto_signin_header_2">Jo binne op in oare Firefox-browser op dizze telefoan oanmeld as %s . Wolle jo oanmelde mei dizze account?</string>
     <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">Ja, mij aanmelden</string>
+    <string name="onboarding_firefox_account_auto_signin_confirm">Ja, my oanmelde</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">Aanmelden…</string>
+    <string name="onboarding_firefox_account_signing_in">Oanmelde…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Aanmelden bij Firefox</string>
+    <string name="onboarding_firefox_account_sign_in">Oanmelde by Firefox</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Afgemeld blijven</string>
+    <string name="onboarding_firefox_account_stay_signed_out">Ofmeld bliuwe</string>
     <!-- text to display in the snackbar once account is signed-in -->
-    <string name="onboarding_firefox_account_sync_is_on">Synchronisatie is ingeschakeld</string>
+    <string name="onboarding_firefox_account_sync_is_on">Syngronisaasje is ynskeakele</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">Aanmelden mislukt</string>
+    <string name="onboarding_firefox_account_automatic_signin_failed">Oanmelden mislearre</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Bescherm uzelf</string>
+    <string name="onboarding_tracking_protection_header">Beskermje josels</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s blokkeert advertentietrackers die u volgen op het internet.
+    <string name="onboarding_tracking_protection_description">%s blokkearret advertinsjetrackers dy\'t jo folgje op it ynternet.
     
     </string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Surf privé</string>
+    <string name="onboarding_private_browsing_header">Sneup privee</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description">Wanneer u het pictogram %s ziet, is privénavigatie slechts een tik verwijderd.
+    <string name="onboarding_private_browsing_description">Wannear\'t jo it piktogram %s sjogge, is priveenavigaasje mar ien tik fierder.
    
    </string>
     <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Uw privacy</string>
+    <string name="onboarding_privacy_notice_header">Jo privacy</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">We hebben %s ontworpen om u controle te geven over wat u online
+    <string name="onboarding_privacy_notice_description">Wy hawwe %s ûntwurpen om jo kontrôle te jaan oer wat jo online
         
-        deelt en wat u met ons deelt.
+        diele en wat jo mei ús diele.
     
     </string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Lees onze privacyverklaring</string>
+    <string name="onboarding_privacy_notice_read_button">Lês ús privacyferklearring</string>
 
     <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Beginnen met surfen</string>
+    <string name="onboarding_finish">Begjinne mei sneupen</string>
 
     <!-- Onboarding theme -->
     <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automatisch</string>
+    <string name="onboarding_theme_automatic_title">Automatysk</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Past zich aan uw apparaatinstellingen aan</string>
+    <string name="onboarding_theme_automatic_summary">Past him oan jo apparaatynstellingen oan</string>
     <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Donker thema</string>
+    <string name="onboarding_theme_dark_title">Donker tema</string>
     <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Licht thema</string>
+    <string name="onboarding_theme_light_title">Ljocht tema</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
-    <string name="sync_sent_tabs_snackbar">Tabbladen verzonden!</string>
+    <string name="sync_sent_tabs_snackbar">Ljepblêden ferstjoerd!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
-    <string name="sync_sent_tab_snackbar">Tabblad verzonden!</string>
+    <string name="sync_sent_tab_snackbar">Ljepblêd ferstjoerd!</string>
     <!-- Text shown in snackbar when sharing tabs failed  -->
-    <string name="sync_sent_tab_error_snackbar">Kan niet verzenden</string>
+    <string name="sync_sent_tab_error_snackbar">Kin net ferstjoere</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
-    <string name="sync_sent_tab_error_snackbar_action">OPNIEUW</string>
+    <string name="sync_sent_tab_error_snackbar_action">OPNIJ</string>
     <!-- Title of QR Pairing Fragment -->
-    <string name="sync_scan_code">De code scannen</string>
+    <string name="sync_scan_code">De koade scanne</string>
     <!-- Instructions on how to access pairing -->
-    <string name="sign_in_instructions"><![CDATA[Open Firefox op uw computer en ga naar <b>https://firefox.com/pair</b>]]></string>
+    <string name="sign_in_instructions"><![CDATA[Iepenje Firefox op jo kompjûter en gean nei <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">Klaar om te scannen</string>
+    <string name="sign_in_ready_for_scan">Ree om te scannen</string>
     <!-- Text shown for settings option for sign with pairing -->
-    <string name="sign_in_with_camera">Meld u aan met uw camera</string>
+    <string name="sign_in_with_camera">Meld jo oan mei jo kamera</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">E-mail gebruiken</string>
+    <string name="sign_in_with_email">E-mail brûke</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox stopt de synchronisatie met uw account, maar zal geen surfgegevens op dit apparaat verwijderen.</string>
+    <string name="sign_out_confirmation_message">Firefox stoppet de syngronisaasje mei jo account, mar sil gjin sneupgegevens op dit apparaat fuortsmite.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_disconnect">Verbinding verbreken</string>
+    <string name="sign_out_disconnect">Ferbining ferbrekke</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_cancel">Annuleren</string>
+    <string name="sign_out_cancel">Annulearje</string>
     <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
-    <string name="bookmark_cannot_edit_root">Kan standaardmappen niet bewerken</string>
+    <string name="bookmark_cannot_edit_root">Kin standertmappen net bewurkje</string>
 
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
-    <string name="etp_settings">Beschermingsinstellingen</string>
+    <string name="etp_settings">Beskermingsynstellingen</string>
     <!-- Preference title for enhanced tracking protection settings -->
-    <string name="preference_enhanced_tracking_protection">Verbeterde bescherming tegen volgen</string>
+    <string name="preference_enhanced_tracking_protection">Ferbettere beskerming tsjin folgjen</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Surf zonder te worden gevolgd</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title">Sneup sûnder folge te wurden</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Houd uw gegevens voor uzelf. %s beschermt u tegen veel van de meest voorkomende trackers die volgen wat u online doet.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Hâld jo gegevens foar josels. %s beskermet jo tsjin in protte fan de meast foarkommende trackers dy\'t folgje wat jo online dogge.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Meer info</string>
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Mear ynfo</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_option">Standaard</string>
+    <string name="preference_enhanced_tracking_protection_standard_option">Standert</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard">Standaard (aanbevolen)</string>
+    <string name="preference_enhanced_tracking_protection_standard">Standert (oanrekommandearre)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description">Gebalanceerd voor bescherming en prestaties.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description">Balansearre foar beskerming en prestaasjes.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">Pagina’s worden normaal geladen, maar er worden minder trackers geblokkeerd.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Siden wurde normaal laden, mar der wurde minder trackers blokkearre.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_standard_info_button">Wat wordt geblokkeerd door standaard bescherming tegen volgen</string>
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Wat wurdt blokkearre troch standert beskerming tsjin folgjen</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict">Streng</string>
+    <string name="preference_enhanced_tracking_protection_strict">Strang</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
-    <string name="preference_enhanced_tracking_protection_strict_default">Streng (standaard)</string>
+    <string name="preference_enhanced_tracking_protection_strict_default">Strang (standert)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">Sterkere bescherming tegen volgen en snellere prestaties, maar sommige websites werken mogelijk niet goed.</string>
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Sterkere beskerming tsjin folgjen en fluggere prestaasjes, mar guon websites wurkje mooglik net goed.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_recommended">Streng (aanbevolen)</string>
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Strang (oanrekommandearre)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">Sterkere bescherming, maar kan ervoor zorgen dat sommige websites of inhoud niet werken.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description">Strangere beskerming, mar kin derfoar soargje dat guon websites of ynhâld net wurkje.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
-    <string name="preference_enhanced_tracking_protection_strict_info_button">Wat wordt geblokkeerd door strenge bescherming tegen volgen</string>
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Wat wurdt blokkearre troch strange beskerming tsjin folgjen</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocked">Geblokkeerd</string>
+    <string name="enhanced_tracking_protection_blocked">Blokkearre</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_allowed">Toegestaan</string>
+    <string name="enhanced_tracking_protection_allowed">Tastien</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_title">Sociale-mediatrackers</string>
+    <string name="etp_social_media_trackers_title">Sosjale-mediatrackers</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_description">Beperkt de mogelijkheid van sociale netwerken om uw surfactiviteit op internet te volgen.</string>
+    <string name="etp_social_media_trackers_description">Behein de mooglikheid fan sosjale netwurken om jo sneupaktiviteit op ynternet te folgjen.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cross-site-trackingcookies</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Blokkeert cookies die advertentienetwerken en analysebedrijven gebruiken om uw surfgegevens op veel websites te verzamelen.</string>
+    <string name="etp_cookies_description">Blokkearret cookies dy\'t advertinsjenetwurken en analysebedriuwen brûke om jo sneupgegevens op in protte websites te sammeljen.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominers</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_description">Voorkomt dat kwaadaardige scripts toegang krijgen tot uw apparaat om digitale valuta te minen.</string>
+    <string name="etp_cryptominers_description">Foarkomt dat kwea-aardige skripts tagong krije ta jo apparaat om digitale faluta te minen.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Fingerprinters</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_description">Voorkomt dat uniek identificeerbare gegevens over uw apparaat worden verzameld die kunnen worden gebruikt voor volgdoeleinden.</string>
+    <string name="etp_fingerprinters_description">Foarkomt dat unyk identifisearbere gegevens oer jo apparaat sammele wurde dy\'t brûkt wurde kinne foar folchdoeleinen.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_title">Volginhoud</string>
+    <string name="etp_tracking_content_title">Folchynhâld</string>
+
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_description">Voorkomt dat externe advertenties, video’s en andere inhoud die volgcode bevat worden geladen. Kan invloed hebben op de functionaliteit van sommige websites.</string>
+    <string name="etp_tracking_content_description">Foarkomt dat eksterne advertinsjes, fideo’s en oare ynhâld dy\'t folchkoade befettet laden wurde. Kin ynfloed hawwe op de funksjonaliteit fan guon websites.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s blokkeert trackers op deze website als het schild paars is. Tik erop om te zien wat er is geblokkeerd.</string>
+    <string name="etp_onboarding_message_2">%s blokkearret trackers op dizze website as it skildsje pears is. Tik dêrop om te sjen wat er blokkearre is.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-    <string name="etp_panel_on">Beschermingen voor deze website staan AAN</string>
+    <string name="etp_panel_on">Beskermingen foar dizze website stean OAN</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
-    <string name="etp_panel_off">Beschermingen voor deze website staan UIT</string>
+    <string name="etp_panel_off">Beskermingen foar dizze website stean ÚT</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
-    <string name="enhanced_tracking_protection_exceptions">Verbeterde bescherming tegen volgen is uit voor deze websites</string>
+    <string name="enhanced_tracking_protection_exceptions">Ferbettere beskerming tsjin folgjen is út foar dizze websites</string>
     <!-- About page Your rights link text -->
-    <string name="about_your_rights">Uw rechten</string>
+    <string name="about_your_rights">Jo rjochten</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Door ons gebruikte opensource-bibliotheken</string>
+    <string name="about_open_source_licenses">Troch ús brûkte iepenboarne-biblioteken</string>
     <!-- About page link text to open what's new link -->
-    <string name="about_whats_new">Wat is er nieuw in %s</string>
+    <string name="about_whats_new">Wat is der nij yn %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
-    <string name="open_source_licenses_title">%s | OSS-bibliotheken</string>
+    <string name="open_source_licenses_title">%s | OSS-biblioteken</string>
 
     <!-- About page link text to open support link -->
-    <string name="about_support">Ondersteuning</string>
+    <string name="about_support">Stipe</string>
     <!-- About page link text to open privacy notice link -->
-    <string name="about_privacy_notice">Privacyverklaring</string>
+    <string name="about_privacy_notice">Privacyferklearring</string>
     <!-- About page link text to open know your rights link -->
-    <string name="about_know_your_rights">Ken uw rechten</string>
+    <string name="about_know_your_rights">Ken jo rjochten</string>
     <!-- About page link text to open licensing information link -->
-    <string name="about_licensing_information">Licentie-informatie</string>
+    <string name="about_licensing_information">Lisinsje-ynformaasje</string>
 
     <!-- About page link text to open a screen with libraries that are used -->
-    <string name="about_other_open_source_libraries">Gebruikte bibliotheken</string>
+    <string name="about_other_open_source_libraries">Brûkte biblioteken</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 tabblad</string>
+    <string name="tab_counter_content_description_one_tab">1 ljepblêd</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d tabbladen</string>
+    <string name="tab_counter_content_description_multi_tab">%d ljepblêden</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
-    <string name="browser_toolbar_long_press_popup_copy">Kopiëren</string>
+    <string name="browser_toolbar_long_press_popup_copy">Kopiearje</string>
     <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
-    <string name="browser_toolbar_long_press_popup_paste_and_go">Plakken &amp; Gaan</string>
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Plakke &amp; iepenje</string>
     <!-- Paste the text in the clipboard -->
-    <string name="browser_toolbar_long_press_popup_paste">Plakken</string>
-  
+    <string name="browser_toolbar_long_press_popup_paste">Plakke</string>
     <!-- Snackbar message shown after an URL has been copied to clipboard. -->
-    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL naar klembord gekopieerd</string>
-  
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL nei klamboerd kopiearre</string>
+
     <!-- Title text for the Add To Homescreen dialog -->
-    <string name="add_to_homescreen_title">Toevoegen aan startscherm</string>
+    <string name="add_to_homescreen_title">Tafoegje oan startskerm</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_cancel">Annuleren</string>
+    <string name="add_to_homescreen_cancel">Annulearje</string>
     <!-- Add button text for the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_add">Toevoegen</string>
+    <string name="add_to_homescreen_add">Tafoegje</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_text_placeholder">Naam snelkoppeling</string>
+    <string name="add_to_homescreen_text_placeholder">Namme fluchtoets</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Aanmeldingen en wachtwoorden</string>
+    <string name="preferences_passwords_logins_and_passwords">Oanmeldingen en wachtwurden</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Aanmeldingen en wachtwoorden opslaan</string>
+    <string name="preferences_passwords_save_logins">Oanmeldingen en wachtwurden bewarje</string>
     <!-- Preference option for asking to save passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_ask_to_save">Vragen om op te slaan</string>
+    <string name="preferences_passwords_save_logins_ask_to_save">Freegje om te bewarjen</string>
     <!-- Preference option for never saving passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_never_save">Nooit opslaan</string>
+    <string name="preferences_passwords_save_logins_never_save">Nea bewarje</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Automatisch invullen</string>
+    <string name="preferences_passwords_autofill">Automatysk ynfolje</string>
     <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Aanmeldingen synchroniseren</string>
+    <string name="preferences_passwords_sync_logins">Oanmeldingen syngronisearje</string>
     <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Aan</string>
+    <string name="preferences_passwords_sync_logins_on">Oan</string>
     <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Uit</string>
+    <string name="preferences_passwords_sync_logins_off">Ut</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Opnieuw verbinden</string>
+    <string name="preferences_passwords_sync_logins_reconnect">Opnij ferbine</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Aanmelden bij Sync</string>
+    <string name="preferences_passwords_sync_logins_sign_in">Oanmelde by Sync</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Opgeslagen aanmeldingen</string>
+    <string name="preferences_passwords_saved_logins">Bewarre oanmeldingen</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions">Uitzonderingen</string>
+    <string name="preferences_passwords_exceptions">Utsûnderingen</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Niet-opgeslagen aanmeldingen en wachtwoorden worden hier weergegeven.</string>
+    <string name="preferences_passwords_exceptions_description_empty">Net-bewarre oanmeldingen en wachtwurden wurde hjir werjûn.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Aanmeldingen en wachtwoorden worden voor deze websites niet opgeslagen.</string>
+    <string name="preferences_passwords_exceptions_description">Oanmeldingen en wachtwurden wurde foar dizze websites net bewarre. </string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Aanmeldingen zoeken</string>
+    <string name="preferences_passwords_saved_logins_search">Oanmeldingen sykje</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">Alfabetisch</string>
+    <string name="preferences_passwords_saved_logins_alphabetically">Alfabetysk</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Onlangs gebruikt</string>
+    <string name="preferences_passwords_saved_logins_recently_used">Koartlyn brûkt</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Website</string>
     <!-- The header for the username for a login -->
-    <string name="preferences_passwords_saved_logins_username">Gebruikersnaam</string>
+    <string name="preferences_passwords_saved_logins_username">Brûkersnamme</string>
     <!-- The header for the password for a login -->
-    <string name="preferences_passwords_saved_logins_password">Wachtwoord</string>
+    <string name="preferences_passwords_saved_logins_password">Wachtwurd</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Voer uw pincode opnieuw in</string>
+    <string name="preferences_passwords_saved_logins_enter_pin">Fier jo pinkoade opnij yn</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Ontgrendel om uw opgeslagen aanmeldingen te bekijken</string>
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Untskoattelje om jo bewarre oanmeldingen te besjen</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">Deze verbinding is niet beveiligd. Hier ingevoerde aanmeldingen kunnen worden onderschept.</string>
+    <string name="logins_insecure_connection_warning">Dizze ferbining is net befeilige. Hjir ynfierde oanmeldingen kinne ûnderskeppe wurde.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Meer info</string>
+    <string name="logins_insecure_connection_warning_learn_more">Mear ynfo</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Wilt u dat %s deze aanmelding opslaat?</string>
+    <string name="logins_doorhanger_save">Wolle jo dat %s dizze oanmelding bewarret?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">Opslaan</string>
+    <string name="logins_doorhanger_save_confirmation">Bewarje</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Niet opslaan</string>
+    <string name="logins_doorhanger_save_dont_save">Net bewarje</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
-    <string name="logins_password_copied">Wachtwoord naar klembord gekopieerd</string>
+    <string name="logins_password_copied">Wachtwurd nei klamboerd kopiearre</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
-    <string name="logins_username_copied">Gebruikersnaam naar klembord gekopieerd</string>
+    <string name="logins_username_copied">Brûkersnamme nei klamboerd kopiearre </string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Website naar klembord gekopieerd</string>
+    <string name="logins_site_copied">Website nei klamboerd kopiearre</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
-    <string name="saved_logins_copy_password">Wachtwoord kopiëren</string>
+    <string name="saved_logins_copy_password">Wachtwurd kopiearje</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
-    <string name="saved_login_copy_username">Gebruikersnaam kopiëren</string>
+    <string name="saved_login_copy_username">Brûkersnamme kopiearje</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Website kopiëren</string>
+    <string name="saved_login_copy_site">Website kopiearje</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
-    <string name="saved_login_reveal_password">Wachtwoord tonen</string>
+    <string name="saved_login_reveal_password">Wachtwurd toane</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
-    <string name="saved_login_hide_password">Wachtwoord verbergen</string>
+    <string name="saved_login_hide_password">Wachtwurd ferstopje</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Ontgrendel om uw opgeslagen aanmeldingen te bekijken</string>
+    <string name="logins_biometric_prompt_message">Untskoattelje om jo bewarre oanmeldingen te besjen</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Beveilig uw aanmeldingen en wachtwoorden</string>
+    <string name="logins_warning_dialog_title">Befeiligje jo oanmeldingen en wachtwurden</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Stel een vergrendelingspatroon, pincode of wachtwoord voor uw apparaat in om uw opgeslagen aanmeldingen en wachtwoorden te beschermen tegen toegang als iemand anders uw apparaat heeft.</string>
+    <string name="logins_warning_dialog_message">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre oanmeldingen en wachtwurden te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_later">Later</string>
+    <string name="logins_warning_dialog_later">Letter</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_set_up_now">Nu instellen</string>
+    <string name="logins_warning_dialog_set_up_now">No ynstelle</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
-    <string name="logins_biometric_prompt_message_pin">Ontgrendel uw apparaat</string>
+    <string name="logins_biometric_prompt_message_pin">Untskoattelje jo apparaat</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom">Inzoomen op alle websites</string>
+    <string name="preference_accessibility_force_enable_zoom">Ynzoome op alle websites</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Knijpen en inzoomen toestaan, zelfs op websites die deze beweging voorkomen.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Knipe en ynzoome tastean, sels op websites dy\'t dizze beweging opkeare.</string>
 
     <!-- Title of the Add search engine screen -->
-    <string name="search_engine_add_custom_search_engine_title">Zoekmachine toevoegen</string>
+    <string name="search_engine_add_custom_search_engine_title">Sykmasine tafoegje</string>
     <!-- Title of the Edit search engine screen -->
-    <string name="search_engine_edit_custom_search_engine_title">Zoekmachine bewerken</string>
+    <string name="search_engine_edit_custom_search_engine_title">Sykmasine bewurkje</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Toevoegen</string>
+    <string name="search_engine_add_button_content_description">Tafoegje</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Opslaan</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Bewarje</string>
     <!-- Text for the menu button to edit a search engine -->
-    <string name="search_engine_edit">Bewerken</string>
+    <string name="search_engine_edit">Bewurkje</string>
     <!-- Text for the menu button to delete a search engine -->
-    <string name="search_engine_delete">Verwijderen</string>
+    <string name="search_engine_delete">Fuortsmite</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label">Aangepast</string>
+    <string name="search_add_custom_engine_label">Oanpast</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Naam</string>
+    <string name="search_add_custom_engine_name_hint">Namme</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Te gebruiken zoekterm</string>
+    <string name="search_add_custom_engine_search_string_hint">Te brûken sykterm</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">Zoekvraag vervangen door ‘%s’. Bijvoorbeeld: \nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example">Sykfraach ferfange troch ‘%s’. Bygelyks: \nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Meer info</string>
+    <string name="search_add_custom_engine_learn_more_label">Mear ynfo</string>
 
     <!-- Text shown when a user leaves the name field empty -->
-    <string name="search_add_custom_engine_error_empty_name">Voer naam van zoekmachine in</string>
+    <string name="search_add_custom_engine_error_empty_name">Fier namme fan sykmasine yn</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">Er bestaat al een zoekmachine met de naam ‘%s’.</string>
+    <string name="search_add_custom_engine_error_existing_name">Der bestiet al in sykmasine mei de namme ‘%s’.</string>
     <!-- Text shown when a user leaves the search string field empty -->
-    <string name="search_add_custom_engine_error_empty_search_string">Voer een zoekterm in</string>
+    <string name="search_add_custom_engine_error_empty_search_string">Fier in sykterm yn</string>
     <!-- Text shown when a user leaves out the required template string -->
-    <string name="search_add_custom_engine_error_missing_template">Controleer of de zoekterm met de voorbeeldopmaak overeenkomt</string>
+    <string name="search_add_custom_engine_error_missing_template">Kontrolearje oft de sykterm mei de foarbyldopmaak oerienkomt</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
-    <string name="search_add_custom_engine_error_cannot_reach">Fout bij verbinden met ‘%s’</string>
+    <string name="search_add_custom_engine_error_cannot_reach">Flater by ferbinen mei ‘%s’</string>
     <!-- Text shown when a user creates a new search engine -->
-    <string name="search_add_custom_engine_success_message">%s aangemaakt</string>
+    <string name="search_add_custom_engine_success_message">%s oanmakke</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
-    <string name="search_edit_custom_engine_success_message">%s opgeslagen</string>
+    <string name="search_edit_custom_engine_success_message">%s bewarre</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
-    <string name="search_delete_search_engine_success_message">%s verwijderd</string>
+    <string name="search_delete_search_engine_success_message">%s fuortsmiten</string>
 </resources>

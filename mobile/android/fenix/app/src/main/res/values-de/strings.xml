@@ -76,6 +76,8 @@
     <string name="browser_menu_desktop_site">Desktop-Website</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Zum Startbildschirm hinzufügen</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Installieren</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">In Seite suchen</string>
     <!-- Browser menu button that creates a private tab -->
