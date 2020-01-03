@@ -1209,8 +1209,8 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvStoreUserInteractionAsPermission(
       const Principal& aPrincipal);
 
-  mozilla::ipc::IPCResult RecvNotifyMediaActiveChanged(
-      BrowsingContext* aContext, bool aActive);
+  mozilla::ipc::IPCResult RecvNotifyMediaStateChanged(
+      BrowsingContext* aContext, ControlledMediaState aState);
 
   mozilla::ipc::IPCResult RecvNotifyMediaAudibleChanged(
       BrowsingContext* aContext, bool aAudible);

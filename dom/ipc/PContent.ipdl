@@ -116,6 +116,7 @@ using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasi
 using mozilla::fontlist::Pointer from "SharedFontList.h";
 using gfxSparseBitSet from "gfxFontUtils.h";
 using mozilla::dom::MediaControlKeysEvent from "ipc/MediaControlIPC.h";
+using mozilla::dom::ControlledMediaState from "ipc/MediaControlIPC.h";
 using refcounted class nsDocShellLoadState from "nsDocShellLoadState.h";
 
 union ChromeRegistryItem
@@ -1496,10 +1497,14 @@ parent:
     async StoreUserInteractionAsPermission(Principal aPrincipal);
 
    /**
-    * When media started or stopped in content process, we have to notify the
-    * chrome process in order to know which tab is playing media.
+    * When media element's controlled state changed in the content process, we
+    * have to notify the chrome process in order to update the status of the
+    * corresponding media controller, which is used to control all media in the
+    * certain tab. We would use the browsing context to find the corresponding
+    * controller.
     */
-    async NotifyMediaActiveChanged(BrowsingContext aContext, bool aActive);
+    async NotifyMediaStateChanged(BrowsingContext aContext,
+                                  ControlledMediaState aState);
 
    /**
     * When media became audible or inaudible in content process, we have to

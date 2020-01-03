@@ -43,6 +43,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
+#include "mozilla/dom/ContentMediaController.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/Element.h"
@@ -5917,13 +5918,13 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaActiveChanged(
-    BrowsingContext* aContext, bool aActive) {
+mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaStateChanged(
+    BrowsingContext* aContext, ControlledMediaState aState) {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(!aContext->GetParent(), "Should be top level browsing context!");
   RefPtr<MediaController> controller =
       service->GetOrCreateControllerById(aContext->Id());
-  controller->NotifyMediaActiveChanged(aActive);
+  // TODO : implementation in following patches.
   return IPC_OK();
 }
 
