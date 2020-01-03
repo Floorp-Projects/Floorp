@@ -8,21 +8,19 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
-const { emulationSpec } = require("devtools/shared/specs/emulation");
+const { responsiveSpec } = require("devtools/shared/specs/responsive");
 
 /**
- * The corresponding Front object for the EmulationActor.
- *
- * Bug 1606852: Delete this file when Firefox 73 is on release.
+ * The corresponding Front object for the Responsive actor.
  */
-class EmulationFront extends FrontClassWithSpec(emulationSpec) {
+class ResponsiveFront extends FrontClassWithSpec(responsiveSpec) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
 
     // Attribute name from which to retrieve the actorID out of the target actor's form
-    this.formAttributeName = "emulationActor";
+    this.formAttributeName = "responsiveActor";
   }
 }
 
-exports.EmulationFront = EmulationFront;
-registerFront(EmulationFront);
+exports.ResponsiveFront = ResponsiveFront;
+registerFront(ResponsiveFront);

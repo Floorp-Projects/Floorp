@@ -42,7 +42,7 @@ function testNetworkThrottlingSelectorLabel(ui, expected) {
 }
 
 var testNetworkThrottlingState = async function(ui, expected) {
-  const state = await ui.emulationFront.getNetworkThrottling();
+  const state = await ui.responsiveFront.getNetworkThrottling();
   Assert.deepEqual(
     state,
     expected,
