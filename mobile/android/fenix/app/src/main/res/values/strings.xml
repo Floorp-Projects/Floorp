@@ -1091,7 +1091,7 @@
     <string name="search_engine_delete">Delete</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label">Custom</string>
+    <string name="search_add_custom_engine_label_other">Other</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Name</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
