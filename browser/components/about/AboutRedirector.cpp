@@ -12,6 +12,7 @@
 #include "nsIURI.h"
 #include "nsIProtocolHandler.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
 
@@ -20,7 +21,6 @@ namespace browser {
 
 NS_IMPL_ISUPPORTS(AboutRedirector, nsIAboutModule)
 
-bool AboutRedirector::sNewTabPageEnabled = false;
 bool AboutRedirector::sAboutLoginsEnabled = false;
 
 static const uint32_t ACTIVITY_STREAM_FLAGS =
@@ -157,13 +157,6 @@ AboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  static bool sNTPEnabledCacheInited = false;
-  if (!sNTPEnabledCacheInited) {
-    Preferences::AddBoolVarCache(&AboutRedirector::sNewTabPageEnabled,
-                                 "browser.newtabpage.enabled");
-    sNTPEnabledCacheInited = true;
-  }
-
   static bool sAboutLoginsCacheInited = false;
   if (!sAboutLoginsCacheInited) {
     Preferences::AddBoolVarCache(&AboutRedirector::sAboutLoginsEnabled,
@@ -176,9 +169,10 @@ AboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
       nsAutoCString url;
 
       // Let the aboutNewTabService decide where to redirect for about:home and
-      // enabled about:newtab. Disabledx about:newtab page uses fallback.
+      // enabled about:newtab. Disabled about:newtab page uses fallback.
       if (path.EqualsLiteral("home") ||
-          (sNewTabPageEnabled && path.EqualsLiteral("newtab"))) {
+          (StaticPrefs::browser_newtabpage_enabled() &&
+           path.EqualsLiteral("newtab"))) {
         nsCOMPtr<nsIAboutNewTabService> aboutNewTabService =
             do_GetService("@mozilla.org/browser/aboutnewtab-service;1", &rv);
         NS_ENSURE_SUCCESS(rv, rv);

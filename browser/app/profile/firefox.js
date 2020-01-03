@@ -1256,9 +1256,6 @@ pref("prompts.tab_modal.enabled", true);
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
-// Indicates if about:newtab shows content (enabled) or just blank
-pref("browser.newtabpage.enabled", true);
-
 // Activity Stream prefs that control to which page to redirect
 #ifndef RELEASE_OR_BETA
   pref("browser.newtabpage.activity-stream.debug", false);
