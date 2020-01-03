@@ -885,6 +885,12 @@
   value: false
   mirror: always
 
+# Indicates if about:newtab shows content (enabled) or just blank.
+- name: browser.newtabpage.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Blocked plugin content
 - name: browser.safebrowsing.blockedURIs.enabled
   type: bool
