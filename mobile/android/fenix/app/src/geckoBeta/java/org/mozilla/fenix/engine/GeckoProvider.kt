@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.lib.crash.handler.CrashHandlerService
+import mozilla.components.service.experiments.Experiments
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.geckoview.GeckoRuntime
@@ -38,6 +39,10 @@ object GeckoProvider {
             .telemetryDelegate(GeckoAdapter())
             .debugLogging(Config.channel.isDebug)
             .build()
+
+        Experiments.withExperiment("control-webrender-rollout-for-fenix") {
+            runtimeSettings.extras.putInt("forcedisablewebrender", 1);
+        }
 
         if (!Settings.getInstance(context).shouldUseAutoSize) {
             runtimeSettings.automaticFontSizeAdjustment = false
