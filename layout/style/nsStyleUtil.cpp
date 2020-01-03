@@ -329,7 +329,7 @@ bool nsStyleUtil::CSPAllowsInlineStyle(
   // query the nonce
   nsAutoString nonce;
   if (aElement && aElement->NodeInfo()->NameAtom() == nsGkAtoms::style) {
-    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
+    aElement->GetAttr(nsGkAtoms::nonce, nonce);
   }
 
   bool allowInlineStyle = true;

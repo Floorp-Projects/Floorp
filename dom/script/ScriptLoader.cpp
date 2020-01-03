@@ -326,7 +326,7 @@ nsresult ScriptLoader::CheckContentPolicy(Document* aDocument,
     nsCOMPtr<Element> element = do_QueryInterface(aContext);
     if (element && element->IsHTMLElement()) {
       nsAutoString cspNonce;
-      element->GetAttribute(NS_LITERAL_STRING("nonce"), cspNonce);
+      element->GetAttr(nsGkAtoms::nonce, cspNonce);
       secCheckLoadInfo->SetCspNonce(cspNonce);
     }
   }
@@ -1324,7 +1324,7 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
     nsCOMPtr<Element> element = do_QueryInterface(context);
     if (element && element->IsHTMLElement()) {
       nsAutoString cspNonce;
-      element->GetAttribute(NS_LITERAL_STRING("nonce"), cspNonce);
+      element->GetAttr(nsGkAtoms::nonce, cspNonce);
       nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
       loadInfo->SetCspNonce(cspNonce);
     }

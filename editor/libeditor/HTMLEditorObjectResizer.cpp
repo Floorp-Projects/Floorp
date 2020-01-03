@@ -573,8 +573,7 @@ nsresult HTMLEditor::StartResizing(Element* aHandle) {
   // the way we change the position/size of the shadow depends on
   // the handle
   nsAutoString locationStr;
-  mActivatedHandle->GetAttribute(NS_LITERAL_STRING("anonlocation"),
-                                 locationStr);
+  mActivatedHandle->GetAttr(nsGkAtoms::anonlocation, locationStr);
   if (locationStr.Equals(kTopLeft)) {
     SetResizeIncrements(1, 1, -1, -1, preserveRatio);
   } else if (locationStr.Equals(kTop)) {
@@ -620,7 +619,7 @@ nsresult HTMLEditor::OnMouseDown(int32_t aClientX, int32_t aClientY,
   NS_ENSURE_ARG_POINTER(aTarget);
 
   nsAutoString anonclass;
-  aTarget->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
+  aTarget->GetAttr(nsGkAtoms::_moz_anonclass, anonclass);
 
   if (anonclass.EqualsLiteral("mozResizer")) {
     AutoEditActionDataSetter editActionData(*this, EditAction::eResizeElement);
