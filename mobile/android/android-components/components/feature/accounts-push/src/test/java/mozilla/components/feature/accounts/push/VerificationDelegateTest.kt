@@ -1,8 +1,6 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
- *  License, v. 2.0. If a copy of the MPL was not distributed with this
- *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package mozilla.components.feature.accounts.push
 
@@ -22,7 +20,7 @@ class VerificationDelegateTest {
 
     @Before
     fun setup() {
-        preference(testContext).edit().remove(LAST_VERIFIED).apply()
+        preference(testContext).edit().remove(PREF_LAST_VERIFIED).apply()
     }
 
     @Test
@@ -112,7 +110,7 @@ class VerificationDelegateTest {
             get() {
                 val stringResult = requireNotNull(
                     preference(testContext).getString(
-                        LAST_VERIFIED,
+                        PREF_LAST_VERIFIED,
                         "{\"timestamp\": ${System.currentTimeMillis()}, \"totalCount\": 0}"
                     )
                 )
@@ -121,7 +119,7 @@ class VerificationDelegateTest {
             }
             set(value) {
                 preference(testContext).edit()
-                    .putString(LAST_VERIFIED, "{\"timestamp\": ${value.first}, \"totalCount\": ${value.second}}")
+                    .putString(PREF_LAST_VERIFIED, "{\"timestamp\": ${value.first}, \"totalCount\": ${value.second}}")
                     .apply()
             }
 

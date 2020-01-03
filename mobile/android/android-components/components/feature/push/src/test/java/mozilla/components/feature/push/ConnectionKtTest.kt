@@ -5,10 +5,28 @@
 package mozilla.components.feature.push
 
 import mozilla.appservices.push.BridgeType
+import mozilla.appservices.push.KeyInfo
+import mozilla.appservices.push.SubscriptionInfo
+import mozilla.appservices.push.SubscriptionResponse
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ConnectionKtTest {
+    @Test
+    @Suppress("Deprecation")
+    fun `transform response to PushSubscription`() {
+        val response = SubscriptionResponse(
+            "992a0f0542383f1ea5ef51b7cf4ae6c4",
+            SubscriptionInfo("https://mozilla.com", KeyInfo("123", "456"))
+        )
+        val sub = response.toPushSubscription("scope")
+
+        assertEquals(response.subscriptionInfo.endpoint, sub.endpoint)
+        assertEquals(response.subscriptionInfo.keys.auth, sub.authKey)
+        assertEquals(response.subscriptionInfo.keys.p256dh, sub.publicKey)
+        assertEquals("scope", sub.scope)
+    }
+
     @Test
     fun `ServiceType to BridgeType`() {
         assertEquals(BridgeType.FCM, ServiceType.FCM.toBridgeType())

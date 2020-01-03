@@ -5,26 +5,12 @@
 package mozilla.components.feature.push
 
 import mozilla.components.support.test.mock
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.`when`
 
 class DeliveryManagerTest {
-
-    @Test
-    fun `serviceType found for PushType`() {
-        val pushType = DeliveryManager.serviceForChannelId("992a0f0542383f1ea5ef51b7cf4ae6c4")
-        assertEquals(PushType.Services, pushType)
-    }
-
-    @Test
-    fun `unknown channelIDs handled gracefully`() {
-        assertNull(DeliveryManager.serviceForChannelId("992a0f0542383f1ea5ef51b7cf4ea6c4"))
-    }
-
     @Test
     fun `DeliveryManager executes block with initialized connection`() {
         val connection: PushConnection = mock()

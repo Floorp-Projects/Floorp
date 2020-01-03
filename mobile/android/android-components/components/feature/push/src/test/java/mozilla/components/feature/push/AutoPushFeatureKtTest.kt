@@ -11,34 +11,19 @@ import mozilla.appservices.push.AlreadyRegisteredError
 import mozilla.appservices.push.CommunicationError
 import mozilla.appservices.push.CommunicationServerError
 import mozilla.appservices.push.CryptoError
-import mozilla.appservices.push.KeyInfo
 import mozilla.appservices.push.InternalPanic
 import mozilla.appservices.push.MissingRegistrationTokenError
 import mozilla.appservices.push.RecordNotFoundError
 import mozilla.appservices.push.StorageError
 import mozilla.appservices.push.StorageSqlError
-import mozilla.appservices.push.SubscriptionInfo
-import mozilla.appservices.push.SubscriptionResponse
 import mozilla.appservices.push.TranscodingError
 import mozilla.appservices.push.UrlParseError
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 @ExperimentalCoroutinesApi
+@Suppress("Deprecation")
 class AutoPushFeatureKtTest {
-    @Test
-    fun `transform response to PushSubscription`() {
-        val response = SubscriptionResponse(
-            "992a0f0542383f1ea5ef51b7cf4ae6c4",
-            SubscriptionInfo("https://mozilla.com", KeyInfo("123", "456"))
-        )
-        val sub = response.toPushSubscription()
-
-        assertEquals(PushType.Services, sub.type)
-        assertEquals(response.subscriptionInfo.endpoint, sub.endpoint)
-        assertEquals(response.subscriptionInfo.keys.auth, sub.authKey)
-        assertEquals(response.subscriptionInfo.keys.p256dh, sub.publicKey)
-    }
 
     @Test
     fun `asserts PushConfig's default values`() {

@@ -11,10 +11,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import mozilla.appservices.push.KeyInfo
-import mozilla.appservices.push.SubscriptionInfo
-import mozilla.appservices.push.SubscriptionResponse
-import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushService
@@ -28,22 +24,24 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
+import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
-import org.mockito.Mockito.verifyZeroInteractions
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
+@Suppress("Deprecation")
 class AutoPushFeatureTest {
 
     private var lastVerified: Long
@@ -97,7 +95,7 @@ class AutoPushFeatureTest {
         val connection: PushConnection = mock()
         whenever(connection.isInitialized()).thenReturn(true)
 
-        AutoPushFeature(testContext, service, mock(), coroutineContext, connection).also {
+        spy(AutoPushFeature(testContext, service, mock(), coroutineContext, connection)).also {
             it.shutdown()
         }
 
@@ -124,10 +122,10 @@ class AutoPushFeatureTest {
         val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
 
         feature.onNewToken("token")
-        verify(feature, times(1)).subscribeAll()
+        verify(feature, times(1)).subscribe(anyString(), nullable(String::class.java), any(), any())
 
         feature.onNewToken("token")
-        verify(feature, times(1)).subscribeAll()
+        verify(feature, times(1)).subscribe(anyString(), nullable(String::class.java), any(), any())
     }
 
     @Test
@@ -136,103 +134,88 @@ class AutoPushFeatureTest {
         val encryptedMessage: EncryptedPushMessage = mock()
         val owner: LifecycleOwner = mock()
         val lifecycle: Lifecycle = mock()
+        val observer: AutoPushFeature.Observer = mock()
         whenever(owner.lifecycle).thenReturn(lifecycle)
         whenever(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
         whenever(connection.isInitialized()).thenReturn(true)
         whenever(encryptedMessage.channelId).thenReturn("992a0f0542383f1ea5ef51b7cf4ae6c4")
-        whenever(connection.decrypt(any(), any(), any(), any(), any())).thenReturn("test".toByteArray())
+        whenever(connection.decryptMessage(any(), any(), any(), any(), any()))
+            .thenReturn(null) // If we get null, we shouldn't notify observers.
+            .thenReturn("testScope" to "test".toByteArray())
 
         val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
 
-        feature.registerForPushMessages(PushType.Services, object : Bus.Observer<PushType, String> {
-            override fun onEvent(type: PushType, message: String) {
-                assertEquals("test", message)
-            }
-        }, owner, true)
+        feature.register(observer)
 
         feature.onMessageReceived(encryptedMessage)
-    }
 
-    @Test
-    fun `onMessageReceived handles unknown channelId`() = runBlockingTest {
-        val connection: PushConnection = mock()
-        val encryptedMessage: EncryptedPushMessage = mock()
-        val owner: LifecycleOwner = mock()
-        val lifecycle: Lifecycle = mock()
-        whenever(owner.lifecycle).thenReturn(lifecycle)
-        whenever(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
-        whenever(connection.isInitialized()).thenReturn(true)
-        whenever(encryptedMessage.channelId).thenReturn("whatisachannelidanyway")
-        whenever(connection.decrypt(any(), any(), any(), any(), any())).thenReturn("test".toByteArray())
+        verify(observer, never()).onMessageReceived("testScope", "test".toByteArray())
 
-        val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
-
-        val pushServiceObserver: Bus.Observer<PushType, String> = mock()
-        val webpushServiceObserver: Bus.Observer<PushType, String> = mock()
-        feature.registerForPushMessages(PushType.Services, pushServiceObserver)
-        feature.registerForPushMessages(PushType.WebPush, webpushServiceObserver)
-
-        // Shouldn't crash!
         feature.onMessageReceived(encryptedMessage)
 
-        // Observers don't need to know about garbage we received.
-        verifyZeroInteractions(pushServiceObserver)
-        verifyZeroInteractions(webpushServiceObserver)
+        verify(observer).onMessageReceived("testScope", "test".toByteArray())
     }
 
     @Test
-    fun `subscribeForType notifies observers`() = runBlockingTest {
-        val connection: PushConnection = spy(TestPushConnection(true))
-        val owner: LifecycleOwner = mock()
-        val lifecycle: Lifecycle = mock()
-        whenever(owner.lifecycle).thenReturn(lifecycle)
-        whenever(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
-
-        val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
-
-        feature.registerForSubscriptions(object : PushSubscriptionObserver {
-            override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
-                assertEquals(PushType.Services, subscription.type)
-            }
-        }, owner, true)
-
-        feature.subscribeForType(PushType.Services)
-    }
-
-    @Test
-    fun `unsubscribeForType calls rust layer`() = runBlockingTest {
+    fun `subscribe calls native layer and notifies observers`() = runBlockingTest {
         val connection: PushConnection = mock()
-        spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
-            .unsubscribeForType(PushType.Services)
+        val observer: AutoPushFeature.Observer = mock()
+        val subscription: AutoPushSubscription = mock()
+        var invoked = false
 
-        verify(connection, never()).unsubscribe(anyString())
+        val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
+        feature.register(observer)
+
+        feature.subscribe("testScope") {
+            invoked = true
+        }
+
+        assertFalse(invoked)
 
         whenever(connection.isInitialized()).thenReturn(true)
+        whenever(connection.subscribe(anyString(), nullable(String::class.java))).thenReturn(subscription)
+        whenever(subscription.scope).thenReturn("testScope")
 
-        spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
-            .unsubscribeForType(PushType.Services)
+        feature.subscribe("testScope") {
+            invoked = true
+        }
 
-        verify(connection).unsubscribe(anyString())
+        assertTrue(invoked)
     }
 
     @Test
-    fun `subscribeAll notifies observers`() = runBlockingTest {
-        val connection: PushConnection = spy(TestPushConnection(true))
-        val owner: LifecycleOwner = mock()
-        val lifecycle: Lifecycle = mock()
-        whenever(owner.lifecycle).thenReturn(lifecycle)
-        whenever(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
-        whenever(connection.isInitialized()).thenReturn(true)
+    fun `unsubscribe calls native layer and notifies observers`() = runBlockingTest {
+        val connection: PushConnection = mock()
+        val observer: AutoPushFeature.Observer = mock()
+        var invoked = false
+        var errorInvoked = false
 
         val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
+        feature.register(observer)
 
-        feature.registerForSubscriptions(object : PushSubscriptionObserver {
-            override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
-                assertEquals(PushType.Services, subscription.type)
-            }
-        }, owner, true)
+        feature.unsubscribe("testScope", { errorInvoked = true }) {
+            invoked = true
+        }
 
-        feature.subscribeAll()
+        assertFalse(errorInvoked)
+        assertFalse(invoked)
+
+        whenever(connection.unsubscribe(anyString())).thenReturn(false)
+        whenever(connection.isInitialized()).thenReturn(true)
+
+        feature.unsubscribe("testScope", { errorInvoked = true }) {
+            invoked = true
+        }
+
+        assertTrue(errorInvoked)
+
+        whenever(connection.unsubscribe(anyString())).thenReturn(true)
+
+        feature.unsubscribe("testScope") {
+            invoked = true
+        }
+
+        assertTrue(invoked)
     }
 
     @Test
@@ -250,27 +233,27 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `verifyActiveSubscriptions notifies subscribers`() = runBlockingTest {
+    fun `verifyActiveSubscriptions notifies observers`() = runBlockingTest {
         val connection: PushConnection = spy(TestPushConnection(true))
         val owner: LifecycleOwner = mock()
         val lifecycle: Lifecycle = mock()
-        val observers: PushSubscriptionObserver = mock()
+        val observers: AutoPushFeature.Observer = mock()
         val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
         whenever(owner.lifecycle).thenReturn(lifecycle)
         whenever(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
 
-        feature.registerForSubscriptions(observers)
+        feature.register(observers)
 
         // When there are NO subscription updates, observers should not be notified.
         feature.verifyActiveSubscriptions()
 
-        verify(observers, never()).onSubscriptionAvailable(any())
+        verify(observers, never()).onSubscriptionChanged(any())
 
         // When there are subscription updates, observers should not be notified.
         whenever(connection.verifyConnection()).thenReturn(true)
         feature.verifyActiveSubscriptions()
 
-        verify(observers, times(2)).onSubscriptionAvailable(any())
+        verify(observers).onSubscriptionChanged(any())
     }
 
     @Test
@@ -312,32 +295,6 @@ class AutoPushFeatureTest {
     }
 
     @Test
-    fun `verifySubscriptions notifies observers`() = runBlockingTest {
-        val owner: LifecycleOwner = mock()
-        val lifecycle: Lifecycle = mock()
-        val native: PushConnection = TestPushConnection(true)
-        val feature = spy(
-            AutoPushFeature(
-                context = testContext,
-                service = mock(),
-                config = mock(),
-                coroutineContext = coroutineContext,
-                connection = native
-            )
-        )
-        `when`(owner.lifecycle).thenReturn(lifecycle)
-        `when`(lifecycle.currentState).thenReturn(Lifecycle.State.STARTED)
-
-        feature.registerForSubscriptions(object : PushSubscriptionObserver {
-            override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
-                assertEquals("https://fool", subscription.endpoint)
-            }
-        }, owner, false)
-
-        feature.verifyActiveSubscriptions()
-    }
-
-    @Test
     fun `crash reporter is notified of errors`() = runBlockingTest {
         val native: PushConnection = TestPushConnection(true)
         val crashReporter: CrashReporter = mock()
@@ -366,13 +323,14 @@ class AutoPushFeatureTest {
     }
 
     class TestPushConnection(private val init: Boolean = false) : PushConnection {
-        override suspend fun subscribe(channelId: String, scope: String) =
-            SubscriptionResponse(
-                channelId,
-                SubscriptionInfo("https://foo", KeyInfo("auth", "p256dh"))
-            )
+        override suspend fun subscribe(scope: String, appServerKey: String?) = AutoPushSubscription(
+            scope = scope,
+            endpoint = "https://foo",
+            publicKey = "p256dh",
+            authKey = "auth"
+        )
 
-        override suspend fun unsubscribe(channelId: String): Boolean = true
+        override suspend fun unsubscribe(scope: String): Boolean = true
 
         override suspend fun unsubscribeAll(): Boolean = true
 
@@ -380,13 +338,13 @@ class AutoPushFeatureTest {
 
         override suspend fun verifyConnection(): Boolean = false
 
-        override fun decrypt(
+        override suspend fun decryptMessage(
             channelId: String,
             body: String,
             encoding: String,
             salt: String,
             cryptoKey: String
-        ): ByteArray {
+        ): Pair<PushScope, ByteArray>? {
             TODO("not implemented")
         }
 

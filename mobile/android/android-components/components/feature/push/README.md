@@ -27,7 +27,7 @@ val service = FirebasePush()
 val feature = AutoPushFeature(
   context = context,
   service = pushService,
-  config = config
+  config = pushConfig
 )
 
 // To start the feature and the service.
@@ -37,21 +37,21 @@ feature.initialize()
 feature.shutdown()
 
 // To receive the subscription info for all the subscription changes.
-feature.registerForSubscriptions(object : PushSubscriptionObserver {
-  override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
-    // handle subscription info here.
+feature.register(object : AutoPushFeature.Observer {
+  override fun onSubscriptionChanged(subscription: AutoPushSubscription) {
+    // Handle subscription info here.
   }
-}, lifecycle, false)
+})
 
-// Force request all subscription information.
-feature.subscribeAll()
+// Subscribe for a unique scope (identifier).
+feature.subscribe("push_subscription_scope_id")
 
-// To receive a message for a specific push message type.
-feature.registerForPushMessages(PushType.Services, object: Bus.Observer<PushType, String> {
-  override fun onEvent(type: PushType, message: String) {
+// To receive messages:
+feature.register(object : AutoPushFeature.Observer {
+  override fun onMessageReceived(scope: String, message: ByteArray?) {
     // Handle decrypted message here.
   }
-}, lifecycle, false)
+})
 ```
 
 ### Setting up the dependency
