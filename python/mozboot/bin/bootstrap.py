@@ -137,10 +137,6 @@ def ensure_environment(repo_url=None, repo_rev=None, repo_type=None):
 
 def main(args):
     parser = OptionParser()
-    parser.add_option('--vcs', dest='vcs',
-                      default='hg',
-                      help='VCS (hg or git) to use for downloading the source code. '
-                      'Uses hg if omitted.')
     parser.add_option('-r', '--repo-url', dest='repo_url',
                       default='https://hg.mozilla.org/mozilla-central/',
                       help='Base URL of source control repository where bootstrap files can '
@@ -155,6 +151,9 @@ def main(args):
 
     parser.add_option('--application-choice', dest='application_choice',
                       help='Pass in an application choice (see mozboot.bootstrap.APPLICATIONS) '
+                      'instead of using the default interactive prompt.')
+    parser.add_option('--vcs', dest='vcs', default=None,
+                      help='VCS (hg or git) to use for downloading the source code, '
                       'instead of using the default interactive prompt.')
     parser.add_option('--no-interactive', dest='no_interactive', action='store_true',
                       help='Answer yes to any (Y/n) interactive prompts.')
