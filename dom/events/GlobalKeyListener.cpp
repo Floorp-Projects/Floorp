@@ -649,12 +649,12 @@ bool XULKeySetGlobalKeyListener::IsExecutableElement(Element* aElement) const {
   }
 
   nsAutoString value;
-  aElement->GetAttribute(NS_LITERAL_STRING("disabled"), value);
+  aElement->GetAttr(nsGkAtoms::disabled, value);
   if (value.EqualsLiteral("true")) {
     return false;
   }
 
-  aElement->GetAttribute(NS_LITERAL_STRING("oncommand"), value);
+  aElement->GetAttr(nsGkAtoms::oncommand, value);
   return !value.IsEmpty();
 }
 

@@ -554,9 +554,9 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
   nsAutoString label;
   nsAutoString modifiers;
   nsAutoString key;
-  menuItem->GetAttribute(NS_LITERAL_STRING("label"), label);
-  menuItem->GetAttribute(NS_LITERAL_STRING("modifiers"), modifiers);
-  menuItem->GetAttribute(NS_LITERAL_STRING("key"), key);
+  menuItem->GetAttr(nsGkAtoms::label, label);
+  menuItem->GetAttr(nsGkAtoms::modifiers, modifiers);
+  menuItem->GetAttr(nsGkAtoms::key, key);
 
   // Get more information about the key equivalent. Start by
   // finding the key node we need.
