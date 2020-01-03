@@ -20,6 +20,7 @@
 extern "C" {
 #endif
 
+MOZ_EXPORT struct wl_display* wl_display_connect(const char* name);
 MOZ_EXPORT int wl_display_roundtrip_queue(struct wl_display* display,
                                           struct wl_event_queue* queue);
 MOZ_EXPORT uint32_t wl_proxy_get_version(struct wl_proxy* proxy);
