@@ -15,7 +15,7 @@
         iframe.src = evt.data.iframeUrl;
 
         iframe.addEventListener("load", e => {
-          iframe.contentWindow.postMessage(evt.data.toSource(), "*");
+          iframe.contentWindow.postMessage(JSON.stringify(evt.data), "*");
         });
 
         return;

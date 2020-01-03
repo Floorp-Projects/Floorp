@@ -90,7 +90,7 @@
     }
 
     let workerScriptUrl =
-      URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+      URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
 
     let xhrWorker = new Worker(workerScriptUrl);
     xhrWorker.postMessage(blob);
