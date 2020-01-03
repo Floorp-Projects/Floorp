@@ -103,13 +103,13 @@ add_task(async function() {
       const validateValue = prefsToCheck[name].validateValue;
 
       is(
-        firstValue.toSource(),
-        currentValue.toSource(),
+        firstValue.toString(),
+        currentValue.toString(),
         "Pref " + name + " should be equal to first value: " + currentValue
       );
       is(
-        validateValue().toSource(),
-        currentValue.toSource(),
+        validateValue().toString(),
+        currentValue.toString(),
         "Pref " + name + " should validate: " + currentValue
       );
     }
@@ -136,24 +136,24 @@ add_task(async function() {
       info("Modified UI element affecting " + name + " to: " + newValue);
 
       is(
-        firstValue.toSource(),
-        currentValue.toSource(),
+        firstValue.toString(),
+        currentValue.toString(),
         "Pref " +
           name +
           " should still be equal to first value: " +
           currentValue
       );
       isnot(
-        newValue.toSource(),
-        currentValue.toSource(),
+        newValue.toString(),
+        currentValue.toString(),
         "Pref " +
           name +
           " should't yet be equal to second value: " +
           currentValue
       );
       is(
-        validateValue().toSource(),
-        newValue.toSource(),
+        validateValue().toString(),
+        newValue.toString(),
         "The UI element affecting " + name + " should validate: " + newValue
       );
     }
@@ -176,18 +176,18 @@ add_task(async function() {
       const validateValue = prefsToCheck[name].validateValue;
 
       isnot(
-        firstValue.toSource(),
-        currentValue.toSource(),
+        firstValue.toString(),
+        currentValue.toString(),
         "Pref " + name + " should't be equal to first value: " + currentValue
       );
       is(
-        newValue.toSource(),
-        currentValue.toSource(),
+        newValue.toString(),
+        currentValue.toString(),
         "Pref " + name + " should now be equal to second value: " + currentValue
       );
       is(
-        validateValue().toSource(),
-        newValue.toSource(),
+        validateValue().toString(),
+        newValue.toString(),
         "The UI element affecting " + name + " should validate: " + newValue
       );
     }
@@ -214,24 +214,24 @@ add_task(async function() {
       info("Modified UI element affecting " + name + " to: " + firstValue);
 
       isnot(
-        firstValue.toSource(),
-        currentValue.toSource(),
+        firstValue.toString(),
+        currentValue.toString(),
         "Pref " +
           name +
           " should't yet be equal to first value: " +
           currentValue
       );
       is(
-        newValue.toSource(),
-        currentValue.toSource(),
+        newValue.toString(),
+        currentValue.toString(),
         "Pref " +
           name +
           " should still be equal to second value: " +
           currentValue
       );
       is(
-        validateValue().toSource(),
-        firstValue.toSource(),
+        validateValue().toString(),
+        firstValue.toString(),
         "The UI element affecting " + name + " should validate: " + firstValue
       );
     }
