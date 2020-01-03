@@ -403,5 +403,5 @@ projects:
   tooling-glean-gradle:
     path: components/tooling/glean-gradle-plugin
     description: 'A Gradle plugin to generate code for Glean metrics.'
-    publish: true
+    publish: false
     artifact-type: jar
