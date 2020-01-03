@@ -23,6 +23,11 @@
     <string name="mozac_browser_errorpages_no_internet_refresh_button">ໂຫລດຄືນໃຫມ່</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">ທີ່ຢູ່ບໍ່ຖືກຕ້ອງ</string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ທີ່ຢູ່ບໍ່ຖືກຕ້ອງ</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">ໂປຼໂຕຄໍທີ່ບໍ່ຮູ້ຈັກ</string>
 
     <!-- The document title and heading of an error page. -->
