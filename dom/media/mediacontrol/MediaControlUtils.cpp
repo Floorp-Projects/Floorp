@@ -21,22 +21,25 @@ mozilla::LazyLogModule gMediaControlLog("MediaControl");
 namespace mozilla {
 namespace dom {
 
-static RefPtr<BrowsingContext> GetTopBrowsingContextByWindowID(
-    uint64_t aWindowID) {
+BrowsingContext* GetAliveTopBrowsingContext(BrowsingContext* aBC) {
+  if (!aBC || aBC->IsDiscarded()) {
+    return nullptr;
+  }
+  aBC = aBC->Top();
+  if (!aBC || aBC->IsDiscarded()) {
+    return nullptr;
+  }
+  return aBC;
+}
+
+static BrowsingContext* GetTopBrowsingContextByWindowID(uint64_t aWindowID) {
   RefPtr<nsGlobalWindowOuter> window =
       nsGlobalWindowOuter::GetOuterWindowWithId(aWindowID);
   if (!window) {
     return nullptr;
   }
-  RefPtr<BrowsingContext> bc = window->GetBrowsingContext();
-  if (!bc || bc->IsDiscarded()) {
-    return nullptr;
-  }
-  bc = bc->Top();
-  if (!bc || bc->IsDiscarded()) {
-    return nullptr;
-  }
-  return bc;
+
+  return GetAliveTopBrowsingContext(window->GetBrowsingContext());
 }
 
 static void NotifyMediaActiveChanged(const RefPtr<BrowsingContext>& aBc,
