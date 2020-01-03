@@ -1019,7 +1019,7 @@ class XPCNativeMember final {
   // our only data...
   jsid mName;
   uint16_t mIndex;
-  // mFlags needs to be wide enogh to hold the flags in the above enum.
+  // mFlags needs to be wide enough to hold the flags in the above enum.
   uint16_t mFlags : 4;
   // mIndexInInterface is the index of this in our XPCNativeInterface's
   // mMembers.  In theory our XPCNativeInterface could have as many as 2^15-1
@@ -1175,7 +1175,6 @@ class XPCNativeSet final {
 
   inline XPCNativeInterface* FindInterfaceWithIID(const nsIID& iid) const;
 
-  uint16_t GetMemberCount() const { return mMemberCount; }
   uint16_t GetInterfaceCount() const { return mInterfaceCount; }
   XPCNativeInterface** GetInterfaceArray() { return mInterfaces; }
 
@@ -1196,14 +1195,13 @@ class XPCNativeSet final {
       JSContext* cx, nsTArray<RefPtr<XPCNativeInterface>>&& array);
   static already_AddRefed<XPCNativeSet> NewInstanceMutate(XPCNativeSetKey* key);
 
-  XPCNativeSet() : mMemberCount(0), mInterfaceCount(0) {}
+  XPCNativeSet() : mInterfaceCount(0) {}
   ~XPCNativeSet();
   void* operator new(size_t, void* p) noexcept(true) { return p; }
 
   static void DestroyInstance(XPCNativeSet* inst);
 
  private:
-  uint16_t mMemberCount;
   uint16_t mInterfaceCount;
   // Always last - object sized for array.
   // These are strong references.
