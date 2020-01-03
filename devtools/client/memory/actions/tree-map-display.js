@@ -30,7 +30,7 @@ const setTreeMap = (exports.setTreeMap = function(display) {
       display.breakdown &&
       display.breakdown.by,
     "Breakdowns must be an object with a `by` property, attempted to set: " +
-      uneval(display)
+      JSON.stringify(display)
   );
 
   return {
