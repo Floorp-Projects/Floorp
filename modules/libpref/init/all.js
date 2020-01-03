@@ -19,7 +19,7 @@
 // improves readability, particular for conditional blocks that exceed a single
 // screen.
 
-#ifdef RELEASE_OR_BETA
+#if MOZ_UPDATE_CHANNEL == release || MOZ_UPDATE_CHANNEL == esr
   pref("security.tls.version.min", 1);
 #else
   pref("security.tls.version.min", 3);
