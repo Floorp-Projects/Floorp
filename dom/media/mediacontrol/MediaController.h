@@ -7,6 +7,7 @@
 #ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLLER_H_
 #define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLLER_H_
 
+#include "ContentMediaController.h"
 #include "MediaControlKeysEvent.h"
 #include "nsDataHashtable.h"
 #include "nsISupportsImpl.h"
@@ -58,7 +59,7 @@ class MediaController final {
 
   // These methods are only being used to notify the state changes of controlled
   // media in ContentParent or MediaControlUtils.
-  void NotifyMediaActiveChanged(bool aActive);
+  void NotifyMediaStateChanged(ControlledMediaState aState);
   void NotifyMediaAudibleChanged(bool aAudible);
 
  private:
@@ -68,6 +69,8 @@ class MediaController final {
       MediaControlKeysEvent aEvent);
   void IncreaseControlledMediaNum();
   void DecreaseControlledMediaNum();
+  void IncreasePlayingControlledMediaNum();
+  void DecreasePlayingControlledMediaNum();
 
   void Activate();
   void Deactivate();
@@ -76,6 +79,7 @@ class MediaController final {
   bool mIsPlaying = false;
   bool mAudible = false;
   int64_t mControlledMediaNum = 0;
+  int64_t mPlayingControlledMediaNum = 0;
 };
 
 }  // namespace dom
