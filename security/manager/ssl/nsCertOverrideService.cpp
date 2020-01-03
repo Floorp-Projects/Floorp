@@ -16,6 +16,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsILineInputStream.h"
+#include "nsIMarionette.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
@@ -608,11 +609,21 @@ nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert* aCert,
   return NS_OK;
 }
 
+static bool IsMarionetteRunning() {
+  bool marionetteRunning = false;
+
+  nsCOMPtr<nsIMarionette> marionette = do_GetService(NS_MARIONETTE_CONTRACTID);
+  if (marionette) {
+    marionette->GetRunning(&marionetteRunning);
+  }
+
+  return marionetteRunning;
+}
+
 NS_IMETHODIMP
 nsCertOverrideService::
     SetDisableAllSecurityChecksAndLetAttackersInterceptMyData(bool aDisable) {
-  if (!(PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR") ||
-        PR_GetEnv("MOZ_MARIONETTE"))) {
+  if (!(PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR") || IsMarionetteRunning())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
