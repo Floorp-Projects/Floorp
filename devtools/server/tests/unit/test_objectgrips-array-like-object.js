@@ -13,7 +13,7 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     debuggee.eval(
       function stopMe(arg1) {
         debugger;
@@ -22,7 +22,7 @@ add_task(
 
     // Currying test function so we don't have to pass the debuggee and clients
     const isArrayLike = object =>
-      test_object_grip_is_array_like(debuggee, client, threadFront, object);
+      test_object_grip_is_array_like(debuggee, threadFront, object);
 
     equal(await isArrayLike({}), false, "An empty object is not ArrayLike");
     equal(
@@ -70,21 +70,16 @@ add_task(
   })
 );
 
-async function test_object_grip_is_array_like(
-  debuggee,
-  dbgClient,
-  threadFront,
-  object
-) {
-  return new Promise((resolve, reject) => {
-    threadFront.once("paused", async function(packet) {
-      const [grip] = packet.frame.arguments;
-      await threadFront.resume();
-      resolve(grip.preview.kind === "ArrayLike");
-    });
+async function test_object_grip_is_array_like(debuggee, threadFront, object) {
+  const packet = await executeOnNextTickAndWaitForPause(
+    () =>
+      debuggee.eval(`
+        stopMe(${JSON.stringify(object)});
+      `),
+    threadFront
+  );
 
-    debuggee.eval(`
-      stopMe(${JSON.stringify(object)});
-    `);
-  });
+  const [grip] = packet.frame.arguments;
+  await threadFront.resume();
+  return grip.preview.kind === "ArrayLike";
 }
