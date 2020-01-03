@@ -508,6 +508,7 @@ static gint moz_gtk_button_paint(cairo_t* cr, const GdkRectangle* rect,
   gtk_widget_set_direction(widget, direction);
 
   gtk_style_context_save(style);
+  StyleContextSetScale(style, state->scale);
   gtk_style_context_set_state(style, state_flags);
 
   if (state->isDefault && relief == GTK_RELIEF_NORMAL) {
@@ -813,6 +814,7 @@ static gint moz_gtk_scrollbar_button_paint(cairo_t* cr,
 
   gtk_style_context_save(style);
   gtk_style_context_add_class(style, GTK_STYLE_CLASS_BUTTON);
+  StyleContextSetScale(style, state->scale);
   gtk_style_context_set_state(style, state_flags);
   if (arrow_angle == ARROW_RIGHT) {
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_RIGHT);
@@ -1370,6 +1372,7 @@ static gint moz_gtk_combo_box_paint(cairo_t* cr, const GdkRectangle* aRect,
   GtkWidget* widget = GetWidget(MOZ_GTK_COMBOBOX_SEPARATOR);
   if (!widget) return MOZ_GTK_SUCCESS;
   style = gtk_widget_get_style_context(widget);
+  StyleContextSetScale(style, state->scale);
   gtk_style_context_get_style(style, "wide-separators", &wide_separators,
                               "separator-width", &separator_width, NULL);
 
@@ -1452,6 +1455,7 @@ static gint moz_gtk_combo_box_entry_button_paint(cairo_t* cr,
 
   if (state_flags & GTK_STATE_FLAG_ACTIVE) {
     style = gtk_widget_get_style_context(comboBoxEntry);
+    StyleContextSetScale(style, state->scale);
     gtk_style_context_get_style(style, "child-displacement-x", &x_displacement,
                                 "child-displacement-y", &y_displacement, NULL);
     arrow_rect.x += x_displacement;
@@ -1970,10 +1974,7 @@ static gint moz_gtk_menu_bar_paint(cairo_t* cr, GdkRectangle* rect,
   style = gtk_widget_get_style_context(widget);
   gtk_style_context_save(style);
   gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUBAR);
-
-  if (state->scale != 1) {
-    StyleContextSetScale(style, state->scale);
-  }
+  StyleContextSetScale(style, state->scale);
 
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
   gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
@@ -1998,10 +1999,7 @@ static gint moz_gtk_menu_popup_paint(cairo_t* cr, GdkRectangle* rect,
   style = gtk_widget_get_style_context(widget);
   gtk_style_context_save(style);
   gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENU);
-
-  if (state->scale != 1) {
-    StyleContextSetScale(style, state->scale);
-  }
+  StyleContextSetScale(style, state->scale);
 
   gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
   gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
