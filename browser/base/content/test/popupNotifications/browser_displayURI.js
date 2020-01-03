@@ -99,11 +99,14 @@ add_task(async function test_displayURI_geo() {
   });
 });
 
-add_task(async function test_displayURI_xr() {
-  await check(async function() {
-    content.navigator.getVRDisplays();
+const kVREnabled = SpecialPowers.getBoolPref("dom.vr.enabled");
+if (kVREnabled) {
+  add_task(async function test_displayURI_xr() {
+    await check(async function() {
+      content.navigator.getVRDisplays();
+    });
   });
-});
+}
 
 add_task(async function test_displayURI_camera() {
   await check(async function() {
@@ -124,17 +127,19 @@ add_task(async function test_displayURI_geo_blob() {
   );
 });
 
-add_task(async function test_displayURI_xr_blob() {
-  await check(
-    async function() {
-      let text = "<script>navigator.getVRDisplays()</script>";
-      let blob = new Blob([text], { type: "text/html" });
-      let url = content.URL.createObjectURL(blob);
-      content.location.href = url;
-    },
-    { skipOnExtension: true }
-  );
-});
+if (kVREnabled) {
+  add_task(async function test_displayURI_xr_blob() {
+    await check(
+      async function() {
+        let text = "<script>navigator.getVRDisplays()</script>";
+        let blob = new Blob([text], { type: "text/html" });
+        let url = content.URL.createObjectURL(blob);
+        content.location.href = url;
+      },
+      { skipOnExtension: true }
+    );
+  });
+}
 
 add_task(async function test_displayURI_camera_blob() {
   await check(
