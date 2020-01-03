@@ -69,6 +69,15 @@ void GetArgumentsForChildProcess(base::ProcessId aMiddlemanPid,
 // Return whether the middleman will be running developer tools server code.
 bool DebuggerRunsInMiddleman();
 
+// Return whether to create replaying processes on a remote machine.
+bool UseCloudForReplayingProcesses();
+
+// Create a replaying process on a remote machine. aProcessId is the pid of the
+// middleman process which the replaying process will connect to, and aChannelId
+// is the ID (unique for each middleman) of the resulting channel.
+void CreateReplayingCloudProcess(base::ProcessId aProcessId,
+                                 uint32_t aChannelId);
+
 }  // namespace parent
 }  // namespace recordreplay
 }  // namespace mozilla

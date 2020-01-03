@@ -37,6 +37,9 @@ struct LockAcquires {
       mNextOwner = NoNextOwner;
     } else {
       mNextOwner = mAcquires->ReadScalar();
+      if (!mNextOwner) {
+        Print("CRASH ReadAndNotifyNextOwner ZERO_ID\n");
+      }
       if (mNextOwner != aCurrentThread->Id()) {
         Thread::Notify(mNextOwner);
       }
@@ -53,13 +56,13 @@ static ChunkAllocator<LockAcquires> gLockAcquires;
 
 // Table mapping native lock pointers to the associated Lock structure, for
 // every recorded lock in existence.
-typedef std::unordered_map<void*, Lock*> LockMap;
+typedef std::unordered_map<NativeLock*, Lock*> LockMap;
 static LockMap* gLocks;
 static ReadWriteSpinLock gLocksLock;
 
 static Lock* CreateNewLock(Thread* aThread, size_t aId) {
   LockAcquires* info = gLockAcquires.Create(aId);
-  info->mAcquires = gRecordingFile->OpenStream(StreamName::Lock, aId);
+  info->mAcquires = gRecording->OpenStream(StreamName::Lock, aId);
 
   if (IsReplaying()) {
     info->ReadAndNotifyNextOwner(aThread);
@@ -69,7 +72,7 @@ static Lock* CreateNewLock(Thread* aThread, size_t aId) {
 }
 
 /* static */
-void Lock::New(void* aNativeLock) {
+void Lock::New(NativeLock* aNativeLock) {
   Thread* thread = Thread::Current();
   RecordingEventSection res(thread);
   if (!res.CanAccessEvents()) {
@@ -104,7 +107,7 @@ void Lock::New(void* aNativeLock) {
 }
 
 /* static */
-void Lock::Destroy(void* aNativeLock) {
+void Lock::Destroy(NativeLock* aNativeLock) {
   Lock* lock = nullptr;
   {
     AutoWriteSpinLock ex(gLocksLock);
@@ -120,7 +123,7 @@ void Lock::Destroy(void* aNativeLock) {
 }
 
 /* static */
-Lock* Lock::Find(void* aNativeLock) {
+Lock* Lock::Find(NativeLock* aNativeLock) {
   MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
 
   AutoReadSpinLock ex(gLocksLock);
@@ -146,7 +149,7 @@ Lock* Lock::Find(void* aNativeLock) {
   return nullptr;
 }
 
-void Lock::Enter() {
+void Lock::Enter(NativeLock* aNativeLock) {
   Thread* thread = Thread::Current();
 
   RecordingEventSection res(thread);
@@ -171,16 +174,18 @@ void Lock::Enter() {
            !thread->MaybeDivergeFromRecording()) {
       Thread::Wait();
     }
-    if (!thread->HasDivergedFromRecording()) {
-      mOwner = thread->Id();
+    if (!thread->HasDivergedFromRecording() && aNativeLock) {
+      thread->AddOwnedLock(aNativeLock);
     }
   }
 }
 
-void Lock::Exit() {
+void Lock::Exit(NativeLock* aNativeLock) {
   Thread* thread = Thread::Current();
   if (IsReplaying() && !thread->HasDivergedFromRecording()) {
-    mOwner = 0;
+    if (aNativeLock) {
+      thread->RemoveOwnedLock(aNativeLock);
+    }
 
     // Notify the next owner before releasing the lock.
     LockAcquires* acquires = gLockAcquires.Get(mId);
@@ -189,7 +194,7 @@ void Lock::Exit() {
 }
 
 /* static */
-void Lock::LockAquiresUpdated(size_t aLockId) {
+void Lock::LockAcquiresUpdated(size_t aLockId) {
   LockAcquires* acquires = gLockAcquires.MaybeGet(aLockId);
   if (acquires && acquires->mAcquires &&
       acquires->mNextOwner == LockAcquires::NoNextOwner) {
@@ -258,7 +263,7 @@ MOZ_EXPORT void RecordReplayInterface_InternalBeginOrderedAtomicAccess(
     gAtomicLockOwners[atomicId].Lock();
   }
 
-  gAtomicLocks[atomicId]->Enter();
+  gAtomicLocks[atomicId]->Enter(nullptr);
 
   MOZ_RELEASE_ASSERT(thread->AtomicLockId().isNothing());
   thread->AtomicLockId().emplace(atomicId);
@@ -281,7 +286,7 @@ MOZ_EXPORT void RecordReplayInterface_InternalEndOrderedAtomicAccess() {
     gAtomicLockOwners[atomicId].Unlock();
   }
 
-  gAtomicLocks[atomicId]->Exit();
+  gAtomicLocks[atomicId]->Exit(nullptr);
 }
 
 }  // extern "C"
