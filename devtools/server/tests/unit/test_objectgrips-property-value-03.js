@@ -10,19 +10,44 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    debuggee.eval(
-      function stopMe() {
-        debugger;
-      }.toString()
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
     );
 
-    await test_object_grip(debuggee, threadFront);
+    const { frame } = packet;
+    try {
+      const grips = frame.arguments;
+      const objClient = threadFront.pauseGrip(grips[0]);
+      const classes = [
+        "Object",
+        "Object",
+        "Array",
+        "Boolean",
+        "Number",
+        "String",
+      ];
+      for (const [i, grip] of grips.entries()) {
+        Assert.equal(grip.class, classes[i]);
+        await check_getter(objClient, grip.actor, i);
+      }
+      await check_getter(objClient, null, 0);
+      await check_getter(objClient, "invalid receiver actorId", 0);
+    } finally {
+      await threadFront.resume();
+    }
   })
 );
 
-async function test_object_grip(debuggee, threadFront) {
-  const script = `
+function evalCode(debuggee) {
+  debuggee.eval(
+    function stopMe() {
+      debugger;
+    }.toString()
+  );
+
+  debuggee.eval(`
     var obj = {
       get getter() {
         return objects.indexOf(this);
@@ -30,34 +55,7 @@ async function test_object_grip(debuggee, threadFront) {
     };
     var objects = [obj, {}, [], new Boolean(), new Number(), new String()];
     stopMe(...objects);
-  `;
-  return new Promise(resolve => {
-    threadFront.once("paused", async function(packet) {
-      const { frame } = packet;
-      try {
-        const grips = frame.arguments;
-        const objClient = threadFront.pauseGrip(grips[0]);
-        const classes = [
-          "Object",
-          "Object",
-          "Array",
-          "Boolean",
-          "Number",
-          "String",
-        ];
-        for (const [i, grip] of grips.entries()) {
-          Assert.equal(grip.class, classes[i]);
-          await check_getter(objClient, grip.actor, i);
-        }
-        await check_getter(objClient, null, 0);
-        await check_getter(objClient, "invalid receiver actorId", 0);
-      } finally {
-        await threadFront.resume();
-        resolve();
-      }
-    });
-    debuggee.eval(script);
-  });
+  `);
 }
 
 async function check_getter(objClient, receiverId, expected) {

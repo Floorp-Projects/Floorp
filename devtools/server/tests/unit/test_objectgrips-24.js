@@ -11,12 +11,13 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
+  threadFrontTest(async ({ threadFront, debuggee }) => {
     debuggee.eval(
       function stopMe() {
         debugger;
       }.toString()
     );
+
     const tests = [
       {
         fn: `function(){}`,
@@ -39,20 +40,18 @@ add_task(
         isGenerator: true,
       },
     ];
+
     for (const { fn, isAsync, isGenerator } of tests) {
-      await new Promise(function(resolve) {
-        threadFront.once("paused", async function(packet) {
-          const [grip] = packet.frame.arguments;
-          strictEqual(grip.class, "Function");
-          strictEqual(grip.isAsync, isAsync);
-          strictEqual(grip.isGenerator, isGenerator);
+      const packet = await executeOnNextTickAndWaitForPause(
+        () => debuggee.eval(`stopMe(${fn})`),
+        threadFront
+      );
+      const [grip] = packet.frame.arguments;
+      strictEqual(grip.class, "Function");
+      strictEqual(grip.isAsync, isAsync);
+      strictEqual(grip.isGenerator, isGenerator);
 
-          await threadFront.resume();
-          resolve();
-        });
-
-        debuggee.eval(`stopMe(${fn})`);
-      });
+      await threadFront.resume();
     }
   })
 );

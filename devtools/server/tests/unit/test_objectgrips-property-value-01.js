@@ -10,143 +10,115 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    debuggee.eval(
-      function stopMe(arg1) {
-        debugger;
-      }.toString()
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
     );
 
-    await test_object_grip(debuggee, threadFront);
+    const arg1 = packet.frame.arguments[0];
+    Assert.equal(arg1.class, "Object");
+
+    const objFront = threadFront.pauseGrip(arg1);
+
+    const expectedValues = {
+      stringProp: {
+        return: "a value",
+      },
+      stringNormal: {
+        return: "a value",
+      },
+      stringAbrupt: {
+        throw: "a value",
+      },
+      objectNormal: {
+        return: {
+          _grip: {
+            type: "object",
+            class: "Object",
+            ownPropertyLength: 1,
+            preview: {
+              kind: "Object",
+              ownProperties: {
+                prop: {
+                  value: 4,
+                },
+              },
+            },
+          },
+        },
+      },
+      objectAbrupt: {
+        throw: {
+          _grip: {
+            type: "object",
+            class: "Object",
+            ownPropertyLength: 1,
+            preview: {
+              kind: "Object",
+              ownProperties: {
+                prop: {
+                  value: 4,
+                },
+              },
+            },
+          },
+        },
+      },
+      context: {
+        return: "correct context",
+      },
+      method: {
+        return: {
+          _grip: {
+            type: "object",
+            class: "Function",
+            name: "method",
+          },
+        },
+      },
+    };
+
+    for (const [key, expected] of Object.entries(expectedValues)) {
+      const { value } = await objFront.getPropertyValue(key, null);
+      assert_completion(value, expected);
+    }
+
+    await threadFront.resume();
   })
 );
 
-async function test_object_grip(debuggee, threadFront) {
-  await assert_object_argument(
-    debuggee,
-    threadFront,
-    `
-      var obj = {
-        stringProp: "a value",
-        get stringNormal(){
-          return "a value";
-        },
-        get stringAbrupt() {
-          throw "a value";
-        },
-        get objectNormal() {
-          return { prop: 4 };
-        },
-        get objectAbrupt() {
-          throw { prop: 4 };
-        },
-        get context(){
-          return this === obj ? "correct context" : "wrong context";
-        },
-        method() {
-          return "a value";
-        },
-      };
-      stopMe(obj);
-    `,
-    async objFront => {
-      const expectedValues = {
-        stringProp: {
-          return: "a value",
-        },
-        stringNormal: {
-          return: "a value",
-        },
-        stringAbrupt: {
-          throw: "a value",
-        },
-        objectNormal: {
-          return: {
-            _grip: {
-              type: "object",
-              class: "Object",
-              ownPropertyLength: 1,
-              preview: {
-                kind: "Object",
-                ownProperties: {
-                  prop: {
-                    value: 4,
-                  },
-                },
-              },
-            },
-          },
-        },
-        objectAbrupt: {
-          throw: {
-            _grip: {
-              type: "object",
-              class: "Object",
-              ownPropertyLength: 1,
-              preview: {
-                kind: "Object",
-                ownProperties: {
-                  prop: {
-                    value: 4,
-                  },
-                },
-              },
-            },
-          },
-        },
-        context: {
-          return: "correct context",
-        },
-        method: {
-          return: {
-            _grip: {
-              type: "object",
-              class: "Function",
-              name: "method",
-            },
-          },
-        },
-      };
-
-      for (const [key, expected] of Object.entries(expectedValues)) {
-        const { value } = await objFront.getPropertyValue(key, null);
-        assert_completion(value, expected);
-      }
-    }
+function evalCode(debuggee) {
+  debuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
   );
-}
 
-function assert_object_argument(debuggee, threadFront, code, objectHandler) {
-  return eval_and_resume(debuggee, threadFront, code, async frame => {
-    const arg1 = frame.arguments[0];
-    Assert.equal(arg1.class, "Object");
-
-    await objectHandler(threadFront.pauseGrip(arg1));
-  });
-}
-
-function eval_and_resume(debuggee, threadFront, code, callback) {
-  return new Promise((resolve, reject) => {
-    wait_for_pause(threadFront, callback).then(resolve, reject);
-
-    // This synchronously blocks until 'threadFront.resume()' above runs
-    // because the 'paused' event runs everthing in a new event loop.
-    debuggee.eval(code);
-  });
-}
-
-function wait_for_pause(threadFront, callback = () => {}) {
-  return new Promise((resolve, reject) => {
-    threadFront.once("paused", function(packet) {
-      (async () => {
-        try {
-          return await callback(packet.frame);
-        } finally {
-          await threadFront.resume();
-        }
-      })().then(resolve, reject);
-    });
-  });
+  debuggee.eval(`
+    var obj = {
+      stringProp: "a value",
+      get stringNormal(){
+        return "a value";
+      },
+      get stringAbrupt() {
+        throw "a value";
+      },
+      get objectNormal() {
+        return { prop: 4 };
+      },
+      get objectAbrupt() {
+        throw { prop: 4 };
+      },
+      get context(){
+        return this === obj ? "correct context" : "wrong context";
+      },
+      method() {
+        return "a value";
+      },
+    };
+    stopMe(obj);
+  `);
 }
 
 function assert_completion(value, expected) {
