@@ -72,10 +72,10 @@ enum class ThreadEvent : uint32_t {
 // Get the printable name for a thread event.
 const char* ThreadEventName(ThreadEvent aEvent);
 
-class File;
+class Recording;
 
-// File used during recording and replay.
-extern File* gRecordingFile;
+// Recording being written to or read from.
+extern Recording* gRecording;
 
 // Whether record/replay state has finished initialization.
 extern bool gInitialized;
@@ -105,6 +105,9 @@ size_t RecordingEndpoint();
 // rewinds and sends graphics updates to the middleman while running forward.
 bool IsMainChild();
 void SetMainChild();
+
+// Whether we are replaying a recording on a machine in the cloud.
+bool ReplayingInCloud();
 
 // Get the process kind and recording file specified at the command line.
 // These are available in the middleman as well as while recording/replaying.
@@ -203,6 +206,9 @@ MOZ_MakeRecordReplayPrinter(Print, false)
     // Get the ID of the process that produced the recording.
     int GetRecordingPid();
 
+// Update the current pid after a fork.
+void ResetPid();
+
 ///////////////////////////////////////////////////////////////////////////////
 // Profiling
 ///////////////////////////////////////////////////////////////////////////////
@@ -233,99 +239,6 @@ struct AutoTimer {
 void DumpTimers();
 
 ///////////////////////////////////////////////////////////////////////////////
-// Memory Management
-///////////////////////////////////////////////////////////////////////////////
-
-// In cases where memory is tracked and should be saved/restored with
-// checkoints, malloc and other standard library functions suffice to allocate
-// memory in the record/replay system. The routines below are used for handling
-// redirections for the raw system calls underlying the standard libraries, and
-// for cases where allocated memory should be untracked: the contents are
-// ignored when saving/restoring checkpoints.
-
-// Different kinds of memory used in the system.
-enum class MemoryKind {
-  // Memory whose contents are saved/restored with checkpoints.
-  Tracked,
-
-  // All remaining memory kinds refer to untracked memory.
-
-  // Memory not fitting into one of the categories below.
-  Generic,
-
-  // Memory used for thread snapshots.
-  ThreadSnapshot,
-
-  // Memory used by various parts of the memory snapshot system.
-  TrackedRegions,
-  FreeRegions,
-  DirtyPageSet,
-  SortedDirtyPageSet,
-  PageCopy,
-
-  // Memory used by various parts of JS integration.
-  ScriptHits,
-
-  Count
-};
-
-// Allocate or deallocate a block of memory of a particular kind. Allocated
-// memory is initially zeroed.
-void* AllocateMemory(size_t aSize, MemoryKind aKind);
-void DeallocateMemory(void* aAddress, size_t aSize, MemoryKind aKind);
-
-// Allocation policy for managing memory of a particular kind.
-template <MemoryKind Kind>
-class AllocPolicy {
- public:
-  template <typename T>
-  T* maybe_pod_calloc(size_t aNumElems) {
-    if (aNumElems & tl::MulOverflowMask<sizeof(T)>::value) {
-      MOZ_CRASH();
-    }
-    // Note: AllocateMemory always returns zeroed memory.
-    return static_cast<T*>(AllocateMemory(aNumElems * sizeof(T), Kind));
-  }
-
-  template <typename T>
-  void free_(T* aPtr, size_t aSize) {
-    DeallocateMemory(aPtr, aSize * sizeof(T), Kind);
-  }
-
-  template <typename T>
-  T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
-    T* res = maybe_pod_calloc<T>(aNewSize);
-    memcpy(res, aPtr, aOldSize * sizeof(T));
-    free_<T>(aPtr, aOldSize);
-    return res;
-  }
-
-  template <typename T>
-  T* maybe_pod_malloc(size_t aNumElems) {
-    return maybe_pod_calloc<T>(aNumElems);
-  }
-
-  template <typename T>
-  T* pod_malloc(size_t aNumElems) {
-    return maybe_pod_malloc<T>(aNumElems);
-  }
-
-  template <typename T>
-  T* pod_calloc(size_t aNumElems) {
-    return maybe_pod_calloc<T>(aNumElems);
-  }
-
-  template <typename T>
-  T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize) {
-    return maybe_pod_realloc<T>(aPtr, aOldSize, aNewSize);
-  }
-
-  void reportAllocOverflow() const {}
-
-  MOZ_MUST_USE bool checkSimulatedOOM() const { return true; }
-};
-
-///////////////////////////////////////////////////////////////////////////////
 // Redirection Bypassing
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -338,16 +251,11 @@ class AllocPolicy {
 typedef size_t FileHandle;
 
 // Allocate/deallocate a block of memory directly from the system.
-void* DirectAllocateMemory(void* aAddress, size_t aSize);
+void* DirectAllocateMemory(size_t aSize);
 void DirectDeallocateMemory(void* aAddress, size_t aSize);
 
-// Give a block of memory R or RX access.
-void DirectWriteProtectMemory(void* aAddress, size_t aSize, bool aExecutable,
-                              bool aIgnoreFailures = false);
-
-// Give a block of memory RW or RWX access.
-void DirectUnprotectMemory(void* aAddress, size_t aSize, bool aExecutable,
-                           bool aIgnoreFailures = false);
+// Make a memory range inaccessible.
+void DirectMakeInaccessible(void* aAddress, size_t aSize);
 
 // Open an existing file for reading or a new file for writing, clobbering any
 // existing file.
@@ -372,8 +280,19 @@ size_t DirectRead(FileHandle aFd, void* aData, size_t aSize);
 // Create a new pipe.
 void DirectCreatePipe(FileHandle* aWriteFd, FileHandle* aReadFd);
 
+typedef pthread_t NativeThreadId;
+
 // Spawn a new thread.
-void DirectSpawnThread(void (*aFunction)(void*), void* aArgument);
+NativeThreadId DirectSpawnThread(void (*aFunction)(void*), void* aArgument,
+                                 void* aStackBase, size_t aStackSize);
+
+// Get the current thread.
+NativeThreadId DirectCurrentThread();
+
+typedef pthread_mutex_t NativeLock;
+
+void DirectLockMutex(NativeLock* aLock, bool aPassThroughEvents = true);
+void DirectUnlockMutex(NativeLock* aLock, bool aPassThroughEvents = true);
 
 }  // namespace recordreplay
 }  // namespace mozilla
