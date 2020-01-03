@@ -63,7 +63,7 @@ dump("EXCEPTION IN CREATION: " + e + "\n " + e.stack + "\n");
       }
 
       var url =
-        URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+        URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
 
       // Keep a reference to the worker on the window.
       var worker = window.worker = new Worker(url);
