@@ -23,6 +23,9 @@
 - (NSString*)type {
   return mType;
 }
+- (TouchBarInputBaseType)baseType {
+  return mBaseType;
+}
 - (NSColor*)color {
   return mColor;
 }
@@ -67,6 +70,19 @@
 - (void)setType:(NSString*)aType {
   [aType retain];
   [mType release];
+  if ([aType hasSuffix:@"button"]) {
+    mBaseType = TouchBarInputBaseType::kButton;
+  } else if ([aType hasSuffix:@"label"]) {
+    mBaseType = TouchBarInputBaseType::kLabel;
+  } else if ([aType hasSuffix:@"mainButton"]) {
+    mBaseType = TouchBarInputBaseType::kMainButton;
+  } else if ([aType hasSuffix:@"popover"]) {
+    mBaseType = TouchBarInputBaseType::kPopover;
+  } else if ([aType hasSuffix:@"scrollView"]) {
+    mBaseType = TouchBarInputBaseType::kScrollView;
+  } else if ([aType hasSuffix:@"scrubber"]) {
+    mBaseType = TouchBarInputBaseType::kScrubber;
+  }
   mType = aType;
 }
 
