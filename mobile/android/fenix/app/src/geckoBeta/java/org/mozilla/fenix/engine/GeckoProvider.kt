@@ -40,8 +40,11 @@ object GeckoProvider {
             .debugLogging(Config.channel.isDebug)
             .build()
 
-        Experiments.withExperiment("control-webrender-rollout-for-fenix") {
-            runtimeSettings.extras.putInt("forcedisablewebrender", 1);
+        Experiments.withExperiment("webrender-performance-comparisson-experiment") {
+          branchName ->
+            if (branchName == "disable_webrender") {
+              runtimeSettings.extras.putInt("forcedisablewebrender", 1);
+            }
         }
 
         if (!Settings.getInstance(context).shouldUseAutoSize) {
