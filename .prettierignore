@@ -7,6 +7,11 @@
 *.xul
 *.xml
 
+# CSS files have not been formatted and are not check by ./mach lint
+# Disable prettier on CSS files to avoid unexpected formatting changes.
+# Bug 1606785, Bug 1606787
+*.css
+
 # Ignore default pref files which have a .js suffix but aren't parsed normally as JavaScript.
 browser/app/profile/channel-prefs.js
 browser/app/profile/firefox.js
