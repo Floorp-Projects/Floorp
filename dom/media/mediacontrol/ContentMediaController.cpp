@@ -110,7 +110,9 @@ void ContentMediaController::NotifyMediaStateChanged(
   } else {
     // Currently this only happen when we disable e10s, otherwise all controlled
     // media would be run in the content process.
-    // TODO : implementation in following patches.
+    RefPtr<MediaController> controller =
+        MediaControlService::GetService()->GetOrCreateControllerById(bc->Id());
+    controller->NotifyMediaStateChanged(aState);
   }
 }
 
