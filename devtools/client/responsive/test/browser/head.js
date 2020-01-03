@@ -543,7 +543,7 @@ async function testTouchEventsOverride(ui, expected) {
   const { document } = ui.toolWindow;
   const touchButton = document.getElementById("touch-simulation-button");
 
-  const flag = await ui.emulationFront.getTouchEventsOverride();
+  const flag = await ui.responsiveFront.getTouchEventsOverride();
   is(
     flag === Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED,
     expected,

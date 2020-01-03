@@ -214,9 +214,14 @@ const ActorRegistry = {
       constructor: "AnimationsActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/emulation", {
-      prefix: "emulation",
-      constructor: "EmulationActor",
+    this.registerModule("devtools/server/actors/emulation/responsive", {
+      prefix: "responsive",
+      constructor: "ResponsiveActor",
+      type: { target: true },
+    });
+    this.registerModule("devtools/server/actors/emulation/content-viewer", {
+      prefix: "contentViewer",
+      constructor: "ContentViewerActor",
       type: { target: true },
     });
     this.registerModule(

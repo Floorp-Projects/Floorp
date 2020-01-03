@@ -5,10 +5,8 @@
 
 const { Arg, RetVal, generateActorSpec } = require("devtools/shared/protocol");
 
-// Bug 1606852: Delete this file when Firefox 73 is on release.
-
-const emulationSpec = generateActorSpec({
-  typeName: "emulation",
+const responsiveSpec = generateActorSpec({
+  typeName: "responsive",
 
   methods: {
     setDPPXOverride: {
@@ -133,39 +131,6 @@ const emulationSpec = generateActorSpec({
       response: {},
     },
 
-    getEmulatedColorScheme: {
-      request: {},
-      response: {
-        emulated: RetVal("nullable:string"),
-      },
-    },
-
-    setEmulatedColorScheme: {
-      request: {
-        scheme: Arg(0, "nullable:string"),
-      },
-      response: {},
-    },
-
-    getIsPrintSimulationEnabled: {
-      request: {},
-      response: {
-        enabled: RetVal("boolean"),
-      },
-    },
-
-    startPrintMediaSimulation: {
-      request: {},
-      response: {},
-    },
-
-    stopPrintMediaSimulation: {
-      request: {
-        state: Arg(0, "boolean"),
-      },
-      response: {},
-    },
-
     simulateScreenOrientationChange: {
       request: {
         orientation: Arg(0, "string"),
@@ -191,4 +156,4 @@ const emulationSpec = generateActorSpec({
   },
 });
 
-exports.emulationSpec = emulationSpec;
+exports.responsiveSpec = responsiveSpec;
