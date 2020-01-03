@@ -3513,6 +3513,7 @@ void AsyncPanZoomController::CallDispatchScroll(
 }
 
 void AsyncPanZoomController::RecordScrollPayload(const TimeStamp& aTimeStamp) {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   if (!mScrollPayload) {
     mScrollPayload = Some(
         CompositionPayload{CompositionPayloadType::eAPZScroll, aTimeStamp});
