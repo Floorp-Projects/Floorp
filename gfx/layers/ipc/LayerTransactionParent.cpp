@@ -885,11 +885,11 @@ bool LayerTransactionParent::AllocUnsafeShmem(
   return PLayerTransactionParent::AllocUnsafeShmem(aSize, aType, aShmem);
 }
 
-void LayerTransactionParent::DeallocShmem(ipc::Shmem& aShmem) {
+bool LayerTransactionParent::DeallocShmem(ipc::Shmem& aShmem) {
   if (!mIPCOpen || mDestroyed) {
-    return;
+    return false;
   }
-  PLayerTransactionParent::DeallocShmem(aShmem);
+  return PLayerTransactionParent::DeallocShmem(aShmem);
 }
 
 bool LayerTransactionParent::IsSameProcess() const {
