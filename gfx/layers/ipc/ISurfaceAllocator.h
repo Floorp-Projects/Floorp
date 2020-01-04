@@ -33,7 +33,6 @@ class CompositableForwarder;
 class CompositorBridgeParentBase;
 class TextureForwarder;
 
-class ShmemAllocator;
 class ShmemSectionAllocator;
 class LegacySurfaceDescriptorAllocator;
 class ClientIPCAllocator;
@@ -74,7 +73,7 @@ class ISurfaceAllocator {
 
   // down-casting
 
-  virtual ShmemAllocator* AsShmemAllocator() { return nullptr; }
+  virtual mozilla::ipc::IShmemAllocator* AsShmemAllocator() { return nullptr; }
 
   virtual ShmemSectionAllocator* AsShmemSectionAllocator() { return nullptr; }
 
@@ -154,21 +153,6 @@ class HostIPCAllocator : public ISurfaceAllocator {
  protected:
   std::vector<AsyncParentMessageData> mPendingAsyncMessage;
   bool mAboutToSendAsyncMessages = false;
-};
-
-/// An allocator can provide shared memory.
-///
-/// The allocated shmems can be deallocated on either process, as long as they
-/// belong to the same channel.
-class ShmemAllocator {
- public:
-  virtual bool AllocShmem(size_t aSize,
-                          mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
-                          mozilla::ipc::Shmem* aShmem) = 0;
-  virtual bool AllocUnsafeShmem(
-      size_t aSize, mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
-      mozilla::ipc::Shmem* aShmem) = 0;
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) = 0;
 };
 
 /// An allocator that can group allocations in bigger chunks of shared memory.
