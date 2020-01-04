@@ -2085,6 +2085,7 @@ class IDLType(IDLObject):
         'domstring',
         'bytestring',
         'usvstring',
+        'utf8string',
         'jsstring',
         'object',
         'date',
@@ -2145,6 +2146,9 @@ class IDLType(IDLObject):
         return False
 
     def isUSVString(self):
+        return False
+
+    def isUTF8String(self):
         return False
 
     def isJSString(self):
@@ -2378,6 +2382,9 @@ class IDLNullableType(IDLParametrizedType):
     def isUSVString(self):
         return self.inner.isUSVString()
 
+    def isUTF8String(self):
+        return self.inner.isUTF8String()
+
     def isJSString(self):
         return self.inner.isJSString()
 
@@ -2523,6 +2530,9 @@ class IDLSequenceType(IDLParametrizedType):
         return False
 
     def isUSVString(self):
+        return False
+
+    def isUTF8String(self):
         return False
 
     def isJSString(self):
@@ -2781,6 +2791,9 @@ class IDLTypedefType(IDLType):
     def isUSVString(self):
         return self.inner.isUSVString()
 
+    def isUTF8String(self):
+        return self.inner.isUTF8String()
+
     def isJSString(self):
         return self.inner.isJSString()
 
@@ -2912,6 +2925,9 @@ class IDLWrapperType(IDLType):
         return False
 
     def isUSVString(self):
+        return False
+
+    def isUTF8String(self):
         return False
 
     def isJSString(self):
@@ -3117,6 +3133,7 @@ class IDLBuiltinType(IDLType):
         'domstring',
         'bytestring',
         'usvstring',
+        'utf8string',
         'jsstring',
         'object',
         'date',
@@ -3155,6 +3172,7 @@ class IDLBuiltinType(IDLType):
         Types.domstring: IDLType.Tags.domstring,
         Types.bytestring: IDLType.Tags.bytestring,
         Types.usvstring: IDLType.Tags.usvstring,
+        Types.utf8string: IDLType.Tags.utf8string,
         Types.jsstring: IDLType.Tags.jsstring,
         Types.object: IDLType.Tags.object,
         Types.date: IDLType.Tags.date,
@@ -3199,7 +3217,7 @@ class IDLBuiltinType(IDLType):
                 self._extendedAttrDict["EnforceRange"] = True
         elif clamp or enforceRange:
             raise WebIDLError("Non-integer types cannot be [Clamp] or [EnforceRange]", attrLocation)
-        if self.isDOMString():
+        if self.isDOMString() or self.isUTF8String():
             if treatNullAsEmpty:
                 self.treatNullAsEmpty = True
                 self.name = "NullIsEmpty" + self.name
@@ -3241,6 +3259,7 @@ class IDLBuiltinType(IDLType):
         return (self._typeTag == IDLBuiltinType.Types.domstring or
                 self._typeTag == IDLBuiltinType.Types.bytestring or
                 self._typeTag == IDLBuiltinType.Types.usvstring or
+                self._typeTag == IDLBuiltinType.Types.utf8string or
                 self._typeTag == IDLBuiltinType.Types.jsstring)
 
     def isByteString(self):
@@ -3251,6 +3270,9 @@ class IDLBuiltinType(IDLType):
 
     def isUSVString(self):
         return self._typeTag == IDLBuiltinType.Types.usvstring
+
+    def isUTF8String(self):
+        return self._typeTag == IDLBuiltinType.Types.utf8string
 
     def isJSString(self):
         return self._typeTag == IDLBuiltinType.Types.jsstring
@@ -3387,8 +3409,8 @@ class IDLBuiltinType(IDLType):
                                       [self.location, attribute.location])
                 ret = self.rangeEnforced([self.location, attribute.location])
             elif identifier == "TreatNullAs":
-                if not self.isDOMString():
-                    raise WebIDLError("[TreatNullAs] only allowed on DOMStrings",
+                if not (self.isDOMString() or self.isUTF8String()):
+                    raise WebIDLError("[TreatNullAs] only allowed on DOMStrings and UTF8Strings",
                                       [self.location, attribute.location])
                 assert not self.nullable()
                 if not attribute.hasValue():
@@ -3457,6 +3479,9 @@ BuiltinTypes = {
     IDLBuiltinType.Types.usvstring:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "USVString",
                        IDLBuiltinType.Types.usvstring),
+    IDLBuiltinType.Types.utf8string:
+        IDLBuiltinType(BuiltinLocation("<builtin type>"), "UTF8String",
+                       IDLBuiltinType.Types.utf8string),
     IDLBuiltinType.Types.jsstring:
         IDLBuiltinType(BuiltinLocation("<builtin type>"), "JSString",
                        IDLBuiltinType.Types.jsstring),
@@ -3626,8 +3651,9 @@ class IDLValue(IDLObject):
             # TreatNullAsEmpty is a different type for resolution reasons,
             # however once you have a value it doesn't matter
             return self
-        elif self.type.isString() and (type.isByteString() or type.isJSString()):
-            # Allow ByteStrings and JSStrings to use a default value like DOMString.
+        elif self.type.isString() and (type.isByteString() or type.isJSString() or type.isUTF8String()):
+            # Allow ByteStrings, UTF8String, and JSStrings to use a default
+            # value like DOMString.
             # No coercion is required as Codegen.py will handle the
             # extra steps. We want to make sure that our string contains
             # only valid characters, so we check that here.
@@ -5695,6 +5721,7 @@ class Tokenizer(object):
         "ByteString": "BYTESTRING",
         "USVString": "USVSTRING",
         "JSString": "JSSTRING",
+        "UTF8String": "UTF8STRING",
         "any": "ANY",
         "boolean": "BOOLEAN",
         "byte": "BYTE",
@@ -6958,6 +6985,7 @@ class Parser(Tokenizer):
                   | DOMSTRING
                   | BYTESTRING
                   | USVSTRING
+                  | UTF8STRING
                   | JSSTRING
                   | PROMISE
                   | ANY
@@ -7229,6 +7257,12 @@ class Parser(Tokenizer):
             BuiltinStringType : USVSTRING
         """
         p[0] = IDLBuiltinType.Types.usvstring
+
+    def p_BuiltinStringTypeUTF8String(self, p):
+        """
+            BuiltinStringType : UTF8STRING
+        """
+        p[0] = IDLBuiltinType.Types.utf8string
 
     def p_BuiltinStringTypeJSString(self, p):
         """
