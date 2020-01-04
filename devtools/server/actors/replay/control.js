@@ -108,7 +108,7 @@ const gChildren = new Map();
 const gUnpausedChildren = new Set();
 
 // Information about a child recording or replaying process.
-function ChildProcess(rootId, forkId, recording, recordingLength) {
+function ChildProcess(rootId, forkId, recording, recordingLength, startPoint) {
   // ID for the root recording/replaying process this is associated with.
   this.rootId = rootId;
 
@@ -125,6 +125,9 @@ function ChildProcess(rootId, forkId, recording, recordingLength) {
 
   // How much of the recording is available to this process.
   this.recordingLength = recordingLength;
+
+  // The execution point at which this process was created, or null.
+  this.startPoint = startPoint;
 
   // Whether this process is paused.
   this.paused = false;
@@ -147,7 +150,7 @@ function ChildProcess(rootId, forkId, recording, recordingLength) {
   // run forward to the first checkpoint.
   this.manifests = [
     {
-      manifest: {},
+      manifest: { kind: "initial" },
       onFinished: ({ point }) => {
         if (this == gMainChild) {
           getCheckpointInfo(FirstCheckpointId).point = point;
@@ -158,6 +161,9 @@ function ChildProcess(rootId, forkId, recording, recordingLength) {
       },
     },
   ];
+
+  // All manifests that have been sent to this child, used in crash recovery.
+  this.processedManifests = [];
 }
 
 const PingIntervalSeconds = 2;
@@ -171,6 +177,29 @@ ChildProcess.prototype = {
     gUnpausedChildren.delete(this);
     RecordReplayControl.terminate(this.rootId, this.forkId);
     this.terminated = true;
+  },
+
+  // Take over the process used by another child that was just spawned.
+  transplantFrom(newChild) {
+    assert(this.terminated && !this.paused);
+    assert(!newChild.terminated && !newChild.paused);
+    this.terminated = false;
+    newChild.terminated = true;
+    gUnpausedChildren.delete(newChild);
+    gUnpausedChildren.add(this);
+
+    this.rootId = newChild.rootId;
+    this.forkId = newChild.forkId;
+    this.id = newChild.id;
+    gChildren.set(this.id, this);
+
+    this.recordingLength = newChild.recordingLength;
+    this.startPoint = newChild.startPoint;
+    this.lastPausePoint = newChild.lastPausePoint;
+    this.lastPingTime = Date.now();
+    this.pings = [];
+    this.manifests = newChild.manifests;
+    this.processedManifests = newChild.processedManifests;
   },
 
   // Get the execution point where this child is currently paused.
@@ -217,7 +246,7 @@ ChildProcess.prototype = {
     assert(!this.paused);
     this.paused = true;
     gUnpausedChildren.delete(this);
-    const { onFinished } = this.manifests.shift();
+    const { manifest, onFinished } = this.manifests.shift();
 
     if (response) {
       if (response.point) {
@@ -229,6 +258,7 @@ ChildProcess.prototype = {
     }
     onFinished(response);
 
+    this.processedManifests.push(manifest);
     this._startNextManifest();
   },
 
@@ -322,6 +352,9 @@ ChildProcess.prototype = {
     if (this.isHanged()) {
       // Try to get the child to crash, so that we can get a minidump.
       RecordReplayControl.crashHangedChild(this.rootId, this.forkId);
+
+      // Treat the child as crashed even if we aren't able to get it to crash.
+      ChildCrashed(this.rootId, this.forkId);
     } else {
       const id = gNextPingId++;
       RecordReplayControl.ping(this.rootId, this.forkId, id);
@@ -338,13 +371,14 @@ ChildProcess.prototype = {
     }
   },
 
-  updateRecording() {
+  updateRecording(length) {
     RecordReplayControl.updateRecording(
       this.rootId,
       this.forkId,
-      this.recordingLength
+      this.recordingLength,
+      length
     );
-    this.recordingLength = RecordReplayControl.recordingLength();
+    this.recordingLength = length;
   },
 };
 
@@ -399,13 +433,14 @@ const gBranchChildren = [];
 let gNextForkId = 1;
 
 // Fork a replaying child, returning the new one.
-function forkChild(child) {
+function forkChild(child, point) {
   const forkId = gNextForkId++;
   const newChild = new ChildProcess(
     child.rootId,
     forkId,
     false,
-    child.recordingLength
+    child.recordingLength,
+    point
   );
 
   dumpv(`Forking ${child.id} -> ${newChild.id}`);
@@ -430,7 +465,7 @@ function newLeafChild(endpoint, onFinished = () => {}) {
     }
   }
 
-  const child = forkChild(entry.child);
+  const child = forkChild(entry.child, entry.point);
   if (pointEquals(endpoint, entry.point)) {
     onFinished(child);
   } else {
@@ -507,7 +542,10 @@ function spawnTrunkChild() {
     RecordReplayControl.recordingLength()
   );
 
-  gTrunkChild = forkChild(gRootChild);
+  gTrunkChild = forkChild(
+    gRootChild,
+    checkpointExecutionPoint(FirstCheckpointId)
+  );
 
   // We should be at the beginning of the recording, and don't have enough space
   // to create any branches yet.
@@ -523,10 +561,12 @@ function forkBranchChild(lastSavedCheckpoint, nextSavedCheckpoint) {
   // a saved checkpoint, so the child we fork here will have the recording
   // contents up to the next saved checkpoint. Branch children are only able to
   // run up to the next saved checkpoint.
-  gTrunkChild.updateRecording();
+  gTrunkChild.updateRecording(RecordReplayControl.recordingLength());
 
-  const child = forkChild(gTrunkChild);
   const point = checkpointExecutionPoint(lastSavedCheckpoint);
+  const child = forkChild(gTrunkChild, point);
+
+  dumpv(`AddBranchChild Checkpoint ${lastSavedCheckpoint} Child ${child.id}`);
   gBranchChildren.push({ child, point });
 
   const endpoint = checkpointExecutionPoint(nextSavedCheckpoint);
@@ -538,6 +578,58 @@ function forkBranchChild(lastSavedCheckpoint, nextSavedCheckpoint) {
     // from throughout the recording will be cached in the root child.
     flushExternalCalls: true,
   });
+}
+
+function respawnCrashedChild(child) {
+  const { startPoint, recordingLength, manifests, processedManifests } = child;
+
+  // Find another child to fork that didn't just crash.
+  let entry;
+  for (let i = gBranchChildren.length - 1; i >= 0; i--) {
+    const branch = gBranchChildren[i];
+    if (
+      !pointPrecedes(child.startPoint, branch.point) &&
+      !branch.child.terminated
+    ) {
+      entry = branch;
+      break;
+    }
+  }
+  if (!entry) {
+    entry = {
+      child: gRootChild,
+      point: checkpointExecutionPoint(FirstCheckpointId),
+    };
+  }
+
+  const newChild = forkChild(entry.child, entry.point);
+
+  dumpv(`Transplanting Child: ${child.id} from ${newChild.id}`);
+  child.transplantFrom(newChild);
+
+  if (recordingLength > child.recordingLength) {
+    child.updateRecording(recordingLength);
+  }
+
+  if (!pointEquals(startPoint, child.startPoint)) {
+    assert(pointPrecedes(child.startPoint, startPoint));
+    child.sendManifest({ kind: "runToPoint", endpoint: startPoint });
+  }
+
+  for (const manifest of processedManifests) {
+    if (manifest.kind != "initial" && manifest.kind != "fork") {
+      child.sendManifest(manifest);
+    }
+  }
+
+  for (const { manifest, onFinished } of manifests) {
+    if (
+      manifest.kind != "initial" &&
+      (manifest.kind != "fork" || manifest != manifests[0].manifest)
+    ) {
+      child.sendManifest(manifest, onFinished);
+    }
+  }
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -1193,23 +1285,25 @@ function ChildCrashed(rootId, forkId) {
   const id = processId(rootId, forkId);
   dumpv(`Child Crashed: ${id}`);
 
-  // In principle we can recover when any replaying child process crashes.
-  // For simplicity, there are some cases where we don't yet try to recover if
-  // a replaying process crashes.
-  //
-  // - It is the main child, and running forward through the recording. While it
-  //   could crash here just as easily as any other replaying process, any crash
-  //   will happen early on and won't interrupt a long-running debugger session.
-  //
-  // - It is the active child, and is paused at gPausePoint. It must have
-  //   crashed while processing a debugger request, which is unlikely.
   const child = gChildren.get(id);
-  if (
-    !child ||
-    !child.manifest ||
-    (child == gActiveChild && gPauseMode == PauseModes.PAUSED)
-  ) {
-    ThrowError("Cannot recover from crashed child");
+  if (!child) {
+    return;
+  }
+
+  // Crashes in recording children can't be recovered.
+  if (child.recording) {
+    ThrowError("Child is recording");
+  }
+
+  // Crashes in root processes can't be recovered, as all communication to forks
+  // happens through the root.
+  if (!forkId) {
+    ThrowError("Child is replaying root");
+  }
+
+  // Children shouldn't be crashing if they aren't doing anything.
+  if (child.paused) {
+    ThrowError("Child is paused");
   }
 
   if (++gNumCrashes > MaxCrashes) {
@@ -1218,8 +1312,15 @@ function ChildCrashed(rootId, forkId) {
 
   child.terminate();
 
-  // Crash recovery does not yet deal with fork based rewinding.
-  ThrowError("Fork based crash recovery NYI");
+  // If the child crashed while forking, the forked child may or may not have
+  // been created. Mark the fork as crashed so that a new process will be
+  // generated in its place (and any successfully forked process ignored).
+  const { manifest } = child.manifests[0];
+  if (manifest.kind == "fork") {
+    ChildCrashed(rootId, manifest.id);
+  }
+
+  respawnCrashedChild(child);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

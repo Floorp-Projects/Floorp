@@ -168,7 +168,6 @@ void Channel::SendRaw(const char* aData, size_t aSize) {
       // If the other side of the channel has crashed, don't send the message.
       // Avoid crashing in this process too, so that we don't generate another
       // minidump that masks the original crash.
-      MOZ_RELEASE_ASSERT(errno == EPIPE);
       return;
     }
     aData += rv;
@@ -204,7 +203,7 @@ Message::UniquePtr Channel::WaitForMessage() {
       continue;
     }
 
-    if (nbytes == 0 || (nbytes < 0 && errno == ECONNRESET)) {
+    if (nbytes <= 0) {
       // The other side of the channel has shut down.
       if (ExitProcessOnDisconnect()) {
         PrintSpew("Channel disconnected, exiting...\n");
@@ -216,7 +215,6 @@ Message::UniquePtr Channel::WaitForMessage() {
       }
     }
 
-    MOZ_RELEASE_ASSERT(nbytes > 0);
     mMessageBytes += nbytes;
   }
 
