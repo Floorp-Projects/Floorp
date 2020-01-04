@@ -1431,8 +1431,8 @@ add_task(async function test_engagementTelemetry() {
     isPrivileged: true,
     incognitoOverride: "spanning",
     useAddonManager: "temporary",
-    background() {
-      browser.urlbar.engagementTelemetry.set({ value: true });
+    async background() {
+      await browser.urlbar.engagementTelemetry.set({ value: true });
       browser.test.sendMessage("ready");
     },
   });

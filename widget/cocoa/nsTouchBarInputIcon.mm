@@ -22,14 +22,20 @@ using namespace mozilla;
 static const uint32_t kIconSize = 16;
 static const CGFloat kHiDPIScalingFactor = 2.0f;
 
-nsTouchBarInputIcon::nsTouchBarInputIcon(RefPtr<Document> aDocument, NSButton* aButton,
-                                         NSSharingServicePickerTouchBarItem* aShareScrubber,
-                                         NSPopoverTouchBarItem* aPopoverItem)
-    : mDocument(aDocument),
-      mSetIcon(false),
-      mButton(aButton),
-      mShareScrubber(aShareScrubber),
-      mPopoverItem(aPopoverItem) {
+nsTouchBarInputIcon::nsTouchBarInputIcon(RefPtr<Document> aDocument, TouchBarInput* aInput,
+                                         NSTouchBarItem* aItem)
+    : mDocument(aDocument), mSetIcon(false), mButton(nil), mShareScrubber(nil), mPopoverItem(nil) {
+  if ([[aInput nativeIdentifier] isEqualToString:ShareScrubberIdentifier]) {
+    mShareScrubber = (NSSharingServicePickerTouchBarItem*)aItem;
+  } else if ([aInput baseType] == TouchBarInputBaseType::kPopover) {
+    mPopoverItem = (NSPopoverTouchBarItem*)aItem;
+  } else if ([aInput baseType] == TouchBarInputBaseType::kButton ||
+             [aInput baseType] == TouchBarInputBaseType::kMainButton) {
+    mButton = (NSButton*)[aItem view];
+  } else {
+    NS_ERROR("Incompatible Touch Bar input passed to nsTouchBarInputIcon.");
+  }
+  aInput = nil;
   MOZ_COUNT_CTOR(nsTouchBarInputIcon);
 }
 
@@ -42,6 +48,7 @@ nsTouchBarInputIcon::~nsTouchBarInputIcon() {
 // (as might otherwise happen if calls to our imgINotificationObserver methods
 // are still outstanding).  nsTouchBar owns our mTouchBarInput.
 void nsTouchBarInputIcon::Destroy() {
+  ReleaseJSObjects();
   if (mIconLoader) {
     mIconLoader->Destroy();
     mIconLoader = nullptr;
@@ -62,7 +69,7 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
   }
 
   if (!(mButton || mShareScrubber || mPopoverItem)) {
-    NS_ERROR("No Touch Bar button");
+    NS_ERROR("No Touch Bar input provided.");
     return NS_ERROR_FAILURE;
   }
 
@@ -83,7 +90,7 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
     [mPopoverItem setCollapsedRepresentationImage:mIconLoader->GetNativeIconImage()];
   }
 
-  nsresult rv = mIconLoader->LoadIcon(aIconURI);
+  nsresult rv = mIconLoader->LoadIcon(aIconURI, true /* aIsInternalIcon */);
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
@@ -98,6 +105,13 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+void nsTouchBarInputIcon::ReleaseJSObjects() {
+  if (mIconLoader) {
+    mIconLoader->ReleaseJSObjects();
+  }
+  mDocument = nil;
 }
 
 //

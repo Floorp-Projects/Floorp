@@ -16,6 +16,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindContext.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/GeneratedImageContent.h"
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
@@ -4119,11 +4120,10 @@ nsCSSFrameConstructor::FindXULDescriptionData(const Element& aElement,
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULMenubarData(const Element& aElement,
                                           ComputedStyle&) {
-  nsCOMPtr<nsIDocShell> treeItem = aElement.OwnerDoc()->GetDocShell();
-  if (treeItem && nsIDocShellTreeItem::typeChrome == treeItem->ItemType()) {
-    nsCOMPtr<nsIDocShellTreeItem> parent;
-    treeItem->GetInProcessParent(getter_AddRefs(parent));
-    if (!parent) {
+  if (aElement.OwnerDoc()->IsInChromeDocShell()) {
+    BrowsingContext* bc = aElement.OwnerDoc()->GetBrowsingContext();
+    bool isRoot = bc && !bc->GetParent();
+    if (isRoot) {
       // This is the root.  Suppress the menubar, since on Mac
       // window menus are not attached to the window.
       static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();

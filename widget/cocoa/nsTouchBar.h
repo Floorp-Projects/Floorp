@@ -8,78 +8,8 @@
 #import <Cocoa/Cocoa.h>
 
 #include "nsITouchBarHelper.h"
-#include "nsITouchBarInput.h"
-#include "nsTouchBarInputIcon.h"
+#include "nsTouchBarInput.h"
 #include "nsTouchBarNativeAPIDefines.h"
-
-using namespace mozilla::dom;
-
-/**
- * NSObject representation of nsITouchBarInput.
- */
-@interface TouchBarInput : NSObject {
-  NSString* mKey;
-  NSString* mTitle;
-  nsCOMPtr<nsIURI> mImageURI;
-  RefPtr<nsTouchBarInputIcon> mIcon;
-  NSString* mType;
-  NSColor* mColor;
-  BOOL mDisabled;
-  nsCOMPtr<nsITouchBarInputCallback> mCallback;
-  RefPtr<Document> mDocument;
-  BOOL mIsIconPositionSet;
-  NSMutableArray<TouchBarInput*>* mChildren;
-}
-
-- (NSString*)key;
-- (NSString*)title;
-- (nsCOMPtr<nsIURI>)imageURI;
-- (RefPtr<nsTouchBarInputIcon>)icon;
-- (NSString*)type;
-- (NSColor*)color;
-- (BOOL)isDisabled;
-- (NSTouchBarItemIdentifier)nativeIdentifier;
-- (nsCOMPtr<nsITouchBarInputCallback>)callback;
-- (RefPtr<Document>)document;
-- (BOOL)isIconPositionSet;
-- (NSMutableArray<TouchBarInput*>*)children;
-- (void)setKey:(NSString*)aKey;
-- (void)setTitle:(NSString*)aTitle;
-- (void)setImageURI:(nsCOMPtr<nsIURI>)aImageURI;
-- (void)setIcon:(RefPtr<nsTouchBarInputIcon>)aIcon;
-- (void)setType:(NSString*)aType;
-- (void)setColor:(NSColor*)aColor;
-- (void)setDisabled:(BOOL)aDisabled;
-- (void)setCallback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback;
-- (void)setDocument:(RefPtr<Document>)aDocument;
-- (void)setIconPositionSet:(BOOL)aIsIconPositionSet;
-- (void)setChildren:(NSMutableArray<TouchBarInput*>*)aChildren;
-
-- (id)initWithKey:(NSString*)aKey
-            title:(NSString*)aTitle
-         imageURI:(nsCOMPtr<nsIURI>)aImageURI
-             type:(NSString*)aType
-         callback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback
-            color:(uint32_t)aColor
-         disabled:(BOOL)aDisabled
-         document:(RefPtr<Document>)aDocument
-         children:(nsCOMPtr<nsIArray>)aChildren;
-
-- (TouchBarInput*)initWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput;
-
-- (void)releaseJSObjects;
-
-- (void)dealloc;
-
-/**
- * We make these helper methods static so that other classes can query a
- * TouchBarInput's nativeIdentifier (e.g. nsTouchBarUpdater looking up a
- * popover in mappedLayoutItems).
- */
-+ (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType withKey:(NSString*)aKey;
-+ (NSTouchBarItemIdentifier)nativeIdentifierWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput;
-
-@end
 
 /**
  * Our TouchBar is its own delegate. This is adequate for our purposes,
@@ -106,10 +36,11 @@ using namespace mozilla::dom;
 
 /**
  * Stores buttons displayed in a NSScrollView. They must be stored separately
- * because they are generic NSButtons and not NSTouchBarItems. As such, they
+ * because they are untethered from the nsTouchBar. As such, they
  * cannot be retrieved with [NSTouchBar itemForIdentifier].
  */
-@property(strong) NSMutableDictionary<NSTouchBarItemIdentifier, NSButton*>* scrollViewButtons;
+@property(strong)
+    NSMutableDictionary<NSTouchBarItemIdentifier, NSCustomTouchBarItem*>* scrollViewButtons;
 
 /**
  * Returns an instance of nsTouchBar based on implementation details
@@ -163,8 +94,9 @@ using namespace mozilla::dom;
 /**
  * Update or create various subclasses of TouchBarItem.
  */
-- (void)updateButton:(NSButton*)aButton withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
-- (void)updateMainButton:(NSButton*)aMainButton
+- (void)updateButton:(NSCustomTouchBarItem*)aButton
+      withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
+- (void)updateMainButton:(NSCustomTouchBarItem*)aMainButton
           withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 - (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem
        withIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
@@ -182,6 +114,11 @@ using namespace mozilla::dom;
  *  Redirects button actions to the appropriate handler.
  */
 - (void)touchBarAction:(id)aSender;
+
+/**
+ * Helper function to initialize a new nsTouchBarInputIcon and load an icon.
+ */
+- (void)loadIconForInput:(TouchBarInput*)aInput forItem:(NSTouchBarItem*)aItem;
 
 - (NSArray*)itemsForSharingServicePickerTouchBarItem:
     (NSSharingServicePickerTouchBarItem*)aPickerTouchBarItem;

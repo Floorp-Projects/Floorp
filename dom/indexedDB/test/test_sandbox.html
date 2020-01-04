@@ -75,7 +75,7 @@ function runInSandbox(sandbox, testFunc) {
   var testPromise = new Promise(r => resolvePromise = r);
   SpecialPowers.Cu.exportFunction(_ => resolvePromise(), sandbox,
                                   { defineAs: "step_done" });
-  SpecialPowers.Cu.evalInSandbox("(" + testFunc.toSource() + ")()" +
+  SpecialPowers.Cu.evalInSandbox("(" + testFunc.toString() + ")()" +
                                  ".then(step_done);", sandbox);
   return testPromise;
 }

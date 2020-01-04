@@ -10,7 +10,7 @@
     function report(result) {
       let message = { source: "iframe" };
       message.result = result;
-      window.parent.postMessage(message.toSource(), "*");
+      window.parent.postMessage(JSON.stringify(message), "*");
     }
 
     function runIndexedDBTest() {

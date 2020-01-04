@@ -10,68 +10,43 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    debuggee.eval(
-      function stopMe(arg1) {
-        debugger;
-      }.toString()
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
     );
 
-    await test_object_grip(debuggee, threadFront);
+    const arg1 = packet.frame.arguments[0];
+    Assert.equal(arg1.class, "Object");
+
+    await threadFront.pauseGrip(arg1).threadGrip();
+    const obj = arg1;
+
+    const objectFront = threadFront.pauseGrip(obj);
+
+    const method = (await objectFront.getPropertyValue("method", null)).value
+      .return;
+
+    try {
+      await method.apply(obj, []);
+      Assert.ok(false, "expected exception");
+    } catch (err) {
+      Assert.ok(!!err.message.match(/debugee object is not callable/));
+    }
+    await threadFront.resume();
   })
 );
 
-async function test_object_grip(debuggee, threadFront) {
-  const code = `
+function evalCode(debuggee) {
+  debuggee.eval(
+    function stopMe(arg1) {
+      debugger;
+    }.toString()
+  );
+
+  debuggee.eval(`
     stopMe({
       method: {},
     });
-  `;
-  const obj = await eval_and_resume(
-    debuggee,
-    threadFront,
-    code,
-    async frame => {
-      const arg1 = frame.arguments[0];
-      Assert.equal(arg1.class, "Object");
-
-      await threadFront.pauseGrip(arg1).threadGrip();
-      return arg1;
-    }
-  );
-  const objectFront = threadFront.pauseGrip(obj);
-
-  const method = (await objectFront.getPropertyValue("method", null)).value
-    .return;
-
-  try {
-    await method.apply(obj, []);
-    Assert.ok(false, "expected exception");
-  } catch (err) {
-    Assert.ok(!!err.message.match(/debugee object is not callable/));
-  }
-}
-
-function eval_and_resume(debuggee, threadFront, code, callback) {
-  return new Promise((resolve, reject) => {
-    wait_for_pause(threadFront, callback).then(resolve, reject);
-
-    // This synchronously blocks until 'threadFront.resume()' above runs
-    // because the 'paused' event runs everthing in a new event loop.
-    debuggee.eval(code);
-  });
-}
-
-function wait_for_pause(threadFront, callback = () => {}) {
-  return new Promise((resolve, reject) => {
-    threadFront.once("paused", function(packet) {
-      (async () => {
-        try {
-          return await callback(packet.frame);
-        } finally {
-          await threadFront.resume();
-        }
-      })().then(resolve, reject);
-    });
-  });
+  `);
 }

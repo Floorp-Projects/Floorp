@@ -822,7 +822,7 @@ void nsObjectLoadingContent::GetNestedParams(
     RefPtr<Element> element = allParams->Item(i);
 
     nsAutoString name;
-    element->GetAttribute(NS_LITERAL_STRING("name"), name);
+    element->GetAttr(nsGkAtoms::name, name);
 
     if (name.IsEmpty()) continue;
 
@@ -841,8 +841,8 @@ void nsObjectLoadingContent::GetNestedParams(
 
     if (parent == ourElement) {
       MozPluginParameter param;
-      element->GetAttribute(NS_LITERAL_STRING("name"), param.mName);
-      element->GetAttribute(NS_LITERAL_STRING("value"), param.mValue);
+      element->GetAttr(nsGkAtoms::name, param.mName);
+      element->GetAttr(nsGkAtoms::value, param.mValue);
 
       param.mName.Trim(" \n\r\t\b", true, true, false);
       param.mValue.Trim(" \n\r\t\b", true, true, false);

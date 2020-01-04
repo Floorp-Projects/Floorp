@@ -46,10 +46,11 @@ class CrashGenerationClient {
   bool RequestDumpForException(int exception_type,
 			       int exception_code,
 			       int exception_subcode,
-			       mach_port_t crashing_thread);
+			       mach_port_t crashing_thread,
+			       mach_port_t crashing_task);
 
   bool RequestDump() {
-    return RequestDumpForException(0, 0, 0, MACH_PORT_NULL);
+    return RequestDumpForException(0, 0, 0, MACH_PORT_NULL, mach_task_self());
   }
 
  private:

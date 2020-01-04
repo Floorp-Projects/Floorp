@@ -1087,7 +1087,7 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
     nsCOMPtr<Element> element = do_QueryInterface(aRequestingNode);
     if (element && element->IsHTMLElement()) {
       nsAutoString cspNonce;
-      element->GetAttribute(NS_LITERAL_STRING("nonce"), cspNonce);
+      element->GetAttr(nsGkAtoms::nonce, cspNonce);
       secCheckLoadInfo->SetCspNonce(cspNonce);
     }
   }
@@ -1404,7 +1404,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
       nsCOMPtr<Element> element = do_QueryInterface(aLoadData.mRequestingNode);
       if (element && element->IsHTMLElement()) {
         nsAutoString cspNonce;
-        element->GetAttribute(NS_LITERAL_STRING("nonce"), cspNonce);
+        element->GetAttr(nsGkAtoms::nonce, cspNonce);
         nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
         loadInfo->SetCspNonce(cspNonce);
       }
@@ -1534,7 +1534,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     nsCOMPtr<Element> element = do_QueryInterface(aLoadData.mRequestingNode);
     if (element && element->IsHTMLElement()) {
       nsAutoString cspNonce;
-      element->GetAttribute(NS_LITERAL_STRING("nonce"), cspNonce);
+      element->GetAttr(nsGkAtoms::nonce, cspNonce);
       nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
       loadInfo->SetCspNonce(cspNonce);
     }

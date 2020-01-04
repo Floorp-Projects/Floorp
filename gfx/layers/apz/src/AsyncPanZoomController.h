@@ -843,6 +843,11 @@ class AsyncPanZoomController {
   void TrackTouch(const MultiTouchInput& aEvent);
 
   /**
+   * Register the start of a touch or pan gesture at the given position and time.
+   */
+  void StartTouch(const ParentLayerPoint& aPoint, uint32_t aTime);
+
+  /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint
    * the displayport area. Calls into GeckoContentController to do the actual
    * work. This call will use the current metrics. If this function is called
@@ -1049,6 +1054,8 @@ class AsyncPanZoomController {
   ExternalPoint mStartTouch;
 
   Maybe<CompositionPayload> mCompositedScrollPayload;
+
+  // Accessing mScrollPayload needs to be protected by mRecursiveMutex
   Maybe<CompositionPayload> mScrollPayload;
 
   friend class Axis;
@@ -1282,6 +1289,7 @@ class AsyncPanZoomController {
   /**
    * Internal helpers for checking general state of this apzc.
    */
+  bool IsInTransformingState() const;
   static bool IsTransformingState(PanZoomState aState);
 
   /* ===================================================================

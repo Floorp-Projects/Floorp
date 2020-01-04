@@ -8,12 +8,11 @@
 #define mozilla_recordreplay_Thread_h
 
 #include "mozilla/Atomics.h"
-#include "File.h"
+#include "Recording.h"
 #include "Lock.h"
 #include "Monitor.h"
 
 #include <pthread.h>
-#include <setjmp.h>
 
 namespace mozilla {
 namespace recordreplay {
@@ -39,9 +38,9 @@ namespace recordreplay {
 //    allows the process to rewind itself without needing to spawn or destroy
 //    any threads.
 //
-// 2. Some additional number of threads are spawned for use by the IPC and
-//    memory snapshot mechanisms. These have associated Thread
-//    structures but are not recorded and always pass through thread events.
+// 2. Some additional number of threads are spawned for use for IPC. These have
+//    associated Thread structures but are not recorded and always pass through
+//    thread events.
 //
 // 3. All recorded threads and must be able to enter a particular blocking
 //    state, under Thread::Wait, when requested by the main thread calling
@@ -49,35 +48,36 @@ namespace recordreplay {
 //    thread attempts to take a recorded lock and blocks in Lock::Wait.
 //    For other threads (any thread which has diverged from the recording,
 //    or JS helper threads even when no recording divergence has occurred),
-//    NotifyUnrecordedWait and MaybeWaitForSnapshot are used to enter
-//    this state when the thread performs a blocking operation.
+//    NotifyUnrecordedWait and MaybeWaitForFork are used to enter this state
+//    when the thread performs a blocking operation.
 //
-// 4. Once all recorded threads are idle, the main thread is able to record
-//    memory snapshots and thread stacks for later rewinding. Additional
-//    threads created for #2 above do not idle and do not have their state
-//    included in snapshots, but they are designed to avoid interfering with
-//    the main thread while it is taking or restoring a checkpoint.
+// 4. Once all recorded threads are idle, the main thread is able to fork.
+//    Additional threads created for #2 above do not idle, but they are designed
+//    to avoid interfering with the main thread while it forks.
 
 // The ID used by the process main thread.
 static const size_t MainThreadId = 1;
 
 // The maximum ID useable by recorded threads.
-static const size_t MaxRecordedThreadId = 70;
+static const size_t MaxThreadId = 70;
 
-// The maximum number of threads which are not recorded but need a Thread so
-// that they can participate in e.g. Wait/Notify calls.
-static const size_t MaxNumNonRecordedThreads = 12;
-
-static const size_t MaxThreadId =
-    MaxRecordedThreadId + MaxNumNonRecordedThreads;
-
-typedef pthread_t NativeThreadId;
-
-// Information about the execution state of a thread.
+// Information about the execution state of a recorded thread.
 class Thread {
  public:
   // Signature for the start function of a thread.
   typedef void (*Callback)(void*);
+
+  // Actions a thread can take with its owned locks.
+  enum OwnedLockState {
+    // No action by the thread is needed.
+    None,
+
+    // The thread must release all of its owned locks.
+    NeedRelease,
+
+    // The thread must acquire all of its owned locks.
+    NeedAcquire,
+  };
 
  private:
   // Monitor used to protect various thread information (see Thread.h) and to
@@ -116,6 +116,12 @@ class Thread {
   // ID for this thread used by the system.
   NativeThreadId mNativeId;
 
+  // On macOS, any thread ID given by mach_thread_self. This originates from the
+  // recording and does not correspond with a system resource when replaying.
+  // It is stored here so that we can provide a consistent ID after the process
+  // forks and we diverge from the recording.
+  uintptr_t mMachId;
+
   // Stream with events for the thread. This is only used on the thread itself.
   Stream* mEvents;
 
@@ -135,6 +141,10 @@ class Thread {
   // Whether the thread is waiting on idlefd.
   Atomic<bool, SequentiallyConsistent, Behavior::DontPreserve> mIdle;
 
+  // While the thread is idling, whether to release or acquire its owned locks.
+  Atomic<OwnedLockState, SequentiallyConsistent, Behavior::DontPreserve>
+      mOwnedLockState;
+
   // Any callback which should be invoked so the thread can make progress,
   // and whether the callback has been invoked yet while the main thread is
   // waiting for threads to become idle. Protected by the thread monitor.
@@ -144,7 +154,31 @@ class Thread {
   // Identifier of any atomic which this thread currently holds.
   Maybe<size_t> mAtomicLockId;
 
+  // While replaying, recorded locks which this thread owns.
+  InfallibleVector<NativeLock*> mOwnedLocks;
+
+  // Thread local storage, used for non-main threads when replaying.
+  // This emulates pthread TLS entries. By associating these TLS entries with
+  // the Thread itself, they will be preserved if we fork and then respawn all
+  // threads.
+  struct StorageEntry {
+    uintptr_t mKey;
+    void* mData;
+    StorageEntry* mNext;
+  };
+  StorageEntry* mStorageEntries;
+  uint8_t* mStorageCursor;
+  uint8_t* mStorageLimit;
+
+  uint8_t* AllocateStorage(size_t aSize);
+
  public:
+
+  // These are used by certain redirections to convey information from the
+  // SaveOutput hook to the MiddlemanCall hook.
+  uintptr_t mRedirectionValue;
+  InfallibleVector<char> mRedirectionData;
+
   ///////////////////////////////////////////////////////////////////////////////
   // Public Routines
   ///////////////////////////////////////////////////////////////////////////////
@@ -157,10 +191,6 @@ class Thread {
   size_t StackSize() { return mStackSize; }
 
   inline bool IsMainThread() const { return mId == MainThreadId; }
-  inline bool IsRecordedThread() const { return mId <= MaxRecordedThreadId; }
-  inline bool IsNonMainRecordedThread() const {
-    return IsRecordedThread() && !IsMainThread();
-  }
 
   // Access the flag for whether this thread is passing events through.
   void SetPassThrough(bool aPassThrough) {
@@ -205,6 +235,11 @@ class Thread {
            !HasDivergedFromRecording();
   }
 
+  // Get the macOS mach identifier for this thread.
+  uintptr_t GetMachId() const {
+    return mMachId;
+  }
+
   // The actual start routine at the root of all recorded threads, and of all
   // threads when replaying.
   static void ThreadMain(void* aArgument);
@@ -225,19 +260,20 @@ class Thread {
   // Lookup a Thread by various methods.
   static Thread* GetById(size_t aId);
   static Thread* GetByNativeId(NativeThreadId aNativeId);
-  static Thread* GetByStackPointer(void* aSp);
 
   // Spawn all non-main recorded threads used for recording/replaying.
   static void SpawnAllThreads();
 
+  // After forking, the new process will only have a main thread. Respawn all
+  // recorded non-main threads and restore them to their state in the original
+  // process before the fork.
+  static void RespawnAllThreadsAfterFork();
+
   // Spawn the specified thread.
-  static void SpawnThread(Thread* aThread);
+  static NativeThreadId SpawnThread(Thread* aThread);
 
   // Spawn a non-recorded thread with the specified start routine/argument.
-  static Thread* SpawnNonRecordedThread(Callback aStart, void* aArgument);
-
-  // Wait until a thread has initialized its stack and other state.
-  static void WaitUntilInitialized(Thread* aThread);
+  static void SpawnNonRecordedThread(Callback aStart, void* aArgument);
 
   // Start an existing thread, for use when the process has called a thread
   // creation system API when events were not passed through. The return value
@@ -250,6 +286,18 @@ class Thread {
 
   // Give access to the atomic lock which the thread owns.
   Maybe<size_t>& AtomicLockId() { return mAtomicLockId; }
+
+  // Mark changes in the recorded locks which this thread owns.
+  void AddOwnedLock(NativeLock* aLock);
+  void RemoveOwnedLock(NativeLock* aLock);
+
+  // Release or acquire all locks owned by this thread. This does not affect
+  // the set of owned locks.
+  void ReleaseOrAcquireOwnedLocks(OwnedLockState aState);
+
+  // Get a pointer to the internal storage for this thread for aKey, creating it
+  // if necessary.
+  void** GetOrCreateStorage(uintptr_t aKey);
 
   ///////////////////////////////////////////////////////////////////////////////
   // Thread Coordination
@@ -285,24 +333,25 @@ class Thread {
   // main thread is already waiting for other threads to become idle.
   //
   // The callback should poke the thread so that it is no longer blocked on the
-  // resource. The thread must call MaybeWaitForSnapshot before blocking again.
+  // resource. The thread must call MaybeWaitForFork before blocking again.
   //
-  // MaybeWaitForSnapshot takes a callback to release any resources before the
+  // MaybeWaitForFork takes a callback to release any resources before the
   // thread begins idling. The return value is whether this callback was
   // invoked.
   void NotifyUnrecordedWait(const std::function<void()>& aNotifyCallback);
-  bool MaybeWaitForSnapshot(const std::function<void()>& aReleaseCallback);
+  bool MaybeWaitForFork(const std::function<void()>& aReleaseCallback);
 
   // Wait for all other threads to enter the idle state necessary for saving
   // or restoring a checkpoint. This may only be called on the main thread.
   static void WaitForIdleThreads();
 
+  // When all other threads are in an idle state, wait for them to either
+  // release or reacquire all locks they own, and then reenter the idle state.
+  static void OperateOnIdleThreadLocks(OwnedLockState aState);
+
   // After WaitForIdleThreads(), the main thread will call this to allow
   // other threads to resume execution.
   static void ResumeIdleThreads();
-
-  // Allow a single thread to resume execution.
-  static void ResumeSingleIdleThread(size_t aId);
 
   // Return whether this thread will remain in the idle state entered after
   // WaitForIdleThreads.
@@ -311,28 +360,6 @@ class Thread {
   // Return the total amount of data consumed by the event streams of every
   // thread. If this increases over time, at least one thread had made progress.
   static size_t TotalEventProgress();
-};
-
-// This uses a stack pointer instead of TLS to make sure events are passed
-// through, for avoiding thorny reentrance issues.
-class AutoEnsurePassThroughThreadEventsUseStackPointer {
-  Thread* mThread;
-  bool mPassedThrough;
-
- public:
-  AutoEnsurePassThroughThreadEventsUseStackPointer()
-      : mThread(Thread::GetByStackPointer(this)),
-        mPassedThrough(!mThread || mThread->PassThroughEvents()) {
-    if (!mPassedThrough) {
-      mThread->SetPassThrough(true);
-    }
-  }
-
-  ~AutoEnsurePassThroughThreadEventsUseStackPointer() {
-    if (!mPassedThrough) {
-      mThread->SetPassThrough(false);
-    }
-  }
 };
 
 // Mark a region of code where a thread's event stream can be accessed.
@@ -358,7 +385,7 @@ class MOZ_RAII RecordingEventSection {
     }
     if (IsRecording()) {
       MOZ_RELEASE_ASSERT(!aThread->Events().mInRecordingEventSection);
-      aThread->Events().mFile->mStreamLock.ReadLock();
+      aThread->Events().mRecording->mStreamLock.ReadLock();
       aThread->Events().mInRecordingEventSection = true;
     } else {
       while (!aThread->MaybeDivergeFromRecording() &&
@@ -373,7 +400,7 @@ class MOZ_RAII RecordingEventSection {
       return;
     }
     if (IsRecording()) {
-      mThread->Events().mFile->mStreamLock.ReadUnlock();
+      mThread->Events().mRecording->mStreamLock.ReadUnlock();
       mThread->Events().mInRecordingEventSection = false;
     }
   }

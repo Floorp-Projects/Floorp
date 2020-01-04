@@ -8843,8 +8843,7 @@ void nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell,
     return;
   }
 
-  topFrameElt->GetAttribute(NS_LITERAL_STRING("mozpresentation"),
-                            aPresentationUrl);
+  topFrameElt->GetAttr(nsGkAtoms::mozpresentation, aPresentationUrl);
 }
 
 /* static */
