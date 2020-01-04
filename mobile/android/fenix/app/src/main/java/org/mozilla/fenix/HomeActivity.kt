@@ -60,6 +60,7 @@ import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.utils.BrowsersCache
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 open class HomeActivity : LocaleAwareAppCompatActivity() {
@@ -139,6 +140,16 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         hotStartMonitor.onPostResumeFinalMethodCall()
     }
 
+    final override fun onPause() {
+        super.onPause()
+
+        // Every time the application goes into the background, it is possible that the user
+        // is about to change the browsers installed on their system. Therefore, we reset the cache of
+        // all the installed browsers.
+        //
+        // NB: There are ways for the user to install new products without leaving the browser.
+        BrowsersCache.resetAll()
+    }
     /**
      * Handles intents received when the activity is open.
      */

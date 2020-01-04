@@ -12,13 +12,13 @@ import android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS
 import androidx.preference.CheckBoxPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.utils.BrowsersCache
 
 /**
  * Lets the user control their default browser preferences
@@ -55,7 +55,7 @@ class DefaultBrowserSettingsFragment : PreferenceFragmentCompat() {
         settings.unsetOpenLinksInAPrivateTabIfNecessary()
 
         findPreference<CheckBoxPreference>(getPreferenceKey(R.string.pref_key_open_links_in_a_private_tab))?.apply {
-            isEnabled = Browsers.all(requireContext()).isDefaultBrowser
+            isEnabled = BrowsersCache.all(requireContext()).isDefaultBrowser
             isChecked = settings.openLinksInAPrivateTab
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }

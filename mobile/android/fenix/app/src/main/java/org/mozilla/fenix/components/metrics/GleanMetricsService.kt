@@ -13,7 +13,6 @@ import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.service.glean.private.NoExtraKeys
-import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
@@ -45,6 +44,7 @@ import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.utils.BrowsersCache
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -504,7 +504,7 @@ class GleanMetricsService(private val context: Context) : MetricsService {
 
     internal fun setStartupMetrics() {
         Metrics.apply {
-            defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
+            defaultBrowser.set(BrowsersCache.all(context).isDefaultBrowser)
             MozillaProductDetector.getMozillaBrowserDefault(context)?.also {
                 defaultMozBrowser.set(it)
             }

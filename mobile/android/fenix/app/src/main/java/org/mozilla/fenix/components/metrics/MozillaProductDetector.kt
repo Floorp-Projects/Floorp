@@ -6,7 +6,7 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import android.content.pm.PackageManager
-import mozilla.components.support.utils.Browsers
+import org.mozilla.fenix.utils.BrowsersCache
 
 object MozillaProductDetector {
     enum class MozillaProducts(val productName: String) {
@@ -57,7 +57,7 @@ object MozillaProductDetector {
      * Returns the default browser if and only if it is a Mozilla product.
      */
     fun getMozillaBrowserDefault(context: Context): String? {
-        val browserPackageName = Browsers.all(context).defaultBrowser?.packageName
+        val browserPackageName = BrowsersCache.all(context).defaultBrowser?.packageName
         return if (isMozillaProduct(browserPackageName)) { browserPackageName } else { null }
     }
 

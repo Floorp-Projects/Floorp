@@ -19,7 +19,6 @@ import mozilla.components.support.ktx.android.content.floatPreference
 import mozilla.components.support.ktx.android.content.intPreference
 import mozilla.components.support.ktx.android.content.longPreference
 import mozilla.components.support.ktx.android.content.stringPreference
-import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
@@ -375,7 +374,7 @@ class Settings private constructor(
     }
 
     fun unsetOpenLinksInAPrivateTabIfNecessary() {
-        if (Browsers.all(appContext).isDefaultBrowser) {
+        if (BrowsersCache.all(appContext).isDefaultBrowser) {
             return
         }
 
