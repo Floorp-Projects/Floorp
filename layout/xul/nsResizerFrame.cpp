@@ -424,28 +424,28 @@ void nsResizerFrame::ResizeContent(nsIContent* aContent,
       nsICSSDeclaration* decl = inlineStyleContent->Style();
 
       if (aOriginalSizeInfo) {
-        decl->GetPropertyValue(NS_LITERAL_STRING("width"),
+        decl->GetPropertyValue(NS_LITERAL_CSTRING("width"),
                                aOriginalSizeInfo->width);
-        decl->GetPropertyValue(NS_LITERAL_STRING("height"),
+        decl->GetPropertyValue(NS_LITERAL_CSTRING("height"),
                                aOriginalSizeInfo->height);
       }
 
       // only set the property if the element could have changed in that
       // direction
       if (aDirection.mHorizontal) {
-        nsAutoString widthstr(aSizeInfo.width);
+        NS_ConvertUTF16toUTF8 widthstr(aSizeInfo.width);
         if (!widthstr.IsEmpty() &&
             !Substring(widthstr, widthstr.Length() - 2, 2).EqualsLiteral("px"))
           widthstr.AppendLiteral("px");
-        decl->SetProperty(NS_LITERAL_STRING("width"), widthstr, EmptyString());
+        decl->SetProperty(NS_LITERAL_CSTRING("width"), widthstr, EmptyString());
       }
       if (aDirection.mVertical) {
-        nsAutoString heightstr(aSizeInfo.height);
+        NS_ConvertUTF16toUTF8 heightstr(aSizeInfo.height);
         if (!heightstr.IsEmpty() &&
             !Substring(heightstr, heightstr.Length() - 2, 2)
                  .EqualsLiteral("px"))
           heightstr.AppendLiteral("px");
-        decl->SetProperty(NS_LITERAL_STRING("height"), heightstr,
+        decl->SetProperty(NS_LITERAL_CSTRING("height"), heightstr,
                           EmptyString());
       }
     }

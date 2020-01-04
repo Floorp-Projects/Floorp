@@ -56,7 +56,7 @@ void CSSFontFaceRuleDecl::SetCssText(const nsAString& aCssText,
 }
 
 NS_IMETHODIMP
-CSSFontFaceRuleDecl::GetPropertyValue(const nsAString& aPropName,
+CSSFontFaceRuleDecl::GetPropertyValue(const nsACString& aPropName,
                                       nsAString& aResult) {
   aResult.Truncate();
   nsCSSFontDesc descID = nsCSSProps::LookupFontDesc(aPropName);
@@ -67,7 +67,7 @@ CSSFontFaceRuleDecl::GetPropertyValue(const nsAString& aPropName,
 }
 
 NS_IMETHODIMP
-CSSFontFaceRuleDecl::RemoveProperty(const nsAString& aPropName,
+CSSFontFaceRuleDecl::RemoveProperty(const nsACString& aPropName,
                                     nsAString& aResult) {
   nsCSSFontDesc descID = nsCSSProps::LookupFontDesc(aPropName);
   NS_ASSERTION(descID >= eCSSFontDesc_UNKNOWN && descID < eCSSFontDesc_COUNT,
@@ -85,15 +85,15 @@ CSSFontFaceRuleDecl::RemoveProperty(const nsAString& aPropName,
   return NS_OK;
 }
 
-void CSSFontFaceRuleDecl::GetPropertyPriority(const nsAString& aPropName,
+void CSSFontFaceRuleDecl::GetPropertyPriority(const nsACString& aPropName,
                                               nsAString& aResult) {
   // font descriptors do not have priorities at present
   aResult.Truncate();
 }
 
 NS_IMETHODIMP
-CSSFontFaceRuleDecl::SetProperty(const nsAString& aPropName,
-                                 const nsAString& aValue,
+CSSFontFaceRuleDecl::SetProperty(const nsACString& aPropName,
+                                 const nsACString& aValue,
                                  const nsAString& aPriority,
                                  nsIPrincipal* aSubjectPrincipal) {
   // FIXME(heycam): If we are changing unicode-range, then a FontFace object
@@ -111,11 +111,11 @@ uint32_t CSSFontFaceRuleDecl::Length() {
 }
 
 void CSSFontFaceRuleDecl::IndexedGetter(uint32_t aIndex, bool& aFound,
-                                        nsAString& aResult) {
+                                        nsACString& aResult) {
   nsCSSFontDesc id = Servo_FontFaceRule_IndexGetter(mRawRule, aIndex);
   if (id != eCSSFontDesc_UNKNOWN) {
     aFound = true;
-    aResult.AssignASCII(nsCSSProps::GetStringValue(id).get());
+    aResult.Assign(nsCSSProps::GetStringValue(id));
   } else {
     aFound = false;
   }

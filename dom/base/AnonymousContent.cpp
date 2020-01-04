@@ -178,7 +178,7 @@ bool AnonymousContent::WrapObject(JSContext* aCx,
 }
 
 void AnonymousContent::GetComputedStylePropertyValue(
-    const nsAString& aElementId, const nsAString& aPropertyName,
+    const nsAString& aElementId, const nsACString& aPropertyName,
     DOMString& aResult, ErrorResult& aRv) {
   Element* element = GetElementById(aElementId);
   if (!element) {
@@ -207,8 +207,8 @@ void AnonymousContent::GetTargetIdForEvent(Event& aEvent, DOMString& aResult) {
   aResult.SetNull();
 }
 
-void AnonymousContent::SetStyle(const nsAString& aProperty,
-                                const nsAString& aValue, ErrorResult& aRv) {
+void AnonymousContent::SetStyle(const nsACString& aProperty,
+                                const nsACString& aValue, ErrorResult& aRv) {
   if (!mContentNode->IsHTMLElement()) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return;

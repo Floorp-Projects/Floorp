@@ -330,14 +330,14 @@ void ActiveLayerTracker::NotifyOffsetRestyle(nsIFrame* aFrame) {
 /* static */
 void ActiveLayerTracker::NotifyAnimated(nsIFrame* aFrame,
                                         nsCSSPropertyID aProperty,
-                                        const nsAString& aNewValue,
+                                        const nsACString& aNewValue,
                                         nsDOMCSSDeclaration* aDOMCSSDecl) {
   LayerActivity* layerActivity = GetLayerActivityForUpdate(aFrame);
   uint8_t& mutationCount = layerActivity->RestyleCountForProperty(aProperty);
   if (mutationCount != 0xFF) {
     nsAutoString oldValue;
     aDOMCSSDecl->GetPropertyValue(aProperty, oldValue);
-    if (aNewValue != oldValue) {
+    if (NS_ConvertUTF16toUTF8(oldValue) != aNewValue) {
       // We know this is animated, so just hack the mutation count.
       mutationCount = 0xFF;
     }
@@ -378,7 +378,7 @@ static bool IsPresContextInScriptAnimationCallback(
 
 /* static */
 void ActiveLayerTracker::NotifyInlineStyleRuleModified(
-    nsIFrame* aFrame, nsCSSPropertyID aProperty, const nsAString& aNewValue,
+    nsIFrame* aFrame, nsCSSPropertyID aProperty, const nsACString& aNewValue,
     nsDOMCSSDeclaration* aDOMCSSDecl) {
   if (IsPresContextInScriptAnimationCallback(aFrame->PresContext())) {
     NotifyAnimated(aFrame, aProperty, aNewValue, aDOMCSSDecl);
