@@ -84,7 +84,7 @@ interface AnonymousContent {
    */
   [Throws]
   DOMString? getComputedStylePropertyValue(DOMString elementId,
-                                           DOMString propertyName);
+                                           UTF8String propertyName);
 
   /**
    * If event's original target is in the anonymous content, this returns the id
@@ -96,5 +96,5 @@ interface AnonymousContent {
    * Set given style to this AnonymousContent.
    */
   [Throws]
-  void setStyle(DOMString property, DOMString value);
+  void setStyle(UTF8String property, UTF8String value);
 };

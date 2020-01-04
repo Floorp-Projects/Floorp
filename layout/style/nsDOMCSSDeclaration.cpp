@@ -47,7 +47,7 @@ nsresult nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
 }
 
 nsresult nsDOMCSSDeclaration::SetPropertyValue(
-    const nsCSSPropertyID aPropID, const nsAString& aValue,
+    const nsCSSPropertyID aPropID, const nsACString& aValue,
     nsIPrincipal* aSubjectPrincipal) {
   if (IsReadOnly()) {
     return NS_OK;
@@ -155,13 +155,13 @@ uint32_t nsDOMCSSDeclaration::Length() {
 }
 
 void nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound,
-                                        nsAString& aPropName) {
+                                        nsACString& aPropName) {
   DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
   aFound = decl && decl->GetNthProperty(aIndex, aPropName);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
+nsDOMCSSDeclaration::GetPropertyValue(const nsACString& aPropertyName,
                                       nsAString& aReturn) {
   aReturn.Truncate();
   if (DeclarationBlock* decl =
@@ -171,7 +171,7 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
   return NS_OK;
 }
 
-void nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
+void nsDOMCSSDeclaration::GetPropertyPriority(const nsACString& aPropertyName,
                                               nsAString& aPriority) {
   DeclarationBlock* decl = GetOrCreateCSSDeclaration(eOperation_Read, nullptr);
 
@@ -182,8 +182,8 @@ void nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
-                                 const nsAString& aValue,
+nsDOMCSSDeclaration::SetProperty(const nsACString& aPropertyName,
+                                 const nsACString& aValue,
                                  const nsAString& aPriority,
                                  nsIPrincipal* aSubjectPrincipal) {
   if (IsReadOnly()) {
@@ -221,7 +221,7 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
+nsDOMCSSDeclaration::RemoveProperty(const nsACString& aPropertyName,
                                     nsAString& aReturn) {
   if (IsReadOnly()) {
     return NS_OK;
@@ -290,7 +290,7 @@ nsresult nsDOMCSSDeclaration::ModifyDeclaration(
 }
 
 nsresult nsDOMCSSDeclaration::ParsePropertyValue(
-    const nsCSSPropertyID aPropID, const nsAString& aPropValue,
+    const nsCSSPropertyID aPropID, const nsACString& aPropValue,
     bool aIsImportant, nsIPrincipal* aSubjectPrincipal) {
   AUTO_PROFILER_LABEL_CATEGORY_PAIR(LAYOUT_CSSParsing);
 
@@ -305,15 +305,14 @@ nsresult nsDOMCSSDeclaration::ParsePropertyValue(
   return ModifyDeclaration(
       aSubjectPrincipal, &closureData,
       [&](DeclarationBlock* decl, ParsingEnvironment& env) {
-        NS_ConvertUTF16toUTF8 value(aPropValue);
         return Servo_DeclarationBlock_SetPropertyById(
-            decl->Raw(), aPropID, &value, aIsImportant, env.mUrlExtraData,
+            decl->Raw(), aPropID, &aPropValue, aIsImportant, env.mUrlExtraData,
             ParsingMode::Default, env.mCompatMode, env.mLoader, closure);
       });
 }
 
 nsresult nsDOMCSSDeclaration::ParseCustomPropertyValue(
-    const nsAString& aPropertyName, const nsAString& aPropValue,
+    const nsACString& aPropertyName, const nsACString& aPropValue,
     bool aIsImportant, nsIPrincipal* aSubjectPrincipal) {
   MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
 
@@ -328,10 +327,8 @@ nsresult nsDOMCSSDeclaration::ParseCustomPropertyValue(
   return ModifyDeclaration(
       aSubjectPrincipal, &closureData,
       [&](DeclarationBlock* decl, ParsingEnvironment& env) {
-        NS_ConvertUTF16toUTF8 property(aPropertyName);
-        NS_ConvertUTF16toUTF8 value(aPropValue);
         return Servo_DeclarationBlock_SetProperty(
-            decl->Raw(), &property, &value, aIsImportant, env.mUrlExtraData,
+            decl->Raw(), &aPropertyName, &aPropValue, aIsImportant, env.mUrlExtraData,
             ParsingMode::Default, env.mCompatMode, env.mLoader, closure);
       });
 }
@@ -366,7 +363,7 @@ nsresult nsDOMCSSDeclaration::RemovePropertyInternal(nsCSSPropertyID aPropID) {
 }
 
 nsresult nsDOMCSSDeclaration::RemovePropertyInternal(
-    const nsAString& aPropertyName) {
+    const nsACString& aPropertyName) {
   if (IsReadOnly()) {
     return NS_OK;
   }

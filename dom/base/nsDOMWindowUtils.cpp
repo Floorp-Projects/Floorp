@@ -2016,7 +2016,8 @@ nsDOMWindowUtils::GetVisitedDependentComputedStyle(
   }
 
   static_cast<nsComputedDOMStyle*>(decl.get())->SetExposeVisitedStyle(true);
-  nsresult rv = decl->GetPropertyValue(aPropertyName, aResult);
+  nsresult rv =
+      decl->GetPropertyValue(NS_ConvertUTF16toUTF8(aPropertyName), aResult);
   static_cast<nsComputedDOMStyle*>(decl.get())->SetExposeVisitedStyle(false);
 
   return rv;

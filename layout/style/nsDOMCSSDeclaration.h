@@ -74,7 +74,7 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
    * always be set to default priority).
    */
   virtual nsresult SetPropertyValue(const nsCSSPropertyID aPropID,
-                                    const nsAString& aValue,
+                                    const nsACString& aValue,
                                     nsIPrincipal* aSubjectPrincipal);
 
   // Require subclasses to implement |GetParentRule|.
@@ -82,14 +82,14 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
   void GetCssText(nsAString& aCssText) override;
   void SetCssText(const nsAString& aCssText, nsIPrincipal* aSubjectPrincipal,
                   mozilla::ErrorResult& aRv) override;
-  NS_IMETHOD GetPropertyValue(const nsAString& propertyName,
+  NS_IMETHOD GetPropertyValue(const nsACString& propertyName,
                               nsAString& _retval) override;
-  NS_IMETHOD RemoveProperty(const nsAString& propertyName,
+  NS_IMETHOD RemoveProperty(const nsACString& propertyName,
                             nsAString& _retval) override;
-  void GetPropertyPriority(const nsAString& propertyName,
+  void GetPropertyPriority(const nsACString& propertyName,
                            nsAString& aPriority) override;
-  NS_IMETHOD SetProperty(const nsAString& propertyName, const nsAString& value,
-                         const nsAString& priority,
+  NS_IMETHOD SetProperty(const nsACString& propertyName,
+                         const nsACString& value, const nsAString& priority,
                          nsIPrincipal* aSubjectPrincipal) override;
   uint32_t Length() override;
 
@@ -102,7 +102,10 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
                                                                               \
   void Set##method_(const nsAString& aValue, nsIPrincipal* aSubjectPrincipal, \
                     mozilla::ErrorResult& rv) {                               \
-    rv = SetPropertyValue(eCSSProperty_##id_, aValue, aSubjectPrincipal);     \
+    /* FIXME: Should switch to UTF8String in the IDL, either by switching the \
+     * serialization code to it too, or by something like bug 862800. */      \
+    NS_ConvertUTF16toUTF8 v(aValue);                                          \
+    rv = SetPropertyValue(eCSSProperty_##id_, v, aSubjectPrincipal);          \
   }
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
@@ -119,7 +122,7 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound,
-                             nsAString& aPropName) override;
+                             nsACString& aPropName) override;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -189,16 +192,16 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
       const mozilla::css::Rule* aRule);
 
   nsresult ParsePropertyValue(const nsCSSPropertyID aPropID,
-                              const nsAString& aPropValue, bool aIsImportant,
+                              const nsACString& aPropValue, bool aIsImportant,
                               nsIPrincipal* aSubjectPrincipal);
 
-  nsresult ParseCustomPropertyValue(const nsAString& aPropertyName,
-                                    const nsAString& aPropValue,
+  nsresult ParseCustomPropertyValue(const nsACString& aPropertyName,
+                                    const nsACString& aPropValue,
                                     bool aIsImportant,
                                     nsIPrincipal* aSubjectPrincipal);
 
   nsresult RemovePropertyInternal(nsCSSPropertyID aPropID);
-  nsresult RemovePropertyInternal(const nsAString& aProperty);
+  nsresult RemovePropertyInternal(const nsACString& aProperty);
 
   virtual void GetPropertyChangeClosure(
       mozilla::DeclarationBlockMutationClosure* aClosure,
