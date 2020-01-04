@@ -407,6 +407,9 @@ interface TestInterface {
   sequence<ByteString> receiveByteStringSequence();
   void passByteStringSequence(sequence<ByteString> arg);
 
+  sequence<UTF8String> receiveUTF8StringSequence();
+  void passUTF8StringSequence(sequence<UTF8String> arg);
+
   sequence<any> receiveAnySequence();
   sequence<any>? receiveNullableAnySequence();
   sequence<sequence<any>> receiveAnySequenceSequence();
@@ -437,6 +440,7 @@ interface TestInterface {
   void passNullableExternalInterfaceRecord(record<DOMString, TestExternalInterface?> arg);
   void passStringRecord(record<DOMString, DOMString> arg);
   void passByteStringRecord(record<DOMString, ByteString> arg);
+  void passUTF8StringRecord(record<DOMString, UTF8String> arg);
   void passRecordOfRecords(record<DOMString, record<DOMString, long>> arg);
   record<DOMString, long> receiveRecord();
   record<DOMString, long>? receiveNullableRecord();
@@ -490,6 +494,17 @@ interface TestInterface {
   void passVariadicByteString(ByteString... arg);
   void passOptionalUnionByteString(optional (ByteString or long) arg);
   void passOptionalUnionByteStringWithDefaultValue(optional (ByteString or long) arg = "abc");
+
+  // UTF8String types
+  void passUTF8String(UTF8String arg);
+  void passNullableUTF8String(UTF8String? arg);
+  void passOptionalUTF8String(optional UTF8String arg);
+  void passOptionalUTF8StringWithDefaultValue(optional UTF8String arg = "abc");
+  void passOptionalNullableUTF8String(optional UTF8String? arg);
+  void passOptionalNullableUTF8StringWithDefaultValue(optional UTF8String? arg = null);
+  void passVariadicUTF8String(UTF8String... arg);
+  void passOptionalUnionUTF8String(optional (UTF8String or long) arg);
+  void passOptionalUnionUTF8StringWithDefaultValue(optional (UTF8String or long) arg = "abc");
 
   // USVString types
   void passUSVS(USVString arg);
@@ -664,6 +679,7 @@ interface TestInterface {
   void passUnion28(optional (EventInit or sequence<DOMString>) arg = {});
   void passUnionWithCallback((EventHandler or long) arg);
   void passUnionWithByteString((ByteString or long) arg);
+  void passUnionWithUTF8String((UTF8String or long) arg);
   void passUnionWithRecord((record<DOMString, DOMString> or DOMString) arg);
   void passUnionWithRecordAndSequence((record<DOMString, DOMString> or sequence<DOMString>) arg);
   void passUnionWithSequenceAndRecord((sequence<DOMString> or record<DOMString, DOMString>) arg);
@@ -713,6 +729,9 @@ interface TestInterface {
   void passUnionWithDefaultValue20(optional (double or USVString) arg = "abc");
   void passUnionWithDefaultValue21(optional (double or USVString) arg = 1);
   void passUnionWithDefaultValue22(optional (double or USVString) arg = 1.5);
+  void passUnionWithDefaultValue23(optional (double or UTF8String) arg = "");
+  void passUnionWithDefaultValue24(optional (double or UTF8String) arg = 1);
+  void passUnionWithDefaultValue25(optional (double or UTF8String) arg = 1.5);
 
   void passNullableUnionWithDefaultValue1(optional (double or DOMString)? arg = "");
   void passNullableUnionWithDefaultValue2(optional (double or DOMString)? arg = 1);
@@ -738,6 +757,11 @@ interface TestInterface {
   void passNullableUnionWithDefaultValue22(optional (double or USVString)? arg = 1);
   void passNullableUnionWithDefaultValue23(optional (double or USVString)? arg = 1.5);
   void passNullableUnionWithDefaultValue24(optional (double or USVString)? arg = null);
+
+  void passNullableUnionWithDefaultValue25(optional (double or UTF8String)? arg = "abc");
+  void passNullableUnionWithDefaultValue26(optional (double or UTF8String)? arg = 1);
+  void passNullableUnionWithDefaultValue27(optional (double or UTF8String)? arg = 1.5);
+  void passNullableUnionWithDefaultValue28(optional (double or UTF8String)? arg = null);
 
   void passSequenceOfUnions(sequence<(CanvasPattern or CanvasGradient)> arg);
   void passSequenceOfUnions2(sequence<(object or long)> arg);
@@ -1143,9 +1167,12 @@ dictionary Dict : ParentDict {
   record<USVString, long>? nullableUSVStringRecordWithDefault = null;
   record<ByteString, long> byteStringRecord;
   record<ByteString, long>? nullableByteStringRecordWithDefault = null;
+  record<UTF8String, long> utf8StringRecord;
+  record<UTF8String, long>? nullableUTF8StringRecordWithDefault = null;
   required record<DOMString, TestInterface> requiredRecord;
   required record<USVString, TestInterface> requiredUSVRecord;
   required record<ByteString, TestInterface> requiredByteRecord;
+  required record<UTF8String, TestInterface> requiredUTF8Record;
 };
 
 dictionary ParentDict : GrandparentDict {

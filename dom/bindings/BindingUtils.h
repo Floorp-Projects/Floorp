@@ -2500,6 +2500,29 @@ inline bool ByteStringToJsval(JSContext* cx, const nsACString& str,
   return NonVoidByteStringToJsval(cx, str, rval);
 }
 
+// Convert an utf-8 encoded nsCString to jsval, returning true on success.
+//
+// TODO(bug 1606957): This could probably be better.
+inline bool NonVoidUTF8StringToJsval(JSContext* cx, const nsACString& str,
+                                     JS::MutableHandle<JS::Value> rval) {
+  JSString* jsStr =
+      JS_NewStringCopyUTF8N(cx, {str.BeginReading(), str.Length()});
+  if (!jsStr) {
+    return false;
+  }
+  rval.setString(jsStr);
+  return true;
+}
+
+inline bool UTF8StringToJsval(JSContext* cx, const nsACString& str,
+                              JS::MutableHandle<JS::Value> rval) {
+  if (str.IsVoid()) {
+    rval.setNull();
+    return true;
+  }
+  return NonVoidUTF8StringToJsval(cx, str, rval);
+}
+
 template <class T, bool isISupports = IsBaseOf<nsISupports, T>::value>
 struct PreserveWrapperHelper {
   static void PreserveWrapper(T* aObject) {
