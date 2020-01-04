@@ -44,6 +44,15 @@ class Assembler {
   // the target will be the copy of aTarget instead.
   void Jump(void* aTarget);
 
+  // Push aValue onto the stack.
+  void PushImmediate(void* aValue);
+
+  // Return to the address at the top of the stack.
+  void Return();
+
+  // For debugging, insert a breakpoint instruction.
+  void Breakpoint();
+
   // Conditionally jump to aTarget, depending on the short jump opcode aCode.
   // If aTarget is in the range of instructions being copied, the target will
   // be the copy of aTarget instead.
@@ -68,9 +77,14 @@ class Assembler {
   // cmpq %rax, 0(%rsp)
   void CompareRaxWithTopOfStack();
 
+  // cmpq 0(%rsp), %rax
+  void CompareTopOfStackWithRax();
+
   // push/pop %rbx
   void PushRbx();
   void PopRbx();
+
+  void PopRegister(/*ud_type*/ int aRegister);
 
   // movq/movl/movb %rbx, 0(%rax)
   void StoreRbxToRax(size_t aWidth);
@@ -173,6 +187,11 @@ static const size_t ShortJumpBytes = 2;
 
 // The number of instruction bytes required for a jump that may clobber rax.
 static const size_t JumpBytesClobberRax = 12;
+
+// The number of instruction bytes required for an arbitrary jump.
+static const size_t JumpBytes = 17;
+
+static const size_t PushImmediateBytes = 16;
 
 // The maximum byte length of an x86/x64 instruction.
 static const size_t MaximumInstructionLength = 15;

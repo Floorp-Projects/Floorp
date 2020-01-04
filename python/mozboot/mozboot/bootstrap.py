@@ -73,6 +73,14 @@ APPLICATIONS = dict(
     mobile_android=APPLICATIONS_LIST[3],
 )
 
+VCS_CHOICE = '''
+Firefox can be cloned using either Git or Mercurial.
+
+Please choose the VCS you want to use:
+1. Mercurial
+2. Git
+Your choice: '''
+
 STATE_DIR_INFO = '''
 The Firefox build system and related tools store shared, persistent state
 in a common directory on the filesystem. On this machine, that directory
@@ -461,9 +469,22 @@ class Bootstrapper(object):
                                      hg=self.instance.which('hg'))
         (checkout_type, checkout_root) = r
 
+        # If we didn't specify a VCS, and we aren't in an exiting clone,
+        # offer a choice
+        if not self.vcs:
+            if checkout_type and False:
+                vcs = checkout_type
+            elif self.instance.no_interactive:
+                vcs = "hg"
+            else:
+                prompt_choice = self.instance.prompt_int(prompt=VCS_CHOICE, low=1, high=2)
+                vcs = ["hg", "git"][prompt_choice - 1]
+        else:
+            vcs = self.vcs
+
         # Possibly configure Mercurial, but not if the current checkout or repo
         # type is Git.
-        if hg_installed and state_dir_available and (checkout_type == 'hg' or self.vcs == 'hg'):
+        if hg_installed and state_dir_available and (checkout_type == 'hg' or vcs == 'hg'):
             configure_hg = False
             if not self.instance.no_interactive:
                 configure_hg = self.instance.prompt_yesno(prompt=CONFIGURE_MERCURIAL)
@@ -474,7 +495,7 @@ class Bootstrapper(object):
                 configure_mercurial(self.instance.which('hg'), state_dir)
 
         # Offer to configure Git, if the current checkout or repo type is Git.
-        elif self.instance.which('git') and (checkout_type == 'git' or self.vcs == 'git'):
+        elif self.instance.which('git') and (checkout_type == 'git' or vcs == 'git'):
             should_configure_git = False
             if not self.instance.no_interactive:
                 should_configure_git = self.instance.prompt_yesno(prompt=CONFIGURE_GIT)
@@ -491,12 +512,12 @@ class Bootstrapper(object):
 
         if checkout_type:
             have_clone = True
-        elif hg_installed and not self.instance.no_interactive and self.vcs == 'hg':
+        elif hg_installed and not self.instance.no_interactive and vcs == 'hg':
             dest = self.input_clone_dest()
             if dest:
                 have_clone = hg_clone_firefox(self.instance.which('hg'), dest)
                 checkout_root = dest
-        elif self.instance.which('git') and self.vcs == 'git':
+        elif self.instance.which('git') and vcs == 'git':
             dest = self.input_clone_dest(False)
             if dest:
                 git = self.instance.which('git')

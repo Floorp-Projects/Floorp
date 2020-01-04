@@ -18,6 +18,7 @@ using struct mozilla::gfx::VRSensorUpdate from "gfxVR.h";
 using struct mozilla::gfx::VRHMDSensorState from "gfxVR.h";
 using struct mozilla::gfx::VRControllerInfo from "gfxVR.h";
 using struct mozilla::gfx::VRSubmitFrameResultInfo from "gfxVR.h";
+using mozilla::gfx::VRDisplayCapabilityFlags from "moz_external_vr.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 
@@ -36,6 +37,10 @@ sync protocol PVRManager
 
 parent:
   async PVRLayer(uint32_t aDisplayID, uint32_t aGroup);
+
+  // Detect runtime capabilities.  This will return the presense of VR and/or AR
+  // runtime software, without enumerating or activating any hardware devices.
+  async DetectRuntimes();
 
   // (Re)Enumerate VR Displays.  An updated list of VR displays will be returned
   // asynchronously to children via UpdateDisplayInfo.
@@ -62,7 +67,9 @@ child:
   // be sent to all children when the parent receives RefreshDisplays, even
   // if no changes have been detected.  This ensures that Promises exposed
   // through DOM calls are always resolved.
-  async UpdateDisplayInfo(VRDisplayInfo[] aDisplayUpdates);
+  async UpdateDisplayInfo(VRDisplayInfo aDisplayInfo);
+
+  async UpdateRuntimeCapabilities(VRDisplayCapabilityFlags aCapabilities);
 
   async ReplyGamepadVibrateHaptic(uint32_t aPromiseID);
   async NotifyPuppetCommandBufferCompleted(bool aSuccess);

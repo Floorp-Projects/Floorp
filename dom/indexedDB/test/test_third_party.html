@@ -68,8 +68,7 @@
     }
 
     function messageListener(event) {
-      // eslint-disable-next-line no-eval
-      let message = eval(event.data);
+      let message = JSON.parse(event.data);
 
       // TODO: This is an ad-hoc solution to get a useful assertion message.
       // It would be desirable that the test framework provides the ability

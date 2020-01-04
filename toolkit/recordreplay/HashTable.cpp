@@ -113,16 +113,14 @@ class StableHashTableInfo {
         mTable(nullptr),
         mCallbackHash(0) {
     // Use AllocateMemory, as the result will have RWX permissions.
-    mCallbackStorage =
-        (uint8_t*)AllocateMemory(CallbackStorageCapacity, MemoryKind::Tracked);
+    mCallbackStorage = (uint8_t*)DirectAllocateMemory(CallbackStorageCapacity);
 
     MarkValid();
   }
 
   ~StableHashTableInfo() {
     MOZ_RELEASE_ASSERT(mHashToKey.empty());
-    DeallocateMemory(mCallbackStorage, CallbackStorageCapacity,
-                     MemoryKind::Tracked);
+    DirectDeallocateMemory(mCallbackStorage, CallbackStorageCapacity);
 
     UnmarkValid();
   }

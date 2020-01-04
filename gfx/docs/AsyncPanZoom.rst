@@ -474,14 +474,15 @@ Locks
 
 There are also a number of locks used in APZ code:
 
-================== ==============================
-Lock type          How many instances
-================== ==============================
-APZ tree lock      one per APZCTreeManager
-APZC map lock      one per APZCTreeManager
-APZC instance lock one per AsyncPanZoomController
-APZ test lock      one per APZCTreeManager
-================== ==============================
+======================= ==============================
+Lock type               How many instances
+======================= ==============================
+APZ tree lock           one per APZCTreeManager
+APZC map lock           one per APZCTreeManager
+APZC instance lock      one per AsyncPanZoomController
+APZ test lock           one per APZCTreeManager
+Checkerboard event lock one per AsyncPanZoomController
+======================= ==============================
 
 Thread / Lock Ordering
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -507,6 +508,7 @@ Respecting the ordering means the following:
 7. **APZC map lock**
 8. **APZC instance lock**
 9. **APZ test lock**
+10. **Checkerboard event lock**
 
 Example workflows
 ^^^^^^^^^^^^^^^^^

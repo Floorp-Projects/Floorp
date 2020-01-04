@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* global uneval */
-
 const { CC } = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpn } = DevToolsUtils;
@@ -47,9 +45,9 @@ LocalDebuggerTransport.prototype = {
     if (flags.wantLogging) {
       // Check 'from' first, as 'echo' packets have both.
       if (packet.from) {
-        dumpn("Packet " + serial + " sent from " + uneval(packet.from));
+        dumpn("Packet " + serial + " sent from " + JSON.stringify(packet.from));
       } else if (packet.to) {
-        dumpn("Packet " + serial + " sent to " + uneval(packet.to));
+        dumpn("Packet " + serial + " sent to " + JSON.stringify(packet.to));
       }
     }
     this._deepFreeze(packet);

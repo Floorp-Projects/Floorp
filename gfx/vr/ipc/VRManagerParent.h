@@ -49,6 +49,7 @@ class VRManagerParent final : public PVRManagerParent {
   virtual void ActorDestroy(ActorDestroyReason why) override;
   void OnChannelConnected(int32_t pid) override;
 
+  mozilla::ipc::IPCResult RecvDetectRuntimes();
   mozilla::ipc::IPCResult RecvRefreshDisplays();
   mozilla::ipc::IPCResult RecvSetGroupMask(const uint32_t& aDisplayID,
                                            const uint32_t& aGroupMask);

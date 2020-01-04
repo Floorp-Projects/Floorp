@@ -73,11 +73,21 @@ namespace recordreplay {
 // Function Redirections
 ///////////////////////////////////////////////////////////////////////////////
 
-struct CallArguments;
+// Capture the arguments that can be passed to a redirection, and provide
+// storage to specify the redirection's return value. We only need to capture
+// enough argument data here for calls made directly from Gecko code,
+// i.e. where events are not passed through. Calls made while events are passed
+// through are performed with the same stack and register state as when they
+// were initially invoked.
+//
+// Arguments and return value indexes refer to the register contents as passed
+// to the function originally. For functions with complex or floating point
+// arguments and return values, the right index to use might be different than
+// expected, per the requirements of the System V x64 ABI.
+struct CallArguments {
+  // The maximum number of stack arguments that can be captured.
+  static const size_t NumStackArguments = 64;
 
-// All argument and return value data that is stored in registers and whose
-// values are preserved when calling a redirected function.
-struct CallRegisterArguments {
  protected:
   size_t arg0;        // 0
   size_t arg1;        // 8
@@ -92,30 +102,6 @@ struct CallRegisterArguments {
   size_t rval1;       // 80
   double floatrval0;  // 88
   double floatrval1;  // 96
-                      // Size: 104
-
- public:
-  void CopyFrom(const CallRegisterArguments* aArguments);
-  void CopyTo(CallRegisterArguments* aArguments) const;
-  void CopyRvalFrom(const CallRegisterArguments* aArguments);
-};
-
-// Capture the arguments that can be passed to a redirection, and provide
-// storage to specify the redirection's return value. We only need to capture
-// enough argument data here for calls made directly from Gecko code,
-// i.e. where events are not passed through. Calls made while events are passed
-// through are performed with the same stack and register state as when they
-// were initially invoked.
-//
-// Arguments and return value indexes refer to the register contents as passed
-// to the function originally. For functions with complex or floating point
-// arguments and return values, the right index to use might be different than
-// expected, per the requirements of the System V x64 ABI.
-struct CallArguments : public CallRegisterArguments {
-  // The maximum number of stack arguments that can be captured.
-  static const size_t NumStackArguments = 64;
-
- protected:
   size_t stack[NumStackArguments];  // 104
                                     // Size: 616
 
@@ -123,7 +109,7 @@ struct CallArguments : public CallRegisterArguments {
   template <typename T>
   T& Arg(size_t aIndex) {
     static_assert(sizeof(T) == sizeof(size_t), "Size must match");
-    static_assert(IsFloatingPoint<T>::value == false, "FloatArg NYI");
+    static_assert(IsFloatingPoint<T>::value == false, "Use FloatArg");
     MOZ_RELEASE_ASSERT(aIndex < 70);
     switch (aIndex) {
       case 0:
@@ -146,6 +132,19 @@ struct CallArguments : public CallRegisterArguments {
   template <size_t Index, typename T>
   T& Arg() {
     return Arg<T>(Index);
+  }
+
+  template <size_t Index>
+  double& FloatArg() {
+    static_assert(Index < 3, "Bad index");
+    switch (Index) {
+      case 0:
+        return floatarg0;
+      case 1:
+        return floatarg1;
+      case 2:
+        return floatarg2;
+    }
   }
 
   template <size_t Offset>
@@ -178,24 +177,6 @@ struct CallArguments : public CallRegisterArguments {
     }
   }
 };
-
-inline void CallRegisterArguments::CopyFrom(
-    const CallRegisterArguments* aArguments) {
-  memcpy(this, aArguments, sizeof(CallRegisterArguments));
-}
-
-inline void CallRegisterArguments::CopyTo(
-    CallRegisterArguments* aArguments) const {
-  memcpy(aArguments, this, sizeof(CallRegisterArguments));
-}
-
-inline void CallRegisterArguments::CopyRvalFrom(
-    const CallRegisterArguments* aArguments) {
-  rval0 = aArguments->rval0;
-  rval1 = aArguments->rval1;
-  floatrval0 = aArguments->floatrval0;
-  floatrval1 = aArguments->floatrval1;
-}
 
 // Generic type for a system error code.
 typedef ssize_t ErrorType;
@@ -231,10 +212,10 @@ enum class PreambleResult {
 // modify its behavior.
 typedef PreambleResult (*PreambleFn)(CallArguments* aArguments);
 
-// Signature for a function that conveys data about a call to or from the
-// middleman process.
-struct MiddlemanCallContext;
-typedef void (*MiddlemanCallFn)(MiddlemanCallContext& aCx);
+// Signature for a function that conveys data about a call to or from an
+// external process.
+struct ExternalCallContext;
+typedef void (*ExternalCallFn)(ExternalCallContext& aCx);
 
 // Information about a system library API function which is being redirected.
 struct Redirection {
@@ -260,13 +241,13 @@ struct Redirection {
   // If specified, will be called upon entry to the redirected call.
   PreambleFn mPreamble;
 
-  // If specified, will be called while replaying and diverged from the
-  // recording to perform this call in the middleman process.
-  MiddlemanCallFn mMiddlemanCall;
+  // If specified, allows this call to be made after diverging from the
+  // recording. See ExternalCall.h
+  ExternalCallFn mExternalCall;
 
   // Additional preamble that is only called while replaying and diverged from
   // the recording.
-  PreambleFn mMiddlemanPreamble;
+  PreambleFn mExternalPreamble;
 };
 
 // Platform specific methods describing the set of redirections.
@@ -399,6 +380,21 @@ static inline void RR_CStringRval(Stream& aEvents, CallArguments* aArguments,
   }
 }
 
+// Record/replay a fixed size rval buffer.
+template <size_t ByteCount>
+static inline void RR_RvalBuffer(Stream& aEvents, CallArguments* aArguments,
+                                 ErrorType* aError) {
+  auto& rval = aArguments->Rval<void*>();
+  bool hasRval = IsRecording() && rval;
+  aEvents.RecordOrReplayValue(&hasRval);
+  if (IsReplaying()) {
+    rval = hasRval ? NewLeakyArray<char>(ByteCount) : nullptr;
+  }
+  if (hasRval) {
+    aEvents.RecordOrReplayBytes(rval, ByteCount);
+  }
+}
+
 // Ensure that the return value matches the specified argument.
 template <size_t Argument>
 static inline void RR_RvalIsArgument(Stream& aEvents, CallArguments* aArguments,
@@ -508,6 +504,14 @@ static inline void RR_WriteOptionalBufferFixedSize(Stream& aEvents,
   }
 }
 
+// Record/replay an out parameter.
+template <size_t Arg, typename Type>
+static inline void RR_OutParam(Stream& aEvents, CallArguments* aArguments,
+                               ErrorType* aError) {
+  RR_WriteOptionalBufferFixedSize<Arg, sizeof(Type)>(aEvents, aArguments,
+                                                     aError);
+}
+
 // Record/replay the contents of a buffer at argument BufferArg with byte size
 // CountArg, where the call return value plus Offset indicates the amount of
 // data written to the buffer by the call. The return value must already have
@@ -586,6 +590,14 @@ static inline PreambleResult Preamble_WaitForever(CallArguments* aArguments) {
   Thread::WaitForever();
   Unreachable();
   return PreambleResult::PassThrough;
+}
+
+static inline PreambleResult Preamble_NYI(CallArguments* aArguments) {
+  if (AreThreadEventsPassedThrough()) {
+    return PreambleResult::PassThrough;
+  }
+  MOZ_CRASH("Redirection NYI");
+  return PreambleResult::Veto;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

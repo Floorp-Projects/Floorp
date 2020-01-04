@@ -8,11 +8,9 @@
 // requests and other instructions from the middleman via the exported symbols
 // defined at the end of this file.
 //
-// Like all other JavaScript in the recording/replaying process, this code's
-// state is included in memory snapshots and reset when checkpoints are
-// restored. In the process of handling the middleman's requests, however, its
-// state may vary between recording and replaying, or between different
-// replays. As a result, we have to be very careful about performing operations
+// In the process of handling the middleman's requests, state in this file may
+// vary between recording and replaying, or between different replays.
+// As a result, we have to be very careful about performing operations
 // that might interact with the recording --- any time we enter the debuggee
 // and evaluate code or perform other operations.
 // The divergeFromRecording function should be used at any point where such
@@ -45,7 +43,6 @@ const {
   CSSRule,
   pointPrecedes,
   pointEquals,
-  pointArrayIncludes,
   findClosestPoint,
 } = sandbox;
 
@@ -173,36 +170,16 @@ function isNonNullObject(obj) {
   return obj && (typeof obj == "object" || typeof obj == "function");
 }
 
-function getMemoryUsage() {
-  const memoryKinds = {
-    Generic: [1],
-    Snapshots: [2, 3, 4, 5, 6, 7],
-    ScriptHits: [8],
-  };
-
-  const rv = {};
-  for (const [name, kinds] of Object.entries(memoryKinds)) {
-    let total = 0;
-    kinds.forEach(kind => {
-      total += RecordReplayControl.memoryUsage(kind);
-    });
-    rv[name] = total;
-  }
-  return rv;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Persistent Script State
 ///////////////////////////////////////////////////////////////////////////////
 
 // Association between Debugger.Scripts and their IDs. The indices that this
-// table assigns to scripts are stable across the entire recording, even though
-// this table (like all JS state) is included in snapshots, rolled back when
-// rewinding, and so forth.  In debuggee time, this table only grows (there is
-// no way to remove entries). Scripts created for debugger activity (e.g. eval)
-// are ignored, and off thread compilation is disabled, so this table acquires
-// the same scripts in the same order as we roll back and run forward in the
-// recording.
+// table assigns to scripts are stable across the entire recording. In debuggee
+// time, this table only grows (there is no way to remove entries).
+// Scripts created for debugger activity (e.g. eval) are ignored, and off thread
+// compilation is disabled, so this table acquires the same scripts in the same
+// order as we roll back and run forward in the recording.
 const gScripts = new IdMap();
 
 // Any scripts added since the last checkpoint.
@@ -957,16 +934,11 @@ const gNewDebuggerStatements = [];
 // Whether to pause on debugger statements when running forward.
 let gPauseOnDebuggerStatement = false;
 
-function ensureRunToPointPositionHandlers({ endpoint, snapshotPoints }) {
+function ensureRunToPointPositionHandlers({ endpoint }) {
   if (gLastCheckpoint == endpoint.checkpoint) {
     assert(endpoint.position);
     ensurePositionHandler(endpoint.position);
   }
-  snapshotPoints.forEach(snapshot => {
-    if (gLastCheckpoint == snapshot.checkpoint && snapshot.position) {
-      ensurePositionHandler(snapshot.position);
-    }
-  });
 }
 
 // Handlers that run when a manifest is first received. This must be specified
@@ -980,9 +952,10 @@ const gManifestStartHandlers = {
     dbg.onDebuggerStatement = debuggerStatementHit;
   },
 
-  restoreSnapshot({ numSnapshots }) {
-    RecordReplayControl.restoreSnapshot(numSnapshots);
-    throwError("Unreachable!");
+  fork({ id }) {
+    const point = currentScriptedExecutionPoint() || currentExecutionPoint();
+    RecordReplayControl.fork(id);
+    RecordReplayControl.manifestFinished({ point });
   },
 
   runToPoint(manifest) {
@@ -1117,7 +1090,7 @@ function currentExecutionPoint(position) {
 function currentScriptedExecutionPoint() {
   const numFrames = countScriptFrames();
   if (!numFrames) {
-    return null;
+    return undefined;
   }
 
   const index = numFrames - 1;
@@ -1152,9 +1125,6 @@ const gManifestFinishedAfterCheckpointHandlers = {
     // The primordial manifest runs forward to the first checkpoint, saves it,
     // and then finishes.
     assert(point.checkpoint == FirstCheckpointId);
-    if (!newSnapshot(point)) {
-      return;
-    }
     RecordReplayControl.manifestFinished({ point });
   },
 
@@ -1163,29 +1133,22 @@ const gManifestFinishedAfterCheckpointHandlers = {
     finishResume(point);
   },
 
-  runToPoint({ endpoint, snapshotPoints }, point) {
+  runToPoint({ endpoint, flushExternalCalls }, point) {
     assert(endpoint.checkpoint >= point.checkpoint);
-    if (pointArrayIncludes(snapshotPoints, point) && !newSnapshot(point)) {
-      return;
-    }
     if (!endpoint.position && point.checkpoint == endpoint.checkpoint) {
+      if (flushExternalCalls) {
+        RecordReplayControl.flushExternalCalls();
+      }
       RecordReplayControl.manifestFinished({ point });
     }
   },
 
-  scanRecording({ endpoint, snapshotPoints }, point) {
+  scanRecording({ endpoint }, point) {
     stopScanningAllScripts();
-    if (pointArrayIncludes(snapshotPoints, point) && !newSnapshot(point)) {
-      return;
-    }
     if (point.checkpoint == endpoint.checkpoint) {
       const duration =
         RecordReplayControl.currentExecutionTime() - gManifestStartTime;
-      RecordReplayControl.manifestFinished({
-        point,
-        duration,
-        memoryUsage: getMemoryUsage(),
-      });
+      RecordReplayControl.manifestFinished({ point, duration });
     }
   },
 };
@@ -1205,7 +1168,7 @@ const gManifestPrepareAfterCheckpointHandlers = {
   },
 };
 
-function processManifestAfterCheckpoint(point, restoredSnapshot) {
+function processManifestAfterCheckpoint(point) {
   if (gManifestFinishedAfterCheckpointHandlers[gManifest.kind]) {
     gManifestFinishedAfterCheckpointHandlers[gManifest.kind](gManifest, point);
   }
@@ -1244,15 +1207,10 @@ const gManifestPositionHandlers = {
     finishResume(point);
   },
 
-  runToPoint({ endpoint, snapshotPoints }, point) {
-    if (pointArrayIncludes(snapshotPoints, point)) {
-      clearPositionHandlers();
-      if (newSnapshot(point)) {
-        ensureRunToPointPositionHandlers({ endpoint, snapshotPoints });
-      }
-    }
+  runToPoint({ endpoint, flushExternalCalls }, point) {
     if (pointEquals(point, endpoint)) {
       clearPositionHandlers();
+      assert(!flushExternalCalls);
       RecordReplayControl.manifestFinished({ point });
     }
   },
@@ -1277,18 +1235,6 @@ function debuggerStatementHit() {
     clearPositionHandlers();
     finishResume(point);
   }
-}
-
-function newSnapshot(point) {
-  if (RecordReplayControl.newSnapshot()) {
-    return true;
-  }
-
-  // After rewinding gManifest won't be correct, so we always mark the current
-  // manifest as finished and rely on the middleman to give us a new one.
-  RecordReplayControl.manifestFinished({ restoredSnapshot: true, point });
-
-  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

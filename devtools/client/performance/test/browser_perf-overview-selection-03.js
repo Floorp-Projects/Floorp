@@ -53,18 +53,18 @@ add_task(async function() {
   await rangeSelected;
 
   is(
-    markersOverview.getSelection().toSource(),
-    framerateGraph.getSelection().toSource(),
+    JSON.stringify(markersOverview.getSelection()),
+    JSON.stringify(framerateGraph.getSelection()),
     "The markers overview has a correct selection."
   );
   is(
-    memoryGraph.getSelection().toSource(),
-    framerateGraph.getSelection().toSource(),
+    JSON.stringify(memoryGraph.getSelection()),
+    JSON.stringify(framerateGraph.getSelection()),
     "The memory overview has a correct selection."
   );
   is(
-    framerateGraph.getSelection().toSource(),
-    "({start:0, end:" + width / 2 + "})",
+    JSON.stringify(framerateGraph.getSelection()),
+    JSON.stringify({ start: 0, end: width / 2 }),
     "The framerate graph has a correct selection."
   );
 
@@ -78,18 +78,18 @@ add_task(async function() {
   await rangeSelected;
 
   is(
-    markersOverview.getSelection().toSource(),
-    framerateGraph.getSelection().toSource(),
+    JSON.stringify(markersOverview.getSelection()),
+    JSON.stringify(framerateGraph.getSelection()),
     "The markers overview has a correct selection."
   );
   is(
-    memoryGraph.getSelection().toSource(),
-    framerateGraph.getSelection().toSource(),
+    JSON.stringify(memoryGraph.getSelection()),
+    JSON.stringify(framerateGraph.getSelection()),
     "The memory overview has a correct selection."
   );
   is(
-    framerateGraph.getSelection().toSource(),
-    "({start:0, end:" + width / 4 + "})",
+    JSON.stringify(framerateGraph.getSelection()),
+    JSON.stringify({ start: 0, end: width / 4 }),
     "The framerate graph has a correct selection."
   );
 
@@ -103,18 +103,18 @@ add_task(async function() {
   await rangeSelected;
 
   is(
-    markersOverview.getSelection().toSource(),
-    framerateGraph.getSelection().toSource(),
+    JSON.stringify(markersOverview.getSelection()),
+    JSON.stringify(framerateGraph.getSelection()),
     "The markers overview has a correct selection."
   );
   is(
-    memoryGraph.getSelection().toSource(),
-    framerateGraph.getSelection().toSource(),
+    JSON.stringify(memoryGraph.getSelection()),
+    JSON.stringify(framerateGraph.getSelection()),
     "The memory overview has a correct selection."
   );
   is(
-    framerateGraph.getSelection().toSource(),
-    "({start:0, end:" + width / 10 + "})",
+    JSON.stringify(framerateGraph.getSelection()),
+    JSON.stringify({ start: 0, end: width / 10 }),
     "The framerate graph has a correct selection."
   );
 

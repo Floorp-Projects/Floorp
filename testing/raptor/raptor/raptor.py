@@ -140,12 +140,15 @@ either Raptor or browsertime."""
         }
 
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
-        # See bugs 1582757 and 1606199; until we support aarch64 and
-        # fennec_aurora conditioned-profile builds, fall back to mozrunner-created profiles
+        # See bugs 1582757, 1606199, and 1606767; until we support win10-aarch64,
+        # fennec_aurora, and reference browser conditioned-profile builds,
+        # fall back to mozrunner-created profiles
         self.no_condprof = ((self.config['platform'] == 'win'
                              and self.config['processor'] == 'aarch64') or
                             self.config['binary'] == 'org.mozilla.fennec_aurora' or
+                            self.config['binary'] == 'org.mozilla.reference.browser.raptor' or
                             self.config['no_conditioned_profile'])
+        LOG.info("self.no_condprof is: {}".format(self.no_condprof))
 
         # We can never use e10s on fennec
         if self.config['app'] == 'fennec':

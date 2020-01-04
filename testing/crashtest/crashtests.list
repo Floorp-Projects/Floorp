@@ -28,6 +28,7 @@ include ../../dom/plugins/test/crashtests/crashtests.list
 include ../../dom/security/test/crashtests/crashtests.list
 include ../../dom/smil/crashtests/crashtests.list
 include ../../dom/svg/crashtests/crashtests.list
+include ../../dom/vr/test/crashtests/crashtests.list
 include ../../dom/workers/test/crashtests/crashtests.list
 include ../../dom/xhr/tests/crashtests/crashtests.list
 include ../../dom/xml/crashtests/crashtests.list

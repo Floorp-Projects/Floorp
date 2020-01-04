@@ -27,6 +27,7 @@ add_task(async function testTempPermissionRequestAfterExpiry() {
     set: [
       ["privacy.temporary_permission_expire_time_ms", EXPIRE_TIME_MS],
       ["media.navigator.permission.fake", true],
+      ["dom.vr.always_support_vr", true],
     ],
   });
 

@@ -13,11 +13,13 @@
 #include "ipc/Channel.h"
 #include "js/Proxy.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
+#include "ChildInternal.h"
 #include "InfallibleVector.h"
 #include "JSControl.h"
 #include "Monitor.h"
 #include "ProcessRecordReplay.h"
 #include "ProcessRedirect.h"
+#include "rrIConnection.h"
 
 #include <algorithm>
 
@@ -83,21 +85,9 @@ ChildProcessInfo* GetChildProcess(size_t aId) {
   return nullptr;
 }
 
-size_t SpawnReplayingChild() {
-  ChildProcessInfo* child = new ChildProcessInfo(Nothing());
+void SpawnReplayingChild(size_t aChannelId) {
+  ChildProcessInfo* child = new ChildProcessInfo(aChannelId, Nothing());
   gReplayingChildren.append(child);
-  return child->GetId();
-}
-
-void ResumeBeforeWaitingForIPDLReply() {
-  MOZ_RELEASE_ASSERT(gActiveChild->IsRecording());
-
-  // The main thread is about to block while it waits for a sync reply from the
-  // recording child process. If the child is paused, resume it immediately so
-  // that we don't deadlock.
-  if (gActiveChild->IsPaused()) {
-    MOZ_CRASH("NYI");
-  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -160,25 +150,17 @@ bool DebuggerRunsInMiddleman() {
 // Saving Recordings
 ///////////////////////////////////////////////////////////////////////////////
 
-// Handle to the recording file opened at startup.
-static FileHandle gRecordingFd;
+StaticInfallibleVector<char> gRecordingContents;
 
 static void SaveRecordingInternal(const ipc::FileDescriptor& aFile) {
   // Make sure the recording file is up to date and ready for copying.
   js::BeforeSaveRecording();
 
-  // Copy the file's contents to the new file.
-  DirectSeekFile(gRecordingFd, 0);
+  // Copy the recording's contents to the new file.
   ipc::FileDescriptor::UniquePlatformHandle writefd =
       aFile.ClonePlatformHandle();
-  char buf[4096];
-  while (true) {
-    size_t n = DirectRead(gRecordingFd, buf, sizeof(buf));
-    if (!n) {
-      break;
-    }
-    DirectWrite(writefd.get(), buf, n);
-  }
+  DirectWrite(writefd.get(), gRecordingContents.begin(),
+              gRecordingContents.length());
 
   PrintSpew("Saved Recording Copy.\n");
 
@@ -197,6 +179,144 @@ void SaveRecording(const ipc::FileDescriptor& aFile) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Cloud Processes
+///////////////////////////////////////////////////////////////////////////////
+
+bool UseCloudForReplayingProcesses() {
+  nsAutoString cloudServer;
+  Preferences::GetString("devtools.recordreplay.cloudServer", cloudServer);
+  return cloudServer.Length() != 0;
+}
+
+static StaticRefPtr<rrIConnection> gConnection;
+static StaticInfallibleVector<Channel*> gConnectionChannels;
+
+class SendMessageToCloudRunnable : public Runnable {
+ public:
+  int32_t mConnectionId;
+  Message::UniquePtr mMsg;
+
+  SendMessageToCloudRunnable(int32_t aConnectionId, Message::UniquePtr aMsg)
+      : Runnable("SendMessageToCloudRunnable"),
+        mConnectionId(aConnectionId), mMsg(std::move(aMsg)) {}
+
+  NS_IMETHODIMP Run() {
+    AutoSafeJSContext cx;
+    JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
+
+    JS::RootedObject data(cx, JS::NewArrayBuffer(cx, mMsg->mSize));
+    MOZ_RELEASE_ASSERT(data);
+
+    {
+      JS::AutoCheckCannotGC nogc;
+
+      bool isSharedMemory;
+      uint8_t* ptr = JS::GetArrayBufferData(data, &isSharedMemory, nogc);
+      MOZ_RELEASE_ASSERT(ptr);
+
+      memcpy(ptr, mMsg.get(), mMsg->mSize);
+    }
+
+    JS::RootedValue dataValue(cx, JS::ObjectValue(*data));
+    if (NS_FAILED(gConnection->SendMessage(mConnectionId, dataValue))) {
+      MOZ_CRASH("SendMessageToCloud");
+    }
+
+    return NS_OK;
+  }
+};
+
+static bool ConnectionCallback(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
+  JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (!args.get(0).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Expected number");
+    return false;
+  }
+  size_t id = args.get(0).toNumber();
+  if (id >= gConnectionChannels.length() || !gConnectionChannels[id]) {
+    JS_ReportErrorASCII(aCx, "Bad connection channel ID");
+    return false;
+  }
+
+  if (!args.get(1).isObject()) {
+    JS_ReportErrorASCII(aCx, "Expected object");
+    return false;
+  }
+
+  bool sentData = false;
+  {
+    JS::AutoCheckCannotGC nogc;
+
+    uint32_t length;
+    uint8_t* ptr;
+    bool isSharedMemory;
+    JS::GetArrayBufferLengthAndData(&args.get(1).toObject(), &length,
+                                    &isSharedMemory, &ptr);
+
+    if (ptr) {
+      Channel* channel = gConnectionChannels[id];
+      channel->SendMessageData((const char*) ptr, length);
+      sentData = true;
+    }
+  }
+  if (!sentData) {
+    JS_ReportErrorASCII(aCx, "Expected array buffer");
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+void CreateReplayingCloudProcess(base::ProcessId aProcessId,
+                                 uint32_t aChannelId) {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+
+  if (!gConnection) {
+    nsCOMPtr<rrIConnection> connection =
+        do_ImportModule("resource://devtools/server/actors/replay/connection.js");
+    gConnection = connection.forget();
+    ClearOnShutdown(&gConnection);
+
+    AutoSafeJSContext cx;
+    JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
+
+    JSFunction* fun = JS_NewFunction(cx, ConnectionCallback, 2, 0,
+                                     "ConnectionCallback");
+    MOZ_RELEASE_ASSERT(fun);
+    JS::RootedValue callback(cx, JS::ObjectValue(*(JSObject*)fun));
+    if (NS_FAILED(gConnection->Initialize(callback))) {
+      MOZ_CRASH("CreateReplayingCloudProcess");
+    }
+  }
+
+  AutoSafeJSContext cx;
+  JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
+
+  nsAutoString cloudServer;
+  Preferences::GetString("devtools.recordreplay.cloudServer", cloudServer);
+  MOZ_RELEASE_ASSERT(cloudServer.Length() != 0);
+
+  int32_t connectionId;
+  if (NS_FAILED(gConnection->Connect(aChannelId, cloudServer, &connectionId))) {
+    MOZ_CRASH("CreateReplayingCloudProcess");
+  }
+
+  Channel* channel = new Channel(
+      aChannelId, Channel::Kind::ParentCloud,
+      [=](Message::UniquePtr aMsg) {
+        RefPtr<SendMessageToCloudRunnable> runnable =
+          new SendMessageToCloudRunnable(connectionId, std::move(aMsg));
+        NS_DispatchToMainThread(runnable);
+      }, aProcessId);
+  while ((size_t)connectionId >= gConnectionChannels.length()) {
+    gConnectionChannels.append(nullptr);
+  }
+  gConnectionChannels[connectionId] = channel;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Initialization
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -208,6 +328,8 @@ MessageLoop* MainThreadMessageLoop() { return gMainThreadMessageLoop; }
 static base::ProcessId gParentPid;
 
 base::ProcessId ParentProcessId() { return gParentPid; }
+
+Monitor* gMonitor;
 
 void InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
                          const base::SharedMemoryHandle& aPrefsHandle,
@@ -234,7 +356,7 @@ void InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
 
   if (gProcessKind == ProcessKind::MiddlemanRecording) {
     RecordingProcessData data(aPrefsHandle, aPrefMapHandle);
-    gRecordingChild = new ChildProcessInfo(Some(data));
+    gRecordingChild = new ChildProcessInfo(0, Some(data));
 
     // Set the active child to the recording child initially, so that message
     // forwarding works before the middleman control JS has been initialized.
@@ -243,9 +365,21 @@ void InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
 
   InitializeForwarding();
 
-  // Open a file handle to the recording file we can use for saving recordings
-  // later on.
-  gRecordingFd = DirectOpenFile(gRecordingFilename, false);
+  if (gProcessKind == ProcessKind::MiddlemanReplaying) {
+    // Load the entire recording into memory.
+    FileHandle fd = DirectOpenFile(gRecordingFilename, false);
+
+    char buf[4096];
+    while (true) {
+      size_t n = DirectRead(fd, buf, sizeof(buf));
+      if (!n) {
+        break;
+      }
+      gRecordingContents.append(buf, n);
+    }
+
+    DirectCloseFile(fd);
+  }
 }
 
 }  // namespace parent

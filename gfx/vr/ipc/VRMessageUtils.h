@@ -64,6 +64,12 @@ struct ParamTraits<mozilla::gfx::VRSubmitFrameResultInfo> {
   }
 };
 
+template <>
+struct ParamTraits<mozilla::gfx::VRDisplayCapabilityFlags>
+    : public BitFlagsEnumSerializer<
+          mozilla::gfx::VRDisplayCapabilityFlags,
+          mozilla::gfx::VRDisplayCapabilityFlags::Cap_All> {};
+
 }  // namespace IPC
 
 #endif  // mozilla_gfx_vr_VRMessageUtils_h
