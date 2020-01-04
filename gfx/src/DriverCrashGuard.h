@@ -42,8 +42,8 @@ enum class CrashGuardType : uint32_t {
   D3D11Video,
   WMFVPXVideo,
   // Add new entries above this line, update the name array in
-  // DriverCrashGuard.cpp, and make sure to add an entry in
-  // ContentParent.cpp.
+  // DriverCrashGuard.cpp, make sure to add an entry in ContentParent.cpp,
+  // and add a fluent identifier in aboutSupport.ftl.
 
   NUM_TYPES
 };
