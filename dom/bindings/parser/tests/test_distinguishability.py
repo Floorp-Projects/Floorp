@@ -149,7 +149,7 @@ def WebIDLTest(parser, harness):
 
     # Now let's test our whole distinguishability table
     argTypes = [ "long", "short", "long?", "short?", "boolean",
-                 "boolean?", "DOMString", "ByteString", "Enum", "Enum2",
+                 "boolean?", "DOMString", "ByteString", "UTF8String", "Enum", "Enum2",
                  "Interface", "Interface?",
                  "AncestorInterface", "UnrelatedInterface", "CallbackInterface",
                  "CallbackInterface?", "CallbackInterface2",
@@ -158,6 +158,7 @@ def WebIDLTest(parser, harness):
                  "record<DOMString, object>",
                  "record<USVString, Dict>",
                  "record<ByteString, long>",
+                 "record<UTF8String, long>",
                  "Date", "Date?", "any",
                  "Promise<any>", "Promise<any>?",
                  "USVString", "JSString", "ArrayBuffer", "ArrayBufferView", "SharedArrayBuffer",
@@ -177,7 +178,7 @@ def WebIDLTest(parser, harness):
     primitives = numerics + booleans
     nonNumerics = allBut(argTypes, numerics + unions)
     nonBooleans = allBut(argTypes, booleans)
-    strings = [ "DOMString", "ByteString", "Enum", "Enum2", "USVString", "JSString" ]
+    strings = [ "DOMString", "ByteString", "Enum", "Enum2", "USVString", "JSString", "UTF8String" ]
     nonStrings = allBut(argTypes, strings)
     nonObjects = primitives + strings
     objects = allBut(argTypes, nonObjects )
@@ -196,7 +197,7 @@ def WebIDLTest(parser, harness):
     notRelatedInterfaces = (nonObjects + ["UnrelatedInterface"] +
                             otherObjects + dates + sequences + bufferSourceTypes + sharedBufferSourceTypes)
     records = [ "record<DOMString, object>", "record<USVString, Dict>",
-                "record<ByteString, long>" ] # JSString not supported in records
+                "record<ByteString, long>", "record<UTF8String, long>" ] # JSString not supported in records
 
     # Build a representation of the distinguishability table as a dict
     # of dicts, holding True values where needed, holes elsewhere.
@@ -215,6 +216,7 @@ def WebIDLTest(parser, harness):
     setDistinguishable("boolean?", allBut(nonBooleans, nullables))
     setDistinguishable("DOMString", nonStrings)
     setDistinguishable("ByteString", nonStrings)
+    setDistinguishable("UTF8String", nonStrings)
     setDistinguishable("USVString", nonStrings)
     setDistinguishable("JSString", nonStrings)
     setDistinguishable("Enum", nonStrings)
@@ -240,6 +242,7 @@ def WebIDLTest(parser, harness):
     setDistinguishable("record<USVString, Dict>", nonUserObjects)
     # JSString not supported in records
     setDistinguishable("record<ByteString, long>", nonUserObjects)
+    setDistinguishable("record<UTF8String, long>", nonUserObjects)
     setDistinguishable("Date", allBut(argTypes, dates + ["object"]))
     setDistinguishable("Date?", allBut(argTypes, dates + nullables + ["object"]))
     setDistinguishable("any", [])
