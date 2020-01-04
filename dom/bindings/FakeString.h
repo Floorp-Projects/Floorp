@@ -23,6 +23,8 @@ namespace binding_detail {
 // or point at the buffer of an nsAString whose lifetime is longer than that of
 // the FakeString.
 struct FakeString {
+  using char_type = nsString::char_type;
+
   FakeString()
       : mDataFlags(nsString::DataFlags::TERMINATED),
         mClassFlags(nsString::ClassFlags(0)) {}
@@ -57,7 +59,7 @@ struct FakeString {
     mDataFlags |= nsString::DataFlags::VOIDED;
   }
 
-  nsString::char_type* BeginWriting() {
+  char_type* BeginWriting() {
     MOZ_ASSERT(IsMutable());
     MOZ_ASSERT(mDataInitialized);
     return mData;
@@ -65,12 +67,12 @@ struct FakeString {
 
   nsString::size_type Length() const { return mLength; }
 
-  operator mozilla::Span<const nsString::char_type>() const {
+  operator mozilla::Span<const char_type>() const {
     MOZ_ASSERT(mDataInitialized);
     return mozilla::MakeSpan(mData, Length());
   }
 
-  operator mozilla::Span<nsString::char_type>() {
+  operator mozilla::Span<char_type>() {
     return mozilla::MakeSpan(BeginWriting(), Length());
   }
 
@@ -82,7 +84,7 @@ struct FakeString {
       mDataFlags |= nsString::DataFlags::INLINE;
     } else {
       RefPtr<nsStringBuffer> buf =
-          nsStringBuffer::Alloc((aLength + 1) * sizeof(nsString::char_type));
+          nsStringBuffer::Alloc((aLength + 1) * sizeof(char_type));
       if (MOZ_UNLIKELY(!buf)) {
         return false;
       }
@@ -109,7 +111,7 @@ struct FakeString {
       buffer = dont_AddRef(nsStringBuffer::FromData(mData));
       // And make sure we don't release it twice by accident.
     }
-    const nsString::char_type* oldChars = mData;
+    const char_type* oldChars = mData;
 
     mDataFlags = nsString::DataFlags::TERMINATED;
 #ifdef DEBUG
@@ -126,14 +128,13 @@ struct FakeString {
     }
     MOZ_ASSERT(oldChars != mData, "Should have new chars now!");
     MOZ_ASSERT(IsMutable(), "Why are we still not mutable?");
-    memcpy(mData, oldChars, Length() * sizeof(nsString::char_type));
+    memcpy(mData, oldChars, Length() * sizeof(char_type));
     return true;
   }
 
   void AssignFromStringBuffer(already_AddRefed<nsStringBuffer> aBuffer,
                               size_t aLength) {
-    InitData(static_cast<nsString::char_type*>(aBuffer.take()->Data()),
-             aLength);
+    InitData(static_cast<char_type*>(aBuffer.take()->Data()), aLength);
     mDataFlags |= nsString::DataFlags::REFCOUNTED;
   }
 
@@ -141,14 +142,14 @@ struct FakeString {
   // called with actual C++ literal strings (i.e. u"stuff") or character arrays
   // that originally come from passing such literal strings.
   template <int N>
-  void AssignLiteral(const nsString::char_type (&aData)[N]) {
+  void AssignLiteral(const char_type (&aData)[N]) {
     AssignLiteral(aData, N - 1);
   }
 
   // Assign a literal to a FakeString when it's not an actual literal
   // in the code, but is known to be a literal somehow (e.g. it came
   // from an nsAString that tested true for IsLiteral()).
-  void AssignLiteral(const nsString::char_type* aData, size_t aLength) {
+  void AssignLiteral(const char_type* aData, size_t aLength) {
     InitData(aData, aLength);
     mDataFlags |= nsString::DataFlags::LITERAL;
   }
@@ -167,14 +168,14 @@ struct FakeString {
   nsAString* ToAStringPtr() { return reinterpret_cast<nsString*>(this); }
 
   // mData is left uninitialized for optimization purposes.
-  MOZ_INIT_OUTSIDE_CTOR nsString::char_type* mData;
+  MOZ_INIT_OUTSIDE_CTOR char_type* mData;
   // mLength is left uninitialized for optimization purposes.
   MOZ_INIT_OUTSIDE_CTOR nsString::size_type mLength;
   nsString::DataFlags mDataFlags;
   nsString::ClassFlags mClassFlags;
 
   static const size_t sInlineCapacity = 64;
-  nsString::char_type mInlineStorage[sInlineCapacity];
+  char_type mInlineStorage[sInlineCapacity];
 #ifdef DEBUG
   bool mDataInitialized = false;
 #endif  // DEBUG
@@ -182,10 +183,10 @@ struct FakeString {
   FakeString(const FakeString& other) = delete;
   void operator=(const FakeString& other) = delete;
 
-  void InitData(const nsString::char_type* aData, nsString::size_type aLength) {
+  void InitData(const char_type* aData, nsString::size_type aLength) {
     MOZ_ASSERT(mDataFlags == nsString::DataFlags::TERMINATED);
     MOZ_ASSERT(!mDataInitialized);
-    mData = const_cast<nsString::char_type*>(aData);
+    mData = const_cast<char_type*>(aData);
     mLength = aLength;
 #ifdef DEBUG
     mDataInitialized = true;

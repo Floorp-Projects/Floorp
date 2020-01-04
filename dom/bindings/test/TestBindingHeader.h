@@ -411,6 +411,9 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void ReceiveByteStringSequence(nsTArray<nsCString>&);
   void PassByteStringSequence(const Sequence<nsCString>&);
 
+  void ReceiveUTF8StringSequence(nsTArray<nsCString>&);
+  void PassUTF8StringSequence(const Sequence<nsCString>&);
+
   void ReceiveAnySequence(JSContext*, nsTArray<JS::Value>&);
   void ReceiveNullableAnySequence(JSContext*, Nullable<nsTArray<JS::Value>>&);
   void ReceiveAnySequenceSequence(JSContext*, nsTArray<nsTArray<JS::Value>>&);
@@ -454,6 +457,7 @@ class TestInterface : public nsISupports, public nsWrapperCache {
       const Record<nsString, RefPtr<TestExternalInterface>>&);
   void PassStringRecord(const Record<nsString, nsString>&);
   void PassByteStringRecord(const Record<nsString, nsCString>&);
+  void PassUTF8StringRecord(const Record<nsString, nsCString>&);
   void PassRecordOfRecords(const Record<nsString, Record<nsString, int32_t>>&);
   void ReceiveRecord(Record<nsString, int32_t>&);
   void ReceiveNullableRecord(Nullable<Record<nsString, int32_t>>&);
@@ -512,6 +516,17 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void PassVariadicByteString(const Sequence<nsCString>&);
   void PassOptionalUnionByteString(const Optional<ByteStringOrLong>&);
   void PassOptionalUnionByteStringWithDefaultValue(const ByteStringOrLong&);
+
+  // UTF8String types
+  void PassUTF8String(const nsACString&);
+  void PassNullableUTF8String(const nsACString&);
+  void PassOptionalUTF8String(const Optional<nsACString>&);
+  void PassOptionalUTF8StringWithDefaultValue(const nsACString&);
+  void PassOptionalNullableUTF8String(const Optional<nsACString>&);
+  void PassOptionalNullableUTF8StringWithDefaultValue(const nsACString&);
+  void PassVariadicUTF8String(const Sequence<nsCString>&);
+  void PassOptionalUnionUTF8String(const Optional<UTF8StringOrLong>&);
+  void PassOptionalUnionUTF8StringWithDefaultValue(const UTF8StringOrLong&);
 
   // USVString types
   void PassUSVS(const nsAString&);
@@ -704,6 +719,7 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void PassUnion28(const EventInitOrStringSequence&);
   void PassUnionWithCallback(const EventHandlerNonNullOrNullOrLong& arg);
   void PassUnionWithByteString(const ByteStringOrLong&);
+  void PassUnionWithUTF8String(const UTF8StringOrLong&);
   void PassUnionWithRecord(const StringStringRecordOrString&);
   void PassUnionWithRecordAndSequence(
       const StringStringRecordOrStringSequence&);
@@ -748,6 +764,9 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void PassUnionWithDefaultValue20(const DoubleOrUSVString& arg);
   void PassUnionWithDefaultValue21(const DoubleOrUSVString& arg);
   void PassUnionWithDefaultValue22(const DoubleOrUSVString& arg);
+  void PassUnionWithDefaultValue23(const DoubleOrUTF8String& arg);
+  void PassUnionWithDefaultValue24(const DoubleOrUTF8String& arg);
+  void PassUnionWithDefaultValue25(const DoubleOrUTF8String& arg);
 
   void PassNullableUnionWithDefaultValue1(const Nullable<DoubleOrString>& arg);
   void PassNullableUnionWithDefaultValue2(const Nullable<DoubleOrString>& arg);
@@ -791,6 +810,14 @@ class TestInterface : public nsISupports, public nsWrapperCache {
       const Nullable<DoubleOrUSVString>& arg);
   void PassNullableUnionWithDefaultValue24(
       const Nullable<DoubleOrUSVString>& arg);
+  void PassNullableUnionWithDefaultValue25(
+      const Nullable<DoubleOrUTF8String>& arg);
+  void PassNullableUnionWithDefaultValue26(
+      const Nullable<DoubleOrUTF8String>& arg);
+  void PassNullableUnionWithDefaultValue27(
+      const Nullable<DoubleOrUTF8String>& arg);
+  void PassNullableUnionWithDefaultValue28(
+      const Nullable<DoubleOrUTF8String>& arg);
 
   void PassSequenceOfUnions(
       const Sequence<OwningCanvasPatternOrCanvasGradient>&);
@@ -1225,6 +1252,15 @@ class TestInterface : public nsISupports, public nsWrapperCache {
   void PassOptionalNullableByteString(Optional<nsCString>&) = delete;
   void PassOptionalNullableByteStringWithDefaultValue(nsCString&) = delete;
   void PassVariadicByteString(Sequence<nsCString>&) = delete;
+
+  // cstrings should be const as well
+  void PassUTF8String(nsACString&) = delete;
+  void PassNullableUTF8String(nsACString&) = delete;
+  void PassOptionalUTF8String(Optional<nsACString>&) = delete;
+  void PassOptionalUTF8StringWithDefaultValue(nsACString&) = delete;
+  void PassOptionalNullableUTF8String(Optional<nsACString>&) = delete;
+  void PassOptionalNullableUTF8StringWithDefaultValue(nsACString&) = delete;
+  void PassVariadicUTF8String(Sequence<nsCString>&) = delete;
 
   // Make sure dictionary arguments are always const
   void PassDictionary(JSContext*, Dict&) = delete;

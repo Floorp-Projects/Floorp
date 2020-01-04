@@ -4607,12 +4607,13 @@ def handleDefaultStringValue(defaultValue, method):
     """
     assert (defaultValue.type.isDOMString() or
             defaultValue.type.isUSVString() or
+            defaultValue.type.isUTF8String() or
             defaultValue.type.isByteString())
     # There shouldn't be any non-ASCII or embedded nulls in here; if
     # it ever sneaks in we will need to think about how to properly
     # represent that in the C++.
     assert(all(ord(c) < 128 and ord(c) > 0 for c in defaultValue.value))
-    if defaultValue.type.isByteString():
+    if defaultValue.type.isByteString() or defaultValue.type.isUTF8String():
         prefix = ""
     else:
         prefix = "u"
@@ -4627,7 +4628,7 @@ def handleDefaultStringValue(defaultValue, method):
 
 def recordKeyType(recordType):
     assert recordType.keyType.isString()
-    if recordType.keyType.isByteString():
+    if recordType.keyType.isByteString() or recordType.keyType.isUTF8String():
         return "nsCString"
     return "nsString"
 
@@ -5099,9 +5100,13 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         keyType = recordKeyType(recordType)
         if recordType.keyType.isJSString():
             raise TypeError("Have do deal with JSString record type, but don't know how")
-        elif recordType.keyType.isByteString():
-            keyConversionFunction = "ConvertJSValueToByteString"
+        if recordType.keyType.isByteString() or recordType.keyType.isUTF8String():
             hashKeyType = "nsCStringHashKey"
+            if recordType.keyType.isByteString():
+                keyConversionFunction = "ConvertJSValueToByteString"
+            else:
+                keyConversionFunction = "ConvertJSValueToString"
+
         else:
             hashKeyType = "nsStringHashKey"
             if recordType.keyType.isDOMString():
@@ -5936,7 +5941,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                         declType=CGGeneric(declType),
                                         declArgs=declArgs)
 
-    if type.isDOMString() or type.isUSVString():
+    if type.isDOMString() or type.isUSVString() or type.isUTF8String():
         assert not isEnforceRange and not isClamp
 
         treatAs = {
@@ -5995,21 +6000,33 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             return handleDefault(conversionCode, defaultCode)
 
         if isMember:
-            # Convert directly into the nsString member we have.
-            declType = CGGeneric("nsString")
+            # Convert directly into the ns[C]String member we have.
+            if type.isUTF8String():
+                declType = "nsCString"
+            else:
+                declType = "nsString"
             return JSToNativeConversionInfo(
                 getConversionCode("${declName}"),
-                declType=declType,
+                declType=CGGeneric(declType),
                 dealWithOptional=isOptional)
 
         if isOptional:
-            declType = "Optional<nsAString>"
-            holderType = CGGeneric("binding_detail::FakeString")
+            if type.isUTF8String():
+                declType = "Optional<nsACString>"
+                holderType = CGGeneric("nsAutoCString")
+            else:
+                declType = "Optional<nsAString>"
+                holderType = CGGeneric("binding_detail::FakeString")
             conversionCode = ("%s"
                               "${declName} = &${holderName};\n" %
                               getConversionCode("${holderName}"))
         else:
-            declType = "binding_detail::FakeString"
+            if type.isUTF8String():
+                # TODO(emilio, bug 1606958): We could make FakeString generic
+                # if we deem it worth it, instead of using nsAutoCString.
+                declType = "nsAutoCString"
+            else:
+                declType = "binding_detail::FakeString"
             holderType = None
             conversionCode = getConversionCode("${declName}")
 
@@ -6935,6 +6952,11 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             # assert anything about the input being ASCII.
             expandedKeyDecl = "NS_ConvertASCIItoUTF16 expandedKey(entry.mKey);\n"
             keyName = "expandedKey"
+        elif type.keyType.isUTF8String():
+            # We do the same as above for utf8 strings. We could do better if
+            # we had a DefineProperty API that takes utf-8 property names.
+            expandedKeyDecl = "NS_ConvertUTF8toUTF16 expandedKey(entry.mKey);\n"
+            keyName = "expandedKey"
         else:
             expandedKeyDecl = ""
             keyName = "entry.mKey"
@@ -7048,6 +7070,12 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
             return (wrapAndSetPtr("ByteStringToJsval(cx, %s, ${jsvalHandle})" % result), False)
         else:
             return (wrapAndSetPtr("NonVoidByteStringToJsval(cx, %s, ${jsvalHandle})" % result), False)
+
+    if type.isUTF8String():
+        if type.nullable():
+            return (wrapAndSetPtr("UTF8StringToJsval(cx, %s, ${jsvalHandle})" % result), False)
+        else:
+            return (wrapAndSetPtr("NonVoidUTF8StringToJsval(cx, %s, ${jsvalHandle})" % result), False)
 
     if type.isEnum():
         if type.nullable():
@@ -7322,7 +7350,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         if isMember:
             return CGGeneric("nsString"), "ref", None, None, None
         return CGGeneric("DOMString"), "ref", None, None, None
-    if returnType.isByteString():
+    if returnType.isByteString() or returnType.isUTF8String():
         return CGGeneric("nsCString"), "ref", None, None, None
     if returnType.isEnum():
         result = CGGeneric(returnType.unroll().inner.identifier.name)
@@ -10316,7 +10344,7 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
     if type.isDOMString() or type.isUSVString():
         return CGGeneric("const nsAString&")
 
-    if type.isByteString():
+    if type.isByteString() or type.isUTF8String():
         return CGGeneric("const nsCString&")
 
     if type.isEnum():
@@ -10559,7 +10587,7 @@ class CGUnionStruct(CGThing):
                     if vars["setter"]:
                         methods.append(vars["setter"])
                     # Provide a SetStringLiteral() method to support string defaults.
-                    if t.isByteString():
+                    if t.isByteString() or t.isUTF8String():
                         charType = "const nsCString::char_type"
                     elif t.isString():
                         charType = "const nsString::char_type"
@@ -10835,7 +10863,7 @@ class CGUnionConversionStruct(CGThing):
                                            body=body,
                                            visibility="private"))
                 # Provide a SetStringLiteral() method to support string defaults.
-                if t.isByteString():
+                if t.isByteString() or t.isUTF8String():
                     charType = "const nsCString::char_type"
                 elif t.isString():
                     charType = "const nsString::char_type"
@@ -15439,7 +15467,7 @@ class CGNativeMember(ClassMethod):
                 return "nsString", None, None
             # Outparam
             return "void", "", "aRetVal = ${declName};\n"
-        if type.isByteString():
+        if type.isByteString() or type.isUTF8String():
             if isMember:
                 # No need for a third element in the isMember case
                 return "nsCString", None, None
@@ -15560,7 +15588,7 @@ class CGNativeMember(ClassMethod):
             args.append(Argument("JS::MutableHandle<JSString*>", "aRetVal"))
         elif returnType.isDOMString() or returnType.isUSVString():
             args.append(Argument("nsString&", "aRetVal"))
-        elif returnType.isByteString():
+        elif returnType.isByteString() or returnType.isUTF8String():
             args.append(Argument("nsCString&", "aRetVal"))
         elif returnType.isSequence():
             nullable = returnType.nullable()
@@ -15721,8 +15749,13 @@ class CGNativeMember(ClassMethod):
                 declType = "nsAString"
             return declType, True, False
 
-        if type.isByteString():
-            declType = "nsCString"
+        if type.isByteString() or type.isUTF8String():
+            # TODO(emilio): Maybe bytestrings could benefit from nsAutoCString
+            # or such too.
+            if type.isUTF8String() and not isMember:
+                declType = "nsACString"
+            else:
+                declType = "nsCString"
             return declType, True, False
 
         if type.isEnum():
@@ -18643,7 +18676,7 @@ class CGEventGetter(CGNativeMember):
         if type.isJSString():
             # https://bugzilla.mozilla.org/show_bug.cgi?id=1580167
             raise TypeError("JSString not supported as member of a generated event")
-        if type.isDOMString() or type.isByteString() or type.isUSVString():
+        if type.isDOMString() or type.isByteString() or type.isUSVString() or type.isUTF8String():
             return "aRetVal = " + memberName + ";\n"
         if type.isSpiderMonkeyInterface() or type.isObject():
             return fill(
@@ -19092,7 +19125,7 @@ class CGEventClass(CGBindingImplClass):
             nativeType = CGGeneric("JS::Heap<JSString*>")
         elif type.isDOMString() or type.isUSVString():
             nativeType = CGGeneric("nsString")
-        elif type.isByteString():
+        elif type.isByteString() or type.isUTF8String():
             nativeType = CGGeneric("nsCString")
         elif type.isPromise():
             nativeType = CGGeneric("RefPtr<Promise>")
@@ -19120,7 +19153,8 @@ class CGEventClass(CGBindingImplClass):
                 innerType = type.inner
             if (not innerType.isPrimitive() and not innerType.isEnum() and
                 not innerType.isDOMString() and not innerType.isByteString() and
-                not innerType.isPromise() and not innerType.isGeckoInterface()):
+                not innerType.isUTF8String() and not innerType.isPromise() and
+                not innerType.isGeckoInterface()):
                 raise TypeError("Don't know how to properly manage GC/CC for "
                                 "event member of type %s" %
                                 type)
