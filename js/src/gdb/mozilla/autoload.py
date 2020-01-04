@@ -21,7 +21,6 @@ import mozilla.JSString
 import mozilla.JSSymbol
 import mozilla.Root
 import mozilla.jsid
-import mozilla.jsop
 import mozilla.jsval
 import mozilla.unwind
 
