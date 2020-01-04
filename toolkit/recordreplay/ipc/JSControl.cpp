@@ -476,17 +476,18 @@ static bool Middleman_UpdateRecording(JSContext* aCx, unsigned aArgc,
     return false;
   }
 
-  if (!args.get(2).isNumber()) {
+  if (!args.get(2).isNumber() || !args.get(3).isNumber()) {
     JS_ReportErrorASCII(aCx, "Expected numeric argument");
     return false;
   }
 
   size_t start = args.get(2).toNumber();
+  size_t end = args.get(3).toNumber();
 
   if (start < parent::gRecordingContents.length()) {
     UniquePtr<Message> msg(RecordingDataMessage::New(
         forkId, start, parent::gRecordingContents.begin() + start,
-        parent::gRecordingContents.length() - start));
+        end - start));
     child->SendMessage(std::move(*msg));
   }
 
@@ -782,6 +783,13 @@ static bool RecordReplay_ChildId(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   args.rval().setInt32(child::GetId());
+  return true;
+}
+
+static bool RecordReplay_ForkId(JSContext* aCx, unsigned aArgc, Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  args.rval().setInt32(child::GetForkId());
   return true;
 }
 
@@ -1437,12 +1445,13 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
     JS_FN("terminate", Middleman_Terminate, 2, 0),
     JS_FN("crashHangedChild", Middleman_CrashHangedChild, 2, 0),
     JS_FN("recordingLength", Middleman_RecordingLength, 0, 0),
-    JS_FN("updateRecording", Middleman_UpdateRecording, 3, 0),
+    JS_FN("updateRecording", Middleman_UpdateRecording, 4, 0),
     JS_FS_END};
 
 static const JSFunctionSpec gRecordReplayMethods[] = {
     JS_FN("fork", RecordReplay_Fork, 1, 0),
     JS_FN("childId", RecordReplay_ChildId, 0, 0),
+    JS_FN("forkId", RecordReplay_ForkId, 0, 0),
     JS_FN("areThreadEventsDisallowed", RecordReplay_AreThreadEventsDisallowed,
           0, 0),
     JS_FN("divergeFromRecording", RecordReplay_DivergeFromRecording, 0, 0),
