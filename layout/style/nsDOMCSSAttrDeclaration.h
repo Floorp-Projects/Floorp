@@ -52,7 +52,7 @@ class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration {
                         const SVGAnimatedLength& aLength);
 
   nsresult SetPropertyValue(const nsCSSPropertyID aPropID,
-                            const nsAString& aValue,
+                            const nsACString& aValue,
                             nsIPrincipal* aSubjectPrincipal) override;
 
   static void MutationClosureFunction(void* aData);

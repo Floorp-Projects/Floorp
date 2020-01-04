@@ -4322,12 +4322,11 @@ pub extern "C" fn Servo_DeclarationBlock_Count(declarations: &RawServoDeclaratio
 pub extern "C" fn Servo_DeclarationBlock_GetNthProperty(
     declarations: &RawServoDeclarationBlock,
     index: u32,
-    result: *mut nsAString,
+    result: &mut nsACString,
 ) -> bool {
     read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
         if let Some(decl) = decls.declarations().get(index as usize) {
-            let result = unsafe { result.as_mut().unwrap() };
-            result.assign_str(&decl.id().name());
+            result.assign(&decl.id().name());
             true
         } else {
             false
@@ -6228,7 +6227,7 @@ pub unsafe extern "C" fn Servo_GetPropertyValue(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
     computed_values: &ComputedValues,
-    name: *const nsAString,
+    name: &nsACString,
     value: *mut nsAString,
 ) -> bool {
     let custom_properties = match computed_values.custom_properties() {
@@ -6236,7 +6235,7 @@ pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
         None => return false,
     };
 
-    let name = Atom::from(&*name);
+    let name = Atom::from(name.as_str_unchecked());
     let computed_value = match custom_properties.get(&name) {
         Some(v) => v,
         None => return false,
@@ -6260,22 +6259,19 @@ pub extern "C" fn Servo_GetCustomPropertiesCount(computed_values: &ComputedValue
 pub extern "C" fn Servo_GetCustomPropertyNameAt(
     computed_values: &ComputedValues,
     index: u32,
-    name: *mut nsAString,
-) -> bool {
+) -> *mut nsAtom {
     let custom_properties = match computed_values.custom_properties() {
         Some(p) => p,
-        None => return false,
+        None => return ptr::null_mut(),
     };
 
     let property_name = match custom_properties.get_index(index as usize) {
         Some((key, _value)) => key,
-        None => return false,
+        None => return ptr::null_mut(),
     };
 
-    let name = unsafe { name.as_mut().unwrap() };
-    name.assign(&*property_name.as_slice());
 
-    true
+    property_name.as_ptr()
 }
 
 #[no_mangle]

@@ -51,7 +51,7 @@ using namespace dom;
 //
 // See: https://drafts.csswg.org/cssom/#resolved-values
 static int32_t GetCSSFloatValue(nsComputedDOMStyle* aComputedStyle,
-                                const nsAString& aProperty) {
+                                const nsACString& aProperty) {
   MOZ_ASSERT(aComputedStyle);
 
   // get the computed CSSValue of the property
@@ -493,18 +493,18 @@ nsresult HTMLEditor::GetPositionAndDimensions(Element& aElement, int32_t& aX,
     NS_ENSURE_STATE(cssDecl);
 
     aBorderLeft =
-        GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("border-left-width"));
+        GetCSSFloatValue(cssDecl, NS_LITERAL_CSTRING("border-left-width"));
     aBorderTop =
-        GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("border-top-width"));
-    aMarginLeft = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("margin-left"));
-    aMarginTop = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("margin-top"));
+        GetCSSFloatValue(cssDecl, NS_LITERAL_CSTRING("border-top-width"));
+    aMarginLeft = GetCSSFloatValue(cssDecl, NS_LITERAL_CSTRING("margin-left"));
+    aMarginTop = GetCSSFloatValue(cssDecl, NS_LITERAL_CSTRING("margin-top"));
 
-    aX = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("left")) + aMarginLeft +
+    aX = GetCSSFloatValue(cssDecl, NS_LITERAL_CSTRING("left")) + aMarginLeft +
          aBorderLeft;
-    aY = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("top")) + aMarginTop +
+    aY = GetCSSFloatValue(cssDecl, NS_LITERAL_CSTRING("top")) + aMarginTop +
          aBorderTop;
-    aW = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("width"));
-    aH = GetCSSFloatValue(cssDecl, NS_LITERAL_STRING("height"));
+    aW = GetCSSFloatValue(cssDecl, NS_LITERAL_CSTRING("width"));
+    aH = GetCSSFloatValue(cssDecl, NS_LITERAL_CSTRING("height"));
   } else {
     mResizedObjectIsAbsolutelyPositioned = false;
     RefPtr<nsGenericHTMLElement> htmlElement =
