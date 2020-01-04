@@ -71,13 +71,15 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
         super(TestSafeBrowsingInitialDownload, self).setUp()
 
         self.safebrowsing_v2_files = self.get_safebrowsing_files(False)
-        if any(f.startswith('goog') for f in self.safebrowsing_v2_files):
+        if any(f.startswith('goog-') or f.startswith('googpub-')
+               for f in self.safebrowsing_v2_files):
             self.prefs_provider_update_time.update({
                 'browser.safebrowsing.provider.google.nextupdatetime': 1,
             })
 
         self.safebrowsing_v4_files = self.get_safebrowsing_files(True)
-        if any(f.startswith('goog') for f in self.safebrowsing_v4_files):
+        if any(f.startswith('goog-') or f.startswith('googpub-')
+               for f in self.safebrowsing_v4_files):
             self.prefs_provider_update_time.update({
                 'browser.safebrowsing.provider.google4.nextupdatetime': 1,
             })
