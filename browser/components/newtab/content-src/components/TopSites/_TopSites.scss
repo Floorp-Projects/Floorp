@@ -23,11 +23,11 @@ $hover-transition-duration: 150ms;
 
   // Two columns
   @media (max-width: $break-point-medium) {
-    :nth-child(2n+1) {
+    > :nth-child(2n+1) {
       @include context-menu-open-middle;
     }
 
-    :nth-child(2n) {
+    > :nth-child(2n) {
       @include context-menu-open-left;
     }
   }

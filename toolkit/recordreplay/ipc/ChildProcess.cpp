@@ -17,76 +17,85 @@ namespace parent {
 // A saved introduction message for sending to all children.
 static IntroductionMessage* gIntroductionMessage;
 
-// How many channels have been constructed so far.
-static size_t gNumChannels;
-
-// Whether children might be debugged and should not be treated as hung.
-static bool gChildrenAreDebugging;
-
 /* static */
 void ChildProcessInfo::SetIntroductionMessage(IntroductionMessage* aMessage) {
   gIntroductionMessage = aMessage;
 }
 
 ChildProcessInfo::ChildProcessInfo(
-    const Maybe<RecordingProcessData>& aRecordingProcessData)
+    size_t aId, const Maybe<RecordingProcessData>& aRecordingProcessData)
     : mRecording(aRecordingProcessData.isSome()) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  static bool gFirst = false;
-  if (!gFirst) {
-    gFirst = true;
-    gChildrenAreDebugging = !!getenv("MOZ_REPLAYING_WAIT_AT_START");
-  }
+  Channel::Kind kind =
+    IsRecording() ? Channel::Kind::MiddlemanRecord : Channel::Kind::MiddlemanReplay;
+  mChannel = new Channel(aId, kind, [=](Message::UniquePtr aMsg) {
+        ReceiveChildMessageOnMainThread(aId, std::move(aMsg));
+      });
 
-  LaunchSubprocess(aRecordingProcessData);
+  LaunchSubprocess(aId, aRecordingProcessData);
 }
 
 ChildProcessInfo::~ChildProcessInfo() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (IsRecording() && !HasCrashed()) {
-    SendMessage(TerminateMessage());
-  }
+  SendMessage(TerminateMessage(0));
 }
 
 void ChildProcessInfo::OnIncomingMessage(const Message& aMsg) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   switch (aMsg.mType) {
-    case MessageType::BeginFatalError:
-      mHasBegunFatalError = true;
-      return;
     case MessageType::FatalError: {
-      mHasFatalError = true;
       const FatalErrorMessage& nmsg =
           static_cast<const FatalErrorMessage&>(aMsg);
-      OnCrash(nmsg.Error());
+      OnCrash(nmsg.mForkId, nmsg.Error());
       return;
     }
     case MessageType::Paint:
       UpdateGraphicsAfterPaint(static_cast<const PaintMessage&>(aMsg));
       break;
-    case MessageType::ManifestFinished:
-      mPaused = true;
-      js::ForwardManifestFinished(this, aMsg);
+    case MessageType::PaintEncoded: {
+      const PaintEncodedMessage& nmsg =
+          static_cast<const PaintEncodedMessage&>(aMsg);
+      nsDependentCSubstring data(nmsg.BinaryData(), nmsg.BinaryDataSize());
+      nsAutoCString dataBinary;
+      if (NS_FAILED(Base64Decode(data, dataBinary))) {
+        MOZ_CRASH("Base64Decode failed");
+      }
+      UpdateGraphicsAfterRepaint(dataBinary);
       break;
-    case MessageType::MiddlemanCallRequest: {
-      const MiddlemanCallRequestMessage& nmsg =
-          static_cast<const MiddlemanCallRequestMessage&>(aMsg);
+    }
+    case MessageType::ManifestFinished: {
+      const auto& nmsg = static_cast<const ManifestFinishedMessage&>(aMsg);
+      js::ForwardManifestFinished(this, nmsg);
+      break;
+    }
+    case MessageType::UnhandledDivergence: {
+      const auto& nmsg = static_cast<const UnhandledDivergenceMessage&>(aMsg);
+      js::ForwardUnhandledDivergence(this, nmsg);
+      break;
+    }
+    case MessageType::PingResponse: {
+      const auto& nmsg = static_cast<const PingResponseMessage&>(aMsg);
+      js::ForwardPingResponse(this, nmsg);
+      break;
+    }
+    case MessageType::ExternalCallRequest: {
+      const auto& nmsg = static_cast<const ExternalCallRequestMessage&>(aMsg);
       InfallibleVector<char> outputData;
-      ProcessMiddlemanCall(GetId(), nmsg.BinaryData(), nmsg.BinaryDataSize(),
-                           &outputData);
-      Message::UniquePtr response(MiddlemanCallResponseMessage::New(
-          outputData.begin(), outputData.length()));
+      ProcessExternalCall(nmsg.BinaryData(), nmsg.BinaryDataSize(),
+                          &outputData);
+      Message::UniquePtr response(ExternalCallResponseMessage::New(
+          nmsg.mForkId, nmsg.mTag, outputData.begin(), outputData.length()));
       SendMessage(std::move(*response));
       break;
     }
-    case MessageType::ResetMiddlemanCalls:
-      ResetMiddlemanCalls(GetId());
+    case MessageType::RecordingData: {
+      const auto& msg = static_cast<const RecordingDataMessage&>(aMsg);
+      MOZ_RELEASE_ASSERT(msg.mTag == gRecordingContents.length());
+      gRecordingContents.append(msg.BinaryData(), msg.BinaryDataSize());
       break;
-    case MessageType::PingResponse:
-      OnPingResponse(static_cast<const PingResponseMessage&>(aMsg));
-      break;
+    }
     default:
       break;
   }
@@ -94,14 +103,6 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg) {
 
 void ChildProcessInfo::SendMessage(Message&& aMsg) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(!HasCrashed());
-
-  // Update paused state.
-  MOZ_RELEASE_ASSERT(IsPaused() || aMsg.CanBeSentWhileUnpaused());
-  if (aMsg.mType == MessageType::ManifestStart) {
-    mPaused = false;
-  }
-
   mChannel->SendMessage(std::move(aMsg));
 }
 
@@ -134,22 +135,16 @@ void GetArgumentsForChildProcess(base::ProcessId aMiddlemanPid,
 }
 
 void ChildProcessInfo::LaunchSubprocess(
+    size_t aChannelId,
     const Maybe<RecordingProcessData>& aRecordingProcessData) {
-  size_t channelId = gNumChannels++;
-
-  // Create a new channel every time we launch a new subprocess, without
-  // deleting or tearing down the old one's state. This is pretty silly and it
-  // would be nice if we could do something better here, especially because
-  // with restarts we could create any number of channels over time.
-  mChannel =
-      new Channel(channelId, IsRecording(), [=](Message::UniquePtr aMsg) {
-        ReceiveChildMessageOnMainThread(std::move(aMsg));
-      });
-
   MOZ_RELEASE_ASSERT(IsRecording() == aRecordingProcessData.isSome());
+
+  MOZ_RELEASE_ASSERT(gIntroductionMessage);
+  SendMessage(std::move(*gIntroductionMessage));
+
   if (IsRecording()) {
     std::vector<std::string> extraArgs;
-    GetArgumentsForChildProcess(base::GetCurrentProcId(), channelId,
+    GetArgumentsForChildProcess(base::GetCurrentProcId(), aChannelId,
                                 gRecordingFilename, /* aRecording = */ true,
                                 extraArgs);
 
@@ -169,17 +164,17 @@ void ChildProcessInfo::LaunchSubprocess(
     if (!gRecordingProcess->LaunchAndWaitForProcessHandle(extraArgs)) {
       MOZ_CRASH("ChildProcessInfo::LaunchSubprocess");
     }
+
+    SendGraphicsMemoryToChild();
   } else {
-    dom::ContentChild::GetSingleton()->SendCreateReplayingProcess(channelId);
+    UniquePtr<Message> msg(RecordingDataMessage::New(
+        0, 0, gRecordingContents.begin(), gRecordingContents.length()));
+    SendMessage(std::move(*msg));
+    dom::ContentChild::GetSingleton()->SendCreateReplayingProcess(aChannelId);
   }
-
-  SendGraphicsMemoryToChild();
-
-  MOZ_RELEASE_ASSERT(gIntroductionMessage);
-  SendMessage(std::move(*gIntroductionMessage));
 }
 
-void ChildProcessInfo::OnCrash(const char* aWhy) {
+void ChildProcessInfo::OnCrash(size_t aForkId, const char* aWhy) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   // If a child process crashes or hangs then annotate the crash report.
@@ -191,28 +186,16 @@ void ChildProcessInfo::OnCrash(const char* aWhy) {
     // be generated.
     dom::ContentChild::GetSingleton()->SendGenerateReplayCrashReport(GetId());
 
+    BusyWait();
+
     // Continue execution if we were able to recover from the crash.
-    if (js::RecoverFromCrash(this)) {
-      // Mark this child as crashed so it can't be used again, even if it didn't
-      // generate a minidump.
-      mHasFatalError = true;
+    if (js::RecoverFromCrash(GetId(), aForkId)) {
       return;
     }
   }
 
-  // If we received a FatalError message then the child generated a minidump.
   // Shut down cleanly so that we don't mask the report with our own crash.
-  if (mHasFatalError) {
-    Shutdown();
-  }
-
-  // Indicate when we crash if the child tried to send us a fatal error message
-  // but had a problem either unprotecting system memory or generating the
-  // minidump.
-  MOZ_RELEASE_ASSERT(!mHasBegunFatalError);
-
-  // The child crashed without producing a minidump, produce one ourselves.
-  MOZ_CRASH("Unexpected child crash");
+  Shutdown();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -226,13 +209,13 @@ void ChildProcessInfo::OnCrash(const char* aWhy) {
 // All messages received on a channel thread which the main thread has not
 // processed yet. This is protected by gMonitor.
 struct PendingMessage {
-  ChildProcessInfo* mProcess;
+  size_t mChildId = 0;
   Message::UniquePtr mMsg;
 
-  PendingMessage() : mProcess(nullptr) {}
+  PendingMessage() {}
 
   PendingMessage& operator=(PendingMessage&& aOther) {
-    mProcess = aOther.mProcess;
+    mChildId = aOther.mChildId;
     mMsg = std::move(aOther.mMsg);
     return *this;
   }
@@ -244,141 +227,39 @@ static StaticInfallibleVector<PendingMessage> gPendingMessages;
 static Message::UniquePtr ExtractChildMessage(ChildProcessInfo** aProcess) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  for (size_t i = 0; i < gPendingMessages.length(); i++) {
-    PendingMessage& pending = gPendingMessages[i];
-    if (!*aProcess || pending.mProcess == *aProcess) {
-      *aProcess = pending.mProcess;
-      Message::UniquePtr msg = std::move(pending.mMsg);
-      gPendingMessages.erase(&pending);
-      return msg;
-    }
+  if (!gPendingMessages.length()) {
+    return nullptr;
   }
 
-  return nullptr;
+  PendingMessage& pending = gPendingMessages[0];
+  *aProcess = GetChildProcess(pending.mChildId);
+  MOZ_RELEASE_ASSERT(*aProcess);
+
+  Message::UniquePtr msg = std::move(pending.mMsg);
+  gPendingMessages.erase(&pending);
+
+  return msg;
 }
 
-// Hang Detection
-//
-// Replaying processes will be terminated if no execution progress has been made
-// for some number of seconds. This generates a crash report for diagnosis and
-// allows another replaying process to be spawned in its place. We detect that
-// no progress is being made by periodically sending ping messages to the
-// replaying process, and comparing the progress values returned by them.
-// The ping messages are sent at least PingIntervalSeconds apart, and the
-// process is considered hanged if at any point the last MaxStalledPings ping
-// messages either did not respond or responded with the same progress value.
-//
-// Dividing our accounting between different ping messages avoids treating
-// processes as hanged when the computer wakes up after sleeping: no pings will
-// be sent while the computer is sleeping and processes are suspended, so the
-// computer will need to be awake for some time before any processes are marked
-// as hanged (before which they will hopefully be able to make progress).
-
-static const size_t PingIntervalSeconds = 2;
-static const size_t MaxStalledPings = 10;
-
-bool ChildProcessInfo::IsHanged() {
-  if (mPings.length() < MaxStalledPings) {
-    return false;
-  }
-
-  size_t firstIndex = mPings.length() - MaxStalledPings;
-  uint64_t firstValue = mPings[firstIndex].mProgress;
-  if (!firstValue) {
-    // The child hasn't responded to any of the pings.
-    return true;
-  }
-
-  for (size_t i = firstIndex; i < mPings.length(); i++) {
-    if (mPings[i].mProgress && mPings[i].mProgress != firstValue) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-void ChildProcessInfo::ResetPings(bool aMightRewind) {
-  mMightRewind = aMightRewind;
-  mPings.clear();
-  mLastPingTime = TimeStamp::Now();
-}
-
-static uint32_t gNumPings;
-
-void ChildProcessInfo::MaybePing() {
-  if (IsRecording() || IsPaused() || gChildrenAreDebugging) {
-    return;
-  }
-
-  TimeStamp now = TimeStamp::Now();
-
-  // After sending a terminate message we don't ping the process anymore, just
-  // make sure it eventually crashes instead of continuing to hang. Use this as
-  // a fallback if we can't ping the process because it might be rewinding.
-  if (mSentTerminateMessage || mMightRewind) {
-    size_t TerminateSeconds = PingIntervalSeconds * MaxStalledPings;
-    if (now >= mLastPingTime + TimeDuration::FromSeconds(TerminateSeconds)) {
-      OnCrash(mMightRewind ? "Rewinding child process non-responsive"
-                           : "Child process non-responsive");
-    }
-    return;
-  }
-
-  if (now < mLastPingTime + TimeDuration::FromSeconds(PingIntervalSeconds)) {
-    return;
-  }
-
-  if (IsHanged()) {
-    // Try to get the child to crash, so that we can get a minidump.
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::RecordReplayHang, true);
-    SendMessage(TerminateMessage());
-    mSentTerminateMessage = true;
-  } else {
-    uint32_t id = ++gNumPings;
-    mPings.emplaceBack(id);
-    SendMessage(PingMessage(id));
-  }
-
-  mLastPingTime = now;
-}
-
-void ChildProcessInfo::OnPingResponse(const PingResponseMessage& aMsg) {
-  for (size_t i = 0; i < mPings.length(); i++) {
-    if (mPings[i].mId == aMsg.mId) {
-      mPings[i].mProgress = aMsg.mProgress;
-      break;
-    }
-  }
-}
-
-void ChildProcessInfo::WaitUntilPaused() {
+/* static */
+void ChildProcessInfo::MaybeProcessNextMessage() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  while (!IsPaused()) {
-    MaybePing();
+  Maybe<MonitorAutoLock> lock;
+  lock.emplace(*gMonitor);
 
-    Maybe<MonitorAutoLock> lock;
-    lock.emplace(*gMonitor);
+  MaybeHandlePendingSyncMessage();
 
-    MaybeHandlePendingSyncMessage();
+  ChildProcessInfo* process;
+  Message::UniquePtr msg = ExtractChildMessage(&process);
 
-    // Search for the first message received from this process.
-    ChildProcessInfo* process = this;
-    Message::UniquePtr msg = ExtractChildMessage(&process);
-
-    if (msg) {
-      lock.reset();
-      OnIncomingMessage(*msg);
-    } else if (HasCrashed()) {
-      // If the child crashed but we recovered, we don't have to keep waiting.
-      break;
-    } else {
-      TimeStamp deadline =
-          TimeStamp::Now() + TimeDuration::FromSeconds(PingIntervalSeconds);
-      gMonitor->WaitUntil(deadline);
-    }
+  if (msg) {
+    lock.reset();
+    process->OnIncomingMessage(*msg);
+  } else {
+    // We wait for at most one second before returning to the caller.
+    TimeStamp deadline = TimeStamp::Now() + TimeDuration::FromSeconds(1);
+    gMonitor->WaitUntil(deadline);
   }
 }
 
@@ -410,14 +291,14 @@ void ChildProcessInfo::MaybeProcessPendingMessageRunnable() {
 // Execute a task that processes a message received from the child. This is
 // called on a channel thread, and the function executes asynchronously on
 // the main thread.
-void ChildProcessInfo::ReceiveChildMessageOnMainThread(
-    Message::UniquePtr aMsg) {
+  /* static */ void ChildProcessInfo::ReceiveChildMessageOnMainThread(
+    size_t aChildId, Message::UniquePtr aMsg) {
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
 
   MonitorAutoLock lock(*gMonitor);
 
   PendingMessage pending;
-  pending.mProcess = this;
+  pending.mChildId = aChildId;
   pending.mMsg = std::move(aMsg);
   gPendingMessages.append(std::move(pending));
 

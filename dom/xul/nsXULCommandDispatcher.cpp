@@ -326,7 +326,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName) {
   RefPtr<Element> element;
   GetFocusedElement(getter_AddRefs(element));
   if (element) {
-    element->GetAttribute(NS_LITERAL_STRING("id"), id);
+    element->GetAttr(nsGkAtoms::id, id);
   }
 
   nsCOMArray<nsIContent> updaters;

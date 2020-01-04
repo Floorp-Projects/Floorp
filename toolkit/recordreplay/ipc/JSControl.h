@@ -9,6 +9,7 @@
 
 #include "jsapi.h"
 
+#include "Channel.h"
 #include "InfallibleVector.h"
 #include "ProcessRewind.h"
 
@@ -57,9 +58,13 @@ void ManifestStart(const CharBuffer& aContents);
 // Setup the middleman control state.
 void SetupMiddlemanControl(const Maybe<size_t>& aRecordingChildId);
 
-// Handle an incoming message from a child process.
+// Handle incoming messages from a child process.
 void ForwardManifestFinished(parent::ChildProcessInfo* aChild,
-                             const Message& aMsg);
+                             const ManifestFinishedMessage& aMsg);
+void ForwardUnhandledDivergence(parent::ChildProcessInfo* aChild,
+                                const UnhandledDivergenceMessage& aMsg);
+void ForwardPingResponse(parent::ChildProcessInfo* aChild,
+                         const PingResponseMessage& aMsg);
 
 // Prepare the child processes so that the recording file can be safely copied.
 void BeforeSaveRecording();
@@ -72,7 +77,7 @@ void AfterSaveRecording();
 void HitCheckpoint(size_t aCheckpoint);
 
 // Called when a child crashes, returning whether the crash was recovered from.
-bool RecoverFromCrash(parent::ChildProcessInfo* aChild);
+bool RecoverFromCrash(size_t aRootId, size_t aForkId);
 
 // Accessors for state which can be accessed from JS.
 

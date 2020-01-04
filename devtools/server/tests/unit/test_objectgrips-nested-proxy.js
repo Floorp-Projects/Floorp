@@ -10,39 +10,43 @@ registerCleanupFunction(() => {
 });
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee, client }) => {
-    await new Promise(function(resolve) {
-      threadFront.once("paused", async function(packet) {
-        const [grip] = packet.frame.arguments;
-        const objClient = threadFront.pauseGrip(grip);
-        const { proxyTarget, proxyHandler } = await objClient.getProxySlots();
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    const packet = await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
 
-        strictEqual(grip.class, "Proxy", "Its a proxy grip.");
-        strictEqual(
-          proxyTarget.getGrip().class,
-          "Proxy",
-          "The target is also a proxy."
-        );
-        strictEqual(
-          proxyHandler.getGrip().class,
-          "Proxy",
-          "The handler is also a proxy."
-        );
+    const [grip] = packet.frame.arguments;
+    const objClient = threadFront.pauseGrip(grip);
+    const { proxyTarget, proxyHandler } = await objClient.getProxySlots();
 
-        await threadFront.resume();
-        resolve();
-      });
-      debuggee.eval(
-        function stopMe(arg) {
-          debugger;
-        }.toString()
-      );
-      debuggee.eval(`
-      var proxy = new Proxy({}, {});
-      for (let i = 0; i < 1e5; ++i)
-        proxy = new Proxy(proxy, proxy);
-      stopMe(proxy);
-    `);
-    });
+    strictEqual(grip.class, "Proxy", "Its a proxy grip.");
+    strictEqual(
+      proxyTarget.getGrip().class,
+      "Proxy",
+      "The target is also a proxy."
+    );
+    strictEqual(
+      proxyHandler.getGrip().class,
+      "Proxy",
+      "The handler is also a proxy."
+    );
+
+    await threadFront.resume();
   })
 );
+
+function evalCode(debuggee) {
+  debuggee.eval(
+    function stopMe(arg) {
+      debugger;
+    }.toString()
+  );
+
+  debuggee.eval(`
+    var proxy = new Proxy({}, {});
+    for (let i = 0; i < 1e5; ++i)
+      proxy = new Proxy(proxy, proxy);
+    stopMe(proxy);
+  `);
+}

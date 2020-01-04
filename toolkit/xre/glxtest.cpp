@@ -552,8 +552,9 @@ bool fire_glxtest_process() {
     write_end_of_the_pipe = pfd[1];
     close_logging();
     // TODO: --display command line argument is not properly handled
+    // NOTE: prefers X for now because eglQueryRendererIntegerMESA does not exist yet
 #ifdef MOZ_WAYLAND
-    if (IsWaylandDisabled() || !wayland_egltest())
+    if (IsWaylandDisabled() || getenv("DISPLAY") || !wayland_egltest())
 #endif
       glxtest();
     close(pfd[1]);

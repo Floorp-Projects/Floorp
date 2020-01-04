@@ -35,9 +35,13 @@ class nsIconLoaderService : public imgINotificationObserver {
 
   // LoadIcon will start a load request for the icon.
   // The request may not complete until after LoadIcon returns.
-  nsresult LoadIcon(nsIURI* aIconURI);
+  // If aIsInternalIcon is true, the document and principal will not be
+  // used when loading.
+  nsresult LoadIcon(nsIURI* aIconURI, bool aIsInternalIcon);
 
   NSImage* GetNativeIconImage();
+
+  void ReleaseJSObjects() { mContent = nil; }
 
   void Destroy();
 

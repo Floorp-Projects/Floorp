@@ -102,6 +102,61 @@ TEST_F(TlsConnectTest, TestDisableDowngradeDetection) {
   server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
 }
 
+typedef std::tuple<SSLProtocolVariant,
+                   uint16_t,  // client version
+                   uint16_t>  // server version
+    TlsDowngradeProfile;
+
+class TlsDowngradeTest
+    : public TlsConnectTestBase,
+      public ::testing::WithParamInterface<TlsDowngradeProfile> {
+ public:
+  TlsDowngradeTest()
+      : TlsConnectTestBase(std::get<0>(GetParam()), std::get<1>(GetParam())),
+        c_ver(std::get<1>(GetParam())),
+        s_ver(std::get<2>(GetParam())) {}
+
+ protected:
+  const uint16_t c_ver;
+  const uint16_t s_ver;
+};
+
+TEST_P(TlsDowngradeTest, TlsDowngradeSentinelTest) {
+  static const uint8_t tls12_downgrade_random[] = {0x44, 0x4F, 0x57, 0x4E,
+                                                   0x47, 0x52, 0x44, 0x01};
+  static const uint8_t tls1_downgrade_random[] = {0x44, 0x4F, 0x57, 0x4E,
+                                                  0x47, 0x52, 0x44, 0x00};
+  static const size_t kRandomLen = 32;
+
+  if (c_ver > s_ver) {
+    return;
+  }
+
+  client_->SetVersionRange(c_ver, c_ver);
+  server_->SetVersionRange(c_ver, s_ver);
+
+  auto sh = MakeTlsFilter<TlsHandshakeRecorder>(server_, ssl_hs_server_hello);
+  Connect();
+  ASSERT_TRUE(sh->buffer().len() > (kRandomLen + 2));
+
+  const uint8_t* downgrade_sentinel =
+      sh->buffer().data() + 2 + kRandomLen - sizeof(tls1_downgrade_random);
+  if (c_ver < s_ver) {
+    if (c_ver == SSL_LIBRARY_VERSION_TLS_1_2) {
+      EXPECT_EQ(0, memcmp(downgrade_sentinel, tls12_downgrade_random,
+                          sizeof(tls12_downgrade_random)));
+    } else {
+      EXPECT_EQ(0, memcmp(downgrade_sentinel, tls1_downgrade_random,
+                          sizeof(tls1_downgrade_random)));
+    }
+  } else {
+    EXPECT_NE(0, memcmp(downgrade_sentinel, tls12_downgrade_random,
+                        sizeof(tls12_downgrade_random)));
+    EXPECT_NE(0, memcmp(downgrade_sentinel, tls1_downgrade_random,
+                        sizeof(tls1_downgrade_random)));
+  }
+}
+
 // TLS 1.1 clients do not check the random values, so we should
 // instead get a handshake failure alert from the server.
 TEST_F(TlsConnectTest, TestDowngradeDetectionToTls10) {
@@ -279,5 +334,11 @@ TEST_F(TlsConnectStreamTls13, Ssl30ClientHelloWithSupportedVersions) {
   MakeTlsFilter<TlsClientHelloVersionSetter>(client_, SSL_LIBRARY_VERSION_3_0);
   ConnectExpectAlert(server_, kTlsAlertProtocolVersion);
 }
+
+INSTANTIATE_TEST_CASE_P(
+    TlsDowngradeSentinelTest, TlsDowngradeTest,
+    ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsVAll,
+                       TlsConnectTestBase::kTlsV12Plus));
 
 }  // namespace nss_test

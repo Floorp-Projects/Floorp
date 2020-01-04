@@ -478,12 +478,12 @@ main {
   margin: 0 -16px;
   padding: 0; }
   @media (max-width: 610px) {
-    .top-sites-list :nth-child(2n+1) .context-menu {
+    .top-sites-list > :nth-child(2n+1) .context-menu {
       margin-inline-end: auto;
       margin-inline-start: auto;
       inset-inline-end: auto;
       inset-inline-start: -32px; }
-    .top-sites-list :nth-child(2n) .context-menu {
+    .top-sites-list > :nth-child(2n) .context-menu {
       margin-inline-end: 5px;
       margin-inline-start: auto;
       inset-inline-end: 0;

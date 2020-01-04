@@ -2608,7 +2608,7 @@ SearchService.prototype = {
     let locale =
       "locale" in config.webExtension
         ? config.webExtension.locale
-        : [SearchUtils.DEFAULT_TAG];
+        : SearchUtils.DEFAULT_TAG;
 
     let manifest = policy.extension.manifest;
     if (locale != "default") {

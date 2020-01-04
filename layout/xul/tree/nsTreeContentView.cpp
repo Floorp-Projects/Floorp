@@ -215,7 +215,7 @@ void nsTreeContentView::GetColumnProperties(nsTreeColumn& aColumn,
   RefPtr<Element> element = aColumn.Element();
 
   if (element) {
-    element->GetAttribute(NS_LITERAL_STRING("properties"), aProperties);
+    element->GetAttr(nsGkAtoms::properties, aProperties);
   }
 }
 

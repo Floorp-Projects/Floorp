@@ -168,7 +168,8 @@ class ExceptionHandler {
   static bool WriteForwardedExceptionMinidump(int exception_type,
 					      int exception_code,
 					      int exception_subcode,
-					      mach_port_t thread);
+					      mach_port_t thread,
+					      mach_port_t task);
 
   // Returns whether out-of-process dump generation is used or not.
   bool IsOutOfProcess() const {
@@ -206,6 +207,7 @@ class ExceptionHandler {
                                   int exception_subcode,
                                   breakpad_ucontext_t *task_context,
                                   mach_port_t thread_name,
+                                  mach_port_t task_name,
                                   bool exit_after_write,
                                   bool report_current_thread);
 

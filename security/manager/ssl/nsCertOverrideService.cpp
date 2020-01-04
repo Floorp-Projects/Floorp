@@ -16,9 +16,13 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsILineInputStream.h"
+#include "nsIMarionette.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
+#ifdef ENABLE_REMOTE_AGENT
+#  include "nsIRemoteAgent.h"
+#endif
 #include "nsISafeOutputStream.h"
 #include "nsIX509Cert.h"
 #include "nsNSSCertHelper.h"
@@ -608,11 +612,29 @@ nsCertOverrideService::IsCertUsedForOverrides(nsIX509Cert* aCert,
   return NS_OK;
 }
 
+static bool IsDebugger() {
+  bool marionetteRunning = false;
+  bool remoteAgentListening = false;
+
+  nsCOMPtr<nsIMarionette> marionette = do_GetService(NS_MARIONETTE_CONTRACTID);
+  if (marionette) {
+    marionette->GetRunning(&marionetteRunning);
+  }
+
+#ifdef ENABLE_REMOTE_AGENT
+  nsCOMPtr<nsIRemoteAgent> agent = do_GetService(NS_REMOTEAGENT_CONTRACTID);
+  if (agent) {
+    agent->GetListening(&remoteAgentListening);
+  }
+#endif
+
+  return marionetteRunning || remoteAgentListening;
+}
+
 NS_IMETHODIMP
 nsCertOverrideService::
     SetDisableAllSecurityChecksAndLetAttackersInterceptMyData(bool aDisable) {
-  if (!(PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR") ||
-        PR_GetEnv("MOZ_MARIONETTE"))) {
+  if (!(PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR") || IsDebugger())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 

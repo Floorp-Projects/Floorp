@@ -622,10 +622,10 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
           HTMLAreaElement::FromNodeOrNull(draggedNode);
       if (areaElem) {
         // use the alt text (or, if missing, the href) as the title
-        areaElem->GetAttribute(NS_LITERAL_STRING("alt"), mTitleString);
+        areaElem->GetAttr(nsGkAtoms::alt, mTitleString);
         if (mTitleString.IsEmpty()) {
           // this can be a relative link
-          areaElem->GetAttribute(NS_LITERAL_STRING("href"), mTitleString);
+          areaElem->GetAttr(nsGkAtoms::href, mTitleString);
         }
 
         // we'll generate HTML like <a href="absurl">alt text</a>
@@ -662,7 +662,7 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
         // XXXbz Also, what if this is an nsIImageLoadingContent
         // that's not an <html:img>?
         if (imageElement) {
-          imageElement->GetAttribute(NS_LITERAL_STRING("alt"), mTitleString);
+          imageElement->GetAttr(nsGkAtoms::alt, mTitleString);
         }
 
         if (mTitleString.IsEmpty()) {

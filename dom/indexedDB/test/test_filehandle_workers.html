@@ -50,7 +50,7 @@
     }
 
     let url =
-      URL.createObjectURL(new Blob(["(", dummyWorkerScript.toSource(), ")()"]));
+      URL.createObjectURL(new Blob(["(", dummyWorkerScript.toString(), ")()"]));
 
     let worker1 = new Worker(url);
     try {
@@ -124,7 +124,7 @@
       };
     }
 
-    url = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+    url = URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
 
     let worker3 = new Worker(url);
     URL.revokeObjectURL(url);

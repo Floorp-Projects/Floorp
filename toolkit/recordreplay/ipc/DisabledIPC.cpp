@@ -86,6 +86,13 @@ bool IsMiddlemanWithRecordingChild() { return false; }
 
 bool DebuggerRunsInMiddleman() { MOZ_CRASH(); }
 
+bool UseCloudForReplayingProcesses() { return false; }
+
+void CreateReplayingCloudProcess(base::ProcessId aProcessId,
+                                 uint32_t aChannelId) {
+  MOZ_CRASH();
+}
+
 }  // namespace parent
 
 }  // namespace recordreplay

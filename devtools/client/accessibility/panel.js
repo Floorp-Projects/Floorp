@@ -274,6 +274,8 @@ AccessibilityPanel.prototype = {
     }
     this._destroyed = true;
 
+    this.postContentMessage("destroy");
+
     this.target.off("navigate", this.onTabNavigated);
     this._toolbox.off("select", this.onPanelVisibilityChange);
 
