@@ -251,7 +251,7 @@ inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
   buffer->ToString(len, dest);
 }
 
-template <typename T>
+template <typename T, typename std::enable_if_t<std::is_same<typename T::char_type, char16_t>::value>* = nullptr>
 inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
   size_t len = JS::GetStringLength(s);
   static_assert(js::MaxStringLength < (1 << 30),
@@ -282,6 +282,49 @@ inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
     return false;
   }
   return js::CopyStringChars(cx, dest.BeginWriting(), s, len);
+}
+
+// Specialization for UTF8String.
+template <typename T, typename std::enable_if_t<std::is_same<typename T::char_type, char>::value>* = nullptr>
+inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
+  using namespace mozilla;
+  CheckedInt<size_t> bufLen(JS::GetStringLength(s));
+  // From the contract for JS_EncodeStringToUTF8BufferPartial, to guarantee that
+  // the whole string is converted.
+  if (js::StringHasLatin1Chars(s)) {
+    bufLen *= 2;
+  } else {
+    bufLen *= 3;
+  }
+
+  if (MOZ_UNLIKELY(!bufLen.isValid())) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Shouldn't really matter, but worth being safe.
+  const bool kAllowShrinking = true;
+
+  nsresult rv;
+  auto handle = dest.BulkWrite(bufLen.value(), 0, kAllowShrinking, rv);
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+
+  auto maybe = JS_EncodeStringToUTF8BufferPartial(cx, s, handle.AsSpan());
+  if (MOZ_UNLIKELY(!maybe)) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+
+  size_t read;
+  size_t written;
+  Tie(read, written) = *maybe;
+
+  MOZ_ASSERT(read == JS::GetStringLength(s));
+  handle.Finish(written, kAllowShrinking);
+  return true;
 }
 
 inline void AssignJSLinearString(nsAString& dest, JSLinearString* s) {
