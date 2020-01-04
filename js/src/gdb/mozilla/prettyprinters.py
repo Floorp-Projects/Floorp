@@ -214,6 +214,7 @@ class TypeCache(object):
         self.mod_GCCellPtr = None
         self.mod_Interpreter = None
         self.mod_JSObject = None
+        self.mod_JSOp = None
         self.mod_JSString = None
         self.mod_JS_Value = None
         self.mod_ExecutableAllocator = None
@@ -265,6 +266,10 @@ template_regexp = re.compile("([\w_:]+)<")
 def is_struct_or_union(t):
     return t.code in (gdb.TYPE_CODE_STRUCT, gdb.TYPE_CODE_UNION)
 
+
+def is_struct_or_union_or_enum(t):
+    return t.code in (gdb.TYPE_CODE_STRUCT, gdb.TYPE_CODE_UNION, gdb.TYPE_CODE_ENUM)
+
 # Construct and return a pretty-printer lookup function for objfile, or
 # return None if the objfile doesn't contain SpiderMonkey code
 # (specifically, definitions for SpiderMonkey types).
@@ -295,7 +300,7 @@ def lookup_for_objfile(objfile):
         def check_table_by_type_name(table, t):
             if t.code == gdb.TYPE_CODE_TYPEDEF:
                 return check_table(table, str(t))
-            elif is_struct_or_union(t) and t.tag:
+            elif is_struct_or_union_or_enum(t) and t.tag:
                 return check_table(table, t.tag)
             else:
                 return None
