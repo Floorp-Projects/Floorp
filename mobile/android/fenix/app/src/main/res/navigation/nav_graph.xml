@@ -397,6 +397,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_toolbarSettingsFragment"
             app:destination="@id/toolbarSettingsFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_localeSettingsFragment"
+            app:destination="@id/localeSettingsFragment" />
     </fragment>
     <fragment
         android:id="@+id/dataChoicesFragment"
@@ -687,4 +690,8 @@
         android:id="@+id/toolbarSettingsFragment"
         android:name="org.mozilla.fenix.settings.ToolbarSettingsFragment"
         android:label="ToolbarSettingsFragment" />
+    <fragment
+        android:id="@+id/localeSettingsFragment"
+        android:name="org.mozilla.fenix.settings.advanced.LocaleSettingsFragment"
+        android:label="LanguageSettingsFragment" />
 </navigation>

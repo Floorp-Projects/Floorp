@@ -50,7 +50,7 @@
 
         <activity
             android:name=".HomeActivity"
-            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -81,7 +81,7 @@
         <activity
             android:name=".customtabs.ExternalAppBrowserActivity"
             android:autoRemoveFromRecents="false"
-            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
             android:exported="false"
             android:label="@string/app_name"
             android:persistableMode="persistNever"
@@ -151,7 +151,7 @@
         <activity
             android:name=".settings.account.AuthCustomTabActivity"
             android:autoRemoveFromRecents="false"
-            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
             android:exported="false"
             android:taskAffinity=""
             android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />

@@ -429,6 +429,7 @@ dependencies {
     implementation Deps.mozilla_support_ktx
     implementation Deps.mozilla_support_rustlog
     implementation Deps.mozilla_support_utils
+    implementation Deps.mozilla_support_locale
 
     // We only care about support-migration in builds that will be overwriting Fennec.
     fennecProductionImplementation Deps.mozilla_support_migration
@@ -600,6 +601,23 @@ task printVariants {
         ])
         println 'variants: ' + groovy.json.JsonOutput.toJson(variants)
     }
+}
+
+task buildTranslationArray {
+    def foundLocales = new StringBuilder()
+    foundLocales.append("new String[]{")
+
+    fileTree("src/main/res").visit { FileVisitDetails details ->
+        if(details.file.path.endsWith("/strings.xml")){
+            def languageCode = details.file.parent.tokenize('/').last().replaceAll('values-','').replaceAll('-r','-')
+            languageCode = (languageCode == "values") ? "en-US" : languageCode
+            foundLocales.append("\"").append(languageCode).append("\"").append(",")
+        }
+    }
+
+    foundLocales.append("}")
+    def foundLocalesString = foundLocales.toString().replaceAll(',}','}')
+    android.defaultConfig.buildConfigField "String[]", "SUPPORTED_LOCALE_ARRAY", foundLocalesString
 }
 
 def glean_android_components_tag = (

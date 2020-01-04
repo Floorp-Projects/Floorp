@@ -62,7 +62,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.account.AccountAuthErrorPreference
 import org.mozilla.fenix.settings.account.AccountPreference
-import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
 @Suppress("LargeClass")
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -210,9 +209,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SettingsFragmentDirections.actionSettingsFragmentToAccessibilityFragment()
             }
             resources.getString(pref_key_language) -> {
-                // TODO #220
-                ItsNotBrokenSnack(requireContext()).showSnackbar(issueNumber = "220")
-                null
+                SettingsFragmentDirections.actionSettingsFragmentToLocaleSettingsFragment()
             }
             resources.getString(pref_key_make_default_browser) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToDefaultBrowserSettingsFragment()

@@ -11,9 +11,9 @@ import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 
 class BookmarkFragmentStore(
-    initalState: BookmarkFragmentState
+    initialState: BookmarkFragmentState
 ) : Store<BookmarkFragmentState, BookmarkFragmentAction>(
-    initalState, ::bookmarkFragmentStateReducer
+    initialState, ::bookmarkFragmentStateReducer
 )
 
 /**

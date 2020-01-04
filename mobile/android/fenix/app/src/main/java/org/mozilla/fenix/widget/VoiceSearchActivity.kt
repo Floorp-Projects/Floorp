@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import androidx.appcompat.app.AppCompatActivity
+import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.components.metrics.Event
@@ -57,6 +58,7 @@ class VoiceSearchActivity : AppCompatActivity() {
     private fun displaySpeechRecognizer() {
         val intentSpeech = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, LocaleManager.getCurrentLocale(this@VoiceSearchActivity))
         }
         metrics.track(Event.SearchWidgetVoiceSearchPressed)
 

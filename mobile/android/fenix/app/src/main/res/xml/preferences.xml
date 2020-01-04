@@ -102,6 +102,15 @@
     </androidx.preference.PreferenceCategory>
 
     <PreferenceCategory
+        android:title="@string/preferences_category_advanced"
+        app:iconSpaceReserved="false">
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_language"
+            android:key="@string/pref_key_language"
+            android:title="@string/preferences_language" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
         android:title="@string/developer_tools_category"
         app:iconSpaceReserved="false">
         <androidx.preference.SwitchPreference

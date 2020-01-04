@@ -5,19 +5,18 @@
 package org.mozilla.fenix
 
 import android.annotation.SuppressLint
-import android.app.Application
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.StrictMode
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.getSystemService
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mozilla.appservices.Megazord
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.service.experiments.Experiments
@@ -29,6 +28,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
+import mozilla.components.support.locale.LocaleAwareApplication
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import org.mozilla.fenix.GleanMetrics.ExperimentsMetrics
@@ -40,7 +40,7 @@ import java.io.File
 
 @SuppressLint("Registered")
 @Suppress("TooManyFunctions")
-open class FenixApplication : Application() {
+open class FenixApplication : LocaleAwareApplication() {
     lateinit var fretboard: Fretboard
     lateinit var experimentLoader: Deferred<Boolean>
 

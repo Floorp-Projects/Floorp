@@ -13,7 +13,6 @@ import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PROTECTED
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination
@@ -30,6 +29,7 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
+import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
 import org.mozilla.fenix.browser.UriOpenedObserver
@@ -62,7 +62,7 @@ import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-open class HomeActivity : AppCompatActivity() {
+open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     lateinit var themeManager: ThemeManager
     lateinit var browsingModeManager: BrowsingModeManager
@@ -239,8 +239,9 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
-        if (sessionObserver == null)
+        if (sessionObserver == null) {
             sessionObserver = UriOpenedObserver(this)
+        }
 
         if (navHost.navController.alreadyOnDestination(R.id.browserFragment)) return
         @IdRes val fragmentId = if (from.fragmentId != 0) from.fragmentId else null

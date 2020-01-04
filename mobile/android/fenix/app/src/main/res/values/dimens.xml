@@ -93,4 +93,15 @@
     <dimen name="about_items_text_size">16sp</dimen>
     <dimen name="about_header_text_line_spacing_extra">4dp</dimen>
 
+    <!-- Locale Settings Fragment -->
+    <dimen name="locale_search_bar_margin">8dp</dimen>
+    <dimen name="locale_search_bar_padding_start">-12dp</dimen>
+    <dimen name="locale_list_margin">16dp</dimen>
+    <dimen name="locale_item_vertical_margin">8dp</dimen>
+    <dimen name="locale_item_text_margin_start">16dp</dimen>
+    <dimen name="locale_item_text_margin_gone_start">40dp</dimen>
+    <dimen name="locale_item_title_size">16sp</dimen>
+    <dimen name="locale_item_subtitle_size">12sp</dimen>
+
+
 </resources>
