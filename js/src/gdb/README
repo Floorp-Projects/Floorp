@@ -148,8 +148,8 @@ are drawn from the list below.
   EXECUTABLE to run the tests.
 
 --srcdir=SRCDIR
-  Find the sources corresponding to OBJDIR/dist/bin/libmozjs.so in SRCDIR.
-  Without this option, we use the parent of the directory containing
+  Find the sources corresponding to LIBDIR/libmozjs.so in SRCDIR. Without
+  this option, we use the parent of the directory containing
   'run-tests.py'. Note that SRCDIR must be a complete SpiderMonkey source
   directory, as our tests #include internal SpiderMonkey header files (to
   test pretty-printers for internal types, like parse nodes.)
@@ -161,9 +161,9 @@ are drawn from the list below.
 
 --builddir=BUILDDIR
   Build the C++ executable that GDB debugs to run the tests in BUILDDIR.
-  If omitted, create a 'gdb-tests' subdirectory of OBJDIR/js/src.
+  If omitted, create a 'gdb-tests' subdirectory of LIBDIR.
 
-(It is safe to use relative paths for OBJDIR, SRCDIR, and so on. They are
+(It is safe to use relative paths for LIBDIR, SRCDIR, and so on. They are
 always interpreted relative to the directory that was current when
 run-tests.py was started.)
 
