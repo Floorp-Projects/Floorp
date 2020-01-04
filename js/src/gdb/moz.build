@@ -16,12 +16,15 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'tests/enum-printers.cpp',
     'tests/test-asmjs.cpp',
     'tests/test-ExecutableAllocator.cpp',
     'tests/test-GCCellPtr.cpp',
     'tests/test-Interpreter.cpp',
+    'tests/test-jsbytecode.cpp',
     'tests/test-jsid.cpp',
     'tests/test-JSObject.cpp',
+    'tests/test-jsop.cpp',
     'tests/test-JSString.cpp',
     'tests/test-JSSymbol.cpp',
     'tests/test-jsval.cpp',
