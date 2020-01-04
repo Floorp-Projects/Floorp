@@ -396,7 +396,9 @@ t_6_v</textarea>
 </form>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
+// Bug 1588148 - The extra ServiceWorker test cases lengthened the runtime
+// enough that sometimes we only nearly make it through all the test cases.
+SimpleTest.requestLongerTimeout(2);
 SimpleTest.waitForExplicitFinish();
 
 const placeholder_myFile1 = {};
