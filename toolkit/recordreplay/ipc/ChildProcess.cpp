@@ -186,8 +186,6 @@ void ChildProcessInfo::OnCrash(size_t aForkId, const char* aWhy) {
     // be generated.
     dom::ContentChild::GetSingleton()->SendGenerateReplayCrashReport(GetId());
 
-    BusyWait();
-
     // Continue execution if we were able to recover from the crash.
     if (js::RecoverFromCrash(GetId(), aForkId)) {
       return;

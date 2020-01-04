@@ -384,9 +384,15 @@ static void InitializeForkListener() {
 }
 
 static void SendMessageToForkedProcess(Message::UniquePtr aMsg) {
-  for (const ForkedProcess& process : gForkedProcesses) {
+  for (ForkedProcess& process : gForkedProcesses) {
     if (process.mForkId == aMsg->mForkId) {
+      bool remove =
+          aMsg->mType == MessageType::Terminate ||
+          aMsg->mType == MessageType::Crash;
       process.mChannel->SendMessage(std::move(*aMsg));
+      if (remove) {
+        gForkedProcesses.erase(&process);
+      }
       return;
     }
   }
@@ -460,14 +466,14 @@ void ReportCrash(const MinidumpInfo& aInfo, void* aFaultingAddress) {
   int pid;
   pid_for_task(aInfo.mTask, &pid);
 
-  size_t forkId = 0;
+  uint32_t forkId = UINT32_MAX;
   if (aInfo.mTask != mach_task_self()) {
     for (const ForkedProcess& fork : gForkedProcesses) {
       if (fork.mPid == pid) {
         forkId = fork.mForkId;
       }
     }
-    if (!forkId) {
+    if (forkId == UINT32_MAX) {
       Print("Could not find fork ID for crashing task\n");
     }
   }
@@ -526,6 +532,7 @@ void ReportUnhandledDivergence() {
 }
 
 size_t GetId() { return gChannel->GetId(); }
+size_t GetForkId() { return gForkId; }
 
 void AddPendingRecordingData() {
   Thread::WaitForIdleThreads();

@@ -50,6 +50,7 @@ void ReportUnhandledDivergence();
 
 // Get the unique ID of this child.
 size_t GetId();
+size_t GetForkId();
 
 // Monitor used for various synchronization tasks.
 extern Monitor* gMonitor;
