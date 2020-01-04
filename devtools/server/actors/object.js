@@ -474,7 +474,12 @@ const proto = {
           continue;
         }
 
-        const result = getter.call(this.obj);
+        let result;
+        if (isReplaying && this.obj.replayHasPropertyValue(name)) {
+          result = this.obj.replayPropertyValue(name);
+        } else {
+          result = getter.call(this.obj);
+        }
         if (!result || "throw" in result) {
           continue;
         }
