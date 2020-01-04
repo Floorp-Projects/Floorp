@@ -355,6 +355,7 @@ Services.obs.addObserver(
         contents.arguments.forEach(v =>
           contents.argumentsData.addValue(v, PropertyLevels.FULL)
         );
+        resetPauseState();
       }
 
       newConsoleMessage(contents);
@@ -793,8 +794,17 @@ function ensurePositionHandler(position) {
 // Paused State
 ///////////////////////////////////////////////////////////////////////////////
 
-let gPausedObjects = new IdMap();
-let gDereferencedObjects = new Map();
+let gPausedObjects;
+let gDereferencedObjects;
+let gPreviewedObjects;
+
+function resetPauseState() {
+  gPausedObjects = new IdMap();
+  gDereferencedObjects = new Map();
+  gPreviewedObjects = new Map();
+}
+
+resetPauseState();
 
 function getObjectId(obj) {
   const id = gPausedObjects.getId(obj);
@@ -1183,12 +1193,6 @@ function HitCheckpoint(id) {
   gLastCheckpoint = id;
   const point = currentExecutionPoint();
 
-  // Reset paused state at each checkpoint. In order to reach the checkpoint we
-  // must have unpaused, and resetting the state allows these objects to be
-  // collected by the GC.
-  gPausedObjects = new IdMap();
-  gDereferencedObjects = new Map();
-
   try {
     processManifestAfterCheckpoint(point);
   } catch (e) {
@@ -1305,18 +1309,6 @@ function getFrameData(index) {
   };
 }
 
-function unknownObjectProperties(why) {
-  return [
-    {
-      name: "Unknown properties",
-      desc: {
-        value: why,
-        enumerable: true,
-      },
-    },
-  ];
-}
-
 function getObjectData(id) {
   const object = gPausedObjects.getObject(id);
   if (object instanceof Debugger.Object) {
@@ -1395,6 +1387,15 @@ function isBlacklisted(object) {
   return object.class == "Storage";
 }
 
+function getOwnPropertyNames(object) {
+  if (!isBlacklisted(object)) {
+    try {
+      return object.getOwnPropertyNames();
+    } catch (e) {}
+  }
+  return [];
+}
+
 function getObjectProperties(object) {
   const rv = Object.create(null);
 
@@ -1402,14 +1403,7 @@ function getObjectProperties(object) {
     return rv;
   }
 
-  let names;
-  try {
-    names = object.getOwnPropertyNames();
-  } catch (e) {
-    return unknownObjectProperties(e.toString());
-  }
-
-  names.forEach(name => {
+  getOwnPropertyNames(object).forEach(name => {
     // Workaround this test-only getter not reporting exceptions properly.
     if (name == "SpecialPowers_wrappedObject") {
       return;
@@ -1499,6 +1493,24 @@ function getWindow() {
   return null;
 }
 
+function isObjectPropertyBlacklisted(object, name) {
+  switch (object.class) {
+    case "Window":
+      return ["localStorage", "sysinfo"].includes(name);
+    case "Navigator":
+      return name == "hardwareConcurrency";
+    case "XPCWrappedNative_NoHelper":
+      return ["isParentWindowMainWidgetVisible", "systemFont"].includes(name);
+    case "Storage":
+      return true;
+  }
+  return false;
+}
+
+function isSafeGetter(getter) {
+  return getter.class == "Function" && !getter.script;
+}
+
 // Maximum number of properties the server is interested in when previewing an
 // object.
 const OBJECT_PREVIEW_MAX_ITEMS = 10;
@@ -1533,31 +1545,26 @@ PreviewedObjects.prototype = {
     const object = gPausedObjects.getObject(id);
     assert(object instanceof Debugger.Object);
 
-    if (!this.objects[id]) {
-      let ownPropertyNamesCount = 0;
-      try {
-        ownPropertyNamesCount = object.getOwnPropertyNames().length;
-      } catch (e) {}
-
-      this.objects[id] = {
-        data: getObjectData(id),
-        preview: { ownPropertyNamesCount, level },
-      };
-    } else {
-      const preview = this.objects[id].preview;
-      if ((preview.level | 0) >= (level | 0)) {
+    if (gPreviewedObjects.has(id)) {
+      const existingLevel = gPreviewedObjects.get(id);
+      if (existingLevel >= (level | 0)) {
         return;
       }
-      preview.level = level;
     }
+    gPreviewedObjects.set(id, level | 0);
 
-    const { data, preview } = this.objects[id];
+    const data = getObjectData(id);
+    const ownPropertyNamesCount = getOwnPropertyNames(object).length;
 
     // If this is a DOM object identified with isInstance, the previewer might
     // need additional properties.
     if (level == PropertyLevels.BASIC && data.isInstance) {
-      preview.level = level = PropertyLevels.FULL;
+      level = PropertyLevels.FULL;
     }
+
+    const preview = { ownPropertyNamesCount, level };
+
+    this.objects[id] = { data, preview };
 
     // Add intrinsic properties that are always included.
     switch (object.class) {
@@ -1571,7 +1578,12 @@ PreviewedObjects.prototype = {
       case "Int32Array":
       case "Float32Array":
       case "Float64Array":
+      case "Storage":
         this.addObjectPropertyValue(object, "length");
+        break;
+      case "Set":
+      case "Map":
+        this.addObjectPropertyValue(object, "size");
         break;
       case "Function":
         this.addObjectPropertyValue(object, "displayName");
@@ -1581,6 +1593,9 @@ PreviewedObjects.prototype = {
     if (!level) {
       return;
     }
+
+    const sublevel =
+      level == PropertyLevels.FULL ? PropertyLevels.BASIC : undefined;
 
     const properties = Object.entries(getObjectProperties(object));
 
@@ -1592,7 +1607,7 @@ PreviewedObjects.prototype = {
     let enumerablePropertyCount = 0;
     for (const [name, desc] of properties) {
       if (level == PropertyLevels.FULL || desc.enumerable) {
-        this.addObjectProperty(object, name, desc);
+        this.addObjectProperty(object, name, desc, sublevel);
         if (level == PropertyLevels.BASIC) {
           if (++enumerablePropertyCount == OBJECT_PREVIEW_MAX_ITEMS) {
             break;
@@ -1622,10 +1637,6 @@ PreviewedObjects.prototype = {
       case "Date":
         this.addObjectCall(object, "getTime");
         break;
-      case "Set":
-      case "Map":
-        this.addObjectPropertyValue(object, "size");
-        break;
       case "Error":
       case "EvalError":
       case "RangeError":
@@ -1640,26 +1651,30 @@ PreviewedObjects.prototype = {
         this.addObjectPropertyValue(object, "lineNumber");
         this.addObjectPropertyValue(object, "columnNumber");
         break;
+      case "HTMLDocument":
+        this.addObjectPropertyValue(object, "nodePrincipal");
+        break;
     }
 
-    // Search the prototype chain for getter properties and fill in their values
-    // if we are getting all properties of the object.
+    // If we are getting all properties of the object, get properties of the
+    // prototype as well, and fill in the values of getter properties.
     if (level == PropertyLevels.FULL) {
       let { proto } = object;
       while (proto) {
-        let names = [];
-        try {
-          names = proto.getOwnPropertyNames();
-        } catch (e) {}
+        this.addObject(gPausedObjects.getId(proto), PropertyLevels.FULL);
 
-        for (const name of names) {
+        for (const name of getOwnPropertyNames(proto)) {
+          if (name == "__proto__") {
+            continue;
+          }
+
           let desc = null;
           try {
             desc = proto.getOwnPropertyDescriptor(name);
           } catch (e) {}
 
-          if (desc && desc.get) {
-            this.addObjectPropertyValue(object, name);
+          if (desc && desc.get && isSafeGetter(desc.get)) {
+            this.addObjectPropertyValue(object, name, sublevel);
           }
         }
 
@@ -1668,28 +1683,38 @@ PreviewedObjects.prototype = {
     }
   },
 
-  addObjectPropertyValue(object, name) {
-    try {
-      const value = makeConvertedDebuggeeValue(
-        object.unsafeDereference()[name]
-      );
+  addObjectPropertyValue(object, name, level) {
+    let value;
+    if (!isObjectPropertyBlacklisted(object, name)) {
+      try {
+        value = object.unsafeDereference()[name];
+      } catch (e) {}
+    }
 
-      this.addObjectProperty(object, name, { value, enumerable: true });
-    } catch (e) {}
+    value = makeConvertedDebuggeeValue(value);
+    this.addObjectProperty(object, name, { value, enumerable: true }, level);
   },
 
-  addObjectProperty(object, name, desc) {
+  addObjectProperty(object, name, desc, level) {
     const id = gPausedObjects.getId(object);
     const preview = this.objects[id].preview;
 
     if (!preview.properties) {
       preview.properties = Object.create(null);
     }
-    if (name in preview.properties) {
+    if (name in preview.properties && !("value" in desc)) {
       return;
     }
 
-    this.addPropertyDescriptor(desc);
+    // Convert getters to their values when we are able to safely call them.
+    if (desc.get && isSafeGetter(gPausedObjects.getObject(desc.get))) {
+      this.addObjectPropertyValue(object, name, level);
+      if (name in preview.properties) {
+        return;
+      }
+    }
+
+    this.addPropertyDescriptor(desc, level);
     preview.properties[name] = desc;
   },
 
@@ -1759,9 +1784,9 @@ PreviewedObjects.prototype = {
 
   addCompletionValue(v) {
     if (v.return) {
-      this.addValue(v.return);
+      this.addValue(v.return, PropertyLevels.FULL);
     } else if (v.throw) {
-      this.addValue(v.throw);
+      this.addValue(v.throw, PropertyLevels.FULL);
     }
   },
 };
@@ -1912,8 +1937,9 @@ const gRequestHandlers = {
 
   getObjectProperties(request) {
     divergeFromRecording();
-    const object = gPausedObjects.getObject(request.id);
-    return { properties: getObjectProperties(object) };
+    const preview = new PreviewedObjects();
+    preview.addObject(request.id, PropertyLevels.FULL);
+    return { preview };
   },
 
   getObjectContainerContents(request) {
@@ -1931,8 +1957,10 @@ const gRequestHandlers = {
     }
 
     const args = request.args.map(v => convertValueFromParent(v));
-    const rv = obj.apply(thisv, args);
-    return convertCompletionValue(rv);
+    const rv = convertCompletionValue(obj.apply(thisv, args));
+    const preview = new PreviewedObjects();
+    preview.addCompletionValue(rv);
+    return { rv, preview };
   },
 
   getEnvironmentNames(request) {
@@ -1979,8 +2007,12 @@ const gRequestHandlers = {
   frameEvaluate(request) {
     divergeFromRecording();
     const frame = scriptFrameForIndex(request.index);
-    const rv = frame.eval(request.text, request.options);
-    return convertCompletionValue(rv);
+    const rv = convertCompletionValue(
+      frame.eval(request.text, request.options)
+    );
+    const preview = new PreviewedObjects();
+    preview.addCompletionValue(rv);
+    return { rv, preview };
   },
 
   findConsoleMessages(request) {
@@ -1994,12 +2026,26 @@ const gRequestHandlers = {
   getFixedObjects(request) {
     divergeFromRecording();
     const window = getWindow();
-    return {
+    const objects = {
       window: getObjectId(makeDebuggeeValue(window)),
       document: getObjectId(makeDebuggeeValue(window.document)),
       Services: getObjectId(makeDebuggeeValue(Services)),
       InspectorUtils: getObjectId(makeDebuggeeValue(InspectorUtils)),
     };
+    const preview = new PreviewedObjects();
+    Object.values(objects).forEach(obj => preview.addObject(obj));
+
+    // Add some preview data which is needed to populate style sheets.
+    preview.addObject(objects.window, PropertyLevels.FULL);
+    preview.addObject(objects.document, PropertyLevels.FULL);
+    preview.addObject(objects.InspectorUtils, PropertyLevels.FULL);
+
+    const nodePrincipal = getObjectId(
+      makeDebuggeeValue(window.document.nodePrincipal)
+    );
+    preview.addObject(nodePrincipal, PropertyLevels.FULL);
+
+    return { objects, preview };
   },
 
   newDeepTreeWalker(request) {
