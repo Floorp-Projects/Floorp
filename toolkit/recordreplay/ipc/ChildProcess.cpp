@@ -51,6 +51,12 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg) {
       OnCrash(nmsg.mForkId, nmsg.Error());
       return;
     }
+    case MessageType::CloudError: {
+      const auto& nmsg = static_cast<const CloudErrorMessage&>(aMsg);
+      Print("Fatal Cloud Error: %s\n", nmsg.Error());
+      MOZ_CRASH("Cloud Error");
+      return;
+    }
     case MessageType::Paint:
       UpdateGraphicsAfterPaint(static_cast<const PaintMessage&>(aMsg));
       break;

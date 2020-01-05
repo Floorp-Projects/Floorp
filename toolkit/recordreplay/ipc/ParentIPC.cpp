@@ -343,6 +343,8 @@ void InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
 
   // Construct the message that will be sent to each child when starting up.
   IntroductionMessage* msg = IntroductionMessage::New(aParentPid, aArgc, aArgv);
+  GetCurrentBuildId(&msg->mBuildId);
+
   ChildProcessInfo::SetIntroductionMessage(msg);
 
   MOZ_RELEASE_ASSERT(gProcessKind == ProcessKind::MiddlemanRecording ||
@@ -379,6 +381,13 @@ void InitializeMiddleman(int aArgc, char* aArgv[], base::ProcessId aParentPid,
     }
 
     DirectCloseFile(fd);
+
+    // Update the build ID in the introduction message according to what we
+    // find in the recording. The introduction message is sent first to each
+    // replaying process, and when replaying in the cloud its contents will be
+    // analyzed to determine what binaries to use for the replay.
+    Recording::ExtractBuildId(gRecordingContents.begin(),
+                              gRecordingContents.length(), &msg->mBuildId);
   }
 }
 

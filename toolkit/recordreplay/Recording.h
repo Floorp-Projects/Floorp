@@ -207,6 +207,19 @@ class Stream {
   bool ReadMismatchedEventData(ThreadEvent aEvent);
 };
 
+// All information about the platform and build where a recording was made.
+struct BuildId {
+  char mContents[128];
+
+  BuildId() { PodZero(this); }
+  bool Matches(const BuildId& aOther) {
+    return !memcmp(this, &aOther, sizeof(*this));
+  }
+};
+
+// Get the build ID for the currently running process.
+void GetCurrentBuildId(BuildId* aBuildId);
+
 class Recording {
  public:
   enum Mode { WRITE, READ };
@@ -258,6 +271,10 @@ class Recording {
 
   // Flush all streams to the recording.
   void Flush();
+
+  // Get the build ID embedded in a recording.
+  static void ExtractBuildId(const char* aContents, size_t aLength,
+                             BuildId* aBuildId);
 
  private:
   StreamChunkLocation WriteChunk(StreamName aName, size_t aNameIndex,
