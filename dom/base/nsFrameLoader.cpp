@@ -1026,9 +1026,9 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
       nsSizeMode sizeMode =
           mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
-
-      Unused << browserBridgeChild->SendShow(
-          size, ParentWindowIsActive(mOwnerContent->OwnerDoc()), sizeMode);
+      OwnerShowInfo info(size, ParentWindowIsActive(mOwnerContent->OwnerDoc()),
+                         sizeMode);
+      Unused << browserBridgeChild->SendShow(info);
       mRemoteBrowserShown = true;
       return true;
     }

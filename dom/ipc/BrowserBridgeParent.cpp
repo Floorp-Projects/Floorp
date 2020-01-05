@@ -137,12 +137,9 @@ void BrowserBridgeParent::Destroy() {
   }
 }
 
-IPCResult BrowserBridgeParent::RecvShow(const ScreenIntSize& aSize,
-                                        const bool& aParentIsActive,
-                                        const nsSizeMode& aSizeMode) {
+IPCResult BrowserBridgeParent::RecvShow(const OwnerShowInfo& aOwnerInfo) {
   mBrowserParent->AttachLayerManager();
-  Unused << mBrowserParent->SendShow(aSize, mBrowserParent->GetShowInfo(),
-                                     aParentIsActive, aSizeMode);
+  Unused << mBrowserParent->SendShow(mBrowserParent->GetShowInfo(), aOwnerInfo);
   return IPC_OK();
 }
 

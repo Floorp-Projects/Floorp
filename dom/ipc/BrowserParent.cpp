@@ -470,11 +470,13 @@ BrowserBridgeParent* BrowserParent::GetBrowserBridgeParent() const {
 
 BrowserHost* BrowserParent::GetBrowserHost() const { return mBrowserHost; }
 
-ShowInfo BrowserParent::GetShowInfo() {
+ParentShowInfo BrowserParent::GetShowInfo() {
   TryCacheDPIAndScale();
   if (mFrameElement) {
     nsAutoString name;
     mFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+    // FIXME(emilio, bug 1606660): allowfullscreen should probably move to
+    // OwnerShowInfo.
     bool allowFullscreen =
         mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) ||
         mFrameElement->HasAttr(kNameSpaceID_None,
@@ -484,12 +486,12 @@ ShowInfo BrowserParent::GetShowInfo() {
     bool isTransparent =
         nsContentUtils::IsChromeDoc(mFrameElement->OwnerDoc()) &&
         mFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::transparent);
-    return ShowInfo(name, allowFullscreen, isPrivate, false, isTransparent,
-                    mDPI, mRounding, mDefaultScale.scale);
+    return ParentShowInfo(name, allowFullscreen, isPrivate, false,
+                          isTransparent, mDPI, mRounding, mDefaultScale.scale);
   }
 
-  return ShowInfo(EmptyString(), false, false, false, false, mDPI, mRounding,
-                  mDefaultScale.scale);
+  return ParentShowInfo(EmptyString(), false, false, false, false, mDPI,
+                        mRounding, mDefaultScale.scale);
 }
 
 already_AddRefed<nsIPrincipal> BrowserParent::GetContentPrincipal() const {
@@ -955,7 +957,8 @@ bool BrowserParent::Show(const ScreenIntSize& size, bool aParentIsActive) {
   baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
   mSizeMode = mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
 
-  Unused << SendShow(size, GetShowInfo(), aParentIsActive, mSizeMode);
+  OwnerShowInfo ownerInfo(size, aParentIsActive, mSizeMode);
+  Unused << SendShow(GetShowInfo(), ownerInfo);
   return true;
 }
 

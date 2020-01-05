@@ -6,6 +6,7 @@
 
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/dom/DocShellMessageUtils.h";
+include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
 include IPCBlob;
@@ -25,7 +26,9 @@ using DesktopToLayoutDeviceScale from "Units.h";
 using CSSToLayoutDeviceScale from "Units.h";
 using CSSRect from "Units.h";
 using CSSSize from "Units.h";
+using ScreenIntSize from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
+using nsSizeMode from "nsIWidgetListener.h";
 using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
@@ -329,6 +332,34 @@ struct IPDLProperty
 {
   nsString name;
   nsIVariant value;
+};
+
+// Struct with information to show a frame from the parent process.
+struct ParentShowInfo
+{
+  nsString name;
+  bool fullscreenAllowed;
+  bool isPrivate;
+  bool fakeShowInfo;
+  bool isTransparent;
+  float dpi;
+  int32_t widgetRounding;
+  double defaultScale;
+};
+
+// Struct with information to show an iframe from the process that owns the
+// frame.
+struct OwnerShowInfo {
+  // This can be an IntSize rather than a Rect because content processes always
+  // render to a virtual <0, 0> top-left point.
+  ScreenIntSize size;
+
+  // TODO(emilio): Scrollbar and margin preferences go here.
+
+  // TODO(emilio): I think we should really be able to figure out these from the
+  // parent process too instead.
+  bool parentWindowIsActive;
+  nsSizeMode sizeMode;
 };
 
 } // namespace dom
