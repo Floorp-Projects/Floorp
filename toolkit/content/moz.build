@@ -233,6 +233,9 @@ with Files('aboutNetworking*'):
 with Files('aboutProfile*'):
     BUG_COMPONENT = ('Toolkit', 'Startup and Profile System')
 
+with Files('aboutReplay*'):
+    BUG_COMPONENT = ('Core', 'Web Replay')
+
 with Files('aboutRights*'):
     BUG_COMPONENT = ('Toolkit', 'General')
 
