@@ -361,9 +361,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
         let desc = null;
         do {
           desc = Object.getOwnPropertyDescriptor(obj, name);
+          if (desc) {
+            break;
+          }
           obj = Object.getPrototypeOf(obj);
-        } while (!desc);
-        return desc.get || desc.value;
+        } while (obj);
+        return desc ? (desc.get || desc.value) : undefined;
       };
       ok(xrayProto.hasOwnProperty(name), `proto should have the property '${name}' as own`);
       ok(!xray.hasOwnProperty(name), `instance should not have the property '${name}' as own`);
@@ -382,9 +385,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
         // If invoking this method returns something non-Xrayable, the
         // stringification is going to return [object Opaque].
         // This happens for set[@@iterator] and other Iterator objects.
-        if (!/Opaque/.test(method.call(xray))) {
+        let callable = lookupCallable(xray.wrappedJSObject);
+        if (!/Opaque/.test(method.call(xray)) && callable) {
           is(method.call(xray) + "",
-             lookupCallable(xray.wrappedJSObject).call(xray.wrappedJSObject) + "",
+             callable.call(xray.wrappedJSObject) + "",
              "Xray and waived method results stringify identically");
         }
       }
@@ -929,8 +933,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
       isnot(re.toSource, Cu.unwaiveXrays(re.wrappedJSObject.toSource), "Different function identities");
       is(Cu.getGlobalForObject(re.toSource), window, "Xray global is correct");
-      is(Cu.getGlobalForObject(re.wrappedJSObject.toSource), iwin, "Underlying global is correct");
-      is(re.toSource(), re.wrappedJSObject.toSource(), "Results match");
+      if (re.wrappedJSObject.toSource) {
+        is(Cu.getGlobalForObject(re.wrappedJSObject.toSource), iwin, "Underlying global is correct");
+        is(re.toSource(), re.wrappedJSObject.toSource(), "Results match");
+      }
 
       // Test with modified flags accessors
       iwin.eval(`
