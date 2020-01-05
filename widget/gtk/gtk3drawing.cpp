@@ -580,6 +580,7 @@ static gint moz_gtk_header_bar_button_paint(cairo_t* cr,
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
 
     gtk_style_context_save(style);
+    StyleContextSetScale(style, state->scale);
     gtk_style_context_set_state(style, state_flags);
 
     const ToolbarButtonGTKMetrics* metrics =
