@@ -87,7 +87,6 @@ class SharedFontList;
 class StyleSheet;
 class WritingMode;
 class ServoElementSnapshotTable;
-enum class StyleContentType : uint8_t;
 
 template <typename T>
 struct StyleForgottenArcSlicePtr;

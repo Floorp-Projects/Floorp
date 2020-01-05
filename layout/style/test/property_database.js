@@ -5285,7 +5285,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     applies_to_marker: true,
-    /* XXX needs to be on pseudo-elements */
+    // XXX This really depends on pseudo-element-ness.
     initial_values: ["normal", "none"],
     other_values: [
       '""',

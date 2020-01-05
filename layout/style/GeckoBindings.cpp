@@ -1076,19 +1076,13 @@ void Gecko_FontWeight_SetFloat(FontWeight* aWeight, float aFloat) {
   *aWeight = FontWeight(aFloat);
 }
 
-void Gecko_SetCounterStyleToName(CounterStylePtr* aPtr, nsAtom* aName) {
-  RefPtr<nsAtom> name = already_AddRefed<nsAtom>(aName);
-  *aPtr = name.forget();
+void Gecko_CounterStyle_ToPtr(const StyleCounterStyle* aStyle,
+                              CounterStylePtr* aPtr) {
+  *aPtr = CounterStylePtr::FromStyle(*aStyle);
 }
 
-void Gecko_SetCounterStyleToSymbols(CounterStylePtr* aPtr, uint8_t aSymbolsType,
-                                    nsACString const* const* aSymbols,
-                                    uint32_t aSymbolsCount) {
-  nsTArray<nsString> symbols(aSymbolsCount);
-  for (uint32_t i = 0; i < aSymbolsCount; i++) {
-    symbols.AppendElement(NS_ConvertUTF8toUTF16(*aSymbols[i]));
-  }
-  *aPtr = new AnonymousCounterStyle(aSymbolsType, std::move(symbols));
+void Gecko_SetCounterStyleToNone(CounterStylePtr* aPtr) {
+  *aPtr = nsGkAtoms::none;
 }
 
 void Gecko_SetCounterStyleToString(CounterStylePtr* aPtr,
@@ -1173,23 +1167,6 @@ void Gecko_CopyCursorArrayFrom(nsStyleUI* aDest, const nsStyleUI* aSrc) {
   aDest->mCursorImages = aSrc->mCursorImages;
 }
 
-void Gecko_SetContentDataImageValue(nsStyleContentData* aContent,
-                                    const StyleComputedImageUrl* aUrl) {
-  MOZ_ASSERT(aContent && aUrl);
-
-  RefPtr<nsStyleImageRequest> req =
-      CreateStyleImageRequest(nsStyleImageRequest::Mode::Track, aUrl);
-  aContent->SetImageRequest(req.forget());
-}
-
-nsStyleContentData::CounterFunction* Gecko_SetCounterFunction(
-    nsStyleContentData* aContent, StyleContentType aType) {
-  auto counterFunc = MakeRefPtr<nsStyleContentData::CounterFunction>();
-  auto* ptr = counterFunc.get();
-  aContent->SetCounters(aType, counterFunc.forget());
-  return ptr;
-}
-
 const nsStyleImageRequest* Gecko_GetImageRequest(const nsStyleImage* aImage) {
   MOZ_ASSERT(aImage);
   return aImage->ImageRequest();
@@ -1243,22 +1220,6 @@ void Gecko_ResizeTArrayForStrings(nsTArray<nsString>* aArray,
 
 void Gecko_ResizeAtomArray(nsTArray<RefPtr<nsAtom>>* aArray, uint32_t aLength) {
   aArray->SetLength(aLength);
-}
-
-void Gecko_ClearAndResizeStyleContents(nsStyleContent* aContent,
-                                       uint32_t aHowMany) {
-  aContent->AllocateContents(aHowMany);
-}
-
-void Gecko_CopyStyleContentsFrom(nsStyleContent* aContent,
-                                 const nsStyleContent* aOther) {
-  uint32_t count = aOther->ContentCount();
-
-  aContent->AllocateContents(count);
-
-  for (uint32_t i = 0; i < count; ++i) {
-    aContent->ContentAt(i) = aOther->ContentAt(i);
-  }
 }
 
 void Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen,
