@@ -25,6 +25,7 @@
 #include <mach/mach_vm.h>
 #include <mach/vm_map.h>
 #include <mach-o/loader.h>
+#include <mach-o/nlist.h>
 #include <signal.h>
 #include <sys/attr.h>
 #include <sys/event.h>
@@ -914,35 +915,7 @@ GetTLVTemplate(void* aPtr, size_t* aTemplateSize, size_t* aTotalSize) {
   return tlvTemplate;
 }
 
-static void*
-GetTLVAddressFunction() {
-  Dl_info info;
-  dladdr(BitwiseCast<void*>(GetTLVAddressFunction), &info);
-  mach_header_64* header = (mach_header_64*) info.dli_fbase;
-  MOZ_RELEASE_ASSERT(header->magic == MH_MAGIC_64);
-
-  uint32_t offset = sizeof(mach_header_64);
-  for (size_t i = 0; i < header->ncmds; i++) {
-    load_command* cmd = (load_command*) ((uint8_t*)header + offset);
-    if (LC_SEGMENT_64 == (cmd->cmd & ~LC_REQ_DYLD)) {
-      segment_command_64* ncmd = (segment_command_64*) cmd;
-      section_64* sect = (section_64*) (ncmd + 1);
-      for (size_t i = 0; i < ncmd->nsects; i++, sect++) {
-        switch (sect->flags & SECTION_TYPE) {
-        case S_THREAD_LOCAL_VARIABLES:
-          tlv_descriptor* desc = (tlv_descriptor*) ((uint8_t*)header + sect->addr);
-          MOZ_RELEASE_ASSERT(desc->thunk);
-          return BitwiseCast<void*>(desc->thunk);
-        }
-      }
-    }
-    offset += cmd->cmdsize;
-  }
-
-  MOZ_CRASH("Couldn't find tlv_get_addr");
-}
-
-static PreambleResult Preamble_tlv_get_addr(CallArguments* aArguments) {
+static PreambleResult Preamble__tlv_bootstrap(CallArguments* aArguments) {
   if (IsReplaying()) {
     Thread* thread = Thread::Current();
     if (thread && !thread->IsMainThread()) {
@@ -966,6 +939,23 @@ static PreambleResult Preamble_tlv_get_addr(CallArguments* aArguments) {
 ///////////////////////////////////////////////////////////////////////////////
 // stdlib redirections
 ///////////////////////////////////////////////////////////////////////////////
+
+static void* FindRedirectionBinding(const char* aName);
+
+static PreambleResult Preamble_dlsym(CallArguments* aArguments) {
+  auto name = aArguments->Arg<1, const char*>();
+
+  // If a redirected function is dynamically looked up, return the redirection.
+  if (!AreThreadEventsPassedThrough()) {
+    void* binding = FindRedirectionBinding(name);
+    if (binding) {
+      aArguments->Rval<void*>() = binding;
+      return PreambleResult::Veto;
+    }
+  }
+
+  return PreambleResult::PassThrough;
+}
 
 static void RR_fread(Stream& aEvents, CallArguments* aArguments,
                      ErrorType* aError) {
@@ -2189,7 +2179,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"pthread_getspecific", nullptr, Preamble_pthread_getspecific},
     {"pthread_setspecific", nullptr, Preamble_pthread_setspecific},
     {"pthread_self", nullptr, Preamble_pthread_self},
-    {"tlv_get_addr", nullptr, Preamble_tlv_get_addr},
+    {"_tlv_bootstrap", nullptr, Preamble__tlv_bootstrap},
 
     /////////////////////////////////////////////////////////////////////////////
     // C library functions
@@ -2198,7 +2188,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"closedir"},
     {"dlclose", nullptr, Preamble_Veto<0>},
     {"dlopen", nullptr, Preamble_PassThrough},
-    {"dlsym", nullptr, Preamble_PassThrough},
+    {"dlsym", nullptr, Preamble_dlsym},
     {"fclose", RR_SaveRvalHadErrorNegative},
     {"fprintf", RR_SaveRvalHadErrorNegative},
     {"fopen", RR_SaveRvalHadErrorZero},
@@ -2379,7 +2369,12 @@ static SystemRedirection gSystemRedirections[] = {
     // Don't handle release/retain calls explicitly in the middleman:
     // all resources will be cleaned up when its calls are reset.
     {"CFRelease", RR_ScalarRval, nullptr, nullptr, Preamble_Veto<0>},
+    {"CGContextRelease", RR_ScalarRval, nullptr, nullptr, Preamble_Veto<0>},
     {"CFRetain", RR_ScalarRval, nullptr, nullptr, MiddlemanPreamble_CFRetain},
+    {"CGContextRetain", RR_ScalarRval, nullptr, nullptr,
+     MiddlemanPreamble_CFRetain},
+    {"CGFontRetain", RR_ScalarRval, nullptr, nullptr,
+     MiddlemanPreamble_CFRetain},
 
     {"CFRunLoopAddSource"},
     {"CFRunLoopGetCurrent", RR_ScalarRval},
@@ -2456,6 +2451,9 @@ static SystemRedirection gSystemRedirections[] = {
                 EX_OversizeRval<CGAffineTransform>>},
     {"CGBitmapContextCreateImage", RR_ScalarRval, nullptr,
      EX_Compose<EX_CFTypeArg<0>, EX_CreateCFTypeRval>},
+    {"CGBitmapContextCreate",
+     RR_Compose<RR_ScalarRval, RR_CGBitmapContextCreateWithData>, nullptr,
+     EX_CGBitmapContextCreateWithData},
     {"CGBitmapContextCreateWithData",
      RR_Compose<RR_ScalarRval, RR_CGBitmapContextCreateWithData>, nullptr,
      EX_CGBitmapContextCreateWithData},
@@ -2870,95 +2868,23 @@ static SystemRedirection gSystemRedirections[] = {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-// Diagnostic Redirections
-///////////////////////////////////////////////////////////////////////////////
-
-// Diagnostic redirections are used to redirection functions in Gecko in order
-// to help hunt down the reasons for crashes or other failures. Because of the
-// unpredictable effects of inlining, diagnostic redirections may not be called
-// whenever the associated function is invoked, and should not be used to
-// modify Gecko's behavior.
-//
-// The address of the function to redirect is specified directly here, as we
-// cannot use dlsym() to lookup symbols that are not externally visible.
-
-// Functions which are not overloaded.
-#define FOR_EACH_DIAGNOSTIC_REDIRECTION(MACRO)              \
-  MACRO(PL_HashTableAdd, Preamble_PLHashTable)              \
-  MACRO(PL_HashTableRemove, Preamble_PLHashTable)           \
-  MACRO(PL_HashTableLookup, Preamble_PLHashTable)           \
-  MACRO(PL_HashTableLookupConst, Preamble_PLHashTable)      \
-  MACRO(PL_HashTableEnumerateEntries, Preamble_PLHashTable) \
-  MACRO(PL_HashTableRawAdd, Preamble_PLHashTable)           \
-  MACRO(PL_HashTableRawRemove, Preamble_PLHashTable)        \
-  MACRO(PL_HashTableRawLookup, Preamble_PLHashTable)        \
-  MACRO(PL_HashTableRawLookupConst, Preamble_PLHashTable)
-
-// Member functions which need a type specification to resolve overloading.
-#define FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(MACRO)         \
-  MACRO(PLDHashEntryHdr* (PLDHashTable::*)(const void*, const fallible_t&), \
-        &PLDHashTable::Add, Preamble_PLDHashTable)
-
-// Member functions which are not overloaded.
-#define FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(MACRO) \
-  MACRO(&PLDHashTable::Clear, Preamble_PLDHashTable)      \
-  MACRO(&PLDHashTable::Remove, Preamble_PLDHashTable)     \
-  MACRO(&PLDHashTable::RemoveEntry, Preamble_PLDHashTable)
-
-static PreambleResult Preamble_PLHashTable(CallArguments* aArguments) {
-  CheckPLHashTable(aArguments->Arg<0, PLHashTable*>());
-  return PreambleResult::IgnoreRedirect;
-}
-
-static PreambleResult Preamble_PLDHashTable(CallArguments* aArguments) {
-  CheckPLDHashTable(aArguments->Arg<0, PLDHashTable*>());
-  return PreambleResult::IgnoreRedirect;
-}
-
-#define MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE(aType, aAddress, aPreamble) \
-  {#aAddress, nullptr, nullptr, nullptr, aPreamble},
-
-#define MAKE_DIAGNOSTIC_ENTRY(aAddress, aPreamble) \
-  {#aAddress, nullptr, nullptr, nullptr, aPreamble},
-
-static Redirection gDiagnosticRedirections[] = {
-    // clang-format off
-  FOR_EACH_DIAGNOSTIC_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY)
-  FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE)
-  FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(MAKE_DIAGNOSTIC_ENTRY)
-    // clang-format on
-};
-
-#undef MAKE_DIAGNOSTIC_ENTRY_WITH_TYPE
-#undef MAKE_DIAGNOSTIC_ENTRY
-
-///////////////////////////////////////////////////////////////////////////////
-// Redirection generation
+// Redirection Generation
 ///////////////////////////////////////////////////////////////////////////////
 
 size_t NumRedirections() {
-  return ArrayLength(gSystemRedirections) +
-         ArrayLength(gDiagnosticRedirections);
+  return ArrayLength(gSystemRedirections);
 }
 
 static Redirection* gRedirections;
 
 Redirection& GetRedirection(size_t aCallId) {
-  if (aCallId < ArrayLength(gSystemRedirections)) {
-    return gRedirections[aCallId];
-  }
-  aCallId -= ArrayLength(gSystemRedirections);
-  MOZ_RELEASE_ASSERT(aCallId < ArrayLength(gDiagnosticRedirections));
-  return gDiagnosticRedirections[aCallId];
+  MOZ_RELEASE_ASSERT(aCallId < ArrayLength(gSystemRedirections));
+  return gRedirections[aCallId];
 }
 
 // Get the instruction pointer to use as the address of the base function for a
 // redirection.
 static uint8_t* FunctionStartAddress(Redirection& aRedirection) {
-  if (!strcmp(aRedirection.mName, "tlv_get_addr")) {
-    return (uint8_t*) GetTLVAddressFunction();
-  }
-
   uint8_t* addr =
       static_cast<uint8_t*>(dlsym(RTLD_DEFAULT, aRedirection.mName));
   if (!addr) {
@@ -2972,17 +2898,30 @@ static uint8_t* FunctionStartAddress(Redirection& aRedirection) {
   return addr;
 }
 
-template <typename FnPtr>
-static uint8_t* ConvertMemberPtrToAddress(FnPtr aPtr) {
-  // Dig around in clang's internal representation of member function pointers.
-  uint8_t** contents = (uint8_t**)&aPtr;
-  return contents[0];
+static bool PreserveCallerSaveRegisters(const char* aName) {
+  // LLVM assumes that the call made when getting thread local variables will
+  // preserve registers that are normally caller save. It's not clear what ABI
+  // is actually assumed for this function so preserve all possible registers.
+  return !strcmp(aName, "_tlv_bootstrap");
 }
 
-void EarlyInitializeRedirections() {
+typedef std::unordered_map<std::string, void*> RedirectionAddressMap;
+static RedirectionAddressMap* gRedirectionAddresses;
+
+void InitializeRedirections() {
   size_t numSystemRedirections = ArrayLength(gSystemRedirections);
   gRedirections = new Redirection[numSystemRedirections];
   PodZero(gRedirections, numSystemRedirections);
+
+  Maybe<Assembler> assembler;
+  if (IsRecordingOrReplaying()) {
+    static const size_t BufferSize = PageSize * 32;
+    uint8_t* buffer = new uint8_t[BufferSize];
+    UnprotectExecutableMemory(buffer, BufferSize);
+    assembler.emplace(buffer, BufferSize);
+
+    gRedirectionAddresses = new RedirectionAddressMap();
+  }
 
   for (size_t i = 0; i < numSystemRedirections; i++) {
     const SystemRedirection& systemRedirection = gSystemRedirections[i];
@@ -2994,59 +2933,311 @@ void EarlyInitializeRedirections() {
     redirection.mExternalCall = systemRedirection.mExternalCall;
     redirection.mExternalPreamble = systemRedirection.mExternalPreamble;
 
-    redirection.mBaseFunction = FunctionStartAddress(redirection);
-    redirection.mOriginalFunction = redirection.mBaseFunction;
+    redirection.mOriginalFunction = FunctionStartAddress(redirection);
 
-    if (redirection.mBaseFunction && IsRecordingOrReplaying()) {
-      // We will get confused if we try to redirect the same address in multiple
-      // places.
-      for (size_t j = 0; j < i; j++) {
-        if (gRedirections[j].mBaseFunction == redirection.mBaseFunction) {
-          redirection.mBaseFunction = nullptr;
-          break;
-        }
-      }
+    if (IsRecordingOrReplaying()) {
+      redirection.mRedirectedFunction =
+          GenerateRedirectStub(assembler.ref(), i,
+                               PreserveCallerSaveRegisters(redirection.mName));
+      gRedirectionAddresses->insert(RedirectionAddressMap::value_type(
+          std::string(redirection.mName), redirection.mRedirectedFunction));
     }
   }
 
-  size_t diagnosticIndex = 0;
-
-#define LOAD_DIAGNOSTIC_ENTRY(aAddress, aPreamble)           \
-  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = \
-      BitwiseCast<uint8_t*>(aAddress);
-  FOR_EACH_DIAGNOSTIC_REDIRECTION(LOAD_DIAGNOSTIC_ENTRY)
-#undef LOAD_DIAGNOSTIC_ENTRY
-
-#define LOAD_DIAGNOSTIC_ENTRY(aType, aAddress, aPreamble)    \
-  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = \
-      ConvertMemberPtrToAddress<aType>(aAddress);
-  FOR_EACH_DIAGNOSTIC_MEMBER_PTR_WITH_TYPE_REDIRECTION(LOAD_DIAGNOSTIC_ENTRY)
-#undef LOAD_DIAGNOSTIC_ENTRY
-
-#define LOAD_DIAGNOSTIC_ENTRY(aAddress, aPreamble)           \
-  gDiagnosticRedirections[diagnosticIndex++].mBaseFunction = \
-      ConvertMemberPtrToAddress(aAddress);
-  FOR_EACH_DIAGNOSTIC_MEMBER_PTR_REDIRECTION(LOAD_DIAGNOSTIC_ENTRY)
-#undef LOAD_DIAGNOSTIC_ENTRY
-
-  for (Redirection& redirection : gDiagnosticRedirections) {
-    redirection.mOriginalFunction = redirection.mBaseFunction;
-  }
-
-  // Bind the gOriginal functions to their redirections' base addresses until we
-  // finish installing redirections.
-  LateInitializeRedirections();
-
-  InitializeStaticClasses();
-}
-
-void LateInitializeRedirections() {
+  // Bind the gOriginal functions to their redirections' addresses.
 #define INIT_ORIGINAL_FUNCTION(aName) \
   gOriginal_##aName = OriginalFunction(#aName);
 
   FOR_EACH_ORIGINAL_FUNCTION(INIT_ORIGINAL_FUNCTION)
 
 #undef INIT_ORIGINAL_FUNCTION
+
+  InitializeStaticClasses();
+}
+
+static void* FindRedirectionBinding(const char* aName) {
+  RedirectionAddressMap::iterator iter = gRedirectionAddresses->find(aName);
+  if (iter != gRedirectionAddresses->end()) {
+    return iter->second;
+  }
+  return nullptr;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Redirection Application
+///////////////////////////////////////////////////////////////////////////////
+
+// References to the binding function for thread local variables work
+// differently from other external references. The function which gets the
+// address of a TLV location is listed in the symbol tables as "_tlv_bootstrap",
+// and while this function exists all it does is abort. dyld replaces references
+// to this symbol with its own tlv_get_address function, which is not exported.
+// We can still find tlv_get_address though by looking at the existing value
+// when the _tlv_bootstrap reference is overwritten with our own binding.
+static void* gTLVGetAddress;
+
+static void ApplyBinding(const char* aName, void** aPtr) {
+  if (aName[0] != '_') {
+    return;
+  }
+  aName++;
+
+  void* binding = FindRedirectionBinding(aName);
+  if (binding) {
+    if (!strcmp(aName, "_tlv_bootstrap")) {
+      MOZ_RELEASE_ASSERT(gTLVGetAddress == nullptr ||
+                         gTLVGetAddress == *aPtr);
+      gTLVGetAddress = *aPtr;
+    }
+    *aPtr = binding;
+  }
+}
+
+// Based on Apple's read_uleb128 implementation.
+static uint64_t ReadLEB128(uint8_t*& aPtr, uint8_t* aEnd) {
+  uint64_t result = 0;
+  int bit = 0;
+  do {
+    MOZ_RELEASE_ASSERT(aPtr < aEnd);
+    uint64_t slice = *aPtr & 0x7F;
+    MOZ_RELEASE_ASSERT(bit <= 63);
+    result |= (slice << bit);
+    bit += 7;
+  } while (*aPtr++ & 0x80);
+  return result;
+}
+
+struct MachOLibrary {
+  uint8_t* mAddress = nullptr;
+
+  FileHandle mFile = 0;
+  uint8_t* mFileAddress = nullptr;
+  size_t mFileSize = 0;
+
+  InfallibleVector<segment_command_64*> mSegments;
+
+  nlist_64* mSymbolTable = nullptr;
+  size_t mSymbolCount = 0;
+
+  char* mStringTable = nullptr;
+  uint32_t* mIndirectSymbols = nullptr;
+  size_t mIndirectSymbolCount = 0;
+
+  MachOLibrary(const char* aPath, uint8_t* aAddress) : mAddress(aAddress) {
+    mFile = DirectOpenFile(aPath, /* aWriting */ false);
+
+    struct stat info;
+    int rv = fstat(mFile, &info);
+    MOZ_RELEASE_ASSERT(rv >= 0);
+
+    mFileSize = info.st_size;
+    mFileAddress = (uint8_t*)mmap(nullptr, mFileSize, PROT_READ,
+                                  MAP_PRIVATE, mFile, 0);
+    MOZ_RELEASE_ASSERT(mFileAddress != MAP_FAILED);
+
+    mach_header_64* header = (mach_header_64*)mFileAddress;
+    MOZ_RELEASE_ASSERT(header->magic == MH_MAGIC_64);
+  }
+
+  ~MachOLibrary() {
+    munmap(mFileAddress, mFileSize);
+    DirectCloseFile(mFile);
+  }
+
+  void ApplyRedirections() {
+    ForEachCommand([=](load_command* aCmd) {
+        switch (aCmd->cmd & ~LC_REQ_DYLD) {
+          case LC_SYMTAB:
+            AddSymbolTable((symtab_command*)aCmd);
+            break;
+          case LC_DYSYMTAB:
+            AddDynamicSymbolTable((dysymtab_command*)aCmd);
+            break;
+        }
+      });
+
+    ForEachCommand([=](load_command* aCmd) {
+        switch (aCmd->cmd & ~LC_REQ_DYLD) {
+          case LC_DYLD_INFO:
+            BindLoadInfo((dyld_info_command*)aCmd);
+            break;
+          case LC_SEGMENT_64:  {
+            auto ncmd = (segment_command_64*)aCmd;
+            mSegments.append(ncmd);
+            BindSegment(ncmd);
+            break;
+          }
+        }
+      });
+  }
+
+  void ForEachCommand(const std::function<void(load_command*)>& aCallback) {
+    mach_header_64* header = (mach_header_64*)mFileAddress;
+    uint32_t offset = sizeof(mach_header_64);
+    for (size_t i = 0; i < header->ncmds; i++) {
+      load_command* cmd = (load_command*) (mFileAddress + offset);
+      aCallback(cmd);
+      offset += cmd->cmdsize;
+    }
+  }
+
+  void AddSymbolTable(symtab_command* aCmd) {
+    mSymbolTable = (nlist_64*) (mFileAddress + aCmd->symoff);
+    mSymbolCount = aCmd->nsyms;
+
+    mStringTable = (char*) (mFileAddress + aCmd->stroff);
+  }
+
+  void AddDynamicSymbolTable(dysymtab_command* aCmd) {
+    mIndirectSymbols = (uint32_t*) (mFileAddress + aCmd->indirectsymoff);
+    mIndirectSymbolCount = aCmd->nindirectsyms;
+  }
+
+  void BindLoadInfo(dyld_info_command* aCmd) {
+    DoBindings(aCmd->bind_off, aCmd->bind_size);
+    DoBindings(aCmd->weak_bind_off, aCmd->weak_bind_size);
+    DoBindings(aCmd->lazy_bind_off, aCmd->lazy_bind_size);
+  }
+
+  void DoBindings(size_t aStart, size_t aSize) {
+    size_t segmentIndex = 0;
+    size_t segmentOffset = 0;
+    const char* symbolName;
+    uint8_t symbolFlags = 0;
+    uint8_t symbolType = BIND_TYPE_POINTER;
+
+    uint8_t* cursor = mFileAddress + aStart;
+    uint8_t* end = cursor + aSize;
+    while (cursor < end) {
+      uint8_t opcode = *cursor & BIND_OPCODE_MASK;
+      uint8_t immediate = *cursor & BIND_IMMEDIATE_MASK;
+      cursor++;
+
+      switch (opcode) {
+        case BIND_OPCODE_DONE:
+          return;
+        case BIND_OPCODE_SET_DYLIB_ORDINAL_IMM:
+        case BIND_OPCODE_SET_DYLIB_SPECIAL_IMM:
+          break;
+        case BIND_OPCODE_SET_DYLIB_ORDINAL_ULEB:
+          ReadLEB128(cursor, end);
+          break;
+        case BIND_OPCODE_SET_SEGMENT_AND_OFFSET_ULEB:
+          segmentIndex = immediate;
+          segmentOffset = ReadLEB128(cursor, end);
+          break;
+        case BIND_OPCODE_SET_SYMBOL_TRAILING_FLAGS_IMM:
+          symbolName = (char*)cursor;
+          symbolFlags = immediate;
+          cursor += strlen(symbolName) + 1;
+          break;
+        case BIND_OPCODE_SET_TYPE_IMM:
+          symbolType = immediate;
+          break;
+        case BIND_OPCODE_SET_ADDEND_SLEB:
+          break;
+        case BIND_OPCODE_DO_BIND:
+          DoBinding(segmentIndex, segmentOffset,
+                    symbolName, symbolFlags, symbolType);
+          segmentOffset += sizeof(uintptr_t);
+          break;
+        case BIND_OPCODE_ADD_ADDR_ULEB:
+          segmentOffset += ReadLEB128(cursor, end);
+          break;
+        case BIND_OPCODE_DO_BIND_ADD_ADDR_ULEB:
+          DoBinding(segmentIndex, segmentOffset,
+                    symbolName, symbolFlags, symbolType);
+          segmentOffset += ReadLEB128(cursor, end) + sizeof(uintptr_t);
+          break;
+        case BIND_OPCODE_DO_BIND_ADD_ADDR_IMM_SCALED:
+          DoBinding(segmentIndex, segmentOffset,
+                    symbolName, symbolFlags, symbolType);
+          segmentOffset += immediate * sizeof(uintptr_t) + sizeof(uintptr_t);
+          break;
+        case BIND_OPCODE_DO_BIND_ULEB_TIMES_SKIPPING_ULEB: {
+          size_t count = ReadLEB128(cursor, end);
+          size_t skip = ReadLEB128(cursor, end);
+          for (size_t i = 0; i < count; i++) {
+            DoBinding(segmentIndex, segmentOffset,
+                      symbolName, symbolFlags, symbolType);
+            segmentOffset += skip + sizeof(uintptr_t);
+          }
+          break;
+        }
+        default:
+          MOZ_CRASH("Unknown binding opcode");
+      }
+    }
+  }
+
+  void DoBinding(size_t aSegmentIndex, size_t aSegmentOffset,
+                 const char* aSymbolName, uint8_t aSymbolFlags,
+                 uint8_t aSymbolType) {
+    MOZ_RELEASE_ASSERT(aSegmentIndex < mSegments.length());
+    segment_command_64* seg = mSegments[aSegmentIndex];
+
+    uint8_t* address = mAddress + seg->vmaddr + aSegmentOffset;
+
+    MOZ_RELEASE_ASSERT(aSymbolType == BIND_TYPE_POINTER);
+    void** ptr = (void**) address;
+    ApplyBinding(aSymbolName, ptr);
+  }
+
+  void BindSegment(segment_command_64* aCmd) {
+    section_64* sect = (section_64*) (aCmd + 1);
+    for (size_t i = 0; i < aCmd->nsects; i++, sect++) {
+      switch (sect->flags & SECTION_TYPE) {
+        case S_NON_LAZY_SYMBOL_POINTERS:
+        case S_LAZY_SYMBOL_POINTERS: {
+          size_t entryCount = sect->size / 8;
+          size_t symbolStart = sect->reserved1;
+          for (size_t i = 0; i < entryCount; i++) {
+            void* ptr = mAddress + sect->addr + i * 8;
+            MOZ_RELEASE_ASSERT(symbolStart + i < mIndirectSymbolCount);
+            uint32_t symbolIndex = mIndirectSymbols[symbolStart + i];
+            if (symbolIndex == INDIRECT_SYMBOL_ABS ||
+                symbolIndex == INDIRECT_SYMBOL_LOCAL) {
+              continue;
+            }
+            MOZ_RELEASE_ASSERT(symbolIndex < mSymbolCount);
+            const nlist_64& sym = mSymbolTable[symbolIndex];
+            char* str = &mStringTable[sym.n_un.n_strx];
+            ApplyBinding(str, (void**)ptr);
+          }
+          break;
+        }
+      }
+    }
+  }
+};
+
+// One symbol from each library that is loaded at startup and has external
+// references we want to fix up.
+static const char* gInitialLibrarySymbols[] = {
+  "RecordReplayInterface_Initialize", // XUL
+  "_ZN7mozilla12recordreplay10InitializeEiPPc", // libmozglue
+  "PR_Initialize", // libnss3
+};
+
+void ApplyInitialLibraryRedirections() {
+  for (const char* symbol : gInitialLibrarySymbols) {
+    void* ptr = dlsym(RTLD_DEFAULT, symbol);
+    MOZ_RELEASE_ASSERT(ptr);
+
+    Dl_info info;
+    dladdr(ptr, &info);
+    uint8_t* address = (uint8_t*)info.dli_fbase;
+
+    MachOLibrary library(info.dli_fname, address);
+    library.ApplyRedirections();
+  }
+
+  for (size_t i = 0; i < NumRedirections(); i++) {
+    Redirection& redirection = gRedirections[i];
+    if (!strcmp(redirection.mName, "_tlv_bootstrap")) {
+      redirection.mOriginalFunction = (uint8_t*)gTLVGetAddress;
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
