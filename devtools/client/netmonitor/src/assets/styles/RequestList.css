@@ -56,6 +56,17 @@
   width: 100% !important;
 }
 
+.requests-list-scroll table {
+  /* Disable overflow-anchor for only child in the scrollable element */
+  overflow-anchor: none;
+}
+
+.requests-list-anchor {
+  overflow-anchor: auto;
+  opacity: 0;
+  height: 1px;
+}
+
 .requests-list-table,
 .ws-frames-list-table {
   /* Reset default browser style of <table> */
@@ -114,10 +125,7 @@
 .requests-list-header-button,
 .ws-frames-list-header-button {
   background-color: transparent;
-  border-image: linear-gradient(transparent 15%,
-                                var(--theme-splitter-color) 15%,
-                                var(--theme-splitter-color) 85%,
-                                transparent 85%) 1 1;
+  border-image: linear-gradient( transparent 15%, var(--theme-splitter-color) 15%, var(--theme-splitter-color) 85%, transparent 85%) 1 1;
   border-width: 0;
   border-inline-start-width: 1px;
   width: 100%;
