@@ -22,6 +22,7 @@ using struct nsHttpAtom from "nsHttp.h";
 using class mozilla::net::nsHttpResponseHead from "nsHttpResponseHead.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using refcounted class nsIPropertyBag2 from "mozilla/dom/PropertyBagUtils.h";
+using refcounted class nsDOMNavigationTiming from "nsDOMNavigationTiming.h";
 
 namespace mozilla {
 namespace net {
@@ -410,6 +411,7 @@ struct DocumentChannelCreationArgs {
   bool isTopLevelDoc;
   bool hasNonEmptySandboxingFlags;
   bool pluginsAllowed;
+  nsDOMNavigationTiming? timing;
 };
 
 struct DocumentChannelRedirect {
@@ -441,6 +443,7 @@ struct RedirectToRealChannelArgs {
   nsIPropertyBag2 properties;
   LastVisitInfo lastVisitInfo;
   uint32_t loadStateLoadFlags;
+  nsDOMNavigationTiming? timing;
 };
 
 struct TimingStructArgs {
