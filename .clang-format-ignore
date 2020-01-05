@@ -178,7 +178,6 @@ toolkit/components/url-classifier/chromium/.*
 toolkit/components/url-classifier/protobuf/.*
 toolkit/crashreporter/breakpad-client/.*
 toolkit/crashreporter/google-breakpad/.*
-toolkit/recordreplay/udis86/.*
 tools/fuzzing/libfuzzer/.*
 tools/profiler/core/vtune/.*
 xpcom/build/mach_override.c
