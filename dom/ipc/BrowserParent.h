@@ -189,7 +189,7 @@ class BrowserParent final : public PBrowserParent,
   // and nullptr otherwise.
   BrowserHost* GetBrowserHost() const;
 
-  ShowInfo GetShowInfo();
+  ParentShowInfo GetShowInfo();
 
   // Get the content principal from the owner element.
   already_AddRefed<nsIPrincipal> GetContentPrincipal() const;

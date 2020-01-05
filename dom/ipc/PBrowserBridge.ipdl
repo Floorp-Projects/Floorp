@@ -11,8 +11,6 @@ include protocol PDocAccessible;
 
 include DOMTypes;
 
-using ScreenIntSize from "Units.h";
-using nsSizeMode from "nsIWidgetListener.h";
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::WidgetMouseEvent from "ipc/nsGUIEventIPC.h";
@@ -78,7 +76,7 @@ parent:
   async ResumeLoad(uint64_t aPendingSwitchID);
 
   // Out of process rendering.
-  async Show(ScreenIntSize size, bool parentIsActive, nsSizeMode sizeMode);
+  async Show(OwnerShowInfo info);
   async UpdateDimensions(DimensionInfo dimensions) compressall;
   async RenderLayers(bool aEnabled, LayersObserverEpoch aEpoch);
 
