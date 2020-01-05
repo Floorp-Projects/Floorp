@@ -11,6 +11,7 @@
 #include "mozilla/Sprintf.h"
 #include "ProcessRewind.h"
 #include "SpinLock.h"
+#include "nsAppRunner.h"
 
 #include <algorithm>
 
@@ -331,13 +332,41 @@ void Stream::DumpEvents() {
 // Recording
 ///////////////////////////////////////////////////////////////////////////////
 
+// We expect to find this at the start of every recording.
+static const uint64_t MagicValue = 0xd3e7f5fae445b3ac;
+
+void GetCurrentBuildId(BuildId* aBuildId) {
+  int n = snprintf(aBuildId->mContents, sizeof(aBuildId->mContents), "macOS-%s",
+                   PlatformBuildID());
+  MOZ_RELEASE_ASSERT((size_t)n + 1 <= sizeof(aBuildId->mContents));
+}
+
+struct Header {
+  uint64_t mMagic;
+  BuildId mBuildId;
+};
+
 Recording::Recording() : mMode(IsRecording() ? WRITE : READ) {
   PodZero(&mLock);
   PodZero(&mStreamLock);
 
-  if (IsReplaying()) {
+  if (IsRecording()) {
+    Header header;
+    header.mMagic = MagicValue;
+    GetCurrentBuildId(&header.mBuildId);
+    mContents.append((const uint8_t*)&header, sizeof(Header));
+  } else {
     gDumpEvents = TestEnv("MOZ_REPLAYING_DUMP_EVENTS");
   }
+}
+
+/* static */
+void Recording::ExtractBuildId(const char* aContents, size_t aLength,
+                               BuildId* aBuildId) {
+  MOZ_RELEASE_ASSERT(aLength >= sizeof(Header));
+  const Header* header = (const Header*)aContents;
+  MOZ_RELEASE_ASSERT(header->mMagic == MagicValue);
+  *aBuildId = header->mBuildId;
 }
 
 // The recording format is a series of chunks. Each chunk is a ChunkDescriptor
@@ -361,9 +390,22 @@ void Recording::NewContents(const uint8_t* aContents, size_t aSize,
   MOZ_RELEASE_ASSERT(Thread::CurrentIsMainThread());
   MOZ_RELEASE_ASSERT(IsReading());
 
+  // Make sure the header matches when reading the first data in the recording.
+  size_t offset = 0;
+  if (mContents.empty()) {
+    MOZ_RELEASE_ASSERT(aSize >= sizeof(Header));
+    offset += sizeof(Header);
+
+    Header* header = (Header*) aContents;
+    MOZ_RELEASE_ASSERT(header->mMagic == MagicValue);
+
+    BuildId currentBuildId;
+    GetCurrentBuildId(&currentBuildId);
+    MOZ_RELEASE_ASSERT(currentBuildId.Matches(header->mBuildId));
+  }
+
   mContents.append(aContents, aSize);
 
-  size_t offset = 0;
   while (offset < aSize) {
     MOZ_RELEASE_ASSERT(offset + sizeof(ChunkDescriptor) <= aSize);
     ChunkDescriptor* desc = (ChunkDescriptor*)(aContents + offset);
