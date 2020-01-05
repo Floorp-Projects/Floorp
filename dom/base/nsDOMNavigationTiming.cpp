@@ -61,6 +61,14 @@ void nsDOMNavigationTiming::Clear() {
   mDocShellHasBeenActiveSinceNavigationStart = false;
 }
 
+void nsDOMNavigationTiming::Anonymize(nsIURI* aFinalURI) {
+  mLoadedURI = aFinalURI;
+  mUnloadedURI = nullptr;
+  mBeforeUnloadStart = TimeStamp();
+  mUnloadStart = TimeStamp();
+  mUnloadEnd = TimeStamp();
+}
+
 DOMTimeMilliSec nsDOMNavigationTiming::TimeStampToDOM(TimeStamp aStamp) const {
   if (aStamp.IsNull()) {
     return 0;
