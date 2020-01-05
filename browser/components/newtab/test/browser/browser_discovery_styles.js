@@ -164,7 +164,7 @@ test_newtab({
     );
     is(
       content.getComputedStyle(hr).content,
-      "none",
+      "normal",
       "filtered out attempted @media query"
     );
   },

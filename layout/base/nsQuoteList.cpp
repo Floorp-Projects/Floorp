@@ -106,6 +106,8 @@ void nsQuoteList::RecalcAll() {
 
 #ifdef DEBUG
 void nsQuoteList::PrintChain() {
+  using StyleContentType = nsQuoteNode::StyleContentType;
+
   printf("Chain: \n");
   for (nsQuoteNode* node = FirstNode(); node; node = Next(node)) {
     printf("  %p %d - ", static_cast<void*>(node), node->mDepthBefore);

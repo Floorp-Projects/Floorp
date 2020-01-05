@@ -186,21 +186,6 @@ enum class StyleColumnSpan : uint8_t {
   All,
 };
 
-// Counters and generated content.
-enum class StyleContentType : uint8_t {
-  String = 1,
-  Image = 10,
-  Attr = 20,
-  Counter = 30,
-  Counters = 31,
-  OpenQuote = 40,
-  CloseQuote = 41,
-  NoOpenQuote = 42,
-  NoCloseQuote = 43,
-  AltContent = 50,
-  Uninitialized,
-};
-
 // Define geometry box for clip-path's reference-box, background-clip,
 // background-origin, mask-clip, mask-origin, shape-box and transform-box.
 enum class StyleGeometryBox : uint8_t {
@@ -347,15 +332,6 @@ enum class StyleBorderCollapse : uint8_t { Collapse, Separate };
 
 // border-image-repeat
 enum class StyleBorderImageRepeat : uint8_t { Stretch, Repeat, Round, Space };
-
-// See nsStyleContent
-enum class StyleContent : uint8_t {
-  OpenQuote,
-  CloseQuote,
-  NoOpenQuote,
-  NoCloseQuote,
-  AltContent
-};
 
 // See nsStyleVisibility
 #define NS_STYLE_DIRECTION_LTR 0

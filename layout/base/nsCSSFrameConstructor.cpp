@@ -1363,13 +1363,12 @@ static bool ShouldCreateImageFrameForContent(const Element& aElement,
   if (aElement.IsRootOfNativeAnonymousSubtree()) {
     return false;
   }
-
-  auto& content = *aStyle.StyleContent();
-  if (content.ContentCount() != 1) {
+  auto& content = aStyle.StyleContent()->mContent;
+  if (!content.IsItems()) {
     return false;
   }
-
-  return content.ContentAt(0).GetType() == StyleContentType::Image;
+  Span<const StyleContentItem> items = content.AsItems().AsSpan();
+  return items.Length() == 1 && items[0].IsUrl();
 }
 
 //----------------------------------------------------------------------
@@ -1485,24 +1484,25 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGenConTextNode(
 already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
     nsFrameConstructorState& aState, const Element& aOriginatingElement,
     ComputedStyle& aPseudoStyle, uint32_t aContentIndex) {
+  using Type = StyleContentItem::Tag;
   // Get the content value
-  const nsStyleContentData& data =
-      aPseudoStyle.StyleContent()->ContentAt(aContentIndex);
-  const StyleContentType type = data.GetType();
+  const auto& item = aPseudoStyle.StyleContent()->ContentAt(aContentIndex);
+  const Type type = item.tag;
 
   switch (type) {
-    case StyleContentType::Image:
+    case Type::Url:
       return GeneratedImageContent::Create(*mDocument, aContentIndex);
 
-    case StyleContentType::String:
-      return CreateGenConTextNode(aState, nsDependentString(data.GetString()),
-                                  nullptr);
+    case Type::String:
+      return CreateGenConTextNode(
+          aState, NS_ConvertUTF8toUTF16(item.AsString().AsString()), nullptr);
 
-    case StyleContentType::Attr: {
-      const nsStyleContentAttr* attr = data.GetAttr();
-      RefPtr<nsAtom> attrName = attr->mName;
+    case Type::Attr: {
+      const auto& attr = item.AsAttr();
+      RefPtr<nsAtom> attrName = attr.attribute.AsAtom();
       int32_t attrNameSpace = kNameSpaceID_None;
-      if (RefPtr<nsAtom> ns = attr->mNamespaceURL) {
+      RefPtr<nsAtom> ns = attr.namespace_url.AsAtom();
+      if (!ns->IsEmpty()) {
         nsresult rv = nsContentUtils::NameSpaceManager()->RegisterNameSpace(
             ns.forget(), attrNameSpace);
         NS_ENSURE_SUCCESS(rv, nullptr);
@@ -1518,25 +1518,36 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
       return content.forget();
     }
 
-    case StyleContentType::Counter:
-    case StyleContentType::Counters: {
-      nsStyleContentData::CounterFunction* counters = data.GetCounters();
-      nsCounterList* counterList =
-          mCounterManager.CounterListFor(counters->mIdent);
+    case Type::Counter:
+    case Type::Counters: {
+      RefPtr<nsAtom> name;
+      CounterStylePtr ptr;
+      nsString separator;
+      if (type == Type::Counter) {
+        auto& counter = item.AsCounter();
+        name = counter._0.AsAtom();
+        ptr = CounterStylePtr::FromStyle(counter._1);
+      } else {
+        auto& counters = item.AsCounters();
+        name = counters._0.AsAtom();
+        separator = NS_ConvertUTF8toUTF16(counters._1.AsString());
+        ptr = CounterStylePtr::FromStyle(counters._2);
+      }
 
+      nsCounterList* counterList = mCounterManager.CounterListFor(name);
       auto node = MakeUnique<nsCounterUseNode>(
-          counters, aContentIndex, type == StyleContentType::Counters);
+          std::move(ptr), std::move(separator), aContentIndex,
+          /* aAllCounters = */ type == Type::Counters);
 
       auto initializer = MakeUnique<nsGenConInitializer>(
           std::move(node), counterList, &nsCSSFrameConstructor::CountersDirty);
       return CreateGenConTextNode(aState, EmptyString(),
                                   std::move(initializer));
     }
-
-    case StyleContentType::OpenQuote:
-    case StyleContentType::CloseQuote:
-    case StyleContentType::NoOpenQuote:
-    case StyleContentType::NoCloseQuote: {
+    case Type::OpenQuote:
+    case Type::CloseQuote:
+    case Type::NoOpenQuote:
+    case Type::NoCloseQuote: {
       auto node = MakeUnique<nsQuoteNode>(type, aContentIndex);
       auto initializer = MakeUnique<nsGenConInitializer>(
           std::move(node), &mQuoteList, &nsCSSFrameConstructor::QuotesDirty);
@@ -1544,7 +1555,7 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
                                   std::move(initializer));
     }
 
-    case StyleContentType::AltContent: {
+    case Type::MozAltContent: {
       // Use the "alt" attribute; if that fails and the node is an HTML
       // <input>, try the value attribute and then fall back to some default
       // localized text we have.
@@ -1574,10 +1585,6 @@ already_AddRefed<nsIContent> nsCSSFrameConstructor::CreateGeneratedContent(
 
       break;
     }
-
-    case StyleContentType::Uninitialized:
-      MOZ_ASSERT_UNREACHABLE("uninitialized content type");
-      return nullptr;
   }
 
   return nullptr;

@@ -93,7 +93,7 @@ class CounterStyle {
 class AnonymousCounterStyle final : public CounterStyle {
  public:
   explicit AnonymousCounterStyle(const nsAString& aContent);
-  AnonymousCounterStyle(uint8_t aSystem, nsTArray<nsString> aSymbols);
+  AnonymousCounterStyle(StyleSymbolsType, nsTArray<nsString> aSymbols);
 
   virtual void GetPrefix(nsAString& aResult) override;
   virtual void GetSuffix(nsAString& aResult) override;
@@ -114,8 +114,9 @@ class AnonymousCounterStyle final : public CounterStyle {
   virtual AnonymousCounterStyle* AsAnonymous() override { return this; }
 
   bool IsSingleString() const { return mSingleString; }
-  uint8_t GetSystem() const { return mSystem; }
   Span<const nsString> GetSymbols() const { return MakeSpan(mSymbols); }
+
+  uint8_t GetSystem() const;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AnonymousCounterStyle)
 
@@ -123,7 +124,7 @@ class AnonymousCounterStyle final : public CounterStyle {
   ~AnonymousCounterStyle() {}
 
   bool mSingleString;
-  uint8_t mSystem;
+  StyleSymbolsType mSymbolsType;
   nsTArray<nsString> mSymbols;
 };
 
@@ -190,6 +191,26 @@ class CounterStylePtr {
       mRaw = reinterpret_cast<uintptr_t>(raw) | eAnonymousCounterStyle;
     }
     return *this;
+  }
+
+  // TODO(emilio): Make CounterStyle have a single representation, either by
+  // removing CounterStylePtr or by moving this representation to Rust.
+  static CounterStylePtr FromStyle(const StyleCounterStyle& aStyle) {
+    CounterStylePtr ret;
+    if (aStyle.IsName()) {
+      ret = do_AddRef(aStyle.AsName().AsAtom());
+    } else {
+      StyleSymbolsType type = aStyle.AsSymbols()._0;
+      Span<const StyleSymbol> symbols = aStyle.AsSymbols()._1._0.AsSpan();
+      nsTArray<nsString> transcoded(symbols.Length());
+      for (const auto& symbol : symbols) {
+        MOZ_ASSERT(symbol.IsString(), "Should not have <ident> in symbols()");
+        transcoded.AppendElement(
+            NS_ConvertUTF8toUTF16(symbol.AsString().AsString()));
+      }
+      ret = new AnonymousCounterStyle(type, std::move(transcoded));
+    }
+    return ret;
   }
 
   explicit operator bool() const { return !!mRaw; }
