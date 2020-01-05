@@ -100,6 +100,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool CreateEGLSurface();
   void DestroyEGLSurface();
   ID3D11Device* GetDeviceOfEGLDisplay();
+  bool CreateSwapChain();
   void CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFactory2);
   RefPtr<IDXGISwapChain1> CreateSwapChainForDComp(bool aUseTripleBuffering,
                                                   bool aUseAlpha);
