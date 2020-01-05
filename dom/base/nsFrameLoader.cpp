@@ -833,9 +833,32 @@ void nsFrameLoader::MaybeShowFrame() {
   }
 }
 
-bool nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
-                         ScrollbarPreference aScrollbarPref,
-                         nsSubDocumentFrame* frame) {
+static ScrollbarPreference GetScrollbarPreference(const Element* aOwner) {
+  if (!aOwner) {
+    return ScrollbarPreference::Auto;
+  }
+  const nsAttrValue* attrValue = aOwner->GetParsedAttr(nsGkAtoms::scrolling);
+  return nsGenericHTMLFrameElement::MapScrollingAttribute(attrValue);
+}
+
+static CSSIntSize GetMarginAttributes(const Element* aOwner) {
+  CSSIntSize result(-1, -1);
+  auto* content = nsGenericHTMLElement::FromNodeOrNull(aOwner);
+  if (!content) {
+    return result;
+  }
+  const nsAttrValue* attr = content->GetParsedAttr(nsGkAtoms::marginwidth);
+  if (attr && attr->Type() == nsAttrValue::eInteger) {
+    result.width = attr->GetIntegerValue();
+  }
+  attr = content->GetParsedAttr(nsGkAtoms::marginheight);
+  if (attr && attr->Type() == nsAttrValue::eInteger) {
+    result.height = attr->GetIntegerValue();
+  }
+  return result;
+}
+
+bool nsFrameLoader::Show(nsSubDocumentFrame* frame) {
   if (mInShow) {
     return false;
   }
@@ -854,24 +877,23 @@ bool nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   if (NS_FAILED(rv)) {
     return false;
   }
-  MOZ_ASSERT(GetDocShell(), "MaybeCreateDocShell succeeded, but null docShell");
-  if (!GetDocShell()) {
+  nsDocShell* ds = GetDocShell();
+  MOZ_ASSERT(ds, "MaybeCreateDocShell succeeded, but null docShell");
+  if (!ds) {
     return false;
   }
 
-  GetDocShell()->SetMarginWidth(marginWidth);
-  GetDocShell()->SetMarginHeight(marginHeight);
-  GetDocShell()->SetScrollbarPreference(aScrollbarPref);
+  ds->SetScrollbarPreference(GetScrollbarPreference(mOwnerContent));
 
-  if (PresShell* presShell = GetDocShell()->GetPresShell()) {
-    // Ensure root scroll frame is reflowed in case scroll preferences or
-    // margins have changed
-    nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
-    if (rootScrollFrame) {
-      presShell->FrameNeedsReflow(rootScrollFrame, IntrinsicDirty::Resize,
-                                  NS_FRAME_IS_DIRTY);
+  if (ds->UpdateFrameMargins(GetMarginAttributes(mOwnerContent))) {
+    if (PresShell* presShell = ds->GetPresShell()) {
+      // Ensure root scroll frame is reflowed in case margins have changed
+      if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
+        presShell->FrameNeedsReflow(rootScrollFrame, IntrinsicDirty::Resize,
+                                    NS_FRAME_IS_DIRTY);
+      }
+      return true;
     }
-    return true;
   }
 
   nsView* view = frame->EnsureInnerView();
@@ -932,27 +954,27 @@ bool nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   return true;
 }
 
-void nsFrameLoader::MarginsChanged(uint32_t aMarginWidth,
-                                   uint32_t aMarginHeight) {
+void nsFrameLoader::MarginsChanged() {
   // We assume that the margins are always zero for remote frames.
   if (IsRemoteFrame()) {
     return;
   }
 
+  nsDocShell* docShell = GetDocShell();
   // If there's no docshell, we're probably not up and running yet.
   // nsFrameLoader::Show() will take care of setting the right
   // margins.
-  if (!GetDocShell()) {
+  if (!docShell) {
     return;
   }
 
-  // Set the margins
-  GetDocShell()->SetMarginWidth(aMarginWidth);
-  GetDocShell()->SetMarginHeight(aMarginHeight);
+  if (!docShell->UpdateFrameMargins(GetMarginAttributes(mOwnerContent))) {
+    return;
+  }
 
   // There's a cached property declaration block
   // that needs to be updated
-  if (Document* doc = GetDocShell()->GetDocument()) {
+  if (Document* doc = docShell->GetDocument()) {
     for (nsINode* cur = doc; cur; cur = cur->GetNextNode()) {
       if (cur->IsHTMLElement(nsGkAtoms::body)) {
         static_cast<HTMLBodyElement*>(cur)->ClearMappedServoStyle();
@@ -962,7 +984,7 @@ void nsFrameLoader::MarginsChanged(uint32_t aMarginWidth,
 
   // Trigger a restyle if there's a prescontext
   // FIXME: This could do something much less expensive.
-  if (nsPresContext* presContext = GetDocShell()->GetPresContext()) {
+  if (nsPresContext* presContext = docShell->GetPresContext()) {
     // rebuild, because now the same nsMappedAttributes* will produce
     // a different style
     presContext->RebuildAllStyleData(nsChangeHint(0),

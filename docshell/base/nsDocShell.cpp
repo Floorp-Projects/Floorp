@@ -315,8 +315,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mCharsetReloadState(eCharsetReloadInit),
       mOrientationLock(hal::eScreenOrientation_None),
       mParentCharsetSource(0),
-      mMarginWidth(-1),
-      mMarginHeight(-1),
+      mFrameMargins(-1, -1),
       mItemType(aBrowsingContext->IsContent() ? typeContent : typeChrome),
       mPreviousEntryIndex(-1),
       mLoadedEntryIndex(-1),
@@ -1973,34 +1972,6 @@ nsDocShell::GetZoom(float* aZoom) {
 
 NS_IMETHODIMP
 nsDocShell::SetZoom(float aZoom) { return NS_ERROR_NOT_IMPLEMENTED; }
-
-NS_IMETHODIMP
-nsDocShell::GetMarginWidth(int32_t* aWidth) {
-  NS_ENSURE_ARG_POINTER(aWidth);
-
-  *aWidth = mMarginWidth;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetMarginWidth(int32_t aWidth) {
-  mMarginWidth = aWidth;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetMarginHeight(int32_t* aHeight) {
-  NS_ENSURE_ARG_POINTER(aHeight);
-
-  *aHeight = mMarginHeight;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetMarginHeight(int32_t aHeight) {
-  mMarginHeight = aHeight;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsDocShell::GetBusyFlags(BusyFlags* aBusyFlags) {

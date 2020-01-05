@@ -259,17 +259,14 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * Called from the layout frame associated with this frame loader;
    * this notifies us to hook up with the widget and view.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool Show(int32_t marginWidth,
-                                        int32_t marginHeight,
-                                        mozilla::ScrollbarPreference,
-                                        nsSubDocumentFrame*);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool Show(nsSubDocumentFrame*);
 
   void MaybeShowFrame();
 
   /**
    * Called when the margin properties of the containing frame are changed.
    */
-  void MarginsChanged(uint32_t aMarginWidth, uint32_t aMarginHeight);
+  void MarginsChanged();
 
   /**
    * Called from the layout frame associated with this frame loader, when

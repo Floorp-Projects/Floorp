@@ -160,12 +160,10 @@ void HTMLBodyElement::MapAttributesIntoRule(
   // if marginwidth or marginheight is set in the <frame> and not set in the
   // <body> reflect them as margin in the <body>
   if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
-    nsCOMPtr<nsIDocShell> docShell(aDecls.Document()->GetDocShell());
-    if (docShell) {
-      nscoord frameMarginWidth = -1;                // default value
-      nscoord frameMarginHeight = -1;               // default value
-      docShell->GetMarginWidth(&frameMarginWidth);  // -1 indicates not set
-      docShell->GetMarginHeight(&frameMarginHeight);
+    if (nsDocShell* ds = nsDocShell::Cast(aDecls.Document()->GetDocShell())) {
+      CSSIntSize margins = ds->GetFrameMargins();
+      int32_t frameMarginWidth = margins.width;
+      int32_t frameMarginHeight = margins.height;
 
       if (bodyMarginWidth == -1 && frameMarginWidth >= 0) {
         if (bodyLeftMargin == -1) {

@@ -213,6 +213,22 @@ class nsDocShell final : public nsDocLoader,
   }
   void SetScrollbarPreference(mozilla::ScrollbarPreference);
 
+  /*
+   * The size, in CSS pixels, of the margins for the <body> of an HTML document
+   * in this docshell; used to implement the marginwidth attribute on HTML
+   * <frame>/<iframe> elements.  A value smaller than zero indicates that the
+   * attribute was not set.
+   */
+  const mozilla::CSSIntSize& GetFrameMargins() const { return mFrameMargins; }
+
+  bool UpdateFrameMargins(const mozilla::CSSIntSize& aMargins) {
+    if (mFrameMargins == aMargins) {
+      return false;
+    }
+    mFrameMargins = aMargins;
+    return true;
+  }
+
   /**
    * Process a click on a link.
    *
@@ -1188,8 +1204,7 @@ class nsDocShell final : public nsDocLoader,
   mozilla::hal::ScreenOrientation mOrientationLock;
 
   int32_t mParentCharsetSource;
-  int32_t mMarginWidth;
-  int32_t mMarginHeight;
+  mozilla::CSSIntSize mFrameMargins;
 
   // This can either be a content docshell or a chrome docshell.
   const int32_t mItemType;
