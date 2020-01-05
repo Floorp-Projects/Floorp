@@ -535,6 +535,31 @@ bool nsDOMNavigationTiming::IsTopLevelContentDocumentInContentProcess() const {
   return mDocShell->GetBrowsingContext()->IsTopContent();
 }
 
+nsDOMNavigationTiming::nsDOMNavigationTiming(nsDocShell* aDocShell,
+                                             nsDOMNavigationTiming* aOther)
+    : mDocShell(aDocShell),
+      mUnloadedURI(aOther->mUnloadedURI),
+      mLoadedURI(aOther->mLoadedURI),
+      mNavigationType(aOther->mNavigationType),
+      mNavigationStartHighRes(aOther->mNavigationStartHighRes),
+      mNavigationStart(aOther->mNavigationStart),
+      mNonBlankPaint(aOther->mNonBlankPaint),
+      mContentfulPaint(aOther->mContentfulPaint),
+      mDOMContentFlushed(aOther->mDOMContentFlushed),
+      mBeforeUnloadStart(aOther->mBeforeUnloadStart),
+      mUnloadStart(aOther->mUnloadStart),
+      mUnloadEnd(aOther->mUnloadEnd),
+      mLoadEventStart(aOther->mLoadEventStart),
+      mLoadEventEnd(aOther->mLoadEventEnd),
+      mDOMLoading(aOther->mDOMLoading),
+      mDOMInteractive(aOther->mDOMInteractive),
+      mDOMContentLoadedEventStart(aOther->mDOMContentLoadedEventStart),
+      mDOMContentLoadedEventEnd(aOther->mDOMContentLoadedEventEnd),
+      mDOMComplete(aOther->mDOMComplete),
+      mTTFI(aOther->mTTFI),
+      mDocShellHasBeenActiveSinceNavigationStart(
+          aOther->mDocShellHasBeenActiveSinceNavigationStart) {}
+
 /* static */
 void mozilla::ipc::IPDLParamTraits<nsDOMNavigationTiming*>::Write(
     IPC::Message* aMsg, IProtocol* aActor, nsDOMNavigationTiming* aParam) {

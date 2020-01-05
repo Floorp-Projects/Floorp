@@ -175,6 +175,8 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
   }
 
  private:
+  friend class nsDocShell;
+  nsDOMNavigationTiming(nsDocShell* aDocShell, nsDOMNavigationTiming* aOther);
   nsDOMNavigationTiming(const nsDOMNavigationTiming&) = delete;
   ~nsDOMNavigationTiming();
 
