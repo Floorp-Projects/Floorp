@@ -222,14 +222,11 @@ struct Redirection {
   // Name of the function being redirected.
   const char* mName;
 
-  // Address of the function which is being redirected. The code for this
-  // function is modified so that attempts to call this function will instead
-  // call into RecordReplayInterceptCall.
-  uint8_t* mBaseFunction;
-
-  // Function with the same signature and original behavior as
-  // mBaseFunction.
+  // Pointer to the original function being redirected.
   uint8_t* mOriginalFunction;
+
+  // Pointer to a stub for this redirection that calls its hooks.
+  uint8_t* mRedirectedFunction;
 
   // Redirection hooks are used to control the behavior of the redirected
   // function.
@@ -254,18 +251,18 @@ struct Redirection {
 size_t NumRedirections();
 Redirection& GetRedirection(size_t aCallId);
 
-// Platform specific early initialization of redirections. This is done on both
+// Platform specific initialization of redirections. This is done on both
 // recording/replaying and middleman processes, and allows OriginalCall() to
 // work in either case.
-void EarlyInitializeRedirections();
+void InitializeRedirections();
 
-// Set up all platform specific redirections, or fail and set
-// gInitializationFailureMessage.
-bool InitializeRedirections();
+// Platform specific routine to apply redirections to external references in
+// all initially loaded libraries.
+void ApplyInitialLibraryRedirections();
 
-// Platform specific function called after setting up redirections in recording
-// or replaying processes.
-void LateInitializeRedirections();
+// Generate a stub that will call the hooks associated with a redirection.
+uint8_t* GenerateRedirectStub(Assembler& aAssembler, size_t aCallId,
+                              bool aPreserveCallerSaveRegisters);
 
 // Functions for saving or restoring system error codes.
 static inline ErrorType SaveError() { return errno; }

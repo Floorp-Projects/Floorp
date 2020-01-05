@@ -213,7 +213,7 @@ void ProcessExternalCall(const char* aInputData, size_t aInputSize,
     }
 
     if (!skipCall) {
-      RecordReplayInvokeCall(redirection.mBaseFunction, &arguments);
+      RecordReplayInvokeCall(redirection.mOriginalFunction, &arguments);
     }
 
     {

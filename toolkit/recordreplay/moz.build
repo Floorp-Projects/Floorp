@@ -24,17 +24,13 @@ if CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['NIGHTLY_BUILD']:
         'ipc/ParentIPC.cpp',
         'Lock.cpp',
         'ProcessRecordReplay.cpp',
+        'ProcessRedirect.cpp',
         'ProcessRedirectDarwin.cpp',
         'ProcessRewind.cpp',
         'Recording.cpp',
         'Thread.cpp',
         'ThreadSnapshot.cpp',
         'ValueIndex.cpp',
-    ]
-    SOURCES += [
-        # ProcessRedirect includes udis86 directly and will not compile if the
-        # udis86 headers are included elsewhere in the same compilation unit.
-        'ProcessRedirect.cpp',
     ]
 else:
     UNIFIED_SOURCES += [
