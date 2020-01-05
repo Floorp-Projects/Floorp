@@ -5859,6 +5859,12 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
       mozilla::Unused << MaybeInitTiming();
       mTiming->NotifyFetchStart(uri,
                                 ConvertLoadTypeToNavigationType(mLoadType));
+      // If we are starting a DocumentChannel, we need to pass the timing
+      // statistics so that should a process switch occur, the starting type can
+      // be passed to the new DocShell running in the other content process.
+      if (RefPtr<DocumentChannelChild> docChannel = do_QueryObject(aRequest)) {
+        docChannel->SetNavigationTiming(mTiming);
+      }
     }
 
     // Page has begun to load
@@ -12772,7 +12778,8 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
       aIdentifier,
       [self, aHistoryIndex](nsIChildChannel* aChannel,
                             nsTArray<net::DocumentChannelRedirect>&& aRedirects,
-                            uint32_t aLoadStateLoadFlags) {
+                            uint32_t aLoadStateLoadFlags,
+                            nsDOMNavigationTiming* aTiming) {
         if (NS_WARN_IF(self->mIsBeingDestroyed)) {
           nsCOMPtr<nsIRequest> request = do_QueryInterface(aChannel);
           if (request) {
@@ -12797,6 +12804,9 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
           self->SavePreviousRedirectsAndLastVisit(channel, previousURI,
                                                   previousFlags, aRedirects);
         }
+
+        MOZ_ASSERT(!self->mTiming, "timing object can't already exists");
+        self->mTiming = new nsDOMNavigationTiming(self, aTiming);
 
         // If we're performing a history load, locate the correct history entry,
         // and set the relevant bits on our loadState.
