@@ -7,17 +7,18 @@
 #include "nsDOMNavigationTiming.h"
 
 #include "GeckoProfiler.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/dom/PerformanceNavigation.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsHttp.h"
 #include "nsIScriptSecurityManager.h"
-#include "prtime.h"
 #include "nsIURI.h"
 #include "nsPrintfCString.h"
-#include "mozilla/dom/PerformanceNavigation.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/Telemetry.h"
+#include "prtime.h"
 #ifdef MOZ_GECKO_PROFILER
 #  include "ProfilerMarkerPayload.h"
 #endif
@@ -532,4 +533,75 @@ bool nsDOMNavigationTiming::IsTopLevelContentDocumentInContentProcess() const {
     return false;
   }
   return mDocShell->GetBrowsingContext()->IsTopContent();
+}
+
+/* static */
+void mozilla::ipc::IPDLParamTraits<nsDOMNavigationTiming*>::Write(
+    IPC::Message* aMsg, IProtocol* aActor, nsDOMNavigationTiming* aParam) {
+  RefPtr<nsIURI> unloadedURI = aParam->mUnloadedURI.get();
+  RefPtr<nsIURI> loadedURI = aParam->mLoadedURI.get();
+  WriteIPDLParam(aMsg, aActor, unloadedURI ? Some(unloadedURI) : Nothing());
+  WriteIPDLParam(aMsg, aActor, loadedURI ? Some(loadedURI) : Nothing());
+  WriteIPDLParam(aMsg, aActor, uint32_t(aParam->mNavigationType));
+  WriteIPDLParam(aMsg, aActor, aParam->mNavigationStartHighRes);
+  WriteIPDLParam(aMsg, aActor, aParam->mNavigationStart);
+  WriteIPDLParam(aMsg, aActor, aParam->mNonBlankPaint);
+  WriteIPDLParam(aMsg, aActor, aParam->mContentfulPaint);
+  WriteIPDLParam(aMsg, aActor, aParam->mDOMContentFlushed);
+  WriteIPDLParam(aMsg, aActor, aParam->mBeforeUnloadStart);
+  WriteIPDLParam(aMsg, aActor, aParam->mUnloadStart);
+  WriteIPDLParam(aMsg, aActor, aParam->mUnloadEnd);
+  WriteIPDLParam(aMsg, aActor, aParam->mLoadEventStart);
+  WriteIPDLParam(aMsg, aActor, aParam->mLoadEventEnd);
+  WriteIPDLParam(aMsg, aActor, aParam->mDOMLoading);
+  WriteIPDLParam(aMsg, aActor, aParam->mDOMInteractive);
+  WriteIPDLParam(aMsg, aActor, aParam->mDOMContentLoadedEventStart);
+  WriteIPDLParam(aMsg, aActor, aParam->mDOMContentLoadedEventEnd);
+  WriteIPDLParam(aMsg, aActor, aParam->mDOMComplete);
+  WriteIPDLParam(aMsg, aActor, aParam->mTTFI);
+  WriteIPDLParam(aMsg, aActor,
+                 aParam->mDocShellHasBeenActiveSinceNavigationStart);
+}
+
+/* static */
+bool mozilla::ipc::IPDLParamTraits<nsDOMNavigationTiming*>::Read(
+    const IPC::Message* aMsg, PickleIterator* aIter, IProtocol* aActor,
+    RefPtr<nsDOMNavigationTiming>* aResult) {
+  auto timing = MakeRefPtr<nsDOMNavigationTiming>(nullptr);
+  uint32_t type;
+  Maybe<RefPtr<nsIURI>> unloadedURI;
+  Maybe<RefPtr<nsIURI>> loadedURI;
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &unloadedURI) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &loadedURI) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &type) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mNavigationStartHighRes) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mNavigationStart) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mNonBlankPaint) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mContentfulPaint) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mDOMContentFlushed) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mBeforeUnloadStart) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mUnloadStart) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mUnloadEnd) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mLoadEventStart) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mLoadEventEnd) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mDOMLoading) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mDOMInteractive) ||
+      !ReadIPDLParam(aMsg, aIter, aActor,
+                     &timing->mDOMContentLoadedEventStart) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mDOMContentLoadedEventEnd) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mDOMComplete) ||
+      !ReadIPDLParam(aMsg, aIter, aActor, &timing->mTTFI) ||
+      !ReadIPDLParam(aMsg, aIter, aActor,
+                     &timing->mDocShellHasBeenActiveSinceNavigationStart)) {
+    return false;
+  }
+  timing->mNavigationType = nsDOMNavigationTiming::Type(type);
+  if (unloadedURI) {
+    timing->mUnloadedURI = unloadedURI->forget();
+  }
+  if (loadedURI) {
+    timing->mLoadedURI = loadedURI->forget();
+  }
+  *aResult = timing.forget();
+  return true;
 }
