@@ -9,6 +9,7 @@
 #define mozilla_net_DocumentChannelChild_h
 
 #include "mozilla/net/PDocumentChannelChild.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannel.h"
 #include "nsIChildChannel.h"
@@ -76,6 +77,10 @@ class DocumentChannelChild final : public nsIIdentChannel,
     mPluginsAllowed = aPluginsAllowed;
   }
 
+  void SetNavigationTiming(nsDOMNavigationTiming* aTiming) {
+    mTiming = aTiming;
+  }
+
  private:
   void ShutdownListeners(nsresult aStatusCode);
   nsDocShell* GetDocShell();
@@ -111,6 +116,7 @@ class DocumentChannelChild final : public nsIIdentChannel,
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsISupports> mOwner;
   bool mPluginsAllowed = false;
+  RefPtr<nsDOMNavigationTiming> mTiming;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentChannelChild, DOCUMENT_CHANNEL_CHILD_IID)

@@ -149,6 +149,8 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
 
   // add ourselves to the load group.
   if (mLoadGroup) {
+    // During this call, we can re-enter back into the DocumentChannelChild to
+    // call SetNavigationTiming.
     mLoadGroup->AddRequest(this, nullptr);
   }
 
@@ -192,7 +194,9 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.asyncOpenTime() = mAsyncOpenTime;
   args.documentOpenFlags() = mDocumentOpenFlags;
   args.pluginsAllowed() = mPluginsAllowed;
-
+  if (mTiming) {
+    args.timing() = Some(mTiming);
+  }
   nsDocShell* docshell = GetDocShell();
   if (docshell) {
     docshell->GetCustomUserAgent(args.customUserAgent());

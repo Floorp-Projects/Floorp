@@ -256,7 +256,7 @@ bool DocumentLoadListener::Open(
     const Maybe<PrincipalInfo>& aContentBlockingAllowListPrincipal,
     const nsString& aCustomUserAgent, const uint64_t& aChannelId,
     const TimeStamp& aAsyncOpenTime, const Maybe<uint32_t>& aDocumentOpenFlags,
-    bool aPluginsAllowed, nsresult* aRv) {
+    bool aPluginsAllowed, nsDOMNavigationTiming* aTiming, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
   if (!nsDocShell::CreateChannelForLoadState(
@@ -340,6 +340,7 @@ bool DocumentLoadListener::Open(
 
   mChannelCreationURI = aLoadState->URI();
   mLoadStateLoadFlags = aLoadState->LoadFlags();
+  mTiming = aTiming;
   return true;
 }
 
@@ -763,6 +764,10 @@ DocumentLoadListener::RedirectToRealChannel(
     RedirectToRealChannelArgs args;
     SerializeRedirectData(args, !!aDestinationProcess, aRedirectFlags,
                           aLoadFlags);
+    if (mTiming) {
+      mTiming->Anonymize(args.uri());
+      args.timing() = Some(std::move(mTiming));
+    }
 
     return cp->SendCrossProcessRedirect(args);
   }

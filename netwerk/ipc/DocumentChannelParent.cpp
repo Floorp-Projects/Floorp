@@ -45,7 +45,7 @@ bool DocumentChannelParent::Init(BrowserParent* aBrowser,
           aArgs.hasNonEmptySandboxingFlags(), aArgs.topWindowURI(),
           aArgs.contentBlockingAllowListPrincipal(), aArgs.customUserAgent(),
           aArgs.channelId(), aArgs.asyncOpenTime(), aArgs.documentOpenFlags(),
-          aArgs.pluginsAllowed(), &rv)) {
+          aArgs.pluginsAllowed(), aArgs.timing().refOr(nullptr), &rv)) {
     return SendFailedAsyncOpen(rv);
   }
 

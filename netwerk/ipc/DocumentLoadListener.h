@@ -15,6 +15,7 @@
 #include "mozilla/net/ParentChannelListener.h"
 #include "mozilla/net/ADocumentChannelBridge.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsIParentChannel.h"
@@ -79,7 +80,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
             const nsString& aCustomUserAgent, const uint64_t& aChannelId,
             const TimeStamp& aAsyncOpenTime,
             const Maybe<uint32_t>& aDocumentOpenFlags, bool aPluginsAllowed,
-            nsresult* aRv);
+            nsDOMNavigationTiming* aTiming, nsresult* aRv);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -319,6 +320,12 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // URI of the first channel in the redirect chain, so we cache the
   // value we need here.
   nsCOMPtr<nsIURI> mChannelCreationURI;
+
+  // The original navigation timing information containing various timestamps
+  // such as when the original load started.
+  // This will be passed back to the new content process should a process
+  // switch occurs.
+  RefPtr<nsDOMNavigationTiming> mTiming;
 
   nsTArray<DocumentChannelRedirect> mRedirects;
 
