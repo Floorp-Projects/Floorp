@@ -1250,6 +1250,18 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DRIVER_BETWEEN_INCLUSIVE_START, V(8, 982, 0, 0), V(8, 983, 0, 0),
         "FEATURE_FAILURE_BUG_783517_ATI", "!= 8.982.*.*");
 
+    /*
+     *  Bug 1599981 - crashes in AMD driver on Windows 10
+     */
+    APPEND_TO_DRIVER_BLOCKLIST2(
+        OperatingSystem::Windows10,
+        (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorAMD),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
+        (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(RadeonCaicos),
+        nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS,
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
+        V(15, 301, 1901, 0), "FEATURE_FAILURE_BUG_1599981");
+
     /* OpenGL on any ATI/AMD hardware is discouraged
      * See:
      *  bug 619773 - WebGL: Crash with blue screen : "NMI: Parity Check / Memory
