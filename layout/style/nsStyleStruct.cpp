@@ -122,8 +122,24 @@ already_AddRefed<nsIURI> StyleComputedUrl::ResolveLocalRef(
   return ResolveLocalRef(aContent->GetBaseURI());
 }
 
-imgRequestProxy* StyleComputedUrl::LoadImage(Document& aDocument) {
+already_AddRefed<imgRequestProxy> StyleComputedUrl::LoadImage(
+    Document& aDocument) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
+  nsIURI* docURI = aDocument.GetDocumentURI();
+  if (HasRef()) {
+    bool isEqualExceptRef = false;
+    nsIURI* imageURI = GetURI();
+    if (!imageURI) {
+      return nullptr;
+    }
+
+    if (NS_SUCCEEDED(imageURI->EqualsExceptRef(docURI, &isEqualExceptRef)) &&
+        isEqualExceptRef) {
+      // Prevent loading an internal resource.
+      return nullptr;
+    }
+  }
 
   static uint64_t sNextLoadID = 1;
 
@@ -136,6 +152,7 @@ imgRequestProxy* StyleComputedUrl::LoadImage(Document& aDocument) {
   // images from aDocument.  Instead we do the image load from the original doc
   // and clone it to aDocument.
   Document* loadingDoc = aDocument.GetOriginalDocument();
+  const bool isPrint = !!loadingDoc;
   if (!loadingDoc) {
     loadingDoc = &aDocument;
   }
@@ -144,7 +161,17 @@ imgRequestProxy* StyleComputedUrl::LoadImage(Document& aDocument) {
   css::ImageLoader::LoadImage(*this, *loadingDoc);
 
   // Register the image in the document that's using it.
-  return aDocument.StyleImageLoader()->RegisterCSSImage(data);
+  imgRequestProxy* request =
+      aDocument.StyleImageLoader()->RegisterCSSImage(data);
+  if (!request) {
+    return nullptr;
+  }
+  if (!isPrint) {
+    return do_AddRef(request);
+  }
+  RefPtr<imgRequestProxy> ret;
+  request->GetStaticRequest(&aDocument, getter_AddRefs(ret));
+  return ret.forget();
 }
 
 // --------------------
@@ -1577,27 +1604,12 @@ nsStyleImageRequest::~nsStyleImageRequest() {
   MOZ_ASSERT(!mImageTracker);
 }
 
-bool nsStyleImageRequest::Resolve(Document& aDocument,
+void nsStyleImageRequest::Resolve(Document& aDocument,
                                   const nsStyleImageRequest* aOldImageRequest) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!IsResolved(), "already resolved");
 
   mResolved = true;
-
-  nsIURI* docURI = aDocument.GetDocumentURI();
-  if (GetImageValue().HasRef()) {
-    bool isEqualExceptRef = false;
-    RefPtr<nsIURI> imageURI = GetImageURI();
-    if (!imageURI) {
-      return false;
-    }
-
-    if (NS_SUCCEEDED(imageURI->EqualsExceptRef(docURI, &isEqualExceptRef)) &&
-        isEqualExceptRef) {
-      // Prevent loading an internal resource.
-      return true;
-    }
-  }
 
   // TODO(emilio, bug 1440442): This is a hackaround to avoid flickering due the
   // lack of non-http image caching in imagelib (bug 1406134), which causes
@@ -1617,18 +1629,12 @@ bool nsStyleImageRequest::Resolve(Document& aDocument,
     mRequestProxy = aOldImageRequest->mRequestProxy;
   } else {
     mDocGroup = aDocument.GetDocGroup();
-    imgRequestProxy* request = mImageURL.LoadImage(aDocument);
-    bool isPrint = !!aDocument.GetOriginalDocument();
-    if (!isPrint) {
-      mRequestProxy = request;
-    } else if (request) {
-      request->GetStaticRequest(&aDocument, getter_AddRefs(mRequestProxy));
-    }
+    mRequestProxy = mImageURL.LoadImage(aDocument);
   }
 
   if (!mRequestProxy) {
     // The URL resolution or image load failed.
-    return false;
+    return;
   }
 
   // Boost priority now that we know the image is present in the ComputedStyle
@@ -1640,7 +1646,6 @@ bool nsStyleImageRequest::Resolve(Document& aDocument,
   }
 
   MaybeTrackAndLock();
-  return true;
 }
 
 void nsStyleImageRequest::MaybeTrackAndLock() {
@@ -3185,126 +3190,19 @@ nsChangeHint nsStyleVisibility::CalcDifference(
   return hint;
 }
 
-nsStyleContentData::~nsStyleContentData() {
-  MOZ_COUNT_DTOR(nsStyleContentData);
-
-  if (mType == StyleContentType::Image) {
-    // FIXME(emilio): Is this needed now that URLs are not main thread only?
-    NS_ReleaseOnMainThreadSystemGroup("nsStyleContentData::mContent.mImage",
-                                      dont_AddRef(mContent.mImage));
-    mContent.mImage = nullptr;
-  } else if (mType == StyleContentType::Counter ||
-             mType == StyleContentType::Counters) {
-    mContent.mCounters->Release();
-  } else if (mType == StyleContentType::String) {
-    free(mContent.mString);
-  } else if (mType == StyleContentType::Attr) {
-    delete mContent.mAttr;
-  } else {
-    MOZ_ASSERT(mContent.mString == nullptr, "Leaking due to missing case");
-  }
-}
-
-nsStyleContentData::nsStyleContentData(const nsStyleContentData& aOther)
-    : mType(aOther.mType) {
-  MOZ_COUNT_CTOR(nsStyleContentData);
-  switch (mType) {
-    case StyleContentType::Image:
-      mContent.mImage = aOther.mContent.mImage;
-      mContent.mImage->AddRef();
-      break;
-    case StyleContentType::Counter:
-    case StyleContentType::Counters:
-      mContent.mCounters = aOther.mContent.mCounters;
-      mContent.mCounters->AddRef();
-      break;
-    case StyleContentType::Attr:
-      mContent.mAttr = new nsStyleContentAttr(*aOther.mContent.mAttr);
-      break;
-    case StyleContentType::String:
-      mContent.mString = NS_xstrdup(aOther.mContent.mString);
-      break;
-    default:
-      MOZ_ASSERT(!aOther.mContent.mString);
-      mContent.mString = nullptr;
-  }
-}
-
-bool nsStyleContentData::CounterFunction::operator==(
-    const CounterFunction& aOther) const {
-  return mIdent == aOther.mIdent && mSeparator == aOther.mSeparator &&
-         mCounterStyle == aOther.mCounterStyle;
-}
-
-nsStyleContentData& nsStyleContentData::operator=(
-    const nsStyleContentData& aOther) {
-  if (this == &aOther) {
-    return *this;
-  }
-  this->~nsStyleContentData();
-  new (this) nsStyleContentData(aOther);
-
-  return *this;
-}
-
-bool nsStyleContentData::operator==(const nsStyleContentData& aOther) const {
-  if (mType != aOther.mType) {
-    return false;
-  }
-  if (mType == StyleContentType::Image) {
-    return DefinitelyEqualImages(mContent.mImage, aOther.mContent.mImage);
-  }
-  if (mType == StyleContentType::Attr) {
-    return *mContent.mAttr == *aOther.mContent.mAttr;
-  }
-  if (mType == StyleContentType::Counter ||
-      mType == StyleContentType::Counters) {
-    return *mContent.mCounters == *aOther.mContent.mCounters;
-  }
-  if (mType == StyleContentType::String) {
-    return NS_strcmp(mContent.mString, aOther.mContent.mString) == 0;
-  }
-  MOZ_ASSERT(!mContent.mString && !aOther.mContent.mString);
-  return true;
-}
-
-void nsStyleContentData::Resolve(Document& aDocument,
-                                 const nsStyleContentData* aOldStyle) {
-  if (mType != StyleContentType::Image) {
-    return;
-  }
-  if (!mContent.mImage->IsResolved()) {
-    const nsStyleImageRequest* oldRequest =
-        (aOldStyle && aOldStyle->mType == StyleContentType::Image)
-            ? aOldStyle->mContent.mImage
-            : nullptr;
-    mContent.mImage->Resolve(aDocument, oldRequest);
-  }
-}
-
 //-----------------------
 // nsStyleContent
 //
 
-nsStyleContent::nsStyleContent(const Document& aDocument) {
+nsStyleContent::nsStyleContent(const Document& aDocument)
+    : mContent(StyleContent::Normal()) {
   MOZ_COUNT_CTOR(nsStyleContent);
 }
 
 nsStyleContent::~nsStyleContent() { MOZ_COUNT_DTOR(nsStyleContent); }
 
-void nsStyleContent::TriggerImageLoads(Document& aDocument,
-                                       const nsStyleContent* aOldStyle) {
-  for (size_t i = 0; i < mContents.Length(); ++i) {
-    const nsStyleContentData* oldData =
-        (aOldStyle && aOldStyle->mContents.Length() > i)
-            ? &aOldStyle->mContents[i]
-            : nullptr;
-    mContents[i].Resolve(aDocument, oldData);
-  }
-}
-
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
-    : mContents(aSource.mContents),
+    : mContent(aSource.mContent),
       mCounterIncrement(aSource.mCounterIncrement),
       mCounterReset(aSource.mCounterReset),
       mCounterSet(aSource.mCounterSet) {
@@ -3316,7 +3214,7 @@ nsChangeHint nsStyleContent::CalcDifference(
   // Unfortunately we need to reframe even if the content lengths are the same;
   // a simple reflow will not pick up different text or different image URLs,
   // since we set all that up in the CSSFrameConstructor
-  if (mContents != aNewData.mContents ||
+  if (mContent != aNewData.mContent ||
       mCounterIncrement != aNewData.mCounterIncrement ||
       mCounterReset != aNewData.mCounterReset ||
       mCounterSet != aNewData.mCounterSet) {

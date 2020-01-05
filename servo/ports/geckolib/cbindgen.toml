@@ -186,6 +186,8 @@ include = [
   "CounterIncrement",
   "WritingMode",
   "VecU8",
+  "Content",
+  "ContentItem",
 ]
 item_types = ["enums", "structs", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
@@ -599,7 +601,7 @@ renaming_overrides_prefixing = true
   inline StyleCorsMode CorsMode() const;
   already_AddRefed<nsIURI> ResolveLocalRef(nsIURI* aBase) const;
   already_AddRefed<nsIURI> ResolveLocalRef(const nsIContent* aContent) const;
-  imgRequestProxy* LoadImage(mozilla::dom::Document&);
+  already_AddRefed<imgRequestProxy> LoadImage(mozilla::dom::Document&);
 """
 
 "GenericGradient" = """

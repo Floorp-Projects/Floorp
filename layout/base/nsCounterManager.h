@@ -89,11 +89,12 @@ struct nsCounterUseNode : public nsCounterNode {
   }
 
   // args go directly to member variables here and of nsGenConNode
-  nsCounterUseNode(nsStyleContentData::CounterFunction* aCounterFunction,
-                   uint32_t aContentIndex, bool aAllCounters)
+  nsCounterUseNode(mozilla::CounterStylePtr aCounterStyle,
+                   nsString aSeparator, uint32_t aContentIndex,
+                   bool aAllCounters)
       : nsCounterNode(aContentIndex, USE),
-        mCounterStyle(aCounterFunction->mCounterStyle),
-        mSeparator(aCounterFunction->mSeparator),
+        mCounterStyle(std::move(aCounterStyle)),
+        mSeparator(std::move(aSeparator)),
         mAllCounters(aAllCounters) {
     NS_ASSERTION(aContentIndex <= INT32_MAX, "out of range");
   }

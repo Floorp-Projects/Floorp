@@ -68,7 +68,6 @@ rusty-enums = [
     "mozilla::InheritTarget",
     "mozilla::css::DocumentMatchingFunction",
     "mozilla::css::SheetParsingMode",
-    "mozilla::StyleContentType",
     "nsStyleSVGOpacitySource",
     "nsCSSKeyword",
     "mozilla::dom::Document_DocumentTheme",
@@ -543,6 +542,9 @@ cbindgen-types = [
     { gecko = "StyleClipRectOrAuto", servo = "values::computed::ClipRectOrAuto" },
     { gecko = "StyleCounterSetOrReset", servo = "values::computed::CounterSetOrReset" },
     { gecko = "StyleCounterIncrement", servo = "values::computed::CounterIncrement" },
+    { gecko = "StyleContent", servo = "values::computed::counters::Content" },
+    { gecko = "StyleSymbolsType", servo = "values::generics::SymbolsType" },
+    { gecko = "StyleCounterStyle", servo = "values::generics::CounterStyle" },
 ]
 
 mapped-generic-types = [
