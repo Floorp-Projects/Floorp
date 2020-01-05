@@ -259,6 +259,8 @@ class Documentation(MachCommandBase):
         try:
             from mozfile import which
             exe_name = which('jsdoc')
+            if not exe_name:
+                return 1
             out = subprocess.check_output([exe_name, '--version'])
             version = out.split()[1]
         except subprocess.CalledProcessError:
