@@ -64,9 +64,8 @@ bool BrowserBridgeHost::Show(const ScreenIntSize& aSize, bool aParentIsActive) {
     NS_WARNING("No widget found in BrowserBridgeHost::Show");
     return false;
   }
-  nsSizeMode sizeMode = widget ? widget->SizeMode() : nsSizeMode_Normal;
-
-  Unused << mBridge->SendShow(aSize, aParentIsActive, sizeMode);
+  OwnerShowInfo info(aSize, aParentIsActive, widget->SizeMode());
+  Unused << mBridge->SendShow(info);
   return true;
 }
 
