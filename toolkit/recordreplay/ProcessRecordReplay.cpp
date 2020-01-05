@@ -124,7 +124,7 @@ MOZ_EXPORT void RecordReplayInterface_Initialize(int aArgc, char* aArgv[]) {
     gSpewEnabled = true;
   }
 
-  EarlyInitializeRedirections();
+  InitializeRedirections();
 
   if (!IsRecordingOrReplaying()) {
     InitializeExternalCalls();
@@ -135,14 +135,8 @@ MOZ_EXPORT void RecordReplayInterface_Initialize(int aArgc, char* aArgv[]) {
 
   gRecording = new Recording();
 
-  InitializeRedirections();
+  ApplyInitialLibraryRedirections();
 
-  if (gInitializationFailureMessage) {
-    fprintf(stderr, "Initialization Failure: %s\n",
-            gInitializationFailureMessage);
-  }
-
-  LateInitializeRedirections();
   Thread::InitializeThreads();
 
   Thread* thread = Thread::GetById(MainThreadId);

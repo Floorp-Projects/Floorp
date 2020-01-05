@@ -14,24 +14,17 @@
 namespace mozilla {
 namespace recordreplay {
 
+// x86-64 general purpose registers.
+enum class Register {
+  RAX, RCX, RDX, RBX, RSP, RBP, RSI, RDI, R8, R9, R10, R11, R12, R13, R14, R15,
+};
+
 // Assembler for x64 instructions. This is a simple assembler that is primarily
 // designed for use in copying instructions from a function that is being
 // redirected.
 class Assembler {
  public:
-  // Create an assembler that allocates its own instruction storage. Assembled
-  // code will never be reclaimed by the system.
-  Assembler();
-
-  // Create an assembler that uses the specified memory range for instruction
-  // storage.
   Assembler(uint8_t* aStorage, size_t aSize);
-
-  ~Assembler();
-
-  // Mark the point at which we start copying an instruction in the original
-  // range.
-  void NoteOriginalInstruction(uint8_t* aIp);
 
   // Get the address where the next assembled instruction will be placed.
   uint8_t* Current();
@@ -44,8 +37,14 @@ class Assembler {
   // the target will be the copy of aTarget instead.
   void Jump(void* aTarget);
 
+  // The number of instruction bytes required by Jump().
+  static const size_t JumpBytes = 17;
+
   // Push aValue onto the stack.
   void PushImmediate(void* aValue);
+
+  // The number of instruction bytes required by PushImmediate().
+  static const size_t PushImmediateBytes = 16;
 
   // Return to the address at the top of the stack.
   void Return();
@@ -53,93 +52,27 @@ class Assembler {
   // For debugging, insert a breakpoint instruction.
   void Breakpoint();
 
-  // Conditionally jump to aTarget, depending on the short jump opcode aCode.
-  // If aTarget is in the range of instructions being copied, the target will
-  // be the copy of aTarget instead.
-  void ConditionalJump(uint8_t aCode, void* aTarget);
-
-  // Copy an instruction verbatim from aIp.
-  void CopyInstruction(uint8_t* aIp, size_t aSize);
-
   // push/pop %rax
   void PushRax();
   void PopRax();
 
-  // jump *%rax
-  void JumpToRax();
-
-  // call *%rax
-  void CallRax();
-
-  // movq/movl/movb 0(%rax), %rax
-  void LoadRax(size_t aWidth);
-
-  // cmpq %rax, 0(%rsp)
-  void CompareRaxWithTopOfStack();
-
-  // cmpq 0(%rsp), %rax
-  void CompareTopOfStackWithRax();
-
-  // push/pop %rbx
-  void PushRbx();
-  void PopRbx();
-
-  void PopRegister(/*ud_type*/ int aRegister);
-
-  // movq/movl/movb %rbx, 0(%rax)
-  void StoreRbxToRax(size_t aWidth);
-
-  // cmpq/cmpb $literal8, %rax
-  void CompareValueWithRax(uint8_t aValue, size_t aWidth);
+  void PopRegister(Register aRegister);
 
   // movq $value, %rax
   void MoveImmediateToRax(void* aValue);
 
   // movq %rax, register
-  void MoveRaxToRegister(/*ud_type*/ int aRegister);
+  void MoveRaxToRegister(Register aRegister);
 
   // movq register, %rax
-  void MoveRegisterToRax(/*ud_type*/ int aRegister);
-
-  // xchgb register, 0(%rbx)
-  void ExchangeByteRegisterWithAddressAtRbx(/*ud_type*/ int aRegister);
-
-  // xchgb $bl, 0(%rax)
-  void ExchangeByteRbxWithAddressAtRax();
-
-  // Normalize a Udis86 register to its 8 byte version, returning UD_NONE/zero
-  // for unexpected registers.
-  static /*ud_type*/ int NormalizeRegister(/*ud_type*/ int aRegister);
-
-  ///////////////////////////////////////////////////////////////////////////////
-  // Routines for assembling instructions at arbitrary locations
-  ///////////////////////////////////////////////////////////////////////////////
-
-  // Return whether it is possible to patch a short jump to aTarget from aIp.
-  static bool CanPatchShortJump(uint8_t* aIp, void* aTarget);
-
-  // Patch a short jump to aTarget at aIp.
-  static void PatchShortJump(uint8_t* aIp, void* aTarget);
-
-  // Patch a long jump to aTarget at aIp. Rax may be clobbered.
-  static void PatchJumpClobberRax(uint8_t* aIp, void* aTarget);
-
-  // Patch the value used in an earlier MoveImmediateToRax call.
-  static void PatchMoveImmediateToRax(uint8_t* aIp, void* aValue);
-
-  // Patch an int3 breakpoint instruction at Ip.
-  static void PatchClobber(uint8_t* aIp);
+  void MoveRegisterToRax(Register aRegister);
 
  private:
-  // Patch a jump that doesn't clobber any instructions.
-  static void PatchJump(uint8_t* aIp, void* aTarget);
-
   // Consume some instruction storage.
   void Advance(size_t aSize);
 
-  // The maximum amount we can write at a time without a jump potentially
-  // being introduced into the instruction stream.
-  static const size_t MaximumAdvance = 20;
+  // Push a 2 byte immediate onto the stack.
+  void Push16(uint16_t aValue);
 
   inline size_t CountBytes() { return 0; }
 
@@ -160,7 +93,6 @@ class Assembler {
   template <typename... ByteList>
   inline void NewInstruction(ByteList... aBytes) {
     size_t numBytes = CountBytes(aBytes...);
-    MOZ_RELEASE_ASSERT(numBytes <= MaximumAdvance);
     uint8_t* ip = Current();
     CopyBytes(ip, aBytes...);
     Advance(numBytes);
@@ -169,32 +101,7 @@ class Assembler {
   // Storage for assembling new instructions.
   uint8_t* mCursor;
   uint8_t* mCursorEnd;
-  bool mCanAllocateStorage;
-
-  // Association between the instruction original and copy pointers, for all
-  // instructions that have been copied.
-  InfallibleVector<std::pair<uint8_t*, uint8_t*>> mCopiedInstructions;
-
-  // For jumps we have copied, association between the source (in generated
-  // code) and target (in the original code) of the jump. These will be updated
-  // to refer to their copy (if there is one) in generated code in the
-  // assembler's destructor.
-  InfallibleVector<std::pair<uint8_t*, uint8_t*>> mJumps;
 };
-
-// The number of instruction bytes required for a short jump.
-static const size_t ShortJumpBytes = 2;
-
-// The number of instruction bytes required for a jump that may clobber rax.
-static const size_t JumpBytesClobberRax = 12;
-
-// The number of instruction bytes required for an arbitrary jump.
-static const size_t JumpBytes = 17;
-
-static const size_t PushImmediateBytes = 16;
-
-// The maximum byte length of an x86/x64 instruction.
-static const size_t MaximumInstructionLength = 15;
 
 // Make a region of memory RWX.
 void UnprotectExecutableMemory(uint8_t* aAddress, size_t aSize);
