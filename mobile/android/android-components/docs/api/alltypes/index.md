@@ -341,6 +341,7 @@
 | [mozilla.components.service.fretboard.scheduler.jobscheduler.JobSchedulerSyncScheduler](../mozilla.components.service.fretboard.scheduler.jobscheduler/-job-scheduler-sync-scheduler/index.md) | Class used to schedule sync of experiment configuration from the server |
 | [org.mozilla.telemetry.schedule.jobscheduler.JobSchedulerTelemetryScheduler](../org.mozilla.telemetry.schedule.jobscheduler/-job-scheduler-telemetry-scheduler/index.md) | TelemetryScheduler implementation that uses Android's JobScheduler API to schedule ping uploads. |
 | [mozilla.components.support.test.KArgumentCaptor](../mozilla.components.support.test/-k-argument-captor/index.md) |  |
+| [kotlin.reflect.KProperty0](../mozilla.components.support.test.ext/kotlin.reflect.-k-property0/index.md) (extensions in package mozilla.components.support.test.ext) |  |
 | [mozilla.components.lib.dataprotect.KeyStoreWrapper](../mozilla.components.lib.dataprotect/-key-store-wrapper/index.md) | Wraps the critical functions around a Java KeyStore to better facilitate testing and instrumenting. |
 | [mozilla.components.lib.dataprotect.Keystore](../mozilla.components.lib.dataprotect/-keystore/index.md) | Manages data protection using a system-isolated cryptographic key. |
 | [mozilla.components.lib.dataprotect.KeystoreException](../mozilla.components.lib.dataprotect/-keystore-exception/index.md) | Exception type thrown by {@link Keystore} when an error is encountered that is not otherwise covered by an existing sub-class to `GeneralSecurityException`. |
