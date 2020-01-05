@@ -264,6 +264,17 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id) {
       APPEND_DEVICE(0x7249);
       APPEND_DEVICE(0x7291);
       break;
+    case RadeonCaicos:
+      APPEND_DEVICE(0x6766);
+      APPEND_DEVICE(0x6767);
+      APPEND_DEVICE(0x6768);
+      APPEND_DEVICE(0x6770);
+      APPEND_DEVICE(0x6771);
+      APPEND_DEVICE(0x6772);
+      APPEND_DEVICE(0x6778);
+      APPEND_DEVICE(0x6779);
+      APPEND_DEVICE(0x677b);
+      break;
     case Geforce7300GT:
       APPEND_DEVICE(0x0393);
       break;
