@@ -67,6 +67,7 @@ dependencies {
     jnaForTest Dependencies.thirdparty_jna
     testImplementation files(configurations.jnaForTest.copyRecursive().files)
     testImplementation Dependencies.mozilla_full_megazord_forUnitTests
+    testImplementation Dependencies.mozilla_glean_forUnitTests
 }
 
 apply from: '../../../publish.gradle'

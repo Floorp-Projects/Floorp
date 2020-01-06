@@ -36,6 +36,13 @@ permalink: /changelog/
 * **sync-logins**
   * 🕵️  **New Telemetry Notice**
   * Added telemetry for password sync, via the new `passwords_sync` in **support-telemetry-sync**
+  * The `service-sync-logins` component now collects some basic performance and quality metrics via Glean.
+    Applications that send telemetry via Glean *must ensure* they have received appropriate data-review before integrating this component.
+  * ⚠️ **This is a breaking change**: The `ServerPassword` fields `username`, `usernameField` and `passwordField` can no longer by `null`.
+    Use the empty string to indicate an absent value for these fields.
+  * ⚠️ **This is a breaking change**: The `AsyncLoginsStorageAdapter.inMemory` method has been removed.
+    Use `AsyncLoginsStorageAdapter.forDatabase(":memory:")` instead.
+
 
 * **samples-sync**
   * Added support for password synchronization (not reflected in the UI, but demonstrates how to integrate the component).

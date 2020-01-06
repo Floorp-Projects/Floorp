@@ -584,13 +584,13 @@ class FennecMigratorTest {
                     timeCreated = 1574735368749,
                     timeLastUsed = 1574735368749,
                     timePasswordChanged = 1574735368749,
-                    usernameField = null,
-                    passwordField = null
+                    usernameField = "",
+                    passwordField = ""
                 ),
                 ServerPassword(
                     id = "{cf7cabe4-ec82-4800-b077-c6d97ffcd63a}",
                     hostname = "https://html.com",
-                    username = null,
+                    username = "",
                     password = "testp",
                     httpRealm = null,
                     formSubmitURL = "https://html.com",
@@ -598,7 +598,7 @@ class FennecMigratorTest {
                     timeCreated = 1574735237274,
                     timeLastUsed = 1574735237274,
                     timePasswordChanged = 1574735237274,
-                    usernameField = null,
+                    usernameField = "",
                     passwordField = "password"
                 )
             ), this)

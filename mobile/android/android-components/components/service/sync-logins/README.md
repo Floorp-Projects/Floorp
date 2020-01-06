@@ -15,6 +15,16 @@ The **Firefox Sync - Logins Component** provides a way for Android applications 
 
 ## Usage
 
+### Before using this component
+
+The `mozilla.appservices.logins` component collects telemetry using the [Glean SDK](https://mozilla.github.io/glean/).
+Applications that send telemetry via Glean *must ensure* they have received appropriate data-review following
+[the Firefox Data Collection process](https://wiki.mozilla.org/Firefox/Data_Collection) before integrating this component.
+
+Details on the metrics collected by the `mozilla.appservices.logins` component are available
+[here](https://github.com/mozilla/application-services/tree/master/docs/metrics/logins/metrics.md)
+
+
 ### Setting up the dependency
 
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
@@ -78,7 +88,7 @@ When inserting records (e.g. creating records for use with `AsyncLoginsStorage.a
 
 The hostname this record corresponds to. It is an error to attempt to insert or update a record to have a blank hostname, and attempting to do so `InvalidRecordException` being thrown.
 
-#### `username: String? = null`
+#### `username: String = ""`
 
 The username associated with this record, which may be blank if no username is asssociated with this login.
 
@@ -124,11 +134,11 @@ A lower bound on the time that the `password` field was last changed in millisec
 
 This is a metadata field, and as such, is ignored by `AsyncLoginsStorage.add` and `AsyncLoginsStorage.update`.
 
-#### `usernameField: String? = null`
+#### `usernameField: String = ""`
 
 HTML field name of the username, if known.
 
-#### `passwordField: String? = null`
+#### `passwordField: String = ""`
 
 HTML field name of the password, if known.
 
@@ -153,8 +163,6 @@ The errors reported as "raw" `LoginsStorageException` are things like Rust panic
 Yes, sort of. This works, however due to the fact that `lock` closes the database connection, *all data is lost when the database is locked*. This means that doing so will result in a database with different behavior around lock/unlock than one stored on disk.
 
 That said, doing so is simple: Just create a `DatabaseLoginsStorage` with the path `:memory:`, and it will work. You may also use a [SQLite URI filename](https://www.sqlite.org/uri.html) with the parameter `mode=memory`. See https://www.sqlite.org/inmemorydb.html for more options and further information.
-
-Note that we offer a `MemoryLoginsStorage` class which doesn't come with the same limitations (however it cannot sync).
 
 ### How do I set a key for the `DatabaseLoginsStorage`?
 
