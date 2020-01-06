@@ -42,10 +42,6 @@ class TabSwitcher:
             ERROR("Could not get window handles")
             return
 
-        if self.current not in self.handles:
-            ERROR("Handle %s not in current set of windows" % str(self.current))
-            return
-
         handle = self.handles[self.current]
         if self.current == len(self.handles) - 1:
             self.current = 0
