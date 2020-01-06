@@ -20,7 +20,11 @@ export ARTIFACTS_DIR="/home/worker/artifacts"
 mkdir -p "$ARTIFACTS_DIR"
 
 # duplicate the functionality of taskcluster-lib-urls, but in bash..
-queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
+if [ "$TASKCLUSTER_ROOT_URL" = "https://taskcluster.net" ]; then
+    queue_base='https://queue.taskcluster.net/v1'
+else
+    queue_base="$TASKCLUSTER_ROOT_URL/api/queue/v1"
+fi
 
 # Get Arcanist API token
 
