@@ -90,7 +90,6 @@ sm-arm-sim-linux32/debug:
         docker-image: {in-tree: debian7-i386-build}
     run:
         spidermonkey-variant: arm-sim
-    run-on-projects: ['mozilla-central', 'try']
 
 sm-arm64-sim-linux64/debug:
     description: "Spidermonkey ARM64 sim"
