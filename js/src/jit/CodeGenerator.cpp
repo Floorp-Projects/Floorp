@@ -5006,31 +5006,28 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
                             nargsreg, calleereg, &invoke);
   }
 
-  // Guard that calleereg is an interpreted function with a JSScript or a
-  // wasm function.
-  // If we are constructing, also ensure the callee is a constructor.
+  // Guard that callee allows the [[Call]] or [[Construct]] operation required.
   if (call->mir()->isConstructing()) {
-    masm.branchIfNotInterpretedConstructor(calleereg, nargsreg, &invoke);
+    masm.branchTestFunctionFlags(calleereg, FunctionFlags::CONSTRUCTOR,
+                                 Assembler::Zero, &invoke);
   } else {
-    // See visitCallKnown.
-    if (call->mir()->needsArgCheck()) {
-      masm.branchIfFunctionHasNoJitEntry(calleereg, /* isConstructing */ false,
-                                         &invoke);
-    } else {
-      masm.branchIfFunctionHasNoScript(calleereg, &invoke);
-    }
     masm.branchFunctionKind(Assembler::Equal, FunctionFlags::ClassConstructor,
                             calleereg, objreg, &invoke);
   }
 
-  if (call->mir()->maybeCrossRealm()) {
-    masm.switchToObjectRealm(calleereg, objreg);
-  }
-
+  // Load jitCodeRaw for callee if exists. See visitCallKnown.
   if (call->mir()->needsArgCheck()) {
+    masm.branchIfFunctionHasNoJitEntry(calleereg, call->mir()->isConstructing(),
+                                       &invoke);
     masm.loadJitCodeRaw(calleereg, objreg);
   } else {
+    masm.branchIfFunctionHasNoScript(calleereg, &invoke);
     masm.loadJitCodeNoArgCheck(calleereg, objreg);
+  }
+
+  // Target may be a different realm even if same compartment.
+  if (call->mir()->maybeCrossRealm()) {
+    masm.switchToObjectRealm(calleereg, nargsreg);
   }
 
   // Nestle the StackPointer up to the argument vector.
