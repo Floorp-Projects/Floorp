@@ -1137,8 +1137,12 @@ nsDataObj ::GetFileContentsInternetShortcut(FORMATETC& aFE, STGMEDIUM& aSTG) {
 
     nsAutoString aUriHash;
 
-    mozilla::widget::FaviconHelper::ObtainCachedIconFile(aUri, aUriHash,
-                                                         mIOThread, true);
+    mozilla::widget::FaviconHelper::ObtainCachedIconFile(
+        aUri, aUriHash, mIOThread, true,
+        NS_NewRunnableFunction("FaviconHelper::RefreshDesktop", [] {
+          SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE,
+                            SPI_SETNONCLIENTMETRICS, 0);
+        }));
 
     rv = mozilla::widget::FaviconHelper::GetOutputIconPath(aUri, icoFile, true);
     NS_ENSURE_SUCCESS(rv, E_FAIL);
