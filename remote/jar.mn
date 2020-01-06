@@ -29,7 +29,7 @@ remote.jar:
   content/targets/TabObserver.jsm (targets/TabObserver.jsm)
   content/targets/TabTarget.jsm (targets/TabTarget.jsm)
   content/targets/Target.jsm (targets/Target.jsm)
-  content/targets/Targets.jsm (targets/Targets.jsm)
+  content/targets/TargetList.jsm (targets/TargetList.jsm)
 
   # domains
   content/domains/ContentProcessDomain.jsm (domains/ContentProcessDomain.jsm)
