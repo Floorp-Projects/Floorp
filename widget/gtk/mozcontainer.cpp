@@ -42,6 +42,13 @@ using namespace mozilla;
 using namespace mozilla::widget;
 #endif
 
+#ifdef MOZ_WAYLAND
+// Declaration from nsWindow, we don't want to include whole nsWindow.h file
+// here just for it.
+wl_region* CreateOpaqueRegionWayland(int aX, int aY, int aWidth, int aHeight,
+                                     bool aSubtractCorners);
+#endif
+
 /* init methods */
 static void moz_container_class_init(MozContainerClass* klass);
 static void moz_container_init(MozContainer* container);
@@ -208,11 +215,12 @@ void moz_container_init(MozContainer* container) {
   container->surface = nullptr;
   container->subsurface = nullptr;
   container->eglwindow = nullptr;
-  container->opaque_region = nullptr;
   container->frame_callback_handler = nullptr;
   container->frame_callback_handler_surface_id = -1;
   // We can draw to x11 window any time.
   container->ready_to_draw = gfxPlatformGtk::GetPlatform()->IsX11Display();
+  container->opaque_region_needs_update = false;
+  container->opaque_region_subtract_corners = false;
   container->surface_needs_clear = true;
   container->subsurface_dx = 0;
   container->subsurface_dy = 0;
@@ -329,11 +337,6 @@ static void moz_container_unmap_wayland(MozContainer* container) {
 
   container->surface_needs_clear = true;
   container->ready_to_draw = false;
-
-  if (container->opaque_region) {
-    wl_region_destroy(container->opaque_region);
-    container->opaque_region = nullptr;
-  }
 
   LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)container));
 }
@@ -566,6 +569,18 @@ static void moz_container_add(GtkContainer* container, GtkWidget* widget) {
 }
 
 #ifdef MOZ_WAYLAND
+static void moz_container_set_opaque_region(MozContainer* container) {
+  GtkAllocation allocation;
+  gtk_widget_get_allocation(GTK_WIDGET(container), &allocation);
+
+  // Set region to mozcontainer which does not have any offset
+  wl_region* region =
+      CreateOpaqueRegionWayland(0, 0, allocation.width, allocation.height,
+                                container->opaque_region_subtract_corners);
+  wl_surface_set_opaque_region(container->surface, region);
+  wl_region_destroy(region);
+}
+
 struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
   LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
               (void*)container, (void*)container->surface,
@@ -615,7 +630,10 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
                        container->subsurface_dy);
   }
 
-  wl_surface_set_opaque_region(container->surface, container->opaque_region);
+  if (container->opaque_region_needs_update) {
+    moz_container_set_opaque_region(container);
+    container->opaque_region_needs_update = false;
+  }
 
   return container->surface;
 }
@@ -655,12 +673,10 @@ gboolean moz_container_surface_needs_clear(MozContainer* container) {
   return ret;
 }
 
-void moz_container_set_opaque_region(MozContainer* container,
-                                     wl_region* opaque_region) {
-  if (container->opaque_region) {
-    wl_region_destroy(container->opaque_region);
-  }
-  container->opaque_region = opaque_region;
+void moz_container_update_opaque_region(MozContainer* container,
+                                        bool aSubtractCorners) {
+  container->opaque_region_needs_update = true;
+  container->opaque_region_subtract_corners = aSubtractCorners;
 }
 #endif
 
