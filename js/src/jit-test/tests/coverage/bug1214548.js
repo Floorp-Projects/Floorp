@@ -1,3 +1,5 @@
+// |jit-test| --code-coverage
+
 if (!('oomTest' in this))
     quit();
 

@@ -2896,6 +2896,10 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
 
   // Collect the list of scripts which are part of the current realm.
 
+  MOZ_RELEASE_ASSERT(
+      coverage::IsLCovEnabled(),
+      "Coverage must be enabled for process before generating LCov info");
+
   // Hold the scripts that we have already flushed, to avoid flushing them
   // twice.
   using JSScriptSet = GCHashSet<JSScript*>;
@@ -2927,13 +2931,18 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
     RootedFunction fun(cx);
 
     JSScriptSet::AddPtr entry = scriptsDone.lookupForAdd(script);
-    if (script->filename() && !entry) {
-      realm->collectCodeCoverageInfo(script, script->filename());
-      script->resetScriptCounts();
+    if (entry) {
+      continue;
+    }
 
-      if (!scriptsDone.add(entry, script)) {
-        return false;
-      }
+    if (!coverage::CollectScriptCoverage(script, false)) {
+      return false;
+    }
+
+    script->resetScriptCounts();
+
+    if (!scriptsDone.add(entry, script)) {
+      return false;
     }
 
     if (!script->isTopLevel()) {

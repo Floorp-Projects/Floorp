@@ -666,17 +666,16 @@ void js::Nursery::forwardBufferPointer(HeapSlot** pSlotsElems) {
 
   // The new location for this buffer is either stored inline with it or in
   // the forwardedBuffers table.
-  do {
-    if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(old)) {
-      *pSlotsElems = reinterpret_cast<HeapSlot*>(p->value());
-      break;
-    }
-
+  if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(old)) {
+    *pSlotsElems = reinterpret_cast<HeapSlot*>(p->value());
+    // It's not valid to assert IsWriteableAddress for indirect forwarding
+    // pointers because the size of the allocation could be less than a word.
+  } else {
     *pSlotsElems = *reinterpret_cast<HeapSlot**>(old);
-  } while (false);
+    MOZ_ASSERT(IsWriteableAddress(*pSlotsElems));
+  }
 
   MOZ_ASSERT(!isInside(*pSlotsElems));
-  MOZ_ASSERT(IsWriteableAddress(*pSlotsElems));
 }
 
 js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)

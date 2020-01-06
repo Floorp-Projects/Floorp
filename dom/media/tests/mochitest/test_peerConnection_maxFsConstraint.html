@@ -81,11 +81,13 @@
 
   runNetworkTest(async () => {
     await pushPrefs(['media.peerconnection.video.lock_scaling', true]);
-    await testScale("VP8");
-    if (!navigator.appVersion.includes("Android")) {
-      // No support for H.264 on Android in automation, see Bug 1355786
-      await testScale("H264");
+    await testScale("H264");
+    // H.264 is prefered on Android for there is HW codec. Disable that to test
+    // VP8.
+    if (navigator.appVersion.includes("Android")) {
+      await pushPrefs(["media.webrtc.hw.h264.enabled", false]);
     }
+    await testScale("VP8");
     networkTestFinished();
   });
 </script>

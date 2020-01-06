@@ -14,7 +14,7 @@ from recommonmark.transform import AutoStructify
 
 # Set up Python environment to load build system packages.
 OUR_DIR = os.path.dirname(__file__)
-topsrcdir = os.path.normpath(os.path.join(OUR_DIR, '..', '..'))
+topsrcdir = os.path.normpath(os.path.join(OUR_DIR, '..'))
 
 EXTRA_PATHS = (
     'layout/tools/reftest',

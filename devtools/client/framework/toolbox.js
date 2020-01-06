@@ -1966,13 +1966,13 @@ Toolbox.prototype = {
 
     if (
       !ResponsiveUIManager.isActiveForTab(localTab) ||
-      (await !this.target.actorHasMethod("emulation", "setElementPickerState"))
+      (await !this.target.actorHasMethod("responsive", "setElementPickerState"))
     ) {
       return;
     }
 
     const ui = ResponsiveUIManager.getResponsiveUIForTab(localTab);
-    await ui.emulationFront.setElementPickerState(state);
+    await ui.responsiveFront.setElementPickerState(state);
   },
 
   /**

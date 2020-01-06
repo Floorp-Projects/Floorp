@@ -288,10 +288,6 @@ CssRuleView.prototype = {
     return this._dummyElement;
   },
 
-  get emulationFront() {
-    return this._emulationFront;
-  },
-
   // Get the highlighters overlay from the Inspector.
   get highlighters() {
     if (!this._highlighters) {
@@ -405,15 +401,28 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Initializes the emulation front and enable the print and color scheme simulation
+   * Initializes the content-viewer front and enable the print and color scheme simulation
    * if they are supported in the current target.
    */
   async _initSimulationFeatures() {
-    // In order to query if the emulation actor's print and color simulation methods are
-    // supported, we have to call the emulation front so that the actor is lazily loaded.
+    // In order to query if the content-viewer actor's print and color simulation methods are
+    // supported, we have to call the content-viewer front so that the actor is lazily loaded.
     // This allows us to use `actorHasMethod`. Please see `getActorDescription` for more
     // information.
-    this._emulationFront = await this.currentTarget.getFront("emulation");
+    try {
+      this.contentViewerFront = await this.currentTarget.getFront(
+        "contentViewer"
+      );
+    } catch (e) {
+      console.error(e);
+    }
+
+    // Bug 1606852: For backwards compatibility, we need to get the emulation actor. The ContentViewer
+    // actor is only available in Firefox 73 or newer. We can remove this call when Firefox 73
+    // is on release.
+    if (!this.contentViewerFront) {
+      this.contentViewerFront = await this.currentTarget.getFront("emulation");
+    }
 
     if (!this.currentTarget.chrome) {
       this.printSimulationButton.removeAttribute("hidden");
@@ -426,14 +435,22 @@ CssRuleView.prototype = {
     // Show the color scheme simulation toggle button if:
     // - The feature pref is enabled.
     // - Color scheme simulation is supported for the current target.
+    const isEmulateColorSchemeSupported =
+      (await this.currentTarget.actorHasMethod(
+        "contentViewer",
+        "getEmulatedColorScheme"
+      )) ||
+      // Bug 1606852: We can removed this check when Firefox 73 is on release.
+      (await this.currentTarget.actorHasMethod(
+        "emulation",
+        "getEmulatedColorScheme"
+      ));
+
     if (
       Services.prefs.getBoolPref(
         "devtools.inspector.color-scheme-simulation.enabled"
       ) &&
-      (await this.currentTarget.actorHasMethod(
-        "emulation",
-        "getEmulatedColorScheme"
-      ))
+      isEmulateColorSchemeSupported
     ) {
       this.colorSchemeSimulationButton.removeAttribute("hidden");
       this.colorSchemeSimulationButton.addEventListener(
@@ -847,7 +864,7 @@ CssRuleView.prototype = {
     }
 
     // Clean-up for print simulation.
-    if (this._emulationFront) {
+    if (this.contentViewerFront) {
       this.colorSchemeSimulationButton.removeEventListener(
         "click",
         this._onToggleColorSchemeSimulation
@@ -857,11 +874,11 @@ CssRuleView.prototype = {
         this._onTogglePrintSimulation
       );
 
-      this._emulationFront.destroy();
+      this.contentViewerFront.destroy();
 
       this.colorSchemeSimulationButton = null;
       this.printSimulationButton = null;
-      this._emulationFront = null;
+      this.contentViewerFront = null;
     }
 
     this.tooltips.destroy();
@@ -1739,7 +1756,7 @@ CssRuleView.prototype = {
   },
 
   async _onToggleColorSchemeSimulation() {
-    const currentState = await this.emulationFront.getEmulatedColorScheme();
+    const currentState = await this.contentViewerFront.getEmulatedColorScheme();
     const index = COLOR_SCHEMES.indexOf(currentState);
     const nextState = COLOR_SCHEMES[(index + 1) % COLOR_SCHEMES.length];
 
@@ -1749,19 +1766,19 @@ CssRuleView.prototype = {
       this.colorSchemeSimulationButton.removeAttribute("state");
     }
 
-    await this.emulationFront.setEmulatedColorScheme(nextState);
+    await this.contentViewerFront.setEmulatedColorScheme(nextState);
     this.refreshPanel();
   },
 
   async _onTogglePrintSimulation() {
-    const enabled = await this.emulationFront.getIsPrintSimulationEnabled();
+    const enabled = await this.contentViewerFront.getIsPrintSimulationEnabled();
 
     if (!enabled) {
       this.printSimulationButton.classList.add("checked");
-      await this.emulationFront.startPrintMediaSimulation();
+      await this.contentViewerFront.startPrintMediaSimulation();
     } else {
       this.printSimulationButton.classList.remove("checked");
-      await this.emulationFront.stopPrintMediaSimulation(false);
+      await this.contentViewerFront.stopPrintMediaSimulation(false);
     }
 
     // Refresh the current element's rules in the panel.

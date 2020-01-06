@@ -3179,7 +3179,7 @@ function ErrorRep(props) {
   const mode = props.mode;
   let name;
 
-  if (preview && preview.name && preview.kind) {
+  if (preview && preview.name && typeof preview.name === "string" && preview.kind) {
     switch (preview.kind) {
       case "Error":
         name = preview.name;
@@ -3198,7 +3198,7 @@ function ErrorRep(props) {
 
   const content = [];
 
-  if (mode === MODE.TINY) {
+  if (mode === MODE.TINY || typeof preview.message !== "string") {
     content.push(name);
   } else {
     content.push(`${name}: "${preview.message}"`);

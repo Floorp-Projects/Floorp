@@ -61,7 +61,7 @@ function workerGroupUsage() {
     }
 
     let url =
-      URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+      URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
 
     let worker = new Worker(url);
     worker.onmessage = function(e) {

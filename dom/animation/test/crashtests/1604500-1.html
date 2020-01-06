@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+<script>
+function start () {
+  const keyframe = new KeyframeEffect(undefined, {});
+  const animation = new Animation(keyframe, undefined);
+  // Make animation run backwards...
+  animation.playbackRate = -100;
+  // But then set the current time to the future so it becomes "current"...
+  animation.currentTime = 2055;
+  // After updating the playback rate to zero, however, it should no longer
+  // be "current" (and this takes effect immediately because |animation| is
+  // paused)...
+  animation.updatePlaybackRate(0);
+  // Now update the target and hope nothing goes wrong...
+  keyframe.target = div;
+}
+
+document.addEventListener('DOMContentLoaded', start)
+</script>
+</head>
+<div id=div></div>
+</html>

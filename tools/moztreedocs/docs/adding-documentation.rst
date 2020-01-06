@@ -23,7 +23,7 @@ for it:
    documentation for, you can use ``SPHINX_PYTHON_PACKAGE_DIRS`` to
    declare directories containing Python packages. e.g.
    ``SPHINX_PYTHON_PACKAGE_DIRS += ['mozpackage']``.
-5. In ``tools/docs/config.yml``, defines in which category the doc
+5. In ``docs/config.yml``, defines in which category the doc
    should go.
 6. Verify the rst syntax using `./mach lint -l rst`_
 

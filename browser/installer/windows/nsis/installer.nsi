@@ -945,11 +945,6 @@ Function CheckExistingInstall
 FunctionEnd
 
 Function LaunchApp
-!ifndef DEV_EDITION
-  ${ManualCloseAppPrompt} "${MainWindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
-  ${ManualCloseAppPrompt} "${DialogWindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
-!endif
-
   ClearErrors
   ${GetParameters} $0
   ${GetOptions} "$0" "/UAC:" $1

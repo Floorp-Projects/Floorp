@@ -6579,7 +6579,7 @@ NS_CycleCollectorSuspectUsingNursery
 ?HasFocus@Document@dom@mozilla@@QBE_NAAVErrorResult@3@@Z
 ?GetFocusedWindow@nsFocusManager@@UAG?AW4nsresult@@PAPAVmozIDOMWindowProxy@@@Z
 ?GetCsp@SystemPrincipal@mozilla@@UAG?AW4nsresult@@PAPAVnsIContentSecurityPolicy@@@Z
-?InnerSetNewDocument@nsGlobalWindowInner@@IAEXPAUJSContext@@PAVDocument@dom@mozilla@@@Z
+?InitDocumentDependentState@nsGlobalWindowInner@@IAEXPAUJSContext@@@Z
 ?WrapObject@nsINode@@UAEPAVJSObject@@PAUJSContext@@V?$Handle@PAVJSObject@@@JS@@@Z
 ?WrapNode@nsHTMLDocument@@UAEPAVJSObject@@PAUJSContext@@V?$Handle@PAVJSObject@@@JS@@@Z
 ?Wrap@HTMLDocument_Binding@dom@mozilla@@YA_NPAUJSContext@@PAVnsHTMLDocument@@PAVnsWrapperCache@@V?$Handle@PAVJSObject@@@JS@@V?$MutableHandle@PAVJSObject@@@8@@Z

@@ -84,7 +84,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667388
       return;
     return new Promise(function(resolve) {
       p.then(function(cloneResult) {
-        is(Cu.waiveXrays(cloneResult).toSource(), win2.wrappedJSObject.testObject.toSource(),
+        is(JSON.stringify(Cu.waiveXrays(cloneResult)),
+           JSON.stringify(win2.wrappedJSObject.testObject),
            "Clone should create an identical object");
         resolve();
       });

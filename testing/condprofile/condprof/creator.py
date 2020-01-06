@@ -80,6 +80,9 @@ class ProfileCreator:
         LOG("Archive created at %s" % archive_name)
         statinfo = os.stat(archive_name)
         LOG("Current size is %d" % statinfo.st_size)
+        if metadata.get("result", 0) != 0:
+            LOG("The scenario returned a bad exit code")
+            raise Exception("scenario error")
         self.changelog.append("update", **metadata)
 
     async def build_profile(self, device, headless):

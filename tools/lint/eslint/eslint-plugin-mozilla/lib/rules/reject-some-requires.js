@@ -12,6 +12,8 @@
 // Rule Definition
 // -----------------------------------------------------------------------------
 
+var helpers = require("../helpers");
+
 module.exports = function(context) {
   // ---------------------------------------------------------------------------
   // Public
@@ -22,30 +24,11 @@ module.exports = function(context) {
   }
   const RX = new RegExp(context.options[0]);
 
-  const checkPath = function(node, path) {
-    if (RX.test(path)) {
-      context.report(node, `require(${path}) is not allowed`);
-    }
-  };
-
   return {
     CallExpression(node) {
-      if (
-        node.callee.type == "Identifier" &&
-        node.callee.name == "require" &&
-        node.arguments.length == 1 &&
-        node.arguments[0].type == "Literal"
-      ) {
-        checkPath(node, node.arguments[0].value);
-      } else if (
-        node.callee.type == "MemberExpression" &&
-        node.callee.property.type == "Identifier" &&
-        (node.callee.property.name == "lazyRequireGetter" ||
-          node.callee.property.name == "lazyImporter") &&
-        node.arguments.length >= 3 &&
-        node.arguments[2].type == "Literal"
-      ) {
-        checkPath(node, node.arguments[2].value);
+      const path = helpers.getDevToolsRequirePath(node);
+      if (path && RX.test(path)) {
+        context.report(node, `require(${path}) is not allowed`);
       }
     },
   };

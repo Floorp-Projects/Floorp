@@ -1,3 +1,5 @@
+// |jit-test| skip-if: isLcovEnabled()
+
 /*
  * Most of these test cases are adapted from:
  * http://johnjbarton.github.com/nonymous/index.html

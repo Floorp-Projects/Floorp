@@ -25,11 +25,11 @@ function storeSVGPropertyAsExpando(localName, prop) {
     elem.addEventListener("click", function() {});
 
     var propVal = elem[prop];
-    Object.prototype.toSource[prop + "_expando"] = propVal;
+    Object.prototype.valueOf[prop + "_expando"] = propVal;
     if (propVal instanceof SVGAnimatedAngle || propVal instanceof SVGAnimatedLength ||
         propVal instanceof SVGAnimatedRect || propVal instanceof SVGAnimatedPreserveAspectRatio) {
-        Object.prototype.toSource[prop + "_baseVal_expando"] = propVal.baseVal;
-        Object.prototype.toSource[prop + "_animVal_expando"] = propVal.animVal;
+        Object.prototype.valueOf[prop + "_baseVal_expando"] = propVal.baseVal;
+        Object.prototype.valueOf[prop + "_animVal_expando"] = propVal.animVal;
     }
 }
 
@@ -73,7 +73,7 @@ document.getElementById("content").appendChild(elem1);
 
 elem2.addEventListener("click", function() {});
 
-Object.prototype.toSource.expando = elem1;
+Object.prototype.valueOf.expando = elem1;
 
 ok(true, "SVG shouldn't leak.");
 

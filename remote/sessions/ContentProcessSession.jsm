@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["ContentProcessSession"];
 const { ContentProcessDomains } = ChromeUtils.import(
   "chrome://remote/content/domains/ContentProcessDomains.jsm"
 );
-const { Domains } = ChromeUtils.import(
-  "chrome://remote/content/domains/Domains.jsm"
+const { DomainCache } = ChromeUtils.import(
+  "chrome://remote/content/domains/DomainCache.jsm"
 );
 
 class ContentProcessSession {
@@ -23,7 +23,7 @@ class ContentProcessSession {
     // implements the following interface. So do the QI only once from here.
     this.docShell.QueryInterface(Ci.nsIWebNavigation);
 
-    this.domains = new Domains(this, ContentProcessDomains);
+    this.domains = new DomainCache(this, ContentProcessDomains);
     this.messageManager.addMessageListener("remote:request", this);
     this.messageManager.addMessageListener("remote:destroy", this);
   }

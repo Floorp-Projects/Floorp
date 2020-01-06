@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Targets"];
+var EXPORTED_SYMBOLS = ["TargetList"];
 
 const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
@@ -22,7 +22,7 @@ const { TabObserver } = ChromeUtils.import(
   "chrome://remote/content/targets/TabObserver.jsm"
 );
 
-class Targets {
+class TargetList {
   constructor() {
     // Target ID -> Target
     this._targets = new Map();
@@ -157,6 +157,6 @@ class Targets {
   }
 
   toString() {
-    return `[object Targets ${this.size}]`;
+    return `[object TargetList ${this.size}]`;
   }
 }

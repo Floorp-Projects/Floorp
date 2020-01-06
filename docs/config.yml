@@ -3,6 +3,8 @@
 # The order of the main categories are defined in index.rst
 # Sub categories orders are preserved
 categories:
+    contributing_doc:
+        - contributing
     source_doc:
         - browser
         - dom
@@ -21,7 +23,7 @@ categories:
         - tools/try
         - build/buildsystem
         - taskcluster
-        - tools/docs
+        - tools/moztreedocs
     testing_doc:
         - testing/marionette
         - testing/geckodriver
@@ -52,3 +54,4 @@ redirects:
     testing/marionette/marionette: testing/marionette
     toolkit/components/telemetry/telemetry: toolkit/components/telemetry
     tools/compare-locales/index.html: build/buildsystem/locales.html
+    tools/docs/index.html: tools/moztreedocs/index.html

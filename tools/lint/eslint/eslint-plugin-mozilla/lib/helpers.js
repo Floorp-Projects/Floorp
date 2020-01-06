@@ -810,4 +810,28 @@ module.exports = {
   getSavedRuleData(rule) {
     return require("./rules/saved-rules-data.json").rulesData[rule];
   },
+
+  /**
+   * Extract the path of require (and require-like) helpers used in DevTools.
+   */
+  getDevToolsRequirePath(node) {
+    if (
+      node.callee.type == "Identifier" &&
+      node.callee.name == "require" &&
+      node.arguments.length == 1 &&
+      node.arguments[0].type == "Literal"
+    ) {
+      return node.arguments[0].value;
+    } else if (
+      node.callee.type == "MemberExpression" &&
+      node.callee.property.type == "Identifier" &&
+      (node.callee.property.name == "lazyRequireGetter" ||
+        node.callee.property.name == "lazyImporter") &&
+      node.arguments.length >= 3 &&
+      node.arguments[2].type == "Literal"
+    ) {
+      return node.arguments[2].value;
+    }
+    return null;
+  },
 };

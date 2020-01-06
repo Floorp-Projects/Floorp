@@ -206,7 +206,7 @@ class ResponsiveUI {
       await message.request(this.toolWindow, "start-frame-script");
     }
 
-    // Get the protocol ready to speak with emulation actor
+    // Get the protocol ready to speak with responsive emulation actor
     debug("Wait until RDP server connect");
     await this.connectToServer();
 
@@ -214,7 +214,7 @@ class ResponsiveUI {
     await this.restoreState();
 
     if (this.isBrowserUIEnabled) {
-      await this.emulationFront.setDocumentInRDMPane(true);
+      await this.responsiveFront.setDocumentInRDMPane(true);
     }
 
     if (!this.isBrowserUIEnabled) {
@@ -316,7 +316,7 @@ class ResponsiveUI {
     }
 
     if (this.isBrowserUIEnabled) {
-      await this.emulationFront.setDocumentInRDMPane(false);
+      await this.responsiveFront.setDocumentInRDMPane(false);
     }
 
     this.tab.removeEventListener("TabClose", this);
@@ -368,14 +368,14 @@ class ResponsiveUI {
     this.toolWindow = null;
     this.swap = null;
 
-    // Close the debugger client used to speak with emulation actor.
+    // Close the debugger client used to speak with responsive emulation actor.
     // The actor handles clearing any overrides itself, so it's not necessary to clear
     // anything on shutdown client side.
     const clientClosed = this.client.close();
     if (!isTabContentDestroying) {
       await clientClosed;
     }
-    this.client = this.emulationFront = null;
+    this.client = this.responsiveFront = null;
 
     if (!this.isBrowserUIEnabled && !isWindowClosing) {
       // Undo the swap and return the content back to a normal tab
@@ -395,11 +395,11 @@ class ResponsiveUI {
     this.client = new DebuggerClient(DebuggerServer.connectPipe());
     await this.client.connect();
     const targetFront = await this.client.mainRoot.getTab();
-    this.emulationFront = await targetFront.getFront("emulation");
+    this.responsiveFront = await targetFront.getFront("responsive");
   }
 
   /**
-   * Show one-time notification about reloads for emulation.
+   * Show one-time notification about reloads for responsive emulation.
    */
   showReloadNotification() {
     if (Services.prefs.getBoolPref(RELOAD_NOTIFICATION_PREF, false)) {
@@ -597,12 +597,12 @@ class ResponsiveUI {
   async onScreenshot() {
     const targetFront = await this.client.mainRoot.getTab();
     const captureScreenshotSupported = await targetFront.actorHasMethod(
-      "emulation",
+      "responsive",
       "captureScreenshot"
     );
 
     if (captureScreenshotSupported) {
-      const data = await this.emulationFront.captureScreenshot();
+      const data = await this.responsiveFront.captureScreenshot();
       await saveScreenshot(this.browserWindow, {}, data);
 
       message.post(this.rdmFrame.contentWindow, "screenshot-captured");
@@ -698,10 +698,10 @@ class ResponsiveUI {
    */
   async updateDPPX(dppx) {
     if (!dppx) {
-      await this.emulationFront.clearDPPXOverride();
+      await this.responsiveFront.clearDPPXOverride();
       return false;
     }
-    await this.emulationFront.setDPPXOverride(dppx);
+    await this.responsiveFront.setDPPXOverride(dppx);
     return false;
   }
 
@@ -714,12 +714,12 @@ class ResponsiveUI {
    */
   async updateNetworkThrottling(enabled, profile) {
     if (!enabled) {
-      await this.emulationFront.clearNetworkThrottling();
+      await this.responsiveFront.clearNetworkThrottling();
       return false;
     }
     const data = throttlingProfiles.find(({ id }) => id == profile);
     const { download, upload, latency } = data;
-    await this.emulationFront.setNetworkThrottling({
+    await this.responsiveFront.setNetworkThrottling({
       downloadThroughput: download,
       uploadThroughput: upload,
       latency,
@@ -735,9 +735,9 @@ class ResponsiveUI {
    */
   updateUserAgent(userAgent) {
     if (!userAgent) {
-      return this.emulationFront.clearUserAgentOverride();
+      return this.responsiveFront.clearUserAgentOverride();
     }
-    return this.emulationFront.setUserAgentOverride(userAgent);
+    return this.responsiveFront.setUserAgentOverride(userAgent);
   }
 
   /**
@@ -758,18 +758,18 @@ class ResponsiveUI {
         false
       );
 
-      reloadNeeded = await this.emulationFront.setTouchEventsOverride(
+      reloadNeeded = await this.responsiveFront.setTouchEventsOverride(
         Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
       );
 
       if (metaViewportEnabled) {
-        reloadNeeded |= await this.emulationFront.setMetaViewportOverride(
+        reloadNeeded |= await this.responsiveFront.setMetaViewportOverride(
           Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_ENABLED
         );
       }
     } else {
-      reloadNeeded = await this.emulationFront.clearTouchEventsOverride();
-      reloadNeeded |= await this.emulationFront.clearMetaViewportOverride();
+      reloadNeeded = await this.responsiveFront.clearTouchEventsOverride();
+      reloadNeeded |= await this.responsiveFront.clearMetaViewportOverride();
     }
     return reloadNeeded;
   }
@@ -791,13 +791,13 @@ class ResponsiveUI {
   async updateScreenOrientation(type, angle, isViewportRotated = false) {
     const targetFront = await this.client.mainRoot.getTab();
     const simulateOrientationChangeSupported = await targetFront.actorHasMethod(
-      "emulation",
+      "responsive",
       "simulateScreenOrientationChange"
     );
 
     // Ensure that simulateScreenOrientationChange is supported.
     if (simulateOrientationChangeSupported) {
-      await this.emulationFront.simulateScreenOrientationChange(
+      await this.responsiveFront.simulateScreenOrientationChange(
         type,
         angle,
         isViewportRotated

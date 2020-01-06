@@ -256,28 +256,6 @@ def main(argv):
     if read_all:
         test_list = jittests.find_tests(run_binast=options.run_binast)
 
-    # Exclude tests when code coverage is enabled.
-    # This part is equivalent to:
-    # skip-if = ccov
-    if os.getenv('JS_CODE_COVERAGE_OUTPUT_DIR') is not None:
-        # JSVM errors.
-        options.exclude += [os.path.join('basic', 'functionnames.js')]           # Bug 1369783
-        options.exclude += [os.path.join('debug', 'Debugger-findScripts-23.js')]
-        options.exclude += [os.path.join('debug', 'bug1160182.js')]
-        options.exclude += [os.path.join('xdr', 'incremental-encoder.js')]
-        options.exclude += [os.path.join('xdr', 'bug1186973.js')]                # Bug 1369785
-        options.exclude += [os.path.join('xdr', 'relazify.js')]
-        options.exclude += [os.path.join('basic', 'werror.js')]
-
-        # Prevent code coverage test that expects coverage
-        # to be off when it starts.
-        options.exclude += [os.path.join('debug', 'Script-getOffsetsCoverage-02.js')]
-
-        # These tests expect functions to be parsed lazily, but lazy parsing
-        # is disabled on coverage build.
-        options.exclude += [os.path.join('debug', 'Debugger-findScripts-uncompleted-01.js')]
-        options.exclude += [os.path.join('debug', 'Debugger-findScripts-uncompleted-02.js')]
-
     if options.exclude_from:
         with open(options.exclude_from) as fh:
             for line in fh:

@@ -95,6 +95,14 @@ PermissionDelegateHandler::MaybeUnsafePermissionDelegate(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PermissionDelegateHandler::GetPermissionDelegateFPEnabled(bool* aEnabled) {
+  MOZ_ASSERT(NS_IsMainThread());
+  *aEnabled = StaticPrefs::permissions_delegation_enabled() &&
+              StaticPrefs::dom_security_featurePolicy_enabled();
+  return NS_OK;
+}
+
 /* static */
 nsresult PermissionDelegateHandler::GetDelegatePrincipal(
     const nsACString& aType, nsIContentPermissionRequest* aRequest,

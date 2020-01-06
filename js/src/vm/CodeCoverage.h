@@ -77,9 +77,6 @@ class LCovRealm {
   explicit LCovRealm(JS::Realm* realm);
   ~LCovRealm();
 
-  // Collect code coverage information for the given source.
-  void collectCodeCoverageInfo(JSScript* script, const char* name);
-
   // Write the Lcov output in a buffer, such as the one associated with
   // the runtime code coverage trace file.
   void exportInto(GenericPrinter& out, bool* isEmpty) const;
@@ -171,9 +168,8 @@ inline bool IsLCovEnabled() {
 // Initialize coverage info to track code coverage for a JSScript.
 bool InitScriptCoverage(JSContext* cx, JSScript* script);
 
-// Collect the code-coverage data from a script into relevant LCovSource. This
-// operations is infalible as it is typically called from JSScript finalizer.
-void CollectScriptCoverage(JSScript* script);
+// Collect the code-coverage data from a script into relevant LCovSource.
+bool CollectScriptCoverage(JSScript* script, bool finalizing);
 
 }  // namespace coverage
 }  // namespace js

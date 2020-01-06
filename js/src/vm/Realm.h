@@ -783,9 +783,6 @@ class JS::Realm : public JS::shadow::Realm {
   // Get or allocate the associated LCovRealm.
   js::coverage::LCovRealm* lcovRealm();
 
-  // Collect coverage info from a script and aggregate into this realm.
-  void collectCodeCoverageInfo(JSScript* script, const char* name);
-
   // Initializes randomNumberGenerator if needed.
   mozilla::non_crypto::XorShift128PlusRNG& getOrCreateRandomNumberGenerator();
 

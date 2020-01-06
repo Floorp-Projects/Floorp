@@ -14167,7 +14167,7 @@ bool TransactionBase::VerifyRequestParams(
   if (objMetadata->mCommonMetadata.autoIncrement() &&
       objMetadata->mCommonMetadata.keyPath().IsValid() &&
       aParams.key().IsUnset()) {
-    const SerializedStructuredCloneWriteInfo cloneInfo = aParams.cloneInfo();
+    const SerializedStructuredCloneWriteInfo& cloneInfo = aParams.cloneInfo();
 
     if (NS_WARN_IF(!cloneInfo.offsetToKeyProp())) {
       ASSERT_UNLESS_FUZZING();
@@ -24324,8 +24324,6 @@ mozilla::ipc::IPCResult NormalTransactionOp::RecvContinue(
       break;
 
     case PreprocessResponse::TObjectStoreGetPreprocessResponse:
-      break;
-
     case PreprocessResponse::TObjectStoreGetAllPreprocessResponse:
       break;
 
@@ -24583,9 +24581,9 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
   // if we allow overwrite or not. By not allowing overwrite we raise
   // detectable errors rather than corrupting data.
   DatabaseConnection::CachedStatement stmt;
-  const auto& optReplaceDirective = (!mOverwrite || keyUnset)
-                                        ? NS_LITERAL_CSTRING("")
-                                        : NS_LITERAL_CSTRING("OR REPLACE ");
+  const auto optReplaceDirective = (!mOverwrite || keyUnset)
+                                       ? NS_LITERAL_CSTRING("")
+                                       : NS_LITERAL_CSTRING("OR REPLACE ");
   rv = aConnection->GetCachedStatement(
       NS_LITERAL_CSTRING("INSERT ") + optReplaceDirective +
           NS_LITERAL_CSTRING("INTO object_data "
@@ -26427,9 +26425,9 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
 
   const bool usingKeyRange = mOptionalKeyRange.isSome();
 
-  const auto& indexTable = mCursor->mUniqueIndex
-                               ? NS_LITERAL_CSTRING("unique_index_data")
-                               : NS_LITERAL_CSTRING("index_data");
+  const auto indexTable = mCursor->mUniqueIndex
+                              ? NS_LITERAL_CSTRING("unique_index_data")
+                              : NS_LITERAL_CSTRING("index_data");
 
   // The result of MakeColumnPairSelectionList is stored in a local variable,
   // since inlining it into the next statement causes a crash on some Mac OS X
@@ -26533,9 +26531,9 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
 
   const bool usingKeyRange = mOptionalKeyRange.isSome();
 
-  const auto& table = mCursor->mUniqueIndex
-                          ? NS_LITERAL_CSTRING("unique_index_data")
-                          : NS_LITERAL_CSTRING("index_data");
+  const auto table = mCursor->mUniqueIndex
+                         ? NS_LITERAL_CSTRING("unique_index_data")
+                         : NS_LITERAL_CSTRING("index_data");
 
   // The result of MakeColumnPairSelectionList is stored in a local variable,
   // since inlining it into the next statement causes a crash on some Mac OS X

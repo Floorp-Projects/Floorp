@@ -1501,10 +1501,6 @@ static inline bool CanStoreCharsAsLatin1(const char16_t* s, size_t length) {
   return IsUtf16Latin1(MakeSpan(s, length));
 }
 
-static bool CanStoreCharsAsLatin1(const Latin1Char* s, size_t length) {
-  MOZ_CRASH("Shouldn't be called for Latin1 chars");
-}
-
 static bool CanStoreCharsAsLatin1(LittleEndianChars chars, size_t length) {
   for (size_t i = 0; i < length; i++) {
     if (chars[i] > JSString::MAX_LATIN1_CHAR) {
@@ -1554,12 +1550,6 @@ static JSLinearString* NewStringDeflated(JSContext* cx, const char16_t* s,
   FillFromCompatible(news.get(), s, n);
 
   return JSLinearString::new_<allowGC>(cx, std::move(news), n);
-}
-
-template <AllowGC allowGC>
-static JSLinearString* NewStringDeflated(JSContext* cx, const Latin1Char* s,
-                                         size_t n) {
-  MOZ_CRASH("Shouldn't be called for Latin1 chars");
 }
 
 static JSLinearString* NewStringDeflatedFromLittleEndianNoGC(
@@ -1618,10 +1608,12 @@ template <typename CharT>
 JSLinearString* js::NewString(JSContext* cx,
                               UniquePtr<CharT[], JS::FreePolicy> chars,
                               size_t length) {
-  if (IsSame<CharT, char16_t>::value &&
-      CanStoreCharsAsLatin1(chars.get(), length)) {
-    // Deflating copies from |chars.get()| and lets |chars| be freed on return.
-    return NewStringDeflated<CanGC>(cx, chars.get(), length);
+  if constexpr (IsSame<CharT, char16_t>::value) {
+    if (CanStoreCharsAsLatin1(chars.get(), length)) {
+      // Deflating copies from |chars.get()| and lets |chars| be freed on
+      // return.
+      return NewStringDeflated<CanGC>(cx, chars.get(), length);
+    }
   }
 
   return NewStringDontDeflate(cx, std::move(chars), length);
@@ -1665,9 +1657,10 @@ template <AllowGC allowGC, typename CharT>
 JSLinearString* js::NewString(JSContext* cx,
                               UniquePtr<CharT[], JS::FreePolicy> chars,
                               size_t length) {
-  if (IsSame<CharT, char16_t>::value &&
-      CanStoreCharsAsLatin1(chars.get(), length)) {
-    return NewStringDeflated<allowGC>(cx, chars.get(), length);
+  if constexpr (IsSame<CharT, char16_t>::value) {
+    if (CanStoreCharsAsLatin1(chars.get(), length)) {
+      return NewStringDeflated<allowGC>(cx, chars.get(), length);
+    }
   }
 
   return NewStringDontDeflate<allowGC>(cx, std::move(chars), length);
@@ -1763,8 +1756,10 @@ JSLinearString* NewLatin1StringZ(JSContext* cx, UniqueChars chars) {
 
 template <AllowGC allowGC, typename CharT>
 JSLinearString* NewStringCopyN(JSContext* cx, const CharT* s, size_t n) {
-  if (IsSame<CharT, char16_t>::value && CanStoreCharsAsLatin1(s, n)) {
-    return NewStringDeflated<allowGC>(cx, s, n);
+  if constexpr (IsSame<CharT, char16_t>::value) {
+    if (CanStoreCharsAsLatin1(s, n)) {
+      return NewStringDeflated<allowGC>(cx, s, n);
+    }
   }
 
   return NewStringCopyNDontDeflate<allowGC>(cx, s, n);

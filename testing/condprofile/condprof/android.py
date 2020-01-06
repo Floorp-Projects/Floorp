@@ -14,7 +14,7 @@ import attr
 from arsenic.services import Geckodriver, free_port, subprocess_based_service
 from mozdevice import ADBDevice, ADBError
 
-from condprof.util import write_yml_file, LOG, _PREFS, ERROR, BaseEnv
+from condprof.util import write_yml_file, LOG, DEFAULT_PREFS, ERROR, BaseEnv
 
 
 # XXX most of this code should migrate into mozdevice - see Bug 1574849
@@ -100,7 +100,7 @@ class AndroidDevice:
         # creating the yml file
         yml_data = {
             "args": ["-marionette", "-profile", self.remote_profile],
-            "prefs": _PREFS,
+            "prefs": DEFAULT_PREFS,
             "env": {"LOG_VERBOSE": 1, "R_LOG_LEVEL": 6, "MOZ_LOG": ""},
         }
 
@@ -187,7 +187,16 @@ class AndroidGeckodriver(Geckodriver):
         await self._check_version()
         LOG("Running Webdriver on port %d" % port)
         LOG("Running Marionette on port 2828")
-        pargs = [self.binary, "-vv", "--port", str(port), "--marionette-port", "2828"]
+        pargs = [
+            self.binary,
+            "-vv",
+            "--log",
+            "trace",
+            "--port",
+            str(port),
+            "--marionette-port",
+            "2828",
+        ]
         LOG("Connecting on Android device")
         pargs.append("--connect-existing")
         return await subprocess_based_service(
@@ -229,11 +238,13 @@ class AndroidEnv(BaseEnv):
     def get_browser(self):
         yield
 
-    def get_browser_args(self, headless):
+    def get_browser_args(self, headless, prefs=None):
         options = []
         if headless:
             options.append("-headless")
-        return {"moz:firefoxOptions": {"args": options}}
+        if prefs is None:
+            prefs = {}
+        return {"moz:firefoxOptions": {"args": options, "prefs": prefs}}
 
     def prepare(self, logfile):
         self.device.prepare(self.profile, logfile)

@@ -724,14 +724,6 @@ void Realm::clearScriptCounts() { zone()->clearScriptCounts(this); }
 
 void Realm::clearScriptLCov() { zone()->clearScriptLCov(this); }
 
-void Realm::collectCodeCoverageInfo(JSScript* script, const char* name) {
-  coverage::LCovRealm* lcov = lcovRealm();
-  if (!lcov) {
-    return;
-  }
-  lcov->collectCodeCoverageInfo(script, name);
-}
-
 void ObjectRealm::addSizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf, size_t* innerViewsArg,
     size_t* objectMetadataTablesArg,

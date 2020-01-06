@@ -26,7 +26,8 @@ runNetworkTest(async () => {
     ['media.navigator.streams.fake', true]);
     // [TODO] re-enable HW decoder after bug 1526207 is fixed.
     if (navigator.userAgent.includes("Android")) {
-      await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false]);
+      await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
+                      ["media.webrtc.hw.h264.enabled", false]);
     }
 
   var originalStream;
