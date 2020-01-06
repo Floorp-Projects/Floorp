@@ -27,7 +27,6 @@ namespace js {
 
 class BaseScopeData;
 class ModuleObject;
-class Scope;
 class AbstractScope;
 
 enum class BindingKind : uint8_t {
@@ -240,6 +239,7 @@ class WrappedPtrOperations<Scope*, Wrapper> {
 //
 class Scope : public js::gc::TenuredCell {
   friend class GCMarker;
+  friend class ScopeCreationData;
 
   // The enclosing scope or nullptr.
   const GCPtrScope enclosing_;
@@ -263,12 +263,6 @@ class Scope : public js::gc::TenuredCell {
   static Scope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
                        HandleShape envShape);
 
-  template <typename ConcreteScope>
-  static ConcreteScope* create(
-      JSContext* cx, ScopeKind kind, HandleScope enclosing,
-      HandleShape envShape,
-      MutableHandle<UniquePtr<typename ConcreteScope::Data>> data);
-
   template <typename ConcreteScope, XDRMode mode>
   static XDRResult XDRSizedBindingNames(
       XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
@@ -283,6 +277,12 @@ class Scope : public js::gc::TenuredCell {
   void applyScopeDataTyped(F&& f);
 
  public:
+  template <typename ConcreteScope>
+  static ConcreteScope* create(
+      JSContext* cx, ScopeKind kind, HandleScope enclosing,
+      HandleShape envShape,
+      MutableHandle<UniquePtr<typename ConcreteScope::Data>> data);
+
   static const JS::TraceKind TraceKind = JS::TraceKind::Scope;
 
   template <typename T>
@@ -308,16 +308,20 @@ class Scope : public js::gc::TenuredCell {
 
   Shape* environmentShape() const { return environmentShape_; }
 
-  bool hasEnvironment() const {
-    switch (kind()) {
+  static bool hasEnvironment(ScopeKind kind, Shape* environmentShape) {
+    switch (kind) {
       case ScopeKind::With:
       case ScopeKind::Global:
       case ScopeKind::NonSyntactic:
         return true;
       default:
         // If there's a shape, an environment must be created for this scope.
-        return environmentShape_ != nullptr;
+        return environmentShape != nullptr;
     }
+  }
+
+  bool hasEnvironment() const {
+    return hasEnvironment(kind_, environmentShape_);
   }
 
   uint32_t chainLength() const;
@@ -389,6 +393,7 @@ class LexicalScope : public Scope {
   friend class Scope;
   friend class BindingIter;
   friend class GCMarker;
+  friend class ScopeCreationData;
 
  public:
   // Data is public because it is created by the frontend. See
@@ -430,7 +435,7 @@ class LexicalScope : public Scope {
 
   static bool prepareForScopeCreation(JSContext* cx, ScopeKind kind,
                                       uint32_t firstFrameSlot,
-                                      HandleScope enclosing,
+                                      Handle<AbstractScope> enclosing,
                                       MutableHandle<UniquePtr<Data>> data,
                                       MutableHandleShape envShape);
 
@@ -617,6 +622,7 @@ class VarScope : public Scope {
   friend class GCMarker;
   friend class BindingIter;
   friend class Scope;
+  friend class ScopeCreationData;
 
  public:
   // Data is public because it is created by the
@@ -791,6 +797,7 @@ class EvalScope : public Scope {
   friend class Scope;
   friend class BindingIter;
   friend class GCMarker;
+  friend class ScopeCreationData;
 
  public:
   // Data is public because it is created by the frontend. See
@@ -879,6 +886,7 @@ class ModuleScope : public Scope {
   friend class BindingIter;
   friend class Scope;
   friend class AbstractScope;
+  friend class ScopeCreationData;
   static const ScopeKind classScopeKind_ = ScopeKind::Module;
 
  public:

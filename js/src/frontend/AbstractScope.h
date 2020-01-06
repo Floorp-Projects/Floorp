@@ -9,11 +9,11 @@
 
 #include "mozilla/Variant.h"
 
+#include "frontend/TypedIndex.h"
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
 #include "gc/Tracer.h"
 #include "vm/Scope.h"
-
 #include "vm/ScopeKind.h"  // For ScopeKind
 
 namespace js {
@@ -21,6 +21,14 @@ class Scope;
 class GlobalScope;
 class EvalScope;
 class GCMarker;
+class ScopeCreationData;
+
+namespace frontend {
+struct ParseInfo;
+class FunctionBox;
+}  // namespace frontend
+
+using ScopeIndex = frontend::TypedIndex<Scope>;
 using HeapPtrScope = HeapPtr<Scope*>;
 
 // An interface class to support Scope queries in the frontend without requiring
@@ -28,35 +36,75 @@ using HeapPtrScope = HeapPtr<Scope*>;
 //
 // This abstracts Scope* (and a future ScopeCreationData type used within the
 // frontend before the Scope is allocated)
+//
+// Because a AbstractScope may hold onto a Scope, it must be rooted if a GC may
+// occur to ensure that the scope is traced.
 class AbstractScope {
  public:
-  using ScopeType = HeapPtrScope;
+  // Used to hold index and the parseInfo together to avoid having a
+  // potentially nullable parseInfo.
+  struct Deferred {
+    ScopeIndex index;
+    frontend::ParseInfo& parseInfo;
+  };
+
+  // To make writing code and managing invariants easier, we require that
+  // any nullptr scopes be stored on the HeapPtrScope arm of the variant.
+  using ScopeType = mozilla::Variant<HeapPtrScope, Deferred>;
 
  private:
-  ScopeType scope_ = {};
+  ScopeType scope_ = ScopeType(HeapPtrScope());
+
+  // Extract the Scope* represented by this; may be nullptr, and will
+  // forward through to the ScopeCreationData if it has a Scope*
+  //
+  // Should only be used after getOrCreate() has been used to reify this into a
+  // Scope.
+  Scope* getExistingScope() const;
 
  public:
   friend class js::Scope;
+  friend class js::frontend::FunctionBox;
 
-  AbstractScope() {}
+  AbstractScope() = default;
 
-  explicit AbstractScope(Scope* scope) : scope_(scope) {}
+  explicit AbstractScope(Scope* scope) : scope_(HeapPtrScope(scope)) {}
+
+  AbstractScope(frontend::ParseInfo& parseInfo, ScopeIndex scope)
+      : scope_(Deferred{scope, parseInfo}) {}
+
+  bool isNullptr() const {
+    if (isScopeCreationData()) {
+      return false;
+    }
+    return scope_.as<HeapPtrScope>() == nullptr;
+  }
 
   // Return true if this AbstractScope represents a Scope, either existant
   // or to be reified. This indicates that queries can be executed on this
   // scope data. Returning false is the equivalent to a nullptr, and usually
   // indicates the end of the scope chain.
-  explicit operator bool() const { return maybeScope(); }
+  explicit operator bool() const { return !isNullptr(); }
 
-  Scope* maybeScope() const;
+  bool isScopeCreationData() const { return scope_.is<Deferred>(); }
 
-  // This allows us to check whether or not this abstract scope wraps
+  // Note: this handle is rooted in the ParseInfo.
+  MutableHandle<ScopeCreationData> scopeCreationData() const;
+
+  Scope* scope() const { return scope_.as<HeapPtrScope>(); }
+
+  // Get a Scope*, creating it from a ScopeCreationData if required.
+  // Used to allow us to ensure that Scopes are always allocated with
+  // real GC allocated Enclosing scopes.
+  bool getOrCreateScope(JSContext* cx, MutableHandleScope scope);
+
+  // This allows us to check whether or not this provider wraps
   // or otherwise would reify to a particular scope type.
   template <typename T>
   bool is() const {
     static_assert(std::is_base_of<Scope, T>::value,
                   "Trying to ask about non-Scope type");
-    if (!maybeScope()) {
+    if (isNullptr()) {
       return false;
     }
     return kind() == T::classScopeKind_;
@@ -65,6 +113,7 @@ class AbstractScope {
   ScopeKind kind() const;
   AbstractScope enclosing() const;
   bool hasEnvironment() const;
+  uint32_t nextFrameSlot() const;
   // Valid iff is<FunctionScope>
   bool isArrow() const;
   JSFunction* canonicalFunction() const;
@@ -84,13 +133,13 @@ class AbstractScope {
 // Specializations of AbstractScope::is
 template <>
 inline bool AbstractScope::is<GlobalScope>() const {
-  return maybeScope() &&
+  return !isNullptr() &&
          (kind() == ScopeKind::Global || kind() == ScopeKind::NonSyntactic);
 }
 
 template <>
 inline bool AbstractScope::is<EvalScope>() const {
-  return maybeScope() &&
+  return !isNullptr() &&
          (kind() == ScopeKind::Eval || kind() == ScopeKind::StrictEval);
 }
 
@@ -130,5 +179,11 @@ class AbstractScopeIter {
 };
 
 }  // namespace js
+
+namespace JS {
+template <>
+struct GCPolicy<js::AbstractScope::Deferred>
+    : JS::IgnoreGCPolicy<js::AbstractScope::Deferred> {};
+}  // namespace JS
 
 #endif  // frontend_AbstractScope_h
