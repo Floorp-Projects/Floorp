@@ -1799,12 +1799,6 @@ void MacroAssembler::loadJitCodeRaw(Register func, Register dest) {
   loadPtr(Address(dest, BaseScript::offsetOfJitCodeRaw()), dest);
 }
 
-void MacroAssembler::loadJitCodeNoArgCheck(Register func, Register dest) {
-  loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
-  loadJitScript(dest, dest);
-  loadPtr(Address(dest, JitScript::offsetOfJitCodeSkipArgCheck()), dest);
-}
-
 void MacroAssembler::loadJitCodeMaybeNoArgCheck(Register func, Register dest) {
 #ifdef DEBUG
   {
@@ -2912,19 +2906,6 @@ void MacroAssembler::loadFunctionLength(Register func, Register funFlags,
                      output);
   }
   bind(&lengthLoaded);
-}
-
-void MacroAssembler::branchIfNotInterpretedConstructor(Register fun,
-                                                       Register scratch,
-                                                       Label* label) {
-  // First, ensure it's a scripted function. It is fine if it is still lazy.
-  branchTestFunctionFlags(
-      fun, FunctionFlags::INTERPRETED | FunctionFlags::INTERPRETED_LAZY,
-      Assembler::Zero, label);
-
-  // Check if the CONSTRUCTOR bit is set.
-  branchTestFunctionFlags(fun, FunctionFlags::CONSTRUCTOR, Assembler::Zero,
-                          label);
 }
 
 void MacroAssembler::branchTestObjGroupNoSpectreMitigations(
