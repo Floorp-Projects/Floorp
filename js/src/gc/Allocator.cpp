@@ -714,8 +714,6 @@ Chunk* GCRuntime::pickChunk(AutoLockGCBgAlloc& lock) {
   MOZ_ASSERT(!fullChunks(lock).contains(chunk));
   MOZ_ASSERT(!availableChunks(lock).contains(chunk));
 
-  chunkAllocationSinceLastGC = true;
-
   availableChunks(lock).push(chunk);
 
   return chunk;
