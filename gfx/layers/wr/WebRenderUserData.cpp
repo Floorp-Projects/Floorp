@@ -372,6 +372,10 @@ WebRenderCanvasRendererAsync* WebRenderCanvasData::CreateCanvasRenderer() {
   return mCanvasRenderer.get();
 }
 
+void WebRenderCanvasData::SetImageContainer(ImageContainer* aImageContainer) {
+  mContainer = aImageContainer;
+}
+
 ImageContainer* WebRenderCanvasData::GetImageContainer() {
   if (!mContainer) {
     mContainer = LayerManager::CreateImageContainer();

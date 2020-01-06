@@ -443,8 +443,8 @@ already_AddRefed<Layer> nsHTMLCanvasFrame::BuildLayer(
   if (canvasSizeInPx.width <= 0 || canvasSizeInPx.height <= 0 || area.IsEmpty())
     return nullptr;
 
-  CanvasLayer* oldLayer = static_cast<CanvasLayer*>(
-      aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
+  Layer* oldLayer =
+      aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem);
   RefPtr<Layer> layer = element->GetCanvasLayer(aBuilder, oldLayer, aManager);
   if (!layer) return nullptr;
 
