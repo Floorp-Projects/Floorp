@@ -24,8 +24,8 @@ var eventList = ["play", "canplay", "playing", "canplaythrough", "ended"];
 function gotPlayEvent(event) {
   var v = event.target;
   ok(tokens[v._state].includes(event.type),
-     "Check expected event got " + uneval(event.type) +
-     " at " + uneval(v._state) + " for " + v._name);
+     "Check expected event got " + event.type +
+     " at " + v._state + " for " + v._name);
   v._state = event.type;
   if (event.type == 'canplaythrough') {
     // Remove all event listeners to avoid running tests after finishing test case.
