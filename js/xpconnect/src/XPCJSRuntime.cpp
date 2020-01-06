@@ -940,7 +940,7 @@ void XPCJSRuntime::WeakPointerZonesCallback(JSContext* cx, void* data) {
 
   // This callback is always called from within the GC so set the mGCIsRunning
   // flag to prevent AssertInvalidWrappedJSNotInTable from trying to call back
-  // into the JS API. This as often already been set by FinalizeCallback by the
+  // into the JS API. This has often already been set by FinalizeCallback by the
   // time we get here, but it may not be if we are doing a shutdown GC or if we
   // are called for compacting GC.
   AutoRestore<bool> restoreState(self->mGCIsRunning);
