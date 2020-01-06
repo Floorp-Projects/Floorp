@@ -105,7 +105,7 @@ BytecodeEmitter::BytecodeEmitter(
       script(cx, script),
       lazyScript(cx, lazyScript),
       bytecodeSection_(cx, line),
-      perScriptData_(cx),
+      perScriptData_(cx, parseInfo),
       fieldInitializers_(fieldInitializers),
       parseInfo(parseInfo),
       firstLine(line),

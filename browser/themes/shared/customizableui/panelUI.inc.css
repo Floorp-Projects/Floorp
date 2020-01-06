@@ -733,7 +733,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   border-radius: 50%;
 }
 
-.PanelUI-fxa-service-description-label {
+.PanelUI-fxa-service-description-label,
+.PanelUI-remotetabs-instruction-label {
   /* Use 'lighter' font for this to de-emphasize it compared to the title.
    * We use 300 on Linux because 100 is too light (lacks contrast with
    * the background) for some fonts in combination with anti-aliasing. */
@@ -784,7 +785,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   color: var(--panel-disabled-color);
 }
 
-/* From the FxA menu -> remote tabs, we don't need to clutter the view with
+/* From the FxA menu -> synced tabs, we don't need to clutter the view with
    redundant buttons because these are accessible from the main menu */
 panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
@@ -839,21 +840,9 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   max-width: 15em;
 }
 
-.PanelUI-fxa-service-description-label {
-  margin-top: 10px;
-}
-
+.PanelUI-fxa-service-description-label,
 .PanelUI-remotetabs-instruction-label {
-  color: var(--panel-disabled-color);
-}
-
-/* The boxes with "instructions" get extra top and bottom padding for space
-   around the illustration and buttons */
-.PanelUI-remotetabs-instruction-box {
-  /* If you change the padding here, the min-height of the synced tabs panel
-    (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
-    need adjusting (see bug 1248506) */
-  padding-bottom: 30px;
+  margin-top: 10px;
 }
 
 .PanelUI-fxa-signin-button,
@@ -874,7 +863,8 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   min-width: 200px;
 }
 
-.PanelUI-fxa-signin-button {
+.PanelUI-fxa-signin-button,
+.PanelUI-remotetabs-button {
   padding: 1em;
 }
 
@@ -905,11 +895,10 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 .fxaSyncIllustration,
 .fxaSyncIllustrationIssue {
   /* If you change the margin here, the min-height of the synced tabs panel
-    (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
-    need adjusting (see bug 1248506) */
+  (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
+  need adjusting (see bug 1248506) */
   width: 204px;
   height: var(--panel-ui-sync-illustration-height);
-  margin: 38px 0 15px;
   -moz-context-properties: fill;
   fill: #cdcdcd;
 }
@@ -943,11 +932,10 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-nodevicespane,
 #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-tabsdisabledpane {
   min-height: calc(var(--panel-ui-sync-illustration-height) +
-                   53px + /* margin of .fxaSyncIllustration */
+                   15px + /* margin of .fxaSyncIllustration */
                    30px + /* margin of .PanelUI-remotetabs-button */
-                   16px + /* padding of .PanelUI-remotetabs-button */
-                   30px + /* padding of .PanelUI-remotetabs-instruction-box */
-                   11em);
+                   8px + /* padding of .PanelUI-remotetabs-button */
+                   1em);
 }
 
 .PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {

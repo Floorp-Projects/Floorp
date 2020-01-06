@@ -1,3 +1,5 @@
+// |jit-test| skip-if: isLcovEnabled()
+
 // Uncompleted scripts and their inner scripts shouldn't be found in
 // findScripts.
 

@@ -441,6 +441,12 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool IsLCovEnabled(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(coverage::IsLCovEnabled());
+  return true;
+}
+
 static bool ReturnStringCopy(JSContext* cx, CallArgs& args,
                              const char* message) {
   JSString* str = JS_NewStringCopyZ(cx, message);
@@ -4803,6 +4809,11 @@ static bool GetLcovInfo(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (!coverage::IsLCovEnabled()) {
+    JS_ReportErrorASCII(cx, "Coverage not enabled for process.");
+    return false;
+  }
+
   RootedObject global(cx);
   if (args.hasDefined(0)) {
     global = ToObject(cx, args[0]);
@@ -6257,6 +6268,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "getBuildConfiguration()",
 "  Return an object describing some of the configuration options SpiderMonkey\n"
 "  was built with."),
+
+    JS_FN_HELP("isLcovEnabled", ::IsLCovEnabled, 0, 0,
+"getBuildConfiguration()",
+"  Return true if JS LCov support is enabled."),
 
     JS_FN_HELP("hasChild", HasChild, 0, 0,
 "hasChild(parent, child)",

@@ -28,7 +28,7 @@ function test_workerOwner() {
   let mc = new MessageChannel();
   mc.port1.postMessage(new Blob(['hello world']));
 
-  let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+  let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
   let worker = new Worker(workerUrl);
 
   worker.postMessage("", [mc.port2]);
@@ -51,7 +51,7 @@ function test_workerToMainThread() {
   let mc = new MessageChannel();
   mc.port1.postMessage(new Blob(['hello world']));
 
-  let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+  let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
   let worker = new Worker(workerUrl);
 
   worker.postMessage("", [mc.port2]);
@@ -86,7 +86,7 @@ function test_workerOwnerPlusFileReaderSync() {
   let mc = new MessageChannel();
   mc.port1.postMessage(new Blob(['hello world']));
 
-  let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+  let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
   let worker = new Worker(workerUrl);
 
   worker.postMessage("", [mc.port2]);

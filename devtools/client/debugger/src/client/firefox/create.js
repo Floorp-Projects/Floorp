@@ -58,6 +58,8 @@ export function createFrame(
     this: frame.this,
     source: null,
     index,
+    asyncCause: frame.asyncCause,
+    state: frame.state,
   };
 }
 

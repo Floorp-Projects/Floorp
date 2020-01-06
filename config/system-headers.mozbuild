@@ -1267,16 +1267,6 @@ if CONFIG['MOZ_SYSTEM_ZLIB']:
         'zlib.h',
     ]
 
-if CONFIG['MOZ_ENABLE_STARTUP_NOTIFICATION']:
-    system_headers += [
-        'libsn/sn-common.h',
-        'libsn/sn.h',
-        'libsn/sn-launchee.h',
-        'libsn/sn-launcher.h',
-        'libsn/sn-monitor.h',
-        'libsn/sn-util.h',
-    ]
-
 if CONFIG['MOZ_SYSTEM_LIBEVENT']:
     system_headers += [
         'event2/event_compat.h',

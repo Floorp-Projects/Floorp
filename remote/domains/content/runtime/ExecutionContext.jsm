@@ -49,7 +49,7 @@ class ExecutionContext {
     const { windowUtils } = debuggee;
     this.windowId = windowUtils.currentInnerWindowID;
     this.id = id;
-    this.frameId = windowUtils.outerWindowID.toString();
+    this.frameId = debuggee.docShell.browsingContext.id.toString();
     this.isDefault = isDefault;
 
     this._remoteObjects = new Map();

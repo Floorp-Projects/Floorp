@@ -47,7 +47,7 @@ PER_PROJECT_PARAMETERS = {
     },
 
     'ash': {
-        'target_tasks_method': 'ash_tasks',
+        'target_tasks_method': 'default',
     },
 
     'cedar': {

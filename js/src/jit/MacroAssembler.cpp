@@ -1791,21 +1791,43 @@ void MacroAssembler::assertRectifierFrameParentType(Register frameType) {
 }
 
 void MacroAssembler::loadJitCodeRaw(Register func, Register dest) {
-  static_assert(
-      JSScript::offsetOfJitCodeRaw() == LazyScript::offsetOfJitCodeRaw(),
-      "LazyScript and JSScript must use same layout for jitCodeRaw_");
-  static_assert(
-      JSScript::offsetOfJitCodeRaw() ==
-          SelfHostedLazyScript::offsetOfJitCodeRaw(),
-      "SelfHostedLazyScript and JSScript must use same layout for jitCodeRaw_");
+  static_assert(BaseScript::offsetOfJitCodeRaw() ==
+                    SelfHostedLazyScript::offsetOfJitCodeRaw(),
+                "SelfHostedLazyScript and BaseScript must use same layout for "
+                "jitCodeRaw_");
   loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
-  loadPtr(Address(dest, JSScript::offsetOfJitCodeRaw()), dest);
+  loadPtr(Address(dest, BaseScript::offsetOfJitCodeRaw()), dest);
 }
 
-void MacroAssembler::loadJitCodeNoArgCheck(Register func, Register dest) {
+void MacroAssembler::loadJitCodeMaybeNoArgCheck(Register func, Register dest) {
+#ifdef DEBUG
+  {
+    Label ok;
+    int32_t flags =
+        FunctionFlags::INTERPRETED | FunctionFlags::INTERPRETED_LAZY;
+    branchTestFunctionFlags(func, flags, Assembler::NonZero, &ok);
+    assumeUnreachable("Function has no BaseScript!");
+    bind(&ok);
+  }
+#endif
+
+  static_assert(ScriptWarmUpData::JitScriptTag == 0,
+                "Code below depends on tag value");
+  Imm32 tagMask(ScriptWarmUpData::TagMask);
+
+  // Read jitCodeSkipArgCheck. If JitScript is missing, the script may be lazy
+  // so fallback to jitCodeRaw.
+  Label uncompiled, end;
   loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
-  loadJitScript(dest, dest);
+  loadPtr(Address(dest, BaseScript::offsetOfWarmUpData()), dest);
+  branchTestPtr(Assembler::NonZero, dest, tagMask, &uncompiled);
   loadPtr(Address(dest, JitScript::offsetOfJitCodeSkipArgCheck()), dest);
+  jump(&end);
+
+  // Fallback to reading BaseScript::jitCodeRaw.
+  bind(&uncompiled);
+  loadJitCodeRaw(func, dest);
+  bind(&end);
 }
 
 void MacroAssembler::loadBaselineFramePtr(Register framePtr, Register dest) {
@@ -2884,19 +2906,6 @@ void MacroAssembler::loadFunctionLength(Register func, Register funFlags,
                      output);
   }
   bind(&lengthLoaded);
-}
-
-void MacroAssembler::branchIfNotInterpretedConstructor(Register fun,
-                                                       Register scratch,
-                                                       Label* label) {
-  // First, ensure it's a scripted function. It is fine if it is still lazy.
-  branchTestFunctionFlags(
-      fun, FunctionFlags::INTERPRETED | FunctionFlags::INTERPRETED_LAZY,
-      Assembler::Zero, label);
-
-  // Check if the CONSTRUCTOR bit is set.
-  branchTestFunctionFlags(fun, FunctionFlags::CONSTRUCTOR, Assembler::Zero,
-                          label);
 }
 
 void MacroAssembler::branchTestObjGroupNoSpectreMitigations(

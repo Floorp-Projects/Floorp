@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["Session"];
 const { ParentProcessDomains } = ChromeUtils.import(
   "chrome://remote/content/domains/ParentProcessDomains.jsm"
 );
-const { Domains } = ChromeUtils.import(
-  "chrome://remote/content/domains/Domains.jsm"
+const { DomainCache } = ChromeUtils.import(
+  "chrome://remote/content/domains/DomainCache.jsm"
 );
 
 /**
@@ -43,7 +43,7 @@ class Session {
     this.target = target;
     this.id = id;
 
-    this.domains = new Domains(this, ParentProcessDomains);
+    this.domains = new DomainCache(this, ParentProcessDomains);
   }
 
   destructor() {

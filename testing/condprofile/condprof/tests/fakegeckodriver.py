@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import sys
 from uuid import uuid4
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import argparse
 
 
 _SESSIONS = {}
@@ -71,6 +71,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             data = {"value": list(session.windows.keys())}
             return self._send_response(data=data)
 
+        if action == ["moz", "context"]:
+            data = {"value": "chrome"}
+            return self._send_response(data=data)
+
         return self._send_response(status=404)
 
     def do_POST(self):
@@ -94,6 +98,13 @@ class RequestHandler(BaseHTTPRequestHandler):
                 return self._send_response(404)
             handle = session.new_window()
             return self._send_response(data={"handle": handle, "type": "tab"})
+
+        if action == ["timeouts"]:
+            return self._send_response()
+
+        if action == ["execute", "async"]:
+            return self._send_response(data={"logs": []})
+
         # other commands not supported yet, we just return 200s
         return self._send_response()
 
@@ -118,10 +129,17 @@ You can obtain a copy of the license at https://mozilla.org/MPL/2.0/.\
 
 
 if __name__ == "__main__":
-    if sys.argv[-1] == "--version":
+    parser = argparse.ArgumentParser(description="FakeGeckodriver")
+    parser.add_argument("--log", type=str, default=None)
+    parser.add_argument("--port", type=int, default=4444)
+    parser.add_argument("--marionette-port", type=int, default=2828)
+    parser.add_argument("--version", action="store_true", default=False)
+    parser.add_argument("--verbose", "-v", action="count")
+    args = parser.parse_args()
+
+    if args.version:
         print(VERSION)
     else:
-        port = int(sys.argv[3])
         HTTPServer.allow_reuse_address = True
-        server = HTTPServer(("127.0.0.1", port), RequestHandler)
+        server = HTTPServer(("127.0.0.1", args.port), RequestHandler)
         server.serve_forever()

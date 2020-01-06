@@ -1,3 +1,4 @@
+// |jit-test| --code-coverage
 
 var lfcode = new Array();
 lfcode.push = loadFile;

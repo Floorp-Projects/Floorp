@@ -7,27 +7,18 @@
 #ifndef frontend_Stencil_h
 #define frontend_Stencil_h
 
+#include "frontend/AbstractScope.h"
+#include "frontend/TypedIndex.h"
 #include "gc/AllocKind.h"
 #include "gc/Rooting.h"
 #include "js/RegExpFlags.h"
 #include "vm/BigIntType.h"
 #include "vm/JSFunction.h"
 #include "vm/JSScript.h"
+#include "vm/Scope.h"
 
 namespace js {
 namespace frontend {
-
-// TypedIndex allows discrimination in variants between different
-// index types. Used as a typesafe index for various stencil arrays.
-template <typename Tag>
-struct TypedIndex {
-  explicit TypedIndex(uint32_t index) : index(index){};
-
-  uint32_t index = 0;
-
-  // For Vector::operator[]
-  operator size_t() const { return index; }
-};
 
 // [SMDOC] Script Stencil (Frontend Representation)
 //
@@ -190,6 +181,152 @@ class BigIntCreationData {
 using BigIntIndex = TypedIndex<BigIntCreationData>;
 
 } /* namespace frontend */
+
+class ScopeCreationData {
+  friend class AbstractScope;
+  friend class GCMarker;
+
+  // The enclosing scope if it exists
+  AbstractScope enclosing_;
+
+  // The kind determines data_.
+  ScopeKind kind_;
+
+  // If there are any aliased bindings, the shape for the
+  // EnvironmentObject. Otherwise nullptr.
+  HeapPtr<Shape*> environmentShape_ = {};
+
+  // Once we've produced a scope from a scope creation data, there may still be
+  // AbstractScopes refering to this ScopeCreationData, and if reification is
+  // requested multiple times, we should return the same scope rather than
+  // creating multiple sopes.
+  //
+  // As well, any queries that require data() to answer must be redirected to
+  // the scope once the scope has been reified, as the ScopeCreationData loses
+  // ownership of the data on reification.
+  HeapPtr<Scope*> scope_ = {};
+
+  // For FunctionScopes we need the funbox; nullptr otherwise.
+  frontend::FunctionBox* funbox_ = nullptr;
+
+  UniquePtr<BaseScopeData> data_;
+
+ public:
+  ScopeCreationData(JSContext* cx, ScopeKind kind,
+                    Handle<AbstractScope> enclosing,
+                    UniquePtr<BaseScopeData> data = {},
+                    Shape* environmentShape = nullptr,
+                    frontend::FunctionBox* funbox = nullptr)
+      : enclosing_(enclosing),
+        kind_(kind),
+        environmentShape_(environmentShape),
+        funbox_(funbox),
+        data_(std::move(data)) {}
+
+  ScopeKind kind() const { return kind_; }
+  AbstractScope enclosing() { return enclosing_; }
+  bool getOrCreateEnclosingScope(JSContext* cx, MutableHandleScope scope) {
+    return enclosing_.getOrCreateScope(cx, scope);
+  }
+
+  // FunctionScope
+  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+                     Handle<FunctionScope::Data*> dataArg,
+                     bool hasParameterExprs, bool needsEnvironment,
+                     frontend::FunctionBox* funbox,
+                     Handle<AbstractScope> enclosing, ScopeIndex* index);
+
+  // LexicalScope
+  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+                     ScopeKind kind, Handle<LexicalScope::Data*> dataArg,
+                     uint32_t firstFrameSlot, Handle<AbstractScope> enclosing,
+                     ScopeIndex* index);
+  // VarScope
+  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+                     ScopeKind kind, Handle<VarScope::Data*> dataArg,
+                     uint32_t firstFrameSlot, bool needsEnvironment,
+                     Handle<AbstractScope> enclosing, ScopeIndex* index);
+
+  // GlobalScope
+  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+                     ScopeKind kind, Handle<GlobalScope::Data*> dataArg,
+                     ScopeIndex* index);
+
+  // EvalScope
+  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+                     ScopeKind kind, Handle<EvalScope::Data*> dataArg,
+                     Handle<AbstractScope> enclosing, ScopeIndex* index);
+
+  // ModuleScope
+  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+                     Handle<ModuleScope::Data*> dataArg,
+                     HandleModuleObject module, Handle<AbstractScope> enclosing,
+                     ScopeIndex* index);
+
+  // WithScope
+  static bool create(JSContext* cx, frontend::ParseInfo& parseInfo,
+                     Handle<AbstractScope> enclosing, ScopeIndex* index);
+
+  bool hasEnvironment() const {
+    return Scope::hasEnvironment(kind(), environmentShape_);
+  }
+
+  // Valid for functions;
+  bool isArrow() const;
+  JSFunction* canonicalFunction() const;
+
+  bool hasScope() const { return scope_ != nullptr; }
+
+  Scope* getScope() const {
+    MOZ_ASSERT(hasScope());
+    return scope_;
+  }
+
+  Scope* createScope(JSContext* cx);
+
+  void trace(JSTracer* trc);
+
+  uint32_t nextFrameSlot() const;
+
+ private:
+  // Non owning reference to data
+  template <typename SpecificScopeType>
+  typename SpecificScopeType::Data& data() const {
+    MOZ_ASSERT(data_.get());
+    return *static_cast<typename SpecificScopeType::Data*>(data_.get());
+  }
+
+  // Transfer ownership into a new UniquePtr.
+  template <typename SpecificScopeType>
+  UniquePtr<typename SpecificScopeType::Data> releaseData() {
+    return UniquePtr<typename SpecificScopeType::Data>(
+        static_cast<typename SpecificScopeType::Data*>(data_.release()));
+  }
+
+  template <typename SpecificScopeType>
+  Scope* createSpecificScope(JSContext* cx);
+
+  template <typename SpecificScopeType>
+  uint32_t nextFrameSlot() const {
+    // If a scope has been allocated for the ScopeCreationData we no longer own
+    // data, so defer to scope
+    if (hasScope()) {
+      return getScope()->template as<SpecificScopeType>().nextFrameSlot();
+    }
+    return data<SpecificScopeType>().nextFrameSlot;
+  }
+};
+
 } /* namespace js */
 
+namespace JS {
+template <>
+struct GCPolicy<js::ScopeCreationData*> {
+  static void trace(JSTracer* trc, js::ScopeCreationData** data,
+                    const char* name) {
+    (*data)->trace(trc);
+  }
+};
+
+}  // namespace JS
 #endif /* frontend_Stencil_h */

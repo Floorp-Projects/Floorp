@@ -82,7 +82,7 @@ class Documentation(MachCommandBase):
         outdir = outdir or os.path.join(self.topobjdir, 'docs')
         savedir = os.path.join(outdir, fmt)
 
-        path = path or os.path.join(self.topsrcdir, 'tools')
+        path = path or self.topsrcdir
         path = os.path.normpath(os.path.abspath(path))
 
         docdir = self._find_doc_dir(path)

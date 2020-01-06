@@ -426,9 +426,6 @@ function setupEnvironment() {
 
   var defaultMochitestPrefs = {
     set: [
-      // We can't use the Fake H.264 GMP encoder with a real decoder until
-      // bug 1509012 is done. So force using the Fake H.264 GMP decoder for now.
-      ["media.navigator.mediadatadecoder_h264_enabled", false],
       ["media.peerconnection.enabled", true],
       ["media.peerconnection.identity.enabled", true],
       ["media.peerconnection.identity.timeout", 120000],
@@ -455,6 +452,14 @@ function setupEnvironment() {
       ["media.navigator.video.max_fr", 10],
       ["media.autoplay.default", Ci.nsIAutoplay.ALLOWED]
     );
+  } else {
+    // For platforms other than Android, the tests use Fake H.264 GMP encoder.
+    // We can't use that with a real decoder until bug 1509012 is done.
+    // So force using the Fake H.264 GMP decoder for now.
+    defaultMochitestPrefs.set.push([
+      "media.navigator.mediadatadecoder_h264_enabled",
+      false,
+    ]);
   }
 
   // Running as a Mochitest.

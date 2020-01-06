@@ -164,7 +164,7 @@ TEST_VARIANTS = {
             'e10s': True,
         },
         'merge': {
-            'fission-run-on-projects': ['ash', 'try'],
+            'fission-run-on-projects': ['try'],
             'mozharness': {
                 'extra-options': ['--setpref=fission.autostart=true',
                                   '--setpref=dom.serviceWorkers.parent_intercept=true',

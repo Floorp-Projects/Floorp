@@ -14,10 +14,44 @@
 
 namespace mozilla {
 
+// OwningNonNull<T> is similar to a RefPtr<T>, which is not null after initial
+// initialization. It has a restricted interface compared to RefPtr, with some
+// additional operations defined. The main use is in DOM bindings. Use it
+// outside DOM bindings only if you can ensure it never escapes without being
+// properly initialized, and you don't need to move it. Otherwise, use a
+// RefPtr<T> instead.
+//
+// Compared to a plain RefPtr<T>, in particular
+// - it is copyable but not movable
+// - it can be constructed and assigned from T& and is convertible to T&
+// implicitly
+// - it cannot be cleared by the user once initialized, though it can be
+//   re-assigned a new (non-null) value
+// - it is not convertible to bool, but there is an explicit isInitialized
+//   member function
+//
+// Beware that there are two cases where an OwningNonNull<T> actually is nullptr
+// - it was default-constructed and not yet initialized
+// - it was cleared during CC unlinking.
+// All attempts to use it in an invalid state will trigger an assertion in debug
+// builds.
+//
+// The original intent of OwningNonNull<T> was to implement a class with the
+// same auto-conversion and annotation semantics as mozilla::dom::NonNull<T>
+// (i.e. never null once you have properly initialized it, auto-converts to T&),
+// but that holds a strong reference to the object involved. This was designed
+// for use in DOM bindings and in particular for storing what WebIDL represents
+// as InterfaceName (as opposed to `InterfaceName?`) in various containers
+// (dictionaries, sequences). DOM bindings never allow a default-constructed
+// uninitialized OwningNonNull to escape. RefPtr could have been used for this
+// use case, just like we could have used T* instead of NonNull<T>, but it
+// seemed desirable to explicitly annotate the non-null nature of the things
+// involved to eliminate pointless null-checks, which otherwise tend to
+// proliferate.
 template <class T>
 class MOZ_IS_SMARTPTR_TO_REFCOUNTED OwningNonNull {
  public:
-  OwningNonNull() {}
+  OwningNonNull() = default;
 
   MOZ_IMPLICIT OwningNonNull(T& aValue) { init(&aValue); }
 
@@ -106,7 +140,7 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED OwningNonNull {
   }
 
   // Allow ImplCycleCollectionUnlink to call unlinkForCC().
-  template<typename U>
+  template <typename U>
   friend void ImplCycleCollectionUnlink(OwningNonNull<U>& aField);
 
  protected:

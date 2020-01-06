@@ -16,15 +16,15 @@ with Files("compare-locales/mach_commands.py"):
 with Files("coverity/**"):
     BUG_COMPONENT = ("Firefox Build System", "Source Code Analysis")
 
-with Files("docs/**"):
-    BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")
-    SCHEDULES.exclusive = ['docs']
-
 with Files("github-sync/**"):
     BUG_COMPONENT = ("Core", "Graphics")
 
 with Files("lint/**"):
     BUG_COMPONENT = ("Firefox Build System", "Lint and Formatting")
+
+with Files("moztreedocs/**"):
+    BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")
+    SCHEDULES.exclusive = ['docs']
 
 with Files("profiler/**"):
     BUG_COMPONENT = ("Core", "Gecko Profiler")
@@ -55,12 +55,12 @@ with Files("update-verify/**"):
 
 SPHINX_TREES['lint'] = 'lint/docs'
 
+SPHINX_TREES['moztreedocs'] = 'moztreedocs/docs'
+
 with Files('lint/docs/**'):
     SCHEDULES.exclusive = ['docs']
 
 SPHINX_TREES['try'] = 'tryselect/docs'
-
-SPHINX_TREES['docs'] = 'docs/docs'
 
 SPHINX_TREES['static-analysis'] = 'clang-tidy/docs'
 

@@ -495,7 +495,7 @@ class WebConsoleUI {
   }
 
   getLongString(grip) {
-    this.getProxy().webConsoleFront.getString(grip);
+    return this.getProxy().webConsoleFront.getString(grip);
   }
 
   /**
