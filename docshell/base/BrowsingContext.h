@@ -221,6 +221,8 @@ class BrowsingContext : public nsISupports,
   bool IsContent() const { return mType == Type::Content; }
   bool IsChrome() const { return !IsContent(); }
 
+  bool IsTop() const { return !GetParent(); }
+
   bool IsTopContent() const { return IsContent() && !GetParent(); }
 
   bool IsContentSubframe() const { return IsContent() && GetParent(); }
