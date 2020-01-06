@@ -37,9 +37,7 @@ $modal-scrollbar-z-index: 1100;
 }
 
 .modalOverlayInner {
-  min-width: min-content;
-  width: 100%;
-  max-width: 960px;
+  width: 960px;
   position: fixed;
   top: 15%;
   left: calc(50% - 480px); // halfway across minus half the width of the modal
@@ -51,6 +49,7 @@ $modal-scrollbar-z-index: 1100;
 
   // modal takes over entire screen
   @media(max-width: 960px) {
+    width: auto;
     height: 100%;
     top: 0;
     left: 0;
@@ -58,13 +57,8 @@ $modal-scrollbar-z-index: 1100;
     border-radius: 0;
   }
 
-  // if modal is short enough, remove the top margin
+  // if modal is short enough, reduce the top margin
   @media(max-height: 730px) {
-    top: 0;
-  }
-
-  // if modal is short enough (but the window is still wide), reduce the top margin
-  @media(max-height: 730px) and (min-width: 1024px){
     top: 5%;
   }
 
