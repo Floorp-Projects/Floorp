@@ -253,9 +253,9 @@ void MediaEngineTabVideoSource::Draw() {
     return;
   }
 
-  if (mTrackMain->IsDestroyed()) {
-    // The track was already destroyed by MediaManager. This can happen because
-    // stopping the draw timer is async.
+  if (!mTrackMain || mTrackMain->IsDestroyed()) {
+    // The track is already gone or destroyed by MediaManager. This can happen
+    // because stopping the draw timer is async.
     return;
   }
 
