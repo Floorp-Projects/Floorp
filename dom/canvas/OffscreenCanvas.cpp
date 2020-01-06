@@ -116,7 +116,6 @@ already_AddRefed<nsISupports> OffscreenCanvas::GetContext(
   }
 
   if (mCanvasRenderer) {
-    mCanvasRenderer->SetContextType(contextType);
     if (contextType == CanvasContextType::WebGL1 ||
         contextType == CanvasContextType::WebGL2) {
       WebGLContext* webGL = static_cast<WebGLContext*>(mCurrentContext.get());
@@ -149,13 +148,6 @@ already_AddRefed<nsISupports> OffscreenCanvas::GetContext(
   return result.forget();
 }
 
-ImageContainer* OffscreenCanvas::GetImageContainer() {
-  if (!mCanvasRenderer) {
-    return nullptr;
-  }
-  return mCanvasRenderer->GetImageContainer();
-}
-
 already_AddRefed<nsICanvasRenderingContextInternal>
 OffscreenCanvas::CreateContext(CanvasContextType aContextType) {
   RefPtr<nsICanvasRenderingContextInternal> ret =
@@ -183,9 +175,7 @@ void OffscreenCanvas::CommitFrameToCompositor() {
     mAttrDirty = false;
   }
 
-  CanvasContextType contentType = mCanvasRenderer->GetContextType();
-  if (mCurrentContext && (contentType == CanvasContextType::WebGL1 ||
-                          contentType == CanvasContextType::WebGL2)) {
+  if (mCurrentContext) {
     static_cast<WebGLContext*>(mCurrentContext.get())->PresentScreenBuffer();
   }
 

@@ -401,7 +401,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
   HTMLCanvasElement* GetOriginalCanvas();
 
-  CanvasContextType GetCurrentContextType();
+  CanvasContextType GetCurrentContextType() { return mCurrentContextType; }
 
  private:
   /**
