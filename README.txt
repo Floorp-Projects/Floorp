@@ -1,11 +1,11 @@
 An explanation of the Mozilla Source Code Directory Structure and links to
 project pages with documentation can be found at:
 
-    https://firefox-source-docs.mozilla.org/tools/docs/contribute/mozilla_source_code_directory_structure.html
+    https://firefox-source-docs.mozilla.org/contributing/directory_structure.html
 
 For information on how to build Mozilla from the source code and create the patch see:
 
-    https://firefox-source-docs.mozilla.org/tools/docs/contribute/how_to_contribute_firefox.html
+    https://firefox-source-docs.mozilla.org/contributing/how_to_contribute_firefox.html
 
 If you have a question about developing Mozilla, and can't find the solution
 on https://developer.mozilla.org, you can try asking your question on IRC at irc.mozilla.org in #introduction channel.

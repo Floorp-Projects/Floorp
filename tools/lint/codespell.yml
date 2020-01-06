@@ -50,7 +50,6 @@ codespell:
         - toolkit/docs/
         - toolkit/locales/en-US/
         - toolkit/modules/docs/
-        - tools/docs/
         - tools/moztreedocs/
         - tools/lint/
         - tools/tryselect/
