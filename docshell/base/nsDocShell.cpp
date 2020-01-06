@@ -12776,7 +12776,10 @@ nsDocShell::ResumeRedirectedLoad(uint64_t aIdentifier, int32_t aHistoryIndex) {
                                                   previousFlags, aRedirects);
         }
 
-        MOZ_ASSERT(!self->mTiming, "timing object can't already exists");
+        MOZ_ASSERT(
+            (self->mCurrentURI && NS_IsAboutBlank(self->mCurrentURI)) ||
+                !self->mTiming,
+            "timing object can't already exists in non-about:blank loads");
         self->mTiming = new nsDOMNavigationTiming(self, aTiming);
 
         // If we're performing a history load, locate the correct history entry,
