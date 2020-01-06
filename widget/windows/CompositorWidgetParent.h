@@ -20,6 +20,40 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
                                   const layers::CompositorOptions& aOptions);
   ~CompositorWidgetParent() override;
 
+  bool PreRender(WidgetRenderingContext*) override;
+  void PostRender(WidgetRenderingContext*) override;
+  already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
+  void EndRemoteDrawing() override;
+  bool NeedsToDeferEndRemoteDrawing() override;
+  LayoutDeviceIntSize GetClientSize() override;
+  already_AddRefed<gfx::DrawTarget> GetBackBufferDrawTarget(
+      gfx::DrawTarget* aScreenTarget, const gfx::IntRect& aRect,
+      bool* aOutIsCleared) override;
+  already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing() override;
+  bool InitCompositor(layers::Compositor* aCompositor) override;
+  bool IsHidden() const override;
+
+  // PlatformCompositorWidgetDelegate Overrides
+
+  void EnterPresentLock() override;
+  void LeavePresentLock() override;
+  void OnDestroyWindow() override;
+  void UpdateTransparency(nsTransparencyMode aMode) override;
+  void ClearTransparentWindow() override;
+
+  bool RedrawTransparentWindow() override;
+
+  // Ensure that a transparent surface exists, then return it.
+  RefPtr<gfxASurface> EnsureTransparentSurface() override;
+
+  HDC GetTransparentDC() const override { return mMemoryDC; }
+
+  mozilla::Mutex& GetTransparentSurfaceLock() override {
+    return mTransparentSurfaceLock;
+  }
+
+  bool HasGlass() const override;
+
   mozilla::ipc::IPCResult RecvEnterPresentLock() override;
   mozilla::ipc::IPCResult RecvLeavePresentLock() override;
   mozilla::ipc::IPCResult RecvUpdateTransparency(
@@ -37,8 +71,30 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   void SetRootLayerTreeID(const layers::LayersId& aRootLayerTreeId) override;
 
  private:
+  HDC GetWindowSurface();
+  void FreeWindowSurface(HDC dc);
+
+  void CreateTransparentSurface(const gfx::IntSize& aSize);
+
   RefPtr<VsyncObserver> mVsyncObserver;
   Maybe<layers::LayersId> mRootLayerTreeID;
+
+  HWND mWnd;
+
+  gfx::CriticalSection mPresentLock;
+
+  // Transparency handling.
+  mozilla::Mutex mTransparentSurfaceLock;
+  mozilla::Atomic<nsTransparencyMode, MemoryOrdering::Relaxed>
+      mTransparencyMode;
+  RefPtr<gfxASurface> mTransparentSurface;
+  HDC mMemoryDC;
+  HDC mCompositeDC;
+
+  // Locked back buffer of BasicCompositor
+  uint8_t* mLockedBackBufferData;
+
+  bool mNotDeferEndRemoteDrawing;
 };
 
 }  // namespace widget
