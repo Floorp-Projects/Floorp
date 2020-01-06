@@ -23,67 +23,15 @@ class InProcessWinCompositorWidget final : public WinCompositorWidget {
                                const layers::CompositorOptions& aOptions,
                                nsWindow* aWindow);
 
-  bool PreRender(WidgetRenderingContext*) override;
-  void PostRender(WidgetRenderingContext*) override;
-  already_AddRefed<gfx::DrawTarget> StartRemoteDrawing() override;
-  void EndRemoteDrawing() override;
-  bool NeedsToDeferEndRemoteDrawing() override;
-  LayoutDeviceIntSize GetClientSize() override;
-  already_AddRefed<gfx::DrawTarget> GetBackBufferDrawTarget(
-      gfx::DrawTarget* aScreenTarget, const gfx::IntRect& aRect,
-      bool* aOutIsCleared) override;
-  already_AddRefed<gfx::SourceSurface> EndBackBufferDrawing() override;
-  bool InitCompositor(layers::Compositor* aCompositor) override;
-  bool IsHidden() const override;
-
-  // PlatformCompositorWidgetDelegate Overrides
-
-  void EnterPresentLock() override;
-  void LeavePresentLock() override;
   void OnDestroyWindow() override;
   void UpdateTransparency(nsTransparencyMode aMode) override;
   void ClearTransparentWindow() override;
-
-  bool RedrawTransparentWindow() override;
-
-  // Ensure that a transparent surface exists, then return it.
-  RefPtr<gfxASurface> EnsureTransparentSurface() override;
-
-  HDC GetTransparentDC() const override { return mMemoryDC; }
-
-  mozilla::Mutex& GetTransparentSurfaceLock() override {
-    return mTransparentSurfaceLock;
-  }
-
-  bool HasGlass() const override;
 
   void ObserveVsync(VsyncObserver* aObserver) override;
   nsIWidget* RealWidget() override;
 
  private:
-  HDC GetWindowSurface();
-  void FreeWindowSurface(HDC dc);
-
-  void CreateTransparentSurface(const gfx::IntSize& aSize);
-
   nsWindow* mWindow;
-
-  HWND mWnd;
-
-  gfx::CriticalSection mPresentLock;
-
-  // Transparency handling.
-  mozilla::Mutex mTransparentSurfaceLock;
-  mozilla::Atomic<nsTransparencyMode, MemoryOrdering::Relaxed>
-      mTransparencyMode;
-  RefPtr<gfxASurface> mTransparentSurface;
-  HDC mMemoryDC;
-  HDC mCompositeDC;
-
-  // Locked back buffer of BasicCompositor
-  uint8_t* mLockedBackBufferData;
-
-  bool mNotDeferEndRemoteDrawing;
 };
 
 }  // namespace widget
