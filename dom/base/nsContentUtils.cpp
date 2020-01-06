@@ -9376,7 +9376,7 @@ bool nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel) {
   nsIDocShell* docShell = outer->GetDocShell();
   BrowsingContext* browsingContext = docShell->GetBrowsingContext();
   bool isOnlyToplevelBrowsingContext =
-      !browsingContext->GetParent() &&
+      browsingContext->IsTop() &&
       browsingContext->Group()->Toplevels().Length() == 1;
   if (!isOnlyToplevelBrowsingContext) {
     outer->SetLargeAllocStatus(LargeAllocStatus::NOT_ONLY_TOPLEVEL_IN_TABGROUP);

@@ -1206,7 +1206,7 @@ bool nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
     mHasLoadedNonBlankURI = true;
   }
 
-  bool isRoot = !mBrowsingContext->GetParent();
+  bool isRoot = mBrowsingContext->IsTop();
   bool isSubFrame = false;  // Is this a subframe navigation?
 
   if (mLSHE) {
@@ -5111,7 +5111,7 @@ nsDocShell::SetTitle(const nsAString& aTitle) {
 
   // When title is set on the top object it should then be passed to the
   // tree owner.
-  if (!mBrowsingContext->GetParent()) {
+  if (mBrowsingContext->IsTop()) {
     nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(mTreeOwner));
     if (treeOwnerAsWin) {
       treeOwnerAsWin->SetTitle(aTitle);
@@ -6139,7 +6139,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     RefreshURIFromQueue();
 
   // Test whether this is the top frame or a subframe
-  bool isTopFrame = !mBrowsingContext->GetParent();
+  bool isTopFrame = mBrowsingContext->IsTop();
 
   //
   // If the page load failed, then deal with the error condition...
