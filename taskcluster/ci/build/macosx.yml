@@ -170,6 +170,7 @@ macosx64-fuzzing/debug:
 
 macosx64-devedition-nightly/opt:
     description: "MacOS X Dev Edition x64 Nightly"
+    use-pgo: macosx64-shippable/opt
     attributes:
         nightly: true
         enable-full-crashsymbols: true
