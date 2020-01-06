@@ -6,6 +6,7 @@ package org.mozilla.samples.browser
 
 import android.app.Application
 import mozilla.components.browser.session.Session
+import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.facts.processor.LogFactProcessor
@@ -39,6 +40,10 @@ class SampleApplication : Application() {
         components.engine.warmUp()
 
         try {
+            GlobalAddonDependencyProvider.initialize(
+                components.addonManager,
+                components.addonUpdater
+            )
             WebExtensionSupport.initialize(
                 components.engine,
                 components.store,
@@ -55,7 +60,8 @@ class SampleApplication : Application() {
                     _, sessionId ->
                         val selected = components.sessionManager.findSessionById(sessionId)
                         selected?.let { components.tabsUseCases.selectTab(it) }
-                }
+                },
+                onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest
             )
         } catch (e: UnsupportedOperationException) {
             // Web extension support is only available for engine gecko

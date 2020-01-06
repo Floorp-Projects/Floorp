@@ -97,10 +97,10 @@ data class Addon(
     ) : Parcelable
 
     /**
-     * Returns a list of id resources per each item on the [AddOn.permissions] list.
+     * Returns a list of id resources per each item on the [permissions] list.
      */
     fun translatePermissions(): List<Int> {
-        return permissions.mapNotNull { permissionToTranslation[it] }
+        return localizePermissions(permissions)
     }
 
     /**
@@ -143,5 +143,14 @@ data class Addon(
             "topSites" to R.string.mozac_feature_addons_permissions_top_sites_description,
             "devtools" to R.string.mozac_feature_addons_permissions_top_sites_description
         )
+
+        /**
+         * Takes a list of [permissions] and returns a list of id resources per each item.
+         * @param permissions The list of permissions to be localized. Valid permissions can be found in
+         * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions
+         */
+        fun localizePermissions(permissions: List<String>): List<Int> {
+            return permissions.mapNotNull { permissionToTranslation[it] }
+        }
     }
 }

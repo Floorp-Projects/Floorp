@@ -381,4 +381,31 @@ class WebExtensionSupportTest {
         verify(store, times(7)).dispatch(actionCaptor.capture())
         assertEquals(popupSessionId, (actionCaptor.value as TabListAction.RemoveTabAction).tabId)
     }
+
+    @Test
+    fun `reacts to onUpdatePermissionRequest`() {
+        var executed = false
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("test")
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    extensions = mapOf(ext.id to WebExtensionState(ext.id))
+                )
+            )
+        )
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(
+            engine = engine,
+            store = store,
+            onUpdatePermissionRequest = { _, _, _, _ ->
+                executed = true
+            })
+
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+        delegateCaptor.value.onUpdatePermissionRequest(mock(), mock(), mock(), mock())
+        assertTrue(executed)
+    }
 }

@@ -104,12 +104,14 @@ interface WebExtensionDelegate {
      *
      * @param current The current [WebExtension].
      * @param updated The update [WebExtension] that requires extra permissions.
+     * @param newPermissions Contains a list of all the new permissions.
      * @param onPermissionsGranted A callback to indicate if the new permissions from the [updated] extension
      * are granted or not.
      */
     fun onUpdatePermissionRequest(
         current: WebExtension,
         updated: WebExtension,
+        newPermissions: List<String>,
         onPermissionsGranted: ((Boolean) -> Unit)
     ) = Unit
 }
