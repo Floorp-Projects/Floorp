@@ -16,9 +16,6 @@
 using namespace mozilla::layers;
 
 namespace mozilla {
-static LazyLogModule gVideoFrameContainerLog("VideoFrameContainer");
-#define CONTAINER_LOG(type, msg) MOZ_LOG(gVideoFrameContainerLog, type, msg)
-
 #define NS_DispatchToMainThread(...) CompileError_UseAbstractMainThreadInstead
 
 namespace {
