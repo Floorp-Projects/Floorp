@@ -70,42 +70,40 @@ add_task(async function setup() {
 add_task(async () => {
   await setRTAMOOnboarding();
 
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:welcome",
-    false
-  );
-  let browser = tab.linkedBrowser;
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:welcome" },
+    async browser => {
+      let modalText = await SpecialPowers.spawn(browser, [], async () => {
+        // Wait for Activity Stream to load
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.querySelector(".activity-stream"),
+          `Should render Activity Stream`
+        );
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.body.classList.contains("welcome"),
+          "The modal setup should be completed"
+        );
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.body.classList.contains("hide-main"),
+          "You shouldn't be able to see newtabpage content"
+        );
+        for (let selector of [
+          // ReturnToAMO elements
+          ".ReturnToAMOOverlay",
+          ".ReturnToAMOContainer",
+          ".ReturnToAMOAddonContents",
+          ".ReturnToAMOIcon",
+        ]) {
+          await ContentTaskUtils.waitForCondition(
+            () => content.document.querySelector(selector) !== null,
+            `Should render ${selector}`
+          );
+        }
 
-  await SpecialPowers.spawn(browser, [], async () => {
-    // Wait for Activity Stream to load
-    await ContentTaskUtils.waitForCondition(
-      () => content.document.querySelector(".activity-stream"),
-      `Should render Activity Stream`
-    );
-    await ContentTaskUtils.waitForCondition(
-      () => content.document.body.classList.contains("welcome"),
-      "The modal setup should be completed"
-    );
-    await ContentTaskUtils.waitForCondition(
-      () => content.document.body.classList.contains("hide-main"),
-      "You shouldn't be able to see newtabpage content"
-    );
-    for (let selector of [
-      // ReturnToAMO elements
-      ".ReturnToAMOOverlay",
-      ".ReturnToAMOContainer",
-      ".ReturnToAMOAddonContents",
-      ".ReturnToAMOIcon",
-    ]) {
-      ok(content.document.querySelector(selector), `Should render ${selector}`);
+        return content.document.querySelector(".ReturnToAMOText").innerText;
+      });
+      // Make sure strings are properly shown
+      Assert.equal(modalText, "Now let’s get you mochitest_name.");
     }
-    // Make sure strings are properly shown
-    Assert.equal(
-      content.document.querySelector(".ReturnToAMOText").innerText,
-      "Now let’s get you mochitest_name."
-    );
-  });
-
-  BrowserTestUtils.removeTab(tab);
+  );
 });
