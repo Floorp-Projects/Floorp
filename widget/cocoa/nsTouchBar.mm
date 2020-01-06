@@ -217,15 +217,12 @@ static const uint32_t kInputIconSize = 16;
 
   NSTouchBarItem* item = [self itemForIdentifier:[aInput nativeIdentifier]];
 
-  // Update our canonical copy of the input.
-  [self replaceMappedLayoutItem:aInput];
-
   // If we can't immediately find item, there are three possibilities:
-  //   * It is a button in a ScrollView, which can't be found with itemForIdentifier; or
-  //   * It is contained within a popover; or
+  //   * It is a button in a ScrollView, or
+  //   * It is contained within a popover, or
   //   * It simply does not exist.
   // We check for each possibility here.
-  if (!item) {
+  if (!self.mappedLayoutItems[[aInput nativeIdentifier]]) {
     if ([self maybeUpdateScrollViewChild:aInput]) {
       return true;
     }
@@ -234,6 +231,9 @@ static const uint32_t kInputIconSize = 16;
     }
     return false;
   }
+
+  // Update our canonical copy of the input.
+  [self replaceMappedLayoutItem:aInput];
 
   if ([aInput baseType] == TouchBarInputBaseType::kButton) {
     [(NSCustomTouchBarItem*)item setCustomizationLabel:[aInput title]];
@@ -247,6 +247,9 @@ static const uint32_t kInputIconSize = 16;
   } else if ([aInput baseType] == TouchBarInputBaseType::kPopover) {
     [(NSPopoverTouchBarItem*)item setCustomizationLabel:[aInput title]];
     [self updatePopover:(NSPopoverTouchBarItem*)item withIdentifier:[aInput nativeIdentifier]];
+    for (TouchBarInput* child in [aInput children]) {
+      [(nsTouchBar*)[(NSPopoverTouchBarItem*)item popoverTouchBar] updateItem:child];
+    }
   } else if ([aInput baseType] == TouchBarInputBaseType::kLabel) {
     [self updateLabel:(NSTextField*)item.view withIdentifier:[aInput nativeIdentifier]];
   }
