@@ -9314,8 +9314,17 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     srcdoc = VoidString();
   }
 
+  // We want to use DocumentChannel if we're a sandboxed srcdoc load or if
+  // we're using a supported scheme. Non-sandboxed srcdoc loads need to share
+  // the same principal object as their outer document (and must load in the
+  // same process), which breaks if we serialize to the parent process.
+  bool isSandboxed = false;
+  aLoadInfo->GetLoadingSandboxed(&isSandboxed);
+  bool canUseDocumentChannel =
+      isSrcdoc ? isSandboxed : SchemeUsesDocChannel(aLoadState->URI());
+
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
-      SchemeUsesDocChannel(aLoadState->URI()) && !isSrcdoc) {
+      canUseDocumentChannel) {
     RefPtr<DocumentChannelChild> child = new DocumentChannelChild(
         aLoadState, aLoadInfo, aInitiatorType, aLoadFlags, aLoadType, aCacheKey,
         aIsActive, aIsTopLevelDoc, aHasNonEmptySandboxingFlags);
