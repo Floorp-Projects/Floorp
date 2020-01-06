@@ -1,3 +1,4 @@
+// |jit-test| --code-coverage
 
 s = newGlobal()
 evalcx("\
