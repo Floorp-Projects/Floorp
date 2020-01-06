@@ -1065,6 +1065,10 @@ def build_beetmover_maven_payload(config, task, task_def):
     Optional('complete-mar-bouncer-product-pattern'): basestring,
     Optional('update-line'): object,
     Optional('suffixes'): [basestring],
+    Optional('background-rate'): optionally_keyed_by(
+        'release-type', 'beta-number', Any(int, None)),
+    Optional('force-fallback-mapping-update'): optionally_keyed_by(
+        'release-type', 'beta-number', bool),
 
 
     # list of artifact URLs for the artifacts that should be beetmoved
@@ -1082,6 +1086,9 @@ def build_beetmover_maven_payload(config, task, task_def):
 def build_balrog_payload(config, task, task_def):
     worker = task['worker']
     release_config = get_release_config(config)
+    beta_number = None
+    if 'b' in release_config['version']:
+        beta_number = release_config['version'].split('b')[-1]
 
     if worker['balrog-action'] == 'submit-locale':
         task_def['payload'] = {
@@ -1090,13 +1097,15 @@ def build_balrog_payload(config, task, task_def):
         }
     else:
         for prop in ('archive-domain', 'channel-names', 'download-domain',
-                     'publish-rules', 'rules-to-update'):
+                     'publish-rules', 'rules-to-update', 'background-rate',
+                     'force-fallback-mapping-update'):
             if prop in worker:
                 resolve_keyed_by(
                     worker, prop, task['description'],
                     **{
                         'release-type': config.params['release_type'],
                         'release-level': config.params.release_level(),
+                        'beta-number': beta_number,
                     }
                 )
         task_def['payload'] = {
@@ -1125,6 +1134,11 @@ def build_balrog_payload(config, task, task_def):
                 'publish_rules': worker['publish-rules'],
                 'release_eta': worker.get('release-eta', config.params.get('release_eta')) or '',
             })
+            if worker.get('force-fallback-mapping-update'):
+                task_def['payload']['force_fallback_mapping_update'] = \
+                    worker['force-fallback-mapping-update']
+            if worker.get('background-rate'):
+                task_def['payload']['background_rate'] = worker['background-rate']
 
 
 @payload_builder('bouncer-aliases', schema={

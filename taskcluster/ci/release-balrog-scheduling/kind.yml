@@ -44,6 +44,22 @@ jobs:
                             esr60: [806]
                             esr68: [875]
                             default: []
+            background-rate:
+                by-release-type:
+                    beta:
+                        by-beta-number:
+                            '1': 25
+                            '2': 50
+                            '3': 100
+                            default: null
+                    default: null
+            force-fallback-mapping-update:
+                by-release-type:
+                    beta:
+                        by-beta-number:
+                            '1': true
+                            default: false
+                    default: false
         treeherder:
             platform: firefox-release/opt
             symbol: Rel(BSFx)
@@ -73,6 +89,19 @@ jobs:
         worker:
             product: devedition
             publish-rules: [10]
+            background-rate:
+                by-release-type:
+                    beta:
+                        by-beta-number:
+                            '1': 25
+                            '2': 50
+                            '3': 100
+                            default: null
+                    default: null
+            force-fallback-mapping-update:
+                by-release-type:
+                    beta: true
+                    default: false
         treeherder:
             platform: devedition-release/opt
             symbol: Rel(BSDev)
