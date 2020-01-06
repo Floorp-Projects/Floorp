@@ -49,7 +49,7 @@ pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.t
 pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-9.html mfenced-9-ref.html # Bug 1392106
 pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-10.html mfenced-10-ref.html # Bug 1392106
 pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-11.html mfenced-11-ref.html # bug 670592, bug 1328771, Bug 1392106
-pref(mathml.mfenced_element.disabled,false) fails-if(gtkWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-12.html mfenced-12-ref.html # bug 670592, bug 1328771, Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-12.html mfenced-12-ref.html # bug 670592, bug 1328771, Bug 1392106
 == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
 != mi-mathvariant-3.html mi-mathvariant-3-ref.html
