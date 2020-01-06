@@ -89,7 +89,7 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
     items.addAll(when (onboardingState) {
         OnboardingState.SignedOutNoAutoSignIn -> {
             listOf(
-                AdapterItem.OnboardingManualSignIn(onboardingState)
+                AdapterItem.OnboardingManualSignIn
             )
         }
         is OnboardingState.SignedOutCanAutoSignIn -> {

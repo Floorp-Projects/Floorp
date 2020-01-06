@@ -96,11 +96,9 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     ) : AdapterItem(OnboardingSectionHeaderViewHolder.LAYOUT_ID) {
         override fun sameAs(other: AdapterItem) = other is OnboardingSectionHeader && labelBuilder == other.labelBuilder
     }
-    data class OnboardingManualSignIn(
-        val state: OnboardingState
-    ) : AdapterItem(OnboardingManualSignInViewHolder.LAYOUT_ID)
+    object OnboardingManualSignIn : AdapterItem(OnboardingManualSignInViewHolder.LAYOUT_ID)
     data class OnboardingAutomaticSignIn(
-        val state: OnboardingState
+        val state: OnboardingState.SignedOutCanAutoSignIn
     ) : AdapterItem(OnboardingAutomaticSignInViewHolder.LAYOUT_ID)
     object OnboardingThemePicker : AdapterItem(OnboardingThemePickerViewHolder.LAYOUT_ID)
     object OnboardingTrackingProtection : AdapterItem(OnboardingTrackingProtectionViewHolder.LAYOUT_ID)
@@ -197,9 +195,8 @@ class SessionControlAdapter(
                 (item as AdapterItem.OnboardingSectionHeader).labelBuilder
             )
             is OnboardingManualSignInViewHolder -> holder.bind()
-            is OnboardingAutomaticSignInViewHolder -> holder.bind((
-                (item as AdapterItem.OnboardingAutomaticSignIn).state
-                    as OnboardingState.SignedOutCanAutoSignIn).withAccount
+            is OnboardingAutomaticSignInViewHolder -> holder.bind(
+                (item as AdapterItem.OnboardingAutomaticSignIn).state.withAccount
             )
         }
     }
