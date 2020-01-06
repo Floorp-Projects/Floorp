@@ -38,24 +38,24 @@ class BackgroundCursorChild;
 // distinctions.
 class IDBCursor final : public nsISupports, public nsWrapperCache {
  public:
-  typedef indexedDB::Key Key;
-  typedef indexedDB::StructuredCloneReadInfo StructuredCloneReadInfo;
+  using Key = indexedDB::Key;
+  using StructuredCloneReadInfo = indexedDB::StructuredCloneReadInfo;
 
-  enum Direction {
-    NEXT = 0,
-    NEXT_UNIQUE,
-    PREV,
-    PREV_UNIQUE,
+  enum struct Direction {
+    Next = 0,
+    NextUnique,
+    Prev,
+    PrevUnique,
 
     // Only needed for IPC serialization helper, should never be used in code.
-    DIRECTION_INVALID
+    Invalid
   };
 
-  enum Type {
-    Type_ObjectStore,
-    Type_ObjectStoreKey,
-    Type_Index,
-    Type_IndexKey,
+  enum struct Type {
+    ObjectStore,
+    ObjectStoreKey,
+    Index,
+    IndexKey,
   };
 
  private:

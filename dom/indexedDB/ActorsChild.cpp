@@ -1278,11 +1278,11 @@ void DispatchFileHandleSuccessEvent(FileHandleResultHelper* aResultHelper) {
 
 auto GetKeyOperator(const IDBCursor::Direction aDirection) {
   switch (aDirection) {
-    case IDBCursor::NEXT:
-    case IDBCursor::NEXT_UNIQUE:
+    case IDBCursor::Direction::Next:
+    case IDBCursor::Direction::NextUnique:
       return &Key::operator>=;
-    case IDBCursor::PREV:
-    case IDBCursor::PREV_UNIQUE:
+    case IDBCursor::Direction::Prev:
+    case IDBCursor::Direction::PrevUnique:
       return &Key::operator<=;
     default:
       MOZ_CRASH("Should never get here.");
@@ -3457,18 +3457,18 @@ void BackgroundCursorChild::CompleteContinueRequestFromCache() {
 
   auto& item = mDelayedResponses.front();
   switch (mCursor->GetType()) {
-    case IDBCursor::Type_ObjectStore:
+    case IDBCursor::Type::ObjectStore:
       mCursor->Reset(std::move(item.mKey), std::move(item.mCloneInfo));
       break;
-    case IDBCursor::Type_Index:
+    case IDBCursor::Type::Index:
       mCursor->Reset(std::move(item.mKey), std::move(item.mLocaleAwareKey),
                      std::move(item.mObjectStoreKey),
                      std::move(item.mCloneInfo));
       break;
-    case IDBCursor::Type_ObjectStoreKey:
+    case IDBCursor::Type::ObjectStoreKey:
       mCursor->Reset(std::move(item.mKey));
       break;
-    case IDBCursor::Type_IndexKey:
+    case IDBCursor::Type::IndexKey:
       mCursor->Reset(std::move(item.mKey), std::move(item.mLocaleAwareKey),
                      std::move(item.mObjectStoreKey));
       break;
