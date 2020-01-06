@@ -16,6 +16,8 @@ const TEST_URI =
 const STUB_FILE = "pageError.js";
 
 add_task(async function() {
+  await pushPref("javascript.options.asyncstack", true);
+
   const isStubsUpdate = env.get(STUBS_UPDATE_ENV) == "true";
   info(`${isStubsUpdate ? "Update" : "Check"} ${STUB_FILE}`);
 
