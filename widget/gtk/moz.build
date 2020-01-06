@@ -146,8 +146,6 @@ DEFINES['CAIRO_GFX'] = True
 
 DEFINES['MOZ_APP_NAME'] = '"%s"' % CONFIG['MOZ_APP_NAME']
 
-CFLAGS += CONFIG['MOZ_STARTUP_NOTIFICATION_CFLAGS']
-
 # When building with GTK3, the widget code always needs to use
 # system Cairo headers, regardless of whether we are also linked
 # against and using in-tree Cairo. By not using in-tree Cairo
@@ -157,8 +155,6 @@ CFLAGS += CONFIG['MOZ_STARTUP_NOTIFICATION_CFLAGS']
 # between the widget code and GTK3.
 if not (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk' and CONFIG['MOZ_TREE_CAIRO']):
     CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
-
-CXXFLAGS += CONFIG['MOZ_STARTUP_NOTIFICATION_CFLAGS']
 
 CFLAGS += CONFIG['TK_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
