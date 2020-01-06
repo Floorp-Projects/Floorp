@@ -688,7 +688,7 @@ void js::BaseScript::finalize(JSFreeOp* fop) {
     JSScript* script = static_cast<JSScript*>(this);
 
     if (coverage::IsLCovEnabled()) {
-      coverage::CollectScriptCoverage(script);
+      coverage::CollectScriptCoverage(script, true);
     }
 
     fop->runtime()->geckoProfiler().onScriptFinalized(script);

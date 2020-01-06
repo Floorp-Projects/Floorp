@@ -1766,22 +1766,6 @@ Function CanWrite
 FunctionEnd
 
 Function LaunchApp
-!ifndef DEV_EDITION
-  FindWindow $0 "${MainWindowClass}"
-  FindWindow $1 "${DialogWindowClass}"
-  ${If} $0 <> 0 ; integer comparison
-  ${OrIf} $1 <> 0
-    StrCpy $FirefoxLaunchCode "1"
-
-    StrCpy $ProgressCompleted ${PROGRESS_BAR_TOTAL_STEPS}
-    Call SetProgressBars
-
-    MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
-    Call SendPing
-    Return
-  ${EndIf}
-!endif
-
   StrCpy $FirefoxLaunchCode "2"
 
   ; Set the current working directory to the installation directory

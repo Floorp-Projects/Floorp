@@ -1,4 +1,4 @@
-// |jit-test| --code-coverage;
+// |jit-test| --code-coverage
 
 // Currently the Jit integration has a few issues, let's keep this test
 // case deterministic.

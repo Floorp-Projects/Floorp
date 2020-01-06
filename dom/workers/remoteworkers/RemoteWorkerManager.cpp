@@ -355,13 +355,21 @@ void RemoteWorkerManager::LaunchNewContentProcess(
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       __func__, [isServiceWorker = IsServiceWorker(aData),
                  principalInfo = aData.principalInfo()] {
-        RefPtr<ContentParent> contentParent =
-            ContentParent::GetNewOrUsedBrowserProcess(
-                nullptr, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
-
-        if (isServiceWorker) {
-          TransmitPermissionsForPrincipalInfo(contentParent, principalInfo);
-        }
+        ContentParent::GetNewOrUsedBrowserProcessAsync(
+            /* aFrameElement = */ nullptr,
+            /* aRemoteType = */ NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))
+            ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                   [isServiceWorker, &principalInfo](
+                       const ContentParent::LaunchPromise::ResolveOrRejectValue&
+                           aResult) {
+                     if (!isServiceWorker) {
+                       return;
+                     }
+                     RefPtr<ContentParent> contentParent =
+                         aResult.IsResolve() ? aResult.ResolveValue() : nullptr;
+                     TransmitPermissionsForPrincipalInfo(contentParent,
+                                                         principalInfo);
+                   });
       });
 
   nsCOMPtr<nsIEventTarget> target =

@@ -17,6 +17,7 @@ codespell:
         - devtools/docs/
         - devtools/shared/locales/en-US/
         - devtools/startup/locales/en-US/
+        - docs/
         - dom/docs/
         - dom/locales/en-US/
         - gfx/docs/
@@ -49,7 +50,7 @@ codespell:
         - toolkit/docs/
         - toolkit/locales/en-US/
         - toolkit/modules/docs/
-        - tools/docs/
+        - tools/moztreedocs/
         - tools/lint/
         - tools/tryselect/
     exclude:

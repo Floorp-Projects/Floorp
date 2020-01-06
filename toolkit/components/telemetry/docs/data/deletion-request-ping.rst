@@ -35,6 +35,6 @@ The following is a list of expected behaviours for the ``deletion-request`` ping
 Version History
 ---------------
 
-- Firefox 70:
+- Firefox 72:
 
   - "deletion-request" ping replaces the "optout" ping (`bug 1585410 <https://bugzilla.mozilla.org/show_bug.cgi?id=1585410>`_).

@@ -32,7 +32,7 @@ class ArchiveNotFound(Exception):
     pass
 
 
-_PREFS = {
+DEFAULT_PREFS = {
     "focusmanager.testmode": True,
     "marionette.defaultPrefs.port": 2828,
     "marionette.port": 2828,
@@ -40,8 +40,10 @@ _PREFS = {
     "marionette.log.level": "Trace",
     "marionette.log.truncate": False,
     "marionette.contentListener": False,
-    "extensions.autoDisableScopes": 0,
+    "extensions.autoDisableScopes": 10,
     "devtools.debugger.remote-enabled": True,
+    "devtools.console.stdout.content": True,
+    "devtools.console.stdout.chrome": True,
 }
 
 DEFAULT_CUSTOMIZATION = os.path.join(
@@ -78,6 +80,7 @@ def get_logger():
         try:
             from arsenic import connection
             from structlog import wrap_logger
+
             logger = wrap_logger(NullLogger(), processors=[])
             connection.log = logger
         except ImportError:
@@ -107,7 +110,7 @@ def fresh_profile(profile, customization_data):
     LOG("Creating a fresh profile")
     new_profile = create_profile(app="firefox")
     prefs = customization_data["prefs"]
-    prefs.update(_PREFS)
+    prefs.update(DEFAULT_PREFS)
     new_profile.set_preferences(prefs)
     extensions = []
     for name, url in customization_data["addons"].items():

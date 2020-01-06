@@ -29,7 +29,7 @@ test(function(t) {
   sandbox.importFunction(document, "document");
   sandbox.importFunction(assert_true, "assert_true");
   sandbox.importFunction(assert_unreached, "assert_unreached");
-  SpecialPowers.Cu.evalInSandbox(`(${contentScript.toSource()})()`, sandbox);
+  SpecialPowers.Cu.evalInSandbox(`(${contentScript.toString()})()`, sandbox);
 }, 'Setting easing should not throw any exceptions in sandbox');
 
 </script>

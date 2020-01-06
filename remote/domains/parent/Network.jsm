@@ -199,7 +199,7 @@ class Network extends Domain {
       initiator: undefined,
       redirectResponse: undefined,
       type: LOAD_CAUSE_STRINGS[causeType] || "unknown",
-      frameId: topFrame.outerWindowID.toString(),
+      frameId: topFrame.browsingContext.id.toString(),
       hasUserGesture: undefined,
     });
   }

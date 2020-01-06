@@ -92,7 +92,7 @@ class Page extends ContentProcessDomain {
   }
 
   async navigate({ url, referrer, transitionType, frameId } = {}) {
-    if (frameId && frameId != this.content.windowUtils.outerWindowID) {
+    if (frameId && frameId != this.docShell.browsingContext.id.toString()) {
       throw new UnsupportedError("frameId not supported");
     }
 
@@ -104,7 +104,7 @@ class Page extends ContentProcessDomain {
     this.docShell.loadURI(url, opts);
 
     return {
-      frameId: this.content.windowUtils.outerWindowID.toString(),
+      frameId: this.docShell.browsingContext.id.toString(),
     };
   }
 
@@ -118,7 +118,7 @@ class Page extends ContentProcessDomain {
   }
 
   getFrameTree() {
-    const frameId = this.content.windowUtils.outerWindowID.toString();
+    const frameId = this.docShell.browsingContext.id.toString();
     return {
       frameTree: {
         frame: {
@@ -175,7 +175,7 @@ class Page extends ContentProcessDomain {
    */
   createIsolatedWorld(options = {}) {
     const { frameId, worldName } = options;
-    if (frameId && frameId != this.content.windowUtils.outerWindowID) {
+    if (frameId && frameId != this.docShell.browsingContext.id.toString()) {
       throw new UnsupportedError("frameId not supported");
     }
     const Runtime = this.session.domains.get("Runtime");
@@ -250,7 +250,7 @@ class Page extends ContentProcessDomain {
     }
 
     const timestamp = Date.now();
-    const frameId = target.defaultView.windowUtils.outerWindowID.toString();
+    const frameId = target.defaultView.docShell.browsingContext.id.toString();
     const url = target.location.href;
 
     switch (type) {

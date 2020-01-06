@@ -185,16 +185,13 @@ class Accessible extends Component {
     }
   }
 
-  async update() {
+  update() {
     const { dispatch, accessibleFront } = this.props;
     if (!accessibleFront.actorID) {
       return;
     }
 
-    const domWalker = (await accessibleFront.targetFront.getFront("inspector"))
-      .walker;
-
-    dispatch(updateDetails(domWalker, accessibleFront));
+    dispatch(updateDetails(accessibleFront));
   }
 
   setExpanded(item, isExpanded) {

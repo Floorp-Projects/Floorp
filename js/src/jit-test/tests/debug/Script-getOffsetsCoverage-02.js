@@ -1,4 +1,4 @@
-// |jit-test| --ion-pgo=off;
+// |jit-test| --ion-pgo=off; skip-if: isLcovEnabled()
 
 // This script check that when we enable / disable the code coverage collection,
 // then we have different results for the getOffsetsCoverage methods.

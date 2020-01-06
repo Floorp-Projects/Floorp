@@ -154,7 +154,7 @@ class AccessibilityRow extends Component {
     scrollIntoView(row);
   }
 
-  async update() {
+  update() {
     const {
       dispatch,
       member: { object },
@@ -163,8 +163,7 @@ class AccessibilityRow extends Component {
       return;
     }
 
-    const domWalker = (await object.targetFront.getFront("inspector")).walker;
-    dispatch(updateDetails(domWalker, object));
+    dispatch(updateDetails(object));
     window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED, object);
   }
 

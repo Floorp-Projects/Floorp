@@ -29,14 +29,14 @@ remote.jar:
   content/targets/TabObserver.jsm (targets/TabObserver.jsm)
   content/targets/TabTarget.jsm (targets/TabTarget.jsm)
   content/targets/Target.jsm (targets/Target.jsm)
-  content/targets/Targets.jsm (targets/Targets.jsm)
+  content/targets/TargetList.jsm (targets/TargetList.jsm)
 
   # domains
   content/domains/ContentProcessDomain.jsm (domains/ContentProcessDomain.jsm)
   content/domains/ContentProcessDomains.jsm (domains/ContentProcessDomains.jsm)
   content/domains/ContextObserver.jsm (domains/ContextObserver.jsm)
   content/domains/Domain.jsm (domains/Domain.jsm)
-  content/domains/Domains.jsm (domains/Domains.jsm)
+  content/domains/DomainCache.jsm (domains/DomainCache.jsm)
   content/domains/ParentProcessDomains.jsm (domains/ParentProcessDomains.jsm)
   content/domains/content/DOM.jsm (domains/content/DOM.jsm)
   content/domains/content/Emulation.jsm (domains/content/Emulation.jsm)

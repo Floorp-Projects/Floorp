@@ -3,6 +3,12 @@ Mozilla Source Tree Documentation
 =================================
 
 .. toctree::
+   :caption: Contributing
+   :maxdepth: 2
+
+   {contributing_doc}
+
+.. toctree::
    :caption: Source code doc
    :maxdepth: 2
 

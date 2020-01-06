@@ -5,6 +5,8 @@
 
 const { Arg, RetVal, generateActorSpec } = require("devtools/shared/protocol");
 
+// Bug 1606852: Delete this file when Firefox 73 is on release.
+
 const emulationSpec = generateActorSpec({
   typeName: "emulation",
 

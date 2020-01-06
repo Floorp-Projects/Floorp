@@ -48,6 +48,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/shared/fronts/changes",
   },
   {
+    types: ["contentViewer"],
+    spec: "devtools/shared/specs/content-viewer",
+    front: "devtools/shared/fronts/content-viewer",
+  },
+  {
     types: ["cssProperties"],
     spec: "devtools/shared/specs/css-properties",
     front: "devtools/shared/fronts/css-properties",
@@ -71,11 +76,6 @@ const Types = (exports.__TypesForTests = [
     types: ["device"],
     spec: "devtools/shared/specs/device",
     front: "devtools/shared/fronts/device",
-  },
-  {
-    types: ["emulation"],
-    spec: "devtools/shared/specs/emulation",
-    front: "devtools/shared/fronts/emulation",
   },
   {
     types: ["environment"],
@@ -173,6 +173,11 @@ const Types = (exports.__TypesForTests = [
     types: ["reflow"],
     spec: "devtools/shared/specs/reflow",
     front: "devtools/shared/fronts/reflow",
+  },
+  {
+    types: ["responsive"],
+    spec: "devtools/shared/specs/responsive",
+    front: "devtools/shared/fronts/responsive",
   },
   {
     types: ["screenshot"],

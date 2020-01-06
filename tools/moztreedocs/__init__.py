@@ -22,7 +22,7 @@ import sphinx.ext.apidoc
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 
-MAIN_DOC_PATH = os.path.normpath(os.path.join(build.topsrcdir, 'tools', 'docs'))
+MAIN_DOC_PATH = os.path.normpath(os.path.join(build.topsrcdir, 'docs'))
 
 logger = sphinx.util.logging.getLogger(__name__)
 
@@ -203,7 +203,7 @@ class _SphinxManager(object):
         if indexes:
             # In case a new doc isn't categorized
             print(indexes)
-            raise Exception("Uncategorized documentation. Please add it in tools/docs/config.yml")
+            raise Exception("Uncategorized documentation. Please add it in docs/config.yml")
 
         data = data.format(**CATEGORIES)
 

@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/Log.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   RecommendedPreferences: "chrome://remote/content/RecommendedPreferences.jsm",
-  Targets: "chrome://remote/content/targets/Targets.jsm",
+  TargetList: "chrome://remote/content/targets/TargetList.jsm",
 });
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
@@ -71,14 +71,12 @@ class RemoteAgentClass {
     this.server = new HttpServer();
     this.server.registerPrefixHandler("/json/", new JSONHandler(this));
 
-    this.targets = new Targets();
+    this.targets = new TargetList();
     this.targets.on("target-created", (eventName, target) => {
       this.server.registerPathHandler(target.path, target);
     });
     this.targets.on("target-destroyed", (eventName, target) => {
-      // TODO: removes the entry added by registerPathHandler,
-      // but we should instead have nsIHttpServer.unregisterPathHandler
-      delete this.server._handler._overridePaths[target.path];
+      this.server.registerPathHandler(target.path, null);
     });
 
     return this.asyncListen(host, port);

@@ -288,24 +288,25 @@ function prompt(
   // nsIContentPermissionRequest, but because webrtc uses their own prompting
   // system, we should manually apply the delegate policy here. Permission
   // should be delegated using Feature Policy and top principal
+  const permDelegateHandler = aContentWindow.document.permDelegateHandler.QueryInterface(
+    Ci.nsIPermissionDelegateHandler
+  );
+
   const shouldDelegatePermission =
-    Services.prefs.getBoolPref("permissions.delegation.enabled", false) &&
-    Services.prefs.getBoolPref("dom.security.featurePolicy.enabled", false);
+    permDelegateHandler.permissionDelegateFPEnabled;
 
   const origin = shouldDelegatePermission
     ? aContentWindow.top.document.nodePrincipal.origin
     : aContentWindow.document.nodePrincipal.origin;
 
   let secondOrigin = undefined;
-  if (shouldDelegatePermission) {
-    const permDelegateHandler = aContentWindow.document.permDelegateHandler.QueryInterface(
-      Ci.nsIPermissionDelegateHandler
-    );
-    if (permDelegateHandler.maybeUnsafePermissionDelegate(requestTypes)) {
-      // We are going to prompt both first party and third party origin.
-      // SecondOrigin should be third party
-      secondOrigin = aContentWindow.document.nodePrincipal.origin;
-    }
+  if (
+    shouldDelegatePermission &&
+    permDelegateHandler.maybeUnsafePermissionDelegate(requestTypes)
+  ) {
+    // We are going to prompt both first party and third party origin.
+    // SecondOrigin should be third party
+    secondOrigin = aContentWindow.document.nodePrincipal.origin;
   }
 
   let request = {

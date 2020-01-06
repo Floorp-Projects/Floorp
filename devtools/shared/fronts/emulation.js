@@ -12,6 +12,8 @@ const { emulationSpec } = require("devtools/shared/specs/emulation");
 
 /**
  * The corresponding Front object for the EmulationActor.
+ *
+ * Bug 1606852: Delete this file when Firefox 73 is on release.
  */
 class EmulationFront extends FrontClassWithSpec(emulationSpec) {
   constructor(client, targetFront, parentFront) {

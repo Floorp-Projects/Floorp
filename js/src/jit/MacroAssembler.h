@@ -1322,7 +1322,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void branchIfFunctionHasNoJitEntry(Register fun, bool isConstructing,
                                             Label* label);
-  inline void branchIfFunctionHasNoScript(Register fun, Label* label);
   inline void branchIfInterpreted(Register fun, bool isConstructing,
                                   Label* label);
 
@@ -1339,9 +1338,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchFunctionKind(Condition cond,
                                  FunctionFlags::FunctionKind kind, Register fun,
                                  Register scratch, Label* label);
-
-  void branchIfNotInterpretedConstructor(Register fun, Register scratch,
-                                         Label* label);
 
   inline void branchIfObjectEmulatesUndefined(Register objReg, Register scratch,
                                               Label* slowCheck, Label* label);
@@ -3016,8 +3012,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   Vector<CodeOffset, 0, SystemAllocPolicy> profilerCallSites_;
 
  public:
-  void loadJitCodeRaw(Register callee, Register dest);
-  void loadJitCodeNoArgCheck(Register callee, Register dest);
+  void loadJitCodeRaw(Register func, Register dest);
+  void loadJitCodeMaybeNoArgCheck(Register func, Register dest);
 
   void loadBaselineFramePtr(Register framePtr, Register dest);
 

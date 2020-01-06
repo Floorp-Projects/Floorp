@@ -79,7 +79,7 @@ interface nsITableEditor : nsISupports
     * The selection is collapsed and is left in the
     *  cell at the same row,col location as
     *  the previous selection anchor, if possible,
-    *  else in the closest neigboring cell
+    *  else in the closest neighboring cell
     *
     * @param aNumber    Number of items to insert/delete
     */

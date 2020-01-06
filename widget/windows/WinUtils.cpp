@@ -1106,12 +1106,17 @@ void WinUtils::InvalidatePluginAsWorkaround(nsIWidget* aWidget,
  * @param aIOThread : the thread which performs the action
  * @param aURLShortcut : Differentiates between (false)Jumplistcache and
  *                       (true)Shortcutcache
+ * @param aRunnable : Executed in the aIOThread when the favicon cache is
+ *                    avaiable
  ************************************************************************/
 
-AsyncFaviconDataReady::AsyncFaviconDataReady(nsIURI* aNewURI,
-                                             nsCOMPtr<nsIThread>& aIOThread,
-                                             const bool aURLShortcut)
-    : mNewURI(aNewURI), mIOThread(aIOThread), mURLShortcut(aURLShortcut) {}
+AsyncFaviconDataReady::AsyncFaviconDataReady(
+    nsIURI* aNewURI, nsCOMPtr<nsIThread>& aIOThread, const bool aURLShortcut,
+    already_AddRefed<nsIRunnable> aRunnable)
+    : mNewURI(aNewURI),
+      mIOThread(aIOThread),
+      mRunnable(aRunnable),
+      mURLShortcut(aURLShortcut) {}
 
 NS_IMETHODIMP
 myDownloadObserver::OnDownloadComplete(nsIDownloader* downloader,
@@ -1247,8 +1252,9 @@ AsyncFaviconDataReady::OnComplete(nsIURI* aFaviconURI, uint32_t aDataLen,
   int32_t stride = 4 * size.width;
 
   // AsyncEncodeAndWriteIcon takes ownership of the heap allocated buffer
-  nsCOMPtr<nsIRunnable> event = new AsyncEncodeAndWriteIcon(
-      path, std::move(data), stride, size.width, size.height, mURLShortcut);
+  nsCOMPtr<nsIRunnable> event =
+      new AsyncEncodeAndWriteIcon(path, std::move(data), stride, size.width,
+                                  size.height, mRunnable.forget());
   mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
   return NS_OK;
@@ -1259,10 +1265,10 @@ AsyncFaviconDataReady::OnComplete(nsIURI* aFaviconURI, uint32_t aDataLen,
 // in
 AsyncEncodeAndWriteIcon::AsyncEncodeAndWriteIcon(
     const nsAString& aIconPath, UniquePtr<uint8_t[]> aBuffer, uint32_t aStride,
-    uint32_t aWidth, uint32_t aHeight, const bool aURLShortcut)
-    : mURLShortcut(aURLShortcut),
-      mIconPath(aIconPath),
+    uint32_t aWidth, uint32_t aHeight, already_AddRefed<nsIRunnable> aRunnable)
+    : mIconPath(aIconPath),
       mBuffer(std::move(aBuffer)),
+      mRunnable(aRunnable),
       mStride(aStride),
       mWidth(aWidth),
       mHeight(aHeight) {}
@@ -1306,9 +1312,8 @@ NS_IMETHODIMP AsyncEncodeAndWriteIcon::Run() {
   fclose(file);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mURLShortcut) {
-    SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETNONCLIENTMETRICS,
-                      0);
+  if (mRunnable) {
+    mRunnable->Run();
   }
   return rv;
 }
@@ -1389,12 +1394,15 @@ AsyncDeleteAllFaviconsFromDisk::~AsyncDeleteAllFaviconsFromDisk() {}
  * @param aICOFilePath The path of the icon file
  * @param aIOThread The thread to perform the Fetch on
  * @param aURLShortcut to distinguish between jumplistcache(false) and
- *        shortcutcache(true)
+ *                     shortcutcache(true)
+ * @param aRunnable Executed in the aIOThread when the favicon cache is
+ *                  avaiable
  */
-nsresult FaviconHelper::ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
-                                             nsString& aICOFilePath,
-                                             nsCOMPtr<nsIThread>& aIOThread,
-                                             bool aURLShortcut) {
+nsresult FaviconHelper::ObtainCachedIconFile(
+    nsCOMPtr<nsIURI> aFaviconPageURI, nsString& aICOFilePath,
+    nsCOMPtr<nsIThread>& aIOThread, bool aURLShortcut,
+    already_AddRefed<nsIRunnable> aRunnable) {
+  nsCOMPtr<nsIRunnable> runnable = aRunnable;
   // Obtain the ICO file path
   nsCOMPtr<nsIFile> icoFile;
   nsresult rv = GetOutputIconPath(aFaviconPageURI, icoFile, aURLShortcut);
@@ -1418,14 +1426,14 @@ nsresult FaviconHelper::ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
     // the next time we try to build the jump list, the data will be available.
     if (NS_FAILED(rv) || (nowTime - fileModTime) > icoReCacheSecondsTimeout) {
       CacheIconFileFromFaviconURIAsync(aFaviconPageURI, icoFile, aIOThread,
-                                       aURLShortcut);
+                                       aURLShortcut, runnable.forget());
       return NS_ERROR_NOT_AVAILABLE;
     }
   } else {
     // The file does not exist yet, obtain it async from the favicon service so
     // that the next time we try to build the jump list it'll be available.
     CacheIconFileFromFaviconURIAsync(aFaviconPageURI, icoFile, aIOThread,
-                                     aURLShortcut);
+                                     aURLShortcut, runnable.forget());
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -1497,7 +1505,9 @@ nsresult FaviconHelper::GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
 // page aFaviconPageURI and stores it to disk at the path of aICOFile.
 nsresult FaviconHelper::CacheIconFileFromFaviconURIAsync(
     nsCOMPtr<nsIURI> aFaviconPageURI, nsCOMPtr<nsIFile> aICOFile,
-    nsCOMPtr<nsIThread>& aIOThread, bool aURLShortcut) {
+    nsCOMPtr<nsIThread>& aIOThread, bool aURLShortcut,
+    already_AddRefed<nsIRunnable> aRunnable) {
+  nsCOMPtr<nsIRunnable> runnable = aRunnable;
 #ifdef MOZ_PLACES
   // Obtain the favicon service and get the favicon for the specified page
   nsCOMPtr<nsIFaviconService> favIconSvc(
@@ -1505,8 +1515,8 @@ nsresult FaviconHelper::CacheIconFileFromFaviconURIAsync(
   NS_ENSURE_TRUE(favIconSvc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIFaviconDataCallback> callback =
-      new mozilla::widget::AsyncFaviconDataReady(aFaviconPageURI, aIOThread,
-                                                 aURLShortcut);
+      new mozilla::widget::AsyncFaviconDataReady(
+          aFaviconPageURI, aIOThread, aURLShortcut, runnable.forget());
 
   favIconSvc->GetFaviconDataForPage(aFaviconPageURI, callback, 0);
 #endif

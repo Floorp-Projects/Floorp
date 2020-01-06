@@ -33,6 +33,8 @@ loader.lazyRequireGetter(
  * A subtle aspect of the code below is that all get* methods must return non-undefined
  * values, so that the absence of a previous value can be distinguished from the value for
  * "no override" for each of the properties.
+ *
+ * Bug 1606852: Delete this file when Firefox 73 is on release.
  */
 const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
   initialize(conn, targetActor) {

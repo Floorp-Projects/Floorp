@@ -107,13 +107,13 @@ async function listWorkerTargets(args: Args) {
       installingWorker,
       evaluatingWorker,
     } = front;
-    await maybeMarkServiceWorker(activeWorker, "active");
-    await maybeMarkServiceWorker(waitingWorker, "waiting");
-    await maybeMarkServiceWorker(installingWorker, "installing");
-    await maybeMarkServiceWorker(evaluatingWorker, "evaluating");
+    await maybeMarkServiceWorker(activeWorker);
+    await maybeMarkServiceWorker(waitingWorker);
+    await maybeMarkServiceWorker(installingWorker);
+    await maybeMarkServiceWorker(evaluatingWorker);
   }
 
-  async function maybeMarkServiceWorker(info, status) {
+  async function maybeMarkServiceWorker(info) {
     if (!info) {
       return;
     }
@@ -123,7 +123,7 @@ async function listWorkerTargets(args: Args) {
       return;
     }
 
-    worker.debuggerServiceWorkerStatus = status;
+    worker.debuggerServiceWorkerStatus = info.stateText;
     if (!workers.includes(worker)) {
       workers.push(worker);
     }

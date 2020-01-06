@@ -39,21 +39,28 @@
 #include "imgIEncoder.h"
 #include "imgITools.h"
 
-#include "WinUtils.h"
 #include "mozilla/LazyIdleThread.h"
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::glue;
 using namespace mozilla::widget;
 
 #define BFH_LENGTH 14
 #define DEFAULT_THREAD_TIMEOUT_MS 30000
 
+//-----------------------------------------------------------------------------
+// CStreamBase implementation
+nsDataObj::CStreamBase::CStreamBase() : mStreamRead(0) {}
+
+//-----------------------------------------------------------------------------
+nsDataObj::CStreamBase::~CStreamBase() {}
+
 NS_IMPL_ISUPPORTS(nsDataObj::CStream, nsIStreamListener)
 
 //-----------------------------------------------------------------------------
 // CStream implementation
-nsDataObj::CStream::CStream() : mChannelRead(false), mStreamRead(0) {}
+nsDataObj::CStream::CStream() : mChannelRead(false) {}
 
 //-----------------------------------------------------------------------------
 nsDataObj::CStream::~CStream() {}
@@ -157,23 +164,25 @@ nsresult nsDataObj::CStream::WaitForCompletion() {
 
 //-----------------------------------------------------------------------------
 // IStream
-STDMETHODIMP nsDataObj::CStream::Clone(IStream** ppStream) { return E_NOTIMPL; }
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::Commit(DWORD dwFrags) { return E_NOTIMPL; }
-
-//-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::CopyTo(IStream* pDestStream,
-                                        ULARGE_INTEGER nBytesToCopy,
-                                        ULARGE_INTEGER* nBytesRead,
-                                        ULARGE_INTEGER* nBytesWritten) {
+STDMETHODIMP nsDataObj::CStreamBase::Clone(IStream** ppStream) {
   return E_NOTIMPL;
 }
 
 //-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::LockRegion(ULARGE_INTEGER nStart,
-                                            ULARGE_INTEGER nBytes,
-                                            DWORD dwFlags) {
+STDMETHODIMP nsDataObj::CStreamBase::Commit(DWORD dwFrags) { return E_NOTIMPL; }
+
+//-----------------------------------------------------------------------------
+STDMETHODIMP nsDataObj::CStreamBase::CopyTo(IStream* pDestStream,
+                                            ULARGE_INTEGER nBytesToCopy,
+                                            ULARGE_INTEGER* nBytesRead,
+                                            ULARGE_INTEGER* nBytesWritten) {
+  return E_NOTIMPL;
+}
+
+//-----------------------------------------------------------------------------
+STDMETHODIMP nsDataObj::CStreamBase::LockRegion(ULARGE_INTEGER nStart,
+                                                ULARGE_INTEGER nBytes,
+                                                DWORD dwFlags) {
   return E_NOTIMPL;
 }
 
@@ -196,11 +205,11 @@ STDMETHODIMP nsDataObj::CStream::Read(void* pvBuffer, ULONG nBytesToRead,
 }
 
 //-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::Revert(void) { return E_NOTIMPL; }
+STDMETHODIMP nsDataObj::CStreamBase::Revert(void) { return E_NOTIMPL; }
 
 //-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::Seek(LARGE_INTEGER nMove, DWORD dwOrigin,
-                                      ULARGE_INTEGER* nNewPos) {
+STDMETHODIMP nsDataObj::CStreamBase::Seek(LARGE_INTEGER nMove, DWORD dwOrigin,
+                                          ULARGE_INTEGER* nNewPos) {
   if (nNewPos == nullptr) return STG_E_INVALIDPOINTER;
 
   if (nMove.LowPart == 0 && nMove.HighPart == 0 &&
@@ -214,7 +223,7 @@ STDMETHODIMP nsDataObj::CStream::Seek(LARGE_INTEGER nMove, DWORD dwOrigin,
 }
 
 //-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::SetSize(ULARGE_INTEGER nNewSize) {
+STDMETHODIMP nsDataObj::CStreamBase::SetSize(ULARGE_INTEGER nNewSize) {
   return E_NOTIMPL;
 }
 
@@ -258,7 +267,7 @@ STDMETHODIMP nsDataObj::CStream::Stat(STATSTG* statstg, DWORD dwFlags) {
   SystemTimeToFileTime((const SYSTEMTIME*)&st, (LPFILETIME)&statstg->mtime);
   statstg->ctime = statstg->atime = statstg->mtime;
 
-  statstg->cbSize.LowPart = (DWORD)mChannelData.Length();
+  statstg->cbSize.QuadPart = mChannelData.Length();
   statstg->grfMode = STGM_READ;
   statstg->grfLocksSupported = LOCK_ONLYONCE;
   statstg->clsid = CLSID_NULL;
@@ -267,15 +276,16 @@ STDMETHODIMP nsDataObj::CStream::Stat(STATSTG* statstg, DWORD dwFlags) {
 }
 
 //-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::UnlockRegion(ULARGE_INTEGER nStart,
-                                              ULARGE_INTEGER nBytes,
-                                              DWORD dwFlags) {
+STDMETHODIMP nsDataObj::CStreamBase::UnlockRegion(ULARGE_INTEGER nStart,
+                                                  ULARGE_INTEGER nBytes,
+                                                  DWORD dwFlags) {
   return E_NOTIMPL;
 }
 
 //-----------------------------------------------------------------------------
-STDMETHODIMP nsDataObj::CStream::Write(const void* pvBuffer, ULONG nBytesToRead,
-                                       ULONG* nBytesRead) {
+STDMETHODIMP nsDataObj::CStreamBase::Write(const void* pvBuffer,
+                                           ULONG nBytesToRead,
+                                           ULONG* nBytesRead) {
   return E_NOTIMPL;
 }
 
@@ -309,6 +319,140 @@ HRESULT nsDataObj::CreateStream(IStream** outStream) {
     return E_FAIL;
   }
   *outStream = pStream;
+
+  return S_OK;
+}
+
+//-----------------------------------------------------------------------------
+// AutoCloseEvent implementation
+nsDataObj::AutoCloseEvent::AutoCloseEvent()
+    : mEvent(::CreateEventW(nullptr, TRUE, FALSE, nullptr)) {}
+
+bool nsDataObj::AutoCloseEvent::IsInited() const { return !!mEvent; }
+
+void nsDataObj::AutoCloseEvent::Signal() const { ::SetEvent(mEvent); }
+
+DWORD nsDataObj::AutoCloseEvent::Wait(DWORD aMillisec) const {
+  return ::WaitForSingleObject(mEvent, aMillisec);
+}
+
+//-----------------------------------------------------------------------------
+// AutoSetEvent implementation
+nsDataObj::AutoSetEvent::AutoSetEvent(NotNull<AutoCloseEvent*> aEvent)
+    : mEvent(aEvent) {}
+
+nsDataObj::AutoSetEvent::~AutoSetEvent() { Signal(); }
+
+void nsDataObj::AutoSetEvent::Signal() const { mEvent->Signal(); }
+
+bool nsDataObj::AutoSetEvent::IsWaiting() const {
+  return mEvent->Wait(0) == WAIT_TIMEOUT;
+}
+
+//-----------------------------------------------------------------------------
+// CMemStream implementation
+Win32SRWLock nsDataObj::CMemStream::mLock;
+
+//-----------------------------------------------------------------------------
+nsDataObj::CMemStream::CMemStream(nsHGLOBAL aGlobalMem, uint32_t aTotalLength,
+                                  already_AddRefed<AutoCloseEvent> aEvent)
+    : mGlobalMem(aGlobalMem), mEvent(aEvent), mTotalLength(aTotalLength) {
+  ::CoCreateFreeThreadedMarshaler(this, getter_AddRefs(mMarshaler));
+}
+
+//-----------------------------------------------------------------------------
+nsDataObj::CMemStream::~CMemStream() {}
+
+//-----------------------------------------------------------------------------
+// IUnknown
+STDMETHODIMP nsDataObj::CMemStream::QueryInterface(REFIID refiid,
+                                                   void** ppvResult) {
+  *ppvResult = nullptr;
+  if (refiid == IID_IUnknown || refiid == IID_IStream ||
+      refiid == IID_IAgileObject) {
+    *ppvResult = this;
+  } else if (refiid == IID_IMarshal && mMarshaler) {
+    return mMarshaler->QueryInterface(refiid, ppvResult);
+  }
+
+  if (nullptr != *ppvResult) {
+    ((LPUNKNOWN)*ppvResult)->AddRef();
+    return S_OK;
+  }
+
+  return E_NOINTERFACE;
+}
+
+void nsDataObj::CMemStream::WaitForCompletion() {
+  if (!mEvent) {
+    // We are not waiting for obtaining the icon cache.
+    return;
+  }
+  if (!NS_IsMainThread()) {
+    mEvent->Wait(INFINITE);
+  } else {
+    // We should not block the main thread.
+    mEvent->Signal();
+  }
+  // mEvent will always be in the signaled state here.
+}
+
+//-----------------------------------------------------------------------------
+// IStream
+STDMETHODIMP nsDataObj::CMemStream::Read(void* pvBuffer, ULONG nBytesToRead,
+                                         ULONG* nBytesRead) {
+  // Wait until the event is signaled.
+  WaitForCompletion();
+
+  AutoExclusiveLock lock(mLock);
+  char* contents = reinterpret_cast<char*>(GlobalLock(mGlobalMem.get()));
+  if (!contents) {
+    return E_OUTOFMEMORY;
+  }
+
+  // Bytes left for Windows to read out of our buffer
+  ULONG bytesLeft = mTotalLength - mStreamRead;
+  // Let Windows know what we will hand back, usually this is the entire buffer
+  *nBytesRead = std::min(bytesLeft, nBytesToRead);
+  // Copy the buffer data over
+  memcpy(pvBuffer, contents + mStreamRead, *nBytesRead);
+  // Update our bytes read tracking
+  mStreamRead += *nBytesRead;
+
+  GlobalUnlock(mGlobalMem.get());
+  return S_OK;
+}
+
+//-----------------------------------------------------------------------------
+STDMETHODIMP nsDataObj::CMemStream::Stat(STATSTG* statstg, DWORD dwFlags) {
+  if (statstg == nullptr) return STG_E_INVALIDPOINTER;
+
+  memset((void*)statstg, 0, sizeof(STATSTG));
+
+  if (dwFlags != STATFLAG_NONAME) {
+    const nsString& wideFileName = EmptyString();
+
+    uint32_t nMaxNameLength = (wideFileName.Length() * 2) + 2;
+    void* retBuf = CoTaskMemAlloc(nMaxNameLength);  // freed by caller
+    if (!retBuf) return STG_E_INSUFFICIENTMEMORY;
+
+    ZeroMemory(retBuf, nMaxNameLength);
+    memcpy(retBuf, wideFileName.get(), wideFileName.Length() * 2);
+    statstg->pwcsName = (LPOLESTR)retBuf;
+  }
+
+  SYSTEMTIME st;
+
+  statstg->type = STGTY_STREAM;
+
+  GetSystemTime(&st);
+  SystemTimeToFileTime((const SYSTEMTIME*)&st, (LPFILETIME)&statstg->mtime);
+  statstg->ctime = statstg->atime = statstg->mtime;
+
+  statstg->cbSize.QuadPart = mTotalLength;
+  statstg->grfMode = STGM_READ;
+  statstg->grfLocksSupported = LOCK_ONLYONCE;
+  statstg->clsid = CLSID_NULL;
 
   return S_OK;
 }
@@ -1125,6 +1269,8 @@ nsDataObj ::GetFileContentsInternetShortcut(FORMATETC& aFE, STGMEDIUM& aSTG) {
     return E_FAIL;
   }
 
+  RefPtr<AutoCloseEvent> event;
+
   const char* shortcutFormatStr;
   int totalLen;
   nsCString asciiPath;
@@ -1137,8 +1283,26 @@ nsDataObj ::GetFileContentsInternetShortcut(FORMATETC& aFE, STGMEDIUM& aSTG) {
 
     nsAutoString aUriHash;
 
-    mozilla::widget::FaviconHelper::ObtainCachedIconFile(aUri, aUriHash,
-                                                         mIOThread, true);
+    event = new AutoCloseEvent();
+    if (!event->IsInited()) {
+      return E_FAIL;
+    }
+
+    RefPtr<AutoSetEvent> e = new AutoSetEvent(WrapNotNull(event));
+    mozilla::widget::FaviconHelper::ObtainCachedIconFile(
+        aUri, aUriHash, mIOThread, true,
+        NS_NewRunnableFunction(
+            "FaviconHelper::RefreshDesktop", [e = std::move(e)] {
+              if (e->IsWaiting()) {
+                // Unblock IStream:::Read.
+                e->Signal();
+              } else {
+                // We could not wait until the favicon was available. We have
+                // to refresh to refect the favicon.
+                SendNotifyMessage(HWND_BROADCAST, WM_SETTINGCHANGE,
+                                  SPI_SETNONCLIENTMETRICS, 0);
+              }
+            }));
 
     rv = mozilla::widget::FaviconHelper::GetOutputIconPath(aUri, icoFile, true);
     NS_ENSURE_SUCCESS(rv, E_FAIL);
@@ -1172,12 +1336,11 @@ nsDataObj ::GetFileContentsInternetShortcut(FORMATETC& aFE, STGMEDIUM& aSTG) {
   }
 
   // create a global memory area and build up the file contents w/in it
-  HGLOBAL hGlobalMemory = ::GlobalAlloc(GMEM_SHARE, totalLen);
-  if (!hGlobalMemory) return E_OUTOFMEMORY;
+  nsAutoGlobalMem globalMem(nsHGLOBAL(::GlobalAlloc(GMEM_SHARE, totalLen)));
+  if (!globalMem) return E_OUTOFMEMORY;
 
-  char* contents = reinterpret_cast<char*>(::GlobalLock(hGlobalMemory));
+  char* contents = reinterpret_cast<char*>(::GlobalLock(globalMem.get()));
   if (!contents) {
-    ::GlobalFree(hGlobalMemory);
     return E_OUTOFMEMORY;
   }
 
@@ -1194,9 +1357,20 @@ nsDataObj ::GetFileContentsInternetShortcut(FORMATETC& aFE, STGMEDIUM& aSTG) {
               asciiPath.get());
   }
 
-  ::GlobalUnlock(hGlobalMemory);
-  aSTG.hGlobal = hGlobalMemory;
-  aSTG.tymed = TYMED_HGLOBAL;
+  ::GlobalUnlock(globalMem.get());
+
+  if (aFE.tymed & TYMED_ISTREAM) {
+    RefPtr<IStream> stream =
+        new CMemStream(globalMem.disown(), totalLen, event.forget());
+    stream.forget(&aSTG.pstm);
+    aSTG.tymed = TYMED_ISTREAM;
+  } else {
+    if (event && event->IsInited()) {
+      event->Signal();  // We can't block reading the global memory
+    }
+    aSTG.hGlobal = globalMem.get();
+    aSTG.tymed = TYMED_HGLOBAL;
+  }
 
   return S_OK;
 }  // GetFileContentsInternetShortcut

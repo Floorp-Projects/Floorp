@@ -2,7 +2,8 @@
 
 [include]
 # Code for generating docs.
-glob:tools/docs/**
+glob:docs/**
+glob:tools/moztreedocs/**
 
 # Potential docs sources
 glob:**/*.rst

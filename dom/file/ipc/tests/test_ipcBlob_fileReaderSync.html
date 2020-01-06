@@ -53,7 +53,7 @@ function maybeFinish() {
   }
 }
 
-let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toSource(), ")()"]));
+let workerUrl = URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
 let worker = new Worker(workerUrl);
 worker.onmessage = event => {
   if ("status" in event.data) {

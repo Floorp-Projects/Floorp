@@ -88,6 +88,8 @@ export type FrameFront = {
   actorID: string,
   displayName: string,
   this: any,
+  asyncCause: null | string,
+  state: "on-stack" | "suspended",
 };
 
 /**
@@ -156,9 +158,9 @@ export type TabPayload = {
   actor: ActorId,
   animationsActor: ActorId,
   consoleActor: ActorId,
+  contentViewerActor: ActorId,
   cssPropertiesActor: ActorId,
   directorManagerActor: ActorId,
-  emulationActor: ActorId,
   eventLoopLagActor: ActorId,
   framerateActor: ActorId,
   inspectorActor: ActorId,
@@ -169,6 +171,7 @@ export type TabPayload = {
   performanceEntriesActor: ActorId,
   profilerActor: ActorId,
   reflowActor: ActorId,
+  responsiveActor: ActorId,
   storageActor: ActorId,
   styleEditorActor: ActorId,
   styleSheetsActor: ActorId,
