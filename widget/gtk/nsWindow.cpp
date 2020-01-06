@@ -7736,4 +7736,6 @@ void nsWindow::SetEGLNativeWindowSize(
                                       aEGLWindowSize.height);
   }
 }
+
+nsWindow* nsWindow::GetFocusedWindow() { return gFocusWindow; }
 #endif

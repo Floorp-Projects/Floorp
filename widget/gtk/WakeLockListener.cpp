@@ -16,6 +16,12 @@
 #    include "prlink.h"
 #  endif
 
+#  if defined(MOZ_WAYLAND)
+#    include "mozilla/widget/nsWaylandDisplay.h"
+#    include "nsWindow.h"
+#    include "mozilla/dom/power/PowerManagerService.h"
+#  endif
+
 #  define FREEDESKTOP_SCREENSAVER_TARGET "org.freedesktop.ScreenSaver"
 #  define FREEDESKTOP_SCREENSAVER_OBJECT "/ScreenSaver"
 #  define FREEDESKTOP_SCREENSAVER_INTERFACE "org.freedesktop.ScreenSaver"
@@ -38,18 +44,26 @@ enum DesktopEnvironment {
 #  if defined(MOZ_X11)
   XScreenSaver,
 #  endif
+#  if defined(MOZ_WAYLAND)
+  WaylandIdleInhibit,
+#  endif
   Unsupported,
 };
 
 class WakeLockTopic {
  public:
   WakeLockTopic(const nsAString& aTopic, DBusConnection* aConnection)
-      : mTopic(NS_ConvertUTF16toUTF8(aTopic)),
+      :
+#  if defined(MOZ_WAYLAND)
+        mWaylandInhibitor(nullptr),
+#  endif
+        mTopic(NS_ConvertUTF16toUTF8(aTopic)),
         mConnection(aConnection),
         mDesktopEnvironment(FreeDesktop),
         mInhibitRequest(0),
         mShouldInhibit(false),
-        mWaitingForReply(false) {}
+        mWaitingForReply(false) {
+  }
 
   nsresult InhibitScreensaver(void);
   nsresult UninhibitScreensaver(void);
@@ -65,6 +79,13 @@ class WakeLockTopic {
 #  if defined(MOZ_X11)
   static bool CheckXScreenSaverSupport();
   static bool InhibitXScreenSaver(bool inhibit);
+#  endif
+
+#  if defined(MOZ_WAYLAND)
+  zwp_idle_inhibitor_v1* mWaylandInhibitor;
+  static bool CheckWaylandIdleInhibitSupport();
+  bool InhibitWaylandIdle();
+  bool UninhibitWaylandIdle();
 #  endif
 
   static void ReceiveInhibitReply(DBusPendingCall* aPending, void* aUserData);
@@ -197,6 +218,49 @@ bool WakeLockTopic::InhibitXScreenSaver(bool inhibit) {
 
 #  endif
 
+#  if defined(MOZ_WAYLAND)
+
+/* static */
+bool WakeLockTopic::CheckWaylandIdleInhibitSupport() {
+  GdkDisplay* gDisplay = gdk_display_get_default();
+  if (GDK_IS_X11_DISPLAY(gDisplay)) return false;
+
+  widget::nsWaylandDisplay* waylandDisplay =
+      widget::WaylandDisplayGet(gDisplay);
+  if (!waylandDisplay->GetIdleInhibitManager()) return false;
+
+  return true;
+}
+
+bool WakeLockTopic::InhibitWaylandIdle() {
+  GdkDisplay* gDisplay = gdk_display_get_default();
+
+  widget::nsWaylandDisplay* waylandDisplay =
+      widget::WaylandDisplayGet(gDisplay);
+
+  nsWindow* focusedWindow = nsWindow::GetFocusedWindow();
+  if (!focusedWindow) return false;
+
+  UninhibitWaylandIdle();
+
+  mWaylandInhibitor = zwp_idle_inhibit_manager_v1_create_inhibitor(
+      waylandDisplay->GetIdleInhibitManager(),
+      focusedWindow->GetWaylandSurface());
+
+  return true;
+}
+
+bool WakeLockTopic::UninhibitWaylandIdle() {
+  if (mWaylandInhibitor == nullptr) return false;
+
+  zwp_idle_inhibitor_v1_destroy(mWaylandInhibitor);
+  mWaylandInhibitor = nullptr;
+
+  return true;
+}
+
+#  endif
+
 bool WakeLockTopic::SendInhibit() {
   bool sendOk = false;
 
@@ -210,6 +274,10 @@ bool WakeLockTopic::SendInhibit() {
 #  if defined(MOZ_X11)
     case XScreenSaver:
       return InhibitXScreenSaver(true);
+#  endif
+#  if defined(MOZ_WAYLAND)
+    case WaylandIdleInhibit:
+      return InhibitWaylandIdle();
 #  endif
     case Unsupported:
       return false;
@@ -237,6 +305,11 @@ bool WakeLockTopic::SendUninhibit() {
 #  if defined(MOZ_X11)
   else if (mDesktopEnvironment == XScreenSaver) {
     return InhibitXScreenSaver(false);
+  }
+#  endif
+#  if defined(MOZ_WAYLAND)
+  else if (mDesktopEnvironment == WaylandIdleInhibit) {
+    return UninhibitWaylandIdle();
   }
 #  endif
 
@@ -299,6 +372,10 @@ void WakeLockTopic::InhibitFailed() {
 #  if defined(MOZ_X11)
   } else if (mDesktopEnvironment == GNOME && CheckXScreenSaverSupport()) {
     mDesktopEnvironment = XScreenSaver;
+#  endif
+#  if defined(MOZ_WAYLAND)
+  } else if (mDesktopEnvironment == GNOME && CheckWaylandIdleInhibitSupport()) {
+    mDesktopEnvironment = WaylandIdleInhibit;
 #  endif
   } else {
     mDesktopEnvironment = Unsupported;
