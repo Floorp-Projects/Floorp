@@ -23,7 +23,7 @@
 namespace js {
 namespace wasm {
 
-bool GenerateStackmapEntriesForTrapExit(const ValTypeVector& args,
+bool GenerateStackmapEntriesForTrapExit(const ArgTypeVector& args,
                                         const MachineState& trapExitLayout,
                                         const size_t trapExitLayoutNumWords,
                                         ExitStubMapVector* extras) {
@@ -37,8 +37,9 @@ bool GenerateStackmapEntriesForTrapExit(const ValTypeVector& args,
     return false;
   }
 
-  for (ABIArgIter<const ValTypeVector> i(args); !i.done(); i++) {
-    MOZ_ASSERT(i.mirType() != MIRType::Pointer);
+  for (ABIArgIter i(args); !i.done(); i++) {
+    MOZ_ASSERT((i.mirType() == MIRType::Pointer) ==
+               args.isSyntheticStackResultPointerArg(i.index()));
     if (!i->argInRegister() || i.mirType() != MIRType::RefOrNull) {
       continue;
     }
