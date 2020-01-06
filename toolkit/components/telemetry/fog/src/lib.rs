@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use glean_preview::Configuration;
+use glean_preview::{ClientInfoMetrics, Configuration};
 use glean_preview::metrics::PingType;
 use log::error;
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
@@ -22,12 +22,14 @@ pub unsafe extern "C" fn fog_init(data_dir: &nsAString, pingsender_path: &nsAStr
   let cfg = Configuration {
     data_path: data_dir.to_string(),
     application_id: "org.mozilla.fogotype".into(),
-    upload_enabled: upload_enabled,
+    upload_enabled,
     max_events: None,
     delay_ping_lifetime_io: false, // We will want this eventually.
+    channel: Some("nightly".into()),
   };
 
-  if glean_preview::initialize(cfg).is_err() {
+  // TODO: Build our own ClientInfoMetrics instead of using unknown().
+  if glean_preview::initialize(cfg, ClientInfoMetrics::unknown()).is_err() {
     return NS_ERROR_FAILURE
   }
 
@@ -54,7 +56,10 @@ fn prototype_ping_init(ping_dir: PathBuf, pingsender_path: PathBuf) -> Result<Jo
       thread::sleep(an_hour);
       let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
       glean_preview::set_upload_enabled(upload_enabled);
-      prototype_ping.send();
+      if !upload_enabled {
+        continue;
+      }
+      prototype_ping.submit();
       if let Err(e) = send_all_pings(&ping_dir, &pingsender_path) {
         error!("Failed to send all pings due to {:?}", e);
       }
