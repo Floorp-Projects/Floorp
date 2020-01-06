@@ -6,8 +6,6 @@
 #include "nsISupports.idl"
 #include "nsITouchBarInput.idl"
 
-webidl Document;
-
 /**
  * Back-to-frontend communication for the Touch Bar
  */
@@ -34,12 +32,6 @@ interface nsITouchBarHelper : nsISupports
    * of nsITouchBarInput objects.
    */
   attribute nsIArray allItems;
-
-  /**
-   * The context in which this nsITouchBarHelper exists. Required to create
-   * an imgLoader to load our SVG icons.
-   */
-  readonly attribute Document document;
 
   /**
    * Returns the requested TouchBarInput.
