@@ -156,22 +156,6 @@ treated as comments.
 The '#baz' anchor will not be stripped off, as it wasn't preceded by
 a space.
 
-Special variable server-root
-````````````````````````````
-There is a special variable called `server-root` used for paths on the system.
-This variable is deemed a path and will be expanded into its absolute form.
-
-Because of the inheritant nature of the key/value pairs, if one requires a
-system path, it must be absolute for it to be of any use in any included file.
-
-.. code-block:: text
-
-    [DEFAULTS]
-    server-root = ../data
-
-    [test1.js]
-    server-root = test1/data
-
 Manifest Conditional Expressions
 ````````````````````````````````
 The conditional expressions used in manifests are parsed using the *ExpressionParser* class.
