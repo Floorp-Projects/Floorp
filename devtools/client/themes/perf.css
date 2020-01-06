@@ -231,13 +231,17 @@
 }
 
 .perf-settings-thread-columns {
-  margin-bottom: 20px;
+  margin-bottom: 5px;
   display: flex;
   line-height: 2;
 }
 
 .perf-settings-thread-column {
   flex: 1;
+}
+
+.perf-settings-all-threads {
+  margin-bottom: 14px;
 }
 
 .perf-settings-checkbox-label {
