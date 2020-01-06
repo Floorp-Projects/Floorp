@@ -12,7 +12,7 @@ root:
           color: [0, 46, 0, 1]
         - type: rect
           bounds: [10, 60, 50, 50]
-          color: [0, 109, 183, 1]
+          color: [0, 109, 128, 1]
         - type: rect
           bounds: [60, 10, 50, 50]
           color: [128, 0, 18, 1]
