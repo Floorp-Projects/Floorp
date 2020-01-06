@@ -230,6 +230,7 @@ class nsWindow final : public nsBaseWidget {
 
 #ifdef MOZ_WAYLAND
   void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
+  static nsWindow* GetFocusedWindow();
 #endif
 
   RefPtr<mozilla::gfx::VsyncSource> GetVsyncSource() override;
