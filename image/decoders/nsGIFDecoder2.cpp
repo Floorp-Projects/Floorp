@@ -190,7 +190,12 @@ nsresult nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
     // The first frame may be displayed progressively.
     pipeFlags |= SurfacePipeFlags::PROGRESSIVE_DISPLAY;
 
-    format = hasTransparency ? SurfaceFormat::OS_RGBA : SurfaceFormat::OS_RGBX;
+    // Only allow opaque surfaces if we are decoding a single image without
+    // transparency. For an animation, there isn't much benefit to RGBX given
+    // the current frame is constantly changing, and there are many risks
+    // since BlendAnimationFilter is able to clear rows of data.
+    format = hasTransparency || animParams ? SurfaceFormat::OS_RGBA
+                                           : SurfaceFormat::OS_RGBX;
   } else {
     format = SurfaceFormat::OS_RGBA;
   }
