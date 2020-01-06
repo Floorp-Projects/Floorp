@@ -845,8 +845,6 @@ class GCRuntime {
   MainThreadData<VerifyPreTracer*> verifyPreData;
 
  private:
-  UnprotectedData<bool> chunkAllocationSinceLastGC;
-
   MainThreadData<mozilla::TimeStamp> lastGCStartTime_;
   MainThreadData<mozilla::TimeStamp> lastGCEndTime_;
 

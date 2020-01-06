@@ -872,7 +872,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
                         1),  // Ensure disjoint from null tagged pointers.
       numArenasFreeCommitted(0),
       verifyPreData(nullptr),
-      chunkAllocationSinceLastGC(false),
       lastGCStartTime_(ReallyNow()),
       lastGCEndTime_(ReallyNow()),
       mode(TuningDefaults::Mode),
@@ -6960,8 +6959,6 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   gcTracer.traceMajorGCStart();
 
   incrementalSlice(budget, gckind, reason, session);
-
-  chunkAllocationSinceLastGC = false;
 
 #ifdef JS_GC_ZEAL
   clearSelectedForMarking();
