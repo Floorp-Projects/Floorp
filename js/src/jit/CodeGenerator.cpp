@@ -13756,11 +13756,6 @@ static void BoundFunctionName(MacroAssembler& masm, Register target,
   {
     masm.bind(&guessed);
 
-    // Unnamed class expression don't have a name property. To avoid
-    // looking it up from the prototype chain, we take the slow path here.
-    masm.branchFunctionKind(Assembler::Equal, FunctionFlags::ClassConstructor,
-                            target, output, slowPath);
-
     // An absent name property defaults to the empty string.
     masm.movePtr(ImmGCPtr(names.empty), output);
   }
