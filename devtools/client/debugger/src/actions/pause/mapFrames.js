@@ -158,6 +158,7 @@ async function expandFrames(
         generatedLocation: frame.generatedLocation,
         originalDisplayName: originalFrame.displayName,
         originalVariables: originalFrame.variables,
+        asyncCause: null,
       });
     });
   }
