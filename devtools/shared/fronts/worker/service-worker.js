@@ -10,6 +10,7 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
+const { Ci } = require("chrome");
 
 class ServiceWorkerFront extends FrontClassWithSpec(serviceWorkerSpec) {
   get fetch() {
@@ -22,6 +23,25 @@ class ServiceWorkerFront extends FrontClassWithSpec(serviceWorkerSpec) {
 
   get state() {
     return this._form.state;
+  }
+
+  get stateText() {
+    switch (this.state) {
+      case Ci.nsIServiceWorkerInfo.STATE_PARSED:
+        return "parsed";
+      case Ci.nsIServiceWorkerInfo.STATE_INSTALLING:
+        return "installing";
+      case Ci.nsIServiceWorkerInfo.STATE_INSTALLED:
+        return "installed";
+      case Ci.nsIServiceWorkerInfo.STATE_ACTIVATING:
+        return "activating";
+      case Ci.nsIServiceWorkerInfo.STATE_ACTIVATED:
+        return "activated";
+      case Ci.nsIServiceWorkerInfo.STATE_REDUNDANT:
+        return "redundant";
+      default:
+        return "unknown";
+    }
   }
 
   get id() {
