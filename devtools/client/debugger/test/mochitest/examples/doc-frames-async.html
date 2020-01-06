@@ -1,0 +1,21 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+    - License, v. 2.0. If a copy of the MPL was not distributed with this
+    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+  <head>
+    <title>Frames</title>
+  </head>
+
+  <body>
+    <script>
+      async function sleep() {
+        await new Promise(r => setTimeout(r, 10));
+        debugger;
+      }
+
+      async function main() {
+        await sleep();
+      }
+    </script>
+  </body>
+</html>

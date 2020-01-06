@@ -88,6 +88,8 @@ export type FrameFront = {
   actorID: string,
   displayName: string,
   this: any,
+  asyncCause: null | string,
+  state: "on-stack" | "suspended",
 };
 
 /**

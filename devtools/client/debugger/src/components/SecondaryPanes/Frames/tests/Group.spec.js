@@ -25,11 +25,12 @@ function render(overrides = {}) {
     frameworkGroupingOn: true,
     toggleFrameworkGrouping: jest.fn(),
     selectFrame: jest.fn(),
+    selectLocation: jest.fn(),
     copyStackTrace: jest.fn(),
     toggleBlackBox: jest.fn(),
     disableContextMenu: false,
     displayFullUrl: false,
-    selectable: true,
+    panel: "webconsole",
   };
 
   const props = { ...defaultProps, ...overrides };

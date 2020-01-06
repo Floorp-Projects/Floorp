@@ -43,6 +43,10 @@
   text-align: right;
 }
 
+.call-stack-pane .location-async-cause {
+  color: var(--theme-comment);
+}
+
 .theme-light .frames .location {
   color: var(--theme-comment);
 }
