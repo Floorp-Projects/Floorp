@@ -55,6 +55,15 @@ publishing {
     }
 }
 
+task renameSnapshotArtifacts(type: Exec) {
+    dependsOn publish
+
+    def renameScript = "${rootDir}/automation/taskcluster/rename_snapshot_artifacts.py"
+    def mavenBuildDir = "${project.buildDir}/maven"
+
+    commandLine 'python', renameScript, '--path', mavenBuildDir, '--timestamp', (project.hasProperty('timestamp') ? timestamp : '')
+}
+
 task lintRelease {
   doLast {
     // Do nothing. We execute the same set of tasks for all our modules in parallel on taskcluster.
@@ -79,4 +88,3 @@ compileTestKotlin {
         jvmTarget = "1.8"
     }
 }
-
