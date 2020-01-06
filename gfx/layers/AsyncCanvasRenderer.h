@@ -8,7 +8,6 @@
 #define MOZILLA_LAYERS_ASYNCCANVASRENDERER_H_
 
 #include "LayersTypes.h"
-#include "mozilla/dom/CanvasRenderingContextHelper.h"
 #include "mozilla/gfx/Point.h"  // for IntSize
 #include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"  // for nsCOMPtr
@@ -35,7 +34,6 @@ namespace layers {
 
 class CanvasClient;
 class TextureClient;
-class ImageContainer;
 
 /**
  * Since HTMLCanvasElement and OffscreenCanvas are not thread-safe, we create
@@ -104,11 +102,6 @@ class AsyncCanvasRenderer final {
 
   already_AddRefed<nsISerialEventTarget> GetActiveEventTarget();
 
-  ImageContainer* GetImageContainer();
-
-  dom::CanvasContextType GetContextType();
-  void SetContextType(dom::CanvasContextType aContextType);
-
   // The lifetime is controllered by HTMLCanvasElement.
   // Only accessed in main thread.
   dom::HTMLCanvasElement* mHTMLCanvasElement;
@@ -151,12 +144,6 @@ class AsyncCanvasRenderer final {
 
   // Can be accessed in any thread, need protect by mutex.
   nsCOMPtr<nsISerialEventTarget> mActiveEventTarget;
-
-  // Can be accessed in any thread, need protect by mutex.
-  RefPtr<ImageContainer> mImageContainer;
-
-  // Can be accessed in any thread, need protect by mutex.
-  dom::CanvasContextType mContextType;
 };
 
 }  // namespace layers

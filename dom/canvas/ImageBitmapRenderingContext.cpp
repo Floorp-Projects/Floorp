@@ -258,23 +258,6 @@ NS_IMETHODIMP
 ImageBitmapRenderingContext::Redraw(const gfxRect& aDirty) {
   mIsCapturedFrameInvalid = true;
 
-  if (mOffscreenCanvas) {
-    RefPtr<layers::ImageContainer> imageContainer =
-        mOffscreenCanvas->GetImageContainer();
-    MOZ_ASSERT(imageContainer);
-    if (imageContainer) {
-      RefPtr<layers::Image> image = ClipToIntrinsicSize();
-      if (image) {
-        AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
-        imageList.AppendElement(ImageContainer::NonOwningImage(image));
-        imageContainer->SetCurrentImages(imageList);
-      } else {
-        imageContainer->ClearAllImages();
-      }
-    }
-    mOffscreenCanvas->CommitFrameToCompositor();
-  }
-
   if (!mCanvasElement) {
     return NS_OK;
   }
