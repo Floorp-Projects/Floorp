@@ -1,0 +1,33 @@
+diff --git a/clang-tools-extra/clang-tidy/readability/BracesAroundStatementsCheck.cpp b/clang-tools-extra/clang-tidy/readability/BracesAroundStatementsCheck.cpp
+index 117ef36d78f..da0bef32c09 100644
+--- a/clang-tools-extra/clang-tidy/readability/BracesAroundStatementsCheck.cpp
++++ b/clang-tools-extra/clang-tidy/readability/BracesAroundStatementsCheck.cpp
+@@ -123,7 +123,10 @@ void BracesAroundStatementsCheck::storeOptions(
+ }
+
+ void BracesAroundStatementsCheck::registerMatchers(MatchFinder *Finder) {
+-  Finder->addMatcher(ifStmt().bind("if"), this);
++  Finder->addMatcher(
++      ifStmt(unless(allOf(isConstexpr(), isInTemplateInstantiation())))
++          .bind("if"),
++      this);
+   Finder->addMatcher(whileStmt().bind("while"), this);
+   Finder->addMatcher(doStmt().bind("do"), this);
+   Finder->addMatcher(forStmt().bind("for"), this);
+diff --git a/clang-tools-extra/clang-tidy/readability/MisleadingIndentationCheck.cpp b/clang-tools-extra/clang-tidy/readability/MisleadingIndentationCheck.cpp
+index 0fd5c1fc55c..3167d159b74 100644
+--- a/clang-tools-extra/clang-tidy/readability/MisleadingIndentationCheck.cpp
++++ b/clang-tools-extra/clang-tidy/readability/MisleadingIndentationCheck.cpp
+@@ -106,7 +106,11 @@ void MisleadingIndentationCheck::missingBracesCheck(const SourceManager &SM,
+ }
+
+ void MisleadingIndentationCheck::registerMatchers(MatchFinder *Finder) {
+-  Finder->addMatcher(ifStmt(hasElse(stmt())).bind("if"), this);
++  Finder->addMatcher(
++      ifStmt(allOf(hasElse(stmt()),
++                   unless(allOf(isConstexpr(), isInTemplateInstantiation()))))
++          .bind("if"),
++      this);
+   Finder->addMatcher(
+       compoundStmt(has(stmt(anyOf(ifStmt(), forStmt(), whileStmt()))))
+           .bind("compound"),

@@ -18,6 +18,7 @@
       "clang-tidy-ci.patch",
       "clang-tidy-no-errors.patch",
       "compiler-rt-no-codesign.patch",
-      "bug-1605181-isConstexpr.patch"
+      "bug-1605181-isConstexpr.patch",
+      "bug-1606630-if_constexpr.patch"
     ]
 }
