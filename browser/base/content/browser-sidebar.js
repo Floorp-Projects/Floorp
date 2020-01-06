@@ -226,7 +226,7 @@ var SidebarUI = {
     // First reset all ordinals to match DOM ordering.
     let browser = document.getElementById("browser");
     [...browser.children].forEach((node, i) => {
-      node.ordinal = i + 1;
+      node.style.MozBoxOrdinalGroup = i + 1;
     });
 
     if (!this._positionStart) {
@@ -234,9 +234,9 @@ var SidebarUI = {
       // Want to display as:  |   appcontent  | splitter |  sidebar-box  |
       // So we just swap box and appcontent ordering
       let appcontent = document.getElementById("appcontent");
-      let boxOrdinal = this._box.ordinal;
-      this._box.ordinal = appcontent.ordinal;
-      appcontent.ordinal = boxOrdinal;
+      let boxOrdinal = this._box.style.MozBoxOrdinalGroup;
+      this._box.style.MozBoxOrdinalGroup = appcontent.style.MozBoxOrdinalGroup;
+      appcontent.style.MozBoxOrdinalGroup = boxOrdinal;
       // Indicate we've switched ordering to the box
       this._box.setAttribute("positionend", true);
     } else {

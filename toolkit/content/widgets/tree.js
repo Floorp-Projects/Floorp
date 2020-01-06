@@ -212,7 +212,7 @@
           var menuitem = this.querySelector('[anonid="menuitem"]');
           if (event.originalTarget == menuitem) {
             tree.columns.restoreNaturalOrder();
-            this.removeAttribute("ordinal");
+            this.style.MozBoxOrdinalGroup = "";
             tree._ensureColumnOrder();
           } else {
             var colindex = event.originalTarget.getAttribute("colindex");
@@ -379,12 +379,12 @@
     }
 
     set ordinal(val) {
-      this.setAttribute("ordinal", val);
+      this.style.MozBoxOrdinalGroup = val;
       return val;
     }
 
     get ordinal() {
-      var val = this.getAttribute("ordinal");
+      var val = this.style.MozBoxOrdinalGroup;
       if (val == "") {
         return "1";
       }
@@ -1128,13 +1128,13 @@
           cols.push(col.element);
         }
         for (let i = 0; i < cols.length; ++i) {
-          cols[i].setAttribute("ordinal", i * 2 + 1);
+          cols[i].style.MozBoxOrdinalGroup = i * 2 + 1;
         }
         // update the ordinal positions of splitters to even numbers, so that
         // they are in between columns
         var splitters = this.getElementsByTagName("splitter");
         for (let i = 0; i < splitters.length; ++i) {
-          splitters[i].setAttribute("ordinal", (i + 1) * 2);
+          splitters[i].style.MozBoxOrdinalGroup = (i + 1) * 2;
         }
       }
     }
@@ -1145,7 +1145,10 @@
       var i;
       var cols = [];
       var col = this.columns.getColumnFor(aColBefore);
-      if (parseInt(aColBefore.ordinal) < parseInt(aColMove.ordinal)) {
+      if (
+        parseInt(aColBefore.style.MozBoxOrdinalGroup) <
+        parseInt(aColMove.style.MozBoxOrdinalGroup)
+      ) {
         if (aBefore) {
           cols.push(aColBefore);
         }
@@ -1157,11 +1160,14 @@
           cols.push(col.element);
         }
 
-        aColMove.ordinal = cols[0].ordinal;
+        aColMove.style.MozBoxOrdinalGroup = cols[0].style.MozBoxOrdinalGroup;
         for (i = 0; i < cols.length; ++i) {
-          cols[i].ordinal = parseInt(cols[i].ordinal) + 2;
+          cols[i].style.MozBoxOrdinalGroup =
+            parseInt(cols[i].style.MozBoxOrdinalGroup) + 2;
         }
-      } else if (aColBefore.ordinal != aColMove.ordinal) {
+      } else if (
+        aColBefore.style.MozBoxOrdinalGroup != aColMove.style.MozBoxOrdinalGroup
+      ) {
         if (!aBefore) {
           cols.push(aColBefore);
         }
@@ -1173,9 +1179,10 @@
           cols.push(col.element);
         }
 
-        aColMove.ordinal = cols[0].ordinal;
+        aColMove.style.MozBoxOrdinalGroup = cols[0].style.MozBoxOrdinalGroup;
         for (i = 0; i < cols.length; ++i) {
-          cols[i].ordinal = parseInt(cols[i].ordinal) - 2;
+          cols[i].style.MozBoxOrdinalGroup =
+            parseInt(cols[i].style.MozBoxOrdinalGroup) - 2;
         }
       }
     }
