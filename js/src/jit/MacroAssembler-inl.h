@@ -372,11 +372,6 @@ void MacroAssembler::branchIfFunctionHasNoJitEntry(Register fun,
   branchTestFunctionFlags(fun, flags, Assembler::Zero, label);
 }
 
-void MacroAssembler::branchIfFunctionHasNoScript(Register fun, Label* label) {
-  int32_t flags = FunctionFlags::INTERPRETED;
-  branchTestFunctionFlags(fun, flags, Assembler::Zero, label);
-}
-
 void MacroAssembler::branchIfInterpreted(Register fun, bool isConstructing,
                                          Label* label) {
   int32_t flags = FunctionFlags::INTERPRETED | FunctionFlags::INTERPRETED_LAZY;
