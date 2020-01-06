@@ -135,7 +135,7 @@ MOZ_EXPORT void RecordReplayInterface_Initialize(int aArgc, char* aArgv[]) {
 
   gRecording = new Recording();
 
-  ApplyInitialLibraryRedirections();
+  ApplyLibraryRedirections(nullptr);
 
   Thread::InitializeThreads();
 

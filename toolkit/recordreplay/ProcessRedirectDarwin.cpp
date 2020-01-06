@@ -942,6 +942,27 @@ static PreambleResult Preamble__tlv_bootstrap(CallArguments* aArguments) {
 
 static void* FindRedirectionBinding(const char* aName);
 
+static PreambleResult Preamble_dlopen(CallArguments* aArguments) {
+  if (!AreThreadEventsPassedThrough()) {
+    auto name = aArguments->Arg<0, const char*>();
+    if (name) {
+      AutoPassThroughThreadEvents pt;
+
+      static void* fnptr = OriginalFunction("dlopen");
+      RecordReplayInvokeCall(fnptr, aArguments);
+
+      void* handle = aArguments->Rval<void*>();
+      if (handle) {
+        ApplyLibraryRedirections(handle);
+      }
+
+      return PreambleResult::Veto;
+    }
+  }
+
+  return PreambleResult::PassThrough;
+}
+
 static PreambleResult Preamble_dlsym(CallArguments* aArguments) {
   auto name = aArguments->Arg<1, const char*>();
 
@@ -1184,15 +1205,19 @@ static void EX_Alloc(ExternalCallContext& aCx) {
 static void EX_PerformSelector(ExternalCallContext& aCx) {
   EX_CString<2>(aCx);
   EX_CFTypeArg<3>(aCx);
+  auto& selector = aCx.mArguments->Arg<2, const char*>();
 
   // The behavior of performSelector:withObject: varies depending on the
   // selector used, so use a whitelist here.
   if (aCx.mPhase == ExternalCallPhase::SaveInput) {
-    auto str = aCx.mArguments->Arg<2, const char*>();
-    if (strcmp(str, "appearanceNamed:")) {
+    if (strcmp(selector, "appearanceNamed:")) {
       aCx.MarkAsFailed();
       return;
     }
+  }
+
+  if (aCx.mPhase == ExternalCallPhase::RestoreInput) {
+    selector = (const char*) sel_registerName(selector);
   }
 
   EX_AutoreleaseCFTypeRval(aCx);
@@ -2113,9 +2138,9 @@ static SystemRedirection gSystemRedirections[] = {
      RR_SaveRvalHadErrorNegative<
          RR_WriteBufferFixedSize<1, sizeof(struct rusage)>>,
      nullptr, nullptr, Preamble_SetError},
-    {"__getrlimit", RR_SaveRvalHadErrorNegative<
-                        RR_WriteBufferFixedSize<1, sizeof(struct rlimit)>>},
-    {"__setrlimit", RR_SaveRvalHadErrorNegative},
+    {"getrlimit", RR_SaveRvalHadErrorNegative<
+                      RR_WriteBufferFixedSize<1, sizeof(struct rlimit)>>},
+    {"setrlimit", RR_SaveRvalHadErrorNegative},
     {"sigprocmask",
      RR_SaveRvalHadErrorNegative<
          RR_WriteOptionalBufferFixedSize<2, sizeof(sigset_t)>>,
@@ -2187,7 +2212,7 @@ static SystemRedirection gSystemRedirections[] = {
 
     {"closedir"},
     {"dlclose", nullptr, Preamble_Veto<0>},
-    {"dlopen", nullptr, Preamble_PassThrough},
+    {"dlopen", nullptr, Preamble_dlopen},
     {"dlsym", nullptr, Preamble_dlsym},
     {"fclose", RR_SaveRvalHadErrorNegative},
     {"fprintf", RR_SaveRvalHadErrorNegative},
@@ -2246,13 +2271,14 @@ static SystemRedirection gSystemRedirections[] = {
          RR_CStringRval, RR_WriteOptionalBufferFixedSize<1, PATH_MAX>>>},
     {"sandbox_init", RR_ScalarRval},
     {"sandbox_init_with_parameters", RR_ScalarRval},
-    {"srand"},
+    {"srand", nullptr, nullptr, nullptr, Preamble_PassThrough},
     {"task_threads", RR_task_threads},
     {"task_get_special_port",
      RR_Compose<RR_ScalarRval, RR_OutParam<2, mach_port_t>>},
     {"task_set_special_port", RR_ScalarRval},
     {"task_swap_exception_ports", RR_ScalarRval}, // Ignore out parameters
-    {"time", RR_Compose<RR_ScalarRval, RR_OutParam<0, time_t>>},
+    {"time", RR_Compose<RR_ScalarRval, RR_OutParam<0, time_t>>,
+     nullptr, nullptr, Preamble_PassThrough},
     {"uname", RR_SaveRvalHadErrorNegative<RR_OutParam<0, utsname>>,
      nullptr, nullptr, Preamble_SetError},
     {"vm_allocate", nullptr, Preamble_VetoIfNotPassedThrough<KERN_FAILURE>},
@@ -2262,6 +2288,12 @@ static SystemRedirection gSystemRedirections[] = {
     {"_dyld_register_func_for_remove_image"},
     {"setjmp", nullptr, Preamble_VetoIfNotPassedThrough<0>},
     {"longjmp", nullptr, Preamble_NYI},
+
+    /////////////////////////////////////////////////////////////////////////////
+    // C++ library functions
+    /////////////////////////////////////////////////////////////////////////////
+
+    {"_ZNSt3__16chrono12system_clock3nowEv", RR_ScalarRval},
 
     /////////////////////////////////////////////////////////////////////////////
     // Gecko functions
@@ -3212,17 +3244,27 @@ struct MachOLibrary {
 };
 
 // One symbol from each library that is loaded at startup and has external
-// references we want to fix up.
+// references we want to fix up. These libraries might not be loaded at startup
+// so we check again after each new library is loaded, and clear out these
+// entries once we have fixed their external references.
 static const char* gInitialLibrarySymbols[] = {
   "RecordReplayInterface_Initialize", // XUL
   "_ZN7mozilla12recordreplay10InitializeEiPPc", // libmozglue
   "PR_Initialize", // libnss3
+  "FREEBL_GetVector", // libfreebl
+  "NSC_GetFunctionList", // libsoftokn3
 };
 
-void ApplyInitialLibraryRedirections() {
-  for (const char* symbol : gInitialLibrarySymbols) {
-    void* ptr = dlsym(RTLD_DEFAULT, symbol);
-    MOZ_RELEASE_ASSERT(ptr);
+void ApplyLibraryRedirections(void* aLibrary) {
+  for (const char*& symbol : gInitialLibrarySymbols) {
+    if (!symbol) {
+      continue;
+    }
+
+    void* ptr = dlsym(aLibrary ? aLibrary : RTLD_DEFAULT, symbol);
+    if (!ptr) {
+      continue;
+    }
 
     Dl_info info;
     dladdr(ptr, &info);
@@ -3230,12 +3272,18 @@ void ApplyInitialLibraryRedirections() {
 
     MachOLibrary library(info.dli_fname, address);
     library.ApplyRedirections();
+
+    symbol = nullptr;
   }
 
-  for (size_t i = 0; i < NumRedirections(); i++) {
-    Redirection& redirection = gRedirections[i];
-    if (!strcmp(redirection.mName, "_tlv_bootstrap")) {
-      redirection.mOriginalFunction = (uint8_t*)gTLVGetAddress;
+  static bool fixedBootstrap = false;
+  if (!fixedBootstrap) {
+    fixedBootstrap = true;
+    for (size_t i = 0; i < NumRedirections(); i++) {
+      Redirection& redirection = gRedirections[i];
+      if (!strcmp(redirection.mName, "_tlv_bootstrap")) {
+        redirection.mOriginalFunction = (uint8_t*)gTLVGetAddress;
+      }
     }
   }
 }
