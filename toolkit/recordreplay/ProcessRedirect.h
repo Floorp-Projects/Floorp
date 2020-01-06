@@ -257,8 +257,8 @@ Redirection& GetRedirection(size_t aCallId);
 void InitializeRedirections();
 
 // Platform specific routine to apply redirections to external references in
-// all initially loaded libraries.
-void ApplyInitialLibraryRedirections();
+// the specified library, or all loaded libraries if null.
+void ApplyLibraryRedirections(void* aLibrary);
 
 // Generate a stub that will call the hooks associated with a redirection.
 uint8_t* GenerateRedirectStub(Assembler& aAssembler, size_t aCallId,
