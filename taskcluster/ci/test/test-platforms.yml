@@ -182,7 +182,7 @@ linux64-asan-qr/opt:
 linux64-ccov/opt:
     build-platform: linux64-ccov/opt
     test-sets:
-        - linux-common-tests
+        - common-tests  # temporary while ccov is excluded from ubuntu1804 migration, see bug 1606861
         - web-platform-tests
         - awsy
         - talos
