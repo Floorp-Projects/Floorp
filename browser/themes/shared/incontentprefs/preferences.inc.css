@@ -28,6 +28,7 @@ body {
 }
 
 #preferences-body {
+  vertical-align: top; /* See bug 1606130 */
   display: -moz-box;
   -moz-box-orient: vertical;
 }
