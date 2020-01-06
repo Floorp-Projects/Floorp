@@ -4809,6 +4809,11 @@ static bool GetLcovInfo(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (!coverage::IsLCovEnabled()) {
+    JS_ReportErrorASCII(cx, "Coverage not enabled for process.");
+    return false;
+  }
+
   RootedObject global(cx);
   if (args.hasDefined(0)) {
     global = ToObject(cx, args[0]);
