@@ -68,11 +68,6 @@
 
 #include "nsGkAtoms.h"
 
-#ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
-#  define SN_API_NOT_YET_FROZEN
-#  include <startup-notification-1.0/libsn/sn.h>
-#endif
-
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Preferences.h"
@@ -1534,8 +1529,6 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
 
 typedef void (*SetUserTimeFunc)(GdkWindow* aWindow, guint32 aTimestamp);
 
-// This will become obsolete when new GTK APIs are widely supported,
-// as described here: http://bugzilla.gnome.org/show_bug.cgi?id=347375
 static void SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow) {
   nsGTKToolkit* GTKToolkit = nsGTKToolkit::GetToolkit();
   if (!GTKToolkit) return;
@@ -1555,35 +1548,7 @@ static void SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow) {
     return;
   }
 
-#if defined(MOZ_ENABLE_STARTUP_NOTIFICATION)
-  // TODO - Implement for non-X11 Gtk backends (Bug 726479)
-  if (gfxPlatformGtk::GetPlatform()->IsX11Display()) {
-    GdkWindow* gdkWindow = gtk_widget_get_window(aWindow);
-
-    GdkScreen* screen = gdk_window_get_screen(gdkWindow);
-    SnDisplay* snd = sn_display_new(
-        gdk_x11_display_get_xdisplay(gdk_window_get_display(gdkWindow)),
-        nullptr, nullptr);
-    if (!snd) return;
-    SnLauncheeContext* ctx = sn_launchee_context_new(
-        snd, gdk_screen_get_number(screen), desktopStartupID.get());
-    if (!ctx) {
-      sn_display_unref(snd);
-      return;
-    }
-
-    if (sn_launchee_context_get_id_has_timestamp(ctx)) {
-      gdk_x11_window_set_user_time(gdkWindow,
-                                   sn_launchee_context_get_timestamp(ctx));
-    }
-
-    sn_launchee_context_setup_window(ctx, gdk_x11_window_get_xid(gdkWindow));
-    sn_launchee_context_complete(ctx);
-
-    sn_launchee_context_unref(ctx);
-    sn_display_unref(snd);
-  }
-#endif
+  gtk_window_set_startup_id(GTK_WINDOW(aWindow), desktopStartupID.get());
 
   // If we used the startup ID, that already contains the focus timestamp;
   // we don't want to reuse the timestamp next time we raise the window
