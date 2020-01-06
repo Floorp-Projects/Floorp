@@ -5628,18 +5628,17 @@ nsresult EditorBase::TopLevelEditSubActionData::AddRangeToChangedRange(
     return rv;
   }
 
-  bool disconnected = false;
-  int16_t relation = mChangedRange->StartRef().IsSet()
-                         ? nsContentUtils::ComparePoints_Deprecated(
-                               mChangedRange->StartRef(),
-                               aStart.ToRawRangeBoundary(), &disconnected)
-                         : 1;
-  if (NS_WARN_IF(disconnected)) {
+  Maybe<int32_t> relation =
+      mChangedRange->StartRef().IsSet()
+          ? nsContentUtils::ComparePoints(mChangedRange->StartRef(),
+                                          aStart.ToRawRangeBoundary())
+          : Some(1);
+  if (NS_WARN_IF(!relation)) {
     return NS_ERROR_FAILURE;
   }
 
   // If aStart is before start of mChangedRange, reset the start.
-  if (relation > 0) {
+  if (*relation > 0) {
     ErrorResult error;
     mChangedRange->SetStart(aStart.ToRawRangeBoundary(), error);
     if (NS_WARN_IF(error.Failed())) {
@@ -5648,16 +5647,15 @@ nsresult EditorBase::TopLevelEditSubActionData::AddRangeToChangedRange(
   }
 
   relation = mChangedRange->EndRef().IsSet()
-                 ? nsContentUtils::ComparePoints_Deprecated(
-                       mChangedRange->EndRef(), aEnd.ToRawRangeBoundary(),
-                       &disconnected)
-                 : 1;
-  if (NS_WARN_IF(disconnected)) {
+                 ? nsContentUtils::ComparePoints(mChangedRange->EndRef(),
+                                                 aEnd.ToRawRangeBoundary())
+                 : Some(1);
+  if (NS_WARN_IF(!relation)) {
     return NS_ERROR_FAILURE;
   }
 
   // If aEnd is after end of mChangedRange, reset the end.
-  if (relation < 0) {
+  if (*relation < 0) {
     ErrorResult error;
     mChangedRange->SetEnd(aEnd.ToRawRangeBoundary(), error);
     if (NS_WARN_IF(error.Failed())) {
