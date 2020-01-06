@@ -6564,7 +6564,11 @@
 
 - name: media.webrtc.platformencoder
   type: bool
+#if defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 - name: media.block-autoplay-until-in-foreground
@@ -6578,7 +6582,11 @@
 
 - name: media.webrtc.hw.h264.enabled
   type: bool
+#if defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
  # If true, then we require explicit approval from the embedding app (ex. Fenix)
