@@ -4759,32 +4759,20 @@ void nsWindow::UpdateWindowDraggingRegion(
   }
 }
 
-// See subtract_corners_from_region() at gtk/gtkwindow.c
-// We need to subtract corners from toplevel window opaque region
-// to draw transparent corners of default Gtk titlebar.
-// Both implementations (cairo_region_t and wl_region) needs to be synced.
-static void SubtractTitlebarCorners(cairo_region_t* aRegion, int aX, int aY,
-                                    int aWindowWidth) {
-  cairo_rectangle_int_t rect = {aX, aY, TITLEBAR_SHAPE_MASK_HEIGHT,
-                                TITLEBAR_SHAPE_MASK_HEIGHT};
-  cairo_region_subtract_rectangle(aRegion, &rect);
-  rect = {
-      aX + aWindowWidth - TITLEBAR_SHAPE_MASK_HEIGHT,
-      aY,
-      TITLEBAR_SHAPE_MASK_HEIGHT,
-      TITLEBAR_SHAPE_MASK_HEIGHT,
-  };
-  cairo_region_subtract_rectangle(aRegion, &rect);
-}
-
 #ifdef MOZ_WAYLAND
-static void SubtractTitlebarCorners(wl_region* aRegion, int aX, int aY,
-                                    int aWindowWidth) {
-  wl_region_subtract(aRegion, aX, aY, TITLEBAR_SHAPE_MASK_HEIGHT,
-                     TITLEBAR_SHAPE_MASK_HEIGHT);
-  wl_region_subtract(aRegion, aX + aWindowWidth - TITLEBAR_SHAPE_MASK_HEIGHT,
-                     aY, TITLEBAR_SHAPE_MASK_HEIGHT,
-                     TITLEBAR_SHAPE_MASK_HEIGHT);
+wl_region* CreateOpaqueRegionWayland(int aX, int aY, int aWidth, int aHeight,
+                                     bool aSubtractCorners) {
+  struct wl_compositor* compositor = WaylandDisplayGet()->GetCompositor();
+  wl_region* region = wl_compositor_create_region(compositor);
+  wl_region_add(region, aX, aY, aWidth, aHeight);
+  if (aSubtractCorners) {
+    wl_region_subtract(region, aX, aY, TITLEBAR_SHAPE_MASK_HEIGHT,
+                       TITLEBAR_SHAPE_MASK_HEIGHT);
+    wl_region_subtract(region, aX + aWidth - TITLEBAR_SHAPE_MASK_HEIGHT,
+                       aY, TITLEBAR_SHAPE_MASK_HEIGHT,
+                       TITLEBAR_SHAPE_MASK_HEIGHT);
+  }
+  return region;
 }
 
 void nsWindow::UpdateTopLevelOpaqueRegionWayland(bool aSubtractCorners) {
@@ -4793,32 +4781,19 @@ void nsWindow::UpdateTopLevelOpaqueRegionWayland(bool aSubtractCorners) {
     return;
   }
 
-  GdkDisplay* display = gtk_widget_get_display(GTK_WIDGET(mShell));
-  nsWaylandDisplay* waylandDisplay = WaylandDisplayGet(display);
-  struct wl_compositor* compositor = waylandDisplay->GetCompositor();
-
   // Set opaque region to mShell. It's moved to mClientOffset.x/mClientOffset.y
   // from origin as we need transparent shadows around a window.
-  wl_region* region = wl_compositor_create_region(compositor);
   int x = DevicePixelsToGdkCoordRoundDown(mClientOffset.x);
   int y = DevicePixelsToGdkCoordRoundDown(mClientOffset.y);
   int width = DevicePixelsToGdkCoordRoundDown(mBounds.width);
   int height = DevicePixelsToGdkCoordRoundDown(mBounds.height);
-  wl_region_add(region, x, y, width, height);
-  if (aSubtractCorners) {
-    SubtractTitlebarCorners(region, x, y, width);
-  }
+  wl_region* region =
+    CreateOpaqueRegionWayland(x, y, width, height, aSubtractCorners);
   wl_surface_set_opaque_region(surface, region);
   wl_surface_commit(surface);
   wl_region_destroy(region);
 
-  // Set region to mozcontainer which does not have any offset
-  region = wl_compositor_create_region(compositor);
-  wl_region_add(region, 0, 0, width, height);
-  if (aSubtractCorners) {
-    SubtractTitlebarCorners(region, 0, 0, width);
-  }
-  moz_container_set_opaque_region(mContainer, region);
+  moz_container_update_opaque_region(mContainer, aSubtractCorners);
 }
 #endif
 
@@ -4835,6 +4810,24 @@ static void GdkWindowSetOpaqueRegion(GdkWindow* aGdkWindow,
   }
 
   (*sGdkWindowSetOpaqueRegion)(aGdkWindow, aRegion);
+}
+
+// See subtract_corners_from_region() at gtk/gtkwindow.c
+// We need to subtract corners from toplevel window opaque region
+// to draw transparent corners of default Gtk titlebar.
+// Both implementations (cairo_region_t and wl_region) needs to be synced.
+static void SubtractTitlebarCorners(cairo_region_t* aRegion, int aX, int aY,
+                                    int aWindowWidth) {
+  cairo_rectangle_int_t rect = {aX, aY, TITLEBAR_SHAPE_MASK_HEIGHT,
+                                TITLEBAR_SHAPE_MASK_HEIGHT};
+  cairo_region_subtract_rectangle(aRegion, &rect);
+  rect = {
+      aX + aWindowWidth - TITLEBAR_SHAPE_MASK_HEIGHT,
+      aY,
+      TITLEBAR_SHAPE_MASK_HEIGHT,
+      TITLEBAR_SHAPE_MASK_HEIGHT,
+  };
+  cairo_region_subtract_rectangle(aRegion, &rect);
 }
 
 void nsWindow::UpdateTopLevelOpaqueRegionGtk(bool aSubtractCorners) {
