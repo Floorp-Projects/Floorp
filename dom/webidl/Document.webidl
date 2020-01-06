@@ -680,6 +680,6 @@ partial interface Document {
 
 // Extension for permission delegation.
 partial interface Document {
-  [Pref="permissions.delegation.enabled", ChromeOnly, Pure]
+  [ChromeOnly, Pure]
   readonly attribute nsIPermissionDelegateHandler permDelegateHandler;
 };
