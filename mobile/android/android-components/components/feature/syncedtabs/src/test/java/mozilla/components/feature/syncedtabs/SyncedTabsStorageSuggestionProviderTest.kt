@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.remotetabs
+package mozilla.components.feature.syncedtabs
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,17 +20,17 @@ import org.junit.runner.RunWith
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
-class RemoteTabsStorageSuggestionProviderTest {
-    private lateinit var remoteTabs: RemoteTabsFeature
+class SyncedTabsStorageSuggestionProviderTest {
+    private lateinit var syncedTabs: SyncedTabsFeature
 
     @Before
     fun setup() {
-        remoteTabs = mock()
+        syncedTabs = mock()
     }
 
     @Test
     fun `matches remote tabs`() = runBlocking {
-        val provider = RemoteTabsStorageSuggestionProvider(remoteTabs, mock())
+        val provider = SyncedTabsStorageSuggestionProvider(syncedTabs, mock())
         val deviceTabs1 = Device(
             id = "client1",
             displayName = "Foo Client",
@@ -68,7 +68,7 @@ class RemoteTabsStorageSuggestionProviderTest {
                 TabEntry("BOBO in CAPS", "https://obob.bar", null) /* active tab */
             ), 1, 1)
         )
-        whenever(remoteTabs.getRemoteTabs()).thenReturn(mapOf(deviceTabs1, deviceTabs2))
+        whenever(syncedTabs.getSyncedTabs()).thenReturn(mapOf(deviceTabs1, deviceTabs2))
 
         val suggestions = provider.onInputChanged("bobo")
         assertEquals(3, suggestions.size)
