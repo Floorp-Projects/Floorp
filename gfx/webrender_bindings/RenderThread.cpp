@@ -930,7 +930,8 @@ static already_AddRefed<gl::GLContext> CreateGLContextANGLE() {
   }
 
   auto* egl = gl::GLLibraryEGL::Get();
-  auto flags = gl::CreateContextFlags::PREFER_ES3;
+  gl::CreateContextFlags flags = gl::CreateContextFlags::PREFER_ES3 |
+                                 gl::CreateContextFlags::PREFER_ROBUSTNESS;
 
   if (egl->IsExtensionSupported(
           gl::GLLibraryEGL::MOZ_create_context_provoking_vertex_dont_care)) {
