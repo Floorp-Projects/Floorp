@@ -923,6 +923,7 @@ void DeviceManagerDx::ResetDevices() {
   mContentDevice = nullptr;
   mCanvasDevice = nullptr;
   mImageDevice = nullptr;
+  mDirectCompositionDevice = nullptr;
   mDeviceStatus = Nothing();
   mDeviceResetReason = Nothing();
   Factory::SetDirect3D11Device(nullptr);
@@ -945,6 +946,7 @@ bool DeviceManagerDx::MaybeResetAndReacquireDevices() {
   bool createCompositorDevice = !!mCompositorDevice;
   bool createContentDevice = !!mContentDevice;
   bool createCanvasDevice = !!mCanvasDevice;
+  bool createDirectCompositionDevice = !!mDirectCompositionDevice;
 
   ResetDevices();
 
@@ -957,6 +959,9 @@ bool DeviceManagerDx::MaybeResetAndReacquireDevices() {
   }
   if (createCanvasDevice) {
     CreateCanvasDevice();
+  }
+  if (createDirectCompositionDevice) {
+    CreateDirectCompositionDevice();
   }
 
   return true;
