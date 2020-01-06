@@ -2931,13 +2931,18 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
     RootedFunction fun(cx);
 
     JSScriptSet::AddPtr entry = scriptsDone.lookupForAdd(script);
-    if (script->filename() && !entry) {
-      realm->collectCodeCoverageInfo(script, script->filename());
-      script->resetScriptCounts();
+    if (entry) {
+      continue;
+    }
 
-      if (!scriptsDone.add(entry, script)) {
-        return false;
-      }
+    if (!coverage::CollectScriptCoverage(script, false)) {
+      return false;
+    }
+
+    script->resetScriptCounts();
+
+    if (!scriptsDone.add(entry, script)) {
+      return false;
     }
 
     if (!script->isTopLevel()) {
