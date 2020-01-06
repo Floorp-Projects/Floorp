@@ -1004,21 +1004,13 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
 }
 
 nsresult nsScriptSecurityManager::ReportError(const char* aMessageTag,
-                                              nsIURI* aSource, nsIURI* aTarget,
+                                              const nsACString& aSourceSpec,
+                                              const nsACString& aTargetSpec,
                                               bool aFromPrivateWindow,
                                               uint64_t aInnerWindowID) {
-  nsresult rv;
-  NS_ENSURE_TRUE(aSource && aTarget, NS_ERROR_NULL_POINTER);
-
-  // Get the source URL spec
-  nsAutoCString sourceSpec;
-  rv = aSource->GetAsciiSpec(sourceSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Get the target URL spec
-  nsAutoCString targetSpec;
-  rv = aTarget->GetAsciiSpec(targetSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aSourceSpec.IsEmpty() || aTargetSpec.IsEmpty()) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIStringBundle> bundle = BundleHelper::GetOrCreate();
   if (NS_WARN_IF(!bundle)) {
@@ -1028,9 +1020,10 @@ nsresult nsScriptSecurityManager::ReportError(const char* aMessageTag,
   // Localize the error message
   nsAutoString message;
   AutoTArray<nsString, 2> formatStrings;
-  CopyASCIItoUTF16(sourceSpec, *formatStrings.AppendElement());
-  CopyASCIItoUTF16(targetSpec, *formatStrings.AppendElement());
-  rv = bundle->FormatStringFromName(aMessageTag, formatStrings, message);
+  CopyASCIItoUTF16(aSourceSpec, *formatStrings.AppendElement());
+  CopyASCIItoUTF16(aTargetSpec, *formatStrings.AppendElement());
+  nsresult rv =
+      bundle->FormatStringFromName(aMessageTag, formatStrings, message);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIConsoleService> console(
@@ -1053,6 +1046,26 @@ nsresult nsScriptSecurityManager::ReportError(const char* aMessageTag,
   NS_ENSURE_SUCCESS(rv, rv);
   console->LogMessage(error);
   return NS_OK;
+}
+
+nsresult nsScriptSecurityManager::ReportError(const char* aMessageTag,
+                                              nsIURI* aSource, nsIURI* aTarget,
+                                              bool aFromPrivateWindow,
+                                              uint64_t aInnerWindowID) {
+  NS_ENSURE_TRUE(aSource && aTarget, NS_ERROR_NULL_POINTER);
+
+  // Get the source URL spec
+  nsAutoCString sourceSpec;
+  nsresult rv = aSource->GetAsciiSpec(sourceSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the target URL spec
+  nsAutoCString targetSpec;
+  rv = aTarget->GetAsciiSpec(targetSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return ReportError(aMessageTag, sourceSpec, targetSpec, aFromPrivateWindow,
+                     aInnerWindowID);
 }
 
 NS_IMETHODIMP
