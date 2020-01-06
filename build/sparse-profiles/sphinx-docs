@@ -3,7 +3,6 @@
 [include]
 # Code for generating docs.
 glob:docs/**
-glob:tools/docs/**
 glob:tools/moztreedocs/**
 
 # Potential docs sources

@@ -173,4 +173,6 @@ OBJDIR_PP_FILES['.cargo'] += ['.cargo/config.in']
 
 DEFINES['top_srcdir'] = TOPSRCDIR
 
+SPHINX_TREES['contributing'] = 'docs/contributing'
+
 include('build/templates.mozbuild')
