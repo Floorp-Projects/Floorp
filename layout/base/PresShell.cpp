@@ -1285,11 +1285,6 @@ void PresShell::Destroy() {
     frameSelection->DisconnectFromPresShell();
   }
 
-  if (mAccessibleCaretEventHub) {
-    mAccessibleCaretEventHub->Terminate();
-    mAccessibleCaretEventHub = nullptr;
-  }
-
   // release our pref style sheet, if we have one still
   //
   // TODO(emilio): Should we move the preference sheet tracking to the Document?
@@ -1373,6 +1368,14 @@ void PresShell::Destroy() {
   }
   for (WeakFrame* weakFrame : toRemove) {
     weakFrame->Clear(this);
+  }
+
+  // Terminate AccessibleCaretEventHub after tearing down the frame tree so that
+  // we don't need to remove caret element's frame in
+  // AccessibleCaret::RemoveCaretElement().
+  if (mAccessibleCaretEventHub) {
+    mAccessibleCaretEventHub->Terminate();
+    mAccessibleCaretEventHub = nullptr;
   }
 
   if (mPresContext) {
