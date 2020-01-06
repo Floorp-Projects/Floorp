@@ -727,6 +727,7 @@ void DocumentLoadListener::SerializeRedirectData(
   aArgs.lastVisitInfo() = LastVisitInfo{previousURI, previousFlags};
   aArgs.srcdocData() = mSrcdocData;
   aArgs.baseUri() = mBaseURI;
+  aArgs.loadStateLoadFlags() = mLoadStateLoadFlags;
 }
 
 void DocumentLoadListener::TriggerCrossProcessSwitch() {
