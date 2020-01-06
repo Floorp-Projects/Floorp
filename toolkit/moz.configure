@@ -935,11 +935,6 @@ def remote_default(target, project, milestone):
     if target.os == 'Android':
         return False
 
-    # winapi 0.2.8 does not work on AArch64
-    # TODO(ato): https://bugzil.la/1598286
-    if target.os == 'WINNT' and target.cpu == 'aarch64':
-        return False
-
     # enable on Firefox Nightly channel only
     # TODO(ato): https://bugzil.la/1544393
     return project == 'browser' and milestone.is_nightly
