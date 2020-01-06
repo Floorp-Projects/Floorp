@@ -248,6 +248,9 @@ class PuppeteerTest(MachCommandBase):
     @CommandArgument("--binary",
                      type=str,
                      help="Path to browser binary.  Defaults to local Firefox build.")
+    @CommandArgument("--enable-fission",
+                     action="store_true",
+                     help="Enable Fission (site isolation) in Gecko.")
     @CommandArgument("-z", "--headless",
                      action="store_true",
                      help="Run browser in headless mode.")
@@ -267,7 +270,7 @@ class PuppeteerTest(MachCommandBase):
                      metavar="<N>",
                      help="Optionally run tests in parallel.")
     @CommandArgument("tests", nargs="*")
-    def puppeteer_test(self, binary=None, headless=False, extra_prefs=None,
+    def puppeteer_test(self, binary=None, enable_fission=False, headless=False, extra_prefs=None,
                        extra_options=None, jobs=1, tests=None, product="firefox", **kwargs):
         # moztest calls this programmatically with test objects or manifests
         if "test_objects" in kwargs and tests is not None:
@@ -294,6 +297,11 @@ class PuppeteerTest(MachCommandBase):
             if len(kv) != 2:
                 exit(EX_USAGE, "syntax error in --setopt={}".format(s))
             options[kv[0]] = kv[1].strip()
+
+        if enable_fission:
+            prefs.update({"fission.autostart": True,
+                          "dom.serviceWorkers.parent_intercept": True,
+                          "browser.tabs.documentchannel": True})
 
         self.install_puppeteer(product)
 
