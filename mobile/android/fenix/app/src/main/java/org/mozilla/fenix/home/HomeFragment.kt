@@ -230,9 +230,12 @@ class HomeFragment : Fragment() {
         setupHomeMenu()
 
         viewLifecycleOwner.lifecycleScope.launch(IO) {
+            // This should be unnecessary, but we've seen crashes around it. See #6832
+            val context = context ?: return@launch
+
             val iconSize = resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
 
-            val searchEngine = requireComponents.search.provider.getDefaultEngine(requireContext())
+            val searchEngine = requireComponents.search.provider.getDefaultEngine(context)
             val searchIcon = BitmapDrawable(resources, searchEngine.icon)
             searchIcon.setBounds(0, 0, iconSize, iconSize)
 
