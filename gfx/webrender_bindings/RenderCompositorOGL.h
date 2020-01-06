@@ -56,11 +56,10 @@ class RenderCompositorOGL : public RenderCompositor {
   void Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
             wr::DeviceIntRect aDirtyRect) override;
   void Unbind() override;
-  void CreateSurface(wr::NativeSurfaceId aId,
-                     wr::DeviceIntSize aTileSize) override;
+  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aTileSize,
+                     bool aIsOpaque) override;
   void DestroySurface(NativeSurfaceId aId) override;
-  void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY,
-                  bool aIsOpaque) override;
+  void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
   void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY) override;
   void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                   wr::DeviceIntRect aClipRect) override;
@@ -91,9 +90,11 @@ class RenderCompositorOGL : public RenderCompositor {
 
   class Surface {
    public:
-    explicit Surface(wr::DeviceIntSize aTileSize) : mTileSize(aTileSize) {}
+    explicit Surface(wr::DeviceIntSize aTileSize, bool aIsOpaque)
+        : mTileSize(aTileSize), mIsOpaque(aIsOpaque) {}
 
     wr::DeviceIntSize mTileSize;
+    bool mIsOpaque;
     std::unordered_map<TileKey, RefPtr<layers::NativeLayer>, TileKeyHashFn>
         mNativeLayers;
   };

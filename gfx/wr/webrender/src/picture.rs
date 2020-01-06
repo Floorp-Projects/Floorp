@@ -204,6 +204,8 @@ pub struct PictureCacheState {
     allocations: PictureCacheRecycledAllocations,
     /// Currently allocated native compositor surface for this picture cache.
     pub native_surface_id: Option<NativeSurfaceId>,
+    /// True if the entire picture cache is opaque.
+    is_opaque: bool,
 }
 
 pub struct PictureCacheRecycledAllocations {
@@ -898,9 +900,7 @@ impl Tile {
         // Check if this tile can be considered opaque. Opacity state must be updated only
         // after all early out checks have been performed. Otherwise, we might miss updating
         // the native surface next time this tile becomes visible.
-        let tile_is_opaque = ctx.backdrop.rect.contains_rect(&self.clipped_rect);
-        let opacity_changed = tile_is_opaque != self.is_opaque;
-        self.is_opaque = tile_is_opaque;
+        self.is_opaque = ctx.backdrop.rect.contains_rect(&self.clipped_rect);
 
         // Check if the selected composite mode supports dirty rect updates. For Draw composite
         // mode, we can always update the content with smaller dirty rects. For native composite
@@ -978,27 +978,7 @@ impl Tile {
             // the tile was previously a color, or not set, then just set
             // up a new texture cache handle.
             match self.surface.take() {
-                Some(TileSurface::Texture { mut descriptor, visibility_mask }) => {
-                    // If opacity changed, and this is a native OS compositor surface,
-                    // it needs to be recreated.
-                    // TODO(gw): This is a limitation of the DirectComposite APIs. It might
-                    //           make sense on other platforms to be able to change this as
-                    //           a property on a surface, if we ever see pages where this
-                    //           is changing frequently.
-                    if opacity_changed {
-                        if let SurfaceTextureDescriptor::Native { ref mut id, .. } = descriptor {
-                            // Reset the dirty rect and tile validity in this case, to
-                            // force the new tile to be completely redrawn.
-                            self.invalidate(None, InvalidationReason::SurfaceOpacityChanged);
-
-                            // If this tile has a currently allocated native surface, destroy it. It
-                            // will be re-allocated next time it's determined to be visible.
-                            if let Some(id) = id.take() {
-                                state.resource_cache.destroy_compositor_tile(id);
-                            }
-                        }
-                    }
-
+                Some(TileSurface::Texture { descriptor, visibility_mask }) => {
                     // Reuse the existing descriptor and vis mask
                     TileSurface::Texture {
                         descriptor,
@@ -1530,6 +1510,8 @@ pub struct TileCacheInstance {
     /// The current device position of this cache. Used to set the compositor
     /// offset of the surface when building the visual tree.
     pub device_position: DevicePoint,
+    /// True if the entire picture cache surface is opaque.
+    is_opaque: bool,
 }
 
 impl TileCacheInstance {
@@ -1579,6 +1561,7 @@ impl TileCacheInstance {
             compare_cache: FastHashMap::default(),
             native_surface_id: None,
             device_position: DevicePoint::zero(),
+            is_opaque: true,
         }
     }
 
@@ -1700,6 +1683,7 @@ impl TileCacheInstance {
             self.opacity_bindings = prev_state.opacity_bindings;
             self.current_tile_size = prev_state.current_tile_size;
             self.native_surface_id = prev_state.native_surface_id;
+            self.is_opaque = prev_state.is_opaque;
 
             fn recycle_map<K: std::cmp::Eq + std::hash::Hash, V>(
                 ideal_len: usize,
@@ -2355,11 +2339,40 @@ impl TileCacheInstance {
             compare_cache: &mut self.compare_cache,
         };
 
-        // Step through each tile and invalidate if the dependencies have changed.
+        // Step through each tile and invalidate if the dependencies have changed. Determine
+        // the current opacity setting and whether it's changed.
+        let mut tile_cache_is_opaque = true;
         for (key, tile) in self.tiles.iter_mut() {
             if tile.post_update(&ctx, &mut state) {
                 self.tiles_to_draw.push(*key);
+                tile_cache_is_opaque &= tile.is_opaque;
             }
+        }
+
+        // If opacity changed, the native compositor surface and all tiles get invalidated.
+        // (this does nothing if not using native compositor mode).
+        // TODO(gw): This property probably changes very rarely, so it is OK to invalidate
+        //           everything in this case. If it turns out that this isn't true, we could
+        //           consider other options, such as per-tile opacity (natively supported
+        //           on CoreAnimation, and supported if backed by non-virtual surfaces in
+        //           DirectComposition).
+        if self.is_opaque != tile_cache_is_opaque {
+            if let Some(native_surface_id) = self.native_surface_id.take() {
+                // Since the native surface will be destroyed, need to clear the compositor tile
+                // handle for all tiles. This means the tiles will be reallocated on demand
+                // when the tiles are added to render tasks.
+                for tile in self.tiles.values_mut() {
+                    if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { ref mut id, .. }, .. }) = tile.surface {
+                        *id = None;
+                    }
+                    // Invalidate the entire tile to force a redraw.
+                    tile.invalidate(None, InvalidationReason::SurfaceOpacityChanged);
+                }
+                // Destroy the compositor surface. It will be reallocated with the correct
+                // opacity flag when render tasks are generated for tiles.
+                frame_state.resource_cache.destroy_compositor_surface(native_surface_id);
+            }
+            self.is_opaque = tile_cache_is_opaque;
         }
 
         // When under test, record a copy of the dirty region to support
@@ -3183,6 +3196,7 @@ impl PicturePrimitive {
                         root_transform: tile_cache.root_transform,
                         current_tile_size: tile_cache.current_tile_size,
                         native_surface_id: tile_cache.native_surface_id.take(),
+                        is_opaque: tile_cache.is_opaque,
                         allocations: PictureCacheRecycledAllocations {
                             old_tiles: tile_cache.old_tiles,
                             old_opacity_bindings: tile_cache.old_opacity_bindings,
@@ -3720,7 +3734,10 @@ impl PicturePrimitive {
                                             if tile_cache.native_surface_id.is_none() {
                                                 let surface_id = frame_state
                                                     .resource_cache
-                                                    .create_compositor_surface(tile_cache.current_tile_size);
+                                                    .create_compositor_surface(
+                                                        tile_cache.current_tile_size,
+                                                        tile_cache.is_opaque,
+                                                    );
 
                                                 tile_cache.native_surface_id = Some(surface_id);
                                             }
@@ -3732,10 +3749,7 @@ impl PicturePrimitive {
                                                 y: key.y,
                                             };
 
-                                            frame_state.resource_cache.create_compositor_tile(
-                                                tile_id,
-                                                tile.is_opaque,
-                                            );
+                                            frame_state.resource_cache.create_compositor_tile(tile_id);
 
                                             *id = Some(tile_id);
                                         }

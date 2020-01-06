@@ -2968,10 +2968,10 @@ impl Renderer {
                 compositor.create_surface(
                     NativeSurfaceId::DEBUG_OVERLAY,
                     framebuffer_size,
+                    false,
                 );
                 compositor.create_tile(
                     NativeTileId::DEBUG_OVERLAY,
-                    false,
                 );
                 self.debug_overlay_state.current_size = Some(framebuffer_size);
             }
@@ -5099,18 +5099,18 @@ impl Renderer {
             CompositorConfig::Native { ref mut compositor, .. } => {
                 for op in self.pending_native_surface_updates.drain(..) {
                     match op.details {
-                        NativeSurfaceOperationDetails::CreateSurface { id, tile_size } => {
+                        NativeSurfaceOperationDetails::CreateSurface { id, tile_size, is_opaque } => {
                             let _inserted = self.allocated_native_surfaces.insert(id);
                             debug_assert!(_inserted, "bug: creating existing surface");
-                            compositor.create_surface(id, tile_size);
+                            compositor.create_surface(id, tile_size, is_opaque);
                         }
                         NativeSurfaceOperationDetails::DestroySurface { id } => {
                             let _existed = self.allocated_native_surfaces.remove(&id);
                             debug_assert!(_existed, "bug: removing unknown surface");
                             compositor.destroy_surface(id);
                         }
-                        NativeSurfaceOperationDetails::CreateTile { id, is_opaque } => {
-                            compositor.create_tile(id, is_opaque);
+                        NativeSurfaceOperationDetails::CreateTile { id } => {
+                            compositor.create_tile(id);
                         }
                         NativeSurfaceOperationDetails::DestroyTile { id } => {
                             compositor.destroy_tile(id);
