@@ -3623,11 +3623,17 @@ bool CacheIRCompiler::emitStoreTypedElement() {
   return true;
 }
 
+static bool CanNurseryAllocateBigInt(JSContext* cx) {
+  JS::Zone* zone = cx->zone();
+  return zone->runtimeFromAnyThread()->gc.nursery().canAllocateBigInts() &&
+         zone->allocNurseryBigInts;
+}
+
 static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
                                Register temp, const LiveRegisterSet& liveSet,
-                               Label* fail) {
+                               Label* fail, bool attemptNursery) {
   Label fallback, done;
-  masm.newGCBigInt(result, temp, &fallback);
+  masm.newGCBigInt(result, temp, &fallback, attemptNursery);
   masm.jump(&done);
   {
     masm.bind(&fallback);
@@ -3636,6 +3642,8 @@ static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
     masm.setupUnalignedABICall(temp);
     masm.loadJSContext(temp);
     masm.passABIArg(temp);
+    masm.move32(Imm32(attemptNursery), result);
+    masm.passABIArg(result);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::AllocateBigIntNoGC));
     masm.storeCallPointerResult(result);
 
@@ -3705,7 +3713,9 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
     save.takeUnchecked(scratch2);
     save.takeUnchecked(output);
 
-    EmitAllocateBigInt(masm, *bigInt, scratch1, save, failure->label());
+    bool attemptNursery = CanNurseryAllocateBigInt(cx_);
+    EmitAllocateBigInt(masm, *bigInt, scratch1, save, failure->label(),
+                       attemptNursery);
   }
 
   // Load the elements vector.
@@ -3874,7 +3884,9 @@ bool CacheIRCompiler::emitLoadTypedObjectResult() {
       save.takeUnchecked(scratch2);
       save.takeUnchecked(output);
 
-      EmitAllocateBigInt(masm, *bigInt, scratch1, save, failure->label());
+      bool attemptNursery = CanNurseryAllocateBigInt(cx_);
+      EmitAllocateBigInt(masm, *bigInt, scratch1, save, failure->label(),
+                         attemptNursery);
     }
   }
 
@@ -4802,7 +4814,8 @@ void CacheIRCompiler::emitPostBarrierShared(Register obj,
 
   TypedOrValueRegister reg = val.reg();
   if (reg.hasTyped()) {
-    if (reg.type() != MIRType::Object && reg.type() != MIRType::String) {
+    if (reg.type() != MIRType::Object && reg.type() != MIRType::String &&
+        reg.type() != MIRType::BigInt) {
       return;
     }
   }

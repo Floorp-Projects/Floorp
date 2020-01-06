@@ -214,10 +214,15 @@ JS_FRIEND_API void HeapObjectPostWriteBarrier(JSObject** objp, JSObject* prev,
                                               JSObject* next);
 JS_FRIEND_API void HeapStringPostWriteBarrier(JSString** objp, JSString* prev,
                                               JSString* next);
+JS_FRIEND_API void HeapBigIntPostWriteBarrier(JS::BigInt** bip,
+                                              JS::BigInt* prev,
+                                              JS::BigInt* next);
 JS_FRIEND_API void HeapObjectWriteBarriers(JSObject** objp, JSObject* prev,
                                            JSObject* next);
 JS_FRIEND_API void HeapStringWriteBarriers(JSString** objp, JSString* prev,
                                            JSString* next);
+JS_FRIEND_API void HeapBigIntWriteBarriers(JS::BigInt** bip, JS::BigInt* prev,
+                                           JS::BigInt* next);
 JS_FRIEND_API void HeapScriptWriteBarriers(JSScript** objp, JSScript* prev,
                                            JSScript* next);
 
@@ -748,6 +753,15 @@ struct BarrierMethods<JSString*>
     : public detail::PtrBarrierMethodsBase<JSString> {
   static void postWriteBarrier(JSString** vp, JSString* prev, JSString* next) {
     JS::HeapStringPostWriteBarrier(vp, prev, next);
+  }
+};
+
+template <>
+struct BarrierMethods<JS::BigInt*>
+    : public detail::PtrBarrierMethodsBase<JS::BigInt> {
+  static void postWriteBarrier(JS::BigInt** vp, JS::BigInt* prev,
+                               JS::BigInt* next) {
+    JS::HeapBigIntPostWriteBarrier(vp, prev, next);
   }
 };
 

@@ -162,6 +162,13 @@ unsafe impl Trace for Heap<*mut JSString> {
     }
 }
 
+#[cfg(feature = "bigint")]
+unsafe impl Trace for Heap<*mut JS::BigInt> {
+    unsafe fn trace(&self, trc: *mut JSTracer) {
+        glue::CallBigIntTracer(trc, self as *const _ as *mut Self, c_str!("bigint"));
+    }
+}
+
 unsafe impl Trace for Heap<JS::Value> {
     unsafe fn trace(&self, trc: *mut JSTracer) {
         glue::CallValueTracer(trc, self as *const _ as *mut Self, c_str!("value"));

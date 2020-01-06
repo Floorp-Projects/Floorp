@@ -1131,7 +1131,7 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 bool DoToNumber(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 
-void* AllocateBigIntNoGC(JSContext* cx);
+void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC);
 
 template <EqualityKind Kind>
 bool BigIntEqual(BigInt* x, BigInt* y);

@@ -521,12 +521,16 @@ MOZ_ALWAYS_INLINE bool IsInsideNursery(const Cell* cell) {
   return location == ChunkLocation::Nursery;
 }
 
-// Allow use before the compiler knows the derivation of JSObject and JSString.
+// Allow use before the compiler knows the derivation of JSObject, JSString, and
+// JS::BigInt.
 MOZ_ALWAYS_INLINE bool IsInsideNursery(const JSObject* obj) {
   return IsInsideNursery(reinterpret_cast<const Cell*>(obj));
 }
 MOZ_ALWAYS_INLINE bool IsInsideNursery(const JSString* str) {
   return IsInsideNursery(reinterpret_cast<const Cell*>(str));
+}
+MOZ_ALWAYS_INLINE bool IsInsideNursery(const JS::BigInt* bi) {
+  return IsInsideNursery(reinterpret_cast<const Cell*>(bi));
 }
 
 MOZ_ALWAYS_INLINE bool IsCellPointerValid(const void* cell) {
@@ -584,6 +588,10 @@ extern JS_PUBLIC_API JS::TraceKind GCThingTraceKind(void* thing);
 extern JS_PUBLIC_API void EnableNurseryStrings(JSContext* cx);
 
 extern JS_PUBLIC_API void DisableNurseryStrings(JSContext* cx);
+
+extern JS_PUBLIC_API void EnableNurseryBigInts(JSContext* cx);
+
+extern JS_PUBLIC_API void DisableNurseryBigInts(JSContext* cx);
 
 /*
  * Returns true when writes to GC thing pointers (and reads from weak pointers)

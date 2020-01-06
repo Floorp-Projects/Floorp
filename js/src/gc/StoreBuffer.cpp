@@ -57,6 +57,7 @@ void StoreBuffer::GenericBuffer::trace(JSTracer* trc) {
 StoreBuffer::StoreBuffer(JSRuntime* rt, const Nursery& nursery)
     : bufferVal(this, JS::GCReason::FULL_VALUE_BUFFER),
       bufStrCell(this, JS::GCReason::FULL_CELL_PTR_STR_BUFFER),
+      bufBigIntCell(this, JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER),
       bufObjCell(this, JS::GCReason::FULL_CELL_PTR_OBJ_BUFFER),
       bufferSlot(this, JS::GCReason::FULL_SLOT_BUFFER),
       bufferWholeCell(this),
@@ -76,6 +77,7 @@ StoreBuffer::StoreBuffer(JSRuntime* rt, const Nursery& nursery)
 void StoreBuffer::checkEmpty() const {
   MOZ_ASSERT(bufferVal.isEmpty());
   MOZ_ASSERT(bufStrCell.isEmpty());
+  MOZ_ASSERT(bufBigIntCell.isEmpty());
   MOZ_ASSERT(bufObjCell.isEmpty());
   MOZ_ASSERT(bufferSlot.isEmpty());
   MOZ_ASSERT(bufferWholeCell.isEmpty());
@@ -119,6 +121,7 @@ void StoreBuffer::clear() {
 
   bufferVal.clear();
   bufStrCell.clear();
+  bufBigIntCell.clear();
   bufObjCell.clear();
   bufferSlot.clear();
   bufferWholeCell.clear();
@@ -137,6 +140,7 @@ void StoreBuffer::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                          JS::GCSizes* sizes) {
   sizes->storeBufferVals += bufferVal.sizeOfExcludingThis(mallocSizeOf);
   sizes->storeBufferCells += bufStrCell.sizeOfExcludingThis(mallocSizeOf) +
+                             bufBigIntCell.sizeOfExcludingThis(mallocSizeOf) +
                              bufObjCell.sizeOfExcludingThis(mallocSizeOf);
   sizes->storeBufferSlots += bufferSlot.sizeOfExcludingThis(mallocSizeOf);
   sizes->storeBufferWholeCells +=
