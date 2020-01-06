@@ -5021,8 +5021,9 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
                                        &invoke);
     masm.loadJitCodeRaw(calleereg, objreg);
   } else {
-    masm.branchIfFunctionHasNoScript(calleereg, &invoke);
-    masm.loadJitCodeNoArgCheck(calleereg, objreg);
+    // If we are using the jitCodeNoArgCheck entry point, the canonical targets
+    // are known, but due to lambda cloning we may still see lazy versions.
+    masm.loadJitCodeMaybeNoArgCheck(calleereg, objreg);
   }
 
   // Target may be a different realm even if same compartment.
