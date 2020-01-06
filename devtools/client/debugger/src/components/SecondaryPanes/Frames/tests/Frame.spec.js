@@ -24,10 +24,11 @@ function frameProperties(frame, selectedFrame: any, overrides = {}) {
     copyStackTrace: jest.fn(),
     contextTypes: {},
     selectFrame: jest.fn(),
+    selectLocation: jest.fn(),
     toggleBlackBox: jest.fn(),
     displayFullUrl: false,
     frameworkGroupingOn: false,
-    selectable: true,
+    panel: "webconsole",
     toggleFrameworkGrouping: null,
     ...overrides,
   };
