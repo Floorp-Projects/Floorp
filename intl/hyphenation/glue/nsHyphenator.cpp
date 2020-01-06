@@ -6,7 +6,6 @@
 #include "nsHyphenator.h"
 
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/Telemetry.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIFile.h"
@@ -140,8 +139,6 @@ nsHyphenator::nsHyphenator(nsIURI* aURI, bool aHyphenateCapitalized)
     : mDict(static_cast<const void*>(nullptr)),
       mDictSize(0),
       mHyphenateCapitalized(aHyphenateCapitalized) {
-  Telemetry::AutoTimer<Telemetry::HYPHENATION_LOAD_TIME> telemetry;
-
   nsCOMPtr<nsIJARURI> jar = do_QueryInterface(aURI);
   if (jar) {
     // This gives us a raw pointer into the omnijar's data (if uncompressed);
