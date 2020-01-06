@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">رازداری کی ترتیبات  پڑھیں اور ترمیم کریں</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">تمام ویب سائٹس کے لئے اپنے کوائف تک رسائی</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">براؤزر ٹیبز تک رسائی حاصل کریں</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">برائوزنگ سابقات تک رسائی  حاصل کریں</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">برائوزر کی پراکسی ترتیبات کو کنٹرول کریں</string>
+    <!-- The version on an addon. -->
+    <string name="mozac_feature_addons_version">ورژن</string>
+    <!-- The developer website (Homepage) of the addon. -->
+    <string name="mozac_feature_addons_home_page">ابتدائی صفحہ</string>
+    <!-- The rating of the addon. -->
+    <string name="mozac_feature_addons_rating">شرح کاری</string>
+    <!-- Indicates the addon is enable. -->
+    <string name="mozac_feature_addons_settings_on">چالو</string>
+    <!-- Indicates the addon is disable. -->
+    <string name="mozac_feature_addons_settings_off">بند</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">تجویز کردہ</string>
+    <!-- Displays a page with all the details of an addon. -->
+    <string name="mozac_feature_addons_details">تفصیلات</string>
+    <!-- This is button that remove (uninstall an addon). -->
+    <string name="mozac_feature_addons_remove">ہٹائیں</string>
+    <!-- This a button to add (installs) an addon . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">شامل کریں</string>
+    <!-- This a button to cancel the addon installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">منسوخ کریں</string>
+    <!-- Accessibility content description to install addon button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">ایڈ اون انسٹاال کریں</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">ایڈ اون</string>
+    </resources>
