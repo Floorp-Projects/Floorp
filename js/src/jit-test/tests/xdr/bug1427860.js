@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !('oomAtAllocation' in this)
+// |jit-test| --code-coverage; skip-if: !('oomAtAllocation' in this)
 
 let x = cacheEntry("function inner() { return 3; }; inner()");
 evaluate(x, { saveIncrementalBytecode: true });

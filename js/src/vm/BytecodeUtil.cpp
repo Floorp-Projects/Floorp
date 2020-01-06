@@ -2896,6 +2896,10 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
 
   // Collect the list of scripts which are part of the current realm.
 
+  MOZ_RELEASE_ASSERT(
+      coverage::IsLCovEnabled(),
+      "Coverage must be enabled for process before generating LCov info");
+
   // Hold the scripts that we have already flushed, to avoid flushing them
   // twice.
   using JSScriptSet = GCHashSet<JSScript*>;
