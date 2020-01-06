@@ -329,6 +329,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   nsTArray<DocumentChannelRedirect> mRedirects;
 
+  nsString mSrcdocData;
+  nsCOMPtr<nsIURI> mBaseURI;
+
   // Flags from nsDocShellLoadState::LoadFlags that we want to make available
   // to the new docshell if we switch processes.
   uint32_t mLoadStateLoadFlags = 0;
