@@ -437,6 +437,11 @@ nr_stun_get_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
     int i;
     char typestr[100];
 
+    // Ensure output records are always fully defined.  See bug 1589990.
+    if (maxaddrs > 0) {
+       memset(addrs, 0, maxaddrs * sizeof(nr_local_addr));
+    }
+
 #ifdef WIN32
     _status = stun_get_win32_addrs(addrs, maxaddrs, count);
 #else
