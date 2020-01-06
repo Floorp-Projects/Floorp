@@ -1535,18 +1535,16 @@ void nsGlobalWindowInner::TraceGlobalJSObject(JSTracer* aTrc) {
   TraceWrapper(aTrc, "active window global");
 }
 
-void nsGlobalWindowInner::InnerSetNewDocument(JSContext* aCx,
-                                              Document* aDocument) {
-  MOZ_ASSERT(aDocument);
+void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
+  MOZ_ASSERT(mDoc);
 
   if (MOZ_LOG_TEST(gDOMLeakPRLogInner, LogLevel::Debug)) {
-    nsIURI* uri = aDocument->GetDocumentURI();
+    nsIURI* uri = mDoc->GetDocumentURI();
     MOZ_LOG(gDOMLeakPRLogInner, LogLevel::Debug,
             ("DOMWINDOW %p SetNewDocument %s", this,
              uri ? uri->GetSpecOrDefault().get() : ""));
   }
 
-  mDoc = aDocument;
   mFocusedElement = nullptr;
   mLocalStorage = nullptr;
   mSessionStorage = nullptr;
@@ -1580,7 +1578,7 @@ void nsGlobalWindowInner::InnerSetNewDocument(JSContext* aCx,
 #endif
 
 #ifdef DEBUG
-  mLastOpenedURI = aDocument->GetDocumentURI();
+  mLastOpenedURI = mDoc->GetDocumentURI();
 #endif
 
   Telemetry::Accumulate(Telemetry::INNERWINDOWS_WITH_MUTATION_LISTENERS,
