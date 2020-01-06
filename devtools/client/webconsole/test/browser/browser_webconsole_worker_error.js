@@ -11,6 +11,7 @@ const TEST_URI =
   "test/browser/test-error-worker.html";
 
 add_task(async function() {
+  await pushPref("javascript.options.asyncstack", true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   await checkMessageStack(hud, "hello", [13, 4, 3]);
