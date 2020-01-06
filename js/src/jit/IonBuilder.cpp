@@ -6341,18 +6341,6 @@ bool IonBuilder::testNeedsArgumentCheck(JSFunction* target,
   // callee. Since typeset accumulates and can't decrease that means we don't
   // need to check the arguments anymore.
 
-  if (target->isNativeWithJitEntry()) {
-    // For natives with JitEntry we use the call-scripted path, but that
-    // requires a JitScript for the skip-arguments-check optimization so make
-    // sure we don't use that optimization. Note that these natives don't do
-    // argument type checks anyway.
-    return true;
-  }
-
-  if (target->isNative()) {
-    return false;
-  }
-
   if (!target->hasScript()) {
     return true;
   }
