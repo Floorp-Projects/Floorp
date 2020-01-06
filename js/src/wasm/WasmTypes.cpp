@@ -383,11 +383,6 @@ size_t FuncTypeWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return FuncType::sizeOfExcludingThis(mallocSizeOf);
 }
 
-ArgTypeVector::ArgTypeVector(const FuncType& funcType)
-    : args_(funcType.args()),
-      hasStackResults_(ABIResultIter::HasStackResults(
-          ResultType::Vector(funcType.results()))) {}
-
 // A simple notion of prefix: types and mutability must match exactly.
 
 bool StructType::hasPrefix(const StructType& other) const {
@@ -669,20 +664,12 @@ JSObject* DebugFrame::environmentChain() const {
 bool DebugFrame::getLocal(uint32_t localIndex, MutableHandleValue vp) {
   ValTypeVector locals;
   size_t argsLength;
-  StackResults stackResults;
-  if (!instance()->debug().debugGetLocalTypes(funcIndex(), &locals, &argsLength,
-                                              &stackResults)) {
+  if (!instance()->debug().debugGetLocalTypes(funcIndex(), &locals,
+                                              &argsLength)) {
     return false;
   }
 
-  ValTypeVector args;
-  MOZ_ASSERT(argsLength <= locals.length());
-  if (!args.append(locals.begin(), argsLength)) {
-    return false;
-  }
-  ArgTypeVector abiArgs(args, stackResults);
-
-  BaseLocalIter iter(locals, abiArgs, /* debugEnabled = */ true);
+  BaseLocalIter iter(locals, argsLength, /* debugEnabled = */ true);
   while (!iter.done() && iter.index() < localIndex) {
     iter++;
   }
