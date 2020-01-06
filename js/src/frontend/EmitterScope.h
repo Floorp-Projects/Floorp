@@ -88,8 +88,16 @@ class EmitterScope : public Nestable<EmitterScope> {
   template <typename ScopeCreator>
   MOZ_MUST_USE bool internScope(BytecodeEmitter* bce, ScopeCreator createScope);
   template <typename ScopeCreator>
+  MOZ_MUST_USE bool internScopeCreationData(BytecodeEmitter* bce,
+                                            ScopeCreator createScope);
+
+  template <typename ScopeCreator>
   MOZ_MUST_USE bool internBodyScope(BytecodeEmitter* bce,
                                     ScopeCreator createScope);
+
+  template <typename ScopeCreator>
+  MOZ_MUST_USE bool internBodyScopeCreationData(BytecodeEmitter* bce,
+                                                ScopeCreator createScope);
   MOZ_MUST_USE bool appendScopeNote(BytecodeEmitter* bce);
 
   MOZ_MUST_USE bool deadZoneFrameSlotRange(BytecodeEmitter* bce,
