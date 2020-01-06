@@ -492,12 +492,19 @@ const tests = [
     info(
       "With pageproxystate=valid, open the panel with openViewOnFocus, select with DOWN, Enter."
     );
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update1", true],
+        ["browser.urlbar.openViewOnFocus", true],
+      ],
+    });
     await addTopSite("http://example.org/");
     gURLBar.value = "";
     let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     await UrlbarTestUtils.promisePopupOpen(window, () => {
       window.document.getElementById("Browser:OpenLocation").doCommand();
     });
+    await SpecialPowers.popPrefEnv();
     await UrlbarTestUtils.promiseSearchComplete(window);
     while (gURLBar.untrimmedValue != "http://example.org/") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -522,13 +529,20 @@ const tests = [
     info(
       "With pageproxystate=valid, open the panel with openViewOnFocus, click on entry."
     );
+
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update1", true],
+        ["browser.urlbar.openViewOnFocus", true],
+      ],
+    });
     await addTopSite("http://example.com/");
     gURLBar.value = "";
     let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     await UrlbarTestUtils.promisePopupOpen(window, () => {
       window.document.getElementById("Browser:OpenLocation").doCommand();
     });
-    Services.prefs.clearUserPref("browser.urlbar.openViewOnFocus");
+    await SpecialPowers.popPrefEnv();
     await UrlbarTestUtils.promiseSearchComplete(window);
     while (gURLBar.untrimmedValue != "http://example.com/") {
       EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -554,6 +568,12 @@ const tests = [
     info(
       "With pageproxystate=invalid, open the panel with openViewOnFocus, Enter."
     );
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update1", true],
+        ["browser.urlbar.openViewOnFocus", true],
+      ],
+    });
     await addTopSite("http://example.org/");
     gURLBar.value = "example.org";
     gURLBar.setAttribute("pageproxystate", "invalid");
@@ -561,6 +581,7 @@ const tests = [
     await UrlbarTestUtils.promisePopupOpen(window, () => {
       window.document.getElementById("Browser:OpenLocation").doCommand();
     });
+    await SpecialPowers.popPrefEnv();
     await UrlbarTestUtils.promiseSearchComplete(window);
     EventUtils.synthesizeKey("VK_RETURN");
     await promise;
@@ -582,6 +603,12 @@ const tests = [
     info(
       "With pageproxystate=invalid, open the panel with openViewOnFocus, click on entry."
     );
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.urlbar.update1", true],
+        ["browser.urlbar.openViewOnFocus", true],
+      ],
+    });
     // This value must be different from the previous test, or else the
     // Megabar's "retained results" feature will interfere with openViewOnFocus.
     // This issue will be addressed in bug 1601052.
@@ -591,6 +618,7 @@ const tests = [
     await UrlbarTestUtils.promisePopupOpen(window, () => {
       window.document.getElementById("Browser:OpenLocation").doCommand();
     });
+    await SpecialPowers.popPrefEnv();
     await UrlbarTestUtils.promiseSearchComplete(window);
     let element = UrlbarTestUtils.getSelectedRow(window);
     EventUtils.synthesizeMouseAtCenter(element, {});
