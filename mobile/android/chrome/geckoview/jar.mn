@@ -13,7 +13,6 @@ geckoview.jar:
   content/geckoview.xhtml
   content/geckoview.js
   content/GeckoViewAutofillChild.js
-  content/GeckoViewContentBlockingChild.js
   content/GeckoViewContentChild.js
   content/GeckoViewMediaChild.js
   content/GeckoViewProgressChild.js
