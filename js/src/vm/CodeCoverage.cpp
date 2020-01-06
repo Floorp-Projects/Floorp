@@ -395,38 +395,6 @@ LCovRealm::~LCovRealm() {
   }
 }
 
-void LCovRealm::collectCodeCoverageInfo(JSScript* script, const char* name) {
-  // Skip any operation if we already some out-of memory issues.
-  if (outTN_.hadOutOfMemory()) {
-    return;
-  }
-
-  if (script->isUncompleted()) {
-    return;
-  }
-
-  // Get the existing source LCov summary, or create a new one.
-  LCovSource* source = lookupOrAdd(name);
-  if (!source) {
-    return;
-  }
-
-  // Get the formatted name of script to use
-  const char* scriptName = getScriptName(script);
-  if (!scriptName) {
-    outTN_.reportOutOfMemory();
-    return;
-  }
-
-  // Write code coverage data into the LCovSource.
-  source->writeScript(script, scriptName);
-
-  // Propegate OOM from LCovSource.
-  if (source->hadOutOfMemory()) {
-    outTN_.reportOutOfMemory();
-  }
-}
-
 LCovSource* LCovRealm::lookupOrAdd(const char* name) {
   // Find existing source if it exists.
   for (LCovSource* source : sources_) {
@@ -683,17 +651,17 @@ bool InitScriptCoverage(JSContext* cx, JSScript* script) {
   return true;
 }
 
-void CollectScriptCoverage(JSScript* script) {
+bool CollectScriptCoverage(JSScript* script, bool finalizing) {
   MOZ_ASSERT(IsLCovEnabled());
 
   ScriptLCovMap* map = script->zone()->scriptLCovMap.get();
   if (!map) {
-    return;
+    return false;
   }
 
   auto p = map->lookup(script);
   if (!p.found()) {
-    return;
+    return false;
   }
 
   LCovSource* source;
@@ -703,7 +671,13 @@ void CollectScriptCoverage(JSScript* script) {
   if (!script->isUncompleted()) {
     source->writeScript(script, scriptName);
   }
-  map->remove(p);
+
+  if (finalizing) {
+    map->remove(p);
+  }
+
+  // Propagate the failure in case caller wants to terminate early.
+  return !source->hadOutOfMemory();
 }
 
 }  // namespace coverage
