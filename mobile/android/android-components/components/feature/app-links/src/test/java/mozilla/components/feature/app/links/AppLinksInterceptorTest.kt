@@ -9,12 +9,14 @@ import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class AppLinksInterceptorTest {
@@ -22,6 +24,8 @@ class AppLinksInterceptorTest {
     private lateinit var mockUseCases: AppLinksUseCases
     private lateinit var mockGetRedirect: AppLinksUseCases.GetAppLinkRedirect
     private lateinit var mockEngineSession: EngineSession
+    private lateinit var mockOpenRedirect: AppLinksUseCases.OpenAppLinkRedirect
+
     private lateinit var appLinksInterceptor: AppLinksInterceptor
 
     private val webUrl = "https://example.com"
@@ -36,7 +40,9 @@ class AppLinksInterceptorTest {
         mockUseCases = mock()
         mockEngineSession = mock()
         mockGetRedirect = mock()
+        mockOpenRedirect = mock()
         whenever(mockUseCases.interceptedAppLinkRedirect).thenReturn(mockGetRedirect)
+        whenever(mockUseCases.openAppLink).thenReturn(mockOpenRedirect)
 
         val webRedirect = AppLinkRedirect(null, webUrl, null)
         val appRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), null, null)
@@ -124,5 +130,20 @@ class AppLinksInterceptorTest {
     fun `use the market intent if target app is not installed`() {
         val response = appLinksInterceptor.onLoadRequest(mockEngineSession, marketplaceUrl, true, false)
         assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
+    }
+
+    @Test
+    fun `external app is launched when launch from interceptor is set to true`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            launchInApp = { true },
+            useCases = mockUseCases,
+            launchFromInterceptor = true
+        )
+
+        val response = appLinksInterceptor.onLoadRequest(mockEngineSession, webUrlWithAppLink, true, false)
+        assert(response is RequestInterceptor.InterceptionResponse.AppIntent)
+        verify(mockOpenRedirect).invoke(any(), any())
     }
 }

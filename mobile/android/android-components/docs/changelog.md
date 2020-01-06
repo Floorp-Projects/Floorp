@@ -31,6 +31,17 @@ permalink: /changelog/
         and renamed to `PingType.submit()`.
     * Rename `deletion_request` ping to `deletion-request` ping after glean_parser update
 
+* **feature-app-links**
+  * AppLinksInterceptor can now be used without the AppLinksFeature. Set the new parameter launchFromInterceptor = true
+  ```kotlin
+  AppLinksInterceptor(
+      applicationContext,
+      interceptLinkClicks = true,
+      launchInApp = { true },
+      launchFromInterceptor = true
+  )
+  ```
+
 # 27.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v26.0.0...v27.0.0)
