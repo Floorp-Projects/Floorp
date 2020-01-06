@@ -35,6 +35,10 @@ except ImportError:
     conditions = None
 
 
+class JavaTestHarnessException(Exception):
+    pass
+
+
 class JUnitTestRunner(MochitestDesktop):
     """
        A test harness to run geckoview junit tests on a remote device.
@@ -225,6 +229,13 @@ class JUnitTestRunner(MochitestDesktop):
             match = re.match(r'INSTRUMENTATION_STATUS:\s*test=(.*)', line)
             if match:
                 self.test_name = match.group(1)
+            match = re.match(r'INSTRUMENTATION_STATUS:\s*stack=(.*)', line)
+            if match:
+                self.exception_message = match.group(1)
+            if "org.mozilla.geckoview.test.rule.TestHarnessException" in self.exception_message:
+                # This is actually a problem in the test harness itself
+                raise JavaTestHarnessException(self.exception_message)
+
             # Expect per-test info like: "INSTRUMENTATION_STATUS_CODE: 0|1|..."
             match = re.match(r'INSTRUMENTATION_STATUS_CODE:\s*([+-]?\d+)', line)
             if match:
@@ -247,7 +258,10 @@ class JUnitTestRunner(MochitestDesktop):
                         expected = 'FAIL'
                         self.todo_count += 1
                     else:
-                        message = 'status %s' % status
+                        if self.exception_message:
+                            message = self.exception_message
+                        else:
+                            message = 'status %s' % status
                         status = 'FAIL'
                         expected = 'PASS'
                         self.fail_count += 1
@@ -273,6 +287,7 @@ class JUnitTestRunner(MochitestDesktop):
             cmd = self.build_command_line(test_filters)
             while self.need_more_runs():
                 self.class_name = ""
+                self.exception_message = ""
                 self.test_name = ""
                 self.current_full_name = ""
                 self.runs += 1
@@ -469,6 +484,9 @@ def run_test_harness(parser, options):
     except KeyboardInterrupt:
         log.info("runjunit.py | Received keyboard interrupt")
         result = -1
+    except JavaTestHarnessException as e:
+        log.error("runjunit.py | The previous test failed because of an error "
+                  "in the test harness | %s" % (str(e)))
     except Exception as e:
         traceback.print_exc()
         log.error(
