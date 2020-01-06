@@ -83,7 +83,7 @@ add_task(async function() {
 
   invokeInTab("registerWorker");
   await checkWorkerThreads(dbg, 1);
-  await checkWorkerStatus(dbg, "active");
+  await checkWorkerStatus(dbg, "activated");
 
   const firstTab = gBrowser.selectedTab;
 
@@ -143,7 +143,7 @@ add_task(async function() {
   await waitForBreakpointCount(dbg, 1);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 2);
-  await checkWorkerStatus(dbg, "evaluating");
+  await checkWorkerStatus(dbg, "parsed");
 
   await addBreakpoint(dbg, "service-worker.sjs", 19);
   await resume(dbg);
@@ -155,7 +155,7 @@ add_task(async function() {
   await resume(dbg);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 5);
-  await checkWorkerStatus(dbg, "active");
+  await checkWorkerStatus(dbg, "activating");
 
   await resume(dbg);
   invokeInTab("unregisterWorker");
