@@ -22,7 +22,11 @@ SourceSurfaceSkia::SourceSurfaceSkia()
       mChangeMutex("SourceSurfaceSkia::mChangeMutex"),
       mIsMapped(false) {}
 
-SourceSurfaceSkia::~SourceSurfaceSkia() {}
+SourceSurfaceSkia::~SourceSurfaceSkia() {
+  // if mIsMapped is true then mChangeMutex will be locked
+  // which will cause problems during destruction.
+  MOZ_RELEASE_ASSERT(!mIsMapped);
+}
 
 IntSize SourceSurfaceSkia::GetSize() const { return mSize; }
 
