@@ -425,6 +425,10 @@ DocumentLoadListener::ReadyToVerify(nsresult aResultCode) {
 }
 
 void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
+  LOG(
+      ("DocumentLoadListener FinishReplacementChannelSetup [this=%p, "
+       "aSucceeded=%d]",
+       this, aSucceeded));
   nsresult rv;
 
   if (mDoingProcessSwitch) {
@@ -537,6 +541,7 @@ void DocumentLoadListener::FinishReplacementChannelSetup(bool aSucceeded) {
 
 void DocumentLoadListener::ResumeSuspendedChannel(
     nsIStreamListener* aListener) {
+  LOG(("DocumentLoadListener ResumeSuspendedChannel [this=%p]", this));
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
   if (httpChannel) {
     httpChannel->SetApplyConversion(mOldApplyConversion);
