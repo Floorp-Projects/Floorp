@@ -63,7 +63,7 @@ function checkModification(e, funcName, args, expectedRes, before, after,
       obs.observe(e, { attributes: true });
     }
     if (shouldThrow) {
-      assert_throws(expectedException, function() {
+      assert_throws_dom(expectedException, function() {
         var list = e.classList;
         var res = list[funcName].apply(list, args);
       });
@@ -143,7 +143,7 @@ function testClassList(e, desc) {
 
   // supports
   test(function() {
-    assert_throws(TypeError(), function() {
+    assert_throws_js(TypeError, function() {
       e.classList.supports("a");
     })
   }, ".supports() must throw TypeError" + desc);
