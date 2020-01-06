@@ -105,7 +105,7 @@ def get_profile(
             LOG("Success, we have a profile to work with")
             return target_dir
         except Exception:
-            ERROR("Failed to get the profile.")
+            LOG("Failed to get the profile.")
             retries += 1
             if os.path.exists(downloaded_archive):
                 try:
