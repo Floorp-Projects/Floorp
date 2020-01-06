@@ -26,6 +26,7 @@ import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
+import android.support.v4.util.ArrayMap;
 import android.util.Log;
 
 import org.mozilla.gecko.EventDispatcher;
@@ -47,6 +48,7 @@ import org.yaml.snakeyaml.error.YAMLException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URI;
+import java.util.Map;
 
 public final class GeckoRuntime implements Parcelable {
     private static final String LOGTAG = "GeckoRuntime";
@@ -319,7 +321,18 @@ public final class GeckoRuntime implements Parcelable {
         info.args = settings.getArguments();
         info.extras = settings.getExtras();
         info.flags = flags;
-        info.prefs = settings.getPrefsMap();
+
+        // Bug 1605454: Temporary change for Fenix experiment that disables webrender
+        // Once the experiment ends or experimenter gets implemented in Gecko, this should be removed
+        // and replaced by :
+        // info.prefs = settings.getPrefsMap();
+        final Map<String, Object> prefMap = new ArrayMap<String, Object>();
+        prefMap.putAll(settings.getPrefsMap());
+        if (info.extras.getInt("forcedisablewebrender") == 1) {
+            prefMap.put("gfx.webrender.force-disabled", true);
+        }
+        info.prefs = prefMap;
+        // End of Bug 1605454 hack
 
         String configFilePath = settings.getConfigFilePath();
         if (configFilePath == null) {
