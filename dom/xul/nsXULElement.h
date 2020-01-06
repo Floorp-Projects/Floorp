@@ -387,12 +387,6 @@ class nsXULElement : public nsStyledElement {
   void SetFlex(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetXULAttr(nsGkAtoms::flex, aValue, rv);
   }
-  void GetOrdinal(DOMString& aValue) const {
-    GetXULAttr(nsGkAtoms::ordinal, aValue);
-  }
-  void SetOrdinal(const nsAString& aValue, mozilla::ErrorResult& rv) {
-    SetXULAttr(nsGkAtoms::ordinal, aValue, rv);
-  }
   void GetOrient(DOMString& aValue) const {
     GetXULAttr(nsGkAtoms::orient, aValue);
   }
