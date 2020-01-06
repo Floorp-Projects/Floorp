@@ -23,7 +23,6 @@ class ErrorResult;
 namespace layers {
 class AsyncCanvasRenderer;
 class CanvasClient;
-class ImageContainer;
 }  // namespace layers
 
 namespace dom {
@@ -146,8 +145,6 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   layers::LayersBackend GetCompositorBackendType() const {
     return mCompositorBackendType;
   }
-
-  layers::ImageContainer* GetImageContainer();
 
  private:
   ~OffscreenCanvas();
