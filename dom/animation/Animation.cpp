@@ -391,6 +391,10 @@ void Animation::UpdatePlaybackRate(double aPlaybackRate) {
     //
     // All we need to do is update observers so that, e.g. DevTools, report the
     // right information.
+    //
+    // First we need to update the relevance however since we might have become
+    // current or stopped being current.
+    UpdateRelevance();
     if (IsRelevant()) {
       MutationObservers::NotifyAnimationChanged(this);
     }
