@@ -58,10 +58,10 @@ class DCLayerTree {
   void Bind(wr::NativeTileId aId, wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
             wr::DeviceIntRect aDirtyRect);
   void Unbind();
-  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aTileSize);
+  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aTileSize,
+                     bool aIsOpaque);
   void DestroySurface(NativeSurfaceId aId);
-  void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY,
-                  bool aIsOpaque);
+  void CreateTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY);
   void DestroyTile(wr::NativeSurfaceId aId, int32_t aX, int32_t aY);
   void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                   wr::DeviceIntRect aClipRect);
@@ -135,11 +135,12 @@ class DCLayerTree {
  */
 class DCSurface {
  public:
-  explicit DCSurface(wr::DeviceIntSize aTileSize, DCLayerTree* aDCLayerTree);
+  explicit DCSurface(wr::DeviceIntSize aTileSize, bool aIsOpaque,
+                     DCLayerTree* aDCLayerTree);
   ~DCSurface();
 
   bool Initialize();
-  void CreateTile(int32_t aX, int32_t aY, bool aIsOpaque);
+  void CreateTile(int32_t aX, int32_t aY);
   void DestroyTile(int32_t aX, int32_t aY);
 
   IDCompositionVisual2* GetVisual() const { return mVisual; }
@@ -168,6 +169,7 @@ class DCSurface {
   RefPtr<IDCompositionVisual2> mVisual;
 
   wr::DeviceIntSize mTileSize;
+  bool mIsOpaque;
   std::unordered_map<TileKey, UniquePtr<DCLayer>, TileKeyHashFn> mDCLayers;
 };
 

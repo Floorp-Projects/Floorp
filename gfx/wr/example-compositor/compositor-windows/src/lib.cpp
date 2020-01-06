@@ -63,6 +63,7 @@ struct TileKeyHasher {
 struct Surface {
     int tile_width;
     int tile_height;
+    bool is_opaque;
     std::unordered_map<TileKey, Tile, TileKeyHasher> tiles;
     IDCompositionVisual2 *pVisual;
 };
@@ -465,13 +466,15 @@ extern "C" {
         Window *window,
         uint64_t id,
         int tile_width,
-        int tile_height
+        int tile_height,
+        bool is_opaque
     ) {
         assert(window->surfaces.count(id) == 0);
 
         Surface surface;
         surface.tile_width = tile_width;
         surface.tile_height = tile_height;
+        surface.is_opaque = is_opaque;
 
         // Create the visual node in the DC tree that stores properties
         HRESULT hr = window->pDCompDevice->CreateVisual(&surface.pVisual);
@@ -484,8 +487,7 @@ extern "C" {
         Window *window,
         uint64_t id,
         int x,
-        int y,
-        bool is_opaque
+        int y
     ) {
         assert(window->surfaces.count(id) == 1);
         Surface &surface = window->surfaces[id];
@@ -496,7 +498,7 @@ extern "C" {
         Tile tile;
 
         // Create the video memory surface.
-        DXGI_ALPHA_MODE alpha_mode = is_opaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
+        DXGI_ALPHA_MODE alpha_mode = surface.is_opaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
         HRESULT hr = window->pDCompDevice->CreateSurface(
             surface.tile_width,
             surface.tile_height,

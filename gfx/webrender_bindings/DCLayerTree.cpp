@@ -230,7 +230,7 @@ void DCLayerTree::Unbind() {
 }
 
 void DCLayerTree::CreateSurface(wr::NativeSurfaceId aId,
-                                wr::DeviceIntSize aTileSize) {
+                                wr::DeviceIntSize aTileSize, bool aIsOpaque) {
   auto it = mDCSurfaces.find(aId);
   MOZ_RELEASE_ASSERT(it == mDCSurfaces.end());
   if (it != mDCSurfaces.end()) {
@@ -238,7 +238,7 @@ void DCLayerTree::CreateSurface(wr::NativeSurfaceId aId,
     return;
   }
 
-  auto surface = MakeUnique<DCSurface>(aTileSize, this);
+  auto surface = MakeUnique<DCSurface>(aTileSize, aIsOpaque, this);
   if (!surface->Initialize()) {
     gfxCriticalNote << "Failed to initialize DCSurface: " << wr::AsUint64(aId);
     return;
@@ -256,10 +256,9 @@ void DCLayerTree::DestroySurface(NativeSurfaceId aId) {
   mDCSurfaces.erase(surface_it);
 }
 
-void DCLayerTree::CreateTile(wr::NativeSurfaceId aId, int aX, int aY,
-                             bool aIsOpaque) {
+void DCLayerTree::CreateTile(wr::NativeSurfaceId aId, int aX, int aY) {
   auto surface = GetSurface(aId);
-  surface->CreateTile(aX, aY, aIsOpaque);
+  surface->CreateTile(aX, aY);
 }
 
 void DCLayerTree::DestroyTile(wr::NativeSurfaceId aId, int aX, int aY) {
@@ -335,8 +334,9 @@ GLuint DCLayerTree::GetOrCreateFbo(int aWidth, int aHeight) {
   return fboId;
 }
 
-DCSurface::DCSurface(wr::DeviceIntSize aTileSize, DCLayerTree* aDCLayerTree)
-    : mDCLayerTree(aDCLayerTree), mTileSize(aTileSize) {}
+DCSurface::DCSurface(wr::DeviceIntSize aTileSize, bool aIsOpaque,
+                     DCLayerTree* aDCLayerTree)
+    : mDCLayerTree(aDCLayerTree), mTileSize(aTileSize), mIsOpaque(aIsOpaque) {}
 
 DCSurface::~DCSurface() {}
 
@@ -352,12 +352,12 @@ bool DCSurface::Initialize() {
   return true;
 }
 
-void DCSurface::CreateTile(int aX, int aY, bool aIsOpaque) {
+void DCSurface::CreateTile(int aX, int aY) {
   TileKey key(aX, aY);
   MOZ_RELEASE_ASSERT(mDCLayers.find(key) == mDCLayers.end());
 
   auto layer = MakeUnique<DCLayer>(mDCLayerTree);
-  if (!layer->Initialize(aX, aY, mTileSize, aIsOpaque)) {
+  if (!layer->Initialize(aX, aY, mTileSize, mIsOpaque)) {
     gfxCriticalNote << "Failed to initialize DCLayer: " << aX << aY;
     return;
   }

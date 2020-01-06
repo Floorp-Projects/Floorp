@@ -1779,6 +1779,7 @@ impl ResourceCache {
     pub fn create_compositor_surface(
         &mut self,
         tile_size: DeviceIntSize,
+        is_opaque: bool,
     ) -> NativeSurfaceId {
         let id = NativeSurfaceId(NEXT_NATIVE_SURFACE_ID.fetch_add(1, Ordering::Relaxed));
 
@@ -1787,6 +1788,7 @@ impl ResourceCache {
                 details: NativeSurfaceOperationDetails::CreateSurface {
                     id,
                     tile_size,
+                    is_opaque,
                 },
             }
         );
@@ -1813,13 +1815,11 @@ impl ResourceCache {
     pub fn create_compositor_tile(
         &mut self,
         id: NativeTileId,
-        is_opaque: bool,
     ) {
         self.pending_native_surface_updates.push(
             NativeSurfaceOperation {
                 details: NativeSurfaceOperationDetails::CreateTile {
                     id,
-                    is_opaque,
                 },
             }
         );
