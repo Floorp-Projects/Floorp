@@ -349,7 +349,6 @@ linux-common-tests:
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-devtools-chrome
-    - mochitest-media
     - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
@@ -367,11 +366,13 @@ linux1804-tests:
     - cppunit
     - crashtest
     - mochitest-gpu
+    - mochitest-media
 
 linux1804-qr-tests:
     - cppunit
     - crashtest
     - mochitest-gpu
+    - mochitest-media
 
 linux-qr-tests:
     - gtest
@@ -380,7 +381,6 @@ linux-qr-tests:
     - mochitest
     - mochitest-a11y
     - mochitest-chrome
-    - mochitest-media
     - mochitest-webgl1-core
     - mochitest-webgl2-core
     - reftest
