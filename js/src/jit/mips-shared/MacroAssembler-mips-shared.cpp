@@ -754,7 +754,7 @@ void MacroAssemblerMIPSShared::ma_b(Label* label, JumpKind jumpKind) {
   asMasm().branchWithCode(getBranchCode(BranchIsJump), label, jumpKind);
 }
 
-Assembler::Condition MacroAssemblerMIPSShared::ma_cmp(Register scratch,
+Assembler::Condition MacroAssemblerMIPSShared::ma_cmp(Register dest,
                                                       Register lhs,
                                                       Register rhs,
                                                       Condition c) {
@@ -763,49 +763,49 @@ Assembler::Condition MacroAssemblerMIPSShared::ma_cmp(Register scratch,
       // bgtu s,t,label =>
       //   sltu at,t,s
       //   bne at,$zero,offs
-      as_sltu(scratch, rhs, lhs);
+      as_sltu(dest, rhs, lhs);
       return NotEqual;
     case AboveOrEqual:
       // bgeu s,t,label =>
       //   sltu at,s,t
       //   beq at,$zero,offs
-      as_sltu(scratch, lhs, rhs);
+      as_sltu(dest, lhs, rhs);
       return Equal;
     case Below:
       // bltu s,t,label =>
       //   sltu at,s,t
       //   bne at,$zero,offs
-      as_sltu(scratch, lhs, rhs);
+      as_sltu(dest, lhs, rhs);
       return NotEqual;
     case BelowOrEqual:
       // bleu s,t,label =>
       //   sltu at,t,s
       //   beq at,$zero,offs
-      as_sltu(scratch, rhs, lhs);
+      as_sltu(dest, rhs, lhs);
       return Equal;
     case GreaterThan:
       // bgt s,t,label =>
       //   slt at,t,s
       //   bne at,$zero,offs
-      as_slt(scratch, rhs, lhs);
+      as_slt(dest, rhs, lhs);
       return NotEqual;
     case GreaterThanOrEqual:
       // bge s,t,label =>
       //   slt at,s,t
       //   beq at,$zero,offs
-      as_slt(scratch, lhs, rhs);
+      as_slt(dest, lhs, rhs);
       return Equal;
     case LessThan:
       // blt s,t,label =>
       //   slt at,s,t
       //   bne at,$zero,offs
-      as_slt(scratch, lhs, rhs);
+      as_slt(dest, lhs, rhs);
       return NotEqual;
     case LessThanOrEqual:
       // ble s,t,label =>
       //   slt at,t,s
       //   beq at,$zero,offs
-      as_slt(scratch, rhs, lhs);
+      as_slt(dest, rhs, lhs);
       return Equal;
     default:
       MOZ_CRASH("Invalid condition.");
@@ -813,49 +813,53 @@ Assembler::Condition MacroAssemblerMIPSShared::ma_cmp(Register scratch,
   return Always;
 }
 
-Assembler::Condition MacroAssemblerMIPSShared::ma_cmp(Register scratch,
+Assembler::Condition MacroAssemblerMIPSShared::ma_cmp(Register dest,
                                                       Register lhs, Imm32 imm,
                                                       Condition c) {
+  MOZ_ASSERT(dest != ScratchRegister);
+  MOZ_ASSERT(lhs != ScratchRegister);
+  ScratchRegisterScope scratch(asMasm());
+
   switch (c) {
     case Above:
     case BelowOrEqual:
       if (Imm16::IsInSignedRange(imm.value + 1) && imm.value != -1) {
         // lhs <= rhs via lhs < rhs + 1 if rhs + 1 does not overflow
-        as_sltiu(scratch, lhs, imm.value + 1);
+        as_sltiu(dest, lhs, imm.value + 1);
 
         return (c == BelowOrEqual ? NotEqual : Equal);
       } else {
         ma_li(scratch, imm);
-        as_sltu(scratch, scratch, lhs);
+        as_sltu(dest, scratch, lhs);
         return (c == BelowOrEqual ? Equal : NotEqual);
       }
     case AboveOrEqual:
     case Below:
       if (Imm16::IsInSignedRange(imm.value)) {
-        as_sltiu(scratch, lhs, imm.value);
+        as_sltiu(dest, lhs, imm.value);
       } else {
         ma_li(scratch, imm);
-        as_sltu(scratch, lhs, scratch);
+        as_sltu(dest, lhs, scratch);
       }
       return (c == AboveOrEqual ? Equal : NotEqual);
     case GreaterThan:
     case LessThanOrEqual:
       if (Imm16::IsInSignedRange(imm.value + 1)) {
         // lhs <= rhs via lhs < rhs + 1.
-        as_slti(scratch, lhs, imm.value + 1);
+        as_slti(dest, lhs, imm.value + 1);
         return (c == LessThanOrEqual ? NotEqual : Equal);
       } else {
         ma_li(scratch, imm);
-        as_slt(scratch, scratch, lhs);
+        as_slt(dest, scratch, lhs);
         return (c == LessThanOrEqual ? Equal : NotEqual);
       }
     case GreaterThanOrEqual:
     case LessThan:
       if (Imm16::IsInSignedRange(imm.value)) {
-        as_slti(scratch, lhs, imm.value);
+        as_slti(dest, lhs, imm.value);
       } else {
         ma_li(scratch, imm);
-        as_slt(scratch, lhs, scratch);
+        as_slt(dest, lhs, scratch);
       }
       return (c == GreaterThanOrEqual ? Equal : NotEqual);
     default:
