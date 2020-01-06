@@ -44,8 +44,8 @@ wr::WrExternalImage wr_renderer_lock_external_image(
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
   MOZ_ASSERT(texture);
   if (!texture) {
-    gfxCriticalNote << "Failed to lock ExternalImage for extId:"
-                    << AsUint64(aId);
+    gfxCriticalNoteOnce << "Failed to lock ExternalImage for extId:"
+                        << AsUint64(aId);
     return InvalidToWrExternalImage();
   }
   return texture->Lock(aChannelIndex, renderer->gl(), aRendering);
