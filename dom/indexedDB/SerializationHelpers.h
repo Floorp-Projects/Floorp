@@ -71,8 +71,9 @@ struct ParamTraits<mozilla::dom::indexedDB::KeyPath> {
 template <>
 struct ParamTraits<mozilla::dom::IDBCursor::Direction>
     : public ContiguousEnumSerializer<
-          mozilla::dom::IDBCursor::Direction, mozilla::dom::IDBCursor::NEXT,
-          mozilla::dom::IDBCursor::DIRECTION_INVALID> {};
+          mozilla::dom::IDBCursor::Direction,
+          mozilla::dom::IDBCursor::Direction::Next,
+          mozilla::dom::IDBCursor::Direction::Invalid> {};
 
 template <>
 struct ParamTraits<mozilla::dom::IDBTransaction::Mode>
