@@ -17,10 +17,10 @@ add_task(async function() {
 
   // Open a keepalive tab in the background to make sure we don't accidentally
   // kill the content process
-  var keepaliveTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  var keepaliveTab = await BrowserTestUtils.addTab(gBrowser, "about:blank");
 
   // Open the main tab to run the test in
-  var tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  var tab = await BrowserTestUtils.addTab(gBrowser, "about:blank");
   gBrowser.selectedTab = tab;
   var browser = gBrowser.selectedBrowser;
 
@@ -67,6 +67,14 @@ add_task(async function() {
     });
 
     await ContentTaskUtils.waitForEvent(this, "DOMContentLoaded");
+
+    // Wait for the test document to be fully loaded.
+    // This is a workaround to avoid JSWindowActor errors when moving on
+    // to the next phase of the test. See Bug 1603925.
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector("#test-emptyTimeStamp"),
+      "Test document should be fully loaded"
+    );
 
     content.console.log("this", "is", "a", "log message");
     content.console.info("this", "is", "a", "info message");
