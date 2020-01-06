@@ -26,6 +26,10 @@ with Files("github-sync/**"):
 with Files("lint/**"):
     BUG_COMPONENT = ("Firefox Build System", "Lint and Formatting")
 
+with Files("moztreedocs/**"):
+    BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")
+    SCHEDULES.exclusive = ['docs']
+
 with Files("profiler/**"):
     BUG_COMPONENT = ("Core", "Gecko Profiler")
 
