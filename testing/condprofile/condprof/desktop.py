@@ -14,6 +14,7 @@ from condprof.util import (
     get_version,
     ERROR,
     get_current_platform,
+    DEFAULT_PREFS,
 )
 
 
@@ -24,7 +25,16 @@ class DesktopGeckodriver(Geckodriver):
         await self._check_version()
         LOG("Running Webdriver on port %d" % port)
         LOG("Running Marionette on port 2828")
-        pargs = [self.binary, "-vv", "--port", str(port), "--marionette-port", "2828"]
+        pargs = [
+            self.binary,
+            "--log",
+            "trace",
+            "-vv",
+            "--port",
+            str(port),
+            "--marionette-port",
+            "2828",
+        ]
         return await subprocess_based_service(
             pargs, f"http://localhost:{port}", self.log_file
         )
@@ -50,13 +60,18 @@ class DesktopEnv(BaseEnv):
                 raise IOError(self.firefox)
             yield
 
-    def get_browser_args(self, headless):
+    def get_browser_args(self, headless, prefs=None):
+        final_prefs = dict(DEFAULT_PREFS)
+        if prefs is not None:
+            final_prefs.update(prefs)
         options = ["-profile", self.profile]
         if headless:
             options.append("-headless")
         args = {"moz:firefoxOptions": {"args": options}}
         if self.firefox is not None:
             args["moz:firefoxOptions"]["binary"] = self.firefox
+        args["moz:firefoxOptions"]["prefs"] = final_prefs
+        args["moz:firefoxOptions"]["log"] = {"level": "trace"}
         return args
 
     def get_browser_version(self):

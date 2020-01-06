@@ -3,6 +3,7 @@ import unittest
 import tempfile
 import shutil
 import re
+import asyncio
 
 import responses
 
@@ -26,6 +27,16 @@ FTP_ARCHIVE = re.compile(
 )
 
 ADDON = re.compile("https://addons.mozilla.org/.*/.*xpi")
+
+
+async def fakesleep(duration):
+    if duration > 1:
+        duration = 1
+    await asyncio.realsleep(duration)
+
+
+asyncio.realsleep = asyncio.sleep
+asyncio.sleep = fakesleep
 
 
 class TestRunner(unittest.TestCase):

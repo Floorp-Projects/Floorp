@@ -151,33 +151,41 @@ def main(args=sys.argv[1:]):
 
     async def run_all(args):
         if args.scenario != "all":
-            return await one_run(args.scenario, args.customization)
+            selected_scenario = [args.scenario]
+        else:
+            selected_scenario = scenarii.keys()
 
         # this is the loop that generates all combinations of profile
         # for the current platform when "all" is selected
         res = []
-        for scenario in scenarii.keys():
+        failures = 0
+        for scenario in selected_scenario:
             if args.customization != "all":
                 try:
                     res.append(await one_run(scenario, args.customization))
                 except Exception:
+                    failures += 1
                     ERROR("Something went wrong on this one.")
                     if args.strict:
                         raise
             else:
                 for customization in get_customizations():
+                    LOG("Customization %s" % customization)
                     try:
                         res.append(await one_run(scenario, customization))
                     except Exception:
+                        failures += 1
                         ERROR("Something went wrong on this one.")
                         if args.strict:
                             raise
-        return res
+        return failures, [one_res for one_res in res if one_res]
 
     try:
-        loop.run_until_complete(run_all(args))
+        failures, results = loop.run_until_complete(run_all(args))
         LOG("Saving changelog in %s" % args.archive)
         changelog.save(args.archive)
+        if failures > 0:
+            raise Exception("At least one scenario failed")
     finally:
         loop.close()
 
