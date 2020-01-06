@@ -1202,6 +1202,8 @@ name = "fog"
 version = "0.1.0"
 dependencies = [
  "glean-preview 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nserror 0.1.0",
+ "nsstring 0.1.0",
 ]
 
 [[package]]
