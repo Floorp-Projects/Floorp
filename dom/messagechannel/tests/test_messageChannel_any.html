@@ -65,7 +65,7 @@ function compare(a, b) {
     for (var p in b) bProps.push(p);
 
     is (aProps.length, bProps.length, 'Props match');
-    is (aProps.sort().toSource(), bProps.sort().toSource(), 'Props match - using toSource()');
+    is (aProps.sort().toString(), bProps.sort().toString(), 'Prop names match');
 
     for (var p in a) {
       compare(a[p], b[p]);
@@ -75,7 +75,7 @@ function compare(a, b) {
   }
 
   if (type != 'null') {
-    is (a.toSource(), b.toSource(), 'Matching using toSource()');
+    is (a, b, 'Same value');
   }
 }
 
