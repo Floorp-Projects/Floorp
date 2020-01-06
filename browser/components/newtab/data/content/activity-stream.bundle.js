@@ -2057,7 +2057,8 @@ const ASRouterUtils = {
         return {
           url: endpoint.href,
           snippetId: params.get("snippetId"),
-          theme: this.getPreviewTheme()
+          theme: this.getPreviewTheme(),
+          dir: this.getPreviewDir()
         };
       } catch (e) {}
     }
@@ -2067,6 +2068,10 @@ const ASRouterUtils = {
 
   getPreviewTheme() {
     return new URLSearchParams(global.location.href.slice(global.location.href.indexOf("theme"))).get("theme");
+  },
+
+  getPreviewDir() {
+    return new URLSearchParams(global.location.href.slice(global.location.href.indexOf("dir"))).get("dir");
   }
 
 }; // Note: nextProps/prevProps refer to props passed to <ImpressionsWrapper />, not <ASRouterUISurface />
@@ -2309,6 +2314,11 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
           data: content_src_lib_constants__WEBPACK_IMPORTED_MODULE_5__["NEWTAB_DARK_THEME"]
         }
       }));
+    }
+
+    if (endpoint && endpoint.dir === "rtl") {
+      //Set `dir = rtl` on the HTML
+      this.props.document.getElementById("root").dir = "rtl";
     }
 
     ASRouterUtils.addListener(this.onMessageFromParent);
