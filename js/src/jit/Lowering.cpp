@@ -2785,6 +2785,17 @@ void LIRGenerator::visitPostWriteBarrier(MPostWriteBarrier* ins) {
       assignSafepoint(lir, ins);
       break;
     }
+    case MIRType::BigInt: {
+      LDefinition tmp =
+          needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
+      auto* lir = new (alloc())
+          LPostWriteBarrierBI(useConstantObject ? useOrConstant(ins->object())
+                                                : useRegister(ins->object()),
+                              useRegister(ins->value()), tmp);
+      add(lir, ins);
+      assignSafepoint(lir, ins);
+      break;
+    }
     case MIRType::Value: {
       LDefinition tmp =
           needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
@@ -2839,6 +2850,17 @@ void LIRGenerator::visitPostWriteElementBarrier(MPostWriteElementBarrier* ins) {
       assignSafepoint(lir, ins);
       break;
     }
+    case MIRType::BigInt: {
+      LDefinition tmp =
+          needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
+      auto* lir = new (alloc()) LPostWriteElementBarrierBI(
+          useConstantObject ? useOrConstant(ins->object())
+                            : useRegister(ins->object()),
+          useRegister(ins->value()), useRegister(ins->index()), tmp);
+      add(lir, ins);
+      assignSafepoint(lir, ins);
+      break;
+    }
     case MIRType::Value: {
       LDefinition tmp =
           needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
@@ -2851,8 +2873,8 @@ void LIRGenerator::visitPostWriteElementBarrier(MPostWriteElementBarrier* ins) {
       break;
     }
     default:
-      // Currently, only objects and strings can be in the nursery. Other
-      // instruction types cannot hold nursery pointers.
+      // Currently, only objects, strings, and bigints can be in the nursery.
+      // Other instruction types cannot hold nursery pointers.
       break;
   }
 }

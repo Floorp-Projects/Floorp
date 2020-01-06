@@ -280,6 +280,10 @@ extern "C" {
     pub fn CallStringTracer(trc: *mut JSTracer,
                             strp: *mut Heap<*mut JSString>,
                             name: *const ::libc::c_char);
+    #[cfg(feature = "bigint")]
+    pub fn CallBigIntTracer(trc: *mut JSTracer,
+                            bip: *mut Heap<*mut JS::BigInt>,
+                            name: *const ::libc::c_char);
     pub fn CallScriptTracer(trc: *mut JSTracer,
                             scriptp: *mut Heap<*mut JSScript>,
                             name: *const ::libc::c_char);

@@ -493,14 +493,19 @@ void MacroAssembler::branchValueIsNurseryCellImpl(Condition cond,
                                                   Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
   MOZ_ASSERT(temp != InvalidReg);
-  Label done, checkAddress, checkObjectAddress;
+  Label done, checkAddress, checkObjectAddress, checkStringAddress;
 
   Register tag = temp;
   splitTag(value, tag);
   branchTestObject(Assembler::Equal, tag, &checkObjectAddress);
-  branchTestString(Assembler::NotEqual, tag,
+  branchTestString(Assembler::Equal, tag, &checkStringAddress);
+  branchTestBigInt(Assembler::NotEqual, tag,
                    cond == Assembler::Equal ? &done : label);
 
+  unboxBigInt(value, temp);
+  jump(&checkAddress);
+
+  bind(&checkStringAddress);
   unboxString(value, temp);
   jump(&checkAddress);
 
