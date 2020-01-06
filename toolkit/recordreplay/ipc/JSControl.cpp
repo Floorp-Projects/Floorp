@@ -996,6 +996,28 @@ static bool RecordReplay_Repaint(JSContext* aCx, unsigned aArgc, Value* aVp) {
   return true;
 }
 
+static bool RecordReplay_MaxRunningProcesses(JSContext* aCx, unsigned aArgc,
+                                             Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+  args.rval().setUndefined();
+
+  // The number of processes we can run at a time is supplied via an environment
+  // variable. This is normally set by the translation layer when we are running
+  // in the cloud.
+  if (IsReplaying()) {
+    AutoEnsurePassThroughThreadEvents pt;
+    const char* env = getenv("MOZ_REPLAYING_MAX_RUNNING_PROCESSES");
+    if (env) {
+      int numProcesses = atoi(env);
+      if (numProcesses > 0) {
+        args.rval().setInt32(numProcesses);
+      }
+    }
+  }
+
+  return true;
+}
+
 static bool RecordReplay_Dump(JSContext* aCx, unsigned aArgc, Value* aVp) {
   // This method is an alternative to dump() that can be used in places where
   // thread events are disallowed.
@@ -1479,6 +1501,7 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
           0),
     JS_FN("findScriptHits", RecordReplay_FindScriptHits, 3, 0),
     JS_FN("findChangeFrames", RecordReplay_FindChangeFrames, 3, 0),
+    JS_FN("maxRunningProcesses", RecordReplay_MaxRunningProcesses, 0, 0),
     JS_FN("dump", RecordReplay_Dump, 1, 0),
     JS_FS_END};
 
