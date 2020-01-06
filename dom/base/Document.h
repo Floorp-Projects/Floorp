@@ -1121,11 +1121,6 @@ class Document : public nsINode,
   GetContentBlockingEvents();
 
   /**
-   * Get the content blocking log.
-   */
-  ContentBlockingLog* GetContentBlockingLog() { return &mContentBlockingLog; }
-
-  /**
    * Get tracking content blocked flag for this document.
    */
   bool GetHasTrackingContentBlocked() {
