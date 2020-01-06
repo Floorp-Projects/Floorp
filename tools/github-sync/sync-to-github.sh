@@ -133,9 +133,9 @@ set -e
 if [[ ${HAS_COMMENT_URL} -ne 0 ]]; then
     echo "Pull request not found, creating..."
     # The PR doesn't exist yet, so let's create it
-    (   echo -n '{ "title": "Sync changes from mozilla-central"'
+    (   echo -n '{ "title": "Sync changes from mozilla-central '"${RELATIVE_PATH}"'"'
         echo -n ', "body": "'"${FIXES}"'"'
-        echo -n ', "head": "moz-gfx:${BRANCH}"'
+        echo -n ', "head": "moz-gfx:'"${BRANCH}"'"'
         echo -n ', "base": "master" }'
     ) > "${TMPDIR}/pr.create"
     "${CURL[@]}" -d "@${TMPDIR}/pr.create" "${API_URL}/pulls" |
