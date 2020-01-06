@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 import json
 import os
+import re
 
 from six.moves.urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode, unquote
 
@@ -115,20 +116,40 @@ def validate_test_ini(test_details):
 
         # support with or without spaces, i.e. 'measure = fcp, loadtime' or '= fcp,loadtime'
         # convert to a list; and remove any spaces
+        # this can also have regexes inside
         test_details['alert_on'] = [_item.strip() for _item in test_details['alert_on'].split(',')]
+
+        # this variable will store all the concrete values for alert_on elements
+        # that have a match in "measure" list
+        valid_alerts = []
 
         # if test is raptor-youtube-playback and measure is empty, use all the tests
         if test_details.get('measure') is None \
                 and 'youtube-playback' in test_details.get('name', ''):
             test_details['measure'] = YOUTUBE_PLAYBACK_MEASURE
 
+        # convert "measure" to string, so we can use it inside a regex
+        measure_as_string = ' '.join(test_details['measure'])
+
         # now make sure each alert_on value provided is valid
         for alert_on_value in test_details['alert_on']:
-            if alert_on_value not in test_details['measure']:
+            # replace the '*' with a valid regex pattern
+            alert_on_value_pattern = alert_on_value.replace('*', '[a-zA-Z0-9.@_%]*')
+            # store all elements that have been found in "measure_as_string"
+            matches = re.findall(alert_on_value_pattern, measure_as_string)
+
+            if len(matches) == 0:
                 LOG.error("The 'alert_on' value of '%s' is not valid because "
                           "it doesn't exist in the 'measure' test setting!"
                           % alert_on_value)
                 valid_settings = False
+            else:
+                # add the matched elements to valid_alerts
+                valid_alerts.extend(matches)
+
+        # replace old alert_on values with valid elements (no more regexes inside)
+        # and also remove duplicates if any, by converting valid_alerts to a 'set' first
+        test_details['alert_on'] = sorted(set(valid_alerts))
 
     return valid_settings
 
