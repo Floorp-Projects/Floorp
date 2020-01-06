@@ -523,10 +523,6 @@ function startup() {
       onInit: {
         resource: "resource://gre/modules/GeckoViewContentBlocking.jsm",
       },
-      onEnable: {
-        frameScript:
-          "chrome://geckoview/content/GeckoViewContentBlockingChild.js",
-      },
     },
     {
       name: "SessionStateAggregator",

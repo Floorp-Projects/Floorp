@@ -209,10 +209,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onContentBlocked(session: GeckoSession,
                                           event: ContentBlocking.BlockEvent) {
-                // A workaround for waiting until the log is actually recorded
-                // in the content process.
-                // TODO: This should be removed after Bug 1599046.
-                Thread.sleep(500);
+
             }
         })
 
