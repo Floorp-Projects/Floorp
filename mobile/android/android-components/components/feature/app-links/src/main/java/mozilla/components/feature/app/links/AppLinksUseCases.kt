@@ -131,6 +131,7 @@ class AppLinksUseCases(
                 intent.addCategory(Intent.CATEGORY_BROWSABLE)
                 intent.component = null
                 intent.selector = null
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
 
             val fallbackIntent = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL)?.let {
