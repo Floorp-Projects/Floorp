@@ -12,11 +12,11 @@ fuzzy-if(webrender&&winWidget,117-129,47-54) == element-paint-simple.html elemen
 == element-paint-recursion.html element-paint-recursion-ref.html
 == element-paint-continuation.html element-paint-continuation-ref.html
 == element-paint-transform-01.html element-paint-transform-01-ref.html
-random-if(d2d) == element-paint-transform-02.html element-paint-transform-02-ref.html # bug 587133
+random-if(d2d) fuzzy-if(webrender,255-255,39-39) == element-paint-transform-02.html element-paint-transform-02-ref.html # bug 587133
 fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),0-16,0-90) == element-paint-background-size-01.html element-paint-background-size-01-ref.html
 == element-paint-background-size-02.html element-paint-background-size-02-ref.html
 fuzzy-if(skiaContent,0-255,0-4) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html # Bug 1475907
-fuzzy-if(d2d,0-255,0-24) == element-paint-transform-03.html element-paint-transform-03-ref.html
+fuzzy-if(d2d,0-255,0-24) fuzzy-if(webrender,255-255,56-56) == element-paint-transform-03.html element-paint-transform-03-ref.html
 fuzzy-if(asyncPan,0-2,0-140) fuzzy-if(skiaContent,0-3,0-106) fuzzy-if(webrender&&winWidget,134-222,1197-1588) fuzzy-if(geckoview&&webrender,7-7,22-1321) == element-paint-native-widget.html element-paint-native-widget-ref.html   # in -ref the scrollframe is active and layerized differently with APZ
 fails-if(usesRepeatResampling&&!(webrender&&winWidget)) == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html

@@ -25,18 +25,19 @@
 // Normalized bounds of the source image in the texture.
 #define V_UV_BOUNDS         flat_varying_vec4_2
 
-#define V_COLOR_OFFSET      flat_varying_vec4_3.xyz
-#define V_AMOUNT            flat_varying_vec4_3.w
+#define V_COLOR_OFFSET      flat_varying_vec4_3
 
 // Layer index to sample.
 #define V_LAYER             flat_varying_vec4_4.x
 // Flag to allow perspective interpolation of UV.
 #define V_PERSPECTIVE       flat_varying_vec4_4.y
 
+#define V_AMOUNT            flat_varying_vec4_4.z
+
 #define V_OP                flat_varying_ivec4_0.x
 #define V_TABLE_ADDRESS     flat_varying_ivec4_0.y
 
-flat varying mat3 vColorMat;
+flat varying mat4 vColorMat;
 
 flat varying int vFuncs[4];
 
@@ -101,52 +102,56 @@ void blend_brush_vs(
     switch (V_OP) {
         case 2: {
             // Grayscale
-            vColorMat = mat3(
-                vec3(lumR + oneMinusLumR * invAmount, lumR - lumR * invAmount, lumR - lumR * invAmount),
-                vec3(lumG - lumG * invAmount, lumG + oneMinusLumG * invAmount, lumG - lumG * invAmount),
-                vec3(lumB - lumB * invAmount, lumB - lumB * invAmount, lumB + oneMinusLumB * invAmount)
+            vColorMat = mat4(
+                vec4(lumR + oneMinusLumR * invAmount, lumR - lumR * invAmount, lumR - lumR * invAmount, 0.0),
+                vec4(lumG - lumG * invAmount, lumG + oneMinusLumG * invAmount, lumG - lumG * invAmount, 0.0),
+                vec4(lumB - lumB * invAmount, lumB - lumB * invAmount, lumB + oneMinusLumB * invAmount, 0.0),
+                vec4(0.0, 0.0, 0.0, 1.0)
             );
-            V_COLOR_OFFSET = vec3(0.0);
+            V_COLOR_OFFSET = vec4(0.0);
             break;
         }
         case 3: {
             // HueRotate
             float c = cos(amount);
             float s = sin(amount);
-            vColorMat = mat3(
-                vec3(lumR + oneMinusLumR * c - lumR * s, lumR - lumR * c + 0.143 * s, lumR - lumR * c - oneMinusLumR * s),
-                vec3(lumG - lumG * c - lumG * s, lumG + oneMinusLumG * c + 0.140 * s, lumG - lumG * c + lumG * s),
-                vec3(lumB - lumB * c + oneMinusLumB * s, lumB - lumB * c - 0.283 * s, lumB + oneMinusLumB * c + lumB * s)
+            vColorMat = mat4(
+                vec4(lumR + oneMinusLumR * c - lumR * s, lumR - lumR * c + 0.143 * s, lumR - lumR * c - oneMinusLumR * s, 0.0),
+                vec4(lumG - lumG * c - lumG * s, lumG + oneMinusLumG * c + 0.140 * s, lumG - lumG * c + lumG * s, 0.0),
+                vec4(lumB - lumB * c + oneMinusLumB * s, lumB - lumB * c - 0.283 * s, lumB + oneMinusLumB * c + lumB * s, 0.0),
+                vec4(0.0, 0.0, 0.0, 1.0)
             );
-            V_COLOR_OFFSET = vec3(0.0);
+            V_COLOR_OFFSET = vec4(0.0);
             break;
         }
         case 5: {
             // Saturate
-            vColorMat = mat3(
-                vec3(invAmount * lumR + amount, invAmount * lumR, invAmount * lumR),
-                vec3(invAmount * lumG, invAmount * lumG + amount, invAmount * lumG),
-                vec3(invAmount * lumB, invAmount * lumB, invAmount * lumB + amount)
+            vColorMat = mat4(
+                vec4(invAmount * lumR + amount, invAmount * lumR, invAmount * lumR, 0.0),
+                vec4(invAmount * lumG, invAmount * lumG + amount, invAmount * lumG, 0.0),
+                vec4(invAmount * lumB, invAmount * lumB, invAmount * lumB + amount, 0.0),
+                vec4(0.0, 0.0, 0.0, 1.0)
             );
-            V_COLOR_OFFSET = vec3(0.0);
+            V_COLOR_OFFSET = vec4(0.0);
             break;
         }
         case 6: {
             // Sepia
-            vColorMat = mat3(
-                vec3(0.393 + 0.607 * invAmount, 0.349 - 0.349 * invAmount, 0.272 - 0.272 * invAmount),
-                vec3(0.769 - 0.769 * invAmount, 0.686 + 0.314 * invAmount, 0.534 - 0.534 * invAmount),
-                vec3(0.189 - 0.189 * invAmount, 0.168 - 0.168 * invAmount, 0.131 + 0.869 * invAmount)
+            vColorMat = mat4(
+                vec4(0.393 + 0.607 * invAmount, 0.349 - 0.349 * invAmount, 0.272 - 0.272 * invAmount, 0.0),
+                vec4(0.769 - 0.769 * invAmount, 0.686 + 0.314 * invAmount, 0.534 - 0.534 * invAmount, 0.0),
+                vec4(0.189 - 0.189 * invAmount, 0.168 - 0.168 * invAmount, 0.131 + 0.869 * invAmount, 0.0),
+                vec4(0.0, 0.0, 0.0, 1.0)
             );
-            V_COLOR_OFFSET = vec3(0.0);
+            V_COLOR_OFFSET = vec4(0.0);
             break;
         }
         case 10: {
             // Color Matrix
-            vec4 mat_data[3] = fetch_from_gpu_cache_3(prim_user_data.z);
+            vec4 mat_data[4] = fetch_from_gpu_cache_4(prim_user_data.z);
             vec4 offset_data = fetch_from_gpu_cache_1(prim_user_data.z + 4);
-            vColorMat = mat3(mat_data[0].xyz, mat_data[1].xyz, mat_data[2].xyz);
-            V_COLOR_OFFSET = offset_data.rgb;
+            vColorMat = mat4(mat_data[0], mat_data[1], mat_data[2], mat_data[3]);
+            V_COLOR_OFFSET = offset_data;
             break;
         }
         case 13: {
@@ -298,7 +303,10 @@ Fragment blend_brush_fs() {
             alpha = V_FLOOD_COLOR.a;
             break;
         default:
-            color = vColorMat * color + V_COLOR_OFFSET;
+            vec4 result = vColorMat * vec4(color, alpha) + V_COLOR_OFFSET;
+            result = clamp(result, vec4(0.0), vec4(1.0));
+            color = result.rgb;
+            alpha = result.a;
     }
 
     // Fail-safe to ensure that we don't sample outside the rendered
