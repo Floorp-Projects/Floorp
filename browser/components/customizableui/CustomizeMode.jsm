@@ -377,6 +377,8 @@ CustomizeMode.prototype = {
 
       this._wrapToolbarItemSync(CustomizableUI.AREA_TABSTRIP);
 
+      this.document.documentElement.setAttribute("customizing", true);
+
       let customizableToolbars = document.querySelectorAll(
         "toolbar[customizable=true]:not([autohide=true]):not([collapsed=true])"
       );
@@ -385,8 +387,6 @@ CustomizeMode.prototype = {
       }
 
       this._updateOverflowPanelArrowOffset();
-
-      await this._doTransition(true);
 
       // Let everybody in this window know that we're about to customize.
       CustomizableUI.dispatchToolboxEvent("customizationstarting", {}, window);
@@ -489,8 +489,6 @@ CustomizeMode.prototype = {
     (async () => {
       await this.depopulatePalette();
 
-      await this._doTransition(false);
-
       if (this.browser.selectedTab == gTab) {
         if (gTab.linkedBrowser.currentURI.spec == "about:blank") {
           closeGlobalTab();
@@ -530,6 +528,8 @@ CustomizeMode.prototype = {
       // customization mode for a second time.
       this._customizing = false;
 
+      this.document.documentElement.removeAttribute("customizing");
+
       let customizableToolbars = document.querySelectorAll(
         "toolbar[customizable=true]:not([autohide=true])"
       );
@@ -553,40 +553,6 @@ CustomizeMode.prototype = {
       log.error("Error exiting customize mode", e);
       this._handler.isExitingCustomizeMode = false;
     });
-  },
-
-  /**
-   * The customize mode transition has 4 phases when entering:
-   * 1) Pre-customization mode
-   *    This is the starting phase of the browser.
-   * 2) LWT swapping
-   *    This is where we swap some of the lightweight theme styles in order
-   *    to make them work in customize mode. We set/unset a customization-
-   *    lwtheme attribute iff we're using a lightweight theme.
-   * 3) customize-entering
-   *    This phase is a transition, optimized for smoothness.
-   * 4) customize-entered
-   *    After the transition completes, this phase draws all of the
-   *    expensive detail that isn't necessary during the second phase.
-   *
-   * Exiting customization mode has a similar set of phases, but in reverse
-   * order - customize-entered, customize-exiting, remove LWT swapping,
-   * pre-customization mode.
-   *
-   * When in the customize-entering, customize-entered, or customize-exiting
-   * phases, there is a "customizing" attribute set on the main-window to simplify
-   * excluding certain styles while in any phase of customize mode.
-   */
-  _doTransition(aEntering) {
-    let docEl = this.document.documentElement;
-    if (aEntering) {
-      docEl.setAttribute("customizing", true);
-      docEl.setAttribute("customize-entered", true);
-    } else {
-      docEl.removeAttribute("customizing");
-      docEl.removeAttribute("customize-entered");
-    }
-    return Promise.resolve();
   },
 
   /**
