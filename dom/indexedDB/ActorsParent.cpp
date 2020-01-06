@@ -864,11 +864,11 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
       return NS_ERROR_FILE_CORRUPTED;
     }
 
-    nsCString keyBuffer(reinterpret_cast<const char*>(blobDataIter),
-                        uint32_t(keyBufferLength));
+    IndexDataValue idv(
+        indexId, unique,
+        Key{nsCString{reinterpret_cast<const char*>(blobDataIter),
+                      uint32_t(keyBufferLength)}});
     blobDataIter += keyBufferLength;
-
-    IndexDataValue idv(indexId, unique, Key(keyBuffer));
 
     // Read sort key buffer length.
     const uint64_t sortKeyBufferLength =
@@ -883,11 +883,10 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
         return NS_ERROR_FILE_CORRUPTED;
       }
 
-      nsCString sortKeyBuffer(reinterpret_cast<const char*>(blobDataIter),
-                              uint32_t(sortKeyBufferLength));
+      idv.mLocaleAwarePosition =
+          Key{nsCString{reinterpret_cast<const char*>(blobDataIter),
+                        uint32_t(sortKeyBufferLength)}};
       blobDataIter += sortKeyBufferLength;
-
-      idv.mLocaleAwarePosition = Key(sortKeyBuffer);
     }
 
     if (NS_WARN_IF(!aIndexValues.InsertElementSorted(idv, fallible))) {
@@ -3588,11 +3587,11 @@ nsresult UpgradeIndexDataValuesFunction::ReadOldCompressedIDVFromBlob(
       return NS_ERROR_FILE_CORRUPTED;
     }
 
-    nsCString keyBuffer(reinterpret_cast<const char*>(blobDataIter),
-                        uint32_t(keyBufferLength));
+    IndexDataValue idv(
+        indexId, unique,
+        Key{nsCString{reinterpret_cast<const char*>(blobDataIter),
+                      uint32_t(keyBufferLength)}});
     blobDataIter += keyBufferLength;
-
-    IndexDataValue idv(indexId, unique, Key(keyBuffer));
 
     if (blobDataIter < blobDataEnd) {
       // Read either a sort key buffer length or an index id.

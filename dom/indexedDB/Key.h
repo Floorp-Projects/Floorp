@@ -50,7 +50,7 @@ class Key {
 
   Key() { Unset(); }
 
-  explicit Key(const nsACString& aBuffer) : mBuffer(aBuffer) {}
+  explicit Key(nsCString aBuffer) : mBuffer(std::move(aBuffer)) {}
 
   Key& operator=(int64_t aInt) {
     SetFromInteger(aInt);
