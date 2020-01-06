@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">プライバシー設定の読み取りと変更</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">すべてのウェブサイトの保存されたデータへのアクセス</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">ブラウザーのタブへのアクセス</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">クライアント側にデータをサイズ制限なしで格納</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">ナビゲーション中のブラウザーアクティビティへのアクセス</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">ブックマークの読み取りと変更</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">ブラウザー設定の読み取りと変更</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">最近のブラウジング履歴、Cookie および関連データの消去</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">クリップボードからのデータ取得</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">クリップボードへのデータ入力</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">ファイルのダウンロードおよびブラウザーのダウンロード履歴の読み取りと変更</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">端末にダウンロードしたファイルを開く</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">開いているすべてのタブからのテキスト読み取り</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">ユーザーの位置情報へのアクセス</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">ブラウジング履歴へのアクセス</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">拡張機能の使用状況の監視とテーマの管理</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">別のアプリとのメッセージ交換</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">通知の表示</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">暗号認証サービスの提供</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">ブラウザーのプロキシー設定の制御</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">最近閉じたタブへのアクセス</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">ブラウザーのタブの表示状態の変更</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">ブラウジング履歴へのアクセス</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">開いたタブのユーザーデータへアクセスするため開発ツールを展開</string>
+    <!-- The version on an addon. -->
+    <string name="mozac_feature_addons_version">バージョン</string>
+    <!-- The authors of an addon. -->
+    <string name="mozac_feature_addons_authors">作者</string>
+    <!-- The last date that the addon was updated. -->
+    <string name="mozac_feature_addons_last_updated">最終更新日時</string>
+    <!-- The developer website (Homepage) of the addon. -->
+    <string name="mozac_feature_addons_home_page">ホームページ</string>
+    <!-- A link where users can find more information about addons permissions. -->
+    <string name="mozac_feature_addons_learn_more">許可設定の詳細情報</string>
+    <!-- The rating of the addon. -->
+    <string name="mozac_feature_addons_rating">評価</string>
+    <!-- The settings of the addon. -->
+    <string name="mozac_feature_addons_settings">設定</string>
+    <!-- Indicates the addon is enable. -->
+    <string name="mozac_feature_addons_settings_on">オン</string>
+    <!-- Indicates the addon is disable. -->
+    <string name="mozac_feature_addons_settings_off">オフ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">インストール済み</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">おすすめ</string>
+    <!-- Displays a page with all the details of an addon. -->
+    <string name="mozac_feature_addons_details">詳細</string>
+    <!-- Displays a page with all the permissions of an addon. -->
+    <string name="mozac_feature_addons_permissions">許可設定</string>
+    <!-- This is button that remove (uninstall an addon). -->
+    <string name="mozac_feature_addons_remove">削除</string>
+    <!-- This is the title of a dialog that indicates to the user if wants to install or not an addon. %1$s is the addon name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s を追加しますか？</string>
+    <!-- This is the subtitle of a dialog that indicate to the user if wants to install or not an addon, the subtitle list the permissions that this addon requires, the permissions will dynamically listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">あなたの許可が必要です:</string>
+    <!-- This a button to add (installs) an addon . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">追加</string>
+    <!-- This a button to cancel the addon installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">キャンセル</string>
+    <!-- Accessibility content description to install addon button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">アドオンをインストール</string>
+    <!-- Indicate how many user has rated an addon. %1$s will be replace with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">ユーザー数: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that addon has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">アドオン</string>
+    <!-- This is the caption for the addon installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">アドオンをダウンロードして検証しています…</string>
+</resources>

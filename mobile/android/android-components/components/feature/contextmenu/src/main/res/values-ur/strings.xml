@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for context menu item to open the link in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">ربط نئی ٹیب میں کھولیں</string>
+    <!-- Text for context menu item to open the link in a private tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">ربط نجی ٹیب میں کھولیں</string>
+    <!-- Text for context menu item to share the link with an other app. -->
+    <string name="mozac_feature_contextmenu_share_link">ربط شیئر کریں</string>
+    <!-- Text for context menu item to copy the link to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_link">ربط نقل کریں</string>
+    <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image_location">نقش محل وقوع نقل کریں</string>
+    <!-- Text for context menu item to save / download the image. -->
+    <string name="mozac_feature_contextmenu_save_image">نقش محفوظ کریں</string>
+    </resources>

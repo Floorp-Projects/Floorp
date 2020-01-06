@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">Llegir i modificar els paràmetres de privadesa</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">Accedir a les dades de tots els llocs web</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">Accedir a les pestanyes del navegador</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Emmagatzemar una quantitat il·limitada de dades del costat del client</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Accedir a l’activitat durant la navegació</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">Llegir i modificar les adreces d’interès</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Llegir i modificar els paràmetres del navegador</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">Esborrar l’historial de navegació recent, les galetes i dades relacionades</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Obtenir les dades del porta-retalls</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Afegir dades al porta-retalls</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">Baixar els fitxers i modificar l’historial de baixades del navegador</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Obrir els fitxers que heu baixat al dispositiu</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">Llegir el text de totes les pestanyes obertes</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">Accedir a la vostra ubicació</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">Accedir a l’historial de navegació</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Supervisar l’ús d’extensions i gestionar els temes</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Intercanviar missatges amb altres aplicacions</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Mostrar-vos notificacions</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Proporcionar serveis d’autenticació criptogràfica</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">Controlar els paràmetres de servidor intermediari del navegador</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">Accedir a les pestanyes tancades recentment</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">Amagar i mostrar pestanyes del navegador</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">Accedir a l’historial de navegació</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">Ampliar les eines per a desenvolupadors per accedir a les vostres dades de les pestanyes obertes</string>
+    <!-- The version on an addon. -->
+    <string name="mozac_feature_addons_version">Versió</string>
+    <!-- The authors of an addon. -->
+    <string name="mozac_feature_addons_authors">Autors</string>
+    <!-- The last date that the addon was updated. -->
+    <string name="mozac_feature_addons_last_updated">Darrera actualització</string>
+    <!-- The developer website (Homepage) of the addon. -->
+    <string name="mozac_feature_addons_home_page">Pàgina d’inici</string>
+    <!-- A link where users can find more information about addons permissions. -->
+    <string name="mozac_feature_addons_learn_more">Més informació sobre els permisos</string>
+    <!-- The rating of the addon. -->
+    <string name="mozac_feature_addons_rating">Valoració</string>
+    <!-- The settings of the addon. -->
+    <string name="mozac_feature_addons_settings">Paràmetres</string>
+    <!-- Indicates the addon is enable. -->
+    <string name="mozac_feature_addons_settings_on">Activat</string>
+    <!-- Indicates the addon is disable. -->
+    <string name="mozac_feature_addons_settings_off">Desactivat</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">Instal·lats</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">Recomanats</string>
+    <!-- Displays a page with all the details of an addon. -->
+    <string name="mozac_feature_addons_details">Detalls</string>
+    <!-- Displays a page with all the permissions of an addon. -->
+    <string name="mozac_feature_addons_permissions">Permisos</string>
+    <!-- This is button that remove (uninstall an addon). -->
+    <string name="mozac_feature_addons_remove">Elimina</string>
+    <!-- This is the title of a dialog that indicates to the user if wants to install or not an addon. %1$s is the addon name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">Voleu afegir %1$s?</string>
+    <!-- This is the subtitle of a dialog that indicate to the user if wants to install or not an addon, the subtitle list the permissions that this addon requires, the permissions will dynamically listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">Necessita permisos per:</string>
+    <!-- This a button to add (installs) an addon . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">Afegeix</string>
+    <!-- This a button to cancel the addon installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">Cancel·la</string>
+    <!-- Accessibility content description to install addon button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">Instal·la el complement</string>
+    <!-- Indicate how many user has rated an addon. %1$s will be replace with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">Usuaris: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that addon has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">Complements</string>
+    <!-- This is the caption for the addon installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">S’està baixant i verificant el complement…</string>
+</resources>

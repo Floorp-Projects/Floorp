@@ -29,6 +29,14 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">חיבור מאובטח נכשל</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>יתכן שמדובר בבעיה בתצורת השרת או שגורם כלשהו מנסה להתחזות לשרת.</li>
+        <li>אם התחברת לשרת זה בהצלחה בעבר, ייתכן שהשגיאה זמנית, ומומלץ לנסות שוב מאוחר יותר.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">החיבור הופסק</string>
 
