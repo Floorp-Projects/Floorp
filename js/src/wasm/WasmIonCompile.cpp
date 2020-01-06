@@ -146,7 +146,7 @@ class FunctionCompiler {
   bool init() {
     // Prepare the entry block for MIR generation:
 
-    const ArgTypeVector args(funcType());
+    const ValTypeVector& args = funcType().args();
 
     if (!mirGen_.ensureBallast()) {
       return false;
@@ -155,13 +155,11 @@ class FunctionCompiler {
       return false;
     }
 
-    for (ABIArgIter i(args); !i.done(); i++) {
-      MOZ_ASSERT(!args.isSyntheticStackResultPointerArg(i.index()),
-                 "multiple results for wasm functions unimplemented");
+    for (ABIArgIter<ValTypeVector> i(args); !i.done(); i++) {
       MOZ_ASSERT(i.mirType() != MIRType::Pointer);
       MWasmParameter* ins = MWasmParameter::New(alloc(), *i, i.mirType());
       curBlock_->add(ins);
-      curBlock_->initSlot(info().localSlot(args.naturalIndex(i.index())), ins);
+      curBlock_->initSlot(info().localSlot(i.index()), ins);
       if (!mirGen_.ensureBallast()) {
         return false;
       }
@@ -1032,9 +1030,8 @@ class FunctionCompiler {
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Func);
     MIRType ret = ToMIRType(funcType.ret());
     auto callee = CalleeDesc::function(funcIndex);
-    ArgTypeVector args(funcType);
     auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret,
-                               StackArgAreaSizeUnaligned(args));
+                               StackArgAreaSizeUnaligned(funcType.args()));
     if (!ins) {
       return false;
     }
@@ -1077,10 +1074,9 @@ class FunctionCompiler {
     }
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
-    ArgTypeVector args(funcType);
-    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                               ToMIRType(funcType.ret()),
-                               StackArgAreaSizeUnaligned(args), index);
+    auto* ins = MWasmCall::New(
+        alloc(), desc, callee, call.regArgs_, ToMIRType(funcType.ret()),
+        StackArgAreaSizeUnaligned(funcType.args()), index);
     if (!ins) {
       return false;
     }
@@ -1100,10 +1096,9 @@ class FunctionCompiler {
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
     auto callee = CalleeDesc::import(globalDataOffset);
-    ArgTypeVector args(funcType);
     auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
                                ToMIRType(funcType.ret()),
-                               StackArgAreaSizeUnaligned(args));
+                               StackArgAreaSizeUnaligned(funcType.args()));
     if (!ins) {
       return false;
     }
@@ -4498,9 +4493,9 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
 
     // Build the local types vector.
 
-    const FuncTypeWithId& funcType = *env.funcTypes[func.index];
+    const ValTypeVector& argTys = env.funcTypes[func.index]->args();
     ValTypeVector locals;
-    if (!locals.appendAll(funcType.args())) {
+    if (!locals.appendAll(argTys)) {
       return false;
     }
     if (!DecodeLocalEntries(d, env.types, env.refTypesEnabled(),
@@ -4549,12 +4544,13 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
         return false;
       }
 
+      FuncTypeIdDesc funcTypeId = env.funcTypes[func.index]->id;
+
       CodeGenerator codegen(&mir, lir, &masm);
 
       BytecodeOffset prologueTrapOffset(func.lineOrBytecode);
       FuncOffsets offsets;
-      ArgTypeVector args(funcType);
-      if (!codegen.generateWasm(funcType.id, prologueTrapOffset, args,
+      if (!codegen.generateWasm(funcTypeId, prologueTrapOffset, argTys,
                                 trapExitLayout, trapExitLayoutNumWords,
                                 &offsets, &code->stackMaps)) {
         return false;

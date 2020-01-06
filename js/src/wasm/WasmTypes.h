@@ -1109,60 +1109,6 @@ struct FuncTypeHashPolicy {
   static bool match(const FuncType* lhs, Lookup rhs) { return *lhs == rhs; }
 };
 
-// ArgTypeVector type.
-//
-// Functions usually receive one ABI argument per WebAssembly argument.  However
-// if a function has multiple results and some of those results go to the stack,
-// then it additionally receives a synthetic ABI argument holding a pointer to
-// the stack result area.
-//
-// Given the presence of synthetic arguments, sometimes we need a name for
-// non-synthetic arguments.  We call those "natural" arguments.
-
-enum class StackResults { HasStackResults, NoStackResults };
-
-class ArgTypeVector {
-  const ValTypeVector& args_;
-  bool hasStackResults_;
-
- public:
-  ArgTypeVector(const ValTypeVector& args, StackResults stackResults)
-      : args_(args),
-        hasStackResults_(stackResults == StackResults::HasStackResults) {}
-  explicit ArgTypeVector(const FuncType& funcType);
-
-  bool hasSyntheticStackResultPointerArg() const { return hasStackResults_; }
-  StackResults stackResults() const {
-    return hasSyntheticStackResultPointerArg() ? StackResults::HasStackResults
-                                               : StackResults::NoStackResults;
-  }
-  size_t lengthWithoutStackResults() const { return args_.length(); }
-  bool isSyntheticStackResultPointerArg(size_t idx) const {
-    // The pointer to stack results area, if present, is a synthetic argument
-    // tacked on at the end.
-    MOZ_ASSERT(idx < length());
-    return idx == args_.length();
-  }
-  bool isNaturalArg(size_t idx) const {
-    return !isSyntheticStackResultPointerArg(idx);
-  }
-  size_t naturalIndex(size_t idx) const {
-    MOZ_ASSERT(isNaturalArg(idx));
-    // Because the synthetic argument, if present, is tacked on the end, an
-    // argument index that isn't synthetic is natural.
-    return idx;
-  }
-
-  size_t length() const { return args_.length() + size_t(hasStackResults_); }
-  jit::MIRType operator[](size_t i) const {
-    MOZ_ASSERT(i < length());
-    if (isSyntheticStackResultPointerArg(i)) {
-      return jit::MIRType::Pointer;
-    }
-    return ToMIRType(args_[naturalIndex(i)]);
-  }
-};
-
 // Structure type.
 //
 // The Module owns a dense array of StructType values that represent the
