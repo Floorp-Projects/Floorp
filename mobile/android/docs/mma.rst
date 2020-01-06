@@ -184,6 +184,14 @@ List of current Events related data that is sent:
 {
 "event" : "E_Just_Installed_Klar"
 }
+* User accessed the promo webpage for the Awesomescreen's Firefox promo banner.
+{
+"event" : "E_Opened_Firefox_Promo"
+}
+* User dismissed the Awesomescreen's Firefox promo banner.
+{
+"event" : "E_Dismissed_Firefox_Promo"
+}
 
 Deep Links:
 Deep links are actions that can point Fennec to open certain pages or load features such as `show bookmark list` or
