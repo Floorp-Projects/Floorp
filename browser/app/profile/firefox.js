@@ -406,7 +406,6 @@ pref("permissions.default.xr", 0);
 pref("permissions.default.desktop-notification", 0);
 pref("permissions.default.shortcuts", 0);
 
-pref("permissions.delegation.enabled", true);
 pref("permissions.desktop-notification.postPrompt.enabled", true);
 pref("permissions.desktop-notification.notNow.enabled", false);
 
@@ -1706,8 +1705,6 @@ pref("reader.errors.includeURLs", true);
 pref("view_source.tab", true);
 
 pref("dom.serviceWorkers.enabled", true);
-
-pref("dom.security.featurePolicy.enabled", true);
 
 // Enable Push API.
 pref("dom.push.enabled", true);
