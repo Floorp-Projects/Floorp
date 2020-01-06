@@ -309,6 +309,7 @@ Finder.prototype = {
       findAgain: options.findAgain,
       drawOutline: options.drawOutline,
       linksOnly: options.linksOnly,
+      entireWord: this._fastFind.entireWord,
       useSubFrames: options.useSubFrames,
     };
     this._setResults(results, options.mode);
