@@ -333,9 +333,6 @@ static const char* sScreenManagerContractID =
 
 extern mozilla::LazyLogModule gWindowsLog;
 
-// Global used in Show window enumerations.
-static bool gWindowsVisible = false;
-
 // True if we have sent a notification that we are suspending/sleeping.
 static bool gIsSleepMode = false;
 
@@ -8183,31 +8180,51 @@ nsWindow* nsWindow::GetTopLevelWindow(bool aStopOnDialogOrPopup) {
   }
 }
 
-static BOOL CALLBACK gEnumWindowsProc(HWND hwnd, LPARAM lParam) {
+// Set a flag if hwnd is a (non-popup) visible window from this process,
+// and bail out of the enumeration. Otherwise leave the flag unmodified
+// and continue the enumeration.
+// lParam must be a bool* pointing at the flag to be set.
+static BOOL CALLBACK EnumVisibleWindowsProc(HWND hwnd, LPARAM lParam) {
   DWORD pid;
   ::GetWindowThreadProcessId(hwnd, &pid);
-  if (pid == GetCurrentProcessId() && ::IsWindowVisible(hwnd)) {
-    gWindowsVisible = true;
-    return FALSE;
+  if (pid == ::GetCurrentProcessId() && ::IsWindowVisible(hwnd)) {
+    // Don't count popups as visible windows, since they don't take focus,
+    // in case we only have a popup visible (see bug 1554490 where the gfx
+    // test window is an offscreen popup).
+    nsWindow* window = WinUtils::GetNSWindowPtr(hwnd);
+    if (!window || !window->IsPopup()) {
+      bool* windowsVisible = reinterpret_cast<bool*>(lParam);
+      *windowsVisible = true;
+      return FALSE;
+    }
   }
   return TRUE;
 }
 
+// Determine if it would be ok to activate a window, taking focus.
+// We want to avoid stealing focus from another app (bug 225305).
 bool nsWindow::CanTakeFocus() {
-  gWindowsVisible = false;
-  EnumWindows(gEnumWindowsProc, 0);
-  if (!gWindowsVisible) {
+  HWND fgWnd = ::GetForegroundWindow();
+  if (!fgWnd) {
+    // There is no foreground window, so don't worry about stealing focus.
     return true;
-  } else {
-    HWND fgWnd = ::GetForegroundWindow();
-    if (!fgWnd) {
-      return true;
-    }
-    DWORD pid;
-    GetWindowThreadProcessId(fgWnd, &pid);
-    if (pid == GetCurrentProcessId()) {
-      return true;
-    }
+  }
+  // We can take focus if the current foreground window is already from
+  // this process.
+  DWORD pid;
+  ::GetWindowThreadProcessId(fgWnd, &pid);
+  if (pid == ::GetCurrentProcessId()) {
+    return true;
+  }
+
+  bool windowsVisible = false;
+  ::EnumWindows(EnumVisibleWindowsProc,
+                reinterpret_cast<LPARAM>(&windowsVisible));
+
+  if (!windowsVisible) {
+    // We're probably creating our first visible window, allow that to
+    // take focus.
+    return true;
   }
   return false;
 }
