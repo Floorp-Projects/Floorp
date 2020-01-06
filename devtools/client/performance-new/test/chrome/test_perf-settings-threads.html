@@ -78,6 +78,21 @@
         is(threadTextEl.value, "GeckoMain,DOM Worker,StyleThread",
           "Another thread was in the thread text input");
 
+        // Enable profiling of all threads
+        const allThreadsCheckbox = document.querySelector(
+          "#perf-settings-thread-checkbox-all-threads");
+        allThreadsCheckbox.click();
+        is(selectors.getThreads(getState()).join(","), "GeckoMain,DOM Worker,StyleThread,*",
+           "Asterisk was added")
+        is(threadTextEl.value, "GeckoMain,DOM Worker,StyleThread,*",
+          "Asterisk was in the thread text input");
+
+        // Remove the asterisk
+        setReactFriendlyInputValue(threadTextEl, "GeckoMain,DOM Worker,StyleThread");
+        threadTextEl.dispatchEvent(new Event("blur", { bubbles: true }));
+        ok(!allThreadsCheckbox.checked,
+          "The all threads checkbox is not checked.");
+
         // Start the profiler by clicking the start button, and flushing the async
         // calls out to the mock perf front.
         document.querySelector("button").click();
