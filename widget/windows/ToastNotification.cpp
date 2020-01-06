@@ -146,6 +146,8 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
     return rv;
   }
 
+  RefPtr<ToastNotificationHandler> oldHandler = mActiveHandlers.Get(name);
+
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, aAlertListener, name, cookie, title, text, hostPort, textClickable);
   mActiveHandlers.Put(name, handler);
@@ -155,6 +157,11 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
     mActiveHandlers.Remove(name);
     handler->UnregisterHandler();
     return rv;
+  }
+
+  // If there was a previous handler with the same name then unregister it.
+  if (oldHandler) {
+    oldHandler->UnregisterHandler();
   }
 
   return NS_OK;
