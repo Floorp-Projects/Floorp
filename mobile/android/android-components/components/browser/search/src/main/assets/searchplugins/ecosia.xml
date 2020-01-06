@@ -11,7 +11,7 @@
   <Param name="type" value="list"/>
 </Url>
 <Url type="text/html" method="GET" template="https://www.ecosia.org/search">
-  <Param name="tt" value="813cf1dd-b"/>
+  <Param name="tt" value="813cf1dd"/>
   <Param name="q" value="{searchTerms}"/>
 </Url>
 <SearchForm>https://www.ecosia.org/</SearchForm>
