@@ -147,7 +147,7 @@ def verify_routes_notification_filters(task, taskgraph, scratch_pad, graph_confi
         This function ensures that only understood filters for notifications are
         specified.
 
-        See: https://firefox-ci-tc.services.mozilla.com/docs/manual/using/task-notifications
+        See: https://docs.taskcluster.net/reference/core/taskcluster-notify/docs/usage
     """
     if task is None:
         return

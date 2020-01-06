@@ -8,6 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 CMD ["/bin/bash", "--login"]
 
 COPY setup_packages.sh /usr/local/sbin/
+COPY cloud-mirror-workaround.sh /usr/local/sbin/
 
 # %ARG DIST
 # %ARG SNAPSHOT
@@ -20,6 +21,7 @@ RUN for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-sec
       echo 'APT::Install-Recommends "false";'; \
       echo 'Acquire::Check-Valid-Until "false";'; \
       echo 'Acquire::Retries "5";'; \
+      echo 'dir::bin::methods::https "/usr/local/sbin/cloud-mirror-workaround.sh";'; \
     ) > /etc/apt/apt.conf.d/99taskcluster
 
 RUN apt-get update && \
