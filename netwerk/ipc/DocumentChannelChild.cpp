@@ -433,6 +433,10 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
 
 NS_IMETHODIMP
 DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
+  LOG(
+      ("DocumentChannelChild OnRedirectVerifyCallback [this=%p, "
+       "aRv=0x%08" PRIx32 " ]",
+       this, static_cast<uint32_t>(aStatusCode)));
   nsCOMPtr<nsIChannel> redirectChannel = std::move(mRedirectChannel);
   RedirectToRealChannelResolver redirectResolver = std::move(mRedirectResolver);
 
