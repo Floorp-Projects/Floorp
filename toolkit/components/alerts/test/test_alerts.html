@@ -19,6 +19,9 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+var notifier;
+var alertName = "fiorello";
+
 var observer = {
   alertShow: false,
   observe(aSubject, aTopic, aData) {
@@ -28,6 +31,15 @@ var observer = {
     } else if (aTopic == "alertshow") {
       ok(!this.alertShow, "Alert should not be shown more than once");
       this.alertShow = true;
+
+      // Notifications are native on OS X 10.8 and later, GNOME Shell with
+      // libnotify (bug 1236036) and Windows >= 8. These notifications persist
+      // in the Notification Center, and only fire the `alertfinished` event
+      // when closed. For platforms where native notifications may be used, we
+      // need to close explicitly to avoid a hang. This also works for XUL
+      // notifications when running this test on OS X < 10.8, or a window
+      // manager like Ubuntu Unity with incomplete libnotify support.
+      notifier.closeAlert(alertName);
     } else {
       is(aTopic, "alertfinished", "Checking the topic for a finished notification");
       SimpleTest.finish();
@@ -46,7 +58,6 @@ function runTest() {
 
   ok(true, "Alerts service exists in this application");
 
-  var notifier;
   try {
     notifier = Cc["@mozilla.org/alerts-service;1"].
                getService(Ci.nsIAlertsService);
@@ -58,23 +69,11 @@ function runTest() {
   }
 
   try {
-    var alertName = "fiorello";
     SimpleTest.waitForExplicitFinish();
     notifier.showAlertNotification(null, "Notification test",
                                    "Surprise! I'm here to test notifications!",
                                    false, "foobarcookie", observer, alertName);
     ok(true, "showAlertNotification() succeeded.  Waiting for notification...");
-
-    if ("@mozilla.org/system-alerts-service;1" in Cc) {
-      // Notifications are native on OS X 10.8 and later, as well as GNOME
-      // Shell with libnotify (bug 1236036). These notifications persist in the
-      // Notification Center, and only fire the `alertfinished` event when
-      // closed. For platforms where native notifications may be used, we need
-      // to close explicitly to avoid a hang. This also works for XUL
-      // notifications when running this test on OS X < 10.8, or a window
-      // manager like Ubuntu Unity with incomplete libnotify support.
-      notifier.closeAlert(alertName);
-    }
   } catch (ex) {
     todo(false, "showAlertNotification() failed.", ex);
     SimpleTest.finish();
