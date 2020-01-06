@@ -70,7 +70,7 @@ class ContextObserver {
       return;
     }
     const { windowUtils } = window;
-    const frameId = windowUtils.outerWindowID.toString();
+    const frameId = window.docShell.browsingContext.id.toString();
     const id = windowUtils.currentInnerWindowID;
     switch (type) {
       case "DOMWindowCreated":
