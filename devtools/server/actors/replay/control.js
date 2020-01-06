@@ -150,13 +150,16 @@ function ChildProcess(rootId, forkId, recording, recordingLength, startPoint) {
   // run forward to the first checkpoint.
   this.manifests = [
     {
-      manifest: { kind: "initial" },
-      onFinished: ({ point }) => {
+      manifest: { kind: "primordial" },
+      onFinished: ({ point, maxRunningProcesses }) => {
         if (this == gMainChild) {
           getCheckpointInfo(FirstCheckpointId).point = point;
           Services.tm.dispatchToMainThread(
             recording ? maybeResumeRecording : setMainChild
           );
+        }
+        if (maxRunningProcesses) {
+          gMaxRunningLeafChildren = maxRunningProcesses;
         }
       },
     },
@@ -477,7 +480,7 @@ function newLeafChild(endpoint, onFinished = () => {}) {
 }
 
 // How many leaf children we can have running simultaneously.
-const MaxRunningLeafChildren = 4;
+let gMaxRunningLeafChildren = 4;
 
 // How many leaf children are currently running.
 let gNumRunningLeafChildren = 0;
@@ -489,7 +492,7 @@ const gChildWaiters = [[], [], []];
 // the limits on the maximum number of running leaves and returning the new
 // child when it reaches the endpoint.
 async function ensureLeafChild(endpoint, priority = Priority.HIGH) {
-  if (gNumRunningLeafChildren < MaxRunningLeafChildren) {
+  if (gNumRunningLeafChildren < gMaxRunningLeafChildren) {
     gNumRunningLeafChildren++;
   } else {
     await new Promise(resolve => gChildWaiters[priority].push(resolve));
@@ -505,7 +508,7 @@ async function ensureLeafChild(endpoint, priority = Priority.HIGH) {
 function stopRunningLeafChild() {
   gNumRunningLeafChildren--;
 
-  if (gNumRunningLeafChildren < MaxRunningLeafChildren) {
+  if (gNumRunningLeafChildren < gMaxRunningLeafChildren) {
     for (const waiters of gChildWaiters) {
       if (waiters.length) {
         const resolve = waiters.shift();
@@ -617,14 +620,14 @@ function respawnCrashedChild(child) {
   }
 
   for (const manifest of processedManifests) {
-    if (manifest.kind != "initial" && manifest.kind != "fork") {
+    if (manifest.kind != "primordial" && manifest.kind != "fork") {
       child.sendManifest(manifest);
     }
   }
 
   for (const { manifest, onFinished } of manifests) {
     if (
-      manifest.kind != "initial" &&
+      manifest.kind != "primordial" &&
       (manifest.kind != "fork" || manifest != manifests[0].manifest)
     ) {
       child.sendManifest(manifest, onFinished);

@@ -1132,10 +1132,10 @@ function finishResume(point) {
 // finished. This does not need to be specified for all manifests.
 const gManifestFinishedAfterCheckpointHandlers = {
   primordial(_, point) {
-    // The primordial manifest runs forward to the first checkpoint, saves it,
-    // and then finishes.
+    // The primordial manifest runs forward to the first checkpoint.
     assert(point.checkpoint == FirstCheckpointId);
-    RecordReplayControl.manifestFinished({ point });
+    const maxRunningProcesses = RecordReplayControl.maxRunningProcesses();
+    RecordReplayControl.manifestFinished({ point, maxRunningProcesses });
   },
 
   resume(_, point) {
