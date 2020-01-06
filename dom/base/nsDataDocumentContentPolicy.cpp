@@ -108,14 +108,13 @@ nsDataDocumentContentPolicy::ShouldLoad(nsIURI* aContentLocation,
       // Report error, if we can.
       if (node) {
         nsIPrincipal* requestingPrincipal = node->NodePrincipal();
-        RefPtr<nsIURI> principalURI;
-        nsresult rv = requestingPrincipal->GetURI(getter_AddRefs(principalURI));
-        if (NS_SUCCEEDED(rv) && principalURI) {
-          nsScriptSecurityManager::ReportError(
-              "ExternalDataError", principalURI, aContentLocation,
-              requestingPrincipal->OriginAttributesRef().mPrivateBrowsingId >
-                  0);
-        }
+        nsAutoCString sourceSpec;
+        requestingPrincipal->GetAsciiSpec(sourceSpec);
+        nsAutoCString targetSpec;
+        aContentLocation->GetAsciiSpec(targetSpec);
+        nsScriptSecurityManager::ReportError(
+            "ExternalDataError", sourceSpec, targetSpec,
+            requestingPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0);
       }
     } else if ((contentType == nsIContentPolicy::TYPE_IMAGE ||
                 contentType == nsIContentPolicy::TYPE_IMAGESET) &&
