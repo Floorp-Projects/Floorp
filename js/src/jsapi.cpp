@@ -366,10 +366,24 @@ JS_PUBLIC_API JSObject* JS_GetBoundFunctionTarget(JSFunction* fun) {
 
 /************************************************************************/
 
+// Prevent functions from being discarded by linker, so that they are callable
+// when debugging.
+static void PreventDiscardingFunctions() {
+  if (reinterpret_cast<uintptr_t>(&PreventDiscardingFunctions) == 1) {
+    // Never executed.
+    memset((void*)&js::debug::GetMarkInfo, 0, 1);
+    memset((void*)&js::debug::GetMarkWordAddress, 0, 1);
+    memset((void*)&js::debug::GetMarkMask, 0, 1);
+  }
+}
+
 JS_PUBLIC_API JSContext* JS_NewContext(uint32_t maxbytes,
                                        JSRuntime* parentRuntime) {
   MOZ_ASSERT(JS::detail::libraryInitState == JS::detail::InitState::Running,
              "must call JS_Init prior to creating any JSContexts");
+
+  // Prevent linker from discarding unused debug functions.
+  PreventDiscardingFunctions();
 
   // Make sure that all parent runtimes are the topmost parent.
   while (parentRuntime && parentRuntime->parentRuntime) {
