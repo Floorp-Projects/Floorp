@@ -191,16 +191,16 @@ class MOZ_STACK_CLASS LoggingString final : public nsAutoCString {
 
   explicit LoggingString(const IDBCursor::Direction aDirection) {
     switch (aDirection) {
-      case IDBCursor::NEXT:
+      case IDBCursor::Direction::Next:
         AssignLiteral("\"next\"");
         break;
-      case IDBCursor::NEXT_UNIQUE:
+      case IDBCursor::Direction::NextUnique:
         AssignLiteral("\"nextunique\"");
         break;
-      case IDBCursor::PREV:
+      case IDBCursor::Direction::Prev:
         AssignLiteral("\"prev\"");
         break;
-      case IDBCursor::PREV_UNIQUE:
+      case IDBCursor::Direction::PrevUnique:
         AssignLiteral("\"prevunique\"");
         break;
       default:

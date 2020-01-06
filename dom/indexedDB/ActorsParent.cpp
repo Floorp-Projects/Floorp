@@ -9397,20 +9397,23 @@ nsAutoCString MakeColumnPairSelectionList(
 }
 
 constexpr bool IsIncreasingOrder(const IDBCursor::Direction aDirection) {
-  MOZ_ASSERT(
-      aDirection == IDBCursor::NEXT || aDirection == IDBCursor::NEXT_UNIQUE ||
-      aDirection == IDBCursor::PREV || aDirection == IDBCursor::PREV_UNIQUE);
+  MOZ_ASSERT(aDirection == IDBCursor::Direction::Next ||
+             aDirection == IDBCursor::Direction::NextUnique ||
+             aDirection == IDBCursor::Direction::Prev ||
+             aDirection == IDBCursor::Direction::PrevUnique);
 
-  return aDirection == IDBCursor::NEXT || aDirection == IDBCursor::NEXT_UNIQUE;
+  return aDirection == IDBCursor::Direction::Next ||
+         aDirection == IDBCursor::Direction::NextUnique;
 }
 
 constexpr bool IsUnique(const IDBCursor::Direction aDirection) {
-  MOZ_ASSERT(
-      aDirection == IDBCursor::NEXT || aDirection == IDBCursor::NEXT_UNIQUE ||
-      aDirection == IDBCursor::PREV || aDirection == IDBCursor::PREV_UNIQUE);
+  MOZ_ASSERT(aDirection == IDBCursor::Direction::Next ||
+             aDirection == IDBCursor::Direction::NextUnique ||
+             aDirection == IDBCursor::Direction::Prev ||
+             aDirection == IDBCursor::Direction::PrevUnique);
 
-  return aDirection == IDBCursor::NEXT_UNIQUE ||
-         aDirection == IDBCursor::PREV_UNIQUE;
+  return aDirection == IDBCursor::Direction::NextUnique ||
+         aDirection == IDBCursor::Direction::PrevUnique;
 }
 
 constexpr bool IsKeyCursor(const Cursor::Type aType) {
@@ -15393,16 +15396,16 @@ bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams,
       const Key& key = aParams.get_ContinueParams().key();
       if (!key.IsUnset()) {
         switch (mDirection) {
-          case IDBCursor::NEXT:
-          case IDBCursor::NEXT_UNIQUE:
+          case IDBCursor::Direction::Next:
+          case IDBCursor::Direction::NextUnique:
             if (NS_WARN_IF(key <= sortKey)) {
               ASSERT_UNLESS_FUZZING();
               return false;
             }
             break;
 
-          case IDBCursor::PREV:
-          case IDBCursor::PREV_UNIQUE:
+          case IDBCursor::Direction::Prev:
+          case IDBCursor::Direction::PrevUnique:
             if (NS_WARN_IF(key >= sortKey)) {
               ASSERT_UNLESS_FUZZING();
               return false;
@@ -15423,7 +15426,7 @@ bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams,
       MOZ_ASSERT(!key.IsUnset());
       MOZ_ASSERT(!primaryKey.IsUnset());
       switch (mDirection) {
-        case IDBCursor::NEXT:
+        case IDBCursor::Direction::Next:
           if (NS_WARN_IF(key < sortKey ||
                          (key == sortKey &&
                           primaryKey <= aPosition.mObjectStorePosition))) {
@@ -15432,7 +15435,7 @@ bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams,
           }
           break;
 
-        case IDBCursor::PREV:
+        case IDBCursor::Direction::Prev:
           if (NS_WARN_IF(key > sortKey ||
                          (key == sortKey &&
                           primaryKey >= aPosition.mObjectStorePosition))) {
@@ -26219,8 +26222,8 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
                        kStmtParamNameCurrentKey);
 
   switch (mCursor->mDirection) {
-    case IDBCursor::NEXT:
-    case IDBCursor::PREV:
+    case IDBCursor::Direction::Next:
+    case IDBCursor::Direction::Prev:
       continueQuery =
           aQueryStart + NS_LITERAL_CSTRING(" AND ") +
           GetSortKeyClause(isIncreasingOrder
@@ -26259,8 +26262,8 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
           NS_LITERAL_CSTRING(")");
       break;
 
-    case IDBCursor::NEXT_UNIQUE:
-    case IDBCursor::PREV_UNIQUE:
+    case IDBCursor::Direction::NextUnique:
+    case IDBCursor::Direction::PrevUnique:
       continueQuery =
           aQueryStart + NS_LITERAL_CSTRING(" AND ") +
           GetSortKeyClause(isIncreasingOrder ? ComparisonOperator::GreaterThan
@@ -26475,16 +26478,16 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
       NS_LITERAL_CSTRING(" ORDER BY ") + kColumnNameAliasSortKey;
 
   switch (mCursor->mDirection) {
-    case IDBCursor::NEXT:
-    case IDBCursor::NEXT_UNIQUE:
+    case IDBCursor::Direction::Next:
+    case IDBCursor::Direction::NextUnique:
       directionClause.AppendLiteral(" ASC, index_table.object_data_key ASC");
       break;
 
-    case IDBCursor::PREV:
+    case IDBCursor::Direction::Prev:
       directionClause.AppendLiteral(" DESC, index_table.object_data_key DESC");
       break;
 
-    case IDBCursor::PREV_UNIQUE:
+    case IDBCursor::Direction::PrevUnique:
       directionClause.AppendLiteral(" DESC, index_table.object_data_key ASC");
       break;
 
@@ -26570,16 +26573,16 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
       NS_LITERAL_CSTRING(" ORDER BY ") + kColumnNameAliasSortKey;
 
   switch (mCursor->mDirection) {
-    case IDBCursor::NEXT:
-    case IDBCursor::NEXT_UNIQUE:
+    case IDBCursor::Direction::Next:
+    case IDBCursor::Direction::NextUnique:
       directionClause.AppendLiteral(" ASC, object_data_key ASC");
       break;
 
-    case IDBCursor::PREV:
+    case IDBCursor::Direction::Prev:
       directionClause.AppendLiteral(" DESC, object_data_key DESC");
       break;
 
-    case IDBCursor::PREV_UNIQUE:
+    case IDBCursor::Direction::PrevUnique:
       directionClause.AppendLiteral(" DESC, object_data_key ASC");
       break;
 
@@ -26691,8 +26694,8 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       mCursor->mType == OpenCursorParams::TIndexOpenCursorParams ||
       mCursor->mType == OpenCursorParams::TIndexOpenKeyCursorParams;
 
-  MOZ_ASSERT_IF(isIndex && (mCursor->mDirection == IDBCursor::NEXT ||
-                            mCursor->mDirection == IDBCursor::PREV),
+  MOZ_ASSERT_IF(isIndex && (mCursor->mDirection == IDBCursor::Direction::Next ||
+                            mCursor->mDirection == IDBCursor::Direction::Prev),
                 !mCursor->mContinueQueries->mContinuePrimaryKeyQuery.IsEmpty());
   MOZ_ASSERT_IF(isIndex, mCursor->mIndexId);
   MOZ_ASSERT_IF(isIndex, !mCurrentPosition.mObjectStorePosition.IsUnset());
@@ -26734,8 +26737,8 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       MOZ_ASSERT(!mParams.get_ContinuePrimaryKeyParams().key().IsUnset());
       MOZ_ASSERT(
           !mParams.get_ContinuePrimaryKeyParams().primaryKey().IsUnset());
-      MOZ_ASSERT(mCursor->mDirection == IDBCursor::NEXT ||
-                 mCursor->mDirection == IDBCursor::PREV);
+      MOZ_ASSERT(mCursor->mDirection == IDBCursor::Direction::Next ||
+                 mCursor->mDirection == IDBCursor::Direction::Prev);
       hasContinueKey = true;
       hasContinuePrimaryKey = true;
       explicitContinueKey = mParams.get_ContinuePrimaryKeyParams().key();
@@ -26812,8 +26815,8 @@ nsresult Cursor::ContinueOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   // Bind object store position if duplicates are allowed and we're not
   // continuing to a specific key.
   if (isIndex && !hasContinueKey &&
-      (mCursor->mDirection == IDBCursor::NEXT ||
-       mCursor->mDirection == IDBCursor::PREV)) {
+      (mCursor->mDirection == IDBCursor::Direction::Next ||
+       mCursor->mDirection == IDBCursor::Direction::Prev)) {
     rv = mCurrentPosition.mObjectStorePosition.BindToStatement(
         &*stmt, kStmtParamNameObjectStorePosition);
     if (NS_WARN_IF(NS_FAILED(rv))) {
