@@ -23,5 +23,11 @@ interface nsIPermissionDelegateHandler : nsISupports
    * @param aTypes the permission types to check
    */
   boolean maybeUnsafePermissionDelegate(in Array<ACString> aTypes);
+
+  /*
+   * Return true if both permissions.delegation.enabled and
+   * dom.security.featurePolicy.enabled pref are true.
+   */
+  readonly attribute boolean permissionDelegateFPEnabled;
 };
 
