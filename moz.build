@@ -28,6 +28,10 @@ with Files('CLOBBER'):
 with Files('*configure*'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
+with Files("docs/**"):
+    BUG_COMPONENT = ("Firefox Build System", "Generated Documentation")
+    SCHEDULES.exclusive = ['docs']
+
 with Files('mach'):
     BUG_COMPONENT = ('Firefox Build System', 'Mach Core')
 
