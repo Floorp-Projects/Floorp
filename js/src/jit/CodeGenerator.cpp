@@ -5138,15 +5138,7 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
     // NOTE: We checked that canonical function script had a valid JitScript.
     // This will not be tossed without all Ion code being tossed first.
 
-    Label uncompiled, end;
-    masm.branchIfFunctionHasNoScript(calleereg, &uncompiled);
-    masm.loadJitCodeNoArgCheck(calleereg, objreg);
-    masm.jump(&end);
-
-    // jitCodeRaw is still valid even if uncompiled.
-    masm.bind(&uncompiled);
-    masm.loadJitCodeRaw(calleereg, objreg);
-    masm.bind(&end);
+    masm.loadJitCodeMaybeNoArgCheck(calleereg, objreg);
   }
 
   // Nestle the StackPointer up to the argument vector.
