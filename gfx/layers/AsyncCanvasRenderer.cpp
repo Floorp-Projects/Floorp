@@ -30,7 +30,8 @@ AsyncCanvasRenderer::AsyncCanvasRenderer()
       mWidth(0),
       mHeight(0),
       mCanvasClient(nullptr),
-      mMutex("AsyncCanvasRenderer::mMutex") {
+      mMutex("AsyncCanvasRenderer::mMutex"),
+      mContextType(dom::CanvasContextType::NoContext) {
   MOZ_COUNT_CTOR(AsyncCanvasRenderer);
 }
 
@@ -112,6 +113,26 @@ AsyncCanvasRenderer::GetActiveEventTarget() {
   MutexAutoLock lock(mMutex);
   nsCOMPtr<nsISerialEventTarget> result = mActiveEventTarget;
   return result.forget();
+}
+
+ImageContainer* AsyncCanvasRenderer::GetImageContainer() {
+  MOZ_ASSERT(mContextType == dom::CanvasContextType::ImageBitmap);
+  MutexAutoLock lock(mMutex);
+  if (!mImageContainer) {
+    mImageContainer =
+        LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS);
+  }
+  return mImageContainer;
+}
+
+dom::CanvasContextType AsyncCanvasRenderer::GetContextType() {
+  MutexAutoLock lock(mMutex);
+  return mContextType;
+}
+
+void AsyncCanvasRenderer::SetContextType(dom::CanvasContextType aContextType) {
+  MutexAutoLock lock(mMutex);
+  mContextType = aContextType;
 }
 
 void AsyncCanvasRenderer::CopyFromTextureClient(TextureClient* aTextureClient) {
