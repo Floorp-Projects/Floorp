@@ -3331,9 +3331,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   padding-top: 80px; }
 
 .modalOverlayInner {
-  min-width: min-content;
-  width: 100%;
-  max-width: 960px;
+  width: 960px;
   position: fixed;
   top: 15%;
   left: calc(50% - 480px);
@@ -3344,15 +3342,13 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   z-index: 1100; }
   @media (max-width: 960px) {
     .modalOverlayInner {
+      width: auto;
       height: 100%;
       top: 0;
       left: 0;
       box-shadow: none;
       border-radius: 0; } }
   @media (max-height: 730px) {
-    .modalOverlayInner {
-      top: 0; } }
-  @media (max-height: 730px) and (min-width: 1024px) {
     .modalOverlayInner {
       top: 5%; } }
   .modalOverlayInner.active {
