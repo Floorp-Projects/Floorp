@@ -22,16 +22,14 @@
 namespace js {
 namespace frontend {
 
-class ParserBase;
-
 // ParseInfo owns a number of pieces of information about a parse,
 // as well as controls the lifetime of parse nodes and other data
 // by controling the mark and reset of the LifoAlloc.
 struct MOZ_RAII ParseInfo {
   // ParseInfo's mode can be eager or deferred:
   //
-  // - In Eager mode, allocation happens right away and the Function Tree is not
-  //   constructed.
+  // - In Eager mode, allocation happens right away and the Function Tree is
+  //   not constructed.
   // - In Deferred mode, allocation is deferred as late as possible.
   enum Mode { Eager, Deferred };
 
@@ -39,10 +37,21 @@ struct MOZ_RAII ParseInfo {
   LifoAllocScope& allocScope;
   FunctionTreeHolder treeHolder;
   Mode mode;
-  // Hold onto the RegExpCreationData and BigIntCreationDatas that are allocated
-  // during parse to ensure correct destruction.
+  // Hold onto the RegExpCreationData and BigIntCreationDatas that are
+  // allocated during parse to ensure correct destruction.
   Vector<RegExpCreationData> regExpData;
   Vector<BigIntCreationData> bigIntData;
+
+  // A rooted list of scopes created during this parse.
+  //
+  // To ensure that ScopeCreationData's destructors fire, and thus our HeapPtr
+  // barriers, we store the scopeCreationData at this level so that they
+  // can be safely destroyed, rather than LifoAllocing them with the rest of
+  // the parser data structures.
+  //
+  // References to scopes are controlled via AbstractScope, which holds onto
+  // an index (and ParseInfo reference).
+  JS::RootedVector<ScopeCreationData> scopeCreationData;
 
   ParseInfo(JSContext* cx, LifoAllocScope& alloc)
       : usedNames(cx),
@@ -52,7 +61,8 @@ struct MOZ_RAII ParseInfo {
                  ? ParseInfo::Mode::Deferred
                  : ParseInfo::Mode::Eager),
         regExpData(cx),
-        bigIntData(cx) {}
+        bigIntData(cx),
+        scopeCreationData(cx) {}
 
   // To avoid any misuses, make sure this is neither copyable,
   // movable or assignable.

@@ -13,6 +13,7 @@
 #include "frontend/ParseInfo.h"
 #include "frontend/ParseNode.h"      // ObjectBox
 #include "frontend/SharedContext.h"  // FunctionBox
+#include "frontend/Stencil.h"        // ScopeCreationData
 #include "vm/BytecodeUtil.h"         // INDEX_LIMIT, StackUses, StackDefs
 #include "vm/JSContext.h"            // JSContext
 #include "vm/RegExpObject.h"         // RegexpObject
@@ -85,6 +86,18 @@ bool GCThingList::finish(JSContext* cx, ParseInfo& parseInfo,
         return false;
       }
       array[i] = JS::GCCellPtr(obj);
+      return true;
+    }
+
+    bool operator()(ScopeIndex& index) {
+      MutableHandle<ScopeCreationData> data =
+          parseInfo.scopeCreationData[index];
+      Scope* scope = data.get().createScope(cx);
+      if (!scope) {
+        return false;
+      }
+
+      array[i] = JS::GCCellPtr(scope);
       return true;
     }
   };
@@ -197,7 +210,7 @@ void BytecodeSection::updateDepth(BytecodeOffset target) {
   }
 }
 
-PerScriptData::PerScriptData(JSContext* cx)
-    : gcThingList_(cx), atomIndices_(cx->frontendCollectionPool()) {}
+PerScriptData::PerScriptData(JSContext* cx, frontend::ParseInfo& parseInfo)
+    : gcThingList_(cx, parseInfo), atomIndices_(cx->frontendCollectionPool()) {}
 
 bool PerScriptData::init(JSContext* cx) { return atomIndices_.acquire(cx); }

@@ -319,7 +319,7 @@ void FunctionBox::finish() {
   if (isInterpretedLazy()) {
     // Lazy inner functions need to record their enclosing scope for when they
     // eventually are compiled.
-    function()->setEnclosingScope(enclosingScope_.maybeScope());
+    function()->setEnclosingScope(enclosingScope_.getExistingScope());
   } else {
     // Non-lazy inner functions don't use the enclosingScope_ field.
     MOZ_ASSERT(!enclosingScope_);
