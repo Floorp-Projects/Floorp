@@ -220,7 +220,8 @@ class AndroidEnv(BaseEnv):
     def dump_logs(self):
         try:
             logcat = self.device.get_logcat()
-        except ADBError:
+        # ValueError will cover all cases of Unicode encode/decode errors
+        except (ADBError, ValueError):
             ERROR("logcat call failure")
             return
 
