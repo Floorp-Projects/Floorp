@@ -85,6 +85,7 @@ export const ASRouterUtils = {
           url: endpoint.href,
           snippetId: params.get("snippetId"),
           theme: this.getPreviewTheme(),
+          dir: this.getPreviewDir(),
         };
       } catch (e) {}
     }
@@ -95,6 +96,11 @@ export const ASRouterUtils = {
     return new URLSearchParams(
       global.location.href.slice(global.location.href.indexOf("theme"))
     ).get("theme");
+  },
+  getPreviewDir() {
+    return new URLSearchParams(
+      global.location.href.slice(global.location.href.indexOf("dir"))
+    ).get("dir");
   },
 };
 
@@ -295,6 +301,10 @@ export class ASRouterUISurface extends React.PureComponent {
           detail: { data: NEWTAB_DARK_THEME },
         })
       );
+    }
+    if (endpoint && endpoint.dir === "rtl") {
+      //Set `dir = rtl` on the HTML
+      this.props.document.getElementById("root").dir = "rtl";
     }
     ASRouterUtils.addListener(this.onMessageFromParent);
     this.requestMessage(endpoint);

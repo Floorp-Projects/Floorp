@@ -54,6 +54,7 @@ describe("ASRouterUISurface", () => {
   let sandbox;
   let headerPortal;
   let footerPortal;
+  let root;
   let fakeDocument;
   let fetchStub;
 
@@ -61,6 +62,7 @@ describe("ASRouterUISurface", () => {
     sandbox = sinon.createSandbox();
     headerPortal = document.createElement("div");
     footerPortal = document.createElement("div");
+    root = document.createElement("div");
     sandbox.stub(footerPortal, "querySelector").returns(footerPortal);
     fetchStub = sandbox.stub(global, "fetch").resolves({
       ok: true,
@@ -99,6 +101,8 @@ describe("ASRouterUISurface", () => {
         switch (id) {
           case "header-asrouter-container":
             return headerPortal;
+          case "root":
+            return root;
           default:
             return footerPortal;
         }
@@ -198,6 +202,13 @@ describe("ASRouterUISurface", () => {
     assert.property(stub.firstCall.args[0].detail.data, "ntp_text");
     assert.property(stub.firstCall.args[0].detail.data, "sidebar");
     assert.property(stub.firstCall.args[0].detail.data, "sidebar_text");
+  });
+
+  it("should set `dir=rtl` on the page's root element if the dir param is set", () => {
+    sandbox.stub(ASRouterUtils, "getPreviewEndpoint").returns({ dir: "rtl" });
+
+    wrapper = mount(<ASRouterUISurface document={fakeDocument} />);
+    assert.propertyVal(root, "dir", "rtl");
   });
 
   describe("snippets", () => {
