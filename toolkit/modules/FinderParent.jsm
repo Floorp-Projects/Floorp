@@ -8,6 +8,8 @@ var EXPORTED_SYMBOLS = ["FinderParent"];
 
 const kFissionEnabledPref = "fission.autostart";
 const kModalHighlightPref = "findbar.modalHighlight";
+const kSoundEnabledPref = "accessibility.typeaheadfind.enablesound";
+const kNotFoundSoundPref = "accessibility.typeaheadfind.soundURL";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
@@ -35,14 +37,30 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "isSoundEnabled",
+  kSoundEnabledPref,
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "notFoundSoundURL",
+  kNotFoundSoundPref,
+  ""
+);
+
 function FinderParent(browser) {
   this._listeners = new Set();
-  this._searchString = null;
+  this._searchString = "";
   this._foundSearchString = null;
   this._lastFoundBrowsingContext = null;
 
   this.swapBrowser(browser);
 }
+
+let gSound = null;
 
 FinderParent.prototype = {
   // Called by findbar.js
@@ -259,6 +277,9 @@ FinderParent.prototype = {
     let rootBC = this.browsingContext;
     let highlightList = this.gatherBrowsingContexts(rootBC);
 
+    let canPlayNotFoundSound =
+      aArgs.searchString.length > this._searchString.length;
+
     this._searchString = aArgs.searchString;
 
     let initialBC = this.getLastFoundBrowsingContext(highlightList);
@@ -292,6 +313,12 @@ FinderParent.prototype = {
     if (aArgs.useSubFrames) {
       // Use the single frame for the highlight list as well.
       highlightList = searchList;
+      // The typeaheadfind component will play the sound in this case.
+      canPlayNotFoundSound = false;
+    }
+
+    if (canPlayNotFoundSound) {
+      this.initNotFoundSound();
     }
 
     // Add the initial browsing context twice to allow looping around.
@@ -374,6 +401,15 @@ FinderParent.prototype = {
 
       // Use the last result found.
       this.onResultFound(response);
+
+      if (
+        canPlayNotFoundSound &&
+        response.result == Ci.nsITypeAheadFind.FIND_NOTFOUND &&
+        !aFindNext &&
+        !response.entireWord
+      ) {
+        this.playNotFoundSound();
+      }
     }
   },
 
@@ -578,5 +614,33 @@ FinderParent.prototype = {
       altKey: aEvent.altKey,
       shiftKey: aEvent.shiftKey,
     });
+  },
+
+  initNotFoundSound() {
+    if (!gSound && isSoundEnabled && notFoundSoundURL) {
+      gSound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
+      gSound.init();
+    }
+  },
+
+  playNotFoundSound() {
+    if (!isSoundEnabled || !notFoundSoundURL) {
+      return;
+    }
+
+    this.initNotFoundSound();
+    if (!gSound) {
+      return;
+    }
+
+    let soundUrl = notFoundSoundURL;
+    if (soundUrl == "beep") {
+      gSound.beep();
+    } else {
+      if (soundUrl == "default") {
+        soundUrl = "chrome://global/content/notfound.wav";
+      }
+      gSound.play(Services.io.newURI(soundUrl));
+    }
   },
 };
