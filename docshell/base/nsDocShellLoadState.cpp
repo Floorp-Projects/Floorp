@@ -10,7 +10,7 @@
 #include "SHEntryChild.h"
 #include "nsISHEntry.h"
 #include "nsIWebNavigation.h"
-#include "nsIChildChannel.h"
+#include "nsIChannel.h"
 #include "ReferrerInfo.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -90,16 +90,11 @@ nsDocShellLoadState::nsDocShellLoadState(
 nsDocShellLoadState::~nsDocShellLoadState() {}
 
 nsresult nsDocShellLoadState::CreateFromPendingChannel(
-    nsIChildChannel* aPendingChannel, nsDocShellLoadState** aResult) {
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aPendingChannel);
-  if (NS_WARN_IF(!channel)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
+    nsIChannel* aPendingChannel, nsDocShellLoadState** aResult) {
   // Create the nsDocShellLoadState object with default state pulled from the
   // passed-in channel.
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = channel->GetURI(getter_AddRefs(uri));
+  nsresult rv = aPendingChannel->GetURI(getter_AddRefs(uri));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -110,13 +105,13 @@ nsresult nsDocShellLoadState::CreateFromPendingChannel(
   // Pull relevant state from the channel, and store it on the
   // nsDocShellLoadState.
   nsCOMPtr<nsIURI> originalUri;
-  rv = channel->GetOriginalURI(getter_AddRefs(originalUri));
+  rv = aPendingChannel->GetOriginalURI(getter_AddRefs(originalUri));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
   loadState->SetOriginalURI(originalUri);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+  nsCOMPtr<nsILoadInfo> loadInfo = aPendingChannel->LoadInfo();
   loadState->SetTriggeringPrincipal(loadInfo->TriggeringPrincipal());
 
   // Return the newly created loadState.
