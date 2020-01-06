@@ -535,6 +535,9 @@ class GCRuntime {
   template <AllowGC allowGC>
   JSString* tryNewNurseryString(JSContext* cx, size_t thingSize,
                                 AllocKind kind);
+  template <AllowGC allowGC>
+  JS::BigInt* tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
+                                  AllocKind kind);
   static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
   void setParallelAtomsAllocEnabled(bool enabled);
@@ -1128,6 +1131,9 @@ class GCRuntime {
   }
   const void* addressOfStringNurseryCurrentEnd() {
     return nursery_.refNoCheck().addressOfCurrentStringEnd();
+  }
+  const void* addressOfBigIntNurseryCurrentEnd() {
+    return nursery_.refNoCheck().addressOfCurrentBigIntEnd();
   }
   uint32_t* addressOfNurseryAllocCount() {
     return stats().addressOfAllocsSinceMinorGCNursery();

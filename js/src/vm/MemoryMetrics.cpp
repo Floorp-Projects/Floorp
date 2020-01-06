@@ -435,7 +435,11 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
 
     case JS::TraceKind::BigInt: {
       JS::BigInt* bi = &cellptr.as<BigInt>();
-      zStats->bigIntsGCHeap += thingSize;
+      size_t size = thingSize;
+      if (!bi->isTenured()) {
+        size += Nursery::bigIntHeaderSize();
+      }
+      zStats->bigIntsGCHeap += size;
       zStats->bigIntsMallocHeap +=
           bi->sizeOfExcludingThis(rtStats->mallocSizeOf_);
       break;

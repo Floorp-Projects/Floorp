@@ -982,11 +982,16 @@ void MacroAssembler::branchValueIsNurseryCellImpl(Condition cond,
   MOZ_ASSERT(temp != ScratchReg &&
              temp != ScratchReg2);  // Both may be used internally.
 
-  Label done, checkAddress, checkObjectAddress;
+  Label done, checkAddress, checkObjectAddress, checkStringAddress;
   bool testNursery = (cond == Assembler::Equal);
   branchTestObject(Assembler::Equal, value, &checkObjectAddress);
-  branchTestString(Assembler::NotEqual, value, testNursery ? &done : label);
+  branchTestString(Assembler::Equal, value, &checkStringAddress);
+  branchTestBigInt(Assembler::NotEqual, value, testNursery ? &done : label);
 
+  unboxBigInt(value, temp);
+  jump(&checkAddress);
+
+  bind(&checkStringAddress);
   unboxString(value, temp);
   jump(&checkAddress);
 

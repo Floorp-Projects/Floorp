@@ -302,6 +302,7 @@ const WHITELIST_FUNCTIONS: &'static [&'static str] = &[
     "JS_HasOwnPropertyById",
     "JS_HasProperty",
     "JS_HasPropertyById",
+    "JS::HeapBigIntWriteBarriers",
     "JS::HeapObjectWriteBarriers",
     "JS::HeapScriptWriteBarriers",
     "JS::HeapStringWriteBarriers",

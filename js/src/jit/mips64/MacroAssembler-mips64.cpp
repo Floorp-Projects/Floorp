@@ -2010,14 +2010,19 @@ void MacroAssembler::branchValueIsNurseryCell(Condition cond,
                                               Label* label) {
   MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
-  Label done, checkAddress, checkObjectAddress;
+  Label done, checkAddress, checkObjectAddress, checkStringAddress;
   SecondScratchRegisterScope scratch2(*this);
 
   splitTag(value, scratch2);
   branchTestObject(Assembler::Equal, scratch2, &checkObjectAddress);
-  branchTestString(Assembler::NotEqual, scratch2,
+  branchTestString(Assembler::Equal, scratch2, &checkStringAddress);
+  branchTestBigInt(Assembler::NotEqual, scratch2,
                    cond == Assembler::Equal ? &done : label);
 
+  unboxBigInt(value, scratch2);
+  jump(&checkAddress);
+
+  bind(&checkStringAddress);
   unboxString(value, scratch2);
   jump(&checkAddress);
 

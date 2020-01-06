@@ -748,6 +748,26 @@ void MacroAssembler::nurseryAllocateString(Register result, Register temp,
   storePtr(ImmPtr(zone), Address(result, -js::Nursery::stringHeaderSize()));
 }
 
+// Inline version of Nursery::allocateBigInt.
+void MacroAssembler::nurseryAllocateBigInt(Register result, Register temp,
+                                           Label* fail) {
+  MOZ_ASSERT(IsNurseryAllocable(gc::AllocKind::BIGINT));
+
+  // No explicit check for nursery.isEnabled() is needed, as the comparison
+  // with the nursery's end will always fail in such cases.
+
+  CompileZone* zone = GetJitContext()->realm()->zone();
+  size_t thingSize = gc::Arena::thingSize(gc::AllocKind::BIGINT);
+  size_t totalSize = js::Nursery::bigIntHeaderSize() + thingSize;
+  MOZ_ASSERT(totalSize < INT32_MAX, "Nursery allocation too large");
+  MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
+
+  bumpPointerAllocate(
+      result, temp, fail, zone->addressOfBigIntNurseryPosition(),
+      zone->addressOfBigIntNurseryCurrentEnd(), totalSize, thingSize);
+  storePtr(ImmPtr(zone), Address(result, -js::Nursery::bigIntHeaderSize()));
+}
+
 void MacroAssembler::bumpPointerAllocate(Register result, Register temp,
                                          Label* fail, void* posAddr,
                                          const void* curEndAddr,
@@ -817,8 +837,17 @@ void MacroAssembler::newGCFatInlineString(Register result, Register temp,
                  attemptNursery ? gc::DefaultHeap : gc::TenuredHeap, fail);
 }
 
-void MacroAssembler::newGCBigInt(Register result, Register temp, Label* fail) {
+void MacroAssembler::newGCBigInt(Register result, Register temp, Label* fail,
+                                 bool attemptNursery) {
   checkAllocatorState(fail);
+
+  gc::InitialHeap initialHeap =
+      attemptNursery ? gc::DefaultHeap : gc::TenuredHeap;
+  if (shouldNurseryAllocate(gc::AllocKind::BIGINT, initialHeap)) {
+    MOZ_ASSERT(initialHeap == gc::DefaultHeap);
+    return nurseryAllocateBigInt(result, temp, fail);
+  }
+
   freeListAllocate(result, temp, gc::AllocKind::BIGINT, fail);
 }
 
@@ -1547,7 +1576,9 @@ void MacroAssembler::initializeBigInt64(Scalar::Type type, Register bigInt,
                                         Register64 val) {
   MOZ_ASSERT(Scalar::isBigIntType(type));
 
-  store32(Imm32(0), Address(bigInt, BigInt::offsetOfFlags()));
+  uint32_t flags = BigInt::TYPE_FLAGS;
+
+  store32(Imm32(flags), Address(bigInt, BigInt::offsetOfFlags()));
 
   Label done, nonZero;
   branch64(Assembler::NotEqual, val, Imm64(0), &nonZero);
@@ -1563,7 +1594,7 @@ void MacroAssembler::initializeBigInt64(Scalar::Type type, Register bigInt,
     Label isPositive;
     branch64(Assembler::GreaterThan, val, Imm64(0), &isPositive);
     {
-      store32(Imm32(BigInt::signBitMask()),
+      store32(Imm32(BigInt::signBitMask() | flags),
               Address(bigInt, BigInt::offsetOfFlags()));
       neg64(val);
     }
