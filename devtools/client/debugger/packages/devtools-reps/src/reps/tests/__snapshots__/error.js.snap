@@ -43,6 +43,84 @@ exports[`Error - Error with invalid stack renders with expected text 1`] = `
 </span>
 `;
 
+exports[`Error - Error with undefined-grip message renders with expected text 1`] = `
+<span
+  className="objectBox-stackTrace"
+  data-link-actor-id="server0.conn0.child1/obj88"
+>
+  Error
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:16:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Error with undefined-grip message renders with expected text 2`] = `
+<span
+  className="objectBox-stackTrace"
+  data-link-actor-id="server0.conn0.child1/obj88"
+>
+  Error
+</span>
+`;
+
+exports[`Error - Error with undefined-grip name renders with expected text 1`] = `
+<span
+  className="objectBox-stackTrace"
+  data-link-actor-id="server0.conn0.child1/obj88"
+>
+  Error: "too much recursion"
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      &lt;anonymous&gt;
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      debugger eval code:16:13
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Error with undefined-grip name renders with expected text 2`] = `
+<span
+  className="objectBox-stackTrace"
+  data-link-actor-id="server0.conn0.child1/obj88"
+>
+  Error
+</span>
+`;
+
 exports[`Error - Error with undefined-grip stack renders with expected text 1`] = `
 <span
   className="objectBox-stackTrace"
