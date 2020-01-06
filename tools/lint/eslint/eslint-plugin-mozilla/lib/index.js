@@ -51,6 +51,7 @@ module.exports = {
     "no-useless-run-test": require("../lib/rules/no-useless-run-test"),
     "prefer-boolean-length-check": require("../lib/rules/prefer-boolean-length-check"),
     "reject-importGlobalProperties": require("../lib/rules/reject-importGlobalProperties"),
+    "reject-relative-requires": require("../lib/rules/reject-relative-requires"),
     "reject-some-requires": require("../lib/rules/reject-some-requires"),
     "rejects-requires-await": require("../lib/rules/rejects-requires-await"),
     "use-cc-etc": require("../lib/rules/use-cc-etc"),
