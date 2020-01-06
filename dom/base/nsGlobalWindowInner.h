@@ -1017,9 +1017,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   void FreeInnerObjects();
 
-  // Only to be called on an inner window.
-  // aDocument must not be null.
-  void InnerSetNewDocument(JSContext* aCx, Document* aDocument);
+  // Initialize state that depends on the document.  By this point, mDoc should
+  // be set correctly and have us set as its script global object.
+  void InitDocumentDependentState(JSContext* aCx);
 
   nsresult EnsureClientSource();
   nsresult ExecutionReady();
