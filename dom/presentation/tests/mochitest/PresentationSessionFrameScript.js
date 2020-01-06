@@ -274,10 +274,10 @@ if (!SpecialPowers.isMainProcess()) {
   var port;
   try {
     port = SpecialPowers.loadPrivilegedScript(
-      loadPrivilegedScriptTest.toSource()
+      loadPrivilegedScriptTest.toString()
     );
   } catch (e) {
-    ok(false, "loadPrivilegedScript shoulde not throw" + e);
+    ok(false, "loadPrivilegedScript should not throw" + e);
   }
 
   port.onmessage = e => {

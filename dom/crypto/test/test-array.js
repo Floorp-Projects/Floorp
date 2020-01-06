@@ -108,7 +108,7 @@ function WorkerTest(worker, name, test) {
     this.startTime = new Date();
 
     // Send the test code to the worker.
-    worker.postMessage(test.toSource());
+    worker.postMessage(test.toString());
 
     // We expect only boolean responses from the worker script.
     worker.onmessage = e => this.complete(e.data);
