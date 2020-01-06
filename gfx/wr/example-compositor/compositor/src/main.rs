@@ -43,12 +43,14 @@ impl webrender::Compositor for DirectCompositeInterface {
         &mut self,
         id: webrender::NativeSurfaceId,
         tile_size: DeviceIntSize,
+        is_opaque: bool,
     ) {
         compositor::create_surface(
             self.window,
             id.0,
             tile_size.width,
             tile_size.height,
+            is_opaque,
         );
     }
 
@@ -62,14 +64,12 @@ impl webrender::Compositor for DirectCompositeInterface {
     fn create_tile(
         &mut self,
         id: webrender::NativeTileId,
-        is_opaque: bool,
     ) {
         compositor::create_tile(
             self.window,
             id.surface_id.0,
             id.x,
             id.y,
-            is_opaque,
         );
     }
 
@@ -260,7 +260,7 @@ fn build_display_list(
         ColorF::new(1.0, 0.0, 0.0, 1.0),
         scroll_space_info.spatial_id,
         root_pipeline_id,
-        0.0,
+        time,
         time,
     );
 

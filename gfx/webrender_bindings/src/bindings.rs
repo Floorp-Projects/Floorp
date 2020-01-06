@@ -1210,6 +1210,7 @@ extern "C" {
         compositor: *mut c_void,
         id: NativeSurfaceId,
         tile_size: DeviceIntSize,
+        is_opaque: bool,
     );
     fn wr_compositor_destroy_surface(
         compositor: *mut c_void,
@@ -1220,7 +1221,6 @@ extern "C" {
         id: NativeSurfaceId,
         x: i32,
         y: i32,
-        is_opaque: bool,
     );
     fn wr_compositor_destroy_tile(
         compositor: *mut c_void,
@@ -1253,12 +1253,14 @@ impl Compositor for WrCompositor {
         &mut self,
         id: NativeSurfaceId,
         tile_size: DeviceIntSize,
+        is_opaque: bool,
     ) {
         unsafe {
             wr_compositor_create_surface(
                 self.0,
                 id,
                 tile_size,
+                is_opaque,
             );
         }
     }
@@ -1278,7 +1280,6 @@ impl Compositor for WrCompositor {
     fn create_tile(
         &mut self,
         id: NativeTileId,
-        is_opaque: bool,
     ) {
         unsafe {
             wr_compositor_create_tile(
@@ -1286,7 +1287,6 @@ impl Compositor for WrCompositor {
                 id.surface_id,
                 id.x,
                 id.y,
-                is_opaque,
             );
         }
     }

@@ -276,8 +276,9 @@ void RenderCompositorOGL::Unbind() {
 }
 
 void RenderCompositorOGL::CreateSurface(wr::NativeSurfaceId aId,
-                                        wr::DeviceIntSize aTileSize) {
-  Surface surface(aTileSize);
+                                        wr::DeviceIntSize aTileSize,
+                                        bool aIsOpaque) {
+  Surface surface(aTileSize, aIsOpaque);
   mSurfaces.insert({aId, surface});
 }
 
@@ -285,15 +286,14 @@ void RenderCompositorOGL::DestroySurface(NativeSurfaceId aId) {
   mSurfaces.erase(aId);
 }
 
-void RenderCompositorOGL::CreateTile(wr::NativeSurfaceId aId, int aX, int aY,
-                                     bool aIsOpaque) {
+void RenderCompositorOGL::CreateTile(wr::NativeSurfaceId aId, int aX, int aY) {
   auto surfaceCursor = mSurfaces.find(aId);
   MOZ_RELEASE_ASSERT(surfaceCursor != mSurfaces.end());
   Surface& surface = surfaceCursor->second;
 
   RefPtr<layers::NativeLayer> layer = mNativeLayerRoot->CreateLayer(
-      IntSize(surface.mTileSize.width, surface.mTileSize.height), aIsOpaque,
-      mSurfacePoolHandle);
+      IntSize(surface.mTileSize.width, surface.mTileSize.height),
+      surface.mIsOpaque, mSurfacePoolHandle);
   surface.mNativeLayers.insert({TileKey(aX, aY), layer});
   mTotalPixelCount += gfx::IntRect({}, layer->GetSize()).Area();
 }

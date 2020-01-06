@@ -38,6 +38,7 @@ extern {
         id: u64,
         tile_width: i32,
         tile_height: i32,
+        is_opaque: bool,
     );
 
     fn com_dc_create_tile(
@@ -45,7 +46,6 @@ extern {
         id: u64,
         x: i32,
         y: i32,
-        is_opaque: bool,
     );
 
     fn com_dc_destroy_tile(
@@ -124,6 +124,7 @@ pub fn create_surface(
     id: u64,
     tile_width: i32,
     tile_height: i32,
+    is_opaque: bool,
 ) {
     unsafe {
         com_dc_create_surface(
@@ -131,6 +132,7 @@ pub fn create_surface(
             id,
             tile_width,
             tile_height,
+            is_opaque,
         )
     }
 }
@@ -140,7 +142,6 @@ pub fn create_tile(
     id: u64,
     x: i32,
     y: i32,
-    is_opaque: bool,
 ) {
     unsafe {
         com_dc_create_tile(
@@ -148,7 +149,6 @@ pub fn create_tile(
             id,
             x,
             y,
-            is_opaque,
         )
     }
 }
