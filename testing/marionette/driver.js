@@ -378,6 +378,29 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
 };
 
 /**
+ * Get the current browsing context.
+ *
+ * @return {number}
+ *     Id of the browsing context.
+ */
+GeckoDriver.prototype.getBrowsingContext = async function() {
+  let browsingContext = null;
+
+  switch (this.context) {
+    case Context.Chrome:
+      browsingContext = this.getCurrentWindow().docShell.browsingContext;
+      break;
+
+    case Context.Content:
+      const id = await this.listener.getBrowsingContextId();
+      browsingContext = BrowsingContext.get(id);
+      break;
+  }
+
+  return browsingContext;
+};
+
+/**
  * Get the session's current top-level browsing context.
  *
  * It will return the outer {@link ChromeWindow} previously selected by
@@ -3003,13 +3026,9 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
   // Only consider full screenshot if no element has been specified
   full = webEl ? false : full;
 
-  let browsingContext;
   let rect;
-
   switch (this.context) {
     case Context.Chrome:
-      browsingContext = win.docShell.browsingContext;
-
       if (id) {
         let el = this.curBrowser.seenEls.get(webEl, win);
         rect = el.getBoundingClientRect();
@@ -3028,11 +3047,11 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
       break;
 
     case Context.Content:
-      browsingContext = this.curBrowser.contentBrowser.browsingContext;
       rect = await this.listener.getScreenshotRect({ el: webEl, full, scroll });
       break;
   }
 
+  const browsingContext = await this.getBrowsingContext();
   let canvas = await capture.canvas(
     win,
     browsingContext,
