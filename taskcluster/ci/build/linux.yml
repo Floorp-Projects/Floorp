@@ -622,7 +622,6 @@ linux-shippable/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['mozilla-central', 'try']
     fetches:
         toolchain:
             - linux64-binutils
