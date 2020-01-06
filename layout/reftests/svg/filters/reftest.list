@@ -22,7 +22,7 @@ fuzzy(0-1,0-42500) == feBlend-1.svg feBlend-1-ref.svg
 == feBlend-2.svg feBlend-2-ref.svg
 
 fuzzy-if(d2d||skiaContent,0-1,0-6400) == feColorMatrix-1.svg feColorMatrix-1-ref.svg
-fuzzy-if(d2d,0-1,0-10000) == feColorMatrix-2.svg feColorMatrix-2-ref.svg
+fuzzy-if(d2d||webrender,0-1,0-10000) == feColorMatrix-2.svg feColorMatrix-2-ref.svg
 
 == feComponentTransfer-1.svg feComponentTransfer-1-ref.svg
 == feComponentTransfer-2.svg feComponentTransfer-2-ref.svg
@@ -132,6 +132,6 @@ fuzzy(0-1,0-10000) == feTurbulence-zero-baseFreq-01.svg feTurbulence-zero-baseFr
 != feTurbulence-zero-baseFreq-02.svg about:blank
 
 == outside-sourcegraphic-1.svg outside-sourcegraphic-ref.svg
-== outside-sourcegraphic-2.svg outside-sourcegraphic-ref.svg
-# This failure is caused by bug 1586055
+# These failures are caused by bug 1586055
+fails-if(webrender) == outside-sourcegraphic-2.svg outside-sourcegraphic-ref.svg
 fails-if(webrender) == outside-sourcegraphic-3.svg outside-sourcegraphic-ref.svg

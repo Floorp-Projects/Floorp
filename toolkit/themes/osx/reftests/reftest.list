@@ -3,5 +3,6 @@
 skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/482681.xhtml chrome://reftest/content/osx-theme/482681-ref.xhtml
 skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/radiosize.xhtml chrome://reftest/content/osx-theme/radiosize-ref.xhtml
 skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/checkboxsize.xhtml chrome://reftest/content/osx-theme/checkboxsize-ref.xhtml
-skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/baseline.xhtml about:blank
+# This failure is caused by bug 1586055 in WebRender
+skip-if(!cocoaWidget) fails-if(webrender) == chrome://reftest/content/osx-theme/baseline.xhtml about:blank
 skip-if(!cocoaWidget) == chrome://reftest/content/osx-theme/nostretch.xhtml chrome://reftest/content/osx-theme/nostretch-ref.xhtml
