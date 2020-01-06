@@ -1,3 +1,5 @@
+// |jit-test| skip-if: isLcovEnabled()
+
 load(libdir + 'bytecode-cache.js');
 var test = "";
 gczeal(0);
