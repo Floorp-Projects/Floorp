@@ -159,6 +159,8 @@ void ToastNotificationHandler::UnregisterHandler() {
 
   mNotification = nullptr;
   mNotifier = nullptr;
+
+  SendFinished();
 }
 
 ComPtr<IXmlDocument> ToastNotificationHandler::InitializeXmlForTemplate(
@@ -417,6 +419,15 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
   return true;
 }
 
+void
+ToastNotificationHandler::SendFinished() {
+  if (!mSentFinished && mAlertListener) {
+    mAlertListener->Observe(nullptr, "alertfinished", mCookie.get());
+  }
+
+  mSentFinished = true;
+}
+
 HRESULT
 ToastNotificationHandler::OnActivate(IToastNotification *notification,
                                      IInspectable *inspectable) {
@@ -471,9 +482,7 @@ ToastNotificationHandler::OnActivate(IToastNotification *notification,
 HRESULT
 ToastNotificationHandler::OnDismiss(IToastNotification *notification,
                                     IToastDismissedEventArgs *aArgs) {
-  if (mAlertListener) {
-    mAlertListener->Observe(nullptr, "alertfinished", mCookie.get());
-  }
+  SendFinished();
   mBackend->RemoveHandler(mName, this);
   return S_OK;
 }
@@ -481,9 +490,7 @@ ToastNotificationHandler::OnDismiss(IToastNotification *notification,
 HRESULT
 ToastNotificationHandler::OnFail(IToastNotification *notification,
                                  IToastFailedEventArgs *aArgs) {
-  if (mAlertListener) {
-    mAlertListener->Observe(nullptr, "alertfinished", mCookie.get());
-  }
+  SendFinished();
   mBackend->RemoveHandler(mName, this);
   return S_OK;
 }
@@ -495,6 +502,7 @@ nsresult ToastNotificationHandler::TryShowAlert() {
   }
   return NS_OK;
 }
+
 NS_IMETHODIMP
 ToastNotificationHandler::OnImageMissing(nsISupports *) {
   return TryShowAlert();
