@@ -40,7 +40,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.test.Mockable
-import java.util.FormatFlagsConversionMismatchException
 
 /**
  * Component group for background services. These are the components that need to be accessed from within a
@@ -55,22 +54,13 @@ class BackgroundServices(
     passwordsStorage: SyncableLoginsStore,
     secureAbove22Preferences: SecureAbove22Preferences
 ) {
-    // // A malformed string is causing crashes.
-    // This will be removed when the string is fixed. See #5552
-    fun defaultDeviceName(context: Context): String = try {
+    fun defaultDeviceName(context: Context): String =
         context.getString(
             R.string.default_device_name,
             context.getString(R.string.app_name),
             Build.MANUFACTURER,
             Build.MODEL
         )
-    } catch (ex: FormatFlagsConversionMismatchException) {
-        "%s on %s %s".format(
-            context.getString(R.string.app_name),
-            Build.MANUFACTURER,
-            Build.MODEL
-        )
-    }
 
     private val serverConfig = FxaServer.config(context)
     private val deviceConfig = DeviceConfig(
