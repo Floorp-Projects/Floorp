@@ -558,3 +558,4 @@ load empty-mask.html
 load 1586600.html
 load 1599518.html
 load 1599532.html
+pref(layout.accessiblecaret.enabled,true) load 1606492.html
