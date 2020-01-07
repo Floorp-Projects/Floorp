@@ -4874,9 +4874,7 @@ nsDocShell::SetIsActive(bool aIsActive) {
     if (RefPtr<Document> doc = mScriptGlobal->GetExtantDoc()) {
       // Update orientation when the top-level browsing context becomes active.
       if (aIsActive) {
-        nsCOMPtr<nsIDocShellTreeItem> parent;
-        GetInProcessSameTypeParent(getter_AddRefs(parent));
-        if (!parent) {
+        if (mBrowsingContext->IsTop()) {
           // We only care about the top-level browsing context.
           uint16_t orientation = OrientationLock();
           ScreenOrientation::UpdateActiveOrientationLock(orientation);
