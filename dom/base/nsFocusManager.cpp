@@ -3212,14 +3212,15 @@ static nsIContent* GetTopLevelScopeOwner(nsIContent* aContent) {
   while (aContent) {
     if (HTMLSlotElement* slot = aContent->GetAssignedSlot()) {
       aContent = slot;
+      topLevelScopeOwner = aContent;
     } else if (ShadowRoot* shadowRoot = aContent->GetContainingShadow()) {
       aContent = shadowRoot->Host();
       topLevelScopeOwner = aContent;
     } else {
-      if (HTMLSlotElement::FromNode(aContent)) {
+      aContent = aContent->GetParent();
+      if (aContent && HTMLSlotElement::FromNode(aContent)) {
         topLevelScopeOwner = aContent;
       }
-      aContent = aContent->GetParent();
     }
   }
 
