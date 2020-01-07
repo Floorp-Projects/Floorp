@@ -324,6 +324,7 @@ typename nsTSubstring<T>::size_type nsTSubstring<T>::Capacity() const {
       capacity = (hdr->StorageSize() / sizeof(char_type)) - 1;
     }
   } else if (this->mDataFlags & DataFlags::INLINE) {
+    MOZ_ASSERT(this->mClassFlags & ClassFlags::INLINE);
     capacity = AsAutoString(this)->mInlineCapacity;
   } else if (this->mDataFlags & DataFlags::OWNED) {
     // we don't store the capacity of an adopted buffer because that would

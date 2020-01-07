@@ -6013,20 +6013,18 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if isOptional:
             if type.isUTF8String():
                 declType = "Optional<nsACString>"
-                holderType = CGGeneric("nsAutoCString")
+                holderType = CGGeneric("binding_detail::FakeString<char>")
             else:
                 declType = "Optional<nsAString>"
-                holderType = CGGeneric("binding_detail::FakeString")
+                holderType = CGGeneric("binding_detail::FakeString<char16_t>")
             conversionCode = ("%s"
                               "${declName} = &${holderName};\n" %
                               getConversionCode("${holderName}"))
         else:
             if type.isUTF8String():
-                # TODO(emilio, bug 1606958): We could make FakeString generic
-                # if we deem it worth it, instead of using nsAutoCString.
-                declType = "nsAutoCString"
+                declType = "binding_detail::FakeString<char>"
             else:
-                declType = "binding_detail::FakeString"
+                declType = "binding_detail::FakeString<char16_t>"
             holderType = None
             conversionCode = getConversionCode("${declName}")
 
@@ -10344,7 +10342,10 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
     if type.isDOMString() or type.isUSVString():
         return CGGeneric("const nsAString&")
 
-    if type.isByteString() or type.isUTF8String():
+    if type.isUTF8String():
+        return CGGeneric("const nsACString&")
+
+    if type.isByteString():
         return CGGeneric("const nsCString&")
 
     if type.isEnum():
@@ -11761,7 +11762,7 @@ class CGProxyNamedOperation(CGProxySpecialOperation):
             decls = ""
             idName = "id"
 
-        decls += "FakeString %s;\n" % argName
+        decls += "FakeString<char16_t> %s;\n" % argName
 
         main = fill(
             """

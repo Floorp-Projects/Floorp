@@ -50,6 +50,8 @@ enum class StringDataFlags : uint16_t {
   //   VOIDED implies TERMINATED, and moreover it implies that mData
   //   points to char_traits::sEmptyBuffer.  Therefore, VOIDED is
   //   mutually exclusive with REFCOUNTED, OWNED, and INLINE.
+  //
+  //   INLINE requires StringClassFlags::INLINE to be set on the type.
 
   // IsTerminated returns true
   TERMINATED = 1 << 0,
@@ -72,8 +74,11 @@ enum class StringDataFlags : uint16_t {
 
 // bits for mClassFlags
 enum class StringClassFlags : uint16_t {
-  INLINE = 1 << 0,          // |this|'s buffer is inline
-  NULL_TERMINATED = 1 << 1  // |this| requires its buffer is null-terminated
+  // |this|'s buffer is inline, and requires the type to be binary-compatible
+  // with nsTAutoStringN
+  INLINE = 1 << 0,
+  // |this| requires its buffer is null-terminated
+  NULL_TERMINATED = 1 << 1
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StringDataFlags)
