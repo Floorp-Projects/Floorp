@@ -83,6 +83,7 @@ config = {
         "mochitest-webgl1-ext": WebglSuite("webgl1-ext"),
         "mochitest-webgl2-ext": WebglSuite("webgl2-ext"),
         "mochitest-webgl2-deqp": WebglSuite("webgl2-deqp"),
+        "mochitest-webgpu": WebglSuite("webgpu"),
         "mochitest-plain-gpu": {
             "run_filename": "runtestsremote.py",
             "testsdir": "mochitest",

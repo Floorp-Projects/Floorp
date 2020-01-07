@@ -163,6 +163,7 @@ TEST_SUITES = {
     'mochitest-webgl2-core': WebglSuite('webgl2-core'),
     'mochitest-webgl2-ext': WebglSuite('webgl2-ext'),
     'mochitest-webgl2-deqp': WebglSuite('webgl2-deqp'),
+    'mochitest-webgpu': WebglSuite('webgpu'),
     'puppeteer': {
         'aliases': ('remote/test/puppeteer',),
         'mach_command': 'puppeteer-test',
@@ -301,6 +302,7 @@ _test_subsuites = {
     ('mochitest', 'webgl2-core'): 'mochitest-webgl2-core',
     ('mochitest', 'webgl2-ext'): 'mochitest-webgl2-ext',
     ('mochitest', 'webgl2-deqp'): 'mochitest-webgl2-deqp',
+    ('mochitest', 'webgpu'): 'mochitest-webgpu',
     ('web-platform-tests', 'testharness'): 'web-platform-tests-testharness',
     ('web-platform-tests', 'crashtest'): 'web-platform-tests-crashtest',
     ('web-platform-tests', 'reftest'): 'web-platform-tests-reftest',
