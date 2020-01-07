@@ -51,10 +51,10 @@
  *
  * ## Jump instructions
  *
- * Operands named `offset` or `forwardOffset` are jump offsets, the distance in
- * bytes from the start of the current instruction to the start of another
- * instruction in the same script. Operands named `forwardOffset` must be
- * positive.
+ * Operands named `offset`, `forwardOffset`, or `defaultOffset` are jump
+ * offsets, the distance in bytes from the start of the current instruction to
+ * the start of another instruction in the same script. Operands named
+ * `forwardOffset` or `defaultOffset` must be positive.
  *
  * Forward jumps must jump to a `JSOP_JUMPTARGET` instruction.  Backward jumps,
  * indicated by negative offsets, must jump to a `JSOP_LOOPHEAD` instruction.
@@ -2120,9 +2120,12 @@
      */ \
     MACRO(JSOP_RESUME, "resume", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE) \
     /*
-     * This opcode is a no-op and it indicates the location of a jump
-     * instruction target. Some other opcodes act as jump targets as well, see
-     * BytecodeIsJumpTarget. The IC index is used by the Baseline interpreter.
+     * No-op instruction marking the target of a jump instruction.
+     *
+     * This instruction and a few others (see `js::BytecodeIsJumpTarget`) are
+     * jump target instructions. The Baseline Interpreter uses these
+     * instructions to sync the frame's `interpreterICEntry` after a jump. Ion
+     * uses them to find block boundaries when translating bytecode to MIR.
      *
      *   Category: Other
      *   Operands: uint32_t icIndex
@@ -2130,12 +2133,16 @@
      */ \
     MACRO(JSOP_JUMPTARGET, "jumptarget", NULL, 5, 0, 0, JOF_ICINDEX) \
     /*
-     * This opcode is the target of the backwards jump for some loop.
+     * Marks the target of the backwards jump for some loop.
      *
-     * The depthHint value is a loop depth hint for Ion. It starts at 1 and
+     * This is a jump target instruction (see `JSOP_JUMPTARGET`). Additionally,
+     * it checks for interrupts and handles JIT tiering.
+     *
+     * The `depthHint` operand is a loop depth hint for Ion. It starts at 1 and
      * deeply nested loops all have the same value.
      *
-     * See JSOP_JUMPTARGET for the icIndex operand.
+     * For the convenience of the JITs, scripts must not start with this
+     * instruction. See bug 1602390.
      *
      *   Category: Statements
      *   Type: Jumps
@@ -2144,7 +2151,9 @@
      */ \
     MACRO(JSOP_LOOPHEAD, "loophead", NULL, 6, 0, 0, JOF_LOOPHEAD) \
     /*
-     * Jumps to a 32-bit offset from the current bytecode.
+     * Jump to a 32-bit offset from the current bytecode.
+     *
+     * See "Jump instructions" above for details.
      *
      *   Category: Statements
      *   Type: Jumps
@@ -2153,22 +2162,21 @@
      */ \
     MACRO(JSOP_GOTO, "goto", NULL, 5, 0, 0, JOF_JUMP) \
     /*
-     * Pops the top of stack value, converts it into a boolean, if the result
-     * is 'false', jumps to a 32-bit offset from the current bytecode.
-     *
-     * The idea is that a sequence like
-     * JSOP_ZERO; JSOP_ZERO; JSOP_EQ; JSOP_IFEQ; JSOP_RETURN;
-     * reads like a nice linear sequence that will execute the return.
+     * If ToBoolean(`cond`) is false, jumps to a 32-bit offset from the current
+     * instruction.
      *
      *   Category: Statements
      *   Type: Jumps
-     *   Operands: int32_t offset
+     *   Operands: int32_t forwardOffset
      *   Stack: cond =>
      */ \
     MACRO(JSOP_IFEQ, "ifeq", NULL, 5, 1, 0, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     /*
-     * Pops the top of stack value, converts it into a boolean, if the result
-     * is 'true', jumps to a 32-bit offset from the current bytecode.
+     * If ToBoolean(`cond`) is true, jump to a 32-bit offset from the current
+     * instruction.
+     *
+     * `offset` may be positive or negative. This is the instruction used at the
+     * end of a do-while loop to jump back to the top.
      *
      *   Category: Statements
      *   Type: Jumps
@@ -2177,70 +2185,111 @@
      */ \
     MACRO(JSOP_IFNE, "ifne", NULL, 5, 1, 0, JOF_JUMP|JOF_IC) \
     /*
-     * Converts the top of stack value into a boolean, if the result is
-     * 'false', jumps to a 32-bit offset from the current bytecode.
+     * Short-circuit for logical AND.
+     *
+     * If ToBoolean(`cond`) is false, jump to a 32-bit offset from the current
+     * instruction. The value remains on the stack.
      *
      *   Category: Statements
      *   Type: Jumps
-     *   Operands: int32_t offset
+     *   Operands: int32_t forwardOffset
      *   Stack: cond => cond
      */ \
     MACRO(JSOP_AND, "and", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     /*
-     * Converts the top of stack value into a boolean, if the result is 'true',
-     * jumps to a 32-bit offset from the current bytecode.
+     * Short-circuit for logical OR.
+     *
+     * If ToBoolean(`cond`) is true, jump to a 32-bit offset from the current
+     * instruction. The value remains on the stack.
      *
      *   Category: Statements
      *   Type: Jumps
-     *   Operands: int32_t offset
+     *   Operands: int32_t forwardOffset
      *   Stack: cond => cond
      */ \
     MACRO(JSOP_OR, "or", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     /*
-     * If the value on top of the stack is not null or undefined, jumps to a 32-bit offset from the
-     * current bytecode.
+     * Short-circuiting for nullish coalescing.
+     *
+     * If `val` is not null or undefined, jump to a 32-bit offset from the
+     * current instruction.
      *
      *   Category: Statements
      *   Type: Jumps
-     *   Operands: int32_t offset
-     *   Stack: cond => cond
+     *   Operands: int32_t forwardOffset
+     *   Stack: val => val
      */ \
     MACRO(JSOP_COALESCE, "coalesce", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING) \
-    /*
-     * Pops the top two values on the stack as 'val' and 'cond'. If 'cond' is
-     * 'true', jumps to a 32-bit offset from the current bytecode, re-pushes
-     * 'val' onto the stack if 'false'.
+     /*
+     * Like `JSOP_IFNE` ("jump if true"), but if the branch is taken,
+     * pop and discard an additional stack value.
+     *
+     * This is used to implement `switch` statements when the
+     * `JSOP_TABLESWITCH` optimization is not possible. The switch statement
+     *
+     *     switch (expr) {
+     *         case A: stmt1;
+     *         case B: stmt2;
+     *     }
+     *
+     * compiles to this bytecode:
+     *
+     *         # dispatch code - evaluate expr, check it against each `case`,
+     *         # jump to the right place in the body or to the end.
+     *         <expr>
+     *         dup; <A>; stricteq; case L1; jumptarget
+     *         dup; <B>; stricteq; case L2; jumptarget
+     *         default LE
+     *
+     *         # body code
+     *     L1: jumptarget; <stmt1>
+     *     L2: jumptarget; <stmt2>
+     *     LE: jumptarget
+     *
+     * This opcode is weird: it's the only one whose ndefs varies depending on
+     * which way a conditional branch goes. We could implement switch
+     * statements using `JSOP_IFNE` and `JSOP_POP`, but that would also be
+     * awkward--putting the `POP` inside the `switch` body would complicate
+     * fallthrough.
      *
      *   Category: Statements
      *   Type: Switch Statement
-     *   Operands: int32_t offset
-     *   Stack: val, cond => val(if !cond)
+     *   Operands: int32_t forwardOffset
+     *   Stack: val, cond => val (if !cond)
      */ \
     MACRO(JSOP_CASE, "case", NULL, 5, 2, 1, JOF_JUMP) \
     /*
-     * This appears after all cases in a JSOP_CONDSWITCH, whether there is a
-     * 'default:' label in the switch statement or not. Pop the switch operand
-     * from the stack and jump to a 32-bit offset from the current bytecode.
-     * offset from the current bytecode.
+     * Like `JSOP_GOTO`, but pop and discard an additional stack value.
+     *
+     * This appears after all cases for a non-optimized `switch` statement. If
+     * there's a `default:` label, it jumps to that point in the body;
+     * otherwise it jumps to the next statement.
      *
      *   Category: Statements
      *   Type: Switch Statement
-     *   Operands: int32_t offset
+     *   Operands: int32_t forwardOffset
      *   Stack: lval =>
      */ \
     MACRO(JSOP_DEFAULT, "default", NULL, 5, 1, 0, JOF_JUMP) \
     /*
-     * Pops the top of stack value as 'i', if 'low <= i <= high',
-     * jumps to a 32-bit offset: offset is stored in the script's resumeOffsets
-     *                           list at index 'firstResumeIndex + (i - low)'
-     * jumps to a 32-bit offset: 'len' from the current bytecode otherwise
+     * Optimized switch-statement dispatch, used when all `case` labels are
+     * small integer constants.
+     *
+     * If `low <= i <= high`, jump to the instruction at the offset given by
+     * `script->resumeOffsets()[firstResumeIndex + i - low]`, in bytes from the
+     * start of the current script's bytecode. Otherwise, jump to the
+     * instruction at `defaultOffset` from the current instruction. All of
+     * these offsets must be in range for the current script and must point to
+     * `JSOP_JUMPTARGET` instructions.
+     *
+     * The following inequalities must hold: `low <= high` and
+     * `firstResumeIndex + high - low < resumeOffsets().size()`.
      *
      *   Category: Statements
      *   Type: Switch Statement
-     *   Operands: int32_t len, int32_t low, int32_t high,
+     *   Operands: int32_t defaultOffset, int32_t low, int32_t high,
      *             uint24_t firstResumeIndex
      *   Stack: i =>
-     *   len: len
      */ \
     MACRO(JSOP_TABLESWITCH, "tableswitch", NULL, 16, 1, 0, JOF_TABLESWITCH|JOF_DETECTING) \
     /*
