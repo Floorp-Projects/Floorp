@@ -7264,7 +7264,7 @@
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["mconley@mozilla.com", "astevenson@mozilla.com"],
     "bug_numbers": [1560590],
-    "expires_in_version": "74",
+    "expires_in_version": "78",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 100,

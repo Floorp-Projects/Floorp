@@ -1021,7 +1021,7 @@ pictureinpicture:
     description: >
       The number of times a Picture-in-Picture window was opened, per trigger
       mechanism (e.g.: the video toggle, the context menu).
-    expires: "74"
+    expires: "78"
     kind: uint
     keyed: true
     notification_emails:
@@ -1043,7 +1043,7 @@ pictureinpicture:
       The number of times a Picture-in-Picture window was closed, per trigger
       mechanism (e.g.: the close button, the unpip button, originating tab going away,
       process shutdown, etc).
-    expires: "74"
+    expires: "78"
     kind: uint
     keyed: true
     notification_emails:
