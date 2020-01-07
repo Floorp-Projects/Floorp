@@ -2404,12 +2404,12 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_StyleRule_SetSelectorText(
+pub extern "C" fn Servo_StyleRule_SetSelectorText(
     sheet: &RawServoStyleSheetContents,
     rule: &RawServoStyleRule,
-    text: *const nsAString,
+    text: &nsAString,
 ) -> bool {
-    let value_str = (*text).to_string();
+    let value_str = text.to_string();
 
     write_locked_arc(rule, |rule: &mut StyleRule| {
         use style::selector_parser::SelectorParser;
@@ -4066,7 +4066,7 @@ pub extern "C" fn Servo_ParseProperty(
 
 #[no_mangle]
 pub extern "C" fn Servo_ParseEasing(
-    easing: *const nsAString,
+    easing: &nsAString,
     data: *mut URLExtraData,
     output: &mut nsTimingFunction,
 ) -> bool {
@@ -4083,7 +4083,7 @@ pub extern "C" fn Servo_ParseEasing(
         None,
         None,
     );
-    let easing = unsafe { (*easing).to_string() };
+    let easing = easing.to_string();
     let mut input = ParserInput::new(&easing);
     let mut parser = Parser::new(&mut input);
     let result =
@@ -6514,13 +6514,13 @@ pub extern "C" fn Servo_IntersectionObserverRootMargin_ToString(
 
 #[no_mangle]
 pub extern "C" fn Servo_ParseTransformIntoMatrix(
-    value: *const nsAString,
-    contain_3d: *mut bool,
-    result: *mut structs::Matrix4x4Components,
+    value: &nsAString,
+    contain_3d: &mut bool,
+    result: &mut structs::Matrix4x4Components,
 ) -> bool {
     use style::properties::longhands::transform;
 
-    let string = unsafe { (*value).to_string() };
+    let string = value.to_string();
     let mut input = ParserInput::new(&string);
     let mut parser = Parser::new(&mut input);
     let context = ParserContext::new(
@@ -6543,8 +6543,6 @@ pub extern "C" fn Servo_ParseTransformIntoMatrix(
         Err(..) => return false,
     };
 
-    let result = unsafe { result.as_mut() }.expect("not a valid matrix");
-    let contain_3d = unsafe { contain_3d.as_mut() }.expect("not a valid bool");
     *result = m.to_row_major_array();
     *contain_3d = is_3d;
     true
@@ -6552,12 +6550,12 @@ pub extern "C" fn Servo_ParseTransformIntoMatrix(
 
 #[no_mangle]
 pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
-    value: *const nsAString,
+    value: &nsAString,
     data: *mut URLExtraData,
-    family: *mut structs::RefPtr<structs::SharedFontList>,
-    style: *mut ComputedFontStyleDescriptor,
-    stretch: *mut f32,
-    weight: *mut f32,
+    family: &mut structs::RefPtr<structs::SharedFontList>,
+    style: &mut ComputedFontStyleDescriptor,
+    stretch: &mut f32,
+    weight: &mut f32,
 ) -> bool {
     use style::properties::shorthands::font;
     use style::values::computed::font::FontFamilyList;
@@ -6567,7 +6565,7 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
         FontFamily, FontStretch, FontStyle, FontWeight, SpecifiedFontStyle,
     };
 
-    let string = (*value).to_string();
+    let string = value.to_string();
     let mut input = ParserInput::new(&string);
     let mut parser = Parser::new(&mut input);
     let url_data = UrlExtraData::from_ptr_ref(&data);
@@ -6587,7 +6585,6 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
     };
 
     // The system font is not acceptable, so we return false.
-    let family = &mut *family;
     match font.font_family {
         FontFamily::Values(FontFamilyList::SharedFontList(list)) => family.set_move(list),
         FontFamily::Values(list) => family.set_move(list.shared_font_list().clone()),
@@ -6598,14 +6595,15 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
         FontStyle::Specified(ref s) => s,
         FontStyle::System(_) => return false,
     };
-    *style = ::std::mem::transmute(match *specified_font_style {
+
+    *style = match *specified_font_style {
         GenericFontStyle::Normal => ComputedFontStyleDescriptor::Normal,
         GenericFontStyle::Italic => ComputedFontStyleDescriptor::Italic,
         GenericFontStyle::Oblique(ref angle) => {
             let angle = SpecifiedFontStyle::compute_angle_degrees(angle);
             ComputedFontStyleDescriptor::Oblique(angle, angle)
         },
-    });
+    };
 
     *stretch = match font.font_stretch {
         FontStretch::Keyword(ref k) => k.compute().0,
