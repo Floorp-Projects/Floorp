@@ -19,13 +19,17 @@ const val MAX_FAILURE_REASON_LENGTH = 100
 /**
  * Contains functionality necessary to process instances of [SyncTelemetryPing].
  */
+@Suppress("LargeClass")
 object SyncTelemetry {
     /**
      * Processes a history-related ping information from the [ping].
      * @return 'false' if global error was encountered, 'true' otherwise.
      */
     @Suppress("ComplexMethod", "NestedBlockDepth")
-    fun processHistoryPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.historySync.submit() }): Boolean {
+    fun processHistoryPing(
+        ping: SyncTelemetryPing,
+        sendPing: () -> Unit = { Pings.historySync.submit() }
+    ): Boolean {
         ping.syncs.forEach eachSync@{ sync ->
             sync.failureReason?.let {
                 recordFailureReason(it, HistorySync.failureReason)
@@ -77,7 +81,10 @@ object SyncTelemetry {
      * @return 'false' if global error was encountered, 'true' otherwise.
      */
     @Suppress("ComplexMethod", "NestedBlockDepth")
-    fun processPasswordsPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.loginsSync.submit() }): Boolean {
+    fun processPasswordsPing(
+        ping: SyncTelemetryPing,
+        sendPing: () -> Unit = { Pings.loginsSync.submit() }
+    ): Boolean {
         ping.syncs.forEach eachSync@{ sync ->
             sync.failureReason?.let {
                 recordFailureReason(it, LoginsSync.failureReason)
@@ -129,7 +136,10 @@ object SyncTelemetry {
      * @return 'false' if global error was encountered, 'true' otherwise.
      */
     @Suppress("ComplexMethod", "NestedBlockDepth")
-    fun processBookmarksPing(ping: SyncTelemetryPing, sendPing: () -> Unit = { Pings.bookmarksSync.submit() }): Boolean {
+    fun processBookmarksPing(
+        ping: SyncTelemetryPing,
+        sendPing: () -> Unit = { Pings.bookmarksSync.submit() }
+    ): Boolean {
         // This function is almost identical to `recordHistoryPing`, with additional
         // reporting for validation problems. Unfortunately, since the
         // `BookmarksSync` and `HistorySync` metrics are two separate objects, we
