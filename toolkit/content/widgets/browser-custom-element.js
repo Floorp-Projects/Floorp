@@ -1278,10 +1278,9 @@
           );
         }
 
-        let rc_js = "resource://gre/modules/RemoteController.js";
-        let scope = {};
-        Services.scriptloader.loadSubScript(rc_js, scope);
-        let RemoteController = scope.RemoteController;
+        const { RemoteController } = ChromeUtils.import(
+          "resource://gre/modules/RemoteController.jsm"
+        );
         this._controller = new RemoteController(this);
         this.controllers.appendController(this._controller);
       }
