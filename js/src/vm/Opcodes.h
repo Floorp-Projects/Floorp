@@ -1555,29 +1555,55 @@
      */ \
     MACRO(JSOP_REGEXP, "regexp", NULL, 5, 0, 1, JOF_REGEXP) \
     /*
-     * Pushes a closure for a named or anonymous function expression onto the
-     * stack.
+     * Push a function object.
+     *
+     * This clones the function unless it's a singleton; see
+     * `CanReuseFunctionForClone`. The new function inherits the current
+     * environment chain.
+     *
+     * Used to create most JS functions. Notable exceptions are arrow functions
+     * and derived or default class constructors.
+     *
+     * The function indicated by `funcIndex` must be a non-arrow function.
+     *
+     * Implements: [InstantiateFunctionObject][1], [Evaluation for
+     * *FunctionExpression*][2], and so on.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject
+     * [2]: https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation
      *
      *   Category: Statements
      *   Type: Function
      *   Operands: uint32_t funcIndex
-     *   Stack: => obj
+     *   Stack: => fn
      */ \
     MACRO(JSOP_LAMBDA, "lambda", NULL, 5, 0, 1, JOF_OBJECT) \
     /*
-     * Pops the top of stack value as 'new.target', pushes an arrow function
-     * with lexical 'new.target' onto the stack.
+     * Push a new arrow function.
+     *
+     * `newTarget` matters only if the arrow function uses the expression
+     * `new.target`. It should be the current value of `new.target`, so that
+     * the arrow function inherits `new.target` from the enclosing scope. (If
+     * `new.target` is illegal here, the value doesn't matter; use `null`.)
+     *
+     * The function indicated by `funcIndex` must be an arrow function.
      *
      *   Category: Statements
      *   Type: Function
      *   Operands: uint32_t funcIndex
-     *   Stack: new.target => obj
+     *   Stack: newTarget => arrowFn
      */ \
     MACRO(JSOP_LAMBDA_ARROW, "lambda_arrow", NULL, 5, 1, 1, JOF_OBJECT) \
     /*
-     * Pops the top two values on the stack as 'name' and 'fun', defines the
-     * name of 'fun' to 'name' with prefix if any, and pushes 'fun' back onto
-     * the stack.
+     * Set the name of a function.
+     *
+     * `fun` must be a function object. `name` must be a string, Int32 value,
+     * or symbol (like the result of `JSOP_TOID`).
+     *
+     * Implements: [SetFunctionName][1], used e.g. to name methods with
+     * computed property names.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-setfunctionname
      *
      *   Category: Statements
      *   Type: Function
@@ -1588,9 +1614,6 @@
     /*
      * Initialize the home object for functions with super bindings.
      *
-     * This opcode takes the function and the object to be the home object,
-     * does the set, and leaves the function on the stack.
-     *
      *   Category: Literals
      *   Type: Object
      *   Operands:
@@ -1598,17 +1621,31 @@
      */ \
     MACRO(JSOP_INITHOMEOBJECT, "inithomeobject", NULL, 1, 2, 1, JOF_BYTE) \
     /*
-     * Ensures the result of a class's heritage expression is either null or a
-     * constructor.
+     * Throw a TypeError if `baseClass` isn't either `null` or a constructor.
+     *
+     * Implements: [ClassDefinitionEvaluation][1] step 6.f.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
      *
      *   Category: Literals
      *   Type: Object
      *   Operands:
-     *   Stack: heritage => heritage
+     *   Stack: baseClass => baseClass
      */ \
     MACRO(JSOP_CHECKCLASSHERITAGE, "checkclassheritage", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Pushes a clone of a function with a given [[Prototype]] onto the stack.
+     * Like `JSOP_LAMBDA`, but using `proto` as the new function's
+     * [[Prototype]] (or %FunctionPrototype% if `proto` is `null`).
+     *
+     * `proto` must be either a constructor or `null`. We use
+     * `JSOP_CHECKCLASSHERITAGE` to check.
+     *
+     * This is used to create the constructor for a derived class.
+     *
+     * Implements: [ClassDefinitionEvaluation][1] steps 6.e.ii, 6.g.iii, and
+     * 12 for derived classes.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
      *
      *   Category: Statements
      *   Type: Function
@@ -1617,10 +1654,15 @@
      */ \
     MACRO(JSOP_FUNWITHPROTO, "funwithproto", NULL, 5, 1, 1, JOF_OBJECT) \
     /*
-     * Push a default constructor for a base class literal.
+     * Create and push a default constructor for a base class.
      *
-     * The sourceStart/sourceEnd offsets are the start/end offsets of the class
-     * definition in the source buffer and are used for toString().
+     * A default constructor behaves like `constructor() {}`.
+     *
+     * Implements: [ClassDefinitionEvaluation for *ClassTail*][1], steps
+     * 10.b. and 12-17.
+     *
+     * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
+     * class definition in the source buffer and are used for `toString()`.
      *
      *   Category: Literals
      *   Type: Class
@@ -1629,10 +1671,16 @@
      */ \
     MACRO(JSOP_CLASSCONSTRUCTOR, "classconstructor", NULL, 13, 0, 1, JOF_CLASS_CTOR) \
     /*
-     * Push a default constructor for a derived class literal.
+     * Create and push a default constructor for a derived class.
      *
-     * The sourceStart/sourceEnd offsets are the start/end offsets of the class
-     * definition in the source buffer and are used for toString().
+     * A default derived-class constructor behaves like
+     * `constructor(...args) { super(...args); }`.
+     *
+     * Implements: [ClassDefinitionEvaluation for *ClassTail*][1], steps
+     * 10.a. and 12-17.
+     *
+     * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
+     * class definition in the source buffer and are used for `toString()`.
      *
      *   Category: Literals
      *   Type: Class
@@ -1650,8 +1698,27 @@
      */ \
     MACRO(JSOP_BUILTINPROTO, "builtinproto", NULL, 2, 0, 1, JOF_UINT8) \
     /*
-     * Invokes 'callee' with 'this' and 'args', pushes return value onto the
-     * stack.
+     * Invoke `callee` with `this` and `args`, and push the return value. Throw
+     * a TypeError if `callee` isn't a function.
+     *
+     * `JSOP_CALLITER` is used for implicit calls to @@iterator methods, to
+     * ensure error messages are formatted with `JSMSG_NOT_ITERABLE` ("x is not
+     * iterable") rather than `JSMSG_NOT_FUNCTION` ("x[Symbol.iterator] is not
+     * a function"). The `argc` operand must be 0 for this variation.
+     *
+     * `JSOP_FUNAPPLY` hints to the VM that this is likely a call to the
+     * builtin method `Function.prototype.apply`, an easy optimization target.
+     *
+     * `JSOP_FUNCALL` similarly hints to the VM that the callee is likely
+     * `Function.prototype.call`.
+     *
+     * `JSOP_CALL_IGNORES_RV` hints to the VM that the return value is ignored.
+     * This allows alternate faster implementations to be used that avoid
+     * unnecesary allocations.
+     *
+     * Implements: [EvaluateCall][1] steps 4, 5, and 7.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-evaluatecall
      *
      *   Category: Statements
      *   Type: Function
@@ -1660,66 +1727,19 @@
      *   nuses: (argc+2)
      */ \
     MACRO(JSOP_CALL, "call", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    /*
-     * Like JSOP_CALL, but used as part of for-of and destructuring bytecode to
-     * provide better error messages.
-     *
-     *   Category: Statements
-     *   Type: Function
-     *   Operands: uint16_t argc (must be 0)
-     *   Stack: callee, this => rval
-     *   nuses: 2
-     */ \
     MACRO(JSOP_CALLITER, "calliter", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    /*
-     * Invokes 'callee' with 'this' and 'args', pushes return value onto the
-     * stack.
-     *
-     * This is for 'f.apply'.
-     *
-     *   Category: Statements
-     *   Type: Function
-     *   Operands: uint16_t argc
-     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
-     *   nuses: (argc+2)
-     */ \
     MACRO(JSOP_FUNAPPLY, "funapply", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    /*
-     * Invokes 'callee' with 'this' and 'args', pushes return value onto the
-     * stack.
-     *
-     * If 'callee' is determined to be the canonical 'Function.prototype.call'
-     * function, then this operation is optimized to directly call 'callee'
-     * with 'args[0]' as 'this', and the remaining arguments as formal args to
-     * 'callee'.
-     *
-     * Like JSOP_FUNAPPLY but for 'f.call' instead of 'f.apply'.
-     *
-     *   Category: Statements
-     *   Type: Function
-     *   Operands: uint16_t argc
-     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
-     *   nuses: (argc+2)
-     */ \
     MACRO(JSOP_FUNCALL, "funcall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    /*
-     * Like JSOP_CALL, but tells the function that the return value is ignored.
-     * stack.
-     *
-     *   Category: Statements
-     *   Type: Function
-     *   Operands: uint16_t argc
-     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
-     *   nuses: (argc+2)
-     */ \
     MACRO(JSOP_CALL_IGNORES_RV, "call-ignores-rv", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
-     * spreadcall variant of JSOP_CALL.
+     * Like `JSOP_CALL`, but the arguments are provided in an array rather than
+     * a span of stack slots. Used to implement spread-call syntax:
+     * `f(...args)`.
      *
-     * Invokes 'callee' with 'this' and 'args', pushes the return value onto
-     * the stack.
-     *
-     * 'args' is an Array object which contains actual arguments.
+     * `args` must be an Array object containing the actual arguments. The
+     * array must be packed (dense and free of holes; see IsPackedArray).
+     * This can be ensured by creating the array with `JSOP_NEWARRAY` and
+     * populating it using `JSOP_INITELEM_ARRAY`.
      *
      *   Category: Statements
      *   Type: Function
@@ -1728,9 +1748,15 @@
      */ \
     MACRO(JSOP_SPREADCALL, "spreadcall", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
-     * Pops the top stack value, pushes the value and a boolean value that
-     * indicates whether the spread operation for the value can be optimized in
-     * spread call.
+     * Push true if `arr` is an array object that can be passed directly as the
+     * `args` argument to `JSOP_SPREADCALL`.
+     *
+     * This instruction and the branch around the iterator loop are emitted
+     * only when `arr` is itself a rest parameter, as in `(...arr) =>
+     * f(...arr)`, a strong hint that it's a packed Array whose prototype is
+     * `Array.prototype`.
+     *
+     * See `js::OptimizeSpreadCall`.
      *
      *   Category: Statements
      *   Type: Function
@@ -1739,10 +1765,22 @@
      */ \
     MACRO(JSOP_OPTIMIZE_SPREADCALL, "optimize-spreadcall", NULL, 1, 1, 2, JOF_BYTE) \
     /*
-     * Invokes 'eval' with 'args' and pushes return value onto the stack.
+     * Perform a direct eval in the current environment if `callee` is the
+     * builtin `eval` function, otherwise follow same behaviour as `JSOP_CALL`.
      *
-     * If 'eval' in global scope is not original one, invokes the function with
-     * 'this' and 'args', and pushes return value onto the stack.
+     * All direct evals use one of the JSOP_*EVAL operations here and these
+     * opcodes are only used when the syntactic conditions for a direct eval
+     * are met. If the builtin `eval` function is called though other means, it
+     * becomes an indirect eval.
+     *
+     * Direct eval causes all bindings in *enclosing* non-global scopes to be
+     * marked "aliased". The optimization that puts bindings in stack slots has
+     * to prove that the bindings won't need to be captured by closures or
+     * accessed using `JSOP_{GET,BIND,SET,DEL}NAME` instructions. Direct eval
+     * makes that analysis impossible.
+     *
+     * Implements: [Function Call Evaluation][1], steps 5-7 and 9, when the
+     * syntactic critera for direct eval in step 6 are all met.
      *
      *   Category: Statements
      *   Type: Function
@@ -1752,12 +1790,9 @@
      */ \
     MACRO(JSOP_EVAL, "eval", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * spreadcall variant of JSOP_EVAL
+     * Spread-call variant of `JSOP_EVAL`.
      *
-     * Invokes 'eval' with 'args' and pushes the return value onto the stack.
-     *
-     * If 'eval' in global scope is not original one, invokes the function with
-     * 'this' and 'args', and pushes return value onto the stack.
+     * See `JSOP_SPREADCALL` for restrictions on `args`.
      *
      *   Category: Statements
      *   Type: Function
@@ -1766,25 +1801,19 @@
      */ \
     MACRO(JSOP_SPREADEVAL, "spreadeval", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Invokes 'eval' with 'args' and pushes return value onto the stack.
-     *
-     * If 'eval' in global scope is not original one, invokes the function with
-     * 'this' and 'args', and pushes return value onto the stack.
+     * Like `JSOP_EVAL`, but for strict mode code.
      *
      *   Category: Statements
      *   Type: Function
      *   Operands: uint16_t argc
-     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
+     *   Stack: evalFn, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
     MACRO(JSOP_STRICTEVAL, "strict-eval", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
     /*
-     * spreadcall variant of JSOP_EVAL
+     * Spread-call variant of `JSOP_STRICTEVAL`.
      *
-     * Invokes 'eval' with 'args' and pushes the return value onto the stack.
-     *
-     * If 'eval' in global scope is not original one, invokes the function with
-     * 'this' and 'args', and pushes return value onto the stack.
+     * See `JSOP_SPREADCALL` for restrictions on `args`.
      *
      *   Category: Statements
      *   Type: Function
@@ -1793,8 +1822,21 @@
      */ \
     MACRO(JSOP_STRICTSPREADEVAL, "strict-spreadeval", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
     /*
-     * Pushes the implicit 'this' value for calls to the associated name onto
-     * the stack.
+     * Push the implicit `this` value for an unqualified function call, like
+     * `foo()`. `nameIndex` gives the name of the function we're calling.
+     *
+     * This walks the run-time environment chain looking for the environment
+     * record that contains the function. If the name definitely refers to a
+     * local variable or lexical binding, use `JSOP_UNDEFINED` instead; it's
+     * equivalent and much faster. If the name definitely isn't bound in any
+     * relevant local scope, and we're not in a `with` scope, use
+     * `JSOP_GIMPLICITTHIS`.
+     *
+     * Implements: [EvaluateCall][1] step 1.b. But not entirely correctly.
+     * See [bug 1166408][2].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-evaluatecall
+     * [2]: https://bugzilla.mozilla.org/show_bug.cgi?id=1166408
      *
      *   Category: Variables and Scopes
      *   Type: This
@@ -1803,15 +1845,19 @@
      */ \
     MACRO(JSOP_IMPLICITTHIS, "implicitthis", "", 5, 0, 1, JOF_ATOM) \
     /*
-     * Pushes the implicit 'this' value for calls to the associated name onto
-     * the stack; only used when the implicit this might be derived from a
-     * non-syntactic scope (instead of the global itself).
+     * Push the implicit `this` value for an unqualified function call, like
+     * `foo()`. `nameIndex` gives the name of the function we're calling.
+     *
+     * This almost always pushes `undefined`. The exception is when it executes
+     * in a non-syntactic scope that has a binding for the given name.
+     *
+     * This opcode must not be used in a `with` scope.
      *
      * Note that code evaluated via the Debugger API uses DebugEnvironmentProxy
      * objects on its scope chain, which are non-syntactic environments that
      * refer to syntactic environments. As a result, the binding we want may be
      * held by a syntactic environments such as CallObject or
-     * VarEnvrionmentObject.
+     * VarEnvironmentObject.
      *
      *   Category: Variables and Scopes
      *   Type: This
@@ -1836,11 +1882,14 @@
      *   Category: Literals
      *   Type: Object
      *   Operands: uint32_t objectIndex
-     *   Stack: => obj
+     *   Stack: => callSiteObj
      */ \
     MACRO(JSOP_CALLSITEOBJ, "callsiteobj", NULL, 5, 0, 1, JOF_OBJECT) \
     /*
-     * Pushes 'JS_IS_CONSTRUCTING'
+     * Push `MagicValue(JS_IS_CONSTRUCTING)`.
+     *
+     * This magic value is a required argument to the `JSOP_NEW` and
+     * `JSOP_SUPERCALL` instructions and must not be used any other way.
      *
      *   Category: Literals
      *   Type: Constants
@@ -1849,31 +1898,55 @@
      */ \
     MACRO(JSOP_IS_CONSTRUCTING, "is-constructing", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Invokes 'callee' as a constructor with 'this' and 'args', pushes return
-     * value onto the stack.
+     * Invoke `callee` as a constructor with `args` and `newTarget`, and push
+     * the return value. Throw a TypeError if `callee` isn't a constructor.
+     *
+     * `isConstructing` must be the value pushed by `JSOP_IS_CONSTRUCTING`.
+     *
+     * `JSOP_SUPERCALL` behaves exactly like `JSOP_NEW`, but is used for
+     * *SuperCall* expressions, to allow JITs to distinguish them from `new`
+     * expressions.
+     *
+     * Implements: [EvaluateConstruct][1] steps 7 and 8.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-evaluatenew
      *
      *   Category: Statements
      *   Type: Function
      *   Operands: uint16_t argc
-     *   Stack: callee, this, args[0], ..., args[argc-1], newTarget => rval
+     *   Stack: callee, isConstructing, args[0], ..., args[argc-1], newTarget => rval
      *   nuses: (argc+3)
      */ \
     MACRO(JSOP_NEW, "new", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC|JOF_IC) \
+    MACRO(JSOP_SUPERCALL, "supercall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
-     * spreadcall variant of JSOP_NEW
+     * Spread-call variant of `JSOP_NEW`.
      *
-     * Invokes 'callee' as a constructor with 'this' and 'args', pushes the
-     * return value onto the stack.
+     * Invokes `callee` as a constructor with `args` and `newTarget`, and
+     * pushes the return value onto the stack.
+     *
+     * `isConstructing` must be the value pushed by `JSOP_IS_CONSTRUCTING`.
+     * See `JSOP_SPREADCALL` for restrictions on `args`.
+     *
+     * `JSOP_SPREADSUPERCALL` behaves exactly like `JSOP_SPREADNEW`, but is
+     * used for *SuperCall* expressions.
      *
      *   Category: Statements
      *   Type: Function
      *   Operands:
-     *   Stack: callee, this, args, newTarget => rval
+     *   Stack: callee, isConstructing, args, newTarget => rval
      */ \
     MACRO(JSOP_SPREADNEW, "spreadnew", NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    MACRO(JSOP_SPREADSUPERCALL, "spreadsupercall", NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
-     * Push the function to invoke with |super()|. This is the prototype of the
-     * function passed in as |callee|.
+     * Push the prototype of `callee` in preparation for calling `super()`.
+     * Throw a TypeError if that value is not a constructor.
+     *
+     * `callee` must be a derived class constructor.
+     *
+     * Implements: [GetSuperConstructor][1], steps 4-7.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-getsuperconstructor
      *
      *   Category: Variables and Scopes
      *   Type: Super
@@ -1882,35 +1955,18 @@
      */ \
     MACRO(JSOP_SUPERFUN, "superfun", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Behaves exactly like JSOP_NEW, but allows JITs to distinguish the two
-     * cases.
+     * Throw a ReferenceError if `thisval` is not
+     * `MagicValue(JS_UNINITIALIZED_LEXICAL)`. Used in derived class
+     * constructors to prohibit calling `super` more than once.
      *
-     *   Category: Statements
-     *   Type: Function
-     *   Operands: uint16_t argc
-     *   Stack: callee, this, args[0], ..., args[argc-1], newTarget => rval
-     *   nuses: (argc+3)
-     */ \
-    MACRO(JSOP_SUPERCALL, "supercall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    /*
-     * spreadcall variant of JSOP_SUPERCALL.
+     * Implements: [BindThisValue][1], step 3.
      *
-     * Behaves exactly like JSOP_SPREADNEW.
-     *
-     *   Category: Statements
-     *   Type: Function
-     *   Operands:
-     *   Stack: callee, this, args, newTarget => rval
-     */ \
-    MACRO(JSOP_SPREADSUPERCALL, "spreadsupercall", NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    /*
-     * Throw an exception if the value on top of the stack is not the TDZ
-     * MagicValue. Used in derived class constructors.
+     * [1]: https://tc39.es/ecma262/#sec-bindthisvalue
      *
      *   Category: Variables and Scopes
      *   Type: This
      *   Operands:
-     *   Stack: this => this
+     *   Stack: thisval => thisval
      */ \
     MACRO(JSOP_CHECKTHISREINIT, "checkthisreinit", NULL, 1, 1, 1, JOF_BYTE) \
     /*
