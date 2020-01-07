@@ -8,11 +8,10 @@ import sys
 
 import requests
 
-from ..tasks import generate_tasks
 from ..cli import BaseTryParser
 from ..push import push_to_try
 
-from taskgraph.util.taskgraph import find_existing_tasks_from_previous_kinds
+from taskgraph.util.taskgraph import find_existing_tasks
 from taskgraph.util.taskcluster import get_artifact, get_session
 from taskgraph.parameters import Parameters
 
@@ -76,14 +75,6 @@ def get_releases(branch):
     return response.json()
 
 
-def find_existing_tasks(graph_id):
-
-    full_task_graph = generate_tasks(full=True)
-    return find_existing_tasks_from_previous_kinds(
-        full_task_graph, [graph_id], rebuild_kinds=[]
-    )
-
-
 def get_ship_phase_graph(release):
     for phase in release["phases"]:
         if phase["name"] in ("ship_firefox",):
@@ -120,7 +111,7 @@ def run(
 
     release = get_releases(RELEASE_TO_BRANCH[release_type])[-1]
     ship_graph = get_ship_phase_graph(release)
-    existing_tasks = find_existing_tasks(ship_graph)
+    existing_tasks = find_existing_tasks([ship_graph])
 
     ship_parameters = Parameters(
         strict=False, **get_artifact(ship_graph, "public/parameters.yml")
