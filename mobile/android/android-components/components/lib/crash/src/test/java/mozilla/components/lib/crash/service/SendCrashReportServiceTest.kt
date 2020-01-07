@@ -9,6 +9,7 @@ import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
@@ -77,6 +78,6 @@ class SendCrashReportServiceTest {
         originalCrash.fillIn(intent)
 
         service?.onStartCommand(intent, 0, 0)
-        verify(crashReporter).submitReport(eq(originalCrash))
+        verify(crashReporter).submitReport(eq(originalCrash), any())
     }
 }
