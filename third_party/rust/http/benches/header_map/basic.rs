@@ -2,13 +2,13 @@ macro_rules! bench {
     ($name:ident($map:ident, $b:ident) $body:expr) => {
         mod $name {
             #[allow(unused_imports)]
-            use test::{self, Bencher};
-            use seahash::SeaHasher;
-            use fnv::FnvHasher;
-            use std::hash::BuildHasherDefault;
-            use http::header::*;
-            #[allow(unused_imports)]
             use super::custom_hdr;
+            use fnv::FnvHasher;
+            use http::header::*;
+            use seahash::SeaHasher;
+            use std::hash::BuildHasherDefault;
+            #[allow(unused_imports)]
+            use test::{self, Bencher};
 
             #[bench]
             fn header_map($b: &mut Bencher) {
@@ -25,7 +25,7 @@ macro_rules! bench {
 
             #[bench]
             fn vec_map($b: &mut Bencher) {
-                use vec_map::VecMap;
+                use crate::vec_map::VecMap;
 
                 let $map = || VecMap::with_capacity(0);
                 $body
@@ -207,7 +207,6 @@ bench!(set_10_get_1_custom_short(new_map, b) {
         test::black_box(h.get(&hdrs[0]));
     })
 });
-
 
 bench!(set_10_get_1_custom_med(new_map, b) {
     let hdrs = super::med_custom_hdr(10);
@@ -474,38 +473,48 @@ bench!(hn_hdrs_set_11_get_with_miss(new_map, b) {
 use http::header::*;
 
 fn custom_hdr(n: usize) -> Vec<HeaderName> {
-    (0..n).map(|i| {
-        let s = format!("x-custom-{}", i);
-        s.parse().unwrap()
-    }).collect()
+    (0..n)
+        .map(|i| {
+            let s = format!("x-custom-{}", i);
+            s.parse().unwrap()
+        })
+        .collect()
 }
 
 fn med_custom_hdr(n: usize) -> Vec<HeaderName> {
-    (0..n).map(|i| {
-        let s = format!("content-length-{}", i);
-        s.parse().unwrap()
-    }).collect()
+    (0..n)
+        .map(|i| {
+            let s = format!("content-length-{}", i);
+            s.parse().unwrap()
+        })
+        .collect()
 }
 
 fn long_custom_hdr(n: usize) -> Vec<HeaderName> {
-    (0..n).map(|i| {
-        let s = format!("access-control-allow-headers-{}", i);
-        s.parse().unwrap()
-    }).collect()
+    (0..n)
+        .map(|i| {
+            let s = format!("access-control-allow-headers-{}", i);
+            s.parse().unwrap()
+        })
+        .collect()
 }
 
 fn very_long_custom_hdr(n: usize) -> Vec<HeaderName> {
-    (0..n).map(|i| {
-        let s = format!("access-control-allow-access-control-allow-headers-{}", i);
-        s.parse().unwrap()
-    }).collect()
+    (0..n)
+        .map(|i| {
+            let s = format!("access-control-allow-access-control-allow-headers-{}", i);
+            s.parse().unwrap()
+        })
+        .collect()
 }
 
 fn custom_std(n: usize) -> Vec<HeaderName> {
-    (0..n).map(|i| {
-        let s = format!("{}-{}", STD[i % STD.len()].as_str(), i);
-        s.parse().unwrap()
-    }).collect()
+    (0..n)
+        .map(|i| {
+            let s = format!("{}-{}", STD[i % STD.len()].as_str(), i);
+            s.parse().unwrap()
+        })
+        .collect()
 }
 
 const STD: &'static [HeaderName] = &[

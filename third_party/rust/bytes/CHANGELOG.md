@@ -1,3 +1,72 @@
+# 0.5.3 (December 12, 2019)
+
+### Added
+- `must_use` attributes to `split`, `split_off`, and `split_to` methods (#337).
+
+### Fix
+- Potential freeing of a null pointer in `Bytes` when constructed with an empty `Vec<u8>` (#341, #342).
+- Calling `Bytes::truncate` with a size large than the length will no longer clear the `Bytes` (#333).
+
+# 0.5.2 (November 27, 2019)
+
+### Added
+- `Limit` methods `into_inner`, `get_ref`, `get_mut`, `limit`, and `set_limit` (#325).
+
+# 0.5.1 (November 25, 2019)
+
+### Fix
+- Growth documentation for `BytesMut` (#321)
+
+# 0.5.0 (November 25, 2019)
+
+### Fix
+- Potential overflow in `copy_to_slice`
+
+### Changed
+- Increased minimum supported Rust version to 1.39.
+- `Bytes` is now a "trait object", allowing for custom allocation strategies (#298)
+- `BytesMut` implicitly grows internal storage. `remaining_mut()` returns
+  `usize::MAX` (#316).
+- `BufMut::bytes_mut` returns `&mut [MaybeUninit<u8>]` to reflect the unknown
+  initialization state (#305).
+- `Buf` / `BufMut` implementations for `&[u8]` and `&mut [u8]`
+  respectively (#261).
+- Move `Buf` / `BufMut` "extra" functions to an extension trait (#306).
+- `BufMutExt::limit` (#309).
+- `Bytes::slice` takes a `RangeBounds` argument (#265).
+- `Bytes::from_static` is now a `const fn` (#311).
+- A multitude of smaller performance optimizations.
+
+### Added
+- `no_std` support (#281).
+- `get_*`, `put_*`, `get_*_le`, and `put_*le` accessors for handling byte order.
+- `BorrowMut` implementation for `BytesMut` (#185).
+
+### Removed
+- `IntoBuf` (#288).
+- `Buf` implementation for `&str` (#301).
+- `byteorder` dependency (#280).
+- `iovec` dependency, use `std::IoSlice` instead (#263).
+- optional `either` dependency (#315).
+- optional `i128` feature -- now available on stable. (#276).
+
+# 0.4.12 (March 6, 2019)
+
+### Added
+- Implement `FromIterator<&'a u8>` for `BytesMut`/`Bytes` (#244).
+- Implement `Buf` for `VecDeque` (#249).
+
+# 0.4.11 (November 17, 2018)
+
+* Use raw pointers for potentially racy loads (#233).
+* Implement `BufRead` for `buf::Reader` (#232).
+* Documentation tweaks (#234).
+
+# 0.4.10 (September 4, 2018)
+
+* impl `Buf` and `BufMut` for `Either` (#225).
+* Add `Bytes::slice_ref` (#208).
+
 # 0.4.9 (July 12, 2018)
 
 * Add 128 bit number support behind a feature flag (#209).

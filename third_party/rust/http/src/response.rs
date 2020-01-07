@@ -13,15 +13,15 @@
 //! use http::{Request, Response, StatusCode};
 //!
 //! fn respond_to(req: Request<()>) -> http::Result<Response<()>> {
-//!     let mut response = Response::builder();
-//!     response.header("Foo", "Bar")
-//!             .status(StatusCode::OK);
+//!     let mut builder = Response::builder()
+//!         .header("Foo", "Bar")
+//!         .status(StatusCode::OK);
 //!
 //!     if req.headers().contains_key("Another-Header") {
-//!         response.header("Another-Header", "Ack");
+//!         builder = builder.header("Another-Header", "Ack");
 //!     }
 //!
-//!     response.body(())
+//!     builder.body(())
 //! }
 //! ```
 //!
@@ -62,12 +62,13 @@
 //! ```
 
 use std::any::Any;
+use std::convert::TryFrom;
 use std::fmt;
 
-use {Error, Result, HttpTryFrom, Extensions};
-use header::{HeaderMap, HeaderName, HeaderValue};
-use status::StatusCode;
-use version::Version;
+use crate::header::{HeaderMap, HeaderName, HeaderValue};
+use crate::status::StatusCode;
+use crate::version::Version;
+use crate::{Extensions, Result};
 
 /// Represents an HTTP response
 ///
@@ -77,7 +78,7 @@ use version::Version;
 /// value that has been deserialized.
 ///
 /// Typically you'll work with responses on the client side as the result of
-/// sending a `Request` and on the server you'll be generating a `Request` to
+/// sending a `Request` and on the server you'll be generating a `Response` to
 /// send back to the client.
 ///
 /// # Examples
@@ -88,15 +89,15 @@ use version::Version;
 /// use http::{Request, Response, StatusCode};
 ///
 /// fn respond_to(req: Request<()>) -> http::Result<Response<()>> {
-///     let mut response = Response::builder();
-///     response.header("Foo", "Bar")
-///             .status(StatusCode::OK);
+///     let mut builder = Response::builder()
+///         .header("Foo", "Bar")
+///         .status(StatusCode::OK);
 ///
 ///     if req.headers().contains_key("Another-Header") {
-///         response.header("Another-Header", "Ack");
+///         builder = builder.header("Another-Header", "Ack");
 ///     }
 ///
-///     response.body(())
+///     builder.body(())
 /// }
 /// ```
 ///
@@ -206,8 +207,7 @@ pub struct Parts {
 /// builder-like pattern.
 #[derive(Debug)]
 pub struct Builder {
-    head: Option<Parts>,
-    err: Option<Error>,
+    inner: Result<Parts>,
 }
 
 impl Response<()> {
@@ -471,9 +471,13 @@ impl<T> Response<T> {
     /// ```
     #[inline]
     pub fn map<F, U>(self, f: F) -> Response<U>
-        where F: FnOnce(T) -> U
+    where
+        F: FnOnce(T) -> U,
     {
-        Response { body: f(self.body), head: self.head }
+        Response {
+            body: f(self.body),
+            head: self.head,
+        }
     }
 }
 
@@ -485,7 +489,7 @@ impl<T: Default> Default for Response<T> {
 }
 
 impl<T: fmt::Debug> fmt::Debug for Response<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Response")
             .field("status", &self.status())
             .field("version", &self.version())
@@ -499,7 +503,7 @@ impl<T: fmt::Debug> fmt::Debug for Response<T> {
 impl Parts {
     /// Creates a new default instance of `Parts`
     fn new() -> Parts {
-        Parts{
+        Parts {
             status: StatusCode::default(),
             version: Version::default(),
             headers: HeaderMap::default(),
@@ -510,7 +514,7 @@ impl Parts {
 }
 
 impl fmt::Debug for Parts {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Parts")
             .field("status", &self.status)
             .field("version", &self.version)
@@ -557,16 +561,15 @@ impl Builder {
     ///     .body(())
     ///     .unwrap();
     /// ```
-    pub fn status<T>(&mut self, status: T) -> &mut Builder
-        where StatusCode: HttpTryFrom<T>,
+    pub fn status<T>(self, status: T) -> Builder
+    where
+        StatusCode: TryFrom<T>,
+        <StatusCode as TryFrom<T>>::Error: Into<crate::Error>,
     {
-        if let Some(head) = head(&mut self.head, &self.err) {
-            match HttpTryFrom::try_from(status) {
-                Ok(s) => head.status = s,
-                Err(e) => self.err = Some(e.into()),
-            }
-        }
-        self
+        self.and_then(move |mut head| {
+            head.status = TryFrom::try_from(status).map_err(Into::into)?;
+            Ok(head)
+        })
     }
 
     /// Set the HTTP version for this response.
@@ -586,11 +589,11 @@ impl Builder {
     ///     .body(())
     ///     .unwrap();
     /// ```
-    pub fn version(&mut self, version: Version) -> &mut Builder {
-        if let Some(head) = head(&mut self.head, &self.err) {
+    pub fn version(self, version: Version) -> Builder {
+        self.and_then(move |mut head| {
             head.version = version;
-        }
-        self
+            Ok(head)
+        })
     }
 
     /// Appends a header to this response builder.
@@ -612,56 +615,46 @@ impl Builder {
     ///     .body(())
     ///     .unwrap();
     /// ```
-    pub fn header<K, V>(&mut self, key: K, value: V) -> &mut Builder
-        where HeaderName: HttpTryFrom<K>,
-              HeaderValue: HttpTryFrom<V>
+    pub fn header<K, V>(self, key: K, value: V) -> Builder
+    where
+        HeaderName: TryFrom<K>,
+        <HeaderName as TryFrom<K>>::Error: Into<crate::Error>,
+        HeaderValue: TryFrom<V>,
+        <HeaderValue as TryFrom<V>>::Error: Into<crate::Error>,
     {
-        if let Some(head) = head(&mut self.head, &self.err) {
-            match <HeaderName as HttpTryFrom<K>>::try_from(key) {
-                Ok(key) => {
-                    match <HeaderValue as HttpTryFrom<V>>::try_from(value) {
-                        Ok(value) => { head.headers.append(key, value); }
-                        Err(e) => self.err = Some(e.into()),
-                    }
-                },
-                Err(e) => self.err = Some(e.into()),
-            };
-        }
-        self
+        self.and_then(move |mut head| {
+            let name = <HeaderName as TryFrom<K>>::try_from(key).map_err(Into::into)?;
+            let value = <HeaderValue as TryFrom<V>>::try_from(value).map_err(Into::into)?;
+            head.headers.append(name, value);
+            Ok(head)
+        })
     }
 
     /// Get header on this response builder.
-    /// when builder has error returns None
-    /// 
+    ///
+    /// When builder has error returns None.
+    ///
     /// # Example
-    /// 
+    ///
     /// ```
-    /// # use http::*;
+    /// # use http::Response;
     /// # use http::header::HeaderValue;
-    /// # use http::response::Builder;
-    /// let mut res = Response::builder();
-    /// res.header("Accept", "text/html")
-    ///    .header("X-Custom-Foo", "bar");
+    /// let res = Response::builder()
+    ///     .header("Accept", "text/html")
+    ///     .header("X-Custom-Foo", "bar");
     /// let headers = res.headers_ref().unwrap();
     /// assert_eq!( headers["Accept"], "text/html" );
     /// assert_eq!( headers["X-Custom-Foo"], "bar" );
     /// ```
     pub fn headers_ref(&self) -> Option<&HeaderMap<HeaderValue>> {
-        if self.err.is_some() {
-            return None;
-        }
-        match self.head
-        {
-            Some(ref head) => Some(&head.headers),
-            None => None
-        }
+        self.inner.as_ref().ok().map(|h| &h.headers)
     }
 
     /// Get header on this response builder.
     /// when builder has error returns None
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```
     /// # use http::*;
     /// # use http::header::HeaderValue;
@@ -677,14 +670,7 @@ impl Builder {
     /// assert_eq!( headers["X-Custom-Foo"], "bar" );
     /// ```
     pub fn headers_mut(&mut self) -> Option<&mut HeaderMap<HeaderValue>> {
-        if self.err.is_some() {
-            return None;
-        }
-        match self.head
-        {
-            Some(ref mut head) => Some(&mut head.headers),
-            None => None
-        }
+        self.inner.as_mut().ok().map(|h| &mut h.headers)
     }
 
     /// Adds an extension to this builder
@@ -702,21 +688,14 @@ impl Builder {
     /// assert_eq!(response.extensions().get::<&'static str>(),
     ///            Some(&"My Extension"));
     /// ```
-    pub fn extension<T>(&mut self, extension: T) -> &mut Builder
-        where T: Any + Send + Sync + 'static,
+    pub fn extension<T>(self, extension: T) -> Builder
+    where
+        T: Any + Send + Sync + 'static,
     {
-        if let Some(head) = head(&mut self.head, &self.err) {
+        self.and_then(move |mut head| {
             head.extensions.insert(extension);
-        }
-        self
-    }
-
-    fn take_parts(&mut self) -> Result<Parts> {
-        let ret = self.head.take().expect("cannot reuse response builder");
-        if let Some(e) = self.err.take() {
-            return Err(e)
-        }
-        Ok(ret)
+            Ok(head)
+        })
     }
 
     /// "Consumes" this builder, using the provided `body` to return a
@@ -730,11 +709,6 @@ impl Builder {
     /// "Bar\r\n")` the error will be returned when this function is called
     /// rather than when `header` was called.
     ///
-    /// # Panics
-    ///
-    /// This method will panic if the builder is reused. The `body` function can
-    /// only be called once.
-    ///
     /// # Examples
     ///
     /// ```
@@ -744,29 +718,32 @@ impl Builder {
     ///     .body(())
     ///     .unwrap();
     /// ```
-    pub fn body<T>(&mut self, body: T) -> Result<Response<T>> {
-        Ok(Response {
-            head: self.take_parts()?,
-            body: body,
+    pub fn body<T>(self, body: T) -> Result<Response<T>> {
+        self.inner.map(move |head| {
+            Response {
+                head,
+                body,
+            }
         })
     }
-}
 
-fn head<'a>(head: &'a mut Option<Parts>, err: &Option<Error>)
-    -> Option<&'a mut Parts>
-{
-    if err.is_some() {
-        return None
+    // private
+
+    fn and_then<F>(self, func: F) -> Self
+    where
+        F: FnOnce(Parts) -> Result<Parts>
+    {
+        Builder {
+            inner: self.inner.and_then(func),
+        }
     }
-    head.as_mut()
 }
 
 impl Default for Builder {
     #[inline]
     fn default() -> Builder {
         Builder {
-            head: Some(Parts::new()),
-            err: None,
+            inner: Ok(Parts::new()),
         }
     }
 }

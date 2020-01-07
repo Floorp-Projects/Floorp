@@ -1,9 +1,9 @@
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
-use std::hash::{BuildHasherDefault, Hasher};
 use std::fmt;
+use std::hash::{BuildHasherDefault, Hasher};
 
-type AnyMap = HashMap<TypeId, Box<Any + Send + Sync>, BuildHasherDefault<IdHasher>>;
+type AnyMap = HashMap<TypeId, Box<dyn Any + Send + Sync>, BuildHasherDefault<IdHasher>>;
 
 // With TypeIds as keys, there's no need to hash them. They are already hashes
 // themselves, coming from the compiler. The IdHasher just holds the u64 of
@@ -27,8 +27,6 @@ impl Hasher for IdHasher {
     }
 }
 
-
-
 /// A type map of protocol extensions.
 ///
 /// `Extensions` can be used by `Request` and `Response` to store
@@ -44,9 +42,7 @@ impl Extensions {
     /// Create an empty `Extensions`.
     #[inline]
     pub fn new() -> Extensions {
-        Extensions {
-            map: None,
-        }
+        Extensions { map: None }
     }
 
     /// Insert a type into this `Extensions`.
@@ -64,13 +60,11 @@ impl Extensions {
     /// assert_eq!(ext.insert(9i32), Some(5i32));
     /// ```
     pub fn insert<T: Send + Sync + 'static>(&mut self, val: T) -> Option<T> {
-        self
-            .map
+        self.map
             .get_or_insert_with(|| Box::new(HashMap::default()))
             .insert(TypeId::of::<T>(), Box::new(val))
             .and_then(|boxed| {
-                //TODO: we can use unsafe and remove double checking the type id
-                (boxed as Box<Any + 'static>)
+                (boxed as Box<dyn Any + 'static>)
                     .downcast()
                     .ok()
                     .map(|boxed| *boxed)
@@ -90,12 +84,10 @@ impl Extensions {
     /// assert_eq!(ext.get::<i32>(), Some(&5i32));
     /// ```
     pub fn get<T: Send + Sync + 'static>(&self) -> Option<&T> {
-        self
-            .map
+        self.map
             .as_ref()
             .and_then(|map| map.get(&TypeId::of::<T>()))
-            //TODO: we can use unsafe and remove double checking the type id
-            .and_then(|boxed| (&**boxed as &(Any + 'static)).downcast_ref())
+            .and_then(|boxed| (&**boxed as &(dyn Any + 'static)).downcast_ref())
     }
 
     /// Get a mutable reference to a type previously inserted on this `Extensions`.
@@ -111,14 +103,11 @@ impl Extensions {
     /// assert_eq!(ext.get::<String>().unwrap(), "Hello World");
     /// ```
     pub fn get_mut<T: Send + Sync + 'static>(&mut self) -> Option<&mut T> {
-        self
-            .map
+        self.map
             .as_mut()
             .and_then(|map| map.get_mut(&TypeId::of::<T>()))
-            //TODO: we can use unsafe and remove double checking the type id
-            .and_then(|boxed| (&mut **boxed as &mut (Any + 'static)).downcast_mut())
+            .and_then(|boxed| (&mut **boxed as &mut (dyn Any + 'static)).downcast_mut())
     }
-
 
     /// Remove a type from this `Extensions`.
     ///
@@ -134,13 +123,11 @@ impl Extensions {
     /// assert!(ext.get::<i32>().is_none());
     /// ```
     pub fn remove<T: Send + Sync + 'static>(&mut self) -> Option<T> {
-        self
-            .map
+        self.map
             .as_mut()
             .and_then(|map| map.remove(&TypeId::of::<T>()))
             .and_then(|boxed| {
-                //TODO: we can use unsafe and remove double checking the type id
-                (boxed as Box<Any + 'static>)
+                (boxed as Box<dyn Any + 'static>)
                     .downcast()
                     .ok()
                     .map(|boxed| *boxed)
@@ -168,9 +155,8 @@ impl Extensions {
 }
 
 impl fmt::Debug for Extensions {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Extensions")
-            .finish()
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Extensions").finish()
     }
 }
 

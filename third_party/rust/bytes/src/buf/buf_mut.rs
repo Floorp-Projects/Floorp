@@ -1,8 +1,9 @@
-use super::{IntoBuf, Writer};
-use byteorder::{LittleEndian, ByteOrder, BigEndian};
-use iovec::IoVec;
+use core::{cmp, mem::{self, MaybeUninit}, ptr, usize};
 
-use std::{cmp, io, ptr, usize};
+#[cfg(feature = "std")]
+use std::fmt;
+
+use alloc::{vec::Vec, boxed::Box};
 
 /// A trait for values that provide sequential write access to bytes.
 ///
@@ -20,7 +21,7 @@ use std::{cmp, io, ptr, usize};
 ///
 /// let mut buf = vec![];
 ///
-/// buf.put("hello world");
+/// buf.put(&b"hello world"[..]);
 ///
 /// assert_eq!(buf, b"hello world");
 /// ```
@@ -35,15 +36,14 @@ pub trait BufMut {
     ///
     /// ```
     /// use bytes::BufMut;
-    /// use std::io::Cursor;
     ///
     /// let mut dst = [0; 10];
-    /// let mut buf = Cursor::new(&mut dst[..]);
+    /// let mut buf = &mut dst[..];
     ///
-    /// assert_eq!(10, buf.remaining_mut());
-    /// buf.put("hello");
+    /// let original_remaining = buf.remaining_mut();
+    /// buf.put(&b"hello"[..]);
     ///
-    /// assert_eq!(5, buf.remaining_mut());
+    /// assert_eq!(original_remaining - 5, buf.remaining_mut());
     /// ```
     ///
     /// # Implementer notes
@@ -69,13 +69,15 @@ pub trait BufMut {
     /// let mut buf = Vec::with_capacity(16);
     ///
     /// unsafe {
-    ///     buf.bytes_mut()[0] = b'h';
-    ///     buf.bytes_mut()[1] = b'e';
+    ///     // MaybeUninit::as_mut_ptr
+    ///     buf.bytes_mut()[0].as_mut_ptr().write(b'h');
+    ///     buf.bytes_mut()[1].as_mut_ptr().write(b'e');
     ///
     ///     buf.advance_mut(2);
     ///
-    ///     buf.bytes_mut()[0] = b'l';
-    ///     buf.bytes_mut()[1..3].copy_from_slice(b"lo");
+    ///     buf.bytes_mut()[0].as_mut_ptr().write(b'l');
+    ///     buf.bytes_mut()[1].as_mut_ptr().write(b'l');
+    ///     buf.bytes_mut()[2].as_mut_ptr().write(b'o');
     ///
     ///     buf.advance_mut(3);
     /// }
@@ -105,14 +107,13 @@ pub trait BufMut {
     ///
     /// ```
     /// use bytes::BufMut;
-    /// use std::io::Cursor;
     ///
     /// let mut dst = [0; 5];
-    /// let mut buf = Cursor::new(&mut dst);
+    /// let mut buf = &mut dst[..];
     ///
     /// assert!(buf.has_remaining_mut());
     ///
-    /// buf.put("hello");
+    /// buf.put(&b"hello"[..]);
     ///
     /// assert!(!buf.has_remaining_mut());
     /// ```
@@ -121,7 +122,8 @@ pub trait BufMut {
     }
 
     /// Returns a mutable slice starting at the current BufMut position and of
-    /// length between 0 and `BufMut::remaining_mut()`.
+    /// length between 0 and `BufMut::remaining_mut()`. Note that this *can* be shorter than the
+    /// whole remainder of the buffer (this allows non-continuous implementation).
     ///
     /// This is a lower level function. Most operations are done with other
     /// functions.
@@ -136,13 +138,15 @@ pub trait BufMut {
     /// let mut buf = Vec::with_capacity(16);
     ///
     /// unsafe {
-    ///     buf.bytes_mut()[0] = b'h';
-    ///     buf.bytes_mut()[1] = b'e';
+    ///     // MaybeUninit::as_mut_ptr
+    ///     buf.bytes_mut()[0].as_mut_ptr().write(b'h');
+    ///     buf.bytes_mut()[1].as_mut_ptr().write(b'e');
     ///
     ///     buf.advance_mut(2);
     ///
-    ///     buf.bytes_mut()[0] = b'l';
-    ///     buf.bytes_mut()[1..3].copy_from_slice(b"lo");
+    ///     buf.bytes_mut()[0].as_mut_ptr().write(b'l');
+    ///     buf.bytes_mut()[1].as_mut_ptr().write(b'l');
+    ///     buf.bytes_mut()[2].as_mut_ptr().write(b'o');
     ///
     ///     buf.advance_mut(3);
     /// }
@@ -158,20 +162,20 @@ pub trait BufMut {
     /// `bytes_mut` returning an empty slice implies that `remaining_mut` will
     /// return 0 and `remaining_mut` returning 0 implies that `bytes_mut` will
     /// return an empty slice.
-    unsafe fn bytes_mut(&mut self) -> &mut [u8];
+    fn bytes_mut(&mut self) -> &mut [MaybeUninit<u8>];
 
     /// Fills `dst` with potentially multiple mutable slices starting at `self`'s
     /// current position.
     ///
-    /// If the `BufMut` is backed by disjoint slices of bytes, `bytes_vec_mut`
+    /// If the `BufMut` is backed by disjoint slices of bytes, `bytes_vectored_mut`
     /// enables fetching more than one slice at once. `dst` is a slice of
-    /// mutable `IoVec` references, enabling the slice to be directly used with
+    /// mutable `IoSliceMut` references, enabling the slice to be directly used with
     /// [`readv`] without any further conversion. The sum of the lengths of all
     /// the buffers in `dst` will be less than or equal to
     /// `Buf::remaining_mut()`.
     ///
     /// The entries in `dst` will be overwritten, but the data **contained** by
-    /// the slices **will not** be modified. If `bytes_vec_mut` does not fill every
+    /// the slices **will not** be modified. If `bytes_vectored_mut` does not fill every
     /// entry in `dst`, then `dst` is guaranteed to contain all remaining slices
     /// in `self.
     ///
@@ -181,20 +185,21 @@ pub trait BufMut {
     /// # Implementer notes
     ///
     /// This function should never panic. Once the end of the buffer is reached,
-    /// i.e., `BufMut::remaining_mut` returns 0, calls to `bytes_vec_mut` must
+    /// i.e., `BufMut::remaining_mut` returns 0, calls to `bytes_vectored_mut` must
     /// return 0 without mutating `dst`.
     ///
     /// Implementations should also take care to properly handle being called
     /// with `dst` being a zero length slice.
     ///
     /// [`readv`]: http://man7.org/linux/man-pages/man2/readv.2.html
-    unsafe fn bytes_vec_mut<'a>(&'a mut self, dst: &mut [&'a mut IoVec]) -> usize {
+    #[cfg(feature = "std")]
+    fn bytes_vectored_mut<'a>(&'a mut self, dst: &mut [IoSliceMut<'a>]) -> usize {
         if dst.is_empty() {
             return 0;
         }
 
         if self.has_remaining_mut() {
-            dst[0] = self.bytes_mut().into();
+            dst[0] = IoSliceMut::from(self.bytes_mut());
             1
         } else {
             0
@@ -211,9 +216,9 @@ pub trait BufMut {
     ///
     /// let mut buf = vec![];
     ///
-    /// buf.put(b'h');
+    /// buf.put_u8(b'h');
     /// buf.put(&b"ello"[..]);
-    /// buf.put(" world");
+    /// buf.put(&b" world"[..]);
     ///
     /// assert_eq!(buf, b"hello world");
     /// ```
@@ -221,11 +226,7 @@ pub trait BufMut {
     /// # Panics
     ///
     /// Panics if `self` does not have enough capacity to contain `src`.
-    fn put<T: IntoBuf>(&mut self, src: T) where Self: Sized {
-        use super::Buf;
-
-        let mut src = src.into_buf();
-
+    fn put<T: super::Buf>(&mut self, mut src: T) where Self: Sized {
         assert!(self.remaining_mut() >= src.remaining());
 
         while src.has_remaining() {
@@ -238,7 +239,7 @@ pub trait BufMut {
 
                 ptr::copy_nonoverlapping(
                     s.as_ptr(),
-                    d.as_mut_ptr(),
+                    d.as_mut_ptr() as *mut u8,
                     l);
             }
 
@@ -254,12 +255,11 @@ pub trait BufMut {
     ///
     /// ```
     /// use bytes::BufMut;
-    /// use std::io::Cursor;
     ///
     /// let mut dst = [0; 6];
     ///
     /// {
-    ///     let mut buf = Cursor::new(&mut dst);
+    ///     let mut buf = &mut dst[..];
     ///     buf.put_slice(b"hello");
     ///
     ///     assert_eq!(1, buf.remaining_mut());
@@ -270,7 +270,7 @@ pub trait BufMut {
     fn put_slice(&mut self, src: &[u8]) {
         let mut off = 0;
 
-        assert!(self.remaining_mut() >= src.len(), "buffer overflow");
+        assert!(self.remaining_mut() >= src.len(), "buffer overflow; remaining = {}; src = {}", self.remaining_mut(), src.len());
 
         while off < src.len() {
             let cnt;
@@ -281,7 +281,7 @@ pub trait BufMut {
 
                 ptr::copy_nonoverlapping(
                     src[off..].as_ptr(),
-                    dst.as_mut_ptr(),
+                    dst.as_mut_ptr() as *mut u8,
                     cnt);
 
                 off += cnt;
@@ -338,14 +338,6 @@ pub trait BufMut {
         self.put_slice(&src)
     }
 
-    #[doc(hidden)]
-    #[deprecated(note="use put_u16_be or put_u16_le")]
-    fn put_u16<T: ByteOrder>(&mut self, n: u16) where Self: Sized {
-        let mut buf = [0; 2];
-        T::write_u16(&mut buf, n);
-        self.put_slice(&buf)
-    }
-
     /// Writes an unsigned 16 bit integer to `self` in big-endian byte order.
     ///
     /// The current position is advanced by 2.
@@ -356,7 +348,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_u16_be(0x0809);
+    /// buf.put_u16(0x0809);
     /// assert_eq!(buf, b"\x08\x09");
     /// ```
     ///
@@ -364,10 +356,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    fn put_u16_be(&mut self, n: u16) {
-        let mut buf = [0; 2];
-        BigEndian::write_u16(&mut buf, n);
-        self.put_slice(&buf)
+    fn put_u16(&mut self, n: u16) {
+        self.put_slice(&n.to_be_bytes())
     }
 
     /// Writes an unsigned 16 bit integer to `self` in little-endian byte order.
@@ -389,17 +379,7 @@ pub trait BufMut {
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
     fn put_u16_le(&mut self, n: u16) {
-        let mut buf = [0; 2];
-        LittleEndian::write_u16(&mut buf, n);
-        self.put_slice(&buf)
-    }
-
-    #[doc(hidden)]
-    #[deprecated(note="use put_i16_be or put_i16_le")]
-    fn put_i16<T: ByteOrder>(&mut self, n: i16) where Self: Sized {
-        let mut buf = [0; 2];
-        T::write_i16(&mut buf, n);
-        self.put_slice(&buf)
+        self.put_slice(&n.to_le_bytes())
     }
 
     /// Writes a signed 16 bit integer to `self` in big-endian byte order.
@@ -412,7 +392,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_i16_be(0x0809);
+    /// buf.put_i16(0x0809);
     /// assert_eq!(buf, b"\x08\x09");
     /// ```
     ///
@@ -420,10 +400,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    fn put_i16_be(&mut self, n: i16) {
-        let mut buf = [0; 2];
-        BigEndian::write_i16(&mut buf, n);
-        self.put_slice(&buf)
+    fn put_i16(&mut self, n: i16) {
+        self.put_slice(&n.to_be_bytes())
     }
 
     /// Writes a signed 16 bit integer to `self` in little-endian byte order.
@@ -445,17 +423,7 @@ pub trait BufMut {
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
     fn put_i16_le(&mut self, n: i16) {
-        let mut buf = [0; 2];
-        LittleEndian::write_i16(&mut buf, n);
-        self.put_slice(&buf)
-    }
-
-    #[doc(hidden)]
-    #[deprecated(note="use put_u32_be or put_u32_le")]
-    fn put_u32<T: ByteOrder>(&mut self, n: u32) where Self: Sized {
-        let mut buf = [0; 4];
-        T::write_u32(&mut buf, n);
-        self.put_slice(&buf)
+        self.put_slice(&n.to_le_bytes())
     }
 
     /// Writes an unsigned 32 bit integer to `self` in big-endian byte order.
@@ -468,7 +436,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_u32_be(0x0809A0A1);
+    /// buf.put_u32(0x0809A0A1);
     /// assert_eq!(buf, b"\x08\x09\xA0\xA1");
     /// ```
     ///
@@ -476,10 +444,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    fn put_u32_be(&mut self, n: u32) {
-        let mut buf = [0; 4];
-        BigEndian::write_u32(&mut buf, n);
-        self.put_slice(&buf)
+    fn put_u32(&mut self, n: u32) {
+        self.put_slice(&n.to_be_bytes())
     }
 
     /// Writes an unsigned 32 bit integer to `self` in little-endian byte order.
@@ -501,17 +467,7 @@ pub trait BufMut {
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
     fn put_u32_le(&mut self, n: u32) {
-        let mut buf = [0; 4];
-        LittleEndian::write_u32(&mut buf, n);
-        self.put_slice(&buf)
-    }
-
-    #[doc(hidden)]
-    #[deprecated(note="use put_i32_be or put_i32_le")]
-    fn put_i32<T: ByteOrder>(&mut self, n: i32) where Self: Sized {
-        let mut buf = [0; 4];
-        T::write_i32(&mut buf, n);
-        self.put_slice(&buf)
+        self.put_slice(&n.to_le_bytes())
     }
 
     /// Writes a signed 32 bit integer to `self` in big-endian byte order.
@@ -524,7 +480,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_i32_be(0x0809A0A1);
+    /// buf.put_i32(0x0809A0A1);
     /// assert_eq!(buf, b"\x08\x09\xA0\xA1");
     /// ```
     ///
@@ -532,10 +488,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    fn put_i32_be(&mut self, n: i32) {
-        let mut buf = [0; 4];
-        BigEndian::write_i32(&mut buf, n);
-        self.put_slice(&buf)
+    fn put_i32(&mut self, n: i32) {
+        self.put_slice(&n.to_be_bytes())
     }
 
     /// Writes a signed 32 bit integer to `self` in little-endian byte order.
@@ -557,17 +511,7 @@ pub trait BufMut {
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
     fn put_i32_le(&mut self, n: i32) {
-        let mut buf = [0; 4];
-        LittleEndian::write_i32(&mut buf, n);
-        self.put_slice(&buf)
-    }
-
-    #[doc(hidden)]
-    #[deprecated(note="use put_u64_be or put_u64_le")]
-    fn put_u64<T: ByteOrder>(&mut self, n: u64) where Self: Sized {
-        let mut buf = [0; 8];
-        T::write_u64(&mut buf, n);
-        self.put_slice(&buf)
+        self.put_slice(&n.to_le_bytes())
     }
 
     /// Writes an unsigned 64 bit integer to `self` in the big-endian byte order.
@@ -580,7 +524,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_u64_be(0x0102030405060708);
+    /// buf.put_u64(0x0102030405060708);
     /// assert_eq!(buf, b"\x01\x02\x03\x04\x05\x06\x07\x08");
     /// ```
     ///
@@ -588,10 +532,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    fn put_u64_be(&mut self, n: u64) {
-        let mut buf = [0; 8];
-        BigEndian::write_u64(&mut buf, n);
-        self.put_slice(&buf)
+    fn put_u64(&mut self, n: u64) {
+        self.put_slice(&n.to_be_bytes())
     }
 
     /// Writes an unsigned 64 bit integer to `self` in little-endian byte order.
@@ -613,17 +555,7 @@ pub trait BufMut {
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
     fn put_u64_le(&mut self, n: u64) {
-        let mut buf = [0; 8];
-        LittleEndian::write_u64(&mut buf, n);
-        self.put_slice(&buf)
-    }
-
-    #[doc(hidden)]
-    #[deprecated(note="use put_i64_be or put_i64_le")]
-    fn put_i64<T: ByteOrder>(&mut self, n: i64) where Self: Sized {
-        let mut buf = [0; 8];
-        T::write_i64(&mut buf, n);
-        self.put_slice(&buf)
+        self.put_slice(&n.to_le_bytes())
     }
 
     /// Writes a signed 64 bit integer to `self` in the big-endian byte order.
@@ -636,7 +568,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_i64_be(0x0102030405060708);
+    /// buf.put_i64(0x0102030405060708);
     /// assert_eq!(buf, b"\x01\x02\x03\x04\x05\x06\x07\x08");
     /// ```
     ///
@@ -644,10 +576,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    fn put_i64_be(&mut self, n: i64) {
-        let mut buf = [0; 8];
-        BigEndian::write_i64(&mut buf, n);
-        self.put_slice(&buf)
+    fn put_i64(&mut self, n: i64) {
+        self.put_slice(&n.to_be_bytes())
     }
 
     /// Writes a signed 64 bit integer to `self` in little-endian byte order.
@@ -669,14 +599,11 @@ pub trait BufMut {
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
     fn put_i64_le(&mut self, n: i64) {
-        let mut buf = [0; 8];
-        LittleEndian::write_i64(&mut buf, n);
-        self.put_slice(&buf)
+        self.put_slice(&n.to_le_bytes())
     }
 
     /// Writes an unsigned 128 bit integer to `self` in the big-endian byte order.
     ///
-    /// **NOTE:** This method requires the `i128` feature.
     /// The current position is advanced by 16.
     ///
     /// # Examples
@@ -685,7 +612,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_u128_be(0x01020304050607080910111213141516);
+    /// buf.put_u128(0x01020304050607080910111213141516);
     /// assert_eq!(buf, b"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16");
     /// ```
     ///
@@ -693,16 +620,12 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[cfg(feature = "i128")]
-    fn put_u128_be(&mut self, n: u128) {
-        let mut buf = [0; 16];
-        BigEndian::write_u128(&mut buf, n);
-        self.put_slice(&buf)
+    fn put_u128(&mut self, n: u128) {
+        self.put_slice(&n.to_be_bytes())
     }
 
     /// Writes an unsigned 128 bit integer to `self` in little-endian byte order.
     ///
-    /// **NOTE:** This method requires the `i128` feature.
     /// The current position is advanced by 16.
     ///
     /// # Examples
@@ -719,16 +642,12 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[cfg(feature = "i128")]
     fn put_u128_le(&mut self, n: u128) {
-        let mut buf = [0; 16];
-        LittleEndian::write_u128(&mut buf, n);
-        self.put_slice(&buf)
+        self.put_slice(&n.to_le_bytes())
     }
 
     /// Writes a signed 128 bit integer to `self` in the big-endian byte order.
     ///
-    /// **NOTE:** This method requires the `i128` feature.
     /// The current position is advanced by 16.
     ///
     /// # Examples
@@ -737,7 +656,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_i128_be(0x01020304050607080910111213141516);
+    /// buf.put_i128(0x01020304050607080910111213141516);
     /// assert_eq!(buf, b"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16");
     /// ```
     ///
@@ -745,16 +664,12 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[cfg(feature = "i128")]
-    fn put_i128_be(&mut self, n: i128) {
-        let mut buf = [0; 16];
-        BigEndian::write_i128(&mut buf, n);
-        self.put_slice(&buf)
+    fn put_i128(&mut self, n: i128) {
+        self.put_slice(&n.to_be_bytes())
     }
 
     /// Writes a signed 128 bit integer to `self` in little-endian byte order.
     ///
-    /// **NOTE:** This method requires the `i128` feature.
     /// The current position is advanced by 16.
     ///
     /// # Examples
@@ -771,19 +686,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    #[cfg(feature = "i128")]
     fn put_i128_le(&mut self, n: i128) {
-        let mut buf = [0; 16];
-        LittleEndian::write_i128(&mut buf, n);
-        self.put_slice(&buf)
-    }
-
-    #[doc(hidden)]
-    #[deprecated(note="use put_uint_be or put_uint_le")]
-    fn put_uint<T: ByteOrder>(&mut self, n: u64, nbytes: usize) where Self: Sized {
-        let mut buf = [0; 8];
-        T::write_uint(&mut buf, n, nbytes);
-        self.put_slice(&buf[0..nbytes])
+        self.put_slice(&n.to_le_bytes())
     }
 
     /// Writes an unsigned n-byte integer to `self` in big-endian byte order.
@@ -796,7 +700,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_uint_be(0x010203, 3);
+    /// buf.put_uint(0x010203, 3);
     /// assert_eq!(buf, b"\x01\x02\x03");
     /// ```
     ///
@@ -804,10 +708,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    fn put_uint_be(&mut self, n: u64, nbytes: usize) {
-        let mut buf = [0; 8];
-        BigEndian::write_uint(&mut buf, n, nbytes);
-        self.put_slice(&buf[0..nbytes])
+    fn put_uint(&mut self, n: u64, nbytes: usize) {
+        self.put_slice(&n.to_be_bytes()[mem::size_of_val(&n) - nbytes..]);
     }
 
     /// Writes an unsigned n-byte integer to `self` in the little-endian byte order.
@@ -829,17 +731,7 @@ pub trait BufMut {
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
     fn put_uint_le(&mut self, n: u64, nbytes: usize) {
-        let mut buf = [0; 8];
-        LittleEndian::write_uint(&mut buf, n, nbytes);
-        self.put_slice(&buf[0..nbytes])
-    }
-
-    #[doc(hidden)]
-    #[deprecated(note="use put_int_be or put_int_le")]
-    fn put_int<T: ByteOrder>(&mut self, n: i64, nbytes: usize) where Self: Sized {
-        let mut buf = [0; 8];
-        T::write_int(&mut buf, n, nbytes);
-        self.put_slice(&buf[0..nbytes])
+        self.put_slice(&n.to_le_bytes()[0..nbytes]);
     }
 
     /// Writes a signed n-byte integer to `self` in big-endian byte order.
@@ -852,7 +744,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_int_be(0x010203, 3);
+    /// buf.put_int(0x010203, 3);
     /// assert_eq!(buf, b"\x01\x02\x03");
     /// ```
     ///
@@ -860,10 +752,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    fn put_int_be(&mut self, n: i64, nbytes: usize) {
-        let mut buf = [0; 8];
-        BigEndian::write_int(&mut buf, n, nbytes);
-        self.put_slice(&buf[0..nbytes])
+    fn put_int(&mut self, n: i64, nbytes: usize) {
+        self.put_slice(&n.to_be_bytes()[mem::size_of_val(&n) - nbytes..]);
     }
 
     /// Writes a signed n-byte integer to `self` in little-endian byte order.
@@ -885,17 +775,7 @@ pub trait BufMut {
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
     fn put_int_le(&mut self, n: i64, nbytes: usize) {
-        let mut buf = [0; 8];
-        LittleEndian::write_int(&mut buf, n, nbytes);
-        self.put_slice(&buf[0..nbytes])
-    }
-
-    #[doc(hidden)]
-    #[deprecated(note="use put_f32_be or put_f32_le")]
-    fn put_f32<T: ByteOrder>(&mut self, n: f32) where Self: Sized {
-        let mut buf = [0; 4];
-        T::write_f32(&mut buf, n);
-        self.put_slice(&buf)
+        self.put_slice(&n.to_le_bytes()[0..nbytes]);
     }
 
     /// Writes  an IEEE754 single-precision (4 bytes) floating point number to
@@ -909,7 +789,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_f32_be(1.2f32);
+    /// buf.put_f32(1.2f32);
     /// assert_eq!(buf, b"\x3F\x99\x99\x9A");
     /// ```
     ///
@@ -917,10 +797,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    fn put_f32_be(&mut self, n: f32) {
-        let mut buf = [0; 4];
-        BigEndian::write_f32(&mut buf, n);
-        self.put_slice(&buf)
+    fn put_f32(&mut self, n: f32) {
+        self.put_u32(n.to_bits());
     }
 
     /// Writes  an IEEE754 single-precision (4 bytes) floating point number to
@@ -943,17 +821,7 @@ pub trait BufMut {
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
     fn put_f32_le(&mut self, n: f32) {
-        let mut buf = [0; 4];
-        LittleEndian::write_f32(&mut buf, n);
-        self.put_slice(&buf)
-    }
-
-    #[doc(hidden)]
-    #[deprecated(note="use put_f64_be or put_f64_le")]
-    fn put_f64<T: ByteOrder>(&mut self, n: f64) where Self: Sized {
-        let mut buf = [0; 8];
-        T::write_f64(&mut buf, n);
-        self.put_slice(&buf)
+        self.put_u32_le(n.to_bits());
     }
 
     /// Writes  an IEEE754 double-precision (8 bytes) floating point number to
@@ -967,7 +835,7 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_f64_be(1.2f64);
+    /// buf.put_f64(1.2f64);
     /// assert_eq!(buf, b"\x3F\xF3\x33\x33\x33\x33\x33\x33");
     /// ```
     ///
@@ -975,10 +843,8 @@ pub trait BufMut {
     ///
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
-    fn put_f64_be(&mut self, n: f64) {
-        let mut buf = [0; 8];
-        BigEndian::write_f64(&mut buf, n);
-        self.put_slice(&buf)
+    fn put_f64(&mut self, n: f64) {
+        self.put_u64(n.to_bits());
     }
 
     /// Writes  an IEEE754 double-precision (8 bytes) floating point number to
@@ -1001,128 +867,116 @@ pub trait BufMut {
     /// This function panics if there is not enough remaining capacity in
     /// `self`.
     fn put_f64_le(&mut self, n: f64) {
-        let mut buf = [0; 8];
-        LittleEndian::write_f64(&mut buf, n);
-        self.put_slice(&buf)
-    }
-
-    /// Creates a "by reference" adaptor for this instance of `BufMut`.
-    ///
-    /// The returned adapter also implements `BufMut` and will simply borrow
-    /// `self`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bytes::BufMut;
-    /// use std::io;
-    ///
-    /// let mut buf = vec![];
-    ///
-    /// {
-    ///     let mut reference = buf.by_ref();
-    ///
-    ///     // Adapt reference to `std::io::Write`.
-    ///     let mut writer = reference.writer();
-    ///
-    ///     // Use the buffer as a writter
-    ///     io::Write::write(&mut writer, &b"hello world"[..]).unwrap();
-    /// } // drop our &mut reference so that we can use `buf` again
-    ///
-    /// assert_eq!(buf, &b"hello world"[..]);
-    /// ```
-    fn by_ref(&mut self) -> &mut Self where Self: Sized {
-        self
-    }
-
-    /// Creates an adaptor which implements the `Write` trait for `self`.
-    ///
-    /// This function returns a new value which implements `Write` by adapting
-    /// the `Write` trait functions to the `BufMut` trait functions. Given that
-    /// `BufMut` operations are infallible, none of the `Write` functions will
-    /// return with `Err`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use bytes::BufMut;
-    /// use std::io::Write;
-    ///
-    /// let mut buf = vec![].writer();
-    ///
-    /// let num = buf.write(&b"hello world"[..]).unwrap();
-    /// assert_eq!(11, num);
-    ///
-    /// let buf = buf.into_inner();
-    ///
-    /// assert_eq!(*buf, b"hello world"[..]);
-    /// ```
-    fn writer(self) -> Writer<Self> where Self: Sized {
-        super::writer::new(self)
+        self.put_u64_le(n.to_bits());
     }
 }
 
-impl<'a, T: BufMut + ?Sized> BufMut for &'a mut T {
+macro_rules! deref_forward_bufmut {
+    () => (
     fn remaining_mut(&self) -> usize {
         (**self).remaining_mut()
     }
 
-    unsafe fn bytes_mut(&mut self) -> &mut [u8] {
+    fn bytes_mut(&mut self) -> &mut [MaybeUninit<u8>] {
         (**self).bytes_mut()
     }
 
-    unsafe fn bytes_vec_mut<'b>(&'b mut self, dst: &mut [&'b mut IoVec]) -> usize {
-        (**self).bytes_vec_mut(dst)
+    #[cfg(feature = "std")]
+    fn bytes_vectored_mut<'b>(&'b mut self, dst: &mut [IoSliceMut<'b>]) -> usize {
+        (**self).bytes_vectored_mut(dst)
     }
 
     unsafe fn advance_mut(&mut self, cnt: usize) {
         (**self).advance_mut(cnt)
     }
+
+    fn put_slice(&mut self, src: &[u8]) {
+        (**self).put_slice(src)
+    }
+
+    fn put_u8(&mut self, n: u8) {
+        (**self).put_u8(n)
+    }
+
+    fn put_i8(&mut self, n: i8) {
+        (**self).put_i8(n)
+    }
+
+    fn put_u16(&mut self, n: u16) {
+        (**self).put_u16(n)
+    }
+
+    fn put_u16_le(&mut self, n: u16) {
+        (**self).put_u16_le(n)
+    }
+
+    fn put_i16(&mut self, n: i16) {
+        (**self).put_i16(n)
+    }
+
+    fn put_i16_le(&mut self, n: i16) {
+        (**self).put_i16_le(n)
+    }
+
+    fn put_u32(&mut self, n: u32) {
+        (**self).put_u32(n)
+    }
+
+    fn put_u32_le(&mut self, n: u32) {
+        (**self).put_u32_le(n)
+    }
+
+    fn put_i32(&mut self, n: i32) {
+        (**self).put_i32(n)
+    }
+
+    fn put_i32_le(&mut self, n: i32) {
+        (**self).put_i32_le(n)
+    }
+
+    fn put_u64(&mut self, n: u64) {
+        (**self).put_u64(n)
+    }
+
+    fn put_u64_le(&mut self, n: u64) {
+        (**self).put_u64_le(n)
+    }
+
+    fn put_i64(&mut self, n: i64) {
+        (**self).put_i64(n)
+    }
+
+    fn put_i64_le(&mut self, n: i64) {
+        (**self).put_i64_le(n)
+    }
+    )
+}
+
+impl<T: BufMut + ?Sized> BufMut for &mut T {
+    deref_forward_bufmut!();
 }
 
 impl<T: BufMut + ?Sized> BufMut for Box<T> {
-    fn remaining_mut(&self) -> usize {
-        (**self).remaining_mut()
-    }
-
-    unsafe fn bytes_mut(&mut self) -> &mut [u8] {
-        (**self).bytes_mut()
-    }
-
-    unsafe fn bytes_vec_mut<'b>(&'b mut self, dst: &mut [&'b mut IoVec]) -> usize {
-        (**self).bytes_vec_mut(dst)
-    }
-
-    unsafe fn advance_mut(&mut self, cnt: usize) {
-        (**self).advance_mut(cnt)
-    }
+    deref_forward_bufmut!();
 }
 
-impl<T: AsMut<[u8]> + AsRef<[u8]>> BufMut for io::Cursor<T> {
+impl BufMut for &mut [u8] {
+    #[inline]
     fn remaining_mut(&self) -> usize {
-        use Buf;
-        self.remaining()
+        self.len()
     }
 
-    /// Advance the internal cursor of the BufMut
+    #[inline]
+    fn bytes_mut(&mut self) -> &mut [MaybeUninit<u8>] {
+        // MaybeUninit is repr(transparent), so safe to transmute
+        unsafe { mem::transmute(&mut **self) }
+    }
+
+    #[inline]
     unsafe fn advance_mut(&mut self, cnt: usize) {
-        use Buf;
-        self.advance(cnt);
-    }
-
-    /// Returns a mutable slice starting at the current BufMut position and of
-    /// length between 0 and `BufMut::remaining()`.
-    ///
-    /// The returned byte slice may represent uninitialized memory.
-    unsafe fn bytes_mut(&mut self) -> &mut [u8] {
-        let len = self.get_ref().as_ref().len();
-        let pos = self.position() as usize;
-
-        if pos >= len {
-            return Default::default();
-        }
-
-        &mut (self.get_mut().as_mut())[pos..]
+        // Lifetime dance taken from `impl Write for &mut [u8]`.
+        let (_, b) = core::mem::replace(self, &mut []).split_at_mut(cnt);
+        *self = b;
     }
 }
 
@@ -1146,8 +1000,8 @@ impl BufMut for Vec<u8> {
     }
 
     #[inline]
-    unsafe fn bytes_mut(&mut self) -> &mut [u8] {
-        use std::slice;
+    fn bytes_mut(&mut self) -> &mut [MaybeUninit<u8>] {
+        use core::slice;
 
         if self.capacity() == self.len() {
             self.reserve(64); // Grow the vec
@@ -1156,11 +1010,79 @@ impl BufMut for Vec<u8> {
         let cap = self.capacity();
         let len = self.len();
 
-        let ptr = self.as_mut_ptr();
-        &mut slice::from_raw_parts_mut(ptr, cap)[len..]
+        let ptr = self.as_mut_ptr() as *mut MaybeUninit<u8>;
+        unsafe {
+            &mut slice::from_raw_parts_mut(ptr, cap)[len..]
+        }
+    }
+
+    // Specialize these methods so they can skip checking `remaining_mut`
+    // and `advance_mut`.
+
+    fn put<T: super::Buf>(&mut self, mut src: T) where Self: Sized {
+        // In case the src isn't contiguous, reserve upfront
+        self.reserve(src.remaining());
+
+        while src.has_remaining() {
+            let l;
+
+            // a block to contain the src.bytes() borrow
+            {
+                let s = src.bytes();
+                l = s.len();
+                self.extend_from_slice(s);
+            }
+
+            src.advance(l);
+        }
+    }
+
+    fn put_slice(&mut self, src: &[u8]) {
+        self.extend_from_slice(src);
     }
 }
 
-// The existance of this function makes the compiler catch if the BufMut
+// The existence of this function makes the compiler catch if the BufMut
 // trait is "object-safe" or not.
-fn _assert_trait_object(_b: &BufMut) {}
+fn _assert_trait_object(_b: &dyn BufMut) {}
+
+// ===== impl IoSliceMut =====
+
+/// A buffer type used for `readv`.
+///
+/// This is a wrapper around an `std::io::IoSliceMut`, but does not expose
+/// the inner bytes in a safe API, as they may point at uninitialized memory.
+///
+/// This is `repr(transparent)` of the `std::io::IoSliceMut`, so it is valid to
+/// transmute them. However, as the memory might be uninitialized, care must be
+/// taken to not *read* the internal bytes, only *write* to them.
+#[repr(transparent)]
+#[cfg(feature = "std")]
+pub struct IoSliceMut<'a>(std::io::IoSliceMut<'a>);
+
+#[cfg(feature = "std")]
+impl fmt::Debug for IoSliceMut<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("IoSliceMut")
+            .field("len", &self.0.len())
+            .finish()
+    }
+}
+
+#[cfg(feature = "std")]
+impl<'a> From<&'a mut [u8]> for IoSliceMut<'a> {
+    fn from(buf: &'a mut [u8]) -> IoSliceMut<'a> {
+        IoSliceMut(std::io::IoSliceMut::new(buf))
+    }
+}
+
+#[cfg(feature = "std")]
+impl<'a> From<&'a mut [MaybeUninit<u8>]> for IoSliceMut<'a> {
+    fn from(buf: &'a mut [MaybeUninit<u8>]) -> IoSliceMut<'a> {
+        IoSliceMut(std::io::IoSliceMut::new(unsafe {
+            // We don't look at the contents, and `std::io::IoSliceMut`
+            // doesn't either.
+            mem::transmute::<&'a mut [MaybeUninit<u8>], &'a mut [u8]>(buf)
+        }))
+    }
+}
