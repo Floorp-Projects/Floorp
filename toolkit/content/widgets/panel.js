@@ -123,8 +123,8 @@
       this.setAttribute("arrowposition", position);
 
       if (position.indexOf("start_") == 0 || position.indexOf("end_") == 0) {
-        container.setAttribute("orient", "horizontal");
-        arrowbox.setAttribute("orient", "vertical");
+        container.orient = "horizontal";
+        arrowbox.orient = "vertical";
         if (position.indexOf("_after") > 0) {
           arrowbox.setAttribute("pack", "end");
         } else {
@@ -146,8 +146,8 @@
         position.indexOf("before_") == 0 ||
         position.indexOf("after_") == 0
       ) {
-        container.removeAttribute("orient");
-        arrowbox.removeAttribute("orient");
+        container.orient = "";
+        arrowbox.orient = "";
         if (position.indexOf("_end") > 0) {
           arrowbox.setAttribute("pack", "end");
         } else {
