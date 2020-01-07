@@ -17,8 +17,6 @@
 ; This file contains a floating-point implementation of the inverse DCT
 ; (Discrete Cosine Transform). The following code is based directly on
 ; the IJG's original jidctflt.c; see the jidctflt.c for more details.
-;
-; [TAB8]
 
 %include "jsimdext.inc"
 %include "jdct.inc"
@@ -95,8 +93,8 @@ EXTN(jsimd_idct_float_sse2):
     mov         rcx, DCTSIZE/4          ; ctr
 .columnloop:
 %ifndef NO_ZERO_COLUMN_TEST_FLOAT_SSE
-    mov         eax, DWORD [DWBLOCK(1,0,rsi,SIZEOF_JCOEF)]
-    or          eax, DWORD [DWBLOCK(2,0,rsi,SIZEOF_JCOEF)]
+    mov         eax, dword [DWBLOCK(1,0,rsi,SIZEOF_JCOEF)]
+    or          eax, dword [DWBLOCK(2,0,rsi,SIZEOF_JCOEF)]
     jnz         near .columnDCT
 
     movq        xmm1, XMM_MMWORD [MMBLOCK(1,0,rsi,SIZEOF_JCOEF)]

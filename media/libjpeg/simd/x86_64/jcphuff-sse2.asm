@@ -16,8 +16,6 @@
 ;
 ; This file contains an SSE2 implementation of data preparation for progressive
 ; Huffman encoding.  See jcphuff.c for more details.
-;
-; [TAB8]
 
 %include "jsimdext.inc"
 

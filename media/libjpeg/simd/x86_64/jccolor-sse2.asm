@@ -12,8 +12,6 @@
 ; assembler (including Borland's Turbo Assembler).
 ; NASM is available from http://nasm.sourceforge.net/ or
 ; http://sourceforge.net/project/showfiles.php?group_id=6208
-;
-; [TAB8]
 
 %include "jsimdext.inc"
 
