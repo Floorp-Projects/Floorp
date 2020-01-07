@@ -21,6 +21,7 @@ namespace dom {
 FileBlobImpl::FileBlobImpl(nsIFile* aFile)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), EmptyString(),
                    EmptyString(), UINT64_MAX, INT64_MAX),
+      mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
       mFileId(-1),
       mWholeFile(true) {
@@ -37,6 +38,7 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
                            nsIFile* aFile)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
                    aLength, UINT64_MAX),
+      mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
       mFileId(-1),
       mWholeFile(true) {
@@ -50,6 +52,7 @@ FileBlobImpl::FileBlobImpl(const nsAString& aName,
                            nsIFile* aFile, int64_t aLastModificationDate)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aName, aContentType,
                    aLength, aLastModificationDate),
+      mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
       mFileId(-1),
       mWholeFile(true) {
@@ -62,6 +65,7 @@ FileBlobImpl::FileBlobImpl(nsIFile* aFile, const nsAString& aName,
                            const nsAString& aContentType,
                            const nsAString& aBlobImplType)
     : BaseBlobImpl(aBlobImplType, aName, aContentType, UINT64_MAX, INT64_MAX),
+      mMutex("FileBlobImpl::mMutex"),
       mFile(aFile),
       mFileId(-1),
       mWholeFile(true) {
@@ -79,12 +83,12 @@ FileBlobImpl::FileBlobImpl(const FileBlobImpl* aOther, uint64_t aStart,
                            uint64_t aLength, const nsAString& aContentType)
     : BaseBlobImpl(NS_LITERAL_STRING("FileBlobImpl"), aContentType,
                    aOther->mStart + aStart, aLength),
+      mMutex("FileBlobImpl::mMutex"),
       mFile(aOther->mFile),
       mFileId(-1),
       mWholeFile(false) {
   MOZ_ASSERT(mFile, "must have file");
   MOZ_ASSERT(XRE_IsParentProcess());
-  mImmutable = aOther->mImmutable;
   mMozFullPath = aOther->mMozFullPath;
 }
 
@@ -100,6 +104,8 @@ void FileBlobImpl::GetMozFullPathInternal(nsAString& aFilename,
                                           ErrorResult& aRv) {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
 
+  MutexAutoLock lock(mMutex);
+
   if (!mMozFullPath.IsVoid()) {
     aFilename = mMozFullPath;
     return;
@@ -114,6 +120,8 @@ void FileBlobImpl::GetMozFullPathInternal(nsAString& aFilename,
 }
 
 uint64_t FileBlobImpl::GetSize(ErrorResult& aRv) {
+  MutexAutoLock lock(mMutex);
+
   if (BaseBlobImpl::IsSizeUnknown()) {
     MOZ_ASSERT(mWholeFile,
                "Should only use lazy size when using the whole file");
@@ -134,14 +142,14 @@ uint64_t FileBlobImpl::GetSize(ErrorResult& aRv) {
   return mLength;
 }
 
-namespace {
-
-class GetTypeRunnable final : public WorkerMainThreadRunnable {
+class FileBlobImpl::GetTypeRunnable final : public WorkerMainThreadRunnable {
  public:
-  GetTypeRunnable(WorkerPrivate* aWorkerPrivate, BlobImpl* aBlobImpl)
+  GetTypeRunnable(WorkerPrivate* aWorkerPrivate, FileBlobImpl* aBlobImpl,
+                  const MutexAutoLock& aProofOfLock)
       : WorkerMainThreadRunnable(aWorkerPrivate,
                                  NS_LITERAL_CSTRING("FileBlobImpl :: GetType")),
-        mBlobImpl(aBlobImpl) {
+        mBlobImpl(aBlobImpl),
+        mProofOfLock(aProofOfLock) {
     MOZ_ASSERT(aBlobImpl);
     aWorkerPrivate->AssertIsOnWorkerThread();
   }
@@ -150,19 +158,24 @@ class GetTypeRunnable final : public WorkerMainThreadRunnable {
     MOZ_ASSERT(NS_IsMainThread());
 
     nsAutoString type;
-    mBlobImpl->GetType(type);
+    mBlobImpl->GetTypeInternal(type, mProofOfLock);
     return true;
   }
 
  private:
   ~GetTypeRunnable() = default;
 
-  RefPtr<BlobImpl> mBlobImpl;
+  RefPtr<FileBlobImpl> mBlobImpl;
+  const MutexAutoLock& mProofOfLock;
 };
 
-}  // anonymous namespace
-
 void FileBlobImpl::GetType(nsAString& aType) {
+  MutexAutoLock lock(mMutex);
+  GetTypeInternal(aType, lock);
+}
+
+void FileBlobImpl::GetTypeInternal(nsAString& aType,
+                                   const MutexAutoLock& aProofOfLock) {
   aType.Truncate();
 
   if (mContentType.IsVoid()) {
@@ -178,7 +191,7 @@ void FileBlobImpl::GetType(nsAString& aType) {
       }
 
       RefPtr<GetTypeRunnable> runnable =
-          new GetTypeRunnable(workerPrivate, this);
+          new GetTypeRunnable(workerPrivate, this, aProofOfLock);
 
       ErrorResult rv;
       runnable->Dispatch(Canceling, rv);
@@ -210,6 +223,9 @@ void FileBlobImpl::GetType(nsAString& aType) {
 
 int64_t FileBlobImpl::GetLastModified(ErrorResult& aRv) {
   MOZ_ASSERT(mIsFile, "Should only be called on files");
+
+  MutexAutoLock lock(mMutex);
+
   if (BaseBlobImpl::IsDateUnknown()) {
     PRTime msecs;
     aRv = mFile->GetLastModifiedTime(&msecs);

@@ -14,7 +14,6 @@
 #include "mozilla/dom/BodyConsumer.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
-#include "nsIMutable.h"
 #include "nsWrapperCache.h"
 #include "nsWeakReference.h"
 
@@ -36,14 +35,11 @@ class Promise;
     }                                                \
   }
 
-class Blob : public nsIMutable,
-             public nsSupportsWeakReference,
+class Blob : public nsSupportsWeakReference,
              public nsWrapperCache {
  public:
-  NS_DECL_NSIMUTABLE
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS_FINAL
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Blob, nsIMutable)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Blob)
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_BLOB_IID)
 
   typedef OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString BlobPart;
@@ -158,7 +154,7 @@ size_t BindingJSObjectMallocBytes(Blob* aBlob);
 }  // namespace mozilla
 
 inline nsISupports* ToSupports(mozilla::dom::Blob* aBlob) {
-  return static_cast<nsIMutable*>(aBlob);
+  return static_cast<nsISupportsWeakReference*>(aBlob);
 }
 
 #endif  // mozilla_dom_Blob_h

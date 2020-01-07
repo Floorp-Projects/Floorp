@@ -51,7 +51,6 @@ StreamBlobImpl::StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
       mInputStream(std::move(aInputStream)),
       mIsDirectory(false),
       mFileId(-1) {
-  mImmutable = true;
 }
 
 StreamBlobImpl::StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
@@ -64,7 +63,6 @@ StreamBlobImpl::StreamBlobImpl(already_AddRefed<nsIInputStream> aInputStream,
       mInputStream(std::move(aInputStream)),
       mIsDirectory(false),
       mFileId(-1) {
-  mImmutable = true;
 }
 
 StreamBlobImpl::~StreamBlobImpl() { UnregisterWeakMemoryReporter(this); }
