@@ -52,6 +52,8 @@ linux1804-64-asan/opt:
     test-sets:
         - linux1804-tests
 
+# Stylo sequential runs check memory and
+# performance when using a single thread.
 linux1804-64-stylo-sequential/opt:
     build-platform: linux64/opt
     test-sets:
@@ -98,7 +100,6 @@ linux64/opt:
         - opt-only-tests
         - desktop-screenshot-capture
         - talos
-        - awsy
         - mochitest-headless
         - linux-talos-flex
         - raptor-firefox
@@ -140,12 +141,6 @@ linux64-asan/opt:
     test-sets:
         - linux-common-tests
         - web-platform-tests
-
-# Stylo sequential runs check memory and performance when using a single thread.
-linux64-stylo-sequential/opt:
-    build-platform: linux64/opt
-    test-sets:
-        - awsy-stylo-sequential
 
 # QR builds just run a subset right now.
 linux64-qr/opt:
