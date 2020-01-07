@@ -105,6 +105,14 @@ devtools
 
 The `Firefox Developer Tools <https://developer.mozilla.org/docs/Tools>`__ server and client components.
 
+
+docs
+----
+
+Contains the documentation configuration (`Sphinx <http://www.sphinx-doc.org/>`__ based), the index page
+and the contribution pages.
+
+
 docshell
 --------
 
