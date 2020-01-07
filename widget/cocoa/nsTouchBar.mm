@@ -514,12 +514,13 @@ static const uint32_t kInputIconSize = 16;
 }
 
 - (void)loadIconForInput:(TouchBarInput*)aInput forItem:(NSTouchBarItem*)aItem {
-  if (!aInput || ![aInput imageURI] || !aItem) {
+  if (!aInput || ![aInput imageURI] || !aItem || !mTouchBarHelper) {
     return;
   }
 
   RefPtr<nsTouchBarInputIcon> icon = [aInput icon];
-  if (!icon && mTouchBarHelper) {
+
+  if (!icon) {
     RefPtr<Document> document;
     nsresult rv = mTouchBarHelper->GetDocument(getter_AddRefs(document));
     if (NS_FAILED(rv) || !document) {
