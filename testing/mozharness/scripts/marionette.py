@@ -77,18 +77,11 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
          "dest": "total_chunks",
          "help": "Number of total chunks",
          }
-     ], [
+    ], [
         ["--this-chunk"],
         {"action": "store",
          "dest": "this_chunk",
          "help": "Number of this chunk",
-         }
-     ], [
-        ["--disable-e10s"],
-        {"action": "store_false",
-         "dest": "e10s",
-         "default": True,
-         "help": "Run tests without multiple processes (e10s). (Desktop builds only)",
          }
     ], [
         ["--setpref"],
@@ -310,9 +303,6 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
 
         if self.config.get('app_arg'):
             config_fmt_args['app_arg'] = self.config['app_arg']
-
-        if not self.config['e10s']:
-            cmd.append('--disable-e10s')
 
         if self.config['enable_webrender']:
             cmd.append('--enable-webrender')
