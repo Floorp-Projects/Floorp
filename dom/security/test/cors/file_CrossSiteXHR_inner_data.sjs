@@ -6,7 +6,7 @@ window.addEventListener("message", function(e) {\n\
 \n\
   sendData = null;\n\
 \n\
-  req = eval(e.data);\n\
+  req = JSON.parse(e.data);\n\
   var res = {\n\
     didFail: false,\n\
     events: [],\n\
@@ -81,7 +81,7 @@ window.addEventListener("message", function(e) {\n\
 }, false);\n\
 \n\
 function post(e, res) {\n\
-  e.source.postMessage(res.toSource(), "*");\n\
+  e.source.postMessage(JSON.stringify(res), "*");\n\
 }\n\
 function trimString(stringValue) {\n\
   return stringValue.replace("/^\s+|\s+$/g","");\n\

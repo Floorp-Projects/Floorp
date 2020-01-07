@@ -25,8 +25,7 @@ var gen;
 function initTest() {
   SimpleTest.waitForExplicitFinish();
   // Allow all cookies, then do the actual test initialization
-  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0],
-  																	 ["security.allow_eval_with_system_principal", true]]},
+  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]},
   																	  initTestCallback);
 }
 
@@ -670,7 +669,7 @@ function* runTest() {
                  "application/x-www-form-urlencoded"]
                    .includes(test.headers[name].toLowerCase()));
       }
-      req.url += "&headers=" + escape(test.headers.toSource());
+      req.url += "&headers=" + escape(JSON.stringify(test.headers));
       reqHeaders =
         escape(Object.keys(test.headers)
                .filter(isUnsafeHeader)
@@ -692,86 +691,86 @@ function* runTest() {
     if (test.preflightStatus)
       req.url += "&preflightStatus=" + test.preflightStatus;
     if (test.responseHeaders)
-      req.url += "&responseHeaders=" + escape(test.responseHeaders.toSource());
+      req.url += "&responseHeaders=" + escape(JSON.stringify(test.responseHeaders));
     if (test.exposeHeaders)
       req.url += "&exposeHeaders=" + escape(test.exposeHeaders);
     if (test.preflightBody)
       req.url += "&preflightBody=" + escape(test.preflightBody);
 
-    loaderWindow.postMessage(req.toSource(), origin);
-    res = eval(yield);
+    loaderWindow.postMessage(JSON.stringify(req), origin);
+    res = JSON.parse(yield);
 
     if (test.pass) {
       is(res.didFail, false,
-        "shouldn't have failed in test for " + test.toSource());
+        "shouldn't have failed in test for " + JSON.stringify(test));
       if (test.status) {
-        is(res.status, test.status, "wrong status in test for " + test.toSource());
-        is(res.statusText, test.statusMessage, "wrong status text for " + test.toSource());
+        is(res.status, test.status, "wrong status in test for " + JSON.stringify(test));
+        is(res.statusText, test.statusMessage, "wrong status text for " + JSON.stringify(test));
       }
       else {
-        is(res.status, 200, "wrong status in test for " + test.toSource());
-        is(res.statusText, "OK", "wrong status text for " + test.toSource());
+        is(res.status, 200, "wrong status in test for " + JSON.stringify(test));
+        is(res.statusText, "OK", "wrong status text for " + JSON.stringify(test));
       }
       if (test.method !== "HEAD") {
         is(res.responseXML, "<res>hello pass</res>",
-           "wrong responseXML in test for " + test.toSource());
+           "wrong responseXML in test for " + JSON.stringify(test));
         is(res.responseText, "<res>hello pass</res>\n",
-           "wrong responseText in test for " + test.toSource());
+           "wrong responseText in test for " + JSON.stringify(test));
         is(res.events.join(","),
            "opening,rs1,sending,loadstart,rs2,rs3,rs4,load,loadend",
-           "wrong responseText in test for " + test.toSource());
+           "wrong responseText in test for " + JSON.stringify(test));
       }
       else {
         is(res.responseXML, null,
-           "wrong responseXML in test for " + test.toSource());
+           "wrong responseXML in test for " + JSON.stringify(test));
         is(res.responseText, "",
-           "wrong responseText in test for " + test.toSource());
+           "wrong responseText in test for " + JSON.stringify(test));
         is(res.events.join(","),
            "opening,rs1,sending,loadstart,rs2,rs4,load,loadend",
-           "wrong responseText in test for " + test.toSource());
+           "wrong responseText in test for " + JSON.stringify(test));
       }
       if (test.responseHeaders) {
         for (header in test.responseHeaders) {
           if (!test.expectedResponseHeaders.includes(header)) {
             is(res.responseHeaders[header], null,
                "|xhr.getResponseHeader()|wrong response header (" + header + ") in test for " +
-               test.toSource());
+               JSON.stringify(test));
             is(res.allResponseHeaders[header], undefined,
               "|xhr.getAllResponseHeaderss()|wrong response header (" + header + ") in test for " +
-              test.toSource());
+              JSON.stringify(test));
           }
           else {
             is(res.responseHeaders[header], test.responseHeaders[header],
                "|xhr.getResponseHeader()|wrong response header (" + header + ") in test for " +
-               test.toSource());
+               JSON.stringify(test));
             is(res.allResponseHeaders[header.toLowerCase()], test.responseHeaders[header],
               "|xhr.getAllResponseHeaderss()|wrong response header (" + header + ") in test for " +
-              test.toSource());
+              JSON.stringify(test));
           }
         }
       }
     }
     else {
       is(res.didFail, true,
-        "should have failed in test for " + test.toSource());
-      is(res.status, 0, "wrong status in test for " + test.toSource());
-      is(res.statusText, "", "wrong status text for " + test.toSource());
+        "should have failed in test for " + JSON.stringify(test));
+      is(res.status, 0, "wrong status in test for " + JSON.stringify(test));
+      is(res.statusText, "", "wrong status text for " + JSON.stringify(test));
       is(res.responseXML, null,
-         "wrong responseXML in test for " + test.toSource());
+         "wrong responseXML in test for " + JSON.stringify(test));
       is(res.responseText, "",
-         "wrong responseText in test for " + test.toSource());
+         "wrong responseText in test for " + JSON.stringify(test));
       if (!res.sendThrew) {
         is(res.events.join(","),
            "opening,rs1,sending,loadstart,rs4,error,loadend",
-           "wrong events in test for " + test.toSource());
+           "wrong events in test for " + JSON.stringify(test));
       }
       is(res.progressEvents, 0,
-         "wrong events in test for " + test.toSource());
+         "wrong events in test for " + JSON.stringify(test));
       if (test.responseHeaders) {
         for (header in test.responseHeaders) {
           is(res.responseHeaders[header], null,
              "wrong response header (" + header + ") in test for " +
-             test.toSource());
+             JSON.stringify(test));
         }
       }
     }
@@ -877,36 +876,36 @@ function* runTest() {
     if ("allowMethods" in test)
       req.url += "&allowMethods=" + escape(test.allowMethods);
 
-    loaderWindow.postMessage(req.toSource(), origin);
+    loaderWindow.postMessage(JSON.stringify(req), origin);
 
-    res = eval(yield);
+    res = JSON.parse(yield);
     if (test.pass) {
       is(res.didFail, false,
-        "shouldn't have failed in test for " + test.toSource());
-      is(res.status, 200, "wrong status in test for " + test.toSource());
-      is(res.statusText, "OK", "wrong status text for " + test.toSource());
+        "shouldn't have failed in test for " + JSON.stringify(test));
+      is(res.status, 200, "wrong status in test for " + JSON.stringify(test));
+      is(res.statusText, "OK", "wrong status text for " + JSON.stringify(test));
       is(res.responseXML, "<res>hello pass</res>",
-         "wrong responseXML in test for " + test.toSource());
+         "wrong responseXML in test for " + JSON.stringify(test));
       is(res.responseText, "<res>hello pass</res>\n",
-         "wrong responseText in test for " + test.toSource());
+         "wrong responseText in test for " + JSON.stringify(test));
       is(res.events.join(","),
          "opening,rs1,sending,loadstart,rs2,rs3,rs4,load,loadend",
-         "wrong responseText in test for " + test.toSource());
+         "wrong responseText in test for " + JSON.stringify(test));
     }
     else {
       is(res.didFail, true,
-        "should have failed in test for " + test.toSource());
-      is(res.status, 0, "wrong status in test for " + test.toSource());
-      is(res.statusText, "", "wrong status text for " + test.toSource());
+        "should have failed in test for " + JSON.stringify(test));
+      is(res.status, 0, "wrong status in test for " + JSON.stringify(test));
+      is(res.statusText, "", "wrong status text for " + JSON.stringify(test));
       is(res.responseXML, null,
-         "wrong responseXML in test for " + test.toSource());
+         "wrong responseXML in test for " + JSON.stringify(test));
       is(res.responseText, "",
-         "wrong responseText in test for " + test.toSource());
+         "wrong responseText in test for " + JSON.stringify(test));
       is(res.events.join(","),
          "opening,rs1,sending,loadstart,rs4,error,loadend",
-         "wrong events in test for " + test.toSource());
+         "wrong events in test for " + JSON.stringify(test));
       is(res.progressEvents, 0,
-         "wrong events in test for " + test.toSource());
+         "wrong events in test for " + JSON.stringify(test));
     }
   }
 
@@ -1431,7 +1430,7 @@ function* runTest() {
   for (test of tests) {
     req = {
       url: test.hops[0].server + basePath + "hop=1&hops=" +
-           escape(test.hops.toSource()),
+           escape(JSON.stringify(test.hops)),
       method: test.method,
       headers: test.headers,
       body: test.body,
@@ -1443,36 +1442,36 @@ function* runTest() {
         req.url += "&body=" + escape(test.body);
     }
 
-    loaderWindow.postMessage(req.toSource(), origin);
+    loaderWindow.postMessage(JSON.stringify(req), origin);
 
-    res = eval(yield);
+    res = JSON.parse(yield);
     if (test.pass) {
       is(res.didFail, false,
-        "shouldn't have failed in test for " + test.toSource());
-      is(res.status, 200, "wrong status in test for " + test.toSource());
-      is(res.statusText, "OK", "wrong status text for " + test.toSource());
+        "shouldn't have failed in test for " + JSON.stringify(test));
+      is(res.status, 200, "wrong status in test for " + JSON.stringify(test));
+      is(res.statusText, "OK", "wrong status text for " + JSON.stringify(test));
       is(res.responseXML, "<res>hello pass</res>",
-         "wrong responseXML in test for " + test.toSource());
+         "wrong responseXML in test for " + JSON.stringify(test));
       is(res.responseText, "<res>hello pass</res>\n",
-         "wrong responseText in test for " + test.toSource());
+         "wrong responseText in test for " + JSON.stringify(test));
       is(res.events.join(","),
          "opening,rs1,sending,loadstart,rs2,rs3,rs4,load,loadend",
-         "wrong responseText in test for " + test.toSource());
+         "wrong responseText in test for " + JSON.stringify(test));
     }
     else {
       is(res.didFail, true,
-        "should have failed in test for " + test.toSource());
-      is(res.status, 0, "wrong status in test for " + test.toSource());
-      is(res.statusText, "", "wrong status text for " + test.toSource());
+        "should have failed in test for " + JSON.stringify(test));
+      is(res.status, 0, "wrong status in test for " + JSON.stringify(test));
+      is(res.statusText, "", "wrong status text for " + JSON.stringify(test));
       is(res.responseXML, null,
-         "wrong responseXML in test for " + test.toSource());
+         "wrong responseXML in test for " + JSON.stringify(test));
       is(res.responseText, "",
-         "wrong responseText in test for " + test.toSource());
+         "wrong responseText in test for " + JSON.stringify(test));
       is(res.events.join(","),
          "opening,rs1,sending,loadstart,rs4,error,loadend",
-         "wrong events in test for " + test.toSource());
+         "wrong events in test for " + JSON.stringify(test));
       is(res.progressEvents, 0,
-         "wrong progressevents in test for " + test.toSource());
+         "wrong progressevents in test for " + JSON.stringify(test));
     }
   }
 
