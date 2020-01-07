@@ -1,5 +1,4 @@
 Cu.import("resource://gre/modules/Services.jsm");
-Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 
 function handleRequest(request, response)
 {
@@ -25,7 +24,7 @@ function handleRequest(request, response)
   // Send response
 
   secData =
-    eval(getState("test/dom/security/test_CrossSiteXHR_cache:secData"));
+    JSON.parse(getState("test/dom/security/test_CrossSiteXHR_cache:secData"));
 
   if (secData.allowOrigin)
     response.setHeader("Access-Control-Allow-Origin", secData.allowOrigin);
