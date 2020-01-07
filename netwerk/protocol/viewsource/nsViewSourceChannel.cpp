@@ -191,6 +191,11 @@ nsresult nsViewSourceChannel::BuildViewSourceURI(nsIURI* aURI,
 
 NS_IMETHODIMP
 nsViewSourceChannel::GetName(nsACString& result) {
+  nsCOMPtr<nsIURI> uri;
+  GetURI(getter_AddRefs(uri));
+  if (uri) {
+    return uri->GetSpec(result);
+  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

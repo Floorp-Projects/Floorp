@@ -593,7 +593,13 @@ NS_IMETHODIMP DocumentChannelChild::GetName(nsACString& aResult) {
     aResult.Truncate();
     return NS_OK;
   }
-  return mURI->GetSpec(aResult);
+  nsCString spec;
+  nsresult rv = mURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aResult.AssignLiteral("documentchannel:");
+  aResult.Append(spec);
+  return NS_OK;
 }
 
 NS_IMETHODIMP DocumentChannelChild::IsPending(bool* aResult) {
