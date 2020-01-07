@@ -2086,3 +2086,4 @@ fuzzy(0-1,0-10000) == 1577566-1.html 1577566-1-ref.html
 == 1579953-2.html 1579953-2-ref.html
 == 1595199-1.html 1595199-1-ref.html
 fuzzy-if(gtkWidget,0-255,0-42) == 1599841-1.html 1599841-1-ref.html
+pref(layout.css.xul-box-display-values.content.enabled,true) == 1606130.html 1606130-ref.html
