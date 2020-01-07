@@ -18,6 +18,8 @@ const gDirServ = Cc["@mozilla.org/file/directory_service;1"].getService(
 );
 const gNetLinkSvc = Cc[
   "@mozilla.org/network/network-link-service;1"
+] && Cc[
+  "@mozilla.org/network/network-link-service;1"
 ].getService(Ci.nsINetworkLinkService);
 
 const gRequestNetworkingData = {
@@ -150,7 +152,10 @@ function displayWebsockets(data) {
 
 function displayRcwnStats(data) {
   let status = Services.prefs.getBoolPref("network.http.rcwn.enabled");
-  let linkType = gNetLinkSvc.linkType;
+  let linkType = Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN;
+  try {
+    linkType = gNetLinkSvc.linkType;
+  } catch (e) {}
   if (
     !(
       linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN ||
@@ -194,13 +199,20 @@ function displayRcwnStats(data) {
 }
 
 function displayNetworkID() {
-  let linkIsUp = gNetLinkSvc.isLinkUp;
-  let linkStatusKnown = gNetLinkSvc.linkStatusKnown;
-  let networkID = gNetLinkSvc.networkID;
+  try {
+    let linkIsUp = gNetLinkSvc.isLinkUp;
+    let linkStatusKnown = gNetLinkSvc.linkStatusKnown;
+    let networkID = gNetLinkSvc.networkID;
 
-  document.getElementById("networkid_isUp").innerText = linkIsUp;
-  document.getElementById("networkid_statusKnown").innerText = linkStatusKnown;
-  document.getElementById("networkid_id").innerText = networkID;
+    document.getElementById("networkid_isUp").innerText = linkIsUp;
+    document.getElementById("networkid_statusKnown").innerText =
+    	linkStatusKnown;
+    document.getElementById("networkid_id").innerText = networkID;
+  } catch (e) {
+    document.getElementById("networkid_isUp").innerText = "<unknown>";
+    document.getElementById("networkid_statusKnown").innerText = "<unknown>";
+    document.getElementById("networkid_id").innerText = "<unknown>";
+  }
 }
 
 function requestAllNetworkingData() {
