@@ -3444,7 +3444,14 @@ nsresult nsFocusManager::GetNextTabbableContent(
             return NS_OK;
           }
         }
+        // There is no next tabbable content in currentTopLevelScopeOwner's
+        // scope. We should continue the loop in order to skip all contents that
+        // is in currentTopLevelScopeOwner's scope.
+        continue;
       }
+
+      MOZ_ASSERT(!GetTopLevelScopeOwner(currentContent),
+                 "currentContent should be in top-level-scope at this point");
 
       // TabIndex not set defaults to 0 for form elements, anchors and other
       // elements that are normally focusable. Tabindex defaults to -1
