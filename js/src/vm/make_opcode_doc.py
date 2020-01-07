@@ -4,7 +4,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-""" Usage: make_opcode_doc.py PATH_TO_MOZILLA_CENTRAL
+""" Usage: mach python make_opcode_doc.py
 
     This script generates SpiderMonkey bytecode documentation
     from js/src/vm/Opcodes.h.
@@ -136,16 +136,12 @@ def print_doc(index):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("Usage: make_opcode_doc.py PATH_TO_MOZILLA_CENTRAL",
+    if len(sys.argv) != 1:
+        print("Usage: mach python make_opcode_doc.py",
               file=sys.stderr)
         sys.exit(1)
-    dir = sys.argv[1]
+    js_src_vm_dir = os.path.dirname(os.path.realpath(__file__))
+    root_dir = os.path.abspath(os.path.join(js_src_vm_dir, '..', '..', '..'))
 
-    try:
-        index, _ = jsopcode.get_opcodes(dir)
-    except Exception as e:
-        print("Error: {}".format(e.args[0]), file=sys.stderr)
-        sys.exit(1)
-
+    index, _ = jsopcode.get_opcodes(root_dir)
     print_doc(index)
