@@ -190,7 +190,7 @@ async function runTest(test, expectedFlag, expectedTrackingResource, prefs) {
     ],
   ];
 
-  info("Testing: " + config.toSource() + "\n");
+  info("Testing: " + JSON.stringify(config) + "\n");
 
   await SpecialPowers.pushPrefEnv({ set: config.concat(prefs) });
 
