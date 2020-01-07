@@ -20,7 +20,6 @@ static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
 static const char kClearPrivateData[] = "clear-private-data";
 static const char kPurge[] = "browser:purge-session-history";
 static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
-static const char kCaptivedetectCanonicalURL[] = "captivedetect.canonicalURL";
 static const char kPrefSkipTRRParentalControl[] =
     "network.dns.skipTRR-when-parental-control-enabled";
 
@@ -82,7 +81,6 @@ nsresult TRRService::Init() {
   if (prefBranch) {
     prefBranch->AddObserver(TRR_PREF_PREFIX, this, true);
     prefBranch->AddObserver(kDisableIpv6Pref, this, true);
-    prefBranch->AddObserver(kCaptivedetectCanonicalURL, this, true);
     prefBranch->AddObserver(kPrefSkipTRRParentalControl, this, true);
   }
   nsCOMPtr<nsICaptivePortalService> captivePortalService =
@@ -316,8 +314,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
     }
   }
   if (!name || !strcmp(name, TRR_PREF("excluded-domains")) ||
-      !strcmp(name, TRR_PREF("builtin-excluded-domains")) ||
-      !strcmp(name, kCaptivedetectCanonicalURL)) {
+      !strcmp(name, TRR_PREF("builtin-excluded-domains"))) {
     MutexAutoLock lock(mLock);
     mExcludedDomains.Clear();
 
@@ -340,19 +337,6 @@ nsresult TRRService::ReadPrefs(const char* name) {
     parseExcludedDomains(TRR_PREF("excluded-domains"));
     parseExcludedDomains(TRR_PREF("builtin-excluded-domains"));
     clearEntireCache = true;
-
-    nsAutoCString canonicalSiteURL;
-    Preferences::GetCString(kCaptivedetectCanonicalURL, canonicalSiteURL);
-
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), canonicalSiteURL,
-                            UTF_8_ENCODING, nullptr);
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoCString host;
-      uri->GetHost(host);
-      LOG(("TRRService::ReadPrefs captive portal URL:[%s]\n", host.get()));
-      mExcludedDomains.PutEntry(host);
-    }
   }
 
   if (!name || !strcmp(name, kPrefSkipTRRParentalControl)) {
