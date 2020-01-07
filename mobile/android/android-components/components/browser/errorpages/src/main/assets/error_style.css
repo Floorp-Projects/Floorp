@@ -118,11 +118,17 @@ button {
   }
 }
 
-#advancedPanelButtonContainer {
+.advancedPanelButtonContainer {
   background-color: rgba(128, 128, 147, 0.1);
   display: flex;
   justify-content: center;
-  padding: 0.5em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-bottom: 0.5em;
+}
+
+#advancedPanelBackButtonContainer {
+  padding-bottom: 0;
 }
 
 #advancedPanelContainer {
@@ -142,12 +148,6 @@ button {
 .button-container {
   display: flex;
   flex-flow: row;
-}
-
-.button-container > button {
-  flex: 1 0 50%;
-  text-align: center;
-  margin: 0em 0.1em 0em 0.1em;
 }
 
 #badCertTechnicalInfo {

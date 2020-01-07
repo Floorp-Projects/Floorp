@@ -30,12 +30,22 @@ interface RequestInterceptor {
     /**
      * An alternative response for an error request.
      */
-    data class ErrorResponse(
-        val data: String,
-        val url: String? = null,
-        val mimeType: String = "text/html",
-        val encoding: String = "UTF-8"
-    )
+    sealed class ErrorResponse {
+        /**
+         * Used to load from data with base URL
+         */
+        data class Content(
+            val data: String,
+            val url: String? = null,
+            val mimeType: String = "text/html",
+            val encoding: String = "UTF-8"
+        ) : ErrorResponse()
+
+        /**
+         * Used to load an encoded URI directly
+         */
+        data class Uri(val uri: String) : ErrorResponse()
+    }
 
     /**
      * A request to open an URI. This is called before each page load to allow

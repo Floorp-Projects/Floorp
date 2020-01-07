@@ -414,14 +414,17 @@ class GeckoEngineSession(
             uri: String?,
             error: WebRequestError
         ): GeckoResult<String> {
-            settings.requestInterceptor?.onErrorRequest(
+            val uriToLoad = settings.requestInterceptor?.onErrorRequest(
                 this@GeckoEngineSession,
                 geckoErrorToErrorType(error.code),
                 uri
-            )?.apply {
-                return GeckoResult.fromValue(Base64.encodeToUriString(data))
+            )?.run {
+                when (this) {
+                    is RequestInterceptor.ErrorResponse.Content -> Base64.encodeToUriString(data)
+                    is RequestInterceptor.ErrorResponse.Uri -> this.uri
+                }
             }
-            return GeckoResult.fromValue(null)
+            return GeckoResult.fromValue(uriToLoad)
         }
     }
 
