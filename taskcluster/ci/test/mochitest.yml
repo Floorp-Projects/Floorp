@@ -285,7 +285,7 @@ mochitest-media:
     variants:
         by-test-platform:
             android.*: []
-            linux64/debug: ['fission', 'serviceworker', 'socketprocess']
+            linux1804-64/debug: ['fission', 'serviceworker', 'socketprocess']
             default: ['fission', 'socketprocess']
     loopback-video: true
     instance-size: large
@@ -296,7 +296,7 @@ mochitest-media:
             macosx.*64.*/.*: 2
             windows10-aarch64/.*: 1
             windows7-32-shippable/.*: 2
-            linux64(-shippable|-devedition|-.*qr)/opt: 2
+            linux1804-64(-shippable|-devedition|-.*qr)/opt: 2
             default: 3
     mozharness:
         mochitest-flavor: plain
