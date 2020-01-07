@@ -11,9 +11,9 @@ import pytest
 
 
 @pytest.mark.skipif(os.name == 'nt', reason="fzf not installed on host")
-def test_paths(run_mach, capfd):
+def test_query_paths(run_mach, capfd):
     cmd = ['try', 'fuzzy', '--no-push',
-           '-q', "'linux64/opt-xpcshell", 'caps/tests/unit/test_origin.js']
+           '-q', "'test-linux1804-64/opt-xpcshell", 'caps/tests/unit/test_origin.js']
     assert run_mach(cmd) == 0
 
     output = capfd.readouterr().out
@@ -23,7 +23,24 @@ def test_paths(run_mach, capfd):
     # with the path filtering.
     expected = """
     "tasks": [
-        "test-linux64/opt-xpcshell-e10s-1"
+        "test-linux1804-64/opt-xpcshell-e10s-1"
+    ]""".lstrip()
+
+    assert expected in output
+
+
+@pytest.mark.skipif(os.name == 'nt', reason="fzf not installed on host")
+def test_query(run_mach, capfd):
+    cmd = ['try', 'fuzzy', '--no-push', '-q', "'source-test-python-taskgraph-tests-py2"]
+    assert run_mach(cmd) == 0
+
+    output = capfd.readouterr().out
+    print(output)
+
+    # Should only ever mach one task exactly.
+    expected = """
+    "tasks": [
+        "source-test-python-taskgraph-tests-py2"
     ]""".lstrip()
 
     assert expected in output
