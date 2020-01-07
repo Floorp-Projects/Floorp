@@ -428,15 +428,18 @@ bool nsScriptErrorBase::ComputeIsFromPrivateWindow(
     nsGlobalWindowInner* aWindow) {
   // Never mark exceptions from chrome windows as having come from private
   // windows, since we always want them to be reported.
+  // winPrincipal needs to be null-checked - Bug 1601175
   nsIPrincipal* winPrincipal = aWindow->GetPrincipal();
-  return aWindow->IsPrivateBrowsing() && !winPrincipal->IsSystemPrincipal();
+  return aWindow->IsPrivateBrowsing() &&
+         (!winPrincipal || !winPrincipal->IsSystemPrincipal());
 }
 
 /* static */
 bool nsScriptErrorBase::ComputeIsFromChromeContext(
     nsGlobalWindowInner* aWindow) {
   nsIPrincipal* winPrincipal = aWindow->GetPrincipal();
-  return winPrincipal->IsSystemPrincipal();
+  // winPrincipal needs to be null-checked - Bug 1601175
+  return (winPrincipal && winPrincipal->IsSystemPrincipal());
 }
 
 NS_IMPL_ISUPPORTS(nsScriptError, nsIConsoleMessage, nsIScriptError)
