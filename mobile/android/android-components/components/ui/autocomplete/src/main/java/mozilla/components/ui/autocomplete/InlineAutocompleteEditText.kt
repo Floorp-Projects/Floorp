@@ -677,6 +677,14 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         windowFocusChangeListener?.invoke(hasFocus)
     }
 
+    override fun onTextContextMenuItem(id: Int): Boolean {
+        var newId = id
+        if (newId == android.R.id.paste && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            newId = android.R.id.pasteAsPlainText
+        }
+        return super.onTextContextMenuItem(newId)
+    }
+
     @Suppress("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return if (Build.VERSION.SDK_INT == Build.VERSION_CODES.M &&
