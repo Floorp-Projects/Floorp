@@ -55,6 +55,18 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  // Wrap the weakRef into the target's compartment.
+  RootedObject wrappedWeakRef(cx, weakRef);
+  AutoRealm ar(cx, target);
+  if (!JS_WrapObject(cx, &wrappedWeakRef)) {
+    return false;
+  }
+
+  if (JS_IsDeadWrapper(wrappedWeakRef)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+    return false;
+  }
+
   // 4. Perfom ! KeepDuringJob(target).
   if (!target->zone()->keepDuringJob(target)) {
     return false;
@@ -62,13 +74,6 @@ bool WeakRefObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
   // 5. Set weakRef.[[Target]] to target.
   weakRef->setPrivateGCThing(target);
-
-  // Wrap the weakRef into the target's compartment.
-  RootedObject wrappedWeakRef(cx, weakRef);
-  AutoRealm ar(cx, target);
-  if (!JS_WrapObject(cx, &wrappedWeakRef)) {
-    return false;
-  }
 
   // Add an entry to the per-zone maps from target JS object to a list of weak
   // ref objects.
