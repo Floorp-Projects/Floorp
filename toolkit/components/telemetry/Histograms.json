@@ -1712,7 +1712,7 @@
   },
   "SCROLL_PRESENT_LATENCY": {
     "record_in_processes": ["main", "gpu"],
-    "products": ["firefox", "fennec", "geckoview"],
+    "products": ["firefox", "geckoview_streaming"],
     "alert_emails": [ "perfteam@mozilla.com", "sefeng@mozilla.com", "vchin@mozilla.com" ],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -1721,7 +1721,7 @@
     "high": 20000,
     "n_buckets": 100,
     "description": "Time between receiving a scroll event on the event loop and compositing its result onto the screen (ms)",
-    "bug_numbers": [ 1500465 ]
+    "bug_numbers": [1500465, 1604818]
   },
   "CANVAS_2D_USED": {
     "record_in_processes": ["main", "content"],
