@@ -8962,7 +8962,11 @@ void PresShell::WillDoReflow() {
 
 void PresShell::DidDoReflow(bool aInterruptible) {
   HandlePostedReflowCallbacks(aInterruptible);
+  if (mIsDestroying) {
+    return;
+  }
 
+  nsAutoScriptBlocker scriptBlocker;
   AutoAssertNoFlush noReentrantFlush(*this);
   if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
     DOMHighResTimeStamp now = GetPerformanceNowUnclamped();
