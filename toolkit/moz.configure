@@ -1769,6 +1769,7 @@ def wasm_sandboxing_libraries():
     return ('graphite',)
 
 option('--with-wasm-sandboxed-libraries',
+       env='WASM_SANDBOXED_LIBRARIES',
        help='Enable wasm sandboxing for the selected libraries',
        nargs='+',
        choices=dependable(wasm_sandboxing_libraries))
