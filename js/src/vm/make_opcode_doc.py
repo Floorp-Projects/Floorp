@@ -98,8 +98,7 @@ OPCODE_FORMAT = """\
 
 def print_opcode(opcode):
     names_template = '{name} [-{nuses}, +{ndefs}]{flags}'
-    opcodes = sorted([opcode] + opcode.group,
-                     key=lambda opcode: opcode.name)
+    opcodes = [opcode] + opcode.group
     names = [names_template.format(name=escape(code.name),
                                    nuses=override(code.nuses,
                                                   opcode.nuses_override),
@@ -170,9 +169,8 @@ def print_doc(index):
                     name=type_name,
                     id=make_element_id(category_name, type_name)))
             print('<dl>')
-            for opcode_ in sorted(opcodes,
-                                  key=lambda opcode: opcode.sort_key):
-                print_opcode(opcode_)
+            for opcode in opcodes:
+                print_opcode(opcode)
             print('</dl>')
 
 
