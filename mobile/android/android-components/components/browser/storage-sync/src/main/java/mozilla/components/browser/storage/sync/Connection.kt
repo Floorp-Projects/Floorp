@@ -10,6 +10,7 @@ import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.support.sync.telemetry.SyncTelemetry
+import org.json.JSONObject
 import java.io.Closeable
 import java.io.File
 
@@ -40,8 +41,15 @@ internal interface Connection : Closeable {
     fun syncHistory(syncInfo: SyncAuthInfo)
     fun syncBookmarks(syncInfo: SyncAuthInfo)
 
-    fun importVisitsFromFennec(dbPath: String)
-    fun importBookmarksFromFennec(dbPath: String)
+    /**
+     * @return Migration metrics wrapped in a JSON object. See libplaces for schema details.
+     */
+    fun importVisitsFromFennec(dbPath: String): JSONObject
+
+    /**
+     * @return Migration metrics wrapped in a JSON object. See libplaces for schema details.
+     */
+    fun importBookmarksFromFennec(dbPath: String): JSONObject
 }
 
 /**
@@ -94,14 +102,14 @@ internal object RustPlacesConnection : Connection {
         SyncTelemetry.processBookmarksPing(ping)
     }
 
-    override fun importVisitsFromFennec(dbPath: String) {
+    override fun importVisitsFromFennec(dbPath: String): JSONObject {
         check(api != null) { "must call init first" }
-        api!!.importVisitsFromFennec(dbPath)
+        return api!!.importVisitsFromFennec(dbPath)
     }
 
-    override fun importBookmarksFromFennec(dbPath: String) {
+    override fun importBookmarksFromFennec(dbPath: String): JSONObject {
         check(api != null) { "must call init first" }
-        api!!.importBookmarksFromFennec(dbPath)
+        return api!!.importBookmarksFromFennec(dbPath)
     }
 
     override fun close() = synchronized(this) {

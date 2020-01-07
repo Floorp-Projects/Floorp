@@ -624,7 +624,7 @@ open class FxaAccountManager(
                     is Event.SignInShareableAccount -> {
                         account.registerPersistenceCallback(statePersistenceCallback)
 
-                        val migrationResult = account.migrateFromSessionTokenAsync(
+                        val migrationResult = account.copyFromSessionTokenAsync(
                             via.account.authInfo.sessionToken,
                             via.account.authInfo.kSync,
                             via.account.authInfo.kXCS

@@ -92,7 +92,7 @@ internal object FennecLoginsMigration {
     private val logger = Logger("FennecLoginsMigration")
     private val keyForId: MutableMap<String, ByteArray> = mutableMapOf()
 
-    @Suppress("TooGenericExceptionCaught", "ReturnCount", "LongParameterList")
+    @Suppress("TooGenericExceptionCaught", "ReturnCount", "LongParameterList", "ComplexMethod")
     internal suspend fun migrate(
         crashReporter: CrashReporter,
         signonsDbPath: String,
@@ -119,12 +119,20 @@ internal object FennecLoginsMigration {
         }
 
         loginsStorage.ensureUnlocked(loginsStorageKey).await()
-        val failedToImport = try {
+        val importMetrics = try {
             loginsStorage.importLoginsAsync(fennecRecords.records).await()
         } catch (e: Exception) {
             return Result.Failure(LoginMigrationException(LoginsMigrationResult.Failure.RustImportThrew(e)))
         } finally {
             loginsStorage.ensureLocked().await()
+        }
+
+        // TODO parse other metrics.
+        // See https://github.com/mozilla/application-services/commit/d1a12d98a8c428567a3fff9e4333869b980952a8
+        val failedToImport = try {
+            importMetrics.getLong("num_failed")
+        } catch (e: Exception) {
+            0L
         }
 
         return Result.Success(LoginsMigrationResult.Success.ImportedLoginRecords(

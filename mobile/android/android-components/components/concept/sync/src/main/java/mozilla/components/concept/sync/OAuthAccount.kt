@@ -152,7 +152,8 @@ interface OAuthAccount : AutoCloseable {
     fun registerPersistenceCallback(callback: StatePersistenceCallback)
 
     /**
-     * Attempts to migrate from an existing session token without user input
+     * Attempts to migrate from an existing session token without user input.
+     * Passed-in session token will be reused.
      *
      * @param sessionToken token string to use for login
      * @param kSync sync string for login
@@ -160,6 +161,17 @@ interface OAuthAccount : AutoCloseable {
      * @return Deferred boolean success or failure for the migration event
      */
     fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean>
+
+    /**
+     * Attempts to migrate from an existing session token without user input.
+     * New session token will be created.
+     *
+     * @param sessionToken token string to use for login
+     * @param kSync sync string for login
+     * @param kXCS XCS string for login
+     * @return Deferred boolean success or failure for the migration event
+     */
+    fun copyFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean>
 
     /**
      * Returns the device constellation for the current account
