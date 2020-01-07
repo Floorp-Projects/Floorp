@@ -593,7 +593,7 @@ class MOZ_NON_MEMMOVABLE nsTAutoStringN : public nsTString<T> {
  protected:
   friend class nsTSubstring<T>;
 
-  size_type mInlineCapacity;
+  const size_type mInlineCapacity;
 
  private:
   char_type mStorage[N];
