@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIChannel.idl"
+
+/**
+ * A channel that exists as a wrapper around another channel,
+ * like view-source.
+ *
+ * Exposes the inner channel for callers that need it. 
+ */
+
+[uuid(2dfce356-b3e0-4f5e-bb55-e91cf9b49acc)]
+interface nsIWrapperChannel : nsISupports
+{
+  readonly attribute nsIChannel innerChannel;
+};
