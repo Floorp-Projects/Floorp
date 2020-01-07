@@ -196,13 +196,13 @@
     }
 
     get scrollClientSize() {
-      return this.getAttribute("orient") == "vertical"
+      return this.orient == "vertical"
         ? this.scrollbox.clientHeight
         : this.scrollbox.clientWidth;
     }
 
     get scrollSize() {
-      return this.getAttribute("orient") == "vertical"
+      return this.orient == "vertical"
         ? this.scrollbox.scrollHeight
         : this.scrollbox.scrollWidth;
     }
@@ -217,7 +217,7 @@
     }
 
     get scrollPosition() {
-      return this.getAttribute("orient") == "vertical"
+      return this.orient == "vertical"
         ? this.scrollbox.scrollTop
         : this.scrollbox.scrollLeft;
     }
@@ -225,9 +225,7 @@
     get startEndProps() {
       if (!this._startEndProps) {
         this._startEndProps =
-          this.getAttribute("orient") == "vertical"
-            ? ["top", "bottom"]
-            : ["left", "right"];
+          this.orient == "vertical" ? ["top", "bottom"] : ["left", "right"];
       }
       return this._startEndProps;
     }
@@ -235,7 +233,7 @@
     get isRTLScrollbox() {
       if (!this._isRTLScrollbox) {
         this._isRTLScrollbox =
-          this.getAttribute("orient") != "vertical" &&
+          this.orient != "vertical" &&
           document.defaultView.getComputedStyle(this.scrollbox).direction ==
             "rtl";
       }
@@ -651,7 +649,7 @@
       let doScroll = false;
       let instant;
       let scrollAmount = 0;
-      if (this.getAttribute("orient") == "vertical") {
+      if (this.orient == "vertical") {
         doScroll = true;
         if (event.deltaMode == event.DOM_DELTA_PIXEL) {
           scrollAmount = event.deltaY;
@@ -720,7 +718,7 @@
         this._touchStart = -1;
       } else {
         this._touchStart =
-          this.getAttribute("orient") == "vertical"
+          this.orient == "vertical"
             ? event.touches[0].screenY
             : event.touches[0].screenX;
       }
@@ -729,7 +727,7 @@
     on_touchmove(event) {
       if (event.touches.length == 1 && this._touchStart >= 0) {
         var touchPoint =
-          this.getAttribute("orient") == "vertical"
+          this.orient == "vertical"
             ? event.touches[0].screenY
             : event.touches[0].screenX;
         var delta = this._touchStart - touchPoint;
@@ -761,7 +759,7 @@
       //   0: vertical
       //   1: horizontal
       //   2: both
-      if (this.getAttribute("orient") == "vertical") {
+      if (this.orient == "vertical") {
         if (event.detail == 1) {
           return;
         }
@@ -786,7 +784,7 @@
       //   0: vertical
       //   1: horizontal
       //   2: both
-      if (this.getAttribute("orient") == "vertical") {
+      if (this.orient == "vertical") {
         if (event.detail == 1) {
           return;
         }
