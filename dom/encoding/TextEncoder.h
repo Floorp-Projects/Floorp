@@ -43,16 +43,17 @@ class TextEncoder final : public NonRefcountedDOMObject {
   void GetEncoding(nsACString& aEncoding);
 
   /**
-   * Encodes incoming utf-16 code units/ DOM string to utf-8.
+   * Encodes incoming code units to utf-8.
    *
    * @param aCx        Javascript context.
    * @param aObj       the wrapper of the TextEncoder
-   * @param aString    utf-16 code units to be encoded.
+   * @param aString    already-encoded utf-8 code units to be returned, via
+   *                   UTF8String.
    * @return JSObject* The Uint8Array wrapped in a JS object.  Returned via
    *                   the aRetval out param.
    */
   void Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
-              JS::Handle<JSString*> aString,
+              const nsACString& aUtf8String,
               JS::MutableHandle<JSObject*> aRetval, OOMReporter& aRv);
 
   void EncodeInto(JSContext* aCx, JS::Handle<JSString*> aSrc,
