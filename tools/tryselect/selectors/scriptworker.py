@@ -29,6 +29,13 @@ TASK_TYPES = {
         "partials-signing-linux64-shippable/opt",
     ],
     "mac-signing": ["build-signing-macosx64-shippable/opt"],
+    "beetmover-candidates": ["beetmover-repackage-linux64-shippable/opt"],
+    "bouncer-submit": ["release-bouncer-sub-firefox"],
+    "balrog-submit": [
+        "release-balrog-submit-toplevel-firefox",
+        "balrog-linux64-shippable/opt",
+    ],
+    "tree": ["release-early-tagging-firefox", "release-version-bump-firefox"],
 }
 
 RELEASE_TO_BRANCH = {
