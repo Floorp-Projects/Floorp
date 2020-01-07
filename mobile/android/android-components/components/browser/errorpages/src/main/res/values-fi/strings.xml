@@ -102,6 +102,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">Pääsy tiedostoon estettiin</string>
 
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Se saattaa olla poistettu, siirretty tai tiedoston oikeudet estävät sen käytön.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">Välityspalvelin kieltäytyi yhteydestä</string>
 
