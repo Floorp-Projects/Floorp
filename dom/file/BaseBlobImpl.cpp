@@ -98,32 +98,6 @@ nsresult BaseBlobImpl::GetSendInfo(nsIInputStream** aBody,
   return NS_OK;
 }
 
-nsresult BaseBlobImpl::GetMutable(bool* aMutable) const {
-  *aMutable = !mImmutable;
-  return NS_OK;
-}
-
-nsresult BaseBlobImpl::SetMutable(bool aMutable) {
-  nsresult rv = NS_OK;
-
-  NS_ENSURE_ARG(!mImmutable || !aMutable);
-
-  if (!mImmutable && !aMutable) {
-    // Force the content type and size to be cached
-    nsAutoString dummyString;
-    GetType(dummyString);
-
-    ErrorResult error;
-    GetSize(error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-  }
-
-  mImmutable = !aMutable;
-  return rv;
-}
-
 /* static */
 uint64_t BaseBlobImpl::NextSerialNumber() {
   static Atomic<uint64_t> nextSerialNumber;
