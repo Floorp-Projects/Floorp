@@ -91,12 +91,7 @@ jobs:
             publish-rules: [10]
             background-rate:
                 by-release-type:
-                    beta:
-                        by-beta-number:
-                            '1': 25
-                            '2': 50
-                            '3': 100
-                            default: null
+                    beta: null
                     default: null
             force-fallback-mapping-update:
                 by-release-type:
