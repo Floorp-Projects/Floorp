@@ -480,30 +480,6 @@ mochitest-webgl2-deqp:
         mochitest-flavor: plain
         chunked: true
 
-mochitest-webgpu:
-    description: "Mochitest webgpu run"
-    treeherder-symbol: M(webgpu)
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: built-projects
-    virtualization: virtual-with-gpu
-    e10s: true
-    loopback-video: true
-    tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            default: default
-    max-run-time:
-        by-test-platform:
-            windows.*: 5400
-            macosx.*64-ccov/.*: 7200
-            default: 3600
-    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
-    allow-software-gl-layers: false
-    mozharness:
-        mochitest-flavor: plain
-
 mochitest-remote:
     description: "Mochitest for the remote agent (/remote folder)"
     suite:

@@ -32,7 +32,6 @@ TinderBoxPrintRe = {
     "mochitest-webgl2-core_summary": _mochitest_summary,
     "mochitest-webgl2-ext_summary": _mochitest_summary,
     "mochitest-webgl2-deqp_summary": _mochitest_summary,
-    "mochitest-webgpu_summary": _mochitest_summary,
     "mochitest-media_summary": _mochitest_summary,
     "mochitest-plain_summary": _mochitest_summary,
     "mochitest-plain-gpu_summary": _mochitest_summary,
