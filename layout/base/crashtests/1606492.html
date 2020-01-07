@@ -1,0 +1,21 @@
+<script>
+function go() {
+  var a = document.createElement("e")
+  document.body.appendChild(a)
+  a.addEventListener("DOMSubtreeModified", () => {
+    c.src = ""
+    d.replaceWith(b)
+    f.srcdoc = ""
+  })
+  document.execCommand("selectAll", false)
+  a.setAttribute("s", "")
+}
+</script>
+<div>
+<output id="b"></output>
+<iframe id="c" sandbox="allow-same-origin"></iframe>
+<ul contenteditable="true">
+<li id="d">A</li>
+</ul>
+<iframe id="f"></iframe>
+<audio onloadstart="go()" src="">
