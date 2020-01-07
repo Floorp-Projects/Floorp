@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Проблема при завантаженні сторінки</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Спробувати знову</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Назад</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Неможливо виконати запит</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Подробиці про цю проблему чи помилку наразі недоступні.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Не вдалося встановити безпечне з’єднання</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Неможливо відобразити сторінку, яку ви намагаєтесь переглянути, тому що не вдається перевірити справжність отриманих даних.</li>
+        <li>Будь ласка, зв’яжіться з власниками веб-сайту, щоб повідомити їх про цю проблему.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Не вдалося встановити безпечне з’єднання</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Це може бути проблемою конфігурації сервера, або, можливо, хтось намагається імітувати сервер.</li>
+        <li>Якщо раніше ви успішно отримували доступ до цього сервера, то це може бути тимчасовою помилкою і ви можете спробувати ще раз пізніше.</li>
+      </ul>
+    ]]></string>
+
+    </resources>
