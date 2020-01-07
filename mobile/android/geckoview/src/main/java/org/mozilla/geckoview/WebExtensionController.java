@@ -1,6 +1,7 @@
 package org.mozilla.geckoview;
 
 import android.support.annotation.AnyThread;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
@@ -13,6 +14,8 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -411,12 +414,48 @@ public class WebExtensionController {
         return result;
     }
 
-    // TODO: Bug 1599585 make public
-    GeckoResult<WebExtension> enable(final WebExtension extension) {
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({ EnableSource.USER })
+    @interface EnableSources {}
+
+    /** Contains the possible values for the <code>source</code> parameter in {@link #enable} and
+     * {@link #disable}. */
+    public static class EnableSource {
+        /** Action has been requested by the user. */
+        public final static int USER = 1;
+
+        // TODO: Bug 1604222
+        /** Action requested by the app itself, e.g. to disable an extension that is
+         * not supported in this version of the app. */
+        final static int APP = 2;
+
+        static String toString(final @EnableSources int flag) {
+            if (flag == USER) {
+                return  "user";
+            } else {
+                throw new IllegalArgumentException("Value provided in flags is not valid.");
+            }
+        }
+    }
+
+    /**
+     * Enable an extension that has been disabled. If the extension is already enabled, this
+     * method has no effect.
+     *
+     * @param extension The {@link WebExtension} to be enabled.
+     * @param source The agent that initiated this action, e.g. if the action has been initiated
+     *               by the user,use {@link EnableSource#USER}.
+     * @return the new {@link WebExtension} instance, updated to reflect the enablement.
+     */
+    @AnyThread
+    @NonNull
+    public GeckoResult<WebExtension> enable(final @NonNull WebExtension extension,
+                                            final @EnableSources int source) {
         final WebExtensionResult result = new WebExtensionResult("extension");
 
-        final GeckoBundle bundle = new GeckoBundle(1);
+        final GeckoBundle bundle = new GeckoBundle(2);
         bundle.putString("webExtensionId", extension.id);
+        bundle.putString("source", EnableSource.toString(source));
 
         EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:Enable",
                 bundle, result);
@@ -427,12 +466,24 @@ public class WebExtensionController {
         });
     }
 
-    // TODO: Bug 1599585 make public
-    GeckoResult<WebExtension> disable(final WebExtension extension) {
+    /**
+     * Disable an extension that is enabled. If the extension is already disabled, this
+     * method has no effect.
+     *
+     * @param extension The {@link WebExtension} to be disabled.
+     * @param source The agent that initiated this action, e.g. if the action has been initiated
+     *               by the user, use {@link EnableSource#USER}.
+     * @return the new {@link WebExtension} instance, updated to reflect the disablement.
+     */
+    @AnyThread
+    @NonNull
+    public GeckoResult<WebExtension> disable(final @NonNull WebExtension extension,
+                                             final @EnableSources int source) {
         final WebExtensionResult result = new WebExtensionResult("extension");
 
-        final GeckoBundle bundle = new GeckoBundle(1);
+        final GeckoBundle bundle = new GeckoBundle(2);
         bundle.putString("webExtensionId", extension.id);
+        bundle.putString("source", EnableSource.toString(source));
 
         EventDispatcher.getInstance().dispatch("GeckoView:WebExtension:Disable",
                 bundle, result);

@@ -1484,6 +1484,12 @@ package org.mozilla.geckoview {
     field public static final int VULNERABLE_UPDATE_AVAILABLE = 4;
   }
 
+  public static class WebExtension.DisabledFlags {
+    ctor public DisabledFlags();
+    field public static final int BLOCKLIST_DISABLED = 4;
+    field public static final int USER_DISABLED = 2;
+  }
+
   public static class WebExtension.Flags {
     ctor protected Flags();
     field public static final long ALLOW_CONTENT_MESSAGING = 1L;
@@ -1533,6 +1539,8 @@ package org.mozilla.geckoview {
     field @Nullable public final String creatorName;
     field @Nullable public final String creatorUrl;
     field @Nullable public final String description;
+    field public final int disabledFlags;
+    field public final boolean enabled;
     field @Nullable public final String homepageUrl;
     field @NonNull public final WebExtension.Icon icon;
     field public final boolean isRecommended;
@@ -1568,6 +1576,8 @@ package org.mozilla.geckoview {
   }
 
   public class WebExtensionController {
+    method @AnyThread @NonNull public GeckoResult<WebExtension> disable(@NonNull WebExtension, int);
+    method @AnyThread @NonNull public GeckoResult<WebExtension> enable(@NonNull WebExtension, int);
     method @UiThread @Nullable public WebExtensionController.PromptDelegate getPromptDelegate();
     method @UiThread @Nullable public WebExtensionController.TabDelegate getTabDelegate();
     method @NonNull @AnyThread public GeckoResult<WebExtension> install(@NonNull String);
@@ -1575,6 +1585,11 @@ package org.mozilla.geckoview {
     method @UiThread public void setPromptDelegate(@Nullable WebExtensionController.PromptDelegate);
     method @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);
     method @NonNull @AnyThread public GeckoResult<Void> uninstall(@NonNull WebExtension);
+  }
+
+  public static class WebExtensionController.EnableSource {
+    ctor public EnableSource();
+    field public static final int USER = 1;
   }
 
   @UiThread public static interface WebExtensionController.PromptDelegate {

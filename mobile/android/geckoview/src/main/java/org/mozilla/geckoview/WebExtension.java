@@ -61,9 +61,6 @@ public class WebExtension {
     // TODO: make public
     final boolean isBuiltIn;
 
-    // TODO: make public
-    final boolean isEnabled;
-
     /** Called whenever a delegate is set or unset on this {@link WebExtension} instance.
     /* package */ interface DelegateController {
         void onMessageDelegate(final String nativeApp, final MessageDelegate delegate);
@@ -113,7 +110,6 @@ public class WebExtension {
         id = bundle.getString("webExtensionId");
         flags = bundle.getInt("webExtensionFlags", 0);
         isBuiltIn = bundle.getBoolean("isBuiltIn", false);
-        isEnabled = bundle.getBoolean("isEnabled", false);
         if (bundle.containsKey("metaData")) {
             metaData = new MetaData(bundle.getBundle("metaData"));
         } else {
@@ -155,7 +151,6 @@ public class WebExtension {
         this.flags = flags;
 
         // TODO:
-        this.isEnabled = false;
         this.isBuiltIn = false;
         this.metaData = null;
     }
@@ -1223,6 +1218,23 @@ public class WebExtension {
             BlocklistStateFlags.VULNERABLE_NO_UPDATE})
     @interface BlocklistState {}
 
+    public static class DisabledFlags {
+        /** The extension has been disabled by the user */
+        public final static int USER_DISABLED = 1 << 1;
+
+        /** The extension has been disabled by the blocklist. The details of why this extension
+         * was blocked can be found in {@link MetaData#blocklistState}. */
+        public final static int BLOCKLIST_DISABLED = 1 << 2;
+
+        // TODO: Bug 1604222
+        final static int APP_DISABLED = 1 << 3;
+    }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(flag = true,
+            value = { DisabledFlags.USER_DISABLED, DisabledFlags.BLOCKLIST_DISABLED })
+    @interface EnabledFlags {}
+
     /** Provides information about a {@link WebExtension}. */
     public class MetaData {
         /** Main {@link Icon} branding for this {@link WebExtension}.
@@ -1324,6 +1336,27 @@ public class WebExtension {
           */
         public final @SignedState int signedState;
 
+        /**
+         * Disabled binary flags for this extension.
+         *
+         * This will be either equal to <code>0</code> if the extension
+         * is enabled or will contain one or more flags from {@link DisabledFlags}.
+         *
+         * e.g. if the extension has been disabled by the user, the value in
+         * {@link DisabledFlags#USER_DISABLED} will be equal to <code>1</code>:
+         *
+         * <pre><code>
+         *     boolean isUserDisabled = metaData.disabledFlags
+         *          &amp; DisabledFlags.USER_DISABLED &gt; 0;
+         * </code></pre>
+         */
+        public final @EnabledFlags int disabledFlags;
+
+        /**
+         * Whether this extension is enabled or not.
+         */
+        public final boolean enabled;
+
         /** Override for testing. */
         protected MetaData() {
             icon = null;
@@ -1340,6 +1373,8 @@ public class WebExtension {
             isRecommended = false;
             blocklistState = BlocklistStateFlags.NOT_BLOCKED;
             signedState = SignedStateFlags.UNKNOWN;
+            disabledFlags = 0;
+            enabled = true;
         }
 
         /* package */ MetaData(final GeckoBundle bundle) {
@@ -1363,6 +1398,21 @@ public class WebExtension {
                 Log.e(LOGTAG, "Unrecognized signed state: " + signedState);
                 this.signedState = SignedStateFlags.UNKNOWN;
             }
+
+            int disabledFlags = 0;
+            final String[] disabledFlagsString = bundle.getStringArray("disabledFlags");
+            this.enabled = disabledFlagsString.length == 0;
+
+            for (final String flag : disabledFlagsString) {
+                if (flag.equals("userDisabled")) {
+                    disabledFlags |= DisabledFlags.USER_DISABLED;
+                } else if (flag.equals("blocklistDisabled")) {
+                    disabledFlags |= DisabledFlags.BLOCKLIST_DISABLED;
+                } else {
+                    Log.e(LOGTAG, "Unrecognized disabledFlag state: " + flag);
+                }
+            }
+            this.disabledFlags = disabledFlags;
 
             if (bundle.containsKey("icons")) {
                 icon = new Icon(bundle.getBundle("icons"));
