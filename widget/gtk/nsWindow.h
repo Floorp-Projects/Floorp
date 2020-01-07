@@ -87,6 +87,16 @@ class CurrentX11TimeGetter;
 
 }  // namespace mozilla
 
+class OpaqueRegionState {
+ public:
+  OpaqueRegionState() : mRect({-1, -1, -1, -1}), mSubtractedCorners(false){};
+  bool NeedsUpdate(GdkRectangle& aNewRect, bool aNewSubtractedCorners);
+
+ private:
+  GdkRectangle mRect;
+  bool mSubtractedCorners;
+};
+
 class nsWindow final : public nsBaseWidget {
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -639,6 +649,9 @@ class nsWindow final : public nsBaseWidget {
   // to force update mBounds after a size state change from a configure
   // event.
   bool mBoundsAreValid;
+
+  // Used to track opaque region changes for toplevel windows.
+  OpaqueRegionState mToplevelOpaqueRegionState;
 
   static bool DragInProgress(void);
 
