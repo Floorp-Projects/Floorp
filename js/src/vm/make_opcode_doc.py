@@ -34,7 +34,7 @@ def override(value, override_value):
 
 
 def format_flags(flags):
-    flags = filter(lambda x: x != 'JOF_BYTE', flags)
+    flags = [flag for flag in flags if flag != 'JOF_BYTE']
     if len(flags) == 0:
         return ''
 
