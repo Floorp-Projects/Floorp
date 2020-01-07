@@ -15,8 +15,10 @@ const {
 } = require("devtools/server/actors/utils/actor-registry");
 const { TabSources } = require("devtools/server/actors/utils/TabSources");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
-
-const noop = () => {};
+const protocol = require("devtools/shared/protocol");
+const {
+  browsingContextTargetSpec,
+} = require("devtools/shared/specs/targets/browsing-context");
 
 var gTestGlobals = new Set();
 DebuggerServer.addTestGlobal = function(global) {
@@ -95,38 +97,34 @@ exports.createRootActor = function createRootActor(connection) {
   return root;
 };
 
-function TestTargetActor(connection, global) {
-  this.conn = connection;
-  this._global = global;
-  this._global.wrappedJSObject = global;
-  this.threadActor = new ThreadActor(this, this._global);
-  this.conn.addActor(this.threadActor);
-  this._attached = false;
-  this._extraActors = {};
-  // This is a hack in order to enable threadActor to be accessed from getFront
-  this._extraActors.threadActor = this.threadActor;
-  this.makeDebugger = makeDebugger.bind(null, {
-    findDebuggees: () => [this._global],
-    shouldAddNewGlobalAsDebuggee: g => {
-      if (gAllowNewThreadGlobals) {
-        return true;
-      }
+const TestTargetActor = protocol.ActorClassWithSpec(browsingContextTargetSpec, {
+  initialize: function(conn, global) {
+    protocol.Actor.prototype.initialize.call(this, conn);
+    this.conn = conn;
+    this._global = global;
+    this._global.wrappedJSObject = global;
+    this.threadActor = new ThreadActor(this, this._global);
+    this.conn.addActor(this.threadActor);
+    this._attached = false;
+    this._extraActors = {};
+    // This is a hack in order to enable threadActor to be accessed from getFront
+    this._extraActors.threadActor = this.threadActor;
+    this.makeDebugger = makeDebugger.bind(null, {
+      findDebuggees: () => [this._global],
+      shouldAddNewGlobalAsDebuggee: g => {
+        if (gAllowNewThreadGlobals) {
+          return true;
+        }
 
-      return (
-        g.hostAnnotations &&
-        g.hostAnnotations.type == "document" &&
-        g.hostAnnotations.element === this._global
-      );
-    },
-  });
-  this.dbg = this.makeDebugger();
-}
-
-TestTargetActor.prototype = {
-  constructor: TestTargetActor,
-  actorPrefix: "TestTargetActor",
-  on: noop,
-  off: noop,
+        return (
+          g.hostAnnotations &&
+          g.hostAnnotations.type == "document" &&
+          g.hostAnnotations.element === this._global
+        );
+      },
+    });
+    this.dbg = this.makeDebugger();
+  },
 
   get window() {
     return this._global;
@@ -161,13 +159,13 @@ TestTargetActor.prototype = {
     return { ...response, ...actors };
   },
 
-  onAttach: function(request) {
+  attach: function(request) {
     this._attached = true;
 
     return { type: "tabAttached", threadActor: this.threadActor.actorID };
   },
 
-  onDetach: function(request) {
+  detach: function(request) {
     if (!this._attached) {
       return { error: "wrongState" };
     }
@@ -175,7 +173,7 @@ TestTargetActor.prototype = {
     return { type: "detached" };
   },
 
-  onReload: function(request) {
+  reload: function(request) {
     this.sources.reset();
     this.threadActor.clearDebuggees();
     this.threadActor.dbg.addDebuggees();
@@ -189,10 +187,4 @@ TestTargetActor.prototype = {
     }
     delete this._extraActors[name];
   },
-};
-
-TestTargetActor.prototype.requestTypes = {
-  attach: TestTargetActor.prototype.onAttach,
-  detach: TestTargetActor.prototype.onDetach,
-  reload: TestTargetActor.prototype.onReload,
-};
+});
