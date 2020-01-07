@@ -614,8 +614,6 @@ class AndroidMixin(object):
         self.logcat_start()
         self.delete_ANRs()
         self.delete_tombstones()
-        # Get a post-boot device process list for diagnostics
-        self.info(self.shell_output('ps'))
         self.info("verify_device complete")
 
     @PreScriptAction('run-tests')
