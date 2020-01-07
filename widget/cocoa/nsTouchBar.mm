@@ -153,8 +153,11 @@ static const uint32_t kInputIconSize = 16;
 
 - (NSTouchBarItem*)touchBar:(NSTouchBar*)aTouchBar
       makeItemForIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
-  TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
+  if (!mTouchBarHelper) {
+    return nil;
+  }
 
+  TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
   if (!input) {
     return nil;
   }
@@ -208,6 +211,10 @@ static const uint32_t kInputIconSize = 16;
 }
 
 - (bool)updateItem:(TouchBarInput*)aInput {
+  if (!mTouchBarHelper) {
+    return nil;
+  }
+
   NSTouchBarItem* item = [self itemForIdentifier:[aInput nativeIdentifier]];
 
   // Update our canonical copy of the input.
