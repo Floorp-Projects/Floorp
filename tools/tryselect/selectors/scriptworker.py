@@ -13,7 +13,8 @@ from ..cli import BaseTryParser
 from ..push import push_to_try
 
 from taskgraph.util.taskgraph import find_existing_tasks_from_previous_kinds
-from taskgraph.util.taskcluster import get_artifact
+from taskgraph.util.taskcluster import get_artifact, get_session
+from taskgraph.parameters import Parameters
 
 TASK_TYPES = {
     "linux-signing": [
@@ -98,6 +99,13 @@ def print_available_task_types():
             print(" " * 8 + "- {}".format(task))
 
 
+def get_hg_file(parameters, path):
+    session = get_session()
+    response = session.get(parameters.file_url(path))
+    response.raise_for_status()
+    return response.content
+
+
 def run(
     task_type,
     release_type,
@@ -114,9 +122,20 @@ def run(
     ship_graph = get_ship_phase_graph(release)
     existing_tasks = find_existing_tasks(ship_graph)
 
-    files_to_change = {}
+    ship_parameters = Parameters(
+        strict=False, **get_artifact(ship_graph, "public/parameters.yml")
+    )
 
-    ship_parameters = get_artifact(ship_graph, "public/parameters.yml")
+    # Copy L10n configuration from the commit the release we are using was
+    # based on. This *should* ensure that the chunking of L10n tasks is the
+    # same between graphs.
+    files_to_change = {
+        path: get_hg_file(ship_parameters, path)
+        for path in [
+            "browser/locales/l10n-changesets.json",
+            "browser/locales/shipped-locales",
+        ]
+    }
 
     try_config = try_config or {}
     task_config = {
