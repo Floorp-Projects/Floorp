@@ -1325,28 +1325,33 @@
      */ \
     MACRO(JSOP_ITER, "iter", NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
-     * Pushes the next iterated value onto the stack. If no value is available,
-     * MagicValue(JS_NO_ITER_VALUE) is pushed.
+     * Get the next property name for a for-in loop.
+     *
+     * `iter` must be a `PropertyIteratorObject` produced by `JSOP_ITER`.  This
+     * pushes the property name for the next loop iteration, or
+     * `MagicValue(JS_NO_ITER_VALUE)` if there are no more enumerable
+     * properties to iterate over. The magic value must be used only by
+     * `JSOP_ISNOITER` and `JSOP_ENDITER`.
      *
      *   Category: Statements
      *   Type: For-In Statement
      *   Operands:
-     *   Stack: iter => iter, val
+     *   Stack: iter => iter, name
      */ \
     MACRO(JSOP_MOREITER, "moreiter", NULL, 1, 1, 2, JOF_BYTE) \
     /*
-     * Pushes a boolean indicating whether the value on top of the stack is
-     * MagicValue(JS_NO_ITER_VALUE).
+     * Test whether the value on top of the stack is
+     * `MagicValue(JS_NO_ITER_VALUE)` and push the boolean result.
      *
      *   Category: Statements
      *   Type: For-In Statement
      *   Operands:
-     *   Stack: val => val, res
+     *   Stack: val => val, done
      */ \
     MACRO(JSOP_ISNOITER, "isnoiter", NULL, 1, 1, 2, JOF_BYTE) \
     /*
-     * NOP opcode to hint to IonBuilder that the value on top of the stack is
-     * the (likely string) key in a for-in loop.
+     * No-op instruction to hint to IonBuilder that the value on top of the
+     * stack is the (likely string) key in a for-in loop.
      *
      *   Category: Other
      *   Operands:
@@ -1354,8 +1359,9 @@
      */ \
     MACRO(JSOP_ITERNEXT, "iternext", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Exits a for-in loop by popping the iteration value and the iterator
-     * object from the stack and closing the iterator object.
+     * Exit a for-in loop, closing the iterator.
+     *
+     * `iter` must be a `PropertyIteratorObject` pushed by `JSOP_ITER`.
      *
      *   Category: Statements
      *   Type: For-In Statement
@@ -1364,9 +1370,16 @@
      */ \
     MACRO(JSOP_ENDITER, "enditer", NULL, 1, 2, 0, JOF_BYTE) \
     /*
-     * Checks that the top value on the stack is an object, and throws a
-     * TypeError if not. The operand 'kind' is used only to generate an
-     * appropriate error message.
+     * Check that the top value on the stack is an object, and throw a
+     * TypeError if not. `kind` is used only to generate an appropriate error
+     * message. It must be in range for `js::CheckIsObjectKind`.
+     *
+     * Implements: [GetIterator][1] step 5, [IteratorNext][2] step 3. Both
+     * operations call a JS method which scripts can define however they want,
+     * so they check afterwards that the method returned an object.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-getiterator
+     * [2]: https://tc39.es/ecma262/#sec-iteratornext
      *
      *   Category: Statements
      *   Type: Generator
@@ -1375,9 +1388,9 @@
      */ \
     MACRO(JSOP_CHECKISOBJ, "checkisobj", NULL, 2, 1, 1, JOF_UINT8) \
     /*
-     * Checks that the top value on the stack is callable, and throws a
-     * TypeError if not. The operand 'kind' is used only to generate an
-     * appropriate error message.
+     * Check that the top value on the stack is callable, and throw a TypeError
+     * if not. The operand `kind` is used only to generate an appropriate error
+     * message. It must be in range for `js::CheckIsCallableKind`.
      *
      *   Category: Statements
      *   Type: Function
@@ -1386,8 +1399,16 @@
      */ \
     MACRO(JSOP_CHECKISCALLABLE, "checkiscallable", NULL, 2, 1, 1, JOF_UINT8) \
     /*
-     * Throw if the value on the stack is not coerscible to an object (is
-     * |null| or |undefined|).
+     * Throw a TypeError if `val` is `null` or `undefined`.
+     *
+     * Implements: [RequireObjectCoercible][1]. But most instructions that
+     * require an object will perform this check for us, so of the dozens of
+     * calls to RequireObjectCoercible in the spec, we need this instruction
+     * only for [destructuring assignment][2] and [initialization][3].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-requireobjectcoercible
+     * [2]: https://tc39.es/ecma262/#sec-runtime-semantics-destructuringassignmentevaluation
+     * [3]: https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-bindinginitialization
      *
      *   Category: Literals
      *   Type: Object
@@ -1396,9 +1417,16 @@
      */ \
     MACRO(JSOP_CHECKOBJCOERCIBLE, "checkobjcoercible", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Pops the iterator and its next method from the top of the stack, and
-     * create async iterator from it and push the async iterator back onto the
-     * stack.
+     * Create and push an async iterator wrapping the sync iterator `iter`.
+     * `next` should be `iter`'s `.next` method.
+     *
+     * Implements: [CreateAsyncToSyncIterator][1]. The spec says this operation
+     * takes one argument, but that argument is a Record with two relevant
+     * fields, [[Iterator]] and [[NextMethod]].
+     *
+     * Used for `for await` loops.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-createasyncfromsynciterator
      *
      *   Category: Statements
      *   Type: Generator
@@ -1409,8 +1437,7 @@
     /*
      * Set the prototype of `obj`.
      *
-     * `obj` must be an object. This is used to implement object literals like
-     * `{__proto__: protoVal}`.
+     * `obj` must be an object.
      *
      * Implements: [B.3.1 __proto__ Property Names in Object Initializers][1], step 7.a.
      *
