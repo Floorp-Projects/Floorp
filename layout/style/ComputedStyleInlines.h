@@ -21,15 +21,28 @@
 
 namespace mozilla {
 
+namespace detail {
+template <typename T, const T* (ComputedStyle::*Method)() const>
+void TriggerImageLoads(dom::Document& aDocument, const ComputedStyle* aOldStyle,
+                       ComputedStyle* aStyle) {
+  if constexpr (T::kHasTriggerImageLoads) {
+    auto* old = aOldStyle ? (aOldStyle->*Method)() : nullptr;
+    auto* current = const_cast<T*>((aStyle->*Method)());
+    current->TriggerImageLoads(aDocument, old);
+  } else {
+    Unused << aOldStyle;
+    Unused << aStyle;
+  }
+}
+}  // namespace detail
+
 void ComputedStyle::StartImageLoads(dom::Document& aDocument,
                                     const ComputedStyle* aOldStyle) {
   MOZ_ASSERT(NS_IsMainThread());
-#define STYLE_STRUCT(name_)                                      \
-  if (nsStyle##name_::kHasTriggerImageLoads) {                   \
-    auto* old = aOldStyle ? aOldStyle->Style##name_() : nullptr; \
-    auto* current = const_cast<nsStyle##name_*>(Style##name_()); \
-    current->TriggerImageLoads(aDocument, old);                  \
-  }
+
+#define STYLE_STRUCT(name_)                                                \
+  detail::TriggerImageLoads<nsStyle##name_, &ComputedStyle::Style##name_>( \
+      aDocument, aOldStyle, this);
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 }
