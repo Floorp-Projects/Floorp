@@ -81,6 +81,12 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
     return 0;
   }
 
+  // Returns the TRR mode encoded by the flags
+  nsIRequest::TRRMode TRRMode();
+  // Returns a TRR mode that takes into account if the TRR service is disabled,
+  // parental controls are on, domain matches exclusion list, etc.
+  nsIRequest::TRRMode EffectiveTRRMode();
+
  protected:
   friend class nsHostResolver;
 
@@ -551,7 +557,6 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   PRTime mCreationTime;
   mozilla::TimeDuration mLongIdleTimeout;
   mozilla::TimeDuration mShortIdleTimeout;
-  bool mSkipTRRWhenParentalControlEnabled;
 
   RefPtr<nsIThreadPool> mResolverThreads;
   RefPtr<mozilla::net::NetworkConnectivityService> mNCS;

@@ -333,7 +333,7 @@ struct HttpConnectionInfoCloneArgs
   uint32_t tlsFlags;
   bool isolated;
   bool isTrrServiceChannel;
-  bool trrDisabled;
+  uint8_t trrMode;
   bool isIPv4Disabled;
   bool isIPv6Disabled;
   nsCString topWindowOrigin;

@@ -139,6 +139,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetLoadGroup(nsILoadGroup* aLoadGroup) override;
   NS_IMETHOD GetLoadFlags(nsLoadFlags* aLoadFlags) override;
   NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) override;
+  NS_IMETHOD GetTRRMode(nsIRequest::TRRMode* aTRRMode) override;
+  NS_IMETHOD SetTRRMode(nsIRequest::TRRMode aTRRMode) override;
   NS_IMETHOD SetDocshellUserAgentOverride();
 
   // nsIChannel

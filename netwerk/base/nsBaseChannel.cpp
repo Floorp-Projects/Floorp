@@ -433,6 +433,16 @@ nsBaseChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
 }
 
 NS_IMETHODIMP
+nsBaseChannel::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return GetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+nsBaseChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return SetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
 nsBaseChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   nsCOMPtr<nsILoadGroup> loadGroup(mLoadGroup);
   loadGroup.forget(aLoadGroup);

@@ -137,11 +137,68 @@ interface nsIRequest : nsISupports
      */
     const unsigned long LOAD_DOCUMENT_NEEDS_COOKIE = 1 << 2;
 
+    cenum TRRMode : 8 {
+        TRR_DEFAULT_MODE = 0,
+        TRR_DISABLED_MODE = 1,
+        TRR_FIRST_MODE = 2,
+        TRR_ONLY_MODE = 3
+    };
 
     /**
-     * Set this flag to disable TRR for this request.
+     * These methods encode/decode the TRR mode to/from the loadFlags.
+     * Helper methods Get/SetTRRModeImpl are provided so implementations don't
+     * need to duplicate code.
+     *
+     * Requests with TRR_DEFAULT_MODE will use the mode indicated by the pref
+     *   - see network.trr.mode in all.js
+     * Requests with TRR_DISABLED_MODE will always use native DNS, even if the
+     *   pref is set to mode3 (TRR-only).
+     * Requests with TRR_DISABLED_MODE will first use TRR then fallback to
+     *   regular DNS, unless TRR is disabled by setting the pref to mode5,
+     *   parental control being enabled, or the domain being in the exclusion
+     *   list.
+     * Requests with TRR_ONLY_MODE will only use TRR, unless not allowed by
+     *   the same conditions mentioned above.
      */
-    const unsigned long LOAD_DISABLE_TRR = 1 << 3;
+    nsIRequest_TRRMode getTRRMode();
+    void setTRRMode(in nsIRequest_TRRMode mode);
+
+    %{C++
+        inline TRRMode GetTRRMode() {
+            TRRMode mode = TRR_DEFAULT_MODE;
+            GetTRRMode(&mode);
+            return mode;
+        }
+
+        inline nsresult GetTRRModeImpl(nsIRequest::TRRMode* aTRRMode) {
+          NS_ENSURE_ARG_POINTER(aTRRMode);
+          nsLoadFlags flags = nsIRequest::LOAD_NORMAL;
+          nsresult rv = GetLoadFlags(&flags);
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+          *aTRRMode = static_cast<nsIRequest::TRRMode>(
+              (flags & nsIRequest::LOAD_TRR_MASK) >> 3);
+          return NS_OK;
+        }
+
+        inline nsresult SetTRRModeImpl(nsIRequest::TRRMode aTRRMode) {
+          MOZ_ASSERT(aTRRMode <= 3, "invalid value");
+          nsLoadFlags flags = nsIRequest::LOAD_NORMAL;
+          nsresult rv = GetLoadFlags(&flags);
+          if (NS_FAILED(rv)) {
+            return rv;
+          }
+          flags = (flags & ~nsIRequest::LOAD_TRR_MASK) | (aTRRMode << 3);
+          return SetLoadFlags(flags);
+        }
+    %}
+
+    /**
+     * These two bits encode the TRR mode.
+     * Do not get/set manually, rather use the getTRRMode/setTRRMode methods.
+     */
+    const unsigned long LOAD_TRR_MASK = (1 << 3) | (1 << 4);
 
     /**************************************************************************
      * The following flags control the flow of data into the cache.

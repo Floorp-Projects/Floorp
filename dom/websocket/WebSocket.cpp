@@ -2545,6 +2545,16 @@ WebSocketImpl::SetLoadFlags(nsLoadFlags aLoadFlags) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WebSocketImpl::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return GetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+WebSocketImpl::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return SetTRRModeImpl(aTRRMode);
+}
+
 namespace {
 
 class WorkerRunnableDispatcher final : public WorkerRunnable {
