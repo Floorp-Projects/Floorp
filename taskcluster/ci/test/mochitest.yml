@@ -385,6 +385,10 @@ mochitest-webgl1-ext:
             windows10-aarch64/opt: ['try']
             default: built-projects
     virtualization: virtual-with-gpu
+    chunks:
+        by-test-platform:
+            android.*: 2
+            default: 1
     e10s: true
     loopback-video: true
     tier:
@@ -399,6 +403,7 @@ mochitest-webgl1-ext:
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
+        chunked: true
 
 mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
@@ -408,6 +413,10 @@ mochitest-webgl2-core:
             windows10-aarch64/opt: ['try']
             default: built-projects
     virtualization: virtual-with-gpu
+    chunks:
+        by-test-platform:
+            android.*: 2
+            default: 1
     e10s: true
     loopback-video: true
     tier:
@@ -422,6 +431,7 @@ mochitest-webgl2-core:
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
+        chunked: true
 
 mochitest-webgl2-ext:
     description: "Mochitest webgl2-ext run"
