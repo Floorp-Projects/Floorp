@@ -15,6 +15,7 @@
 const {
   connectToFrame,
 } = require("devtools/server/connectors/frame-connector");
+const protocol = require("devtools/shared/protocol");
 
 loader.lazyImporter(
   this,
@@ -33,19 +34,28 @@ loader.lazyImporter(
  * @param options
  *        - {Boolean} favicons: true if the form should include the favicon for the tab.
  */
-function FrameTargetActorProxy(connection, browser, options = {}) {
-  this._conn = connection;
-  this._browser = browser;
-  this._form = null;
-  this.exited = false;
-  this.options = options;
-}
+// As this proxy is returned by RootActor.listTabs, it has to be inheriting from Actor
+// class in order to be correctly marshalled by protocol.js.
+// This is related to this very particular check in protocol.js:
+// https://searchfox.org/mozilla-central/rev/b243debf6235b050b42fd2eb615fdc729636ca6b/devtools/shared/protocol/types.js#354-367
+// But this isn't a real Actor. Only `form()` method is being called when protocol.js
+// marshall the proxy. We also register the proxy into Pools and so `typeName`
+// as well as `actorID` attributes are being used in this process.
+const proxySpec = protocol.generateActorSpec({
+  typeName: "frameTargetProxy",
+  methods: {},
+  events: {},
+});
+exports.FrameTargetActorProxy = protocol.ActorClassWithSpec(proxySpec, {
+  initialize: function(conn, browser, options = {}) {
+    protocol.Actor.prototype.initialize.call(this, conn);
 
-FrameTargetActorProxy.prototype = {
-  // As these proxies are added to pools, they are considered as actors and should have
-  // a prefix set, even if that's never really used. FrameTargetActor's actorID is going
-  // to be used in form().
-  actorPrefix: "frameTargetProxy",
+    this._conn = conn;
+    this._browser = browser;
+    this._form = null;
+    this.exited = false;
+    this.options = options;
+  },
 
   async connect() {
     const onDestroy = () => {
@@ -236,6 +246,4 @@ FrameTargetActorProxy.prototype = {
     this._form = null;
     this.exited = true;
   },
-};
-
-exports.FrameTargetActorProxy = FrameTargetActorProxy;
+});
