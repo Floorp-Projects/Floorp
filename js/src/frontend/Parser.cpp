@@ -2173,17 +2173,23 @@ JSFunction* AllocNewFunction(JSContext* cx,
   if (!GetFunctionPrototype(cx, data.generatorKind, data.asyncKind, &proto)) {
     return nullptr;
   }
-  RootedFunction fun(cx);
-
-  fun = NewFunctionWithProto(cx, nullptr, 0, data.flags, nullptr,
-                             data.getAtom(cx), proto, data.allocKind,
-                             TenuredObject);
+  RootedFunction fun(cx, NewFunctionWithProto(cx, nullptr, 0, data.flags,
+                                              nullptr, data.getAtom(cx), proto,
+                                              data.allocKind, TenuredObject));
   if (!fun) {
     return nullptr;
   }
+
   if (data.isSelfHosting) {
     fun->setIsSelfHostedBuiltin();
     MOZ_ASSERT(fun->hasScript());
+  }
+
+  if (data.typeForScriptedFunction) {
+    if (!JSFunction::setTypeForScriptedFunction(
+            cx, fun, *data.typeForScriptedFunction)) {
+      return nullptr;
+    }
   }
   return fun;
 }

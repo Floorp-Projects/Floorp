@@ -44,7 +44,7 @@ bool FunctionEmitter::interpretedCommon() {
   // case, if the lambda runs multiple times then CloneFunctionObject will
   // make a deep clone of its contents.
   bool singleton = bce_->checkRunOnceContext();
-  if (!JSFunction::setTypeForScriptedFunction(bce_->cx, fun_, singleton)) {
+  if (!funbox_->setTypeForScriptedFunction(bce_->cx, singleton)) {
     return false;
   }
 
