@@ -774,6 +774,10 @@ a.learn-more-link.webconsole-learn-more-link {
   font-style: inherit;
 }
 
+.webconsole-app .message.network .network-monitor .empty-notice {
+  font-size: 16px;
+}
+
 .network.message .network-info {
   display: none;
   margin-block-start: 6px;
