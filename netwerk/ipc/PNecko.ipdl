@@ -104,10 +104,10 @@ parent:
 
   async SpeculativeConnect(URIParams uri, nsIPrincipal principal, bool anonymous);
   async HTMLDNSPrefetch(nsString hostname, bool isHttps,
-                        OriginAttributes originAttributes, uint16_t flags);
+                        OriginAttributes originAttributes, uint32_t flags);
   async CancelHTMLDNSPrefetch(nsString hostname, bool isHttps,
                               OriginAttributes originAttributes,
-                              uint16_t flags, nsresult reason);
+                              uint32_t flags, nsresult reason);
 
   /**
    * channelId is used to establish a connection between redirect channels in

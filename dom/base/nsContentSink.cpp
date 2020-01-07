@@ -817,7 +817,8 @@ void nsContentSink::PrefetchDNS(const nsAString& aHref) {
 
   if (!hostname.IsEmpty() && nsHTMLDNSPrefetch::IsAllowed(mDocument)) {
     nsHTMLDNSPrefetch::PrefetchLow(
-        hostname, isHttps, mDocument->NodePrincipal()->OriginAttributesRef());
+        hostname, isHttps, mDocument->NodePrincipal()->OriginAttributesRef(),
+        mDocument->GetChannel()->GetTRRMode());
   }
 }
 

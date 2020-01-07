@@ -162,10 +162,10 @@ class NeckoParent : public PNeckoParent {
                                                  const bool& aAnonymous);
   mozilla::ipc::IPCResult RecvHTMLDNSPrefetch(
       const nsString& hostname, const bool& isHttps,
-      const OriginAttributes& aOriginAttributes, const uint16_t& flags);
+      const OriginAttributes& aOriginAttributes, const uint32_t& flags);
   mozilla::ipc::IPCResult RecvCancelHTMLDNSPrefetch(
       const nsString& hostname, const bool& isHttps,
-      const OriginAttributes& aOriginAttributes, const uint16_t& flags,
+      const OriginAttributes& aOriginAttributes, const uint32_t& flags,
       const nsresult& reason);
   PWebSocketEventListenerParent* AllocPWebSocketEventListenerParent(
       const uint64_t& aInnerWindowID);
