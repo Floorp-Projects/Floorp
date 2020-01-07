@@ -2,7 +2,7 @@
 
 # DefaultAddonUpdater
 
-`class DefaultAddonUpdater : `[`AddonUpdater`](../-addon-updater/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L80)
+`class DefaultAddonUpdater : `[`AddonUpdater`](../-addon-updater/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/update/AddonUpdater.kt#L121)
 
 An implementation of [AddonUpdater](../-addon-updater/index.md) that uses the work manager api for scheduling new updates.
 
@@ -16,8 +16,10 @@ An implementation of [AddonUpdater](../-addon-updater/index.md) that uses the wo
 
 | Name | Summary |
 |---|---|
+| [onUpdatePermissionRequest](on-update-permission-request.md) | `fun onUpdatePermissionRequest(current: `[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`, updated: `[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`, newPermissions: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, onPermissionsGranted: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [AddonUpdater.onUpdatePermissionRequest](../-addon-updater/on-update-permission-request.md) |
 | [registerForFutureUpdates](register-for-future-updates.md) | `fun registerForFutureUpdates(addonId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [AddonUpdater.registerForFutureUpdates](../-addon-updater/register-for-future-updates.md) |
 | [unregisterForFutureUpdates](unregister-for-future-updates.md) | `fun unregisterForFutureUpdates(addonId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [AddonUpdater.unregisterForFutureUpdates](../-addon-updater/unregister-for-future-updates.md) |
+| [update](update.md) | `fun update(addonId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [AddonUpdater.update](../-addon-updater/update.md) |
 
 ### Extension Functions
 

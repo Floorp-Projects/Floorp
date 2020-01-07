@@ -2,7 +2,7 @@
 
 # AsyncLoginsStorageAdapter
 
-`open class AsyncLoginsStorageAdapter<T : LoginsStorage> : `[`AsyncLoginsStorage`](../-async-logins-storage/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L297)
+`open class AsyncLoginsStorageAdapter<T : LoginsStorage> : `[`AsyncLoginsStorage`](../-async-logins-storage/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L295)
 
 A helper class to wrap a synchronous [LoginsStorage](#) implementation and make it asynchronous.
 
@@ -39,7 +39,6 @@ A helper class to wrap a synchronous [LoginsStorage](#) implementation and make 
 | Name | Summary |
 |---|---|
 | [forDatabase](for-database.md) | `fun forDatabase(dbPath: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`AsyncLoginsStorageAdapter`](./index.md)`<DatabaseLoginsStorage>`<br>Creates an [AsyncLoginsStorage](../-async-logins-storage/index.md) that is backed by a [DatabaseLoginsStorage](#). |
-| [inMemory](in-memory.md) | `fun inMemory(items: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ServerPassword`](../-server-password.md)`>): `[`AsyncLoginsStorageAdapter`](./index.md)`<MemoryLoginsStorage>`<br>Creates an [AsyncLoginsStorage](../-async-logins-storage/index.md) that is backed by a [MemoryLoginsStorage](#). |
 
 ### Extension Functions
 
