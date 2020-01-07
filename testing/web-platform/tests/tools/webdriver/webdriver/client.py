@@ -738,10 +738,6 @@ class Element(object):
         return self.send_element_command("GET", "selected")
 
     @command
-    def screenshot(self):
-        return self.send_element_command("GET", "screenshot")
-
-    @command
     def attribute(self, name):
         return self.send_element_command("GET", "attribute/%s" % name)
 
