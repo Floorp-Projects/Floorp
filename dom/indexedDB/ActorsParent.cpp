@@ -817,7 +817,7 @@ nsresult MakeCompressedIndexDataValues(
 
   MOZ_ASSERT(blobDataIter == blobData.get() + blobDataLength);
 
-  aCompressedIndexDataValues.swap(blobData);
+  aCompressedIndexDataValues = std::move(blobData);
   *aCompressedIndexDataValuesLength = uint32_t(blobDataLength);
 
   return NS_OK;
@@ -4972,7 +4972,7 @@ class ConnectionPool final {
   struct IdleDatabaseInfo;
   struct IdleResource;
   struct IdleThreadInfo;
-  struct ThreadInfo;
+  class ThreadInfo;
   class ThreadRunnable;
   class TransactionInfo;
   struct TransactionInfoPair;
@@ -5043,7 +5043,7 @@ class ConnectionPool final {
 
   void CancelIdleTimer();
 
-  void ShutdownThread(ThreadInfo& aThreadInfo);
+  void ShutdownThread(ThreadInfo aThreadInfo);
 
   void CloseIdleDatabases();
 
@@ -5110,11 +5110,17 @@ class ConnectionPool::CloseConnectionRunnable final
   NS_DECL_NSIRUNNABLE
 };
 
-struct ConnectionPool::ThreadInfo {
-  nsCOMPtr<nsIThread> mThread;
-  RefPtr<ThreadRunnable> mRunnable;
-
+class ConnectionPool::ThreadInfo {
+ public:
   ThreadInfo();
+
+  ThreadInfo(nsCOMPtr<nsIThread> aThread, RefPtr<ThreadRunnable> aRunnable)
+      : mThread{std::move(aThread)}, mRunnable{std::move(aRunnable)} {
+    AssertIsOnBackgroundThread();
+    AssertValid();
+
+    MOZ_COUNT_CTOR(ConnectionPool::ThreadInfo);
+  }
 
   ThreadInfo(const ThreadInfo& aOther) = delete;
   ThreadInfo& operator=(const ThreadInfo& aOther) = delete;
@@ -5122,7 +5128,46 @@ struct ConnectionPool::ThreadInfo {
   ThreadInfo(ThreadInfo&& aOther) noexcept;
   ThreadInfo& operator=(ThreadInfo&& aOther) = default;
 
+  bool IsValid() const {
+    const bool res = mThread;
+    if (res) {
+      AssertValid();
+    } else {
+      AssertEmpty();
+    }
+    return res;
+  }
+
+  void AssertValid() const {
+    MOZ_ASSERT(mThread);
+    MOZ_ASSERT(mRunnable);
+  }
+
+  void AssertEmpty() const {
+    MOZ_ASSERT(!mThread);
+    MOZ_ASSERT(!mRunnable);
+  }
+
+  nsIThread& ThreadRef() {
+    AssertValid();
+    return *mThread;
+  }
+
+  std::tuple<nsCOMPtr<nsIThread>, RefPtr<ThreadRunnable>> Forget() {
+    AssertValid();
+
+    return {std::move(mThread), std::move(mRunnable)};
+  }
+
   ~ThreadInfo();
+
+  bool operator==(const ThreadInfo& aOther) const {
+    return mThread == aOther.mThread && mRunnable == aOther.mRunnable;
+  }
+
+ private:
+  nsCOMPtr<nsIThread> mThread;
+  RefPtr<ThreadRunnable> mRunnable;
 };
 
 struct ConnectionPool::DatabaseInfo final {
@@ -5270,8 +5315,7 @@ struct ConnectionPool::IdleThreadInfo final : public IdleResource {
       : IdleResource(std::move(aOther)),
         mThreadInfo(std::move(aOther.mThreadInfo)) {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(mThreadInfo.mRunnable);
-    MOZ_ASSERT(mThreadInfo.mThread);
+    mThreadInfo.AssertValid();
 
     MOZ_COUNT_CTOR(ConnectionPool::IdleThreadInfo);
   }
@@ -5281,8 +5325,7 @@ struct ConnectionPool::IdleThreadInfo final : public IdleResource {
   ~IdleThreadInfo();
 
   bool operator==(const IdleThreadInfo& aOther) const {
-    return mThreadInfo.mRunnable == aOther.mThreadInfo.mRunnable &&
-           mThreadInfo.mThread == aOther.mThreadInfo.mThread;
+    return mThreadInfo == aOther.mThreadInfo;
   }
 
   bool operator<(const IdleThreadInfo& aOther) const {
@@ -6077,9 +6120,7 @@ class Database::UnmapBlobCallback final
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(mDatabase);
 
-    RefPtr<Database> database;
-    mDatabase.swap(database);
-
+    const RefPtr<Database> database = std::move(mDatabase);
     database->UnmapBlob(aID);
   }
 
@@ -8653,7 +8694,7 @@ nsresult DeserializeStructuredCloneFile(const FileManager& aFileManager,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  aFile->mFileInfo.swap(fileInfo);
+  aFile->mFileInfo = std::move(fileInfo);
   aFile->mType = type;
 
   return NS_OK;
@@ -9908,7 +9949,7 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
       return rv;
     }
 
-    mUpdateRefcountFunction.swap(function);
+    mUpdateRefcountFunction = std::move(function);
   }
 
   // This one cannot obviously use ExecuteCachedStatement because of the custom
@@ -11179,11 +11220,10 @@ void ConnectionPool::IdleTimerCallback(nsITimer* aTimer, void* aClosure) {
 
   for (uint32_t count = self->mIdleThreads.Length(); index < count; index++) {
     IdleThreadInfo& info = self->mIdleThreads[index];
-    MOZ_ASSERT(info.mThreadInfo.mThread);
-    MOZ_ASSERT(info.mThreadInfo.mRunnable);
+    info.mThreadInfo.AssertValid();
 
     if (now >= info.mIdleTime) {
-      self->ShutdownThread(info.mThreadInfo);
+      self->ShutdownThread(std::move(info.mThreadInfo));
     } else {
       break;
     }
@@ -11350,14 +11390,13 @@ void ConnectionPool::Dispatch(uint64_t aTransactionId, nsIRunnable* aRunnable) {
   if (transactionInfo->mRunning) {
     DatabaseInfo* dbInfo = transactionInfo->mDatabaseInfo;
     MOZ_ASSERT(dbInfo);
-    MOZ_ASSERT(dbInfo->mThreadInfo.mThread);
-    MOZ_ASSERT(dbInfo->mThreadInfo.mRunnable);
+    dbInfo->mThreadInfo.AssertValid();
     MOZ_ASSERT(!dbInfo->mClosing);
     MOZ_ASSERT_IF(transactionInfo->mIsWriteTransaction,
                   dbInfo->mRunningWriteTransaction == transactionInfo);
 
-    MOZ_ALWAYS_SUCCEEDS(
-        dbInfo->mThreadInfo.mThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL));
+    MOZ_ALWAYS_SUCCEEDS(dbInfo->mThreadInfo.ThreadRef().Dispatch(
+        aRunnable, NS_DISPATCH_NORMAL));
   } else {
     transactionInfo->mQueuedRunnables.AppendElement(aRunnable);
   }
@@ -11545,17 +11584,12 @@ void ConnectionPool::CancelIdleTimer() {
   }
 }
 
-void ConnectionPool::ShutdownThread(ThreadInfo& aThreadInfo) {
+void ConnectionPool::ShutdownThread(ThreadInfo aThreadInfo) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aThreadInfo.mThread);
-  MOZ_ASSERT(aThreadInfo.mRunnable);
   MOZ_ASSERT(mTotalThreadCount);
 
-  RefPtr<ThreadRunnable> runnable;
-  aThreadInfo.mRunnable.swap(runnable);
-
-  nsCOMPtr<nsIThread> thread;
-  aThreadInfo.mThread.swap(thread);
+  // We need to move thread and runnable separately.
+  auto [thread, runnable] = aThreadInfo.Forget();
 
   IDB_DEBUG_LOG(("ConnectionPool shutting down thread %" PRIu32,
                  runnable->SerialNumber()));
@@ -11598,7 +11632,7 @@ void ConnectionPool::ShutdownIdleThreads() {
   AUTO_PROFILER_LABEL("ConnectionPool::ShutdownIdleThreads", DOM);
 
   for (auto& idleThread : mIdleThreads) {
-    ShutdownThread(idleThread.mThreadInfo);
+    ShutdownThread(std::move(idleThread.mThreadInfo));
   }
   mIdleThreads.Clear();
 }
@@ -11624,9 +11658,7 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
     return true;
   }
 
-  if (!dbInfo->mThreadInfo.mThread) {
-    MOZ_ASSERT(!dbInfo->mThreadInfo.mRunnable);
-
+  if (!dbInfo->mThreadInfo.IsValid()) {
     if (mIdleThreads.IsEmpty()) {
       bool created = false;
 
@@ -11645,8 +11677,8 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
           IDB_DEBUG_LOG(("ConnectionPool created thread %" PRIu32,
                          runnable->SerialNumber()));
 
-          dbInfo->mThreadInfo.mThread.swap(newThread);
-          dbInfo->mThreadInfo.mRunnable.swap(runnable);
+          dbInfo->mThreadInfo =
+              ThreadInfo{std::move(newThread), std::move(runnable)};
 
           mTotalThreadCount++;
           created = true;
@@ -11669,9 +11701,9 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
              index > 0; index--) {
           DatabaseInfo* dbInfo = mDatabasesPerformingIdleMaintenance[index - 1];
           MOZ_ASSERT(dbInfo);
-          MOZ_ASSERT(dbInfo->mThreadInfo.mThread);
+          dbInfo->mThreadInfo.AssertValid();
 
-          MOZ_ALWAYS_SUCCEEDS(dbInfo->mThreadInfo.mThread->Dispatch(
+          MOZ_ALWAYS_SUCCEEDS(dbInfo->mThreadInfo.ThreadRef().Dispatch(
               runnable, NS_DISPATCH_NORMAL));
         }
       }
@@ -11686,10 +11718,7 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
     } else {
       const uint32_t lastIndex = mIdleThreads.Length() - 1;
 
-      ThreadInfo& threadInfo = mIdleThreads[lastIndex].mThreadInfo;
-
-      dbInfo->mThreadInfo.mRunnable.swap(threadInfo.mRunnable);
-      dbInfo->mThreadInfo.mThread.swap(threadInfo.mThread);
+      dbInfo->mThreadInfo = std::move(mIdleThreads[lastIndex].mThreadInfo);
 
       mIdleThreads.RemoveElementAt(lastIndex);
 
@@ -11697,8 +11726,7 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
     }
   }
 
-  MOZ_ASSERT(dbInfo->mThreadInfo.mThread);
-  MOZ_ASSERT(dbInfo->mThreadInfo.mRunnable);
+  dbInfo->mThreadInfo.AssertValid();
 
   if (aTransactionInfo->mIsWriteTransaction) {
     if (dbInfo->mRunningWriteTransaction) {
@@ -11723,7 +11751,7 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo* aTransactionInfo,
 
   if (!queuedRunnables.IsEmpty()) {
     for (auto& queuedRunnable : queuedRunnables) {
-      MOZ_ALWAYS_SUCCEEDS(dbInfo->mThreadInfo.mThread->Dispatch(
+      MOZ_ALWAYS_SUCCEEDS(dbInfo->mThreadInfo.ThreadRef().Dispatch(
           queuedRunnable.forget(), NS_DISPATCH_NORMAL));
     }
 
@@ -11748,8 +11776,7 @@ void ConnectionPool::NoteFinishedTransaction(uint64_t aTransactionId) {
   DatabaseInfo* dbInfo = transactionInfo->mDatabaseInfo;
   MOZ_ASSERT(dbInfo);
   MOZ_ASSERT(mDatabases.Get(transactionInfo->mDatabaseId) == dbInfo);
-  MOZ_ASSERT(dbInfo->mThreadInfo.mThread);
-  MOZ_ASSERT(dbInfo->mThreadInfo.mRunnable);
+  dbInfo->mThreadInfo.AssertValid();
 
   // Schedule the next write transaction if there are any queued.
   if (dbInfo->mRunningWriteTransaction == transactionInfo) {
@@ -11810,8 +11837,7 @@ void ConnectionPool::NoteFinishedTransaction(uint64_t aTransactionId) {
 
 void ConnectionPool::ScheduleQueuedTransactions(ThreadInfo aThreadInfo) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aThreadInfo.mThread);
-  MOZ_ASSERT(aThreadInfo.mRunnable);
+  aThreadInfo.AssertValid();
   MOZ_ASSERT(!mQueuedTransactions.IsEmpty());
 
   AUTO_PROFILER_LABEL("ConnectionPool::ScheduleQueuedTransactions", DOM);
@@ -11836,8 +11862,7 @@ void ConnectionPool::NoteIdleDatabase(DatabaseInfo* aDatabaseInfo) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseInfo);
   MOZ_ASSERT(!aDatabaseInfo->TotalTransactionCount());
-  MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mThread);
-  MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mRunnable);
+  aDatabaseInfo->mThreadInfo.AssertValid();
   MOZ_ASSERT(!mIdleDatabases.Contains(aDatabaseInfo));
 
   AUTO_PROFILER_LABEL("ConnectionPool::NoteIdleDatabase", DOM);
@@ -11857,7 +11882,7 @@ void ConnectionPool::NoteIdleDatabase(DatabaseInfo* aDatabaseInfo) {
       // If there are no other databases that need to run then we can shut this
       // thread down immediately instead of going through the idle thread
       // mechanism.
-      ShutdownThread(aDatabaseInfo->mThreadInfo);
+      ShutdownThread(std::move(aDatabaseInfo->mThreadInfo));
     }
 
     return;
@@ -11890,15 +11915,13 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo) {
   //   4. Finally, if nothing above took the thread then we can add it to our
   //      list of idle threads. It may be reused or it may time out. If we have
   //      too many idle threads then we will shut down the oldest.
-  if (aDatabaseInfo->mThreadInfo.mThread) {
-    MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mRunnable);
-
+  if (aDatabaseInfo->mThreadInfo.IsValid()) {
     if (!mQueuedTransactions.IsEmpty()) {
       // Give the thread to another database.
       ScheduleQueuedTransactions(std::move(aDatabaseInfo->mThreadInfo));
     } else if (!aDatabaseInfo->TotalTransactionCount()) {
       if (mShutdownRequested) {
-        ShutdownThread(aDatabaseInfo->mThreadInfo);
+        ShutdownThread(std::move(aDatabaseInfo->mThreadInfo));
       } else {
         auto idleThreadInfo =
             IdleThreadInfo{std::move(aDatabaseInfo->mThreadInfo)};
@@ -11907,7 +11930,7 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo* aDatabaseInfo) {
         mIdleThreads.InsertElementSorted(std::move(idleThreadInfo));
 
         if (mIdleThreads.Length() > kMaxIdleConnectionThreadCount) {
-          ShutdownThread(mIdleThreads[0].mThreadInfo);
+          ShutdownThread(std::move(mIdleThreads[0].mThreadInfo));
           mIdleThreads.RemoveElementAt(0);
         }
 
@@ -11991,8 +12014,7 @@ void ConnectionPool::PerformIdleDatabaseMaintenance(
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseInfo);
   MOZ_ASSERT(!aDatabaseInfo->TotalTransactionCount());
-  MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mThread);
-  MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mRunnable);
+  aDatabaseInfo->mThreadInfo.AssertValid();
   MOZ_ASSERT(aDatabaseInfo->mIdle);
   MOZ_ASSERT(!aDatabaseInfo->mCloseOnIdle);
   MOZ_ASSERT(!aDatabaseInfo->mClosing);
@@ -12006,7 +12028,7 @@ void ConnectionPool::PerformIdleDatabaseMaintenance(
 
   mDatabasesPerformingIdleMaintenance.AppendElement(aDatabaseInfo);
 
-  MOZ_ALWAYS_SUCCEEDS(aDatabaseInfo->mThreadInfo.mThread->Dispatch(
+  MOZ_ALWAYS_SUCCEEDS(aDatabaseInfo->mThreadInfo.ThreadRef().Dispatch(
       MakeAndAddRef<IdleConnectionRunnable>(aDatabaseInfo, neededCheckpoint),
       NS_DISPATCH_NORMAL));
 }
@@ -12015,15 +12037,14 @@ void ConnectionPool::CloseDatabase(DatabaseInfo* aDatabaseInfo) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseInfo);
   MOZ_DIAGNOSTIC_ASSERT(!aDatabaseInfo->TotalTransactionCount());
-  MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mThread);
-  MOZ_ASSERT(aDatabaseInfo->mThreadInfo.mRunnable);
+  aDatabaseInfo->mThreadInfo.AssertValid();
   MOZ_ASSERT(!aDatabaseInfo->mClosing);
 
   aDatabaseInfo->mIdle = false;
   aDatabaseInfo->mNeedsCheckpoint = false;
   aDatabaseInfo->mClosing = true;
 
-  MOZ_ALWAYS_SUCCEEDS(aDatabaseInfo->mThreadInfo.mThread->Dispatch(
+  MOZ_ALWAYS_SUCCEEDS(aDatabaseInfo->mThreadInfo.ThreadRef().Dispatch(
       MakeAndAddRef<CloseConnectionRunnable>(aDatabaseInfo),
       NS_DISPATCH_NORMAL));
 }
@@ -12067,8 +12088,7 @@ ConnectionPool::IdleConnectionRunnable::Run() {
   MOZ_ASSERT(mDatabaseInfo);
   MOZ_ASSERT(!mDatabaseInfo->mIdle);
 
-  nsCOMPtr<nsIEventTarget> owningThread;
-  mOwningEventTarget.swap(owningThread);
+  const nsCOMPtr<nsIEventTarget> owningThread = std::move(mOwningEventTarget);
 
   if (owningThread) {
     mDatabaseInfo->AssertIsOnConnectionThread();
@@ -12111,8 +12131,7 @@ ConnectionPool::CloseConnectionRunnable::Run() {
   if (mOwningEventTarget) {
     MOZ_ASSERT(mDatabaseInfo->mClosing);
 
-    nsCOMPtr<nsIEventTarget> owningThread;
-    mOwningEventTarget.swap(owningThread);
+    const nsCOMPtr<nsIEventTarget> owningThread = std::move(mOwningEventTarget);
 
     // The connection could be null if EnsureConnection() didn't run or was not
     // successful in TransactionDatabaseOperationBase::RunOnConnectionThread().
@@ -12170,8 +12189,7 @@ ConnectionPool::DatabaseInfo::~DatabaseInfo() {
   MOZ_ASSERT(!mConnection);
   MOZ_ASSERT(mScheduledWriteTransactions.IsEmpty());
   MOZ_ASSERT(!mRunningWriteTransaction);
-  MOZ_ASSERT(!mThreadInfo.mThread);
-  MOZ_ASSERT(!mThreadInfo.mRunnable);
+  mThreadInfo.AssertEmpty();
   MOZ_ASSERT(!TotalTransactionCount());
 
   MOZ_COUNT_DTOR(ConnectionPool::DatabaseInfo);
@@ -12382,8 +12400,7 @@ ConnectionPool::IdleThreadInfo::IdleThreadInfo(ThreadInfo aThreadInfo)
                    TimeDuration::FromMilliseconds(kConnectionThreadIdleMS)),
       mThreadInfo(std::move(aThreadInfo)) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mThreadInfo.mRunnable);
-  MOZ_ASSERT(mThreadInfo.mThread);
+  mThreadInfo.AssertValid();
 
   MOZ_COUNT_CTOR(ConnectionPool::IdleThreadInfo);
 }
@@ -12818,8 +12835,7 @@ void WaitForTransactionsHelper::CallCallback() {
              mState == State::WaitingForTransactions ||
              mState == State::WaitingForFileHandles);
 
-  nsCOMPtr<nsIRunnable> callback;
-  mCallback.swap(callback);
+  const nsCOMPtr<nsIRunnable> callback = std::move(mCallback);
 
   callback->Run();
 
@@ -14724,8 +14740,7 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
     return;
   }
 
-  RefPtr<FullDatabaseMetadata> oldMetadata;
-  mOldMetadata.swap(oldMetadata);
+  RefPtr<FullDatabaseMetadata> oldMetadata = std::move(mOldMetadata);
 
   DatabaseActorInfo* info;
   if (!gLiveDatabaseHashtable->Get(oldMetadata->mDatabaseId, &info)) {
@@ -14777,8 +14792,7 @@ void VersionChangeTransaction::SendCompleteNotification(nsresult aResult) {
   MOZ_ASSERT_IF(!mActorWasAlive, mOpenDatabaseOp->mState >
                                      OpenDatabaseOp::State::SendingResults);
 
-  RefPtr<OpenDatabaseOp> openDatabaseOp;
-  mOpenDatabaseOp.swap(openDatabaseOp);
+  const RefPtr<OpenDatabaseOp> openDatabaseOp = std::move(mOpenDatabaseOp);
 
   if (!mActorWasAlive) {
     return;
@@ -18489,7 +18503,7 @@ nsresult UpgradeFileIdsFunction::Init(nsIFile* aFMDirectory,
     return rv;
   }
 
-  mFileManager.swap(fileManager);
+  mFileManager = std::move(fileManager);
   return NS_OK;
 }
 
@@ -19696,9 +19710,8 @@ nsresult FactoryOp::Open() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State::Initial);
 
-  // Swap this to the stack now to ensure that we release it on this thread.
-  RefPtr<ContentParent> contentParent;
-  mContentParent.swap(contentParent);
+  // Move this to the stack now to ensure that we release it on this thread.
+  const RefPtr<ContentParent> contentParent = std::move(mContentParent);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !OperationMayProceed()) {
@@ -19793,9 +19806,8 @@ nsresult FactoryOp::RetryCheckPermission() {
   MOZ_ASSERT(mCommonParams.principalInfo().type() ==
              PrincipalInfo::TContentPrincipalInfo);
 
-  // Swap this to the stack now to ensure that we release it on this thread.
-  RefPtr<ContentParent> contentParent;
-  mContentParent.swap(contentParent);
+  // Move this to the stack now to ensure that we release it on this thread.
+  const RefPtr<ContentParent> contentParent = std::move(mContentParent);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
       !OperationMayProceed()) {
@@ -19936,11 +19948,10 @@ void FactoryOp::FinishSendResults() {
   MOZ_ASSERT(mState == State::SendingResults);
   MOZ_ASSERT(mFactory);
 
-  // Make sure to release the factory on this thread.
-  RefPtr<Factory> factory;
-  mFactory.swap(factory);
-
   mState = State::Completed;
+
+  // Make sure to release the factory on this thread.
+  mFactory = nullptr;
 }
 
 nsresult FactoryOp::CheckPermission(
@@ -21137,7 +21148,7 @@ nsresult OpenDatabaseOp::BeginVersionChange() {
     return rv;
   }
 
-  mVersionChangeTransaction.swap(transaction);
+  mVersionChangeTransaction = std::move(transaction);
 
   if (mMaybeBlockedDatabases.IsEmpty()) {
     // We don't need to wait on any databases, just jump to the transaction
@@ -21278,8 +21289,8 @@ nsresult OpenDatabaseOp::SendUpgradeNeeded() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  RefPtr<VersionChangeTransaction> transaction;
-  mVersionChangeTransaction.swap(transaction);
+  const RefPtr<VersionChangeTransaction> transaction =
+      std::move(mVersionChangeTransaction);
 
   nsresult rv = EnsureDatabaseActorIsAlive();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -21770,9 +21781,10 @@ nsresult DeleteDatabaseOp::DatabaseOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::DatabaseOpenPending);
 
-  // Swap this to the stack now to ensure that we release it on this thread.
-  RefPtr<ContentParent> contentParent;
-  mContentParent.swap(contentParent);
+  // The content parent must be kept alive until SendToIOThread completed.
+  // Move this to the stack now to ensure that we release it on this thread.
+  const RefPtr<ContentParent> contentParent = std::move(mContentParent);
+  Unused << contentParent;  // XXX see Bug 1605075
 
   nsresult rv = SendToIOThread();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -22054,8 +22066,7 @@ void DeleteDatabaseOp::VersionChangeOp::RunOnOwningThread() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mDeleteDatabaseOp->mState == State::DatabaseWorkVersionChange);
 
-  RefPtr<DeleteDatabaseOp> deleteOp;
-  mDeleteDatabaseOp.swap(deleteOp);
+  const RefPtr<DeleteDatabaseOp> deleteOp = std::move(mDeleteDatabaseOp);
 
   if (deleteOp->IsActorDestroyed()) {
     IDB_REPORT_INTERNAL_ERR();
@@ -24728,9 +24739,9 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
       MOZ_ASSERT(storedFileInfo.mInputStream || storedFileInfo.mFileActor ||
                  storedFileInfo.mType == StructuredCloneFile::eMutableFile);
 
-      nsCOMPtr<nsIInputStream> inputStream;
       // Check for an explicit stream, like a structured clone stream.
-      storedFileInfo.mInputStream.swap(inputStream);
+      nsCOMPtr<nsIInputStream> inputStream =
+          std::move(storedFileInfo.mInputStream);
       // Check for a blob-backed stream otherwise.
       if (!inputStream && storedFileInfo.mFileActor) {
         ErrorResult streamRv;
