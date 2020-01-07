@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=390488
 
   function matches(s, p, name) {
     ok(s.match(p) != null,
-      name + " - got " + uneval(s) + ", expected a string matching " + uneval(p));
+      name + " - got " + s + ", expected a string matching " + p);
   }
 
   function checkForStacks() {

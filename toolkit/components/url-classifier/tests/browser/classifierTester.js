@@ -344,7 +344,7 @@ var classifierTester = {
     async function fn(frame, iframeId, depth) {
       return SpecialPowers.spawn(
         frame,
-        [iframeId, depth, fn.toSource()],
+        [iframeId, depth, fn.toString()],
         async (iframeId, depth, fnSource) => {
           // eslint-disable-next-line no-eval
           let fnGetIframePluginInfo = eval(`(() => (${fnSource}))()`);

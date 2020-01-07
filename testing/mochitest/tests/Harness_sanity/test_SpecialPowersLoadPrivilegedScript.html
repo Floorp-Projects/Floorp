@@ -24,7 +24,7 @@ function loadPrivilegedScriptTest() {
 var contentProcessType = SpecialPowers.isMainProcess();
 var port;
 try {
-  port = SpecialPowers.loadPrivilegedScript(loadPrivilegedScriptTest.toSource());
+  port = SpecialPowers.loadPrivilegedScript(loadPrivilegedScriptTest.toString());
 } catch (e) {
   ok(false, "loadPrivilegedScript shoulde not throw");
 }

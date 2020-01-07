@@ -31,10 +31,10 @@ function getCOW(x) {
   x = Cu.waiveXrays(x);
   var rval = {};
   if (typeof x == "function")
-    rval = eval(uneval(x));
+    rval = eval(`(${x.toString()})`);
   for (var i in x) {
     if (x.__lookupGetter__(i))
-      rval.__defineGetter__(i, eval(uneval(x.__lookupGetter__(i))))
+      rval.__defineGetter__(i, eval(`(${x.__lookupGetter__(i).toString()})`))
     else
       rval[i] = getCOW(x[i]);
   }
@@ -59,7 +59,7 @@ function COWTests() {
         return names;
     }
 
-    // This function is actually decompiled and run inside a
+    // This function is actually stringified and run inside a
     // sandbox with content privileges.
 
     // TODO: This could use some refactoring; creating helper
@@ -204,8 +204,8 @@ function COWTests() {
     }
 }
 
-// Decompile the COW test suite, re-evaluate it in the sandbox and execute it.
-Cu.evalInSandbox('(' + uneval(COWTests) + ')()', sandbox);
+// Stringify the COW test suite and directly evaluate it in the sandbox.
+Cu.evalInSandbox('(' + COWTests.toString() + ')()', sandbox);
 
 // Test that COWed objects passing from content to chrome get unwrapped.
 function returnCOW() {
@@ -214,7 +214,7 @@ function returnCOW() {
 }
 
 var unwrapped = Cu.evalInSandbox(
-    '(' + uneval(returnCOW) + ')()',
+    '(' + returnCOW.toString() + ')()',
     sandbox
 );
 

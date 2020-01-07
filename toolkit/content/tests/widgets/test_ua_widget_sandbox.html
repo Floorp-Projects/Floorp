@@ -75,7 +75,7 @@ const sandboxScript = function(shadowRoot) {
   win.wrappedJSObject.spanElementFromUAWidget = span;
   win.wrappedJSObject.divElementFromUAWidget = shadowRoot.lastChild;
 };
-SpecialPowers.Cu.evalInSandbox("this.script = " + sandboxScript.toSource(), sandbox);
+SpecialPowers.Cu.evalInSandbox("this.script = " + sandboxScript.toString(), sandbox);
 sandbox.script(div.shadowRoot);
 
 ok(window.spanElementFromUAWidget instanceof HTMLSpanElement, "<span> exposed");
