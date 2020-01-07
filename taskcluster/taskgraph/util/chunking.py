@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import json
 
+from manifestparser import TestManifest
 from manifestparser.filters import chunk_by_runtime
 from mozbuild.util import memoize
 from moztest.resolve import TestResolver, TestManifestLoader
@@ -17,6 +18,34 @@ from taskgraph import GECKO
 
 here = os.path.abspath(os.path.dirname(__file__))
 resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
+
+
+def guess_mozinfo_from_task(task):
+    """Attempt to build a mozinfo dict from a task definition.
+
+    This won't be perfect and many values used in the manifests will be missing. But
+    it should cover most of the major ones and be "good enough" for chunking in the
+    taskgraph.
+
+    Args:
+        task (dict): A task definition.
+
+    Returns:
+        A dict that can be used as a mozinfo replacement.
+    """
+    info = {
+        'debug': task['build-attributes']['build_type'] == 'debug',
+        'e10s': task['attributes']['e10s'],
+        'webrender': task.get('webrender', False),
+    }
+    for platform in ('android', 'linux', 'mac', 'win'):
+        if platform in task['build-attributes']['build_platform']:
+            info['os'] = platform
+            break
+    else:
+        raise ValueError("{} is not a known platform!".format(
+                         task['build-attributes']['build_platform']))
+    return info
 
 
 @memoize
@@ -39,7 +68,7 @@ def get_tests(flavor, subsuite):
 
 
 @memoize
-def get_chunked_manifests(flavor, subsuite, platform, chunks):
+def get_chunked_manifests(flavor, subsuite, chunks, mozinfo):
     """Compute which manifests should run in which chunks with the given category
     of tests.
 
@@ -47,18 +76,36 @@ def get_chunked_manifests(flavor, subsuite, platform, chunks):
         flavor (str): The suite to run. Values are defined by the 'build_flavor' key
             in `moztest.resolve.TEST_SUITES`.
         subsuite (str): The subsuite to run or 'undefined' to denote no subsuite.
-        platform (str): Platform used to find runtime data.
         chunks (int): Number of chunks to split manifests across.
+        mozinfo (frozenset): Set of data in the form of (<key>, <value>) used
+                             for filtering.
 
     Returns:
         A list of manifests where each item contains the manifest that should
         run in the corresponding chunk.
     """
+    mozinfo = dict(mozinfo)
+    # Compute all tests for the given suite/subsuite.
     tests = get_tests(flavor, subsuite)
-    return [
+    all_manifests = set(t['manifest_relpath'] for t in tests)
+
+    # Compute only the active tests.
+    m = TestManifest()
+    m.tests = tests
+    tests = m.active_tests(disabled=False, exists=False, **mozinfo)
+    active_manifests = set(t['manifest_relpath'] for t in tests)
+
+    # Run the chunking algorithm.
+    chunked_manifests = [
         c[1] for c in chunk_by_runtime(
             None,
             chunks,
-            get_runtimes(platform)
+            get_runtimes(mozinfo['os'])
         ).get_chunked_manifests(tests)
     ]
+
+    # Add all skipped manifests to the first chunk so they still show up in the
+    # logs. They won't impact runtime much.
+    skipped_manifests = all_manifests - active_manifests
+    chunked_manifests[0].extend(skipped_manifests)
+    return chunked_manifests
