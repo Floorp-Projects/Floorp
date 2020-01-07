@@ -4,6 +4,7 @@
 from __future__ import absolute_import
 
 import os
+import six
 import sys
 
 import mozunit
@@ -18,8 +19,13 @@ def test_which(monkeypatch):
     monkeypatch.chdir(cwd)
 
     if sys.platform == "win32":
+        if six.PY3:
+            import winreg
+        else:
+            import _winreg as winreg
         bindir = os.path.join(cwd, "win")
         monkeypatch.setenv("PATH", bindir)
+        monkeypatch.setattr(winreg, 'QueryValue', (lambda k, sk: None))
 
         assert which("foo.exe").lower() == os.path.join(bindir, "foo.exe").lower()
         assert which("foo").lower() == os.path.join(bindir, "foo.exe").lower()
@@ -29,6 +35,18 @@ def test_which(monkeypatch):
 
         assert which("bar").lower() == os.path.join(bindir, "bar").lower()
         assert which("baz").lower() == os.path.join(cwd, "baz.exe").lower()
+
+        registered_dir = os.path.join(cwd, "registered")
+        quux = os.path.join(registered_dir, "quux.exe").lower()
+
+        def mock_registry(key, subkey):
+            assert subkey == (
+                r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\quux.exe")
+            return quux
+
+        monkeypatch.setattr(winreg, 'QueryValue', mock_registry)
+        assert which("quux").lower() == quux
+        assert which("quux.exe").lower() == quux
 
     else:
         bindir = os.path.join(cwd, "unix")
