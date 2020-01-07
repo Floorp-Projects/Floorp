@@ -831,6 +831,17 @@ decorate_task(
     reportRecipeStub
   ) {
     loadRecipesStub.returns(Promise.resolve([]));
+
+    // Mark any existing timer as having run just now.
+    for (const { value } of Services.catMan.enumerateCategory("update-timer")) {
+      const timerID = value.split(",")[2];
+      console.log(`Mark timer ${timerID} as ran recently`);
+      // See https://searchfox.org/mozilla-central/rev/11cfa0462/toolkit/components/timermanager/UpdateTimerManager.jsm#8
+      const timerLastUpdatePref = `app.update.lastUpdateTime.${timerID}`;
+      const lastUpdateTime = Math.round(Date.now() / 1000);
+      Services.prefs.setIntPref(timerLastUpdatePref, lastUpdateTime);
+    }
+
     // Set a timer interval as small as possible so that the UpdateTimerManager
     // will pick the recipe runner as the most imminent timer to run on `notify()`.
     Services.prefs.setIntPref("app.normandy.run_interval_seconds", 1);
