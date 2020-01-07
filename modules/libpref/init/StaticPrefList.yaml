@@ -1191,16 +1191,6 @@
   mirror: always
 
 #---------------------------------------------------------------------------
-# Prefs starting with "datareporting."
-#---------------------------------------------------------------------------
-
-- name: datareporting.healthreport.uploadEnabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
-#---------------------------------------------------------------------------
 # Prefs starting with "device."
 #---------------------------------------------------------------------------
 
