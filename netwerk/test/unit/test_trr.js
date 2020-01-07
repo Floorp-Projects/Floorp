@@ -881,15 +881,61 @@ add_task(async function test24e() {
   await new DNSListener("bar.example.com", "127.0.0.1");
 });
 
+function observerPromise(topic) {
+  return new Promise(resolve => {
+    let observer = {
+      QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver]),
+      observe(aSubject, aTopic, aData) {
+        dump(`observe: ${aSubject}, ${aTopic}, ${aData} \n`);
+        if (aTopic == topic) {
+          Services.obs.removeObserver(observer, topic);
+          resolve(aData);
+        }
+      },
+    };
+    Services.obs.addObserver(observer, topic);
+  });
+}
+
 // TRR-first check that captivedetect.canonicalURL is resolved via native DNS
 add_task(async function test24f() {
   dns.clearCache(true);
+
+  const cpServer = new HttpServer();
+  cpServer.registerPathHandler("/cp", function handleRawData(
+    request,
+    response
+  ) {
+    response.setHeader("Content-Type", "text/plain", false);
+    response.setHeader("Cache-Control", "no-cache", false);
+    response.bodyOutputStream.write("data", 4);
+  });
+  cpServer.start(-1);
+  cpServer.identity.setPrimary(
+    "http",
+    "detectportal.firefox.com",
+    cpServer.identity.primaryPort
+  );
+  let cpPromise = observerPromise("captive-portal-login");
+
   Services.prefs.setCharPref(
     "captivedetect.canonicalURL",
-    "http://test.detectportal.com/success.txt"
+    `http://detectportal.firefox.com:${cpServer.identity.primaryPort}/cp`
   );
+  Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
+  Services.prefs.setBoolPref("network.captive-portal-service.enabled", true);
 
-  await new DNSListener("test.detectportal.com", "127.0.0.1");
+  // The captive portal has to have used native DNS, otherwise creating
+  // a socket to a non-local IP would trigger a crash.
+  await cpPromise;
+  // Simply resolving the captive portal domain should still use TRR
+  await new DNSListener("detectportal.firefox.com", "192.192.192.192");
+
+  Services.prefs.clearUserPref("network.captive-portal-service.enabled");
+  Services.prefs.clearUserPref("network.captive-portal-service.testMode");
+  Services.prefs.clearUserPref("captivedetect.canonicalURL");
+
+  await new Promise(resolve => cpServer.stop(resolve));
 });
 
 // TRR-first check that a domain is resolved via native DNS when parental control is enabled.
@@ -1003,15 +1049,45 @@ add_task(async function test25e() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
   Services.prefs.setCharPref(
-    "captivedetect.canonicalURL",
-    "http://test.detectportal.com/success.txt"
-  );
-  Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=192.192.192.192`
   );
 
-  await new DNSListener("test.detectportal.com", "127.0.0.1");
+  const cpServer = new HttpServer();
+  cpServer.registerPathHandler("/cp", function handleRawData(
+    request,
+    response
+  ) {
+    response.setHeader("Content-Type", "text/plain", false);
+    response.setHeader("Cache-Control", "no-cache", false);
+    response.bodyOutputStream.write("data", 4);
+  });
+  cpServer.start(-1);
+  cpServer.identity.setPrimary(
+    "http",
+    "detectportal.firefox.com",
+    cpServer.identity.primaryPort
+  );
+  let cpPromise = observerPromise("captive-portal-login");
+
+  Services.prefs.setCharPref(
+    "captivedetect.canonicalURL",
+    `http://detectportal.firefox.com:${cpServer.identity.primaryPort}/cp`
+  );
+  Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
+  Services.prefs.setBoolPref("network.captive-portal-service.enabled", true);
+
+  // The captive portal has to have used native DNS, otherwise creating
+  // a socket to a non-local IP would trigger a crash.
+  await cpPromise;
+  // // Simply resolving the captive portal domain should still use TRR
+  await new DNSListener("detectportal.firefox.com", "192.192.192.192");
+
+  Services.prefs.clearUserPref("network.captive-portal-service.enabled");
+  Services.prefs.clearUserPref("network.captive-portal-service.testMode");
+  Services.prefs.clearUserPref("captivedetect.canonicalURL");
+
+  await new Promise(resolve => cpServer.stop(resolve));
 });
 
 // TRR-only check that a domain is resolved via native DNS when parental control is enabled.
