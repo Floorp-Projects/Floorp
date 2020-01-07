@@ -6,7 +6,7 @@ exports[`OutlineFilter shows an input with no value when filter is empty 1`] = `
 >
   <form>
     <input
-      className="outline-filter-input"
+      className="outline-filter-input devtools-filterinput"
       onBlur={[Function]}
       onChange={[Function]}
       onFocus={[Function]}
@@ -25,7 +25,7 @@ exports[`OutlineFilter shows an input with the filter when it is not empty 1`] =
 >
   <form>
     <input
-      className="outline-filter-input"
+      className="outline-filter-input devtools-filterinput"
       onBlur={[Function]}
       onChange={[Function]}
       onFocus={[Function]}
