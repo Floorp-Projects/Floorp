@@ -44,31 +44,26 @@ const App = createFactory(
  */
 window.Application = {
   async bootstrap({ toolbox, panel }) {
-    // bind event handlers to `this`
     this.handleOnNavigate = this.handleOnNavigate.bind(this);
     this.updateWorkers = this.updateWorkers.bind(this);
     this.updateDomain = this.updateDomain.bind(this);
     this.updateCanDebugWorkers = this.updateCanDebugWorkers.bind(this);
-    this.onTargetAvailable = this.onTargetAvailable.bind(this);
-    this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
 
+    this.mount = document.querySelector("#mount");
     this.toolbox = toolbox;
-    // NOTE: the client is the same through the lifecycle of the toolbox, even
-    // though we get it from toolbox.target
     this.client = toolbox.target.client;
 
     this.store = configureStore();
     this.actions = bindActionCreators(actions, this.store.dispatch);
 
     services.init(this.toolbox);
-    await l10n.init(["devtools/application.ftl"]);
-
-    await this.updateWorkers();
-    this.workersListener = new WorkersListener(this.client.mainRoot);
-    this.workersListener.addListener(this.updateWorkers);
 
     this.deviceFront = await this.client.mainRoot.getFront("device");
-    await this.updateCanDebugWorkers();
+
+    this.workersListener = new WorkersListener(this.client.mainRoot);
+    this.workersListener.addListener(this.updateWorkers);
+    this.toolbox.target.on("navigate", this.handleOnNavigate);
+
     if (this.deviceFront) {
       this.canDebugWorkersListener = this.deviceFront.on(
         "can-debug-sw-updated",
@@ -76,16 +71,14 @@ window.Application = {
       );
     }
 
-    // awaiting for watchTargets will return the targets that are currently
-    // available, so we can have our first render with all the data ready
-    await this.toolbox.targetList.watchTargets(
-      [this.toolbox.targetList.TYPES.FRAME],
-      this.onTargetAvailable,
-      this.onTargetDestroyed
-    );
+    // start up updates for the initial state
+    this.updateDomain();
+    await this.updateCanDebugWorkers();
+    await this.updateWorkers();
+
+    await l10n.init(["devtools/application.ftl"]);
 
     // Render the root Application component.
-    this.mount = document.querySelector("#mount");
     const app = App({
       client: this.client,
       fluentBundles: l10n.getBundles(),
@@ -121,50 +114,16 @@ window.Application = {
     );
   },
 
-  setupTarget(targetFront) {
-    this.handleOnNavigate(); // update domain and manifest for the new target
-    targetFront.on("navigate", this.handleOnNavigate);
-  },
-
-  cleanUpTarget(targetFront) {
-    targetFront.off("navigate", this.handleOnNavigate);
-  },
-
-  onTargetAvailable({ targetFront, isTopLevel }) {
-    if (!isTopLevel) {
-      return; // ignore target frames that are not top level for now
-    }
-
-    this.setupTarget(targetFront);
-  },
-
-  onTargetDestroyed({ targetFront, isTopLevel }) {
-    if (!isTopLevel) {
-      return; // ignore target frames that are not top level for now
-    }
-
-    this.cleanUpTarget(targetFront);
-  },
-
   destroy() {
     this.workersListener.removeListener();
     if (this.deviceFront) {
       this.deviceFront.off("can-debug-sw-updated", this.updateCanDebugWorkers);
     }
-
-    this.toolbox.targetList.unwatchTargets(
-      [this.toolbox.targetList.TYPES.FRAME],
-      this.onTargetAvailable,
-      this.onTargetDestroyed
-    );
-
-    this.cleanUpTarget(this.toolbox.target);
+    this.toolbox.target.off("navigate", this.updateDomain);
 
     unmountComponentAtNode(this.mount);
     this.mount = null;
     this.toolbox = null;
     this.client = null;
-    this.workersListener = null;
-    this.deviceFront = null;
   },
 };
