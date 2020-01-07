@@ -15,7 +15,6 @@ interface XULElement : Element {
   [SetterThrows]
   attribute DOMString flex;
   [SetterThrows]
-  attribute DOMString orient;
 
   // Properties for hiding elements.
   attribute boolean hidden;
