@@ -13,6 +13,14 @@ exclude: true
 
 ⚠️  breaking change
 
+## v74
+- Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
+  enable and disable extensions.
+  ([bug 1599585]({{bugzilla}}1599585))
+
+[74.1]: {{javadoc_uri}}/WebExtensionController.html#enable-org.mozilla.geckoview.WebExtension-int-
+[74.2]: {{javadoc_uri}}/WebExtensionController.html#disable-org.mozilla.geckoview.WebExtension-int-
+
 ## v73
 - Added [`WebExtensionController.install`][73.1] and [`uninstall`][73.2] to
   manage installed extensions
@@ -522,4 +530,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2a944df46a5560f6b45f421536fd3051f9c32885
+[api-version]: 45f21fe6c3c30f903b65a573540901e8f45affca

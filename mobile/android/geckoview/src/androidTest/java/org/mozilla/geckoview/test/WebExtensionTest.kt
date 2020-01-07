@@ -4,8 +4,6 @@
 
 package org.mozilla.geckoview.test
 
-import android.support.test.InstrumentationRegistry
-
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.core.StringEndsWith.endsWith
@@ -23,8 +21,8 @@ import org.mozilla.geckoview.*
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
-import org.mozilla.geckoview.test.util.TestServer
-import java.net.URI
+import org.mozilla.geckoview.WebExtension.DisabledFlags
+import org.mozilla.geckoview.WebExtensionController.EnableSource
 
 import java.util.UUID
 
@@ -64,9 +62,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         // First let's check that the color of the border is empty before loading
         // the WebExtension
-        val colorBefore = mainSession.evaluateJS("document.body.style.borderColor")
-        assertThat("The border color should be empty when loading without extensions.",
-                colorBefore as String, equalTo(""))
+        assertBodyBorderEqualTo("")
 
         val borderify = WebExtension("resource://android/assets/web_extensions/borderify/",
                 controller)
@@ -78,9 +74,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         // Check that the WebExtension was applied by checking the border color
-        val color = mainSession.evaluateJS("document.body.style.borderColor")
-        assertThat("Content script should have been applied",
-                color as String, equalTo("red"))
+        assertBodyBorderEqualTo("red")
 
         // Unregister WebExtension and check again
         sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(borderify))
@@ -89,9 +83,74 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         // Check that the WebExtension was not applied after being unregistered
-        val colorAfter = mainSession.evaluateJS("document.body.style.borderColor")
-        assertThat("Content script should have been applied",
-                colorAfter as String, equalTo(""))
+        assertBodyBorderEqualTo("")
+    }
+
+    private fun assertBodyBorderEqualTo(expected: String) {
+        val color = mainSession.evaluateJS("document.body.style.borderColor")
+        assertThat("The border color should be '$expected'",
+                color as String, equalTo(expected))
+    }
+
+    @Test
+    fun enableDisable() {
+        mainSession.loadUri("example.com")
+        sessionRule.waitForPageStop()
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+            }
+        })
+
+        // First let's check that the color of the border is empty before loading
+        // the WebExtension
+        assertBodyBorderEqualTo("")
+
+        var borderify = sessionRule.waitForResult(
+                controller.install("resource://android/assets/web_extensions/borderify.xpi"))
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        assertThat("Extension should be enabled after installing", borderify.metaData!!.enabled,
+                equalTo(true))
+        assertThat("Extension should be user disabled after calling disable",
+                borderify.metaData!!.disabledFlags, equalTo(0))
+        // Border should be ready because the extension is enabled
+        assertBodyBorderEqualTo("red")
+
+        borderify = sessionRule.waitForResult(controller.disable(borderify, EnableSource.USER))
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        assertThat("Extension should be user disabled after calling disable",
+                borderify.metaData!!.enabled, equalTo(false))
+        assertThat("Extension should be user disabled after calling disable",
+                borderify.metaData!!.disabledFlags and DisabledFlags.USER_DISABLED > 0,
+                equalTo(true))
+        assertThat("Extension should not be blocklist disabled after calling disable",
+                borderify.metaData!!.disabledFlags and DisabledFlags.BLOCKLIST_DISABLED > 0,
+                equalTo(false))
+        // Border should be empty because the extension is disabled
+        assertBodyBorderEqualTo("")
+
+        borderify = sessionRule.waitForResult(controller.enable(borderify, EnableSource.USER))
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        assertThat("Extension should be user disabled after calling disable",
+                borderify.metaData!!.enabled, equalTo(true))
+        assertThat("Extension should be user disabled after calling disable",
+                borderify.metaData!!.disabledFlags, equalTo(0))
+        assertBodyBorderEqualTo("red")
+
+        sessionRule.waitForResult(controller.uninstall(borderify))
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Border should be empty because the extension is not installed anymore
+        assertBodyBorderEqualTo("")
     }
 
     @Test
@@ -101,9 +160,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         // First let's check that the color of the border is empty before loading
         // the WebExtension
-        val colorBefore = mainSession.evaluateJS("document.body.style.borderColor")
-        assertThat("The border color should be empty when loading without extensions.",
-                colorBefore as String, equalTo(""))
+        assertBodyBorderEqualTo("")
 
         sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
             @AssertCalled
@@ -114,8 +171,7 @@ class WebExtensionTest : BaseSessionTest() {
                 assertEquals(extension.metaData!!.version, "1.0")
                 // TODO: Bug 1601067
                 // assertEquals(extension.isBuiltIn, false)
-                // TODO: Bug 1599585
-                // assertEquals(extension.isEnabled, false)
+                assertEquals(extension.metaData!!.enabled, true)
                 assertEquals(extension.metaData!!.signedState,
                         WebExtension.SignedStateFlags.SIGNED)
                 assertEquals(extension.metaData!!.blocklistState,
@@ -132,9 +188,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         // Check that the WebExtension was applied by checking the border color
-        val color = mainSession.evaluateJS("document.body.style.borderColor")
-        assertThat("Content script should have been applied",
-                color as String, equalTo("red"))
+        assertBodyBorderEqualTo("red")
 
         var list = sessionRule.waitForResult(controller.list())
         assertEquals(list.size, 1)
@@ -150,9 +204,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForPageStop()
 
         // Check that the WebExtension was not applied after being unregistered
-        val colorAfter = mainSession.evaluateJS("document.body.style.borderColor")
-        assertThat("Content script should have been applied",
-                colorAfter as String, equalTo(""))
+        assertBodyBorderEqualTo("")
     }
 
     @Test
