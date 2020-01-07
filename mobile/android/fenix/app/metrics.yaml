@@ -1667,3 +1667,38 @@ search_suggestions:
     notification_emails:
      - fenix-core@mozilla.com
     expires: "2020-09-01"
+
+top_sites:
+  open_in_new_tab:
+    type: event
+    description: >
+      A user opens a new tab based on a top site item
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6757
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/7523
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  open_in_private_tab:
+    type: event
+    description: >
+      A user opens a new private tab based on a top site item
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6757
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/7523
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  remove:
+    type: event
+    description: >
+      A user removes a top site item
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/6757
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/7523
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"

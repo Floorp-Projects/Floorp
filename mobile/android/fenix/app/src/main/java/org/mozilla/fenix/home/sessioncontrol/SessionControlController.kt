@@ -260,6 +260,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleOpenInPrivateTabClicked(topSite: TopSite) {
+        metrics.track(Event.TopSiteOpenInPrivateTab)
         with(activity) {
             browsingModeManager.mode = BrowsingMode.Private
             openToBrowserAndLoad(
@@ -288,6 +289,8 @@ class DefaultSessionControlController(
     }
 
     override fun handleRemoveTopSiteClicked(topSite: TopSite) {
+        metrics.track(Event.TopSiteRemoved)
+
         lifecycleScope.launch(Dispatchers.IO) {
             topSiteStorage.removeTopSite(topSite)
         }
@@ -336,6 +339,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleSelectTopSite(url: String) {
+        metrics.track(Event.TopSiteOpenInNewTab)
         activity.components.useCases.tabsUseCases.addTab.invoke(url, true, true)
         navController.nav(
             R.id.homeFragment,

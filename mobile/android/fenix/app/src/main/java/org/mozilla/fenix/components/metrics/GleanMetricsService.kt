@@ -39,6 +39,7 @@ import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
+import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.GleanMetrics.UserSpecifiedSearchEngines
 import org.mozilla.fenix.ext.components
@@ -455,6 +456,15 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.SaveLoginsSettingChanged -> EventWrapper(
             { Logins.saveLoginsSettingChanged.record(it) },
             { Logins.saveLoginsSettingChangedKeys.valueOf(it) }
+        )
+        is Event.TopSiteOpenInNewTab -> EventWrapper<NoExtraKeys>(
+            { TopSites.openInNewTab.record(it) }
+        )
+        is Event.TopSiteOpenInPrivateTab -> EventWrapper<NoExtraKeys>(
+            { TopSites.openInPrivateTab.record(it) }
+        )
+        is Event.TopSiteRemoved -> EventWrapper<NoExtraKeys>(
+            { TopSites.remove.record(it) }
         )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null
