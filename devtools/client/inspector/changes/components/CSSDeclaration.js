@@ -12,7 +12,6 @@ class CSSDeclaration extends PureComponent {
   static get propTypes() {
     return {
       className: PropTypes.string,
-      marker: PropTypes.object,
       property: PropTypes.string.isRequired,
       value: PropTypes.string.isRequired,
     };
@@ -21,16 +20,15 @@ class CSSDeclaration extends PureComponent {
   static get defaultProps() {
     return {
       className: "",
-      marker: null,
     };
   }
 
   render() {
-    const { className, marker, property, value } = this.props;
+    const { className, property, value } = this.props;
 
     return dom.div(
       { className: `changes__declaration ${className}` },
-      marker,
+      "  ", // Two spaces indent when copying plain text to clipboard
       dom.span(
         { className: "changes__declaration-name theme-fg-color3" },
         property
