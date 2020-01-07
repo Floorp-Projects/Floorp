@@ -24,6 +24,8 @@ from mach.decorators import (
 )
 
 here = os.path.abspath(os.path.dirname(__file__))
+topsrcdir = os.path.abspath(os.path.dirname(os.path.dirname(here)))
+DOC_ROOT = os.path.join(topsrcdir, 'docs')
 JSDOC_NOT_FOUND = """\
 JSDoc==3.5.5 is required to build the docs but was not found on your system.
 Please install it globally by running:
@@ -237,7 +239,7 @@ class Documentation(MachCommandBase):
         if project == 'main':
             key_prefixes.append('')
 
-        with open(os.path.join(here, 'config.yml'), 'r') as fh:
+        with open(os.path.join(DOC_ROOT, 'config.yml'), 'r') as fh:
             redirects = yaml.safe_load(fh)['redirects']
 
         redirects = {k.strip("/"): v.strip("/") for k, v in redirects.items()}
