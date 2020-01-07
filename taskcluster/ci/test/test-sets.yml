@@ -341,9 +341,7 @@ awsy-stylo-sequential:
 linux-common-tests:
     - firefox-ui-functional-local
     - firefox-ui-functional-remote
-    - gtest
     - jittest
-    - jsreftest
     - marionette
     - mochitest
     - mochitest-a11y
@@ -366,6 +364,8 @@ linux-common-tests:
 linux1804-tests:
     - cppunit
     - crashtest
+    - gtest
+    - jsreftest
     - mochitest-gpu
     - mochitest-media
     - xpcshell
@@ -373,14 +373,14 @@ linux1804-tests:
 linux1804-qr-tests:
     - cppunit
     - crashtest
+    - gtest
+    - jsreftest
     - mochitest-gpu
     - mochitest-media
     - xpcshell
 
 linux-qr-tests:
-    - gtest
     - jittest
-    - jsreftest
     - mochitest
     - mochitest-a11y
     - mochitest-chrome
