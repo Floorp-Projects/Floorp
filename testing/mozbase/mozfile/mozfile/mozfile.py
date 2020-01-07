@@ -325,6 +325,7 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None):
       only found if it had an extension in `PATHEXT`.
     * Ensures the absolute path to the binary is returned. Previously if the
       binary was found in `cwd`, a relative path was returned.
+    * Checks the Windows registry if shutil.which doesn't come up with anything.
 
     The arguments are the same as the ones in `shutil.which`. In addition there
     is an `exts` argument that only has an effect on Windows. This is used to
@@ -354,13 +355,29 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None, exts=None):
     os.environ["PATHEXT"] = os.pathsep.join(exts)
     try:
         path = shutil_which(cmd, mode=mode, path=path)
-        return os.path.abspath(path.rstrip('.')) if path else None
-
+        if path:
+            return os.path.abspath(path.rstrip('.'))
     finally:
         if oldexts:
             os.environ["PATHEXT"] = oldexts
         else:
             del os.environ["PATHEXT"]
+
+    # If we've gotten this far, we need to check for registered executables
+    # before giving up.
+    try:
+        import winreg
+    except ImportError:
+        import _winreg as winreg
+    if not cmd.lower().endswith('.exe'):
+        cmd += '.exe'
+    try:
+        ret = winreg.QueryValue(
+            winreg.HKEY_LOCAL_MACHINE,
+            r'SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\%s' % cmd)
+        return os.path.abspath(ret) if ret else None
+    except winreg.error:
+        return None
 
 
 # utilities for temporary resources
