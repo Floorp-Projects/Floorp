@@ -689,6 +689,15 @@ class FunctionBox : public ObjectBox, public SharedContext {
     functionCreationData()->lazyScriptData->fieldInitializers.emplace(fi);
   }
 
+  bool setTypeForScriptedFunction(JSContext* cx, bool singleton) {
+    if (hasObject()) {
+      RootedFunction fun(cx, function());
+      return JSFunction::setTypeForScriptedFunction(cx, fun, singleton);
+    }
+    functionCreationData()->typeForScriptedFunction.emplace(singleton);
+    return true;
+  }
+
   void trace(JSTracer* trc) override;
 };
 

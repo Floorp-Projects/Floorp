@@ -108,6 +108,10 @@ struct FunctionCreationData {
 
   bool isSelfHosting = false;
 
+  // If Some(), calls JSFunction::setTypeForScriptedFunction when
+  // this Function is created.
+  mozilla::Maybe<bool> typeForScriptedFunction;
+
   mozilla::Maybe<LazyScriptCreationData> lazyScriptData;
 
   HandleAtom getAtom(JSContext* cx) const;
