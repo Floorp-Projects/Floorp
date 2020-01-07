@@ -97,10 +97,10 @@ permalink: /changelog/
 
   ```kotlin
   // Get a unique id for the provided tag
-  val id = NotificationIds.getIdForTag(context, "mozac.my.feature")
+  val id = SharedIdsHelper.getIdForTag(context, "mozac.my.feature")
 
   // Get the next unique id for the provided tag
-  val id = NotificationIds.getNextIdForTag(context, "mozac.my.feature")
+  val id = SharedIdsHelper.getNextIdForTag(context, "mozac.my.feature")
   ```
 
 # 26.0.0
