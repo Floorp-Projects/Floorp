@@ -20,7 +20,6 @@
 #include "nsIThread.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "xpcpublic.h"
 #include "mozilla/AbstractEventQueue.h"
 #include "mozilla/Atomics.h"

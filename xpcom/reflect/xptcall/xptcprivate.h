@@ -9,7 +9,6 @@
 #define xptcprivate_h___
 
 #include "xptcall.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
 #if !defined(__ia64) || \

@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"

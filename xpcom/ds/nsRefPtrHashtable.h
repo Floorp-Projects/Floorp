@@ -9,7 +9,6 @@
 
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
-#include "nsAutoPtr.h"
 
 /**
  * templated hashtable class maps keys to reference pointers.

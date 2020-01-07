@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "MediaDataDemuxer.h"
 #include "MediaResource.h"
+#include "nsAutoPtr.h"
 namespace mozilla {
 
 namespace flac {

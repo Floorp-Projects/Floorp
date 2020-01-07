@@ -20,7 +20,6 @@
 #include "nsString.h"
 #include "mozilla/Logging.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include <windows.h>
 #undef GetStartupInfo  // Prevent Windows from polluting global namespace
 #include <wmistr.h>

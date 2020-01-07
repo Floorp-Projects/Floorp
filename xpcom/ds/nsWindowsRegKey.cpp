@@ -11,7 +11,6 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
 
 //-----------------------------------------------------------------------------
 
