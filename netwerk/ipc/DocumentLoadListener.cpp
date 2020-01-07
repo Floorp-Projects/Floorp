@@ -259,7 +259,8 @@ bool DocumentLoadListener::Open(
     bool aPluginsAllowed, nsDOMNavigationTiming* aTiming, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
-  if (!nsDocShell::CreateChannelForLoadState(
+
+  if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
           aLoadState, aLoadInfo, mParentChannelListener, nullptr,
           aInitiatorType, aLoadFlags, aLoadType, aCacheKey, aIsActive,
           aIsTopLevelDoc, aHasNonEmptySandboxingFlags, *aRv,
