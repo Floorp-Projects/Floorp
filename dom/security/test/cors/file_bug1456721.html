@@ -61,9 +61,9 @@ function* runTest() {
       method: test.method
     };
 
-    loaderWindow.postMessage(req.toSource(), origin);
+    loaderWindow.postMessage(JSON.stringify(req), origin);
     number_of_tests++;
-    eval(yield);
+    yield;
   }
 }
 

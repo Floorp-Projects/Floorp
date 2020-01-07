@@ -3177,6 +3177,7 @@ class JSScript : public js::BaseScript {
   inline js::RegExpObject* getRegExp(jsbytecode* pc);
 
   js::BigInt* getBigInt(size_t index) {
+    MOZ_ASSERT(gcthings()[index].asCell()->isTenured());
     return &gcthings()[index].as<js::BigInt>();
   }
 

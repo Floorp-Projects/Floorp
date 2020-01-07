@@ -568,6 +568,15 @@ impl GCMethods for jsid {
     unsafe fn write_barriers(_: *mut jsid, _: jsid, _: jsid) {}
 }
 
+#[cfg(feature = "bigint")]
+impl GCMethods for *mut JS::BigInt {
+    unsafe fn initial() -> *mut JS::BigInt { ptr::null_mut() }
+    unsafe fn write_barriers(v: *mut *mut JS::BigInt, prev: *mut JS::BigInt,
+                             next: *mut JS::BigInt) {
+        JS::HeapBigIntWriteBarriers(v, prev, next);
+    }
+}
+
 impl GCMethods for *mut JSObject {
     unsafe fn initial() -> *mut JSObject { ptr::null_mut() }
     unsafe fn write_barriers(v: *mut *mut JSObject,

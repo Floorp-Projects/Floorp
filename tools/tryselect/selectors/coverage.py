@@ -56,7 +56,14 @@ class CoverageParser(BaseTryParser):
     name = 'coverage'
     arguments = []
     common_groups = ['push', 'task']
-    task_configs = ['artifact', 'env', 'rebuild', 'chemspill-prio', 'disable-pgo']
+    task_configs = [
+        "artifact",
+        "env",
+        "rebuild",
+        "chemspill-prio",
+        "disable-pgo",
+        "worker-overrides",
+    ]
 
 
 def read_test_manifests():

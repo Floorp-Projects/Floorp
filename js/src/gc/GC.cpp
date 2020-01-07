@@ -291,9 +291,6 @@ static_assert(js::detail::LIFO_ALLOC_ALIGN > BitMask(Cell::ReservedBits),
               "Cell::ReservedBits should support LifoAlloc");
 static_assert(CellAlignBytes > BitMask(Cell::ReservedBits),
               "Cell::ReservedBits should support gc::Cell");
-static_assert(
-    sizeof(uintptr_t) > BitMask(Cell::ReservedBits),
-    "Cell::ReservedBits should support small malloc / aligned globals");
 static_assert(js::jit::CodeAlignment > BitMask(Cell::ReservedBits),
               "Cell::ReservedBits should support JIT code");
 
@@ -7855,7 +7852,8 @@ JS_FRIEND_API void JS::AssertGCThingMustBeTenured(JSObject* obj) {
 
 JS_FRIEND_API void JS::AssertGCThingIsNotNurseryAllocable(Cell* cell) {
   MOZ_ASSERT(cell);
-  MOZ_ASSERT(!cell->is<JSObject>() && !cell->is<JSString>());
+  MOZ_ASSERT(!cell->is<JSObject>() && !cell->is<JSString>() &&
+             !cell->is<JS::BigInt>());
 }
 
 JS_FRIEND_API void js::gc::AssertGCThingHasType(js::gc::Cell* cell,
@@ -7868,8 +7866,11 @@ JS_FRIEND_API void js::gc::AssertGCThingHasType(js::gc::Cell* cell,
   MOZ_ASSERT(IsCellPointerValid(cell));
 
   if (IsInsideNursery(cell)) {
-    MOZ_ASSERT(kind == (cell->nurseryCellIsString() ? JS::TraceKind::String
-                                                    : JS::TraceKind::Object));
+    MOZ_ASSERT(kind == (cell->nurseryCellIsString()
+                            ? JS::TraceKind::String
+                            : cell->nurseryCellIsBigInt()
+                                  ? JS::TraceKind::BigInt
+                                  : JS::TraceKind::Object));
     return;
   }
 

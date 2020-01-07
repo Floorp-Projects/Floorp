@@ -17,8 +17,6 @@
 ; This file contains an SSE2 implementation for Huffman coding of one block.
 ; The following code is based directly on jchuff.c; see jchuff.c for more
 ; details.
-;
-; [TAB8]
 
 %include "jsimdext.inc"
 
@@ -196,8 +194,8 @@ EXTN(jsimd_huff_encode_one_block_sse2):
     push        ebp
 
     mov         esi, POINTER [eax+8]       ; (working_state *state)
-    mov         put_buffer, DWORD [esi+8]  ; put_buffer = state->cur.put_buffer;
-    mov         put_bits, DWORD [esi+12]   ; put_bits = state->cur.put_bits;
+    mov         put_buffer, dword [esi+8]  ; put_buffer = state->cur.put_buffer;
+    mov         put_bits, dword [esi+12]   ; put_bits = state->cur.put_bits;
     push        esi                        ; esi is now scratch
 
     get_GOT     edx                        ; get GOT address
@@ -213,7 +211,7 @@ EXTN(jsimd_huff_encode_one_block_sse2):
     ; Encode the DC coefficient difference per section F.1.2.1
     mov         esi, POINTER [esp+block]  ; block
     movsx       ecx, word [esi]           ; temp = temp2 = block[0] - last_dc_val;
-    sub         ecx, DWORD [eax+20]
+    sub         ecx, dword [eax+20]
     mov         esi, ecx
 
     ; This is a well-known technique for obtaining the absolute value
@@ -228,12 +226,12 @@ EXTN(jsimd_huff_encode_one_block_sse2):
     ; For a negative input, want temp2 = bitwise complement of abs(input)
     ; This code assumes we are on a two's complement machine
     add         esi, edx                ; temp2 += temp3;
-    mov         DWORD [esp+temp], esi   ; backup temp2 in temp
+    mov         dword [esp+temp], esi   ; backup temp2 in temp
 
     ; Find the number of bits needed for the magnitude of the coefficient
     movpic      ebp, POINTER [esp+gotptr]                        ; load GOT address (ebp)
     movzx       edx, byte [GOTOFF(ebp, EXTN(jpeg_nbits_table) + ecx)]  ; nbits = JPEG_NBITS(temp);
-    mov         DWORD [esp+temp2], edx                           ; backup nbits in temp2
+    mov         dword [esp+temp2], edx                           ; backup nbits in temp2
 
     ; Emit the Huffman-coded symbol for the number of bits
     mov         ebp, POINTER [eax+24]         ; After this point, arguments are not accessible anymore
@@ -241,13 +239,13 @@ EXTN(jsimd_huff_encode_one_block_sse2):
     movzx       ecx, byte [ebp + edx + 1024]  ; size = dctbl->ehufsi[nbits];
     EMIT_BITS   eax                           ; EMIT_BITS(code, size)
 
-    mov         ecx, DWORD [esp+temp2]        ; restore nbits
+    mov         ecx, dword [esp+temp2]        ; restore nbits
 
     ; Mask off any extra bits in code
     mov         eax, 1
     shl         eax, cl
     dec         eax
-    and         eax, DWORD [esp+temp]   ; temp2 &= (((JLONG)1)<<nbits) - 1;
+    and         eax, dword [esp+temp]   ; temp2 &= (((JLONG)1)<<nbits) - 1;
 
     ; Emit that number of bits of the value, if positive,
     ; or the complement of its magnitude, if negative.
@@ -290,22 +288,22 @@ EXTN(jsimd_huff_encode_one_block_sse2):
     jz          near .ELOOP
     lea         esi, [esi+ecx*2]        ; k += r;
     shr         edx, cl                 ; index >>= r;
-    mov         DWORD [esp+temp3], edx
+    mov         dword [esp+temp3], edx
 .BRLOOP:
     cmp         ecx, 16                       ; while (r > 15) {
     jl          near .ERLOOP
     sub         ecx, 16                       ; r -= 16;
-    mov         DWORD [esp+temp], ecx
+    mov         dword [esp+temp], ecx
     mov         eax, INT [ebp + 240 * 4]      ; code_0xf0 = actbl->ehufco[0xf0];
     movzx       ecx, byte [ebp + 1024 + 240]  ; size_0xf0 = actbl->ehufsi[0xf0];
     EMIT_BITS   eax                           ; EMIT_BITS(code_0xf0, size_0xf0)
-    mov         ecx, DWORD [esp+temp]
+    mov         ecx, dword [esp+temp]
     jmp         .BRLOOP
 .ERLOOP:
     movsx       eax, word [esi]                                  ; temp = t1[k];
     movpic      edx, POINTER [esp+gotptr]                        ; load GOT address (edx)
     movzx       eax, byte [GOTOFF(edx, EXTN(jpeg_nbits_table) + eax)]  ; nbits = JPEG_NBITS(temp);
-    mov         DWORD [esp+temp2], eax
+    mov         dword [esp+temp2], eax
     ; Emit Huffman symbol for run length / number of bits
     shl         ecx, 4                        ; temp3 = (r << 4) + nbits;
     add         ecx, eax
@@ -315,13 +313,13 @@ EXTN(jsimd_huff_encode_one_block_sse2):
 
     movsx       edx, word [esi+DCTSIZE2*2]    ; temp2 = t2[k];
     ; Mask off any extra bits in code
-    mov         ecx, DWORD [esp+temp2]
+    mov         ecx, dword [esp+temp2]
     mov         eax, 1
     shl         eax, cl
     dec         eax
     and         eax, edx                ; temp2 &= (((JLONG)1)<<nbits) - 1;
     EMIT_BITS   eax                     ; PUT_BITS(temp2, nbits)
-    mov         edx, DWORD [esp+temp3]
+    mov         edx, dword [esp+temp3]
     add         esi, 2                  ; ++k;
     shr         edx, 1                  ; index >>= 1;
 
@@ -351,29 +349,29 @@ EXTN(jsimd_huff_encode_one_block_sse2):
     shr         edx, cl                 ; index >>= r;
     add         ecx, eax
     lea         esi, [esi+ecx*2]        ; k += r;
-    mov         DWORD [esp+temp3], edx
+    mov         dword [esp+temp3], edx
     jmp         .BRLOOP2
 .BLOOP2:
     bsf         ecx, edx                ; r = __builtin_ctzl(index);
     jz          near .ELOOP2
     lea         esi, [esi+ecx*2]        ; k += r;
     shr         edx, cl                 ; index >>= r;
-    mov         DWORD [esp+temp3], edx
+    mov         dword [esp+temp3], edx
 .BRLOOP2:
     cmp         ecx, 16                       ; while (r > 15) {
     jl          near .ERLOOP2
     sub         ecx, 16                       ; r -= 16;
-    mov         DWORD [esp+temp], ecx
+    mov         dword [esp+temp], ecx
     mov         eax, INT [ebp + 240 * 4]      ; code_0xf0 = actbl->ehufco[0xf0];
     movzx       ecx, byte [ebp + 1024 + 240]  ; size_0xf0 = actbl->ehufsi[0xf0];
     EMIT_BITS   eax                           ; EMIT_BITS(code_0xf0, size_0xf0)
-    mov         ecx, DWORD [esp+temp]
+    mov         ecx, dword [esp+temp]
     jmp         .BRLOOP2
 .ERLOOP2:
     movsx       eax, word [esi]         ; temp = t1[k];
     bsr         eax, eax                ; nbits = 32 - __builtin_clz(temp);
     inc         eax
-    mov         DWORD [esp+temp2], eax
+    mov         dword [esp+temp2], eax
     ; Emit Huffman symbol for run length / number of bits
     shl         ecx, 4                        ; temp3 = (r << 4) + nbits;
     add         ecx, eax
@@ -383,13 +381,13 @@ EXTN(jsimd_huff_encode_one_block_sse2):
 
     movsx       edx, word [esi+DCTSIZE2*2]    ; temp2 = t2[k];
     ; Mask off any extra bits in code
-    mov         ecx, DWORD [esp+temp2]
+    mov         ecx, dword [esp+temp2]
     mov         eax, 1
     shl         eax, cl
     dec         eax
     and         eax, edx                ; temp2 &= (((JLONG)1)<<nbits) - 1;
     EMIT_BITS   eax                     ; PUT_BITS(temp2, nbits)
-    mov         edx, DWORD [esp+temp3]
+    mov         edx, dword [esp+temp3]
     add         esi, 2                  ; ++k;
     shr         edx, 1                  ; index >>= 1;
 
@@ -406,8 +404,8 @@ EXTN(jsimd_huff_encode_one_block_sse2):
     mov         eax, [esp+buffer]
     pop         esi
     ; Save put_buffer & put_bits
-    mov         DWORD [esi+8], put_buffer  ; state->cur.put_buffer = put_buffer;
-    mov         DWORD [esi+12], put_bits   ; state->cur.put_bits = put_bits;
+    mov         dword [esi+8], put_buffer  ; state->cur.put_buffer = put_buffer;
+    mov         dword [esi+12], put_bits   ; state->cur.put_bits = put_bits;
 
     pop         ebp
     pop         edi

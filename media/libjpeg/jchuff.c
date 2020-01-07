@@ -43,8 +43,8 @@
  */
 
 /* NOTE: Both GCC and Clang define __GNUC__ */
-#if defined __GNUC__ && (defined __arm__ || defined __aarch64__)
-#if !defined __thumb__ || defined __thumb2__
+#if defined(__GNUC__) && (defined(__arm__) || defined(__aarch64__))
+#if !defined(__thumb__) || defined(__thumb2__)
 #define USE_CLZ_INTRINSIC
 #endif
 #endif
@@ -432,7 +432,7 @@ dump_buffer(working_state *state)
  * scanning order-- 1, 8, 16, etc.), then this will produce an encoded block
  * larger than 200 bytes.
  */
-#define BUFSIZE  (DCTSIZE2 * 4)
+#define BUFSIZE  (DCTSIZE2 * 8)
 
 #define LOAD_BUFFER() { \
   if (state->free_in_buffer < BUFSIZE) { \

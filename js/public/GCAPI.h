@@ -463,9 +463,9 @@ namespace JS {
   D(INCREMENTAL_ALLOC_TRIGGER, 27)         \
   D(FULL_CELL_PTR_STR_BUFFER, 28)          \
   D(TOO_MUCH_JIT_CODE, 29)                 \
+  D(FULL_CELL_PTR_BIGINT_BUFFER, 30)       \
                                            \
   /* These are reserved for future use. */ \
-  D(RESERVED6, 30)                         \
   D(RESERVED7, 31)                         \
   D(RESERVED8, 32)                         \
                                            \

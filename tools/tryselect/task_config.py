@@ -383,6 +383,80 @@ class UbuntuBionicTests(TryConfig):
             }
 
 
+class WorkerOverrides(TryConfig):
+
+    arguments = [
+        [
+            ["--worker-override"],
+            {
+                "action": "append",
+                "dest": "worker_overrides",
+                "help": (
+                    "Override the worker pool used for a given taskgraph worker alias. "
+                    "The argument should be `<alias>=<worker-pool>`. "
+                    "Can be specified multiple times."
+                ),
+            },
+        ],
+        [
+            ["--worker-suffix"],
+            {
+                "action": "append",
+                "dest": "worker_suffixes",
+                "help": (
+                    "Override the worker pool used for a given taskgraph worker alias, "
+                    "by appending a suffix to the work-pool. "
+                    "The argument should be `<alias>=<suffix>`. "
+                    "Can be specified multiple times."
+                ),
+            },
+        ],
+    ]
+
+    def try_config(self, worker_overrides, worker_suffixes, **kwargs):
+        from taskgraph.config import load_graph_config
+        from taskgraph.util.workertypes import get_worker_type
+
+        overrides = {}
+        if worker_overrides:
+            for override in worker_overrides:
+                alias, worker_pool = override.split("=", 1)
+                if alias in overrides:
+                    print(
+                        "Can't override worker alias {alias} more than once. "
+                        "Already set to use {previous}, but also asked to use {new}.".format(
+                            alias=alias, previous=overrides[alias], new=worker_pool
+                        )
+                    )
+                    sys.exit(1)
+                overrides[alias] = worker_pool
+
+        if worker_suffixes:
+            root = build.topsrcdir
+            root = os.path.join(root, "taskcluster", "ci")
+            graph_config = load_graph_config(root)
+            for worker_suffix in worker_suffixes:
+                alias, suffix = worker_suffix.split("=", 1)
+                if alias in overrides:
+                    print(
+                        "Can't override worker alias {alias} more than once. "
+                        "Already set to use {previous}, but also asked "
+                        "to add suffix {suffix}.".format(
+                            alias=alias, previous=overrides[alias], suffix=suffix
+                        )
+                    )
+                    sys.exit(1)
+                provisioner, worker_type = get_worker_type(
+                    graph_config, alias, level="1", release_level="staging",
+                )
+                overrides[alias] = "{provisioner}/{worker_type}{suffix}".format(
+                    provisioner=provisioner, worker_type=worker_type, suffix=suffix
+                )
+
+        if overrides:
+            return {"worker-overrides": overrides}
+
+
 all_task_configs = {
     'artifact': Artifact,
     'browsertime': Browsertime,
@@ -395,4 +469,5 @@ all_task_configs = {
     'rebuild': Rebuild,
     'ubuntu-bionic': UbuntuBionicTests,
     'visual-metrics-jobs': VisualMetricsJobs,
+    'worker-overrides': WorkerOverrides,
 }

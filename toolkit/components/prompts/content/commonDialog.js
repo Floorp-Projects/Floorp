@@ -59,6 +59,11 @@ function commonDialogOnLoad() {
 
   // resize the window to the content
   window.sizeToContent();
+
+  // If the icon hasn't loaded yet, size the window to the content again when
+  // it does, as its layout can change.
+  ui.infoIcon.addEventListener("load", () => window.sizeToContent());
+
   window.getAttention();
 }
 

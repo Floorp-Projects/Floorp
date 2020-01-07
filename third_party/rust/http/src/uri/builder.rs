@@ -1,6 +1,7 @@
-use {Uri, Result};
-use convert::{HttpTryFrom, HttpTryInto};
-use super::{Authority, Scheme, Parts, PathAndQuery};
+use std::convert::{TryFrom, TryInto};
+
+use super::{Authority, Parts, PathAndQuery, Scheme};
+use crate::Uri;
 
 /// A builder for `Uri`s.
 ///
@@ -8,7 +9,7 @@ use super::{Authority, Scheme, Parts, PathAndQuery};
 /// through a builder pattern.
 #[derive(Debug)]
 pub struct Builder {
-    parts: Option<Result<Parts>>,
+    parts: Result<Parts, crate::Error>,
 }
 
 impl Builder {
@@ -41,13 +42,15 @@ impl Builder {
     /// let mut builder = uri::Builder::new();
     /// builder.scheme("https");
     /// ```
-    pub fn scheme<T>(&mut self, scheme: T) -> &mut Self
+    pub fn scheme<T>(self, scheme: T) -> Self
     where
-        Scheme: HttpTryFrom<T>,
+        Scheme: TryFrom<T>,
+        <Scheme as TryFrom<T>>::Error: Into<crate::Error>,
     {
-        self.map(|parts| {
-            parts.scheme = Some(scheme.http_try_into()?);
-            Ok(())
+        self.map(move |mut parts| {
+            let scheme = scheme.try_into().map_err(Into::into)?;
+            parts.scheme = Some(scheme);
+            Ok(parts)
         })
     }
 
@@ -63,13 +66,15 @@ impl Builder {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn authority<T>(&mut self, auth: T) -> &mut Self
+    pub fn authority<T>(self, auth: T) -> Self
     where
-        Authority: HttpTryFrom<T>,
+        Authority: TryFrom<T>,
+        <Authority as TryFrom<T>>::Error: Into<crate::Error>,
     {
-        self.map(|parts| {
-            parts.authority = Some(auth.http_try_into()?);
-            Ok(())
+        self.map(move |mut parts| {
+            let auth = auth.try_into().map_err(Into::into)?;
+            parts.authority = Some(auth);
+            Ok(parts)
         })
     }
 
@@ -85,13 +90,15 @@ impl Builder {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn path_and_query<T>(&mut self, p_and_q: T) -> &mut Self
+    pub fn path_and_query<T>(self, p_and_q: T) -> Self
     where
-        PathAndQuery: HttpTryFrom<T>,
+        PathAndQuery: TryFrom<T>,
+        <PathAndQuery as TryFrom<T>>::Error: Into<crate::Error>,
     {
-        self.map(|parts| {
-            parts.path_and_query = Some(p_and_q.http_try_into()?);
-            Ok(())
+        self.map(move |mut parts| {
+            let p_and_q = p_and_q.try_into().map_err(Into::into)?;
+            parts.path_and_query = Some(p_and_q);
+            Ok(parts)
         })
     }
 
@@ -119,29 +126,21 @@ impl Builder {
     ///     .build()
     ///     .unwrap();
     /// ```
-    pub fn build(&mut self) -> Result<Uri> {
-        self
-            .parts
-            .take()
-            .expect("cannot reuse Uri builder")
-            .and_then(|parts| parts.http_try_into())
+    pub fn build(self) -> Result<Uri, crate::Error> {
+        let parts = self.parts?;
+        Uri::from_parts(parts).map_err(Into::into)
     }
 
-    fn map<F>(&mut self, f: F) -> &mut Self
+    // private
+
+    fn map<F>(self, func: F) -> Self
     where
-        F: FnOnce(&mut Parts) -> Result<()>,
+        F: FnOnce(Parts) -> Result<Parts, crate::Error>,
     {
-        let res = if let Some(Ok(ref mut parts)) = self.parts {
-            f(parts)
-        } else {
-            return self;
-        };
 
-        if let Err(err) = res {
-            self.parts = Some(Err(err));
+        Builder {
+            parts: self.parts.and_then(func),
         }
-
-        self
     }
 }
 
@@ -149,8 +148,7 @@ impl Default for Builder {
     #[inline]
     fn default() -> Builder {
         Builder {
-            parts: Some(Ok(Parts::default())),
+            parts: Ok(Parts::default()),
         }
     }
 }
-

@@ -48,6 +48,8 @@
 --no-native-regexp
 --nursery-strings=off
 --nursery-strings=on
+--nursery-bigints=off
+--nursery-bigints=on
 --parser-deferred-alloc
 --spectre-mitigations=off
 --spectre-mitigations=on

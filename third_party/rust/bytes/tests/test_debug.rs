@@ -1,4 +1,4 @@
-extern crate bytes;
+#![deny(warnings, rust_2018_idioms)]
 
 use bytes::Bytes;
 

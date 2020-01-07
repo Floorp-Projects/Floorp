@@ -78,6 +78,12 @@ inline JSFatInlineString* AllocateString<JSFatInlineString, NoGC>(
       js::AllocateStringImpl<JSFatInlineString, NoGC>(cx, heap));
 }
 
+// Allocate a BigInt.
+//
+// Use for nursery-allocatable BigInt.
+template <AllowGC allowGC = CanGC>
+JS::BigInt* AllocateBigInt(JSContext* cx, gc::InitialHeap heap);
+
 }  // namespace js
 
 #endif  // gc_Allocator_h

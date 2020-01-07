@@ -1,15 +1,12 @@
-// Deprecated in 1.26, needed until our minimum version is >=1.23.
-#[allow(unused, deprecated)]
-use std::ascii::AsciiExt;
-use std::{cmp, fmt, str};
+use std::convert::TryFrom;
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
+use std::{cmp, fmt, str};
 
 use bytes::Bytes;
 
-use byte_str::ByteStr;
-use convert::HttpTryFrom;
-use super::{ErrorKind, InvalidUri, InvalidUriBytes, URI_CHARS, Port};
+use super::{ErrorKind, InvalidUri, Port, URI_CHARS};
+use crate::byte_str::ByteStr;
 
 /// Represents the authority component of a URI.
 #[derive(Clone)]
@@ -19,32 +16,14 @@ pub struct Authority {
 
 impl Authority {
     pub(super) fn empty() -> Self {
-        Authority { data: ByteStr::new() }
+        Authority {
+            data: ByteStr::new(),
+        }
     }
 
-    /// Attempt to convert an `Authority` from `Bytes`.
-    ///
-    /// This function will be replaced by a `TryFrom` implementation once the
-    /// trait lands in stable.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # extern crate http;
-    /// # use http::uri::*;
-    /// extern crate bytes;
-    ///
-    /// use bytes::Bytes;
-    ///
-    /// # pub fn main() {
-    /// let bytes = Bytes::from("example.com");
-    /// let authority = Authority::from_shared(bytes).unwrap();
-    ///
-    /// assert_eq!(authority.host(), "example.com");
-    /// # }
-    /// ```
-    pub fn from_shared(s: Bytes) -> Result<Self, InvalidUriBytes> {
-        let authority_end = Authority::parse_non_empty(&s[..]).map_err(InvalidUriBytes)?;
+    // Not public while `bytes` is unstable.
+    pub(super) fn from_shared(s: Bytes) -> Result<Self, InvalidUri> {
+        let authority_end = Authority::parse_non_empty(&s[..])?;
 
         if authority_end != s.len() {
             return Err(ErrorKind::InvalidUriChar.into());
@@ -75,7 +54,8 @@ impl Authority {
     pub fn from_static(src: &'static str) -> Self {
         let s = src.as_bytes();
         let b = Bytes::from_static(s);
-        let authority_end = Authority::parse_non_empty(&b[..]).expect("static str is not valid authority");
+        let authority_end =
+            Authority::parse_non_empty(&b[..]).expect("static str is not valid authority");
 
         if authority_end != b.len() {
             panic!("static str is not valid authority");
@@ -84,6 +64,22 @@ impl Authority {
         Authority {
             data: unsafe { ByteStr::from_utf8_unchecked(b) },
         }
+    }
+
+
+    /// Attempt to convert a `Bytes` buffer to a `Authority`.
+    ///
+    /// This will try to prevent a copy if the type passed is the type used
+    /// internally, and will copy the data if it is not.
+    pub fn from_maybe_shared<T>(src: T) -> Result<Self, InvalidUri>
+    where
+        T: AsRef<[u8]> + 'static,
+    {
+        if_downcast_into!(T, Bytes, src, {
+            return Authority::from_shared(src);
+        });
+
+        Authority::try_from(src.as_ref())
     }
 
     // Note: this may return an *empty* Authority. You might want `parse_non_empty`.
@@ -103,15 +99,20 @@ impl Authority {
                 }
                 b':' => {
                     colon_cnt += 1;
-                },
+                }
                 b'[' => {
                     start_bracket = true;
+                    if has_percent {
+                        // Something other than the userinfo has a `%`, so reject it.
+                        return Err(ErrorKind::InvalidAuthority.into());
+                    }
                 }
                 b']' => {
                     end_bracket = true;
 
                     // Those were part of an IPv6 hostname, so forget them...
                     colon_cnt = 0;
+                    has_percent = false;
                 }
                 b'@' => {
                     at_sign_pos = Some(i);
@@ -127,8 +128,11 @@ impl Authority {
                     // the userinfo can have a percent-encoded username and password,
                     // so record that a `%` was found. If this turns out to be
                     // part of the userinfo, this flag will be cleared.
+                    // Also per https://tools.ietf.org/html/rfc6874, percent-encoding can
+                    // be used to indicate a zone identifier.
                     // If the flag hasn't been cleared at the end, that means this
-                    // was part of the hostname, and will fail with an error.
+                    // was part of the hostname (and not part of an IPv6 address), and
+                    // will fail with an error.
                     has_percent = true;
                 }
                 0 => {
@@ -197,12 +201,6 @@ impl Authority {
         host(self.as_str())
     }
 
-    #[deprecated(since="0.1.14", note="use `port_part` or `port_u16` instead")]
-    #[doc(hidden)]
-    pub fn port(&self) -> Option<u16> {
-        self.port_u16()
-    }
-
     /// Get the port part of this `Authority`.
     ///
     /// The port subcomponent of authority is designated by an optional port
@@ -225,7 +223,7 @@ impl Authority {
     /// # use http::uri::Authority;
     /// let authority: Authority = "example.org:80".parse().unwrap();
     ///
-    /// let port = authority.port_part().unwrap();
+    /// let port = authority.port().unwrap();
     /// assert_eq!(port.as_u16(), 80);
     /// assert_eq!(port.as_str(), "80");
     /// ```
@@ -236,9 +234,9 @@ impl Authority {
     /// # use http::uri::Authority;
     /// let authority: Authority = "example.org".parse().unwrap();
     ///
-    /// assert!(authority.port_part().is_none());
+    /// assert!(authority.port().is_none());
     /// ```
-    pub fn port_part(&self) -> Option<Port<&str>> {
+    pub fn port(&self) -> Option<Port<&str>> {
         let bytes = self.as_str();
         bytes
             .rfind(":")
@@ -256,7 +254,7 @@ impl Authority {
     /// assert_eq!(authority.port_u16(), Some(80));
     /// ```
     pub fn port_u16(&self) -> Option<u16> {
-        self.port_part().and_then(|p| Some(p.as_u16()))
+        self.port().and_then(|p| Some(p.as_u16()))
     }
 
     /// Return a str representation of the authority
@@ -264,13 +262,10 @@ impl Authority {
     pub fn as_str(&self) -> &str {
         &self.data[..]
     }
-
-    /// Converts this `Authority` back to a sequence of bytes
-    #[inline]
-    pub fn into_bytes(self) -> Bytes {
-        self.into()
-    }
 }
+
+// Purposefully not public while `bytes` is unstable.
+// impl TryFrom<Bytes> for Authority
 
 impl AsRef<str> for Authority {
     fn as_ref(&self) -> &str {
@@ -421,7 +416,10 @@ impl PartialOrd<Authority> for String {
 /// assert_eq!(a, b);
 /// ```
 impl Hash for Authority {
-    fn hash<H>(&self, state: &mut H) where H: Hasher {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
         self.data.len().hash(state);
         for &b in self.data.as_bytes() {
             state.write_u8(b.to_ascii_lowercase());
@@ -429,15 +427,7 @@ impl Hash for Authority {
     }
 }
 
-impl HttpTryFrom<Bytes> for Authority {
-    type Error = InvalidUriBytes;
-    #[inline]
-    fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
-        Authority::from_shared(bytes)
-    }
-}
-
-impl<'a> HttpTryFrom<&'a [u8]> for Authority {
+impl<'a> TryFrom<&'a [u8]> for Authority {
     type Error = InvalidUri;
     #[inline]
     fn try_from(s: &'a [u8]) -> Result<Self, Self::Error> {
@@ -449,16 +439,18 @@ impl<'a> HttpTryFrom<&'a [u8]> for Authority {
         }
 
         Ok(Authority {
-            data: unsafe { ByteStr::from_utf8_unchecked(s.into()) },
+            data: unsafe {
+                ByteStr::from_utf8_unchecked(Bytes::copy_from_slice(s))
+            },
         })
     }
 }
 
-impl<'a> HttpTryFrom<&'a str> for Authority {
+impl<'a> TryFrom<&'a str> for Authority {
     type Error = InvalidUri;
     #[inline]
     fn try_from(s: &'a str) -> Result<Self, Self::Error> {
-        HttpTryFrom::try_from(s.as_bytes())
+        TryFrom::try_from(s.as_bytes())
     }
 }
 
@@ -466,41 +458,37 @@ impl FromStr for Authority {
     type Err = InvalidUri;
 
     fn from_str(s: &str) -> Result<Self, InvalidUri> {
-        HttpTryFrom::try_from(s)
-    }
-}
-
-impl From<Authority> for Bytes {
-    #[inline]
-    fn from(src: Authority) -> Bytes {
-        src.data.into()
+        TryFrom::try_from(s)
     }
 }
 
 impl fmt::Debug for Authority {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
 }
 
 impl fmt::Display for Authority {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
 }
 
 fn host(auth: &str) -> &str {
-    let host_port = auth.rsplitn(2, '@')
+    let host_port = auth
+        .rsplitn(2, '@')
         .next()
         .expect("split always has at least 1 item");
 
     if host_port.as_bytes()[0] == b'[' {
-        let i = host_port.find(']')
+        let i = host_port
+            .find(']')
             .expect("parsing should validate brackets");
         // ..= ranges aren't available in 1.20, our minimum Rust version...
-        &host_port[0 .. i + 1]
+        &host_port[0..i + 1]
     } else {
-        host_port.split(':')
+        host_port
+            .split(':')
             .next()
             .expect("split always has at least 1 item")
     }
@@ -610,6 +598,22 @@ mod tests {
         assert_eq!(err.0, ErrorKind::InvalidAuthority);
 
         let err = Authority::parse_non_empty(b"a%2f:b%2f@example%2f.com").unwrap_err();
+        assert_eq!(err.0, ErrorKind::InvalidAuthority);
+    }
+
+    #[test]
+    fn allows_percent_in_ipv6_address() {
+        let authority_str = "[fe80::1:2:3:4%25eth0]";
+        let result: Authority = authority_str.parse().unwrap();
+        assert_eq!(result, authority_str);
+    }
+
+    #[test]
+    fn rejects_percent_outside_ipv6_address() {
+        let err = Authority::parse_non_empty(b"1234%20[fe80::1:2:3:4]").unwrap_err();
+        assert_eq!(err.0, ErrorKind::InvalidAuthority);
+
+        let err = Authority::parse_non_empty(b"[fe80::1:2:3:4]%20").unwrap_err();
         assert_eq!(err.0, ErrorKind::InvalidAuthority);
     }
 }

@@ -91,25 +91,40 @@ def run(index=0, purge=False, list_configs=False, list_tasks=0, message='{msg}',
     if list_configs or list_tasks > 0:
         for i, data in enumerate(history):
             msg, config = json.loads(data)
-            n = len(config['tasks'])
-            print('{index}. ({n} task{s}) {msg}'.format(
-                index=i,
-                msg=msg,
-                n=n,
-                s='' if n == 1 else 's'))
+            version = config.get('version', '1')
+            if version == 1:
+                tasks = config['tasks']
+            elif version == 2:
+                try_config = config.get('parameters', {}).get('try_task_config', {})
+                tasks = try_config.get('tasks')
+            else:
+                tasks = None
 
-            if list_tasks > 0:
-                indent = ' ' * 4
-                all_tasks = config['tasks']
-                if list_tasks > 1:
-                    shown_tasks = all_tasks
-                else:
-                    shown_tasks = all_tasks[:10]
-                print(indent + ('\n' + indent).join(shown_tasks))
+            if tasks is not None:
+                n = len(tasks)
 
-                num_hidden_tasks = len(all_tasks) - len(shown_tasks)
-                if num_hidden_tasks > 0:
-                    print('{}... and {} more'.format(indent, num_hidden_tasks))
+                print('{index}. ({n} task{s}) {msg}'.format(
+                    index=i,
+                    msg=msg,
+                    n=n,
+                    s='' if n == 1 else 's'))
+
+                if list_tasks > 0:
+                    indent = ' ' * 4
+                    if list_tasks > 1:
+                        shown_tasks = tasks
+                    else:
+                        shown_tasks = tasks[:10]
+                    print(indent + ('\n' + indent).join(shown_tasks))
+
+                    num_hidden_tasks = len(tasks) - len(shown_tasks)
+                    if num_hidden_tasks > 0:
+                        print('{}... and {} more'.format(indent, num_hidden_tasks))
+            else:
+                print('{index}. {msg}'.format(
+                    index=i,
+                    msg=msg,
+                ))
 
         return
 

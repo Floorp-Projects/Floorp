@@ -4,13 +4,17 @@
 
 loadTestSubscript("head_devtools.js");
 
+const BASE_URL =
+  "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
+
 /**
  * this test file ensures that:
  *
  * - devtools.inspectedWindow.eval provides the expected $0 and inspect bindings
  */
 add_task(async function test_devtools_inspectedWindow_eval_bindings() {
-  const TEST_TARGET_URL = "http://mochi.test:8888/";
+  const TEST_TARGET_URL = `${BASE_URL}/file_inspectedwindow_eval.html`;
+
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     TEST_TARGET_URL
@@ -104,12 +108,13 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
     const toolId = await toolbox.once("select");
 
     if (toolId === "inspector") {
+      info("Toolbox has been switched to the inspector as expected");
       const selectedNodeName =
         toolbox.selection.nodeFront &&
         toolbox.selection.nodeFront._form.nodeName;
       is(
         selectedNodeName,
-        "HTML",
+        "A",
         "The expected DOM node has been selected in the inspector"
       );
     } else {
@@ -120,20 +125,52 @@ add_task(async function test_devtools_inspectedWindow_eval_bindings() {
   })();
 
   info("Test inspectedWindow.eval inspect() binding called for a DOM element");
-  const inspectDOMNodePromise = extension.awaitMessage(
-    `inspectedWindow-eval-result`
-  );
   extension.sendMessage(
     `inspectedWindow-eval-request`,
-    "inspect(document.documentElement)"
+    "inspect(document.querySelector('a#link-to-inspect'))"
   );
-  await inspectDOMNodePromise;
+  await extension.awaitMessage(`inspectedWindow-eval-result`);
 
   info(
     "Wait for the toolbox to switch to the inspector and the expected node has been selected"
   );
   await inspectorPanelSelectedPromise;
-  info("Toolbox has been switched to the inspector as expected");
+
+  info("Test inspectedWindow.eval inspect() binding called for a function");
+  const debuggerPanelSelectedPromise = (async () => {
+    const toolId = await toolbox.once("select");
+
+    if (toolId === "jsdebugger") {
+      info("Toolbox has been switched to the jsdebugger as expected");
+      const dbg = toolbox.getPanel("jsdebugger");
+
+      await BrowserTestUtils.waitForCondition(() => {
+        const selectedLocation = dbg._selectors.getSelectedLocation(
+          dbg._getState()
+        );
+
+        if (!selectedLocation) {
+          return false;
+        }
+
+        return (
+          selectedLocation.sourceId.includes(
+            "file_inspectedwindow_eval.html"
+          ) && selectedLocation.line == 9
+        );
+      }, "Wait the expected function to be selected in the jsdebugger panel");
+    } else {
+      throw new Error(
+        `jsdebugger panel expected, ${toolId} has been selected instead`
+      );
+    }
+  })();
+  extension.sendMessage(
+    `inspectedWindow-eval-request`,
+    "inspect(test_inspect_function)"
+  );
+  await extension.awaitMessage(`inspectedWindow-eval-result`);
+  await debuggerPanelSelectedPromise;
 
   info("Test inspectedWindow.eval inspect() binding called for a JS object");
 

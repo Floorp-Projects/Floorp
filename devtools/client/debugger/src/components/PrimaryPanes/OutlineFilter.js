@@ -48,7 +48,9 @@ export default class OutlineFilter extends Component<Props, State> {
       <div className="outline-filter">
         <form>
           <input
-            className={classnames("outline-filter-input", { focused })}
+            className={classnames("outline-filter-input devtools-filterinput", {
+              focused,
+            })}
             onFocus={() => this.setFocus(true)}
             onBlur={() => this.setFocus(false)}
             placeholder={L10N.getStr("outline.placeholder")}

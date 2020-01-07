@@ -16,7 +16,7 @@ window.addEventListener("message", function(e) {
 
   sendData = null;
 
-  req = eval(e.data);
+  req = JSON.parse(e.data);
   var res = {
     didFail: false,
     events: [],
@@ -110,7 +110,7 @@ window.addEventListener("message", function(e) {
 });
 
 function post(e, res) {
-  e.source.postMessage(res.toSource(), "http://mochi.test:8888");
+  e.source.postMessage(JSON.stringify(res), "http://mochi.test:8888");
 }
 
 </script>

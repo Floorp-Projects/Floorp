@@ -1,7 +1,5 @@
-extern crate http;
-
-use http::*;
 use http::header::*;
+use http::*;
 
 #[test]
 fn smoke() {
@@ -11,7 +9,7 @@ fn smoke() {
 
     let name: HeaderName = "hello".parse().unwrap();
 
-    match headers.entry(&name).unwrap() {
+    match headers.entry(&name) {
         Entry::Vacant(e) => {
             e.insert("world".parse().unwrap());
         }
@@ -20,7 +18,7 @@ fn smoke() {
 
     assert!(headers.get("hello").is_some());
 
-    match headers.entry(&name).unwrap() {
+    match headers.entry(&name) {
         Entry::Occupied(mut e) => {
             assert_eq!(e.get(), &"world");
 
@@ -38,6 +36,22 @@ fn smoke() {
 }
 
 #[test]
+#[should_panic]
+fn reserve_over_capacity() {
+    // See https://github.com/hyperium/http/issues/352
+    let mut headers = HeaderMap::<u32>::with_capacity(32);
+    headers.reserve(50_000); // over MAX_SIZE
+}
+
+#[test]
+#[should_panic]
+fn reserve_overflow() {
+    // See https://github.com/hyperium/http/issues/352
+    let mut headers = HeaderMap::<u32>::with_capacity(0);
+    headers.reserve(std::usize::MAX); // next_power_of_two overflows
+}
+
+#[test]
 fn drain() {
     let mut headers = HeaderMap::new();
 
@@ -47,12 +61,10 @@ fn drain() {
 
     {
         let mut iter = headers.drain();
-        let (name, values) = iter.next().unwrap();
-        assert_eq!(name.as_str(), "hello");
+        let (name, value) = iter.next().unwrap();
+        assert_eq!(name.unwrap().as_str(), "hello");
 
-        let values: Vec<_> = values.collect();
-        assert_eq!(values.len(), 1);
-        assert_eq!(values[0], "world");
+        assert_eq!(value, "world");
 
         assert!(iter.next().is_none());
     }
@@ -60,45 +72,101 @@ fn drain() {
     assert!(headers.is_empty());
 
     // Insert two sequential values
-    headers.insert("hello".parse::<HeaderName>().unwrap(), "world".parse().unwrap());
-    headers.insert("zomg".parse::<HeaderName>().unwrap(), "bar".parse().unwrap());
-    headers.append("hello".parse::<HeaderName>().unwrap(), "world2".parse().unwrap());
+    headers.insert(
+        "hello".parse::<HeaderName>().unwrap(),
+        "world".parse().unwrap(),
+    );
+    headers.insert(
+        "zomg".parse::<HeaderName>().unwrap(),
+        "bar".parse().unwrap(),
+    );
+    headers.append(
+        "hello".parse::<HeaderName>().unwrap(),
+        "world2".parse().unwrap(),
+    );
 
     // Drain...
     {
         let mut iter = headers.drain();
-        let (name, values) = iter.next().unwrap();
-        assert_eq!(name.as_str(), "hello");
 
-        let values: Vec<_> = values.collect();
-        assert_eq!(values.len(), 2);
-        assert_eq!(values[0], "world");
-        assert_eq!(values[1], "world2");
+        let (name, value) = iter.next().unwrap();
+        assert_eq!(name.unwrap().as_str(), "hello");
+        assert_eq!(value, "world");
 
-        let (name, values) = iter.next().unwrap();
-        assert_eq!(name.as_str(), "zomg");
+        let (name, value) = iter.next().unwrap();
+        assert_eq!(name, None);
+        assert_eq!(value, "world2");
 
-        let values: Vec<_> = values.collect();
-        assert_eq!(values.len(), 1);
-        assert_eq!(values[0], "bar");
+        let (name, value) = iter.next().unwrap();
+        assert_eq!(name.unwrap().as_str(), "zomg");
+        assert_eq!(value, "bar");
 
         assert!(iter.next().is_none());
     }
 }
 
 #[test]
+fn drain_drop_immediately() {
+    // test mem::forgetting does not double-free
+
+    let mut headers = HeaderMap::new();
+    headers.insert("hello", "world".parse().unwrap());
+    headers.insert("zomg", "bar".parse().unwrap());
+    headers.append("hello", "world2".parse().unwrap());
+
+    let iter = headers.drain();
+    assert_eq!(iter.size_hint(), (2, Some(3)));
+    // not consuming `iter`
+}
+
+#[test]
+fn drain_forget() {
+    // test mem::forgetting does not double-free
+
+    let mut headers = HeaderMap::<HeaderValue>::new();
+    headers.insert("hello", "world".parse().unwrap());
+    headers.insert("zomg", "bar".parse().unwrap());
+
+    assert_eq!(headers.len(), 2);
+
+    {
+        let mut iter = headers.drain();
+        assert_eq!(iter.size_hint(), (2, Some(2)));
+        let _ = iter.next().unwrap();
+        std::mem::forget(iter);
+    }
+
+    assert_eq!(headers.len(), 0);
+}
+
+#[test]
 fn drain_entry() {
     let mut headers = HeaderMap::new();
 
-    headers.insert("hello".parse::<HeaderName>().unwrap(), "world".parse().unwrap());
-    headers.insert("zomg".parse::<HeaderName>().unwrap(), "foo".parse().unwrap());
-    headers.append("hello".parse::<HeaderName>().unwrap(), "world2".parse().unwrap());
-    headers.insert("more".parse::<HeaderName>().unwrap(), "words".parse().unwrap());
-    headers.append("more".parse::<HeaderName>().unwrap(), "insertions".parse().unwrap());
+    headers.insert(
+        "hello".parse::<HeaderName>().unwrap(),
+        "world".parse().unwrap(),
+    );
+    headers.insert(
+        "zomg".parse::<HeaderName>().unwrap(),
+        "foo".parse().unwrap(),
+    );
+    headers.append(
+        "hello".parse::<HeaderName>().unwrap(),
+        "world2".parse().unwrap(),
+    );
+    headers.insert(
+        "more".parse::<HeaderName>().unwrap(),
+        "words".parse().unwrap(),
+    );
+    headers.append(
+        "more".parse::<HeaderName>().unwrap(),
+        "insertions".parse().unwrap(),
+    );
 
     // Using insert
     {
-        let mut e = match headers.entry("hello").unwrap() {
+        let mut e = match headers.entry("hello") {
             Entry::Occupied(e) => e,
             _ => panic!(),
         };
@@ -117,10 +185,16 @@ fn eq() {
 
     assert_eq!(a, b);
 
-    a.insert("hello".parse::<HeaderName>().unwrap(), "world".parse().unwrap());
+    a.insert(
+        "hello".parse::<HeaderName>().unwrap(),
+        "world".parse().unwrap(),
+    );
     assert_ne!(a, b);
 
-    b.insert("hello".parse::<HeaderName>().unwrap(), "world".parse().unwrap());
+    b.insert(
+        "hello".parse::<HeaderName>().unwrap(),
+        "world".parse().unwrap(),
+    );
     assert_eq!(a, b);
 
     a.insert("foo".parse::<HeaderName>().unwrap(), "bar".parse().unwrap());
@@ -178,13 +252,18 @@ fn insert_all_std_headers() {
     for (i, hdr) in STD.iter().enumerate() {
         m.insert(hdr.clone(), hdr.as_str().parse().unwrap());
 
-        for j in 0..(i+1) {
+        for j in 0..(i + 1) {
             assert_eq!(m[&STD[j]], STD[j].as_str());
         }
 
         if i != 0 {
-            for j in (i+1)..STD.len() {
-                assert!(m.get(&STD[j]).is_none(), "contained {}; j={}", STD[j].as_str(), j);
+            for j in (i + 1)..STD.len() {
+                assert!(
+                    m.get(&STD[j]).is_none(),
+                    "contained {}; j={}",
+                    STD[j].as_str(),
+                    j
+                );
             }
         }
     }
@@ -198,11 +277,11 @@ fn insert_79_custom_std_headers() {
     for (i, hdr) in hdrs.iter().enumerate() {
         h.insert(hdr.clone(), hdr.as_str().parse().unwrap());
 
-        for j in 0..(i+1) {
+        for j in 0..(i + 1) {
             assert_eq!(h[&hdrs[j]], hdrs[j].as_str());
         }
 
-        for j in (i+1)..hdrs.len() {
+        for j in (i + 1)..hdrs.len() {
             assert!(h.get(&hdrs[j]).is_none());
         }
     }
@@ -216,7 +295,8 @@ fn append_multiple_values() {
     map.append(header::CONTENT_TYPE, "html".parse().unwrap());
     map.append(header::CONTENT_TYPE, "xml".parse().unwrap());
 
-    let vals = map.get_all(&header::CONTENT_TYPE)
+    let vals = map
+        .get_all(&header::CONTENT_TYPE)
         .iter()
         .collect::<Vec<_>>();
 
@@ -224,10 +304,12 @@ fn append_multiple_values() {
 }
 
 fn custom_std(n: usize) -> Vec<HeaderName> {
-    (0..n).map(|i| {
-        let s = format!("{}-{}", STD[i % STD.len()].as_str(), i);
-        s.parse().unwrap()
-    }).collect()
+    (0..n)
+        .map(|i| {
+            let s = format!("{}-{}", STD[i % STD.len()].as_str(), i);
+            s.parse().unwrap()
+        })
+        .collect()
 }
 
 const STD: &'static [HeaderName] = &[

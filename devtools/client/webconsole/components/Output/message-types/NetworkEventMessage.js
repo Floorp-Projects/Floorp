@@ -167,7 +167,7 @@ function NetworkEventMessage({
     open &&
     dom.div(
       {
-        className: "network-info network-monitor devtools-monospace",
+        className: "network-info network-monitor",
       },
       createElement(TabboxPanel, {
         connector,

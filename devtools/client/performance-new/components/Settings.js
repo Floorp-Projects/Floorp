@@ -70,6 +70,7 @@ const {
   h3,
   section,
   p,
+  em,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 const Range = createFactory(
   require("devtools/client/performance-new/components/Range")
@@ -452,6 +453,25 @@ class Settings extends PureComponent {
         div(
           { className: "perf-settings-thread-columns" },
           threadColumns.map(this._renderThreadsColumns)
+        ),
+        div(
+          { className: "perf-settings-all-threads" },
+          label(
+            {
+              className: "perf-settings-checkbox-label",
+            },
+            input({
+              className: "perf-settings-checkbox",
+              id: "perf-settings-thread-checkbox-all-threads",
+              type: "checkbox",
+              value: "*",
+              checked: threads.includes("*"),
+              onChange: this._handleThreadCheckboxChange,
+            }),
+            "Bypass selections above and record ",
+            em(null, "all"),
+            " registered threads"
+          )
         ),
         div(
           { className: "perf-settings-row" },

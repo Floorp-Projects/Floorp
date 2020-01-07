@@ -1,5 +1,5 @@
 /* libjpeg-turbo build number */
-#define BUILD "20190905"
+#define BUILD "20191231"
 
 /* Need to use Mozilla-specific function inlining. */
 #include "mozilla/Attributes.h"
@@ -9,7 +9,7 @@
 #define PACKAGE_NAME "libjpeg-turbo"
 
 /* Version number of package */
-#define VERSION "2.0.3"
+#define VERSION "2.0.4"
 
 /* The size of `size_t', as computed by sizeof. */
 #ifdef HAVE_64BIT_BUILD
