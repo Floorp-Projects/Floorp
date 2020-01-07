@@ -14,6 +14,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
@@ -23,6 +24,8 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.sync.logins.AsyncLoginsStorage
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.FennecMigrator.Builder
+import mozilla.components.support.migration.state.MigrationAction
+import mozilla.components.support.migration.state.MigrationStore
 import java.io.File
 import java.lang.Exception
 import java.util.concurrent.Executors
@@ -369,17 +372,41 @@ class FennecMigrator private constructor(
         return getMigrationsToRun().isNotEmpty()
     }
 
+    private fun isFennecInstallation(): Boolean {
+        // Not implemented yet.
+        // https://github.com/mozilla-mobile/android-components/issues/5115
+        return true
+    }
+
     /**
-     * Starts the provided [AbstractMigrationService] implementation if there are migrations to be
-     * run for this installation.
+     * If a migration is needed then invoking this method will update the [MigrationStore] and launch
+     * the provided [AbstractMigrationService] implementation.
      */
-    fun <T> startMigrationServiceIfNeeded(service: Class<T>) where T : AbstractMigrationService {
-        if (hasMigrationsToRun()) {
-            logger.debug("Has migrations to run. Starting service.")
-            ContextCompat.startForegroundService(context, Intent(context, service))
-        } else {
-            logger.debug("No migrations to run. Not starting service.")
+    fun <T> startMigrationIfNeeded(
+        store: MigrationStore,
+        service: Class<T>
+    ) where T : AbstractMigrationService {
+        if (!isFennecInstallation()) {
+            // This installation seems to never have been Fennec, so we do not need
+            // to migrate anything.
+            logger.debug("This is not a Fennec installation. No migration needed.")
+            return
         }
+
+        if (!hasMigrationsToRun()) {
+            // There are no migrations to run for this installation. This likely means that we are
+            // migrated already and there are no updated migrations to run.
+            logger.debug("This is a Fennec installation. But there are no migrations to run.")
+            return
+        }
+
+        logger.debug("Migration is needed. Updating state and starting service.")
+
+        runBlocking {
+            store.dispatch(MigrationAction.Started).join()
+        }
+
+        ContextCompat.startForegroundService(context, Intent(context, service))
     }
 
     private fun getMigrationsToRun(): List<VersionedMigration> {

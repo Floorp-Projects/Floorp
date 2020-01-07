@@ -49,6 +49,7 @@ dependencies {
     implementation project(':service-sync-logins')
 
     implementation project(':lib-crash')
+    implementation project(':lib-state')
 
     implementation project(':support-ktx')
 
