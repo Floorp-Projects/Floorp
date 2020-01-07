@@ -7,13 +7,13 @@
 #include <stdlib.h>
 #include "mozilla/Logging.h"
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
 #include "nsIInputStreamTee.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIEventTarget.h"
 #include "nsThreadUtils.h"
 
@@ -50,7 +50,7 @@ class nsInputStreamTee final : public nsIInputStreamTee {
   nsCOMPtr<nsIEventTarget> mEventTarget;
   nsWriteSegmentFun mWriter;  // for implementing ReadSegments
   void* mClosure;             // for implementing ReadSegments
-  nsAutoPtr<Mutex> mLock;     // synchronize access to mSinkIsValid
+  Maybe<Mutex> mLock;         // synchronize access to mSinkIsValid
   bool mSinkIsValid;          // False if TeeWriteEvent fails
 };
 
@@ -128,7 +128,7 @@ class nsInputStreamTeeWriteEvent : public Runnable {
 };
 
 nsInputStreamTee::nsInputStreamTee()
-    : mWriter(nullptr), mClosure(nullptr), mLock(nullptr), mSinkIsValid(true) {}
+    : mWriter(nullptr), mClosure(nullptr), mLock(), mSinkIsValid(true) {}
 
 bool nsInputStreamTee::SinkIsValid() {
   MutexAutoLock lock(*mLock);
@@ -288,7 +288,7 @@ nsInputStreamTee::SetEventTarget(nsIEventTarget* aEventTarget) {
   mEventTarget = aEventTarget;
   if (mEventTarget) {
     // Only need synchronization if this is an async tee
-    mLock = new Mutex("nsInputStreamTee.mLock");
+    mLock.emplace("nsInputStreamTee.mLock");
   }
   return NS_OK;
 }
