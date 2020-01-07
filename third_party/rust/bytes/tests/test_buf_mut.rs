@@ -1,9 +1,6 @@
-extern crate bytes;
-extern crate byteorder;
-extern crate iovec;
+#![deny(warnings, rust_2018_idioms)]
 
-use bytes::{BufMut, BytesMut};
-use iovec::IoVec;
+use bytes::{buf::IoSliceMut, BufMut, BytesMut};
 use std::usize;
 use std::fmt::Write;
 
@@ -13,9 +10,7 @@ fn test_vec_as_mut_buf() {
 
     assert_eq!(buf.remaining_mut(), usize::MAX);
 
-    unsafe {
-        assert!(buf.bytes_mut().len() >= 64);
-    }
+    assert!(buf.bytes_mut().len() >= 64);
 
     buf.put(&b"zomg"[..]);
 
@@ -34,14 +29,14 @@ fn test_vec_as_mut_buf() {
 #[test]
 fn test_put_u8() {
     let mut buf = Vec::with_capacity(8);
-    buf.put::<u8>(33);
+    buf.put_u8(33);
     assert_eq!(b"\x21", &buf[..]);
 }
 
 #[test]
 fn test_put_u16() {
     let mut buf = Vec::with_capacity(8);
-    buf.put_u16_be(8532);
+    buf.put_u16(8532);
     assert_eq!(b"\x21\x54", &buf[..]);
 
     buf.clear();
@@ -66,18 +61,58 @@ fn test_clone() {
     buf.write_str("this is a test").unwrap();
     let buf2 = buf.clone();
 
-    buf.write_str(" of our emergecy broadcast system").unwrap();
+    buf.write_str(" of our emergency broadcast system").unwrap();
     assert!(buf != buf2);
 }
 
 #[test]
 fn test_bufs_vec_mut() {
-    use std::mem;
+    let b1: &mut [u8] = &mut [];
+    let b2: &mut [u8] = &mut [];
+    let mut dst = [IoSliceMut::from(b1), IoSliceMut::from(b2)];
 
-    let mut buf = BytesMut::from(&b"hello world"[..]);
+    // with no capacity
+    let mut buf = BytesMut::new();
+    assert_eq!(buf.capacity(), 0);
+    assert_eq!(1, buf.bytes_vectored_mut(&mut dst[..]));
 
-    unsafe {
-        let mut dst: [&mut IoVec; 2] = mem::zeroed();
-        assert_eq!(1, buf.bytes_vec_mut(&mut dst[..]));
+    // with capacity
+    let mut buf = BytesMut::with_capacity(64);
+    assert_eq!(1, buf.bytes_vectored_mut(&mut dst[..]));
+}
+
+#[test]
+fn test_mut_slice() {
+    let mut v = vec![0, 0, 0, 0];
+    let mut s = &mut v[..];
+    s.put_u32(42);
+}
+
+#[test]
+fn test_deref_bufmut_forwards() {
+    struct Special;
+
+    impl BufMut for Special {
+        fn remaining_mut(&self) -> usize {
+            unreachable!("remaining_mut");
+        }
+
+        fn bytes_mut(&mut self) -> &mut [std::mem::MaybeUninit<u8>] {
+            unreachable!("bytes_mut");
+        }
+
+        unsafe fn advance_mut(&mut self, _: usize) {
+            unreachable!("advance");
+        }
+
+        fn put_u8(&mut self, _: u8) {
+            // specialized!
+        }
     }
+
+    // these should all use the specialized method
+    Special.put_u8(b'x');
+    (&mut Special as &mut dyn BufMut).put_u8(b'x');
+    (Box::new(Special) as Box<dyn BufMut>).put_u8(b'x');
+    Box::new(Special).put_u8(b'x');
 }

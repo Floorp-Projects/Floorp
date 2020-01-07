@@ -1,3 +1,36 @@
+# 0.2.0 (December 2, 2019)
+
+* Add `Version::HTTP_3` constant.
+* Add `HeaderValue::from_maybe_shared`, `HeaderValue::from_maybe_shared_unchecked`, `Uri::from_maybe_shared`, `Authority::from_maybe_shared`, and `PathAndQuery::from_maybe_shared`.
+* Change `request::Builder`, `response::Builder`, and `uri::Builder` to use by-value methods instead of by-ref.
+* Change from `HttpTryFrom` trait to `std::convert::TryFrom`.
+* Change `HeaderMap::entry` to no longer return a `Result`.
+* Change `HeaderMap::drain` iterator to match the behavior of `IntoIter`.
+* Change `Authority::port` to return an `Option<Port>` instead of `Option<u16>`.
+* Change `Uri::scheme` to return `Option<&Scheme>` instead of `Option<&str>`.
+* Change `Uri::authority` to return `Option<&Authority>` instead of `Option<&str>`.
+* Remove `InvalidUriBytes`, `InvalidHeaderNameBytes`, and `InvalidHeaderValueBytes` error types.
+* Remove `HeaderValue::from_shared`, `HeaderValue::from_shared_unchecked`, `Uri::from_shared`, `Authority::from_shared`, `Scheme::from_shared`, and `PathAndQuery::from_shared`.
+* Remove `Authority::port_part`.
+* Remove `Uri::scheme_part` and `Uri::authority_part`.
+
+# 0.1.20 (November 26, 2019)
+
+* Fix possible double-free if `header::Drain` iterator is `std::mem::forgot`en (#357).
+* Fix possible data race if multiple `header::ValueDrain`s are iterated on different threads (#362).
+* Fix `HeaderMap::reserve` capacity overflows (#360).
+* Fix parsing long authority-form `Uri`s (#351).
+
+# 0.1.19 (October 15, 2019)
+
+* Allow `%` in IPv6 addresses in `Uri` (#343).
+
+# 0.1.18 (July 26, 2019)
+
+* Fix compilation of `HeaderName` parsing on WASM targets (#324).
+* Implement `HttpTryFrom<HashMap>` for `HeaderMap` (#326).
+* Export `http::header::HeaderValue` as `http::HeaderValue`.
+
 # 0.1.17 (April 5, 2019)
 
 * Add `Error::inner_ref()` to view the kind of error (#303)

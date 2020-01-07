@@ -9,6 +9,9 @@ race:arc*Weak*drop
 # rust runtime logic.
 race:std*mpsc_queue
 
+# Some test runtime races. Allocation should be race free
+race:alloc::alloc
+
 # Not sure why this is warning, but it is in the test harness and not the library.
 race:TestEvent*clone
 race:test::run_tests_console::*closure
@@ -16,6 +19,6 @@ race:test::run_tests_console::*closure
 # Probably more fences in std.
 race:__call_tls_dtors
 
-# `is_inline_or_static` is explicitly called concurrently without synchronization.
-# The safety explanation can be found in a comment.
-race:Inner::is_inline_or_static
+# This ignores a false positive caused by `thread::park()`/`thread::unpark()`.
+# See: https://github.com/rust-lang/rust/pull/54806#issuecomment-436193353
+race:pthread_cond_destroy

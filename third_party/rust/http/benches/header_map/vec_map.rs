@@ -9,7 +9,7 @@ impl<K: PartialEq, V> VecMap<K, V> {
     #[inline]
     pub fn with_capacity(cap: usize) -> VecMap<K, V> {
         VecMap {
-            vec: Vec::with_capacity(cap)
+            vec: Vec::with_capacity(cap),
         }
     }
 
@@ -17,12 +17,12 @@ impl<K: PartialEq, V> VecMap<K, V> {
     pub fn insert(&mut self, key: K, value: V) {
         match self.find(&key) {
             Some(pos) => self.vec[pos] = (key, value),
-            None => self.vec.push((key, value))
+            None => self.vec.push((key, value)),
         }
     }
 
     #[inline]
-    pub fn entry(&mut self, key: K) -> Entry<K, V> {
+    pub fn entry(&mut self, key: K) -> Entry<'_, K, V> {
         match self.find(&key) {
             Some(pos) => Entry::Occupied(OccupiedEntry {
                 vec: self,
@@ -31,7 +31,7 @@ impl<K: PartialEq, V> VecMap<K, V> {
             None => Entry::Vacant(VacantEntry {
                 vec: self,
                 key: key,
-            })
+            }),
         }
     }
 
@@ -51,15 +51,19 @@ impl<K: PartialEq, V> VecMap<K, V> {
     }
 
     #[inline]
-    pub fn len(&self) -> usize { self.vec.len() }
+    pub fn len(&self) -> usize {
+        self.vec.len()
+    }
 
     #[inline]
-    pub fn iter(&self) -> ::std::slice::Iter<(K, V)> {
+    pub fn iter(&self) -> ::std::slice::Iter<'_, (K, V)> {
         self.vec.iter()
     }
     #[inline]
     pub fn remove<K2: PartialEq<K> + ?Sized>(&mut self, key: &K2) -> Option<V> {
-        self.find(key).map(|pos| self.vec.remove(pos)).map(|(_, v)| v)
+        self.find(key)
+            .map(|pos| self.vec.remove(pos))
+            .map(|(_, v)| v)
     }
     #[inline]
     pub fn clear(&mut self) {
@@ -74,10 +78,10 @@ impl<K: PartialEq, V> VecMap<K, V> {
 
 pub enum Entry<'a, K: 'a, V: 'a> {
     Vacant(VacantEntry<'a, K, V>),
-    Occupied(OccupiedEntry<'a, K, V>)
+    Occupied(OccupiedEntry<'a, K, V>),
 }
 
-pub struct VacantEntry<'a, K: 'a, V: 'a> {
+pub struct VacantEntry<'a, K, V> {
     vec: &'a mut VecMap<K, V>,
     key: K,
 }
@@ -91,7 +95,7 @@ impl<'a, K, V> VacantEntry<'a, K, V> {
     }
 }
 
-pub struct OccupiedEntry<'a, K: 'a, V: 'a> {
+pub struct OccupiedEntry<'a, K, V> {
     vec: &'a mut VecMap<K, V>,
     pos: usize,
 }

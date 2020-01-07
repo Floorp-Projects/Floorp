@@ -1,11 +1,11 @@
-use std::{cmp, fmt, str};
+use std::convert::TryFrom;
 use std::str::FromStr;
+use std::{cmp, fmt, str};
 
 use bytes::Bytes;
 
-use byte_str::ByteStr;
-use convert::HttpTryFrom;
-use super::{ErrorKind, InvalidUri, InvalidUriBytes};
+use super::{ErrorKind, InvalidUri};
+use crate::byte_str::ByteStr;
 
 /// Represents the path component of a URI
 #[derive(Clone)]
@@ -17,33 +17,16 @@ pub struct PathAndQuery {
 const NONE: u16 = ::std::u16::MAX;
 
 impl PathAndQuery {
-    /// Attempt to convert a `PathAndQuery` from `Bytes`.
-    ///
-    /// This function will be replaced by a `TryFrom` implementation once the
-    /// trait lands in stable.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # extern crate http;
-    /// # use http::uri::*;
-    /// extern crate bytes;
-    ///
-    /// use bytes::Bytes;
-    ///
-    /// # pub fn main() {
-    /// let bytes = Bytes::from("/hello?world");
-    /// let path_and_query = PathAndQuery::from_shared(bytes).unwrap();
-    ///
-    /// assert_eq!(path_and_query.path(), "/hello");
-    /// assert_eq!(path_and_query.query(), Some("world"));
-    /// # }
-    /// ```
-    pub fn from_shared(mut src: Bytes) -> Result<Self, InvalidUriBytes> {
+    // Not public while `bytes` is unstable.
+    pub(super) fn from_shared(mut src: Bytes) -> Result<Self, InvalidUri> {
         let mut query = NONE;
         let mut fragment = None;
 
         // block for iterator borrow
+        //
+        // allow: `...` pattersn are now `..=`, but we cannot update yet
+        // because of minimum Rust version
+        #[allow(warnings)]
         {
             let mut iter = src.as_ref().iter().enumerate();
 
@@ -59,16 +42,16 @@ impl PathAndQuery {
                     b'#' => {
                         fragment = Some(i);
                         break;
-                    },
+                    }
 
                     // This is the range of bytes that don't need to be
                     // percent-encoded in the path. If it should have been
                     // percent-encoded, then error.
                     0x21 |
-                    0x24...0x3B |
+                    0x24..=0x3B |
                     0x3D |
-                    0x40...0x5F |
-                    0x61...0x7A |
+                    0x40..=0x5F |
+                    0x61..=0x7A |
                     0x7C |
                     0x7E => {},
 
@@ -78,6 +61,10 @@ impl PathAndQuery {
 
             // query ...
             if query != NONE {
+
+                // allow: `...` pattersn are now `..=`, but we cannot update yet
+                // because of minimum Rust version
+                #[allow(warnings)]
                 for (i, &b) in iter {
                     match b {
                         // While queries *should* be percent-encoded, most
@@ -86,14 +73,14 @@ impl PathAndQuery {
                         //
                         // Allowed: 0x21 / 0x24 - 0x3B / 0x3D / 0x3F - 0x7E
                         0x21 |
-                        0x24...0x3B |
+                        0x24..=0x3B |
                         0x3D |
-                        0x3F...0x7E => {},
+                        0x3F..=0x7E => {},
 
                         b'#' => {
                             fragment = Some(i);
                             break;
-                        },
+                        }
 
                         _ => return Err(ErrorKind::InvalidUriChar.into()),
                     }
@@ -133,8 +120,22 @@ impl PathAndQuery {
     pub fn from_static(src: &'static str) -> Self {
         let src = Bytes::from_static(src.as_bytes());
 
-        PathAndQuery::from_shared(src)
-            .unwrap()
+        PathAndQuery::from_shared(src).unwrap()
+    }
+
+    /// Attempt to convert a `Bytes` buffer to a `PathAndQuery`.
+    ///
+    /// This will try to prevent a copy if the type passed is the type used
+    /// internally, and will copy the data if it is not.
+    pub fn from_maybe_shared<T>(src: T) -> Result<Self, InvalidUri>
+    where
+        T: AsRef<[u8]> + 'static,
+    {
+        if_downcast_into!(T, Bytes, src, {
+            return PathAndQuery::from_shared(src);
+        });
+
+        PathAndQuery::try_from(src.as_ref())
     }
 
     pub(super) fn empty() -> Self {
@@ -268,35 +269,21 @@ impl PathAndQuery {
         }
         ret
     }
-
-    /// Converts this `PathAndQuery` back to a sequence of bytes
-    #[inline]
-    pub fn into_bytes(self) -> Bytes {
-        self.into()
-    }
 }
 
-impl HttpTryFrom<Bytes> for PathAndQuery {
-    type Error = InvalidUriBytes;
-    #[inline]
-    fn try_from(bytes: Bytes) -> Result<Self, Self::Error> {
-        PathAndQuery::from_shared(bytes)
-    }
-}
-
-impl<'a> HttpTryFrom<&'a [u8]> for PathAndQuery {
+impl<'a> TryFrom<&'a [u8]> for PathAndQuery {
     type Error = InvalidUri;
     #[inline]
     fn try_from(s: &'a [u8]) -> Result<Self, Self::Error> {
-        PathAndQuery::from_shared(s.into()).map_err(|e| e.0)
+        PathAndQuery::from_shared(Bytes::copy_from_slice(s))
     }
 }
 
-impl<'a> HttpTryFrom<&'a str> for PathAndQuery {
+impl<'a> TryFrom<&'a str> for PathAndQuery {
     type Error = InvalidUri;
     #[inline]
     fn try_from(s: &'a str) -> Result<Self, Self::Error> {
-        HttpTryFrom::try_from(s.as_bytes())
+        TryFrom::try_from(s.as_bytes())
     }
 }
 
@@ -304,24 +291,18 @@ impl FromStr for PathAndQuery {
     type Err = InvalidUri;
     #[inline]
     fn from_str(s: &str) -> Result<Self, InvalidUri> {
-        HttpTryFrom::try_from(s)
-    }
-}
-
-impl From<PathAndQuery> for Bytes {
-    fn from(src: PathAndQuery) -> Bytes {
-        src.data.into()
+        TryFrom::try_from(s)
     }
 }
 
 impl fmt::Debug for PathAndQuery {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self, f)
     }
 }
 
 impl fmt::Display for PathAndQuery {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         if !self.data.is_empty() {
             match self.data.as_bytes()[0] {
                 b'/' | b'*' => write!(fmt, "{}", &self.data[..]),

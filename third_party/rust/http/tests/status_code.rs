@@ -1,14 +1,16 @@
-extern crate http;
-
 use http::*;
 
 #[test]
 fn from_bytes() {
-    for ok in &["100", "101", "199", "200", "250", "299", "321", "399", "499", "599"] {
+    for ok in &[
+        "100", "101", "199", "200", "250", "299", "321", "399", "499", "599",
+    ] {
         assert!(StatusCode::from_bytes(ok.as_bytes()).is_ok());
     }
 
-    for not_ok in &["0", "00", "10", "40", "99", "000", "010", "099", "600", "610", "999"] {
+    for not_ok in &[
+        "0", "00", "10", "40", "99", "000", "010", "099", "600", "610", "999",
+    ] {
         assert!(StatusCode::from_bytes(not_ok.as_bytes()).is_err());
     }
 }
