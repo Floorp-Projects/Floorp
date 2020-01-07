@@ -13,7 +13,7 @@ add_task(async function() {
 
   info("Loading a page with no manifest");
   let url = URL_ROOT + "resources/manifest/load-no-manifest.html";
-  const { panel, tab, target } = await openNewTabAndApplicationPanel(url);
+  const { panel, tab, toolbox } = await openNewTabAndApplicationPanel(url);
   const doc = panel.panelWin.document;
 
   selectPage(panel, "manifest");
@@ -24,7 +24,7 @@ add_task(async function() {
 
   info("Navigating to a page with a manifest");
   url = URL_ROOT + "resources/manifest/load-ok.html";
-  await navigate(target, url);
+  await navigate(toolbox, url);
 
   info("Waiting for the manifest to show up");
   await waitUntil(() => doc.querySelector(".js-manifest") !== null);
@@ -32,7 +32,7 @@ add_task(async function() {
 
   info("Navigating to a page with a manifest that fails to load");
   url = URL_ROOT + "resources/manifest/load-fail.html";
-  await navigate(target, url);
+  await navigate(toolbox, url);
 
   info("Waiting for the manifest to fail to load");
   await waitUntil(
@@ -41,7 +41,7 @@ add_task(async function() {
   ok(true, "Manifest page displays loading error");
 
   info("Reloading");
-  await navigate(target, url);
+  await navigate(toolbox, url);
 
   info("Waiting for the loading message to appear");
   await waitUntil(() => doc.querySelector(".js-manifest-loading") !== null);
