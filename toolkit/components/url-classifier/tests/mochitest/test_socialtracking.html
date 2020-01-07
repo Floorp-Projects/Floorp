@@ -42,7 +42,7 @@ async function runTest(test) {
     [ "privacy.trackingprotection.socialtracking.enabled", true ],
   ]});
 
-  info("Testing: " + test.config.toSource() + "\n");
+  info("Testing: " + JSON.stringify(test.config) + "\n");
 
   // Let's load an image with a random query string, just to avoid network cache.
   let result = await new Promise(resolve => {

@@ -1348,7 +1348,7 @@ SimpleTest.monitorConsole = function (continuation, msgs, forbidUnexpectedMsgs) 
   }
 
   var counter = 0;
-  var assertionLabel = msgs.toSource();
+  var assertionLabel = JSON.stringify(msgs);
   function listener(msg) {
     if (msg.message === "SENTINEL" && !msg.isScriptError) {
       is(counter, msgs.length,
