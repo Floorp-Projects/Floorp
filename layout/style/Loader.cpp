@@ -1186,7 +1186,7 @@ Loader::MediaMatched Loader::PrepareSheet(
     mediaList = MediaList::Create(aMediaString);
   }
 
-  aSheet.SetMedia(mediaList);
+  aSheet.SetMedia(do_AddRef(mediaList));
 
   aSheet.SetTitle(aTitle);
   aSheet.SetEnabled(aIsAlternate == IsAlternate::No ||
