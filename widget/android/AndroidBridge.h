@@ -119,8 +119,6 @@ class AndroidBridge final {
 
   void Vibrate(const nsTArray<uint32_t>& aPattern);
 
-  void GetSystemColors(AndroidSystemColors* aColors);
-
   void GetIconForExtension(const nsACString& aFileExt, uint32_t aIconSize,
                            uint8_t* const aBuf);
 
