@@ -114,6 +114,8 @@ class TenuringTracer : public JSTracer {
   gc::RelocationOverlay** objTail;
   gc::RelocationOverlay* stringHead;
   gc::RelocationOverlay** stringTail;
+  gc::RelocationOverlay* bigIntHead;
+  gc::RelocationOverlay** bigIntTail;
 
   TenuringTracer(JSRuntime* rt, Nursery* nursery);
 
@@ -130,10 +132,12 @@ class TenuringTracer : public JSTracer {
   void traceObjectSlots(NativeObject* nobj, uint32_t start, uint32_t length);
   void traceSlots(JS::Value* vp, uint32_t nslots);
   void traceString(JSString* src);
+  void traceBigInt(JS::BigInt* src);
 
  private:
   inline void insertIntoObjectFixupList(gc::RelocationOverlay* entry);
   inline void insertIntoStringFixupList(gc::RelocationOverlay* entry);
+  inline void insertIntoBigIntFixupList(gc::RelocationOverlay* entry);
 
   template <typename T>
   inline T* allocTenured(JS::Zone* zone, gc::AllocKind kind);
@@ -141,11 +145,14 @@ class TenuringTracer : public JSTracer {
   inline JSObject* movePlainObjectToTenured(PlainObject* src);
   JSObject* moveToTenuredSlow(JSObject* src);
   JSString* moveToTenured(JSString* src);
+  JS::BigInt* moveToTenured(JS::BigInt* src);
 
   size_t moveElementsToTenured(NativeObject* dst, NativeObject* src,
                                gc::AllocKind dstKind);
   size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src);
   size_t moveStringToTenured(JSString* dst, JSString* src,
+                             gc::AllocKind dstKind);
+  size_t moveBigIntToTenured(JS::BigInt* dst, JS::BigInt* src,
                              gc::AllocKind dstKind);
 
   void traceSlots(JS::Value* vp, JS::Value* end);
@@ -178,6 +185,11 @@ class Nursery {
     CellAlignedByte cell;
   };
 
+  struct BigIntLayout {
+    JS::Zone* zone;
+    CellAlignedByte cell;
+  };
+
   using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
 
   explicit Nursery(gc::GCRuntime* gc);
@@ -204,6 +216,10 @@ class Nursery {
   void enableStrings();
   void disableStrings();
   bool canAllocateStrings() const { return canAllocateStrings_; }
+
+  void enableBigInts();
+  void disableBigInts();
+  bool canAllocateBigInts() const { return canAllocateBigInts_; }
 
   // Return true if no allocations have been made since the last collection.
   bool isEmpty() const;
@@ -232,6 +248,10 @@ class Nursery {
   // Nursery is full.
   gc::Cell* allocateString(JS::Zone* zone, size_t size, gc::AllocKind kind);
 
+  // Allocate and return a pointer to a new BigInt. Returns nullptr if the
+  // Nursery is full.
+  gc::Cell* allocateBigInt(JS::Zone* zone, size_t size, gc::AllocKind kind);
+
   // String zones are stored just before the string in nursery memory.
   static JS::Zone* getStringZone(const JSString* str) {
 #ifdef DEBUG
@@ -246,7 +266,23 @@ class Nursery {
     return reinterpret_cast<const StringLayout*>(layout)->zone;
   }
 
+  // BigInt zones are stored just before the BigInt in nursery memory.
+  static JS::Zone* getBigIntZone(const JS::BigInt* bi) {
+#ifdef DEBUG
+    auto cell = reinterpret_cast<const js::gc::Cell*>(
+        bi);  // JS::BigInt type is incomplete here
+    MOZ_ASSERT(js::gc::IsInsideNursery(cell),
+               "getBigIntZone must be passed a nursery BigInt");
+#endif
+
+    auto layout =
+        reinterpret_cast<const uint8_t*>(bi) - offsetof(BigIntLayout, cell);
+    return reinterpret_cast<const BigIntLayout*>(layout)->zone;
+  }
+
   static size_t stringHeaderSize() { return offsetof(StringLayout, cell); }
+
+  static size_t bigIntHeaderSize() { return offsetof(BigIntLayout, cell); }
 
   // Allocate a buffer for a given zone, using the nursery if possible.
   void* allocateBuffer(JS::Zone* zone, size_t nbytes);
@@ -274,6 +310,14 @@ class Nursery {
 
   // Resize an existing object buffer.
   void* reallocateBuffer(JSObject* obj, void* oldBuffer, size_t oldBytes,
+                         size_t newBytes);
+
+  // Allocate a digits buffer for a given BigInt, using the nursery if possible
+  // and |bi| is in the nursery.
+  void* allocateBuffer(JS::BigInt* bi, size_t nbytes);
+
+  // Resize an existing BigInt digits buffer.
+  void* reallocateBuffer(JS::BigInt* bi, void* oldDigits, size_t oldBytes,
                          size_t newBytes);
 
   // Free an object buffer.
@@ -371,6 +415,9 @@ class Nursery {
   const void* addressOfCurrentStringEnd() const {
     return (void*)&currentStringEnd_;
   }
+  const void* addressOfCurrentBigIntEnd() const {
+    return (void*)&currentBigIntEnd_;
+  }
 
   void requestMinorGC(JS::GCReason reason) const;
 
@@ -425,6 +472,10 @@ class Nursery {
   // are not allocating strings in the nursery.
   uintptr_t currentStringEnd_;
 
+  // Pointer to the last byte of space in the current chunk, or nullptr if we
+  // are not allocating BigInts in the nursery.
+  uintptr_t currentBigIntEnd_;
+
   // The index of the chunk that is currently being allocated from.
   unsigned currentChunk_;
 
@@ -442,6 +493,9 @@ class Nursery {
 
   // Whether we will nursery-allocate strings.
   bool canAllocateStrings_;
+
+  // Whether we will nursery-allocate BigInts.
+  bool canAllocateBigInts_;
 
   // Report ObjectGroups with at least this many instances tenured.
   int64_t reportTenurings_;

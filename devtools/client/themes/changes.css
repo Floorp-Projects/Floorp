@@ -165,10 +165,12 @@
 
 .changes__declaration {
   overflow-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .changes__declaration-name {
-  margin-left: 10px;
+  /* Counteract double space used for indentation when text is copied to clipboard */
+  margin-left: -4px;
 }
 
 .diff-add,
@@ -177,7 +179,8 @@
   position: relative;
 }
 
-.diff-marker {
+.diff-add::before,
+.diff-remove::before {
   position: absolute;
   left: 5px;
 }
@@ -186,7 +189,8 @@
   background-color: var(--diff-add-background-color);
 }
 
-.diff-add .diff-marker {
+.diff-add::before {
+  content: "+";
   color: var(--diff-add-text-color);
 }
 
@@ -194,7 +198,8 @@
   background-color: var(--diff-remove-background-color);
 }
 
-.diff-remove .diff-marker{
+.diff-remove::before {
+  content: "-";
   color: var(--diff-remove-text-color);
 }
 

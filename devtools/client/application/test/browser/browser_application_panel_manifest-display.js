@@ -113,9 +113,11 @@ add_task(async function() {
   const iconEl = findMemberByLabel(doc, "128x128image/svg");
   ok(iconEl !== null, "Icon label is being displayed with size and image type");
   const imgEl = iconEl.querySelector(".js-manifest-item-content img");
-  ok(
-    imgEl && imgEl.src === URL_ROOT + "resources/manifest/icon.svg",
-    "An image is being displayed with the icon url as source"
+  ok(imgEl !== null, "An image is displayed for the icon");
+  is(
+    imgEl.src,
+    URL_ROOT + "resources/manifest/icon.svg",
+    "The icon image has the the icon url as source"
   );
   const iconTextContent = iconEl.querySelector(".js-manifest-item-content")
     .textContent;
@@ -134,9 +136,9 @@ function findMemberByLabel(doc, member) {
 
 function checkManifestMember(doc, member, expectedValue) {
   const itemEl = findMemberByLabel(doc, member);
-  ok(
-    itemEl.querySelector(".js-manifest-item-content").textContent ===
-      expectedValue,
-    `Manifest member ${member} is being displayed with value ${expectedValue}`
+  is(
+    itemEl.querySelector(".js-manifest-item-content").textContent,
+    expectedValue,
+    `Manifest member ${member} displays the correct value`
   );
 }

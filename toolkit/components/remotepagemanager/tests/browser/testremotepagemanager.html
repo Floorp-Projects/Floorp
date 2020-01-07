@@ -29,7 +29,7 @@ function testData(data) {
   };
 
   function compare(prop, expected) {
-    if (uneval(data[prop]) == uneval(expected))
+    if (JSON.stringify(data[prop]) == JSON.stringify(expected))
       return;
     if (response.result)
       response.status = "";

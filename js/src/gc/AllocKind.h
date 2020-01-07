@@ -70,10 +70,13 @@ namespace gc {
     D(FAT_INLINE_ATOM,     String,       js::FatInlineAtom, js::FatInlineAtom, true,   false,  false) \
     D(ATOM,                String,       js::NormalAtom,    js::NormalAtom,    true,   false,  false) \
     D(SYMBOL,              Symbol,       JS::Symbol,        JS::Symbol,        true,   false,  false) \
-    D(BIGINT,              BigInt,       JS::BigInt,        JS::BigInt,        true,   false,  true) \
     D(JITCODE,             JitCode,      js::jit::JitCode,  js::jit::JitCode,  false,  false,  false) \
     D(SCOPE,               Scope,        js::Scope,         js::Scope,         true,   false,  true) \
     D(REGEXP_SHARED,       RegExpShared, js::RegExpShared,  js::RegExpShared,  true,   false,  true)
+
+#define FOR_EACH_NONOBJECT_NURSERY_ALLOCKIND(D) \
+ /* AllocKind              TraceKind     TypeName           SizedType          BGFinal Nursery Compact */ \
+    D(BIGINT,              BigInt,       JS::BigInt,        JS::BigInt,        true,   true,  true)
 
 #define FOR_EACH_NURSERY_STRING_ALLOCKIND(D) \
     D(FAT_INLINE_STRING,   String,        JSFatInlineString, JSFatInlineString, true,   true,  true) \
@@ -82,6 +85,7 @@ namespace gc {
 
 #define FOR_EACH_NONOBJECT_ALLOCKIND(D)      \
   FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(D) \
+  FOR_EACH_NONOBJECT_NURSERY_ALLOCKIND(D)    \
   FOR_EACH_NURSERY_STRING_ALLOCKIND(D)
 
 #define FOR_EACH_ALLOCKIND(D)  \

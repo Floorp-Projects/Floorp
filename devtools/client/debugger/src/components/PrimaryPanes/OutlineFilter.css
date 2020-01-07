@@ -3,16 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .outline-filter {
-  padding: 4px 10px 0 10px;
+  border: 1px solid var(--theme-splitter-color);
+  border-top: 0px;
 }
 
 .outline-filter-input {
-  padding: 0.5em 1.6em;
+  padding-top: 2px;
+  padding-bottom: 2px;
   width: 100%;
-  border: 1px solid var(--theme-splitter-color);
   background-color: var(--theme-sidebar-background);
   color: var(--theme-body-color);
-  font-size: 12px;
+  font-size: inherit;
   user-select: text;
 }
 

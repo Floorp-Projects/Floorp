@@ -1149,6 +1149,7 @@ class IonBuilder : public MIRGenerator,
     rootList_ = &rootList;
   }
   void clearForBackEnd();
+  void checkNurseryCell(gc::Cell* cell);
   JSObject* checkNurseryObject(JSObject* obj);
 
   JSScript* script() const { return script_; }

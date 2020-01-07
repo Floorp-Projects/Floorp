@@ -34,6 +34,8 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "SerializedLoadContext.h"
+#include "nsIAuthPrompt.h"
+#include "nsIAuthPrompt2.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/LoadInfo.h"
 #include "nsQueryObject.h"
@@ -41,6 +43,7 @@
 #include "nsCORSListenerProxy.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "nsIPrompt.h"
+#include "nsIPromptFactory.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "nsIWindowWatcher.h"
 #include "mozilla/dom/Document.h"
@@ -299,6 +302,29 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void** result) {
   if (XRE_IsParentProcess() && aIID.Equals(NS_GET_IID(nsIAuthPromptProvider))) {
     *result = nullptr;
     return NS_OK;
+  }
+
+  // A system XHR can be created without reference to a window, hence mTabParent
+  // may be null.  In that case we want to let the window watcher pick a prompt
+  // directly.
+  if (!mBrowserParent && (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
+                          aIID.Equals(NS_GET_IID(nsIAuthPrompt2)))) {
+    nsresult rv;
+    nsCOMPtr<nsIWindowWatcher> wwatch =
+        do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    bool hasWindowCreator = false;
+    Unused << wwatch->HasWindowCreator(&hasWindowCreator);
+    if (!hasWindowCreator) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIPromptFactory> factory = do_QueryInterface(wwatch);
+    if (!factory) {
+      return NS_ERROR_NO_INTERFACE;
+    }
+    return factory->GetPrompt(nullptr, aIID, reinterpret_cast<void**>(result));
   }
 
   // Only support nsILoadContext if child channel's callbacks did too

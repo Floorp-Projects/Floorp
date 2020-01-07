@@ -4055,16 +4055,6 @@ void CodeGenerator::visitGetPropertyPolymorphicT(
   emitGetPropertyPolymorphic(ins, obj, temp, output);
 }
 
-template <typename T>
-static void EmitUnboxedPreBarrier(MacroAssembler& masm, T address,
-                                  JSValueType type) {
-  if (type == JSVAL_TYPE_OBJECT) {
-    masm.guardedCallPreBarrier(address, MIRType::Object);
-  } else if (type == JSVAL_TYPE_STRING) {
-    masm.guardedCallPreBarrier(address, MIRType::String);
-  }
-}
-
 void CodeGenerator::emitSetPropertyPolymorphic(
     LInstruction* ins, Register obj, Register scratch,
     const ConstantOrRegister& value) {
@@ -4558,9 +4548,11 @@ void CodeGenerator::visitPostWriteBarrierCommon(LPostBarrierType* lir,
     } else {
       MOZ_ASSERT(lir->mir()->value()->type() == MIRType::Object);
     }
-  } else {
-    MOZ_ASSERT(nurseryType == MIRType::String);
+  } else if (nurseryType == MIRType::String) {
     MOZ_ASSERT(lir->mir()->value()->type() == MIRType::String);
+  } else {
+    MOZ_ASSERT(nurseryType == MIRType::BigInt);
+    MOZ_ASSERT(lir->mir()->value()->type() == MIRType::BigInt);
   }
   masm.branchPtrInNurseryChunk(Assembler::Equal, value, temp, ool->entry());
 
@@ -4586,8 +4578,8 @@ void CodeGenerator::visitPostWriteBarrierCommonV(LPostBarrierType* lir,
   maybeEmitGlobalBarrierCheck(lir->object(), ool);
 
   ValueOperand value = ToValue(lir, LPostBarrierType::Input);
-  // Bug 1386094 - most callers only need to check for object or string, not
-  // both.
+  // Bug 1386094 - most callers only need to check for object, string, or
+  // bigint, not all three.
   masm.branchValueIsNurseryCell(Assembler::Equal, value, temp, ool->entry());
 
   masm.bind(ool->rejoin());
@@ -4601,6 +4593,11 @@ void CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO* lir) {
 void CodeGenerator::visitPostWriteBarrierS(LPostWriteBarrierS* lir) {
   auto ool = new (alloc()) OutOfLineCallPostWriteBarrier(lir, lir->object());
   visitPostWriteBarrierCommon<LPostWriteBarrierS, MIRType::String>(lir, ool);
+}
+
+void CodeGenerator::visitPostWriteBarrierBI(LPostWriteBarrierBI* lir) {
+  auto ool = new (alloc()) OutOfLineCallPostWriteBarrier(lir, lir->object());
+  visitPostWriteBarrierCommon<LPostWriteBarrierBI, MIRType::BigInt>(lir, ool);
 }
 
 void CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV* lir) {
@@ -4680,6 +4677,14 @@ void CodeGenerator::visitPostWriteElementBarrierS(
       OutOfLineCallPostWriteElementBarrier(lir, lir->object(), lir->index());
   visitPostWriteBarrierCommon<LPostWriteElementBarrierS, MIRType::String>(lir,
                                                                           ool);
+}
+
+void CodeGenerator::visitPostWriteElementBarrierBI(
+    LPostWriteElementBarrierBI* lir) {
+  auto ool = new (alloc())
+      OutOfLineCallPostWriteElementBarrier(lir, lir->object(), lir->index());
+  visitPostWriteBarrierCommon<LPostWriteElementBarrierBI, MIRType::BigInt>(lir,
+                                                                           ool);
 }
 
 void CodeGenerator::visitPostWriteElementBarrierV(

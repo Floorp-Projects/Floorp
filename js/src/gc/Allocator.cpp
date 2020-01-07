@@ -227,6 +227,81 @@ StringAllocT* js::AllocateStringImpl(JSContext* cx, InitialHeap heap) {
   return GCRuntime::tryNewTenuredThing<StringAllocT, allowGC>(cx, kind, size);
 }
 
+// Attempt to allocate a new BigInt out of the nursery. If there is not enough
+// room in the nursery or there is an OOM, this method will return nullptr.
+template <AllowGC allowGC>
+JS::BigInt* GCRuntime::tryNewNurseryBigInt(JSContext* cx, size_t thingSize,
+                                           AllocKind kind) {
+  MOZ_ASSERT(IsNurseryAllocable(kind));
+  MOZ_ASSERT(cx->isNurseryAllocAllowed());
+  MOZ_ASSERT(!cx->isHelperThreadContext());
+  MOZ_ASSERT(!cx->isNurseryAllocSuppressed());
+  MOZ_ASSERT(!cx->zone()->isAtomsZone());
+
+  Cell* cell = cx->nursery().allocateBigInt(cx->zone(), thingSize, kind);
+  if (cell) {
+    return static_cast<JS::BigInt*>(cell);
+  }
+
+  if (allowGC && !cx->suppressGC) {
+    cx->runtime()->gc.minorGC(JS::GCReason::OUT_OF_NURSERY);
+
+    // Exceeding gcMaxBytes while tenuring can disable the Nursery, and
+    // other heuristics can disable nursery BigInts for this zone.
+    if (cx->nursery().isEnabled() && cx->zone()->allocNurseryBigInts) {
+      return static_cast<JS::BigInt*>(
+          cx->nursery().allocateBigInt(cx->zone(), thingSize, kind));
+    }
+  }
+  return nullptr;
+}
+
+template <AllowGC allowGC /* = CanGC */>
+JS::BigInt* js::AllocateBigInt(JSContext* cx, InitialHeap heap) {
+  AllocKind kind = MapTypeToFinalizeKind<JS::BigInt>::kind;
+  size_t size = sizeof(JS::BigInt);
+  MOZ_ASSERT(size == Arena::thingSize(kind));
+
+  // Off-thread alloc cannot trigger GC or make runtime assertions.
+  if (cx->isNurseryAllocSuppressed()) {
+    JS::BigInt* bi =
+        GCRuntime::tryNewTenuredThing<JS::BigInt, NoGC>(cx, kind, size);
+    if (MOZ_UNLIKELY(allowGC && !bi)) {
+      ReportOutOfMemory(cx);
+    }
+    return bi;
+  }
+
+  JSRuntime* rt = cx->runtime();
+  if (!rt->gc.checkAllocatorState<allowGC>(cx, kind)) {
+    return nullptr;
+  }
+
+  if (cx->nursery().isEnabled() && heap != TenuredHeap &&
+      cx->nursery().canAllocateBigInts() && cx->zone()->allocNurseryBigInts) {
+    auto bi = static_cast<JS::BigInt*>(
+        rt->gc.tryNewNurseryBigInt<allowGC>(cx, size, kind));
+    if (bi) {
+      return bi;
+    }
+
+    // Our most common non-jit allocation path is NoGC; thus, if we fail the
+    // alloc and cannot GC, we *must* return nullptr here so that the caller
+    // will do a CanGC allocation to clear the nursery. Failing to do so will
+    // cause all allocations on this path to land in Tenured, and we will not
+    // get the benefit of the nursery.
+    if (!allowGC) {
+      return nullptr;
+    }
+  }
+
+  return GCRuntime::tryNewTenuredThing<JS::BigInt, allowGC>(cx, kind, size);
+}
+template JS::BigInt* js::AllocateBigInt<NoGC>(JSContext* cx,
+                                              gc::InitialHeap heap);
+template JS::BigInt* js::AllocateBigInt<CanGC>(JSContext* cx,
+                                               gc::InitialHeap heap);
+
 #define DECL_ALLOCATOR_INSTANCES(allocKind, traceKind, type, sizedType, \
                                  bgfinal, nursery, compact)             \
   template type* js::AllocateStringImpl<type, NoGC>(JSContext * cx,     \

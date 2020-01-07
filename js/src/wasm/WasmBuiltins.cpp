@@ -23,6 +23,7 @@
 #include "fdlibm.h"
 #include "jslibmath.h"
 
+#include "gc/Allocator.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "jit/MacroAssembler.h"
@@ -648,10 +649,10 @@ static int32_t CoerceInPlace_JitEntry(int funcExportIndex, TlsData* tlsData,
 
 #ifdef ENABLE_WASM_BIGINT
 // Allocate a BigInt without GC, corresponds to the similar VMFunction.
-static BigInt* AllocateBigInt() {
+static BigInt* AllocateBigIntTenuredNoGC() {
   JSContext* cx = TlsContext.get();
 
-  return js::Allocate<BigInt, NoGC>(cx);
+  return js::AllocateBigInt<NoGC>(cx, gc::TenuredHeap);
 }
 #endif
 
@@ -850,7 +851,7 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
 #ifdef ENABLE_WASM_BIGINT
     case SymbolicAddress::AllocateBigInt:
       *abiType = Args_General0;
-      return FuncCast(AllocateBigInt, *abiType);
+      return FuncCast(AllocateBigIntTenuredNoGC, *abiType);
 #endif
     case SymbolicAddress::DivI64:
       *abiType = Args_General4;

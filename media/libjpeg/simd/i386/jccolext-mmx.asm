@@ -13,8 +13,6 @@
 ; assembler (including Borland's Turbo Assembler).
 ; NASM is available from http://nasm.sourceforge.net/ or
 ; http://sourceforge.net/project/showfiles.php?group_id=6208
-;
-; [TAB8]
 
 %include "jcolsamp.inc"
 
@@ -111,13 +109,13 @@ EXTN(jsimd_rgb_ycc_convert_mmx):
     jz          short .column_ld2
     sub         ecx, byte SIZEOF_BYTE
     xor         eax, eax
-    mov         al, BYTE [esi+ecx]
+    mov         al, byte [esi+ecx]
 .column_ld2:
     test        cl, SIZEOF_WORD
     jz          short .column_ld4
     sub         ecx, byte SIZEOF_WORD
     xor         edx, edx
-    mov         dx, WORD [esi+ecx]
+    mov         dx, word [esi+ecx]
     shl         eax, WORD_BIT
     or          eax, edx
 .column_ld4:
@@ -127,7 +125,7 @@ EXTN(jsimd_rgb_ycc_convert_mmx):
     test        cl, SIZEOF_DWORD
     jz          short .column_ld8
     sub         ecx, byte SIZEOF_DWORD
-    movd        mmG, DWORD [esi+ecx]
+    movd        mmG, dword [esi+ecx]
     psllq       mmA, DWORD_BIT
     por         mmA, mmG
 .column_ld8:
@@ -197,7 +195,7 @@ EXTN(jsimd_rgb_ycc_convert_mmx):
     test        cl, SIZEOF_MMWORD/8
     jz          short .column_ld2
     sub         ecx, byte SIZEOF_MMWORD/8
-    movd        mmA, DWORD [esi+ecx*RGB_PIXELSIZE]
+    movd        mmA, dword [esi+ecx*RGB_PIXELSIZE]
 .column_ld2:
     test        cl, SIZEOF_MMWORD/4
     jz          short .column_ld4

@@ -41,7 +41,7 @@ let code_for_oopif_to_run = function() {
 async function* test() {
   let iframeElement = document.getElementById("testframe");
 
-  let iframeResponse = await FissionTestHelper.sendToOopif(iframeElement, code_for_oopif_to_run.toSource() + "()");
+  let iframeResponse = await FissionTestHelper.sendToOopif(iframeElement, `(${code_for_oopif_to_run})()`);
   dump("OOPIF response: " + JSON.stringify(iframeResponse) + "\n");
   ok(iframeResponse, "code_for_oopif_to_run successfully installed");
 

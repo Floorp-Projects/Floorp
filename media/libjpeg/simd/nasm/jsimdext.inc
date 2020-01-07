@@ -2,7 +2,7 @@
 ; jsimdext.inc - common declarations
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
-; Copyright (C) 2010, 2016, D. R. Commander.
+; Copyright (C) 2010, 2016, 2019, D. R. Commander.
 ; Copyright (C) 2018, Matthieu Darbois.
 ;
 ; Based on the x86 SIMD extension for IJG JPEG library - version 1.02
@@ -24,8 +24,6 @@
 ; 2. Altered source versions must be plainly marked as such, and must not be
 ;    misrepresented as being the original software.
 ; 3. This notice may not be removed or altered from any source distribution.
-;
-; [TAB8]
 
 ; ==========================================================================
 ;  System-dependent configurations
@@ -167,19 +165,19 @@ section .note.GNU-stack noalloc noexec nowrite progbits
 %define XMM_DWORD
 %define XMM_MMWORD
 
-%define SIZEOF_BYTE   1                 ; sizeof(BYTE)
-%define SIZEOF_WORD   2                 ; sizeof(WORD)
-%define SIZEOF_DWORD  4                 ; sizeof(DWORD)
-%define SIZEOF_QWORD  8                 ; sizeof(QWORD)
-%define SIZEOF_OWORD  16                ; sizeof(OWORD)
-%define SIZEOF_YWORD  32                ; sizeof(YWORD)
+%define SIZEOF_BYTE   1                 ; sizeof(byte)
+%define SIZEOF_WORD   2                 ; sizeof(word)
+%define SIZEOF_DWORD  4                 ; sizeof(dword)
+%define SIZEOF_QWORD  8                 ; sizeof(qword)
+%define SIZEOF_OWORD  16                ; sizeof(oword)
+%define SIZEOF_YWORD  32                ; sizeof(yword)
 
 %define BYTE_BIT      8                 ; CHAR_BIT in C
-%define WORD_BIT      16                ; sizeof(WORD)*BYTE_BIT
-%define DWORD_BIT     32                ; sizeof(DWORD)*BYTE_BIT
-%define QWORD_BIT     64                ; sizeof(QWORD)*BYTE_BIT
-%define OWORD_BIT     128               ; sizeof(OWORD)*BYTE_BIT
-%define YWORD_BIT     256               ; sizeof(YWORD)*BYTE_BIT
+%define WORD_BIT      16                ; sizeof(word)*BYTE_BIT
+%define DWORD_BIT     32                ; sizeof(dword)*BYTE_BIT
+%define QWORD_BIT     64                ; sizeof(qword)*BYTE_BIT
+%define OWORD_BIT     128               ; sizeof(oword)*BYTE_BIT
+%define YWORD_BIT     256               ; sizeof(yword)*BYTE_BIT
 
 ; --------------------------------------------------------------------------
 ;  External Symbol Name
@@ -198,6 +196,11 @@ section .note.GNU-stack noalloc noexec nowrite progbits
 %ifdef __YASM_VER__
 %define GLOBAL_FUNCTION(name)  global EXTN(name):private_extern
 %define GLOBAL_DATA(name)      global EXTN(name):private_extern
+%else
+%if __NASM_VERSION_ID__ >= 0x020E0000
+%define GLOBAL_FUNCTION(name)  global EXTN(name):private_extern
+%define GLOBAL_DATA(name)      global EXTN(name):private_extern
+%endif
 %endif
 %endif
 

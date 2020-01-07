@@ -18,8 +18,6 @@
 ; output: either 4x4 or 2x2 pixels from an 8x8 DCT block.
 ; The following code is based directly on the IJG's original jidctred.c;
 ; see the jidctred.c for more details.
-;
-; [TAB8]
 
 %include "jsimdext.inc"
 %include "jdct.inc"
@@ -144,8 +142,8 @@ EXTN(jsimd_idct_4x4_mmx):
     alignx      16, 7
 .columnloop:
 %ifndef NO_ZERO_COLUMN_TEST_4X4_MMX
-    mov         eax, DWORD [DWBLOCK(1,0,esi,SIZEOF_JCOEF)]
-    or          eax, DWORD [DWBLOCK(2,0,esi,SIZEOF_JCOEF)]
+    mov         eax, dword [DWBLOCK(1,0,esi,SIZEOF_JCOEF)]
+    or          eax, dword [DWBLOCK(2,0,esi,SIZEOF_JCOEF)]
     jnz         short .columnDCT
 
     movq        mm0, MMWORD [MMBLOCK(1,0,esi,SIZEOF_JCOEF)]
@@ -464,16 +462,16 @@ EXTN(jsimd_idct_4x4_mmx):
 
     mov         edx, JSAMPROW [edi+0*SIZEOF_JSAMPROW]
     mov         esi, JSAMPROW [edi+2*SIZEOF_JSAMPROW]
-    movd        DWORD [edx+eax*SIZEOF_JSAMPLE], mm1
-    movd        DWORD [esi+eax*SIZEOF_JSAMPLE], mm0
+    movd        dword [edx+eax*SIZEOF_JSAMPLE], mm1
+    movd        dword [esi+eax*SIZEOF_JSAMPLE], mm0
 
     psrlq       mm1, 4*BYTE_BIT
     psrlq       mm0, 4*BYTE_BIT
 
     mov         edx, JSAMPROW [edi+1*SIZEOF_JSAMPROW]
     mov         esi, JSAMPROW [edi+3*SIZEOF_JSAMPROW]
-    movd        DWORD [edx+eax*SIZEOF_JSAMPLE], mm1
-    movd        DWORD [esi+eax*SIZEOF_JSAMPLE], mm0
+    movd        dword [edx+eax*SIZEOF_JSAMPLE], mm1
+    movd        dword [esi+eax*SIZEOF_JSAMPLE], mm0
 
     emms                                ; empty MMX state
 
@@ -688,8 +686,8 @@ EXTN(jsimd_idct_2x2_mmx):
 
     mov         edx, JSAMPROW [edi+0*SIZEOF_JSAMPROW]
     mov         esi, JSAMPROW [edi+1*SIZEOF_JSAMPROW]
-    mov         WORD [edx+eax*SIZEOF_JSAMPLE], bx
-    mov         WORD [esi+eax*SIZEOF_JSAMPLE], cx
+    mov         word [edx+eax*SIZEOF_JSAMPLE], bx
+    mov         word [esi+eax*SIZEOF_JSAMPLE], cx
 
     emms                                ; empty MMX state
 

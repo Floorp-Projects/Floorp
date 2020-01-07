@@ -14,6 +14,7 @@
 #include "jstypes.h"
 #include "gc/Barrier.h"
 #include "gc/GC.h"
+#include "gc/Nursery.h"
 #include "js/AllocPolicy.h"
 #include "js/GCHashTable.h"
 #include "js/Result.h"
@@ -38,16 +39,18 @@ XDRResult XDRBigInt(XDRState<mode>* xdr, MutableHandle<JS::BigInt*> bi);
 
 namespace JS {
 
-class BigInt final
-    : public js::gc::CellWithLengthAndFlags<js::gc::TenuredCell> {
-  using Base = js::gc::CellWithLengthAndFlags<js::gc::TenuredCell>;
+class BigInt final : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
+  using Base = js::gc::CellWithLengthAndFlags<js::gc::Cell>;
 
  public:
   using Digit = uintptr_t;
 
+  static constexpr uintptr_t TYPE_FLAGS = js::gc::Cell::BIGINT_BIT;
+
  private:
   // The low NumFlagBitsReservedForGC flag bits are reserved.
   static constexpr uintptr_t SignBit = js::Bit(Base::NumFlagBitsReservedForGC);
+
   static constexpr size_t InlineDigitsLength =
       (js::gc::MinCellSize - sizeof(Base)) / sizeof(Digit);
 
@@ -61,8 +64,33 @@ class BigInt final
     Digit inlineDigits_[InlineDigitsLength];
   };
 
+  // Shadow Base::setLengthAndFlags to automatically set TYPE_FLAGS.
+  void setLengthAndFlags(uint32_t len, uint32_t flags) {
+    Base::setLengthAndFlags(len, flags | TYPE_FLAGS);
+  }
+
  public:
   static const JS::TraceKind TraceKind = JS::TraceKind::BigInt;
+
+  JS::Zone* zone() const {
+    if (isTenured()) {
+      return asTenured().zone();
+    }
+    return js::Nursery::getBigIntZone(this);
+  }
+
+  // Implement TenuredZone members needed for template instantiations.
+
+  JS::Zone* zoneFromAnyThread() const {
+    if (isTenured()) {
+      return asTenured().zoneFromAnyThread();
+    }
+    return js::Nursery::getBigIntZone(this);
+  }
+
+  void fixupAfterMovingGC() {}
+
+  js::gc::AllocKind getAllocKind() const { return js::gc::AllocKind::BIGINT; }
 
   size_t digitLength() const { return lengthField(); }
 
@@ -93,12 +121,47 @@ class BigInt final
   void initializeDigitsToZero();
 
   void traceChildren(JSTracer* trc);
+
+  static MOZ_ALWAYS_INLINE void readBarrier(BigInt* thing) {
+    if (js::gc::IsInsideNursery(thing)) {
+      return;
+    }
+    js::gc::TenuredCell::readBarrier(&thing->asTenured());
+  }
+
+  static MOZ_ALWAYS_INLINE void writeBarrierPre(BigInt* thing) {
+    if (!thing || js::gc::IsInsideNursery(thing)) {
+      return;
+    }
+
+    js::gc::TenuredCell::writeBarrierPre(&thing->asTenured());
+  }
+
+  static void writeBarrierPost(void* cellp, BigInt* prev, BigInt* next) {
+    // See JSObject::writeBarrierPost for a description of the logic here.
+    MOZ_ASSERT(cellp);
+
+    js::gc::StoreBuffer* buffer;
+    if (next && (buffer = next->storeBuffer())) {
+      if (prev && prev->storeBuffer()) {
+        return;
+      }
+      buffer->putCell(static_cast<BigInt**>(cellp));
+      return;
+    }
+
+    if (prev && (buffer = prev->storeBuffer())) {
+      buffer->unputCell(static_cast<BigInt**>(cellp));
+    }
+  }
+
   void finalize(JSFreeOp* fop);
   js::HashNumber hash() const;
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  static BigInt* createUninitialized(JSContext* cx, size_t digitLength,
-                                     bool isNegative);
+  static BigInt* createUninitialized(
+      JSContext* cx, size_t digitLength, bool isNegative,
+      js::gc::InitialHeap heap = js::gc::DefaultHeap);
   static BigInt* createFromDouble(JSContext* cx, double d);
   static BigInt* createFromUint64(JSContext* cx, uint64_t n);
   static BigInt* createFromInt64(JSContext* cx, int64_t n);
@@ -106,11 +169,13 @@ class BigInt final
   static BigInt* createFromNonZeroRawUint64(JSContext* cx, uint64_t n,
                                             bool isNegative);
   // FIXME: Cache these values.
-  static BigInt* zero(JSContext* cx);
+  static BigInt* zero(JSContext* cx,
+                      js::gc::InitialHeap heap = js::gc::DefaultHeap);
   static BigInt* one(JSContext* cx);
   static BigInt* negativeOne(JSContext* cx);
 
-  static BigInt* copy(JSContext* cx, Handle<BigInt*> x);
+  static BigInt* copy(JSContext* cx, Handle<BigInt*> x,
+                      js::gc::InitialHeap heap = js::gc::DefaultHeap);
   static BigInt* add(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
   static BigInt* sub(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
   static BigInt* mul(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
@@ -183,10 +248,10 @@ class BigInt final
                               const mozilla::Range<const CharT> chars,
                               bool* haveParseError);
   template <typename CharT>
-  static BigInt* parseLiteralDigits(JSContext* cx,
-                                    const mozilla::Range<const CharT> chars,
-                                    unsigned radix, bool isNegative,
-                                    bool* haveParseError);
+  static BigInt* parseLiteralDigits(
+      JSContext* cx, const mozilla::Range<const CharT> chars, unsigned radix,
+      bool isNegative, bool* haveParseError,
+      js::gc::InitialHeap heap = js::gc::DefaultHeap);
 
   template <typename CharT>
   static bool literalIsZero(const mozilla::Range<const CharT> chars);
@@ -411,6 +476,9 @@ class BigInt final
   static constexpr size_t inlineDigitsLength() { return InlineDigitsLength; }
 
   static constexpr size_t signBitMask() { return SignBit; }
+
+ private:
+  friend class js::TenuringTracer;
 };
 
 static_assert(

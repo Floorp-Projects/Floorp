@@ -5013,7 +5013,7 @@ bool PrivateScriptData::Clone(JSContext* cx, HandleScript src, HandleScript dst,
       bigint = &gcThing.as<BigInt>();
       BigInt* clone = bigint;
       if (cx->zone() != bigint->zone()) {
-        clone = BigInt::copy(cx, bigint);
+        clone = BigInt::copy(cx, bigint, gc::TenuredHeap);
         if (!clone) {
           return false;
         }

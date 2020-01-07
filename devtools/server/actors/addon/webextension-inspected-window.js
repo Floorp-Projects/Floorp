@@ -356,12 +356,11 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
         enumerable: true,
         configurable: true,
         value: dbgWindow.makeDebuggeeValue(object => {
-          const dbgObj = dbgWindow.makeDebuggeeValue(object);
-
           const consoleActor = DebuggerServer.searchAllConnectionsForActor(
             options.toolboxConsoleActorID
           );
           if (consoleActor) {
+            const dbgObj = consoleActor.makeDebuggeeValue(object);
             consoleActor.inspectObject(
               dbgObj,
               "webextension-devtools-inspectedWindow-eval"

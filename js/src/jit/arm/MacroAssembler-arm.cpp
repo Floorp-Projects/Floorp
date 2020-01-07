@@ -4568,7 +4568,8 @@ void MacroAssembler::branchValueIsNurseryCell(Condition cond,
   Register tag = temp;
   tag = extractTag(address, tag);
   branchTestObject(Assembler::Equal, tag, &checkAddress);
-  branchTestString(Assembler::NotEqual, tag,
+  branchTestString(Assembler::Equal, tag, &checkAddress);
+  branchTestBigInt(Assembler::NotEqual, tag,
                    cond == Assembler::Equal ? &done : label);
 
   bind(&checkAddress);
@@ -4586,7 +4587,8 @@ void MacroAssembler::branchValueIsNurseryCell(Condition cond,
   Label done, checkAddress;
 
   branchTestObject(Assembler::Equal, value.typeReg(), &checkAddress);
-  branchTestString(Assembler::NotEqual, value.typeReg(),
+  branchTestString(Assembler::Equal, value.typeReg(), &checkAddress);
+  branchTestBigInt(Assembler::NotEqual, value.typeReg(),
                    cond == Assembler::Equal ? &done : label);
 
   bind(&checkAddress);

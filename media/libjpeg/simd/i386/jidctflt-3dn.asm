@@ -17,8 +17,6 @@
 ; This file contains a floating-point implementation of the inverse DCT
 ; (Discrete Cosine Transform). The following code is based directly on
 ; the IJG's original jidctflt.c; see the jidctflt.c for more details.
-;
-; [TAB8]
 
 %include "jsimdext.inc"
 %include "jdct.inc"
@@ -92,23 +90,23 @@ EXTN(jsimd_idct_float_3dnow):
     alignx      16, 7
 .columnloop:
 %ifndef NO_ZERO_COLUMN_TEST_FLOAT_3DNOW
-    mov         eax, DWORD [DWBLOCK(1,0,esi,SIZEOF_JCOEF)]
-    or          eax, DWORD [DWBLOCK(2,0,esi,SIZEOF_JCOEF)]
+    mov         eax, dword [DWBLOCK(1,0,esi,SIZEOF_JCOEF)]
+    or          eax, dword [DWBLOCK(2,0,esi,SIZEOF_JCOEF)]
     jnz         short .columnDCT
 
     pushpic     ebx                     ; save GOT address
-    mov         ebx, DWORD [DWBLOCK(3,0,esi,SIZEOF_JCOEF)]
-    mov         eax, DWORD [DWBLOCK(4,0,esi,SIZEOF_JCOEF)]
-    or          ebx, DWORD [DWBLOCK(5,0,esi,SIZEOF_JCOEF)]
-    or          eax, DWORD [DWBLOCK(6,0,esi,SIZEOF_JCOEF)]
-    or          ebx, DWORD [DWBLOCK(7,0,esi,SIZEOF_JCOEF)]
+    mov         ebx, dword [DWBLOCK(3,0,esi,SIZEOF_JCOEF)]
+    mov         eax, dword [DWBLOCK(4,0,esi,SIZEOF_JCOEF)]
+    or          ebx, dword [DWBLOCK(5,0,esi,SIZEOF_JCOEF)]
+    or          eax, dword [DWBLOCK(6,0,esi,SIZEOF_JCOEF)]
+    or          ebx, dword [DWBLOCK(7,0,esi,SIZEOF_JCOEF)]
     or          eax, ebx
     poppic      ebx                     ; restore GOT address
     jnz         short .columnDCT
 
     ; -- AC terms all zero
 
-    movd        mm0, DWORD [DWBLOCK(0,0,esi,SIZEOF_JCOEF)]
+    movd        mm0, dword [DWBLOCK(0,0,esi,SIZEOF_JCOEF)]
 
     punpcklwd   mm0, mm0
     psrad       mm0, (DWORD_BIT-WORD_BIT)
@@ -135,10 +133,10 @@ EXTN(jsimd_idct_float_3dnow):
 
     ; -- Even part
 
-    movd        mm0, DWORD [DWBLOCK(0,0,esi,SIZEOF_JCOEF)]
-    movd        mm1, DWORD [DWBLOCK(2,0,esi,SIZEOF_JCOEF)]
-    movd        mm2, DWORD [DWBLOCK(4,0,esi,SIZEOF_JCOEF)]
-    movd        mm3, DWORD [DWBLOCK(6,0,esi,SIZEOF_JCOEF)]
+    movd        mm0, dword [DWBLOCK(0,0,esi,SIZEOF_JCOEF)]
+    movd        mm1, dword [DWBLOCK(2,0,esi,SIZEOF_JCOEF)]
+    movd        mm2, dword [DWBLOCK(4,0,esi,SIZEOF_JCOEF)]
+    movd        mm3, dword [DWBLOCK(6,0,esi,SIZEOF_JCOEF)]
 
     punpcklwd   mm0, mm0
     punpcklwd   mm1, mm1
@@ -182,10 +180,10 @@ EXTN(jsimd_idct_float_3dnow):
 
     ; -- Odd part
 
-    movd        mm2, DWORD [DWBLOCK(1,0,esi,SIZEOF_JCOEF)]
-    movd        mm3, DWORD [DWBLOCK(3,0,esi,SIZEOF_JCOEF)]
-    movd        mm5, DWORD [DWBLOCK(5,0,esi,SIZEOF_JCOEF)]
-    movd        mm1, DWORD [DWBLOCK(7,0,esi,SIZEOF_JCOEF)]
+    movd        mm2, dword [DWBLOCK(1,0,esi,SIZEOF_JCOEF)]
+    movd        mm3, dword [DWBLOCK(3,0,esi,SIZEOF_JCOEF)]
+    movd        mm5, dword [DWBLOCK(5,0,esi,SIZEOF_JCOEF)]
+    movd        mm1, dword [DWBLOCK(7,0,esi,SIZEOF_JCOEF)]
 
     punpcklwd   mm2, mm2
     punpcklwd   mm3, mm3

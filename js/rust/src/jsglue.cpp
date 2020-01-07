@@ -637,6 +637,11 @@ void CallStringTracer(JSTracer* trc, JS::Heap<JSString*>* strp,
   JS::TraceEdge(trc, strp, name);
 }
 
+void CallBigIntTracer(JSTracer* trc, JS::Heap<JS::BigInt*>* bip,
+                      const char* name) {
+  JS::TraceEdge(trc, bip, name);
+}
+
 void CallScriptTracer(JSTracer* trc, JS::Heap<JSScript*>* scriptp,
                       const char* name) {
   JS::TraceEdge(trc, scriptp, name);

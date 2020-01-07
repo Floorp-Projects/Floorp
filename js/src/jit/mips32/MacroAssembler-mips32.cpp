@@ -2170,7 +2170,8 @@ void MacroAssembler::branchValueIsNurseryCell(Condition cond,
   Label done, checkAddress;
 
   branchTestObject(Assembler::Equal, address, &checkAddress);
-  branchTestString(Assembler::NotEqual, address,
+  branchTestString(Assembler::Equal, address, &checkAddress);
+  branchTestBigInt(Assembler::NotEqual, address,
                    cond == Assembler::Equal ? &done : label);
 
   bind(&checkAddress);
@@ -2187,7 +2188,8 @@ void MacroAssembler::branchValueIsNurseryCell(Condition cond,
 
   Label done, checkAddress;
   branchTestObject(Assembler::Equal, value, &checkAddress);
-  branchTestString(Assembler::NotEqual, value,
+  branchTestString(Assembler::Equal, value, &checkAddress);
+  branchTestBigInt(Assembler::NotEqual, value,
                    cond == Assembler::Equal ? &done : label);
 
   bind(&checkAddress);

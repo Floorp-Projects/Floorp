@@ -156,6 +156,8 @@ JS::Zone::Zone(JSRuntime* rt)
       purgeAtomsDeferred(this, 0),
       tenuredStrings(this, 0),
       allocNurseryStrings(this, true),
+      tenuredBigInts(this, 0),
+      allocNurseryBigInts(this, true),
       propertyTree_(this, this),
       baseShapes_(this, this),
       initialShapes_(this, this),

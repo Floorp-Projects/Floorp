@@ -1,4 +1,4 @@
-use std::fmt;
+use core::fmt;
 
 /// Alternative implementation of `fmt::Debug` for byte slice.
 ///
@@ -12,29 +12,29 @@ use std::fmt;
 /// `BsDebug` is not a part of public API of bytes crate.
 pub struct BsDebug<'a>(pub &'a [u8]);
 
-impl<'a> fmt::Debug for BsDebug<'a> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        try!(write!(fmt, "b\""));
+impl fmt::Debug for BsDebug<'_> {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(fmt, "b\"")?;
         for &c in self.0 {
             // https://doc.rust-lang.org/reference.html#byte-escapes
             if c == b'\n' {
-                try!(write!(fmt, "\\n"));
+                write!(fmt, "\\n")?;
             } else if c == b'\r' {
-                try!(write!(fmt, "\\r"));
+                write!(fmt, "\\r")?;
             } else if c == b'\t' {
-                try!(write!(fmt, "\\t"));
+                write!(fmt, "\\t")?;
             } else if c == b'\\' || c == b'"' {
-                try!(write!(fmt, "\\{}", c as char));
+                write!(fmt, "\\{}", c as char)?;
             } else if c == b'\0' {
-                try!(write!(fmt, "\\0"));
+                write!(fmt, "\\0")?;
             // ASCII printable
             } else if c >= 0x20 && c < 0x7f {
-                try!(write!(fmt, "{}", c as char));
+                write!(fmt, "{}", c as char)?;
             } else {
-                try!(write!(fmt, "\\x{:02x}", c));
+                write!(fmt, "\\x{:02x}", c)?;
             }
         }
-        try!(write!(fmt, "\""));
+        write!(fmt, "\"")?;
         Ok(())
     }
 }

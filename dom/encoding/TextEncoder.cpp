@@ -16,15 +16,8 @@ void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
                          const nsACString& aUtf8String,
                          JS::MutableHandle<JSObject*> aRetval,
                          OOMReporter& aRv) {
-  // Uint8Array::Create takes uint32_t as the length.
-  if (MOZ_UNLIKELY(aUtf8String.Length() > UINT32_MAX)) {
-    aRv.ReportOOM();
-    return;
-  }
-
   JSAutoRealm ar(aCx, aObj);
-  const char* buffer = aUtf8String.BeginReading();
-  JSObject* outView = Uint8Array::Create(aCx, aUtf8String.Length(), reinterpret_cast<const uint8_t*>(buffer));
+  JSObject* outView = Uint8Array::Create(aCx, aUtf8String);
   if (!outView) {
     aRv.ReportOOM();
     return;

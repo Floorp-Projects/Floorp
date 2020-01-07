@@ -57,6 +57,8 @@
         this.checkbox.hidden = false;
       } else {
         this.checkbox.hidden = true;
+        // Reset checked state to avoid wrong using of previous value.
+        this.checkbox.checked = false;
       }
 
       this.hidden = false;

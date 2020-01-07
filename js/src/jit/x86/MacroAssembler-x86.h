@@ -485,6 +485,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     cmp32(tagOf(address), ImmTag(JSVAL_TAG_SYMBOL));
     return cond;
   }
+  Condition testBigInt(Condition cond, const Address& address) {
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    cmp32(tagOf(address), ImmTag(JSVAL_TAG_BIGINT));
+    return cond;
+  }
   Condition testBigInt(Condition cond, const BaseIndex& address) {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);
     cmp32(tagOf(address), ImmTag(JSVAL_TAG_BIGINT));

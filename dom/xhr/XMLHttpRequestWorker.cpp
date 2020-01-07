@@ -1893,14 +1893,6 @@ void XMLHttpRequestWorker::Send(
     RefPtr<Blob> blob = &aData.Value().GetAsBlob();
     MOZ_ASSERT(blob);
 
-    RefPtr<BlobImpl> blobImpl = blob->Impl();
-    MOZ_ASSERT(blobImpl);
-
-    aRv = blobImpl->SetMutable(false);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
-
     JS::Rooted<JS::Value> value(aCx);
     if (!GetOrCreateDOMReflector(aCx, blob, &value)) {
       aRv.Throw(NS_ERROR_FAILURE);

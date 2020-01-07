@@ -816,6 +816,8 @@ bool HeapCheckTracerBase::onChild(const JS::GCCellPtr& thing) {
     zone = thing.as<JSObject>().zone();
   } else if (thing.is<JSString>()) {
     zone = thing.as<JSString>().zone();
+  } else if (thing.is<JS::BigInt>()) {
+    zone = thing.as<JS::BigInt>().zone();
   } else {
     zone = cell->asTenured().zone();
   }
@@ -1007,6 +1009,10 @@ static Zone* GetCellZoneFromAnyThread(Cell* cell) {
 
   if (cell->is<JSString>()) {
     return cell->as<JSString>()->zoneFromAnyThread();
+  }
+
+  if (cell->is<JS::BigInt>()) {
+    return cell->as<JS::BigInt>()->zoneFromAnyThread();
   }
 
   return cell->asTenured().zoneFromAnyThread();
