@@ -21,8 +21,6 @@ namespace browser {
 
 NS_IMPL_ISUPPORTS(AboutRedirector, nsIAboutModule)
 
-bool AboutRedirector::sAboutLoginsEnabled = false;
-
 static const uint32_t ACTIVITY_STREAM_FLAGS =
     nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::ENABLE_INDEXED_DB |
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
@@ -157,13 +155,6 @@ AboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  static bool sAboutLoginsCacheInited = false;
-  if (!sAboutLoginsCacheInited) {
-    Preferences::AddBoolVarCache(&AboutRedirector::sAboutLoginsEnabled,
-                                 "signon.management.page.enabled");
-    sAboutLoginsCacheInited = true;
-  }
-
   for (auto& redir : kRedirMap) {
     if (!strcmp(path.get(), redir.id)) {
       nsAutoCString url;
@@ -178,10 +169,6 @@ AboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
         NS_ENSURE_SUCCESS(rv, rv);
         rv = aboutNewTabService->GetDefaultURL(url);
         NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      if (!sAboutLoginsEnabled && path.EqualsLiteral("logins")) {
-        return NS_ERROR_NOT_AVAILABLE;
       }
 
       if (path.EqualsLiteral("welcome")) {
