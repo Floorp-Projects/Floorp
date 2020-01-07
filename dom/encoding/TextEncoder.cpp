@@ -13,39 +13,18 @@ namespace mozilla {
 namespace dom {
 
 void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                         JS::Handle<JSString*> aString,
+                         const nsACString& aUtf8String,
                          JS::MutableHandle<JSObject*> aRetval,
                          OOMReporter& aRv) {
-  CheckedInt<size_t> bufLen(JS::GetStringLength(aString));
-  bufLen *= 3;  // from the contract for JS_EncodeStringToUTF8BufferPartial
   // Uint8Array::Create takes uint32_t as the length.
-  if (!bufLen.isValid() || bufLen.value() > UINT32_MAX) {
+  if (MOZ_UNLIKELY(aUtf8String.Length() > UINT32_MAX)) {
     aRv.ReportOOM();
     return;
   }
-
-  // TODO: Avoid malloc and use a stack-allocated buffer if bufLen
-  // is small.
-  auto data = mozilla::MakeUniqueFallible<uint8_t[]>(bufLen.value());
-  if (!data) {
-    aRv.ReportOOM();
-    return;
-  }
-
-  size_t read;
-  size_t written;
-  auto maybe = JS_EncodeStringToUTF8BufferPartial(
-      aCx, aString, AsWritableChars(MakeSpan(data.get(), bufLen.value())));
-  if (!maybe) {
-    aRv.ReportOOM();
-    return;
-  }
-  Tie(read, written) = *maybe;
-  MOZ_ASSERT(written <= bufLen.value());
-  MOZ_ASSERT(read == JS::GetStringLength(aString));
 
   JSAutoRealm ar(aCx, aObj);
-  JSObject* outView = Uint8Array::Create(aCx, written, data.get());
+  const char* buffer = aUtf8String.BeginReading();
+  JSObject* outView = Uint8Array::Create(aCx, aUtf8String.Length(), reinterpret_cast<const uint8_t*>(buffer));
   if (!outView) {
     aRv.ReportOOM();
     return;

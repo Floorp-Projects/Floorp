@@ -29,17 +29,19 @@ interface TextEncoder {
   readonly attribute ByteString encoding;
 
   /*
-   * This is spec-wise USVString but marking it as
-   * JSString as an optimization. (The SpiderMonkey-provided
-   * conversion to UTF-8 takes care of replacing lone
-   * surrogates with the REPLACEMENT CHARACTER, so the
+   * This is spec-wise USVString but marking it as UTF8String as an
+   * optimization. (The SpiderMonkey-provided conversion to UTF-8 takes care of
+   * replacing lone surrogates with the REPLACEMENT CHARACTER, so the
    * observable behavior of USVString is matched.)
    */
   [NewObject]
-  Uint8Array encode(optional JSString input = "");
+  Uint8Array encode(optional UTF8String input = "");
 
   /*
-   * The same comment about USVString as above applies here.
+   * The same comment about UTF8String as above applies here with JSString.
+   *
+   * We use JSString because we don't want to encode the full string, just as
+   * much as the capacity of the Uint8Array.
    */
   [CanOOM]
   TextEncoderEncodeIntoResult encodeInto(JSString source, Uint8Array destination);
