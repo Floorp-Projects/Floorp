@@ -40,7 +40,6 @@ def mach_parsed_kwargs(logger):
         'browsermob_port': None,
         'browsermob_script': None,
         'device_serial': None,
-        'e10s': True,
         'emulator': False,
         'emulator_bin': None,
         'gecko_log': None,

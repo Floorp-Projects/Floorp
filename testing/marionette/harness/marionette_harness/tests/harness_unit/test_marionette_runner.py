@@ -34,8 +34,6 @@ def mock_runner(runner, mock_marionette, monkeypatch):
     for attr in ['run_test', '_capabilities']:
         setattr(runner, attr, Mock())
     runner._appName = 'fake_app'
-    # simulate that browser runs with e10s by default
-    runner._e10s_from_browser = True
     monkeypatch.setattr('marionette_harness.runner.base.mozversion', Mock())
     return runner
 
@@ -343,12 +341,6 @@ def test_manifest_basic_args(mock_runner, manifest, monkeypatch):
     assert 'mozinfo_key' in kwargs and kwargs['mozinfo_key'] == 'mozinfo_val'
 
 
-@pytest.mark.parametrize('e10s', (True, False))
-def test_manifest_with_e10s(mock_runner, manifest, monkeypatch, e10s):
-    kwargs = get_kwargs_passed_to_manifest(mock_runner, manifest, monkeypatch, e10s=e10s)
-    assert kwargs['e10s'] == e10s
-
-
 @pytest.mark.parametrize('test_tags', (None, ['tag', 'tag2']))
 def test_manifest_with_test_tags(mock_runner, manifest, monkeypatch, test_tags):
     kwargs = get_kwargs_passed_to_manifest(mock_runner, manifest, monkeypatch, test_tags=test_tags)
@@ -450,25 +442,6 @@ def test_catch_invalid_test_names(runner):
         assert bad_name in msg
     for good_name in good_tests:
         assert good_name not in msg
-
-
-@pytest.mark.parametrize('e10s', (True, False))
-def test_option_e10s_sets_prefs(mach_parsed_kwargs, e10s):
-    mach_parsed_kwargs['e10s'] = e10s
-    runner = MarionetteTestRunner(**mach_parsed_kwargs)
-    e10s_prefs = {
-        'browser.tabs.remote.autostart': True,
-    }
-    for k,v in e10s_prefs.iteritems():
-        assert runner.prefs.get(k, False) == (v and e10s)
-
-
-def test_option_e10s_clash_raises(mock_runner):
-    mock_runner._e10s_from_browser = False
-
-    with pytest.raises(AssertionError) as e:
-        mock_runner.run_tests([u'test_fake_thing.py'])
-        assert "configuration (self.e10s) does not match browser appinfo" in e.value.message
 
 
 @pytest.mark.parametrize('repeat', (None, 0, 42, -1))

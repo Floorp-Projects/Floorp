@@ -88,7 +88,7 @@ it inside the already sourced virtual environment.
 Here an example for chunk 1 which runs all the tests in the current
 chunk with some options for logs removed:
 
-	% /builds/worker/workspace/build/venv/bin/python -u /builds/worker/workspace/build/tests/marionette/harness/marionette_harness/runtests.py --emulator --app=fennec --package=org.mozilla.fennec_aurora --address=127.0.0.1:2828 /builds/worker/workspace/build/tests/marionette/tests/testing/marionette/harness/marionette_harness/tests/unit-tests.ini --disable-e10s --gecko-log=- --symbols-path=/builds/worker/workspace/build/symbols --startup-timeout=300 --this-chunk 1 --total-chunks 10
+	% /builds/worker/workspace/build/venv/bin/python -u /builds/worker/workspace/build/tests/marionette/harness/marionette_harness/runtests.py --emulator --app=fennec --package=org.mozilla.fennec_aurora --address=127.0.0.1:2828 /builds/worker/workspace/build/tests/marionette/tests/testing/marionette/harness/marionette_harness/tests/unit-tests.ini --gecko-log=- --symbols-path=/builds/worker/workspace/build/symbols --startup-timeout=300 --this-chunk 1 --total-chunks 10
 
 To execute a specific test only simply replace `unit-tests.ini`
 with its name.

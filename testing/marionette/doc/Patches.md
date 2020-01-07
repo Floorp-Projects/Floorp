@@ -14,7 +14,7 @@ granted commit access level 1 you will have permission to use the
 
 This is a good try syntax to use when testing Marionette changes:
 
-	-b do -p linux,linux64,macosx64,win64,android-api-16 -u marionette-e10s,marionette-headless-e10s,xpcshell,web-platform-tests,firefox-ui-functional -t none
+	-b do -p linux,linux64,macosx64,win64,android-api-16 -u marionette,marionette-headless,xpcshell,web-platform-tests,firefox-ui-functional -t none
 
 [Phabricator]: https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html
 [commit creation guidelines]: https://mozilla-version-control-tools.readthedocs.io/en/latest/devguide/contributing.html?highlight=phabricator#submitting-patches-for-review

@@ -119,8 +119,7 @@ option. Marionette Test Runner will take care of forwarding the port and
 starting Fennec with the correct prefs. (You may need to run
 `adb forward --remove-all` to allow the runner to start.)
 
-    % ./mach marionette-test --emulator --app='fennec' --address=127.0.0.1:2828 --disable-e10s
-    --startup-timeout=300
+    % ./mach marionette-test --emulator --app='fennec' --address=127.0.0.1:2828 --startup-timeout=300
 
 If you need to troubleshoot the Marionette connection, the most basic check is
 to start Fennec, make sure the `marionette.enabled` browser preference is
