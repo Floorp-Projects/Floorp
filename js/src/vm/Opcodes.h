@@ -207,42 +207,41 @@
  * SpiderMonkey bytecode categorization (as used in generated documentation):
  *
  * [Index]
- *   [Statements]
- *     Jumps
- *     Switch Statement
- *     For-In Statement
- *     With Statement
- *     Exception Handling
- *     Function
- *     Generator
- *     Debugger
- *   [Variables and Scopes]
- *     Variables
- *     Free Variables
- *     Local Variables
- *     Aliased Variables
- *     Intrinsics
- *     Block-local Scope
- *     This
+ *   [Constants]
+ *   [Expressions]
+ *     Unary operators
+ *     Binary operators
+ *     Conversions
+ *     Other expressions
+ *   [Objects]
+ *     Creating objects
+ *     Defining properties
+ *     Accessing properties
  *     Super
- *     Arguments
- *     Var Scope
- *     Modules
- *   [Operators]
- *     Comparison Operators
- *     Arithmetic Operators
- *     Bitwise Logical Operators
- *     Bitwise Shift Operators
- *     Logical Operators
- *     Special Operators
- *     Stack Operations
- *     Debugger
- *   [Literals]
- *     Constants
- *     Object
- *     Array
- *     RegExp
- *     Class
+ *     Enumeration
+ *     Iteration
+ *     SetPrototype
+ *     Array literals
+ *     RegExp literals
+ *   [Functions]
+ *     Creating functions
+ *     Creating constructors
+ *     Calls
+ *     Generators and async functions
+ *   [Control flow]
+ *     Jump targets
+ *     Jumps
+ *     Return
+ *     Exceptions
+ *   [Variables and scopes]
+ *     Initialization
+ *     Looking up bindings
+ *     Getting binding values
+ *     Setting binding values
+ *     Entering and leaving environments
+ *     Creating and deleting bindings
+ *     Function environment setup
+ *   [Stack operations]
  *   [Other]
  */
 // clang-format on
@@ -252,8 +251,7 @@
     /*
      * Push `undefined`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands:
      *   Stack: => undefined
      */ \
@@ -261,8 +259,7 @@
     /*
      * Push `null`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands:
      *   Stack: => null
      */ \
@@ -270,8 +267,7 @@
     /*
      * Push a boolean constant.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands:
      *   Stack: => true/false
      */ \
@@ -283,8 +279,7 @@
      * `JSOP_ZERO`, `JSOP_ONE`, `JSOP_INT8`, `JSOP_UINT16`, and `JSOP_UINT24`
      * are all compact encodings for `JSOP_INT32`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands: int32_t val
      *   Stack: => val
      */ \
@@ -292,8 +287,7 @@
     /*
      * Push the number `0`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands:
      *   Stack: => 0
      */ \
@@ -301,8 +295,7 @@
     /*
      * Push the number `1`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands:
      *   Stack: => 1
      */ \
@@ -310,8 +303,7 @@
     /*
      * Push the `int8_t` immediate operand as an `Int32Value`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands: int8_t val
      *   Stack: => val
      */ \
@@ -319,8 +311,7 @@
     /*
      * Push the `uint16_t` immediate operand as an `Int32Value`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands: uint16_t val
      *   Stack: => val
      */ \
@@ -328,8 +319,7 @@
     /*
      * Push the `uint24_t` immediate operand as an `Int32Value`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands: uint24_t val
      *   Stack: => val
      */ \
@@ -340,8 +330,7 @@
      * If the operand is a NaN, it must be the canonical NaN (see
      * `JS::detail::CanonicalizeNaN`).
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands: double val
      *   Stack: => val
      */ \
@@ -349,8 +338,7 @@
     /*
      * Push the BigInt constant `script->getBigInt(bigIntIndex)`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands: uint32_t bigIntIndex
      *   Stack: => bigint
      */ \
@@ -358,8 +346,7 @@
     /*
      * Push the string constant `script->getAtom(atomIndex)`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands: uint32_t atomIndex
      *   Stack: => string
      */ \
@@ -369,8 +356,7 @@
      *
      * `symbol` must be in range for `JS::SymbolCode`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Constants
      *   Operands: uint8_t symbol (the JS::SymbolCode of the symbol to use)
      *   Stack: => symbol
      */ \
@@ -382,8 +368,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-void-operator
      *
-     *   Category: Operators
-     *   Type: Special Operators
+     *   Category: Expressions
+     *   Type: Unary operators
      *   Operands:
      *   Stack: val => undefined
      */ \
@@ -411,8 +397,8 @@
      * [1]: https://tc39.es/ecma262/#sec-typeof-operator
      * [2]: https://tc39.es/ecma262/#sec-ecmascript-language-types
      *
-     *   Category: Operators
-     *   Type: Special Operators
+     *   Category: Expressions
+     *   Type: Unary operators
      *   Operands:
      *   Stack: val => (typeof val)
      */ \
@@ -430,8 +416,8 @@
      * [1]: https://tc39.es/ecma262/#sec-unary-plus-operator
      * [2]: https://tc39.es/ecma262/#sec-tonumber
      *
-     *   Category: Operators
-     *   Type: Arithmetic Operators
+     *   Category: Expressions
+     *   Type: Unary operators
      *   Operands:
      *   Stack: val => (+val)
      */ \
@@ -445,8 +431,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-unary-minus-operator
      *
-     *   Category: Operators
-     *   Type: Arithmetic Operators
+     *   Category: Expressions
+     *   Type: Unary operators
      *   Operands:
      *   Stack: val => (-val)
      */ \
@@ -460,8 +446,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-bitwise-not-operator
      *
-     *   Category: Operators
-     *   Type: Bitwise Logical Operators
+     *   Category: Expressions
+     *   Type: Unary operators
      *   Operands:
      *   Stack: val => (~val)
      */ \
@@ -476,8 +462,8 @@
      * [1]: https://tc39.es/ecma262/#sec-logical-not-operator
      * [2]: https://tc39.es/ecma262/#sec-toboolean
      *
-     *   Category: Operators
-     *   Type: Logical Operators
+     *   Category: Expressions
+     *   Type: Unary operators
      *   Operands:
      *   Stack: val => (!val)
      */ \
@@ -491,8 +477,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-binary-bitwise-operators
      *
-     *   Category: Operators
-     *   Type: Bitwise Logical Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
@@ -510,8 +496,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-abstract-equality-comparison
      *
-     *   Category: Operators
-     *   Type: Comparison Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
@@ -528,8 +514,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-strict-equality-comparison
      *
-     *   Category: Operators
-     *   Type: Comparison Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
@@ -546,8 +532,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation
      *
-     *   Category: Operators
-     *   Type: Comparison Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
@@ -564,8 +550,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-instanceofoperator
      *
-     *   Category: Operators
-     *   Type: Special Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: value, target => (value instanceof target)
      */ \
@@ -581,8 +567,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation
      *
-     *   Category: Operators
-     *   Type: Special Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: id, obj => (id in obj)
      */ \
@@ -598,8 +584,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-bitwise-shift-operators
      *
-     *   Category: Operators
-     *   Type: Bitwise Shift Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
@@ -617,8 +603,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-addition-operator-plus-runtime-semantics-evaluation
      *
-     *   Category: Operators
-     *   Type: Arithmetic Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: lval, rval => (lval + rval)
      */ \
@@ -634,8 +620,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-subtraction-operator-minus-runtime-semantics-evaluation
      *
-     *   Category: Operators
-     *   Type: Arithmetic Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: lval, rval => (lval - rval)
      */ \
@@ -650,8 +636,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-postfix-increment-operator
      *
-     *   Category: Operators
-     *   Type: Arithmetic Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: val => (val +/- 1)
      */ \
@@ -668,8 +654,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-multiplicative-operators-runtime-semantics-evaluation
      *
-     *   Category: Operators
-     *   Type: Arithmetic Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
@@ -688,8 +674,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-exp-operator
      *
-     *   Category: Operators
-     *   Type: Arithmetic Operators
+     *   Category: Expressions
+     *   Type: Binary operators
      *   Operands:
      *   Stack: lval, rval => (lval ** rval)
      */ \
@@ -712,8 +698,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-topropertykey
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Expressions
+     *   Type: Conversions
      *   Operands:
      *   Stack: propertyNameValue => propertyKey
      */ \
@@ -733,8 +719,8 @@
      * [1]: https://tc39.es/ecma262/#sec-tonumeric
      * [2]: https://tc39.es/ecma262/#sec-postfix-increment-operator
      *
-     *   Category: Operators
-     *   Type: Arithmetic Operators
+     *   Category: Expressions
+     *   Type: Conversions
      *   Operands:
      *   Stack: val => ToNumeric(val)
      */ \
@@ -751,8 +737,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-tostring
      *
-     *   Category: Other
-     *   Operands:
+     *   Category: Expressions
+     *   Operands: Conversions
      *   Stack: val => ToString(val)
      */ \
     MACRO(JSOP_TOSTRING, "tostring", NULL, 1, 1, 1, JOF_BYTE) \
@@ -763,8 +749,8 @@
      * This must be used only in scopes where `this` refers to the global
      * `this`.
      *
-     *   Category: Variables and Scopes
-     *   Type: This
+     *   Category: Expressions
+     *   Type: Other expressions
      *   Operands:
      *   Stack: => this
      */ \
@@ -782,8 +768,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-getnewtarget
      *
-     *   Category: Variables and Scopes
-     *   Type: Arguments
+     *   Category: Expressions
+     *   Type: Other expressions
      *   Operands:
      *   Stack: => new.target
      */ \
@@ -796,8 +782,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-import-calls
      *
-     *   Category: Variables and Scopes
-     *   Type: Modules
+     *   Category: Expressions
+     *   Type: Other expressions
      *   Operands:
      *   Stack: moduleId => promise
      */ \
@@ -807,8 +793,8 @@
      *
      * This must be used only in module code.
      *
-     *   Category: Variables and Scopes
-     *   Type: Modules
+     *   Category: Expressions
+     *   Type: Other expressions
      *   Operands:
      *   Stack: => import.meta
      */ \
@@ -819,8 +805,8 @@
      * (This opcode has 4 unused bytes so it can be easily turned into
      * `JSOP_NEWOBJECT` during bytecode generation.)
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Creating objects
      *   Operands: uint32_t _unused
      *   Stack: => obj
      */ \
@@ -838,8 +824,8 @@
      * `JSOP_NEWOBJECT_WITHGROUP`, the new object has the same group as the
      * template object.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Creating objects
      *   Operands: uint32_t baseobjIndex
      *   Stack: => obj
      */ \
@@ -860,8 +846,8 @@
      * There's a shell-only option, `newGlobal({cloneSingletons: true})`, that
      * makes this instruction do a deep copy of the object. A few tests use it.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Creating objects
      *   Operands: uint32_t objectIndex
      *   Stack: => obj
      */ \
@@ -871,8 +857,8 @@
      *
      * This is used to create the `.prototype` object for derived classes.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Creating objects
      *   Operands:
      *   Stack: proto => obj
      */ \
@@ -889,8 +875,8 @@
      *    [1]: https://tc39.es/ecma262/#sec-createdatapropertyorthrow
      *    [2]: https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Defining properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
@@ -905,8 +891,8 @@
      *
      *    [1]: https://tc39.es/ecma262/#sec-method-definitions-runtime-semantics-propertydefinitionevaluation
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Defining properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
@@ -922,8 +908,8 @@
      *
      *    [1]: https://tc39.es/ecma262/#sec-makeconstructor
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Defining properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
@@ -940,8 +926,8 @@
      *
      *    [1]: https://tc39.es/ecma262/#sec-createdatapropertyorthrow
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Defining properties
      *   Operands:
      *   Stack: obj, id, val => obj
      */ \
@@ -954,8 +940,8 @@
      * `JSOP_INITHIDDENPROP_GETTER` is the same but defines a non-enumerable
      * property, for getters in classes.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Defining properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj, getter => obj
      */ \
@@ -969,8 +955,8 @@
      * `JSOP_INITHIDDENELEM_GETTER` is the same but defines a non-enumerable
      * property, for getters in classes.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Defining properties
      *   Operands:
      *   Stack: obj, id, getter => obj
      */ \
@@ -984,8 +970,8 @@
      * `JSOP_INITHIDDENPROP_SETTER` is the same but defines a non-enumerable
      * property, for setters in classes.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Defining properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj, setter => obj
      */ \
@@ -1001,8 +987,8 @@
      * `JSOP_INITHIDDENELEM_SETTER` is the same but defines a non-enumerable
      * property, for setters in classes.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Defining properties
      *   Operands:
      *   Stack: obj, id, setter => obj
      */ \
@@ -1020,8 +1006,8 @@
      * [1]: https://tc39.es/ecma262/#sec-getv
      * [2]: https://tc39.es/ecma262/#sec-getvalue
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj => obj[name]
      */ \
@@ -1038,8 +1024,8 @@
      * [1]: https://tc39.es/ecma262/#sec-getv
      * [2]: https://tc39.es/ecma262/#sec-getvalue
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands:
      *   Stack: obj, key => obj[key]
      */ \
@@ -1051,8 +1037,8 @@
      * `nameIndex` must be the index of the atom `"length"`. This then behaves
      * exactly like `JSOP_GETPROP`.
      *
-     *   Category: Literals
-     *   Type: Array
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj => obj.length
      */ \
@@ -1068,8 +1054,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-putvalue
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => val
      */ \
@@ -1079,8 +1065,8 @@
      * `obj[key]` exists but is non-writable, if it's an accessor property with
      * no setter, or if `obj` is a primitive value.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => val
      */ \
@@ -1092,8 +1078,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-putvalue
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands:
      *   Stack: obj, key, val => val
      */ \
@@ -1103,8 +1089,8 @@
      * `obj[key]` exists but is non-writable, if it's an accessor property with
      * no setter, or if `obj` is a primitive value.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands:
      *   Stack: obj, key, val => val
      */ \
@@ -1120,8 +1106,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
      *
-     *   Category: Operators
-     *   Type: Special Operators
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj => succeeded
      */ \
@@ -1130,8 +1116,8 @@
      * Like `JSOP_DELPROP`, but for strict mode code. Push `true` on success,
      * else throw a TypeError.
      *
-     *   Category: Operators
-     *   Type: Special Operators
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands: uint32_t nameIndex
      *   Stack: obj => succeeded
      */ \
@@ -1146,8 +1132,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
      *
-     *   Category: Operators
-     *   Type: Special Operators
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands:
      *   Stack: obj, key => succeeded
      */ \
@@ -1156,8 +1142,8 @@
      * Like `JSOP_DELELEM, but for strict mode code. Push `true` on success,
      * else throw a TypeError.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands:
      *   Stack: obj, key => succeeded
      */ \
@@ -1172,8 +1158,8 @@
      * `Object.prototype.hasOwnProperty` is implemented this way (see
      * js/src/builtin/Object.js).
      *
-     *   Category: Other
-     *   Type:
+     *   Category: Objects
+     *   Type: Accessing properties
      *   Operands:
      *   Stack: id, obj => (obj.hasOwnProperty(id))
      */ \
@@ -1191,7 +1177,7 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-getsuperbase
      *
-     *   Category: Variables and Scopes
+     *   Category: Objects
      *   Type: Super
      *   Operands:
      *   Stack: callee => superBase
@@ -1208,8 +1194,8 @@
      * [1]: https://tc39.es/ecma262/#sec-getvalue
      * [2]: https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Super
      *   Operands: uint32_t nameIndex
      *   Stack: receiver, obj => super.name
      */ \
@@ -1226,8 +1212,8 @@
      * [2]: https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
      * [3]: https://tc39.es/ecma262/#sec-reflect.get
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Super
      *   Operands:
      *   Stack: receiver, key, obj => super[key]
      */ \
@@ -1243,8 +1229,8 @@
      * [1]: https://tc39.es/ecma262/#sec-putvalue
      * [2]: https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Super
      *   Operands: uint32_t nameIndex
      *   Stack: receiver, obj, val => val
      */ \
@@ -1252,8 +1238,8 @@
     /*
      * Like `JSOP_SETPROP_SUPER`, but for strict mode code.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Super
      *   Operands: uint32_t nameIndex
      *   Stack: receiver, obj, val => val
      */ \
@@ -1269,8 +1255,8 @@
      * [1]: https://tc39.es/ecma262/#sec-putvalue
      * [2]: https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Super
      *   Operands:
      *   Stack: receiver, key, obj, val => val
      */ \
@@ -1278,8 +1264,8 @@
     /*
      * Like `JSOP_SETELEM_SUPER`, but for strict mode code.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Super
      *   Operands:
      *   Stack: receiver, key, obj, val => val
      */ \
@@ -1318,8 +1304,8 @@
      * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind
      * [2]: https://tc39.es/ecma262/#sec-enumerate-object-properties
      *
-     *   Category: Statements
-     *   Type: For-In Statement
+     *   Category: Objects
+     *   Type: Enumeration
      *   Operands:
      *   Stack: val => iter
      */ \
@@ -1333,8 +1319,8 @@
      * properties to iterate over. The magic value must be used only by
      * `JSOP_ISNOITER` and `JSOP_ENDITER`.
      *
-     *   Category: Statements
-     *   Type: For-In Statement
+     *   Category: Objects
+     *   Type: Enumeration
      *   Operands:
      *   Stack: iter => iter, name
      */ \
@@ -1343,8 +1329,8 @@
      * Test whether the value on top of the stack is
      * `MagicValue(JS_NO_ITER_VALUE)` and push the boolean result.
      *
-     *   Category: Statements
-     *   Type: For-In Statement
+     *   Category: Objects
+     *   Type: Enumeration
      *   Operands:
      *   Stack: val => val, done
      */ \
@@ -1353,7 +1339,8 @@
      * No-op instruction to hint to IonBuilder that the value on top of the
      * stack is the (likely string) key in a for-in loop.
      *
-     *   Category: Other
+     *   Category: Objects
+     *   Type: Enumeration
      *   Operands:
      *   Stack: val => val
      */ \
@@ -1363,8 +1350,8 @@
      *
      * `iter` must be a `PropertyIteratorObject` pushed by `JSOP_ITER`.
      *
-     *   Category: Statements
-     *   Type: For-In Statement
+     *   Category: Objects
+     *   Type: Enumeration
      *   Operands:
      *   Stack: iter, iterval =>
      */ \
@@ -1381,8 +1368,8 @@
      * [1]: https://tc39.es/ecma262/#sec-getiterator
      * [2]: https://tc39.es/ecma262/#sec-iteratornext
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Objects
+     *   Type: Iteration
      *   Operands: uint8_t kind
      *   Stack: result => result
      */ \
@@ -1392,8 +1379,8 @@
      * if not. The operand `kind` is used only to generate an appropriate error
      * message. It must be in range for `js::CheckIsCallableKind`.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Objects
+     *   Type: Iteration
      *   Operands: uint8_t kind
      *   Stack: obj => obj
      */ \
@@ -1410,8 +1397,8 @@
      * [2]: https://tc39.es/ecma262/#sec-runtime-semantics-destructuringassignmentevaluation
      * [3]: https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-bindinginitialization
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: Iteration
      *   Operands:
      *   Stack: val => val
      */ \
@@ -1428,8 +1415,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-createasyncfromsynciterator
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Objects
+     *   Type: Iteration
      *   Operands:
      *   Stack: iter, next => asynciter
      */ \
@@ -1443,8 +1430,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-__proto__-property-names-in-object-initializers
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Objects
+     *   Type: SetPrototype
      *   Operands:
      *   Stack: obj, protoVal => obj
      */ \
@@ -1453,8 +1440,8 @@
      * Create and push a new Array object with the given `length`,
      * preallocating enough memory to hold that many elements.
      *
-     *   Category: Literals
-     *   Type: Array
+     *   Category: Objects
+     *   Type: Array literals
      *   Operands: uint32_t length
      *   Stack: => array
      */ \
@@ -1474,8 +1461,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation
      *
-     *   Category: Literals
-     *   Type: Array
+     *   Category: Objects
+     *   Type: Array literals
      *   Operands: uint32_t index
      *   Stack: array, val => array
      */ \
@@ -1505,8 +1492,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation
      *
-     *   Category: Literals
-     *   Type: Array
+     *   Category: Objects
+     *   Type: Array literals
      *   Operands:
      *   Stack: array, index, val => array, (index + 1)
      */ \
@@ -1518,8 +1505,8 @@
      * This magic value must be used only by `JSOP_INITELEM_ARRAY` or
      * `JSOP_INITELEM_INC`.
      *
-     *   Category: Literals
-     *   Type: Array
+     *   Category: Objects
+     *   Type: Array literals
      *   Operands:
      *   Stack: => hole
      */ \
@@ -1535,8 +1522,8 @@
      * array literal, saving run time, code, and memory compared to
      * `JSOP_NEWARRAY` and a series of `JSOP_INITELEM` instructions.
      *
-     *   Category: Literals
-     *   Type: Array
+     *   Category: Objects
+     *   Type: Array literals
      *   Operands: uint32_t objectIndex
      *   Stack: => array
      */ \
@@ -1548,8 +1535,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation
      *
-     *   Category: Literals
-     *   Type: RegExp
+     *   Category: Objects
+     *   Type: RegExp literals
      *   Operands: uint32_t regexpIndex
      *   Stack: => regexp
      */ \
@@ -1572,8 +1559,8 @@
      * [1]: https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject
      * [2]: https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Creating functions
      *   Operands: uint32_t funcIndex
      *   Stack: => fn
      */ \
@@ -1588,8 +1575,8 @@
      *
      * The function indicated by `funcIndex` must be an arrow function.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Creating functions
      *   Operands: uint32_t funcIndex
      *   Stack: newTarget => arrowFn
      */ \
@@ -1605,8 +1592,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-setfunctionname
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Creating functions
      *   Operands: uint8_t prefixKind
      *   Stack: fun, name => fun
      */ \
@@ -1614,8 +1601,8 @@
     /*
      * Initialize the home object for functions with super bindings.
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Functions
+     *   Type: Creating functions
      *   Operands:
      *   Stack: fun, homeObject => fun
      */ \
@@ -1627,8 +1614,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Functions
+     *   Type: Creating constructors
      *   Operands:
      *   Stack: baseClass => baseClass
      */ \
@@ -1647,8 +1634,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Creating constructors
      *   Operands: uint32_t funcIndex
      *   Stack: proto => obj
      */ \
@@ -1664,8 +1651,8 @@
      * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
      * class definition in the source buffer and are used for `toString()`.
      *
-     *   Category: Literals
-     *   Type: Class
+     *   Category: Functions
+     *   Type: Creating constructors
      *   Operands: uint32_t nameIndex, uint32_t sourceStart, uint32_t sourceEnd
      *   Stack: => constructor
      */ \
@@ -1682,8 +1669,8 @@
      * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
      * class definition in the source buffer and are used for `toString()`.
      *
-     *   Category: Literals
-     *   Type: Class
+     *   Category: Functions
+     *   Type: Creating constructors
      *   Operands: uint32_t nameIndex, uint32_t sourceStart, uint32_t sourceEnd
      *   Stack: proto => constructor
      */ \
@@ -1691,8 +1678,8 @@
     /*
      * Pushes the current global's builtin prototype for a given proto key.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Functions
+     *   Type: Creating constructors
      *   Operands: uint8_t kind
      *   Stack: => %BuiltinPrototype%
      */ \
@@ -1720,8 +1707,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-evaluatecall
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Calls
      *   Operands: uint16_t argc
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
@@ -1741,8 +1728,8 @@
      * This can be ensured by creating the array with `JSOP_NEWARRAY` and
      * populating it using `JSOP_INITELEM_ARRAY`.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Calls
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
@@ -1758,8 +1745,8 @@
      *
      * See `js::OptimizeSpreadCall`.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Calls
      *   Operands:
      *   Stack: arr => arr, optimized
      */ \
@@ -1782,8 +1769,8 @@
      * Implements: [Function Call Evaluation][1], steps 5-7 and 9, when the
      * syntactic critera for direct eval in step 6 are all met.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Calls
      *   Operands: uint16_t argc
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
@@ -1794,8 +1781,8 @@
      *
      * See `JSOP_SPREADCALL` for restrictions on `args`.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Calls
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
@@ -1803,8 +1790,8 @@
     /*
      * Like `JSOP_EVAL`, but for strict mode code.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Calls
      *   Operands: uint16_t argc
      *   Stack: evalFn, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
@@ -1815,8 +1802,8 @@
      *
      * See `JSOP_SPREADCALL` for restrictions on `args`.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Calls
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
@@ -1840,8 +1827,8 @@
      * [1]: https://tc39.es/ecma262/#sec-evaluatecall
      * [2]: https://bugzilla.mozilla.org/show_bug.cgi?id=1166408
      *
-     *   Category: Variables and Scopes
-     *   Type: This
+     *   Category: Functions
+     *   Type: Calls
      *   Operands: uint32_t nameIndex
      *   Stack: => this
      */ \
@@ -1860,8 +1847,8 @@
      * clone the script into a non-syntactic environment, with the bytecode
      * reused, unchanged.
      *
-     *   Category: Variables and Scopes
-     *   Type: This
+     *   Category: Functions
+     *   Type: Calls
      *   Operands: uint32_t nameIndex
      *   Stack: => this
      */ \
@@ -1880,8 +1867,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-gettemplateobject
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Functions
+     *   Type: Calls
      *   Operands: uint32_t objectIndex
      *   Stack: => callSiteObj
      */ \
@@ -1892,8 +1879,8 @@
      * This magic value is a required argument to the `JSOP_NEW` and
      * `JSOP_SUPERCALL` instructions and must not be used any other way.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Functions
+     *   Type: Calls
      *   Operands:
      *   Stack: => JS_IS_CONSTRUCTING
      */ \
@@ -1912,8 +1899,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-evaluatenew
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Calls
      *   Operands: uint16_t argc
      *   Stack: callee, isConstructing, args[0], ..., args[argc-1], newTarget => rval
      *   nuses: (argc+3)
@@ -1932,8 +1919,8 @@
      * `JSOP_SPREADSUPERCALL` behaves exactly like `JSOP_SPREADNEW`, but is
      * used for *SuperCall* expressions.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Calls
      *   Operands:
      *   Stack: callee, isConstructing, args, newTarget => rval
      */ \
@@ -1949,8 +1936,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-getsuperconstructor
      *
-     *   Category: Variables and Scopes
-     *   Type: Super
+     *   Category: Functions
+     *   Type: Calls
      *   Operands:
      *   Stack: callee => superFun
      */ \
@@ -1964,8 +1951,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-bindthisvalue
      *
-     *   Category: Variables and Scopes
-     *   Type: This
+     *   Category: Functions
+     *   Type: Calls
      *   Operands:
      *   Stack: thisval => thisval
      */ \
@@ -1974,8 +1961,8 @@
      * Initializes generator frame, creates a generator and pushes it on the
      * stack.
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands:
      *   Stack: => generator
      */ \
@@ -1987,8 +1974,8 @@
      * When resuming execution, JSOP_RESUME pushes the rval, gen and resumeKind
      * values. resumeKind is the GeneratorResumeKind stored as int32.
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands: uint24_t resumeIndex
      *   Stack: gen => rval, gen, resumeKind
      */ \
@@ -1999,8 +1986,8 @@
      * as jump target op so that the Baseline Interpreter can efficiently
      * restore the frame's interpreterICEntry when resuming a generator.
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands: uint32_t icIndex
      *   Stack: =>
      */ \
@@ -2009,8 +1996,8 @@
      * Pops the generator and suspends and closes it. Yields the value in the
      * frame's return value slot.
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands:
      *   Stack: gen =>
      */ \
@@ -2022,8 +2009,8 @@
      * When resuming execution, JSOP_RESUME pushes the rval2, gen and resumeKind
      * values.
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands: uint24_t resumeIndex
      *   Stack: rval1, gen => rval2, gen, resumeKind
      */ \
@@ -2032,8 +2019,8 @@
      * Pushes a boolean indicating whether the top of the stack is
      * MagicValue(JS_GENERATOR_CLOSING).
      *
-     *   Category: Statements
-     *   Type: For-In Statement
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands:
      *   Stack: val => val, res
      */ \
@@ -2044,8 +2031,8 @@
      * execution of 'gen'. Pushes the async function promise on the stack, so
      * that it'll be returned to the caller on the very first "await".
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands:
      *   Stack: value, gen => promise
      */ \
@@ -2056,8 +2043,8 @@
      * internal generator object created in async functions. The pushed promise
      * is the async function's result promise, which is stored in `gen`.
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands: uint8_t fulfillOrReject
      *   Stack: valueOrReason, gen => promise
      */ \
@@ -2069,8 +2056,8 @@
      * When resuming execution, JSOP_RESUME pushes the resolved, gen and
      * resumeKind values. resumeKind is the GeneratorResumeKind stored as int32.
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands: uint24_t resumeIndex
      *   Stack: promise, gen => resolved, gen, resumeKind
      */ \
@@ -2082,8 +2069,8 @@
      * 'true' onto the stack. Otherwise, pushes 'value' and 'false' on the
      * stack.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands:
      *   Stack: value => value_or_resolved, canskip
      */ \
@@ -2091,8 +2078,8 @@
     /*
      * Pushes one of the GeneratorResumeKind values as Int32Value.
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands: resumeKind (GeneratorResumeKind)
      *   Stack: => resumeKind
      */ \
@@ -2103,8 +2090,8 @@
      * execution. If resumeKind is Throw or Return, these completions are
      * handled by throwing an exception. See GeneratorThrowOrReturn.
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands:
      *   Stack: rval, gen, resumeKind => rval
      */ \
@@ -2114,8 +2101,8 @@
      * generator frame and resumes execution of it. Pushes the return value
      * after the generator yields.
      *
-     *   Category: Statements
-     *   Type: Generator
+     *   Category: Functions
+     *   Type: Generators and async functions
      *   Operands:
      *   Stack: gen, val, resumeKind => rval
      */ \
@@ -2128,7 +2115,8 @@
      * instructions to sync the frame's `interpreterICEntry` after a jump. Ion
      * uses them to find block boundaries when translating bytecode to MIR.
      *
-     *   Category: Other
+     *   Category: Control flow
+     *   Type: Jump targets
      *   Operands: uint32_t icIndex
      *   Stack: =>
      */ \
@@ -2145,8 +2133,8 @@
      * For the convenience of the JITs, scripts must not start with this
      * instruction. See bug 1602390.
      *
-     *   Category: Statements
-     *   Type: Jumps
+     *   Category: Control flow
+     *   Type: Jump targets
      *   Operands: uint32_t icIndex, uint8_t depthHint
      *   Stack: =>
      */ \
@@ -2156,7 +2144,7 @@
      *
      * See "Jump instructions" above for details.
      *
-     *   Category: Statements
+     *   Category: Control flow
      *   Type: Jumps
      *   Operands: int32_t offset
      *   Stack: =>
@@ -2166,7 +2154,7 @@
      * If ToBoolean(`cond`) is false, jumps to a 32-bit offset from the current
      * instruction.
      *
-     *   Category: Statements
+     *   Category: Control flow
      *   Type: Jumps
      *   Operands: int32_t forwardOffset
      *   Stack: cond =>
@@ -2179,7 +2167,7 @@
      * `offset` may be positive or negative. This is the instruction used at the
      * end of a do-while loop to jump back to the top.
      *
-     *   Category: Statements
+     *   Category: Control flow
      *   Type: Jumps
      *   Operands: int32_t offset
      *   Stack: cond =>
@@ -2191,7 +2179,7 @@
      * If ToBoolean(`cond`) is false, jump to a 32-bit offset from the current
      * instruction. The value remains on the stack.
      *
-     *   Category: Statements
+     *   Category: Control flow
      *   Type: Jumps
      *   Operands: int32_t forwardOffset
      *   Stack: cond => cond
@@ -2203,7 +2191,7 @@
      * If ToBoolean(`cond`) is true, jump to a 32-bit offset from the current
      * instruction. The value remains on the stack.
      *
-     *   Category: Statements
+     *   Category: Control flow
      *   Type: Jumps
      *   Operands: int32_t forwardOffset
      *   Stack: cond => cond
@@ -2215,7 +2203,7 @@
      * If `val` is not null or undefined, jump to a 32-bit offset from the
      * current instruction.
      *
-     *   Category: Statements
+     *   Category: Control flow
      *   Type: Jumps
      *   Operands: int32_t forwardOffset
      *   Stack: val => val
@@ -2253,8 +2241,8 @@
      * awkward--putting the `POP` inside the `switch` body would complicate
      * fallthrough.
      *
-     *   Category: Statements
-     *   Type: Switch Statement
+     *   Category: Control flow
+     *   Type: Jumps
      *   Operands: int32_t forwardOffset
      *   Stack: val, cond => val (if !cond)
      */ \
@@ -2266,8 +2254,8 @@
      * there's a `default:` label, it jumps to that point in the body;
      * otherwise it jumps to the next statement.
      *
-     *   Category: Statements
-     *   Type: Switch Statement
+     *   Category: Control flow
+     *   Type: Jumps
      *   Operands: int32_t forwardOffset
      *   Stack: lval =>
      */ \
@@ -2286,8 +2274,8 @@
      * The following inequalities must hold: `low <= high` and
      * `firstResumeIndex + high - low < resumeOffsets().size()`.
      *
-     *   Category: Statements
-     *   Type: Switch Statement
+     *   Category: Control flow
+     *   Type: Jumps
      *   Operands: int32_t defaultOffset, int32_t low, int32_t high,
      *             uint24_t firstResumeIndex
      *   Stack: i =>
@@ -2299,8 +2287,8 @@
      * This must not be used in derived class constructors. Instead use
      * `JSOP_SETRVAL`, `JSOP_CHECKRETURN`, and `JSOP_RETRVAL`.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Control flow
+     *   Type: Return
      *   Operands:
      *   Stack: rval =>
      */ \
@@ -2313,8 +2301,8 @@
      * generators, async functions, and derived class constructors. Plain
      * functions usually use `JSOP_RETURN` instead.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Control flow
+     *   Type: Return
      *   Operands:
      *   Stack: => rval
      */ \
@@ -2322,8 +2310,8 @@
     /*
      * Store `rval` in the current stack frame's `returnValue` slot.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Control flow
+     *   Type: Return
      *   Operands:
      *   Stack: rval =>
      */ \
@@ -2339,8 +2327,8 @@
      * If the current script is a derived class constructor, `returnValue` must
      * be an object. The script can use `JSOP_CHECKRETURN` to ensure this.
      *
-     *   Category: Statements
-     *   Type: Function
+     *   Category: Control flow
+     *   Type: Return
      *   Operands:
      *   Stack: =>
      */ \
@@ -2364,8 +2352,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget
      *
-     *   Category: Variables and Scopes
-     *   Type: This
+     *   Category: Control flow
+     *   Type: Return
      *   Operands:
      *   Stack: thisval =>
      */ \
@@ -2386,8 +2374,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation
      *
-     *   Category: Statements
-     *   Type: Exception Handling
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands:
      *   Stack: exc =>
      */ \
@@ -2403,8 +2391,8 @@
      * determines the `.message` and [[Prototype]] of the new Error object. The
      * number of arguments in the error message must be 0.
      *
-     *   Category: Statements
-     *   Type: Exception Handling
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands: uint16_t msgNumber
      *   Stack: =>
      */ \
@@ -2413,8 +2401,8 @@
      * Throw a TypeError for invalid assignment to a `const`. The environment
      * coordinate is used to get the variable name for the error message.
      *
-     *   Category: Variables and Scopes
-     *   Type: Aliased Variables
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: v => v
      */ \
@@ -2426,8 +2414,8 @@
      * over, does not have a frame slot to look up the name with for the error
      * message.
      *
-     *   Category: Variables and Scopes
-     *   Type: Local Variables
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands:
      *   Stack: v => v
      */ \
@@ -2437,8 +2425,8 @@
      * `const` binding. `localno` is used to get the variable name for the
      * error message.
      *
-     *   Category: Variables and Scopes
-     *   Type: Local Variables
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
@@ -2447,15 +2435,15 @@
      * No-op instruction that marks the top of the bytecode for a
      * *TryStatement*.
      *
-     * The jumpAtEndOffset operand is the offset (relative to the current op) of
-     * the JSOP_GOTO at the end of the try-block body. This is used by bytecode
-     * analysis and JIT compilation.
+     * The `jumpAtEndOffset` operand is the offset (relative to the current op)
+     * of the `JSOP_GOTO` at the end of the try-block body. This is used by
+     * bytecode analysis and JIT compilation.
      *
      * Location information for catch/finally blocks is stored in a side table,
      * `script->trynotes()`.
      *
-     *   Category: Statements
-     *   Type: Exception Handling
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands: int32_t jumpAtEndOffset
      *   Stack: =>
      */ \
@@ -2465,7 +2453,8 @@
      * correct environment to unwind to when performing IteratorClose due to
      * destructuring.
      *
-     *   Category: Other
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands:
      *   Stack: =>
      */ \
@@ -2480,8 +2469,8 @@
      * Used to implement catch-blocks, including the implicit ones generated as
      * part of for-of iteration.
      *
-     *   Category: Statements
-     *   Type: Exception Handling
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands:
      *   Stack: => exception
      */ \
@@ -2491,7 +2480,8 @@
      *
      * This value must be used only by `JSOP_GOSUB`, `JSOP_FINALLY`, and `JSOP_RETSUB`.
      *
-     *   Category: Other
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands: uint24_t resumeIndex
      *   Stack: => resumeIndex
      */ \
@@ -2542,8 +2532,8 @@
      * reached, it pops the two values (for real this time) and control
      * resumes at the instruction that follows JSOP_GOSUB in memory.
      *
-     *   Category: Statements
-     *   Type: Exception Handling
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands: int32_t forwardOffset
      *   Stack: false, resumeIndex =>
      */ \
@@ -2555,8 +2545,8 @@
      *
      * These two values must not be used except by `JSOP_RETSUB`.
      *
-     *   Category: Statements
-     *   Type: Exception Handling
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands:
      *   Stack: => false, resumeIndex
      */ \
@@ -2571,8 +2561,8 @@
      * The two values popped must be the ones notionally pushed by
      * `JSOP_FINALLY`.
      *
-     *   Category: Statements
-     *   Type: Exception Handling
+     *   Category: Control flow
+     *   Type: Exceptions
      *   Operands:
      *   Stack: throwing, v =>
      */ \
@@ -2583,8 +2573,8 @@
      *
      * This magic value must be used only by `JSOP_INIT*LEXICAL`.
      *
-     *   Category: Literals
-     *   Type: Constants
+     *   Category: Variables and scopes
+     *   Type: Initialization
      *   Operands:
      *   Stack: => uninitialized
      */ \
@@ -2605,8 +2595,8 @@
      * [1]: https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d
      * [2]: https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
      *
-     *   Category: Variables and Scopes
-     *   Type: Local Variables
+     *   Category: Variables and scopes
+     *   Type: Initialization
      *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
@@ -2616,8 +2606,8 @@
      *
      * Like `JSOP_INITLEXICAL` but for global lexicals.
      *
-     *   Category: Variables and Scopes
-     *   Type: Free Variables
+     *   Category: Variables and scopes
+     *   Type: Initialization
      *   Operands: uint32_t nameIndex
      *   Stack: val => val
      */ \
@@ -2634,8 +2624,8 @@
      * `hops` is usually 0, but in `function f(a=eval("var b;")) { }`, the
      * argument `a` is initialized from inside a nested scope, so `hops == 1`.
      *
-     *   Category: Variables and Scopes
-     *   Type: Aliased Variables
+     *   Category: Variables and scopes
+     *   Type: Initialization
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: v => v
      */ \
@@ -2655,8 +2645,8 @@
      * [1]: https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s
      * [2]: https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s
      *
-     *   Category: Variables and Scopes
-     *   Type: Local Variables
+     *   Category: Variables and scopes
+     *   Type: Initialization
      *   Operands: uint24_t localno
      *   Stack: =>
      */ \
@@ -2668,8 +2658,8 @@
      * they're unnecessary. `JSOP_{GET,SET}{NAME,GNAME}` all check for
      * uninitialized lexicals and throw if needed.
      *
-     *   Category: Variables and Scopes
-     *   Type: Aliased Variables
+     *   Category: Variables and scopes
+     *   Type: Initialization
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: =>
      */ \
@@ -2684,8 +2674,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding
      *
-     *   Category: Variables and Scopes
-     *   Type: This
+     *   Category: Variables and scopes
+     *   Type: Initialization
      *   Operands:
      *   Stack: this => this
      */ \
@@ -2696,8 +2686,8 @@
      *
      * `nameIndex` is only used when acting like JSOP_BINDNAME.
      *
-     *   Category: Variables and Scopes
-     *   Type: Free Variables
+     *   Category: Variables and scopes
+     *   Type: Looking up bindings
      *   Operands: uint32_t nameIndex
      *   Stack: => global
      */ \
@@ -2707,8 +2697,8 @@
      * contains a binding for that name. If no such binding exists, push the
      * global lexical environment.
      *
-     *   Category: Variables and Scopes
-     *   Type: Variables
+     *   Category: Variables and scopes
+     *   Type: Looking up bindings
      *   Operands: uint32_t nameIndex
      *   Stack: => env
      */ \
@@ -2729,8 +2719,8 @@
      * [1]: https://tc39.es/ecma262/#sec-resolvebinding
      * [2]: https://tc39.es/ecma262/#sec-getvalue
      *
-     *   Category: Variables and Scopes
-     *   Type: Variables
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
@@ -2753,8 +2743,8 @@
      * found (unless the next instruction is `JSOP_TYPEOF`) or if the binding
      * is an uninitialized lexical.
      *
-     *   Category: Variables and Scopes
-     *   Type: Free Variables
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
@@ -2763,8 +2753,8 @@
      * Push the value of an argument that is stored in the stack frame
      * or in an `ArgumentsObject`.
      *
-     *   Category: Variables and Scopes
-     *   Type: Arguments
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
      *   Operands: uint16_t argno
      *   Stack: => arguments[argno]
      */ \
@@ -2775,8 +2765,8 @@
      * If the variable is an uninitialized lexical, push
      * `MagicValue(JS_UNINIITALIZED_LEXICAL)`.
      *
-     *   Category: Variables and Scopes
-     *   Type: Local Variables
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
      *   Operands: uint24_t localno
      *   Stack: => val
      */ \
@@ -2802,8 +2792,8 @@
      *
      * [1]: https://searchfox.org/mozilla-central/search?q=symbol:T_js%3A%3AEnvironmentCoordinate
      *
-     *   Category: Variables and Scopes
-     *   Type: Aliased Variables
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: => aliasedVar
      */ \
@@ -2811,8 +2801,8 @@
     /*
      * Get the value of a module import by name and pushes it onto the stack.
      *
-     *   Category: Variables and Scopes
-     *   Type: Variables
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
@@ -2836,8 +2826,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-getvalue
      *
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
      *   Operands: uint32_t nameIndex
      *   Stack: env => v
      */ \
@@ -2849,8 +2839,8 @@
      * `GlobalObject::getIntrinsicsHolder`), which is used in lieu of global
      * bindings in self-hosting code.
      *
-     *   Category: Variables and Scopes
-     *   Type: Intrinsics
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
      *   Operands: uint32_t nameIndex
      *   Stack: => intrinsic[name]
      */ \
@@ -2869,8 +2859,8 @@
      * binding for `fac`, unless it's otherwise observable (via `with`, `eval`,
      * or a nested closure).
      *
-     *   Category: Variables and Scopes
-     *   Type: Arguments
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
      *   Operands:
      *   Stack: => callee
      */ \
@@ -2880,8 +2870,8 @@
      * numHops operand is the number of environment objects to skip on the
      * environment chain.
      *
-     *   Category: Variables and Scopes
-     *   Type: Arguments
+     *   Category: Variables and scopes
+     *   Type: Getting binding values
      *   Operands: uint8_t numHops
      *   Stack: => callee
      */ \
@@ -2908,8 +2898,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-putvalue
      *
-     *   Category: Variables and Scopes
-     *   Type: Variables
+     *   Category: Variables and scopes
+     *   Type: Setting binding values
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
@@ -2923,8 +2913,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-putvalue
      *
-     *   Category: Variables and Scopes
-     *   Type: Variables
+     *   Category: Variables and scopes
+     *   Type: Setting binding values
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
@@ -2933,8 +2923,8 @@
      * Like `JSOP_SETNAME`, but for assigning to globals. `env` must be an
      * environment pushed by `JSOP_BINDGNAME`.
      *
-     *   Category: Variables and Scopes
-     *   Type: Free Variables
+     *   Category: Variables and scopes
+     *   Type: Setting binding values
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
@@ -2943,8 +2933,8 @@
      * Like `JSOP_STRICTSETGNAME`, but for assigning to globals. `env` must be
      * an environment pushed by `JSOP_BINDGNAME`.
      *
-     *   Category: Variables and Scopes
-     *   Type: Free Variables
+     *   Category: Variables and scopes
+     *   Type: Setting binding values
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
@@ -2953,8 +2943,8 @@
      * Assign `val` to an argument binding that's stored in the stack frame or
      * in an `ArgumentsObject`.
      *
-     *   Category: Variables and Scopes
-     *   Type: Arguments
+     *   Category: Variables and scopes
+     *   Type: Setting binding values
      *   Operands: uint16_t argno
      *   Stack: val => val
      */ \
@@ -2962,8 +2952,8 @@
     /*
      * Assign to an optimized local binding.
      *
-     *   Category: Variables and Scopes
-     *   Type: Local Variables
+     *   Category: Variables and scopes
+     *   Type: Setting binding values
      *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
@@ -2977,8 +2967,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s
      *
-     *   Category: Variables and Scopes
-     *   Type: Aliased Variables
+     *   Category: Variables and scopes
+     *   Type: Setting binding values
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: val => val
      */ \
@@ -2991,8 +2981,8 @@
      * object, `GlobalObject::getIntrinsicsHolder`. (Self-hosted code doesn't
      * have many global `var`s, but it has many `function`s.)
      *
-     *   Category: Variables and Scopes
-     *   Type: Intrinsics
+     *   Category: Variables and scopes
+     *   Type: Setting binding values
      *   Operands: uint32_t nameIndex
      *   Stack: val => val
      */ \
@@ -3034,8 +3024,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation
      *
-     *   Category: Variables and Scopes
-     *   Type: Block-local Scope
+     *   Category: Variables and scopes
+     *   Type: Entering and leaving environments
      *   Operands: uint32_t lexicalScopeIndex
      *   Stack: =>
      */ \
@@ -3045,8 +3035,8 @@
      *
      * See `JSOP_PUSHLEXICALENV` for the fine print.
      *
-     *   Category: Variables and Scopes
-     *   Type: Block-local Scope
+     *   Category: Variables and scopes
+     *   Type: Entering and leaving environments
      *   Operands:
      *   Stack: =>
      */ \
@@ -3064,8 +3054,8 @@
      * must be marked with either this instruction (if the scope is optimized)
      * or `JSOP_POPLEXICALENV` (if not).
      *
-     *   Category: Statements
-     *   Type: Debugger
+     *   Category: Variables and scopes
+     *   Type: Entering and leaving environments
      *   Operands:
      *   Stack: =>
      */ \
@@ -3076,8 +3066,8 @@
      * fresh lexical environment for every iteration of a for-in/of loop whose
      * loop-head has a (captured) lexical declaration.
      *
-     *   Category: Variables and Scopes
-     *   Type: Block-local Scope
+     *   Category: Variables and scopes
+     *   Type: Entering and leaving environments
      *   Operands:
      *   Stack: =>
      */ \
@@ -3089,8 +3079,8 @@
      * `for(let ...; ...; ...)` loop, if any declarations induced by such a
      * loop are captured within the loop.
      *
-     *   Category: Variables and Scopes
-     *   Type: Block-local Scope
+     *   Category: Variables and scopes
+     *   Type: Entering and leaving environments
      *   Operands:
      *   Stack: =>
      */ \
@@ -3126,8 +3116,8 @@
      * [2]: https://tc39.es/ecma262/#sec-functiondeclarationinstantiation
      * [3]: https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-iteratorbindinginitialization
      *
-     *   Category: Variables and Scopes
-     *   Type: Var Scope
+     *   Category: Variables and scopes
+     *   Type: Entering and leaving environments
      *   Operands: uint32_t scopeIndex
      *   Stack: =>
      */ \
@@ -3137,8 +3127,8 @@
      *
      * See `JSOP_PUSHLEXICALENV` for the fine print.
      *
-     *   Category: Variables and Scopes
-     *   Type: Var Scope
+     *   Category: Variables and scopes
+     *   Type: Entering and leaving environments
      *   Operands:
      *   Stack: =>
      */ \
@@ -3160,8 +3150,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation
      *
-     *   Category: Statements
-     *   Type: With Statement
+     *   Category: Variables and scopes
+     *   Type: Entering and leaving environments
      *   Operands: uint32_t staticWithIndex
      *   Stack: val =>
      */ \
@@ -3175,8 +3165,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation
      *
-     *   Category: Statements
-     *   Type: With Statement
+     *   Category: Variables and scopes
+     *   Type: Entering and leaving environments
      *   Operands:
      *   Stack: =>
      */ \
@@ -3192,8 +3182,8 @@
      *
      * [1]: https://tc39.es/ecma262/#sec-web-compat-functiondeclarationinstantiation
      *
-     *   Category: Variables and Scopes
-     *   Type: Free Variables
+     *   Category: Variables and scopes
+     *   Type: Creating and deleting bindings
      *   Operands:
      *   Stack: => env
      */ \
@@ -3216,8 +3206,8 @@
      * This is used for global scripts and also in some cases for function
      * scripts where use of dynamic scoping inhibits optimization.
      *
-     *   Category: Variables and Scopes
-     *   Type: Variables
+     *   Category: Variables and scopes
+     *   Type: Creating and deleting bindings
      *   Operands: uint32_t nameIndex
      *   Stack: =>
      */ \
@@ -3236,8 +3226,8 @@
      * [1]: https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
      * [2]: https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
      *
-     *   Category: Variables and Scopes
-     *   Type: Variables
+     *   Category: Variables and scopes
+     *   Type: Creating and deleting bindings
      *   Operands:
      *   Stack: fun =>
      */ \
@@ -3248,8 +3238,8 @@
      * environment, or if a var binding with the same name exists on the
      * global.
      *
-     *   Category: Variables and Scopes
-     *   Type: Variables
+     *   Category: Variables and scopes
+     *   Type: Creating and deleting bindings
      *   Operands: uint32_t nameIndex
      *   Stack: =>
      */ \
@@ -3261,8 +3251,8 @@
      * that environment, or if a var binding with the same name exists on the
      * global.
      *
-     *   Category: Variables and Scopes
-     *   Type: Variables
+     *   Category: Variables and scopes
+     *   Type: Creating and deleting bindings
      *   Operands: uint32_t nameIndex
      *   Stack: =>
      */ \
@@ -3279,8 +3269,8 @@
      *    [1]: https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
      *    [2]: https://tc39.es/ecma262/#sec-delete-operator-static-semantics-early-errors
      *
-     *   Category: Variables and Scopes
-     *   Type: Variables
+     *   Category: Variables and scopes
+     *   Type: Creating and deleting bindings
      *   Operands: uint32_t nameIndex
      *   Stack: => succeeded
      */ \
@@ -3324,8 +3314,8 @@
      * It's not documented anywhere exactly which opcodes support
      * `JS_OPTIMIZED_ARGUMENTS`; see the source of `AnalyzeArgumentsUsage`.
      *
-     *   Category: Variables and Scopes
-     *   Type: Arguments
+     *   Category: Variables and scopes
+     *   Type: Function environment setup
      *   Operands:
      *   Stack: => arguments
      */ \
@@ -3335,8 +3325,8 @@
      *
      * This must appear only in function scripts.
      *
-     *   Category: Variables and Scopes
-     *   Type: Arguments
+     *   Category: Variables and scopes
+     *   Type: Function environment setup
      *   Operands:
      *   Stack: => rest
      */ \
@@ -3354,8 +3344,8 @@
      * `".this"`, which is initialized using this instruction in the function
      * prologue.
      *
-     *   Category: Variables and Scopes
-     *   Type: This
+     *   Category: Variables and scopes
+     *   Type: Function environment setup
      *   Operands:
      *   Stack: => this
      */ \
@@ -3363,8 +3353,7 @@
     /*
      * Pop the top value from the stack and discard it.
      *
-     *   Category: Operators
-     *   Type: Stack Operations
+     *   Category: Stack operations
      *   Operands:
      *   Stack: v =>
      */ \
@@ -3373,8 +3362,7 @@
      * Pop the top `n` values from the stack. `n` must be <= the current stack
      * depth.
      *
-     *   Category: Operators
-     *   Type: Stack Operations
+     *   Category: Stack operations
      *   Operands: uint16_t n
      *   Stack: v[n-1], ..., v[1], v[0] =>
      *   nuses: n
@@ -3383,8 +3371,7 @@
     /*
      * Push a copy of the top value on the stack.
      *
-     *   Category: Operators
-     *   Type: Stack Operations
+     *   Category: Stack operations
      *   Operands:
      *   Stack: v => v, v
      */ \
@@ -3392,8 +3379,7 @@
     /*
      * Duplicate the top two values on the stack.
      *
-     *   Category: Operators
-     *   Type: Stack Operations
+     *   Category: Stack operations
      *   Operands:
      *   Stack: v1, v2 => v1, v2, v1, v2
      */ \
@@ -3403,8 +3389,7 @@
      *
      * `n` must be less than the current stack depth.
      *
-     *   Category: Operators
-     *   Type: Stack Operations
+     *   Category: Stack operations
      *   Operands: uint24_t n
      *   Stack: v[n], v[n-1], ..., v[1], v[0] =>
      *          v[n], v[n-1], ..., v[1], v[0], v[n]
@@ -3413,8 +3398,7 @@
     /*
      * Swap the top two values on the stack.
      *
-     *   Category: Operators
-     *   Type: Stack Operations
+     *   Category: Stack operations
      *   Operands:
      *   Stack: v1, v2 => v2, v1
      */ \
@@ -3422,8 +3406,7 @@
     /*
      * Pick the nth element from the stack and move it to the top of the stack.
      *
-     *   Category: Operators
-     *   Type: Stack Operations
+     *   Category: Stack operations
      *   Operands: uint8_t n
      *   Stack: v[n], v[n-1], ..., v[1], v[0] => v[n-1], ..., v[1], v[0], v[n]
      */ \
@@ -3432,8 +3415,7 @@
      * Move the top of the stack value under the `n`th element of the stack.
      * `n` must not be 0.
      *
-     *   Category: Operators
-     *   Type: Stack Operations
+     *   Category: Stack operations
      *   Operands: uint8_t n
      *   Stack: v[n], v[n-1], ..., v[1], v[0] => v[0], v[n], v[n-1], ..., v[1]
      */ \
@@ -3518,8 +3500,7 @@
      * [1]: https://developer.mozilla.org/en-US/docs/Tools/Debugger-API/Debugger
      * [2]: https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation
      *
-     *   Category: Statements
-     *   Type: Debugger
+     *   Category: Other
      *   Operands:
      *   Stack: =>
      */ \
