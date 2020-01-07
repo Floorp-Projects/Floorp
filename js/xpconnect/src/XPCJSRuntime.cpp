@@ -2194,11 +2194,7 @@ class OrphanReporter : public JS::ObjectPrivateVisitor {
 
   virtual size_t sizeOfIncludingThis(nsISupports* aSupports) override {
     nsCOMPtr<nsINode> node = do_QueryInterface(aSupports);
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=773533#c11 explains that we
-    // have to skip XBL elements because they violate certain assumptions.  Yuk.
-    if (!node || node->IsInComposedDoc() ||
-        (node->IsElement() &&
-         node->AsElement()->IsInNamespace(kNameSpaceID_XBL))) {
+    if (!node || node->IsInComposedDoc()) {
       return 0;
     }
 

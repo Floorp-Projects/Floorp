@@ -1693,10 +1693,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
     }
 
     nsAutoCString orphan;
-    if (!tmp->IsInComposedDoc() &&
-        // Ignore xbl:content, which is never in the document and hence always
-        // appears to be orphaned.
-        !tmp->NodeInfo()->Equals(nsGkAtoms::content, kNameSpaceID_XBL)) {
+    if (!tmp->IsInComposedDoc()) {
       orphan.AppendLiteral(" (orphan)");
     }
 
