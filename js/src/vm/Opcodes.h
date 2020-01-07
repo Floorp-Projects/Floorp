@@ -1825,12 +1825,14 @@
      * Push the implicit `this` value for an unqualified function call, like
      * `foo()`. `nameIndex` gives the name of the function we're calling.
      *
+     * The result is always `undefined` except when the name refers to a `with`
+     * binding.  For example, in `with (date) { getFullYear(); }`, the
+     * implicit `this` passed to `getFullYear` is `date`, not `undefined`.
+     *
      * This walks the run-time environment chain looking for the environment
-     * record that contains the function. If the name definitely refers to a
-     * local variable or lexical binding, use `JSOP_UNDEFINED` instead; it's
-     * equivalent and much faster. If the name definitely isn't bound in any
-     * relevant local scope, and we're not in a `with` scope, use
-     * `JSOP_GIMPLICITTHIS`.
+     * record that contains the function. If the function call is not inside a
+     * `with` statement, use `JSOP_GIMPLICITTHIS` instead. If the function call
+     * definitely refers to a local binding, use `JSOP_UNDEFINED`.
      *
      * Implements: [EvaluateCall][1] step 1.b. But not entirely correctly.
      * See [bug 1166408][2].
@@ -1845,19 +1847,18 @@
      */ \
     MACRO(JSOP_IMPLICITTHIS, "implicitthis", "", 5, 0, 1, JOF_ATOM) \
     /*
-     * Push the implicit `this` value for an unqualified function call, like
-     * `foo()`. `nameIndex` gives the name of the function we're calling.
+     * Like `JSOP_IMPLICITTHIS`, but the name must not be bound in any local
+     * environments.
      *
-     * This almost always pushes `undefined`. The exception is when it executes
-     * in a non-syntactic scope that has a binding for the given name.
+     * The result is always `undefined` except when the name refers to a
+     * binding in a non-syntactic `with` environment.
      *
-     * This opcode must not be used in a `with` scope.
-     *
-     * Note that code evaluated via the Debugger API uses DebugEnvironmentProxy
-     * objects on its scope chain, which are non-syntactic environments that
-     * refer to syntactic environments. As a result, the binding we want may be
-     * held by a syntactic environments such as CallObject or
-     * VarEnvironmentObject.
+     * Note: The frontend has to emit `JSOP_GIMPLICITTHIS` (and not
+     * `JSOP_UNDEFINED`) for global unqualified function calls, even when
+     * `CompileOptions::nonSyntacticScope == false`, because later
+     * `js::CloneGlobalScript` can be called with `ScopeKind::NonSyntactic` to
+     * clone the script into a non-syntactic environment, with the bytecode
+     * reused, unchanged.
      *
      *   Category: Variables and Scopes
      *   Type: This
@@ -2577,10 +2578,10 @@
      */ \
     MACRO(JSOP_RETSUB, "retsub", NULL, 1, 2, 0, JOF_BYTE) \
     /*
-     * Pushes a JS_UNINITIALIZED_LEXICAL value onto the stack, representing an
-     * uninitialized lexical binding.
+     * Push `MagicValue(JS_UNINITIALIZED_LEXICAL)`, a magic value used to mark
+     * a binding as uninitialized.
      *
-     * This opcode is used with the JSOP_INITLEXICAL opcode.
+     * This magic value must be used only by `JSOP_INIT*LEXICAL`.
      *
      *   Category: Literals
      *   Type: Constants
@@ -2589,8 +2590,20 @@
      */ \
     MACRO(JSOP_UNINITIALIZED, "uninitialized", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Initializes an uninitialized local lexical binding with the top of stack
-     * value.
+     * Initialize an optimized local lexical binding; or mark it as
+     * uninitialized.
+     *
+     * This stores the value `v` in the fixed slot `localno` in the current
+     * stack frame. If `v` is the magic value produced by `JSOP_UNINITIALIZED`,
+     * this marks the binding as uninitialized. Otherwise this initializes the
+     * binding with value `v`.
+     *
+     * Implements: [CreateMutableBinding][1] step 3, substep "record that it is
+     * uninitialized", and [InitializeBinding][2], for optimized locals. (Note:
+     * this is how `const` bindings are initialized.)
+     *
+     * [1]: https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d
+     * [2]: https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
      *
      *   Category: Variables and Scopes
      *   Type: Local Variables
@@ -2599,8 +2612,9 @@
      */ \
     MACRO(JSOP_INITLEXICAL, "initlexical", NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
     /*
-     * Initializes an uninitialized global lexical binding with the top of
-     * stack value.
+     * Initialize a global lexical binding; or mark it as uninitialized.
+     *
+     * Like `JSOP_INITLEXICAL` but for global lexicals.
      *
      *   Category: Variables and Scopes
      *   Type: Free Variables
@@ -2609,8 +2623,16 @@
      */ \
     MACRO(JSOP_INITGLEXICAL, "initglexical", NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_PROPINIT|JOF_GNAME|JOF_IC) \
     /*
-     * Initializes an uninitialized aliased lexical binding with the top of
-     * stack value.
+     * Initialize an aliased lexical binding; or mark it as uninitialized.
+     *
+     * Like `JSOP_INITLEXICAL` but for aliased bindings.
+     *
+     * Note: There is no even-less-optimized `INITNAME` instruction because JS
+     * doesn't need it. We always know statically which binding we're
+     * initializing.
+     *
+     * `hops` is usually 0, but in `function f(a=eval("var b;")) { }`, the
+     * argument `a` is initialized from inside a nested scope, so `hops == 1`.
      *
      *   Category: Variables and Scopes
      *   Type: Aliased Variables
@@ -2619,8 +2641,19 @@
      */ \
     MACRO(JSOP_INITALIASEDLEXICAL, "initaliasedlexical", NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPINIT|JOF_DETECTING) \
     /*
-     * Checks if the value of the local variable is the
-     * JS_UNINITIALIZED_LEXICAL magic, throwing an error if so.
+     * Throw a ReferenceError if the optimized local `localno` is
+     * uninitialized.
+     *
+     * `localno` must be the number of a fixed slot in the current stack frame
+     * previously initialized or marked uninitialized using `JSOP_INITLEXICAL`.
+     *
+     * Typically used before `JSOP_GETLOCAL` or `JSOP_SETLOCAL`.
+     *
+     * Implements: [GetBindingValue][1] step 3 and [SetMutableBinding][2] step
+     * 4 for declarative Environment Records.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s
+     * [2]: https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s
      *
      *   Category: Variables and Scopes
      *   Type: Local Variables
@@ -2629,8 +2662,11 @@
      */ \
     MACRO(JSOP_CHECKLEXICAL, "checklexical", NULL, 4, 0, 0, JOF_LOCAL|JOF_NAME) \
     /*
-     * Checks if the value of the aliased variable is the
-     * JS_UNINITIALIZED_LEXICAL magic, throwing an error if so.
+     * Like `JSOP_CHECKLEXICAL` but for aliased bindings.
+     *
+     * Note: There are no `CHECKNAME` or `CHECKGNAME` instructions because
+     * they're unnecessary. `JSOP_{GET,SET}{NAME,GNAME}` all check for
+     * uninitialized lexicals and throw if needed.
      *
      *   Category: Variables and Scopes
      *   Type: Aliased Variables
@@ -2639,8 +2675,14 @@
      */ \
     MACRO(JSOP_CHECKALIASEDLEXICAL, "checkaliasedlexical", NULL, 5, 0, 0, JOF_ENVCOORD|JOF_NAME) \
     /*
-     * Throw if the value on top of the stack is the TDZ MagicValue. Used in
-     * derived class constructors.
+     * Throw a ReferenceError if the value on top of the stack is
+     * `MagicValue(JS_UNINITIALIZED_LEXICAL)`. Used in derived class
+     * constructors to check `this` (which needs to be initialized before use,
+     * by calling `super()`).
+     *
+     * Implements: [GetThisBinding][1] step 3.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding
      *
      *   Category: Variables and Scopes
      *   Type: This
@@ -2649,10 +2691,10 @@
      */ \
     MACRO(JSOP_CHECKTHIS, "checkthis", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Pushes the global environment onto the stack if the script doesn't have
-     * a non-syntactic global scope. Otherwise will act like JSOP_BINDNAME.
+     * Push the global environment onto the stack, unless the script has a
+     * non-syntactic global scope. In that case, this acts like JSOP_BINDNAME.
      *
-     * 'nameIndex' is only used when acting like JSOP_BINDNAME.
+     * `nameIndex` is only used when acting like JSOP_BINDNAME.
      *
      *   Category: Variables and Scopes
      *   Type: Free Variables
@@ -2661,9 +2703,9 @@
      */ \
     MACRO(JSOP_BINDGNAME, "bindgname", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_GNAME|JOF_IC) \
     /*
-     * Looks up name on the environment chain and pushes the environment which
-     * contains the name onto the stack. If not found, pushes global lexical
-     * environment onto the stack.
+     * Look up a name on the environment chain and push the environment which
+     * contains a binding for that name. If no such binding exists, push the
+     * global lexical environment.
      *
      *   Category: Variables and Scopes
      *   Type: Variables
@@ -2672,8 +2714,20 @@
      */ \
     MACRO(JSOP_BINDNAME, "bindname", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_IC) \
     /*
-     * Looks up name on the environment chain and pushes its value onto the
-     * stack.
+     * Find a binding on the environment chain and push its value.
+     *
+     * If the binding is an uninitialized lexical, throw a ReferenceError. If
+     * no such binding exists, throw a ReferenceError unless the next
+     * instruction is `JSOP_TYPEOF`, in which case push `undefined`.
+     *
+     * Implements: [ResolveBinding][1] followed by [GetValue][2]
+     * (adjusted hackily for `typeof`).
+     *
+     * This is the fallback `GET` instruction that handles all unoptimized
+     * cases. Optimized instructions follow.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-resolvebinding
+     * [2]: https://tc39.es/ecma262/#sec-getvalue
      *
      *   Category: Variables and Scopes
      *   Type: Variables
@@ -2682,12 +2736,22 @@
      */ \
     MACRO(JSOP_GETNAME, "getname", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
-     * Looks up name on global environment and pushes its value onto the stack,
-     * unless the script has a non-syntactic global scope, in which case it
-     * acts just like JSOP_NAME.
+     * Find a global binding and push its value.
      *
-     * Free variable references that must either be found on the global or a
-     * ReferenceError.
+     * This searches the global lexical environment and, failing that, the
+     * global object. (Unlike most declarative environments, the global lexical
+     * environment can gain more bindings after compilation, possibly shadowing
+     * global object properties.)
+     *
+     * This is an optimized version of `JSOP_GETNAME` that skips all local
+     * scopes, for use when the name doesn't refer to any local binding.
+     * `NonSyntacticVariablesObject`s break this optimization, so if the
+     * current script has a non-syntactic global scope, this acts like
+     * `JSOP_GETNAME`.
+     *
+     * Like `JSOP_GETNAME`, this throws a ReferenceError if no such binding is
+     * found (unless the next instruction is `JSOP_TYPEOF`) or if the binding
+     * is an uninitialized lexical.
      *
      *   Category: Variables and Scopes
      *   Type: Free Variables
@@ -2696,9 +2760,8 @@
      */ \
     MACRO(JSOP_GETGNAME, "getgname", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME|JOF_IC) \
     /*
-     * Fast get op for function arguments and local variables.
-     *
-     * Pushes 'arguments[argno]' onto the stack.
+     * Push the value of an argument that is stored in the stack frame
+     * or in an `ArgumentsObject`.
      *
      *   Category: Variables and Scopes
      *   Type: Arguments
@@ -2707,7 +2770,10 @@
      */ \
     MACRO(JSOP_GETARG, "getarg", NULL, 3, 0, 1, JOF_QARG|JOF_NAME) \
     /*
-     * Pushes the value of local variable onto the stack.
+     * Push the value of an optimized local variable.
+     *
+     * If the variable is an uninitialized lexical, push
+     * `MagicValue(JS_UNINIITALIZED_LEXICAL)`.
      *
      *   Category: Variables and Scopes
      *   Type: Local Variables
@@ -2716,19 +2782,25 @@
      */ \
     MACRO(JSOP_GETLOCAL, "getlocal", NULL, 4, 0, 1, JOF_LOCAL|JOF_NAME) \
     /*
-     * Pushes aliased variable onto the stack.
+     * Push the value of an aliased binding.
      *
-     * An "aliased variable" is a var, let, or formal arg that is aliased.
-     * Sources of aliasing include: nested functions accessing the vars of an
-     * enclosing function, function statements that are conditionally executed,
-     * 'eval', 'with', and 'arguments'. All of these cases require creating a
-     * CallObject to own the aliased variable.
+     * Local bindings that aren't closed over or dynamically accessed are
+     * stored in stack slots. Global and `with` bindings are object properties.
+     * All other bindings are called "aliased" and stored in
+     * `EnvironmentObject`s.
      *
-     * An ALIASEDVAR opcode contains the following immediates:
-     *  uint8 hops: the number of environment objects to skip to find the
-     *               EnvironmentObject containing the variable being accessed
-     *  uint24 slot: the slot containing the variable in the EnvironmentObject
-     *               (this 'slot' does not include RESERVED_SLOTS).
+     * Where possible, `ALIASED` instructions are used to access aliased
+     * bindings.  (There's no difference in meaning between `ALIASEDVAR` and
+     * `ALIASEDLEXICAL`.) Each of these instructions has operands `hops` and
+     * `slot` that encode an [`EnvironmentCoordinate`][1], directions to the
+     * binding from the current environment object.
+     *
+     * `hops` and `slot` must be valid for the current scope.
+     *
+     * `ALIASED` instructions can't be used when there's a dynamic scope (due
+     * to non-strict `eval` or `with`) that might shadow the aliased binding.
+     *
+     * [1]: https://searchfox.org/mozilla-central/search?q=symbol:T_js%3A%3AEnvironmentCoordinate
      *
      *   Category: Variables and Scopes
      *   Type: Aliased Variables
@@ -2737,7 +2809,7 @@
      */ \
     MACRO(JSOP_GETALIASEDVAR, "getaliasedvar", NULL, 5, 0, 1, JOF_ENVCOORD|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
-     * Gets the value of a module import by name and pushes it onto the stack.
+     * Get the value of a module import by name and pushes it onto the stack.
      *
      *   Category: Variables and Scopes
      *   Type: Variables
@@ -2746,9 +2818,23 @@
      */ \
     MACRO(JSOP_GETIMPORT, "getimport", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
-     * Pops an environment, gets the value of a bound name on it. If the name
-     * is not bound to the environment, throw a ReferenceError. Used in
-     * conjunction with BINDNAME.
+     * Get the value of a binding from the environment `env`. If the name is
+     * not bound in `env`, throw a ReferenceError.
+     *
+     * `env` must be an environment currently on the environment chain, pushed
+     * by `JSOP_BINDNAME`.
+     *
+     * Note: `JSOP_BINDNAME` and `JSOP_GETBOUNDNAME` are the two halves of the
+     * `JSOP_GETNAME` operation: finding and reading a variable. This
+     * decomposed version is needed to implement the compound assignment and
+     * increment/decrement operators, which get and then set a variable. The
+     * spec says the variable lookup is done only once. If we did the lookup
+     * twice, there would be observable bugs, thanks to dynamic scoping. We
+     * could set the wrong variable or call proxy traps incorrectly.
+     *
+     * Implements: [GetValue][1] steps 4 and 6.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-getvalue
      *
      *   Category: Literals
      *   Type: Object
@@ -2757,13 +2843,11 @@
      */ \
     MACRO(JSOP_GETBOUNDNAME, "getboundname", NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
-     * Pushes the value of the intrinsic onto the stack.
+     * Push the value of an intrinsic onto the stack.
      *
-     * Intrinsic names are emitted instead of JSOP_*NAME ops when the
-     * 'CompileOptions' flag 'selfHostingMode' is set.
-     *
-     * They are used in self-hosted code to access other self-hosted values and
-     * intrinsic functions the runtime doesn't give client JS code access to.
+     * Non-standard. Intrinsics are slots in the intrinsics holder object (see
+     * `GlobalObject::getIntrinsicsHolder`), which is used in lieu of global
+     * bindings in self-hosting code.
      *
      *   Category: Variables and Scopes
      *   Type: Intrinsics
@@ -2772,9 +2856,18 @@
      */ \
     MACRO(JSOP_GETINTRINSIC, "getintrinsic", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
-     * Pushes current callee onto the stack.
+     * Pushes the currently executing function onto the stack.
      *
-     * Used for named function expression self-naming, if lightweight.
+     * The current script must be a function script.
+     *
+     * Used to implement `super`. This is also used sometimes as a minor
+     * optimization when a named function expression refers to itself by name:
+     *
+     *     f = function fac(n) {  ... fac(n - 1) ... };
+     *
+     * This lets us optimize away a lexical environment that contains only the
+     * binding for `fac`, unless it's otherwise observable (via `with`, `eval`,
+     * or a nested closure).
      *
      *   Category: Variables and Scopes
      *   Type: Arguments
@@ -2794,8 +2887,26 @@
      */ \
     MACRO(JSOP_ENVCALLEE, "envcallee", NULL, 2, 0, 1, JOF_UINT8) \
     /*
-     * Pops an environment and value from the stack, assigns value to the given
-     * name, and pushes the value back on the stack
+     * Assign `val` to the binding in `env` with the name given by `nameIndex`.
+     * Throw a ReferenceError if the binding is an uninitialized lexical.
+     * This can call setters and/or proxy traps.
+     *
+     * `env` must be an environment currently on the environment chain,
+     * pushed by `JSOP_BINDNAME`.
+     *
+     * This is the fallback `SET` instruction that handles all unoptimized
+     * cases. Optimized instructions follow.
+     *
+     * Implements: [PutValue][1] steps 5 and 7 for unoptimized bindings.
+     *
+     * Note: `JSOP_BINDNAME` and `JSOP_SETNAME` are the two halves of simple
+     * assignment: finding and setting a variable. They are two separate
+     * instructions because, per spec, the "finding" part happens before
+     * evaluating the right-hand side of the assignment, and the "setting" part
+     * after. Optimized cases don't need a `BIND` instruction because the
+     * "finding" is done statically.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-putvalue
      *
      *   Category: Variables and Scopes
      *   Type: Variables
@@ -2804,13 +2915,11 @@
      */ \
     MACRO(JSOP_SETNAME, "setname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Assign `val` to the binding in `env` with the name given by `nameIndex`,
-     * then push `val` back onto the stack. If assignment failed, throw a
-     * TypeError.
+     * Like `JSOP_SETNAME`, but throw a TypeError if there is no binding for
+     * the specified name in `env`, or if the binding is immutable (a `const`
+     * or read-only property).
      *
-     * `env` must be an environment currently on the environment chain.
-     *
-     * Implements: [PutValue][1] step 7 for strict mode code.
+     * Implements: [PutValue][1] steps 5 and 7 for strict mode code.
      *
      * [1]: https://tc39.es/ecma262/#sec-putvalue
      *
@@ -2821,11 +2930,8 @@
      */ \
     MACRO(JSOP_STRICTSETNAME, "strict-setname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
     /*
-     * Pops the top two values on the stack as 'val' and 'env', sets property
-     * of 'env' as 'val' and pushes 'val' back on the stack.
-     *
-     * 'env' should be the global lexical environment unless the script has a
-     * non-syntactic global scope, in which case acts like JSOP_SETNAME.
+     * Like `JSOP_SETNAME`, but for assigning to globals. `env` must be an
+     * environment pushed by `JSOP_BINDGNAME`.
      *
      *   Category: Variables and Scopes
      *   Type: Free Variables
@@ -2834,12 +2940,8 @@
      */ \
     MACRO(JSOP_SETGNAME, "setgname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Pops the top two values on the stack as 'val' and 'env', sets property
-     * of 'env' as 'val' and pushes 'val' back on the stack. Throws a TypeError
-     * if the set fails, per strict mode semantics.
-     *
-     * 'env' should be the global lexical environment unless the script has a
-     * non-syntactic global scope, in which case acts like JSOP_STRICTSETNAME.
+     * Like `JSOP_STRICTSETGNAME`, but for assigning to globals. `env` must be
+     * an environment pushed by `JSOP_BINDGNAME`.
      *
      *   Category: Variables and Scopes
      *   Type: Free Variables
@@ -2848,18 +2950,17 @@
      */ \
     MACRO(JSOP_STRICTSETGNAME, "strict-setgname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSTRICT|JOF_IC) \
     /*
-     * Fast set op for function arguments and local variables.
-     *
-     * Sets 'arguments[argno]' as the top of stack value.
+     * Assign `val` to an argument binding that's stored in the stack frame or
+     * in an `ArgumentsObject`.
      *
      *   Category: Variables and Scopes
      *   Type: Arguments
      *   Operands: uint16_t argno
-     *   Stack: v => v
+     *   Stack: val => val
      */ \
     MACRO(JSOP_SETARG, "setarg", NULL, 3, 1, 1, JOF_QARG|JOF_NAME) \
     /*
-     * Stores the top stack value to the given local.
+     * Assign to an optimized local binding.
      *
      *   Category: Variables and Scopes
      *   Type: Local Variables
@@ -2868,16 +2969,27 @@
      */ \
     MACRO(JSOP_SETLOCAL, "setlocal", NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
     /*
-     * Sets aliased variable as the top of stack value.
+     * Assign to an aliased binding.
+     *
+     * Implements: [SetMutableBinding for declarative Environment Records][1],
+     * in certain cases where it's known that the binding exists, is mutable,
+     * and has been initialized.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s
      *
      *   Category: Variables and Scopes
      *   Type: Aliased Variables
      *   Operands: uint8_t hops, uint24_t slot
-     *   Stack: v => v
+     *   Stack: val => val
      */ \
     MACRO(JSOP_SETALIASEDVAR, "setaliasedvar", NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPSET|JOF_DETECTING) \
     /*
-     * Stores the top stack value in the specified intrinsic.
+     * Assign to an intrinsic.
+     *
+     * Nonstandard. Intrinsics are used in lieu of global bindings in self-
+     * hosted code. The value is actually stored in the intrinsics holder
+     * object, `GlobalObject::getIntrinsicsHolder`. (Self-hosted code doesn't
+     * have many global `var`s, but it has many `function`s.)
      *
      *   Category: Variables and Scopes
      *   Type: Intrinsics
@@ -2886,7 +2998,41 @@
      */ \
     MACRO(JSOP_SETINTRINSIC, "setintrinsic", NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_DETECTING) \
     /*
-     * Pushes lexical environment onto the env chain.
+     * Push a lexical environment onto the environment chain.
+     *
+     * The `LexicalScope` indicated by `lexicalScopeIndex` determines the shape
+     * of the new `LexicalEnvironmentObject`. All bindings in the new
+     * environment are marked as uninitialized.
+     *
+     * Implements: [Evaluation of *Block*][1], steps 1-4.
+     *
+     * #### Fine print for environment chain instructions
+     *
+     * The following rules for `JSOP_{PUSH,POP}LEXICALENV` also apply to
+     * `JSOP_{PUSH,POP}VARENV` and `JSOP_{ENTER,LEAVE}WITH`.
+     *
+     * Each `JSOP_POPLEXICALENV` instruction matches a particular
+     * `JSOP_PUSHLEXICALENV` instruction in the same script and must have the
+     * same scope and stack depth as the instruction immediately after that
+     * `PUSHLEXICALENV`.
+     *
+     * `JSOP_PUSHLEXICALENV` enters a scope that extends to some set of
+     * instructions in the script. Code must not jump into or out of this
+     * region: control can enter only by executing `PUSHLEXICALENV` and can
+     * exit only by executing a `POPLEXICALENV` or by exception unwinding. (A
+     * `JSOP_POPLEXICALENV` is always emitted at the end of the block, and
+     * extra copies are emitted on "exit slides", where a `break`, `continue`,
+     * or `return` statement exits the scope.)
+     *
+     * The script's `JSScript::scopeNotes()` must identify exactly which
+     * instructions begin executing in this scope. Typically this means a
+     * single entry marking the contiguous chunk of bytecode from the
+     * instruction after `JSOP_PUSHLEXICALENV` to `JSOP_POPLEXICALENV`
+     * (inclusive); but if that range contains any instructions on exit slides,
+     * after a `JSOP_POPLEXICALENV`, then those must be correctly noted as
+     * *outside* the scope.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation
      *
      *   Category: Variables and Scopes
      *   Type: Block-local Scope
@@ -2895,7 +3041,9 @@
      */ \
     MACRO(JSOP_PUSHLEXICALENV, "pushlexicalenv", NULL, 5, 0, 0, JOF_SCOPE) \
     /*
-     * Pops lexical environment from the env chain.
+     * Pop a lexical environment from the environment chain.
+     *
+     * See `JSOP_PUSHLEXICALENV` for the fine print.
      *
      *   Category: Variables and Scopes
      *   Type: Block-local Scope
@@ -2904,7 +3052,17 @@
      */ \
     MACRO(JSOP_POPLEXICALENV, "poplexicalenv", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * The opcode to assist the debugger.
+     * No-op instruction that indicates leaving an optimized lexical scope.
+     *
+     * If all bindings in a lexical scope are optimized into stack slots, then
+     * the runtime environment objects for that scope are optimized away. No
+     * `JSOP_{PUSH,POP}LEXICALENV` instructions are emitted. However, the
+     * debugger still needs to be notified when control exits a scope; that's
+     * what this instruction does.
+     *
+     * The last instruction in a lexical scope, as indicated by scope notes,
+     * must be marked with either this instruction (if the scope is optimized)
+     * or `JSOP_POPLEXICALENV` (if not).
      *
      *   Category: Statements
      *   Type: Debugger
@@ -2913,10 +3071,10 @@
      */ \
     MACRO(JSOP_DEBUGLEAVELEXICALENV, "debugleavelexicalenv", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Recreates the current block on the env chain with a fresh block with
-     * uninitialized bindings. This operation implements the behavior of
-     * inducing a fresh lexical environment for every iteration of a for-in/of
-     * loop whose loop-head has a (captured) lexical declaration.
+     * Recreate the current block on the environment chain with a fresh block
+     * with uninitialized bindings. This implements the behavior of inducing a
+     * fresh lexical environment for every iteration of a for-in/of loop whose
+     * loop-head has a (captured) lexical declaration.
      *
      *   Category: Variables and Scopes
      *   Type: Block-local Scope
@@ -2925,10 +3083,10 @@
      */ \
     MACRO(JSOP_RECREATELEXICALENV, "recreatelexicalenv", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Replaces the current block on the env chain with a fresh block that
-     * copies all the bindings in the block. This operation implements the
-     * behavior of inducing a fresh lexical environment for every iteration of
-     * a for(let ...; ...; ...) loop, if any declarations induced by such a
+     * Replace the current block on the environment chain with a fresh block
+     * that copies all the bindings in the block. This implements the behavior
+     * of inducing a fresh lexical environment for every iteration of a
+     * `for(let ...; ...; ...)` loop, if any declarations induced by such a
      * loop are captured within the loop.
      *
      *   Category: Variables and Scopes
@@ -2938,7 +3096,35 @@
      */ \
     MACRO(JSOP_FRESHENLEXICALENV, "freshenlexicalenv", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Pushes a var environment onto the env chain.
+     * Push a var environment onto the environment chain.
+     *
+     * Like `JSOP_PUSHLEXICALENV`, but pushes a `VarEnvironmentObject` rather
+     * than a `LexicalEnvironmentObject`. The difference is that non-strict
+     * direct `eval` can add bindings to a var environment; see `VarScope` in
+     * Scope.h.
+     *
+     * See `JSOP_PUSHLEXICALENV` for the fine print.
+     *
+     * Implements: Places in the spec where the VariableEnvironment is set:
+     *
+     * -   The bit in [PerformEval][1] where, in strict direct eval, the new
+     *     eval scope is taken as *varEnv* and becomes "*runningContext*'s
+     *     VariableEnvironment".
+     *
+     * -   The weird scoping rules for functions with default parameter
+     *     expressions, as specified in [FunctionDeclarationInstantiation][2]
+     *     step 28 ("NOTE: A separate Environment Record is needed...") and
+     *     [IteratorBindingInitialization for *FormalParameter* and
+     *     *FormalRestParameter*][3].
+     *
+     * Note: The spec also pushes a new VariableEnvironment on entry to every
+     * function, but the VM takes care of that as part of pushing the stack
+     * frame, before the function script starts to run, so `JSOP_PUSHVARENV` is
+     * not needed.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-performeval
+     * [2]: https://tc39.es/ecma262/#sec-functiondeclarationinstantiation
+     * [3]: https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-iteratorbindinginitialization
      *
      *   Category: Variables and Scopes
      *   Type: Var Scope
@@ -2947,7 +3133,9 @@
      */ \
     MACRO(JSOP_PUSHVARENV, "pushvarenv", NULL, 5, 0, 0, JOF_SCOPE) \
     /*
-     * Pops a var environment from the env chain.
+     * Pop a `VarEnvironmentObject` from the environment chain.
+     *
+     * See `JSOP_PUSHLEXICALENV` for the fine print.
      *
      *   Category: Variables and Scopes
      *   Type: Var Scope
@@ -2956,12 +3144,21 @@
      */ \
     MACRO(JSOP_POPVARENV, "popvarenv", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Pops the top of stack value, converts it to an object, and adds a
-     * 'WithEnvironmentObject' wrapping that object to the environment chain.
+     * Push a `WithEnvironmentObject` wrapping ToObject(`val`) to the
+     * environment chain.
      *
-     * There is a matching JSOP_LEAVEWITH instruction later. All name
-     * lookups between the two that may need to consult the With object
-     * are deoptimized.
+     * Implements: [Evaluation of `with` statements][1], steps 2-6.
+     *
+     * Operations that may need to consult a WithEnvironment can't be correctly
+     * implemented using optimized instructions like `JSOP_GETLOCAL`. A script
+     * must use the deoptimized `JSOP_GETNAME`, `BINDNAME`, `SETNAME`, and
+     * `DELNAME` instead. Since those instructions don't work correctly with
+     * optimized locals and arguments, all bindings in scopes enclosing a
+     * `with` statement are marked as "aliased" and deoptimized too.
+     *
+     * See `JSOP_PUSHLEXICALENV` for the fine print.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation
      *
      *   Category: Statements
      *   Type: With Statement
@@ -2970,7 +3167,13 @@
      */ \
     MACRO(JSOP_ENTERWITH, "enterwith", NULL, 5, 1, 0, JOF_SCOPE) \
     /*
-     * Pops the environment chain object pushed by JSOP_ENTERWITH.
+     * Pop a `WithEnvironmentObject` from the environment chain.
+     *
+     * See `JSOP_PUSHLEXICALENV` for the fine print.
+     *
+     * Implements: [Evaluation of `with` statements][1], step 8.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation
      *
      *   Category: Statements
      *   Type: With Statement
@@ -2979,7 +3182,15 @@
      */ \
     MACRO(JSOP_LEAVEWITH, "leavewith", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Pushes the nearest 'var' environment.
+     * Push the current VariableEnvironment (the environment on the environment
+     * chain designated to receive new variables).
+     *
+     * Implements: [Annex B.3.3.1, changes to FunctionDeclarationInstantiation
+     * for block-level functions][1], step 1.a.ii.3.a, and similar steps in
+     * other Annex B.3.3 algorithms, when setting the function's second binding
+     * can't be optimized.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-web-compat-functiondeclarationinstantiation
      *
      *   Category: Variables and Scopes
      *   Type: Free Variables
@@ -2988,12 +3199,19 @@
      */ \
     MACRO(JSOP_BINDVAR, "bindvar", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Defines the new binding on the frame's current variables-object (the
-     * environment on the environment chain designated to receive new
-     * variables).
+     * Create a new binding on the current VariableEnvironment (the environment
+     * on the environment chain designated to receive new variables).
      *
-     * Throws if the current variables-object is the global object and a
-     * binding with the same name exists on the global lexical environment.
+     * `JSOP_DEF{VAR,LET,CONST,FUN}` instructions must appear in the script
+     * before anything else that might add bindings to the environment, and
+     * only once per binding. There must be a correct entry for the new binding
+     * in `script->bodyScope()`. (All this ensures that at run time, there is
+     * no existing conflicting binding. We check before running the script, in
+     * `js::CheckGlobalOrEvalDeclarationConflicts`.)
+     *
+     * Throw a SyntaxError if the current VariableEnvironment is the global
+     * environment and a binding with the same name exists on the global
+     * lexical environment.
      *
      * This is used for global scripts and also in some cases for function
      * scripts where use of dynamic scoping inhibits optimization.
@@ -3005,10 +3223,18 @@
      */ \
     MACRO(JSOP_DEFVAR, "defvar", NULL, 5, 0, 0, JOF_ATOM) \
     /*
-     * Defines the given function on the current scope.
+     * Create a new binding for the given function on the current scope.
      *
-     * This is used for global scripts and also in some cases for function
-     * scripts where use of dynamic scoping inhibits optimization.
+     * `fun` must be a function object with an explicit name. The new
+     * variable's name is `fun->explicitName()`, and its value is `fun`. In
+     * global scope, this creates a new property on the global object.
+     *
+     * Implements: The body of the loop in [GlobalDeclarationInstantiation][1]
+     * step 17 ("For each Parse Node *f* in *functionsToInitialize*...") and
+     * the corresponding loop in [EvalDeclarationInstantiation][2].
+     *
+     * [1]: https://tc39.es/ecma262/#sec-globaldeclarationinstantiation
+     * [2]: https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
      *
      *   Category: Variables and Scopes
      *   Type: Variables
@@ -3017,9 +3243,8 @@
      */ \
     MACRO(JSOP_DEFFUN, "deffun", NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Defines the new mutable binding on global lexical environment.
-     *
-     * Throws if a binding with the same name already exists on the
+     * Create a new mutable binding in the global lexical environment. Throw a
+     * SyntaxError if a binding with the same name already exists on that
      * environment, or if a var binding with the same name exists on the
      * global.
      *
@@ -3030,10 +3255,10 @@
      */ \
     MACRO(JSOP_DEFLET, "deflet", NULL, 5, 0, 0, JOF_ATOM) \
     /*
-     * Defines the new constant binding on global lexical environment.
+     * Create a new constant binding in the global lexical environment.
      *
-     * Throws if a binding with the same name already exists on the
-     * environment, or if a var binding with the same name exists on the
+     * Throw a SyntaxError if a binding with the same name already exists in
+     * that environment, or if a var binding with the same name exists on the
      * global.
      *
      *   Category: Variables and Scopes
@@ -3043,11 +3268,16 @@
      */ \
     MACRO(JSOP_DEFCONST, "defconst", NULL, 5, 0, 0, JOF_ATOM) \
     /*
-     * Looks up name on the environment chain and deletes it, pushes 'true'
-     * onto the stack if succeeded (if the property was present and deleted or
-     * if the property wasn't present in the first place), 'false' if not.
+     * Look up a variable on the environment chain and delete it. Push `true`
+     * on success (if a binding was deleted, or if no such binding existed in
+     * the first place), `false` otherwise (most kinds of bindings can't be
+     * deleted).
      *
-     * Strict mode code should never contain this opcode.
+     * Implements: [`delete` *Identifier*][1], which [is a SyntaxError][2] in
+     * strict mode code.
+     *
+     *    [1]: https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
+     *    [2]: https://tc39.es/ecma262/#sec-delete-operator-static-semantics-early-errors
      *
      *   Category: Variables and Scopes
      *   Type: Variables
@@ -3056,13 +3286,43 @@
      */ \
     MACRO(JSOP_DELNAME, "delname", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_CHECKSLOPPY) \
     /*
-     * Pushes the 'arguments' object for the current function activation.
+     * Create and push the `arguments` object for the current function activation.
      *
-     * If 'JSScript' is not marked 'needsArgsObj', then a
-     * JS_OPTIMIZED_ARGUMENTS magic value is pushed. Otherwise, a proper
-     * arguments object is constructed and pushed.
+     * When it exists, `arguments` is stored in an ordinary local variable.
+     * `JSOP_ARGUMENTS` is used in function preludes, to populate that variable
+     * before the function body runs, *not* each time `arguments` appears in a
+     * function.
      *
-     * This opcode requires that the function does not have rest parameter.
+     * If a function clearly doesn't use `arguments`, we optimize it away when
+     * emitting bytecode. The function's script won't use `JSOP_ARGUMENTS` at
+     * all.
+     *
+     * The current script must be a function script. This instruction must
+     * execute at most once per function activation.
+     *
+     * #### Optimized arguments
+     *
+     * If `script->needsArgsObj()` is false, no ArgumentsObject is created.
+     * Instead, `MagicValue(JS_OPTIMIZED_ARGUMENTS)` is pushed.
+     *
+     * This optimization imposes no restrictions on bytecode. Rather,
+     * `js::jit::AnalyzeArgumentsUsage` examines the bytecode and enables the
+     * optimization only if all uses of `arguments` are optimizable.  Each
+     * execution engine must know what the analysis considers optimizable and
+     * cope with the magic value when it is used in those ways.
+     *
+     * Example 1: `arguments[0]` is supported; therefore the interpreter's
+     * implementation of `JSOP_GETELEM` checks for optimized arguments (see
+     * `GetElemOptimizedArguments`).
+     *
+     * Example 2: `f.apply(this, arguments)` is supported; therefore our
+     * implementation of `Function.prototype.apply` checks for optimized
+     * arguments (`see js::fun_apply`), and all `JSOP_FUNAPPLY` implementations
+     * must check for cases where `f.apply` turns out to be any other function
+     * (see `GuardFunApplyArgumentsOptimization`).
+     *
+     * It's not documented anywhere exactly which opcodes support
+     * `JS_OPTIMIZED_ARGUMENTS`; see the source of `AnalyzeArgumentsUsage`.
      *
      *   Category: Variables and Scopes
      *   Type: Arguments
@@ -3071,8 +3331,9 @@
      */ \
     MACRO(JSOP_ARGUMENTS, "arguments", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Creates rest parameter array for current function call, and pushes it
-     * onto the stack.
+     * Create and push the rest parameter array for current function call.
+     *
+     * This must appear only in function scripts.
      *
      *   Category: Variables and Scopes
      *   Type: Arguments
@@ -3081,9 +3342,17 @@
      */ \
     MACRO(JSOP_REST, "rest", NULL, 1, 0, 1, JOF_BYTE|JOF_TYPESET|JOF_IC) \
     /*
-     * Determines the 'this' value for current function frame and pushes it
-     * onto the stack. Emitted in the prologue of functions with a
-     * this-binding.
+     * Determines the `this` value for current function frame and pushes it
+     * onto the stack.
+     *
+     * In functions, `this` is stored in a local variable. This instruction is
+     * used in the function prologue to get the value to initialize that
+     * variable.  (This doesn't apply to arrow functions, becauses they don't
+     * have a `this` binding; also, `this` is optimized away if it's unused.)
+     *
+     * Functions that have a `this` binding have a local variable named
+     * `".this"`, which is initialized using this instruction in the function
+     * prologue.
      *
      *   Category: Variables and Scopes
      *   Type: This
