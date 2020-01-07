@@ -845,10 +845,8 @@ bool nsXMLContentSink::SetDocElement(int32_t aNameSpaceID, nsAtom* aTagName,
 
   // check for root elements that needs special handling for
   // prettyprinting
-  if ((aNameSpaceID == kNameSpaceID_XBL && aTagName == nsGkAtoms::bindings) ||
-      (aNameSpaceID == kNameSpaceID_XSLT &&
-       (aTagName == nsGkAtoms::stylesheet ||
-        aTagName == nsGkAtoms::transform))) {
+  if (aNameSpaceID == kNameSpaceID_XSLT &&
+      (aTagName == nsGkAtoms::stylesheet || aTagName == nsGkAtoms::transform)) {
     mPrettyPrintHasSpecialRoot = true;
     if (mPrettyPrintXML) {
       // In this case, disable script execution, stylesheet
