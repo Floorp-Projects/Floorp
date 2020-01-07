@@ -12,9 +12,9 @@
 [Pref="dom.serviceWorkers.enabled",
  Exposed=(Window,Worker)]
 interface ServiceWorkerRegistration : EventTarget {
-  [Unforgeable] readonly attribute ServiceWorker? installing;
-  [Unforgeable] readonly attribute ServiceWorker? waiting;
-  [Unforgeable] readonly attribute ServiceWorker? active;
+  readonly attribute ServiceWorker? installing;
+  readonly attribute ServiceWorker? waiting;
+  readonly attribute ServiceWorker? active;
 
   readonly attribute USVString scope;
   [Throws]
