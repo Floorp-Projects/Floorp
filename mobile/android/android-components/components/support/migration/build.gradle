@@ -2,6 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+buildscript {
+    repositories {
+        maven {
+            url "https://maven.mozilla.org/maven2"
+        }
+
+        dependencies {
+            classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+        }
+    }
+}
+
+plugins {
+    id "com.jetbrains.python.envs" version "0.0.26"
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -47,6 +63,7 @@ dependencies {
     implementation project(':browser-storage-sync')
     implementation project(':service-firefox-accounts')
     implementation project(':service-sync-logins')
+    implementation project(':service-glean')
 
     implementation project(':lib-crash')
     implementation project(':lib-state')
@@ -73,3 +90,6 @@ dependencies {
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
+
+ext.gleanGenerateMarkdownDocs = true
+apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"

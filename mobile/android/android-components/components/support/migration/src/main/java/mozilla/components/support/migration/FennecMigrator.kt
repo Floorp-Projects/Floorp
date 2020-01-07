@@ -25,10 +25,23 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.sync.logins.AsyncLoginsStorage
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.FennecMigrator.Builder
+import mozilla.components.support.migration.GleanMetrics.MigrationAddons
 import mozilla.components.support.migration.state.MigrationAction
 import mozilla.components.support.migration.state.MigrationStore
+import mozilla.components.support.migration.GleanMetrics.Pings
+import mozilla.components.support.migration.GleanMetrics.Migration as MigrationPing
+import mozilla.components.support.migration.GleanMetrics.MigrationBookmarks
+import mozilla.components.support.migration.GleanMetrics.MigrationFxa
+import mozilla.components.support.migration.GleanMetrics.MigrationGecko
+import mozilla.components.support.migration.GleanMetrics.MigrationHistory
+import mozilla.components.support.migration.GleanMetrics.MigrationLogins
+import mozilla.components.support.migration.GleanMetrics.MigrationTelemetryIdentifiers
+import mozilla.components.support.migration.GleanMetrics.MigrationOpenTabs
+import mozilla.components.support.migration.GleanMetrics.MigrationSettings
 import java.io.File
 import java.lang.Exception
+import java.util.Date
+import java.util.UUID
 import java.util.concurrent.Executors
 import kotlin.IllegalStateException
 import kotlin.coroutines.CoroutineContext
@@ -80,7 +93,7 @@ sealed class Migration(val currentVersion: Int) {
     /**
      * Migrates Fennec's telemetry identifiers.
      */
-    object TelemetryPingIdentifiers : Migration(currentVersion = 1)
+    object TelemetryIdentifiers : Migration(currentVersion = 1)
 }
 
 /**
@@ -303,10 +316,13 @@ class FennecMigrator private constructor(
             return this
         }
 
+        /**
+         * Enable migration of Fennec telemetry identifiers.
+         */
         fun migrateTelemetryIdentifiers(
-            version: Int = Migration.TelemetryPingIdentifiers.currentVersion
+            version: Int = Migration.TelemetryIdentifiers.currentVersion
         ): Builder {
-            migrations.add(VersionedMigration(Migration.TelemetryPingIdentifiers, version))
+            migrations.add(VersionedMigration(Migration.TelemetryIdentifiers, version))
             return this
         }
 
@@ -483,6 +499,10 @@ class FennecMigrator private constructor(
         migrations.forEach { versionedMigration ->
             logger.debug("Executing $versionedMigration")
 
+            val telemetryId = versionedMigration.migration.telemetryIdentifier()
+            val migrationVersion = versionedMigration.version
+            MigrationPing.migrationVersions[telemetryId].set("$migrationVersion")
+
             val migrationResult = when (versionedMigration.migration) {
                 Migration.History -> migrateHistory()
                 Migration.Bookmarks -> migrateBookmarks()
@@ -492,7 +512,7 @@ class FennecMigrator private constructor(
                 Migration.Logins -> migrateLogins()
                 Migration.Settings -> migrateSharedPrefs()
                 Migration.Addons -> migrateAddons()
-                Migration.TelemetryPingIdentifiers -> migrateTelemetryIdentifiers()
+                Migration.TelemetryIdentifiers -> migrateTelemetryIdentifiers()
             }
 
             val migrationRun = when (migrationResult) {
@@ -501,6 +521,20 @@ class FennecMigrator private constructor(
                         "Failed to migrate $versionedMigration",
                         migrationResult.throwables.first()
                     )
+                    // Local fun to make `when` exhaustive.
+                    fun setFailure(migration: Migration): Unit = when (migration) {
+                        Migration.History -> MigrationHistory.anyFailures.set(true)
+                        Migration.Bookmarks -> MigrationBookmarks.anyFailures.set(true)
+                        Migration.OpenTabs -> MigrationOpenTabs.anyFailures.set(true)
+                        Migration.FxA -> MigrationFxa.anyFailures.set(true)
+                        Migration.Gecko -> MigrationGecko.anyFailures.set(true)
+                        Migration.Logins -> MigrationLogins.anyFailures.set(true)
+                        Migration.Settings -> MigrationSettings.anyFailures.set(true)
+                        Migration.Addons -> MigrationAddons.anyFailures.set(true)
+                        Migration.TelemetryIdentifiers -> MigrationTelemetryIdentifiers.anyFailures.set(true)
+                    }
+                    setFailure(versionedMigration.migration)
+
                     MigrationRun(versionedMigration.version, false)
                 }
                 is Result.Success<*> -> {
@@ -518,10 +552,14 @@ class FennecMigrator private constructor(
             results[versionedMigration.migration] = migrationRun
         }
 
+        // At this point, individual migrations have populated the MigrationResultPing, and we can
+        // ask Glean to send it.
+        Pings.migration.submit()
+
         results
     }
 
-    @SuppressWarnings("TooGenericExceptionCaught")
+    @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber")
     private fun migrateHistory(): Result<Unit> {
         checkNotNull(historyStorage) { "History storage must be configured to migrate history" }
 
@@ -533,18 +571,34 @@ class FennecMigrator private constructor(
         if (dbPath == null) {
             return Result.Failure(IllegalStateException("Missing DB path during history migration"))
         }
-        return try {
+        val migrationMetrics = try {
             logger.debug("Migrating history...")
             historyStorage.importFromFennec(dbPath)
-            logger.debug("Migrated history.")
-            Result.Success(Unit)
         } catch (e: Exception) {
             crashReporter.submitCaughtException(FennecMigratorException.MigrateHistoryException(e))
-            Result.Failure(e)
+            return Result.Failure(e)
         }
+
+        // Process migration metrics. Here and elsewhere, we're assuming and hard-coding metrics schema.
+        // See application-services repository: https://github.com/mozilla/application-services/commit/a7d5ff1903fb0f904785a1645cb7ae1d6c313f10
+        try {
+            MigrationHistory.detected.add(migrationMetrics.getInt("num_total"))
+            MigrationHistory.migrated["succeeded"].add(migrationMetrics.getInt("num_succeeded"))
+            MigrationHistory.migrated["failed"].add(migrationMetrics.getInt("num_failed"))
+            // Assuming that 'total_duration' is in milliseconds.
+            MigrationHistory.duration.setRawNanos(migrationMetrics.getLong("total_duration") * 1000000)
+        } catch (e: Exception) {
+            MigrationHistory.anyFailures.set(true)
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateHistoryException(e)
+            )
+        }
+
+        logger.debug("Migrated history.")
+        return Result.Success(Unit)
     }
 
-    @SuppressWarnings("TooGenericExceptionCaught")
+    @SuppressWarnings("TooGenericExceptionCaught", "MagicNumber")
     private fun migrateBookmarks(): Result<Unit> {
         checkNotNull(bookmarksStorage) { "Bookmarks storage must be configured to migrate bookmarks" }
 
@@ -556,17 +610,33 @@ class FennecMigrator private constructor(
         if (dbPath == null) {
             return Result.Failure(IllegalStateException("Missing DB path during bookmark migration"))
         }
-        return try {
+        val migrationMetrics = try {
             logger.debug("Migrating bookmarks...")
             bookmarksStorage.importFromFennec(dbPath)
-            logger.debug("Migrated bookmarks.")
-            Result.Success(Unit)
         } catch (e: Exception) {
             crashReporter.submitCaughtException(
                 FennecMigratorException.MigrateBookmarksException(e)
             )
-            Result.Failure(e)
+            return Result.Failure(e)
         }
+
+        // Process migration metrics. Here and elsewhere, we're assuming and hard-coding metrics schema.
+        // See application-services repository: https://github.com/mozilla/application-services/commit/b2e2edcc06a04503d493e1733b0d566815feac7c#diff-216f62325632ae6549587b038b21cfe0
+        try {
+            MigrationBookmarks.detected.add(migrationMetrics.getInt("num_total"))
+            MigrationBookmarks.migrated["succeeded"].add(migrationMetrics.getInt("num_succeeded"))
+            MigrationBookmarks.migrated["failed"].add(migrationMetrics.getInt("num_failed"))
+            // Assuming that 'total_duration' is in milliseconds.
+            MigrationBookmarks.duration.setRawNanos(migrationMetrics.getLong("total_duration") * 1000000)
+        } catch (e: Exception) {
+            MigrationBookmarks.anyFailures.set(true)
+            crashReporter.submitCaughtException(
+                FennecMigratorException.MigrateBookmarksException(e)
+            )
+        }
+
+        logger.debug("Migrated history.")
+        return Result.Success(Unit)
     }
 
     @Suppress("ComplexMethod", "TooGenericExceptionCaught", "LongMethod", "ReturnCount")
@@ -595,12 +665,15 @@ class FennecMigrator private constructor(
             return when (val failure = migrationFailureWrapper.failure) {
                 is LoginsMigrationResult.Failure.FailedToCheckMasterPassword -> {
                     logger.error("Failed to check master password: $failure")
+                    MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_MP_CHECK.code)
                     // We definitely expect to be able to check our master password, so report a failure.
                     crashReporter.submitCaughtException(migrationFailureWrapper)
                     result
                 }
                 is LoginsMigrationResult.Failure.UnsupportedSignonsDbVersion -> {
                     logger.error("Unsupported logins database version: $failure")
+                    MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_UNSUPPORTED_LOGINS_DB.code)
+                    MigrationLogins.unsupportedDbVersion.add(failure.version)
                     // We really don't expect anyone to hit this, so let's submit it to Sentry.
                     crashReporter.submitCaughtException(migrationFailureWrapper)
                     result
@@ -608,17 +681,20 @@ class FennecMigrator private constructor(
                 is LoginsMigrationResult.Failure.UnexpectedLoginsKeyMaterialAlg,
                 is LoginsMigrationResult.Failure.UnexpectedMetadataKeyMaterialAlg -> {
                     logger.error("Encryption failure: $failure")
+                    MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_ENCRYPTION.code)
                     // While this may happen in theory, let's keep track of exact reasons.
                     crashReporter.submitCaughtException(migrationFailureWrapper)
                     result
                 }
                 is LoginsMigrationResult.Failure.GetLoginsThrew -> {
                     logger.error("getLogins failure: $failure")
+                    MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_GET.code)
                     crashReporter.submitCaughtException(migrationFailureWrapper)
                     result
                 }
                 is LoginsMigrationResult.Failure.RustImportThrew -> {
                     logger.error("Rust import failure: $failure")
+                    MigrationLogins.failureReason.add(FailureReasonTelemetryCodes.LOGINS_RUST_IMPORT.code)
                     crashReporter.submitCaughtException(migrationFailureWrapper)
                     result
                 }
@@ -629,6 +705,7 @@ class FennecMigrator private constructor(
         return when (val success = loginMigrationSuccess.value as LoginsMigrationResult.Success) {
             is LoginsMigrationResult.Success.MasterPasswordIsSet -> {
                 logger.debug("Could not migrate logins - master password is set")
+                MigrationLogins.successReason.add(SuccessReasonTelemetryCodes.LOGINS_MP_SET.code)
                 result
             }
 
@@ -638,6 +715,10 @@ class FennecMigrator private constructor(
                     failed to process=${success.failedToProcess},
                     failed to import=${success.failedToImport}
                 """.trimIndent())
+                MigrationLogins.successReason.add(SuccessReasonTelemetryCodes.LOGINS_MIGRATED.code)
+                MigrationLogins.detected.add(success.totalRecordsDetected)
+                MigrationLogins.failureCounts["process"].add(success.failedToProcess)
+                MigrationLogins.failureCounts["import"].add(success.failedToImport)
                 result
             }
         }
@@ -653,11 +734,17 @@ class FennecMigrator private constructor(
         return try {
             logger.debug("Migrating session...")
             val result = FennecSessionMigration.migrate(File(profile.path))
-            if (result is Result.Success<*>) {
+            if (result is Result.Success<SessionManager.Snapshot>) {
                 logger.debug("Loading migrated session snapshot...")
+                MigrationOpenTabs.detected.add(result.value.sessions.size)
                 withContext(Dispatchers.Main) {
-                    sessionManager!!.restore(result.value as SessionManager.Snapshot)
+                    sessionManager!!.restore(result.value)
+                    // Note that this is assuming that sessionManager starts off empty before the
+                    // migration.
+                    MigrationOpenTabs.migrated.add(sessionManager.all.size)
                 }
+            } else if (result is Result.Failure<*>) {
+                MigrationOpenTabs.anyFailures.set(result.throwables.isNotEmpty())
             }
             result
         } catch (e: Exception) {
@@ -673,7 +760,10 @@ class FennecMigrator private constructor(
 
         if (result is Result.Failure<FxaMigrationResult>) {
             val migrationFailureWrapper = result.throwables.first() as FxaMigrationException
-            return when (val failure = migrationFailureWrapper.failure) {
+            val failure = migrationFailureWrapper.failure
+            // Note that 'failure' has been cleared from PII in 'FennecFxaMigration'.
+            MigrationFxa.failureReasonRust.set("$failure")
+            return when (failure) {
                 is FxaMigrationResult.Failure.CorruptAccountState -> {
                     logger.error("Detected a corrupt account state: $failure")
                     result
@@ -695,6 +785,7 @@ class FennecMigrator private constructor(
             // The rest are all successful migrations.
             is FxaMigrationResult.Success.NoAccount -> {
                 logger.debug("No Fennec account detected")
+                MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_NO_ACCOUNT.code)
                 result
             }
             is FxaMigrationResult.Success.UnauthenticatedAccount -> {
@@ -702,10 +793,13 @@ class FennecMigrator private constructor(
                 // "Bad auth state" could be a few things - unverified account, bad credentials detected by Fennec, etc.
                 // We could try using the 'email' address as a starting point in the authentication flow.
                 logger.debug("Detected a Fennec account in a bad authentication state: ${success.stateLabel}")
+                MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_BAD_AUTH.code)
+                MigrationFxa.badAuthState.set(success.stateLabel)
                 result
             }
             is FxaMigrationResult.Success.SignedInIntoAuthenticatedAccount -> {
                 logger.debug("Signed-in into a detected Fennec account")
+                MigrationFxa.successReason.add(SuccessReasonTelemetryCodes.FXA_SIGNED_IN.code)
                 result
             }
         }
@@ -730,6 +824,7 @@ class FennecMigrator private constructor(
         }
     }
 
+    @SuppressWarnings("TooGenericExceptionCaught")
     private fun migrateSharedPrefs(): Result<SettingsMigrationResult> {
         val result = try {
             FennecSettingsMigration.migrateSharedPrefs(context)
@@ -746,11 +841,13 @@ class FennecMigrator private constructor(
                 is SettingsMigrationResult.Failure.MissingFHRPrefValue -> {
                     logger.error("Missing FHR value: $failure")
                     crashReporter.submitCaughtException(migrationFailureWrapper)
+                    MigrationSettings.failureReason.add(FailureReasonTelemetryCodes.SETTINGS_MISSING_FHR_VALUE.code)
                     result
                 }
                 is SettingsMigrationResult.Failure.WrongTelemetryValueAfterMigration -> {
                     logger.error("Wrong telemetry value: $failure")
                     crashReporter.submitCaughtException(migrationFailureWrapper)
+                    MigrationSettings.failureReason.add(FailureReasonTelemetryCodes.SETTINGS_WRONG_TELEMETRY_VALUE.code)
                     result
                 }
             }
@@ -761,16 +858,19 @@ class FennecMigrator private constructor(
             // The rest are all successful migrations.
             is SettingsMigrationResult.Success.NoFennecPrefs -> {
                 logger.debug("No Fennec prefs detected")
+                MigrationSettings.successReason.add(SuccessReasonTelemetryCodes.SETTINGS_NO_PREFS.code)
                 result
             }
             is SettingsMigrationResult.Success.SettingsMigrated -> {
                 logger.debug("Migrated settings; telemetry=${success.telemetry}")
+                MigrationSettings.successReason.add(SuccessReasonTelemetryCodes.SETTINGS_MIGRATED.code)
+                MigrationSettings.telemetryEnabled.set(success.telemetry)
                 result
             }
         }
     }
 
-    @SuppressWarnings("TooGenericExceptionCaught", "NestedBlockDepth")
+    @SuppressWarnings("TooGenericExceptionCaught", "NestedBlockDepth", "ComplexMethod")
     private suspend fun migrateAddons(): Result<AddonMigrationResult> {
         return try {
             logger.debug("Migrating add-ons...")
@@ -780,11 +880,14 @@ class FennecMigrator private constructor(
                 return when (val failure = migrationFailureWrapper.failure) {
                     is AddonMigrationResult.Failure.FailedToQueryInstalledAddons -> {
                         logger.error("Failed to query installed add-ons: $failure")
+                        MigrationAddons.failureReason.add(FailureReasonTelemetryCodes.ADDON_QUERY.code)
                         crashReporter.submitCaughtException(migrationFailureWrapper)
                         result
                     }
                     is AddonMigrationResult.Failure.FailedToMigrateAddons -> {
-                        logger.error("Failed to migrate add-ons: $failure")
+                        logger.error("Failed to migrate some add-ons: $failure")
+                        MigrationAddons.failedAddons.add(failure.failedAddons.size)
+                        MigrationAddons.migratedAddons.add(failure.migratedAddons.size)
                         val recordedFailures = mutableSetOf<String>()
                         failure.failedAddons.forEach { (_, exception) ->
                             // Let's not spam Sentry and submit the same exception multiple times
@@ -797,9 +900,21 @@ class FennecMigrator private constructor(
                         result
                     }
                 }
-            } else {
-                logger.debug("Successfully migrated add-ons")
-                result
+            }
+
+            val migrationSuccess = result as Result.Success<AddonMigrationResult>
+            return when (val success = migrationSuccess.value as AddonMigrationResult.Success) {
+                is AddonMigrationResult.Success.NoAddons -> {
+                    logger.debug("No add-ons to migrate")
+                    MigrationAddons.successReason.add(SuccessReasonTelemetryCodes.ADDONS_NO.code)
+                    result
+                }
+                is AddonMigrationResult.Success.AddonsMigrated -> {
+                    MigrationAddons.successReason.add(SuccessReasonTelemetryCodes.ADDONS_MIGRATED.code)
+                    MigrationAddons.migratedAddons.add(success.migratedAddons.size)
+                    logger.debug("Successfully migrated add-ons")
+                    result
+                }
             }
         } catch (e: Exception) {
             crashReporter.submitCaughtException(
@@ -809,13 +924,14 @@ class FennecMigrator private constructor(
         }
     }
 
+    @SuppressWarnings("TooGenericExceptionCaught")
     private fun migrateTelemetryIdentifiers(): Result<TelemetryIdentifiersResult> {
         if (profile == null) {
             crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
             return Result.Failure(IllegalStateException("Missing Profile path"))
         }
 
-        return try {
+        val result = try {
             // Will submit unexpected errors via crashReporter.
             TelemetryIdentifiersMigration.migrate(profile.path, crashReporter)
         } catch (e: Exception) {
@@ -824,5 +940,21 @@ class FennecMigrator private constructor(
             )
             return Result.Failure(e)
         }
+
+        if (result is Result.Success<TelemetryIdentifiersResult>) {
+            when (val success = result.value as TelemetryIdentifiersResult.Success) {
+                is TelemetryIdentifiersResult.Success.Identifiers -> {
+                    // It's important that we're aware, during telemetry analysis, that these values
+                    // are missing or present. Absence of a set value should be enough.
+                    success.clientId?.let { MigrationTelemetryIdentifiers.fennecClientId.set(UUID.fromString(it)) }
+                    // profileCreationDate is a unix timestamp.
+                    success.profileCreationDate?.let {
+                        MigrationTelemetryIdentifiers.fennecProfileCreationDate.set(Date(it))
+                    }
+                }
+            }
+        }
+
+        return result
     }
 }

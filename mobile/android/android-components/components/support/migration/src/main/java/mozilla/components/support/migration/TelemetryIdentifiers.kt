@@ -11,8 +11,17 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 
+/**
+ * Result of a telemetry identifier migration.
+ */
 sealed class TelemetryIdentifiersResult {
+    /**
+     * Success results.
+     */
     sealed class Success : TelemetryIdentifiersResult() {
+        /**
+         * Present identifiers obtained.
+         */
         data class Identifiers(val clientId: String?, val profileCreationDate: Long?) : Success()
     }
 }
@@ -28,6 +37,7 @@ internal object TelemetryIdentifiersMigration {
     private const val TIMES_PATH = "times.json"
     private const val PROFILE_CREATION_DATE_JSON_ATTR = "created"
 
+    @SuppressWarnings("TooGenericExceptionCaught")
     internal fun migrate(profilePath: String, crashReporter: CrashReporter): Result<TelemetryIdentifiersResult> {
         val clientStateFile = File(profilePath, CLIENT_ID_FILE_PATH)
 

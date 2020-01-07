@@ -61,6 +61,10 @@ permalink: /changelog/
   * `signInWithShareableAccountAsync` now takes a `reuseAccount` parameter, allowing consumers
     to reuse existing session token (and FxA device) associated with the passed-in account.
 
+* **support-migration**
+  * **New Telemetry Notice**
+  * Added a 'migration' ping, which contains telemetry data about migration via Glean. It's emitted whenever a migration is executed.
+
 # 27.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v26.0.0...v27.0.0)
