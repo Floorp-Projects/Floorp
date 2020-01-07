@@ -28,12 +28,12 @@ impl PingType {
         Self { name, ping_type }
     }
 
-    /// Submit the ping.
+    /// Send the ping.
     ///
     /// ## Return value
     ///
     /// Returns true if a ping was assembled and queued, false otherwise.
-    pub fn submit(&self) -> bool {
-        crate::submit_ping(self)
+    pub fn send(&self) -> bool {
+        crate::send_ping(self)
     }
 }

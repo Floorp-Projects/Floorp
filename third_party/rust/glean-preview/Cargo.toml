@@ -13,9 +13,9 @@
 [package]
 edition = "2018"
 name = "glean-preview"
-version = "0.0.4"
+version = "0.0.2"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
-include = ["README.md", "LICENSE", "CHANGELOG.md", "src/**/*", "tests/**/*", "Cargo.toml"]
+include = ["README.md", "LICENSE", "src/**/*", "tests/**/*", "Cargo.toml"]
 description = "Nice Glean SDK Rust API"
 readme = "README.md"
 keywords = ["telemetry", "glean"]

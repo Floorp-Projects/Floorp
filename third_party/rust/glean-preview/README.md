@@ -37,7 +37,7 @@ let prototype_ping = PingType::new("prototype", true, true);
 
 glean_preview::register_ping_type(&prototype_ping);
 
-prototype_ping.submit();
+prototype_ping.send();
 ```
 
 ## License
