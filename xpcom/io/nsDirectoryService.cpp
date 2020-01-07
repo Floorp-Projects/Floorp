@@ -7,7 +7,6 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsDirectoryService.h"
 #include "nsLocalFile.h"
 #include "nsDebug.h"

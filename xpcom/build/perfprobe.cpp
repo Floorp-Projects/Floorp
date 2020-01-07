@@ -12,7 +12,6 @@
 #include <evntrace.h>
 
 #include "perfprobe.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace probes {

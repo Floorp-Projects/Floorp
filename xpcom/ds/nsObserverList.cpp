@@ -7,7 +7,6 @@
 #include "nsObserverList.h"
 
 #include "mozilla/ResultExtensions.h"
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "xpcpublic.h"
 

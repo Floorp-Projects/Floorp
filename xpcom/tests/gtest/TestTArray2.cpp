@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <iostream>
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"

@@ -11,11 +11,9 @@
 #include "MoofParser.h"
 #include "mozilla/Result.h"
 #include "MP4Interval.h"
+#include "nsAutoPtr.h"
 #include "nsISupportsImpl.h"
 #include "TimeUnits.h"
-
-template <class T>
-class nsAutoPtr;
 
 namespace mozilla {
 class IndiceWrapper;

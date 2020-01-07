@@ -9,7 +9,6 @@
 
 #include "nsID.h"
 #include "nsISupports.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "PLDHashTable.h"
 #include <new>

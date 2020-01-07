@@ -13,7 +13,6 @@
 #include "mozilla/SystemGroup.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
 #include "nsIThread.h"

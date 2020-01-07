@@ -19,7 +19,6 @@
 #  include "nsIIdleService.h"
 #  include "nsISimpleEnumerator.h"
 #  include "nsIFile.h"
-#  include "nsAutoPtr.h"
 #  include "nsITimer.h"
 #  include "nsCRT.h"
 

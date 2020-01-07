@@ -9,7 +9,6 @@
 #include "nsCOMArray.h"
 #include "nsUnicharInputStream.h"
 #include "nsPrintfCString.h"
-#include "nsAutoPtr.h"
 
 #include "nsPersistentProperties.h"
 #include "nsIProperties.h"
