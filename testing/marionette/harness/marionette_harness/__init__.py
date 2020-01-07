@@ -11,12 +11,10 @@ from .marionette_test import (
     expectedFailure,
     MarionetteTestCase,
     parameterized,
-    run_if_e10s,
     run_if_manage_instance,
     skip,
     skip_if_chrome,
     skip_if_desktop,
-    skip_if_e10s,
     SkipTest,
     skip_unless_protocol,
 )

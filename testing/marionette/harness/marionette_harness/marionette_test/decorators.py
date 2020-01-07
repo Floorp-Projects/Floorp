@@ -48,29 +48,6 @@ def parameterized(func_suffix, *args, **kwargs):
     return wrapped
 
 
-def run_if_e10s(reason):
-    """Decorator which runs a test if e10s mode is active."""
-    def decorator(test_item):
-        if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
-
-        @functools.wraps(test_item)
-        def skip_wrapper(self, *args, **kwargs):
-            with self.marionette.using_context('chrome'):
-                multi_process_browser = not self.marionette.execute_script("""
-                    try {
-                      return Services.appinfo.browserTabsRemoteAutostart;
-                    } catch (e) {
-                      return false;
-                    }
-                """)
-                if multi_process_browser:
-                    raise SkipTest(reason)
-            return test_item(self, *args, **kwargs)
-        return skip_wrapper
-    return decorator
-
-
 def run_if_manage_instance(reason):
     """Decorator which runs a test if Marionette manages the application instance."""
     def decorator(test_item):
@@ -111,29 +88,6 @@ def skip_if_desktop(reason):
         def skip_wrapper(self, *args, **kwargs):
             if self.marionette.session_capabilities.get('browserName') == 'firefox':
                 raise SkipTest(reason)
-            return test_item(self, *args, **kwargs)
-        return skip_wrapper
-    return decorator
-
-
-def skip_if_e10s(reason):
-    """Decorator which skips a test if e10s mode is active."""
-    def decorator(test_item):
-        if not isinstance(test_item, types.FunctionType):
-            raise Exception('Decorator only supported for functions')
-
-        @functools.wraps(test_item)
-        def skip_wrapper(self, *args, **kwargs):
-            with self.marionette.using_context('chrome'):
-                multi_process_browser = self.marionette.execute_script("""
-                    try {
-                      return Services.appinfo.browserTabsRemoteAutostart;
-                    } catch (e) {
-                      return false;
-                    }
-                """)
-                if multi_process_browser:
-                    raise SkipTest(reason)
             return test_item(self, *args, **kwargs)
         return skip_wrapper
     return decorator
