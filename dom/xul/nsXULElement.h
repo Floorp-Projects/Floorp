@@ -387,6 +387,11 @@ class nsXULElement : public nsStyledElement {
   void SetFlex(const nsAString& aValue, mozilla::ErrorResult& rv) {
     SetXULAttr(nsGkAtoms::flex, aValue, rv);
   }
+  void GetOrient(DOMString& aValue) const {
+    GetXULAttr(nsGkAtoms::orient, aValue);
+  }
+  void SetOrient(const nsAString& aValue, mozilla::ErrorResult& rv) {
+    SetXULAttr(nsGkAtoms::orient, aValue, rv);
   }
   bool Hidden() const { return BoolAttrIsTrue(nsGkAtoms::hidden); }
   void SetHidden(bool aHidden) { SetXULBoolAttr(nsGkAtoms::hidden, aHidden); }
