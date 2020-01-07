@@ -2,7 +2,7 @@
 
 # LoginsStorageException
 
-`typealias LoginsStorageException = LoginsStorageException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L48)
+`typealias LoginsStorageException = LoginsStorageException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L47)
 
 The base class of all errors emitted by logins storage.
 

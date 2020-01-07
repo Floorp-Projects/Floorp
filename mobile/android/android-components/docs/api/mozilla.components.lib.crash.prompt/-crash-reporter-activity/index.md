@@ -2,7 +2,7 @@
 
 # CrashReporterActivity
 
-`class CrashReporterActivity : AppCompatActivity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/prompt/CrashReporterActivity.kt#L32)
+`class CrashReporterActivity : AppCompatActivity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/prompt/CrashReporterActivity.kt#L28)
 
 Activity showing the crash reporter prompt asking the user for confirmation before submitting a crash report.
 

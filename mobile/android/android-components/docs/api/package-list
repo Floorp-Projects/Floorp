@@ -183,11 +183,11 @@ mozilla.components.feature.pwa.intent
 mozilla.components.feature.qr
 mozilla.components.feature.readerview
 mozilla.components.feature.readerview.view
-mozilla.components.feature.remotetabs
 mozilla.components.feature.search
 mozilla.components.feature.session
 mozilla.components.feature.session.behavior
 mozilla.components.feature.sitepermissions
+mozilla.components.feature.syncedtabs
 mozilla.components.feature.tab.collections
 mozilla.components.feature.tabs
 mozilla.components.feature.tabs.tabstray
@@ -263,6 +263,7 @@ mozilla.components.support.ktx.android.content
 mozilla.components.support.ktx.android.content.res
 mozilla.components.support.ktx.android.graphics
 mozilla.components.support.ktx.android.net
+mozilla.components.support.ktx.android.notification
 mozilla.components.support.ktx.android.org.json
 mozilla.components.support.ktx.android.os
 mozilla.components.support.ktx.android.util

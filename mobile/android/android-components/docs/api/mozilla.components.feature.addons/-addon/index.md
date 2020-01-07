@@ -47,13 +47,19 @@ https://addons.mozilla.org/en-US/firefox/
 |---|---|
 | [isEnabled](is-enabled.md) | `fun isEnabled(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this [Addon](./index.md) is currently enabled. |
 | [isInstalled](is-installed.md) | `fun isInstalled(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this [Addon](./index.md) is currently installed. |
-| [translatePermissions](translate-permissions.md) | `fun translatePermissions(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>`<br>Returns a list of id resources per each item on the [AddOn.permissions](#) list. |
+| [translatePermissions](translate-permissions.md) | `fun translatePermissions(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>`<br>Returns a list of id resources per each item on the [permissions](permissions.md) list. |
 
 ### Companion Object Properties
 
 | Name | Summary |
 |---|---|
 | [permissionToTranslation](permission-to-translation.md) | `val permissionToTranslation: <ERROR CLASS>`<br>A map of permissions to translation string ids. |
+
+### Companion Object Functions
+
+| Name | Summary |
+|---|---|
+| [localizePermissions](localize-permissions.md) | `fun localizePermissions(permissions: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>`<br>Takes a list of [permissions](localize-permissions.md#mozilla.components.feature.addons.Addon.Companion$localizePermissions(kotlin.collections.List((kotlin.String)))/permissions) and returns a list of id resources per each item. |
 
 ### Extension Functions
 

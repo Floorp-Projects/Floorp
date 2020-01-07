@@ -2,7 +2,7 @@
 
 # SyncableLoginsStore
 
-`data class SyncableLoginsStore : `[`LockableStore`](../../mozilla.components.concept.sync/-lockable-store/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L406)
+`data class SyncableLoginsStore : `[`LockableStore`](../../mozilla.components.concept.sync/-lockable-store/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L397)
 
 Wraps [AsyncLoginsStorage](../-async-logins-storage/index.md) instance along with a lazy encryption key.
 

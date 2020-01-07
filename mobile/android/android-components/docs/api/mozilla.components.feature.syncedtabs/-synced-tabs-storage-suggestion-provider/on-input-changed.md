@@ -1,8 +1,8 @@
-[android-components](../../index.md) / [mozilla.components.feature.remotetabs](../index.md) / [RemoteTabsStorageSuggestionProvider](index.md) / [onInputChanged](./on-input-changed.md)
+[android-components](../../index.md) / [mozilla.components.feature.syncedtabs](../index.md) / [SyncedTabsStorageSuggestionProvider](index.md) / [onInputChanged](./on-input-changed.md)
 
 # onInputChanged
 
-`suspend fun onInputChanged(text: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Suggestion`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/remotetabs/src/main/java/mozilla/components/feature/remotetabs/RemoteTabsStorageSuggestionProvider.kt#L28)
+`suspend fun onInputChanged(text: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Suggestion`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/syncedtabs/src/main/java/mozilla/components/feature/syncedtabs/SyncedTabsStorageSuggestionProvider.kt#L28)
 
 Overrides [SuggestionProvider.onInputChanged](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/on-input-changed.md)
 
