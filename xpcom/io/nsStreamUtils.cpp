@@ -7,7 +7,6 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
 #include "nsStreamUtils.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsICloneableInputStream.h"
 #include "nsIEventTarget.h"

@@ -10,7 +10,6 @@
 #include "nsThreadManager.h"
 #include "nsThread.h"
 #include "nsMemory.h"
-#include "nsAutoPtr.h"
 #include "prinrval.h"
 #include "mozilla/Logging.h"
 #include "mozilla/SystemGroup.h"

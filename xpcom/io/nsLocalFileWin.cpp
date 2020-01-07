@@ -10,7 +10,6 @@
 #include "mozilla/Utf8.h"
 
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsMemory.h"
 #include "GeckoProfiler.h"
 
