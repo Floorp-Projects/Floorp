@@ -17,7 +17,7 @@ add_task(async function run_test() {
   }
 
   // try a basic crash
-  await do_crash(null, function(mdump, extra) {
+  await do_content_crash(null, function(mdump, extra) {
     Assert.ok(mdump.exists());
     Assert.ok(mdump.fileSize > 0);
     Assert.ok("StartupTime" in extra);
