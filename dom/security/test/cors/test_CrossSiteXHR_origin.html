@@ -118,9 +118,9 @@ function* runTest() {
              "&origin=" + escape(origin),
         method: "GET",
       };
-      loaderWindow.postMessage(JSON.stringify(req), isNullOrigin ? "*" : origin);
+      loaderWindow.postMessage(req.toSource(), isNullOrigin ? "*" : origin);
 
-      res = JSON.parse(yield);
+      res = eval(yield);
       is(res.didFail, false, "shouldn't have failed for " + allowOrigin);
       is(res.status, 200, "wrong status for " + allowOrigin);
       is(res.statusText, "OK", "wrong status text for " + allowOrigin);
@@ -139,9 +139,9 @@ function* runTest() {
         url: baseURL + "allowOrigin=" + escape(allowOrigin),
         method: "GET",
       };
-      loaderWindow.postMessage(JSON.stringify(req), isNullOrigin ? "*" : origin);
+      loaderWindow.postMessage(req.toSource(), isNullOrigin ? "*" : origin);
 
-      res = JSON.parse(yield);
+      res = eval(yield);
       is(res.didFail, true, "should have failed for " + allowOrigin);
       is(res.responseText, "", "should have no text for " + allowOrigin);
       is(res.status, 0, "should have no status for " + allowOrigin);
