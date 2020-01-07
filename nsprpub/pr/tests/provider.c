@@ -58,11 +58,22 @@
 ** This is the beginning of the test
 */
 
+#ifdef DEBUG
+#define PORT_INC_DO +100
+#else
+#define PORT_INC_DO
+#endif
+#ifdef IS_64
+#define PORT_INC_3264 +200
+#else
+#define PORT_INC_3264
+#endif
+
 #define RECV_FLAGS 0
 #define SEND_FLAGS 0
 #define BUFFER_SIZE 1024
 #define DEFAULT_BACKLOG 5
-#define DEFAULT_PORT 13000
+#define DEFAULT_PORT 13000 PORT_INC_DO PORT_INC_3264
 #define DEFAULT_CLIENTS 1
 #define ALLOWED_IN_ACCEPT 1
 #define DEFAULT_CLIPPING 1000

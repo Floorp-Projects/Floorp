@@ -72,9 +72,20 @@
 #include <string.h>
 #include <private/primpl.h>
 
-#define SEM_NAME1 "/tmp/nameshmSEM1"
-#define SEM_NAME2 "/tmp/nameshmSEM2"
-#define OPT_NAME "/tmp/xxxNSPRshm"
+#ifdef DEBUG
+#define SEM_D "D"
+#else
+#define SEM_D
+#endif
+#ifdef IS_64
+#define SEM_64 "64"
+#else
+#define SEM_64
+#endif
+
+#define SEM_NAME1 "/tmp/nameshmSEM1" SEM_D SEM_64
+#define SEM_NAME2 "/tmp/nameshmSEM2" SEM_D SEM_64
+#define OPT_NAME "/tmp/xxxNSPRshm" SEM_D SEM_64
 #define EXE_NAME "nameshm1"
 #define SEM_MODE  0666
 #define SHM_MODE  0666

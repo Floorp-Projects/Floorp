@@ -53,7 +53,19 @@ typedef enum Verbosity {silent, quiet, chatty, noisy} Verbosity;
 static PRIntn minor_iterations = 5;
 static PRIntn major_iterations = 1;
 static Verbosity verbosity = quiet;
-static PRUint16 default_port = 12273;
+
+#ifdef DEBUG
+#define PORT_INC_DO +100
+#else
+#define PORT_INC_DO
+#endif
+#ifdef IS_64
+#define PORT_INC_3264 +200
+#else
+#define PORT_INC_3264
+#endif
+
+static PRUint16 default_port = 12273 PORT_INC_DO PORT_INC_3264;
 
 static PRFileDesc *PushLayer(PRFileDesc *stack)
 {

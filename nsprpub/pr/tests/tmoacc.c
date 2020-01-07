@@ -11,7 +11,18 @@
 #include "plerror.h"
 #include "plgetopt.h"
 
-#define BASE_PORT 9867
+#ifdef DEBUG
+#define PORT_INC_DO +100
+#else
+#define PORT_INC_DO
+#endif
+#ifdef IS_64
+#define PORT_INC_3264 +200
+#else
+#define PORT_INC_3264
+#endif
+
+#define BASE_PORT 9867 PORT_INC_DO PORT_INC_3264
 #define DEFAULT_THREADS 1
 #define DEFAULT_BACKLOG 10
 #define DEFAULT_TIMEOUT 10

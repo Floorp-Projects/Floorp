@@ -57,7 +57,19 @@ PRUint32  failed_already = 0;
 
 /* JITTER_DEFAULT: the number of times AcceptThread() and JitterThread() ping-pong */
 #define JITTER_DEFAULT  100000
-#define BASE_PORT 9867
+
+#ifdef DEBUG
+#define PORT_INC_DO +100
+#else
+#define PORT_INC_DO
+#endif
+#ifdef IS_64
+#define PORT_INC_3264 +200
+#else
+#define PORT_INC_3264
+#endif
+
+#define BASE_PORT 9867 PORT_INC_DO PORT_INC_3264
 
 PRIntervalTime timeout;
 PRNetAddr   listenAddr;

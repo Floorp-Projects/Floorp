@@ -45,9 +45,9 @@ char *TEST_DIR = "prdir";
 char *SMALL_FILE_NAME = "prsmallf";
 char *LARGE_FILE_NAME = "prlargef";
 #else
-char *TEST_DIR = "/tmp/prsocket_test_dir";
-char *SMALL_FILE_NAME = "/tmp/prsocket_test_dir/small_file";
-char *LARGE_FILE_NAME = "/tmp/prsocket_test_dir/large_file";
+char *TEST_DIR = "./tmp-prsocket_test_dir";
+char *SMALL_FILE_NAME = "./tmp-prsocket_test_dir/small_file";
+char *LARGE_FILE_NAME = "./tmp-prsocket_test_dir/large_file";
 #endif
 #define SMALL_FILE_SIZE             (3 * 1024)        /* 3 KB        */
 #define SMALL_FILE_OFFSET_1         (512)
