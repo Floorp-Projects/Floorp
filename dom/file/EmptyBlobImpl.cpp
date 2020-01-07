@@ -15,11 +15,6 @@ already_AddRefed<BlobImpl> EmptyBlobImpl::CreateSlice(
     ErrorResult& aRv) {
   MOZ_ASSERT(!aStart && !aLength);
   RefPtr<BlobImpl> impl = new EmptyBlobImpl(aContentType);
-
-  DebugOnly<bool> isMutable;
-  MOZ_ASSERT(NS_SUCCEEDED(impl->GetMutable(&isMutable)));
-  MOZ_ASSERT(!isMutable);
-
   return impl.forget();
 }
 
