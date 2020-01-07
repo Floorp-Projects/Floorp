@@ -40,7 +40,6 @@ common-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
-    - mochitest-webgpu
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
@@ -353,7 +352,6 @@ linux-common-tests:
     - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
-    - mochitest-webgpu
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
@@ -386,7 +384,6 @@ linux-qr-tests:
     - mochitest-chrome
     - mochitest-webgl1-core
     - mochitest-webgl2-core
-    - mochitest-webgpu
     - reftest
 
 linux-qr-smoketests:
@@ -404,7 +401,6 @@ windows-qr-tests:
     - mochitest-media
     - mochitest-webgl1-core
     - mochitest-webgl2-core
-    - mochitest-webgpu
     - reftest
 
 ccov-code-coverage-tests:
@@ -435,7 +431,6 @@ windows-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
-    - mochitest-webgpu
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
@@ -454,7 +449,6 @@ mingwclang-tests-debug:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
-    - mochitest-webgpu
     - reftest
     - telemetry-tests-client
 
@@ -479,7 +473,6 @@ windows-aarch64-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
-    - mochitest-webgpu
     - reftest
     - web-platform-tests
     - web-platform-tests-crashtests
@@ -530,7 +523,6 @@ macosx1014-64-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
-    - mochitest-webgpu
     - reftest
     - telemetry-tests-client
     - test-verify
