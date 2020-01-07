@@ -78,12 +78,11 @@ class nsPermissionManager final : public nsIPermissionManager,
   class PermissionKey {
    public:
     static PermissionKey* CreateFromPrincipal(nsIPrincipal* aPrincipal,
-                                              bool aForceStripOA,
                                               nsresult& aResult);
     static PermissionKey* CreateFromURI(nsIURI* aURI, nsresult& aResult);
     static PermissionKey* CreateFromURIAndOriginAttributes(
         nsIURI* aURI, const mozilla::OriginAttributes* aOriginAttributes,
-        bool aForceStripOA, nsresult& aResult);
+        nsresult& aResult);
 
     explicit PermissionKey(const nsACString& aOrigin)
         : mOrigin(aOrigin), mHashCode(mozilla::HashString(aOrigin)) {}
@@ -223,13 +222,11 @@ class nsPermissionManager final : public nsIPermissionManager,
    * https://, or ftp:// schemes are given the default "" Permission Key.
    *
    * @param aPrincipal  The Principal which the key is to be extracted from.
-   * @param aForceStripOA Whether to force stripping the principals origin
-   *        attributes prior to generating the key.
-   * @param aKey  A string which will be filled with the permission
+   * @param aPermissionKey  A string which will be filled with the permission
    * key.
    */
-  static void GetKeyForPrincipal(nsIPrincipal* aPrincipal, bool aForceStripOA,
-                                 nsACString& aKey);
+  static void GetKeyForPrincipal(nsIPrincipal* aPrincipal,
+                                 nsACString& aPermissionKey);
 
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
@@ -243,13 +240,11 @@ class nsPermissionManager final : public nsIPermissionManager,
    * nonsensical permission key result.
    *
    * @param aOrigin  The origin which the key is to be extracted from.
-   * @param aForceStripOA Whether to force stripping the origins attributes
-   *        prior to generating the key.
-   * @param aKey  A string which will be filled with the permission
+   * @param aPermissionKey  A string which will be filled with the permission
    * key.
    */
-  static void GetKeyForOrigin(const nsACString& aOrigin, bool aForceStripOA,
-                              nsACString& aKey);
+  static void GetKeyForOrigin(const nsACString& aOrigin,
+                              nsACString& aPermissionKey);
 
   /**
    * See `nsIPermissionManager::GetPermissionsWithKey` for more info on
@@ -365,16 +360,6 @@ class nsPermissionManager final : public nsIPermissionManager,
 
  private:
   virtual ~nsPermissionManager();
-
-  /**
-   * Get all permissions for a given principal, which should not be isolated
-   * by user context or private browsing. The principal has its origin
-   * attributes stripped before perm db lookup. This is currently only affects
-   * the "cookie" permission.
-   * @param aPrincipal Used for creating the permission key.
-   */
-  nsresult GetStripPermsForPrincipal(nsIPrincipal* aPrincipal,
-                                     nsTArray<PermissionEntry>& aResult);
 
   // NOTE: nullptr can be passed as aType - if it is this function will return
   // "false" unconditionally.
