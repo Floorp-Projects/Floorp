@@ -6514,13 +6514,13 @@ pub extern "C" fn Servo_IntersectionObserverRootMargin_ToString(
 
 #[no_mangle]
 pub extern "C" fn Servo_ParseTransformIntoMatrix(
-    value: &nsAString,
+    value: &nsACString,
     contain_3d: &mut bool,
     result: &mut structs::Matrix4x4Components,
 ) -> bool {
     use style::properties::longhands::transform;
 
-    let string = value.to_string();
+    let string = unsafe { value.as_str_unchecked() };
     let mut input = ParserInput::new(&string);
     let mut parser = Parser::new(&mut input);
     let context = ParserContext::new(
