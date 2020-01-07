@@ -16,6 +16,7 @@ import mozilla.components.feature.pwa.intent.TrustedWebActivityIntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.home.intent.FennecBookmarkShortcutsIntentProcessor
 import org.mozilla.fenix.test.Mockable
 
 /**
@@ -62,7 +63,8 @@ class IntentProcessors(
                 apiKey = BuildConfig.DIGITAL_ASSET_LINKS_TOKEN,
                 store = customTabsStore
             ),
-            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, ManifestStorage(context))
+            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, ManifestStorage(context)),
+            FennecBookmarkShortcutsIntentProcessor(sessionManager, sessionUseCases.loadUrl)
         )
     }
 }

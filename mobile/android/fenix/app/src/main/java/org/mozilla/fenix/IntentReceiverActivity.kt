@@ -64,8 +64,9 @@ class IntentReceiverActivity : Activity() {
 
         intent.setClassName(applicationContext, intentProcessorType.activityClassName)
         intent.putExtra(HomeActivity.OPEN_TO_BROWSER, intentProcessorType.shouldOpenToBrowser(intent))
-        startActivity(intent)
 
+        // finish() before starting another activity. Don't keep this on the activities back stack.
         finish()
+        startActivity(intent)
     }
 }

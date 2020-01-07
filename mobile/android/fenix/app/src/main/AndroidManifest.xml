@@ -48,6 +48,14 @@
                 android:resource="@xml/shortcuts" />
         </activity-alias>
 
+        <!--
+          Fennec declared entry for homescreen pinned shortcuts.
+        -->
+        <activity-alias
+            android:name="org.mozilla.gecko.BrowserApp"
+            android:targetActivity=".IntentReceiverActivity">
+        </activity-alias>
+
         <activity
             android:name=".HomeActivity"
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
