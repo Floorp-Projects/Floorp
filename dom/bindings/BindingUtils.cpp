@@ -2541,7 +2541,7 @@ bool NormalizeUSVString(nsAString& aString) {
   return EnsureUTF16Validity(aString);
 }
 
-bool NormalizeUSVString(binding_detail::FakeString<char16_t>& aString) {
+bool NormalizeUSVString(binding_detail::FakeString& aString) {
   uint32_t upTo = Utf16ValidUpTo(aString);
   uint32_t len = aString.Length();
   if (upTo == len) {
