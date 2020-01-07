@@ -70,7 +70,7 @@ int main(int argc, char **argv)
                                  PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
             break;
 
-        case 3: file = PR_Open("/usr/tmp/", PR_RDONLY, 0);
+        case 3: file = PR_Open("./tmp-", PR_RDONLY, 0);
             break;
 
         case 4: udp = PR_NewUDPSocket();
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
         case 5: tcp = PR_NewTCPSocket();
             break;
 
-        case 6: dir = PR_OpenDir("/usr/tmp/");
+        case 6: dir = PR_OpenDir("./tmp-");
             break;
 
         case 7: (void)PR_NewThreadPrivateIndex(&pdkey, NULL);

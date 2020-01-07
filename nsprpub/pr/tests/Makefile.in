@@ -442,17 +442,4 @@ endif
 ALWAYS:
 
 runtests:: $(PROGS) ALWAYS
-	@$(ECHO) "\nNSPR Test Results - $(OBJDIR)\n"
-	@$(ECHO) "BEGIN\t\t\t`date`"
-	@$(ECHO) "NSPR_TEST_LOGFILE\t$(LOGFILE)\n"
-	@$(ECHO) "Test\t\t\tResult\n"
-	@cd $(OBJDIR); for i in $(PROGRAMS); do					\
-	$(ECHO) "$$i\c";										\
-	./$$i >> $(LOGFILE) 2>&1 ;								\
-	if  [ 0 = $$? ] ; then									\
-		$(ECHO) "\t\t\tPassed";								\
-	else													\
-		$(ECHO) "\t\t\tFAILED";								\
-	fi;														\
-	done
-	@$(ECHO) "\nEND\t\t`date`\n"
+	$(topsrcdir)/pr/tests/runtests.sh $(DIST)

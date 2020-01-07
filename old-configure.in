@@ -47,7 +47,7 @@ dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZPNG=10635
 NSPR_VERSION=4
-NSPR_MINVER=4.24
+NSPR_MINVER=4.25
 NSS_VERSION=3
 
 dnl Set the minimum version of toolkit libs used by mozilla

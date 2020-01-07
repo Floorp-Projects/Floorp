@@ -6,7 +6,7 @@
 /*
  * File: fdcach.c
  * Description:
- *   This test verifies that the fd cache and stack are working
+ *   This test verifies that the fd cache is working
  *   correctly.
  */
 
@@ -18,7 +18,7 @@
 /*
  * Define ORDER_PRESERVED if the implementation of PR_SetFDCacheSize
  * preserves the ordering of the fd's when moving them between the
- * cache and the stack.
+ * cache.
  */
 #define ORDER_PRESERVED 1
 
@@ -35,12 +35,6 @@ int main(int argc, char **argv)
     PRFileDesc *savefds[NUM_FDS];
     int numfds = sizeof(fds)/sizeof(fds[0]);
 
-    /*
-     * Switch between cache and stack when they are empty.
-     * Then start with the fd cache.
-     */
-    PR_SetFDCacheSize(0, FD_CACHE_SIZE);
-    PR_SetFDCacheSize(0, 0);
     PR_SetFDCacheSize(0, FD_CACHE_SIZE);
 
     /* Add some fd's to the fd cache. */
@@ -82,59 +76,6 @@ int main(int argc, char **argv)
         }
     }
 
-    /* Switch to the fd stack. */
-    PR_SetFDCacheSize(0, 0);
-
-    /*
-     * Create some fd's.  These fd's should come from
-     * the fd stack.
-     */
-    for (i = 0; i < numfds; i++) {
-        fds[i] = PR_NewTCPSocket();
-        if (NULL == fds[i]) {
-            fprintf(stderr, "PR_NewTCPSocket failed\n");
-            exit(1);
-        }
-#ifdef ORDER_PRESERVED
-        if (fds[i] != savefds[numfds-1-i]) {
-            fprintf(stderr, "fd stack malfunctioned\n");
-            exit(1);
-        }
-#else
-        savefds[numfds-1-i] = fds[i];
-#endif
-    }
-    /* Put the fd's back to the fd stack. */
-    for (i = 0; i < numfds; i++) {
-        if (PR_Close(savefds[i]) == PR_FAILURE) {
-            fprintf(stderr, "PR_Close failed\n");
-            exit(1);
-        }
-    }
-
-    /*
-     * Now create some fd's and verify the LIFO ordering of
-     * the fd stack.
-     */
-    for (i = 0; i < numfds; i++) {
-        fds[i] = PR_NewTCPSocket();
-        if (NULL == fds[i]) {
-            fprintf(stderr, "PR_NewTCPSocket failed\n");
-            exit(1);
-        }
-        if (fds[i] != savefds[numfds-1-i]) {
-            fprintf(stderr, "fd stack malfunctioned\n");
-            exit(1);
-        }
-    }
-    /* Put the fd's back to the fd stack. */
-    for (i = 0; i < numfds; i++) {
-        if (PR_Close(savefds[i]) == PR_FAILURE) {
-            fprintf(stderr, "PR_Close failed\n");
-            exit(1);
-        }
-    }
-
     /* Switch to the fd cache. */
     PR_SetFDCacheSize(0, FD_CACHE_SIZE);
 
@@ -168,49 +109,6 @@ int main(int argc, char **argv)
         }
         if (fds[i] != savefds[i]) {
             fprintf(stderr, "fd cache malfunctioned\n");
-            exit(1);
-        }
-    }
-    for (i = 0; i < numfds; i++) {
-        if (PR_Close(savefds[i]) == PR_FAILURE) {
-            fprintf(stderr, "PR_Close failed\n");
-            exit(1);
-        }
-    }
-
-    /* Switch to the fd stack. */
-    PR_SetFDCacheSize(0, 0);
-
-    for (i = 0; i < numfds; i++) {
-        fds[i] = PR_NewTCPSocket();
-        if (NULL == fds[i]) {
-            fprintf(stderr, "PR_NewTCPSocket failed\n");
-            exit(1);
-        }
-#ifdef ORDER_PRESERVED
-        if (fds[i] != savefds[numfds-1-i]) {
-            fprintf(stderr, "fd stack malfunctioned\n");
-            exit(1);
-        }
-#else
-        savefds[numfds-1-i];
-#endif
-    }
-    for (i = 0; i < numfds; i++) {
-        if (PR_Close(savefds[i]) == PR_FAILURE) {
-            fprintf(stderr, "PR_Close failed\n");
-            exit(1);
-        }
-    }
-
-    for (i = 0; i < numfds; i++) {
-        fds[i] = PR_NewTCPSocket();
-        if (NULL == fds[i]) {
-            fprintf(stderr, "PR_NewTCPSocket failed\n");
-            exit(1);
-        }
-        if (fds[i] != savefds[numfds-1-i]) {
-            fprintf(stderr, "fd stack malfunctioned\n");
             exit(1);
         }
     }
