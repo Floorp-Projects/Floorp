@@ -210,7 +210,7 @@ interface nsIPrincipal : nsISerializable
      * Returns an ASCII compatible representation
      * of the principals Origin
      */
-    readonly attribute ACString AsciiOrigin;
+    [noscript] readonly attribute ACString asciiOrigin;
 
     /**
       * Returns the ASCII Spec from the Principals URI.
@@ -220,7 +220,7 @@ interface nsIPrincipal : nsISerializable
       * WARNING: DO NOT USE FOR SECURITY CHECKS.
       * just for logging purposes!
      */
-     readonly attribute ACString AsciiSpec;
+    [noscript] readonly attribute ACString asciiSpec;
 
     /**
     * Checks if the Principal's URI Scheme matches with the parameter
@@ -260,7 +260,7 @@ interface nsIPrincipal : nsISerializable
      *
      * This method returns false instead of throwing upon errors.
      */ 
-    readonly attribute bool IsOriginPotentiallyTrustworthy;
+    readonly attribute bool isOriginPotentiallyTrustworthy;
 
     /**
      * Returns the Flags of the Principals 
