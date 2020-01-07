@@ -100,7 +100,7 @@ this.InsecurePasswordUtils = {
       if (uri.schemeIs("http")) {
         isFormSubmitHTTP = true;
         if (
-          principal.IsOriginPotentiallyTrustworthy ||
+          principal.isOriginPotentiallyTrustworthy ||
           // Ignore sites with local IP addresses pointing to local forms.
           (this._isPrincipalForLocalIPAddress(
             aForm.rootElement.nodePrincipal

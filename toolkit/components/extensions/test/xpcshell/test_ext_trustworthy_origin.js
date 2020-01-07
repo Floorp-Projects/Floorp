@@ -12,7 +12,7 @@ add_task(
       {}
     );
     Assert.equal(
-      principal.IsOriginPotentiallyTrustworthy,
+      principal.isOriginPotentiallyTrustworthy,
       true,
       "it is potentially trustworthy"
     );
