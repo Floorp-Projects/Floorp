@@ -1,4 +1,4 @@
-use Buf;
+use crate::Buf;
 
 /// Iterator over the bytes contained by the buffer.
 ///
@@ -9,10 +9,10 @@ use Buf;
 /// Basic usage:
 ///
 /// ```
-/// use bytes::{Buf, IntoBuf, Bytes};
+/// use bytes::{Buf, Bytes};
 ///
-/// let buf = Bytes::from(&b"abc"[..]).into_buf();
-/// let mut iter = buf.iter();
+/// let buf = Bytes::from(&b"abc"[..]);
+/// let mut iter = buf.into_iter();
 ///
 /// assert_eq!(iter.next(), Some(b'a'));
 /// assert_eq!(iter.next(), Some(b'b'));
@@ -23,20 +23,39 @@ use Buf;
 /// [`iter`]: trait.Buf.html#method.iter
 /// [`Buf`]: trait.Buf.html
 #[derive(Debug)]
-pub struct Iter<T> {
+pub struct IntoIter<T> {
     inner: T,
 }
 
-impl<T> Iter<T> {
-    /// Consumes this `Iter`, returning the underlying value.
+impl<T> IntoIter<T> {
+    /// Creates an iterator over the bytes contained by the buffer.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bytes::{Buf, Bytes};
+    /// use bytes::buf::IntoIter;
+    ///
+    /// let buf = Bytes::from_static(b"abc");
+    /// let mut iter = IntoIter::new(buf);
+    ///
+    /// assert_eq!(iter.next(), Some(b'a'));
+    /// assert_eq!(iter.next(), Some(b'b'));
+    /// assert_eq!(iter.next(), Some(b'c'));
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    pub fn new(inner: T) -> IntoIter<T> {
+        IntoIter { inner }
+    }
+    /// Consumes this `IntoIter`, returning the underlying value.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use bytes::{Buf, IntoBuf, Bytes};
+    /// use bytes::{Buf, Bytes};
     ///
-    /// let buf = Bytes::from(&b"abc"[..]).into_buf();
-    /// let mut iter = buf.iter();
+    /// let buf = Bytes::from(&b"abc"[..]);
+    /// let mut iter = buf.into_iter();
     ///
     /// assert_eq!(iter.next(), Some(b'a'));
     ///
@@ -54,10 +73,10 @@ impl<T> Iter<T> {
     /// # Examples
     ///
     /// ```rust
-    /// use bytes::{Buf, IntoBuf, Bytes};
+    /// use bytes::{Buf, Bytes};
     ///
-    /// let buf = Bytes::from(&b"abc"[..]).into_buf();
-    /// let mut iter = buf.iter();
+    /// let buf = Bytes::from(&b"abc"[..]);
+    /// let mut iter = buf.into_iter();
     ///
     /// assert_eq!(iter.next(), Some(b'a'));
     ///
@@ -74,27 +93,24 @@ impl<T> Iter<T> {
     /// # Examples
     ///
     /// ```rust
-    /// use bytes::{Buf, IntoBuf, BytesMut};
+    /// use bytes::{Buf, BytesMut};
     ///
-    /// let buf = BytesMut::from(&b"abc"[..]).into_buf();
-    /// let mut iter = buf.iter();
-    ///
-    /// assert_eq!(iter.next(), Some(b'a'));
-    ///
-    /// iter.get_mut().set_position(0);
+    /// let buf = BytesMut::from(&b"abc"[..]);
+    /// let mut iter = buf.into_iter();
     ///
     /// assert_eq!(iter.next(), Some(b'a'));
+    ///
+    /// iter.get_mut().advance(1);
+    ///
+    /// assert_eq!(iter.next(), Some(b'c'));
     /// ```
     pub fn get_mut(&mut self) -> &mut T {
         &mut self.inner
     }
 }
 
-pub fn new<T>(inner: T) -> Iter<T> {
-    Iter { inner: inner }
-}
 
-impl<T: Buf> Iterator for Iter<T> {
+impl<T: Buf> Iterator for IntoIter<T> {
     type Item = u8;
 
     fn next(&mut self) -> Option<u8> {
@@ -104,6 +120,7 @@ impl<T: Buf> Iterator for Iter<T> {
 
         let b = self.inner.bytes()[0];
         self.inner.advance(1);
+
         Some(b)
     }
 
@@ -113,4 +130,4 @@ impl<T: Buf> Iterator for Iter<T> {
     }
 }
 
-impl<T: Buf> ExactSizeIterator for Iter<T> { }
+impl<T: Buf> ExactSizeIterator for IntoIter<T> { }

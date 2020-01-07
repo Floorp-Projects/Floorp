@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,31 +11,26 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "bytes"
-version = "0.4.9"
-authors = ["Carl Lerche <me@carllerche.com>"]
-exclude = [".gitignore", ".travis.yml", "deploy.sh", "bench/**/*", "test/**/*"]
+version = "0.5.3"
+authors = ["Carl Lerche <me@carllerche.com>", "Sean McArthur <sean@seanmonstar.com>"]
 description = "Types and traits for working with bytes"
-homepage = "https://github.com/carllerche/bytes"
-documentation = "https://carllerche.github.io/bytes/bytes"
+documentation = "https://docs.rs/bytes"
 readme = "README.md"
 keywords = ["buffers", "zero-copy", "io"]
 categories = ["network-programming", "data-structures"]
 license = "MIT"
-repository = "https://github.com/carllerche/bytes"
-[package.metadata.docs.rs]
-features = ["i128"]
-[dependencies.byteorder]
-version = "1.1.0"
-
-[dependencies.iovec]
-version = "0.1"
-
+repository = "https://github.com/tokio-rs/bytes"
 [dependencies.serde]
 version = "1.0"
 optional = true
+[dev-dependencies.loom]
+version = "0.2.10"
+
 [dev-dependencies.serde_test]
 version = "1.0"
 
 [features]
-i128 = ["byteorder/i128"]
+default = ["std"]
+std = []

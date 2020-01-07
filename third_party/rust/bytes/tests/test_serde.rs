@@ -1,7 +1,6 @@
 #![cfg(feature = "serde")]
+#![deny(warnings, rust_2018_idioms)]
 
-extern crate bytes;
-extern crate serde_test;
 use serde_test::{Token, assert_tokens};
 
 #[test]
