@@ -59,6 +59,8 @@ class MultipartBlobImpl final : public BaseBlobImpl {
     return mBlobImpls.Length() ? &mBlobImpls : nullptr;
   }
 
+  virtual nsresult SetMutable(bool aMutable) override;
+
   void SetName(const nsAString& aName) { mName = aName; }
 
   virtual bool MayBeClonedToOtherThreads() const override;

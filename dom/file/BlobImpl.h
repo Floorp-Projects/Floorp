@@ -89,6 +89,10 @@ class BlobImpl : public nsISupports {
                                nsACString& aContentType,
                                nsACString& aCharset) = 0;
 
+  virtual nsresult GetMutable(bool* aMutable) const = 0;
+
+  virtual nsresult SetMutable(bool aMutable) = 0;
+
   virtual void SetLazyData(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            int64_t aLastModifiedDate) = 0;

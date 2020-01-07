@@ -19,6 +19,7 @@ class BaseBlobImpl : public BlobImpl {
                int64_t aLastModifiedDate)
       : mBlobImplType(aBlobImplType),
         mIsFile(true),
+        mImmutable(false),
         mContentType(aContentType),
         mName(aName),
         mStart(0),
@@ -33,6 +34,7 @@ class BaseBlobImpl : public BlobImpl {
                const nsAString& aContentType, uint64_t aLength)
       : mBlobImplType(aBlobImplType),
         mIsFile(true),
+        mImmutable(false),
         mContentType(aContentType),
         mName(aName),
         mStart(0),
@@ -47,6 +49,7 @@ class BaseBlobImpl : public BlobImpl {
                uint64_t aLength)
       : mBlobImplType(aBlobImplType),
         mIsFile(false),
+        mImmutable(false),
         mContentType(aContentType),
         mStart(0),
         mLength(aLength),
@@ -60,6 +63,7 @@ class BaseBlobImpl : public BlobImpl {
                uint64_t aStart, uint64_t aLength)
       : mBlobImplType(aBlobImplType),
         mIsFile(false),
+        mImmutable(false),
         mContentType(aContentType),
         mStart(aStart),
         mLength(aLength),
@@ -122,6 +126,10 @@ class BaseBlobImpl : public BlobImpl {
                                nsACString& aContentType,
                                nsACString& aCharset) override;
 
+  virtual nsresult GetMutable(bool* aMutable) const override;
+
+  virtual nsresult SetMutable(bool aMutable) override;
+
   virtual void SetLazyData(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            int64_t aLastModifiedDate) override {
@@ -159,6 +167,7 @@ class BaseBlobImpl : public BlobImpl {
   const nsString mBlobImplType;
 
   bool mIsFile;
+  bool mImmutable;
 
   nsString mContentType;
   nsString mName;
