@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 import re
-from xml.sax.saxutils import escape
 
 quoted_pat = re.compile(r"([^A-Za-z0-9]|^)'([^']+)'")
 js_pat = re.compile(r"([^A-Za-z0-9]|^)(JS[A-Z0-9_\*]+)")
@@ -172,24 +171,6 @@ def add_to_index(index, opcode):
     opcodes.append(opcode)
 
 
-def format_desc(descs):
-    current_type = ''
-    desc = ''
-    for (type, line) in descs:
-        if type != current_type:
-            if current_type:
-                desc += '</{name}>\n'.format(name=current_type)
-            current_type = type
-            if type:
-                desc += '<{name}>'.format(name=current_type)
-        if current_type:
-            desc += line + '\n'
-    if current_type:
-        desc += '</{name}>'.format(name=current_type)
-
-    return desc
-
-
 tag_pat = re.compile('^\s*[A-Za-z]+:\s*|\s*$')
 
 
@@ -244,7 +225,7 @@ def get_opcodes(dir):
 
             state = 'desc'
             stack = ''
-            descs = []
+            desc = ''
 
             for line in get_comment_body(comment):
                 if line.startswith('  Category:'):
@@ -269,14 +250,7 @@ def get_opcodes(dir):
                     state = 'ndefs'
                     comment_info.ndefs_override = get_tag_value(line)
                 elif state == 'desc':
-                    if line.startswith(' '):
-                        descs.append(('pre', escape(line[1:])))
-                    else:
-                        line = line.strip()
-                        if line == '':
-                            descs.append(('', line))
-                        else:
-                            descs.append(('p', codify(escape(line))))
+                    desc += line + "\n"
                 elif line.startswith('  '):
                     if state == 'operands':
                         comment_info.operands += line.strip()
@@ -289,7 +263,7 @@ def get_opcodes(dir):
                     elif state == 'ndefs':
                         comment_info.ndefs_override += line.strip()
 
-            comment_info.desc = format_desc(descs)
+            comment_info.desc = desc
 
             comment_info.operands_array = parse_csv(comment_info.operands)
             comment_info.stack_uses_array = parse_csv(comment_info.stack_uses)
