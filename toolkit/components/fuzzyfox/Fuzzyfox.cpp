@@ -72,8 +72,14 @@ Fuzzyfox::Fuzzyfox()
 
   sFuzzyfoxInitializing = fuzzyfoxEnabled;
 
-  // Should I see if these fail? And do what?
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (!prefs) {
+    // Sometimes the call to the pref service fails. If that happens, we
+    // don't add the observers. The user will have to restart to have
+    // preference changes take effect.
+    return;
+  }
+
   prefs->AddObserver(FUZZYFOX_ENABLED_PREF, this, false);
   prefs->AddObserver(FUZZYFOX_CLOCKGRAIN_PREF, this, false);
 }
