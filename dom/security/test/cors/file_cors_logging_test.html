@@ -663,7 +663,7 @@ function* runTest() {
                  "application/x-www-form-urlencoded"]
                    .includes(test.headers[name].toLowerCase()));
       }
-      req.url += "&headers=" + escape(JSON.stringify(test.headers));
+      req.url += "&headers=" + escape(test.headers.toSource());
       reqHeaders =
         escape(Object.keys(test.headers)
                .filter(isUnsafeHeader)
@@ -685,14 +685,14 @@ function* runTest() {
     if (test.preflightStatus)
       req.url += "&preflightStatus=" + test.preflightStatus;
     if (test.responseHeaders)
-      req.url += "&responseHeaders=" + escape(JSON.stringify(test.responseHeaders));
+      req.url += "&responseHeaders=" + escape(test.responseHeaders.toSource());
     if (test.exposeHeaders)
       req.url += "&exposeHeaders=" + escape(test.exposeHeaders);
     if (test.preflightBody)
       req.url += "&preflightBody=" + escape(test.preflightBody);
 
-    loaderWindow.postMessage(JSON.stringify(req), origin);
-    res = JSON.parse(yield);
+    loaderWindow.postMessage(req.toSource(), origin);
+    res = eval(yield);
   }
 
   // Test cookie behavior
@@ -795,9 +795,9 @@ function* runTest() {
     if ("allowMethods" in test)
       req.url += "&allowMethods=" + escape(test.allowMethods);
 
-    loaderWindow.postMessage(JSON.stringify(req), origin);
+    loaderWindow.postMessage(req.toSource(), origin);
 
-    res = JSON.parse(yield);
+    res = eval(yield);
   }
 
   // Make sure to clear cookies to avoid affecting other tests
@@ -1285,7 +1285,7 @@ function* runTest() {
   for (test of tests) {
     req = {
       url: test.hops[0].server + basePath + "hop=1&hops=" +
-           escape(JSON.stringify(test.hops)),
+           escape(test.hops.toSource()),
       method: test.method,
       headers: test.headers,
       body: test.body,
@@ -1297,9 +1297,9 @@ function* runTest() {
         req.url += "&body=" + escape(test.body);
     }
 
-    loaderWindow.postMessage(JSON.stringify(req), origin);
+    loaderWindow.postMessage(req.toSource(), origin);
 
-    res = JSON.parse(yield);
+    res = eval(yield);
   }
 
   document.location.href += "#finished";
