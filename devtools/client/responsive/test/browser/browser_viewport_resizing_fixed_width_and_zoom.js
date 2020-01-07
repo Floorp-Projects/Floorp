@@ -11,11 +11,6 @@ const TEST_URL =
   'initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"></head>' +
   "<body>meta viewport scaled locked at 1.0</body>";
 addRDMTask(TEST_URL, async function({ ui, manager }) {
-  // Turn on the pref that allows meta viewport support.
-  await SpecialPowers.pushPrefEnv({
-    set: [["devtools.responsive.metaViewport.enabled", true]],
-  });
-
   const store = ui.toolWindow.store;
 
   // Wait until the viewport has been added.

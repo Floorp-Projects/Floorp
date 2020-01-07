@@ -10,8 +10,6 @@ const TEST_URL =
 addRDMTask(
   TEST_URL,
   async function({ ui, manager }) {
-    await pushPref("devtools.responsive.metaViewport.enabled", true);
-
     ok(ui, "An instance of the RDM should be attached to the tab.");
     await setViewportSizeAndAwaitReflow(ui, manager, 110, 500);
 
