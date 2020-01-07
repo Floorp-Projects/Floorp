@@ -314,7 +314,7 @@ static_assert(mozilla::ArrayLength(slotsToThingKind) ==
 FOR_EACH_ALLOCKIND(CHECK_THING_SIZE);
 #undef CHECK_THING_SIZE
 
-const uint32_t Arena::ThingSizes[] = {
+const uint8_t Arena::ThingSizes[] = {
 #define EXPAND_THING_SIZE(allocKind, traceKind, type, sizedType, bgFinal, \
                           nursery, compact)                               \
   sizeof(sizedType),
@@ -330,7 +330,7 @@ FreeSpan FreeLists::emptySentinel;
 #define OFFSET(type) \
   uint32_t(ArenaHeaderSize + (ArenaSize - ArenaHeaderSize) % sizeof(type))
 
-const uint32_t Arena::FirstThingOffsets[] = {
+const uint8_t Arena::FirstThingOffsets[] = {
 #define EXPAND_FIRST_THING_OFFSET(allocKind, traceKind, type, sizedType, \
                                   bgFinal, nursery, compact)             \
   OFFSET(sizedType),
@@ -342,7 +342,7 @@ const uint32_t Arena::FirstThingOffsets[] = {
 
 #define COUNT(type) uint32_t((ArenaSize - ArenaHeaderSize) / sizeof(type))
 
-const uint32_t Arena::ThingsPerArena[] = {
+const uint8_t Arena::ThingsPerArena[] = {
 #define EXPAND_THINGS_PER_ARENA(allocKind, traceKind, type, sizedType, \
                                 bgFinal, nursery, compact)             \
   COUNT(sizedType),
@@ -432,6 +432,17 @@ void Arena::staticAsserts() {
   static_assert(
       mozilla::ArrayLength(ThingsPerArena) == size_t(AllocKind::LIMIT),
       "We haven't defined all counts.");
+}
+
+/* static */
+inline void Arena::checkLookupTables() {
+#ifdef DEBUG
+  for (size_t i = 0; i < size_t(AllocKind::LIMIT); i++) {
+    MOZ_ASSERT(
+        FirstThingOffsets[i] + ThingsPerArena[i] * ThingSizes[i] == ArenaSize,
+        "Inconsistent arena lookup table data");
+  }
+#endif
 }
 
 template <typename T>
@@ -1212,6 +1223,7 @@ void js::gc::DumpArenaInfo() {
 
 bool GCRuntime::init(uint32_t maxbytes) {
   MOZ_ASSERT(SystemPageSize());
+  Arena::checkLookupTables();
 
   {
     AutoLockGCBgAlloc lock(this);
