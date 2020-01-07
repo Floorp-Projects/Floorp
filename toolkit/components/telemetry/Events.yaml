@@ -1802,7 +1802,7 @@ pictureinpicture:
       - main
     bug_numbers:
       - 1560590
-    expiry_version: "74"
+    expiry_version: "78"
     release_channel_collection: opt-in
   resize:
     objects: ["player"]
@@ -1822,7 +1822,7 @@ pictureinpicture:
       - main
     bug_numbers:
       - 1560590
-    expiry_version: "74"
+    expiry_version: "78"
     release_channel_collection: opt-in
   move:
     objects: ["player"]
@@ -1842,5 +1842,5 @@ pictureinpicture:
       - main
     bug_numbers:
       - 1560590
-    expiry_version: "74"
+    expiry_version: "78"
     release_channel_collection: opt-in

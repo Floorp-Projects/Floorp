@@ -569,6 +569,97 @@ var gTests = [
       await promptNoDelegateScreenSharing("test2.example.com");
     },
   },
+
+  {
+    desc:
+      "Prompt and display both first party and third party origin and temporary deny in frame does not change permission scope",
+    skipObserverVerification: true,
+    run: async function checkPromptBothOriginsTempDenyFrame() {
+      // Persistent allowed first party origin
+      let browser = gBrowser.selectedBrowser;
+      let uri = gBrowser.selectedBrowser.documentURI;
+      let principal = Services.scriptSecurityManager.createContentPrincipal(
+        uri,
+        {}
+      );
+
+      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      await promiseRequestDevice(true, true);
+      await promise;
+      await observerPromise;
+
+      // Ensure that checking the 'Remember this decision'
+      let notification = PopupNotifications.panel.firstElementChild;
+      let checkbox = notification.checkbox;
+      ok(!!checkbox, "checkbox is present");
+      ok(!checkbox.checked, "checkbox is not checked");
+      checkbox.click();
+
+      let indicator = promiseIndicatorWindow();
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
+      await promiseMessage("ok", () =>
+        EventUtils.synthesizeMouseAtCenter(notification.button, {})
+      );
+      await observerPromise1;
+      await observerPromise2;
+      Assert.deepEqual(
+        await getMediaCaptureState(),
+        { audio: true, video: true },
+        "expected camera and microphone to be shared"
+      );
+      await indicator;
+      await checkSharingUI({ audio: true, video: true });
+      await closeStream(true);
+
+      // Check that we get a prompt.
+      observerPromise = expectObserverCalled("getUserMedia:request");
+      promise = promisePopupNotificationShown("webRTC-shareDevices");
+      await promiseRequestDevice(true, true, "frame4");
+      await promise;
+      await observerPromise;
+
+      // The 'Remember this decision' checkbox is hidden.
+      notification = PopupNotifications.panel.firstElementChild;
+      checkbox = notification.checkbox;
+      ok(!!checkbox, "checkbox is present");
+      ok(checkbox.hidden, "checkbox is not visible");
+
+      observerPromise1 = expectObserverCalled("getUserMedia:response:deny");
+      observerPromise2 = expectObserverCalled("recording-window-ended");
+      await promiseMessage(permissionError, () => {
+        activateSecondaryAction(kActionDeny);
+      });
+
+      await observerPromise1;
+      await observerPromise2;
+      await checkNotSharing();
+
+      // Make sure we are not changing the scope and state of persistent
+      // permission
+      let { state, scope } = SitePermissions.getForPrincipal(
+        principal,
+        "camera",
+        browser
+      );
+      Assert.equal(state, SitePermissions.ALLOW);
+      Assert.equal(scope, SitePermissions.SCOPE_PERSISTENT);
+
+      ({ state, scope } = SitePermissions.getForPrincipal(
+        principal,
+        "microphone",
+        browser
+      ));
+      Assert.equal(state, SitePermissions.ALLOW);
+      Assert.equal(scope, SitePermissions.SCOPE_PERSISTENT);
+
+      PermissionTestUtils.remove(uri, "camera");
+      PermissionTestUtils.remove(uri, "microphone");
+    },
+  },
 ];
 
 add_task(async function test() {

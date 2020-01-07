@@ -1357,7 +1357,6 @@ void AssertValidBigIntPtr(JSContext* cx, JS::BigInt* bi) {
   // FIXME: check runtime?
   MOZ_ASSERT(cx->zone() == bi->zone());
   MOZ_ASSERT(bi->isAligned());
-  MOZ_ASSERT(bi->isTenured());
   MOZ_ASSERT(bi->getAllocKind() == gc::AllocKind::BIGINT);
 }
 
@@ -1973,9 +1972,14 @@ bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
   return ToNumeric(cx, ret);
 }
 
-void* AllocateBigIntNoGC(JSContext* cx) {
+void* AllocateBigIntNoGC(JSContext* cx, bool requestMinorGC) {
   AutoUnsafeCallWithABI unsafe;
-  return js::Allocate<BigInt, NoGC>(cx);
+
+  if (requestMinorGC) {
+    cx->nursery().requestMinorGC(JS::GCReason::OUT_OF_NURSERY);
+  }
+
+  return js::AllocateBigInt<NoGC>(cx, gc::TenuredHeap);
 }
 
 template <EqualityKind Kind>

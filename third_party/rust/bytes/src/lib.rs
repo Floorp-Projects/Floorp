@@ -1,3 +1,7 @@
+#![deny(warnings, missing_docs, missing_debug_implementations, rust_2018_idioms)]
+#![doc(html_root_url = "https://docs.rs/bytes/0.5.3")]
+#![no_std]
+
 //! Provides abstractions for working with bytes.
 //!
 //! The `bytes` crate provides an efficient byte buffer structure
@@ -9,7 +13,7 @@
 //!
 //! # `Bytes`
 //!
-//! `Bytes` is an efficient container for storing and operating on continguous
+//! `Bytes` is an efficient container for storing and operating on contiguous
 //! slices of memory. It is intended for use primarily in networking code, but
 //! could have applications elsewhere as well.
 //!
@@ -23,18 +27,18 @@
 //! example:
 //!
 //! ```rust
-//! use bytes::{BytesMut, BufMut, BigEndian};
+//! use bytes::{BytesMut, BufMut};
 //!
 //! let mut buf = BytesMut::with_capacity(1024);
 //! buf.put(&b"hello world"[..]);
-//! buf.put_u16::<BigEndian>(1234);
+//! buf.put_u16(1234);
 //!
-//! let a = buf.take();
+//! let a = buf.split();
 //! assert_eq!(a, b"hello world\x04\xD2"[..]);
 //!
 //! buf.put(&b"goodbye world"[..]);
 //!
-//! let b = buf.take();
+//! let b = buf.split();
 //! assert_eq!(b, b"goodbye world"[..]);
 //!
 //! assert_eq!(buf.capacity(), 998);
@@ -68,34 +72,47 @@
 //! perform a syscall, which has the potential of failing. Operations on `Buf`
 //! and `BufMut` are infallible.
 
-#![deny(warnings, missing_docs, missing_debug_implementations)]
-#![doc(html_root_url = "https://docs.rs/bytes/0.4.9")]
 
-extern crate byteorder;
-extern crate iovec;
+extern crate alloc;
+
+#[cfg(feature = "std")]
+extern crate std;
 
 pub mod buf;
-pub use buf::{
+pub use crate::buf::{
     Buf,
     BufMut,
-    IntoBuf,
-};
-#[deprecated(since = "0.4.1", note = "moved to `buf` module")]
-#[doc(hidden)]
-pub use buf::{
-    Reader,
-    Writer,
-    Take,
 };
 
+mod bytes_mut;
 mod bytes;
 mod debug;
-pub use bytes::{Bytes, BytesMut};
-
-#[deprecated]
-pub use byteorder::{ByteOrder, BigEndian, LittleEndian};
+mod hex;
+mod loom;
+pub use crate::bytes_mut::BytesMut;
+pub use crate::bytes::Bytes;
 
 // Optional Serde support
 #[cfg(feature = "serde")]
-#[doc(hidden)]
-pub mod serde;
+mod serde;
+
+#[inline(never)]
+#[cold]
+fn abort() -> ! {
+    #[cfg(feature = "std")]
+    {
+        std::process::abort();
+    }
+
+    #[cfg(not(feature = "std"))]
+    {
+        struct Abort;
+        impl Drop for Abort {
+            fn drop(&mut self) {
+                panic!();
+            }
+        }
+        let _a = Abort;
+        panic!("abort");
+    }
+}

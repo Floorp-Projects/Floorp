@@ -27,7 +27,7 @@ function runSandboxTest(testFunc, argString) {
   var finishFuncName = 'finish_' + testFunc.name;
   SpecialPowers.Cu.exportFunction(_ => resolvePromise(), sb,
                                   { defineAs: finishFuncName });
-  SpecialPowers.Cu.evalInSandbox('(' + testFunc.toSource() + ')' +
+  SpecialPowers.Cu.evalInSandbox('(' + testFunc.toString() + ')' +
                                  '(' + argString + ')' +
                                  '.then(' + finishFuncName + ');', sb);
   return testPromise;

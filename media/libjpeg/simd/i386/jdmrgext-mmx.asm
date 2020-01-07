@@ -13,8 +13,6 @@
 ; assembler (including Borland's Turbo Assembler).
 ; NASM is available from http://nasm.sourceforge.net/ or
 ; http://sourceforge.net/project/showfiles.php?group_id=6208
-;
-; [TAB8]
 
 %include "jcolsamp.inc"
 
@@ -283,7 +281,7 @@ EXTN(jsimd_h2v1_merged_upsample_mmx):
     movd        eax, mmA
     cmp         ecx, byte SIZEOF_DWORD
     jb          short .column_st2
-    mov         DWORD [edi+0*SIZEOF_DWORD], eax
+    mov         dword [edi+0*SIZEOF_DWORD], eax
     psrlq       mmA, DWORD_BIT
     movd        eax, mmA
     sub         ecx, byte SIZEOF_DWORD
@@ -291,14 +289,14 @@ EXTN(jsimd_h2v1_merged_upsample_mmx):
 .column_st2:
     cmp         ecx, byte SIZEOF_WORD
     jb          short .column_st1
-    mov         WORD [edi+0*SIZEOF_WORD], ax
+    mov         word [edi+0*SIZEOF_WORD], ax
     shr         eax, WORD_BIT
     sub         ecx, byte SIZEOF_WORD
     add         edi, byte SIZEOF_WORD
 .column_st1:
     cmp         ecx, byte SIZEOF_BYTE
     jb          short .endcolumn
-    mov         BYTE [edi+0*SIZEOF_BYTE], al
+    mov         byte [edi+0*SIZEOF_BYTE], al
 
 %else  ; RGB_PIXELSIZE == 4 ; -----------
 
@@ -373,7 +371,7 @@ EXTN(jsimd_h2v1_merged_upsample_mmx):
 .column_st4:
     cmp         ecx, byte SIZEOF_MMWORD/8
     jb          short .endcolumn
-    movd        DWORD [edi+0*SIZEOF_DWORD], mmA
+    movd        dword [edi+0*SIZEOF_DWORD], mmA
 
 %endif  ; RGB_PIXELSIZE ; ---------------
 

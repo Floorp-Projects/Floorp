@@ -20,9 +20,6 @@ let gen;
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("This test needs to generate artificial pauses, hence it uses timeouts.  There is no way around it, unfortunately. :(");
 
-SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
-                                     true]]});
-
 window.addEventListener("message", function(e) {
   gen.next(e.data);
 });
@@ -541,16 +538,16 @@ function* runTest() {
             cacheTime: test.cacheTime,
             withCred: test.withCred };
     xhr = new XMLHttpRequest();
-    xhr.open("POST", setStateURL + escape(sec.toSource()), true);
+    xhr.open("POST", setStateURL + escape(JSON.stringify(sec)), true);
     xhr.onloadend = function() { gen.next(); }
     xhr.send();
     yield undefined;
 
-    loaderWindow.postMessage(req.toSource(), origin);
+    loaderWindow.postMessage(JSON.stringify(req), origin);
 
-    res = eval(yield);
+    res = JSON.parse(yield);
 
-    testName = test.toSource() + " (index " + tests.indexOf(test) + ")";
+    testName = JSON.stringify(test) + " (index " + tests.indexOf(test) + ")";
 
     if (test.pass) {
       is(res.didFail, false,

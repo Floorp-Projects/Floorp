@@ -391,19 +391,31 @@ static void ComposeSortedEffects(
     const nsTArray<KeyframeEffect*>& aSortedEffects,
     const EffectSet* aEffectSet, EffectCompositor::CascadeLevel aCascadeLevel,
     RawServoAnimationValueMap* aAnimationValues) {
-  // If multiple animations affect the same property, animations with higher
-  // composite order (priority) override or add to animations with lower
-  // priority.
+  const bool isTransition =
+      aCascadeLevel == EffectCompositor::CascadeLevel::Transitions;
   nsCSSPropertyIDSet propertiesToSkip;
+  // Transitions should be overridden by running animations of the same
+  // property per https://drafts.csswg.org/css-transitions/#application:
+  //
+  // > Implementations must add this value to the cascade if and only if that
+  // > property is not currently undergoing a CSS Animation on the same element.
+  //
+  // FIXME(emilio, bug 1606176): This should assert that
+  // aEffectSet->PropertiesForAnimationsLevel() is up-to-date, and it may not
+  // follow the spec in those cases. There are various places where we get style
+  // without flushing that would trigger the below assertion.
+  //
+  // MOZ_ASSERT_IF(aEffectSet, !aEffectSet->CascadeNeedsUpdate());
   if (aEffectSet) {
     propertiesToSkip =
-        aCascadeLevel == EffectCompositor::CascadeLevel::Animations
-            ? aEffectSet->PropertiesForAnimationsLevel().Inverse()
-            : aEffectSet->PropertiesForAnimationsLevel();
+        isTransition ? aEffectSet->PropertiesForAnimationsLevel()
+                     : aEffectSet->PropertiesForAnimationsLevel().Inverse();
   }
 
   for (KeyframeEffect* effect : aSortedEffects) {
-    effect->GetAnimation()->ComposeStyle(*aAnimationValues, propertiesToSkip);
+    auto* animation = effect->GetAnimation();
+    MOZ_ASSERT(!isTransition || animation->CascadeLevel() == aCascadeLevel);
+    animation->ComposeStyle(*aAnimationValues, propertiesToSkip);
   }
 }
 
@@ -423,11 +435,27 @@ bool EffectCompositor::GetServoAnimationRule(
     return false;
   }
 
+  const bool isTransition = aCascadeLevel == CascadeLevel::Transitions;
+
   // Get a list of effects sorted by composite order.
   nsTArray<KeyframeEffect*> sortedEffectList(effectSet->Count());
   for (KeyframeEffect* effect : *effectSet) {
+    if (isTransition &&
+        effect->GetAnimation()->CascadeLevel() != aCascadeLevel) {
+      // We may need to use transition rules for the animations level for the
+      // case of missing keyframes in animations, but we don't ever need to look
+      // at non-transition levels to build a transition rule. When the effect
+      // set information is out of date (see above), this avoids creating bogus
+      // transition rules, see bug 1605610.
+      continue;
+    }
     sortedEffectList.AppendElement(effect);
   }
+
+  if (sortedEffectList.IsEmpty()) {
+    return false;
+  }
+
   sortedEffectList.Sort(EffectCompositeOrderComparator());
 
   ComposeSortedEffects(sortedEffectList, effectSet, aCascadeLevel,
@@ -461,8 +489,7 @@ bool EffectCompositor::ComposeServoAnimationRuleForEffect(
   // where the cascade results are updated in the pre-traversal as needed.
   // This function, however, is only called when committing styles so we
   // need to ensure the cascade results are up-to-date manually.
-  EffectCompositor::MaybeUpdateCascadeResults(target->mElement,
-                                              target->mPseudoType);
+  MaybeUpdateCascadeResults(target->mElement, target->mPseudoType);
 
   EffectSet* effectSet =
       EffectSet::GetEffectSet(target->mElement, target->mPseudoType);

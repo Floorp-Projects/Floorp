@@ -1,6 +1,5 @@
 #![feature(test)]
 
-extern crate http;
 extern crate test;
 
 use http::Uri;

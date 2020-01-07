@@ -60,6 +60,13 @@ enum Stat {
   // being tenured.
   STAT_NURSERY_STRING_REALMS_DISABLED,
 
+  // Number of BigInts tenured.
+  STAT_BIGINTS_TENURED,
+
+  // Number of realms that had nursery BigInts disabled due to large numbers
+  // being tenured.
+  STAT_NURSERY_BIGINT_REALMS_DISABLED,
+
   STAT_LIMIT
 };
 

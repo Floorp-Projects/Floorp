@@ -106,7 +106,8 @@ class CellColor {
 // heap extend either gc::Cell or gc::TenuredCell. If a type is always tenured,
 // prefer the TenuredCell class as base.
 //
-// The first word (a pointer or uintptr_t) of each Cell must reserve the low
+// The first word (a pointer or uintptr_t) of each Cell must reserve the low bit
+// for GC purposes. In addition to that, nursery Cells must reserve the low
 // Cell::ReservedBits bits for GC purposes. The remaining bits are available to
 // sub-classes and typically store a pointer to another gc::Cell.
 //
@@ -116,17 +117,21 @@ class CellColor {
 struct alignas(gc::CellAlignBytes) Cell {
  public:
   // The low bits of the first word of each Cell are reserved for GC flags.
-  static constexpr int ReservedBits = 2;
+  static constexpr int ReservedBits = 3;
   static constexpr uintptr_t RESERVED_MASK = BitMask(ReservedBits);
 
   // Indicates if the cell is currently a RelocationOverlay
   static constexpr uintptr_t FORWARD_BIT = Bit(0);
 
   // When a Cell is in the nursery, this will indicate if it is a JSString (1)
-  // or JSObject (0). When not in nursery, this bit is still reserved for
+  // or JSObject/BigInt (0). When not in nursery, this bit is still reserved for
   // JSString to use as JSString::NON_ATOM bit. This may be removed by Bug
   // 1376646.
   static constexpr uintptr_t JSSTRING_BIT = Bit(1);
+
+  // When a Cell is in the nursery, this will indicate if it is a BigInt (1)
+  // or JSObject/JSString (0).
+  static constexpr uintptr_t BIGINT_BIT = Bit(2);
 
   MOZ_ALWAYS_INLINE bool isTenured() const { return !IsInsideNursery(this); }
   MOZ_ALWAYS_INLINE const TenuredCell& asTenured() const;
@@ -170,6 +175,12 @@ struct alignas(gc::CellAlignBytes) Cell {
     MOZ_ASSERT(!isTenured());
     uintptr_t firstWord = *reinterpret_cast<const uintptr_t*>(this);
     return firstWord & JSSTRING_BIT;
+  }
+
+  inline bool nurseryCellIsBigInt() const {
+    MOZ_ASSERT(!isTenured());
+    uintptr_t firstWord = *reinterpret_cast<const uintptr_t*>(this);
+    return firstWord & BIGINT_BIT;
   }
 
   template <class T>
@@ -342,13 +353,28 @@ inline StoreBuffer* Cell::storeBuffer() const {
   return chunk()->trailer.storeBuffer;
 }
 
+#ifdef DEBUG
+extern Cell* UninlinedForwarded(const Cell* cell);
+#endif
+
 inline JS::TraceKind Cell::getTraceKind() const {
   if (isTenured()) {
+    MOZ_ASSERT_IF(isForwarded(), UninlinedForwarded(this)->getTraceKind() ==
+                                     asTenured().getTraceKind());
     return asTenured().getTraceKind();
   }
   if (nurseryCellIsString()) {
+    MOZ_ASSERT_IF(isForwarded(), UninlinedForwarded(this)->getTraceKind() ==
+                                     JS::TraceKind::String);
     return JS::TraceKind::String;
   }
+  if (nurseryCellIsBigInt()) {
+    MOZ_ASSERT_IF(isForwarded(), UninlinedForwarded(this)->getTraceKind() ==
+                                     JS::TraceKind::BigInt);
+    return JS::TraceKind::BigInt;
+  }
+  MOZ_ASSERT_IF(isForwarded(), UninlinedForwarded(this)->getTraceKind() ==
+                                   JS::TraceKind::Object);
   return JS::TraceKind::Object;
 }
 

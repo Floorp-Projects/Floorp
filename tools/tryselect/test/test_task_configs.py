@@ -40,6 +40,17 @@ TASK_CONFIG_TESTS = {
         (['--rebuild', '1'], SystemExit),
         (['--rebuild', '21'], SystemExit),
     ],
+    'worker-overrides': [
+        ([], None),
+        (['--worker-override', 'alias=worker/pool'],
+         {'worker-overrides': {'alias': 'worker/pool'}}),
+        (['--worker-override', 'alias=worker/pool', '--worker-override', 'alias=other/pool'],
+         SystemExit),
+        (['--worker-suffix', 'b-linux=-dev'],
+         {'worker-overrides': {'b-linux': 'gecko-1/b-linux-dev'}}),
+        (['--worker-override', 'b-linux=worker/pool' '--worker-suffix', 'b-linux=-dev'],
+         SystemExit),
+    ]
 }
 
 

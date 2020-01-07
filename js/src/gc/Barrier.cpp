@@ -207,6 +207,13 @@ JS_PUBLIC_API void JS::HeapStringPostWriteBarrier(JSString** strp,
   js::InternalBarrierMethods<JSString*>::postBarrier(strp, prev, next);
 }
 
+JS_PUBLIC_API void JS::HeapBigIntPostWriteBarrier(JS::BigInt** bip,
+                                                  JS::BigInt* prev,
+                                                  JS::BigInt* next) {
+  MOZ_ASSERT(bip);
+  js::InternalBarrierMethods<JS::BigInt*>::postBarrier(bip, prev, next);
+}
+
 JS_PUBLIC_API void JS::HeapValuePostWriteBarrier(JS::Value* valuep,
                                                  const Value& prev,
                                                  const Value& next) {
@@ -229,6 +236,14 @@ JS_PUBLIC_API void JS::HeapStringWriteBarriers(JSString** strp, JSString* prev,
   MOZ_ASSERT(strp);
   js::InternalBarrierMethods<JSString*>::preBarrier(prev);
   js::InternalBarrierMethods<JSString*>::postBarrier(strp, prev, next);
+}
+
+JS_PUBLIC_API void JS::HeapBigIntWriteBarriers(JS::BigInt** bip,
+                                               JS::BigInt* prev,
+                                               JS::BigInt* next) {
+  MOZ_ASSERT(bip);
+  js::InternalBarrierMethods<JS::BigInt*>::preBarrier(prev);
+  js::InternalBarrierMethods<JS::BigInt*>::postBarrier(bip, prev, next);
 }
 
 JS_PUBLIC_API void JS::HeapScriptWriteBarriers(JSScript** scriptp,

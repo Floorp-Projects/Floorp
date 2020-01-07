@@ -554,6 +554,9 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::ZoneData<uint32_t> tenuredStrings;
   js::ZoneData<bool> allocNurseryStrings;
 
+  js::ZoneData<uint32_t> tenuredBigInts;
+  js::ZoneData<bool> allocNurseryBigInts;
+
  private:
   // Shared Shape property tree.
   js::ZoneData<js::PropertyTree> propertyTree_;

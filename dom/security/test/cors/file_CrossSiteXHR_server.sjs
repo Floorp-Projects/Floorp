@@ -25,7 +25,7 @@ function handleRequest(request, response)
 
   if (query.hop) {
     query.hop = parseInt(query.hop, 10);
-    hops = eval(query.hops);
+    hops = JSON.parse(query.hops);
     var curHop = hops[query.hop - 1];
     query.allowOrigin = curHop.allowOrigin;
     query.allowHeaders = curHop.allowHeaders;
@@ -50,7 +50,7 @@ function handleRequest(request, response)
   }
 
   if (!isPreflight && "headers" in query) {
-    headers = eval(query.headers);
+    headers = JSON.parse(query.headers);
     for(headerName in headers) {
       // Content-Type is changed if there was a body 
       if (!(headerName == "Content-Type" && body) &&
@@ -142,7 +142,7 @@ function handleRequest(request, response)
   }
   else {
     if (query.responseHeaders) {
-      let responseHeaders = eval(query.responseHeaders);
+      let responseHeaders = JSON.parse(query.responseHeaders);
       for (let responseHeader in responseHeaders) {
         response.setHeader(responseHeader, responseHeaders[responseHeader]);
       }

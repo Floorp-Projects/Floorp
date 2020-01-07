@@ -1431,6 +1431,11 @@ void MacroAssembler::branchTestBigInt(Condition cond, Register tag,
   branchTestBigIntImpl(cond, tag, label);
 }
 
+void MacroAssembler::branchTestBigInt(Condition cond, const Address& address,
+                                      Label* label) {
+  branchTestBigIntImpl(cond, address, label);
+}
+
 void MacroAssembler::branchTestBigInt(Condition cond, const BaseIndex& address,
                                       Label* label) {
   branchTestBigIntImpl(cond, address, label);

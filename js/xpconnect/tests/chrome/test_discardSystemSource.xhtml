@@ -28,11 +28,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990353
   function frameLoaded() {
     switch (++gLoadCount) {
       case 1:
-        ok(/native code/.test(window[0].canary.toSource()), "System function should be sourceless: " + window[0].canary.toSource());
-        ok(/native code/.test(window[0].onload.toSource()), "System event handler should be sourceless: " + window[0].onload.toSource());
+        ok(/native code/.test(window[0].canary.toString()), "System function should be sourceless: " + window[0].canary.toString());
+        ok(/native code/.test(window[0].onload.toString()), "System event handler should be sourceless: " + window[0].onload.toString());
         var sb = new Cu.Sandbox('http://www.example.com', { discardSource: true });
         Cu.evalInSandbox('function canary() { var someBitOfSource = 42; }', sb);
-        ok(/native code/.test(sb.canary.toSource()), "Function from sandbox with explicit discarding should be sourceless");
+        ok(/native code/.test(sb.canary.toString()), "Function from sandbox with explicit discarding should be sourceless");
         try {
           window[0].throwSomething();
           ok(false, "should have thrown");
@@ -43,8 +43,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990353
         window[0].location = "http://example.org/tests/js/xpconnect/tests/chrome/file_discardSystemSource.html";
         break;
       case 2:
-        ok(/someBitOfSource/.test(Cu.waiveXrays(window[0]).canary.toSource()), "Content function should have source");
-        ok(/someBitOfSource/.test(Cu.waiveXrays(window[0]).onload.toSource()), "Content event handler should have source");
+        ok(/someBitOfSource/.test(Cu.waiveXrays(window[0]).canary.toString()), "Content function should have source");
+        ok(/someBitOfSource/.test(Cu.waiveXrays(window[0]).onload.toString()), "Content event handler should have source");
         testWorker();
         break;
     }
@@ -65,7 +65,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=990353
   function go() {
     // We should have our own source, because the pref wasn't enabled when we
     // were loaded.
-    ok(/someBitOfSource/.test(canary.toSource()), "Should have own source");
+    ok(/someBitOfSource/.test(canary.toString()), "Should have own source");
 
     window[0].frameElement.onload = frameLoaded;
     window[0].location = "file_discardSystemSource.html";

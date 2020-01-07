@@ -1835,12 +1835,18 @@ def build_task(config, tasks):
     for task in tasks:
         level = str(config.params['level'])
 
-        provisioner_id, worker_type = get_worker_type(
-            config.graph_config,
-            task['worker-type'],
-            level=level,
-            release_level=config.params.release_level(),
-        )
+        if task['worker-type'] in config.params['try_task_config'].get('worker-overrides', {}):
+            worker_pool = (
+                config.params['try_task_config']['worker-overrides'][task['worker-type']]
+            )
+            provisioner_id, worker_type = worker_pool.split('/', 1)
+        else:
+            provisioner_id, worker_type = get_worker_type(
+                config.graph_config,
+                task['worker-type'],
+                level=level,
+                release_level=config.params.release_level(),
+            )
         task['worker-type'] = '/'.join([provisioner_id, worker_type])
         project = config.params['project']
 

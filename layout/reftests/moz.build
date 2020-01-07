@@ -21,6 +21,9 @@ TEST_HARNESS_FILES.testing.mochitest.tests.fonts += [
 
 REFTEST_MANIFESTS += ['reftest.list']
 
+with Files("**"):
+    SCHEDULES.exclusive = ['reftest']
+
 with Files('abs-pos/**'):
     BUG_COMPONENT = ('Core', 'Layout: Positioned')
 with Files('async-scrolling/**'):

@@ -14,11 +14,8 @@
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "mozilla/Unused.h"
-#include "nsIAuthPrompt.h"
-#include "nsIAuthPrompt2.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIPrompt.h"
-#include "nsIPromptFactory.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIWindowWatcher.h"
 #include "nsQueryObject.h"
@@ -195,16 +192,6 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
   if (mNextListener && NS_SUCCEEDED(CallQueryInterface(mNextListener.get(),
                                                        getter_AddRefs(ir)))) {
     return ir->GetInterface(aIID, result);
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
-      aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
-    nsresult rv;
-    nsCOMPtr<nsIPromptFactory> wwatch =
-        do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return wwatch->GetPrompt(nullptr, aIID, reinterpret_cast<void**>(result));
   }
 
   return NS_NOINTERFACE;

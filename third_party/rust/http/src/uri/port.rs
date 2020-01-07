@@ -19,7 +19,7 @@ impl<T> Port<T> {
     /// # use http::uri::Authority;
     /// let authority: Authority = "example.org:80".parse().unwrap();
     ///
-    /// let port = authority.port_part().unwrap();
+    /// let port = authority.port().unwrap();
     /// assert_eq!(port.as_u16(), 80);
     /// ```
     pub fn as_u16(&self) -> u16 {
@@ -38,13 +38,8 @@ where
         bytes
             .as_ref()
             .parse::<u16>()
-            .map(|port| Port {
-                port,
-                repr: bytes,
-            })
-            .map_err(|_| {
-                ErrorKind::InvalidPort.into()
-            })
+            .map(|port| Port { port, repr: bytes })
+            .map_err(|_| ErrorKind::InvalidPort.into())
     }
 
     /// Returns the port number as a `str`.
@@ -57,7 +52,7 @@ where
     /// # use http::uri::Authority;
     /// let authority: Authority = "example.org:80".parse().unwrap();
     ///
-    /// let port = authority.port_part().unwrap();
+    /// let port = authority.port().unwrap();
     /// assert_eq!(port.as_str(), "80");
     /// ```
     pub fn as_str(&self) -> &str {
@@ -69,15 +64,13 @@ impl<T> fmt::Debug for Port<T>
 where
     T: fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_tuple("Port")
-            .field(&self.port)
-            .finish()
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("Port").field(&self.port).finish()
     }
 }
 
 impl<T> fmt::Display for Port<T> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Use `u16::fmt` so that it respects any formatting flags that
         // may have been set (like padding, align, etc).
         fmt::Display::fmt(&self.port, f)

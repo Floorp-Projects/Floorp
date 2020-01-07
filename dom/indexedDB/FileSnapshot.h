@@ -123,14 +123,6 @@ class BlobImplSnapshot final : public BlobImpl, public PIBlobImplSnapshot {
                                   aCharset);
   }
 
-  virtual nsresult GetMutable(bool* aMutable) const override {
-    return mBlobImpl->GetMutable(aMutable);
-  }
-
-  virtual nsresult SetMutable(bool aMutable) override {
-    return mBlobImpl->SetMutable(aMutable);
-  }
-
   virtual void SetLazyData(const nsAString& aName,
                            const nsAString& aContentType, uint64_t aLength,
                            int64_t aLastModifiedDate) override {

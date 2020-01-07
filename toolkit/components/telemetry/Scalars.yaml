@@ -1021,7 +1021,7 @@ pictureinpicture:
     description: >
       The number of times a Picture-in-Picture window was opened, per trigger
       mechanism (e.g.: the video toggle, the context menu).
-    expires: "74"
+    expires: "78"
     kind: uint
     keyed: true
     notification_emails:
@@ -1043,7 +1043,7 @@ pictureinpicture:
       The number of times a Picture-in-Picture window was closed, per trigger
       mechanism (e.g.: the close button, the unpip button, originating tab going away,
       process shutdown, etc).
-    expires: "74"
+    expires: "78"
     kind: uint
     keyed: true
     notification_emails:
@@ -5038,6 +5038,23 @@ fxrPC:
     record_in_processes:
       - 'main'
       - 'gpu'
+
+policies:
+  count:
+    bug_numbers:
+      - 1432897
+    description: >-
+      A uint with the number of active enterprise policies, collected once at
+      startup.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mkaply@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.

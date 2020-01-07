@@ -660,11 +660,10 @@ class alignas(8) Value {
                   "Value type tags must correspond with JS::TraceKinds.");
     static_assert((JSVAL_TAG_OBJECT & 0x03) == size_t(JS::TraceKind::Object),
                   "Value type tags must correspond with JS::TraceKinds.");
+    static_assert((JSVAL_TAG_BIGINT & 0x03) == size_t(JS::TraceKind::BigInt),
+                  "Value type tags must correspond with JS::TraceKinds.");
     if (MOZ_UNLIKELY(isPrivateGCThing())) {
       return JS::GCThingTraceKind(toGCThing());
-    }
-    if (MOZ_UNLIKELY(isBigInt())) {
-      return JS::TraceKind::BigInt;
     }
     return JS::TraceKind(toTag() & 0x03);
   }

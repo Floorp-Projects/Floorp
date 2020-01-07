@@ -98,6 +98,10 @@ def get_profile(
                         tar.extract = functools.partial(_extract, tar)
                         tar.extractall(target_dir)
             except (OSError, tarfile.ReadError) as e:
+                LOG("Failed to extract the tarball")
+                if download_cache and os.path.exists(archive):
+                    LOG("Removing cached file to attempt a new download")
+                    os.remove(archive)
                 raise ProfileNotFoundError(str(e))
             finally:
                 if not download_cache:

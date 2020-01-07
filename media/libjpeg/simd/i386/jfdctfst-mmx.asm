@@ -18,8 +18,6 @@
 ; the forward DCT (Discrete Cosine Transform). The following code is
 ; based directly on the IJG's original jfdctfst.c; see the jfdctfst.c
 ; for more details.
-;
-; [TAB8]
 
 %include "jsimdext.inc"
 %include "jdct.inc"

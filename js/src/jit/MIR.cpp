@@ -939,6 +939,8 @@ MConstant::MConstant(TempAllocator& alloc, const js::Value& vp,
       payload_.sym = vp.toSymbol();
       break;
     case MIRType::BigInt:
+      MOZ_ASSERT_IF(IsInsideNursery(vp.toBigInt()),
+                    IonCompilationCanUseNurseryPointers());
       payload_.bi = vp.toBigInt();
       break;
     case MIRType::Object:

@@ -2,10 +2,15 @@
 
 A utility library for working with bytes.
 
-[![Crates.io](https://img.shields.io/crates/v/bytes.svg?maxAge=2592000)](https://crates.io/crates/bytes)
-[![Build Status](https://travis-ci.org/carllerche/bytes.svg?branch=master)](https://travis-ci.org/carllerche/bytes)
+[![Crates.io][crates-badge]][crates-url]
+[![Build Status][azure-badge]][azure-url]
 
-[Documentation](https://carllerche.github.io/bytes/bytes/index.html)
+[crates-badge]: https://img.shields.io/crates/v/bytes.svg
+[crates-url]: https://crates.io/crates/bytes
+[azure-badge]: https://dev.azure.com/tokio-rs/bytes/_apis/build/status/tokio-rs.bytes?branchName=master
+[azure-url]: https://dev.azure.com/tokio-rs/bytes/_build/latest?definitionId=3&branchName=master
+
+[Documentation](https://docs.rs/bytes)
 
 ## Usage
 
@@ -13,14 +18,12 @@ To use `bytes`, first add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bytes = "0.4"
+bytes = "0.5"
 ```
 
 Next, add this to your crate:
 
 ```rust
-extern crate bytes;
-
 use bytes::{Bytes, BytesMut, Buf, BufMut};
 ```
 
@@ -30,7 +33,7 @@ Serde support is optional and disabled by default. To enable use the feature `se
 
 ```toml
 [dependencies]
-bytes = { version = "0.4", features = ["serde"] }
+bytes = { version = "0.5", features = ["serde"] }
 ```
 
 ## License
