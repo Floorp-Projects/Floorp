@@ -16,11 +16,11 @@ const gDashboard = Cc["@mozilla.org/network/dashboard;1"].getService(
 const gDirServ = Cc["@mozilla.org/file/directory_service;1"].getService(
   Ci.nsIDirectoryServiceProvider
 );
-const gNetLinkSvc = Cc[
-  "@mozilla.org/network/network-link-service;1"
-] && Cc[
-  "@mozilla.org/network/network-link-service;1"
-].getService(Ci.nsINetworkLinkService);
+const gNetLinkSvc =
+  Cc["@mozilla.org/network/network-link-service;1"] &&
+  Cc["@mozilla.org/network/network-link-service;1"].getService(
+    Ci.nsINetworkLinkService
+  );
 
 const gRequestNetworkingData = {
   http: gDashboard.requestHttpConnections,
@@ -205,8 +205,9 @@ function displayNetworkID() {
     let networkID = gNetLinkSvc.networkID;
 
     document.getElementById("networkid_isUp").innerText = linkIsUp;
-    document.getElementById("networkid_statusKnown").innerText =
-    	linkStatusKnown;
+    document.getElementById(
+      "networkid_statusKnown"
+    ).innerText = linkStatusKnown;
     document.getElementById("networkid_id").innerText = networkID;
   } catch (e) {
     document.getElementById("networkid_isUp").innerText = "<unknown>";
