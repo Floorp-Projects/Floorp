@@ -152,8 +152,9 @@ static inline bool IsLowPriority(uint16_t flags) {
 // this macro filters out any flags that are not used when constructing the
 // host key.  the significant flags are those that would affect the resulting
 // host record (i.e., the flags that are passed down to PR_GetAddrInfoByName).
-#define RES_KEY_FLAGS(_f) \
-  ((_f) & (nsHostResolver::RES_CANON_NAME | nsHostResolver::RES_DISABLE_TRR))
+#define RES_KEY_FLAGS(_f)                                                     \
+  ((_f) & (nsHostResolver::RES_CANON_NAME | nsHostResolver::RES_DISABLE_TRR | \
+           nsIDNSService::RESOLVE_TRR_MODE_MASK))
 
 #define IS_ADDR_TYPE(_type) ((_type) == nsIDNSService::RESOLVE_TYPE_DEFAULT)
 #define IS_OTHER_TYPE(_type) ((_type) != nsIDNSService::RESOLVE_TYPE_DEFAULT)
@@ -165,12 +166,7 @@ nsHostKey::nsHostKey(const nsACString& aHost, uint16_t aType, uint16_t aFlags,
       flags(aFlags),
       af(aAf),
       pb(aPb),
-      originSuffix(aOriginsuffix) {
-  if (TRR_DISABLED(gTRRService->Mode())) {
-    // When not using TRR, lookup all answers as TRR-disabled
-    flags |= nsHostResolver::RES_DISABLE_TRR;
-  }
-}
+      originSuffix(aOriginsuffix) {}
 
 bool nsHostKey::operator==(const nsHostKey& other) const {
   return host == other.host && type == other.type &&
@@ -547,8 +543,6 @@ static const char kPrefGetTtl[] = "network.dns.get-ttl";
 static const char kPrefNativeIsLocalhost[] = "network.dns.native-is-localhost";
 static const char kPrefThreadIdleTime[] =
     "network.dns.resolver-thread-extra-idle-time-seconds";
-static const char kPrefSkipTRRParentalControl[] =
-    "network.dns.skipTRR-when-parental-control-enabled";
 static bool sGetTtlEnabled = false;
 mozilla::Atomic<bool, mozilla::Relaxed> gNativeIsLocalhost;
 
@@ -578,7 +572,6 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
       mLock("nsHostResolver.mLock"),
       mIdleTaskCV(mLock, "nsHostResolver.mIdleTaskCV"),
       mEvictionQSize(0),
-      mSkipTRRWhenParentalControlEnabled(true),
       mShutdown(true),
       mNumIdleTasks(0),
       mActiveTaskCount(0),
@@ -602,8 +595,6 @@ nsresult nsHostResolver::Init() {
 
   mShutdown = false;
   mNCS = NetworkConnectivityService::GetSingleton();
-  mSkipTRRWhenParentalControlEnabled =
-      Preferences::GetBool(kPrefSkipTRRParentalControl, true);
 
   // The preferences probably haven't been loaded from the disk yet, so we
   // need to register a callback that will set up the experiment once they
@@ -829,7 +820,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost, uint16_t type,
 
   // By-Type requests use only TRR. If TRR is disabled we can return
   // immediately.
-  if (IS_OTHER_TYPE(type) && TRR_DISABLED(Mode())) {
+  if (IS_OTHER_TYPE(type) && Mode() == MODE_TRROFF) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
@@ -1199,6 +1190,10 @@ nsresult nsHostResolver::TrrLookup_unlocked(nsHostRecord* rec, TRR* pushedTRR) {
 // returns error if no TRR resolve is issued
 // it is impt this is not called while a native lookup is going on
 nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
+  if (Mode() == MODE_TRROFF) {
+    return NS_ERROR_UNKNOWN_HOST;
+  }
+
   RefPtr<nsHostRecord> rec(aRec);
   mLock.AssertCurrentThreadOwns();
 
@@ -1221,7 +1216,8 @@ nsresult nsHostResolver::TrrLookup(nsHostRecord* aRec, TRR* pushedTRR) {
 #endif
   MOZ_ASSERT(!rec->mResolving);
 
-  if (!gTRRService || !gTRRService->Enabled()) {
+  nsIRequest::TRRMode reqMode = rec->EffectiveTRRMode();
+  if (!gTRRService || !gTRRService->Enabled(reqMode)) {
     LOG(("TrrLookup:: %s service not enabled\n", rec->host.get()));
     return NS_ERROR_UNKNOWN_HOST;
   }
@@ -1382,6 +1378,49 @@ ResolverMode nsHostResolver::Mode() {
   return MODE_NATIVEONLY;
 }
 
+nsIRequest::TRRMode nsHostRecord::TRRMode() {
+  return nsIDNSService::GetTRRModeFromFlags(flags);
+}
+
+nsIRequest::TRRMode nsHostRecord::EffectiveTRRMode() {
+  // For domains that are excluded from TRR or when parental control is enabled,
+  // we fallback to NativeLookup. This happens even in MODE_TRRONLY. By default
+  // localhost and local are excluded (so we cover *.local hosts) See the
+  // network.trr.excluded-domains pref.
+  bool skipTRR = true;
+  if (gTRRService) {
+    skipTRR = gTRRService->IsExcludedFromTRR(host) ||
+              (gTRRService->SkipTRRWhenParentalControlEnabled() &&
+               gTRRService->ParentalControlEnabled());
+  }
+
+  nsIRequest::TRRMode aRequestMode = TRRMode();
+  if (!gTRRService) {
+    return aRequestMode;
+  }
+
+  ResolverMode aResolverMode = static_cast<ResolverMode>(gTRRService->Mode());
+
+  if (skipTRR || aResolverMode == MODE_TRROFF ||
+      aRequestMode == nsIRequest::TRR_DISABLED_MODE ||
+      (aRequestMode == nsIRequest::TRR_DEFAULT_MODE &&
+       aResolverMode == MODE_NATIVEONLY)) {
+    return nsIRequest::TRR_DISABLED_MODE;
+  }
+
+  if (aRequestMode == nsIRequest::TRR_DEFAULT_MODE &&
+      aResolverMode == MODE_TRRFIRST) {
+    return nsIRequest::TRR_FIRST_MODE;
+  }
+
+  if (aRequestMode == nsIRequest::TRR_DEFAULT_MODE &&
+      aResolverMode == MODE_TRRONLY) {
+    return nsIRequest::TRR_ONLY_MODE;
+  }
+
+  return aRequestMode;
+}
+
 // Kick-off a name resolve operation, using native resolver and/or TRR
 nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
   nsresult rv = NS_ERROR_UNKNOWN_HOST;
@@ -1390,8 +1429,8 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
     return NS_OK;
   }
 
-  ResolverMode mode = rec->mResolverMode = Mode();
-  MOZ_ASSERT(mode != MODE_RESERVED1);
+  rec->mResolverMode = Mode();
+  MOZ_ASSERT(rec->mResolverMode != MODE_RESERVED1);
 
   if (rec->IsAddrRecord()) {
     RefPtr<AddrHostRecord> addrRec = do_QueryObject(rec);
@@ -1406,30 +1445,15 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec) {
     addrRec->mTrrAAAAUsed = AddrHostRecord::INIT;
   }
 
-  // For domains that are excluded from TRR or when parental control is enabled,
-  // we fallback to NativeLookup. This happens even in MODE_TRRONLY. By default
-  // localhost and local are excluded (so we cover *.local hosts) See the
-  // network.trr.excluded-domains pref.
-  bool skipTRR = true;
-  if (gTRRService) {
-    skipTRR = gTRRService->IsExcludedFromTRR(rec->host) ||
-              (mSkipTRRWhenParentalControlEnabled &&
-               gTRRService->ParentalControlEnabled());
-  }
-
-  if (rec->flags & RES_DISABLE_TRR) {
-    if (mode == MODE_TRRONLY && !skipTRR) {
-      return rv;
-    }
-    mode = MODE_NATIVEONLY;
-  }
-
-  if (!TRR_DISABLED(mode) && !skipTRR) {
+  nsIRequest::TRRMode effectiveRequestMode = rec->EffectiveTRRMode();
+  if (effectiveRequestMode != nsIRequest::TRR_DISABLED_MODE &&
+      !((rec->flags & RES_DISABLE_TRR))) {
     rv = TrrLookup(rec);
   }
 
-  if (TRR_DISABLED(mode) || ((mode == MODE_TRRFIRST) && NS_FAILED(rv)) ||
-      (mode == MODE_TRRONLY && skipTRR)) {
+  if (effectiveRequestMode == nsIRequest::TRR_DISABLED_MODE ||
+      (effectiveRequestMode == nsIRequest::TRR_FIRST_MODE &&
+       (rec->flags & RES_DISABLE_TRR) && NS_FAILED(rv))) {
     if (!rec->IsAddrRecord()) {
       return rv;
     }

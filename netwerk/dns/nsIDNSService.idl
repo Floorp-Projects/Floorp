@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIRequest.idl"
 
 %{ C++
 #include "mozilla/BasePrincipal.h"
@@ -293,6 +294,22 @@ interface nsIDNSService : nsISupports
      * existing cache entry first (if existing) then make a new resolve.
      */
     const unsigned long RESOLVE_REFRESH_CACHE = (1 << 10);
+
+    /**
+     * These two bits encode the TRR mode of the request.
+     * Use the static helper methods convert between the TRR mode and flags.
+     */
+    const unsigned long RESOLVE_TRR_MODE_MASK = (1 << 11) | (1 << 12);
+
+%{C++
+    static uint32_t GetFlagsFromTRRMode(nsIRequest::TRRMode aMode) {
+        return static_cast<uint32_t>(aMode) << 11;
+    }
+
+    static nsIRequest::TRRMode GetTRRModeFromFlags(uint32_t aFlags) {
+        return static_cast<nsIRequest::TRRMode>((aFlags & RESOLVE_TRR_MODE_MASK) >> 11);
+    }
+%}
 
     /**
      * This ure dns request types that are currently supported.

@@ -85,7 +85,7 @@ HttpTransactionChild::DeserializeHttpConnectionInfoCloneArgs(
   cinfo->SetBeConservative(aInfoArgs.beConservative());
   cinfo->SetTlsFlags(aInfoArgs.tlsFlags());
   cinfo->SetIsTrrServiceChannel(aInfoArgs.isTrrServiceChannel());
-  cinfo->SetTrrDisabled(aInfoArgs.trrDisabled());
+  cinfo->SetTRRMode(static_cast<nsIRequest::TRRMode>(aInfoArgs.trrMode()));
   cinfo->SetIPv4Disabled(aInfoArgs.isIPv4Disabled());
   cinfo->SetIPv6Disabled(aInfoArgs.isIPv6Disabled());
 

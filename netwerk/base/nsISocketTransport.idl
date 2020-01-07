@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsITransport.idl"
+#include "nsIRequest.idl"
 
 interface nsIInterfaceRequestor;
 interface nsINetAddr;
@@ -257,6 +258,23 @@ interface nsISocketTransport : nsITransport
      * to use esni and query dns for esni keys.
      */
     const unsigned long DONT_TRY_ESNI = (1 << 10);
+
+    /**
+     * These two bits encode the TRR mode of the request.
+     * Use the static helper methods convert between the TRR mode and flags.
+     */
+    const unsigned long TRR_MODE_FLAGS = (1 << 11) | (1 << 12);
+
+%{C++
+
+    static uint32_t GetFlagsFromTRRMode(nsIRequest::TRRMode aMode) {
+        return static_cast<uint32_t>(aMode) << 11;
+    }
+
+    static nsIRequest::TRRMode GetTRRModeFromFlags(uint32_t aFlags) {
+        return static_cast<nsIRequest::TRRMode>((aFlags & TRR_MODE_FLAGS) >> 11);
+    }
+%}
 
     /**
      * An opaque flags for non-standard behavior of the TLS system.

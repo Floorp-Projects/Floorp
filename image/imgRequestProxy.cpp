@@ -249,9 +249,7 @@ void imgRequestProxy::ClearValidating() {
   }
 }
 
-bool imgRequestProxy::IsOnEventTarget() const {
-  return true;
-}
+bool imgRequestProxy::IsOnEventTarget() const { return true; }
 
 already_AddRefed<nsIEventTarget> imgRequestProxy::GetEventTarget() const {
   nsCOMPtr<nsIEventTarget> target(mEventTarget);
@@ -642,6 +640,16 @@ NS_IMETHODIMP
 imgRequestProxy::SetLoadFlags(nsLoadFlags flags) {
   mLoadFlags = flags;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+imgRequestProxy::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return GetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+imgRequestProxy::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return SetTRRModeImpl(aTRRMode);
 }
 
 /**  imgIRequest methods **/
