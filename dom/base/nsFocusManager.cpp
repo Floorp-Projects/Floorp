@@ -2991,9 +2991,9 @@ void ScopedContentTraversal::Prev() {
 
 /**
  * Returns scope owner of aContent.
- * A scope owner is either a document root, shadow host, or slot.
+ * A scope owner is either a shadow host, or slot.
  */
-static nsIContent* FindOwner(nsIContent* aContent) {
+static nsIContent* FindScopeOwner(nsIContent* aContent) {
   nsIContent* currentContent = aContent;
   while (currentContent) {
     nsIContent* parent = currentContent->GetFlattenedTreeParent();
@@ -3173,7 +3173,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
     nsIContent* aStartOwner, nsIContent** aStartContent,
     nsIContent* aOriginalStartContent, bool aForward, int32_t* aCurrentTabIndex,
     bool aIgnoreTabIndex, bool aForDocumentNavigation) {
-  MOZ_ASSERT(aStartOwner == FindOwner(*aStartContent),
+  MOZ_ASSERT(aStartOwner == FindScopeOwner(*aStartContent),
              "aStartOWner should be the scope owner of aStartContent");
   MOZ_ASSERT(IsHostOrSlot(aStartOwner), "scope owner should be host or slot");
 
@@ -3196,7 +3196,7 @@ nsIContent* nsFocusManager::GetNextTabbableContentInAncestorScopes(
     }
 
     startContent = owner;
-    owner = FindOwner(startContent);
+    owner = FindScopeOwner(startContent);
   }
 
   // If not found in shadow DOM, search from the top level shadow host in light
@@ -3256,7 +3256,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
 
   // If aStartContent is in a scope owned by Shadow DOM search from scope
   // including aStartContent
-  if (nsIContent* owner = FindOwner(aStartContent)) {
+  if (nsIContent* owner = FindScopeOwner(aStartContent)) {
     nsIContent* contentToFocus = GetNextTabbableContentInAncestorScopes(
         owner, &aStartContent, aOriginalStartContent, aForward,
         &aCurrentTabIndex, aIgnoreTabIndex, aForDocumentNavigation);
@@ -3270,7 +3270,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
   // We need to continue searching in light DOM, starting at the top level
   // shadow host in light DOM (updated aStartContent) and its tabindex
   // (updated aCurrentTabIndex).
-  MOZ_ASSERT(!FindOwner(aStartContent),
+  MOZ_ASSERT(!FindScopeOwner(aStartContent),
              "aStartContent should not be owned by Shadow DOM at this point");
 
   nsPresContext* presContext = aPresShell->GetPresContext();
