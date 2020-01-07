@@ -88,9 +88,9 @@ enum class StyleDisplay : uint16_t {
 
   /// XUL boxes.
   MozBox =
-      StyleDisplayFrom(StyleDisplayOutside::XUL, StyleDisplayInside::MozBox),
-  MozInlineBox = StyleDisplayFrom(StyleDisplayOutside::XUL,
-                                  StyleDisplayInside::MozInlineBox),
+      StyleDisplayFrom(StyleDisplayOutside::Block, StyleDisplayInside::MozBox),
+  MozInlineBox = StyleDisplayFrom(StyleDisplayOutside::Inline,
+                                  StyleDisplayInside::MozBox),
   MozGrid =
       StyleDisplayFrom(StyleDisplayOutside::XUL, StyleDisplayInside::MozGrid),
   MozGridGroup = StyleDisplayFrom(StyleDisplayOutside::XUL,
