@@ -943,7 +943,7 @@ class CEnum(object):
         return "%s::%s " % (self.iface.name, self.basename)
 
     def rustType(self, calltype):
-        raise RustNoncompat('cenums unimplemented')
+        return "%s u%d" % ('*mut' if 'out' in calltype else '', self.width)
 
     def __str__(self):
         body = ', '.join('%s = %s' % v for v in self.variants)
