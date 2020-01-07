@@ -4803,9 +4803,8 @@ wl_region* CreateOpaqueRegionWayland(int aX, int aY, int aWidth, int aHeight,
   if (aSubtractCorners) {
     wl_region_subtract(region, aX, aY, TITLEBAR_SHAPE_MASK_HEIGHT,
                        TITLEBAR_SHAPE_MASK_HEIGHT);
-    wl_region_subtract(region, aX + aWidth - TITLEBAR_SHAPE_MASK_HEIGHT,
-                       aY, TITLEBAR_SHAPE_MASK_HEIGHT,
-                       TITLEBAR_SHAPE_MASK_HEIGHT);
+    wl_region_subtract(region, aX + aWidth - TITLEBAR_SHAPE_MASK_HEIGHT, aY,
+                       TITLEBAR_SHAPE_MASK_HEIGHT, TITLEBAR_SHAPE_MASK_HEIGHT);
   }
   return region;
 }
@@ -4822,11 +4821,21 @@ void nsWindow::UpdateTopLevelOpaqueRegionWayland(bool aSubtractCorners) {
   int y = DevicePixelsToGdkCoordRoundDown(mClientOffset.y);
   int width = DevicePixelsToGdkCoordRoundDown(mBounds.width);
   int height = DevicePixelsToGdkCoordRoundDown(mBounds.height);
+
+  GdkRectangle rect = {x, y, width, height};
+  if (!mToplevelOpaqueRegionState.NeedsUpdate(rect, aSubtractCorners)) {
+    return;
+  }
+
   wl_region* region =
-    CreateOpaqueRegionWayland(x, y, width, height, aSubtractCorners);
+      CreateOpaqueRegionWayland(x, y, width, height, aSubtractCorners);
   wl_surface_set_opaque_region(surface, region);
-  wl_surface_commit(surface);
   wl_region_destroy(region);
+
+  GdkWindow* window = gtk_widget_get_window(mShell);
+  if (window) {
+    gdk_window_invalidate_rect(window, &rect, false);
+  }
 
   moz_container_update_opaque_region(mContainer, aSubtractCorners);
 }
@@ -4866,12 +4875,16 @@ static void SubtractTitlebarCorners(cairo_region_t* aRegion, int aX, int aY,
 }
 
 void nsWindow::UpdateTopLevelOpaqueRegionGtk(bool aSubtractCorners) {
-  cairo_region_t* region = cairo_region_create();
   int x = DevicePixelsToGdkCoordRoundDown(mClientOffset.x);
   int y = DevicePixelsToGdkCoordRoundDown(mClientOffset.y);
   int width = DevicePixelsToGdkCoordRoundDown(mBounds.width);
   int height = DevicePixelsToGdkCoordRoundDown(mBounds.height);
 
+  GdkRectangle gdkRect = {x, y, width, height};
+  if (!mToplevelOpaqueRegionState.NeedsUpdate(gdkRect, aSubtractCorners)) {
+    return;
+  }
+  cairo_region_t* region = cairo_region_create();
   cairo_rectangle_int_t rect = {x, y, width, height};
   cairo_region_union_rectangle(region, &rect);
 
@@ -7538,6 +7551,18 @@ void nsWindow::SetCompositorHint(WindowComposeRequest aState) {
   }
 }
 #endif
+
+bool OpaqueRegionState::NeedsUpdate(GdkRectangle& aNewRect,
+                                    bool aNewSubtractedCorners) {
+  if (aNewRect.x != mRect.x || aNewRect.y != mRect.y ||
+      aNewRect.width != mRect.width || aNewRect.height != mRect.height ||
+      aNewSubtractedCorners != mSubtractedCorners) {
+    mRect = aNewRect;
+    mSubtractedCorners = aNewSubtractedCorners;
+    return true;
+  }
+  return false;
+}
 
 nsresult nsWindow::SetSystemFont(const nsCString& aFontName) {
   GtkSettings* settings = gtk_settings_get_default();
