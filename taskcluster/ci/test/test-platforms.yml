@@ -76,8 +76,9 @@ linux1804-64-qr/debug:
     test-sets:
         - linux1804-qr-tests
 
-linux1804-64-qr-asan/opt:
+linux1804-64-asan-qr/opt:
     build-platform: linux64-asan/opt
+    test-sets:
         - linux-qr-smoketests
 
 linux1804-64-ccov/opt:
