@@ -318,6 +318,7 @@ You can set this by specifying --test-url URL
             'mochitest-webgl2-core': 'mochitest',
             'mochitest-webgl2-ext': 'mochitest',
             'mochitest-webgl2-deqp': 'mochitest',
+            'mochitest-webgpu': 'mochitest',
             'geckoview': 'mochitest',
             'geckoview-junit': 'mochitest',
             'jsreftest': 'reftest',
