@@ -29,20 +29,12 @@ class CreateURLRunnable : public WorkerMainThreadRunnable {
         mBlobImpl(aBlobImpl),
         mURL(aURL) {
     MOZ_ASSERT(aBlobImpl);
-
-    DebugOnly<bool> isMutable;
-    MOZ_ASSERT(NS_SUCCEEDED(aBlobImpl->GetMutable(&isMutable)));
-    MOZ_ASSERT(!isMutable);
   }
 
   bool MainThreadRun() override {
     using namespace mozilla::ipc;
 
     AssertIsOnMainThread();
-
-    DebugOnly<bool> isMutable;
-    MOZ_ASSERT(NS_SUCCEEDED(mBlobImpl->GetMutable(&isMutable)));
-    MOZ_ASSERT(!isMutable);
 
     nsCOMPtr<nsIPrincipal> principal = mWorkerPrivate->GetPrincipal();
 
@@ -162,11 +154,6 @@ void URLWorker::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
 
   RefPtr<BlobImpl> blobImpl = aBlob.Impl();
   MOZ_ASSERT(blobImpl);
-
-  aRv = blobImpl->SetMutable(false);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
 
   RefPtr<CreateURLRunnable> runnable =
       new CreateURLRunnable(workerPrivate, blobImpl, aResult);
