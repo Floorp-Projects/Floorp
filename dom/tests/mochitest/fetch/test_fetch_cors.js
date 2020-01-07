@@ -164,14 +164,14 @@ function testSameOriginCredentials() {
   }
 
   function testResponse(res, test) {
-    ok(test.pass, "Expected test to pass " + JSON.stringify(test));
-    is(res.status, 200, "wrong status in test for " + JSON.stringify(test));
-    is(res.statusText, "OK", "wrong status text for " + JSON.stringify(test));
+    ok(test.pass, "Expected test to pass " + test.toSource());
+    is(res.status, 200, "wrong status in test for " + test.toSource());
+    is(res.statusText, "OK", "wrong status text for " + test.toSource());
     return res.text().then(function(v) {
       is(
         v,
         "<res>hello pass</res>\n",
-        "wrong text in test for " + JSON.stringify(test)
+        "wrong text in test for " + test.toSource()
       );
     });
   }
@@ -191,8 +191,8 @@ function testSameOriginCredentials() {
         });
       },
       function(e) {
-        ok(!test.pass, "Expected test to fail " + JSON.stringify(test));
-        ok(e instanceof TypeError, "Test should fail " + JSON.stringify(test));
+        ok(!test.pass, "Expected test to fail " + test.toSource());
+        ok(e instanceof TypeError, "Test should fail " + test.toSource());
         if (i < tests.length - 1) {
           runATest(tests, i + 1);
         } else {
@@ -804,7 +804,7 @@ function testModeCors() {
             ].includes(test.headers[name].toLowerCase()))
         );
       }
-      req.url += "&headers=" + escape(JSON.stringify(test.headers));
+      req.url += "&headers=" + escape(test.headers.toSource());
       reqHeaders = escape(
         Object.keys(test.headers)
           .filter(isUnsafeHeader)
@@ -831,8 +831,7 @@ function testModeCors() {
       req.url += "&preflightStatus=" + test.preflightStatus;
     }
     if (test.responseHeaders) {
-      req.url +=
-        "&responseHeaders=" + escape(JSON.stringify(test.responseHeaders));
+      req.url += "&responseHeaders=" + escape(test.responseHeaders.toSource());
     }
     if (test.exposeHeaders) {
       req.url += "&exposeHeaders=" + escape(test.exposeHeaders);
@@ -857,28 +856,28 @@ function testModeCors() {
             return fetch(request);
           })
           .then(function(res) {
-            ok(test.pass, "Expected test to pass for " + JSON.stringify(test));
+            ok(test.pass, "Expected test to pass for " + test.toSource());
             if (test.status) {
               is(
                 res.status,
                 test.status,
-                "wrong status in test for " + JSON.stringify(test)
+                "wrong status in test for " + test.toSource()
               );
               is(
                 res.statusText,
                 test.statusMessage,
-                "wrong status text for " + JSON.stringify(test)
+                "wrong status text for " + test.toSource()
               );
             } else {
               is(
                 res.status,
                 200,
-                "wrong status in test for " + JSON.stringify(test)
+                "wrong status in test for " + test.toSource()
               );
               is(
                 res.statusText,
                 "OK",
-                "wrong status text for " + JSON.stringify(test)
+                "wrong status text for " + test.toSource()
               );
             }
             if (test.responseHeaders) {
@@ -890,7 +889,7 @@ function testModeCors() {
                     "|Headers.has()|wrong response header (" +
                       header +
                       ") in test for " +
-                      JSON.stringify(test)
+                      test.toSource()
                   );
                 } else {
                   is(
@@ -899,7 +898,7 @@ function testModeCors() {
                     "|Headers.get()|wrong response header (" +
                       header +
                       ") in test for " +
-                      JSON.stringify(test)
+                      test.toSource()
                   );
                 }
               }
@@ -912,21 +911,21 @@ function testModeCors() {
               is(
                 v,
                 "<res>hello pass</res>\n",
-                "wrong responseText in test for " + JSON.stringify(test)
+                "wrong responseText in test for " + test.toSource()
               );
             } else {
               is(
                 v,
                 "",
-                "wrong responseText in HEAD test for " + JSON.stringify(test)
+                "wrong responseText in HEAD test for " + test.toSource()
               );
             }
           })
           .catch(function(e) {
-            ok(!test.pass, "Expected test failure for " + JSON.stringify(test));
+            ok(!test.pass, "Expected test failure for " + test.toSource());
             ok(
               e instanceof TypeError,
-              "Exception should be TypeError for " + JSON.stringify(test)
+              "Exception should be TypeError for " + test.toSource()
             );
           });
       })(test)
@@ -1113,7 +1112,7 @@ function testCrossOriginCredentials() {
         test.hops[0].server +
         corsServerPath +
         "hop=1&hops=" +
-        escape(JSON.stringify(test.hops));
+        escape(test.hops.toSource());
     } else {
       url = baseURL + "allowOrigin=" + escape(test.origin || origin);
     }
@@ -1153,14 +1152,14 @@ function testCrossOriginCredentials() {
   }
 
   function testResponse(res, test) {
-    ok(test.pass, "Expected test to pass for " + JSON.stringify(test));
-    is(res.status, 200, "wrong status in test for " + JSON.stringify(test));
-    is(res.statusText, "OK", "wrong status text for " + JSON.stringify(test));
+    ok(test.pass, "Expected test to pass for " + test.toSource());
+    is(res.status, 200, "wrong status in test for " + test.toSource());
+    is(res.statusText, "OK", "wrong status text for " + test.toSource());
     return res.text().then(function(v) {
       is(
         v,
         "<res>hello pass</res>\n",
-        "wrong text in test for " + JSON.stringify(test)
+        "wrong text in test for " + test.toSource()
       );
     });
   }
@@ -1179,10 +1178,10 @@ function testCrossOriginCredentials() {
         });
       },
       function(e) {
-        ok(!test.pass, "Expected test failure for " + JSON.stringify(test));
+        ok(!test.pass, "Expected test failure for " + test.toSource());
         ok(
           e instanceof TypeError,
-          "Exception should be TypeError for " + JSON.stringify(test)
+          "Exception should be TypeError for " + test.toSource()
         );
         if (i < tests.length - 1) {
           runATest(tests, i + 1);
@@ -1271,7 +1270,7 @@ function testModeNoCorsCredentials() {
   }
 
   function testResponse(res, test) {
-    is(res.type, "opaque", "wrong response type for " + JSON.stringify(test));
+    is(res.type, "opaque", "wrong response type for " + test.toSource());
 
     // Get unfiltered response
     var chromeResponse = SpecialPowers.wrap(res);
@@ -1281,14 +1280,14 @@ function testModeNoCorsCredentials() {
     is(
       unfiltered.status,
       status,
-      "wrong status in test for " + JSON.stringify(test)
+      "wrong status in test for " + test.toSource()
     );
     return unfiltered.text().then(function(v) {
       if (status === 200) {
         is(
           v,
           "<res>hello pass</res>\n",
-          "wrong text in test for " + JSON.stringify(test)
+          "wrong text in test for " + test.toSource()
         );
       }
     });
@@ -1313,8 +1312,8 @@ function testModeNoCorsCredentials() {
         });
       },
       function(e) {
-        ok(!test.pass, "Expected test to fail " + JSON.stringify(test));
-        ok(e instanceof TypeError, "Test should fail " + JSON.stringify(test));
+        ok(!test.pass, "Expected test to fail " + test.toSource());
+        ok(e instanceof TypeError, "Test should fail " + test.toSource());
         if (i < tests.length - 1) {
           runATest(tests, i + 1);
         } else {
@@ -1620,14 +1619,14 @@ function testCORSRedirects() {
         test.hops[0].server +
         corsServerPath +
         "hop=1&hops=" +
-        escape(JSON.stringify(test.hops)),
+        escape(test.hops.toSource()),
       method: test.method,
       headers: test.headers,
       body: test.body,
     };
 
     if (test.headers) {
-      req.url += "&headers=" + escape(JSON.stringify(test.headers));
+      req.url += "&headers=" + escape(test.headers.toSource());
     }
 
     if (test.pass) {
@@ -1645,22 +1644,14 @@ function testCORSRedirects() {
       (function(request, test) {
         return fetch(request).then(
           function(res) {
-            ok(test.pass, "Expected test to pass for " + JSON.stringify(test));
-            is(
-              res.status,
-              200,
-              "wrong status in test for " + JSON.stringify(test)
-            );
+            ok(test.pass, "Expected test to pass for " + test.toSource());
+            is(res.status, 200, "wrong status in test for " + test.toSource());
             is(
               res.statusText,
               "OK",
-              "wrong status text for " + JSON.stringify(test)
+              "wrong status text for " + test.toSource()
             );
-            is(
-              res.type,
-              "cors",
-              "wrong response type for " + JSON.stringify(test)
-            );
+            is(res.type, "cors", "wrong response type for " + test.toSource());
             var reqHost = new URL(req.url).host;
             // If there is a service worker present, the redirections will be
             // transparent, assuming that the original request is to the current
@@ -1684,15 +1675,15 @@ function testCORSRedirects() {
               is(
                 v,
                 "<res>hello pass</res>\n",
-                "wrong responseText in test for " + JSON.stringify(test)
+                "wrong responseText in test for " + test.toSource()
               );
             });
           },
           function(e) {
-            ok(!test.pass, "Expected test failure for " + JSON.stringify(test));
+            ok(!test.pass, "Expected test failure for " + test.toSource());
             ok(
               e instanceof TypeError,
-              "Exception should be TypeError for " + JSON.stringify(test)
+              "Exception should be TypeError for " + test.toSource()
             );
           }
         );
@@ -1749,14 +1740,14 @@ function testNoCORSRedirects() {
         test.hops[0].server +
         corsServerPath +
         "hop=1&hops=" +
-        escape(JSON.stringify(test.hops)),
+        escape(test.hops.toSource()),
       method: test.method,
       headers: test.headers,
       body: test.body,
     };
 
     if (test.headers) {
-      req.url += "&headers=" + escape(JSON.stringify(test.headers));
+      req.url += "&headers=" + escape(test.headers.toSource());
     }
 
     if (test.pass) {
@@ -1782,45 +1773,31 @@ function testNoCORSRedirects() {
           })
           .then(
             function(res) {
-              ok(
-                test.pass,
-                "Expected test to pass for " + JSON.stringify(test)
-              );
+              ok(test.pass, "Expected test to pass for " + test.toSource());
               // All requests are cross-origin no-cors, we should always have
               // an opaque response here.  All values on the opaque response
               // should be hidden.
               is(
                 res.type,
                 "opaque",
-                "wrong response type for " + JSON.stringify(test)
+                "wrong response type for " + test.toSource()
               );
-              is(
-                res.status,
-                0,
-                "wrong status in test for " + JSON.stringify(test)
-              );
+              is(res.status, 0, "wrong status in test for " + test.toSource());
               is(
                 res.statusText,
                 "",
-                "wrong status text for " + JSON.stringify(test)
+                "wrong status text for " + test.toSource()
               );
-              is(res.url, "", "wrong response url for " + JSON.stringify(test));
+              is(res.url, "", "wrong response url for " + test.toSource());
               return res.text().then(function(v) {
-                is(
-                  v,
-                  "",
-                  "wrong responseText in test for " + JSON.stringify(test)
-                );
+                is(v, "", "wrong responseText in test for " + test.toSource());
               });
             },
             function(e) {
-              ok(
-                !test.pass,
-                "Expected test failure for " + JSON.stringify(test)
-              );
+              ok(!test.pass, "Expected test failure for " + test.toSource());
               ok(
                 e instanceof TypeError,
-                "Exception should be TypeError for " + JSON.stringify(test)
+                "Exception should be TypeError for " + test.toSource()
               );
             }
           );
@@ -1843,7 +1820,7 @@ function testReferrer() {
     Referer: referrer,
   };
   return fetch(
-    corsServerPath + "headers=" + encodeURIComponent(JSON.stringify(dict))
+    corsServerPath + "headers=" + encodeURIComponent(dict.toSource())
   ).then(
     function(res) {
       is(res.status, 200, "expected correct referrer header to be sent");
