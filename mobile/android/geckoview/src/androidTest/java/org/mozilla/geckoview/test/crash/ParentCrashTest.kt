@@ -3,6 +3,7 @@ package org.mozilla.geckoview.test.crash
 import android.content.Intent
 import android.os.Message
 import android.os.Messenger
+import android.support.test.annotation.UiThreadTest
 import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.rule.ServiceTestRule
@@ -32,29 +33,27 @@ class ParentCrashTest {
 
     @get:Rule val rule = ServiceTestRule()
 
-    val client = TestCrashHandler.Client(InstrumentationRegistry.getTargetContext())
-
     @Before
     fun setup() {
         val context = InstrumentationRegistry.getTargetContext()
         val binder = rule.bindService(Intent(context, RemoteGeckoService::class.java))
         messenger = Messenger(binder)
         assertThat("messenger should not be null", binder, notNullValue())
-
-        assertTrue(client.connect(env.defaultTimeoutMillis))
-        client.setEvalNextCrashDump(/* expectFatal */ true)
     }
 
     @Test
+    @UiThreadTest
     fun crashParent() {
+        val client = TestCrashHandler.Client(InstrumentationRegistry.getTargetContext())
+
+        assertTrue(client.connect(env.defaultTimeoutMillis))
+        client.setEvalNextCrashDump(/* expectFatal */ true)
+
         messenger.send(Message.obtain(null, RemoteGeckoService.CMD_CRASH_PARENT_NATIVE))
 
         var evalResult = client.getEvalResult(env.defaultTimeoutMillis)
         assertTrue(evalResult.mMsg, evalResult.mResult)
-    }
 
-    @After
-    fun teardown() {
         client.disconnect()
     }
 }
