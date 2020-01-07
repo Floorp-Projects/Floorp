@@ -369,35 +369,6 @@ void AndroidBridge::Vibrate(const nsTArray<uint32_t>& aPattern) {
                          -1 /* don't repeat */);
 }
 
-void AndroidBridge::GetSystemColors(AndroidSystemColors* aColors) {
-  NS_ASSERTION(aColors != nullptr,
-               "AndroidBridge::GetSystemColors: aColors is null!");
-  if (!aColors) return;
-
-  auto arr = GeckoAppShell::GetSystemColors();
-  if (!arr) return;
-
-  JNIEnv* const env = arr.Env();
-  uint32_t len = static_cast<uint32_t>(env->GetArrayLength(arr.Get()));
-  jint* elements = env->GetIntArrayElements(arr.Get(), 0);
-
-  uint32_t colorsCount = sizeof(AndroidSystemColors) / sizeof(nscolor);
-  if (len < colorsCount) colorsCount = len;
-
-  // Convert Android colors to nscolor by switching R and B in the ARGB 32 bit
-  // value
-  nscolor* colors = (nscolor*)aColors;
-
-  for (uint32_t i = 0; i < colorsCount; i++) {
-    uint32_t androidColor = static_cast<uint32_t>(elements[i]);
-    uint8_t r = (androidColor & 0x00ff0000) >> 16;
-    uint8_t b = (androidColor & 0x000000ff);
-    colors[i] = (androidColor & 0xff00ff00) | (b << 16) | r;
-  }
-
-  env->ReleaseIntArrayElements(arr.Get(), elements, 0);
-}
-
 void AndroidBridge::GetIconForExtension(const nsACString& aFileExt,
                                         uint32_t aIconSize,
                                         uint8_t* const aBuf) {
