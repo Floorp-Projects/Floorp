@@ -2,17 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#[macro_use]
+extern crate cstr;
+
 use glean_preview::{ClientInfoMetrics, Configuration};
 use glean_preview::metrics::PingType;
 use log::error;
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
-use nsstring::nsAString;
+use nsstring::{nsAString, nsString};
 use std::{thread, time};
+use std::ffi::{CString};
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, Error, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 use std::thread::JoinHandle;
+use xpcom::interfaces::{nsIFile, nsIProcess};
+use xpcom::RefPtr;
 
 #[no_mangle]
 pub unsafe extern "C" fn fog_init(data_dir: &nsAString, pingsender_path: &nsAString) -> nsresult {
@@ -35,7 +40,6 @@ pub unsafe extern "C" fn fog_init(data_dir: &nsAString, pingsender_path: &nsAStr
 
   let mut data_path = PathBuf::from(data_dir.to_string());
   data_path.push("pending_pings");
-  let pingsender_path = PathBuf::from(pingsender_path.to_string());
 
   // We ignore the returned JoinHandle for the nonce.
   // The detached thread will live until this process (the main process) dies.
@@ -46,7 +50,8 @@ pub unsafe extern "C" fn fog_init(data_dir: &nsAString, pingsender_path: &nsAStr
   NS_OK
 }
 
-fn prototype_ping_init(ping_dir: PathBuf, pingsender_path: PathBuf) -> Result<JoinHandle<()>, Error> {
+fn prototype_ping_init(ping_dir: PathBuf, pingsender_path: &nsAString) -> Result<JoinHandle<()>, Error> {
+  let pingsender_path_owned = nsString::from(pingsender_path);
   thread::Builder::new().name("fogotype_ping".to_owned()).spawn(move || {
     let prototype_ping = PingType::new("prototype", true, true);
     glean_preview::register_ping_type(&prototype_ping);
@@ -60,14 +65,14 @@ fn prototype_ping_init(ping_dir: PathBuf, pingsender_path: PathBuf) -> Result<Jo
         continue;
       }
       prototype_ping.submit();
-      if let Err(e) = send_all_pings(&ping_dir, &pingsender_path) {
+      if let Err(e) = send_all_pings(&ping_dir, &pingsender_path_owned) {
         error!("Failed to send all pings due to {:?}", e);
       }
     }
   })
 }
 
-fn send_all_pings(ping_dir: &Path, pingsender_path: &Path) -> io::Result<()> {
+fn send_all_pings(ping_dir: &Path, pingsender_path: &nsAString) -> Result<(), Box<dyn std::error::Error>> {
   assert!(ping_dir.is_dir());
   // This will be a multi-step process:
   // 1. Ensure we have an (empty) subdirectory in ping_dir called "telemetry" we can work within.
@@ -99,20 +104,31 @@ fn send_all_pings(ping_dir: &Path, pingsender_path: &Path) -> io::Result<()> {
       continue;
     }
 
-    let telemetry_ping_path = telemetry_dir.join(path.file_name().unwrap());
+    let telemetry_ping_path = telemetry_dir.join(path.file_name().ok_or("ping dir file name invalid")?);
     let mut telemetry_ping_file = File::create(&telemetry_ping_path)?;
     write!(telemetry_ping_file, "{}", lines[1])?;
 
     fs::remove_file(path)?;
 
-    let mut pingsender = Command::new(pingsender_path);
-    pingsender.stdout(Stdio::null())
-              .stderr(Stdio::null())
-              .stdin(Stdio::null());
-
-    let _status = pingsender.arg(format!("https://incoming.telemetry.mozilla.org{}", lines[0]))
-                            .arg(&telemetry_ping_path)
-                            .status();
+    let pingsender_file: RefPtr<nsIFile>  = xpcom::create_instance(&cstr!("@mozilla.org/file/local;1")).ok_or("couldn't create nsIFile")?;
+    let process: RefPtr<nsIProcess> = xpcom::create_instance(&cstr!("@mozilla.org/process/util;1")).ok_or("couldn't create nsIProcess")?;
+    unsafe {
+      pingsender_file.InitWithPath(pingsender_path).to_result()?;
+      process.Init(&*pingsender_file).to_result()?;
+      process.SetStartHidden(true).to_result()?;
+      process.SetNoShell(true).to_result()?;
+    };
+    let server_url = CString::new(format!("https://incoming.telemetry.mozilla.org{}", lines[0]))?;
+    let telemetry_ping_path_cstr = CString::new(telemetry_ping_path.to_str().expect("non-unicode ping path character"))?;
+    let mut args = [
+      server_url.as_ptr(),
+      telemetry_ping_path_cstr.as_ptr(),
+    ];
+    let args_length = 2;
+    // Block while running the process.
+    // We should feel free to do this because we're on our own thread.
+    // Also, if we run async, nsIProcess tries to get the ObserverService on this thread, and asserts.
+    unsafe { process.Run(true /* blocking */, args.as_mut_ptr(), args_length).to_result()?; };
   }
   Ok(())
 }
