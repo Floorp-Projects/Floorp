@@ -20,14 +20,10 @@ for example - use `all_tests.py` instead.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
-import json
 import logging
-import os
 
-from manifestparser.filters import chunk_by_runtime
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
-from mozbuild.util import memoize
-from moztest.resolve import TestResolver, TestManifestLoader, TEST_SUITES
+from moztest.resolve import TEST_SUITES
 from voluptuous import (
     Any,
     Optional,
@@ -35,7 +31,6 @@ from voluptuous import (
     Exclusive,
 )
 
-from taskgraph import GECKO
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import match_run_on_projects, keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
@@ -47,13 +42,13 @@ from taskgraph.util.schema import (
     optionally_keyed_by,
     Schema,
 )
+from taskgraph.util.chunking import get_chunked_manifests
 from taskgraph.util.taskcluster import (
     get_artifact_path,
     get_index_url,
 )
 from taskgraph.util.perfile import perfile_number_of_chunks
 
-here = os.path.abspath(os.path.dirname(__file__))
 
 # default worker types keyed by instance-size
 LINUX_WORKER_TYPES = {
@@ -1326,35 +1321,6 @@ def split_chunks(config, tests):
     """Based on the 'chunks' key, split tests up into chunks by duplicating
     them and assigning 'this-chunk' appropriately and updating the treeherder
     symbol."""
-    resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
-
-    @memoize
-    def get_runtimes(platform):
-        base = os.path.join(GECKO, 'testing', 'runtimes', 'manifest-runtimes-{}.json')
-        for key in ('android', 'windows'):
-            if key in platform:
-                path = base.format(key)
-                break
-        else:
-            path = base.format('unix')
-
-        with open(path, 'r') as fh:
-            return json.load(fh)
-
-    @memoize
-    def get_tests(flavor, subsuite):
-        return list(resolver.resolve_tests(flavor=flavor, subsuite=subsuite))
-
-    @memoize
-    def get_chunked_manifests(flavor, subsuite, platform, chunks):
-        tests = get_tests(flavor, subsuite)
-        return [
-            c[1] for c in chunk_by_runtime(
-                None,
-                chunks,
-                get_runtimes(platform)
-            ).get_chunked_manifests(tests)
-        ]
 
     for test in tests:
         if test['suite'].startswith('test-verify') or \
