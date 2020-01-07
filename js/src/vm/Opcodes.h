@@ -3361,7 +3361,7 @@
      */ \
     MACRO(JSOP_FUNCTIONTHIS, "functionthis", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pops the top value off the stack.
+     * Pop the top value from the stack and discard it.
      *
      *   Category: Operators
      *   Type: Stack Operations
@@ -3370,7 +3370,8 @@
      */ \
     MACRO(JSOP_POP, "pop", NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Pops the top 'n' values from the stack.
+     * Pop the top `n` values from the stack. `n` must be <= the current stack
+     * depth.
      *
      *   Category: Operators
      *   Type: Stack Operations
@@ -3380,7 +3381,7 @@
      */ \
     MACRO(JSOP_POPN, "popn", NULL, 3, -1, 0, JOF_UINT16) \
     /*
-     * Pushes a copy of the top value on the stack.
+     * Push a copy of the top value on the stack.
      *
      *   Category: Operators
      *   Type: Stack Operations
@@ -3389,7 +3390,7 @@
      */ \
     MACRO(JSOP_DUP, "dup", NULL, 1, 1, 2, JOF_BYTE) \
     /*
-     * Duplicates the top two values on the stack.
+     * Duplicate the top two values on the stack.
      *
      *   Category: Operators
      *   Type: Stack Operations
@@ -3398,7 +3399,9 @@
      */ \
     MACRO(JSOP_DUP2, "dup2", NULL, 1, 2, 4, JOF_BYTE) \
     /*
-     * Duplicates the Nth value from the top onto the stack.
+     * Push a copy of the nth value from the top of the stack.
+     *
+     * `n` must be less than the current stack depth.
      *
      *   Category: Operators
      *   Type: Stack Operations
@@ -3408,8 +3411,7 @@
      */ \
     MACRO(JSOP_DUPAT, "dupat", NULL, 4, 0, 1, JOF_UINT24) \
     /*
-     * Swaps the top two values on the stack. This is useful for things like
-     * post-increment/decrement.
+     * Swap the top two values on the stack.
      *
      *   Category: Operators
      *   Type: Stack Operations
@@ -3418,8 +3420,7 @@
      */ \
     MACRO(JSOP_SWAP, "swap", NULL, 1, 2, 2, JOF_BYTE) \
     /*
-     * Picks the nth element from the stack and moves it to the top of the
-     * stack.
+     * Pick the nth element from the stack and move it to the top of the stack.
      *
      *   Category: Operators
      *   Type: Stack Operations
@@ -3428,8 +3429,8 @@
      */ \
     MACRO(JSOP_PICK, "pick", NULL, 2, 0, 0, JOF_UINT8) \
     /*
-     * Moves the top of the stack value under the nth element of the stack.
-     * Note: n must NOT be 0.
+     * Move the top of the stack value under the `n`th element of the stack.
+     * `n` must not be 0.
      *
      *   Category: Operators
      *   Type: Stack Operations
@@ -3438,7 +3439,8 @@
      */ \
     MACRO(JSOP_UNPICK, "unpick", NULL, 2, 0, 0, JOF_UINT8) \
     /*
-     * No operation is performed.
+     * Do nothing. This is used when we need distinct bytecode locations for
+     * various mechanisms.
      *
      *   Category: Other
      *   Operands:
@@ -3446,7 +3448,7 @@
      */ \
     MACRO(JSOP_NOP, "nop", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Embedded lineno to speedup 'pc->line' mapping.
+     * No-op instruction used to speed up pc-to-line mapping.
      *
      *   Category: Other
      *   Operands: uint32_t lineno
@@ -3454,8 +3456,8 @@
      */ \
     MACRO(JSOP_LINENO, "lineno", NULL, 5, 0, 0, JOF_UINT32) \
     /*
-     * No-op used by the decompiler to produce nicer error messages about
-     * destructuring code.
+     * No-op instruction used by the decompiler to produce nicer error messages
+     * about destructuring code.
      *
      *   Category: Other
      *   Operands:
@@ -3463,9 +3465,9 @@
      */ \
     MACRO(JSOP_NOP_DESTRUCTURING, "nop-destructuring", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * No-op bytecode only emitted in some self-hosted functions. Not handled
-     * by the JITs or Baseline Interpreter so the script always runs in the C++
-     * interpreter.
+     * No-op instruction only emitted in some self-hosted functions. Not
+     * handled by the JITs or Baseline Interpreter so the script always runs in
+     * the C++ interpreter.
      *
      *   Category: Other
      *   Operands:
@@ -3473,9 +3475,9 @@
      */ \
     MACRO(JSOP_FORCEINTERPRETER, "forceinterpreter", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Examines the top stack value, asserting that it's either a self-hosted
-     * function or a self-hosted intrinsic. This opcode does nothing in a
-     * non-debug build.
+     * Examine the top stack value, asserting that it's either a self-hosted
+     * function or a self-hosted intrinsic. This does nothing in a non-debug
+     * build.
      *
      *   Category: Other
      *   Operands:
@@ -3483,28 +3485,38 @@
      */ \
     MACRO(JSOP_DEBUGCHECKSELFHOSTED, "debug-checkselfhosted", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Pushes a boolean indicating if instrumentation is active.
+     * Push a boolean indicating if instrumentation is active.
+     *
      *   Category: Other
      *   Operands:
      *   Stack: => val
      */ \
     MACRO(JSOP_INSTRUMENTATION_ACTIVE, "instrumentationActive", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pushes the instrumentation callback for the current realm.
+     * Push the instrumentation callback for the current realm.
+     *
      *   Category: Other
      *   Operands:
      *   Stack: => val
      */ \
     MACRO(JSOP_INSTRUMENTATION_CALLBACK, "instrumentationCallback", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pushes the current script's instrumentation ID.
+     * Push the current script's instrumentation ID.
+     *
      *   Category: Other
      *   Operands:
      *   Stack: => val
      */ \
     MACRO(JSOP_INSTRUMENTATION_SCRIPT_ID, "instrumentationScriptId", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Invokes debugger.
+     * Break in the debugger, if one is attached. Otherwise this is a no-op.
+     *
+     * The [`Debugger` API][1] offers a way to hook into this instruction.
+     *
+     * Implements: [Evaluation for *DebuggerStatement*][2].
+     *
+     * [1]: https://developer.mozilla.org/en-US/docs/Tools/Debugger-API/Debugger
+     * [2]: https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation
      *
      *   Category: Statements
      *   Type: Debugger
