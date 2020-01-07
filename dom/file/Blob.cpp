@@ -40,8 +40,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Blob)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMutable)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(Blob)
+  NS_INTERFACE_MAP_ENTRY(nsIMutable)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
@@ -204,6 +205,12 @@ nsresult Blob::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                            nsACString& aCharset) const {
   return mImpl->GetSendInfo(aBody, aContentLength, aContentType, aCharset);
 }
+
+NS_IMETHODIMP
+Blob::GetMutable(bool* aMutable) { return mImpl->GetMutable(aMutable); }
+
+NS_IMETHODIMP
+Blob::SetMutable(bool aMutable) { return mImpl->SetMutable(aMutable); }
 
 JSObject* Blob::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return Blob_Binding::Wrap(aCx, this, aGivenProto);

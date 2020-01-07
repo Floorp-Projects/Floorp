@@ -147,6 +147,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
                      aOther->mStart + aStart, aLength),
         mDataOwner(aOther->mDataOwner) {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
+    mImmutable = aOther->mImmutable;
   }
 
   ~MemoryBlobImpl() {}
