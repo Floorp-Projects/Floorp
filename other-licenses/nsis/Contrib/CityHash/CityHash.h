@@ -29,7 +29,3 @@
 #else
 #define CITYHASH_API __declspec(dllimport)
 #endif
-
-#ifndef ssize_t
-typedef int ssize_t;
-#endif
