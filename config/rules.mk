@@ -574,10 +574,18 @@ $(WASM_ARCHIVE): $(CWASMOBJS) $(CPPWASMOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOB
 	$(REPORT_BUILD_VERBOSE)
 	$(RM) $(WASM_LIBRARY).$(WASM_OBJ_SUFFIX)
 	$(WASM_CXX) $(OUTOPTION)$@ -Wl,--export-all $(WASM_LDFLAGS) $(CWASMOBJS) $(CPPWASMOBJS)
+
+lucet_options := \
+    --bindings $(topsrcdir)/third_party/rust/lucet-wasi/bindings.json \
+    --guard-size 4GiB \
+    --min-reserved-size 4GiB \
+    --max-reserved-size 4GiB \
+    --opt-level 2
+
 $(WASM_LIBRARY): $(WASM_LIBRARY).$(WASM_OBJ_SUFFIX)
 	$(REPORT_BUILD)
 	$(RM) $(WASM_LIBRARY)
-	$(LUCETC) --bindings $(topsrcdir)/third_party/rust/lucet-wasi/bindings.json $(WASM_LIBRARY).$(WASM_OBJ_SUFFIX) --opt-level 2 -o $(WASM_LIBRARY)
+	$(LUCETC) $(lucet_options) $(WASM_LIBRARY).$(WASM_OBJ_SUFFIX) -o $(WASM_LIBRARY)
 
 ifeq ($(OS_ARCH),WINNT)
 # Import libraries are created by the rules creating shared libraries.
