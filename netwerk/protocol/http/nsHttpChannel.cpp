@@ -6856,8 +6856,8 @@ void nsHttpChannel::MaybeStartDNSPrefetch() {
          mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
     OriginAttributes originAttributes;
     NS_GetOriginAttributes(this, originAttributes);
-    mDNSPrefetch =
-        new nsDNSPrefetch(mURI, originAttributes, this, mTimingEnabled);
+    mDNSPrefetch = new nsDNSPrefetch(
+        mURI, originAttributes, nsIRequest::GetTRRMode(), this, mTimingEnabled);
     mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
   }
 }
