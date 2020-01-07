@@ -17,8 +17,6 @@
 ; This file contains a floating-point implementation of the forward DCT
 ; (Discrete Cosine Transform). The following code is based directly on
 ; the IJG's original jfdctflt.c; see the jfdctflt.c for more details.
-;
-; [TAB8]
 
 %include "jsimdext.inc"
 %include "jdct.inc"
