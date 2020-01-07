@@ -219,7 +219,8 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::FromFloat64Array(
 
 already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::Constructor(
     const GlobalObject& aGlobal,
-    const Optional<StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>& aArg,
+    const Optional<UTF8StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>&
+        aArg,
     ErrorResult& aRv) {
   if (!aArg.WasPassed()) {
     RefPtr<DOMMatrixReadOnly> rval =
@@ -228,7 +229,7 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::Constructor(
   }
 
   const auto& arg = aArg.Value();
-  if (arg.IsString()) {
+  if (arg.IsUTF8String()) {
     nsCOMPtr<nsPIDOMWindowInner> win =
         do_QueryInterface(aGlobal.GetAsSupports());
     if (!win) {
@@ -237,7 +238,7 @@ already_AddRefed<DOMMatrixReadOnly> DOMMatrixReadOnly::Constructor(
     }
     RefPtr<DOMMatrixReadOnly> rval =
         new DOMMatrixReadOnly(aGlobal.GetAsSupports());
-    rval->SetMatrixValue(arg.GetAsString(), aRv);
+    rval->SetMatrixValue(arg.GetAsUTF8String(), aRv);
     return rval.forget();
   }
   if (arg.IsDOMMatrixReadOnly()) {
@@ -664,7 +665,8 @@ already_AddRefed<DOMMatrix> DOMMatrix::FromFloat64Array(
 
 already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
     const GlobalObject& aGlobal,
-    const Optional<StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>& aArg,
+    const Optional<UTF8StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>&
+        aArg,
     ErrorResult& aRv) {
   if (!aArg.WasPassed()) {
     RefPtr<DOMMatrix> rval = new DOMMatrix(aGlobal.GetAsSupports());
@@ -672,7 +674,7 @@ already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
   }
 
   const auto& arg = aArg.Value();
-  if (arg.IsString()) {
+  if (arg.IsUTF8String()) {
     nsCOMPtr<nsPIDOMWindowInner> win =
         do_QueryInterface(aGlobal.GetAsSupports());
     if (!win) {
@@ -680,7 +682,7 @@ already_AddRefed<DOMMatrix> DOMMatrix::Constructor(
       return nullptr;
     }
     RefPtr<DOMMatrix> rval = new DOMMatrix(aGlobal.GetAsSupports());
-    rval->SetMatrixValue(arg.GetAsString(), aRv);
+    rval->SetMatrixValue(arg.GetAsUTF8String(), aRv);
     return rval.forget();
   }
   if (arg.IsDOMMatrixReadOnly()) {
@@ -967,7 +969,7 @@ DOMMatrix* DOMMatrix::InvertSelf() {
 }
 
 DOMMatrixReadOnly* DOMMatrixReadOnly::SetMatrixValue(
-    const nsAString& aTransformList, ErrorResult& aRv) {
+    const nsACString& aTransformList, ErrorResult& aRv) {
   // An empty string is a no-op.
   if (aTransformList.IsEmpty()) {
     return this;
@@ -1001,7 +1003,7 @@ DOMMatrixReadOnly* DOMMatrixReadOnly::SetMatrixValue(
   return this;
 }
 
-DOMMatrix* DOMMatrix::SetMatrixValue(const nsAString& aTransformList,
+DOMMatrix* DOMMatrix::SetMatrixValue(const nsACString& aTransformList,
                                      ErrorResult& aRv) {
   DOMMatrixReadOnly::SetMatrixValue(aTransformList, aRv);
   return this;

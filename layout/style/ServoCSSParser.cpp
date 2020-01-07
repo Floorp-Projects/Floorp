@@ -49,7 +49,7 @@ bool ServoCSSParser::ParseEasing(const nsAString& aValue, URLExtraData* aUrl,
 }
 
 /* static */
-bool ServoCSSParser::ParseTransformIntoMatrix(const nsAString& aValue,
+bool ServoCSSParser::ParseTransformIntoMatrix(const nsACString& aValue,
                                               bool& aContains3DTransform,
                                               gfx::Matrix4x4& aResult) {
   return Servo_ParseTransformIntoMatrix(&aValue, &aContains3DTransform,

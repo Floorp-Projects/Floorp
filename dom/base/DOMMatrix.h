@@ -26,7 +26,7 @@ namespace dom {
 class GlobalObject;
 class DOMMatrix;
 class DOMPoint;
-class StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly;
+class UTF8StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly;
 struct DOMPointInit;
 struct DOMMatrixInit;
 struct DOMMatrix2DInit;
@@ -83,7 +83,7 @@ class DOMMatrixReadOnly : public nsWrapperCache {
 
   static already_AddRefed<DOMMatrixReadOnly> Constructor(
       const GlobalObject& aGlobal,
-      const Optional<StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>&
+      const Optional<UTF8StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>&
           aArg,
       ErrorResult& aRv);
 
@@ -240,8 +240,7 @@ class DOMMatrixReadOnly : public nsWrapperCache {
   void SetDataFromMatrix2DInit(const DOMMatrix2DInit& aMatrixInit);
   void SetDataFromMatrixInit(const DOMMatrixInit& aMatrixInit);
 
-  DOMMatrixReadOnly* SetMatrixValue(const nsAString& aTransformList,
-                                    ErrorResult& aRv);
+  DOMMatrixReadOnly* SetMatrixValue(const nsACString&, ErrorResult&);
   void Ensure3DMatrix();
 
   DOMMatrixReadOnly(nsISupports* aParent, bool is2D) : mParent(aParent) {
@@ -291,7 +290,7 @@ class DOMMatrix : public DOMMatrixReadOnly {
 
   static already_AddRefed<DOMMatrix> Constructor(
       const GlobalObject& aGlobal,
-      const Optional<StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>&
+      const Optional<UTF8StringOrUnrestrictedDoubleSequenceOrDOMMatrixReadOnly>&
           aArg,
       ErrorResult& aRv);
 
@@ -318,7 +317,7 @@ class DOMMatrix : public DOMMatrixReadOnly {
   DOMMatrix* SkewXSelf(double aSx);
   DOMMatrix* SkewYSelf(double aSy);
   DOMMatrix* InvertSelf();
-  DOMMatrix* SetMatrixValue(const nsAString& aTransformList, ErrorResult& aRv);
+  DOMMatrix* SetMatrixValue(const nsACString&, ErrorResult&);
 
   virtual ~DOMMatrix() {}
 
