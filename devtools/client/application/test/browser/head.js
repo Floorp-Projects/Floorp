@@ -33,14 +33,6 @@ async function enableServiceWorkerDebugging() {
 }
 
 async function enableApplicationPanel() {
-  // FIXME bug 1575427 this rejection is very common.
-  const { PromiseTestUtils } = ChromeUtils.import(
-    "resource://testing-common/PromiseTestUtils.jsm"
-  );
-  PromiseTestUtils.whitelistRejectionsGlobally(
-    /this._frontCreationListeners is null/
-  );
-
   // Enable all preferences related to service worker debugging.
   await enableServiceWorkerDebugging();
 
@@ -52,24 +44,9 @@ function getWorkerContainers(doc) {
   return doc.querySelectorAll(".js-sw-container");
 }
 
-async function navigate(toolbox, url) {
-  const isTargetSwitchingEnabled = Services.prefs.getBoolPref(
-    "devtools.target-switching.enabled",
-    false
-  );
-
-  // when target switching, a new target will receive the "navigate" event
-  if (isTargetSwitchingEnabled) {
-    const onSwitched = once(toolbox, "switched-target");
-    toolbox.target.navigateTo({ url });
-    return onSwitched;
-  }
-
-  // when we are not target switching, the same target will receive the
-  // "navigate" event
-  const onNavigated = once(toolbox.target, "navigate");
-  toolbox.target.navigateTo({ url });
-  return onNavigated;
+function navigate(target, url, waitForTargetEvent = "navigate") {
+  executeSoon(() => target.navigateTo({ url }));
+  return once(target, waitForTargetEvent);
 }
 
 async function openNewTabAndApplicationPanel(url) {
