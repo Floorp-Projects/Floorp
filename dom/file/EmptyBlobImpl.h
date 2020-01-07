@@ -18,12 +18,16 @@ class EmptyBlobImpl final : public BaseBlobImpl {
 
   explicit EmptyBlobImpl(const nsAString& aContentType)
       : BaseBlobImpl(NS_LITERAL_STRING("EmptyBlobImpl"), aContentType,
-                     0 /* aLength */) {}
+                     0 /* aLength */) {
+    mImmutable = true;
+  }
 
   EmptyBlobImpl(const nsAString& aName, const nsAString& aContentType,
                 int64_t aLastModifiedDate)
       : BaseBlobImpl(NS_LITERAL_STRING("EmptyBlobImpl"), aName, aContentType, 0,
-                     aLastModifiedDate) {}
+                     aLastModifiedDate) {
+    mImmutable = true;
+  }
 
   virtual void CreateInputStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) override;

@@ -464,6 +464,8 @@ JSObject* ReadBlob(JSContext* aCx, uint32_t aIndex,
     // pointer while destructors are running.
     RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[aIndex];
 
+    MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
+
     RefPtr<Blob> blob = Blob::Create(aHolder->GlobalDuringRead(), blobImpl);
     if (NS_WARN_IF(!blob)) {
       return nullptr;
@@ -490,6 +492,7 @@ bool WriteBlob(JSStructuredCloneWriter* aWriter, Blob* aBlob,
   }
 
   RefPtr<BlobImpl> blobImpl = aBlob->Impl();
+  MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
   // We store the position of the blobImpl in the array as index.
   if (JS_WriteUint32Pair(aWriter, SCTAG_DOM_BLOB,
@@ -601,6 +604,8 @@ JSObject* ReadFileList(JSContext* aCx, JSStructuredCloneReader* aReader,
       RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[pos];
       MOZ_ASSERT(blobImpl->IsFile());
 
+      MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
+
       RefPtr<File> file = File::Create(aHolder->GlobalDuringRead(), blobImpl);
       if (NS_WARN_IF(!file)) {
         return nullptr;
@@ -640,6 +645,7 @@ bool WriteFileList(JSStructuredCloneWriter* aWriter, FileList* aFileList,
 
   for (uint32_t i = 0; i < aFileList->Length(); ++i) {
     RefPtr<BlobImpl> blobImpl = aFileList->Item(i)->Impl();
+    MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
     blobImpls.AppendElement(blobImpl);
   }
 
@@ -680,6 +686,7 @@ JSObject* ReadFormData(JSContext* aCx, JSStructuredCloneReader* aReader,
         MOZ_ASSERT(indexOrLengthOfString < aHolder->BlobImpls().Length());
 
         RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[indexOrLengthOfString];
+        MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
         RefPtr<Blob> blob = Blob::Create(aHolder->GlobalDuringRead(), blobImpl);
         if (NS_WARN_IF(!blob)) {
@@ -778,6 +785,7 @@ bool WriteFormData(JSStructuredCloneWriter* aWriter, FormData* aFormData,
         }
 
         RefPtr<BlobImpl> blobImpl = aValue.GetAsBlob()->Impl();
+        MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
         closure->mHolder->BlobImpls().AppendElement(blobImpl);
         return true;
