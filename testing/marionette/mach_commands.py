@@ -98,10 +98,6 @@ class MarionetteTest(MachCommandBase):
                 tests = [os.path.join(self.topsrcdir,
                          "testing/marionette/harness/marionette_harness/tests/unit-tests.ini")]
 
-        # Force disable e10s because it is not supported in Fennec
-        if kwargs.get("app") == "fennec":
-            kwargs["e10s"] = False
-
         if not kwargs.get("binary") and \
                 (conditions.is_firefox(self) or conditions.is_thunderbird(self)):
             kwargs["binary"] = self.get_binary_path("app")

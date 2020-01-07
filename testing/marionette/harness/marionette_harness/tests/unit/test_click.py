@@ -11,7 +11,6 @@ from marionette_driver.marionette import Alert
 
 from marionette_harness import (
     MarionetteTestCase,
-    run_if_e10s,
     WindowManagerMixin,
 )
 
@@ -428,7 +427,6 @@ class TestClickNavigation(MarionetteTestCase):
         self.marionette.find_element(By.ID, "option").click()
         self.marionette.find_element(By.ID, "delay")
 
-    @run_if_e10s("Requires e10s mode enabled")
     def test_click_remoteness_change(self):
         self.marionette.navigate("about:robots")
         self.marionette.navigate(self.test_page)

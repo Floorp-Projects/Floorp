@@ -5,7 +5,7 @@
 from __future__ import absolute_import
 from firefox_puppeteer import PuppeteerMixin
 from marionette_driver import Wait
-from marionette_harness import MarionetteTestCase, skip_if_e10s
+from marionette_harness import MarionetteTestCase, skip
 
 
 class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):
@@ -45,7 +45,7 @@ class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):
         finally:
             super(TestSSLStatusAfterRestart, self).tearDown()
 
-    @skip_if_e10s("Bug 1325047")
+    @skip("Bug 1325047 - Tests fails when run with multiple processes")
     def test_ssl_status_after_restart(self):
         for item in self.test_data:
             with self.marionette.using_context('content'):
