@@ -42,7 +42,10 @@ from taskgraph.util.schema import (
     optionally_keyed_by,
     Schema,
 )
-from taskgraph.util.chunking import get_chunked_manifests
+from taskgraph.util.chunking import (
+    get_chunked_manifests,
+    guess_mozinfo_from_task,
+)
 from taskgraph.util.taskcluster import (
     get_artifact_path,
     get_index_url,
@@ -1344,11 +1347,12 @@ def split_chunks(config, tests):
         chunked_manifests = None
         if test['suite'] not in CHUNK_SUITES_BLACKLIST:
             suite_definition = TEST_SUITES[test['suite']]
+            mozinfo = guess_mozinfo_from_task(test)
             chunked_manifests = get_chunked_manifests(
                 suite_definition['build_flavor'],
                 suite_definition.get('kwargs', {}).get('subsuite', 'undefined'),
-                test['test-platform'],
                 test['chunks'],
+                frozenset(mozinfo.items()),
             )
 
         for i in range(test['chunks']):
