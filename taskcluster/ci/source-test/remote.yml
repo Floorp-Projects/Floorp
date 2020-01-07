@@ -27,3 +27,13 @@ puppeteer:
         command: >
             cd $GECKO_PATH/ &&
             ./mach puppeteer-test --setpref "remote.log.level=Trace" --binary $MOZ_FETCHES_DIR/firefox/firefox --headless
+
+puppeteer-fis:
+    description: Puppeteer tests against Firefox CDP-based remote protocol with Fission (site isolation) turned on
+    treeherder:
+        symbol: remote(pup-fis)
+    run:
+        using: run-task
+        command: >
+            cd $GECKO_PATH/ &&
+            ./mach puppeteer-test --setpref "remote.log.level=Trace" --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --enable-fission
