@@ -227,6 +227,16 @@ NS_IMETHODIMP RemoteWebProgressRequest::GetLoadFlags(nsLoadFlags* aLoadFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP RemoteWebProgressRequest::GetTRRMode(
+    nsIRequest::TRRMode* aTRRMode) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP RemoteWebProgressRequest::SetTRRMode(
+    nsIRequest::TRRMode aTRRMode) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP RemoteWebProgressRequest::SetLoadFlags(nsLoadFlags aLoadFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

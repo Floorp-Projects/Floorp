@@ -394,6 +394,16 @@ nsViewSourceChannel::SetLoadFlags(uint32_t aLoadFlags) {
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return nsIViewSourceChannel::GetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return nsIViewSourceChannel::SetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetContentType(nsACString& aContentType) {
   NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 

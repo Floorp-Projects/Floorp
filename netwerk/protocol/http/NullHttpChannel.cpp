@@ -455,6 +455,16 @@ NullHttpChannel::GetLoadFlags(nsLoadFlags* aLoadFlags) {
 }
 
 NS_IMETHODIMP
+NullHttpChannel::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

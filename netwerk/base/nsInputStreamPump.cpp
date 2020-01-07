@@ -252,6 +252,16 @@ nsInputStreamPump::SetLoadFlags(nsLoadFlags aLoadFlags) {
 }
 
 NS_IMETHODIMP
+nsInputStreamPump::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return GetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+nsInputStreamPump::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return SetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
 nsInputStreamPump::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   RecursiveMutexAutoLock lock(mMutex);
 

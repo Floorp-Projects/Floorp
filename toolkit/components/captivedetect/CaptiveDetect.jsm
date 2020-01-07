@@ -34,7 +34,7 @@ function URLFetcher(url, timeout) {
   // Prevent privacy leaks
   xhr.channel.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
   // Use the system's resolver for this check
-  xhr.channel.loadFlags |= Ci.nsIRequest.LOAD_DISABLE_TRR;
+  xhr.channel.setTRRMode(Ci.nsIRequest.TRR_DISABLED_MODE);
   // We except this from being classified
   xhr.channel.loadFlags |= Ci.nsIChannel.LOAD_BYPASS_URL_CLASSIFIER;
 

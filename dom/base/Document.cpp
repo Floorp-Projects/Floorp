@@ -699,6 +699,16 @@ OnloadBlocker::GetLoadFlags(nsLoadFlags* aLoadFlags) {
 }
 
 NS_IMETHODIMP
+OnloadBlocker::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return GetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+OnloadBlocker::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return SetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
 OnloadBlocker::SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
 
 // ==================================================================

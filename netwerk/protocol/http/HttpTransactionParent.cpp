@@ -105,7 +105,7 @@ void HttpTransactionParent::GetStructFromInfo(
   aArgs.tlsFlags() = aInfo->GetTlsFlags();
   aArgs.isolated() = aInfo->GetIsolated();
   aArgs.isTrrServiceChannel() = aInfo->GetIsTrrServiceChannel();
-  aArgs.trrDisabled() = aInfo->GetTrrDisabled();
+  aArgs.trrMode() = static_cast<uint8_t>(aInfo->GetTRRMode());
   aArgs.isIPv4Disabled() = aInfo->GetIPv4Disabled();
   aArgs.isIPv6Disabled() = aInfo->GetIPv6Disabled();
   aArgs.topWindowOrigin() = aInfo->GetTopWindowOrigin();
@@ -649,6 +649,18 @@ HttpTransactionParent::GetLoadFlags(nsLoadFlags* aLoadFlags) {
 
 NS_IMETHODIMP
 HttpTransactionParent::SetLoadFlags(nsLoadFlags aLoadFlags) {
+  MOZ_ASSERT(false, "Should not be called.");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+HttpTransactionParent::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  MOZ_ASSERT(false, "Should not be called.");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+HttpTransactionParent::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
   MOZ_ASSERT(false, "Should not be called.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }

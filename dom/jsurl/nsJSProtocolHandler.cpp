@@ -837,6 +837,16 @@ nsJSChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
 }
 
 NS_IMETHODIMP
+nsJSChannel::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return GetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return SetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
 nsJSChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   return mStreamChannel->GetLoadGroup(aLoadGroup);
 }

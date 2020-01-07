@@ -676,6 +676,16 @@ PresentationConnection::GetLoadFlags(nsLoadFlags* aLoadFlags) {
 NS_IMETHODIMP
 PresentationConnection::SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
 
+NS_IMETHODIMP
+PresentationConnection::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return GetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+PresentationConnection::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return SetTRRModeImpl(aTRRMode);
+}
+
 nsresult PresentationConnection::AddIntoLoadGroup() {
   // Avoid adding to loadgroup multiple times
   if (mWeakLoadGroup) {

@@ -1039,6 +1039,9 @@ nsresult nsSocketTransport::ResolveHost() {
   if (mConnectionFlags & nsSocketTransport::DISABLE_TRR)
     dnsFlags |= nsIDNSService::RESOLVE_DISABLE_TRR;
 
+  dnsFlags |= nsIDNSService::GetFlagsFromTRRMode(
+      nsISocketTransport::GetTRRModeFromFlags(mConnectionFlags));
+
   NS_ASSERTION(!(dnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV6) ||
                    !(dnsFlags & nsIDNSService::RESOLVE_DISABLE_IPV4),
                "Setting both RESOLVE_DISABLE_IPV6 and RESOLVE_DISABLE_IPV4");
