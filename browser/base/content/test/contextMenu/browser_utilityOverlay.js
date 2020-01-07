@@ -55,17 +55,6 @@ add_task(async function test_getTopWin() {
   is(getTopWin(), window, "got top window");
 });
 
-add_task(async function test_openNewTabWith() {
-  const kURL = "http://example.com/";
-  let tabLoadPromise = BrowserTestUtils.waitForNewTab(gBrowser, kURL, true);
-  openNewTabWith("http://example.com/", null, {
-    triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
-  });
-  let tab = await tabLoadPromise;
-  is(tab.linkedBrowser.currentURI.spec, kURL, "example.com loaded");
-  gBrowser.removeCurrentTab();
-});
-
 add_task(async function test_openUILink() {
   const kURL = "http://example.org/";
   let tab = await BrowserTestUtils.openNewForegroundTab(
