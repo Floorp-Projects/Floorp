@@ -21,8 +21,9 @@ permalink: /changelog/
       migration and initialization.
     * Metrics with `lifetime: application` are now cleared when the application is started,
       after startup Glean SDK pings are generated.
-    * The public method `PingType.send()` (in all platforms) have been deprecated
-      and renamed to `PingType.submit()`.
+    * ⚠️ **This is a breaking change**:
+      * The public method `PingType.send()` (in all platforms) have been deprecated
+        and renamed to `PingType.submit()`.
     * Rename `deletion_request` ping to `deletion-request` ping after glean_parser update
 
 # 27.0.0

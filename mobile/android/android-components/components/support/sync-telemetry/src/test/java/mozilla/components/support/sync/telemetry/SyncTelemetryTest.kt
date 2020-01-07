@@ -143,7 +143,7 @@ class SyncTelemetryTest {
             }
             // We still need to send the ping, so that the counters are
             // cleared out between calls to `sendHistoryPing`.
-            Pings.historySync.send()
+            Pings.historySync.submit()
             pingCount++
         }
 
@@ -284,7 +284,7 @@ class SyncTelemetryTest {
             }
             // We still need to send the ping, so that the counters are
             // cleared out between calls to `sendHistoryPing`.
-            Pings.historySync.send()
+            Pings.historySync.submit()
             pingCount++
         }
 
@@ -317,7 +317,7 @@ class SyncTelemetryTest {
             }
             // We still need to send the ping, so that the counters are
             // cleared out between calls to `sendHistoryPing`.
-            Pings.historySync.send()
+            Pings.historySync.submit()
             pingCount++
         }
 
@@ -427,7 +427,7 @@ class SyncTelemetryTest {
             }
             // We still need to send the ping, so that the counters are
             // cleared out between calls to `sendPasswordsPing`.
-            Pings.loginsSync.send()
+            Pings.loginsSync.submit()
             pingCount++
         }
 
@@ -568,7 +568,7 @@ class SyncTelemetryTest {
             }
             // We still need to send the ping, so that the counters are
             // cleared out between calls to `sendPasswordsPing`.
-            Pings.loginsSync.send()
+            Pings.loginsSync.submit()
             pingCount++
         }
 
@@ -601,7 +601,7 @@ class SyncTelemetryTest {
             }
             // We still need to send the ping, so that the counters are
             // cleared out between calls to `sendHistoryPing`.
-            Pings.loginsSync.send()
+            Pings.loginsSync.submit()
             pingCount++
         }
 
@@ -668,7 +668,7 @@ class SyncTelemetryTest {
                 }
                 else -> fail()
             }
-            Pings.bookmarksSync.send()
+            Pings.bookmarksSync.submit()
             pingCount++
         }
 
@@ -800,7 +800,7 @@ class SyncTelemetryTest {
             }
             // We still need to send the ping, so that the counters are
             // cleared out between calls to `sendBookmarksPing`.
-            Pings.bookmarksSync.send()
+            Pings.bookmarksSync.submit()
             pingCount++
         }
 
@@ -833,7 +833,7 @@ class SyncTelemetryTest {
             }
             // We still need to send the ping, so that the counters are
             // cleared out between calls to `sendHistoryPing`.
-            Pings.bookmarksSync.send()
+            Pings.bookmarksSync.submit()
             pingCount++
         }
 
