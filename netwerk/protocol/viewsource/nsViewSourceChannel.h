@@ -17,6 +17,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "nsIViewSourceChannel.h"
+#include "nsIWrapperChannel.h"
 #include "nsIChildChannel.h"
 #include "nsString.h"
 
@@ -27,7 +28,8 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
                                   public nsICachingChannel,
                                   public nsIApplicationCacheChannel,
                                   public nsIFormPOSTActionChannel,
-                                  public nsIChildChannel {
+                                  public nsIChildChannel,
+                                  public nsIWrapperChannel {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
@@ -38,6 +40,7 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIHTTPCHANNEL
   NS_DECL_NSICHILDCHANNEL
+  NS_DECL_NSIWRAPPERCHANNEL
   NS_FORWARD_SAFE_NSICACHEINFOCHANNEL(mCacheInfoChannel)
   NS_FORWARD_SAFE_NSICACHINGCHANNEL(mCachingChannel)
   NS_FORWARD_SAFE_NSIAPPLICATIONCACHECHANNEL(mApplicationCacheChannel)
