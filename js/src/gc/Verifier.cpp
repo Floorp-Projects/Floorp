@@ -1055,26 +1055,26 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
 
   // Values belonging to other runtimes or in uncollected zones are treated as
   // black.
-  CellColor valueColor = CellColor::Black;
-  if (value->runtimeFromAnyThread() == zone->runtimeFromAnyThread() &&
-      valueZone->isGCMarking()) {
-    valueColor = value->color();
-  }
+  JSRuntime* mapRuntime = zone->runtimeFromAnyThread();
+  auto effectiveColor = [=](Cell* cell, Zone* cellZone) -> CellColor {
+    if (cell->runtimeFromAnyThread() != mapRuntime) {
+      return CellColor::Black;
+    }
+    if (cellZone->isGCMarking() || cellZone->isGCSweeping()) {
+      return cell->color();
+    }
+    return CellColor::Black;
+  };
 
-  if (valueColor < std::min(map->mapColor, key->color())) {
+  CellColor valueColor = effectiveColor(value, valueZone);
+  CellColor keyColor = effectiveColor(key, keyZone);
+
+  if (valueColor < std::min(map->mapColor, keyColor)) {
     fprintf(stderr, "WeakMap value is less marked than map and key\n");
     fprintf(stderr, "(map %p is %s, key %p is %s, value %p is %s)\n", map,
-            map->mapColor.name(), key, key->color().name(), value,
+            map->mapColor.name(), key, keyColor.name(), value,
             valueColor.name());
     ok = false;
-  }
-
-  // Debugger weak maps map have keys in zones that are not or are
-  // no longer collecting. We can't make guarantees about the mark
-  // state of these keys.
-  if (map->allowKeysInOtherZones() &&
-      !(keyZone->isGCMarking() || keyZone->isGCSweeping())) {
-    return ok;
   }
 
   JSObject* delegate = MaybeGetDelegate(key);
@@ -1082,19 +1082,12 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
     return ok;
   }
 
-  CellColor delegateColor;
-  if (delegate->zone()->isGCMarking() || delegate->zone()->isGCSweeping()) {
-    delegateColor = delegate->color();
-  } else {
-    // IsMarked() assumes cells in uncollected zones are marked.
-    delegateColor = CellColor::Black;
-  }
-
-  if (key->color() < std::min(map->mapColor, delegateColor)) {
+  CellColor delegateColor = effectiveColor(delegate, delegate->zone());
+  if (keyColor < std::min(map->mapColor, delegateColor)) {
     fprintf(stderr, "WeakMap key is less marked than map or delegate\n");
     fprintf(stderr, "(map %p is %s, delegate %p is %s, key %p is %s)\n", map,
             map->mapColor.name(), delegate, delegateColor.name(), key,
-            key->color().name());
+            keyColor.name());
     ok = false;
   }
 
