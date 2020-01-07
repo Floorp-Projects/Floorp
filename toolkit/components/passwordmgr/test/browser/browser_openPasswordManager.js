@@ -39,10 +39,6 @@ add_task(async function test_filter() {
 });
 
 add_task(async function test_management_overrideURI_noFilter() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["signon.management.page.enabled", true]],
-  });
-
   Services.prefs.setStringPref(
     PREF_MANAGEMENT_URI,
     "about:logins?filter=%DOMAIN%"
