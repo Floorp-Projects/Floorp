@@ -473,17 +473,18 @@ nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs) {
   // For any threads that have not shutdown yet, we need to remove them from
   // mRequestedShutdownContexts so the thread manager does not wait for them
   // at shutdown.
+  static const nsThread::ShutdownContextsComp comparator{};
   for (int32_t i = 0; i < threads.Count(); ++i) {
     nsThread* thread = static_cast<nsThread*>(threads[i]);
     // If mThread is not null on the thread it means that it hasn't shutdown
     // context[i] corresponds to thread[i]
     if (thread->mThread && contexts[i]) {
-      auto index =
-          currentThread->mRequestedShutdownContexts.IndexOf(contexts[i]);
+      auto index = currentThread->mRequestedShutdownContexts.IndexOf(
+          contexts[i], 0, comparator);
       if (index != nsThread::ShutdownContexts::NoIndex) {
         // We must leak the shutdown context just in case the leaked thread
         // does get unstuck and completes before the main thread is done.
-        currentThread->mRequestedShutdownContexts[index].forget();
+        Unused << currentThread->mRequestedShutdownContexts[index].release();
         currentThread->mRequestedShutdownContexts.RemoveElementsAt(index, 1);
       }
     }
