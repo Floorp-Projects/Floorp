@@ -605,7 +605,7 @@ linux-shippable/opt:
         job-name: linux-opt
         type: shippable
     treeherder:
-        platform: linux1804-32-shippable/opt
+        platform: linux32-shippable/opt
         symbol: Bpgo(B)
     worker-type: b-linux
     worker:
