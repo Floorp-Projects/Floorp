@@ -14,6 +14,7 @@
 #  include "mozilla/RefPtr.h"
 #  include "mozilla/Tuple.h"
 #  include "mozilla/TypeTraits.h"
+#  include "mozilla/UniquePtr.h"
 #  include "mozilla/Variant.h"
 
 #  include "nsISerialEventTarget.h"
@@ -1350,7 +1351,7 @@ class ProxyRunnable : public CancelableRunnable {
 
  private:
   RefPtr<typename PromiseType::Private> mProxyPromise;
-  nsAutoPtr<MethodCall<PromiseType, MethodType, ThisType, Storages...>>
+  UniquePtr<MethodCall<PromiseType, MethodType, ThisType, Storages...>>
       mMethodCall;
 };
 

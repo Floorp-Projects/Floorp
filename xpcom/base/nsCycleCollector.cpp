@@ -165,6 +165,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/MruCache.h"
 #include "mozilla/SegmentedVector.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionNoteRootCallback.h"
@@ -1109,7 +1110,7 @@ class nsCycleCollector : public nsIMemoryReporter {
 
   ccPhase mIncrementalPhase;
   CCGraph mGraph;
-  nsAutoPtr<CCGraphBuilder> mBuilder;
+  UniquePtr<CCGraphBuilder> mBuilder;
   RefPtr<nsCycleCollectorLogger> mLogger;
 
 #ifdef DEBUG
@@ -1828,7 +1829,7 @@ class CCGraphBuilder final : public nsCycleCollectionTraversalCallback,
   nsCString mNextEdgeName;
   RefPtr<nsCycleCollectorLogger> mLogger;
   bool mMergeZones;
-  nsAutoPtr<NodePool::Enumerator> mCurrNode;
+  UniquePtr<NodePool::Enumerator> mCurrNode;
   uint32_t mNoteChildCount;
 
   struct PtrInfoCache : public MruCache<void*, PtrInfo*, PtrInfoCache, 491> {
@@ -2034,7 +2035,7 @@ void CCGraphBuilder::DoneAddingRoots() {
   // We've finished adding roots, and everything in the graph is a root.
   mGraph.mRootCount = mGraph.MapCount();
 
-  mCurrNode = new NodePool::Enumerator(mGraph.mNodes);
+  mCurrNode = MakeUnique<NodePool::Enumerator>(mGraph.mNodes);
 }
 
 MOZ_NEVER_INLINE bool CCGraphBuilder::BuildGraph(SliceBudget& aBudget) {
@@ -3603,8 +3604,8 @@ void nsCycleCollector::BeginCollection(
   mResults.mMergedZones = mergeZones;
 
   MOZ_ASSERT(!mBuilder, "Forgot to clear mBuilder");
-  mBuilder =
-      new CCGraphBuilder(mGraph, mResults, mCCJSRuntime, mLogger, mergeZones);
+  mBuilder = MakeUnique<CCGraphBuilder>(mGraph, mResults, mCCJSRuntime, mLogger,
+                                        mergeZones);
   timeLog.Checkpoint("BeginCollection prepare graph builder");
 
   if (mCCJSRuntime) {

@@ -20,6 +20,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Module.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/UniquePtr.h"
 #include "nsXULAppAPI.h"
 #include "nsIFactory.h"
 #include "nsIInterfaceRequestor.h"
@@ -27,7 +28,6 @@
 #include "PLDHashTable.h"
 #include "prtime.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsWeakReference.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
@@ -222,7 +222,7 @@ class nsComponentManagerImpl final : public nsIComponentManager,
 
   // The KnownModule is kept alive by these members, it is
   // referenced by pointer from the factory entries.
-  nsTArray<nsAutoPtr<KnownModule>> mKnownStaticModules;
+  nsTArray<mozilla::UniquePtr<KnownModule>> mKnownStaticModules;
   // The key is the URI string of the module
   nsClassHashtable<nsCStringHashKey, KnownModule> mKnownModules;
 
