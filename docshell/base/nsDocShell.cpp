@@ -9343,8 +9343,7 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
 }
 
 static bool SchemeUsesDocChannel(nsIURI* aURI) {
-  if (SchemeIsJavascript(aURI) || SchemeIsViewSource(aURI) ||
-      NS_IsAboutBlank(aURI)) {
+  if (SchemeIsJavascript(aURI) || NS_IsAboutBlank(aURI)) {
     return false;
   }
 
