@@ -3359,10 +3359,8 @@ nsresult nsFocusManager::GetNextTabbableContent(
       // that is not owned by document in frame traversal.
       nsIContent* currentContent = frame->GetContent();
       nsIContent* oldTopLevelScopeOwner = currentTopLevelScopeOwner;
-      if (!aForward || oldTopLevelScopeOwner != currentContent) {
+      if (!aForward || currentTopLevelScopeOwner != currentContent) {
         currentTopLevelScopeOwner = GetTopLevelScopeOwner(currentContent);
-      } else {
-        currentTopLevelScopeOwner = currentContent;
       }
       if (currentTopLevelScopeOwner &&
           currentTopLevelScopeOwner == oldTopLevelScopeOwner) {
@@ -3429,7 +3427,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
       //  append ELEMENT to NAVIGATION-ORDER."
       // and later in "For each element ELEMENT in NAVIGATION-ORDER: "
       // hosts and slots are handled before other elements.
-      if (IsHostOrSlot(currentTopLevelScopeOwner)) {
+      if (currentTopLevelScopeOwner) {
         bool focusableHostSlot;
         int32_t tabIndex = HostOrSlotTabIndexValue(currentTopLevelScopeOwner,
                                                    &focusableHostSlot);
