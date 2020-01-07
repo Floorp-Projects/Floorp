@@ -230,7 +230,9 @@ class HomeFragment : Fragment() {
         setupHomeMenu()
 
         viewLifecycleOwner.lifecycleScope.launch(IO) {
-            // This should be unnecessary, but we've seen crashes around it. See #6832
+            // This is necessary due to a bug in viewLifecycleOwner. See:
+            // https://github.com/mozilla-mobile/android-components/blob/master/components/lib/state/src/main/java/mozilla/components/lib/state/ext/Fragment.kt#L32-L56
+            // TODO remove when viewLifecycleOwner is fixed
             val context = context ?: return@launch
 
             val iconSize = resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
