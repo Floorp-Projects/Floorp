@@ -2252,6 +2252,7 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
     int rv, err;
     LONG hiOffset = 0;
     LONG loOffset;
+    LARGE_INTEGER offset; /* use for a normalized add of len to offset */
 
     if (!fd->secret->md.sync_file_io) {
         PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -2368,7 +2369,14 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
                 return -1;
             }
 
-            SetFilePointer((HANDLE)f, me->md.blocked_io_bytes, 0, FILE_CURRENT);
+            /* Apply the workaround from bug 70765 (see _PR_MD_WRITE)
+             * to the reading code, too. */
+
+            offset.LowPart = me->md.overlapped.overlapped.Offset;
+            offset.HighPart = me->md.overlapped.overlapped.OffsetHigh;
+            offset.QuadPart += me->md.blocked_io_bytes;
+
+            SetFilePointer((HANDLE)f, offset.LowPart, &offset.HighPart, FILE_BEGIN);
 
             PR_ASSERT(me->io_pending == PR_FALSE);
 

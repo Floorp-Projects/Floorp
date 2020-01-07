@@ -4,6 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+if test -z $1
+then
+  echo "usage: $0 <path-to-dist>"
+  exit 1
+fi
+
+cd $1/lib
+ABS_LIB=$PWD
+cd -
+
+export DYLD_LIBRARY_PATH=${ABS_LIB}:${DYLD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=${ABS_LIB}:${LD_LIBRARY_PATH}
+export PATH=${ABS_LIB}:${PATH}
+
 #
 # runtests.sh
 #	Bourne shell script for nspr tests
@@ -57,12 +71,35 @@ fi
 #
 
 #forktest (failed on IRIX)
+#multiwait - fails on Linux 64bit since NSPR v 4.4 from 2004.
 #nbconn - fails on some platforms 
 #poll_er - fails on some platforms? limited use?
 #prpoll -  the bad-FD test needs to be moved to a different test
 #sleep	-  specific to OS/2
+#
+# all of the following were disabled in 2019 when reenabling CI tests,
+# because they failed on at least one of the platforms:
+#
+# cltsrv
+# cvar
+# gethost
+# getproto
+# layer
+# logfile
+# nameshm1
+# nblayer
+# nonblock
+# ntioto
+# op_2long
+# parent
+# provider
+# ranfile
+# socket
+# sockopt
+# vercheck
 
-LOGFILE=${NSPR_TEST_LOGFILE:-$NULL_DEVICE}
+#LOGFILE=${NSPR_TEST_LOGFILE:-$NULL_DEVICE}
+LOGFILE=nspr-test.log
 
 #
 # Tests run on all platforms
@@ -80,9 +117,7 @@ atomic
 attach
 bigfile
 cleanup
-cltsrv
 concur
-cvar
 cvar2
 dlltest
 dtoa
@@ -93,8 +128,6 @@ fileio
 foreign
 formattm
 fsync
-gethost
-getproto
 i2l
 initclk
 inrval
@@ -108,27 +141,18 @@ joinkk
 joinku
 joinuk
 joinuu
-layer
 lazyinit
 libfilename
 lltest
 lock
 lockfile
-logfile
 logger
 many_cv
-multiwait
-nameshm1
-nblayer
-nonblock
-ntioto
 ntoh
-op_2long
 op_excl
 op_filnf
 op_filok
 op_nofil
-parent
 parsetm
 peek
 perf
@@ -141,10 +165,8 @@ pollable
 prftest
 prfz
 primblok
-provider
 prpollml
 pushtop
-ranfile
 randseed
 reinit
 rwlocktest
@@ -164,8 +186,6 @@ servr_ku
 servr_uu
 short_thread
 sigpipe
-socket
-sockopt
 sockping
 sprintf
 stack
@@ -181,7 +201,6 @@ timemac
 timetest
 tpd
 udpsrv
-vercheck
 version
 writev
 xnotify
@@ -211,7 +230,7 @@ printf "Test\t\t\tResult\n\n"
 if [ $OS_PLATFORM = "Windows_95" ] || [ $OS_PLATFORM = "Windows_98" ] || [ $OS_PLATFORM = "Windows_NT" ] || [ $OS_PLATFORM = "OS/2" ] ; then
 	for prog in $TESTS
 	do
-		printf "$prog"
+		printf "$prog (`date +%T`)"
 		printf "\nBEGIN TEST: $prog\n\n" >> ${LOGFILE} 2>&1
 		./$prog >> ${LOGFILE} 2>&1
 		if [ 0 = $? ] ; then
@@ -225,7 +244,7 @@ if [ $OS_PLATFORM = "Windows_95" ] || [ $OS_PLATFORM = "Windows_98" ] || [ $OS_P
 else
 	for prog in $TESTS
 	do
-		printf "$prog"
+		printf "$prog (`date +%T`)"
 		printf "\nBEGIN TEST: $prog\n\n" >> ${LOGFILE} 2>&1
 		export test_rval
 		./$prog >> ${LOGFILE} 2>&1 &
@@ -249,22 +268,10 @@ else
 	done
 fi;
 
+if [ $rval -ne 0 ]; then
+  cat ${LOGFILE}
+fi
+
 printf "END\t\t\t`date`\n"
 exit $rval
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

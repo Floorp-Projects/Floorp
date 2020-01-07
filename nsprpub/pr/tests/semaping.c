@@ -8,9 +8,20 @@
 
 #include <stdio.h>
 
-#define SHM_NAME "/tmp/counter"
-#define SEM_NAME1 "/tmp/foo.sem"
-#define SEM_NAME2 "/tmp/bar.sem"
+#ifdef DEBUG
+#define SEM_D "D"
+#else
+#define SEM_D
+#endif
+#ifdef IS_64
+#define SEM_64 "64"
+#else
+#define SEM_64
+#endif
+
+#define SHM_NAME "/tmp/counter" SEM_D SEM_64
+#define SEM_NAME1 "/tmp/foo.sem" SEM_D SEM_64
+#define SEM_NAME2 "/tmp/bar.sem" SEM_D SEM_64
 #define EXE_NAME "semapong"
 #define SEM_MODE  0666
 #define SHM_MODE  0666

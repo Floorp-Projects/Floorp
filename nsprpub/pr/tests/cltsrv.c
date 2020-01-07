@@ -64,7 +64,20 @@
 #define DEFAULT_HIGH 0
 #define BUFFER_SIZE 1024
 #define DEFAULT_BACKLOG 5
-#define DEFAULT_PORT 12849
+
+#ifdef DEBUG
+#define PORT_INC_DO +100
+#else
+#define PORT_INC_DO
+#endif
+#ifdef IS_64
+#define PORT_INC_3264 +200
+#else
+#define PORT_INC_3264
+#endif
+
+#define DEFAULT_PORT 12849 PORT_INC_DO PORT_INC_3264
+
 #define DEFAULT_CLIENTS 1
 #define ALLOWED_IN_ACCEPT 1
 #define DEFAULT_CLIPPING 1000
@@ -792,11 +805,16 @@ static void PR_CALLBACK Server(void *arg)
 
     memset(&serverAddress, 0, sizeof(serverAddress));
     if (PR_AF_INET6 != domain) {
+        TEST_LOG(cltsrv_log_file, TEST_LOG_ALWAYS,
+                 ("server binding to ip port %s\n", DEFAULT_PORT));
         rv = PR_InitializeNetAddr(PR_IpAddrAny, DEFAULT_PORT, &serverAddress);
     }
-    else
+    else {
+        TEST_LOG(cltsrv_log_file, TEST_LOG_ALWAYS,
+                 ("server binding to ipv6 port %s\n", DEFAULT_PORT));
         rv = PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, DEFAULT_PORT,
                            &serverAddress);
+    }
     rv = PR_Bind(server->listener, &serverAddress);
     TEST_ASSERT(PR_SUCCESS == rv);
 
@@ -1131,16 +1149,24 @@ int main(int argc, char** argv)
             client[index].ml = PR_NewLock();
             if (serverIsLocal)
             {
-                if (PR_AF_INET6 != domain)
+                if (PR_AF_INET6 != domain) {
+                    TEST_LOG(cltsrv_log_file, TEST_LOG_ALWAYS,
+                             ("loopback client ip port %s\n", DEFAULT_PORT));
                     (void)PR_InitializeNetAddr(
                         PR_IpAddrLoopback, DEFAULT_PORT,
                         &client[index].serverAddress);
-                else
+                }
+                else {
+                    TEST_LOG(cltsrv_log_file, TEST_LOG_ALWAYS,
+                             ("loopback client ipv6 port %s\n", DEFAULT_PORT));
                     rv = PR_SetNetAddr(PR_IpAddrLoopback, PR_AF_INET6,
                                        DEFAULT_PORT, &client[index].serverAddress);
+                }
             }
             else
             {
+                TEST_LOG(cltsrv_log_file, TEST_LOG_ALWAYS,
+                         ("client enumerate port %s\n", DEFAULT_PORT));
                 (void)PR_EnumerateHostEnt(
                     0, &host, DEFAULT_PORT, &client[index].serverAddress);
             }

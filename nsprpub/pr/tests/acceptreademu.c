@@ -20,7 +20,18 @@
 
 #include <stdlib.h>
 
-#define DEFAULT_PORT 12273
+#ifdef DEBUG
+#define PORT_INC_DO +100
+#else
+#define PORT_INC_DO
+#endif
+#ifdef IS_64
+#define PORT_INC_3264 +200
+#else
+#define PORT_INC_3264
+#endif
+
+#define DEFAULT_PORT 12273 PORT_INC_DO PORT_INC_3264
 #define GET "GET / HTTP/1.0\n\n"
 static PRFileDesc *std_out, *err_out;
 static PRIntervalTime write_dally, accept_timeout;

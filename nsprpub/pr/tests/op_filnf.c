@@ -31,7 +31,7 @@ PRIntn error_code;
 int main(int argc, char **argv)
 {
     PR_STDIO_INIT();
-    t1 = PR_Open("/usr/tmp/ttools/err03.tmp", PR_TRUNCATE | PR_RDWR, 0666);
+    t1 = PR_Open("./tmp-ttools/err03.tmp", PR_TRUNCATE | PR_RDWR, 0666);
     if (t1 == NULL) {
         if (PR_GetError() == PR_FILE_NOT_FOUND_ERROR) {
             printf ("error code is %d \n", PR_GetError());

@@ -19,7 +19,7 @@ static void Help(void)
     PR_fprintf(err, "\t-c   Nuber of iterations     (default: 10)\n");
     PR_fprintf(err, "\t-S   Sync the file           (default: FALSE)\n");
     PR_fprintf(err, "\t-K   Size of file (K bytes)  (default: 10)\n");
-    PR_fprintf(err, "\t     Name of file to write   (default: /usr/tmp/sync.dat)\n");
+    PR_fprintf(err, "\t     Name of file to write   (default: ./tmp-sync.dat)\n");
     PR_fprintf(err, "\t-h   This message and nothing else\n");
 }  /* Help */
 

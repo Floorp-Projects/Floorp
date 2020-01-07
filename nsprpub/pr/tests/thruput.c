@@ -27,7 +27,20 @@
 #include "plgetopt.h"
 
 #define ADDR_BUFFER 100
-#define PORT_NUMBER 51877
+
+#ifdef DEBUG
+#define PORT_INC_DO +100
+#else
+#define PORT_INC_DO
+#endif
+#ifdef IS_64
+#define PORT_INC_3264 +200
+#else
+#define PORT_INC_3264
+#endif
+
+#define PORT_NUMBER 51877 PORT_INC_DO PORT_INC_3264
+
 #define SAMPLING_INTERVAL 10
 #define BUFFER_SIZE (32 * 1024)
 
