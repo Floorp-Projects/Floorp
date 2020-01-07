@@ -762,7 +762,6 @@ void Accessible::NameFromAssociatedXULLabel(DocAccessible* aDocument,
       nsTextEquivUtils::AppendTextEquivFromContent(label, label->Elm(), &aName);
     }
   }
-  aName.CompressWhitespace();
 }
 
 void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
@@ -800,6 +799,8 @@ void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
   if (aName.IsEmpty()) {
     NameFromAssociatedXULLabel(aDocument, aElm, aName);
   }
+
+  aName.CompressWhitespace();
 }
 
 nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {

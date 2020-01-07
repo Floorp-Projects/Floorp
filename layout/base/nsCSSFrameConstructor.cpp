@@ -3960,7 +3960,8 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
 static bool IsXULDisplayType(const nsStyleDisplay* aDisplay) {
   // -moz-{inline-}box is XUL, unless we're emulating it with flexbox.
   if (!StaticPrefs::layout_css_emulate_moz_box_with_flex() &&
-      aDisplay->DisplayInside() == StyleDisplayInside::MozBox) {
+      (aDisplay->mDisplay == StyleDisplay::MozInlineBox ||
+       aDisplay->mDisplay == StyleDisplay::MozBox)) {
     return true;
   }
 
@@ -4409,7 +4410,8 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
           &nsCSSFrameConstructor::ConstructTableCell);
       return &data;
     }
-    case StyleDisplayInside::MozBox: {
+    case StyleDisplayInside::MozBox:
+    case StyleDisplayInside::MozInlineBox: {
       if (!aElement.IsInNativeAnonymousSubtree() &&
           aElement.OwnerDoc()->IsContentDocument()) {
         aElement.OwnerDoc()->WarnOnceAbout(Document::eMozBoxOrInlineBoxDisplay);
@@ -5587,7 +5589,8 @@ void nsCSSFrameConstructor::ConstructFramesFromItem(
 
   const auto* disp = computedStyle->StyleDisplay();
   MOZ_ASSERT(!disp->IsAbsolutelyPositionedStyle() ||
-             disp->DisplayInside() != StyleDisplayInside::MozBox,
+                 (disp->mDisplay != StyleDisplay::MozBox &&
+                  disp->mDisplay != StyleDisplay::MozInlineBox),
              "This may be a frame that was previously blockified "
              "but isn't any longer! It probably needs explicit "
              "'display:block' to preserve behavior");
