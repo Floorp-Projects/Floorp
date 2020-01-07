@@ -2370,19 +2370,37 @@
      */ \
     MACRO(JSOP_CHECKRETURN, "checkreturn", NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Pops the top of stack value as 'v', sets pending exception as 'v', then
-     * raises error.
+     * Throw `exc`. (ノಠ益ಠ)ノ彡┴──┴
+     *
+     * This sets the pending exception to `exc` and jumps to error-handling
+     * code. If we're in a `try` block, error handling adjusts the stack and
+     * environment chain and resumes execution at the top of the `catch` or
+     * `finally` block. Otherwise it starts unwinding the stack.
+     *
+     * Implements: [*ThrowStatement* Evaluation][1], step 3.
+     *
+     * This is also used in for-of loops. If the body of the loop throws an
+     * exception, we catch it, close the iterator, then use `JSOP_THROW` to
+     * rethrow.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation
      *
      *   Category: Statements
      *   Type: Exception Handling
      *   Operands:
-     *   Stack: v =>
+     *   Stack: exc =>
      */ \
     MACRO(JSOP_THROW, js_throw_str, NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Sometimes we know when emitting that an operation will always throw.
+     * Create and throw an Error object.
      *
-     * Throws the indicated JSMSG.
+     * Sometimes we know at emit time that an operation always throws. For
+     * example, `delete super.prop;` is allowed in methods, but always throws a
+     * ReferenceError.
+     *
+     * `msgNumber` must be one of the error codes listed in js/src/js.msg; it
+     * determines the `.message` and [[Prototype]] of the new Error object. The
+     * number of arguments in the error message must be 0.
      *
      *   Category: Statements
      *   Type: Exception Handling
@@ -2391,8 +2409,8 @@
      */ \
     MACRO(JSOP_THROWMSG, "throwmsg", NULL, 3, 0, 0, JOF_UINT16) \
     /*
-     * Throws a runtime TypeError for invalid assignment to 'const'. The
-     * environment coordinate is used for better error messages.
+     * Throw a TypeError for invalid assignment to a `const`. The environment
+     * coordinate is used to get the variable name for the error message.
      *
      *   Category: Variables and Scopes
      *   Type: Aliased Variables
@@ -2401,11 +2419,11 @@
      */ \
     MACRO(JSOP_THROWSETALIASEDCONST, "throwsetaliasedconst", NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_DETECTING) \
     /*
-     * Throws a runtime TypeError for invalid assignment to the callee in a
-     * named lambda, which is always a 'const' binding. This is a different
-     * bytecode than JSOP_SETCONST because the named lambda callee, if not
-     * closed over, does not have a frame slot to look up the name with for the
-     * error message.
+     * Throw a TypeError for invalid assignment to the callee binding in a named
+     * lambda, which is always a `const` binding. This is a different bytecode
+     * than `JSOP_THROWSETCONST` because the named lambda callee, if not closed
+     * over, does not have a frame slot to look up the name with for the error
+     * message.
      *
      *   Category: Variables and Scopes
      *   Type: Local Variables
@@ -2414,8 +2432,9 @@
      */ \
     MACRO(JSOP_THROWSETCALLEE, "throwsetcallee", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Throws a runtime TypeError for invalid assignment to 'const'. The
-     * localno is used for better error messages.
+     * Throws a runtime TypeError for invalid assignment to an optimized
+     * `const` binding. `localno` is used to get the variable name for the
+     * error message.
      *
      *   Category: Variables and Scopes
      *   Type: Local Variables
@@ -2424,14 +2443,15 @@
      */ \
     MACRO(JSOP_THROWSETCONST, "throwsetconst", NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
     /*
-     * This no-op appears at the top of the bytecode for a 'TryStatement'.
+     * No-op instruction that marks the top of the bytecode for a
+     * *TryStatement*.
      *
      * The jumpAtEndOffset operand is the offset (relative to the current op) of
      * the JSOP_GOTO at the end of the try-block body. This is used by bytecode
      * analysis and JIT compilation.
      *
      * Location information for catch/finally blocks is stored in a side table,
-     * 'script->trynotes()'.
+     * `script->trynotes()`.
      *
      *   Category: Statements
      *   Type: Exception Handling
@@ -2440,8 +2460,8 @@
      */ \
     MACRO(JSOP_TRY, "try", NULL, 5, 0, 0, JOF_CODE_OFFSET) \
     /*
-     * No-op used by the exception unwinder to determine the correct
-     * environment to unwind to when performing IteratorClose due to
+     * No-op instruction used by the exception unwinder to determine the
+     * correct environment to unwind to when performing IteratorClose due to
      * destructuring.
      *
      *   Category: Other
@@ -2450,10 +2470,14 @@
      */ \
     MACRO(JSOP_TRY_DESTRUCTURING, "try-destructuring", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Pushes the current pending exception onto the stack and clears the
-     * pending exception. This is only emitted at the beginning of code for a
-     * catch-block, so it is known that an exception is pending. It is used to
-     * implement catch-blocks and 'yield*'.
+     * Push and clear the pending exception. ┬──┬◡ﾉ(° -°ﾉ)
+     *
+     * This must be used only in the fixed sequence of instructions following a
+     * `JSTRY_CATCH` span (see "Bytecode Invariants" above), as that's the only
+     * way instructions would run with an exception pending.
+     *
+     * Used to implement catch-blocks, including the implicit ones generated as
+     * part of for-of iteration.
      *
      *   Category: Statements
      *   Type: Exception Handling
@@ -2462,11 +2486,9 @@
      */ \
     MACRO(JSOP_EXCEPTION, "exception", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pushes a resumeIndex (stored as 24-bit operand) on the stack.
+     * Push `resumeIndex`.
      *
-     * Resume indexes are used for ops like JSOP_YIELD and JSOP_GOSUB.
-     * JSScript and BaselineScript have lists of resume entries (one for each
-     * resumeIndex); this lets the JIT resume at these ops from JIT code.
+     * This value must be used only by `JSOP_GOSUB`, `JSOP_FINALLY`, and `JSOP_RETSUB`.
      *
      *   Category: Other
      *   Operands: uint24_t resumeIndex
@@ -2474,26 +2496,63 @@
      */ \
     MACRO(JSOP_RESUMEINDEX, "resume-index", NULL, 4, 0, 1, JOF_RESUMEINDEX) \
     /*
-     * This opcode is used for entering a 'finally' block. Jumps to a 32-bit
-     * offset from the current pc.
+     * Jump to the start of a `finally` block.
      *
-     * Note: this op doesn't actually push/pop any values, but it has a use
-     * count of 2 (for the 'false' + resumeIndex values pushed by preceding
-     * bytecode ops) because the 'finally' entry point does not expect these
-     * values on the stack. See also JSOP_FINALLY (it has a def count of 2).
+     * `JSOP_GOSUB` is unusual: if the finally block finishes normally, it will
+     * reach the `JSOP_RETSUB` instruction at the end, and control then
+     * "returns" to the `JSOP_GOSUB` and picks up at the next instruction, like
+     * a function call but within a single script and stack frame. (It's named
+     * after the thing in BASIC.)
      *
-     * When the execution resumes from 'finally' block, those stack values are
-     * popped.
+     * We need this because a `try` block can terminate in several different
+     * ways: control can flow off the end, return, throw an exception, `break`
+     * with or without a label, or `continue`. Exceptions are handled
+     * separately; but all those success paths are written as bytecode, and
+     * each one needs to run the `finally` block before continuing with
+     * whatever they were doing. They use `JSOP_GOSUB` for this. It is thus
+     * normal for multiple `GOSUB` instructions in a script to target the same
+     * `finally` block.
+     *
+     * Rules: `forwardOffset` must be positive and must target a
+     * `JSOP_JUMPTARGET` instruction followed by `JSOP_FINALLY`. The
+     * instruction immediately following `JSOP_GOSUB` in the script must be a
+     * `JSOP_JUMPTARGET` instruction, and `resumeIndex` must be the index into
+     * `script->resumeOffsets()` that points to that instruction.
+     *
+     * Note: This op doesn't actually push or pop any values. Its use count of
+     * 2 is a lie to make the stack depth math work for this very odd control
+     * flow instruction.
+     *
+     * `JSOP_GOSUB` is considered to have two "successors": the target of
+     * `offset`, which is the actual next instruction to run; and the
+     * instruction immediately following `JSOP_GOSUB`, even though it won't run
+     * until later. We define the successor graph this way in order to support
+     * knowing the stack depth at that instruction without first reading the
+     * whole `finally` block.
+     *
+     * The stack depth at that instruction is, as it happens, the current stack
+     * depth minus 2. So this instruction gets nuses == 2.
+     *
+     * Unfortunately there is a price to be paid in horribleness. When
+     * `JSOP_GOSUB` runs, it leaves two values on the stack that the stack
+     * depth math doesn't know about. It jumps to the finally block, where
+     * `JSOP_FINALLY` again does nothing to the stack, but with a bogus def
+     * count of 2, restoring balance to the accounting. If `JSOP_RETSUB` is
+     * reached, it pops the two values (for real this time) and control
+     * resumes at the instruction that follows JSOP_GOSUB in memory.
      *
      *   Category: Statements
      *   Type: Exception Handling
-     *   Operands: int32_t offset
+     *   Operands: int32_t forwardOffset
      *   Stack: false, resumeIndex =>
      */ \
     MACRO(JSOP_GOSUB, "gosub", NULL, 5, 2, 0, JOF_JUMP) \
     /*
-     * This opcode has a def count of 2, but these values are already on the
-     * stack (they're pushed by JSOP_GOSUB).
+     * No-op instruction that marks the start of a `finally` block. This has a
+     * def count of 2, but the values are already on the stack (they're
+     * actually left on the stack by `JSOP_GOSUB`).
+     *
+     * These two values must not be used except by `JSOP_RETSUB`.
      *
      *   Category: Statements
      *   Type: Exception Handling
@@ -2502,16 +2561,19 @@
      */ \
     MACRO(JSOP_FINALLY, "finally", NULL, 1, 0, 2, JOF_BYTE) \
     /*
-     * This opcode is used for returning from a 'finally' block.
+     * Jump back to the next instruction, or rethrow an exception, at the end
+     * of a `finally` block. See `JSOP_GOSUB` for the explanation.
      *
-     * Pops the top two values on the stack as 'rval' and 'lval'. Then:
-     * - If 'lval' is true, throws 'rval'.
-     * - If 'lval' is false, jumps to the resumeIndex stored in 'lval'.
+     * If `throwing` is true, throw `v`. Otherwise, `v` must be a resume index;
+     * jump to the corresponding offset within the script.
+     *
+     * The two values popped must be the ones notionally pushed by
+     * `JSOP_FINALLY`.
      *
      *   Category: Statements
      *   Type: Exception Handling
      *   Operands:
-     *   Stack: lval, rval =>
+     *   Stack: throwing, v =>
      */ \
     MACRO(JSOP_RETSUB, "retsub", NULL, 1, 2, 0, JOF_BYTE) \
     /*
