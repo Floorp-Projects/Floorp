@@ -158,6 +158,7 @@ class SingleTestMixin(object):
                 ('mochitest-plain', 'webgl2-core', None): 'mochitest-webgl2-core',
                 ('mochitest-plain', 'webgl2-ext', None): 'mochitest-webgl2-ext',
                 ('mochitest-plain', 'webgl2-deqp', None): 'mochitest-webgl2-deqp',
+                ('mochitest-plain', 'webgpu', None): 'mochitest-webgpu',
             }
             if entry in subsuite_mapping:
                 suite = subsuite_mapping[entry]
