@@ -358,7 +358,6 @@ linux-common-tests:
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
-    - xpcshell
 
 # List of tests that are green on ubuntu1804 docker image.
 # See Bug 1602863 for information.
@@ -367,12 +366,14 @@ linux1804-tests:
     - crashtest
     - mochitest-gpu
     - mochitest-media
+    - xpcshell
 
 linux1804-qr-tests:
     - cppunit
     - crashtest
     - mochitest-gpu
     - mochitest-media
+    - xpcshell
 
 linux-qr-tests:
     - gtest
@@ -384,7 +385,6 @@ linux-qr-tests:
     - mochitest-webgl1-core
     - mochitest-webgl2-core
     - reftest
-    - xpcshell
 
 linux-qr-smoketests:
     - crashtest
