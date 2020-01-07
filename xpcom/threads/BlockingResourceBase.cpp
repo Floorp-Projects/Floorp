@@ -9,8 +9,6 @@
 #ifdef DEBUG
 #  include "prthread.h"
 
-#  include "nsAutoPtr.h"
-
 #  ifndef MOZ_CALLSTACK_DISABLED
 #    include "CodeAddressService.h"
 #    include "nsHashKeys.h"
@@ -24,6 +22,7 @@
 #  include "mozilla/ReentrantMonitor.h"
 #  include "mozilla/Mutex.h"
 #  include "mozilla/RWLock.h"
+#  include "mozilla/UniquePtr.h"
 
 #  if defined(MOZILLA_INTERNAL_API)
 #    include "GeckoProfiler.h"
@@ -89,9 +88,9 @@ void BlockingResourceBase::GetStackTrace(AcquisitionState& aState) {
  * some info is written into |aOut|
  */
 static bool PrintCycle(
-    const BlockingResourceBase::DDT::ResourceAcquisitionArray* aCycle,
+    const BlockingResourceBase::DDT::ResourceAcquisitionArray& aCycle,
     nsACString& aOut) {
-  NS_ASSERTION(aCycle->Length() > 1, "need > 1 element for cycle!");
+  NS_ASSERTION(aCycle.Length() > 1, "need > 1 element for cycle!");
 
   bool maybeImminent = true;
 
@@ -99,14 +98,14 @@ static bool PrintCycle(
   aOut += "Cyclical dependency starts at\n";
 
   const BlockingResourceBase::DDT::ResourceAcquisitionArray::elem_type res =
-      aCycle->ElementAt(0);
+      aCycle.ElementAt(0);
   maybeImminent &= res->Print(aOut);
 
   BlockingResourceBase::DDT::ResourceAcquisitionArray::index_type i;
   BlockingResourceBase::DDT::ResourceAcquisitionArray::size_type len =
-      aCycle->Length();
+      aCycle.Length();
   const BlockingResourceBase::DDT::ResourceAcquisitionArray::elem_type* it =
-      1 + aCycle->Elements();
+      1 + aCycle.Elements();
   for (i = 1; i < len - 1; ++i, ++it) {
     fputs("\n--- Next dependency:\n", stderr);
     aOut += "\nNext dependency:\n";
@@ -221,7 +220,7 @@ void BlockingResourceBase::CheckAcquire() {
   }
 
   BlockingResourceBase* chainFront = ResourceChainFront();
-  nsAutoPtr<DDT::ResourceAcquisitionArray> cycle(
+  mozilla::UniquePtr<DDT::ResourceAcquisitionArray> cycle(
       sDeadlockDetector->CheckAcquisition(chainFront ? chainFront : 0, this));
   if (!cycle) {
     return;
@@ -234,7 +233,7 @@ void BlockingResourceBase::CheckAcquire() {
 
   fputs("###!!! ERROR: Potential deadlock detected:\n", stderr);
   nsAutoCString out("Potential deadlock detected:\n");
-  bool maybeImminent = PrintCycle(cycle, out);
+  bool maybeImminent = PrintCycle(*cycle, out);
 
   if (maybeImminent) {
     fputs("\n###!!! Deadlock may happen NOW!\n\n", stderr);
