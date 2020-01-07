@@ -4790,6 +4790,7 @@ nsresult XRE_InitCommandLine(int aArgc, char* aArgv[]) {
 
   recordreplay::parent::InitializeUIProcess(gArgc, gArgv);
 
+#if defined(MOZ_WIDGET_ANDROID)
   const char* path = nullptr;
   ArgResult ar = CheckArg("greomni", &path);
   if (ar == ARG_BAD) {
@@ -4825,6 +4826,8 @@ nsresult XRE_InitCommandLine(int aArgc, char* aArgv[]) {
   }
 
   mozilla::Omnijar::Init(greOmni, appOmni);
+#endif
+
   return rv;
 }
 
