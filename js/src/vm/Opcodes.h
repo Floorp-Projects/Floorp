@@ -2293,8 +2293,10 @@
      */ \
     MACRO(JSOP_TABLESWITCH, "tableswitch", NULL, 16, 1, 0, JOF_TABLESWITCH|JOF_DETECTING) \
     /*
-     * Pops the top of stack value as 'rval', stops interpretation of current
-     * script and returns 'rval'.
+     * Return `rval`.
+     *
+     * This must not be used in derived class constructors. Instead use
+     * `JSOP_SETRVAL`, `JSOP_CHECKRETURN`, and `JSOP_RETRVAL`.
      *
      *   Category: Statements
      *   Type: Function
@@ -2303,7 +2305,12 @@
      */ \
     MACRO(JSOP_RETURN, "return", NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Pushes stack frame's 'rval' onto the stack.
+     * Push the current stack frame's `returnValue`. If no `JSOP_SETRVAL`
+     * instruction has been executed in this stack frame, this is `undefined`.
+     *
+     * Every stack frame has a `returnValue` slot, used by top-level scripts,
+     * generators, async functions, and derived class constructors. Plain
+     * functions usually use `JSOP_RETURN` instead.
      *
      *   Category: Statements
      *   Type: Function
@@ -2312,8 +2319,7 @@
      */ \
     MACRO(JSOP_GETRVAL, "getrval", NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Pops the top of stack value as 'rval', sets the return value in stack
-     * frame as 'rval'.
+     * Store `rval` in the current stack frame's `returnValue` slot.
      *
      *   Category: Statements
      *   Type: Function
@@ -2322,11 +2328,15 @@
      */ \
     MACRO(JSOP_SETRVAL, "setrval", NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Stops interpretation and returns value set by JSOP_SETRVAL. When not
-     * set, returns 'undefined'.
+     * Stop execution and return the current stack frame's `returnValue`. If no
+     * `JSOP_SETRVAL` instruction has been executed in this stack frame, this
+     * is `undefined`.
      *
-     * Also emitted at end of script so interpreter don't need to check if
-     * opcode is still in script range.
+     * Also emitted at end of every script so consumers don't need to worry
+     * about running off the end.
+     *
+     * If the current script is a derived class constructor, `returnValue` must
+     * be an object. The script can use `JSOP_CHECKRETURN` to ensure this.
      *
      *   Category: Statements
      *   Type: Function
@@ -2335,14 +2345,28 @@
      */ \
     MACRO(JSOP_RETRVAL, "retrval", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Check if a derived class constructor has a valid return value and 'this'
-     * value before it returns. If the return value is not an object, stores
-     * the 'this' value to the return value slot.
+     * Check the return value in a derived class constructor.
+     *
+     * -   If the current stack frame's `returnValue` is an object, do nothing.
+     *
+     * -   Otherwise, if the `returnValue` is undefined and `thisval` is an
+     *     object, store `thisval` in the `returnValue` slot.
+     *
+     * -   Otherwise, throw a TypeError.
+     *
+     * This is exactly what has to happen when a derived class constructor
+     * returns. `thisval` should be the current value of `this`, or
+     * `MagicValue(JS_UNINITIALIZED_LEXICAL)` if `this` is uninitialized.
+     *
+     * Implements: [The \[\[Construct\]\] internal method of JS functions][1],
+     * steps 13 and 15.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget
      *
      *   Category: Variables and Scopes
      *   Type: This
      *   Operands:
-     *   Stack: this =>
+     *   Stack: thisval =>
      */ \
     MACRO(JSOP_CHECKRETURN, "checkreturn", NULL, 1, 1, 0, JOF_BYTE) \
     /*
