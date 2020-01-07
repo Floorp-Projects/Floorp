@@ -698,7 +698,7 @@
 /* Also show separators beside the selected tab when dragging it. */
 #tabbrowser-tabs[movingtab] > .tabbrowser-arrowscrollbox > .tabbrowser-tab[visuallyselected]::before {
   content: "";
-  display: -moz-box;
+  display: block;
 }
 
 /* Tab bar scroll arrows */
