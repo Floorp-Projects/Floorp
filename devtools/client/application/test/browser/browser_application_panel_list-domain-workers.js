@@ -15,10 +15,18 @@ const EMPTY_URL = (URL_ROOT + "resources/service-workers/empty.html").replace(
   "test2.example.com"
 );
 
+// FIXME bug 1575427 this rejection is very common.
+const { PromiseTestUtils } = ChromeUtils.import(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /this._frontCreationListeners is null/
+);
+
 add_task(async function() {
   await enableApplicationPanel();
 
-  const { panel, toolbox } = await openNewTabAndApplicationPanel(SIMPLE_URL);
+  const { panel, target } = await openNewTabAndApplicationPanel(SIMPLE_URL);
   const doc = panel.panelWin.document;
 
   selectPage(panel, "service-workers");
@@ -36,7 +44,7 @@ add_task(async function() {
     "Navigate to another page for a different domain with no service worker"
   );
 
-  await navigate(toolbox, EMPTY_URL);
+  await navigate(target, EMPTY_URL);
   info("Wait until the service worker list is updated");
   await waitUntil(() => doc.querySelector(".worker-list-empty") !== null);
   ok(
@@ -47,7 +55,7 @@ add_task(async function() {
   info(
     "Navigate to another page for a different domain with another service worker"
   );
-  await navigate(toolbox, OTHER_URL);
+  await navigate(target, OTHER_URL);
 
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
@@ -58,5 +66,5 @@ add_task(async function() {
     "Second service worker registration is displayed for the correct domain"
   );
 
-  await unregisterAllWorkers(toolbox.target.client);
+  await unregisterAllWorkers(target.client);
 });
