@@ -1313,25 +1313,26 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
       mEnterpriseCerts);
 }
 
-// Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and
-// TLS 1.2 (max) when the prefs aren't set or set to invalid values.
+// Enable the TLS versions given in the prefs, defaulting to TLS 1.2 (min) and
+// TLS 1.3 (max) when the prefs aren't set or set to invalid values.
 nsresult nsNSSComponent::setEnabledTLSVersions() {
   // Keep these values in sync with all.js.
   // 1 means TLS 1.0, 2 means TLS 1.1, etc.
-  static const uint32_t PSM_DEFAULT_MIN_TLS_VERSION = 1;
+  static const uint32_t PSM_DEFAULT_MIN_TLS_VERSION = 3;
   static const uint32_t PSM_DEFAULT_MAX_TLS_VERSION = 4;
+  static const uint32_t PSM_DEPRECATED_TLS_VERSION = 1;
 
   uint32_t minFromPrefs = Preferences::GetUint("security.tls.version.min",
                                                PSM_DEFAULT_MIN_TLS_VERSION);
   uint32_t maxFromPrefs = Preferences::GetUint("security.tls.version.max",
                                                PSM_DEFAULT_MAX_TLS_VERSION);
 
-  // This override should be removed when PSM_DEFAULT_MIN_TLS_VERSION is
+  // This override should be removed after PSM_DEFAULT_MIN_TLS_VERSION is
   // increased to 3 in March 2020, see bug 1579285.
   bool enableDeprecated =
       Preferences::GetBool("security.tls.version.enable-deprecated", false);
   if (enableDeprecated) {
-    minFromPrefs = std::min(minFromPrefs, PSM_DEFAULT_MIN_TLS_VERSION);
+    minFromPrefs = std::min(minFromPrefs, PSM_DEPRECATED_TLS_VERSION);
   }
 
   SSLVersionRange defaults = {
