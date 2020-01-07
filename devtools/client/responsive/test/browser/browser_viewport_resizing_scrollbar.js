@@ -49,12 +49,10 @@ const TEST_URL =
   '<body><div style="background:orange; width:1000px; height:1000px"></div></body>';
 
 addRDMTask(TEST_URL, async function({ ui, manager }) {
-  // Turn on the prefs that allow meta viewport support, and force overlay
-  // scrollbars to always be visible, and to allow data URIs to be considered
-  // as same-origin.
+  // Turn on the prefs that force overlay scrollbars to always be visible, and to allow
+  // data URIs to be considered as same-origin.
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["devtools.responsive.metaViewport.enabled", true],
       ["layout.testing.overlay-scrollbars.always-visible", true],
       ["security.data_uri.unique_opaque_origin", false],
     ],
