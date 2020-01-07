@@ -36,36 +36,42 @@ self.addEventListener("message", function({ data }) {
 
 const gConnections = [];
 
-function doConnect(id, channelId, address) {
+async function doConnect(id, channelId, address) {
   if (gConnections[id]) {
     ThrowError(`Duplicate connection ID ${id}`);
   }
-  const socket = new WebSocket(address);
+  const connection = { outgoing: [] };
+  gConnections[id] = connection;
+
+  // The cloud server address we are given provides us with the address of a
+  // websocket server we should connect to.
+  const response = await fetch(address);
+  const text = await response.text();
+
+  if (!/^wss?:\/\//.test(text)) {
+    ThrowError(`Invalid websocket address ${text}`);
+  }
+
+  const socket = new WebSocket(text);
   socket.onopen = evt => onOpen(id, evt);
   socket.onclose = evt => onClose(id, evt);
   socket.onmessage = evt => onMessage(id, evt);
   socket.onerror = evt => onError(id, evt);
 
-  const connection = { outgoing: [] };
-  const promise = new Promise(r => (connection.openWaiter = r));
+  await new Promise(resolve => (connection.openWaiter = resolve));
 
-  gConnections[id] = connection;
-
-  (async function sendMessages() {
-    await promise;
-    while (gConnections[id]) {
-      if (connection.outgoing.length) {
-        const buf = connection.outgoing.shift();
-        try {
-          socket.send(buf);
-        } catch (e) {
-          ThrowError(`Send error ${e}`);
-        }
-      } else {
-        await new Promise(resolve => (connection.sendWaiter = resolve));
+  while (gConnections[id]) {
+    if (connection.outgoing.length) {
+      const buf = connection.outgoing.shift();
+      try {
+        socket.send(buf);
+      } catch (e) {
+        ThrowError(`Send error ${e}`);
       }
+    } else {
+      await new Promise(resolve => (connection.sendWaiter = resolve));
     }
-  })();
+  }
 }
 
 function doSend(id, buf) {
