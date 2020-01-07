@@ -76,6 +76,11 @@ sealed class Migration(val currentVersion: Int) {
      * Migrates / Disables all currently unsupported Add-ons.
      */
     object Addons : Migration(currentVersion = 1)
+
+    /**
+     * Migrates Fennec's telemetry identifiers.
+     */
+    object TelemetryPingIdentifiers : Migration(currentVersion = 1)
 }
 
 /**
@@ -131,7 +136,7 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
 
     /**
      * Unexpected exception while migrating settings.
-     * @param cause Original exception which caused the problem
+     * @param cause Original exception which caused the problem.
      */
     class MigrateSettingsException(cause: Exception) : FennecMigratorException(cause)
 
@@ -140,6 +145,12 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
      * @param cause Original exception which caused the problem
      */
     class MigrateAddonsException(cause: Exception) : FennecMigratorException(cause)
+
+    /**
+     * Unexpected exception while migrating telemetry identifiers.
+     * @param cause Original exception which caused the problem.
+     */
+    class TelemetryIdentifierException(cause: Exception) : FennecMigratorException(cause)
 }
 
 /**
@@ -289,6 +300,13 @@ class FennecMigrator private constructor(
          */
         fun migrateSettings(version: Int = Migration.Settings.currentVersion): Builder {
             migrations.add(VersionedMigration(Migration.Settings, version))
+            return this
+        }
+
+        fun migrateTelemetryIdentifiers(
+            version: Int = Migration.TelemetryPingIdentifiers.currentVersion
+        ): Builder {
+            migrations.add(VersionedMigration(Migration.TelemetryPingIdentifiers, version))
             return this
         }
 
@@ -474,6 +492,7 @@ class FennecMigrator private constructor(
                 Migration.Logins -> migrateLogins()
                 Migration.Settings -> migrateSharedPrefs()
                 Migration.Addons -> migrateAddons()
+                Migration.TelemetryPingIdentifiers -> migrateTelemetryIdentifiers()
             }
 
             val migrationRun = when (migrationResult) {
@@ -787,6 +806,23 @@ class FennecMigrator private constructor(
                 FennecMigratorException.MigrateAddonsException(e)
             )
             Result.Failure(e)
+        }
+    }
+
+    private fun migrateTelemetryIdentifiers(): Result<TelemetryIdentifiersResult> {
+        if (profile == null) {
+            crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
+            return Result.Failure(IllegalStateException("Missing Profile path"))
+        }
+
+        return try {
+            // Will submit unexpected errors via crashReporter.
+            TelemetryIdentifiersMigration.migrate(profile.path, crashReporter)
+        } catch (e: Exception) {
+            crashReporter.submitCaughtException(
+                FennecMigratorException.TelemetryIdentifierException(e)
+            )
+            return Result.Failure(e)
         }
     }
 }
