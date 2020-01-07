@@ -154,16 +154,16 @@ struct MaybePoisoner {
  *     functions |Some()| and |Nothing()|.
  */
 template <class T>
-class MOZ_NON_PARAM MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe {
-  MOZ_ALIGNAS_IN_STRUCT(T) unsigned char mStorage[sizeof(T)];
+class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe {
+  using NonConstT = typename RemoveConst<T>::Type;
+  union Union {
+    Union() {}
+    ~Union() {}
+    NonConstT val;
+  } mStorage;
   char mIsSome;  // not bool -- guarantees minimal space consumption
 
-  // GCC fails due to -Werror=strict-aliasing if |mStorage| is directly cast to
-  // T*.  Indirecting through these functions addresses the problem.
-  void* data() { return mStorage; }
-  const void* data() const { return mStorage; }
-
-  void poisonData() { detail::MaybePoisoner<T>::poison(data()); }
+  void poisonData() { detail::MaybePoisoner<T>::poison(&mStorage.val); }
 
  public:
   using ValueType = T;
@@ -498,13 +498,13 @@ const T* Maybe<T>::operator->() const {
 template <typename T>
 T& Maybe<T>::ref() {
   MOZ_DIAGNOSTIC_ASSERT(mIsSome);
-  return *static_cast<T*>(data());
+  return mStorage.val;
 }
 
 template <typename T>
 const T& Maybe<T>::ref() const {
   MOZ_DIAGNOSTIC_ASSERT(mIsSome);
-  return *static_cast<const T*>(data());
+  return mStorage.val;
 }
 
 template <typename T>
@@ -523,7 +523,7 @@ template <typename T>
 template <typename... Args>
 void Maybe<T>::emplace(Args&&... aArgs) {
   MOZ_DIAGNOSTIC_ASSERT(!mIsSome);
-  ::new (KnownNotNull, data()) T(std::forward<Args>(aArgs)...);
+  ::new (KnownNotNull, &mStorage.val) T(std::forward<Args>(aArgs)...);
   mIsSome = true;
 }
 
