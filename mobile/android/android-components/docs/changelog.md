@@ -12,6 +12,19 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **service-glean**
+
+  * Glean was updated to v23.0.0:
+    * The Glean Gradle Plugin correctly triggers docs and API updates when registry files
+      change, without requiring them to be deleted.
+    * `parseISOTimeString` has been made 4x faster. This had an impact on Glean
+      migration and initialization.
+    * Metrics with `lifetime: application` are now cleared when the application is started,
+      after startup Glean SDK pings are generated.
+    * The public method `PingType.send()` (in all platforms) have been deprecated
+      and renamed to `PingType.submit()`.
+    * Rename `deletion_request` ping to `deletion-request` ping after glean_parser update
+
 # 27.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v26.0.0...v27.0.0)
