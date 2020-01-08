@@ -18,16 +18,16 @@
   <form id="options-panel">
     <div id="tools-box" class="options-vertical-pane">
       <fieldset id="default-tools-box" class="options-groupbox">
-        <legend>&options.selectDefaultTools.label2;</legend>
-        <span id="tools-not-supported-label" class="options-citation-label theme-comment">&options.toolNotSupported.label;</span>
+        <legend data-l10n-id="options-select-default-tools-label"></legend>
+        <span id="tools-not-supported-label" class="options-citation-label theme-comment" data-l10n-id="options-tool-not-supported-label"></span>
       </fieldset>
 
       <fieldset id="additional-tools-box" class="options-groupbox">
-        <legend>&options.selectAdditionalTools.label;</legend>
+        <legend data-l10n-id="options-select-additional-tools-label"></legend>
       </fieldset>
 
       <fieldset id="enabled-toolbox-buttons-box" class="options-groupbox">
-        <legend>&options.selectEnabledToolboxButtons.label;</legend>
+        <legend data-l10n-id="options-select-enabled-toolbox-buttons-label"></legend>
       </fieldset>
     </div>
 
@@ -37,87 +37,87 @@
                        horizontal-options-groupbox
                        radiogroup"
                 data-pref="devtools.theme">
-        <legend>&options.selectDevToolsTheme.label2;</legend>
+        <legend data-l10n-id="options-select-dev-tools-theme-label"></legend>
       </fieldset>
 
       <fieldset id="inspector-options" class="options-groupbox">
-        <legend>&options.context.inspector;</legend>
-        <label title="&options.showUserAgentStyles.tooltip;">
+        <legend data-l10n-id="options-context-inspector"></legend>
+        <label data-l10n-id="options-show-user-agent-styles-tooltip">
           <input type="checkbox"
                  data-pref="devtools.inspector.showUserAgentStyles"/>
-          <span>&options.showUserAgentStyles.label;</span>
+          <span data-l10n-id="options-show-user-agent-styles-label"></span>
         </label>
-        <label title="&options.collapseAttrs.tooltip;">
+        <label data-l10n-id="options-collapse-attrs-tooltip">
           <input type="checkbox"
                  data-pref="devtools.markup.collapseAttributes"/>
-          <span>&options.collapseAttrs.label;</span>
+          <span data-l10n-id="options-collapse-attrs-label"></span>
         </label>
         <label>
-          <span>&options.defaultColorUnit.label;</span>
+          <span data-l10n-id="options-default-color-unit-label"></span>
           <select id="defaultColorUnitMenuList"
                   data-pref="devtools.defaultColorUnit">
-            <option value="authored">&options.defaultColorUnit.authored;</option>
-            <option value="hex">&options.defaultColorUnit.hex;</option>
-            <option value="hsl">&options.defaultColorUnit.hsl;</option>
-            <option value="rgb">&options.defaultColorUnit.rgb;</option>
-            <option value="name">&options.defaultColorUnit.name;</option>
+            <option value="authored" data-l10n-id="options-default-color-unit-authored"></option>
+            <option value="hex" data-l10n-id="options-default-color-unit-hex"></option>
+            <option value="hsl" data-l10n-id="options-default-color-unit-hsl"></option>
+            <option value="rgb" data-l10n-id="options-default-color-unit-rgb"></option>
+            <option value="name" data-l10n-id="options-default-color-unit-name"></option>
           </select>
         </label>
       </fieldset>
 
       <fieldset id="debugger-options" class="options-groupbox" hidden="true">
-        <legend>&options.debugger.label;</legend>
+        <legend data-l10n-id="options-debugger-label"></legend>
       </fieldset>
 
       <fieldset id="styleeditor-options" class="options-groupbox">
-        <legend>&options.styleeditor.label;</legend>
-        <label title="&options.stylesheetAutocompletion.tooltip;">
+        <legend data-l10n-id="options-styleeditor-label"></legend>
+        <label data-l10n-id="options-stylesheet-autocompletion-tooltip">
           <input type="checkbox"
                  data-pref="devtools.styleeditor.autocompletion-enabled"/>
-          <span>&options.stylesheetAutocompletion.label;</span>
+          <span data-l10n-id="options-stylesheet-autocompletion-label"></span>
         </label>
       </fieldset>
 
       <fieldset id="screenshot-options" class="options-groupbox">
-        <legend>&options.screenshot.label;</legend>
-        <label title="&options.screenshot.clipboard.tooltip;">
+        <legend data-l10n-id="options-screenshot-label"></legend>
+        <label data-l10n-id="options-screenshot-clipboard-tooltip">
           <input type="checkbox"
                  id="devtools-screenshot-clipboard"
                  data-pref="devtools.screenshot.clipboard.enabled"/>
-          <span>&options.screenshot.clipboard.label;</span>
+          <span data-l10n-id="options-screenshot-clipboard-label"></span>
         </label>
-        <label title="&options.screenshot.audio.tooltip;">
+        <label data-l10n-id="options-screenshot-audio-tooltip">
           <input type="checkbox"
                  id="devtools-screenshot-audio"
                  data-pref="devtools.screenshot.audio.enabled"/>
-          <span>&options.screenshot.audio.label;</span>
+          <span data-l10n-id="options-screenshot-audio-label"></span>
         </label>
       </fieldset>
     </div>
 
     <div class="options-vertical-pane">
       <fieldset id="sourceeditor-options" class="options-groupbox">
-        <legend>&options.sourceeditor.label;</legend>
-        <label title="&options.sourceeditor.detectindentation.tooltip;">
+        <legend data-l10n-id="options-sourceeditor-label"></legend>
+        <label data-l10n-id="options-sourceeditor-detectindentation-tooltip">
           <input type="checkbox"
                  id="devtools-sourceeditor-detectindentation"
                  data-pref="devtools.editor.detectindentation"/>
-          <span>&options.sourceeditor.detectindentation.label;</span>
+          <span data-l10n-id="options-sourceeditor-detectindentation-label"></span>
         </label>
-        <label title="&options.sourceeditor.autoclosebrackets.tooltip;">
+        <label data-l10n-id="options-sourceeditor-autoclosebrackets-tooltip">
           <input type="checkbox"
                  id="devtools-sourceeditor-autoclosebrackets"
                  data-pref="devtools.editor.autoclosebrackets"/>
-          <span>&options.sourceeditor.autoclosebrackets.label;</span>
+          <span data-l10n-id="options-sourceeditor-autoclosebrackets-label"></span>
         </label>
-        <label title="&options.sourceeditor.expandtab.tooltip;">
+        <label data-l10n-id="options-sourceeditor-expandtab-tooltip">
           <input type="checkbox"
                  id="devtools-sourceeditor-expandtab"
                  data-pref="devtools.editor.expandtab"/>
-          <span>&options.sourceeditor.expandtab.label;</span>
+          <span data-l10n-id="options-sourceeditor-expandtab-label"></span>
         </label>
         <label>
-          <span>&options.sourceeditor.tabsize.label;</span>
+          <span data-l10n-id="options-sourceeditor-tabsize-label"></span>
           <select id="devtools-sourceeditor-tabsize-select"
                   data-pref="devtools.editor.tabsize">
             <option label="2">2</option>
@@ -126,10 +126,10 @@
           </select>
         </label>
         <label>
-          <span>&options.sourceeditor.keybinding.label;</span>
+          <span data-l10n-id="options-sourceeditor-keybinding-label"></span>
           <select id="devtools-sourceeditor-keybinding-select"
                   data-pref="devtools.editor.keymap">
-            <option value="default">&options.sourceeditor.keybinding.default.label;</option>
+            <option value="default" data-l10n-id="options-sourceeditor-keybinding-default-label"></option>
             <option value="vim">Vim</option>
             <option value="emacs">Emacs</option>
             <option value="sublime">Sublime Text</option>
@@ -138,48 +138,48 @@
       </fieldset>
 
       <fieldset id="context-options" class="options-groupbox">
-        <legend>&options.context.advancedSettings;</legend>
-          <label title="&options.sourceMaps.tooltip1;">
+        <legend data-l10n-id="options-context-advanced-settings"></legend>
+          <label data-l10n-id="options-source-maps-tooltip">
             <input type="checkbox"
                    data-pref="devtools.source-map.client-service.enabled"/>
-            <span>&options.sourceMaps.label;</span>
+            <span data-l10n-id="options-source-maps-label"></span>
           </label>
-         <label title="&options.showPlatformData.tooltip;">
+         <label data-l10n-id="options-show-platform-data-tooltip">
             <input type="checkbox"
                    id="devtools-show-gecko-data"
                    data-pref="devtools.performance.ui.show-platform-data"/>
-            <span>&options.showPlatformData.label;</span>
+            <span data-l10n-id="options-show-platform-data-label"></span>
           </label>
-          <label title="&options.disableHTTPCache.tooltip;">
+          <label data-l10n-id="options-disable-http-cache-tooltip">
             <input type="checkbox"
                    id="devtools-disable-cache"
                    data-pref="devtools.cache.disabled"/>
-            <span>&options.disableHTTPCache.label;</span>
+            <span data-l10n-id="options-disable-http-cache-label"></span>
           </label>
-          <label title="&options.disableJavaScript.tooltip;">
+          <label data-l10n-id="options-disable-javascript-tooltip">
             <input type="checkbox"
                    id="devtools-disable-javascript"/>
-            <span>&options.disableJavaScript.label;</span>
+            <span data-l10n-id="options-disable-javascript-label"></span>
           </label>
-          <label title="&options.enableServiceWorkersHTTP.tooltip;">
+          <label data-l10n-id="options-enable-service-workers-http-tooltip">
             <input type="checkbox"
                    id="devtools-enable-serviceWorkersTesting"
                    data-pref="devtools.serviceWorkers.testing.enabled"/>
-            <span>&options.enableServiceWorkersHTTP.label;</span>
+            <span data-l10n-id="options-enable-service-workers-http-label"></span>
           </label>
-          <label title="&options.enableChrome.tooltip3;">
+          <label data-l10n-id="options-enable-chrome-tooltip">
             <input type="checkbox"
                    data-pref="devtools.chrome.enabled"/>
-            <span>&options.enableChrome.label5;</span>
+            <span data-l10n-id="options-enable-chrome-label"></span>
           </label>
-          <label title="&options.enableRemote.tooltip2;">
+          <label data-l10n-id="options-enable-remote-tooltip">
             <input type="checkbox"
                    data-pref="devtools.debugger.remote-enabled"/>
-            <span>&options.enableRemote.label3;</span>
+            <span data-l10n-id="options-enable-remote-label"></span>
           </label>
           <span class="options-citation-label theme-comment"
-                id="triggers-page-refresh-label"
-          >&options.context.triggersPageRefresh;</span>
+                id="triggers-page-refresh-label" data-l10n-id="options-context-triggers-page-refresh"
+          ></span>
       </fieldset>
     </div>
 
