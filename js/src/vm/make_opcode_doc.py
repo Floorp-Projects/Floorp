@@ -69,7 +69,7 @@ def format_flags(flags):
         return ''
 
     flags = map(lambda x: x.replace('JOF_', ''), flags)
-    return ' ({flags})'.format(flags=', '.join(flags))
+    return '<p>Flags: {flags}</p>\n'.format(flags=', '.join(flags))
 
 
 def maybe_escape(value, format_str, fallback=""):
@@ -89,20 +89,18 @@ OPCODE_FORMAT = """\
 </table>
 
 {desc}
-</dd>
+{flags}</dd>
 """
 
 
 def print_opcode(opcode):
-    names_template = '{name}{flags}'
     opcodes = [opcode] + opcode.group
-    names = [names_template.format(name=escape(code.name),
-                                   flags=format_flags(code.flags))
-             for code in opcodes]
+    names = ', '.join(escape(code.name) for code in opcodes)
 
     print(OPCODE_FORMAT.format(
         id=opcodes[0].name,
-        names='<br>'.join(names),
+        names=names,
+        flags=format_flags(opcode.flags),
         operands=maybe_escape(opcode.operands, "<code>({})</code>", "none"),
         stack_uses=maybe_escape(opcode.stack_uses, "<code>{}</code> "),
         stack_defs=maybe_escape(opcode.stack_defs, " <code>{}</code>"),
