@@ -9,9 +9,7 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 const NESTED_IFRAME_DOC_BODY_ID = "nested-iframe-body";
 const NESTED_IFRAME_ID = "nested-iframe";
-const nestedURL = new URL(
-  `http://example.net${CURRENT_FILE_DIR}fission_document_builder.sjs`
-);
+const nestedURL = new URL(`http://example.com/document-builder.sjs`);
 nestedURL.searchParams.append(
   "html",
   `<html>
