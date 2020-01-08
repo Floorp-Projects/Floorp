@@ -19,7 +19,7 @@ permalink: /changelog/
     * `browser-engine-gecko-nightly`: GeckoView 74.0
 
 * **service-glean**
-  * Glean was updated to v23.0.0:
+  * Glean was updated to v23.0.1:
     * The Glean Gradle Plugin correctly triggers docs and API updates when registry files
       change, without requiring them to be deleted.
     * `parseISOTimeString` has been made 4x faster. This had an impact on Glean
@@ -30,6 +30,8 @@ permalink: /changelog/
       * The public method `PingType.send()` (in all platforms) have been deprecated
         and renamed to `PingType.submit()`.
     * Rename `deletion_request` ping to `deletion-request` ping after glean_parser update
+    * BUGFIX: The Glean Gradle plugin will now work if an app or library doesn't
+      have a metrics.yaml or pings.yaml file.
 
 # 27.0.0
 
