@@ -218,18 +218,6 @@ class TargetList {
     this.listenForWorkers = false;
   }
 
-  _fissionEnabled() {
-    const fissionBrowserToolboxEnabled = Services.prefs.getBoolPref(
-      BROWSERTOOLBOX_FISSION_ENABLED
-    );
-    // For now, only enable additional targets when:
-    // - browser toolbox's fission pref is turned on, and,
-    // - we are in the browser toolbox or the browser console.
-    // These are the main two cases where the top level target is the ParentProcessTargetFront.
-    // Note that it can also happen when debugging remotely the main process.
-    return fissionBrowserToolboxEnabled && this.targetFront.isParentProcess;
-  }
-
   // Called whenever a new Target front is available.
   // Either because a target was already available as we started calling startListening
   // or if it has just been created
@@ -292,21 +280,29 @@ class TargetList {
    * By the time this function resolves, all the already-existing targets will be
    * reported to _onTargetAvailable.
    */
-  async startListening(types) {
+  async startListening() {
+    let types = [];
+    if (this.targetFront.isParentProcess) {
+      const fissionBrowserToolboxEnabled = Services.prefs.getBoolPref(
+        BROWSERTOOLBOX_FISSION_ENABLED
+      );
+      if (fissionBrowserToolboxEnabled) {
+        types = TargetList.ALL_TYPES;
+      }
+    }
+    if (this.listenForWorkers && !types.includes(TargetList.TYPES.WORKER)) {
+      types.push(TargetList.TYPES.WORKER);
+    }
+    // If no pref are set to true, nor is listenForWorkers set to true,
+    // we won't listen for any additional target. Only the top level target
+    // will be managed. We may still do target-switching.
+
     for (const type of types) {
       if (this._isListening(type)) {
         continue;
       }
       this._setListening(type, true);
 
-      // We only listen for additional target when the fission pref is turned on.
-      // Or we we explicitely ask for workers without the fission pref.
-      if (
-        !this._fissionEnabled() &&
-        !(type == "worker" && this.listenForWorkers)
-      ) {
-        continue;
-      }
       if (this.legacyImplementation[type]) {
         await this.legacyImplementation[type].listen();
       } else {
@@ -317,21 +313,13 @@ class TargetList {
     }
   }
 
-  stopListening(types) {
-    for (const type of types) {
+  stopListening() {
+    for (const type of TargetList.ALL_TYPES) {
       if (!this._isListening(type)) {
         continue;
       }
       this._setListening(type, false);
 
-      // We only listen for additional target when the fission pref is turned on.
-      // Or we we explicitely ask for workers without the fission pref.
-      if (
-        !this._fissionEnabled() &&
-        !(type == "worker" && this.listenForWorkers)
-      ) {
-        continue;
-      }
       if (this.legacyImplementation[type]) {
         this.legacyImplementation[type].unlisten();
       } else {
@@ -386,12 +374,6 @@ class TargetList {
     }
 
     for (const type of types) {
-      if (!this._isListening(type)) {
-        throw new Error(
-          `watchTargets was called for a target type (${type}) that isn't being listened to`
-        );
-      }
-
       // Notify about already existing target of these types
       for (const targetFront of this._targets) {
         if (this._matchTargetType(type, targetFront)) {
@@ -453,11 +435,6 @@ class TargetList {
     if (!type) {
       throw new Error("getAllTargets expects a 'type' argument");
     }
-    if (!this._isListening(type)) {
-      throw new Error(
-        `getAllTargets was called for a target type (${type}) that isn't being listened to`
-      );
-    }
 
     const targets = [...this._targets].filter(target =>
       this._matchTargetType(type, target)
@@ -498,10 +475,7 @@ class TargetList {
       const isTargetSwitching = target == this.targetFront;
       this._onTargetDestroyed(target, isTargetSwitching);
     }
-    const listenedTypes = TargetList.ALL_TYPES.filter(type =>
-      this._isListening(type)
-    );
-    this.stopListening(listenedTypes);
+    this.stopListening();
 
     // Clear the cached target list
     this._targets.clear();
@@ -515,7 +489,7 @@ class TargetList {
 
     // Re-register the listeners as the top level target changed
     // and some targets are fetched from it
-    await this.startListening(listenedTypes);
+    await this.startListening();
   }
 }
 

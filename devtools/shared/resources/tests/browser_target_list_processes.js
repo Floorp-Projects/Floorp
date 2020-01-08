@@ -24,11 +24,11 @@ add_task(async function() {
   const mainProcess = await mainRoot.getMainProcess();
 
   const targetList = new TargetList(mainRoot, mainProcess);
-  await targetList.startListening([TargetList.TYPES.PROCESS]);
+  await targetList.startListening();
 
   await testProcesses(targetList, mainProcess);
 
-  await targetList.stopListening([TargetList.TYPES.PROCESS]);
+  await targetList.stopListening();
   await client.close();
 });
 

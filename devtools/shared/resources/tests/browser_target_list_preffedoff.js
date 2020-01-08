@@ -34,16 +34,17 @@ async function testPreffedOffMainProcess(mainRoot, mainProcess) {
   );
 
   const targetList = new TargetList(mainRoot, mainProcess);
-  await targetList.startListening([
-    TargetList.TYPES.PROCESS,
-    TargetList.TYPES.FRAME,
-  ]);
+  await targetList.startListening();
 
   // The API should only report the top level target,
   // i.e. the Main process target, which is considered as frame
   // and not as process.
   const processes = await targetList.getAllTargets(TargetList.TYPES.PROCESS);
-  is(processes.length, 0);
+  is(
+    processes.length,
+    0,
+    "We only get a frame target for the top level target"
+  );
   const frames = await targetList.getAllTargets(TargetList.TYPES.FRAME);
   is(frames.length, 1, "We get only one frame when preffed-off");
   is(
@@ -83,7 +84,7 @@ async function testPreffedOffMainProcess(mainRoot, mainProcess) {
   );
   targetList.unwatchTargets([TargetList.TYPES.FRAME], onFrameAvailable);
 
-  targetList.stopListening([TargetList.TYPES.PROCESS, TargetList.TYPES.FRAME]);
+  targetList.stopListening();
 }
 
 async function testPreffedOffTab(mainRoot) {
@@ -97,13 +98,10 @@ async function testPreffedOffTab(mainRoot) {
   const target = await mainRoot.getTab({ tab });
   const targetList = new TargetList(mainRoot, target);
 
-  await targetList.startListening([
-    TargetList.TYPES.PROCESS,
-    TargetList.TYPES.FRAME,
-  ]);
+  await targetList.startListening();
 
   const processes = await targetList.getAllTargets(TargetList.TYPES.PROCESS);
-  is(processes.length, 0);
+  is(processes.length, 0, "Tabs don't expose any process");
   // This only reports the top level target when devtools fission preference is off
   const frames = await targetList.getAllTargets(TargetList.TYPES.FRAME);
   is(frames.length, 1, "We get only one frame when preffed-off");
@@ -140,7 +138,7 @@ async function testPreffedOffTab(mainRoot) {
   );
   targetList.unwatchTargets([TargetList.TYPES.FRAME], onFrameAvailable);
 
-  targetList.stopListening([TargetList.TYPES.PROCESS, TargetList.TYPES.FRAME]);
+  targetList.stopListening();
 
   BrowserTestUtils.removeTab(tab);
 }
