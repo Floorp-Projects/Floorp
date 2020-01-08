@@ -1765,10 +1765,10 @@ class CheckAvailData final : public Runnable {
   }
 
   MOZ_MUST_USE nsresult Dispatch() {
-    if (OnSocketThread()) {
-      return Run();
-    }
-
+    // Dispatch the event even if we're on socket thread to avoid closing and
+    // destructing Http2Session in case this call is comming from
+    // Http2Session::ReadSegments() and the callback closes the transaction in
+    // OnInputStreamRead().
     nsCOMPtr<nsIEventTarget> sts =
         do_GetService("@mozilla.org/network/socket-transport-service;1");
     return sts->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
