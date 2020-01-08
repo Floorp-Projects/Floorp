@@ -81,16 +81,18 @@ linux1804-64-qr/debug:
     test-sets:
         - linux1804-qr-tests
 
-linux1804-64-asan-qr/opt:
-    build-platform: linux64-asan/opt
-    test-sets:
-        - linux-qr-smoketests
+# Disabled temporarily due to Bug 1602863
+# linux1804-64-asan-qr/opt:
+#     build-platform: linux64-asan/opt
+#     test-sets:
+#         - linux-qr-smoketests
 
-linux1804-64-ccov/opt:
-    build-platform: linux64-ccov/opt
-    test-sets:
-        - awsy
-        - linux1804-tests
+# Temporarily disabled as ccov still runs on ubuntu1604, Bug 1606861
+# linux1804-64-ccov/opt:
+#     build-platform: linux64-ccov/opt
+#     test-sets:
+#         - awsy
+#         - linux1804-tests
 
 linux64/debug:
     build-platform: linux64/debug
