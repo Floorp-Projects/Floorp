@@ -1097,7 +1097,7 @@ add_task(async function setup() {
   }
 
   await spoofProfileReset();
-  TelemetryEnvironment.delayedInit();
+  await TelemetryEnvironment.delayedInit();
 });
 
 add_task(async function test_checkEnvironment() {
