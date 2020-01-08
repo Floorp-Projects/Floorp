@@ -596,6 +596,10 @@
             android:name="gravity"
             android:defaultValue="80"
             app:argType="integer" />
+        <action
+            android:id="@+id/action_quickSettingsSheetDialogFragment_to_SitePermissionsManagePhoneFeature"
+            app:destination="@id/SitePermissionsManagePhoneFeature"
+            app:popUpTo="@id/quickSettingsSheetDialogFragment" />
     </dialog>
     <fragment
         android:id="@+id/accountProblemFragment"

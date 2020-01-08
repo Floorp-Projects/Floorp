@@ -95,17 +95,22 @@ class DefaultQuickSettingsController(
         when (permission.isBlockedByAndroid) {
             true -> handleAndroidPermissionRequest(featureToggled.androidPermissionsList)
             false -> {
-                sitePermissions = sitePermissions!!.toggle(featureToggled).also {
-                    handlePermissionsChange(it)
-                }
+                val permissions = sitePermissions
+                if (permissions != null) {
+                    val newPermissions = permissions.toggle(featureToggled).also {
+                        handlePermissionsChange(it)
+                    }
 
-                quickSettingsStore.dispatch(
-                    WebsitePermissionAction.TogglePermission(
-                        permission,
-                        featureToggled.getActionLabel(context, sitePermissions, settings),
-                        featureToggled.shouldBeEnabled(context, sitePermissions, settings)
+                    quickSettingsStore.dispatch(
+                        WebsitePermissionAction.TogglePermission(
+                            permission,
+                            featureToggled.getActionLabel(context, newPermissions, settings),
+                            featureToggled.shouldBeEnabled(context, newPermissions, settings)
+                        )
                     )
-                )
+                } else {
+                    navigateToManagePhoneFeature(featureToggled)
+                }
             }
         }
     }
@@ -188,5 +193,16 @@ class DefaultQuickSettingsController(
             )
             PhoneFeature.AUTOPLAY -> defaultWebsitePermission!! // fail-fast
         }
+    }
+
+    /**
+     * Navigate to toggle [SitePermissions] for the specified [PhoneFeature]
+     *
+     * @param phoneFeature [PhoneFeature] to toggle [SitePermissions] for.
+     */
+    private fun navigateToManagePhoneFeature(phoneFeature: PhoneFeature) {
+        val directions = QuickSettingsSheetDialogFragmentDirections
+            .actionQuickSettingsSheetDialogFragmentToSitePermissionsManagePhoneFeature(phoneFeature.id)
+        navController.navigate(directions)
     }
 }

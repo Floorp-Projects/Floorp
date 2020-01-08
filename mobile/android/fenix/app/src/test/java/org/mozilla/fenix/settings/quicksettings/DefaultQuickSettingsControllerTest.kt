@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.quicksettings
 
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
 import assertk.assertAll
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -12,7 +13,9 @@ import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isSameAs
 import assertk.assertions.isTrue
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
@@ -134,6 +137,36 @@ class DefaultQuickSettingsControllerTest {
             assertThat(action.captured).isInstanceOf(WebsitePermissionAction.TogglePermission::class)
             assertThat((action.captured as WebsitePermissionAction.TogglePermission).websitePermission)
                 .isInstanceOf(websitePermission::class)
+        }
+    }
+
+    @Test
+    fun `handlePermissionToggled blocked by user should navigate to site permission manager`() {
+        val websitePermission = mockk<WebsitePermission.Camera>()
+        val invalidSitePermissionsController = DefaultQuickSettingsController(
+            context = context,
+            quickSettingsStore = store,
+            coroutineScope = coroutinesScope,
+            navController = navController,
+            session = browserSession,
+            sitePermissions = null,
+            settings = appSettings,
+            permissionStorage = permissionStorage,
+            reload = reload,
+            addNewTab = addNewTab,
+            requestRuntimePermissions = requestPermissions,
+            reportSiteIssue = reportIssue,
+            displayPermissions = displayPermissions,
+            dismiss = dismiss
+        )
+
+        every { websitePermission.isBlockedByAndroid } returns false
+        every { navController.navigate(any<NavDirections>()) } just Runs
+
+        invalidSitePermissionsController.handlePermissionToggled(websitePermission)
+
+        verify {
+            navController.navigate(any<NavDirections>())
         }
     }
 
