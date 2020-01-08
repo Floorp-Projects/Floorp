@@ -3701,24 +3701,12 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   }
 
   nsCOMPtr<nsIChannel> newChannel;
-  if (aArgs.loadStateLoadFlags() &
-      nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC) {
-    rv = NS_NewInputStreamChannelInternal(
-        getter_AddRefs(newChannel), aArgs.uri(), aArgs.srcdocData(),
-        NS_LITERAL_CSTRING("text/html"), loadInfo, true);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(newChannel);
-      MOZ_ASSERT(isc);
-      isc->SetBaseURI(aArgs.baseUri());
-    }
-  } else {
-    rv =
-        NS_NewChannelInternal(getter_AddRefs(newChannel), aArgs.uri(), loadInfo,
-                              nullptr,  // PerformanceStorage
-                              nullptr,  // aLoadGroup
-                              nullptr,  // aCallbacks
-                              aArgs.newLoadFlags());
-  }
+  MOZ_ASSERT((aArgs.loadStateLoadFlags() &
+              nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC) ||
+             aArgs.srcdocData().IsVoid());
+  rv = nsDocShell::CreateRealChannelForDocument(
+      getter_AddRefs(newChannel), aArgs.uri(), loadInfo, nullptr, nullptr,
+      aArgs.newLoadFlags(), aArgs.srcdocData(), aArgs.baseUri());
 
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
