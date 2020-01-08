@@ -60,5 +60,10 @@ add_task(async function testCustomize() {
     "The events are recorded correctly"
   );
 
+  // Wait for customize mode to be re-entered now that the customize tab is
+  // active. This is needed for endCustomizing() to work properly.
+  await TestUtils.waitForCondition(
+    () => document.documentElement.getAttribute("customizing") == "true"
+  );
   await endCustomizing();
 });
