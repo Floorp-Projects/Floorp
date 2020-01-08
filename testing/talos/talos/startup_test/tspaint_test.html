@@ -43,20 +43,7 @@ function failed() {
 }
 
 function dumpConsoleAndQuit() {
-  var messages;
-  try {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    // ChromeUtils is not available in this scope.
-    // eslint-disable-next-line mozilla/use-chromeutils-import
-    Cu.import("resource://gre/modules/Services.jsm");
-    messages = Services.console.getMessageArray();
-  } catch (ex) {
-    dump(ex + "\n");
-    messages = [];
-  }
-
-  for (var i = 0; i < messages.length; i++)
-    dump(messages[i].message + "\n");
+  TalosPowersContent.dumpConsole();
 
   // Close window asynchronously, there might still be startup operations that still need to run
   window.setTimeout(function() {
