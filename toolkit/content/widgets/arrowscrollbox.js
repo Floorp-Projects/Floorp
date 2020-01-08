@@ -135,6 +135,13 @@
       }
       this.hasConnected = true;
 
+      if (!this.hasAttribute("smoothscroll")) {
+        this.smoothScroll = Services.prefs.getBoolPref(
+          "toolkit.scrollbox.smoothScroll",
+          true
+        );
+      }
+
       this.setAttribute("notoverflowing", "true");
       this.initializeAttributeInheritance();
       this._updateScrollButtonsDisabledState();
@@ -181,13 +188,6 @@
     }
 
     get smoothScroll() {
-      if (!this.hasAttribute("smoothscroll")) {
-        this.smoothScroll = Services.prefs.getBoolPref(
-          "toolkit.scrollbox.smoothScroll",
-          true
-        );
-      }
-
       return this.getAttribute("smoothscroll") == "true";
     }
 
