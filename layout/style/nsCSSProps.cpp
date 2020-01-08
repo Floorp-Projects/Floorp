@@ -121,6 +121,7 @@ bool nsCSSProps::IsCustomPropertyName(const nsACString& aProperty) {
 
 nsCSSPropertyID nsCSSProps::LookupPropertyByIDLName(
     const nsACString& aPropertyIDLName, EnabledState aEnabled) {
+  MOZ_ASSERT(gPropertyIDLNameTable, "no lookup table, needs addref");
   nsCSSPropertyID res;
   if (!gPropertyIDLNameTable->Get(aPropertyIDLName, &res)) {
     return eCSSProperty_UNKNOWN;
@@ -130,13 +131,6 @@ nsCSSPropertyID nsCSSProps::LookupPropertyByIDLName(
     return eCSSProperty_UNKNOWN;
   }
   return res;
-}
-
-nsCSSPropertyID nsCSSProps::LookupPropertyByIDLName(
-    const nsAString& aPropertyIDLName, EnabledState aEnabled) {
-  MOZ_ASSERT(gPropertyIDLNameTable, "no lookup table, needs addref");
-  return LookupPropertyByIDLName(NS_ConvertUTF16toUTF8(aPropertyIDLName),
-                                 aEnabled);
 }
 
 nsCSSFontDesc nsCSSProps::LookupFontDesc(const nsACString& aFontDesc) {

@@ -125,7 +125,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
       css::SheetLoadData* aLoadData, uint32_t aLineNumber,
       css::LoaderReusableStyleSheets* aReusableSheets = nullptr);
 
-  nsresult ReparseSheet(const nsAString& aInput);
+  nsresult ReparseSheet(const nsACString& aInput);
 
   const RawServoStyleSheetContents* RawContents() const {
     return Inner().mContents;

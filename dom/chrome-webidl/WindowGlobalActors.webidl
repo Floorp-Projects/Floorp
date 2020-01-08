@@ -71,7 +71,7 @@ interface WindowGlobalParent {
   [Throws]
   Promise<ImageBitmap> drawSnapshot(DOMRect? rect,
                                     double scale,
-                                    DOMString backgroundColor);
+                                    UTF8String backgroundColor);
 
   /**
    * Fetches the securityInfo object for this window. This function will

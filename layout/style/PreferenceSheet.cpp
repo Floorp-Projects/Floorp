@@ -8,6 +8,7 @@
 
 #include "ServoCSSParser.h"
 #include "MainThreadUtils.h"
+#include "mozilla/Encoding.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_devtools.h"
 #include "mozilla/Telemetry.h"
@@ -26,9 +27,9 @@ PreferenceSheet::Prefs PreferenceSheet::sContentPrefs;
 PreferenceSheet::Prefs PreferenceSheet::sChromePrefs;
 
 static void GetColor(const char* aPrefName, nscolor& aColor) {
-  nsAutoString value;
-  Preferences::GetString(aPrefName, value);
-  if (value.IsEmpty()) {
+  nsAutoCString value;
+  Preferences::GetCString(aPrefName, value);
+  if (value.IsEmpty() || Encoding::UTF8ValidUpTo(value) != value.Length()) {
     return;
   }
   nscolor result;
