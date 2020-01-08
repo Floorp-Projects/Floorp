@@ -581,11 +581,10 @@ static bool MaybeGetAndClearException(JSContext* cx, MutableHandleValue rval) {
   return GetAndClearException(cx, rval);
 }
 
-static MOZ_MUST_USE bool RunSettlingFunction(JSContext* cx,
-                                             HandleObject resolutionFun,
-                                             HandleValue result,
-                                             ResolutionMode mode,
-                                             HandleObject promiseObj);
+static MOZ_MUST_USE bool RunRejectFunction(JSContext* cx,
+                                           HandleObject onRejectedFunc,
+                                           HandleValue result,
+                                           HandleObject promiseObj);
 
 // ES2016, 25.4.1.1.1, Steps 1.a-b.
 // Extracting all of this internal spec algorithm into a helper function would
@@ -599,7 +598,7 @@ static bool AbruptRejectPromise(JSContext* cx, CallArgs& args,
     return false;
   }
 
-  if (!RunSettlingFunction(cx, reject, reason, RejectMode, promiseObj)) {
+  if (!RunRejectFunction(cx, reject, reason, promiseObj)) {
     return false;
   }
 
@@ -1586,6 +1585,12 @@ static MOZ_MUST_USE bool TriggerPromiseReactions(JSContext* cx,
     return EnqueuePromiseReactionJob(cx, reaction, valueOrReason, state);
   });
 }
+
+static MOZ_MUST_USE bool RunSettlingFunction(JSContext* cx,
+                                             HandleObject settlingFun,
+                                             HandleValue result,
+                                             ResolutionMode mode,
+                                             HandleObject promiseObj);
 
 // Implements PromiseReactionJob optimized for the case when the reaction
 // handler is one of the default resolving functions as created by the
@@ -2700,62 +2705,90 @@ MOZ_MUST_USE JSObject* js::GetWaitForAllPromise(
   return resultCapability.promise();
 }
 
-static MOZ_MUST_USE bool RunSettlingFunction(JSContext* cx,
-                                             HandleObject resolutionFun,
-                                             HandleValue result,
-                                             ResolutionMode mode,
-                                             HandleObject promiseObj) {
-  // The absence of a resolve/reject function can mean that, as an
-  // optimization, those weren't created. In that case, a flag is set on
-  // the Promise object. (It's also possible to not have a resolution
-  // function without that flag being set. This can occur if a Promise
-  // subclass constructor passes null/undefined to `super()`.)
-  // There are also reactions where the Promise itself is missing. For
-  // those, there's nothing left to do here.
-  cx->check(resolutionFun);
+static MOZ_MUST_USE bool RunFulfillFunction(JSContext* cx,
+                                            HandleObject onFulfilledFunc,
+                                            HandleValue result,
+                                            HandleObject promiseObj) {
+  cx->check(onFulfilledFunc);
   cx->check(result);
   cx->check(promiseObj);
-  if (resolutionFun) {
-    RootedValue calleeOrRval(cx, ObjectValue(*resolutionFun));
+
+  // If |onFulfilledFunc| couldn't be optimized away, just call it.
+  if (onFulfilledFunc) {
+    RootedValue calleeOrRval(cx, ObjectValue(*onFulfilledFunc));
     return Call(cx, calleeOrRval, UndefinedHandleValue, result, &calleeOrRval);
   }
 
+  // The promise itself may be optimized away.  If so, we're done.
   if (!promiseObj) {
-    if (mode == RejectMode) {
-      // The rejection will never be handled, given the returned promise
-      // is known to be unused, and already optimized away.
-      //
-      // Create temporary Promise object and reject it, in order to
-      // report the unhandled rejection.
-      //
-      // Allocation time points wrong time, but won't matter much.
-      Rooted<PromiseObject*> temporaryPromise(cx);
-      temporaryPromise = CreatePromiseObjectWithoutResolutionFunctions(cx);
-      if (!temporaryPromise) {
-        cx->clearPendingException();
-        return true;
-      }
-
-      return RejectPromiseInternal(cx, temporaryPromise, result);
-    }
-
     return true;
   }
 
+  // Resolve the promise only if it's still pending.
   Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
   if (promise->state() != JS::PromiseState::Pending) {
     return true;
   }
 
-  if (!PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS)) {
-    return true;
-  }
-
-  if (mode == ResolveMode) {
+  // If the promise has a default resolution function, perform its steps.
+  if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS)) {
     return ResolvePromiseInternal(cx, promise, result);
   }
 
-  return RejectPromiseInternal(cx, promise, result);
+  // Otherwise we're done.
+  return true;
+}
+
+static MOZ_MUST_USE bool RunRejectFunction(JSContext* cx,
+                                           HandleObject onRejectedFunc,
+                                           HandleValue result,
+                                           HandleObject promiseObj) {
+  cx->check(onRejectedFunc);
+  cx->check(result);
+  cx->check(promiseObj);
+
+  // If |onRejectedFunc| couldn't be optimized away, just call it.
+  if (onRejectedFunc) {
+    RootedValue calleeOrRval(cx, ObjectValue(*onRejectedFunc));
+    return Call(cx, calleeOrRval, UndefinedHandleValue, result, &calleeOrRval);
+  }
+
+  // The promise itself may be optimized away.  But we want to report this as an
+  // unhandled rejection, so create and reject a promise on the fly.  The
+  // promise's allocation time will be wrong, but we can't help that.
+  if (!promiseObj) {
+    Rooted<PromiseObject*> temporaryPromise(
+        cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+    if (!temporaryPromise) {
+      cx->clearPendingException();
+      return true;
+    }
+
+    return RejectPromiseInternal(cx, temporaryPromise, result);
+  }
+
+  // Reject the promise only if it's still pending.
+  Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
+  if (promise->state() != JS::PromiseState::Pending) {
+    return true;
+  }
+
+  // If the promise has a default rejection function, perform its steps.
+  if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS)) {
+    return RejectPromiseInternal(cx, promise, result);
+  }
+
+  // Otherwise we're done.
+  return true;
+}
+
+static MOZ_MUST_USE bool RunSettlingFunction(JSContext* cx,
+                                             HandleObject settlingFun,
+                                             HandleValue result,
+                                             ResolutionMode mode,
+                                             HandleObject promiseObj) {
+  auto func = mode == ResolveMode ? RunFulfillFunction : RunRejectFunction;
+  return func(cx, settlingFun, result, promiseObj);
 }
 
 static MOZ_MUST_USE JSObject* CommonStaticResolveRejectImpl(
@@ -2979,13 +3012,12 @@ static MOZ_MUST_USE bool CommonPerformPromiseCombinator(
 
       // Skip the creation of a built-in Promise object if:
       // 1. `thenSpecies` is the built-in Promise constructor.
-      // 2. `resolveFun` doesn't return an object, which ensures no
-      //    side-effects take place in ResolvePromiseInternal.
+      // 2. `resolveFun` doesn't return an object, which ensures no side effects
+      //    occur in ResolvePromiseInternal.
       // 3. The result promise is a built-in Promise object.
-      // 4. The result promise doesn't use the default resolving
-      //    functions, which in turn means RunSettlingFunction when
-      //    called from PromiseRectionJob won't try to resolve the
-      //    promise.
+      // 4. The result promise doesn't use the default resolving functions,
+      //    which in turn means RunSettlingFunction when called from
+      //    PromiseReactionJob won't try to resolve the promise.
       if (thenSpecies == promiseCtor && resolveReturnsUndefined &&
           resultPromise->is<PromiseObject>() &&
           !PromiseHasAnyFlag(resultPromise->as<PromiseObject>(),
@@ -3276,8 +3308,8 @@ static MOZ_MUST_USE bool PerformPromiseAll(
 
   // Steps 8.d.iii-iv.
   if (remainingCount == 0) {
-    return RunSettlingFunction(cx, resultCapability.resolve(), values.value(),
-                               ResolveMode, resultCapability.promise());
+    return RunFulfillFunction(cx, resultCapability.resolve(), values.value(),
+                              resultCapability.promise());
   }
 
   return true;
@@ -3323,8 +3355,7 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
     // Step 7 (Adapted to work with PromiseCombinatorDataHolder's layout).
     RootedObject resolveAllFun(cx, data->resolveOrRejectObj());
     RootedObject promiseObj(cx, data->promiseObj());
-    if (!RunSettlingFunction(cx, resolveAllFun, values.value(), ResolveMode,
-                             promiseObj)) {
+    if (!RunFulfillFunction(cx, resolveAllFun, values.value(), promiseObj)) {
       return false;
     }
   }
@@ -3481,8 +3512,8 @@ static MOZ_MUST_USE bool PerformPromiseAllSettled(
 
   // Steps 8.d.iii-iv.
   if (remainingCount == 0) {
-    return RunSettlingFunction(cx, resultCapability.resolve(), values.value(),
-                               ResolveMode, resultCapability.promise());
+    return RunFulfillFunction(cx, resultCapability.resolve(), values.value(),
+                              resultCapability.promise());
   }
 
   return true;
@@ -3569,8 +3600,7 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
     // Step 7 (Adapted to work with PromiseCombinatorDataHolder's layout).
     RootedObject resolveAllFun(cx, data->resolveOrRejectObj());
     RootedObject promiseObj(cx, data->promiseObj());
-    if (!RunSettlingFunction(cx, resolveAllFun, values.value(), ResolveMode,
-                             promiseObj)) {
+    if (!RunFulfillFunction(cx, resolveAllFun, values.value(), promiseObj)) {
       return false;
     }
   }
@@ -3738,7 +3768,7 @@ static bool PromiseAnyRejectElementFunction(JSContext* cx, unsigned argc,
       return false;
     }
 
-    if (!RunSettlingFunction(cx, rejectFun, reason, RejectMode, promiseObj)) {
+    if (!RunRejectFunction(cx, rejectFun, reason, promiseObj)) {
       return false;
     }
   }
@@ -3867,14 +3897,15 @@ static MOZ_MUST_USE JSObject* CommonStaticResolveRejectImpl(
   //      Perform ? Call(promiseCapability.[[Resolve]], undefined, « x »).
   // Promise.reject, step 4:
   //      Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
-  if (!RunSettlingFunction(
-          cx, mode == ResolveMode ? capability.resolve() : capability.reject(),
-          argVal, mode, capability.promise())) {
+  HandleObject promise = capability.promise();
+  if (!(mode == ResolveMode
+            ? RunFulfillFunction(cx, capability.resolve(), argVal, promise)
+            : RunRejectFunction(cx, capability.reject(), argVal, promise))) {
     return nullptr;
   }
 
   // Step 5: Return promiseCapability.[[Promise]].
-  return capability.promise();
+  return promise;
 }
 
 MOZ_MUST_USE JSObject* js::PromiseResolve(JSContext* cx,
