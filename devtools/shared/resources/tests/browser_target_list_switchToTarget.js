@@ -8,14 +8,6 @@
 const { TargetList } = require("devtools/shared/resources/target-list");
 
 add_task(async function() {
-  // Enabled fission's pref as the TargetList is almost disabled without it
-  await pushPref("devtools.browsertoolbox.fission", true);
-  // Disable the preloaded process as it gets created lazily and may interfere
-  // with process count assertions
-  await pushPref("dom.ipc.processPrelaunch.enabled", false);
-  // This preference helps destroying the content process when we close the tab
-  await pushPref("dom.ipc.keepProcessesAlive.web", 1);
-
   const client = await createLocalClient();
 
   await testSwitchToTarget(client);
@@ -27,10 +19,16 @@ async function testSwitchToTarget(client) {
   info("Test TargetList.switchToTarget method");
 
   const { mainRoot } = client;
-  const firstTarget = await mainRoot.getMainProcess();
+  // Create a first target to switch from, a new tab with an iframe
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  const firstTab = await addTab(
+    `data:text/html,<iframe src="data:text/html,foo"></iframe>`
+  );
+  const firstTarget = await mainRoot.getTab({ tab: gBrowser.selectedTab });
+
   const targetList = new TargetList(mainRoot, firstTarget);
 
-  await targetList.startListening([TargetList.TYPES.FRAME]);
+  await targetList.startListening();
 
   is(
     targetList.targetFront,
@@ -38,10 +36,10 @@ async function testSwitchToTarget(client) {
     "The target list top level target is the main process one"
   );
 
-  // Create the new target to switch to, a new tab with an iframe
+  // Create a second target to switch to, a new tab with an iframe
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  const tab = await addTab(
-    `data:text/html,<iframe src="data:text/html,foo"></iframe>`
+  const secondTab = await addTab(
+    `data:text/html,<iframe src="data:text/html,bar"></iframe>`
   );
   const secondTarget = await mainRoot.getTab({ tab: gBrowser.selectedTab });
 
@@ -148,7 +146,8 @@ async function testSwitchToTarget(client) {
     );
   }
 
-  targetList.stopListening([TargetList.TYPES.FRAME]);
+  targetList.stopListening();
 
-  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(firstTab);
+  BrowserTestUtils.removeTab(secondTab);
 }

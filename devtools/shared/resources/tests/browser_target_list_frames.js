@@ -32,7 +32,7 @@ async function testBrowserFrames(mainRoot) {
 
   const target = await mainRoot.getMainProcess();
   const targetList = new TargetList(mainRoot, target);
-  await targetList.startListening([TargetList.TYPES.FRAME]);
+  await targetList.startListening();
 
   // Very naive sanity check against getAllTargets(frame)
   const frames = await targetList.getAllTargets(TargetList.TYPES.FRAME);
@@ -99,7 +99,7 @@ async function testBrowserFrames(mainRoot) {
   ok(hasTabDocument, "retrieve the target for tab via getAllTargets");
   */
 
-  targetList.stopListening([TargetList.TYPES.FRAME]);
+  targetList.stopListening();
 }
 
 // For now as we do not support "real fission", for tabs, this behaves as if devtools fission pref was false
@@ -112,7 +112,7 @@ async function testTabFrames(mainRoot) {
   const target = await mainRoot.getTab({ tab });
   const targetList = new TargetList(mainRoot, target);
 
-  await targetList.startListening([TargetList.TYPES.FRAME]);
+  await targetList.startListening();
 
   // Check that calling getAllTargets(frame) return the same target instances
   const frames = await targetList.getAllTargets(TargetList.TYPES.FRAME);
@@ -156,7 +156,7 @@ async function testTabFrames(mainRoot) {
   }
   targetList.unwatchTargets([TargetList.TYPES.FRAME], onAvailable);
 
-  targetList.stopListening([TargetList.TYPES.FRAME]);
+  targetList.stopListening();
 
   BrowserTestUtils.removeTab(tab);
 }
