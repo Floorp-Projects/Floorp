@@ -54,15 +54,6 @@ tabpanels {
   background-color: transparent;
 }
 
-.tab-drop-indicator-box {
-  -moz-box-align: end;
-}
-
-.tab-drop-indicator {
-  position: relative;
-  z-index: 2;
-}
-
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
 @media (resolution: 2dppx) {
   .tab-icon-image {
