@@ -833,7 +833,7 @@ class DoReadToStringEvent final : public AbstractReadEvent {
 
     CheckedInt<size_t> needed = mDecoder->MaxUTF16BufferLength(src.Length());
     if (!needed.isValid() ||
-        needed.value() > MaxValue<nsAString::size_type>::value) {
+        needed.value() > std::numeric_limits<nsAString::size_type>::max()) {
       Fail(NS_LITERAL_CSTRING("arithmetics"), mResult.forget(),
            OS_ERROR_TOO_LARGE);
       return;
