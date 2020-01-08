@@ -17,7 +17,6 @@ using mozilla::AddRvalueReference;
 using mozilla::Decay;
 using mozilla::DeclVal;
 using mozilla::IsArray;
-using mozilla::IsBaseOf;
 using mozilla::IsClass;
 using mozilla::IsConvertible;
 using mozilla::IsDefaultConstructible;
@@ -418,55 +417,12 @@ static_assert(!IsDestructible<PrivateDestructible>::value,
 static_assert(IsDestructible<TrivialDestructible>::value,
               "trivial destructible class is destructible");
 
-namespace CPlusPlus11IsBaseOf {
-
-// Adapted from C++11 § 20.9.6.
-struct B {};
-struct B1 : B {};
-struct B2 : B {};
-struct D : private B1, private B2 {};
-
-static void StandardIsBaseOfTests() {
-  static_assert((std::is_base_of<B, D>::value) == true,
-                "IsBaseOf fails on diamond");
-  static_assert((std::is_base_of<const B, D>::value) == true,
-                "IsBaseOf fails on diamond plus constness change");
-  static_assert((std::is_base_of<B, const D>::value) == true,
-                "IsBaseOf fails on diamond plus constness change");
-  static_assert((std::is_base_of<B, const B>::value) == true,
-                "IsBaseOf fails on constness change");
-  static_assert((std::is_base_of<D, B>::value) == false,
-                "IsBaseOf got the direction of inheritance wrong");
-  static_assert((std::is_base_of<B&, D&>::value) == false,
-                "IsBaseOf should return false on references");
-  static_assert((std::is_base_of<B[3], D[3]>::value) == false,
-                "IsBaseOf should return false on arrays");
-  // We fail at the following test.  To fix it, we need to specialize IsBaseOf
-  // for all built-in types.
-  // static_assert((std::is_base_of<int, int>::value) == false);
-}
-
-} /* namespace CPlusPlus11IsBaseOf */
-
 class A {};
 class B : public A {};
 class C : private A {};
 class D {};
 class E : public A {};
 class F : public B, public E {};
-
-static void TestIsBaseOf() {
-  static_assert((std::is_base_of<A, B>::value), "A is a base of B");
-  static_assert((!std::is_base_of<B, A>::value), "B is not a base of A");
-  static_assert((std::is_base_of<A, C>::value), "A is a base of C");
-  static_assert((!std::is_base_of<C, A>::value), "C is not a base of A");
-  static_assert((std::is_base_of<A, F>::value), "A is a base of F");
-  static_assert((!std::is_base_of<F, A>::value), "F is not a base of A");
-  static_assert((!std::is_base_of<A, D>::value), "A is not a base of D");
-  static_assert((!std::is_base_of<D, A>::value), "D is not a base of A");
-  static_assert((std::is_base_of<B, B>::value),
-                "B is the same as B (and therefore, a base of B)");
-}
 
 class ExplicitCopyConstructor {
   explicit ExplicitCopyConstructor(const ExplicitCopyConstructor&) = default;
@@ -697,8 +653,6 @@ static_assert(mozilla::IsSame<unsigned int, uintptr_t>::value,
 #endif
 
 int main() {
-  CPlusPlus11IsBaseOf::StandardIsBaseOfTests();
-  TestIsBaseOf();
   TestIsConvertible();
   return 0;
 }
