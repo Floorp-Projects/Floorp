@@ -9,13 +9,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
-import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
@@ -50,7 +48,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
-    private val appLinksFeature = ViewBoundFeatureWrapper<AppLinksFeature>()
 
     protected val sessionId: String?
         get() = arguments?.getString(SESSION_ID_KEY)
@@ -179,19 +176,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
             contextMenuFeature,
             menuUpdaterFeature,
             secureWindowFeature
-        )
-
-        appLinksFeature.set(
-            feature = AppLinksFeature(
-                context = requireContext(),
-                sessionManager = components.sessionManager,
-                sessionId = sessionId,
-                fragmentManager = requireFragmentManager(),
-                launchInApp = { components.preferences.getBoolean(DefaultComponents.PREF_LAUNCH_EXTERNAL_APP, false) },
-                failedToLaunchAction = { Toast.makeText(context, "Failed to open in app", Toast.LENGTH_LONG).show() }
-            ),
-            owner = this,
-            view = layout
         )
 
         return layout

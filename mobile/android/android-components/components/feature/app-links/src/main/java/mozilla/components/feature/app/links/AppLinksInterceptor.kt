@@ -37,6 +37,7 @@ import mozilla.components.concept.engine.request.RequestInterceptor
  * of security concerns.
  * @param useCases These use cases allow for the detection of, and opening of links that other apps
  * have registered to open.
+ * @param launchFromInterceptor If {true} then the interceptor will launch the link in third-party apps if available.
  */
 class AppLinksInterceptor(
     private val context: Context,
@@ -44,7 +45,8 @@ class AppLinksInterceptor(
     private val alwaysAllowedSchemes: Set<String> = setOf("mailto", "market", "sms", "tel"),
     private val alwaysDeniedSchemes: Set<String> = setOf("javascript", "about"),
     private val launchInApp: () -> Boolean = { false },
-    private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp)
+    private val useCases: AppLinksUseCases = AppLinksUseCases(context, launchInApp),
+    private val launchFromInterceptor: Boolean = false
 ) : RequestInterceptor {
 
     override fun onLoadRequest(
@@ -60,8 +62,13 @@ class AppLinksInterceptor(
         }
 
         val redirect = useCases.interceptedAppLinkRedirect(uri)
+        val result = handleRedirect(redirect, uri)
         if (redirect.isRedirect()) {
-            return handleRedirect(redirect, uri)
+            if (launchFromInterceptor && result is RequestInterceptor.InterceptionResponse.AppIntent) {
+                useCases.openAppLink(result.appIntent)
+            }
+
+            return result
         }
 
         return null
