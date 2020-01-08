@@ -57,7 +57,7 @@ def set_tp_preferences(test, browser_config):
                 test[cycle_var] = 2
 
     CLI_bool_options = ['tpchrome', 'tphero', 'tpmozafterpaint', 'tploadnocache', 'tpscrolltest',
-                        'fnbpaint', 'pdfpaint']
+                        'fnbpaint', 'pdfpaint', 'a11y']
     CLI_options = ['tpcycles', 'tppagecycles', 'tptimeout', 'tpmanifest']
     for key in CLI_bool_options:
         _pref_name = "talos.%s" % key
