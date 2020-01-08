@@ -136,7 +136,7 @@ private object AuthenticatedAccountProcessor {
             authInfo = fennecAuthInfo
         )
 
-        if (!accountManager.signInWithShareableAccountAsync(shareableAccount).await()) {
+        if (!accountManager.signInWithShareableAccountAsync(shareableAccount, reuseAccount = true).await()) {
             // What do we do now?
             // We detected an account in a good state, and failed to actually login with it.
             // This could indicate that credentials stored in Fennec are no longer valid, or that we had a

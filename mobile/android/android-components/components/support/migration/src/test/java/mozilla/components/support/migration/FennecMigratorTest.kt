@@ -38,6 +38,7 @@ import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.ServerPassword
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.whenever
+import mozilla.components.support.test.eq
 import org.mockito.Mockito.reset
 import java.lang.IllegalArgumentException
 
@@ -484,7 +485,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        `when`(accountManager.signInWithShareableAccountAsync(any())).thenReturn(CompletableDeferred(true))
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(true))).thenReturn(CompletableDeferred(true))
 
         with(migrator.migrateAsync().await()) {
             assertEquals(1, this.size)
@@ -493,7 +494,7 @@ class FennecMigratorTest {
         }
 
         val captor = argumentCaptor<ShareableAccount>()
-        verify(accountManager).signInWithShareableAccountAsync(captor.capture())
+        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(true))
 
         assertEquals("test@example.com", captor.value.email)
         // This is going to be package name (org.mozilla.firefox) in actual builds.
@@ -521,7 +522,7 @@ class FennecMigratorTest {
             .build()
 
         // For now, we don't treat sign-in failure any different from success. E.g. it's a one-shot attempt.
-        `when`(accountManager.signInWithShareableAccountAsync(any())).thenReturn(CompletableDeferred(false))
+        `when`(accountManager.signInWithShareableAccountAsync(any(), eq(true))).thenReturn(CompletableDeferred(false))
 
         with(migrator.migrateAsync().await()) {
             assertEquals(1, this.size)
@@ -530,7 +531,7 @@ class FennecMigratorTest {
         }
 
         val captor = argumentCaptor<ShareableAccount>()
-        verify(accountManager).signInWithShareableAccountAsync(captor.capture())
+        verify(accountManager).signInWithShareableAccountAsync(captor.capture(), eq(true))
 
         assertEquals("test@example.com", captor.value.email)
         // This is going to be package name (org.mozilla.firefox) in actual builds.

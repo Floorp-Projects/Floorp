@@ -44,6 +44,10 @@ permalink: /changelog/
   )
   ```
 
+* **service-firefox-accounts**
+  * `signInWithShareableAccountAsync` now takes a `reuseAccount` parameter, allowing consumers
+    to reuse existing session token (and FxA device) associated with the passed-in account.
+
 # 27.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v26.0.0...v27.0.0)

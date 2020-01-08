@@ -196,7 +196,7 @@ open class FxaAccountManager(
                     Event.FailedToAuthenticate -> AccountState.NotAuthenticated
 
                     is Event.SignInShareableAccount -> AccountState.NotAuthenticated
-                    Event.SignedInShareableAccount -> AccountState.AuthenticatedNoProfile
+                    is Event.SignedInShareableAccount -> AccountState.AuthenticatedNoProfile
 
                     is Event.Pair -> AccountState.NotAuthenticated
                     is Event.Authenticated -> AccountState.AuthenticatedNoProfile
@@ -287,10 +287,14 @@ open class FxaAccountManager(
      * user input. Once sign-in completes, any registered [AccountObserver.onAuthenticated] listeners
      * will be notified and [authenticatedAccount] will refer to the new account.
      * This may fail in case of network errors, or if provided credentials are not valid.
+     * @param reuseAccount Whether or not to reuse existing session token (which is part of the [ShareableAccount].
      * @return A deferred boolean flag indicating success (if true) of the sign-in operation.
      */
-    fun signInWithShareableAccountAsync(fromAccount: ShareableAccount): Deferred<Boolean> {
-        val stateMachineTransition = processQueueAsync(Event.SignInShareableAccount(fromAccount))
+    fun signInWithShareableAccountAsync(
+        fromAccount: ShareableAccount,
+        reuseAccount: Boolean = false
+    ): Deferred<Boolean> {
+        val stateMachineTransition = processQueueAsync(Event.SignInShareableAccount(fromAccount, reuseAccount))
         val result = CompletableDeferred<Boolean>()
         CoroutineScope(coroutineContext).launch {
             stateMachineTransition.await()
@@ -624,14 +628,25 @@ open class FxaAccountManager(
                     is Event.SignInShareableAccount -> {
                         account.registerPersistenceCallback(statePersistenceCallback)
 
-                        val migrationResult = account.copyFromSessionTokenAsync(
-                            via.account.authInfo.sessionToken,
-                            via.account.authInfo.kSync,
-                            via.account.authInfo.kXCS
-                        ).await()
+                        // "reusing an account" in this case means that we will maintain the same
+                        // session token, enabling us to re-use the same FxA device record and, in
+                        // theory, push subscriptions.
+                        val migrationResult = if (via.reuseAccount) {
+                            account.migrateFromSessionTokenAsync(
+                                via.account.authInfo.sessionToken,
+                                via.account.authInfo.kSync,
+                                via.account.authInfo.kXCS
+                            ).await()
+                        } else {
+                            account.copyFromSessionTokenAsync(
+                                via.account.authInfo.sessionToken,
+                                via.account.authInfo.kSync,
+                                via.account.authInfo.kXCS
+                            ).await()
+                        }
 
                         return if (migrationResult) {
-                            Event.SignedInShareableAccount
+                            Event.SignedInShareableAccount(via.reuseAccount)
                         } else {
                             null
                         }
@@ -695,18 +710,26 @@ open class FxaAccountManager(
                             null
                         }
                     }
-                    Event.SignedInShareableAccount -> {
+                    is Event.SignedInShareableAccount -> {
                         // Note that we are not registering an account persistence callback here like
                         // we do in other `AuthenticatedNoProfile` methods, because it would have been
                         // already registered while handling `Event.SignInShareableAccount`.
                         logger.info("Registering device constellation observer")
                         account.deviceConstellation().register(deviceEventsIntegration)
 
-                        logger.info("Initializing device")
-                        // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
-                        account.deviceConstellation().initDeviceAsync(
+                        if (via.reuseAccount) {
+                            logger.info("Configuring migrated account's device")
+                            // At the minimum, we need to "ensure capabilities" - that is, register for Send Tab, etc.
+                            account.deviceConstellation().ensureCapabilitiesAsync(deviceConfig.capabilities).await()
+                            // Note that at this point, we do not rename a device record to our own default name.
+                            // It's possible that user already customized their name, and we'd like to retain it.
+                        } else {
+                            logger.info("Initializing device")
+                            // NB: underlying API is expected to 'ensureCapabilities' as part of device initialization.
+                            account.deviceConstellation().initDeviceAsync(
                                 deviceConfig.name, deviceConfig.type, deviceConfig.capabilities
-                        ).await()
+                            ).await()
+                        }
 
                         postAuthenticated(AuthType.Shared)
 
