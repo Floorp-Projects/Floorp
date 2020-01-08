@@ -197,9 +197,16 @@ void UniformAsMatrix4x4fv(gl::GLContext& gl, GLint location, GLsizei count,
 
 // -
 
+static bool EndsWith(const std::string& str, const std::string& needle) {
+  if (str.length() < needle.length()) return false;
+  return str.compare(str.length() - needle.length(), needle.length(), needle) ==
+         0;
+}
+
 webgl::ActiveUniformValidationInfo webgl::ActiveUniformValidationInfo::Make(
     const webgl::ActiveUniformInfo& info) {
   auto ret = webgl::ActiveUniformValidationInfo{info};
+  ret.isArray = EndsWith(info.name, "[0]");
 
   switch (info.elemType) {
     case LOCAL_GL_FLOAT:
@@ -326,8 +333,8 @@ webgl::ActiveUniformValidationInfo webgl::ActiveUniformValidationInfo::Make(
 
 //#define DUMP_SHADERVAR_MAPPINGS
 
-static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
-    WebGLProgram* prog, gl::GLContext* gl) {
+RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(WebGLProgram* prog,
+                                                        gl::GLContext* gl) {
   WebGLContext* const webgl = prog->mContext;
 
   RefPtr<webgl::LinkedProgramInfo> info(new webgl::LinkedProgramInfo(prog));
@@ -422,6 +429,15 @@ static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
 
   // -
 
+  for (const auto& attrib : info->active.activeAttribs) {
+    if (attrib.location == 0) {
+      info->attrib0Active = true;
+      break;
+    }
+  }
+
+  // -
+
   for (const auto& uniform : info->active.activeUniforms) {
     const auto& elemType = uniform.elemType;
     webgl::SamplerUniformInfo* samplerInfo = nullptr;
@@ -493,8 +509,8 @@ static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
 
 webgl::LinkedProgramInfo::LinkedProgramInfo(WebGLProgram* prog)
     : prog(prog),
-      transformFeedbackBufferMode(prog->mNextLink_TransformFeedbackBufferMode),
-      attrib0Active(false) {}
+      transformFeedbackBufferMode(prog->mNextLink_TransformFeedbackBufferMode) {
+}
 
 webgl::LinkedProgramInfo::~LinkedProgramInfo() {}
 
@@ -724,7 +740,11 @@ void WebGLProgram::AttachShader(WebGLShader& shader) {
 }
 
 void WebGLProgram::BindAttribLocation(GLuint loc, const std::string& name) {
-  if (!ValidateGLSLVariableName(name, mContext)) return;
+  const auto err = CheckGLSLVariableName(mContext->IsWebGL2(), name);
+  if (err) {
+    mContext->GenerateError(err->type, "%s", err->info.c_str());
+    return;
+  }
 
   if (loc >= mContext->MaxVertexAttribs()) {
     mContext->ErrorInvalidValue(
@@ -1121,7 +1141,7 @@ bool WebGLProgram::UseProgram() const {
   return true;
 }
 
-void WebGLProgram::ValidateProgram() const {
+bool WebGLProgram::ValidateProgram() const {
   gl::GLContext* gl = mContext->gl;
 
 #ifdef XP_MACOSX
@@ -1131,11 +1151,14 @@ void WebGLProgram::ValidateProgram() const {
     mContext->GenerateWarning(
         "Implemented as a no-op on"
         " Mac to work around crashes.");
-    return;
+    return true;
   }
 #endif
 
   gl->fValidateProgram(mGLName);
+  GLint ok = 0;
+  gl->fGetProgramiv(mGLName, LOCAL_GL_VALIDATE_STATUS, &ok);
+  return bool(ok);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

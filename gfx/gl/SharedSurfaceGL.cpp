@@ -9,6 +9,7 @@
 #include "GLContext.h"
 #include "GLReadTexImageHelper.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/layers/TextureForwarder.h"
 #include "ScopedGLHelpers.h"
 
 namespace mozilla {

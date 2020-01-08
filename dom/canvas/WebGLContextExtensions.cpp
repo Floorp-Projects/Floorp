@@ -9,8 +9,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/EnumeratedRange.h"
-#include "mozilla/Preferences.h"
-#include "nsContentUtils.h"
 #include "nsString.h"
 #include "WebGLContextUtils.h"
 #include "WebGLExtensions.h"
@@ -211,7 +209,7 @@ RefPtr<ClientWebGLExtensionBase> ClientWebGLContext::GetExtension(
         case WebGLExtensionID::Max:
           break;
       }
-      MOZ_ASSERT_UNREACHABLE("illegal extension enum");
+      MOZ_CRASH("illegal extension enum");
     }();
     MOZ_ASSERT(extSlot);
     RequestExtension(ext);
@@ -225,8 +223,10 @@ RefPtr<ClientWebGLExtensionBase> ClientWebGLContext::GetExtension(
 
 bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const {
   switch (ext) {
-    case WebGLExtensionID::WEBGL_lose_context:
     case WebGLExtensionID::MOZ_debug:
+    case WebGLExtensionID::WEBGL_debug_renderer_info:
+    case WebGLExtensionID::WEBGL_debug_shaders:
+    case WebGLExtensionID::WEBGL_lose_context:
       // Always supported.
       return true;
 
@@ -327,13 +327,6 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const {
 
     case WebGLExtensionID::WEBGL_compressed_texture_s3tc_srgb:
       return WebGLExtensionCompressedTextureS3TC_SRGB::IsSupported(this);
-
-    case WebGLExtensionID::WEBGL_debug_renderer_info:
-      return Preferences::GetBool("webgl.enable-debug-renderer-info", false) &&
-             !mResistFingerprinting;
-
-    case WebGLExtensionID::WEBGL_debug_shaders:
-      return !mResistFingerprinting;
 
     case WebGLExtensionID::WEBGL_depth_texture:
       return WebGLExtensionDepthTexture::IsSupported(this);

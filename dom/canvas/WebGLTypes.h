@@ -20,6 +20,7 @@
 #include "gfxTypes.h"
 
 #include "nsTArray.h"
+#include "nsString.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"
 //#include "WebGLStrongTypes.h"
@@ -515,6 +516,7 @@ struct InitContextDesc final {
   bool resistFingerprinting = false;
   uvec2 size = {};
   WebGLContextOptions options;
+  uint32_t principalKey = 0;
 };
 
 struct Limits final {
@@ -887,14 +889,6 @@ inline auto MakeRangeAbv(const T& abv)
   return {abv.DataAllowShared(), abv.LengthAllowShared()};
 }
 
-template <typename T>
-inline Range<const uint8_t> MakeByteRange(const T& x) {
-  const auto typed = MakeRange(x);
-  return Range<const uint8_t>(
-      reinterpret_cast<const uint8_t*>(typed.begin().get()),
-      typed.length() * sizeof(typed[0]));
-}
-
 Maybe<Range<const uint8_t>> GetRangeFromView(const dom::ArrayBufferView& view,
                                              GLuint elemOffset,
                                              GLuint elemCountOverride);
@@ -926,6 +920,10 @@ Maybe<webgl::ErrorInfo> CheckVertexAttribPointer(bool webgl2, bool isFuncInt,
                                                  uint64_t byteOffset);
 
 uint8_t ElemTypeComponents(GLenum elemType);
+
+inline std::string ToString(const nsACString& text) {
+  return {text.BeginReading(), text.Length()};
+}
 
 }  // namespace mozilla
 

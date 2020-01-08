@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
+#include "CompositorTypes.h"
 #include "SharedSurface.h"
 
 #ifdef MOZ_WIDGET_ANDROID

@@ -42,7 +42,7 @@ static UniquePtr<webgl::TexUnpackBytes> FromView(
     const auto range =
         GetRangeFromView(*view, viewElemOffset, viewElemLengthOverride);
     if (!range) {
-      webgl->GenerateError(LOCAL_GL_INVALID_VALUE, "`source` too small.");
+      webgl->GenerateError(LOCAL_GL_INVALID_OPERATION, "`source` too small.");
       return nullptr;
     }
     bytes = range->begin().get();
@@ -926,12 +926,19 @@ void WebGLTexture::TexStorage(TexTarget target, uint32_t levels,
 // TexSubImage iff `!respectFormat`
 void WebGLTexture::TexImage(GLenum imageTarget, uint32_t level,
                             GLenum respecFormat, const uvec3& offset,
-                            const uvec3& size, const webgl::PackingInfo& pi,
+                            const uvec3& claimedSize,
+                            const webgl::PackingInfo& pi,
                             const TexImageSource& src,
                             const dom::HTMLCanvasElement& canvas) {
   dom::Uint8ClampedArray scopedArr;
-  const auto blob = mContext->From(canvas, imageTarget, size, src, &scopedArr);
+  const auto blob =
+      mContext->From(canvas, imageTarget, claimedSize, src, &scopedArr);
   if (!blob) return;
+
+  // For DOM element upload entrypoints that have no size arguments, claimedSize
+  // is 0. Use blob size, not claimedSize. (blob size can also be zero, and
+  // that's valid!)
+  const auto size = uvec3{blob->mWidth, blob->mHeight, blob->mDepth};
 
   ////////////////////////////////////
   // Get dest info
@@ -1031,6 +1038,8 @@ void WebGLTexture::TexImage(GLenum imageTarget, uint32_t level,
     return;
   }
 
+  if (!blob->Validate(mContext, pi)) return;
+
   ////////////////////////////////////
   // Do the thing!
 
@@ -1045,13 +1054,15 @@ void WebGLTexture::TexImage(GLenum imageTarget, uint32_t level,
           Some(std::vector<bool>(blob->mDepth, true));
     }
 
-    if (imageInfo->mWidth == newImageInfo->mWidth &&
-        imageInfo->mHeight == newImageInfo->mHeight &&
-        imageInfo->mDepth == newImageInfo->mDepth &&
-        imageInfo->mFormat == newImageInfo->mFormat) {
-      isRespec = true;
-    }
+    isRespec = (imageInfo->mWidth != newImageInfo->mWidth ||
+                imageInfo->mHeight != newImageInfo->mHeight ||
+                imageInfo->mDepth != newImageInfo->mDepth ||
+                imageInfo->mFormat != newImageInfo->mFormat);
   } else {
+    if (!blob->HasData()) {
+      mContext->ErrorInvalidValue("`source` cannot be null.");
+      return;
+    }
     if (!EnsureImageDataInitializedForUpload(this, imageTarget, level, offset,
                                              size, imageInfo)) {
       return;
@@ -1122,7 +1133,7 @@ void WebGLTexture::CompressedTexImage(bool sub, GLenum imageTarget,
                                       const uvec3& offset, const uvec3& size,
                                       const Range<const uint8_t>& src,
                                       const uint32_t pboImageSize,
-                                      const Maybe<uint64_t> pboOffset) {
+                                      const Maybe<uint64_t>& pboOffset) {
   auto imageSize = pboImageSize;
   if (pboOffset) {
     const auto& buffer =
@@ -1198,8 +1209,8 @@ void WebGLTexture::CompressedTexImage(bool sub, GLenum imageTarget,
         return;
 
       // Block-aligned:
-      case webgl::CompressionFamily::ES3:  // Yes, the ES3 formats don't match
-                                           // the ES3
+      case webgl::CompressionFamily::ES3:   // Yes, the ES3 formats don't match
+                                            // the ES3
       case webgl::CompressionFamily::S3TC:  // default behavior.
       case webgl::CompressionFamily::BPTC:
       case webgl::CompressionFamily::RGTC:
@@ -1272,8 +1283,7 @@ void WebGLTexture::CompressedTexImage(bool sub, GLenum imageTarget,
     } else {
       call = nsPrintfCString(
           "DoCompressedTexSubImage(0x%04x, %u, %u,%u,%u, %u,%u,%u, 0x%04x, %u, "
-          "%p) "
-          "-> 0x%04x",
+          "%p)",
           imageTarget, level, offset.x, offset.y, offset.z, size.x, size.y,
           size.z, formatEnum, imageSize, ptr);
     }
@@ -1602,7 +1612,7 @@ static const webgl::FormatUsageInfo* ValidateCopyDestUsage(
 
 static bool ValidateCopyTexImageForFeedback(const WebGLContext& webgl,
                                             const WebGLTexture& tex,
-                                            const uint8_t mipLevel,
+                                            const uint32_t mipLevel,
                                             const uint32_t zLayer) {
   const auto& fb = webgl.BoundReadFb();
   if (fb) {
@@ -1750,9 +1760,7 @@ void WebGLTexture::CopyTexImage(GLenum imageTarget, uint32_t level,
   }
   const auto& srcFormat = srcUsage->format;
 
-  const uint32_t zOffset = 0;
-  if (!ValidateCopyTexImageForFeedback(*mContext, *this,
-                                       AssertedCast<uint8_t>(level), zOffset))
+  if (!ValidateCopyTexImageForFeedback(*mContext, *this, level, dstOffset.z))
     return;
 
   const auto size = uvec3{size2.x, size2.y, 1};

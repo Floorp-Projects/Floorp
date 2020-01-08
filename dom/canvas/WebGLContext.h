@@ -46,6 +46,8 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 
+#include <list>
+
 class nsIDocShell;
 
 // WebGL-only GLenums
@@ -277,6 +279,36 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   };
 
  private:
+  class LruPosition final {
+    std::list<WebGLContext*>::iterator mItr;
+
+    void reset();
+
+   public:
+    LruPosition();
+    explicit LruPosition(WebGLContext&);
+
+    LruPosition& operator=(LruPosition&& rhs) {
+      reset();
+      std::swap(mItr, rhs.mItr);
+      return *this;
+    }
+
+    ~LruPosition() { reset(); }
+  };
+
+  LruPosition mLruPosition;
+
+ public:
+  void BumpLru() {
+    LruPosition next{*this};
+    mLruPosition = std::move(next);
+  }
+
+  void LoseLruContextIfLimitExceeded();
+
+  // -
+
   // We've had issues in the past with nulling `gl` without actually releasing
   // all of our resources. This construction ensures that we are aware that we
   // should only null `gl` in DestroyResourcesAndContext.
@@ -302,6 +334,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   const WeakPtr<HostWebGLContext> mHost;
   const bool mResistFingerprinting;
   WebGLContextOptions mOptions;
+  const uint32_t mPrincipalKey;
   Maybe<webgl::Limits> mLimits;
 
   bool mIsContextLost = false;
@@ -397,49 +430,45 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   template <typename... Args>
   void GenerateError(const GLenum err, const char* const fmt,
-                     const Args&... args) const MOZ_FORMAT_PRINTF(3, 4) {
+                     const Args&... args) const {
     MOZ_ASSERT(FuncName());
-
-    // AppendPrintf doesn't understand size_t %tu types, and SKIPS THEM, which
-    // is bad.
-    MOZ_ASSERT(strstr(fmt, "%t") == nullptr);
 
     nsCString text;
     text.AppendPrintf("WebGL warning: %s: ", FuncName());
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-security"
     text.AppendPrintf(fmt, args...);
+#pragma clang diagnostic pop
+
     GenerateErrorImpl(err, text);
   }
 
   template <typename... Args>
-  void ErrorInvalidEnum(const char* const fmt, const Args&... args) const
-      MOZ_FORMAT_PRINTF(2, 3) {
+  void ErrorInvalidEnum(const char* const fmt, const Args&... args) const {
     GenerateError(LOCAL_GL_INVALID_ENUM, fmt, args...);
   }
   template <typename... Args>
-  void ErrorInvalidOperation(const char* const fmt, const Args&... args) const
-      MOZ_FORMAT_PRINTF(2, 3) {
+  void ErrorInvalidOperation(const char* const fmt, const Args&... args) const {
     GenerateError(LOCAL_GL_INVALID_OPERATION, fmt, args...);
   }
   template <typename... Args>
-  void ErrorInvalidValue(const char* const fmt, const Args&... args) const
-      MOZ_FORMAT_PRINTF(2, 3) {
+  void ErrorInvalidValue(const char* const fmt, const Args&... args) const {
     GenerateError(LOCAL_GL_INVALID_VALUE, fmt, args...);
   }
   template <typename... Args>
   void ErrorInvalidFramebufferOperation(const char* const fmt,
-                                        const Args&... args) const
-      MOZ_FORMAT_PRINTF(2, 3) {
+                                        const Args&... args) const {
     GenerateError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION, fmt, args...);
   }
   template <typename... Args>
-  void ErrorOutOfMemory(const char* const fmt, const Args&... args) const
-      MOZ_FORMAT_PRINTF(2, 3) {
+  void ErrorOutOfMemory(const char* const fmt, const Args&... args) const {
     GenerateError(LOCAL_GL_OUT_OF_MEMORY, fmt, args...);
   }
 
   template <typename... Args>
-  void ErrorImplementationBug(const char* const fmt, const Args&... args) const
-      MOZ_FORMAT_PRINTF(2, 3) {
+  void ErrorImplementationBug(const char* const fmt,
+                              const Args&... args) const {
     const nsPrintfCString newFmt(
         "Implementation bug, please file at %s! %s",
         "https://bugzilla.mozilla.org/"
@@ -486,10 +515,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   // Present to compositor
   bool Present();
-
-  // a number that increments every time we have an event that causes
-  // all context resources to be lost.
-  auto Generation() const { return mGeneration; }
 
   void RunContextLossTimer();
   void CheckForContextLoss();
@@ -637,7 +662,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   void UseProgram(WebGLProgram* prog);
 
   bool ValidateAttribArraySetter(uint32_t count, uint32_t arrayLength);
-  void ValidateProgram(const WebGLProgram& prog);
+  bool ValidateProgram(const WebGLProgram& prog) const;
   void Viewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
   // -----------------------------------------------------------------------------
@@ -719,11 +744,11 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
  private:
   // State tracking slots
-  realGLboolean mDitherEnabled;
-  realGLboolean mRasterizerDiscardEnabled;
-  realGLboolean mScissorTestEnabled;
+  realGLboolean mDitherEnabled = 1;
+  realGLboolean mRasterizerDiscardEnabled = 0;
+  realGLboolean mScissorTestEnabled = 0;
   realGLboolean mDepthTestEnabled = 0;
-  realGLboolean mStencilTestEnabled;
+  realGLboolean mStencilTestEnabled = 0;
   realGLboolean mBlendEnabled = 0;
   GLenum mGenerateMipmapHint = 0;
 
@@ -741,13 +766,13 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   realGLboolean* GetStateTrackingSlot(GLenum cap);
 
   // Allocation debugging variables
-  mutable uint64_t mDataAllocGLCallCount;
+  mutable uint64_t mDataAllocGLCallCount = 0;
 
   void OnDataAllocCall() const { mDataAllocGLCallCount++; }
 
   uint64_t GetNumGLDataAllocCalls() const { return mDataAllocGLCallCount; }
 
-  void OnEndOfFrame() const;
+  void OnEndOfFrame();
 
   // -----------------------------------------------------------------------------
   // Texture funcions (WebGLContextTextures.cpp)
@@ -862,15 +887,13 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   bool DoFakeVertexAttrib0(uint64_t vertexCount);
   void UndoFakeVertexAttrib0();
 
-  uint64_t mGeneration = 0;
-
   bool mResetLayer = true;
-  bool mOptionsFrozen;
-  bool mIsMesa;
+  bool mOptionsFrozen = false;
+  bool mIsMesa = false;
   bool mLoseContextOnMemoryPressure = false;
   bool mCanLoseContextInForeground = true;
-  bool mShouldPresent;
-  bool mDisableFragHighP;
+  bool mShouldPresent = false;
+  bool mDisableFragHighP = false;
   bool mVRReady = false;
 
   template <typename WebGLObjectType>
@@ -880,7 +903,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   GLenum mDefaultFB_DrawBuffer0 = 0;
   GLenum mDefaultFB_ReadBuffer = 0;
 
-  mutable GLenum mWebGLError;
+  mutable GLenum mWebGLError = 0;
 
   std::unique_ptr<webgl::ShaderValidator> CreateShaderValidator(
       GLenum shaderType) const;
@@ -1153,20 +1176,22 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   ////////////////////////////////////
 
  protected:
-  GLuint mEmptyTFO;
+  GLuint mEmptyTFO = 0;
 
   // Generic Vertex Attributes
   // Though CURRENT_VERTEX_ATTRIB is listed under "Vertex Shader State" in the
   // spec state tables, this isn't vertex shader /object/ state. This array is
   // merely state useful to vertex shaders, but is global state.
   std::vector<webgl::AttribBaseType> mGenericVertexAttribTypes;
-  uint8_t mGenericVertexAttrib0Data[sizeof(float) * 4];
   CacheInvalidator mGenericVertexAttribTypeInvalidator;
 
   GLuint mFakeVertexAttrib0BufferObject = 0;
   size_t mFakeVertexAttrib0BufferObjectSize = 0;
   bool mFakeVertexAttrib0DataDefined = false;
-  uint8_t mFakeVertexAttrib0Data[sizeof(float) * 4];
+  alignas(alignof(float)) uint8_t
+      mGenericVertexAttrib0Data[sizeof(float) * 4] = {};
+  alignas(alignof(float)) uint8_t
+      mFakeVertexAttrib0Data[sizeof(float) * 4] = {};
 
   GLint mStencilRefFront = 0;
   GLint mStencilRefBack = 0;
@@ -1180,11 +1205,11 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   GLint mStencilClearValue = 0;
   GLfloat mDepthClearValue = 0.0;
 
-  GLint mViewportX;
-  GLint mViewportY;
-  GLsizei mViewportWidth;
-  GLsizei mViewportHeight;
-  bool mAlreadyWarnedAboutViewportLargerThanDest;
+  GLint mViewportX = 0;
+  GLint mViewportY = 0;
+  GLsizei mViewportWidth = 0;
+  GLsizei mViewportHeight = 0;
+  bool mAlreadyWarnedAboutViewportLargerThanDest = false;
 
   GLfloat mLineWidth = 0.0;
 
@@ -1192,24 +1217,21 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
 
   // Used for some hardware (particularly Tegra 2 and 4) that likes to
   // be Flushed while doing hundreds of draw calls.
-  int mDrawCallsSinceLastFlush;
+  int mDrawCallsSinceLastFlush = 0;
 
-  mutable int mAlreadyGeneratedWarnings;
-  int mMaxWarnings;
-  bool mAlreadyWarnedAboutFakeVertexAttrib0;
+  mutable uint64_t mWarningCount = 0;
+  const uint64_t mMaxWarnings;
+  bool mAlreadyWarnedAboutFakeVertexAttrib0 = false;
 
-  bool ShouldGenerateWarnings() const {
-    if (mMaxWarnings == -1) return true;
-    return mAlreadyGeneratedWarnings < mMaxWarnings;
-  }
+  bool ShouldGenerateWarnings() const { return mWarningCount < mMaxWarnings; }
 
   bool ShouldGeneratePerfWarnings() const {
     return mNumPerfWarnings < mMaxPerfWarnings;
   }
 
-  bool mNeedsFakeNoAlpha;
-  bool mNeedsFakeNoDepth;
-  bool mNeedsFakeNoStencil;
+  bool mNeedsFakeNoAlpha = false;
+  bool mNeedsFakeNoDepth = false;
+  bool mNeedsFakeNoStencil = false;
   bool mNeedsFakeNoStencil_UserFBs = false;
 
   mutable uint8_t mDriverColorMask = 0;
@@ -1256,20 +1278,23 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
  public:
   // console logging helpers
   template <typename... Args>
-  void GenerateWarning(const char* const fmt, const Args&... args) const
-      MOZ_FORMAT_PRINTF(2, 3) {
+  void GenerateWarning(const char* const fmt, const Args&... args) const {
     GenerateError(0, fmt, args...);
   }
 
   template <typename... Args>
-  void GeneratePerfWarning(const char* const fmt, const Args&... args) const
-      MOZ_FORMAT_PRINTF(2, 3) {
+  void GeneratePerfWarning(const char* const fmt, const Args&... args) const {
     if (!ShouldGeneratePerfWarnings()) return;
 
     const auto funcName = FuncName();
     nsCString msg;
     msg.AppendPrintf("WebGL perf warning: %s: ", funcName);
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-security"
     msg.AppendPrintf(fmt, args...);
+#pragma clang diagnostic pop
+
     GenerateErrorImpl(0, msg);
 
     mNumPerfWarnings++;

@@ -60,6 +60,7 @@ void UniformAs1fv(gl::GLContext& gl, GLint location, GLsizei count,
 
 struct ActiveUniformValidationInfo final {
   const ActiveUniformInfo& info;
+  bool isArray = false;
   uint8_t channelsPerElem = 0;
   decltype(&UniformAs1fv) pfn = nullptr;
 
@@ -99,7 +100,7 @@ struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,
 
   mutable std::vector<size_t> componentsPerTFVert;
 
-  bool attrib0Active;
+  bool attrib0Active = false;
 
   // -
 
@@ -146,7 +147,7 @@ class WebGLProgram final : public WebGLContextBoundObject {
 
   void LinkProgram();
   bool UseProgram() const;
-  void ValidateProgram() const;
+  bool ValidateProgram() const;
 
   ////////////////
 
