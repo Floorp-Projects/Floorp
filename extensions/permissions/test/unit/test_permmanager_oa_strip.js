@@ -6,6 +6,10 @@ const TEST_PERMISSION = "test/oastrip";
 const TEST_PERMISSION2 = "test/oastrip2";
 const TEST_PERMISSION3 = "test/oastrip3";
 
+// List of permissions which are not isolated by private browsing or user context
+// as per array kStripOAPermissions in nsPermissionManager.cpp
+const STRIPPED_PERMS = ["cookie"];
+
 let principal = Services.scriptSecurityManager.createContentPrincipal(
   TEST_URI,
   {}
@@ -137,6 +141,70 @@ function testOAIsolation(permIsolateUserContext, permIsolatePrivateBrowsing) {
       : Ci.nsIPermissionManager.PROMPT_ACTION,
     pm.testPermissionFromPrincipal(principalPrivateBrowsing, TEST_PERMISSION3)
   );
+
+  pm.removeAll();
+
+  // Modifying an non-isolated/stripped permission should affect all browsing contexts,
+  // independently of permission isolation pref state
+  STRIPPED_PERMS.forEach(perm => {
+    info("Testing stripped permission " + perm);
+
+    // Add a permission for the normal window
+    pm.addFromPrincipal(principal, perm, pm.ALLOW_ACTION);
+    Assert.equal(
+      pm.testPermissionFromPrincipal(principalPrivateBrowsing, perm),
+      Ci.nsIPermissionManager.ALLOW_ACTION
+    );
+    Assert.equal(
+      pm.testPermissionFromPrincipal(principalUserContext1, perm),
+      Ci.nsIPermissionManager.ALLOW_ACTION
+    );
+    Assert.equal(
+      pm.testPermissionFromPrincipal(principalUserContext2, perm),
+      Ci.nsIPermissionManager.ALLOW_ACTION
+    );
+
+    // Remove the permission from private window
+    pm.removeFromPrincipal(principalPrivateBrowsing, perm);
+    Assert.equal(
+      pm.testPermissionFromPrincipal(principal, perm),
+      Ci.nsIPermissionManager.UNKNOWN_ACTION
+    );
+    Assert.equal(
+      pm.testPermissionFromPrincipal(principalUserContext1, perm),
+      Ci.nsIPermissionManager.UNKNOWN_ACTION
+    );
+    Assert.equal(
+      pm.testPermissionFromPrincipal(principalUserContext2, perm),
+      Ci.nsIPermissionManager.UNKNOWN_ACTION
+    );
+
+    // Set a permission for a normal window and then override it by adding it to container 2 again
+    pm.addFromPrincipal(principal, perm, pm.PROMPT_ACTION);
+    pm.addFromPrincipal(principal, TEST_PERMISSION, pm.ALLOW_ACTION);
+    pm.addFromPrincipal(principalUserContext2, perm, pm.DENY_ACTION);
+
+    let principalPerms = pm.getAllForPrincipal(principalPrivateBrowsing, perm);
+
+    Assert.ok(
+      principalPerms.some(p => p.type == perm && p.capability == pm.DENY_ACTION)
+    );
+    if (permIsolatePrivateBrowsing) {
+      Assert.equal(principalPerms.length, 1);
+      Assert.ok(
+        principalPerms.some(
+          p => p.type == perm && p.capability == pm.DENY_ACTION
+        )
+      );
+    } else {
+      Assert.equal(principalPerms.length, 2);
+      Assert.ok(
+        principalPerms.some(
+          p => p.type == TEST_PERMISSION && p.capability == pm.ALLOW_ACTION
+        )
+      );
+    }
+  });
 
   // Cleanup
   pm.removeAll();
