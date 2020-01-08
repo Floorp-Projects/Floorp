@@ -78,6 +78,30 @@ using namespace mozilla;
 #  define DRIVE_REMOTE 4
 #endif
 
+static HWND GetMostRecentNavigatorHWND() {
+  nsresult rv;
+  nsCOMPtr<nsIWindowMediator> winMediator(
+      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<mozIDOMWindowProxy> navWin;
+  rv = winMediator->GetMostRecentWindow(u"navigator:browser",
+                                        getter_AddRefs(navWin));
+  if (NS_FAILED(rv) || !navWin) {
+    return nullptr;
+  }
+
+  nsPIDOMWindowOuter* win = nsPIDOMWindowOuter::From(navWin);
+  nsCOMPtr<nsIWidget> widget = widget::WidgetUtils::DOMWindowToWidget(win);
+  if (!widget) {
+    return nullptr;
+  }
+
+  return reinterpret_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
+}
+
 /**
  * A runnable to dispatch back to the main thread when
  * AsyncRevealOperation completes.
@@ -3022,16 +3046,16 @@ nsLocalFile::Launch() {
   // Pass VT_ERROR/DISP_E_PARAMNOTFOUND to omit an optional RPC parameter
   // to execute a file with the default verb.
   _variant_t verbDefault(DISP_E_PARAMNOTFOUND, VT_ERROR);
-  _variant_t workingDir;
   _variant_t showCmd(SW_SHOWNORMAL);
 
   // Use the directory of the file we're launching as the working
   // directory. That way if we have a self extracting EXE it won't
   // suggest to extract to the install directory.
+  wchar_t* workingDirectoryPtr = nullptr;
   WCHAR workingDirectory[MAX_PATH + 1] = {L'\0'};
   wcsncpy(workingDirectory, mResolvedPath.get(), MAX_PATH);
   if (PathRemoveFileSpecW(workingDirectory)) {
-    workingDir = workingDirectory;
+    workingDirectoryPtr = workingDirectory;
   } else {
     NS_WARNING("Could not set working directory for launched file.");
   }
@@ -3039,10 +3063,24 @@ nsLocalFile::Launch() {
   // Ask Explorer to ShellExecute on our behalf, as some applications such as
   // Skype for Business do not start correctly when inheriting our process's
   // migitation policies.
+  // It does not work in a special environment such as Citrix.  In such a case
+  // we fall back to launching an application as a child process.  We need to
+  // find a way to handle the combination of these interop issues.
   mozilla::LauncherVoidResult shellExecuteOk = mozilla::ShellExecuteByExplorer(
-      execPath, args, verbDefault, workingDir, showCmd);
+      execPath, args, verbDefault, workingDirectoryPtr, showCmd);
   if (shellExecuteOk.isErr()) {
-    return NS_ERROR_FILE_EXECUTION_FAILED;
+    SHELLEXECUTEINFOW seinfo = {sizeof(SHELLEXECUTEINFOW)};
+    seinfo.fMask = SEE_MASK_ASYNCOK;
+    seinfo.hwnd = GetMostRecentNavigatorHWND();
+    seinfo.lpVerb = nullptr;
+    seinfo.lpFile = mResolvedPath.get();
+    seinfo.lpParameters = nullptr;
+    seinfo.lpDirectory = workingDirectoryPtr;
+    seinfo.nShow = SW_SHOWNORMAL;
+
+    if (!ShellExecuteExW(&seinfo)) {
+      return NS_ERROR_FILE_EXECUTION_FAILED;
+    }
   }
 
   return NS_OK;
