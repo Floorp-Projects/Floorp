@@ -365,7 +365,7 @@ impl FontContext {
     }
 
     pub fn delete_font(&mut self, font_key: &FontKey) {
-        if let Some(_) = self.faces.remove(font_key) {
+        if self.faces.remove(font_key).is_some() {
             self.variations.retain(|k, _| k.0 != *font_key);
         }
     }

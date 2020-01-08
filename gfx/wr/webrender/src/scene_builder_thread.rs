@@ -518,7 +518,7 @@ impl SceneBuilderThread {
 
     /// Do the bulk of the work of the scene builder thread.
     fn process_transaction(&mut self, txn: &mut Transaction) -> Box<BuiltTransaction> {
-        if let &Some(ref hooks) = &self.hooks {
+        if let Some(ref hooks) = self.hooks {
             hooks.pre_scene_build();
         }
 
@@ -612,8 +612,8 @@ impl SceneBuilderThread {
 
     /// Send the results of process_transaction back to the render backend.
     fn forward_built_transactions(&mut self, txns: Vec<Box<BuiltTransaction>>) {
-        let (pipeline_info, result_tx, result_rx) = match &self.hooks {
-            &Some(ref hooks) => {
+        let (pipeline_info, result_tx, result_rx) = match self.hooks {
+            Some(ref hooks) => {
                 if txns.iter().any(|txn| txn.built_scene.is_some()) {
                     let info = PipelineInfo {
                         epochs: txns.iter()
@@ -646,7 +646,7 @@ impl SceneBuilderThread {
         let have_resources_updates : Vec<DocumentId> = if pipeline_info.is_none() {
             txns.iter()
                 .filter(|txn| !txn.resource_updates.is_empty() || txn.invalidate_rendered_frame)
-                .map(|txn| txn.document_id.clone())
+                .map(|txn| txn.document_id)
                 .collect()
         } else {
             Vec::new()
@@ -663,14 +663,11 @@ impl SceneBuilderThread {
             self.hooks.as_ref().unwrap().post_scene_swap(&document_ids,
                                                          pipeline_info, scene_swap_time);
             // Once the hook is done, allow the RB thread to resume
-            match swap_result {
-                Ok(SceneSwapResult::Complete(resume_tx)) => {
-                    resume_tx.send(()).ok();
-                },
-                _ => (),
-            };
+            if let Ok(SceneSwapResult::Complete(resume_tx)) = swap_result {
+                resume_tx.send(()).ok();
+            }
         } else if !have_resources_updates.is_empty() {
-            if let &Some(ref hooks) = &self.hooks {
+            if let Some(ref hooks) = self.hooks {
                 hooks.post_resource_update(&have_resources_updates);
             }
         } else if let Some(ref hooks) = self.hooks {
