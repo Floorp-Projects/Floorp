@@ -116,7 +116,7 @@ static nsWaylandDisplay* WaylandDisplayGetLocked(GdkDisplay* aGdkDisplay,
 nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay) {
   if (!aGdkDisplay) {
     aGdkDisplay = gdk_display_get_default();
-    if (!aGdkDisplay) {
+    if (!aGdkDisplay || GDK_IS_X11_DISPLAY(aGdkDisplay)) {
       return nullptr;
     }
   }
