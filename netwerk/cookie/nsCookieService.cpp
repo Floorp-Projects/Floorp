@@ -1962,31 +1962,9 @@ nsresult nsCookieService::GetCookieStringCommon(nsIURI* aHostURI,
 
   aCookie.Truncate();
 
-  // Determine whether the request is foreign. Failure is acceptable.
-  bool isForeign = true;
-
-  if (aChannel) {
-    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
-  }
-
-  bool isTrackingResource = false;
-  bool isSocialTrackingResource = false;
-  bool firstPartyStorageAccessGranted = false;
   uint32_t rejectedReason = 0;
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-      do_QueryInterface(aChannel);
-  if (classifiedChannel) {
-    isTrackingResource = classifiedChannel->IsTrackingResource();
-    isSocialTrackingResource = classifiedChannel->IsSocialTrackingResource();
-
-    // Check first-party storage access even for non-tracking resources, since
-    // we will need the result when computing the access rights for the reject
-    // foreign cookie behavior mode.
-    if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-            aChannel, aHostURI, &rejectedReason)) {
-      firstPartyStorageAccessGranted = true;
-    }
-  }
+  ThirdPartyAnalysisResult result = mThirdPartyUtil->AnalyzeChannel(
+      aChannel, false, aHostURI, nullptr, &rejectedReason);
 
   OriginAttributes attrs;
   if (aChannel) {
@@ -1997,9 +1975,12 @@ nsresult nsCookieService::GetCookieStringCommon(nsIURI* aHostURI,
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
   bool isSameSiteForeign = NS_IsSameSiteForeign(aChannel, aHostURI);
   GetCookieStringInternal(
-      aHostURI, aChannel, isForeign, isTrackingResource,
-      isSocialTrackingResource, firstPartyStorageAccessGranted, rejectedReason,
-      isSafeTopLevelNav, isSameSiteForeign, aHttpBound, attrs, aCookie);
+      aHostURI, aChannel, result.contains(ThirdPartyAnalysis::IsForeign),
+      result.contains(ThirdPartyAnalysis::IsTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsSocialTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
+      rejectedReason, isSafeTopLevelNav, isSameSiteForeign, aHttpBound, attrs,
+      aCookie);
   return NS_OK;
 }
 
@@ -2087,31 +2068,9 @@ nsresult nsCookieService::SetCookieStringCommon(nsIURI* aHostURI,
                                                 bool aFromHttp) {
   NS_ENSURE_ARG(aHostURI);
 
-  // Determine whether the request is foreign. Failure is acceptable.
-  bool isForeign = true;
-
-  if (aChannel) {
-    mThirdPartyUtil->IsThirdPartyChannel(aChannel, aHostURI, &isForeign);
-  }
-
-  bool isTrackingResource = false;
-  bool isSocialTrackingResource = false;
-  bool firstPartyStorageAccessGranted = false;
   uint32_t rejectedReason = 0;
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-      do_QueryInterface(aChannel);
-  if (classifiedChannel) {
-    isTrackingResource = classifiedChannel->IsTrackingResource();
-    isSocialTrackingResource = classifiedChannel->IsSocialTrackingResource();
-
-    // Check first-party storage access even for non-tracking resources, since
-    // we will need the result when computing the access rights for the reject
-    // foreign cookie behavior mode.
-    if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-            aChannel, aHostURI, &rejectedReason)) {
-      firstPartyStorageAccessGranted = true;
-    }
-  }
+  ThirdPartyAnalysisResult result = mThirdPartyUtil->AnalyzeChannel(
+      aChannel, false, aHostURI, nullptr, &rejectedReason);
 
   OriginAttributes attrs;
   if (aChannel) {
@@ -2121,9 +2080,11 @@ nsresult nsCookieService::SetCookieStringCommon(nsIURI* aHostURI,
 
   nsCString cookieString(aCookieHeader);
   SetCookieStringInternal(
-      aHostURI, isForeign, isTrackingResource, isSocialTrackingResource,
-      firstPartyStorageAccessGranted, rejectedReason, cookieString, aServerTime,
-      aFromHttp, attrs, aChannel);
+      aHostURI, result.contains(ThirdPartyAnalysis::IsForeign),
+      result.contains(ThirdPartyAnalysis::IsTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsSocialTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
+      rejectedReason, cookieString, aServerTime, aFromHttp, attrs, aChannel);
   return NS_OK;
 }
 

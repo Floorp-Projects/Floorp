@@ -82,7 +82,7 @@ class CookieServiceChild : public PCookieServiceChild,
 
   void PrefChanged(nsIPrefBranch* aPrefBranch);
 
-  bool RequireThirdPartyCheck(nsILoadInfo* aLoadInfo);
+  static bool RequireThirdPartyCheck(nsILoadInfo* aLoadInfo);
 
   mozilla::ipc::IPCResult RecvTrackCookiesLoad(
       nsTArray<CookieStruct>&& aCookiesList, const OriginAttributes& aAttrs);

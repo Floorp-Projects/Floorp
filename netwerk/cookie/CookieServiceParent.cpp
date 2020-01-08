@@ -113,32 +113,19 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
   // Send matching cookies to Child.
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil;
   thirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
-  bool isForeign = true;
-  thirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
 
-  bool isTrackingResource = false;
-  bool isSocialTrackingResource = false;
-  bool storageAccessGranted = false;
   uint32_t rejectedReason = 0;
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-      do_QueryInterface(aChannel);
-  if (classifiedChannel) {
-    isTrackingResource = classifiedChannel->IsTrackingResource();
-    isSocialTrackingResource = classifiedChannel->IsSocialTrackingResource();
-    // Check first-party storage access even for non-tracking resources, since
-    // we will need the result when computing the access rights for the reject
-    // foreign cookie behavior mode.
-    if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-            aChannel, uri, &rejectedReason)) {
-      storageAccessGranted = true;
-    }
-  }
+  ThirdPartyAnalysisResult result = thirdPartyUtil->AnalyzeChannel(
+      aChannel, false, nullptr, nullptr, &rejectedReason);
 
   nsTArray<nsCookie*> foundCookieList;
   mCookieService->GetCookiesForURI(
-      uri, aChannel, isForeign, isTrackingResource, isSocialTrackingResource,
-      storageAccessGranted, rejectedReason, isSafeTopLevelNav,
-      aIsSameSiteForeign, false, attrs, foundCookieList);
+      uri, aChannel, result.contains(ThirdPartyAnalysis::IsForeign),
+      result.contains(ThirdPartyAnalysis::IsTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsSocialTrackingResource),
+      result.contains(ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted),
+      rejectedReason, isSafeTopLevelNav, aIsSameSiteForeign, false, attrs,
+      foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
   SerialializeCookieList(foundCookieList, matchingCookiesList, uri);
   Unused << SendTrackCookiesLoad(matchingCookiesList, attrs);
