@@ -19,7 +19,8 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
                                     public PlatformCompositorWidgetDelegate {
  public:
   CompositorWidgetChild(RefPtr<CompositorVsyncDispatcher> aVsyncDispatcher,
-                        RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver);
+                        RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver,
+                        const CompositorWidgetInitData& aInitData);
   ~CompositorWidgetChild() override;
 
   void EnterPresentLock() override;
@@ -27,8 +28,6 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
   void OnDestroyWindow() override;
   void UpdateTransparency(nsTransparencyMode aMode) override;
   void ClearTransparentWindow() override;
-  HDC GetTransparentDC() const override;
-  void SetParentWnd(const HWND aParentWnd) override;
 
   mozilla::ipc::IPCResult RecvObserveVsync() override;
   mozilla::ipc::IPCResult RecvUnobserveVsync() override;
