@@ -11,10 +11,13 @@
 #include "GLReadTexImageHelper.h"
 #include "GLScreenBuffer.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "nsICanvasRenderingContextInternal.h"
 #include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/CanvasClient.h"
+#include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
+#include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
@@ -93,6 +96,18 @@ void AsyncCanvasRenderer::SetCanvasClient(CanvasClient* aClient) {
   mCanvasClient = aClient;
   if (aClient) {
     mCanvasClientAsyncHandle = aClient->GetAsyncHandle();
+    if (mContext) {
+      MOZ_ASSERT(mCanvasClient->GetForwarder() &&
+                 mCanvasClient->GetForwarder()->AsLayerForwarder() &&
+                 mCanvasClient->GetForwarder()
+                     ->AsLayerForwarder()
+                     ->GetShadowManager());
+      LayerTransactionChild* ltc =
+          mCanvasClient->GetForwarder()->AsLayerForwarder()->GetShadowManager();
+      DebugOnly<bool> success =
+          mContext->UpdateCompositableHandle(ltc, mCanvasClientAsyncHandle);
+      MOZ_ASSERT(success);
+    }
   } else {
     mCanvasClientAsyncHandle = CompositableHandle();
   }

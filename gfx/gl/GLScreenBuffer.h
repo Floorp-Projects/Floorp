@@ -90,6 +90,11 @@ class GLScreenBuffer {
       layers::KnowsCompositor* compositorConnection,
       const layers::TextureFlags& flags);
 
+  static UniquePtr<SurfaceFactory> CreateFactory(
+      GLContext* gl, const SurfaceCaps& caps,
+      layers::LayersIPCChannel* ipcChannel, layers::LayersBackend backend,
+      bool useANGLE, const layers::TextureFlags& flags);
+
  protected:
   GLContext* const mGL;  // Owns us.
  public:

@@ -12,8 +12,14 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/PVRLayerParent.h"
 #include "gfxVR.h"
+#include "mozilla/layers/TextureClientSharedSurface.h"
 
 namespace mozilla {
+
+namespace dom {
+class PWebGLParent;
+}
+
 namespace gfx {
 
 class VRLayerParent : public PVRLayerParent {
@@ -22,9 +28,14 @@ class VRLayerParent : public PVRLayerParent {
  public:
   VRLayerParent(uint32_t aVRDisplayID, const uint32_t aGroup);
   virtual mozilla::ipc::IPCResult RecvSubmitFrame(
-      const layers::SurfaceDescriptor& aTexture, const uint64_t& aFrameId,
-      const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect) override;
+      mozilla::dom::PWebGLParent* aPWebGLParent, const uint64_t& aFrameId,
+      const uint64_t& aLastFrameId, const gfx::Rect& aLeftEyeRect,
+      const gfx::Rect& aRightEyeRect) override;
+
+  mozilla::ipc::IPCResult RecvClearSurfaces() override;
+
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
+
   uint32_t GetDisplayID() const { return mVRDisplayID; }
   uint32_t GetGroup() const { return mGroup; }
 
@@ -33,6 +44,9 @@ class VRLayerParent : public PVRLayerParent {
 
   virtual ~VRLayerParent();
   void Destroy();
+
+  RefPtr<layers::SharedSurfaceTextureClient> mThisFrameTexture;
+  RefPtr<layers::SharedSurfaceTextureClient> mLastFrameTexture;
 
   bool mIPCOpen;
 

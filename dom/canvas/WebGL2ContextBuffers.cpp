@@ -5,6 +5,7 @@
 
 #include "WebGL2Context.h"
 
+#include "ClientWebGLContext.h"
 #include "GLContext.h"
 #include "WebGLBuffer.h"
 #include "WebGLTransformFeedback.h"
@@ -84,35 +85,22 @@ void WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
   writeBuffer->ResetLastUpdateFenceId();
 }
 
-void WebGL2Context::GetBufferSubData(GLenum target, WebGLintptr srcByteOffset,
-                                     const dom::ArrayBufferView& dstData,
-                                     GLuint dstElemOffset,
-                                     GLuint dstElemCountOverride) {
+Maybe<UniquePtr<RawBuffer<>>> WebGL2Context::GetBufferSubData(
+    GLenum target, WebGLintptr srcByteOffset, size_t byteLen) {
   const FuncScope funcScope(*this, "getBufferSubData");
-  if (IsContextLost()) return;
-
-  if (!ValidateNonNegative("srcByteOffset", srcByteOffset)) return;
-
-  uint8_t* bytes;
-  size_t byteLen;
-  if (!ValidateArrayBufferView(dstData, dstElemOffset, dstElemCountOverride,
-                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
-    return;
-  }
-
-  ////
+  if (IsContextLost()) return Nothing();
 
   const auto& buffer = ValidateBufferSelection(target);
-  if (!buffer) return;
+  if (!buffer) return Nothing();
 
-  if (!buffer->ValidateRange(srcByteOffset, byteLen)) return;
+  if (!buffer->ValidateRange(srcByteOffset, byteLen)) return Nothing();
 
   ////
 
   if (!CheckedInt<GLintptr>(srcByteOffset).isValid() ||
       !CheckedInt<GLsizeiptr>(byteLen).isValid()) {
     ErrorOutOfMemory("offset or size too large for platform.");
-    return;
+    return Nothing();
   }
   const GLsizeiptr glByteLen(byteLen);
 
@@ -138,6 +126,12 @@ void WebGL2Context::GetBufferSubData(GLenum target, WebGLintptr srcByteOffset,
 
   ////
 
+  uint8_t* bytes = new uint8_t[byteLen];
+  if (!bytes) {
+    ErrorOutOfMemory("Could not allocate temp array");
+    return Nothing();
+  }
+
   const ScopedLazyBind readBind(gl, target, buffer);
 
   if (byteLen) {
@@ -162,6 +156,9 @@ void WebGL2Context::GetBufferSubData(GLenum target, WebGLintptr srcByteOffset,
       gl->fBindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, tfo);
     }
   }
+
+  UniquePtr<RawBuffer<>> ret = MakeUnique<RawBuffer<>>(byteLen, bytes, true);
+  return Some(std::move(ret));
 }
 
 }  // namespace mozilla

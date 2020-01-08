@@ -5,7 +5,7 @@
 
 #include "WebGLContextUtils.h"
 #include "WebGLContext.h"
-
+#include "HostWebGLContext.h"
 #include "GLContext.h"
 #include "jsapi.h"
 #include "js/Warnings.h"  // JS::WarnASCII
@@ -40,16 +40,6 @@ TexTarget TexImageTargetToTexTarget(TexImageTarget texImageTarget) {
   }
 }
 
-JS::Value StringValue(JSContext* cx, const char* chars, ErrorResult& rv) {
-  JSString* str = JS_NewStringCopyZ(cx, chars);
-  if (!str) {
-    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return JS::NullValue();
-  }
-
-  return JS::StringValue(str);
-}
-
 void WebGLContext::GenerateWarning(const char* fmt, ...) const {
   va_list ap;
   va_start(ap, fmt);
@@ -68,25 +58,18 @@ void WebGLContext::GenerateWarning(const char* fmt, va_list ap) const {
   VsprintfLiteral(buf, fmt, ap);
 
   // JS::WarnASCII will print to stderr for us.
-
-  if (!mCanvasElement) {
-    return;
-  }
-
-  dom::AutoJSAPI api;
-  if (!api.Init(mCanvasElement->OwnerDoc()->GetScopeObject())) {
-    return;
-  }
-
-  JSContext* cx = api.cx();
   const auto funcName = FuncName();
-  JS::WarnASCII(cx, "WebGL warning: %s: %s", funcName, buf);
+  nsCString msg;
+  msg.AppendPrintf("WebGL warning: %s: %s", funcName, buf);
   if (!ShouldGenerateWarnings()) {
-    JS::WarnASCII(cx,
-                  "WebGL: No further warnings will be reported for this WebGL "
-                  "context. (already reported %d warnings)",
-                  mAlreadyGeneratedWarnings);
+    msg.AppendPrintf(
+        "WebGL: No further warnings will be reported for"
+        " this WebGL context."
+        " (already reported %d warnings)",
+        mAlreadyGeneratedWarnings);
   }
+
+  mHost->PostWarning(msg);
 }
 
 bool WebGLContext::ShouldGenerateWarnings() const {
@@ -97,14 +80,6 @@ bool WebGLContext::ShouldGenerateWarnings() const {
 
 void WebGLContext::GeneratePerfWarning(const char* fmt, ...) const {
   if (!ShouldGeneratePerfWarnings()) return;
-
-  if (!mCanvasElement) return;
-
-  dom::AutoJSAPI api;
-  if (!api.Init(mCanvasElement->OwnerDoc()->GetScopeObject())) return;
-  JSContext* cx = api.cx();
-
-  ////
 
   va_list ap;
   va_start(ap, fmt);
@@ -117,15 +92,18 @@ void WebGLContext::GeneratePerfWarning(const char* fmt, ...) const {
   ////
 
   const auto funcName = FuncName();
-  JS::WarnASCII(cx, "WebGL perf warning: %s: %s", funcName, buf);
+  nsCString msg;
+  msg.AppendPrintf("WebGL perf warning: %s: %s", funcName, buf);
   mNumPerfWarnings++;
 
   if (!ShouldGeneratePerfWarnings()) {
-    JS::WarnASCII(cx,
-                  "WebGL: After reporting %u, no further perf warnings will be "
-                  "reported for this WebGL context.",
-                  uint32_t(mNumPerfWarnings));
+    msg.AppendPrintf(
+        "WebGL: After reporting %u, no further perf warnings will"
+        " be reported for this WebGL context.",
+        uint32_t(mNumPerfWarnings));
   }
+
+  mHost->PostWarning(msg);
 }
 
 void WebGLContext::SynthesizeGLError(GLenum err) const {
@@ -733,27 +711,27 @@ void WebGLContext::AssertCachedGlobalState() const {
              int4[2] == mViewportWidth && int4[3] == mViewportHeight);
 
   AssertUintParamCorrect(gl, LOCAL_GL_PACK_ALIGNMENT,
-                         mPixelStore_PackAlignment);
+                         mPixelStore.mPackAlignment);
   AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_ALIGNMENT,
-                         mPixelStore_UnpackAlignment);
+                         mPixelStore.mUnpackAlignment);
 
   if (IsWebGL2()) {
     AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_IMAGE_HEIGHT,
-                           mPixelStore_UnpackImageHeight);
+                           mPixelStore.mUnpackImageHeight);
     AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_SKIP_IMAGES,
-                           mPixelStore_UnpackSkipImages);
+                           mPixelStore.mUnpackSkipImages);
     AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_ROW_LENGTH,
-                           mPixelStore_UnpackRowLength);
+                           mPixelStore.mUnpackRowLength);
     AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_SKIP_ROWS,
-                           mPixelStore_UnpackSkipRows);
+                           mPixelStore.mUnpackSkipRows);
     AssertUintParamCorrect(gl, LOCAL_GL_UNPACK_SKIP_PIXELS,
-                           mPixelStore_UnpackSkipPixels);
+                           mPixelStore.mUnpackSkipPixels);
     AssertUintParamCorrect(gl, LOCAL_GL_PACK_ROW_LENGTH,
-                           mPixelStore_PackRowLength);
+                           mPixelStore.mPackRowLength);
     AssertUintParamCorrect(gl, LOCAL_GL_PACK_SKIP_ROWS,
-                           mPixelStore_PackSkipRows);
+                           mPixelStore.mPackSkipRows);
     AssertUintParamCorrect(gl, LOCAL_GL_PACK_SKIP_PIXELS,
-                           mPixelStore_PackSkipPixels);
+                           mPixelStore.mPackSkipPixels);
   }
 
   MOZ_ASSERT(!gl::GLContext::IsBadCallError(errorScope.GetError()));
@@ -798,15 +776,5 @@ const char* InfoFrom(WebGLTexImageFunc func, WebGLTexDimensions dims) {
 }
 
 ////
-
-JS::Value StringValue(JSContext* cx, const nsAString& str, ErrorResult& er) {
-  JSString* jsStr = JS_NewUCStringCopyN(cx, str.BeginReading(), str.Length());
-  if (!jsStr) {
-    er.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return JS::NullValue();
-  }
-
-  return JS::StringValue(jsStr);
-}
 
 }  // namespace mozilla

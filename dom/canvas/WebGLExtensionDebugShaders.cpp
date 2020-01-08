@@ -19,20 +19,17 @@ WebGLExtensionDebugShaders::~WebGLExtensionDebugShaders() {}
 // If no source has been defined, compileShader() has not been called, or the
 // translation has failed for shader, an empty string is returned; otherwise,
 // return the translated source.
-void WebGLExtensionDebugShaders::GetTranslatedShaderSource(
-    const WebGLShader& shader, nsAString& retval) const {
-  retval.SetIsVoid(true);
-  if (mIsLost || !mContext) return;
+nsString WebGLExtensionDebugShaders::GetTranslatedShaderSource(
+    const WebGLShader& shader) const {
+  if (mIsLost) return {};
 
   const WebGLContext::FuncScope funcScope(*mContext,
                                           "getShaderTranslatedSource");
   MOZ_ASSERT(!mContext->IsContextLost());
 
-  if (!mContext->ValidateObject("shader", shader)) return;
+  if (!mContext->ValidateObject("shader", shader)) return EmptyString();
 
-  shader.GetShaderTranslatedSource(&retval);
+  return shader.GetShaderTranslatedSource();
 }
-
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDebugShaders, WEBGL_debug_shaders)
 
 }  // namespace mozilla

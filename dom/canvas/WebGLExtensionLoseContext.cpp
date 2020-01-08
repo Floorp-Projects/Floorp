@@ -25,6 +25,4 @@ void WebGLExtensionLoseContext::RestoreContext() {
   mContext->RestoreContext();
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionLoseContext, WEBGL_lose_context)
-
 }  // namespace mozilla

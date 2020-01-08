@@ -58,6 +58,7 @@ class CopyableCanvasRenderer : public CanvasRenderer {
   RefPtr<gl::GLContext> mGLContext;
   RefPtr<PersistentBufferProvider> mBufferProvider;
   RefPtr<AsyncCanvasRenderer> mAsyncRenderer;
+  RefPtr<OOPCanvasRenderer> mOOPRenderer;
 
   bool mIsAlphaPremultiplied;
   gl::OriginPos mOriginPos;

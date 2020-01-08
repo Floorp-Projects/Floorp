@@ -16,15 +16,14 @@
 
 namespace mozilla {
 
-JS::Value WebGL2Context::GetParameter(JSContext* cx, GLenum pname,
-                                      ErrorResult& rv) {
+MaybeWebGLVariant WebGL2Context::GetParameter(GLenum pname) {
   const FuncScope funcScope(*this, "getParameter");
   // The following cases are handled in WebGLContext::GetParameter():
   //     case LOCAL_GL_MAX_COLOR_ATTACHMENTS:
   //     case LOCAL_GL_MAX_DRAW_BUFFERS:
   //     case LOCAL_GL_DRAW_BUFFERi:
 
-  if (IsContextLost()) return JS::NullValue();
+  if (IsContextLost()) return Nothing();
 
   switch (pname) {
     /* GLboolean */
@@ -33,23 +32,24 @@ JS::Value WebGL2Context::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_SAMPLE_COVERAGE: {
       realGLboolean b = 0;
       gl->fGetBooleanv(pname, &b);
-      return JS::BooleanValue(bool(b));
+      return AsSomeVariant(bool(b));
     }
 
     case LOCAL_GL_TRANSFORM_FEEDBACK_ACTIVE:
-      return JS::BooleanValue(mBoundTransformFeedback->mIsActive);
+      return AsSomeVariant(mBoundTransformFeedback->mIsActive);
     case LOCAL_GL_TRANSFORM_FEEDBACK_PAUSED:
-      return JS::BooleanValue(mBoundTransformFeedback->mIsPaused);
+      return AsSomeVariant(mBoundTransformFeedback->mIsPaused);
 
     /* GLenum */
     case LOCAL_GL_READ_BUFFER: {
-      if (!mBoundReadFramebuffer) return JS::Int32Value(mDefaultFB_ReadBuffer);
+      if (!mBoundReadFramebuffer)
+        return AsSomeVariant(std::move(mDefaultFB_ReadBuffer));
 
       if (!mBoundReadFramebuffer->ColorReadBuffer())
-        return JS::Int32Value(LOCAL_GL_NONE);
+        return AsSomeVariant(LOCAL_GL_NONE);
 
-      return JS::Int32Value(
-          mBoundReadFramebuffer->ColorReadBuffer()->mAttachmentPoint);
+      return AsSomeVariant(std::move(
+          mBoundReadFramebuffer->ColorReadBuffer()->mAttachmentPoint));
     }
 
     case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
@@ -81,41 +81,41 @@ JS::Value WebGL2Context::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_UNPACK_ROW_LENGTH: {
       GLint val;
       gl->fGetIntegerv(pname, &val);
-      return JS::Int32Value(val);
+      return AsSomeVariant(val);
     }
 
     case LOCAL_GL_UNPACK_SKIP_IMAGES:
-      return JS::Int32Value(mPixelStore_UnpackSkipImages);
+      return AsSomeVariant(mPixelStore.mUnpackSkipImages);
 
     case LOCAL_GL_UNPACK_SKIP_PIXELS:
-      return JS::Int32Value(mPixelStore_UnpackSkipPixels);
+      return AsSomeVariant(mPixelStore.mUnpackSkipPixels);
 
     case LOCAL_GL_UNPACK_SKIP_ROWS:
-      return JS::Int32Value(mPixelStore_UnpackSkipRows);
+      return AsSomeVariant(mPixelStore.mUnpackSkipRows);
 
     case LOCAL_GL_MAX_3D_TEXTURE_SIZE:
-      return JS::Int32Value(mGLMax3DTextureSize);
+      return AsSomeVariant(mGLMax3DTextureSize);
 
     case LOCAL_GL_MAX_ARRAY_TEXTURE_LAYERS:
-      return JS::Int32Value(mGLMaxArrayTextureLayers);
+      return AsSomeVariant(mGLMaxArrayTextureLayers);
 
     case LOCAL_GL_MAX_VARYING_COMPONENTS: {
       // On OS X Core Profile this is buggy.  The spec says that the
       // value is 4 * GL_MAX_VARYING_VECTORS
       GLint val;
       gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, &val);
-      return JS::Int32Value(4 * val);
+      return AsSomeVariant(4 * val);
     }
 
     /* GLint64 */
     case LOCAL_GL_MAX_CLIENT_WAIT_TIMEOUT_WEBGL:
-      return JS::NumberValue(kMaxClientWaitSyncTimeoutNS);
+      return AsSomeVariant(kMaxClientWaitSyncTimeoutNS);
 
     case LOCAL_GL_MAX_ELEMENT_INDEX:
       // GL_MAX_ELEMENT_INDEX becomes available in GL 4.3 or via ES3
       // compatibility
       if (!gl->IsSupported(gl::GLFeature::ES3_compatibility))
-        return JS::NumberValue(UINT32_MAX);
+        return AsSomeVariant(UINT32_MAX);
 
       /*** fall through to fGetInteger64v ***/
       [[fallthrough]];
@@ -125,72 +125,71 @@ JS::Value WebGL2Context::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_MAX_UNIFORM_BLOCK_SIZE: {
       GLint64 val;
       gl->fGetInteger64v(pname, &val);
-      return JS::DoubleValue(static_cast<double>(val));
+      return AsSomeVariant(static_cast<double>(val));
     }
 
     /* GLuint64 */
     case LOCAL_GL_MAX_SERVER_WAIT_TIMEOUT: {
       GLuint64 val;
       gl->fGetInteger64v(pname, (GLint64*)&val);
-      return JS::DoubleValue(static_cast<double>(val));
+      return AsSomeVariant(static_cast<double>(val));
     }
 
     case LOCAL_GL_COPY_READ_BUFFER_BINDING:
-      return WebGLObjectAsJSValue(cx, mBoundCopyReadBuffer.get(), rv);
+      return AsSomeVariant(std::move(mBoundCopyReadBuffer.get()));
 
     case LOCAL_GL_COPY_WRITE_BUFFER_BINDING:
-      return WebGLObjectAsJSValue(cx, mBoundCopyWriteBuffer.get(), rv);
+      return AsSomeVariant(std::move(mBoundCopyWriteBuffer.get()));
 
     case LOCAL_GL_PIXEL_PACK_BUFFER_BINDING:
-      return WebGLObjectAsJSValue(cx, mBoundPixelPackBuffer.get(), rv);
+      return AsSomeVariant(std::move(mBoundPixelPackBuffer.get()));
 
     case LOCAL_GL_PIXEL_UNPACK_BUFFER_BINDING:
-      return WebGLObjectAsJSValue(cx, mBoundPixelUnpackBuffer.get(), rv);
+      return AsSomeVariant(std::move(mBoundPixelUnpackBuffer.get()));
 
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-      return WebGLObjectAsJSValue(cx, mBoundTransformFeedbackBuffer.get(), rv);
+      return AsSomeVariant(std::move(mBoundTransformFeedbackBuffer.get()));
 
     case LOCAL_GL_UNIFORM_BUFFER_BINDING:
-      return WebGLObjectAsJSValue(cx, mBoundUniformBuffer.get(), rv);
+      return AsSomeVariant(std::move(mBoundUniformBuffer.get()));
 
     // DRAW_FRAMEBUFFER_BINDING is the same as FRAMEBUFFER_BINDING.
     case LOCAL_GL_READ_FRAMEBUFFER_BINDING:
-      return WebGLObjectAsJSValue(cx, mBoundReadFramebuffer.get(), rv);
+      return AsSomeVariant(std::move(mBoundReadFramebuffer.get()));
 
     case LOCAL_GL_SAMPLER_BINDING:
-      return WebGLObjectAsJSValue(cx, mBoundSamplers[mActiveTexture].get(), rv);
+      return AsSomeVariant(std::move(mBoundSamplers[mActiveTexture].get()));
 
     case LOCAL_GL_TEXTURE_BINDING_2D_ARRAY:
-      return WebGLObjectAsJSValue(
-          cx, mBound2DArrayTextures[mActiveTexture].get(), rv);
+      return AsSomeVariant(
+          std::move(mBound2DArrayTextures[mActiveTexture].get()));
 
     case LOCAL_GL_TEXTURE_BINDING_3D:
-      return WebGLObjectAsJSValue(cx, mBound3DTextures[mActiveTexture].get(),
-                                  rv);
+      return AsSomeVariant(std::move(mBound3DTextures[mActiveTexture].get()));
 
     case LOCAL_GL_TRANSFORM_FEEDBACK_BINDING: {
-      const WebGLTransformFeedback* tf = mBoundTransformFeedback;
+      WebGLTransformFeedback* tf = mBoundTransformFeedback;
       if (tf == mDefaultTransformFeedback) {
         tf = nullptr;
       }
-      return WebGLObjectAsJSValue(cx, tf, rv);
+      return AsSomeVariant(std::move(tf));
     }
 
     case LOCAL_GL_VERTEX_ARRAY_BINDING: {
       WebGLVertexArray* vao = (mBoundVertexArray != mDefaultVertexArray)
                                   ? mBoundVertexArray.get()
                                   : nullptr;
-      return WebGLObjectAsJSValue(cx, vao, rv);
+      return AsSomeVariant(std::move(vao));
     }
 
     case LOCAL_GL_VERSION:
-      return StringValue(cx, "WebGL 2.0", rv);
+      return AsSomeVariant(nsCString("WebGL 2.0"));
 
     case LOCAL_GL_SHADING_LANGUAGE_VERSION:
-      return StringValue(cx, "WebGL GLSL ES 3.00", rv);
+      return AsSomeVariant(nsCString("WebGL GLSL ES 3.00"));
 
     default:
-      return WebGLContext::GetParameter(cx, pname, rv);
+      return WebGLContext::GetParameter(pname);
   }
 }
 

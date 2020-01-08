@@ -54,13 +54,11 @@ void WebGLContext::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1,
 // -------------------------------------------------------------------------
 // Uniform Buffer Objects and Transform Feedback Buffers
 
-void WebGL2Context::GetIndexedParameter(JSContext* cx, GLenum target,
-                                        GLuint index,
-                                        JS::MutableHandleValue retval,
-                                        ErrorResult& out_error) {
+MaybeWebGLVariant WebGL2Context::GetIndexedParameter(GLenum target,
+                                                     GLuint index) {
   const FuncScope funcScope(*this, "getIndexedParameter");
-  retval.set(JS::NullValue());
-  if (IsContextLost()) return;
+  MaybeWebGLVariant ret;
+  if (IsContextLost()) return ret;
 
   const std::vector<IndexedBufferBinding>* bindings;
   switch (target) {
@@ -78,61 +76,55 @@ void WebGL2Context::GetIndexedParameter(JSContext* cx, GLenum target,
 
     default:
       ErrorInvalidEnumInfo("target", target);
-      return;
+      return ret;
   }
 
   if (index >= bindings->size()) {
     ErrorInvalidValue("`index` must be < %s.",
                       "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
-    return;
+    return ret;
   }
   const auto& binding = (*bindings)[index];
-
-  JS::Value ret = JS::NullValue();
 
   switch (target) {
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
     case LOCAL_GL_UNIFORM_BUFFER_BINDING:
       if (binding.mBufferBinding) {
-        ret = WebGLObjectAsJSValue(cx, binding.mBufferBinding.get(), out_error);
+        ret = AsSomeVariant(binding.mBufferBinding.get());
       }
       break;
 
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_START:
     case LOCAL_GL_UNIFORM_BUFFER_START:
-      ret = JS::NumberValue(binding.mRangeStart);
+      ret = AsSomeVariant(binding.mRangeStart);
       break;
 
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
     case LOCAL_GL_UNIFORM_BUFFER_SIZE:
-      ret = JS::NumberValue(binding.mRangeSize);
+      ret = AsSomeVariant(binding.mRangeSize);
       break;
   }
 
-  retval.set(ret);
+  return ret;
 }
 
-void WebGL2Context::GetUniformIndices(
-    const WebGLProgram& program, const dom::Sequence<nsString>& uniformNames,
-    dom::Nullable<nsTArray<GLuint> >& retval) {
+MaybeWebGLVariant WebGL2Context::GetUniformIndices(
+    const WebGLProgram& program, const nsTArray<nsString>& uniformNames) {
   const FuncScope funcScope(*this, "getUniformIndices");
-  retval.SetNull();
-  if (IsContextLost()) return;
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObject("program", program)) return;
+  if (!ValidateObject("program", program)) return Nothing();
 
-  if (!uniformNames.Length()) return;
+  if (!uniformNames.Length()) return Nothing();
 
-  program.GetUniformIndices(uniformNames, retval);
+  return program.GetUniformIndices(uniformNames);
 }
 
-void WebGL2Context::GetActiveUniforms(
-    JSContext* cx, const WebGLProgram& program,
-    const dom::Sequence<GLuint>& uniformIndices, GLenum pname,
-    JS::MutableHandleValue retval) {
+MaybeWebGLVariant WebGL2Context::GetActiveUniforms(
+    const WebGLProgram& program, const nsTArray<GLuint>& uniformIndices,
+    GLenum pname) {
   const FuncScope funcScope(*this, "getActiveUniforms");
-  retval.setNull();
-  if (IsContextLost()) return;
+  if (IsContextLost()) return Nothing();
 
   switch (pname) {
     case LOCAL_GL_UNIFORM_TYPE:
@@ -146,61 +138,70 @@ void WebGL2Context::GetActiveUniforms(
 
     default:
       ErrorInvalidEnumInfo("pname", pname);
-      return;
+      return Nothing();
   }
 
-  if (!ValidateObject("program", program)) return;
+  if (!ValidateObject("program", program)) return Nothing();
 
   if (!program.IsLinked()) {
     ErrorInvalidOperation("`program` must be linked.");
-    return;
+    return Nothing();
   }
 
   const auto& numActiveUniforms = program.LinkInfo()->uniforms.size();
   for (const auto& curIndex : uniformIndices) {
     if (curIndex >= numActiveUniforms) {
       ErrorInvalidValue("Too-large active uniform index queried.");
-      return;
+      return Nothing();
     }
   }
 
   const auto& count = uniformIndices.Length();
 
-  JS::Rooted<JSObject*> array(cx, JS::NewArrayObject(cx, count));
-  UniquePtr<GLint[]> samples(new GLint[count]);
-  if (!array || !samples) {
-    ErrorOutOfMemory("Failed to allocate buffers.");
-    return;
-  }
-  retval.setObject(*array);
-
-  gl->fGetActiveUniformsiv(program.mGLName, count, uniformIndices.Elements(),
-                           pname, samples.get());
-
+  MaybeWebGLVariant ret;
   switch (pname) {
     case LOCAL_GL_UNIFORM_TYPE:
     case LOCAL_GL_UNIFORM_SIZE:
     case LOCAL_GL_UNIFORM_BLOCK_INDEX:
     case LOCAL_GL_UNIFORM_OFFSET:
     case LOCAL_GL_UNIFORM_ARRAY_STRIDE:
-    case LOCAL_GL_UNIFORM_MATRIX_STRIDE:
-      for (size_t i = 0; i < count; ++i) {
-        JS::RootedValue value(cx);
-        value = JS::Int32Value(samples[i]);
-        if (!JS_DefineElement(cx, array, i, value, JSPROP_ENUMERATE)) return;
+    case LOCAL_GL_UNIFORM_MATRIX_STRIDE: {
+      ret = AsSomeVariant(nsTArray<int32_t>());
+      nsTArray<int32_t>& variantArray = ret.ref().as<nsTArray<int32_t>>();
+      GLint* array = variantArray.AppendElements(count);
+      if (!array) {
+        ErrorOutOfMemory("Failed to allocate return array.");
+        return Nothing();
       }
-      break;
-    case LOCAL_GL_UNIFORM_IS_ROW_MAJOR:
-      for (size_t i = 0; i < count; ++i) {
-        JS::RootedValue value(cx);
-        value = JS::BooleanValue(samples[i]);
-        if (!JS_DefineElement(cx, array, i, value, JSPROP_ENUMERATE)) return;
+
+      gl->fGetActiveUniformsiv(program.mGLName, count,
+                               uniformIndices.Elements(), pname, array);
+    } break;
+    case LOCAL_GL_UNIFORM_IS_ROW_MAJOR: {
+      ret = AsSomeVariant(nsTArray<bool>());
+      nsTArray<bool>& variantArray = ret.ref().as<nsTArray<bool>>();
+      GLint* intArray = new GLint[count];
+      if (!intArray) {
+        ErrorOutOfMemory("Failed to allocate int buffer.");
+        return Nothing();
       }
-      break;
+      gl->fGetActiveUniformsiv(program.mGLName, count,
+                               uniformIndices.Elements(), pname, intArray);
+      bool* boolArray = variantArray.AppendElements(count);
+      if (!boolArray) {
+        ErrorOutOfMemory("Failed to allocate return array.");
+        return Nothing();
+      }
+      for (uint32_t i = 0; i < count; ++i) {
+        boolArray[i] = intArray[i];
+      }
+    } break;
 
     default:
       MOZ_CRASH("Invalid pname");
   }
+
+  return ret;
 }
 
 GLuint WebGL2Context::GetUniformBlockIndex(const WebGLProgram& program,
@@ -213,14 +214,12 @@ GLuint WebGL2Context::GetUniformBlockIndex(const WebGLProgram& program,
   return program.GetUniformBlockIndex(uniformBlockName);
 }
 
-void WebGL2Context::GetActiveUniformBlockParameter(
-    JSContext* cx, const WebGLProgram& program, GLuint uniformBlockIndex,
-    GLenum pname, JS::MutableHandleValue out_retval, ErrorResult& out_error) {
+MaybeWebGLVariant WebGL2Context::GetActiveUniformBlockParameter(
+    const WebGLProgram& program, GLuint uniformBlockIndex, GLenum pname) {
   const FuncScope funcScope(*this, "getActiveUniformBlockParameter");
-  out_retval.setNull();
-  if (IsContextLost()) return;
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObject("program", program)) return;
+  if (!ValidateObject("program", program)) return Nothing();
 
   switch (pname) {
     case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:
@@ -228,29 +227,24 @@ void WebGL2Context::GetActiveUniformBlockParameter(
     case LOCAL_GL_UNIFORM_BLOCK_BINDING:
     case LOCAL_GL_UNIFORM_BLOCK_DATA_SIZE:
     case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS:
-      out_retval.set(
-          program.GetActiveUniformBlockParam(uniformBlockIndex, pname));
-      return;
+      return program.GetActiveUniformBlockParam(uniformBlockIndex, pname);
 
     case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES:
-      out_retval.set(program.GetActiveUniformBlockActiveUniforms(
-          cx, uniformBlockIndex, &out_error));
-      return;
+      return program.GetActiveUniformBlockActiveUniforms(uniformBlockIndex);
   }
 
   ErrorInvalidEnumInfo("parameter", pname);
+  return Nothing();
 }
 
-void WebGL2Context::GetActiveUniformBlockName(const WebGLProgram& program,
-                                              GLuint uniformBlockIndex,
-                                              nsAString& retval) {
+nsString WebGL2Context::GetActiveUniformBlockName(const WebGLProgram& program,
+                                                  GLuint uniformBlockIndex) {
   const FuncScope funcScope(*this, "getActiveUniformBlockName");
-  retval.SetIsVoid(true);
-  if (IsContextLost()) return;
+  if (IsContextLost()) return EmptyString();
 
-  if (!ValidateObject("program", program)) return;
+  if (!ValidateObject("program", program)) return EmptyString();
 
-  program.GetActiveUniformBlockName(uniformBlockIndex, retval);
+  return program.GetActiveUniformBlockName(uniformBlockIndex);
 }
 
 void WebGL2Context::UniformBlockBinding(WebGLProgram& program,

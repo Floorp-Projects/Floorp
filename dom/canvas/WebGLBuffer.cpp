@@ -386,14 +386,4 @@ void WebGLBuffer::ResetLastUpdateFenceId() const {
   mLastUpdateFenceId = mContext->mNextFenceId;
 }
 
-JSObject* WebGLBuffer::WrapObject(JSContext* cx,
-                                  JS::Handle<JSObject*> givenProto) {
-  return dom::WebGLBuffer_Binding::Wrap(cx, this, givenProto);
-}
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLBuffer)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLBuffer, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLBuffer, Release)
-
 }  // namespace mozilla

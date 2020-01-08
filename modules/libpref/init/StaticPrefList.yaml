@@ -8038,6 +8038,11 @@
   value: 4
   mirror: always
 
+- name: webgl.out-of-process
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: webgl.prefer-16bpp
   type: bool
   value: false

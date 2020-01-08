@@ -17,7 +17,7 @@ namespace mozilla {
 WebGLUniformLocation::WebGLUniformLocation(
     WebGLContext* webgl, const webgl::LinkedProgramInfo* linkInfo,
     webgl::UniformInfo* info, GLuint loc, size_t arrayIndex)
-    : WebGLContextBoundObject(webgl),
+    : WebGLContextBoundObject<WebGLUniformLocation>(webgl),
       mLinkInfo(linkInfo),
       mInfo(info),
       mLoc(loc),
@@ -49,17 +49,17 @@ bool WebGLUniformLocation::ValidateSizeAndType(
     const webgl::AttribBaseType setterType) const {
   MOZ_ASSERT(mLinkInfo);
 
-  const auto& uniformElemSize = mInfo->mActiveInfo->mElemSize;
+  const auto& uniformElemSize = mInfo->mActiveInfo.mElemSize;
   if (setterElemSize != uniformElemSize) {
     mContext->ErrorInvalidOperation(
         "Function used differs from uniform size: %i", uniformElemSize);
     return false;
   }
 
-  const auto& uniformType = mInfo->mActiveInfo->mBaseType;
+  const auto& uniformType = mInfo->mActiveInfo.mBaseType;
   if (setterType != uniformType &&
       uniformType != webgl::AttribBaseType::Boolean) {
-    const auto& uniformStr = EnumString(mInfo->mActiveInfo->mElemType);
+    const auto& uniformStr = EnumString(mInfo->mActiveInfo.mElemType);
     mContext->ErrorInvalidOperation(
         "Function used is incompatible with uniform"
         " of type: %s",
@@ -89,7 +89,7 @@ bool WebGLUniformLocation::ValidateArrayLength(uint8_t setterElemSize,
    * exceeds the highest array element index used, as reported by
    * `GetActiveUniform`, will be ignored by GL.
    */
-  if (!mInfo->mActiveInfo->mIsArray && setterArraySize != setterElemSize) {
+  if (!mInfo->mActiveInfo.mIsArray && setterArraySize != setterElemSize) {
     mContext->ErrorInvalidOperation(
         "Expected an array of length exactly %d"
         " (since this uniform is not an array uniform),"
@@ -101,10 +101,10 @@ bool WebGLUniformLocation::ValidateArrayLength(uint8_t setterElemSize,
   return true;
 }
 
-JS::Value WebGLUniformLocation::GetUniform(JSContext* js) const {
+MaybeWebGLVariant WebGLUniformLocation::GetUniform() const {
   MOZ_ASSERT(mLinkInfo);
 
-  const uint8_t elemSize = mInfo->mActiveInfo->mElemSize;
+  const uint8_t elemSize = mInfo->mActiveInfo.mElemSize;
   static const uint8_t kMaxElemSize = 16;
   MOZ_ASSERT(elemSize <= kMaxElemSize);
 
@@ -112,7 +112,7 @@ JS::Value WebGLUniformLocation::GetUniform(JSContext* js) const {
 
   gl::GLContext* gl = mContext->GL();
 
-  switch (mInfo->mActiveInfo->mElemType) {
+  switch (mInfo->mActiveInfo.mElemType) {
     case LOCAL_GL_INT:
     case LOCAL_GL_INT_VEC2:
     case LOCAL_GL_INT_VEC3:
@@ -134,15 +134,9 @@ JS::Value WebGLUniformLocation::GetUniform(JSContext* js) const {
     case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D_ARRAY: {
       GLint buffer[kMaxElemSize] = {0};
       gl->fGetUniformiv(prog, mLoc, buffer);
-
-      if (elemSize == 1) return JS::Int32Value(buffer[0]);
-
-      JSObject* obj = dom::Int32Array::Create(js, mContext, elemSize, buffer);
-      if (!obj) {
-        mContext->ErrorOutOfMemory("getUniform: Out of memory.");
-        return JS::NullValue();
-      }
-      return JS::ObjectOrNullValue(obj);
+      nsTArray<int32_t> ret;
+      ret.AppendElements(buffer, elemSize);
+      return AsSomeVariant(ret);
     }
 
     case LOCAL_GL_BOOL:
@@ -151,19 +145,9 @@ JS::Value WebGLUniformLocation::GetUniform(JSContext* js) const {
     case LOCAL_GL_BOOL_VEC4: {
       GLint buffer[kMaxElemSize] = {0};
       gl->fGetUniformiv(prog, mLoc, buffer);
-
-      if (elemSize == 1) return JS::BooleanValue(buffer[0]);
-
-      bool boolBuffer[kMaxElemSize];
-      for (uint8_t i = 0; i < kMaxElemSize; i++) boolBuffer[i] = buffer[i];
-
-      JS::RootedValue val(js);
-      // Be careful: we don't want to convert all of |uv|!
-      if (!dom::ToJSValue(js, boolBuffer, elemSize, &val)) {
-        mContext->ErrorOutOfMemory("getUniform: Out of memory.");
-        return JS::NullValue();
-      }
-      return val;
+      nsTArray<bool> ret;
+      ret.AppendElements(buffer, elemSize);
+      return AsSomeVariant(ret);
     }
 
     case LOCAL_GL_FLOAT:
@@ -181,15 +165,9 @@ JS::Value WebGLUniformLocation::GetUniform(JSContext* js) const {
     case LOCAL_GL_FLOAT_MAT4x3: {
       GLfloat buffer[16] = {0.0f};
       gl->fGetUniformfv(prog, mLoc, buffer);
-
-      if (elemSize == 1) return JS::DoubleValue(buffer[0]);
-
-      JSObject* obj = dom::Float32Array::Create(js, mContext, elemSize, buffer);
-      if (!obj) {
-        mContext->ErrorOutOfMemory("getUniform: Out of memory.");
-        return JS::NullValue();
-      }
-      return JS::ObjectOrNullValue(obj);
+      nsTArray<float> ret;
+      ret.AppendElements(buffer, elemSize);
+      return AsSomeVariant(ret);
     }
 
     case LOCAL_GL_UNSIGNED_INT:
@@ -198,34 +176,14 @@ JS::Value WebGLUniformLocation::GetUniform(JSContext* js) const {
     case LOCAL_GL_UNSIGNED_INT_VEC4: {
       GLuint buffer[kMaxElemSize] = {0};
       gl->fGetUniformuiv(prog, mLoc, buffer);
-
-      if (elemSize == 1)
-        return JS::DoubleValue(
-            buffer[0]);  // This is Double because only Int32 is special cased.
-
-      JSObject* obj = dom::Uint32Array::Create(js, mContext, elemSize, buffer);
-      if (!obj) {
-        mContext->ErrorOutOfMemory("getUniform: Out of memory.");
-        return JS::NullValue();
-      }
-      return JS::ObjectOrNullValue(obj);
+      nsTArray<uint32_t> ret;
+      ret.AppendElements(buffer, elemSize);
+      return AsSomeVariant(ret);
     }
 
     default:
       MOZ_CRASH("GFX: Invalid elemType.");
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-JSObject* WebGLUniformLocation::WrapObject(JSContext* js,
-                                           JS::Handle<JSObject*> givenProto) {
-  return dom::WebGLUniformLocation_Binding::Wrap(js, this, givenProto);
-}
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLUniformLocation)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLUniformLocation, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLUniformLocation, Release)
 
 }  // namespace mozilla

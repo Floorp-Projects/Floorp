@@ -12,6 +12,7 @@
 #include "mozilla/dom/PURLClassifierLocalParent.h"
 #include "nsIURIClassifier.h"
 #include "nsIUrlClassifierFeature.h"
+#include "mozilla/dom/PContent.h"
 
 namespace mozilla {
 namespace dom {

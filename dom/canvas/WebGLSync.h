@@ -15,8 +15,7 @@ namespace webgl {
 class AvailabilityRunnable;
 }  // namespace webgl
 
-class WebGLSync final : public nsWrapperCache,
-                        public WebGLRefCountedObject<WebGLSync>,
+class WebGLSync final : public WebGLRefCountedObject<WebGLSync>,
                         public LinkedListElement<WebGLSync> {
   friend class WebGL2Context;
   friend class webgl::AvailabilityRunnable;
@@ -29,13 +28,8 @@ class WebGLSync final : public nsWrapperCache,
   WebGLSync(WebGLContext* webgl, GLenum condition, GLbitfield flags);
 
   void Delete();
-  WebGLContext* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> givenProto) override;
-
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLSync)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLSync)
+  NS_INLINE_DECL_REFCOUNTING(WebGLSync)
 
   void MarkSignaled() const;
 

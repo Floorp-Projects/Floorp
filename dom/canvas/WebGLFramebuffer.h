@@ -97,9 +97,8 @@ class WebGLFBAttachPoint final {
 
   void DoAttachment(gl::GLContext* gl) const;
 
-  JS::Value GetParameter(WebGLContext* webgl, JSContext* cx, GLenum target,
-                         GLenum attachment, GLenum pname,
-                         ErrorResult* const out_error) const;
+  MaybeWebGLVariant GetParameter(WebGLContext* webgl, GLenum target,
+                                 GLenum attachment, GLenum pname) const;
 
   bool IsEquivalentForFeedback(const WebGLFBAttachPoint& other) const {
     if (!HasAttachment() | !other.HasAttachment()) return false;
@@ -135,8 +134,7 @@ class WebGLFBAttachPoint final {
   };
 };
 
-class WebGLFramebuffer final : public nsWrapperCache,
-                               public WebGLRefCountedObject<WebGLFramebuffer>,
+class WebGLFramebuffer final : public WebGLRefCountedObject<WebGLFramebuffer>,
                                public LinkedListElement<WebGLFramebuffer>,
                                public SupportsWeakPtr<WebGLFramebuffer>,
                                public CacheInvalidator {
@@ -194,14 +192,9 @@ class WebGLFramebuffer final : public nsWrapperCache,
   ////
 
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebuffer)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLFramebuffer)
+  NS_INLINE_DECL_REFCOUNTING(WebGLFramebuffer)
 
   WebGLFramebuffer(WebGLContext* webgl, GLuint fbo);
-
-  WebGLContext* GetParentObject() const { return mContext; }
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> givenProto) override;
 
  private:
   ~WebGLFramebuffer() {
@@ -272,12 +265,11 @@ class WebGLFramebuffer final : public nsWrapperCache,
   FBStatus CheckFramebufferStatus() const;
   void FramebufferAttach(GLenum attachEnum,
                          const webgl::FbAttachInfo& toAttach);
-  void DrawBuffers(const dom::Sequence<GLenum>& buffers);
+  void DrawBuffers(const nsTArray<GLenum>& buffers);
   void ReadBuffer(GLenum attachPoint);
 
-  JS::Value GetAttachmentParameter(JSContext* cx, GLenum target,
-                                   GLenum attachment, GLenum pname,
-                                   ErrorResult* const out_error);
+  MaybeWebGLVariant GetAttachmentParameter(GLenum target, GLenum attachment,
+                                           GLenum pname);
 
   static void BlitFramebuffer(WebGLContext* webgl, GLint srcX0, GLint srcY0,
                               GLint srcX1, GLint srcY1, GLint dstX0,

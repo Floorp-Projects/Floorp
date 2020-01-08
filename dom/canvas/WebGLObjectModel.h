@@ -21,22 +21,27 @@ class WebGLContext;
 // This class is a mixin for objects that are tied to a specific
 // context (which is to say, all of them).  They provide initialization
 // as well as comparison with the current context.
-class WebGLContextBoundObject {
+template <typename Derived>
+class WebGLContextBoundObject : public WebGLId<Derived> {
  public:
   const WeakPtr<WebGLContext> mContext;
 
+  explicit WebGLContextBoundObject(WebGLContext* webgl)
+      : mContext(webgl), mContextGeneration(webgl->Generation()) {}
+
+  bool IsCompatibleWithContext(const WebGLContext* other) const {
+    return (mContext == other && mContextGeneration == other->Generation());
+  }
+
  private:
+  friend class HostWebGLContext;
+
   const uint32_t mContextGeneration;
-
- public:
-  explicit WebGLContextBoundObject(WebGLContext* webgl);
-
-  bool IsCompatibleWithContext(const WebGLContext* other) const;
 };
 
 ////
 
-class WebGLDeletableObject : public WebGLContextBoundObject {
+class WebGLDeletableObject {
   template <typename>
   friend class WebGLRefCountedObject;
 
@@ -47,8 +52,7 @@ class WebGLDeletableObject : public WebGLContextBoundObject {
 
   ////
 
-  explicit WebGLDeletableObject(WebGLContext* webgl)
-      : WebGLContextBoundObject(webgl), mDeletionStatus(Default) {}
+  explicit WebGLDeletableObject() : mDeletionStatus(Default) {}
 
   ~WebGLDeletableObject() {
     MOZ_ASSERT(mDeletionStatus == Deleted,
@@ -139,7 +143,8 @@ class WebGLDeletableObject : public WebGLContextBoundObject {
  */
 
 template <typename Derived>
-class WebGLRefCountedObject : public WebGLDeletableObject {
+class WebGLRefCountedObject : public WebGLContextBoundObject<Derived>,
+                              public WebGLDeletableObject {
   friend class WebGLContext;
   template <typename T>
   friend void ClearLinkedList(LinkedList<T>& list);
@@ -149,7 +154,7 @@ class WebGLRefCountedObject : public WebGLDeletableObject {
 
  public:
   explicit WebGLRefCountedObject(WebGLContext* webgl)
-      : WebGLDeletableObject(webgl) {}
+      : WebGLContextBoundObject<Derived>(webgl), WebGLDeletableObject() {}
 
   ~WebGLRefCountedObject() {
     MOZ_ASSERT(mWebGLRefCnt == 0,

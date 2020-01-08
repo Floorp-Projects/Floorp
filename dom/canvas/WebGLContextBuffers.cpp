@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLContext.h"
+#include "ClientWebGLContext.h"
 
 #include <limits>
 
@@ -246,68 +246,13 @@ void WebGLContext::BindBufferRangeImpl(GLenum target, GLuint index,
 
 void WebGLContext::BufferDataImpl(GLenum target, uint64_t dataLen,
                                   const uint8_t* data, GLenum usage) {
+  const FuncScope funcScope(*this, "bufferData");
+  if (IsContextLost()) return;
+
   const auto& buffer = ValidateBufferSelection(target);
   if (!buffer) return;
 
   buffer->BufferData(target, dataLen, data, usage);
-}
-
-////
-
-void WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage) {
-  const FuncScope funcScope(*this, "bufferData");
-  if (IsContextLost()) return;
-
-  if (!ValidateNonNegative("size", size)) return;
-
-  ////
-
-  const auto checkedSize = CheckedInt<size_t>(size);
-  if (!checkedSize.isValid())
-    return ErrorOutOfMemory("size too large for platform.");
-
-#if defined(XP_MACOSX)
-  // bug 1573048
-  if (gl->WorkAroundDriverBugs() && size > 1200000000) {
-    return ErrorOutOfMemory(
-        "Allocations larger than 1200000000 fail on macOS.");
-  }
-#endif
-
-  const UniqueBuffer zeroBuffer(calloc(checkedSize.value(), 1u));
-  if (!zeroBuffer) return ErrorOutOfMemory("Failed to allocate zeros.");
-
-  BufferDataImpl(target, uint64_t{checkedSize.value()},
-                 (const uint8_t*)zeroBuffer.get(), usage);
-}
-
-void WebGLContext::BufferData(GLenum target,
-                              const dom::Nullable<dom::ArrayBuffer>& maybeSrc,
-                              GLenum usage) {
-  const FuncScope funcScope(*this, "bufferData");
-  if (IsContextLost()) return;
-
-  if (!ValidateNonNull("src", maybeSrc)) return;
-  const auto& src = maybeSrc.Value();
-
-  src.ComputeLengthAndData();
-  BufferDataImpl(target, src.LengthAllowShared(), src.DataAllowShared(), usage);
-}
-
-void WebGLContext::BufferData(GLenum target, const dom::ArrayBufferView& src,
-                              GLenum usage, GLuint srcElemOffset,
-                              GLuint srcElemCountOverride) {
-  const FuncScope funcScope(*this, "bufferData");
-  if (IsContextLost()) return;
-
-  uint8_t* bytes;
-  size_t byteLen;
-  if (!ValidateArrayBufferView(src, srcElemOffset, srcElemCountOverride,
-                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
-    return;
-  }
-
-  BufferDataImpl(target, byteLen, bytes, usage);
 }
 
 ////////////////////////////////////////
@@ -315,6 +260,7 @@ void WebGLContext::BufferData(GLenum target, const dom::ArrayBufferView& src,
 void WebGLContext::BufferSubDataImpl(GLenum target, WebGLsizeiptr dstByteOffset,
                                      uint64_t dataLen, const uint8_t* data) {
   const FuncScope funcScope(*this, "bufferSubData");
+  if (IsContextLost()) return;
 
   if (!ValidateNonNegative("byteOffset", dstByteOffset)) return;
 
@@ -322,35 +268,6 @@ void WebGLContext::BufferSubDataImpl(GLenum target, WebGLsizeiptr dstByteOffset,
   if (!buffer) return;
 
   buffer->BufferSubData(target, uint64_t(dstByteOffset), dataLen, data);
-}
-
-////
-
-void WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
-                                 const dom::ArrayBuffer& src) {
-  const FuncScope funcScope(*this, "bufferSubData");
-  if (IsContextLost()) return;
-
-  src.ComputeLengthAndData();
-  BufferSubDataImpl(target, dstByteOffset, src.LengthAllowShared(),
-                    src.DataAllowShared());
-}
-
-void WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
-                                 const dom::ArrayBufferView& src,
-                                 GLuint srcElemOffset,
-                                 GLuint srcElemCountOverride) {
-  const FuncScope funcScope(*this, "bufferSubData");
-  if (IsContextLost()) return;
-
-  uint8_t* bytes;
-  size_t byteLen;
-  if (!ValidateArrayBufferView(src, srcElemOffset, srcElemCountOverride,
-                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen)) {
-    return;
-  }
-
-  BufferSubDataImpl(target, dstByteOffset, byteLen, bytes);
 }
 
 ////////////////////////////////////////

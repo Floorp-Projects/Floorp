@@ -52,7 +52,4 @@ bool WebGLExtensionCompressedTextureS3TC_SRGB::IsSupported(
          gl->IsExtensionSupported(gl::GLContext::EXT_texture_compression_s3tc);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureS3TC_SRGB,
-                          WEBGL_compressed_texture_s3tc_srgb)
-
 }  // namespace mozilla

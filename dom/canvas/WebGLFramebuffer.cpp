@@ -18,6 +18,7 @@
 #include "WebGLContext.h"
 #include "WebGLContextUtils.h"
 #include "WebGLExtensions.h"
+#include "WebGLFormats.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
 
@@ -255,10 +256,10 @@ void WebGLFBAttachPoint::DoAttachment(gl::GLContext* const gl) const {
   }
 }
 
-JS::Value WebGLFBAttachPoint::GetParameter(WebGLContext* webgl, JSContext* cx,
-                                           GLenum target, GLenum attachment,
-                                           GLenum pname,
-                                           ErrorResult* const out_error) const {
+MaybeWebGLVariant WebGLFBAttachPoint::GetParameter(WebGLContext* webgl,
+                                                   GLenum target,
+                                                   GLenum attachment,
+                                                   GLenum pname) const {
   if (!HasAttachment()) {
     // Divergent between GLES 3 and 2.
 
@@ -273,10 +274,10 @@ JS::Value WebGLFBAttachPoint::GetParameter(WebGLContext* webgl, JSContext* cx,
     //   queries will generate an INVALID_OPERATION error."
     switch (pname) {
       case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-        return JS::Int32Value(LOCAL_GL_NONE);
+        return AsSomeVariant(LOCAL_GL_NONE);
 
       case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-        if (webgl->IsWebGL2()) return JS::NullValue();
+        if (webgl->IsWebGL2()) return Nothing();
 
         break;
 
@@ -292,25 +293,25 @@ JS::Value WebGLFBAttachPoint::GetParameter(WebGLContext* webgl, JSContext* cx,
       webgl->ErrorInvalidEnum("No attachment at %s.",
                               attachmentName.BeginReading());
     }
-    return JS::NullValue();
+    return Nothing();
   }
 
   bool isPNameValid = false;
   switch (pname) {
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-      return JS::Int32Value(mTexturePtr ? LOCAL_GL_TEXTURE
-                                        : LOCAL_GL_RENDERBUFFER);
+      return AsSomeVariant(mTexturePtr ? LOCAL_GL_TEXTURE
+                                       : LOCAL_GL_RENDERBUFFER);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-      return (mTexturePtr ? webgl->WebGLObjectAsJSValue(cx, mTexturePtr.get(),
-                                                        *out_error)
-                          : webgl->WebGLObjectAsJSValue(
-                                cx, mRenderbufferPtr.get(), *out_error));
+      if (mTexturePtr) {
+        return AsSomeVariant(mTexturePtr);
+      }
+      return AsSomeVariant(mRenderbufferPtr);
 
       //////
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-      if (mTexturePtr) return JS::Int32Value(MipLevel());
+      if (mTexturePtr) return AsSomeVariant(MipLevel());
       break;
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
@@ -319,7 +320,7 @@ JS::Value WebGLFBAttachPoint::GetParameter(WebGLContext* webgl, JSContext* cx,
         if (mTexturePtr->Target() == LOCAL_GL_TEXTURE_CUBE_MAP) {
           face = LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + Layer();
         }
-        return JS::Int32Value(face);
+        return AsSomeVariant(face);
       }
       break;
 
@@ -363,16 +364,16 @@ JS::Value WebGLFBAttachPoint::GetParameter(WebGLContext* webgl, JSContext* cx,
 
   if (!isPNameValid) {
     webgl->ErrorInvalidEnum("Invalid pname: 0x%04x", pname);
-    return JS::NullValue();
+    return Nothing();
   }
 
   const auto& imageInfo = *GetImageInfo();
   const auto& usage = imageInfo.mFormat;
   if (!usage) {
     if (pname == LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING)
-      return JS::NumberValue(LOCAL_GL_LINEAR);
+      return AsSomeVariant(LOCAL_GL_LINEAR);
 
-    return JS::NullValue();
+    return Nothing();
   }
 
   auto format = usage->format;
@@ -460,7 +461,7 @@ JS::Value WebGLFBAttachPoint::GetParameter(WebGLContext* webgl, JSContext* cx,
       break;
   }
 
-  return JS::Int32Value(ret);
+  return AsSomeVariant(ret);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1069,7 +1070,7 @@ void WebGLFramebuffer::RefreshReadBuffer() const {
 
 ////
 
-void WebGLFramebuffer::DrawBuffers(const dom::Sequence<GLenum>& buffers) {
+void WebGLFramebuffer::DrawBuffers(const nsTArray<GLenum>& buffers) {
   if (buffers.Length() > mContext->mGLMaxDrawBuffers) {
     // "An INVALID_VALUE error is generated if `n` is greater than
     // MAX_DRAW_BUFFERS."
@@ -1166,16 +1167,16 @@ void WebGLFramebuffer::FramebufferAttach(const GLenum attachEnum,
   InvalidateCaches();
 }
 
-JS::Value WebGLFramebuffer::GetAttachmentParameter(
-    JSContext* cx, GLenum target, GLenum attachEnum, GLenum pname,
-    ErrorResult* const out_error) {
+MaybeWebGLVariant WebGLFramebuffer::GetAttachmentParameter(GLenum target,
+                                                           GLenum attachEnum,
+                                                           GLenum pname) {
   const auto maybeAttach = GetAttachPoint(attachEnum);
   if (!maybeAttach || attachEnum == LOCAL_GL_NONE) {
     mContext->ErrorInvalidEnum(
         "Can only query COLOR_ATTACHMENTi,"
         " DEPTH_ATTACHMENT, DEPTH_STENCIL_ATTACHMENT, or"
         " STENCIL_ATTACHMENT for a framebuffer.");
-    return JS::NullValue();
+    return Nothing();
   }
   auto attach = maybeAttach.value();
 
@@ -1188,7 +1189,7 @@ JS::Value WebGLFramebuffer::GetAttachmentParameter(
           " FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE"
           " against DEPTH_STENCIL_ATTACHMENT is an"
           " error.");
-      return JS::NullValue();
+      return Nothing();
     }
 
     if (mDepthAttachment.Renderbuffer() != mStencilAttachment.Renderbuffer() ||
@@ -1196,14 +1197,13 @@ JS::Value WebGLFramebuffer::GetAttachmentParameter(
       mContext->ErrorInvalidOperation(
           "DEPTH_ATTACHMENT and STENCIL_ATTACHMENT"
           " have different objects bound.");
-      return JS::NullValue();
+      return Nothing();
     }
 
     attach = &mDepthAttachment;
   }
 
-  return attach->GetParameter(mContext, cx, target, attachEnum, pname,
-                              out_error);
+  return attach->GetParameter(mContext, target, attachEnum, pname);
 }
 
 ////////////////////
@@ -1580,49 +1580,5 @@ void WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl, GLint srcX0,
                     webgl->mColorClearValue[2], webgl->mColorClearValue[3]);
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// Goop.
-
-JSObject* WebGLFramebuffer::WrapObject(JSContext* cx,
-                                       JS::Handle<JSObject*> givenProto) {
-  return dom::WebGLFramebuffer_Binding::Wrap(cx, this, givenProto);
-}
-
-inline void ImplCycleCollectionUnlink(mozilla::WebGLFBAttachPoint& field) {
-  field.Unlink();
-}
-
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& callback,
-    const mozilla::WebGLFBAttachPoint& field, const char* name,
-    uint32_t flags = 0) {
-  CycleCollectionNoteChild(callback, field.Texture(), name, flags);
-  CycleCollectionNoteChild(callback, field.Renderbuffer(), name, flags);
-}
-
-template <typename C>
-inline void ImplCycleCollectionUnlink(C& field) {
-  for (auto& cur : field) {
-    cur.Unlink();
-  }
-}
-
-template <typename C>
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& callback, const C& field,
-    const char* name, uint32_t flags = 0) {
-  for (auto& cur : field) {
-    ImplCycleCollectionTraverse(callback, cur, name, flags);
-  }
-}
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLFramebuffer, mDepthAttachment,
-                                      mStencilAttachment,
-                                      mDepthStencilAttachment,
-                                      mColorAttachments)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLFramebuffer, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLFramebuffer, Release)
 
 }  // namespace mozilla

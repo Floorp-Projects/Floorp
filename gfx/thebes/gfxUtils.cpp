@@ -17,6 +17,7 @@
 #include "mozilla/dom/ImageEncoder.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/ipc/CrossProcessSemaphore.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Logging.h"
@@ -27,6 +28,7 @@
 #include "mozilla/image/nsICOEncoder.h"
 #include "mozilla/image/nsJPEGEncoder.h"
 #include "mozilla/image/nsPNGEncoder.h"
+#include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -1356,11 +1358,13 @@ nsresult gfxUtils::GetInputStream(gfx::DataSourceSurface* aSurface,
       format, encoder, aEncoderOptions, outStream);
 }
 
-class GetFeatureStatusRunnable final : public dom::WorkerMainThreadRunnable {
+class GetFeatureStatusWorkerRunnable final
+    : public dom::WorkerMainThreadRunnable {
  public:
-  GetFeatureStatusRunnable(dom::WorkerPrivate* workerPrivate,
-                           const nsCOMPtr<nsIGfxInfo>& gfxInfo, int32_t feature,
-                           nsACString& failureId, int32_t* status)
+  GetFeatureStatusWorkerRunnable(dom::WorkerPrivate* workerPrivate,
+                                 const nsCOMPtr<nsIGfxInfo>& gfxInfo,
+                                 int32_t feature, nsACString& failureId,
+                                 int32_t* status)
       : WorkerMainThreadRunnable(workerPrivate,
                                  NS_LITERAL_CSTRING("GFX :: GetFeatureStatus")),
         mGfxInfo(gfxInfo),
@@ -1379,7 +1383,7 @@ class GetFeatureStatusRunnable final : public dom::WorkerMainThreadRunnable {
   nsresult GetNSResult() const { return mNSResult; }
 
  protected:
-  ~GetFeatureStatusRunnable() {}
+  ~GetFeatureStatusWorkerRunnable() {}
 
  private:
   nsCOMPtr<nsIGfxInfo> mGfxInfo;
@@ -1393,11 +1397,23 @@ class GetFeatureStatusRunnable final : public dom::WorkerMainThreadRunnable {
 nsresult gfxUtils::ThreadSafeGetFeatureStatus(
     const nsCOMPtr<nsIGfxInfo>& gfxInfo, int32_t feature, nsACString& failureId,
     int32_t* status) {
-  if (!NS_IsMainThread()) {
+  if (NS_IsMainThread()) {
+    return gfxInfo->GetFeatureStatus(feature, failureId, status);
+  }
+
+  // In a content process, we must call this on the main thread.
+  // In a composition process (parent or GPU), this needs to be called on the
+  // compositor thread.
+  bool isCompositionProcess = XRE_IsGPUProcess() || XRE_IsParentProcess();
+  MOZ_ASSERT(!isCompositionProcess || NS_IsInCompositorThread());
+
+  // Content-process non-main-thread case:
+  if (!isCompositionProcess) {
     dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
 
-    RefPtr<GetFeatureStatusRunnable> runnable = new GetFeatureStatusRunnable(
-        workerPrivate, gfxInfo, feature, failureId, status);
+    RefPtr<GetFeatureStatusWorkerRunnable> runnable =
+        new GetFeatureStatusWorkerRunnable(workerPrivate, gfxInfo, feature,
+                                           failureId, status);
 
     ErrorResult rv;
     runnable->Dispatch(dom::WorkerStatus::Canceling, rv);
@@ -1407,11 +1423,17 @@ nsresult gfxUtils::ThreadSafeGetFeatureStatus(
       // exception.  Ah, well.
       return rv.StealNSResult();
     }
-
     return runnable->GetNSResult();
   }
 
-  return gfxInfo->GetFeatureStatus(feature, failureId, status);
+  nsresult rv;
+  SynchronousTask task("GetFeatureStatusSync");
+  NS_DispatchToMainThread(NS_NewRunnableFunction("GetFeatureStatusMain", [&]() {
+    AutoCompleteTask complete(&task);
+    rv = gfxInfo->GetFeatureStatus(feature, failureId, status);
+  }));
+  task.Wait();
+  return rv;
 }
 
 #define GFX_SHADER_CHECK_BUILD_VERSION_PREF "gfx-shader-check.build-version"

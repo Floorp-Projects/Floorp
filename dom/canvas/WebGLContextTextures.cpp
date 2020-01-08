@@ -235,18 +235,19 @@ void WebGLContext::GenerateMipmap(GLenum rawTexTarget) {
   tex->GenerateMipmap();
 }
 
-JS::Value WebGLContext::GetTexParameter(GLenum rawTexTarget, GLenum pname) {
+MaybeWebGLVariant WebGLContext::GetTexParameter(GLenum rawTexTarget,
+                                                GLenum pname) {
   const FuncScope funcScope(*this, "getTexParameter");
   const uint8_t funcDims = 0;
 
   TexTarget texTarget;
   WebGLTexture* tex;
   if (!ValidateTexTarget(this, funcDims, rawTexTarget, &texTarget, &tex))
-    return JS::NullValue();
+    return Nothing();
 
   if (!IsTexParamValid(pname)) {
     ErrorInvalidEnumInfo("pname", pname);
-    return JS::NullValue();
+    return Nothing();
   }
 
   return tex->GetTexParameter(texTarget, pname);
@@ -272,27 +273,35 @@ void WebGLContext::CompressedTexImage(uint8_t funcDims, GLenum rawTarget,
                                       GLint level, GLenum internalFormat,
                                       GLsizei width, GLsizei height,
                                       GLsizei depth, GLint border,
-                                      const TexImageSource& src,
+                                      UniquePtr<webgl::TexUnpackBytes>&& src,
                                       const Maybe<GLsizei>& expectedImageSize) {
+  if (!src) {
+    ErrorImplementationBug("No TexUnpackBytes received");
+    return;
+  }
+
   TexImageTarget target;
   WebGLTexture* tex;
   if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
-
   tex->CompressedTexImage(target, level, internalFormat, width, height, depth,
-                          border, src, expectedImageSize);
+                          border, std::move(src), expectedImageSize);
 }
 
 void WebGLContext::CompressedTexSubImage(
     uint8_t funcDims, GLenum rawTarget, GLint level, GLint xOffset,
     GLint yOffset, GLint zOffset, GLsizei width, GLsizei height, GLsizei depth,
-    GLenum unpackFormat, const TexImageSource& src,
+    GLenum unpackFormat, UniquePtr<webgl::TexUnpackBytes>&& src,
     const Maybe<GLsizei>& expectedImageSize) {
+  if (!src) {
+    ErrorImplementationBug("No TexUnpackBytes received");
+    return;
+  }
+
   TexImageTarget target;
   WebGLTexture* tex;
   if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
-
   tex->CompressedTexSubImage(target, level, xOffset, yOffset, zOffset, width,
-                             height, depth, unpackFormat, src,
+                             height, depth, unpackFormat, std::move(src),
                              expectedImageSize);
 }
 
@@ -300,7 +309,8 @@ void WebGLContext::CompressedTexSubImage(
 
 void WebGLContext::CopyTexImage2D(GLenum rawTarget, GLint level,
                                   GLenum internalFormat, GLint x, GLint y,
-                                  GLsizei width, GLsizei height, GLint border) {
+                                  uint32_t width, uint32_t height,
+                                  uint32_t depth) {
   const FuncScope funcScope(*this, "copyTexImage2D");
   const uint8_t funcDims = 2;
 
@@ -309,49 +319,50 @@ void WebGLContext::CopyTexImage2D(GLenum rawTarget, GLint level,
   if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
   tex->CopyTexImage2D(target, level, internalFormat, x, y, width, height,
-                      border);
+                      depth);
 }
 
 void WebGLContext::CopyTexSubImage(uint8_t funcDims, GLenum rawTarget,
                                    GLint level, GLint xOffset, GLint yOffset,
                                    GLint zOffset, GLint x, GLint y,
-                                   GLsizei width, GLsizei height) {
+                                   uint32_t width, uint32_t height,
+                                   uint32_t depth) {
   TexImageTarget target;
   WebGLTexture* tex;
   if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
   tex->CopyTexSubImage(target, level, xOffset, yOffset, zOffset, x, y, width,
-                       height);
+                       height, depth);
 }
 
 ////
 
 void WebGLContext::TexImage(uint8_t funcDims, GLenum rawTarget, GLint level,
-                            GLenum internalFormat, GLsizei width,
-                            GLsizei height, GLsizei depth, GLint border,
+                            GLenum internalFormat, uint32_t width,
+                            uint32_t height, uint32_t depth, GLint border,
                             GLenum unpackFormat, GLenum unpackType,
-                            const TexImageSource& src) {
+                            UniquePtr<webgl::TexUnpackBlob>&& src) {
   TexImageTarget target;
   WebGLTexture* tex;
   if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
   const webgl::PackingInfo pi = {unpackFormat, unpackType};
   tex->TexImage(target, level, internalFormat, width, height, depth, border, pi,
-                src);
+                std::move(src));
 }
 
 void WebGLContext::TexSubImage(uint8_t funcDims, GLenum rawTarget, GLint level,
                                GLint xOffset, GLint yOffset, GLint zOffset,
-                               GLsizei width, GLsizei height, GLsizei depth,
+                               uint32_t width, uint32_t height, uint32_t depth,
                                GLenum unpackFormat, GLenum unpackType,
-                               const TexImageSource& src) {
+                               UniquePtr<webgl::TexUnpackBlob>&& src) {
   TexImageTarget target;
   WebGLTexture* tex;
   if (!ValidateTexImageTarget(this, funcDims, rawTarget, &target, &tex)) return;
 
   const webgl::PackingInfo pi = {unpackFormat, unpackType};
   tex->TexSubImage(target, level, xOffset, yOffset, zOffset, width, height,
-                   depth, pi, src);
+                   depth, pi, std::move(src));
 }
 
 }  // namespace mozilla

@@ -17,8 +17,7 @@ namespace webgl {
 class AvailabilityRunnable;
 }  // namespace webgl
 
-class WebGLQuery final : public nsWrapperCache,
-                         public WebGLRefCountedObject<WebGLQuery>,
+class WebGLQuery final : public WebGLRefCountedObject<WebGLQuery>,
                          public LinkedListElement<WebGLQuery> {
   friend class webgl::AvailabilityRunnable;
   friend class WebGLRefCountedObject<WebGLQuery>;
@@ -39,8 +38,7 @@ class WebGLQuery final : public nsWrapperCache,
 
   ////
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLQuery)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLQuery)
+  NS_INLINE_DECL_REFCOUNTING(WebGLQuery)
 
   explicit WebGLQuery(WebGLContext* webgl);
 
@@ -51,16 +49,12 @@ class WebGLQuery final : public nsWrapperCache,
   void Delete();
 
  public:
-  WebGLContext* GetParentObject() const { return mContext; }
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> givenProto) override;
-
   ////
 
   void BeginQuery(GLenum target, WebGLRefPtr<WebGLQuery>& slot);
   void DeleteQuery();
   void EndQuery();
-  void GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const;
+  MaybeWebGLVariant GetQueryParameter(GLenum pname) const;
   bool IsQuery() const;
   void QueryCounter(GLenum target);
 };

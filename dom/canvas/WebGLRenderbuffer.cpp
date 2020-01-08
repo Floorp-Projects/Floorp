@@ -23,11 +23,6 @@ static GLenum DepthFormatForDepthStencilEmu(gl::GLContext* gl) {
   return LOCAL_GL_DEPTH_COMPONENT24;
 }
 
-JSObject* WebGLRenderbuffer::WrapObject(JSContext* cx,
-                                        JS::Handle<JSObject*> givenProto) {
-  return dom::WebGLRenderbuffer_Binding::Wrap(cx, this, givenProto);
-}
-
 static GLuint DoCreateRenderbuffer(gl::GLContext* gl) {
   MOZ_ASSERT(gl->IsCurrent());
 
@@ -260,10 +255,5 @@ GLint WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
   MOZ_ASSERT(false, "This function should only be called with valid `pname`.");
   return 0;
 }
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLRenderbuffer)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLRenderbuffer, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLRenderbuffer, Release)
 
 }  // namespace mozilla

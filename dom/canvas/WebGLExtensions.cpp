@@ -13,7 +13,7 @@
 namespace mozilla {
 
 WebGLExtensionBase::WebGLExtensionBase(WebGLContext* webgl)
-    : WebGLContextBoundObject(webgl), mIsLost(false), mIsExplicit(false) {}
+    : WebGLContextBoundObject(webgl) {}
 
 WebGLExtensionBase::~WebGLExtensionBase() {}
 
@@ -22,11 +22,6 @@ void WebGLExtensionBase::MarkLost() {
 
   OnMarkLost();
 }
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLExtensionBase)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLExtensionBase, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLExtensionBase, Release)
 
 // -
 
@@ -45,8 +40,6 @@ void WebGLExtensionExplicitPresent::Present() const {
   if (mIsLost || !mContext) return;
   mContext->PresentScreenBuffer();
 }
-
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionExplicitPresent, WEBGL_explicit_present)
 
 // -
 
@@ -68,8 +61,6 @@ bool WebGLExtensionFloatBlend::IsSupported(const WebGLContext* const webgl) {
   return gl->IsExtensionSupported(gl::GLContext::EXT_float_blend);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionFloatBlend, EXT_float_blend)
-
 // -
 
 WebGLExtensionFBORenderMipmap::WebGLExtensionFBORenderMipmap(
@@ -89,8 +80,6 @@ bool WebGLExtensionFBORenderMipmap::IsSupported(
   if (gl->Version() >= 300) return true;
   return gl->IsExtensionSupported(gl::GLContext::OES_fbo_render_mipmap);
 }
-
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionFBORenderMipmap, OES_fbo_render_mipmap)
 
 // -
 
@@ -122,7 +111,5 @@ void WebGLExtensionMultiview::FramebufferTextureMultiviewOVR(
   mContext->FramebufferTextureMultiview(target, attachment, texture, level,
                                         baseViewIndex, numViews);
 }
-
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionMultiview, OVR_multiview2)
 
 }  // namespace mozilla

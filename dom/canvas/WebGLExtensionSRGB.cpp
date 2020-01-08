@@ -58,6 +58,4 @@ bool WebGLExtensionSRGB::IsSupported(const WebGLContext* const webgl) {
   return webgl->gl->IsSupported(gl::GLFeature::sRGB);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionSRGB, EXT_sRGB)
-
 }  // namespace mozilla

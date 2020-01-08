@@ -23,8 +23,7 @@ namespace webgl {
 struct LinkedProgramInfo;
 }
 
-class WebGLVertexArray : public nsWrapperCache,
-                         public WebGLRefCountedObject<WebGLVertexArray>,
+class WebGLVertexArray : public WebGLRefCountedObject<WebGLVertexArray>,
                          public LinkedListElement<WebGLVertexArray>,
                          public CacheInvalidator {
  public:
@@ -32,13 +31,7 @@ class WebGLVertexArray : public nsWrapperCache,
 
   void Delete();
 
-  WebGLContext* GetParentObject() const { return mContext; }
-
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> givenProto) override;
-
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLVertexArray)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLVertexArray)
+  NS_INLINE_DECL_REFCOUNTING(WebGLVertexArray)
 
  protected:
   WebGLVertexArray(WebGLContext* webgl, GLuint name);

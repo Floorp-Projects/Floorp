@@ -61,10 +61,17 @@ UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
     GLContext* gl, const SurfaceCaps& caps,
     KnowsCompositor* compositorConnection, const layers::TextureFlags& flags) {
   LayersIPCChannel* ipcChannel = compositorConnection->GetTextureForwarder();
-  const layers::LayersBackend backend =
+  layers::LayersBackend backend =
       compositorConnection->GetCompositorBackendType();
-  const bool useANGLE = compositorConnection->GetCompositorUseANGLE();
+  bool useANGLE = compositorConnection->GetCompositorUseANGLE();
+  return CreateFactory(gl, caps, ipcChannel, backend, useANGLE, flags);
+}
 
+/* static */
+UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
+    GLContext* gl, const SurfaceCaps& caps, LayersIPCChannel* ipcChannel,
+    layers::LayersBackend backend, bool useANGLE,
+    const layers::TextureFlags& flags) {
   const bool useGl =
       !StaticPrefs::webgl_force_layers_readback() &&
       (backend == layers::LayersBackend::LAYERS_OPENGL ||
@@ -103,11 +110,14 @@ UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
     // Ensure devices initialization. SharedSurfaceANGLE and
     // SharedSurfaceD3D11Interop use them. The devices are lazily initialized
     // with WebRender to reduce memory usage.
-    gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
+    if (XRE_IsContentProcess()) {
+      gfxPlatform::GetPlatform()->EnsureDevicesInitialized();
+    }
 
     // Enable surface sharing only if ANGLE and compositing devices
     // are both WARP or both not WARP
     gfx::DeviceManagerDx* dm = gfx::DeviceManagerDx::Get();
+    MOZ_ASSERT(dm);
     if (gl->IsANGLE() && (gl->IsWARP() == dm->IsWARP()) &&
         dm->TextureSharingWorks()) {
       factory =
