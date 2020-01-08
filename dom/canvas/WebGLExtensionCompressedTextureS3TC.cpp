@@ -52,7 +52,4 @@ bool WebGLExtensionCompressedTextureS3TC::IsSupported(
              gl::GLContext::ANGLE_texture_compression_dxt5);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureS3TC,
-                          WEBGL_compressed_texture_s3tc)
-
 }  // namespace mozilla

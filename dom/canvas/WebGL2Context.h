@@ -11,6 +11,7 @@
 namespace mozilla {
 
 class ErrorResult;
+class HostWebGLContext;
 class WebGLSampler;
 class WebGLSync;
 class WebGLTransformFeedback;
@@ -22,18 +23,12 @@ class OwningWebGLBufferOrLongLong;
 
 class WebGL2Context : public WebGLContext {
  public:
-  virtual ~WebGL2Context();
+  virtual ~WebGL2Context(){};
 
   static bool IsSupported();
-  static WebGL2Context* Create();
+  static WebGL2Context* Create() { return new WebGL2Context(); }
 
   virtual bool IsWebGL2() const override { return true; }
-
-  // -------------------------------------------------------------------------
-  // IMPLEMENT nsWrapperCache
-
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> givenProto) override;
 
   // -------------------------------------------------------------------------
   // Buffer objects - WebGL2ContextBuffers.cpp
@@ -48,9 +43,9 @@ class WebGL2Context : public WebGLContext {
                          const BufferT& data);
 
  public:
-  void GetBufferSubData(GLenum target, WebGLintptr srcByteOffset,
-                        const dom::ArrayBufferView& dstData,
-                        GLuint dstElemOffset, GLuint dstElemCountOverride);
+  Maybe<UniquePtr<RawBuffer<>>> GetBufferSubData(GLenum target,
+                                                 WebGLintptr srcByteOffset,
+                                                 size_t byteLen);
 
   // -------------------------------------------------------------------------
   // Framebuffer objects - WebGL2ContextFramebuffers.cpp
@@ -59,240 +54,38 @@ class WebGL2Context : public WebGLContext {
                        GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                        GLbitfield mask, GLenum filter);
 
-  virtual JS::Value GetFramebufferAttachmentParameter(JSContext* cx,
-                                                      GLenum target,
-                                                      GLenum attachment,
-                                                      GLenum pname,
-                                                      ErrorResult& rv) override;
+  virtual MaybeWebGLVariant GetFramebufferAttachmentParameter(
+      GLenum target, GLenum attachment, GLenum pname) override;
+
   // Make the inline version from the superclass visible here.
   using WebGLContext::GetFramebufferAttachmentParameter;
 
   void InvalidateFramebuffer(GLenum target,
-                             const dom::Sequence<GLenum>& attachments,
-                             ErrorResult& rv);
+                             const nsTArray<GLenum>& attachments);
   void InvalidateSubFramebuffer(GLenum target,
-                                const dom::Sequence<GLenum>& attachments,
-                                GLint x, GLint y, GLsizei width, GLsizei height,
-                                ErrorResult& rv);
+                                const nsTArray<GLenum>& attachments, GLint x,
+                                GLint y, GLsizei width, GLsizei height);
   void ReadBuffer(GLenum mode);
 
   // -------------------------------------------------------------------------
   // Renderbuffer objects - WebGL2ContextRenderbuffers.cpp
 
-  void GetInternalformatParameter(JSContext*, GLenum target,
-                                  GLenum internalformat, GLenum pname,
-                                  JS::MutableHandleValue retval,
-                                  ErrorResult& rv);
-  void RenderbufferStorageMultisample(GLenum target, GLsizei samples,
-                                      GLenum internalFormat, GLsizei width,
-                                      GLsizei height) {
-    const FuncScope funcScope(*this, "renderbufferStorageMultisample");
-    RenderbufferStorage_base(target, samples, internalFormat, width, height);
-  }
+  Maybe<nsTArray<int32_t>> GetInternalformatParameter(GLenum target,
+                                                      GLenum internalformat,
+                                                      GLenum pname);
 
   // -------------------------------------------------------------------------
   // Texture objects - WebGL2ContextTextures.cpp
 
-  void TexStorage2D(GLenum target, GLsizei levels, GLenum internalFormat,
-                    GLsizei width, GLsizei height) {
-    const FuncScope funcScope(*this, "TexStorage2D");
-    const uint8_t funcDims = 2;
-    const GLsizei depth = 1;
-    TexStorage(funcDims, target, levels, internalFormat, width, height, depth);
-  }
-
-  void TexStorage3D(GLenum target, GLsizei levels, GLenum internalFormat,
-                    GLsizei width, GLsizei height, GLsizei depth) {
-    const FuncScope funcScope(*this, "TexStorage3D");
-    const uint8_t funcDims = 3;
-    TexStorage(funcDims, target, levels, internalFormat, width, height, depth);
-  }
-
- protected:
   void TexStorage(uint8_t funcDims, GLenum target, GLsizei levels,
                   GLenum internalFormat, GLsizei width, GLsizei height,
                   GLsizei depth);
 
-  ////////////////////////////////////
-
- public:
-  void CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
-                            GLsizei width, GLsizei height, GLsizei depth,
-                            GLint border, GLsizei imageSize,
-                            WebGLintptr offset) {
-    const FuncScope funcScope(*this, "compressedTexImage3D");
-    const uint8_t funcDims = 3;
-    const TexImageSourceAdapter src(&offset, 0, 0);
-    CompressedTexImage(funcDims, target, level, internalFormat, width, height,
-                       depth, border, src, Some(imageSize));
-  }
-
-  template <typename T>
-  void CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
-                            GLsizei width, GLsizei height, GLsizei depth,
-                            GLint border, const T& anySrc,
-                            GLuint viewElemOffset = 0,
-                            GLuint viewElemLengthOverride = 0) {
-    const FuncScope funcScope(*this, "compressedTexImage3D");
-    const uint8_t funcDims = 3;
-    const TexImageSourceAdapter src(&anySrc, viewElemOffset,
-                                    viewElemLengthOverride);
-    CompressedTexImage(funcDims, target, level, internalFormat, width, height,
-                       depth, border, src, Nothing());
-  }
-
-  void CompressedTexSubImage3D(GLenum target, GLint level, GLint xOffset,
-                               GLint yOffset, GLint zOffset, GLsizei width,
-                               GLsizei height, GLsizei depth,
-                               GLenum unpackFormat, GLsizei imageSize,
-                               WebGLintptr offset) {
-    const FuncScope funcScope(*this, "compressedTexSubImage3D");
-    const uint8_t funcDims = 3;
-    const TexImageSourceAdapter src(&offset, 0, 0);
-    CompressedTexSubImage(funcDims, target, level, xOffset, yOffset, zOffset,
-                          width, height, depth, unpackFormat, src,
-                          Some(imageSize));
-  }
-
-  template <typename T>
-  void CompressedTexSubImage3D(GLenum target, GLint level, GLint xOffset,
-                               GLint yOffset, GLint zOffset, GLsizei width,
-                               GLsizei height, GLsizei depth,
-                               GLenum unpackFormat, const T& anySrc,
-                               GLuint viewElemOffset = 0,
-                               GLuint viewElemLengthOverride = 0) {
-    const FuncScope funcScope(*this, "compressedTexSubImage3D");
-    const uint8_t funcDims = 3;
-    const TexImageSourceAdapter src(&anySrc, viewElemOffset,
-                                    viewElemLengthOverride);
-    CompressedTexSubImage(funcDims, target, level, xOffset, yOffset, zOffset,
-                          width, height, depth, unpackFormat, src, Nothing());
-  }
-
-  ////////////////////////////////////
-
-  void CopyTexSubImage3D(GLenum target, GLint level, GLint xOffset,
-                         GLint yOffset, GLint zOffset, GLint x, GLint y,
-                         GLsizei width, GLsizei height) {
-    const FuncScope funcScope(*this, "copyTexSubImage3D");
-    const uint8_t funcDims = 3;
-    CopyTexSubImage(funcDims, target, level, xOffset, yOffset, zOffset, x, y,
-                    width, height);
-  }
-
-  ////////////////////////////////////
-
-  template <typename T>
-  void TexImage3D(GLenum target, GLint level, GLenum internalFormat,
-                  GLsizei width, GLsizei height, GLsizei depth, GLint border,
-                  GLenum unpackFormat, GLenum unpackType, const T& anySrc,
-                  ErrorResult& out_error) {
-    const TexImageSourceAdapter src(&anySrc, &out_error);
-    TexImage3D(target, level, internalFormat, width, height, depth, border,
-               unpackFormat, unpackType, src);
-  }
-
-  void TexImage3D(GLenum target, GLint level, GLenum internalFormat,
-                  GLsizei width, GLsizei height, GLsizei depth, GLint border,
-                  GLenum unpackFormat, GLenum unpackType,
-                  const dom::ArrayBufferView& view, GLuint viewElemOffset,
-                  ErrorResult&) {
-    const TexImageSourceAdapter src(&view, viewElemOffset);
-    TexImage3D(target, level, internalFormat, width, height, depth, border,
-               unpackFormat, unpackType, src);
-  }
-
- protected:
-  void TexImage3D(GLenum target, GLint level, GLenum internalFormat,
-                  GLsizei width, GLsizei height, GLsizei depth, GLint border,
-                  GLenum unpackFormat, GLenum unpackType,
-                  const TexImageSource& src) {
-    const FuncScope funcScope(*this, "texImage3D");
-    const uint8_t funcDims = 3;
-    TexImage(funcDims, target, level, internalFormat, width, height, depth,
-             border, unpackFormat, unpackType, src);
-  }
-
-  ////////////////////////////////////
-
- public:
-  template <typename T>
-  void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
-                     GLint zOffset, GLsizei width, GLsizei height,
-                     GLsizei depth, GLenum unpackFormat, GLenum unpackType,
-                     const T& anySrc, ErrorResult& out_error) {
-    const TexImageSourceAdapter src(&anySrc, &out_error);
-    TexSubImage3D(target, level, xOffset, yOffset, zOffset, width, height,
-                  depth, unpackFormat, unpackType, src);
-  }
-
-  void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
-                     GLint zOffset, GLsizei width, GLsizei height,
-                     GLsizei depth, GLenum unpackFormat, GLenum unpackType,
-                     const dom::Nullable<dom::ArrayBufferView>& maybeSrcView,
-                     GLuint srcElemOffset, ErrorResult&) {
-    const FuncScope funcScope(*this, "texSubImage3D");
-    if (IsContextLost()) return;
-
-    if (!ValidateNonNull("src", maybeSrcView)) return;
-    const auto& srcView = maybeSrcView.Value();
-
-    const TexImageSourceAdapter src(&srcView, srcElemOffset);
-    TexSubImage3D(target, level, xOffset, yOffset, zOffset, width, height,
-                  depth, unpackFormat, unpackType, src);
-  }
-
- protected:
-  void TexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
-                     GLint zOffset, GLsizei width, GLsizei height,
-                     GLsizei depth, GLenum unpackFormat, GLenum unpackType,
-                     const TexImageSource& src) {
-    const FuncScope funcScope(*this, "texSubImage3D");
-    const uint8_t funcDims = 3;
-    TexSubImage(funcDims, target, level, xOffset, yOffset, zOffset, width,
-                height, depth, unpackFormat, unpackType, src);
-  }
-
- public:
-  // -------------------------------------------------------------------------
-  // Programs and shaders - WebGL2ContextPrograms.cpp
-  GLint GetFragDataLocation(const WebGLProgram& program, const nsAString& name);
-
-  // -------------------------------------------------------------------------
-  // Uniforms and attributes - WebGL2ContextUniforms.cpp
-
-  void VertexAttribIPointer(GLuint index, GLint size, GLenum type,
-                            GLsizei stride, WebGLintptr byteOffset) {
-    const FuncScope funcScope(*this, "vertexAttribIPointer");
-    const bool isFuncInt = true;
-    const bool normalized = false;
-    VertexAttribAnyPointer(isFuncInt, index, size, type, normalized, stride,
-                           byteOffset);
-  }
-
-  ////////////////
+  GLint GetFragDataLocation(const WebGLProgram& prog, const nsAString& name);
 
   // GL 3.0 & ES 3.0
   void VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w);
   void VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
-
-  void VertexAttribI4iv(GLuint index, const Int32ListU& list) {
-    const FuncScope funcScope(*this, "VertexAttribI4iv");
-    const auto& arr = Int32Arr::From(list);
-    if (!ValidateAttribArraySetter(4, arr.elemCount)) return;
-
-    const auto& itr = arr.elemBytes;
-    VertexAttribI4i(index, itr[0], itr[1], itr[2], itr[3]);
-  }
-
-  void VertexAttribI4uiv(GLuint index, const Uint32ListU& list) {
-    const FuncScope funcScope(*this, "vertexAttribI4uiv");
-    const auto& arr = Uint32Arr::From(list);
-    if (!ValidateAttribArraySetter(4, arr.elemCount)) return;
-
-    const auto& itr = arr.elemBytes;
-    VertexAttribI4ui(index, itr[0], itr[1], itr[2], itr[3]);
-  }
 
   // -------------------------------------------------------------------------
   // Writing to the drawing buffer
@@ -315,13 +108,13 @@ class WebGL2Context : public WebGLContext {
       return;
     }
 
-    DrawElements(mode, count, type, byteOffset);
+    DrawElementsInstanced(mode, count, type, byteOffset, 1);
   }
 
   // ------------------------------------------------------------------------
   // Multiple Render Targets - WebGL2ContextMRTs.cpp
   /* Implemented in WebGLContext
-  void DrawBuffers(const dom::Sequence<GLenum>& buffers);
+  void DrawBuffers(const nsTArray<GLenum>& buffers);
   */
 
  private:
@@ -329,29 +122,16 @@ class WebGL2Context : public WebGLContext {
                            size_t availElemCount, GLuint elemOffset,
                            GLenum funcType);
 
-  void ClearBufferfv(GLenum buffer, GLint drawBuffer, const Float32Arr& src,
-                     GLuint srcElemOffset);
-  void ClearBufferiv(GLenum buffer, GLint drawBuffer, const Int32Arr& src,
-                     GLuint srcElemOffset);
-  void ClearBufferuiv(GLenum buffer, GLint drawBuffer, const Uint32Arr& src,
-                      GLuint srcElemOffset);
-
  public:
-  void ClearBufferfv(GLenum buffer, GLint drawBuffer, const Float32ListU& list,
-                     GLuint srcElemOffset) {
-    ClearBufferfv(buffer, drawBuffer, Float32Arr::From(list), srcElemOffset);
-  }
-  void ClearBufferiv(GLenum buffer, GLint drawBuffer, const Int32ListU& list,
-                     GLuint srcElemOffset) {
-    ClearBufferiv(buffer, drawBuffer, Int32Arr::From(list), srcElemOffset);
-  }
-  void ClearBufferuiv(GLenum buffer, GLint drawBuffer, const Uint32ListU& list,
-                      GLuint srcElemOffset) {
-    ClearBufferuiv(buffer, drawBuffer, Uint32Arr::From(list), srcElemOffset);
-  }
-
   void ClearBufferfi(GLenum buffer, GLint drawBuffer, GLfloat depth,
                      GLint stencil);
+  void ClearBufferfv(GLenum buffer, GLint drawBuffer,
+                     const RawBuffer<const float>& src, GLuint srcElemOffset);
+  void ClearBufferiv(GLenum buffer, GLint drawBuffer,
+                     const RawBuffer<const int32_t>& src, GLuint srcElemOffset);
+  void ClearBufferuiv(GLenum buffer, GLint drawBuffer,
+                      const RawBuffer<const uint32_t>& src,
+                      GLuint srcElemOffset);
 
   // -------------------------------------------------------------------------
   // Sampler Objects - WebGL2ContextSamplers.cpp
@@ -362,8 +142,8 @@ class WebGL2Context : public WebGLContext {
   void BindSampler(GLuint unit, WebGLSampler* sampler);
   void SamplerParameteri(WebGLSampler& sampler, GLenum pname, GLint param);
   void SamplerParameterf(WebGLSampler& sampler, GLenum pname, GLfloat param);
-  void GetSamplerParameter(JSContext*, const WebGLSampler& sampler,
-                           GLenum pname, JS::MutableHandleValue retval);
+  MaybeWebGLVariant GetSamplerParameter(const WebGLSampler& sampler,
+                                        GLenum pname);
 
   // -------------------------------------------------------------------------
   // Sync objects - WebGL2ContextSync.cpp
@@ -377,8 +157,7 @@ class WebGL2Context : public WebGLContext {
   GLenum ClientWaitSync(const WebGLSync& sync, GLbitfield flags,
                         GLuint64 timeout);
   void WaitSync(const WebGLSync& sync, GLbitfield flags, GLint64 timeout);
-  void GetSyncParameter(JSContext*, const WebGLSync& sync, GLenum pname,
-                        JS::MutableHandleValue retval);
+  MaybeWebGLVariant GetSyncParameter(const WebGLSync& sync, GLenum pname);
 
   // -------------------------------------------------------------------------
   // Transform Feedback - WebGL2ContextTransformFeedback.cpp
@@ -392,9 +171,9 @@ class WebGL2Context : public WebGLContext {
   void PauseTransformFeedback();
   void ResumeTransformFeedback();
   void TransformFeedbackVaryings(WebGLProgram& program,
-                                 const dom::Sequence<nsString>& varyings,
+                                 const nsTArray<nsString>& varyings,
                                  GLenum bufferMode);
-  already_AddRefed<WebGLActiveInfo> GetTransformFeedbackVarying(
+  Maybe<WebGLActiveInfo> GetTransformFeedbackVarying(
       const WebGLProgram& program, GLuint index);
 
   // -------------------------------------------------------------------------
@@ -406,27 +185,24 @@ class WebGL2Context : public WebGLContext {
       void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
                            WebGLintptr offset, WebGLsizeiptr size);
   */
-  virtual JS::Value GetParameter(JSContext* cx, GLenum pname,
-                                 ErrorResult& rv) override;
+  MaybeWebGLVariant GetParameter(GLenum pname) override;
+
   // Make the inline version from the superclass visible here.
   using WebGLContext::GetParameter;
-  void GetIndexedParameter(JSContext* cx, GLenum target, GLuint index,
-                           JS::MutableHandleValue retval, ErrorResult& rv);
-  void GetUniformIndices(const WebGLProgram& program,
-                         const dom::Sequence<nsString>& uniformNames,
-                         dom::Nullable<nsTArray<GLuint> >& retval);
-  void GetActiveUniforms(JSContext* cx, const WebGLProgram& program,
-                         const dom::Sequence<GLuint>& uniformIndices,
-                         GLenum pname, JS::MutableHandleValue retval);
+  MaybeWebGLVariant GetIndexedParameter(GLenum target, GLuint index);
+  MaybeWebGLVariant GetUniformIndices(const WebGLProgram& program,
+                                      const nsTArray<nsString>& uniformNames);
+  MaybeWebGLVariant GetActiveUniforms(const WebGLProgram& program,
+                                      const nsTArray<GLuint>& uniformIndices,
+                                      GLenum pname);
 
   GLuint GetUniformBlockIndex(const WebGLProgram& program,
                               const nsAString& uniformBlockName);
-  void GetActiveUniformBlockParameter(JSContext*, const WebGLProgram& program,
-                                      GLuint uniformBlockIndex, GLenum pname,
-                                      JS::MutableHandleValue retval,
-                                      ErrorResult& rv);
-  void GetActiveUniformBlockName(const WebGLProgram& program,
-                                 GLuint uniformBlockIndex, nsAString& retval);
+  MaybeWebGLVariant GetActiveUniformBlockParameter(const WebGLProgram& program,
+                                                   GLuint uniformBlockIndex,
+                                                   GLenum pname);
+  nsString GetActiveUniformBlockName(const WebGLProgram& program,
+                                     GLuint uniformBlockIndex);
   void UniformBlockBinding(WebGLProgram& program, GLuint uniformBlockIndex,
                            GLuint uniformBlockBinding);
 
@@ -441,7 +217,12 @@ class WebGL2Context : public WebGLContext {
   */
 
  private:
-  WebGL2Context();
+  WebGL2Context() {
+    MOZ_ASSERT(IsSupported(),
+               "not supposed to create a WebGL2Context"
+               "context when not supported");
+  }
+
   virtual UniquePtr<webgl::FormatUsageAuthority> CreateFormatUsage(
       gl::GLContext* gl) const override;
 

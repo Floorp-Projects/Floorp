@@ -22,9 +22,6 @@ class WebGLVertexArrayObject final : public WebGLVertexArrayGL {
  public:
   static WebGLVertexArray* Create(WebGLContext* webgl);
 
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> givenProto) override;
-
  private:
   explicit WebGLVertexArrayObject(WebGLContext* webgl)
       : WebGLVertexArrayGL(webgl) {}
@@ -33,6 +30,7 @@ class WebGLVertexArrayObject final : public WebGLVertexArrayGL {
 };
 
 }  // namespace dom
+
 }  // namespace mozilla
 
 #endif  // !mozilla_dom_WebGLVertexArrayObject_h

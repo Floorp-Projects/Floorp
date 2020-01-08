@@ -14,6 +14,7 @@
 #include "WebGLRenderbuffer.h"
 #include "WebGLShader.h"
 #include "WebGLTexture.h"
+#include "WebGLTypes.h"
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
 
@@ -43,39 +44,37 @@ static bool ValidateAttribIndex(WebGLContext& webgl, GLuint index) {
   return valid;
 }
 
-JSObject* WebGLContext::GetVertexAttribFloat32Array(JSContext* cx,
-                                                    GLuint index) {
-  GLfloat attrib[4];
+Float32Array4&& WebGLContext::GetVertexAttribFloat32Array(GLuint index) {
+  Float32Array4 attrib;
   if (index) {
-    gl->fGetVertexAttribfv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, attrib);
+    gl->fGetVertexAttribfv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, &attrib[0]);
   } else {
-    memcpy(attrib, mGenericVertexAttrib0Data,
+    memcpy(&attrib[0], mGenericVertexAttrib0Data,
            sizeof(mGenericVertexAttrib0Data));
   }
-  return dom::Float32Array::Create(cx, this, 4, attrib);
+  return std::move(attrib);
 }
 
-JSObject* WebGLContext::GetVertexAttribInt32Array(JSContext* cx, GLuint index) {
-  GLint attrib[4];
+Int32Array4&& WebGLContext::GetVertexAttribInt32Array(GLuint index) {
+  Int32Array4 attrib;
   if (index) {
-    gl->fGetVertexAttribIiv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, attrib);
+    gl->fGetVertexAttribIiv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, &attrib[0]);
   } else {
-    memcpy(attrib, mGenericVertexAttrib0Data,
+    memcpy(&attrib[0], mGenericVertexAttrib0Data,
            sizeof(mGenericVertexAttrib0Data));
   }
-  return dom::Int32Array::Create(cx, this, 4, attrib);
+  return std::move(attrib);
 }
 
-JSObject* WebGLContext::GetVertexAttribUint32Array(JSContext* cx,
-                                                   GLuint index) {
-  GLuint attrib[4];
+Uint32Array4&& WebGLContext::GetVertexAttribUint32Array(GLuint index) {
+  Uint32Array4 attrib;
   if (index) {
-    gl->fGetVertexAttribIuiv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, attrib);
+    gl->fGetVertexAttribIuiv(index, LOCAL_GL_CURRENT_VERTEX_ATTRIB, &attrib[0]);
   } else {
-    memcpy(attrib, mGenericVertexAttrib0Data,
+    memcpy(&attrib[0], mGenericVertexAttrib0Data,
            sizeof(mGenericVertexAttrib0Data));
   }
-  return dom::Uint32Array::Create(cx, this, 4, attrib);
+  return std::move(attrib);
 }
 
 ////////////////////////////////////////
@@ -182,81 +181,70 @@ void WebGLContext::DisableVertexAttribArray(GLuint index) {
   mBoundVertexArray->InvalidateCaches();
 }
 
-JS::Value WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index,
-                                        GLenum pname, ErrorResult& rv) {
+MaybeWebGLVariant WebGLContext::GetVertexAttrib(GLuint index, GLenum pname) {
   const FuncScope funcScope(*this, "getVertexAttrib");
-  if (IsContextLost()) return JS::NullValue();
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateAttribIndex(*this, index)) return JS::NullValue();
+  if (!ValidateAttribIndex(*this, index)) return Nothing();
 
   MOZ_ASSERT(mBoundVertexArray);
 
   switch (pname) {
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-      return WebGLObjectAsJSValue(
-          cx, mBoundVertexArray->mAttribs[index].mBuf.get(), rv);
+      return AsSomeVariant(std::move(mBoundVertexArray->mAttribs[index].mBuf));
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
-      return JS::Int32Value(mBoundVertexArray->mAttribs[index].Stride());
+      return AsSomeVariant(
+          static_cast<int32_t>(mBoundVertexArray->mAttribs[index].Stride()));
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
-      return JS::Int32Value(mBoundVertexArray->mAttribs[index].Size());
+      return AsSomeVariant(
+          static_cast<int32_t>(mBoundVertexArray->mAttribs[index].Size()));
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE:
-      return JS::Int32Value(mBoundVertexArray->mAttribs[index].Type());
+      return AsSomeVariant(
+          static_cast<int32_t>(mBoundVertexArray->mAttribs[index].Type()));
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_INTEGER:
       if (IsWebGL2())
-        return JS::BooleanValue(
-            mBoundVertexArray->mAttribs[index].IntegerFunc());
+        return AsSomeVariant(static_cast<bool>(
+            mBoundVertexArray->mAttribs[index].IntegerFunc()));
 
       break;
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
       if (IsWebGL2() ||
           IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays)) {
-        return JS::Int32Value(mBoundVertexArray->mAttribs[index].mDivisor);
+        return AsSomeVariant(
+            static_cast<int32_t>(mBoundVertexArray->mAttribs[index].mDivisor));
       }
       break;
 
     case LOCAL_GL_CURRENT_VERTEX_ATTRIB: {
-      JS::RootedObject obj(cx);
       switch (mGenericVertexAttribTypes[index]) {
         case webgl::AttribBaseType::Float:
-          obj = GetVertexAttribFloat32Array(cx, index);
-          break;
-
+          return AsSomeVariant(std::move(GetVertexAttribFloat32Array(index)));
         case webgl::AttribBaseType::Int:
-          obj = GetVertexAttribInt32Array(cx, index);
-          break;
-
+          return AsSomeVariant(std::move(GetVertexAttribInt32Array(index)));
         case webgl::AttribBaseType::UInt:
-          obj = GetVertexAttribUint32Array(cx, index);
-          break;
-
+          return AsSomeVariant(std::move(GetVertexAttribUint32Array(index)));
         case webgl::AttribBaseType::Boolean:
           MOZ_CRASH("impossible");
       }
-
-      if (!obj) {
-        rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return JS::NullValue();
-      }
-      return JS::ObjectValue(*obj);
     }
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-      return JS::BooleanValue(mBoundVertexArray->mAttribs[index].mEnabled);
+      return AsSomeVariant(mBoundVertexArray->mAttribs[index].mEnabled);
 
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
-      return JS::BooleanValue(mBoundVertexArray->mAttribs[index].Normalized());
+      return AsSomeVariant(mBoundVertexArray->mAttribs[index].Normalized());
 
     default:
       break;
   }
 
   ErrorInvalidEnumInfo("pname", pname);
-  return JS::NullValue();
+  return Nothing();
 }
 
 WebGLsizeiptr WebGLContext::GetVertexAttribOffset(GLuint index, GLenum pname) {

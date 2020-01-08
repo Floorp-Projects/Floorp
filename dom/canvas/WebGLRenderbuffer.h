@@ -19,8 +19,7 @@ namespace webgl {
 struct FormatUsageInfo;
 }
 
-class WebGLRenderbuffer final : public nsWrapperCache,
-                                public WebGLRefCountedObject<WebGLRenderbuffer>,
+class WebGLRenderbuffer final : public WebGLRefCountedObject<WebGLRenderbuffer>,
                                 public LinkedListElement<WebGLRenderbuffer>,
                                 public WebGLRectangleObject,
                                 public CacheInvalidator {
@@ -37,8 +36,7 @@ class WebGLRenderbuffer final : public nsWrapperCache,
   webgl::ImageInfo mImageInfo;
 
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLRenderbuffer)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLRenderbuffer)
+  NS_INLINE_DECL_REFCOUNTING(WebGLRenderbuffer)
 
   explicit WebGLRenderbuffer(WebGLContext* webgl);
 
@@ -46,15 +44,10 @@ class WebGLRenderbuffer final : public nsWrapperCache,
 
   const auto& ImageInfo() const { return mImageInfo; }
 
-  WebGLContext* GetParentObject() const { return mContext; }
-
   void RenderbufferStorage(uint32_t samples, GLenum internalFormat,
                            uint32_t width, uint32_t height);
   // Only handles a subset of `pname`s.
   GLint GetRenderbufferParameter(RBTarget target, RBParam pname) const;
-
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> givenProto) override;
 
   auto MemoryUsage() const { return mImageInfo.MemoryUsage(); }
 

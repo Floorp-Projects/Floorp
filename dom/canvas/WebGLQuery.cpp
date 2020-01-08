@@ -91,8 +91,7 @@ void WebGLQuery::EndQuery() {
   availRunnable->mQueries.push_back(this);
 }
 
-void WebGLQuery::GetQueryParameter(GLenum pname,
-                                   JS::MutableHandleValue retval) const {
+MaybeWebGLVariant WebGLQuery::GetQueryParameter(GLenum pname) const {
   switch (pname) {
     case LOCAL_GL_QUERY_RESULT_AVAILABLE:
     case LOCAL_GL_QUERY_RESULT:
@@ -100,16 +99,18 @@ void WebGLQuery::GetQueryParameter(GLenum pname,
 
     default:
       mContext->ErrorInvalidEnumInfo("pname", pname);
-      return;
+      return Nothing();
   }
 
   if (!mTarget) {
     mContext->ErrorInvalidOperation("Query has never been active.");
-    return;
+    return Nothing();
   }
 
-  if (mActiveSlot)
-    return mContext->ErrorInvalidOperation("Query is still active.");
+  if (mActiveSlot) {
+    mContext->ErrorInvalidOperation("Query is still active.");
+    return Nothing();
+  }
 
   // End of validation
   ////
@@ -119,9 +120,9 @@ void WebGLQuery::GetQueryParameter(GLenum pname,
       (mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
   if (!canBeAvailable) {
     if (pname == LOCAL_GL_QUERY_RESULT_AVAILABLE) {
-      retval.set(JS::BooleanValue(false));
+      return AsSomeVariant(false);
     }
-    return;
+    return Nothing();
   }
 
   const auto& gl = mContext->gl;
@@ -130,8 +131,7 @@ void WebGLQuery::GetQueryParameter(GLenum pname,
   switch (pname) {
     case LOCAL_GL_QUERY_RESULT_AVAILABLE:
       gl->fGetQueryObjectuiv(mGLName, pname, (GLuint*)&val);
-      retval.set(JS::BooleanValue(bool(val)));
-      return;
+      return AsSomeVariant(static_cast<bool>(val));
 
     case LOCAL_GL_QUERY_RESULT:
       switch (mTarget) {
@@ -154,13 +154,9 @@ void WebGLQuery::GetQueryParameter(GLenum pname,
         case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
         case LOCAL_GL_TIME_ELAPSED_EXT:
         case LOCAL_GL_TIMESTAMP_EXT:
-          retval.set(JS::NumberValue(val));
-          break;
-
-        default:
-          MOZ_CRASH("Bad `mTarget`.");
+          return AsSomeVariant(val);
       }
-      return;
+      MOZ_CRASH("Bad `mTarget`.");
 
     default:
       MOZ_CRASH("Bad `pname`.");
@@ -205,17 +201,5 @@ void WebGLQuery::QueryCounter(GLenum target) {
   const auto& availRunnable = mContext->EnsureAvailabilityRunnable();
   availRunnable->mQueries.push_back(this);
 }
-
-////
-
-JSObject* WebGLQuery::WrapObject(JSContext* cx,
-                                 JS::Handle<JSObject*> givenProto) {
-  return dom::WebGLQuery_Binding::Wrap(cx, this, givenProto);
-}
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLQuery)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLQuery, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLQuery, Release)
 
 }  // namespace mozilla

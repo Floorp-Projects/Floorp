@@ -226,7 +226,7 @@ bool WebGLContext::ValidateUniformArraySetter(
 
   if (!loc->ValidateArrayLength(setterElemSize, setterArraySize)) return false;
 
-  const auto& elemCount = loc->mInfo->mActiveInfo->mElemCount;
+  const auto& elemCount = loc->mInfo->mActiveInfo.mElemCount;
   MOZ_ASSERT(elemCount > loc->mArrayIndex);
   const uint32_t uniformElemCount = elemCount - loc->mArrayIndex;
 
@@ -255,7 +255,7 @@ bool WebGLContext::ValidateUniformMatrixArraySetter(
     return false;
   }
 
-  const auto& elemCount = loc->mInfo->mActiveInfo->mElemCount;
+  const auto& elemCount = loc->mInfo->mActiveInfo.mElemCount;
   MOZ_ASSERT(elemCount > loc->mArrayIndex);
   const uint32_t uniformElemCount = elemCount - loc->mArrayIndex;
 
@@ -627,22 +627,22 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
   mDefaultVertexArray->BindVertexArray();
   mDefaultVertexArray->mAttribs.resize(mGLMaxVertexAttribs);
 
-  mPixelStore_FlipY = false;
-  mPixelStore_PremultiplyAlpha = false;
-  mPixelStore_ColorspaceConversion = BROWSER_DEFAULT_WEBGL;
-  mPixelStore_RequireFastPath = false;
+  mPixelStore.mFlipY = false;
+  mPixelStore.mPremultiplyAlpha = false;
+  mPixelStore.mColorspaceConversion = BROWSER_DEFAULT_WEBGL;
+  mPixelStore.mRequireFastPath = false;
 
   // GLES 3.0.4, p259:
-  mPixelStore_UnpackImageHeight = 0;
-  mPixelStore_UnpackSkipImages = 0;
-  mPixelStore_UnpackRowLength = 0;
-  mPixelStore_UnpackSkipRows = 0;
-  mPixelStore_UnpackSkipPixels = 0;
-  mPixelStore_UnpackAlignment = 4;
-  mPixelStore_PackRowLength = 0;
-  mPixelStore_PackSkipRows = 0;
-  mPixelStore_PackSkipPixels = 0;
-  mPixelStore_PackAlignment = 4;
+  mPixelStore.mUnpackImageHeight = 0;
+  mPixelStore.mUnpackSkipImages = 0;
+  mPixelStore.mUnpackRowLength = 0;
+  mPixelStore.mUnpackSkipRows = 0;
+  mPixelStore.mUnpackSkipPixels = 0;
+  mPixelStore.mUnpackAlignment = 4;
+  mPixelStore.mPackRowLength = 0;
+  mPixelStore.mPackSkipRows = 0;
+  mPixelStore.mPackSkipPixels = 0;
+  mPixelStore.mPackAlignment = 4;
 
   mPrimRestartTypeBytes = 0;
 

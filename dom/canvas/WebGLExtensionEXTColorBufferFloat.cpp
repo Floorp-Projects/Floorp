@@ -48,7 +48,4 @@ bool WebGLExtensionEXTColorBufferFloat::IsSupported(const WebGLContext* webgl) {
   return gl->IsSupported(gl::GLFeature::EXT_color_buffer_float);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionEXTColorBufferFloat,
-                          EXT_color_buffer_float)
-
 }  // namespace mozilla

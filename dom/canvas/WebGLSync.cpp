@@ -26,23 +26,10 @@ void WebGLSync::Delete() {
   LinkedListElement<WebGLSync>::removeFrom(mContext->mSyncs);
 }
 
-WebGLContext* WebGLSync::GetParentObject() const { return mContext; }
-
 void WebGLSync::MarkSignaled() const {
   if (mContext->mCompletedFenceId < mFenceId) {
     mContext->mCompletedFenceId = mFenceId;
   }
 }
-
-// -------------------------------------------------------------------------
-// IMPLEMENT NS
-JSObject* WebGLSync::WrapObject(JSContext* cx,
-                                JS::Handle<JSObject*> givenProto) {
-  return dom::WebGLSync_Binding::Wrap(cx, this, givenProto);
-}
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLSync)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLSync, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLSync, Release);
 
 }  // namespace mozilla

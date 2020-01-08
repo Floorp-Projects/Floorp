@@ -146,18 +146,25 @@ static webgl::AttribBaseType ElemBaseType(const GLenum elemType) {
   }
 }
 
-WebGLActiveInfo::WebGLActiveInfo(WebGLContext* webgl, GLint elemCount,
-                                 GLenum elemType, bool isArray,
+WebGLActiveInfo::WebGLActiveInfo(GLint elemCount, GLenum elemType, bool isArray,
                                  const nsACString& baseUserName,
                                  const nsACString& baseMappedName)
-    : mWebGL(webgl),
-      mElemCount(elemCount),
+    : mElemCount(elemCount),
       mElemType(elemType),
       mBaseUserName(baseUserName),
       mIsArray(isArray),
       mElemSize(ElemSizeFromType(elemType)),
       mBaseMappedName(baseMappedName),
       mBaseType(ElemBaseType(mElemType)) {}
+
+WebGLActiveInfo::WebGLActiveInfo(const WebGLActiveInfo& aOther)
+    : mElemCount(aOther.mElemCount),
+      mElemType(aOther.mElemType),
+      mBaseUserName(aOther.mBaseUserName),
+      mIsArray(aOther.mIsArray),
+      mElemSize(aOther.mElemSize),
+      mBaseMappedName(aOther.mBaseMappedName),
+      mBaseType(aOther.mBaseType) {}
 
 bool WebGLActiveInfo::IsSampler() const {
   switch (mElemType) {
@@ -185,14 +192,14 @@ bool WebGLActiveInfo::IsSampler() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-JSObject* WebGLActiveInfo::WrapObject(JSContext* js,
-                                      JS::Handle<JSObject*> givenProto) {
+JSObject* ClientWebGLActiveInfo::WrapObject(JSContext* js,
+                                            JS::Handle<JSObject*> givenProto) {
   return dom::WebGLActiveInfo_Binding::Wrap(js, this, givenProto);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLActiveInfo)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(ClientWebGLActiveInfo)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLActiveInfo, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLActiveInfo, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ClientWebGLActiveInfo, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ClientWebGLActiveInfo, Release)
 
 }  // namespace mozilla

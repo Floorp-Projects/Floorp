@@ -5,12 +5,13 @@
 
 #include "WebGLShaderPrecisionFormat.h"
 
+#include "ClientWebGLContext.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "WebGLContext.h"
 
 namespace mozilla {
 
-bool WebGLShaderPrecisionFormat::WrapObject(
+bool ClientWebGLShaderPrecisionFormat::WrapObject(
     JSContext* cx, JS::Handle<JSObject*> givenProto,
     JS::MutableHandle<JSObject*> reflector) {
   return dom::WebGLShaderPrecisionFormat_Binding::Wrap(cx, this, givenProto,

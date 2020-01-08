@@ -42,7 +42,4 @@ bool WebGLExtensionCompressedTextureRGTC::IsSupported(
   return webgl->gl->IsSupported(gl::GLFeature::texture_compression_rgtc);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureRGTC,
-                          EXT_texture_compression_rgtc)
-
 }  // namespace mozilla

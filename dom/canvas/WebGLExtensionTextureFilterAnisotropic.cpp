@@ -18,7 +18,4 @@ WebGLExtensionTextureFilterAnisotropic::WebGLExtensionTextureFilterAnisotropic(
 WebGLExtensionTextureFilterAnisotropic::
     ~WebGLExtensionTextureFilterAnisotropic() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureFilterAnisotropic,
-                          EXT_texture_filter_anisotropic)
-
 }  // namespace mozilla

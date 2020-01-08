@@ -1,0 +1,38 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PCompositorBridge;
+include protocol PLayerTransaction;
+
+using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+
+namespace mozilla {
+namespace dom {
+
+/**
+ * Represents the connection between a WebGLChild actor that issues WebGL
+ * command from the content process, and a WebGLParent in the compositor
+ * process that runs the commands.
+ */
+sync protocol PWebGL
+{
+  manager PCompositorBridge;
+
+parent:
+  async __delete__();
+
+  // DLP: TODO: Does this need to be sync?
+  sync UpdateCompositableHandle(PLayerTransaction aLayerTrans,
+                         CompositableHandle aHandle);
+
+child:
+  // Tell client that this queue needs to be shut down
+  async QueueFailed();
+};
+
+} // dom
+} // mozilla

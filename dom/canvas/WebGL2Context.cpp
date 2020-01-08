@@ -17,14 +17,6 @@
 
 namespace mozilla {
 
-WebGL2Context::WebGL2Context() : WebGLContext() {
-  MOZ_ASSERT(IsSupported(),
-             "not supposed to create a WebGL2Context"
-             "context when not supported");
-}
-
-WebGL2Context::~WebGL2Context() {}
-
 UniquePtr<webgl::FormatUsageAuthority> WebGL2Context::CreateFormatUsage(
     gl::GLContext* gl) const {
   return webgl::FormatUsageAuthority::CreateForWebGL2(gl);
@@ -32,14 +24,6 @@ UniquePtr<webgl::FormatUsageAuthority> WebGL2Context::CreateFormatUsage(
 
 /*static*/
 bool WebGL2Context::IsSupported() { return StaticPrefs::webgl_enable_webgl2(); }
-
-/*static*/
-WebGL2Context* WebGL2Context::Create() { return new WebGL2Context(); }
-
-JSObject* WebGL2Context::WrapObject(JSContext* cx,
-                                    JS::Handle<JSObject*> givenProto) {
-  return dom::WebGL2RenderingContext_Binding::Wrap(cx, this, givenProto);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // WebGL 2 initialisation

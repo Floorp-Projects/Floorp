@@ -16,8 +16,7 @@ struct CachedDrawFetchLimits;
 }
 
 class WebGLTransformFeedback final
-    : public nsWrapperCache,
-      public WebGLRefCountedObject<WebGLTransformFeedback>,
+    : public WebGLRefCountedObject<WebGLTransformFeedback>,
       public LinkedListElement<WebGLTransformFeedback> {
   friend class ScopedDrawWithTransformFeedback;
   friend class WebGLContext;
@@ -51,12 +50,9 @@ class WebGLTransformFeedback final
   ~WebGLTransformFeedback();
 
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLTransformFeedback)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLTransformFeedback)
+  NS_INLINE_DECL_REFCOUNTING(WebGLTransformFeedback)
 
   void Delete();
-  WebGLContext* GetParentObject() const { return mContext; }
-  virtual JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
 
   bool IsActiveAndNotPaused() const { return mIsActive && !mIsPaused; }
 

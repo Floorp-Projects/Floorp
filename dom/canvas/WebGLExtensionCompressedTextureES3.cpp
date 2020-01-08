@@ -59,7 +59,4 @@ WebGLExtensionCompressedTextureES3::WebGLExtensionCompressedTextureES3(
 
 WebGLExtensionCompressedTextureES3::~WebGLExtensionCompressedTextureES3() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureES3,
-                          WEBGL_compressed_texture_etc)
-
 }  // namespace mozilla

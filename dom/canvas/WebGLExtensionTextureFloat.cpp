@@ -125,6 +125,4 @@ bool WebGLExtensionTextureFloat::IsSupported(const WebGLContext* webgl) {
   return true;
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionTextureFloat, OES_texture_float)
-
 }  // namespace mozilla

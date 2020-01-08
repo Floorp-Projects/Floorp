@@ -37,6 +37,7 @@
 namespace mozilla {
 
 typedef gfxImageFormat PixelFormat;
+enum WebGLVersion : uint32_t { WEBGL1, WEBGL2 };
 
 }  // namespace mozilla
 
@@ -1179,6 +1180,13 @@ struct ParamTraits<mozilla::SideBits>
     : public BitFlagsEnumSerializer<mozilla::SideBits,
                                     mozilla::SideBits::eAll> {};
 
+template <>
+struct ParamTraits<mozilla::WebGLVersion>
+    : public ContiguousEnumSerializerInclusive<mozilla::WebGLVersion,
+                                               mozilla::WebGLVersion::WEBGL1,
+                                               mozilla::WebGLVersion::WEBGL2> {
+};
+
 } /* namespace IPC */
 
 namespace mozilla {
@@ -1232,7 +1240,7 @@ struct IPDLParamTraits<gfx::PaintFragment> {
   }
 };
 
-} /* namespace ipc */
-} /* namespace mozilla */
+}  // namespace ipc
+}  // namespace mozilla
 
 #endif /* __GFXMESSAGEUTILS_H__ */

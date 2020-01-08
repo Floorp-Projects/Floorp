@@ -31,7 +31,7 @@ void CompositableClient::InitIPDL(const CompositableHandle& aHandle) {
   mForwarder->AssertInForwarderThread();
 
   mHandle = aHandle;
-  mIsAsync = !NS_IsMainThread();
+  mIsAsync |= !NS_IsMainThread();
 }
 
 CompositableClient::CompositableClient(CompositableForwarder* aForwarder,

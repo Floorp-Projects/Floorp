@@ -98,12 +98,10 @@ void WebGLContext::EndQuery(GLenum target) {
   query->EndQuery();
 }
 
-void WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
-                            JS::MutableHandleValue retval) {
+MaybeWebGLVariant WebGLContext::GetQuery(GLenum target, GLenum pname) {
   const FuncScope funcScope(*this, "getQuery");
 
-  retval.setNull();
-  if (IsContextLost()) return;
+  if (IsContextLost()) return Nothing();
 
   switch (pname) {
     case LOCAL_GL_CURRENT_QUERY_EXT: {
@@ -112,20 +110,17 @@ void WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
         // Doesn't seem illegal to ask about, but is always null.
         // TIMESTAMP has no slot, so ValidateQuerySlotByTarget would generate
         // INVALID_ENUM.
-        return;
+        return Nothing();
       }
 
       const auto& slot = ValidateQuerySlotByTarget(target);
-      if (!slot || !*slot) return;
+      if (!slot || !*slot) return Nothing();
 
       const auto& query = *slot;
-      if (target != query->Target()) return;
+      if (target != query->Target()) return Nothing();
 
-      JS::Rooted<JS::Value> v(cx);
-      dom::GetOrCreateDOMReflector(cx, slot->get(), &v);
-      retval.set(v);
+      return AsSomeVariant(std::move(query));
     }
-      return;
 
     case LOCAL_GL_QUERY_COUNTER_BITS_EXT:
       if (!IsExtensionEnabled(WebGLExtensionID::EXT_disjoint_timer_query))
@@ -134,7 +129,7 @@ void WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
       if (target != LOCAL_GL_TIME_ELAPSED_EXT &&
           target != LOCAL_GL_TIMESTAMP_EXT) {
         ErrorInvalidEnumInfo("target", target);
-        return;
+        return Nothing();
       }
 
       {
@@ -144,27 +139,25 @@ void WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
         if (!Has64BitTimestamps() && bits > 32) {
           bits = 32;
         }
-        retval.set(JS::Int32Value(bits));
+        return AsSomeVariant(bits);
       }
-      return;
 
     default:
       break;
   }
 
   ErrorInvalidEnumInfo("pname", pname);
+  return Nothing();
 }
 
-void WebGLContext::GetQueryParameter(JSContext*, const WebGLQuery& query,
-                                     GLenum pname,
-                                     JS::MutableHandleValue retval) {
+MaybeWebGLVariant WebGLContext::GetQueryParameter(const WebGLQuery& query,
+                                                  GLenum pname) {
   const FuncScope funcScope(*this, "getQueryParameter");
-  retval.setNull();
-  if (IsContextLost()) return;
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObject("query", query)) return;
+  if (!ValidateObject("query", query)) return Nothing();
 
-  query.GetQueryParameter(pname, retval);
+  return query.GetQueryParameter(pname);
 }
 
 }  // namespace mozilla

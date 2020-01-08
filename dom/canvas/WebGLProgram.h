@@ -18,12 +18,14 @@
 #include "nsWrapperCache.h"
 
 #include "CacheInvalidator.h"
+#include "WebGLActiveInfo.h"
 #include "WebGLContext.h"
 #include "WebGLObjectModel.h"
 
 namespace mozilla {
 class ErrorResult;
 class WebGLActiveInfo;
+class WebGLContext;
 class WebGLProgram;
 class WebGLShader;
 class WebGLUniformLocation;
@@ -41,14 +43,14 @@ namespace webgl {
 enum class TextureBaseType : uint8_t;
 
 struct AttribInfo final {
-  const RefPtr<WebGLActiveInfo> mActiveInfo;
+  const WebGLActiveInfo mActiveInfo;
   const GLint mLoc;  // -1 for active built-ins
 };
 
 struct UniformInfo final {
   typedef decltype(WebGLContext::mBound2DTextures) TexListT;
 
-  const RefPtr<WebGLActiveInfo> mActiveInfo;
+  const WebGLActiveInfo mActiveInfo;
   const TexListT* const mSamplerTexList;
   const webgl::TextureBaseType mTexBaseType;
   const bool mIsShadowSampler;
@@ -56,10 +58,11 @@ struct UniformInfo final {
   std::vector<uint32_t> mSamplerValues;
 
  protected:
-  static const TexListT* GetTexList(WebGLActiveInfo* activeInfo);
+  static const TexListT* GetTexList(const WebGLContext* aWebGL,
+                                    WebGLActiveInfo* activeInfo);
 
  public:
-  explicit UniformInfo(WebGLActiveInfo* activeInfo);
+  explicit UniformInfo(const WebGLContext* aWebGL, WebGLActiveInfo& activeInfo);
 };
 
 struct UniformBlockInfo final {
@@ -106,7 +109,7 @@ struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,
   std::vector<AttribInfo> attribs;
   std::vector<UniformInfo*> uniforms;            // Owns its contents.
   std::vector<UniformBlockInfo*> uniformBlocks;  // Owns its contents.
-  std::vector<RefPtr<WebGLActiveInfo>> transformFeedbackVaryings;
+  std::vector<WebGLActiveInfo> transformFeedbackVaryings;
   std::unordered_map<uint8_t, const FragOutputInfo> fragOutputs;
   uint8_t zLayerCount = 1;
 
@@ -138,15 +141,13 @@ struct LinkedProgramInfo final : public RefCounted<LinkedProgramInfo>,
 
 }  // namespace webgl
 
-class WebGLProgram final : public nsWrapperCache,
-                           public WebGLRefCountedObject<WebGLProgram>,
+class WebGLProgram final : public WebGLRefCountedObject<WebGLProgram>,
                            public LinkedListElement<WebGLProgram> {
   friend class WebGLTransformFeedback;
   friend struct webgl::LinkedProgramInfo;
 
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLProgram)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLProgram)
+  NS_INLINE_DECL_REFCOUNTING(WebGLProgram)
 
   explicit WebGLProgram(WebGLContext* webgl);
 
@@ -156,25 +157,23 @@ class WebGLProgram final : public nsWrapperCache,
   void AttachShader(WebGLShader* shader);
   void BindAttribLocation(GLuint index, const nsAString& name);
   void DetachShader(const WebGLShader* shader);
-  already_AddRefed<WebGLActiveInfo> GetActiveAttrib(GLuint index) const;
-  already_AddRefed<WebGLActiveInfo> GetActiveUniform(GLuint index) const;
-  void GetAttachedShaders(nsTArray<RefPtr<WebGLShader>>* const out) const;
+  Maybe<WebGLActiveInfo> GetActiveAttrib(GLuint index) const;
+  Maybe<WebGLActiveInfo> GetActiveUniform(GLuint index) const;
+  MaybeAttachedShaders GetAttachedShaders() const;
   GLint GetAttribLocation(const nsAString& name) const;
   GLint GetFragDataLocation(const nsAString& name) const;
-  void GetProgramInfoLog(nsAString* const out) const;
-  JS::Value GetProgramParameter(GLenum pname) const;
+  nsString GetProgramInfoLog() const;
+  MaybeWebGLVariant GetProgramParameter(GLenum pname) const;
   GLuint GetUniformBlockIndex(const nsAString& name) const;
-  void GetActiveUniformBlockName(GLuint uniformBlockIndex,
-                                 nsAString& name) const;
-  JS::Value GetActiveUniformBlockParam(GLuint uniformBlockIndex,
-                                       GLenum pname) const;
-  JS::Value GetActiveUniformBlockActiveUniforms(
-      JSContext* cx, GLuint uniformBlockIndex,
-      ErrorResult* const out_error) const;
+  nsString GetActiveUniformBlockName(GLuint uniformBlockIndex) const;
+  MaybeWebGLVariant GetActiveUniformBlockParam(GLuint uniformBlockIndex,
+                                               GLenum pname) const;
+  MaybeWebGLVariant GetActiveUniformBlockActiveUniforms(
+      GLuint uniformBlockIndex) const;
   already_AddRefed<WebGLUniformLocation> GetUniformLocation(
       const nsAString& name) const;
-  void GetUniformIndices(const dom::Sequence<nsString>& uniformNames,
-                         dom::Nullable<nsTArray<GLuint>>& retval) const;
+  MaybeWebGLVariant GetUniformIndices(
+      const nsTArray<nsString>& uniformNames) const;
   void UniformBlockBinding(GLuint uniformBlockIndex,
                            GLuint uniformBlockBinding) const;
 
@@ -195,10 +194,9 @@ class WebGLProgram final : public nsWrapperCache,
   bool UnmapUniformBlockName(const nsCString& mappedName,
                              nsCString* const out_userName) const;
 
-  void TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
+  void TransformFeedbackVaryings(const nsTArray<nsString>& varyings,
                                  GLenum bufferMode);
-  already_AddRefed<WebGLActiveInfo> GetTransformFeedbackVarying(
-      GLuint index) const;
+  Maybe<WebGLActiveInfo> GetTransformFeedbackVarying(GLuint index) const;
 
   void EnumerateFragOutputs(
       std::map<nsCString, const nsCString>& out_FragOutputs) const;
@@ -211,11 +209,6 @@ class WebGLProgram final : public nsWrapperCache,
 
   const auto& VertShader() const { return mVertShader; }
   const auto& FragShader() const { return mFragShader; }
-
-  WebGLContext* GetParentObject() const { return mContext; }
-
-  virtual JSObject* WrapObject(JSContext* js,
-                               JS::Handle<JSObject*> givenProto) override;
 
  private:
   ~WebGLProgram();

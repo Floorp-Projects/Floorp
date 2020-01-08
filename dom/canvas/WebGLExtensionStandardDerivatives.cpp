@@ -17,7 +17,4 @@ WebGLExtensionStandardDerivatives::WebGLExtensionStandardDerivatives(
 
 WebGLExtensionStandardDerivatives::~WebGLExtensionStandardDerivatives() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionStandardDerivatives,
-                          OES_standard_derivatives)
-
 }  // namespace mozilla

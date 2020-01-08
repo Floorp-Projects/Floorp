@@ -68,18 +68,17 @@ bool WebGLContext::GetStencilBits(GLint* const out_stencilBits) const {
   return true;
 }
 
-JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
-                                     ErrorResult& rv) {
+MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
   const FuncScope funcScope(*this, "getParameter");
 
-  if (IsContextLost()) return JS::NullValue();
+  if (IsContextLost()) return Nothing();
 
   if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers)) {
     if (pname == LOCAL_GL_MAX_COLOR_ATTACHMENTS) {
-      return JS::Int32Value(mGLMaxColorAttachments);
+      return AsSomeVariant(mGLMaxColorAttachments);
 
     } else if (pname == LOCAL_GL_MAX_DRAW_BUFFERS) {
-      return JS::Int32Value(mGLMaxDrawBuffers);
+      return AsSomeVariant(mGLMaxDrawBuffers);
 
     } else if (pname >= LOCAL_GL_DRAW_BUFFER0 &&
                pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + mGLMaxDrawBuffers)) {
@@ -91,7 +90,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
       } else {
         gl->fGetIntegerv(pname, &ret);
       }
-      return JS::Int32Value(ret);
+      return AsSomeVariant(ret);
     }
   }
 
@@ -101,7 +100,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
       WebGLVertexArray* vao = (mBoundVertexArray != mDefaultVertexArray)
                                   ? mBoundVertexArray.get()
                                   : nullptr;
-      return WebGLObjectAsJSValue(cx, vao, rv);
+      return AsSomeVariant(vao);
     }
   }
 
@@ -116,7 +115,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
         }
         // TODO: JS doesn't support 64-bit integers. Be lossy and
         // cast to double (53 bits)
-        return JS::NumberValue(val);
+        return AsSomeVariant(val);
       }
 
       case LOCAL_GL_GPU_DISJOINT_EXT: {
@@ -124,7 +123,8 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
         if (gl->IsExtensionSupported(gl::GLContext::EXT_disjoint_timer_query)) {
           gl->fGetBooleanv(pname, &val);
         }
-        return JS::BooleanValue(val);
+        bool boolVal = static_cast<bool>(val);
+        return AsSomeVariant(boolVal);
       }
 
       default:
@@ -157,7 +157,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
 
         bool hasRetVal = false;
 
-        nsAutoString ret;
+        nsString ret;
         if (overridePref) {
           nsresult res = Preferences::GetString(overridePref, ret);
           if (NS_SUCCEEDED(res) && ret.Length() > 0) hasRetVal = true;
@@ -170,7 +170,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
           hasRetVal = true;
         }
 
-        return StringValue(cx, ret, rv);
+        return AsSomeVariant(std::move(ret));
       }
     }
   }
@@ -180,7 +180,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
     if (pname == LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT) {
       GLint i = 0;
       gl->fGetIntegerv(pname, &i);
-      return JS::Int32Value(i);
+      return AsSomeVariant(i);
     }
   }
 
@@ -188,7 +188,8 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
     if (pname == LOCAL_GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT) {
       GLfloat f = 0.f;
       gl->fGetFloatv(pname, &f);
-      return JS::NumberValue(f);
+      double df = static_cast<double>(f);
+      return AsSomeVariant(df);
     }
   }
 
@@ -198,11 +199,11 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
     //
     case LOCAL_GL_VENDOR:
     case LOCAL_GL_RENDERER:
-      return StringValue(cx, "Mozilla", rv);
+      return AsSomeVariant(nsCString("Mozilla"));
     case LOCAL_GL_VERSION:
-      return StringValue(cx, "WebGL 1.0", rv);
+      return AsSomeVariant(nsCString("WebGL 1.0"));
     case LOCAL_GL_SHADING_LANGUAGE_VERSION:
-      return StringValue(cx, "WebGL GLSL ES 1.0", rv);
+      return AsSomeVariant(nsCString("WebGL GLSL ES 1.0"));
 
     ////////////////////////////////
     // Single-value params
@@ -228,19 +229,17 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_BLEND_EQUATION_ALPHA: {
       GLint i = 0;
       gl->fGetIntegerv(pname, &i);
-      return JS::NumberValue(uint32_t(i));
+      return AsSomeVariant(uint32_t(i));
     }
 
     case LOCAL_GL_GENERATE_MIPMAP_HINT:
-      return JS::NumberValue(mGenerateMipmapHint);
+      return AsSomeVariant(mGenerateMipmapHint);
 
     case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT:
     case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
       const webgl::FormatUsageInfo* usage;
       uint32_t width, height;
-      if (!BindCurFBForColorRead(&usage, &width, &height,
-                                 LOCAL_GL_INVALID_OPERATION))
-        return JS::NullValue();
+      if (!BindCurFBForColorRead(&usage, &width, &height)) return Nothing();
 
       const auto implPI = ValidImplementationColorReadPI(usage);
 
@@ -250,14 +249,14 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
       } else {
         ret = implPI.type;
       }
-      return JS::NumberValue(uint32_t(ret));
+      return AsSomeVariant(uint32_t(ret));
     }
 
     // int
     case LOCAL_GL_STENCIL_REF:
     case LOCAL_GL_STENCIL_BACK_REF: {
       GLint stencilBits = 0;
-      if (!GetStencilBits(&stencilBits)) return JS::NullValue();
+      if (!GetStencilBits(&stencilBits)) return Nothing();
 
       // Assuming stencils have 8 bits
       const GLint stencilMask = (1 << stencilBits) - 1;
@@ -265,7 +264,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
       GLint refValue = 0;
       gl->fGetIntegerv(pname, &refValue);
 
-      return JS::Int32Value(refValue & stencilMask);
+      return AsSomeVariant(refValue & stencilMask);
     }
 
     case LOCAL_GL_SAMPLE_BUFFERS:
@@ -285,8 +284,8 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
       if (samples && pname == LOCAL_GL_SAMPLE_BUFFERS) {
         samples = Some(uint32_t(bool(samples.value())));
       }
-      if (!samples) return JS::NullValue();
-      return JS::NumberValue(samples.value());
+      if (!samples) return Nothing();
+      return AsSomeVariant(samples.value());
     }
 
     case LOCAL_GL_STENCIL_CLEAR_VALUE:
@@ -295,7 +294,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_SUBPIXEL_BITS: {
       GLint i = 0;
       gl->fGetIntegerv(pname, &i);
-      return JS::Int32Value(i);
+      return AsSomeVariant(i);
     }
 
     case LOCAL_GL_RED_BITS:
@@ -377,38 +376,38 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
             break;
         }
       }
-      return JS::Int32Value(ret);
+      return AsSomeVariant(ret);
     }
 
     case LOCAL_GL_MAX_TEXTURE_SIZE:
-      return JS::Int32Value(mGLMaxTextureSize);
+      return AsSomeVariant(mGLMaxTextureSize);
 
     case LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE:
-      return JS::Int32Value(mGLMaxCubeMapTextureSize);
+      return AsSomeVariant(mGLMaxCubeMapTextureSize);
 
     case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
-      return JS::Int32Value(mGLMaxRenderbufferSize);
+      return AsSomeVariant(mGLMaxRenderbufferSize);
 
     case LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
-      return JS::Int32Value(mGLMaxVertexTextureImageUnits);
+      return AsSomeVariant(mGLMaxVertexTextureImageUnits);
 
     case LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS:
-      return JS::Int32Value(mGLMaxFragmentTextureImageUnits);
+      return AsSomeVariant(mGLMaxFragmentTextureImageUnits);
 
     case LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
-      return JS::Int32Value(mGLMaxCombinedTextureImageUnits);
+      return AsSomeVariant(mGLMaxCombinedTextureImageUnits);
 
     case LOCAL_GL_MAX_VERTEX_ATTRIBS:
-      return JS::Int32Value(mGLMaxVertexAttribs);
+      return AsSomeVariant(mGLMaxVertexAttribs);
 
     case LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS:
-      return JS::Int32Value(mGLMaxVertexUniformVectors);
+      return AsSomeVariant(mGLMaxVertexUniformVectors);
 
     case LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS:
-      return JS::Int32Value(mGLMaxFragmentUniformVectors);
+      return AsSomeVariant(mGLMaxFragmentUniformVectors);
 
     case LOCAL_GL_MAX_VARYING_VECTORS:
-      return JS::Int32Value(mGLMaxFragmentInputVectors);
+      return AsSomeVariant(mGLMaxFragmentInputVectors);
 
     case LOCAL_GL_MAX_VIEWS_OVR:
       if (IsExtensionEnabled(WebGLExtensionID::OVR_multiview2)) {
@@ -417,35 +416,28 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
       break;
 
     case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS: {
-      uint32_t length = mCompressedTextureFormats.Length();
-      JSObject* obj = dom::Uint32Array::Create(
-          cx, this, length, mCompressedTextureFormats.Elements());
-      if (!obj) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-      return JS::ObjectOrNullValue(obj);
+      return AsSomeVariant(mCompressedTextureFormats);
     }
 
     // unsigned int. here we may have to return very large values like 2^32-1
     // that can't be represented as javascript integer values. We just return
     // them as doubles and javascript doesn't care.
     case LOCAL_GL_STENCIL_BACK_VALUE_MASK:
-      return JS::DoubleValue(
-          mStencilValueMaskBack);  // pass as FP value to allow large values
-                                   // such as 2^32-1.
+      return AsSomeVariant((double)mStencilValueMaskBack);
+      // pass as FP value to allow large values such as 2^32-1.
 
     case LOCAL_GL_STENCIL_BACK_WRITEMASK:
-      return JS::DoubleValue(mStencilWriteMaskBack);
+      return AsSomeVariant((double)mStencilWriteMaskBack);
 
     case LOCAL_GL_STENCIL_VALUE_MASK:
-      return JS::DoubleValue(mStencilValueMaskFront);
+      return AsSomeVariant((double)mStencilValueMaskFront);
 
     case LOCAL_GL_STENCIL_WRITEMASK:
-      return JS::DoubleValue(mStencilWriteMaskFront);
+      return AsSomeVariant((double)mStencilWriteMaskFront);
 
     // float
     case LOCAL_GL_LINE_WIDTH:
-      return JS::DoubleValue(mLineWidth);
+      return AsSomeVariant((double)mLineWidth);
 
     case LOCAL_GL_DEPTH_CLEAR_VALUE:
     case LOCAL_GL_POLYGON_OFFSET_FACTOR:
@@ -453,14 +445,14 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_SAMPLE_COVERAGE_VALUE: {
       GLfloat f = 0.f;
       gl->fGetFloatv(pname, &f);
-      return JS::DoubleValue(f);
+      return AsSomeVariant((double)f);
     }
 
     // bool
     case LOCAL_GL_DEPTH_TEST:
-      return JS::BooleanValue(mDepthTestEnabled);
+      return AsSomeVariant((bool)mDepthTestEnabled);
     case LOCAL_GL_STENCIL_TEST:
-      return JS::BooleanValue(mStencilTestEnabled);
+      return AsSomeVariant((bool)mStencilTestEnabled);
 
     case LOCAL_GL_BLEND:
     case LOCAL_GL_CULL_FACE:
@@ -473,18 +465,18 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_DEPTH_WRITEMASK: {
       realGLboolean b = 0;
       gl->fGetBooleanv(pname, &b);
-      return JS::BooleanValue(bool(b));
+      return AsSomeVariant(bool(b));
     }
 
     // bool, WebGL-specific
     case UNPACK_FLIP_Y_WEBGL:
-      return JS::BooleanValue(mPixelStore_FlipY);
+      return AsSomeVariant((bool)mPixelStore.mFlipY);
     case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
-      return JS::BooleanValue(mPixelStore_PremultiplyAlpha);
+      return AsSomeVariant((bool)mPixelStore.mPremultiplyAlpha);
 
     // uint, WebGL-specific
     case UNPACK_COLORSPACE_CONVERSION_WEBGL:
-      return JS::NumberValue(uint32_t(mPixelStore_ColorspaceConversion));
+      return AsSomeVariant(uint32_t(mPixelStore.mColorspaceConversion));
 
     ////////////////////////////////
     // Complex values
@@ -493,6 +485,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
     case LOCAL_GL_DEPTH_RANGE:
     case LOCAL_GL_ALIASED_POINT_SIZE_RANGE:
     case LOCAL_GL_ALIASED_LINE_WIDTH_RANGE: {
+      Float32Array2 obj;
       GLfloat fv[2] = {0};
       switch (pname) {
         case LOCAL_GL_ALIASED_POINT_SIZE_RANGE:
@@ -508,90 +501,82 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
           gl->fGetFloatv(pname, fv);
           break;
       }
-      JSObject* obj = dom::Float32Array::Create(cx, this, 2, fv);
-      if (!obj) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
+      for (uint32_t i = 0; i < 2; ++i) {
+        obj[i] = fv[i];
       }
-      return JS::ObjectOrNullValue(obj);
+      return AsSomeVariant(obj);
     }
 
     // 4 floats
     case LOCAL_GL_COLOR_CLEAR_VALUE:
     case LOCAL_GL_BLEND_COLOR: {
+      Float32Array2 obj;
       GLfloat fv[4] = {0};
       gl->fGetFloatv(pname, fv);
-      JSObject* obj = dom::Float32Array::Create(cx, this, 4, fv);
-      if (!obj) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
+      for (uint32_t i = 0; i < 4; ++i) {
+        obj[i] = fv[i];
       }
-      return JS::ObjectOrNullValue(obj);
+      return AsSomeVariant(obj);
     }
 
     // 2 ints
     case LOCAL_GL_MAX_VIEWPORT_DIMS: {
+      Int32Array2 obj;
       GLint iv[2] = {GLint(mGLMaxViewportDims[0]),
                      GLint(mGLMaxViewportDims[1])};
-      JSObject* obj = dom::Int32Array::Create(cx, this, 2, iv);
-      if (!obj) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
+      for (uint32_t i = 0; i < 2; ++i) {
+        obj[i] = iv[i];
       }
-      return JS::ObjectOrNullValue(obj);
+      return AsSomeVariant(obj);
     }
 
     // 4 ints
     case LOCAL_GL_SCISSOR_BOX:
     case LOCAL_GL_VIEWPORT: {
+      Int32Array4 obj;
       GLint iv[4] = {0};
       gl->fGetIntegerv(pname, iv);
-      JSObject* obj = dom::Int32Array::Create(cx, this, 4, iv);
-      if (!obj) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
+      for (uint32_t i = 0; i < 4; ++i) {
+        obj[i] = iv[i];
       }
-      return JS::ObjectOrNullValue(obj);
+      return AsSomeVariant(obj);
     }
 
     // 4 bools
     case LOCAL_GL_COLOR_WRITEMASK: {
-      const bool vals[4] = {
+      BoolArray4 obj = {
           bool(mColorWriteMask & (1 << 0)), bool(mColorWriteMask & (1 << 1)),
           bool(mColorWriteMask & (1 << 2)), bool(mColorWriteMask & (1 << 3))};
-      JS::Rooted<JS::Value> arr(cx);
-      if (!dom::ToJSValue(cx, vals, &arr)) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-      return arr;
+      return AsSomeVariant(obj);
     }
 
     case LOCAL_GL_ARRAY_BUFFER_BINDING: {
-      return WebGLObjectAsJSValue(cx, mBoundArrayBuffer.get(), rv);
+      return AsSomeVariant(mBoundArrayBuffer);
     }
 
     case LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING: {
-      return WebGLObjectAsJSValue(
-          cx, mBoundVertexArray->mElementArrayBuffer.get(), rv);
+      return AsSomeVariant(mBoundVertexArray->mElementArrayBuffer);
     }
 
     case LOCAL_GL_RENDERBUFFER_BINDING: {
-      return WebGLObjectAsJSValue(cx, mBoundRenderbuffer.get(), rv);
+      return AsSomeVariant(mBoundRenderbuffer);
     }
 
     // DRAW_FRAMEBUFFER_BINDING is the same as FRAMEBUFFER_BINDING.
     case LOCAL_GL_FRAMEBUFFER_BINDING: {
-      return WebGLObjectAsJSValue(cx, mBoundDrawFramebuffer.get(), rv);
+      return AsSomeVariant(mBoundDrawFramebuffer);
     }
 
     case LOCAL_GL_CURRENT_PROGRAM: {
-      return WebGLObjectAsJSValue(cx, mCurrentProgram.get(), rv);
+      return AsSomeVariant(mCurrentProgram);
     }
 
     case LOCAL_GL_TEXTURE_BINDING_2D: {
-      return WebGLObjectAsJSValue(cx, mBound2DTextures[mActiveTexture].get(),
-                                  rv);
+      return AsSomeVariant(mBound2DTextures[mActiveTexture]);
     }
 
     case LOCAL_GL_TEXTURE_BINDING_CUBE_MAP: {
-      return WebGLObjectAsJSValue(
-          cx, mBoundCubeMapTextures[mActiveTexture].get(), rv);
+      return AsSomeVariant(mBoundCubeMapTextures[mActiveTexture]);
     }
 
     default:
@@ -599,7 +584,7 @@ JS::Value WebGLContext::GetParameter(JSContext* cx, GLenum pname,
   }
 
   ErrorInvalidEnumInfo("pname", pname);
-  return JS::NullValue();
+  return Nothing();
 }
 
 bool WebGLContext::IsEnabled(GLenum cap) {

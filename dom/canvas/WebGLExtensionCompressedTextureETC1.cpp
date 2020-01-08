@@ -35,7 +35,4 @@ WebGLExtensionCompressedTextureETC1::WebGLExtensionCompressedTextureETC1(
 
 WebGLExtensionCompressedTextureETC1::~WebGLExtensionCompressedTextureETC1() {}
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureETC1,
-                          WEBGL_compressed_texture_etc1)
-
 }  // namespace mozilla

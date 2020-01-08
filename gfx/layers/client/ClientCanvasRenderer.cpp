@@ -35,6 +35,9 @@ bool ClientCanvasRenderer::CreateCompositable() {
     if (mLayer->HasShadow()) {
       if (mAsyncRenderer) {
         static_cast<CanvasClientBridge*>(mCanvasClient.get())->SetLayer(mLayer);
+      } else if (mOOPRenderer) {
+        static_cast<CanvasClientOOP*>(mCanvasClient.get())
+            ->SetLayer(mLayer, mOOPRenderer);
       } else {
         mCanvasClient->Connect();
         GetForwarder()->AsLayerForwarder()->Attach(mCanvasClient, mLayer);

@@ -76,6 +76,8 @@ void ShareableCanvasRenderer::Destroy() {
 }
 
 bool ShareableCanvasRenderer::UpdateTarget(DrawTarget* aDestTarget) {
+  MOZ_ASSERT(!mOOPRenderer);
+
   MOZ_ASSERT(aDestTarget);
   if (!aDestTarget) {
     return false;
@@ -174,6 +176,11 @@ CanvasClient::CanvasClientType ShareableCanvasRenderer::GetCanvasClientType() {
   if (mGLContext) {
     return CanvasClient::CanvasClientTypeShSurf;
   }
+
+  if (mOOPRenderer) {
+    return CanvasClient::CanvasClientTypeOOP;
+  }
+
   return CanvasClient::CanvasClientSurface;
 }
 

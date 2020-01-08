@@ -17,8 +17,7 @@
 
 namespace mozilla {
 
-class WebGLBuffer final : public nsWrapperCache,
-                          public WebGLRefCountedObject<WebGLBuffer>,
+class WebGLBuffer final : public WebGLRefCountedObject<WebGLBuffer>,
                           public LinkedListElement<WebGLBuffer> {
   friend class WebGLContext;
   friend class WebGL2Context;
@@ -43,11 +42,6 @@ class WebGLBuffer final : public nsWrapperCache,
                                          uint32_t indexCount) const;
   bool ValidateRange(size_t byteOffset, size_t byteLen) const;
 
-  WebGLContext* GetParentObject() const { return mContext; }
-
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> givenProto) override;
-
   bool ValidateCanBindToTarget(GLenum target);
   void BufferData(GLenum target, uint64_t size, const void* data, GLenum usage);
   void BufferSubData(GLenum target, uint64_t dstByteOffset, uint64_t dataLen,
@@ -57,8 +51,7 @@ class WebGLBuffer final : public nsWrapperCache,
 
   const GLenum mGLName;
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLBuffer)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLBuffer)
+  NS_INLINE_DECL_REFCOUNTING(WebGLBuffer)
 
  protected:
   ~WebGLBuffer();

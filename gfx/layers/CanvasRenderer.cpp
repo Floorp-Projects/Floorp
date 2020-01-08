@@ -6,6 +6,8 @@
 
 #include "CanvasRenderer.h"
 
+#include "OOPCanvasRenderer.h"
+
 namespace mozilla {
 namespace layers {
 

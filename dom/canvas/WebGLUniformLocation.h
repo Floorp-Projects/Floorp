@@ -8,9 +8,7 @@
 
 #include "GLDefs.h"
 #include "mozilla/WeakPtr.h"
-#include "nsCycleCollectionParticipant.h"  // NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS
 #include "nsISupportsImpl.h"  // NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING
-#include "nsWrapperCache.h"
 
 #include "WebGLObjectModel.h"
 
@@ -26,16 +24,10 @@ struct LinkedProgramInfo;
 struct UniformInfo;
 }  // namespace webgl
 
-class WebGLUniformLocation final : public nsWrapperCache,
-                                   public WebGLContextBoundObject {
+class WebGLUniformLocation final
+    : public WebGLContextBoundObject<WebGLUniformLocation> {
  public:
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLUniformLocation)
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLUniformLocation)
-
-  virtual JSObject* WrapObject(JSContext* js,
-                               JS::Handle<JSObject*> givenProto) override;
-
-  WebGLContext* GetParentObject() const { return mContext; }
+  NS_INLINE_DECL_REFCOUNTING(WebGLUniformLocation)
 
   //////
 
@@ -56,7 +48,7 @@ class WebGLUniformLocation final : public nsWrapperCache,
   bool ValidateArrayLength(uint8_t setterElemSize,
                            size_t setterArraySize) const;
 
-  JS::Value GetUniform(JSContext* js) const;
+  MaybeWebGLVariant GetUniform() const;
 
   // Needed for certain helper functions like ValidateObject.
   // `WebGLUniformLocation`s can't be 'Deleted' in the WebGL sense.

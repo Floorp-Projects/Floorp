@@ -6,38 +6,54 @@
 #ifndef WEBGL_SHADER_PRECISION_FORMAT_H_
 #define WEBGL_SHADER_PRECISION_FORMAT_H_
 
-#include "WebGLObjectModel.h"
+#include "GLTypes.h"
+#include "nsISupports.h"
 
 namespace mozilla {
 
-class WebGLShaderPrecisionFormat final : public WebGLContextBoundObject {
+namespace ipc {
+template <typename T>
+struct PcqParamTraits;
+};
+
+class WebGLShaderPrecisionFormat final {
  public:
-  WebGLShaderPrecisionFormat(WebGLContext* context, GLint rangeMin,
-                             GLint rangeMax, GLint precision)
-      : WebGLContextBoundObject(context),
-        mRangeMin(rangeMin),
-        mRangeMax(rangeMax),
-        mPrecision(precision) {}
+  WebGLShaderPrecisionFormat(GLint rangeMin, GLint rangeMax, GLint precision)
+      : mRangeMin(rangeMin), mRangeMax(rangeMax), mPrecision(precision) {}
 
-  bool WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto,
-                  JS::MutableHandle<JSObject*> reflector);
-
-  // WebIDL WebGLShaderPrecisionFormat API
   GLint RangeMin() const { return mRangeMin; }
-
   GLint RangeMax() const { return mRangeMax; }
-
   GLint Precision() const { return mPrecision; }
 
-  NS_INLINE_DECL_REFCOUNTING(WebGLShaderPrecisionFormat)
-
- private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~WebGLShaderPrecisionFormat() {}
+ protected:
+  friend struct mozilla::ipc::PcqParamTraits<WebGLShaderPrecisionFormat>;
 
   GLint mRangeMin;
   GLint mRangeMax;
   GLint mPrecision;
+};
+
+class ClientWebGLShaderPrecisionFormat final {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(ClientWebGLShaderPrecisionFormat)
+  bool WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto,
+                  JS::MutableHandle<JSObject*> reflector);
+  ClientWebGLShaderPrecisionFormat(GLint rangeMin, GLint rangeMax,
+                                   GLint precision)
+      : mSPF(rangeMin, rangeMax, precision) {}
+
+  ClientWebGLShaderPrecisionFormat(const WebGLShaderPrecisionFormat& aOther)
+      : mSPF(aOther.RangeMin(), aOther.RangeMax(), aOther.Precision()) {}
+
+  // WebIDL WebGLShaderPrecisionFormat API
+  GLint RangeMin() const { return mSPF.RangeMin(); }
+  GLint RangeMax() const { return mSPF.RangeMax(); }
+  GLint Precision() const { return mSPF.Precision(); }
+  WebGLShaderPrecisionFormat& GetObject() { return mSPF; }
+
+ protected:
+  ~ClientWebGLShaderPrecisionFormat() {}
+  WebGLShaderPrecisionFormat mSPF;
 };
 
 }  // namespace mozilla

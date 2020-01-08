@@ -59,7 +59,16 @@ EXPORTS.mozilla.dom += [
     'ImageData.h',
     'ImageUtils.h',
     'OffscreenCanvas.h',
+    'ProducerConsumerQueue.h',
     'TextMetrics.h',
+    'WebGLChild.h',
+    'WebGLCommandQueue.h',
+    'WebGLContextEndpoint.h',
+    'WebGLCrossProcessCommandQueue.h',
+    'WebGLErrorQueue.h',
+    'WebGLParent.h',
+    'WebGLShaderPrecisionFormat.h',
+    'WebGLTypes.h',
     'WebGLVertexArrayObject.h',
 ]
 
@@ -82,6 +91,10 @@ SOURCES += [
 # WebGL Sources
 UNIFIED_SOURCES += [
     'CacheInvalidator.cpp',
+    'ClientWebGLContext.cpp',
+    'ClientWebGLExtensions.cpp',
+    'HostWebGLContext.cpp',
+    'ProducerConsumerQueue.cpp',
     'TexUnpackBlob.cpp',
     'WebGL1Context.cpp',
     'WebGL2Context.cpp',
@@ -100,6 +113,7 @@ UNIFIED_SOURCES += [
     'WebGL2ContextVAOs.cpp',
     'WebGLActiveInfo.cpp',
     'WebGLBuffer.cpp',
+    'WebGLChild.cpp',
     'WebGLContext.cpp',
     'WebGLContextBuffers.cpp',
     'WebGLContextDraw.cpp',
@@ -113,6 +127,8 @@ UNIFIED_SOURCES += [
     'WebGLContextValidate.cpp',
     'WebGLContextVertexArray.cpp',
     'WebGLContextVertices.cpp',
+    'WebGLCrossProcessCommandQueue.cpp',
+    'WebGLErrorQueue.cpp',
     'WebGLExtensionBlendMinMax.cpp',
     'WebGLExtensionColorBufferFloat.cpp',
     'WebGLExtensionColorBufferHalfFloat.cpp',
@@ -148,7 +164,7 @@ UNIFIED_SOURCES += [
     'WebGLFormats.cpp',
     'WebGLFramebuffer.cpp',
     'WebGLMemoryTracker.cpp',
-    'WebGLObjectModel.cpp',
+    'WebGLParent.cpp',
     'WebGLProgram.cpp',
     'WebGLQuery.cpp',
     'WebGLRenderbuffer.cpp',
@@ -172,6 +188,10 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     'MurmurHash3.cpp',
+]
+
+IPDL_SOURCES += [
+    'PWebGL.ipdl',
 ]
 
 # Suppress warnings from third-party code.
