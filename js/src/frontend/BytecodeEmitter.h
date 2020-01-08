@@ -554,7 +554,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitAssignmentRhs(uint8_t offset);
 
   MOZ_MUST_USE bool emitNewInit();
-  MOZ_MUST_USE bool emitSingletonInitialiser(ListNode* objOrArray);
 
   MOZ_MUST_USE bool emitPrepareIteratorResult();
   MOZ_MUST_USE bool emitFinishIteratorResult(bool done);
