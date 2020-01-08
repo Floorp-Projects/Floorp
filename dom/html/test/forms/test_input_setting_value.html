@@ -15,7 +15,11 @@
 
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(() => {
+SimpleTest.waitForFocus(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.input_events.beforeinput.enabled", true]],
+  });
+
   let input = document.querySelector("input[type=text]");
 
   // Setting value during composition causes committing composition before setting the value.
@@ -372,7 +376,7 @@ SimpleTest.waitForFocus(() => {
   ok(inputEventFired, `${description}"input" event should've been fired for setUserInput("abc")`);
   input.type = "text";
   is(input.value, "abc", `${description}input value should keep inserted value immediately after restoring the type`);
-  todo(SpecialPowers.wrap(input).editor !== null, `${description}restoring input type should create editor if it's focused element`);
+  todo(SpecialPowers.wrap(input).hasEditor, `${description}restoring input type should create editor if it's focused element`);
   input.blur();
   input.focus();
   is(SpecialPowers.wrap(input).editor.rootElement.firstChild.wholeText, input.value,
@@ -396,12 +400,219 @@ SimpleTest.waitForFocus(() => {
   ok(inputEventFired, `${description}"input" event should've been fired for setUserInput("abc")`);
   input.type = "text";
   is(input.value, "abc", `${description}input value should keep inserted value immediately after restoring the type`);
-  todo(SpecialPowers.wrap(input).editor !== null, `${description}restoring input type should create editor if it's focused element`);
+  todo(SpecialPowers.wrap(input).hasEditor, `${description}restoring input type should create editor if it's focused element`);
   input.blur();
   input.focus();
   is(SpecialPowers.wrap(input).editor.rootElement.firstChild.wholeText, input.value,
      `${description}native anonymous text node should have exactly same value as value of <input> element`);
   is(input.value, "abc", `${description}input value should keep inserted value after creating editor`);
+
+  function testSettingValueFromBeforeInput(aWithEditor, aPreventDefaultOfBeforeInput) {
+    let beforeInputEvents = [];
+    let inputEvents = [];
+    function recordEvent(aEvent) {
+      if (aEvent.type === "beforeinput") {
+        beforeInputEvents.push(aEvent);
+      } else {
+        inputEvents.push(aEvent);
+      }
+    }
+    let condition = `(${aWithEditor ? "with editor" : "without editor"}${aPreventDefaultOfBeforeInput ? ' and canceling "beforeinput" event' : ""})`;
+    function Reset() {
+      beforeInputEvents = [];
+      inputEvents = [];
+      if (SpecialPowers.wrap(input).hasEditor != aWithEditor) {
+        if (aWithEditor) {
+          input.blur();
+          input.focus(); // Associate `TextEditor` with input
+          if (!SpecialPowers.wrap(input).hasEditor) {
+            ok(false, `${description}Failed to associate TextEditor with the input ${condition}`);
+            return false;
+          }
+        } else {
+          input.blur();
+          input.type = "button";
+          input.type = "text";
+          if (SpecialPowers.wrap(input).hasEditor) {
+            ok(false, `${description}Failed to disassociate TextEditor from the input ${condition}`);
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    description = `Setting value from "beforeinput" event listener whose inputType is "insertReplacementText" ${condition}: `;
+    input.value = "abc";
+    if (!Reset()) {
+      return;
+    }
+    input.addEventListener("beforeinput", (aEvent) => {
+      is(aEvent.inputType, "insertReplacementText", `${description}inputType of "beforeinput" event should be "insertReplacementText"`);
+      ok(aEvent.cancelable, `${description}"beforeinput" event should be cancelable`);
+      is(input.value, "abc", `${description}The value shouldn't have been modified yet at "beforeinput" event listener`);
+      input.addEventListener("beforeinput", recordEvent);
+      input.addEventListener("input", recordEvent);
+      input.value = "hig";
+      if (aPreventDefaultOfBeforeInput) {
+        aEvent.preventDefault();
+      }
+    }, {once: true});
+    SpecialPowers.wrap(input).setUserInput("def");
+    is(beforeInputEvents.length, 0, `${description}"beforeinput" event shouldn't be fired again`);
+    if (aPreventDefaultOfBeforeInput) {
+      is(input.value, "hig",
+         `${description}The value should be set to the specified value in "beforeinput" event listener since "beforeinput" was canceled`);
+      is(inputEvents.length, 0,
+         `${description}"input" event shouldn't be fired since "beforeinput" was canceled`);
+    } else {
+      // XXX This result is different from Chrome (verified with spellchecker).
+      //     Chrome inserts the new text to current value and selected range.
+      //     It might be reasonable, but we don't touch this for now since it
+      //     requires a lot of changes.
+      is(input.value, "hig",
+         `${description}The value should be set to the specified value in "beforeinput" event listener since the event target was already modified`);
+      is(inputEvents.length, 1, `${description}"input" event should be fired`);
+      if (inputEvents.length > 0) {
+        is(inputEvents[0].inputType,
+           "insertReplacementText", `${description}inputType of "input" event should be "insertReplacementText"`);
+        is(inputEvents[0].data, "def",
+           `${description}data of "input" event should be the value specified by setUserInput()`);
+      }
+    }
+    input.removeEventListener("beforeinput", recordEvent);
+    input.removeEventListener("input", recordEvent);
+
+    description = `Setting value from "beforeinput" event listener whose inputType is "insertReplacementText" and changing the type to "button" ${condition}: `;
+    input.value = "abc";
+    if (!Reset()) {
+      return;
+    }
+    input.addEventListener("beforeinput", (aEvent) => {
+      is(aEvent.inputType, "insertReplacementText", `${description}inputType of "beforeinput" event should be "insertReplacementText"`);
+      ok(aEvent.cancelable, `${description}"beforeinput" event should be cancelable`);
+      is(input.value, "abc", `${description}The value shouldn't have been modified yet at "beforeinput" event listener`);
+      input.addEventListener("beforeinput", recordEvent);
+      input.addEventListener("input", recordEvent);
+      input.value = "hig";
+      input.type = "button";
+      if (aPreventDefaultOfBeforeInput) {
+        aEvent.preventDefault();
+      }
+    }, {once: true});
+    SpecialPowers.wrap(input).setUserInput("def");
+    is(beforeInputEvents.length, 0, `${description}"beforeinput" event shouldn't be fired again`);
+    if (aPreventDefaultOfBeforeInput) {
+      is(input.value, "hig",
+         `${description}The value should be set to the specified value in "beforeinput" event listener since "beforeinput" was canceled`);
+      is(inputEvents.length, 0,
+         `${description}"input" event shouldn't be fired since "beforeinput" was canceled`);
+    } else {
+      // XXX This result is same as Chrome (verified with spellchecker).
+      //     But this behavior is not consistent with just setting the value on Chrome.
+      is(input.value, "hig",
+         `${description}The value should be set to the specified value in "beforeinput" event listener since the event target was already modified`);
+      // Same as Chrome
+      is(inputEvents.length, 0,
+         `${description}"input" event shouldn't be fired since the input element's type is changed`);
+    }
+    input.type = "text";
+    input.removeEventListener("beforeinput", recordEvent);
+    input.removeEventListener("input", recordEvent);
+
+    description = `Setting value from "beforeinput" event listener whose inputType is "insertReplacementText" and destroying the frame ${condition}: `;
+    input.value = "abc";
+    if (!Reset()) {
+      return;
+    }
+    input.addEventListener("beforeinput", (aEvent) => {
+      is(aEvent.inputType, "insertReplacementText", `${description}inputType of "beforeinput" event should be "insertReplacementText"`);
+      ok(aEvent.cancelable, `${description}"beforeinput" event should be cancelable`);
+      is(input.value, "abc", `${description}The value shouldn't have been modified yet at "beforeinput" event listener`);
+      input.addEventListener("beforeinput", recordEvent);
+      input.addEventListener("input", recordEvent);
+      input.value = "hig";
+      input.style.display = "none";
+      if (aPreventDefaultOfBeforeInput) {
+        aEvent.preventDefault();
+      }
+    }, {once: true});
+    SpecialPowers.wrap(input).setUserInput("def");
+    is(beforeInputEvents.length, 0, `${description}"beforeinput" event shouldn't be fired again`);
+    if (aPreventDefaultOfBeforeInput) {
+      is(input.value, "hig",
+         `${description}The value should be set to the specified value in "beforeinput" event listener since "beforeinput" was canceled`);
+      is(inputEvents.length, 0,
+         `${description}"input" event shouldn't be fired since "beforeinput" was canceled`);
+    } else {
+      // XXX This result is same as Chrome (verified with spellchecker).
+      //     But this behavior is not consistent with just setting the value on Chrome.
+      is(input.value, "hig",
+         `${description}The value should be set to the specified value in "beforeinput" event listener since the event target was already modified`);
+      // Different from Chrome
+      is(inputEvents.length, 1,
+         `${description}"input" event should be fired even if the frame of target is destroyed`);
+      if (inputEvents.length > 0) {
+        is(inputEvents[0].inputType,
+           "insertReplacementText", `${description}inputType of "input" event should be "insertReplacementText"`);
+        is(inputEvents[0].data, "def",
+           `${description}data of "input" event should be the value specified by setUserInput()`);
+      }
+    }
+    input.style.display = "inline";
+    input.removeEventListener("beforeinput", recordEvent);
+    input.removeEventListener("input", recordEvent);
+
+    if (aWithEditor) {
+      return;
+    }
+
+    description = `Setting value from "beforeinput" event listener whose inputType is "insertReplacementText and create editor" ${condition}: `;
+    input.value = "abc";
+    if (!Reset()) {
+      return;
+    }
+    input.addEventListener("beforeinput", (aEvent) => {
+      is(aEvent.inputType, "insertReplacementText", `${description}inputType of "beforeinput" event should be "insertReplacementText"`);
+      ok(aEvent.cancelable, `${description}"beforeinput" event should be cancelable`);
+      is(input.value, "abc", `${description}The value shouldn't have been modified yet at "beforeinput" event listener`);
+      input.addEventListener("beforeinput", recordEvent);
+      input.addEventListener("input", recordEvent);
+      input.value = "hig";
+      input.focus();
+      if (aPreventDefaultOfBeforeInput) {
+        aEvent.preventDefault();
+      }
+    }, {once: true});
+    SpecialPowers.wrap(input).setUserInput("def");
+    is(beforeInputEvents.length, 0, `${description}"beforeinput" event shouldn't be fired again`);
+    if (aPreventDefaultOfBeforeInput) {
+      is(input.value, "hig",
+         `${description}The value should be set to the specified value in "beforeinput" event listener since "beforeinput" was canceled`);
+      is(inputEvents.length, 0,
+         `${description}"input" event shouldn't be fired since "beforeinput" was canceled`);
+    } else {
+      // XXX This result is different from Chrome (verified with spellchecker).
+      //     Chrome inserts the new text to current value and selected range.
+      //     It might be reasonable, but we don't touch this for now since it
+      //     requires a lot of changes.
+      is(input.value, "hig",
+         `${description}The value should be set to the specified value in "beforeinput" event listener since the event target was already modified`);
+      is(inputEvents.length, 1, `${description}"input" event should be fired`);
+      if (inputEvents.length > 0) {
+        is(inputEvents[0].inputType,
+           "insertReplacementText", `${description}inputType of "input" event should be "insertReplacementText"`);
+        is(inputEvents[0].data, "def",
+           `${description}data of "input" event should be the value specified by setUserInput()`);
+      }
+    }
+    input.removeEventListener("beforeinput", recordEvent);
+    input.removeEventListener("input", recordEvent);
+  }
+  // testSettingValueFromBeforeInput(true, true);
+  // testSettingValueFromBeforeInput(true, false);
+  testSettingValueFromBeforeInput(false, true);
+  testSettingValueFromBeforeInput(false, false);
 
   SimpleTest.finish();
 });

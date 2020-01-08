@@ -146,6 +146,7 @@ async function triggerAutofillAndCheckProfile(profile) {
     const checkFieldAutofilled = Promise.all([
       new Promise(resolve => {
         let beforeInputFired = false;
+        let hadEditor = SpecialPowers.wrap(element).hasEditor;
         element.addEventListener(
           "beforeinput",
           event => {
@@ -183,12 +184,21 @@ async function triggerAutofillAndCheckProfile(profile) {
           "input",
           event => {
             if (element.tagName == "INPUT" && element.type == "text") {
-              todo(
-                beforeInputFired,
-                `"beforeinput" event should've been fired before "input" event on ${
-                  element.tagName
-                }`
-              );
+              if (hadEditor) {
+                todo(
+                  beforeInputFired,
+                  `"beforeinput" event should've been fired before "input" event on ${
+                    element.tagName
+                  }`
+                );
+              } else {
+                ok(
+                  beforeInputFired,
+                  `"beforeinput" event should've been fired before "input" event on ${
+                    element.tagName
+                  }`
+                );
+              }
               ok(
                 event instanceof InputEvent,
                 `"input" event should be dispatched with InputEvent interface on ${
