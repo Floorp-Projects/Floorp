@@ -47,6 +47,10 @@ class FirefoxConnector {
     this.getNetworkRequest = this.getNetworkRequest.bind(this);
   }
 
+  get currentTarget() {
+    return this.toolbox.targetList.targetFront;
+  }
+
   /**
    * Connect to the backend.
    *
@@ -57,13 +61,12 @@ class FirefoxConnector {
   async connect(connection, actions, getState) {
     this.actions = actions;
     this.getState = getState;
-    this.tabTarget = connection.tabConnection.tabTarget;
     this.toolbox = connection.toolbox;
 
     // The owner object (NetMonitorAPI) received all events.
     this.owner = connection.owner;
 
-    this.webConsoleFront = await this.tabTarget.getFront("console");
+    this.webConsoleFront = await this.currentTarget.getFront("console");
 
     this.dataProvider = new FirefoxDataProvider({
       webConsoleFront: this.webConsoleFront,
@@ -79,23 +82,21 @@ class FirefoxConnector {
     // these are used to pause/resume the connector.
     // Paused network panel should be automatically resumed when page
     // reload, so `will-navigate` listener needs to be there all the time.
-    if (this.tabTarget) {
-      this.tabTarget.on("will-navigate", this.willNavigate);
-      this.tabTarget.on("navigate", this.navigate);
+    this.currentTarget.on("will-navigate", this.willNavigate);
+    this.currentTarget.on("navigate", this.navigate);
 
-      // Initialize Responsive Emulation front for network throttling.
-      try {
-        this.responsiveFront = await this.tabTarget.getFront("responsive");
-      } catch (e) {
+    // Initialize Responsive Emulation front for network throttling.
+    try {
+      this.responsiveFront = await this.currentTarget.getFront("responsive");
+    } catch (e) {
         console.error(e);
-      }
+    }
 
-      // Bug 1606852: For backwards compatibility, we need to get the emulation actor. The Responsive
-      // actor is only available in Firefox 73 or newer. We can remove this call when Firefox 73
-      // is on release.
-      if (!this.responsiveFront) {
-        this.responsiveFront = await this.tabTarget.getFront("emulation");
-      }
+    // Bug 1606852: For backwards compatibility, we need to get the emulation actor. The Responsive
+    // actor is only available in Firefox 73 or newer. We can remove this call when Firefox 73
+    // is on release.
+    if (!this.responsiveFront) {
+      this.responsiveFront = await this.currentTarget.getFront("emulation");
     }
 
     // Displaying cache events is only intended for the UI panel.
@@ -121,11 +122,8 @@ class FirefoxConnector {
       this.webSocketFront = null;
     }
 
-    if (this.tabTarget) {
-      this.tabTarget.off("will-navigate", this.willNavigate);
-      this.tabTarget.off("navigate", this.navigate);
-      this.tabTarget = null;
-    }
+    this.currentTarget.off("will-navigate", this.willNavigate);
+    this.currentTarget.off("navigate", this.navigate);
 
     this.webConsoleFront = null;
     this.dataProvider = null;
@@ -140,7 +138,7 @@ class FirefoxConnector {
   }
 
   async addListeners() {
-    this.tabTarget.on("close", this.disconnect);
+    this.currentTarget.on("close", this.disconnect);
     this.webConsoleFront.on("networkEvent", this.dataProvider.onNetworkEvent);
     this.webConsoleFront.on(
       "networkEventUpdate",
@@ -152,7 +150,7 @@ class FirefoxConnector {
     if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
       try {
         // Initialize WebSocket front to intercept websocket traffic.
-        this.webSocketFront = await this.tabTarget.getFront("webSocket");
+        this.webSocketFront = await this.currentTarget.getFront("webSocket");
         this.webSocketFront.startListening();
 
         this.webSocketFront.on(
@@ -179,23 +177,21 @@ class FirefoxConnector {
   }
 
   removeListeners() {
-    if (this.tabTarget) {
-      this.tabTarget.off("close", this.disconnect);
-      if (this.webSocketFront) {
-        this.webSocketFront.off(
-          "webSocketOpened",
-          this.dataProvider.onWebSocketOpened
-        );
-        this.webSocketFront.off(
-          "webSocketClosed",
-          this.dataProvider.onWebSocketClosed
-        );
-        this.webSocketFront.off(
-          "frameReceived",
-          this.dataProvider.onFrameReceived
-        );
-        this.webSocketFront.off("frameSent", this.dataProvider.onFrameSent);
-      }
+    this.currentTarget.off("close", this.disconnect);
+    if (this.webSocketFront) {
+      this.webSocketFront.off(
+        "webSocketOpened",
+        this.dataProvider.onWebSocketOpened
+      );
+      this.webSocketFront.off(
+        "webSocketClosed",
+        this.dataProvider.onWebSocketClosed
+      );
+      this.webSocketFront.off(
+        "frameReceived",
+        this.dataProvider.onFrameReceived
+      );
+      this.webSocketFront.off("frameSent", this.dataProvider.onFrameSent);
     }
     if (this.webConsoleFront) {
       this.webConsoleFront.off(
@@ -361,19 +357,14 @@ class FirefoxConnector {
     };
 
     // Waits for a series of "navigation start" and "navigation stop" events.
-    const waitForNavigation = () => {
-      return new Promise(resolve => {
-        this.tabTarget.once("will-navigate", () => {
-          this.tabTarget.once("navigate", () => {
-            resolve();
-          });
-        });
-      });
+    const waitForNavigation = async () => {
+      await this.currentTarget.once("will-navigate");
+      await this.currentTarget.once("navigate");
     };
 
     // Reconfigures the tab, optionally triggering a reload.
     const reconfigureTab = options => {
-      return this.tabTarget.reconfigure({ options });
+      return this.currentTarget.reconfigure({ options });
     };
 
     // Reconfigures the tab and waits for the target to finish navigating.
@@ -387,7 +378,7 @@ class FirefoxConnector {
         return reconfigureTabAndWaitForNavigation({}).then(standBy);
       case ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED:
         this.currentActivity = ACTIVITY_TYPE.ENABLE_CACHE;
-        this.tabTarget.once("will-navigate", () => {
+        this.currentTarget.once("will-navigate", () => {
           this.currentActivity = type;
         });
         return reconfigureTabAndWaitForNavigation({
@@ -396,7 +387,7 @@ class FirefoxConnector {
         }).then(standBy);
       case ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED:
         this.currentActivity = ACTIVITY_TYPE.DISABLE_CACHE;
-        this.tabTarget.once("will-navigate", () => {
+        this.currentTarget.once("will-navigate", () => {
           this.currentActivity = type;
         });
         return reconfigureTabAndWaitForNavigation({
@@ -450,7 +441,7 @@ class FirefoxConnector {
    * @return {object} browser tab target instance
    */
   getTabTarget() {
-    return this.tabTarget;
+    return this.currentTarget;
   }
 
   /**
