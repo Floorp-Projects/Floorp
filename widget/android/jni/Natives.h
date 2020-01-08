@@ -128,7 +128,7 @@ enum NativePtrType { OWNING, WEAK, REFPTR };
 template <class Impl>
 class NativePtrPicker {
   template <class I>
-  static typename EnableIf<IsBaseOf<SupportsWeakPtr<I>, I>::value,
+  static typename EnableIf<std::is_base_of<SupportsWeakPtr<I>, I>::value,
                            char (&)[NativePtrType::WEAK]>::Type
   Test(char);
 

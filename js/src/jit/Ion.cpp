@@ -265,11 +265,10 @@ bool JitRuntime::generateTrampolines(JSContext* cx) {
 
   // The arguments rectifier has to use the same frame layout as the function
   // frames it rectifies.
-  static_assert(mozilla::IsBaseOf<JitFrameLayout, RectifierFrameLayout>::value,
+  static_assert(std::is_base_of<JitFrameLayout, RectifierFrameLayout>::value,
                 "a rectifier frame can be used with jit frame");
-  static_assert(
-      mozilla::IsBaseOf<JitFrameLayout, WasmToJSJitFrameLayout>::value,
-      "wasm frames simply are jit frames");
+  static_assert(std::is_base_of<JitFrameLayout, WasmToJSJitFrameLayout>::value,
+                "wasm frames simply are jit frames");
   static_assert(sizeof(JitFrameLayout) == sizeof(WasmToJSJitFrameLayout),
                 "thus a rectifier frame can be used with a wasm frame");
 

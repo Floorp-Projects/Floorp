@@ -26,13 +26,13 @@ enum StorageType { AsBase, AsMember };
 // The extra conditions on storage for B are necessary so that PairHelper won't
 // ambiguously inherit from either A or B, such that one or the other base class
 // would be inaccessible.
-template <typename A, typename B,
-          detail::StorageType =
-              IsEmpty<A>::value ? detail::AsBase : detail::AsMember,
-          detail::StorageType = IsEmpty<B>::value && !IsBaseOf<A, B>::value &&
-                                        !IsBaseOf<B, A>::value
-                                    ? detail::AsBase
-                                    : detail::AsMember>
+template <
+    typename A, typename B,
+    detail::StorageType = IsEmpty<A>::value ? detail::AsBase : detail::AsMember,
+    detail::StorageType = IsEmpty<B>::value && !std::is_base_of<A, B>::value &&
+                                  !std::is_base_of<B, A>::value
+                              ? detail::AsBase
+                              : detail::AsMember>
 struct PairHelper;
 
 template <typename A, typename B>

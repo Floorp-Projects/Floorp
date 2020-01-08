@@ -427,22 +427,23 @@ struct B2 : B {};
 struct D : private B1, private B2 {};
 
 static void StandardIsBaseOfTests() {
-  static_assert((IsBaseOf<B, D>::value) == true, "IsBaseOf fails on diamond");
-  static_assert((IsBaseOf<const B, D>::value) == true,
+  static_assert((std::is_base_of<B, D>::value) == true,
+                "IsBaseOf fails on diamond");
+  static_assert((std::is_base_of<const B, D>::value) == true,
                 "IsBaseOf fails on diamond plus constness change");
-  static_assert((IsBaseOf<B, const D>::value) == true,
+  static_assert((std::is_base_of<B, const D>::value) == true,
                 "IsBaseOf fails on diamond plus constness change");
-  static_assert((IsBaseOf<B, const B>::value) == true,
+  static_assert((std::is_base_of<B, const B>::value) == true,
                 "IsBaseOf fails on constness change");
-  static_assert((IsBaseOf<D, B>::value) == false,
+  static_assert((std::is_base_of<D, B>::value) == false,
                 "IsBaseOf got the direction of inheritance wrong");
-  static_assert((IsBaseOf<B&, D&>::value) == false,
+  static_assert((std::is_base_of<B&, D&>::value) == false,
                 "IsBaseOf should return false on references");
-  static_assert((IsBaseOf<B[3], D[3]>::value) == false,
+  static_assert((std::is_base_of<B[3], D[3]>::value) == false,
                 "IsBaseOf should return false on arrays");
   // We fail at the following test.  To fix it, we need to specialize IsBaseOf
   // for all built-in types.
-  // static_assert((IsBaseOf<int, int>::value) == false);
+  // static_assert((std::is_base_of<int, int>::value) == false);
 }
 
 } /* namespace CPlusPlus11IsBaseOf */
@@ -455,15 +456,15 @@ class E : public A {};
 class F : public B, public E {};
 
 static void TestIsBaseOf() {
-  static_assert((IsBaseOf<A, B>::value), "A is a base of B");
-  static_assert((!IsBaseOf<B, A>::value), "B is not a base of A");
-  static_assert((IsBaseOf<A, C>::value), "A is a base of C");
-  static_assert((!IsBaseOf<C, A>::value), "C is not a base of A");
-  static_assert((IsBaseOf<A, F>::value), "A is a base of F");
-  static_assert((!IsBaseOf<F, A>::value), "F is not a base of A");
-  static_assert((!IsBaseOf<A, D>::value), "A is not a base of D");
-  static_assert((!IsBaseOf<D, A>::value), "D is not a base of A");
-  static_assert((IsBaseOf<B, B>::value),
+  static_assert((std::is_base_of<A, B>::value), "A is a base of B");
+  static_assert((!std::is_base_of<B, A>::value), "B is not a base of A");
+  static_assert((std::is_base_of<A, C>::value), "A is a base of C");
+  static_assert((!std::is_base_of<C, A>::value), "C is not a base of A");
+  static_assert((std::is_base_of<A, F>::value), "A is a base of F");
+  static_assert((!std::is_base_of<F, A>::value), "F is not a base of A");
+  static_assert((!std::is_base_of<A, D>::value), "A is not a base of D");
+  static_assert((!std::is_base_of<D, A>::value), "D is not a base of A");
+  static_assert((std::is_base_of<B, B>::value),
                 "B is the same as B (and therefore, a base of B)");
 }
 

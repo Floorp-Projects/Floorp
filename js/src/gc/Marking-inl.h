@@ -33,7 +33,7 @@ struct TaggedPtr<JS::Value> {
   static JS::Value wrap(JS::BigInt* bi) { return JS::BigIntValue(bi); }
   template <typename T>
   static JS::Value wrap(T* priv) {
-    static_assert(mozilla::IsBaseOf<Cell, T>::value,
+    static_assert(std::is_base_of<Cell, T>::value,
                   "Type must be a GC thing derived from js::gc::Cell");
     return JS::PrivateGCThingValue(priv);
   }
@@ -57,20 +57,20 @@ struct TaggedPtr<TaggedProto> {
 
 template <typename T>
 struct MightBeForwarded {
-  static_assert(mozilla::IsBaseOf<Cell, T>::value, "T must derive from Cell");
+  static_assert(std::is_base_of<Cell, T>::value, "T must derive from Cell");
   static_assert(!mozilla::IsSame<Cell, T>::value &&
                     !mozilla::IsSame<TenuredCell, T>::value,
                 "T must not be Cell or TenuredCell");
 
-  static const bool value = mozilla::IsBaseOf<JSObject, T>::value ||
-                            mozilla::IsBaseOf<Shape, T>::value ||
-                            mozilla::IsBaseOf<BaseShape, T>::value ||
-                            mozilla::IsBaseOf<JSString, T>::value ||
-                            mozilla::IsBaseOf<JS::BigInt, T>::value ||
-                            mozilla::IsBaseOf<JSScript, T>::value ||
-                            mozilla::IsBaseOf<js::LazyScript, T>::value ||
-                            mozilla::IsBaseOf<js::Scope, T>::value ||
-                            mozilla::IsBaseOf<js::RegExpShared, T>::value;
+  static const bool value = std::is_base_of<JSObject, T>::value ||
+                            std::is_base_of<Shape, T>::value ||
+                            std::is_base_of<BaseShape, T>::value ||
+                            std::is_base_of<JSString, T>::value ||
+                            std::is_base_of<JS::BigInt, T>::value ||
+                            std::is_base_of<JSScript, T>::value ||
+                            std::is_base_of<js::LazyScript, T>::value ||
+                            std::is_base_of<js::Scope, T>::value ||
+                            std::is_base_of<js::RegExpShared, T>::value;
 };
 
 template <typename T>

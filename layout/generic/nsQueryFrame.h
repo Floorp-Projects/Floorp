@@ -127,9 +127,8 @@ class do_QueryFrameHelper {
   template <class Src, class Dst>
   struct FastQueryFrame<
       Src, Dst,
-      typename mozilla::EnableIf<mozilla::IsBaseOf<nsIFrame, Src>::value>::Type,
-      typename mozilla::EnableIf<
-          mozilla::IsBaseOf<nsIFrame, Dst>::value>::Type> {
+      typename mozilla::EnableIf<std::is_base_of<nsIFrame, Src>::value>::Type,
+      typename mozilla::EnableIf<std::is_base_of<nsIFrame, Dst>::value>::Type> {
     static Dst* QueryFrame(Src* aFrame) {
       return nsQueryFrame::FrameIID(aFrame->mClass) == Dst::kFrameIID
                  ? reinterpret_cast<Dst*>(aFrame)

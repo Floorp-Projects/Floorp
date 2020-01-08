@@ -245,7 +245,7 @@ template <typename T>
 class RefCounted : public detail::RefCounted<T, detail::NonAtomicRefCount> {
  public:
   ~RefCounted() {
-    static_assert(IsBaseOf<RefCounted, T>::value,
+    static_assert(std::is_base_of<RefCounted, T>::value,
                   "T must derive from RefCounted<T>");
   }
 };
@@ -266,7 +266,7 @@ class AtomicRefCounted
                                          Recording> {
  public:
   ~AtomicRefCounted() {
-    static_assert(IsBaseOf<AtomicRefCounted, T>::value,
+    static_assert(std::is_base_of<AtomicRefCounted, T>::value,
                   "T must derive from AtomicRefCounted<T>");
   }
 };
