@@ -71,6 +71,8 @@
     <string name="browser_menu_desktop_site">Lloc d’escriptori</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Afegeix a la pantalla d’inici</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Instal·la</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Cerca a la pàgina</string>
     <!-- Browser menu button that creates a private tab -->
@@ -949,6 +951,17 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | Biblioteques de codi obert</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Assistència</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Avís de privadesa</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Coneixeu els vostres drets</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Informació de la llicència</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Biblioteques que utilitzem</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 pestanya</string>

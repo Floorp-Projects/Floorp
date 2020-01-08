@@ -223,6 +223,9 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Accountynstellingen</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Keppelingen iepenje yn apps</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">No syngronisearje</string>

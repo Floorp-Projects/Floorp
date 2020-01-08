@@ -225,6 +225,9 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">帳號設定</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">用 App 開啟鏈結</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">立即同步</string>

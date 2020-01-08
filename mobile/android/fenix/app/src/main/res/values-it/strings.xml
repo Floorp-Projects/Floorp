@@ -226,6 +226,9 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Impostazioni account</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Apri collegamenti nelle app</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizza adesso</string>

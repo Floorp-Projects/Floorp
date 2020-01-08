@@ -75,6 +75,8 @@
     <string name="browser_menu_desktop_site">デスクトップサイト</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">ホーム画面に追加</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">インストール</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ページ内検索</string>
     <!-- Browser menu button that creates a private tab -->
@@ -222,6 +224,9 @@
     <string name="preferences_search_bookmarks">ブックマークを検索する</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">アカウント設定</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">リンクをアプリで開く</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -907,6 +912,8 @@
     <string name="preference_enhanced_tracking_protection_standard_description">追跡防止とパフォーマンスを均等にします。</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_2">ページは正常に読み込まれますが、ブロックされるトラッカーが少なくなります。</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">標準のトラッキング防止でブロックされるもの</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">厳格</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
@@ -917,6 +924,8 @@
     <string name="preference_enhanced_tracking_protection_strict_recommended">厳格 (推奨)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">強力な追跡防止。ただし、一部のサイトまたはコンテンツが破損する可能性があります。</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">厳格なトラッキング防止でブロックされるもの</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">ブロック済み</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -958,6 +967,17 @@
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | OSS ライブラリー</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">サポート</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">個人情報保護方針</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">あなたの権利について</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">ライセンス情報</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">利用しているライブラリー</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">タブ 1 個</string>

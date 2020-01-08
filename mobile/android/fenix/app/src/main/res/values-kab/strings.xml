@@ -221,6 +221,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Iɣewwaṛen n umiḍan</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Ldi iseɣwan deg isnasen</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Mtawi tura</string>

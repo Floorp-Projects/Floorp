@@ -226,6 +226,9 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Nastavení účtu</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Otevírat odkazy v aplikacích</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synchronizovat</string>

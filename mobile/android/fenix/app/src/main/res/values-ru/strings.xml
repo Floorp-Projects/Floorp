@@ -229,6 +229,9 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Настройки Аккаунта</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Открывать ссылки в приложениях</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Синхронизировать</string>

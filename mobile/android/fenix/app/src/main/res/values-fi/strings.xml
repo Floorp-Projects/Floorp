@@ -200,6 +200,8 @@
     <string name="developer_tools_category">Kehittäjätyökalut</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Etävianjäljitys USB:n kautta</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Näytä hakuoikopolut</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Näytä hakuehdotukset</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
@@ -212,6 +214,9 @@
     <string name="preferences_search_bookmarks">Etsi kirjanmerkeistä</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Tilin asetukset</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Avaa linkit sovelluksissa</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->

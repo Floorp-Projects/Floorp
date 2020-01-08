@@ -194,6 +194,9 @@
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">הגדרות חשבון</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">פתיחת קישורים ביישומונים</string>
+
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">סנכרון כעת</string>
