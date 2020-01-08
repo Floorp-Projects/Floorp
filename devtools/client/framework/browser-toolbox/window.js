@@ -108,8 +108,8 @@ var connect = async function() {
   await gClient.connect();
 
   appendStatusMessage("Get root form for toolbox");
-  const front = await gClient.mainRoot.getMainProcess();
-  await openToolbox(front);
+  const mainProcessTargetFront = await gClient.mainRoot.getMainProcess();
+  await openToolbox(mainProcessTargetFront);
 };
 
 // Certain options should be toggled since we can assume chrome debugging here
@@ -186,8 +186,8 @@ function onDebugBrowserToolbox() {
   BrowserToolboxLauncher.init();
 }
 
-async function openToolbox(target) {
-  const form = target.targetForm;
+async function openToolbox(targetFront) {
+  const form = targetFront.targetForm;
   appendStatusMessage(
     `Create toolbox target: ${JSON.stringify({ form }, null, 2)}`
   );
@@ -201,19 +201,16 @@ async function openToolbox(target) {
 
   const toolboxOptions = { doc: document };
   appendStatusMessage(`Show toolbox with ${selectedTool} selected`);
-  const toolbox = await gDevTools.showToolbox(
-    target,
+
+  gToolbox = await gDevTools.showToolbox(
+    targetFront,
     selectedTool,
     Toolbox.HostType.BROWSERTOOLBOX,
     toolboxOptions
   );
-  await onNewToolbox(toolbox);
-}
 
-async function onNewToolbox(toolbox) {
-  gToolbox = toolbox;
   bindToolboxHandlers();
-  toolbox.raise();
+  gToolbox.raise();
 
   // Enable some testing features if the browser toolbox test pref is set.
   if (
@@ -223,11 +220,11 @@ async function onNewToolbox(toolbox) {
     )
   ) {
     // setup a server so that the test can evaluate messages in this process.
-    installTestingServer(toolbox);
+    installTestingServer();
   }
 }
 
-function installTestingServer(toolbox) {
+function installTestingServer() {
   // Install a DebuggerServer in this process and inform the server of its
   // location. Tests operating on the browser toolbox run in the server
   // (the firefox parent process) and can connect to this new server using
