@@ -60,6 +60,9 @@ void AnimationInfo::ClearAnimations() {
 
   mAnimations.Clear();
   mPropertyAnimationGroups.Clear();
+  if (mTransformLikeMetaData) {
+    mTransformLikeMetaData->Clear();
+  }
   mTransformLikeMetaData.reset();
   mCachedMotionPath = nullptr;
 
@@ -82,7 +85,10 @@ void AnimationInfo::SetCompositorAnimations(
   AnimationStorageData data =
       AnimationHelper::ExtractAnimations(aCompositorAnimations.animations());
   mPropertyAnimationGroups.SwapElements(data.mAnimation);
-  mTransformLikeMetaData.swap(data.mTransformLikeMetaData);
+  if (data.mTransformLikeMetaData.HasData()) {
+    mTransformLikeMetaData = MakeUnique<CompositorAnimationData>(
+        std::move(data.mTransformLikeMetaData));
+  }
   mCachedMotionPath.swap(data.mCachedMotionPath);
 }
 

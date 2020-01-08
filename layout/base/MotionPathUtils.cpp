@@ -490,7 +490,7 @@ Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
 }
 
 static OffsetPathData GenerateOffsetPathData(
-    const StyleOffsetPath& aPath, const layers::TransformData& aTransformData,
+    const StyleOffsetPath& aPath, const RayReferenceData& aRayReferenceData,
     gfx::Path* aCachedMotionPath) {
   switch (aPath.tag) {
     case StyleOffsetPath::Tag::Path: {
@@ -506,8 +506,7 @@ static OffsetPathData GenerateOffsetPathData(
       return OffsetPathData::Path(svgPathData, path.forget());
     }
     case StyleOffsetPath::Tag::Ray:
-      return OffsetPathData::Ray(aPath.AsRay(),
-                                 aTransformData.motionPathRayReferenceData());
+      return OffsetPathData::Ray(aPath.AsRay(), aRayReferenceData);
     case StyleOffsetPath::Tag::None:
     default:
       return OffsetPathData::None();
@@ -518,26 +517,29 @@ static OffsetPathData GenerateOffsetPathData(
 Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
     const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
     const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
-    const layers::TransformData& aTransformData, gfx::Path* aCachedMotionPath) {
+    const Maybe<layers::MotionPathData>& aMotionPathData,
+    const CSSSize& aFrameSize, gfx::Path* aCachedMotionPath) {
   if (!aPath) {
     return Nothing();
   }
 
+  MOZ_ASSERT(aMotionPathData);
+
   auto zeroOffsetDistance = LengthPercentage::Zero();
   auto autoOffsetRotate = StyleOffsetRotate{true, StyleAngle::Zero()};
   auto autoOffsetAnchor = StylePositionOrAuto::Auto();
-  Maybe<CSSPoint> framePosition =
-      Some(aTransformData.motionPathFramePosition());
+  Maybe<CSSPoint> framePosition = Some(aMotionPathData->framePosition());
 
   return MotionPathUtils::ResolveMotionPath(
-      GenerateOffsetPathData(*aPath, aTransformData, aCachedMotionPath),
+      GenerateOffsetPathData(*aPath, aMotionPathData->rayReferenceData(),
+                             aCachedMotionPath),
       aDistance ? *aDistance : zeroOffsetDistance,
       aRotate ? *aRotate : autoOffsetRotate,
-      aAnchor ? *aAnchor : autoOffsetAnchor, aTransformData.motionPathOrigin(),
-      CSSSize::FromAppUnits(aTransformData.bounds().Size()),
+      aAnchor ? *aAnchor : autoOffsetAnchor, aMotionPathData->origin(),
+      aFrameSize,
       // The frame position is (0, 0) if we don't have to tweak, so using
       // Some() is fine.
-      Some(aTransformData.motionPathFramePosition()));
+      Some(aMotionPathData->framePosition()));
 }
 
 /* static */

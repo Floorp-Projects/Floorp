@@ -434,11 +434,18 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
       // Got a different group, we should create a different array.
       currData = storageData.mAnimation.AppendElement();
       currData->mProperty = animation.property();
-      if (animation.data()) {
-        MOZ_ASSERT(!storageData.mTransformLikeMetaData,
-                   "Only one entry has animation data");
-        storageData.mTransformLikeMetaData =
-            MakeUnique<TransformData>(animation.data().ref());
+      if (animation.transformData()) {
+        MOZ_ASSERT(!storageData.mTransformLikeMetaData.mTransform,
+                   "Only one entry has TransformData");
+        storageData.mTransformLikeMetaData.mTransform =
+            animation.transformData();
+      }
+
+      if (animation.motionPathData()) {
+        MOZ_ASSERT(!storageData.mTransformLikeMetaData.mMotionPath,
+                   "Only one entry has MotionPathData");
+        storageData.mTransformLikeMetaData.mMotionPath =
+            animation.motionPathData();
       }
       prevID = animation.property();
 
@@ -548,8 +555,13 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
 
     if (seenProperties.IsSubsetOf(LayerAnimationInfo::GetCSSPropertiesFor(
             DisplayItemType::TYPE_TRANSFORM))) {
-      MOZ_ASSERT(storageData.mTransformLikeMetaData,
+      MOZ_ASSERT(storageData.mTransformLikeMetaData.mTransform,
                  "Should have TransformData");
+    }
+
+    if (seenProperties.HasProperty(eCSSProperty_offset_path)) {
+      MOZ_ASSERT(storageData.mTransformLikeMetaData.mMotionPath,
+                 "Should have MotionPathData");
     }
   }
 #endif
@@ -617,17 +629,16 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
       case eCSSProperty_offset_distance:
       case eCSSProperty_offset_rotate:
       case eCSSProperty_offset_anchor: {
-        MOZ_ASSERT(animationStorageData.mTransformLikeMetaData);
-        const TransformData& transformData =
-            *animationStorageData.mTransformLikeMetaData;
-
         gfx::Matrix4x4 transform = ServoAnimationValueToMatrix4x4(
-            animationValues, transformData,
+            animationValues, animationStorageData.mTransformLikeMetaData,
             animationStorageData.mCachedMotionPath);
         gfx::Matrix4x4 frameTransform = transform;
         // If the parent has perspective transform, then the offset into
         // reference frame coordinates is already on this transform. If not,
         // then we need to ask for it to be added here.
+        MOZ_ASSERT(animationStorageData.mTransformLikeMetaData.mTransform);
+        const TransformData& transformData =
+            *animationStorageData.mTransformLikeMetaData.mTransform;
         if (!transformData.hasPerspectiveParent()) {
           nsLayoutUtils::PostTranslate(transform, transformData.origin(),
                                        transformData.appUnitsPerDevPixel(),
@@ -651,7 +662,8 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
 
 gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
     const nsTArray<RefPtr<RawServoAnimationValue>>& aValues,
-    const TransformData& aTransformData, gfx::Path* aCachedMotionPath) {
+    const CompositorAnimationData& aAnimationData,
+    gfx::Path* aCachedMotionPath) {
   // This is a bit silly just to avoid the transform list copy from the
   // animation transform list.
   auto noneTranslate = StyleTranslate::None();
@@ -709,19 +721,23 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
     }
   }
 
-  Maybe<MotionPathData> motion = MotionPathUtils::ResolveMotionPath(
-      path, distance, offsetRotate, anchor, aTransformData, aCachedMotionPath);
+  MOZ_ASSERT(aAnimationData.mTransform);
+  const TransformData& transformData = *aAnimationData.mTransform;
+
+  Maybe<mozilla::MotionPathData> motion = MotionPathUtils::ResolveMotionPath(
+      path, distance, offsetRotate, anchor, aAnimationData.mMotionPath,
+      CSSSize::FromAppUnits(transformData.bounds().Size()), aCachedMotionPath);
 
   // We expect all our transform data to arrive in device pixels
-  gfx::Point3D transformOrigin = aTransformData.transformOrigin();
+  gfx::Point3D transformOrigin = transformData.transformOrigin();
   nsDisplayTransform::FrameTransformProperties props(
       translate ? *translate : noneTranslate, rotate ? *rotate : noneRotate,
       scale ? *scale : noneScale, transform ? *transform : noneTransform,
       motion, transformOrigin);
 
   return nsDisplayTransform::GetResultingTransformMatrix(
-      props, aTransformData.origin(), aTransformData.appUnitsPerDevPixel(), 0,
-      &aTransformData.bounds());
+      props, transformData.origin(), transformData.appUnitsPerDevPixel(), 0,
+      &transformData.bounds());
 }
 
 }  // namespace layers

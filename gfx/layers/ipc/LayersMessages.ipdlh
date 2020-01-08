@@ -255,17 +255,11 @@ struct AnimationSegment {
 
 // Transforms need extra information to correctly convert the list of transform
 // functions to a Matrix4x4 that can be applied directly to the layer.
-// FIXME: Bug 1591629: Move motion path data into an individual struct.
 struct TransformData {
   // the origin of the frame being transformed in app units
   nsPoint origin;
   // the transform-origin property for the transform in device pixels
   Point3D transformOrigin;
-  // the transform-origin property for motion in css pixels
-  CSSPoint motionPathOrigin;
-  // the position of the frame, which is used by motion path
-  CSSPoint motionPathFramePosition;
-  RayReferenceData motionPathRayReferenceData;
   nsRect bounds;
   int32_t appUnitsPerDevPixel;
   // The resolution scale inherited from the parent
@@ -273,6 +267,14 @@ struct TransformData {
   float inheritedYScale;
   // True if the parent has perspective transform
   bool hasPerspectiveParent;
+};
+
+struct MotionPathData {
+  // the transform-origin property for motion in css pixels
+  CSSPoint origin;
+  // the position of the frame, which is used by motion path
+  CSSPoint framePosition;
+  RayReferenceData rayReferenceData;
 };
 
 struct Animation {
@@ -309,7 +311,8 @@ struct Animation {
   // This uses dom::FillMode.
   uint8_t fillMode;
   nsCSSPropertyID property;
-  TransformData? data;
+  TransformData? transformData;
+  MotionPathData? motionPathData;
   float playbackRate;
   // When performing an asynchronous update to the playbackRate, |playbackRate|
   // above is the updated playbackRate while |previousPlaybackRate| is the
