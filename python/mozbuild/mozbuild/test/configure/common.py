@@ -7,11 +7,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 import errno
 import os
+import six
 import subprocess
 import sys
 import tempfile
 import unittest
-from StringIO import StringIO
+from six import StringIO
 
 from mozbuild.configure import ConfigureSandbox
 from mozbuild.util import ReadOnlyNamespace
@@ -78,10 +79,10 @@ class ConfigureTestSandbox(ConfigureSandbox):
         self._search_path = environ.get('PATH', '').split(os.pathsep)
 
         self._subprocess_paths = {
-            mozpath.abspath(k): v for k, v in paths.iteritems() if v
+            mozpath.abspath(k): v for k, v in six.iteritems(paths) if v
         }
 
-        paths = paths.keys()
+        paths = list(paths)
 
         environ = copy.copy(environ)
         if 'CONFIG_SHELL' not in environ:
