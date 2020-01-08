@@ -3926,14 +3926,42 @@ JS_PUBLIC_API JSObject* JS::CallOriginalPromiseThen(
 
 JS_PUBLIC_API bool JS::AddPromiseReactions(JSContext* cx,
                                            JS::HandleObject promiseObj,
-                                           JS::HandleObject onResolvedObj,
-                                           JS::HandleObject onRejectedObj) {
+                                           JS::HandleObject onFulfilled,
+                                           JS::HandleObject onRejected) {
   RootedObject resultPromise(cx);
-  bool result = CallOriginalPromiseThenImpl(cx, promiseObj, onResolvedObj,
-                                            onRejectedObj, &resultPromise,
+  bool result = CallOriginalPromiseThenImpl(cx, promiseObj, onFulfilled,
+                                            onRejected, &resultPromise,
                                             CreateDependentPromise::Never);
   MOZ_ASSERT(!resultPromise);
   return result;
+}
+
+JS_PUBLIC_API bool JS::AddPromiseReactionsIgnoringUnhandledRejection(
+    JSContext* cx, JS::HandleObject promiseObj, JS::HandleObject onFulfilled,
+    JS::HandleObject onRejected) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(promiseObj, onFulfilled, onRejected);
+
+  MOZ_ASSERT_IF(onFulfilled, IsCallable(onFulfilled));
+  MOZ_ASSERT_IF(onRejected, IsCallable(onRejected));
+
+  Rooted<PromiseObject*> unwrappedPromise(cx);
+  {
+    RootedValue promiseVal(cx, ObjectValue(*promiseObj));
+    unwrappedPromise = UnwrapAndTypeCheckValue<PromiseObject>(
+        cx, promiseVal, [cx, promiseObj] {
+          JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                     JSMSG_INCOMPATIBLE_PROTO, "Promise",
+                                     "then", promiseObj->getClass()->name);
+        });
+    if (!unwrappedPromise) {
+      return false;
+    }
+  }
+
+  return ReactIgnoringUnhandledRejection(cx, unwrappedPromise, onFulfilled,
+                                         onRejected);
 }
 
 JS_PUBLIC_API JS::PromiseUserInputEventHandlingState
