@@ -1209,6 +1209,19 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
     mTextInputListener->SetValueChanged(mSetValueFlags &
                                         TextControlState::eSetValue_Notify);
     mEditActionHandled = false;
+    // Even if falling back to `TextControlState::SetValueWithoutTextEditor()`
+    // due to editor destruction, it shouldn't dispatch "beforeinput" event
+    // anymore.  Therefore, we should mark that we've already dispatched
+    // "beforeinput" event.
+    WillDispatchBeforeInputEvent();
+  }
+
+  /**
+   * WillDispatchBeforeInputEvent() is called immediately before dispatching
+   * "beforeinput" event in `TextControlState`.
+   */
+  void WillDispatchBeforeInputEvent() {
+    mBeforeInputEventHasBeenDispatched = true;
   }
 
   /**
@@ -1282,6 +1295,9 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
         ->mTextControlFrame.IsAlive();
   }
   bool HasEditActionHandled() const { return mEditActionHandled; }
+  bool HasBeforeInputEventDispatched() const {
+    return mBeforeInputEventHasBeenDispatched;
+  }
   bool Is(TextControlAction aTextControlAction) const {
     return mTextControlAction == aTextControlAction;
   }
@@ -1346,6 +1362,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
   bool mTextControlStateDestroyed = false;
   bool mEditActionHandled = false;
   bool mPreareEditorLater = false;
+  bool mBeforeInputEventHasBeenDispatched = false;
 };
 
 /*****************************************************************************
@@ -2651,6 +2668,11 @@ bool TextControlState::SetValue(const nsAString& aValue,
   // Note that if this may be called during reframe of the editor.  In such
   // case, we shouldn't commit composition.  Therefore, when this is called
   // for internal processing, we shouldn't commit the composition.
+  // TODO: In strictly speaking, we should move committing composition into
+  //       editor because if "beforeinput" for this setting value is canceled,
+  //       we shouldn't commit composition.  However, in Firefox, we never
+  //       call this via `setUserInput` during composition.  Therefore, the
+  //       bug must not be reproducible actually.
   if (aFlags & (eSetValue_BySetUserInput | eSetValue_ByContent)) {
     if (EditorHasComposition()) {
       // When this is called recursively, there shouldn't be composition.
@@ -2918,39 +2940,92 @@ bool TextControlState::SetValueWithoutTextEditor(
   // OnValueChanged below still need to be called.
   if (!mValue->Equals(aHandlingSetValue.GetSettingValue()) ||
       !StaticPrefs::dom_input_skip_cursor_move_for_same_value_set()) {
-    if (!mValue->Assign(aHandlingSetValue.GetSettingValue(), fallible)) {
-      return false;
-    }
-
-    // Since we have no editor we presumably have cached selection state.
-    if (IsSelectionCached()) {
-      MOZ_ASSERT(AreFlagsNotDemandingContradictingMovements(
-          aHandlingSetValue.GetSetValueFlags()));
-
-      SelectionProperties& props = GetSelectionProperties();
-      if (aHandlingSetValue.GetSetValueFlags() &
-          eSetValue_MoveCursorToEndIfValueChanged) {
-        props.SetStart(aHandlingSetValue.GetSettingValue().Length());
-        props.SetEnd(aHandlingSetValue.GetSettingValue().Length());
-        props.SetDirection(nsITextControlFrame::eForward);
-      } else if (aHandlingSetValue.GetSetValueFlags() &
-                 eSetValue_MoveCursorToBeginSetSelectionDirectionForward) {
-        props.SetStart(0);
-        props.SetEnd(0);
-        props.SetDirection(nsITextControlFrame::eForward);
-      } else {
-        // Make sure our cached selection position is not outside the new
-        // value.
-        props.SetStart(std::min(props.GetStart(),
-                                aHandlingSetValue.GetSettingValue().Length()));
-        props.SetEnd(std::min(props.GetEnd(),
-                              aHandlingSetValue.GetSettingValue().Length()));
+    bool handleSettingValue = true;
+    // If `SetValue()` call is nested, `GetSettingValue()` result will be
+    // modified.  So, we need to store input event data value before
+    // dispatching beforeinput event.
+    nsString inputEventData(aHandlingSetValue.GetSettingValue());
+    if ((aHandlingSetValue.GetSetValueFlags() & eSetValue_BySetUserInput) &&
+        StaticPrefs::dom_input_events_beforeinput_enabled() &&
+        !aHandlingSetValue.HasBeforeInputEventDispatched()) {
+      // This probably occurs when session restorer sets the old value with
+      // `setUserInput`.  If so, we need to dispatch "beforeinput" event of
+      // "insertReplacementText" for conforming to the spec.  However, the
+      // spec does NOT treat the session restoring case.  Therefore, if this
+      // breaks session restorere in a lot of web apps, we should probably
+      // stop dispatching it or make it non-cancelable.
+      MOZ_ASSERT(aHandlingSetValue.GetTextControlElement());
+      MOZ_ASSERT(!aHandlingSetValue.GetSettingValue().IsVoid());
+      aHandlingSetValue.WillDispatchBeforeInputEvent();
+      nsEventStatus status = nsEventStatus_eIgnore;
+      DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
+          MOZ_KnownLive(aHandlingSetValue.GetTextControlElement()),
+          eEditorBeforeInput, EditorInputType::eInsertReplacementText, nullptr,
+          nsContentUtils::InputEventOptions(inputEventData), &status);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                           "Failed to dispatch beforeinput event");
+      if (status == nsEventStatus_eConsumeNoDefault) {
+        return true;  // "beforeinput" event was canceled.
+      }
+      // If we were destroyed by "beforeinput" event listeners, probably, we
+      // don't need to keep handling it.
+      if (aHandlingSetValue.IsTextControlStateDestroyed()) {
+        return true;
+      }
+      // Even if "beforeinput" event was not canceled, its listeners may do
+      // something.  If it causes creating `TextEditor` and bind this to a
+      // frame, we need to use the path, but `TextEditor` shouldn't fire
+      // "beforeinput" event again.  Therefore, we need to prevent editor
+      // to dispatch it.
+      if (mTextEditor && mBoundFrame) {
+        AutoInputEventSuppresser suppressInputEvent(mTextEditor);
+        if (!SetValueWithTextEditor(aHandlingSetValue)) {
+          return false;
+        }
+        // If we were destroyed by "beforeinput" event listeners, probably, we
+        // don't need to keep handling it.
+        if (aHandlingSetValue.IsTextControlStateDestroyed()) {
+          return true;
+        }
+        handleSettingValue = false;
       }
     }
 
-    // Update the frame display if needed
-    if (mBoundFrame) {
-      mBoundFrame->UpdateValueDisplay(true);
+    if (handleSettingValue) {
+      if (!mValue->Assign(aHandlingSetValue.GetSettingValue(), fallible)) {
+        return false;
+      }
+
+      // Since we have no editor we presumably have cached selection state.
+      if (IsSelectionCached()) {
+        MOZ_ASSERT(AreFlagsNotDemandingContradictingMovements(
+            aHandlingSetValue.GetSetValueFlags()));
+
+        SelectionProperties& props = GetSelectionProperties();
+        if (aHandlingSetValue.GetSetValueFlags() &
+            eSetValue_MoveCursorToEndIfValueChanged) {
+          props.SetStart(aHandlingSetValue.GetSettingValue().Length());
+          props.SetEnd(aHandlingSetValue.GetSettingValue().Length());
+          props.SetDirection(nsITextControlFrame::eForward);
+        } else if (aHandlingSetValue.GetSetValueFlags() &
+                   eSetValue_MoveCursorToBeginSetSelectionDirectionForward) {
+          props.SetStart(0);
+          props.SetEnd(0);
+          props.SetDirection(nsITextControlFrame::eForward);
+        } else {
+          // Make sure our cached selection position is not outside the new
+          // value.
+          props.SetStart(std::min(
+              props.GetStart(), aHandlingSetValue.GetSettingValue().Length()));
+          props.SetEnd(std::min(props.GetEnd(),
+                                aHandlingSetValue.GetSettingValue().Length()));
+        }
+      }
+
+      // Update the frame display if needed
+      if (mBoundFrame) {
+        mBoundFrame->UpdateValueDisplay(true);
+      }
     }
 
     // If this is called as part of user input, we need to dispatch "input"
@@ -2966,8 +3041,7 @@ bool TextControlState::SetValueWithoutTextEditor(
       DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
           MOZ_KnownLive(aHandlingSetValue.GetTextControlElement()),
           eEditorInput, EditorInputType::eInsertReplacementText, nullptr,
-          nsContentUtils::InputEventOptions(
-              aHandlingSetValue.GetSettingValue()));
+          nsContentUtils::InputEventOptions(inputEventData));
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                            "Failed to dispatch input event");
     }
