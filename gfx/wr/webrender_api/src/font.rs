@@ -402,7 +402,6 @@ impl Default for GlyphInstance {
 
 impl Eq for GlyphInstance {}
 
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::derive_hash_xor_eq))]
 impl Hash for GlyphInstance {
     fn hash<H: Hasher>(&self, state: &mut H) {
         // Note: this is inconsistent with the Eq impl for -0.0 (don't care).

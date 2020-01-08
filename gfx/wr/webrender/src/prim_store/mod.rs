@@ -125,7 +125,7 @@ impl PrimitiveOpacity {
         }
     }
 
-    pub fn combine(self, other: PrimitiveOpacity) -> PrimitiveOpacity {
+    pub fn combine(&self, other: PrimitiveOpacity) -> PrimitiveOpacity {
         PrimitiveOpacity{
             is_opaque: self.is_opaque && other.is_opaque
         }
@@ -378,13 +378,13 @@ impl ClipTaskIndex {
 pub struct PictureIndex(pub usize);
 
 impl GpuCacheHandle {
-    pub fn as_int(self, gpu_cache: &GpuCache) -> i32 {
+    pub fn as_int(&self, gpu_cache: &GpuCache) -> i32 {
         gpu_cache.get_address(self).as_int()
     }
 }
 
 impl GpuCacheAddress {
-    pub fn as_int(self) -> i32 {
+    pub fn as_int(&self) -> i32 {
         // TODO(gw): Temporarily encode GPU Cache addresses as a single int.
         //           In the future, we can change the PrimitiveInstanceData struct
         //           to use 2x u16 for the vertex attribute instead of an i32.
@@ -2018,8 +2018,10 @@ impl PrimitiveStore {
                         let pic = &self.pictures[pic_index.0];
                         prim_instance.prim_origin = pic.precise_local_rect.origin;
 
-                        if prim_instance.is_chased() && pic.estimated_local_rect != pic.precise_local_rect {
-                            println!("\testimate {:?} adjusted to {:?}", pic.estimated_local_rect, pic.precise_local_rect);
+                        if prim_instance.is_chased() {
+                            if pic.estimated_local_rect != pic.precise_local_rect {
+                                println!("\testimate {:?} adjusted to {:?}", pic.estimated_local_rect, pic.precise_local_rect);
+                            }
                         }
 
                         let mut shadow_rect = pic.precise_local_rect;
@@ -2251,11 +2253,9 @@ impl PrimitiveStore {
                             frame_state.scratch.push_debug_rect(debug_rect, debug_color, debug_color.scale_alpha(0.5));
                         }
                     } else if frame_context.debug_flags.contains(::api::DebugFlags::OBSCURE_IMAGES) {
-                        let is_image = matches!(
-                            prim_instance.kind,
-                            PrimitiveInstanceKind::Image { .. } | PrimitiveInstanceKind::YuvImage { .. }
-                        );
-                        if is_image {
+                        if matches!(prim_instance.kind, PrimitiveInstanceKind::Image { .. } |
+                                                        PrimitiveInstanceKind::YuvImage { .. })
+                        {
                             // We allow "small" images, since they're generally UI elements.
                             let rect = clipped_world_rect * frame_context.global_device_pixel_scale;
                             if rect.size.width > 70.0 && rect.size.height > 70.0 {

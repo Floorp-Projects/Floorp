@@ -46,7 +46,7 @@ pub struct BlobImageKey(pub ImageKey);
 
 impl BlobImageKey {
     /// Interpret this blob image as an image for a display item.
-    pub fn as_image(self) -> ImageKey {
+    pub fn as_image(&self) -> ImageKey {
         self.0
     }
 }

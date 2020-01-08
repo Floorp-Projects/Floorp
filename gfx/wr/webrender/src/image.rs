@@ -600,7 +600,7 @@ pub fn compute_valid_tiles_if_bounds_change(
         return Some(TileRange::zero());
     }
 
-    let intersection = intersection.unwrap_or_else(DeviceIntRect::zero);
+    let intersection = intersection.unwrap_or(DeviceIntRect::zero());
 
     let left = prev_rect.min_x() != new_rect.min_x();
     let right = prev_rect.max_x() != new_rect.max_x();
