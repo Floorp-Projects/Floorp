@@ -1080,7 +1080,7 @@ impl BrushSegment {
                 let port = frame_state
                     .surfaces[surface_index.0]
                     .render_tasks
-                    .expect(&format!("bug: no task for surface {:?}", surface_index))
+                    .unwrap_or_else(|| panic!("bug: no task for surface {:?}", surface_index))
                     .port;
                 frame_state.render_tasks.add_dependency(port, clip_task_id);
                 ClipMaskKind::Mask(clip_task_id)
