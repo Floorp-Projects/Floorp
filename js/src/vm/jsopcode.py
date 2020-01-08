@@ -233,11 +233,16 @@ def get_opcodes(dir):
                     stack = get_tag_value(line)
                 elif state == 'desc':
                     desc += line + "\n"
-                elif line.startswith('  '):
-                    if state == 'operands':
-                        comment_info.operands += line.strip()
+                elif line.startswith('   '):
+                    if line.isspace():
+                        pass
+                    elif state == 'operands':
+                        comment_info.operands += ' ' + line.strip()
                     elif state == 'stack':
-                        stack += line.strip()
+                        stack += ' ' + line.strip()
+                else:
+                    raise ValueError("unrecognized line in comment: {!r}\n\nfull comment was:\n{}"
+                                     .format(line, comment))
 
             comment_info.desc = desc
 
