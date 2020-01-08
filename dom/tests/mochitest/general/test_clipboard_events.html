@@ -39,7 +39,8 @@ add_task(async function initialize_for_tests() {
     SpecialPowers.pushPrefEnv({
       // NOTE: These tests operate under the assumption that the protected mode of
       // DataTransfer is enabled.
-      "set": [["dom.events.dataTransfer.protected.enabled", true]]
+      "set": [["dom.events.dataTransfer.protected.enabled", true],
+              ["dom.input_events.beforeinput.enabled", true]]
     }, resolve);
   });
 
@@ -191,18 +192,22 @@ add_task(async function test_input_oncopy() {
   contentInput.focus();
   contentInput.setSelectionRange(2, 8);
 
-  var oncopy_fired = false;
-  var oninput_fired = false;
-  contentInput.oncopy = function() { oncopy_fired = true; };
-  contentInput.oninput = function () { oninput_fired = true; };
+  let oncopy_fired = false;
+  let onbeforeinput_fired = false;
+  let oninput_fired = false;
+  contentInput.oncopy = () => { oncopy_fired = true; };
+  contentInput.onbeforeinput = () => { onbeforeinput = true; };
+  contentInput.oninput = () => { oninput_fired = true; };
   try {
     await putOnClipboard("PUT TE", () => {
       synthesizeKey("c", {accelKey: 1});
     }, "copy on plaintext editor set clipboard correctly");
     ok(oncopy_fired, "copy event firing on plaintext editor");
+    ok(!onbeforeinput_fired, "beforeinput event shouldn't be fired on plaintext editor by copy");
     ok(!oninput_fired, "input event shouldn't be fired on plaintext editor by copy");
   } finally {
     contentInput.oncopy = null;
+    contentInput.onbeforeinput = null;
     contentInput.oninput = null;
   }
 });
@@ -214,30 +219,36 @@ add_task(async function test_input_oncut() {
   // handler was fired, the clipboard contains the INPUT TEXT, and
   // that the input itself is empty.
   selectContentInput();
-  var oncut_fired = false;
-  var oninput_count = 0;
-  var inputType = "";
-  var data, dataTransfer;
-  contentInput.oncut = function() { oncut_fired = true; };
-  contentInput.oninput = function (aEvent) {
-    oninput_count++;
-    inputType = aEvent.inputType;
-    data = aEvent.data;
-    dataTransfer = aEvent.dataTransfer;
-  };
+  let oncut_fired = false;
+  let beforeInputEvents = [];
+  let inputEvents = [];
+  contentInput.oncut = () => { oncut_fired = true; };
+  contentInput.onbeforeinput = (aEvent) => { beforeInputEvents.push(aEvent); }
+  contentInput.oninput = (aEvent) => { inputEvents.push(aEvent); }
   try {
     await putOnClipboard("INPUT TEXT", () => {
       synthesizeKey("x", {accelKey: 1});
     }, "cut on plaintext editor set clipboard correctly");
     ok(oncut_fired, "cut event firing on plaintext editor");
-    is(oninput_count, 1, "input event should be fired once by cut");
-    is(inputType, "deleteByCut", "inputType of the input event should be \"deleteByCut\"");
-    is(data, null, "data of the input event should be null when inputType is \"deleteByCut\"");
-    is(dataTransfer, null, "dataTransfer of the input event should be null when inputType is \"deleteByCut\"");
+    todo_is(beforeInputEvents.length, 1, '"beforeinput" event should be fired once by cut');
+    if (beforeInputEvents.length > 0) {
+      is(beforeInputEvents[0].inputType, "deleteByCut", '"inputType" of "beforeinput" event should be "deleteByCut"');
+      is(beforeInputEvents[0].cancelable, true, '"beforeinput" event for "deleteByCut" should be cancelable');
+      is(beforeInputEvents[0].data, null, '"data" of "beforeinput" event for "deleteByCut" should be null');
+      is(beforeInputEvents[0].dataTransfer, null, '"dataTransfer" of "beforeinput" event for "deleteByCut" should be null');
+    }
+    is(inputEvents.length, 1, '"input" event should be fired once by cut');
+    if (inputEvents.length > 0) {
+      is(inputEvents[0].inputType, "deleteByCut", '"inputType" of "input" event should be "deleteByCut"');
+      is(inputEvents[0].cancelable, false, '"input" event for "deleteByCut" should not be cancelable');
+      is(inputEvents[0].data, null, '"data" of "input" event for "deleteByCut" should be null');
+      is(inputEvents[0].dataTransfer, null, '"dataTransfer" of "input" event for "deleteByCut" should be null');
+    }
     is(contentInput.value, "",
       "cut on plaintext editor emptied editor");
   } finally {
     contentInput.oncut = null;
+    contentInput.onbeforeinput = null;
     contentInput.oninput = null;
   }
 });
@@ -249,31 +260,37 @@ add_task(async function test_input_onpaste() {
   // handler was fired, the clipboard contents didn't change, and that the
   // input value did change (ie. paste succeeded).
   selectContentInput();
-  var onpaste_fired = false;
-  var oninput_count = 0;
-  var inputType = "";
-  var data, dataTransfer;
-  contentInput.onpaste = function() { onpaste_fired = true; };
-  contentInput.oninput = function(aEvent) {
-    oninput_count++;
-    inputType = aEvent.inputType;
-    data = aEvent.data;
-    dataTransfer = aEvent.dataTransfer;
-  };
+  let onpaste_fired = false;
+  let beforeInputEvents = [];
+  let inputEvents = [];
+  contentInput.onpaste = () => { onpaste_fired = true; };
+  contentInput.onbeforeinput = (aEvent) => { beforeInputEvents.push(aEvent); }
+  contentInput.oninput = (aEvent) => { inputEvents.push(aEvent); }
 
   try {
     synthesizeKey("v", {accelKey: 1});
     ok(onpaste_fired, "paste event firing on plaintext editor");
     is(getClipboardText(), clipboardInitialValue,
       "paste on plaintext editor did not modify clipboard contents");
-    is(oninput_count, 1, "input event should be fired once by cut");
-    is(inputType, "insertFromPaste", "inputType of the input event should be \"insertFromPaste\"");
-    is(data, clipboardInitialValue, `data of the input event should be ${clipboardInitialValue}`);
-    is(dataTransfer, null, "dataTransfer of the input event should be null even when inputType is \"insertFromPaste\"");
+    todo_is(beforeInputEvents.length, 1, '"beforeinput" event should be fired once by paste');
+    if (beforeInputEvents.length > 0) {
+      is(beforeInputEvents[0].inputType, "insertFromPaste", '"inputType" of "beforeinput" event should be "insertFromPaste"');
+      is(beforeInputEvents[0].cancelable, true, '"beforeinput" event for "insertFromPaste" should be cancelable');
+      is(beforeInputEvents[0].data, clipboardInitialValue, `"data" of "beforeinput" event for "insertFromPaste" should be "${clipboardInitialValue}"`);
+      is(beforeInputEvents[0].dataTransfer, null, '"dataTransfer" of "beforeinput" event for "insertFromPaste" should be null');
+    }
+    is(inputEvents.length, 1, '"input" event should be fired once by paste');
+    if (inputEvents.length > 0) {
+      is(inputEvents[0].inputType, "insertFromPaste", '"inputType" of "input" event should be "insertFromPaste"');
+      is(inputEvents[0].cancelable, false, '"input" event for "insertFromPaste" should not be cancelable');
+      is(inputEvents[0].data, clipboardInitialValue, `"data" of "input" event for "insertFromPaste" should be "${clipboardInitialValue}"`);
+      is(inputEvents[0].dataTransfer, null, '"dataTransfer" of "input" event for "insertFromPaste" should be null');
+    }
     is(contentInput.value, clipboardInitialValue,
       "paste on plaintext editor did modify editor value");
   } finally {
     contentInput.onpaste = null;
+    contentInput.onbeforeinput = null;
     contentInput.oninput = null;
   }
 });
@@ -284,10 +301,13 @@ add_task(async function test_input_oncopy_abort() {
   // Setup an oncopy event handler, fire copy.  Ensure that the event
   // handler was called, and that the clipboard value did NOT change.
   selectContentInput();
-  var oncopy_fired = false;
-  contentInput.oncopy = function() { oncopy_fired = true; return false; };
+  let oncopy_fired = false;
+  contentInput.oncopy = () => { oncopy_fired = true; return false; };
+  contentInput.onbeforeinput = () => {
+    ok(false, '"beforeinput" event should not be fired by copy but canceled');
+  };
   contentInput.oninput = function() {
-    ok(false, "input event shouldn't be fired by copy but canceled");
+    ok(false, '"input" event should not be fired by copy but canceled');
   };
   try {
     await wontPutOnClipboard(clipboardInitialValue, () => {
@@ -296,6 +316,7 @@ add_task(async function test_input_oncopy_abort() {
     ok(oncopy_fired, "copy event (to-be-cancelled) firing on plaintext editor");
   } finally {
     contentInput.oncopy = null;
+    contentInput.onbeforeinput = null;
     contentInput.oninput = null;
   }
 });
@@ -307,10 +328,13 @@ add_task(async function test_input_oncut_abort() {
   // handler was fired, the clipboard contains the INPUT TEXT, and
   // that the input itself is empty.
   selectContentInput();
-  var oncut_fired = false;
-  contentInput.oncut = function() { oncut_fired = true; return false; };
-  contentInput.oninput = function() {
-    ok(false, "input event shouldn't be fired by cut but canceled");
+  let oncut_fired = false;
+  contentInput.oncut = () => { oncut_fired = true; return false; };
+  contentInput.onbeforeinput = () => {
+    ok(false, '"beforeinput" event should not be fired by cut but canceled by "cut" event listener');
+  };
+  contentInput.oninput = () => {
+    ok(false, '"input" event should not be fired by cut but canceled by "cut" event listener');
   };
   try {
     await wontPutOnClipboard(clipboardInitialValue, () => {
@@ -321,6 +345,42 @@ add_task(async function test_input_oncut_abort() {
       "aborted cut on plaintext editor did not modify editor contents");
   } finally {
     contentInput.oncut = null;
+    contentInput.onbeforeinput = null;
+    contentInput.oninput = null;
+  }
+});
+
+add_task(async function test_input_oncut_beforeinput_abort() {
+  await reset();
+
+  // Setup an oncut event handler, and fire cut.  Ensure that the event
+  // handler was fired, the clipboard contains the INPUT TEXT, and
+  // that the input itself is empty.
+  selectContentInput();
+  let oncut_fired = false;
+  let beforeInputEvents = [];
+  let inputEvents = [];
+  contentInput.oncut = () => { oncut_fired = true; };
+  contentInput.onbeforeinput = (aEvent) => { beforeInputEvents.push(aEvent); aEvent.preventDefault(); }
+  contentInput.oninput = (aEvent) => { inputEvents.push(aEvent); }
+  try {
+    await putOnClipboard("INPUT TEXT", () => {
+      synthesizeKey("x", {accelKey: 1});
+    }, "cut on plaintext editor set clipboard correctly");
+    ok(oncut_fired, "cut event firing on plaintext editor");
+    todo_is(beforeInputEvents.length, 1, '"beforeinput" event should be fired once by cut');
+    if (beforeInputEvents.length > 0) {
+      is(beforeInputEvents[0].inputType, "deleteByCut", '"inputType" of "beforeinput" event should be "deleteByCut"');
+      is(beforeInputEvents[0].cancelable, true, '"beforeinput" event for "deleteByCut" should be cancelable');
+      is(beforeInputEvents[0].data, null, '"data" of "beforeinput" event for "deleteByCut" should be null');
+      is(beforeInputEvents[0].dataTransfer, null, '"dataTransfer" of "beforeinput" event for "deleteByCut" should be null');
+    }
+    todo_is(inputEvents.length, 0, '"input" event should not be fired by cut if "beforeinput" event is canceled');
+    todo_is(contentInput.value, "INPUT TEXT",
+      'cut on plaintext editor should not change editor since "beforeinput" event was canceled');
+  } finally {
+    contentInput.oncut = null;
+    contentInput.onbeforeinput = null;
     contentInput.oninput = null;
   }
 });
@@ -332,10 +392,13 @@ add_task(async function test_input_onpaste_abort() {
   // handler was fired, the clipboard contents didn't change, and that the
   // input value did change (ie. paste succeeded).
   selectContentInput();
-  var onpaste_fired = false;
-  contentInput.onpaste = function() { onpaste_fired = true; return false; };
-  contentInput.oninput = function() {
-    ok(false, "input event shouldn't be fired by paste but canceled");
+  let onpaste_fired = false;
+  contentInput.onpaste = () => { onpaste_fired = true; return false; };
+  contentInput.onbeforeinput = () => {
+    ok(false, '"beforeinput" event should not be fired by paste but canceled');
+  };
+  contentInput.oninput = () => {
+    ok(false, '"input" event should not be fired by paste but canceled');
   };
   try {
     synthesizeKey("v", {accelKey: 1});
@@ -347,6 +410,43 @@ add_task(async function test_input_onpaste_abort() {
       "aborted paste on plaintext editor did not modify modified editor value");
   } finally {
     contentInput.onpaste = null;
+    contentInput.onbeforeinput = null;
+    contentInput.oninput = null;
+  }
+});
+
+add_task(async function test_input_onpaste_beforeinput_abort() {
+  await reset();
+
+  // Setup an onpaste event handler, and fire paste.  Ensure that the event
+  // handler was fired, the clipboard contents didn't change, and that the
+  // input value did change (ie. paste succeeded).
+  selectContentInput();
+  let onpaste_fired = false;
+  let beforeInputEvents = [];
+  let inputEvents = [];
+  contentInput.onpaste = () => { onpaste_fired = true; };
+  contentInput.onbeforeinput = (aEvent) => { beforeInputEvents.push(aEvent); aEvent.preventDefault(); }
+  contentInput.oninput = (aEvent) => { inputEvents.push(aEvent); }
+
+  try {
+    synthesizeKey("v", {accelKey: 1});
+    ok(onpaste_fired, "paste event firing on plaintext editor");
+    is(getClipboardText(), clipboardInitialValue,
+      "paste on plaintext editor did not modify clipboard contents");
+    todo_is(beforeInputEvents.length, 1, '"beforeinput" event should be fired once by paste');
+    if (beforeInputEvents.length > 0) {
+      is(beforeInputEvents[0].inputType, "insertFromPaste", '"inputType" of "beforeinput" event should be "insertFromPaste"');
+      is(beforeInputEvents[0].cancelable, true, '"beforeinput" event for "insertFromPaste" should be cancelable');
+      is(beforeInputEvents[0].data, clipboardInitialValue, `"data" of "beforeinput" event for "insertFromPaste" should be "${clipboardInitialValue}"`);
+      is(beforeInputEvents[0].dataTransfer, null, '"dataTransfer" of "beforeinput" event for "insertFromPaste" should be null');
+    }
+    todo_is(inputEvents.length, 0, '"input" event should not be fired by paste when "beforeinput" is canceled');
+    todo_is(contentInput.value, "INPUT TEXT",
+      "paste on plaintext editor did modify editor value");
+  } finally {
+    contentInput.onpaste = null;
+    contentInput.onbeforeinput = null;
     contentInput.oninput = null;
   }
 });
