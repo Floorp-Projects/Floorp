@@ -352,7 +352,6 @@ linux-common-tests:
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgpu
-    - reftest
     - reftest-no-accel
     - telemetry-tests-client
     - test-verify
@@ -368,6 +367,7 @@ linux1804-tests:
     - jsreftest
     - mochitest-gpu
     - mochitest-media
+    - reftest
     - xpcshell
 
 linux1804-qr-tests:
@@ -377,6 +377,7 @@ linux1804-qr-tests:
     - jsreftest
     - mochitest-gpu
     - mochitest-media
+    - reftest
     - xpcshell
 
 linux-qr-tests:
@@ -387,7 +388,6 @@ linux-qr-tests:
     - mochitest-webgl1-core
     - mochitest-webgl2-core
     - mochitest-webgpu
-    - reftest
 
 linux-qr-smoketests:
     - crashtest
