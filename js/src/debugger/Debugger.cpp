@@ -969,6 +969,10 @@ bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
       Debugger* dbg = Debugger::fromChildJSObject(frameobj);
       EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
 
+      // Removing a global from a Debugger's debuggee set kills all of that
+      // Debugger's D.Fs in that global. This means that one D.F's onPop can
+      // kill the next D.F. So we have to check whether frameobj is still "on
+      // the stack".
       if (frameobj->isOnStack() && frameobj->onPopHandler()) {
         OnPopHandler* handler = frameobj->onPopHandler();
 
