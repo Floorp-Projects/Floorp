@@ -7,6 +7,7 @@
 
 #include "GLContext.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "nsContentUtils.h"
 #include "WebGLContext.h"
 
@@ -21,16 +22,14 @@ static GLuint GenQuery(gl::GLContext* gl) {
 }
 
 WebGLQuery::WebGLQuery(WebGLContext* webgl)
-    : WebGLRefCountedObject(webgl),
+    : WebGLContextBoundObject(webgl),
       mGLName(GenQuery(mContext->gl)),
       mTarget(0),
-      mActiveSlot(nullptr) {
-  mContext->mQueries.insertBack(this);
-}
+      mActiveSlot(nullptr) {}
 
-void WebGLQuery::Delete() {
+WebGLQuery::~WebGLQuery() {
+  if (!mContext) return;
   mContext->gl->fDeleteQueries(1, &mGLName);
-  LinkedListElement<WebGLQuery>::removeFrom(mContext->mQueries);
 }
 
 ////
@@ -53,14 +52,7 @@ static GLenum TargetForDriver(const gl::GLContext* gl, GLenum target) {
   return LOCAL_GL_SAMPLES_PASSED;
 }
 
-void WebGLQuery::BeginQuery(GLenum target, WebGLRefPtr<WebGLQuery>& slot) {
-  if (mTarget && target != mTarget) {
-    mContext->ErrorInvalidOperation("Queries cannot change targets.");
-    return;
-  }
-
-  ////
-
+void WebGLQuery::BeginQuery(GLenum target, RefPtr<WebGLQuery>& slot) {
   mTarget = target;
   mActiveSlot = &slot;
   *mActiveSlot = this;
@@ -91,7 +83,7 @@ void WebGLQuery::EndQuery() {
   availRunnable->mQueries.push_back(this);
 }
 
-MaybeWebGLVariant WebGLQuery::GetQueryParameter(GLenum pname) const {
+Maybe<double> WebGLQuery::GetQueryParameter(GLenum pname) const {
   switch (pname) {
     case LOCAL_GL_QUERY_RESULT_AVAILABLE:
     case LOCAL_GL_QUERY_RESULT:
@@ -120,7 +112,7 @@ MaybeWebGLVariant WebGLQuery::GetQueryParameter(GLenum pname) const {
       (mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
   if (!canBeAvailable) {
     if (pname == LOCAL_GL_QUERY_RESULT_AVAILABLE) {
-      return AsSomeVariant(false);
+      return Some(false);
     }
     return Nothing();
   }
@@ -131,7 +123,7 @@ MaybeWebGLVariant WebGLQuery::GetQueryParameter(GLenum pname) const {
   switch (pname) {
     case LOCAL_GL_QUERY_RESULT_AVAILABLE:
       gl->fGetQueryObjectuiv(mGLName, pname, (GLuint*)&val);
-      return AsSomeVariant(static_cast<bool>(val));
+      return Some(static_cast<bool>(val));
 
     case LOCAL_GL_QUERY_RESULT:
       switch (mTarget) {
@@ -154,7 +146,7 @@ MaybeWebGLVariant WebGLQuery::GetQueryParameter(GLenum pname) const {
         case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
         case LOCAL_GL_TIME_ELAPSED_EXT:
         case LOCAL_GL_TIMESTAMP_EXT:
-          return AsSomeVariant(val);
+          return Some(val);
       }
       MOZ_CRASH("Bad `mTarget`.");
 
@@ -163,30 +155,8 @@ MaybeWebGLVariant WebGLQuery::GetQueryParameter(GLenum pname) const {
   }
 }
 
-bool WebGLQuery::IsQuery() const {
-  MOZ_ASSERT(!IsDeleted());
-
-  if (!mTarget) return false;
-
-  return true;
-}
-
-void WebGLQuery::DeleteQuery() {
-  MOZ_ASSERT(!IsDeleteRequested());
-
-  if (mActiveSlot) {
-    EndQuery();
-  }
-
-  RequestDelete();
-}
-
-void WebGLQuery::QueryCounter(GLenum target) {
-  if (target != LOCAL_GL_TIMESTAMP_EXT) {
-    mContext->ErrorInvalidEnum("`target` must be TIMESTAMP_EXT.");
-    return;
-  }
-
+void WebGLQuery::QueryCounter() {
+  const GLenum target = LOCAL_GL_TIMESTAMP_EXT;
   if (mTarget && target != mTarget) {
     mContext->ErrorInvalidOperation("Queries cannot change targets.");
     return;

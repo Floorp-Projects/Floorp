@@ -12,11 +12,18 @@
 namespace mozilla {
 
 WebGLBuffer::WebGLBuffer(WebGLContext* webgl, GLuint buf)
-    : WebGLRefCountedObject(webgl), mGLName(buf) {
-  mContext->mBuffers.insertBack(this);
-}
+    : WebGLContextBoundObject(webgl), mGLName(buf) {}
 
-WebGLBuffer::~WebGLBuffer() { DeleteOnce(); }
+WebGLBuffer::~WebGLBuffer() {
+  mByteLength = 0;
+  mFetchInvalidator.InvalidateCaches();
+
+  mIndexCache = nullptr;
+  mIndexRanges.clear();
+
+  if (!mContext) return;
+  mContext->gl->fDeleteBuffers(1, &mGLName);
+}
 
 void WebGLBuffer::SetContentAfterBind(GLenum target) {
   if (mContent != Kind::Undefined) return;
@@ -39,17 +46,6 @@ void WebGLBuffer::SetContentAfterBind(GLenum target) {
     default:
       MOZ_CRASH("GFX: invalid target");
   }
-}
-
-void WebGLBuffer::Delete() {
-  mContext->gl->fDeleteBuffers(1, &mGLName);
-
-  mByteLength = 0;
-  mFetchInvalidator.InvalidateCaches();
-
-  mIndexCache = nullptr;
-  mIndexRanges.clear();
-  LinkedListElement<WebGLBuffer>::remove();  // remove from mContext->mBuffers
 }
 
 ////////////////////////////////////////
@@ -95,8 +91,17 @@ void WebGLBuffer::BufferData(GLenum target, uint64_t size, const void* data,
   }
 #endif
 
-  const void* uploadData = data;
+  UniqueBuffer maybeCalloc;
+  if (!data) {
+    maybeCalloc = calloc(1, AssertedCast<size_t>(size));
+    if (!maybeCalloc) {
+      mContext->ErrorOutOfMemory("Failed to alloc zeros.");
+      return;
+    }
+    data = maybeCalloc.get();
+  }
 
+  const void* uploadData = data;
   UniqueBuffer newIndexCache;
   if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER &&
       mContext->mNeedsIndexValidation) {

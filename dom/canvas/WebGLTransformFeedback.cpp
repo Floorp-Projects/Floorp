@@ -14,21 +14,17 @@
 namespace mozilla {
 
 WebGLTransformFeedback::WebGLTransformFeedback(WebGLContext* webgl, GLuint tf)
-    : WebGLRefCountedObject(webgl),
+    : WebGLContextBoundObject(webgl),
       mGLName(tf),
-      mIndexedBindings(webgl->mGLMaxTransformFeedbackSeparateAttribs),
+      mIndexedBindings(webgl->Limits().maxTransformFeedbackSeparateAttribs),
       mIsPaused(false),
-      mIsActive(false) {
-  mContext->mTransformFeedbacks.insertBack(this);
-}
+      mIsActive(false) {}
 
-WebGLTransformFeedback::~WebGLTransformFeedback() { DeleteOnce(); }
-
-void WebGLTransformFeedback::Delete() {
+WebGLTransformFeedback::~WebGLTransformFeedback() {
+  if (!mContext) return;
   if (mGLName) {
     mContext->gl->fDeleteTransformFeedbacks(1, &mGLName);
   }
-  removeFrom(mContext->mTransformFeedbacks);
 }
 
 ////////////////////////////////////////

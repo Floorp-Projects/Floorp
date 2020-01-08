@@ -98,7 +98,7 @@ bool TruncateComments(const nsAString& src, nsAString* const out) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool IsValidGLSLChar(char16_t c) {
+static bool IsValidGLSLChar(const char c) {
   if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
       ('0' <= c && c <= '9')) {
     return true;
@@ -143,7 +143,7 @@ static bool IsValidGLSLChar(char16_t c) {
   }
 }
 
-static bool IsValidGLSLPreprocChar(char16_t c) {
+static bool IsValidGLSLPreprocChar(const char c) {
   if (IsValidGLSLChar(c)) return true;
 
   switch (c) {
@@ -158,10 +158,8 @@ static bool IsValidGLSLPreprocChar(char16_t c) {
 
 ////
 
-bool ValidateGLSLPreprocString(WebGLContext* webgl, const nsAString& string) {
-  for (size_t i = 0; i < string.Length(); ++i) {
-    const auto& cur = string[i];
-
+bool ValidateGLSLPreprocString(WebGLContext* webgl, const std::string& string) {
+  for (const auto cur : string) {
     if (!IsValidGLSLPreprocChar(cur)) {
       webgl->ErrorInvalidValue("String contains the illegal character 0x%x.",
                                cur);
@@ -179,20 +177,19 @@ bool ValidateGLSLPreprocString(WebGLContext* webgl, const nsAString& string) {
   return true;
 }
 
-bool ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl) {
-  if (name.IsEmpty()) return false;
+bool ValidateGLSLVariableName(const std::string& name, WebGLContext* webgl) {
+  if (name.empty()) return false;
 
   const uint32_t maxSize = webgl->IsWebGL2() ? 1024 : 256;
-  if (name.Length() > maxSize) {
+  if (name.size() > maxSize) {
     webgl->ErrorInvalidValue(
-        "Identifier is %u characters long, exceeds the"
+        "Identifier is %tu characters long, exceeds the"
         " maximum allowed length of %u characters.",
-        name.Length(), maxSize);
+        name.size(), maxSize);
     return false;
   }
 
-  for (size_t i = 0; i < name.Length(); ++i) {
-    const auto& cur = name[i];
+  for (const auto cur : name) {
     if (!IsValidGLSLChar(cur)) {
       webgl->ErrorInvalidValue("String contains the illegal character 0x%x'.",
                                cur);
@@ -203,8 +200,7 @@ bool ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl) {
   nsString prefix1 = NS_LITERAL_STRING("webgl_");
   nsString prefix2 = NS_LITERAL_STRING("_webgl_");
 
-  if (Substring(name, 0, prefix1.Length()).Equals(prefix1) ||
-      Substring(name, 0, prefix2.Length()).Equals(prefix2)) {
+  if (name.find("webgl_") == 0 || name.find("_webgl_") == 0) {
     webgl->ErrorInvalidOperation("String contains a reserved GLSL prefix.");
     return false;
   }

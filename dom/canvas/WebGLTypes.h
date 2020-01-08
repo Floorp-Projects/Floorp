@@ -7,17 +7,22 @@
 #define WEBGLTYPES_H_
 
 #include <limits>
+#include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 // Most WebIDL typedefs are identical to their OpenGL counterparts.
-#include "GLTypes.h"
+#include "GLDefs.h"
 #include "mozilla/Casting.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/Range.h"
+#include "mozilla/RefCounted.h"
 #include "gfxTypes.h"
 
 #include "nsTArray.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"
-#include "WebGLShaderPrecisionFormat.h"
-#include "WebGLStrongTypes.h"
+//#include "WebGLStrongTypes.h"
 
 // Manual reflection of WebIDL typedefs that are different from their
 // OpenGL counterparts.
@@ -101,7 +106,6 @@ class TexUnpackSurface;
 class ClientWebGLContext;
 struct WebGLTexPboOffset;
 class WebGLTexture;
-class WebGLUniformLocation;
 class WebGLBuffer;
 class WebGLFramebuffer;
 class WebGLProgram;
@@ -112,11 +116,21 @@ class WebGLShader;
 class WebGLSync;
 class WebGLTexture;
 class WebGLTransformFeedback;
-class WebGLUniformLocation;
 class WebGLVertexArray;
-class WebGLVertexArrayObject;
-template <typename T>
-class WebGLRefPtr;
+
+// -
+
+class VRefCounted : public RefCounted<VRefCounted> {
+ public:
+  virtual ~VRefCounted() = default;
+
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+  virtual const char* typeName() const = 0;
+  virtual size_t typeSize() const = 0;
+#endif
+};
+
+// -
 
 /*
  * Implementing WebGL (or OpenGL ES 2.0) on top of desktop OpenGL requires
@@ -233,6 +247,11 @@ enum class WebGLExtensionID : uint8_t {
   Max
 };
 
+template <typename T>
+inline constexpr auto EnumValue(const T v) {
+  return static_cast<typename std::underlying_type<T>::type>(v);
+}
+
 class UniqueBuffer {
   // Like UniquePtr<>, but for void* and malloc/calloc/free.
   void* mBuffer;
@@ -285,66 +304,32 @@ struct SampleableInfo final {
 };
 
 enum class AttribBaseType : uint8_t {
-  Int,
-  UInt,
-  Float,    // Also includes NormU?Int
   Boolean,  // Can convert from anything.
+  Float,    // Also includes NormU?Int
+  Int,
+  Uint,
 };
+webgl::AttribBaseType ToAttribBaseType(GLenum);
 const char* ToString(AttribBaseType);
+
+enum class UniformBaseType : uint8_t {
+  Float,
+  Int,
+  Uint,
+};
+const char* ToString(UniformBaseType);
+
+typedef uint64_t ObjectId;
+
+enum class BufferKind : uint8_t {
+  Undefined,
+  Index,
+  NonIndex,
+};
 
 }  // namespace webgl
 
-// ---
-
-/**
- * ID type used by most WebGL classes.   The Id() is unique for each Client
- * object of a given type.  The IDs start at 1 -- ID 0 is reserved for
- * null objects.  This class is subclassed by ClientWebGL... classes in the
- * client and is used directly as a key in an object ID map in the host.
- */
-template <typename HostType>
-class WebGLId {
- public:
-  using IdType = uint64_t;
-
-  WebGLId() : mId(0){};
-  WebGLId(IdType aId) : mId(aId){};
-  WebGLId(const WebGLId<HostType>* aPtr) { mId = aPtr ? aPtr->mId : 0; }
-  WebGLId(const HostType* aPtr) { mId = aPtr ? aPtr->Id() : 0; }
-
-  IdType Id() const { return mId; }
-
-  operator bool() const { return mId != 0; }
-
-  bool operator<(const WebGLId<HostType>& o) const { return mId < o.mId; }
-  bool operator!=(const WebGLId<HostType>& o) const { return mId != o.mId; }
-
-  static const WebGLId<HostType> Invalid() { return WebGLId<HostType>(); }
-
- protected:
-  friend struct DefaultHasher<WebGLId<HostType>>;
-  IdType mId;
-};
-
-template <typename HostType>
-struct DefaultHasher<WebGLId<HostType>> {
-  using Key = WebGLId<HostType>;
-  using Lookup = Key;
-
-  static HashNumber hash(const Lookup& aLookup) {
-    // This discards the high 32-bits of 64-bit integers!
-    return aLookup.Id();
-  }
-
-  static bool match(const Key& aKey, const Lookup& aLookup) {
-    // Use builtin or overloaded operator==.
-    return aKey.Id() == aLookup.Id();
-  }
-
-  static void rekey(Key& aKey, const Key& aNewKey) { aKey.mId = aNewKey.Id(); }
-};
-
-// ---
+// -
 
 struct FloatOrInt final  // For TexParameter[fi] and friends.
 {
@@ -379,37 +364,12 @@ struct WebGLPixelStore {
   bool mRequireFastPath = false;
 };
 
-struct WebGLTexImageData {
-  TexImageTarget mTarget;
-  int32_t mRowLength;
-  uint32_t mWidth;
-  uint32_t mHeight;
-  uint32_t mDepth;
-  gfxAlphaType mSrcAlphaType;
-};
-
-struct WebGLTexPboOffset {
-  TexImageTarget mTarget;
-  uint32_t mWidth;
-  uint32_t mHeight;
-  uint32_t mDepth;
-  WebGLsizeiptr mPboOffset;
-  bool mHasExpectedImageSize;
-  GLsizei mExpectedImageSize;
-};
-
 using WebGLTexUnpackVariant =
     Variant<UniquePtr<webgl::TexUnpackBytes>,
             UniquePtr<webgl::TexUnpackSurface>,
             UniquePtr<webgl::TexUnpackImage>, WebGLTexPboOffset>;
 
 using MaybeWebGLTexUnpackVariant = Maybe<WebGLTexUnpackVariant>;
-
-// TODO: Make this into a bit-vector instead.
-struct ExtensionSets {
-  nsTArray<WebGLExtensionID> mNonSystem;
-  nsTArray<WebGLExtensionID> mSystem;
-};
 
 struct WebGLContextOptions {
   bool alpha = true;
@@ -426,18 +386,263 @@ struct WebGLContextOptions {
   bool enableDebugRendererInfo = false;
 
   WebGLContextOptions();
+  WebGLContextOptions(const WebGLContextOptions&) = default;
+
   bool operator==(const WebGLContextOptions&) const;
+  bool operator!=(const WebGLContextOptions& rhs) const {
+    return !(*this == rhs);
+  }
 };
 
-// return value for the SetDimensions message
-struct SetDimensionsData {
-  WebGLContextOptions mOptions;
-  bool mOptionsFrozen;
-  bool mResetLayer;
-  bool mMaybeLostOldContext;
-  nsresult mResult;
-  WebGLPixelStore mPixelStore;
+// -
+
+template <typename T>
+struct avec2 {
+  T x = T();
+  T y = T();
+
+  template <typename U, typename V>
+  static Maybe<avec2> From(const U _x, const V _y) {
+    const auto x = CheckedInt<T>(_x);
+    const auto y = CheckedInt<T>(_y);
+    if (!x.isValid() || !y.isValid()) return {};
+    return Some(avec2(x.value(), y.value()));
+  }
+
+  template <typename U>
+  static auto From(const U& val) {
+    return From(val.x, val.y);
+  }
+  template <>
+  static auto From(const gfx::IntSize& val) {
+    return From(val.width, val.height);
+  }
+
+  avec2() = default;
+  avec2(const T _x, const T _y) : x(_x), y(_y) {}
+
+  bool operator==(const avec2& rhs) const { return x == rhs.x && y == rhs.y; }
+  bool operator!=(const avec2& rhs) const { return !(*this == rhs); }
 };
+
+template <typename T>
+struct avec3 {
+  T x = T();
+  T y = T();
+  T z = T();
+
+  template <typename U, typename V>
+  static Maybe<avec3> From(const U _x, const V _y, const V _z) {
+    const auto x = CheckedInt<T>(_x);
+    const auto y = CheckedInt<T>(_y);
+    const auto z = CheckedInt<T>(_z);
+    if (!x.isValid() || !y.isValid() || !z.isValid()) return {};
+    return Some(avec3(x.value(), y.value(), z.value()));
+  }
+
+  template <typename U>
+  static auto From(const U& val) {
+    return From(val.x, val.y, val.z);
+  }
+
+  avec3() = default;
+  avec3(const T _x, const T _y, const T _z) : x(_x), y(_y), z(_z) {}
+
+  bool operator==(const avec3& rhs) const {
+    return x == rhs.x && y == rhs.y && z == rhs.z;
+  }
+  bool operator!=(const avec3& rhs) const { return !(*this == rhs); }
+};
+
+typedef avec2<int32_t> ivec2;
+typedef avec3<int32_t> ivec3;
+typedef avec2<uint32_t> uvec2;
+typedef avec3<uint32_t> uvec3;
+
+// -
+
+namespace webgl {
+
+class ExtensionBits final {
+  uint64_t mBits = 0;
+
+  struct BitRef final {
+    ExtensionBits& bits;
+    const uint64_t mask;
+
+    explicit operator bool() const { return bits.mBits & mask; }
+
+    auto& operator=(const bool val) {
+      if (val) {
+        bits.mBits |= mask;
+      } else {
+        bits.mBits &= ~mask;
+      }
+      return *this;
+    }
+  };
+
+  uint64_t Mask(const WebGLExtensionID i) const {
+    return uint64_t{1} << static_cast<uint64_t>(i);
+  }
+
+ public:
+  BitRef operator[](const WebGLExtensionID i) { return {*this, Mask(i)}; }
+  bool operator[](const WebGLExtensionID i) const { return mBits & Mask(i); }
+};
+
+// -
+
+enum class ContextLossReason : uint8_t {
+  None,
+  Manual,
+  Guilty,
+};
+
+inline bool ReadContextLossReason(const uint8_t val,
+                                  ContextLossReason* const out) {
+  if (val > static_cast<uint8_t>(ContextLossReason::Guilty)) {
+    return false;
+  }
+  *out = static_cast<ContextLossReason>(val);
+  return true;
+}
+
+// -
+
+struct InitContextDesc final {
+  bool isWebgl2 = false;
+  bool resistFingerprinting = false;
+  uvec2 size = {};
+  WebGLContextOptions options;
+};
+
+struct Limits final {
+  ExtensionBits supportedExtensions;
+
+  // WebGL 1
+  uint32_t maxTexUnits = 0;
+  uint32_t maxTex2dSize = 0;
+  uint32_t maxTexCubeSize = 0;
+  uint32_t maxVertexAttribs = 0;
+  std::array<uint32_t, 2> maxViewportDims = {};
+  std::array<float, 2> pointSizeRange = {1, 1};
+  std::array<float, 2> lineWidthRange = {1, 1};
+
+  // WebGL 2
+  uint32_t maxTexArrayLayers = 0;
+  uint32_t maxTex3dSize = 0;
+  uint32_t maxTransformFeedbackSeparateAttribs = 0;
+  uint32_t maxUniformBufferBindings = 0;
+  uint32_t uniformBufferOffsetAlignment = 0;
+
+  // Exts
+  bool astcHdr = false;
+  uint32_t maxColorDrawBuffers = 1;
+  uint64_t queryCounterBitsTimeElapsed = 0;
+  uint64_t queryCounterBitsTimestamp = 0;
+  uint32_t maxMultiviewLayers = 0;
+};
+
+struct InitContextResult final {
+  std::string error;
+  WebGLContextOptions options;
+  webgl::Limits limits;
+};
+
+// -
+
+struct ErrorInfo final {
+  GLenum type;
+  std::string info;
+};
+
+struct ShaderPrecisionFormat final {
+  GLint rangeMin = 0;
+  GLint rangeMax = 0;
+  GLint precision = 0;
+};
+
+// -
+
+enum class LossStatus {
+  Ready,
+
+  Lost,
+  LostForever,
+  LostManually,
+};
+
+// -
+
+struct CompileResult final {
+  bool pending = true;
+  std::string log;
+  std::string translatedSource;
+  bool success = false;
+};
+
+// -
+
+struct ActiveInfo {
+  GLenum elemType = 0;     // `type`
+  uint32_t elemCount = 0;  // `size`
+  std::string name;
+};
+
+struct ActiveAttribInfo final : public ActiveInfo {
+  int32_t location = -1;
+};
+
+struct ActiveUniformInfo final : public ActiveInfo {
+  std::unordered_map<uint32_t, uint32_t>
+      locByIndex;  // Uniform array locations are sparse.
+  int32_t block_index = -1;
+  int32_t block_offset = -1;  // In block, offset.
+  int32_t block_arrayStride = -1;
+  int32_t block_matrixStride = -1;
+  bool block_isRowMajor = false;
+};
+
+struct ActiveUniformBlockInfo final {
+  std::string name;
+  // BLOCK_BINDING is dynamic state
+  uint32_t dataSize = 0;
+  std::vector<uint32_t> activeUniformIndices;
+  bool referencedByVertexShader = false;
+  bool referencedByFragmentShader = false;
+};
+
+struct LinkActiveInfo final {
+  std::vector<ActiveAttribInfo> activeAttribs;
+  std::vector<ActiveUniformInfo> activeUniforms;
+  std::vector<ActiveUniformBlockInfo> activeUniformBlocks;
+  std::vector<ActiveInfo> activeTfVaryings;
+};
+
+struct LinkResult final {
+  bool pending = true;
+  std::string log;
+  bool success = false;
+  LinkActiveInfo active;
+  GLenum tfBufferMode = 0;
+};
+
+// -
+
+/// 4x32-bit primitives, with a type tag.
+struct TypedQuad final {
+  alignas(alignof(float)) uint8_t data[4 * sizeof(float)] = {};
+  webgl::AttribBaseType type = webgl::AttribBaseType::Float;
+};
+
+/// [1-16]x32-bit primitives, with a type tag.
+struct GetUniformData final {
+  alignas(alignof(float)) uint8_t data[4 * 4 * sizeof(float)] = {};
+  GLenum type = 0;
+};
+
+}  // namespace webgl
 
 // return value for the InitializeCanvasRenderer message
 struct ICRData {
@@ -446,83 +651,6 @@ struct ICRData {
   bool supportsAlpha;
   bool isPremultAlpha;
 };
-
-using Int32Array2 = Array<int32_t, 2>;
-using Int32Array4 = Array<int32_t, 4>;
-using Uint32Array4 = Array<uint32_t, 4>;
-using Float32Array2 = Array<float, 2>;
-using Float32Array4 = Array<float, 4>;
-using BoolArray4 = Array<bool, 4>;
-
-// First is vertex shader, second is fragment shader.
-using MaybeAttachedShaders = Maybe<Array<WebGLId<WebGLShader>, 2>>;
-
-using WebGLVariant =
-    Variant<int32_t, uint32_t, int64_t, uint64_t, bool, float, double,
-            nsCString, nsString, WebGLId<WebGLBuffer>,
-            WebGLId<WebGLFramebuffer>, WebGLId<WebGLProgram>,
-            WebGLId<WebGLQuery>, WebGLId<WebGLRenderbuffer>,
-            WebGLId<WebGLSampler>, WebGLId<WebGLShader>, WebGLId<WebGLSync>,
-            WebGLId<WebGLTexture>, WebGLId<WebGLTransformFeedback>,
-            WebGLId<WebGLUniformLocation>, WebGLId<WebGLVertexArray>,
-            WebGLShaderPrecisionFormat, Int32Array2, Int32Array4, Uint32Array4,
-            Float32Array2, Float32Array4, BoolArray4, nsTArray<uint32_t>,
-            nsTArray<int32_t>, nsTArray<bool>, nsTArray<float>>;
-
-using MaybeWebGLVariant = Maybe<WebGLVariant>;
-
-template <typename T>
-class AsSomeVariantT {
-  Maybe<T> mMaybeObj;
-
- public:
-  AsSomeVariantT(Maybe<T>&& aObj) : mMaybeObj(std::move(aObj)) {}
-
-  template <typename... As>
-  operator Maybe<Variant<As...>>() {
-    if (mMaybeObj.isNothing()) {
-      return Nothing();
-    }
-    return Some(Variant<As...>(std::forward<T>(mMaybeObj.ref())));
-  }
-};
-
-template <typename FullType,
-          typename T = typename RemoveReference<FullType>::Type>
-AsSomeVariantT<T> AsSomeVariant(FullType&& aObj) {
-  return AsSomeVariantT<T>(Some(std::forward<T>(aObj)));
-}
-
-// Stack-based arrays can't be moved
-template <typename T, size_t N>
-AsSomeVariantT<Array<T, N>> AsSomeVariant(const Array<T, N>& aObj) {
-  return AsSomeVariantT<Array<T, N>>(Some(aObj));
-}
-
-template <typename T>
-AsSomeVariantT<WebGLId<T>> AsSomeVariant(WebGLId<T>* aObj) {
-  return AsSomeVariantT<WebGLId<T>>(aObj ? Some(*aObj) : Nothing());
-}
-
-template <typename T>
-AsSomeVariantT<WebGLId<T>> AsSomeVariant(T* aObj) {
-  return AsSomeVariant(static_cast<WebGLId<T>*>(aObj));
-}
-
-template <typename T>
-AsSomeVariantT<WebGLId<T>> AsSomeVariant(WebGLRefPtr<T> aObj) {
-  return AsSomeVariant(static_cast<WebGLId<T>*>(aObj.get()));
-}
-
-template <typename T>
-AsSomeVariantT<T> AsSomeVariant(const Maybe<T>& aObj) {
-  return AsSomeVariantT<T>(aObj);
-}
-
-template <typename T>
-AsSomeVariantT<T> AsSomeVariant(Maybe<T>&& aObj) {
-  return AsSomeVariantT<T>(std::move(aObj));
-}
 
 /**
  * Represents a block of memory that it may or may not own.  The
@@ -552,7 +680,6 @@ class RawBuffer {
    */
   RawBuffer(size_t len, T* data, bool aTakeData = false)
       : mData(data), mLength(len), mOwnsData(aTakeData) {
-    MOZ_ASSERT(mData && mLength);
   }
 
   RawBuffer(size_t len, RefPtr<mozilla::ipc::SharedMemoryBasic>& aSmem)
@@ -571,7 +698,7 @@ class RawBuffer {
     }
   }
 
-  uint32_t Length() const { return mLength; }
+  auto Length() const { return mLength; }
 
   T* Data() { return mData; }
   const T* Data() const { return mData; }
@@ -584,8 +711,6 @@ class RawBuffer {
     MOZ_ASSERT(mData && (idx < mLength));
     return mData[idx];
   }
-
-  operator bool() const { return mData && mLength; }
 
   RawBuffer() {}
   RawBuffer(const RawBuffer&) = delete;
@@ -614,6 +739,193 @@ class RawBuffer {
     return *this;
   }
 };
+
+// -
+
+// clang-format off
+
+#define FOREACH_ID(X) \
+  X(FuncScopeIdError) \
+  X(compressedTexImage2D) \
+  X(compressedTexImage3D) \
+  X(compressedTexSubImage2D) \
+  X(compressedTexSubImage3D) \
+  X(copyTexSubImage2D) \
+  X(copyTexSubImage3D) \
+  X(drawArrays) \
+  X(drawArraysInstanced) \
+  X(drawElements) \
+  X(drawElementsInstanced) \
+  X(drawRangeElements) \
+  X(renderbufferStorage) \
+  X(renderbufferStorageMultisample) \
+  X(texImage2D) \
+  X(texImage3D) \
+  X(TexStorage2D) \
+  X(TexStorage3D) \
+  X(texSubImage2D) \
+  X(texSubImage3D) \
+  X(vertexAttrib1f) \
+  X(vertexAttrib1fv) \
+  X(vertexAttrib2f) \
+  X(vertexAttrib2fv) \
+  X(vertexAttrib3f) \
+  X(vertexAttrib3fv) \
+  X(vertexAttrib4f) \
+  X(vertexAttrib4fv) \
+  X(vertexAttribI4i) \
+  X(vertexAttribI4iv) \
+  X(vertexAttribI4ui) \
+  X(vertexAttribI4uiv) \
+  X(vertexAttribIPointer) \
+  X(vertexAttribPointer)
+
+// clang-format on
+
+enum class FuncScopeId {
+#define _(X) X,
+  FOREACH_ID(_)
+#undef _
+};
+
+static constexpr const char* const FUNCSCOPE_NAME_BY_ID[] = {
+#define _(X) #X,
+    FOREACH_ID(_)
+#undef _
+};
+
+#undef FOREACH_ID
+
+inline auto GetFuncScopeName(const FuncScopeId id) {
+  return FUNCSCOPE_NAME_BY_ID[static_cast<size_t>(id)];
+}
+
+// -
+
+template <typename C, typename K>
+inline auto MaybeFind(C& container, const K& key)
+    -> decltype(&(container.find(key)->second)) {
+  const auto itr = container.find(key);
+  if (itr == container.end()) return nullptr;
+  return &(itr->second);
+}
+
+template <typename C, typename K>
+inline typename C::mapped_type Find(
+    const C& container, const K& key,
+    const typename C::mapped_type notFound = {}) {
+  const auto itr = container.find(key);
+  if (itr == container.end()) return notFound;
+  return itr->second;
+}
+
+// -
+
+inline GLenum ImageToTexTarget(const GLenum imageTarget) {
+  switch (imageTarget) {
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+    case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+      return LOCAL_GL_TEXTURE_CUBE_MAP;
+    default:
+      return imageTarget;
+  }
+}
+
+// -
+
+namespace dom {
+class ImageBitmap;
+class ImageData;
+}  // namespace dom
+
+struct TexImageSource {
+  const dom::ArrayBufferView* mView = nullptr;
+  GLuint mViewElemOffset = 0;
+  GLuint mViewElemLengthOverride = 0;
+
+  const WebGLintptr* mPboOffset = nullptr;
+
+  const dom::ImageBitmap* mImageBitmap = nullptr;
+  const dom::ImageData* mImageData = nullptr;
+
+  const dom::Element* mDomElem = nullptr;
+  ErrorResult* mOut_error = nullptr;
+};
+
+// ---------------------------------------
+// MakeRange
+
+template <typename T, size_t N>
+inline Range<const T> MakeRange(T (&arr)[N]) {
+  return {arr, N};
+}
+
+template <typename T>
+inline Range<const T> MakeRange(const dom::Sequence<T>& seq) {
+  return {seq.Elements(), seq.Length()};
+}
+
+template <typename T>
+inline Range<const T> MakeRange(const RawBuffer<T>& from) {
+  return {from.Data(), from.Length()};
+}
+
+template <typename T>
+inline Range<T> MakeRange(RawBuffer<T>& from) {
+  return {from.Data(), from.Length()};
+}
+
+// abv = ArrayBufferView
+template <typename T>
+inline auto MakeRangeAbv(const T& abv)
+    -> Range<const typename T::element_type> {
+  abv.ComputeLengthAndData();
+  return {abv.DataAllowShared(), abv.LengthAllowShared()};
+}
+
+template <typename T>
+inline Range<const uint8_t> MakeByteRange(const T& x) {
+  const auto typed = MakeRange(x);
+  return Range<const uint8_t>(
+      reinterpret_cast<const uint8_t*>(typed.begin().get()),
+      typed.length() * sizeof(typed[0]));
+}
+
+Maybe<Range<const uint8_t>> GetRangeFromView(const dom::ArrayBufferView& view,
+                                             GLuint elemOffset,
+                                             GLuint elemCountOverride);
+
+// -
+
+template <typename T>
+RawBuffer<T> RawBufferView(const Range<T>& range) {
+  return {range.length(), range.begin().get()};
+}
+
+// -
+
+Maybe<webgl::ErrorInfo> CheckBindBufferRange(
+    const GLenum target, const GLuint index, const bool isBuffer,
+    const uint64_t offset, const uint64_t size, const webgl::Limits& limits);
+
+Maybe<webgl::ErrorInfo> CheckFramebufferAttach(const GLenum bindImageTarget,
+                                               const GLenum curTexTarget,
+                                               const uint32_t mipLevel,
+                                               const uint32_t zLayerBase,
+                                               const uint32_t zLayerCount,
+                                               const webgl::Limits& limits);
+
+Maybe<webgl::ErrorInfo> CheckVertexAttribPointer(bool webgl2, bool isFuncInt,
+                                                 GLint size, GLenum type,
+                                                 bool normalized,
+                                                 uint32_t stride,
+                                                 uint64_t byteOffset);
+
+uint8_t ElemTypeComponents(GLenum elemType);
 
 }  // namespace mozilla
 

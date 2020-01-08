@@ -16,8 +16,6 @@ WebGLExtensionFragDepth::WebGLExtensionFragDepth(WebGLContext* webgl)
   MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 }
 
-WebGLExtensionFragDepth::~WebGLExtensionFragDepth() {}
-
 bool WebGLExtensionFragDepth::IsSupported(const WebGLContext* webgl) {
   if (webgl->IsWebGL2()) return false;
 

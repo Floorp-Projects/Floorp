@@ -7,7 +7,6 @@
 
 #include "GLContext.h"
 #include "GLScreenBuffer.h"
-#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "MozFramebuffer.h"
@@ -68,20 +67,19 @@ bool WebGLContext::GetStencilBits(GLint* const out_stencilBits) const {
   return true;
 }
 
-MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
+Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
   const FuncScope funcScope(*this, "getParameter");
-
-  if (IsContextLost()) return Nothing();
+  if (IsContextLost()) return {};
 
   if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers)) {
     if (pname == LOCAL_GL_MAX_COLOR_ATTACHMENTS) {
-      return AsSomeVariant(mGLMaxColorAttachments);
+      return Some(MaxValidDrawBuffers());
 
     } else if (pname == LOCAL_GL_MAX_DRAW_BUFFERS) {
-      return AsSomeVariant(mGLMaxDrawBuffers);
+      return Some(MaxValidDrawBuffers());
 
     } else if (pname >= LOCAL_GL_DRAW_BUFFER0 &&
-               pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + mGLMaxDrawBuffers)) {
+               pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + MaxValidDrawBuffers())) {
       GLint ret = LOCAL_GL_NONE;
       if (!mBoundDrawFramebuffer) {
         if (pname == LOCAL_GL_DRAW_BUFFER0) {
@@ -90,17 +88,7 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
       } else {
         gl->fGetIntegerv(pname, &ret);
       }
-      return AsSomeVariant(ret);
-    }
-  }
-
-  if (IsWebGL2() ||
-      IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
-    if (pname == LOCAL_GL_VERTEX_ARRAY_BINDING) {
-      WebGLVertexArray* vao = (mBoundVertexArray != mDefaultVertexArray)
-                                  ? mBoundVertexArray.get()
-                                  : nullptr;
-      return AsSomeVariant(vao);
+      return Some(ret);
     }
   }
 
@@ -115,7 +103,7 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
         }
         // TODO: JS doesn't support 64-bit integers. Be lossy and
         // cast to double (53 bits)
-        return AsSomeVariant(val);
+        return Some(val);
       }
 
       case LOCAL_GL_GPU_DISJOINT_EXT: {
@@ -124,54 +112,11 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
           gl->fGetBooleanv(pname, &val);
         }
         bool boolVal = static_cast<bool>(val);
-        return AsSomeVariant(boolVal);
+        return Some(boolVal);
       }
 
       default:
         break;
-    }
-  }
-
-  // Privileged string params exposed by WEBGL_debug_renderer_info.
-  // The privilege check is done in WebGLContext::IsExtensionSupported.
-  // So here we just have to check that the extension is enabled.
-  if (IsExtensionEnabled(WebGLExtensionID::WEBGL_debug_renderer_info)) {
-    switch (pname) {
-      case UNMASKED_VENDOR_WEBGL:
-      case UNMASKED_RENDERER_WEBGL: {
-        const char* overridePref = nullptr;
-        GLenum driverEnum = LOCAL_GL_NONE;
-
-        switch (pname) {
-          case UNMASKED_RENDERER_WEBGL:
-            overridePref = "webgl.renderer-string-override";
-            driverEnum = LOCAL_GL_RENDERER;
-            break;
-          case UNMASKED_VENDOR_WEBGL:
-            overridePref = "webgl.vendor-string-override";
-            driverEnum = LOCAL_GL_VENDOR;
-            break;
-          default:
-            MOZ_CRASH("GFX: bad `pname`");
-        }
-
-        bool hasRetVal = false;
-
-        nsString ret;
-        if (overridePref) {
-          nsresult res = Preferences::GetString(overridePref, ret);
-          if (NS_SUCCEEDED(res) && ret.Length() > 0) hasRetVal = true;
-        }
-
-        if (!hasRetVal) {
-          const char* chars =
-              reinterpret_cast<const char*>(gl->fGetString(driverEnum));
-          ret = NS_ConvertASCIItoUTF16(chars);
-          hasRetVal = true;
-        }
-
-        return AsSomeVariant(std::move(ret));
-      }
     }
   }
 
@@ -180,7 +125,7 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
     if (pname == LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT) {
       GLint i = 0;
       gl->fGetIntegerv(pname, &i);
-      return AsSomeVariant(i);
+      return Some(i);
     }
   }
 
@@ -189,22 +134,11 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
       GLfloat f = 0.f;
       gl->fGetFloatv(pname, &f);
       double df = static_cast<double>(f);
-      return AsSomeVariant(df);
+      return Some(df);
     }
   }
 
   switch (pname) {
-    //
-    // String params
-    //
-    case LOCAL_GL_VENDOR:
-    case LOCAL_GL_RENDERER:
-      return AsSomeVariant(nsCString("Mozilla"));
-    case LOCAL_GL_VERSION:
-      return AsSomeVariant(nsCString("WebGL 1.0"));
-    case LOCAL_GL_SHADING_LANGUAGE_VERSION:
-      return AsSomeVariant(nsCString("WebGL GLSL ES 1.0"));
-
     ////////////////////////////////
     // Single-value params
 
@@ -229,11 +163,11 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
     case LOCAL_GL_BLEND_EQUATION_ALPHA: {
       GLint i = 0;
       gl->fGetIntegerv(pname, &i);
-      return AsSomeVariant(uint32_t(i));
+      return Some(uint32_t(i));
     }
 
     case LOCAL_GL_GENERATE_MIPMAP_HINT:
-      return AsSomeVariant(mGenerateMipmapHint);
+      return Some(mGenerateMipmapHint);
 
     case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT:
     case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
@@ -249,7 +183,7 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
       } else {
         ret = implPI.type;
       }
-      return AsSomeVariant(uint32_t(ret));
+      return Some(uint32_t(ret));
     }
 
     // int
@@ -264,7 +198,7 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
       GLint refValue = 0;
       gl->fGetIntegerv(pname, &refValue);
 
-      return AsSomeVariant(refValue & stencilMask);
+      return Some(refValue & stencilMask);
     }
 
     case LOCAL_GL_SAMPLE_BUFFERS:
@@ -285,7 +219,7 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
         samples = Some(uint32_t(bool(samples.value())));
       }
       if (!samples) return Nothing();
-      return AsSomeVariant(samples.value());
+      return Some(samples.value());
     }
 
     case LOCAL_GL_STENCIL_CLEAR_VALUE:
@@ -294,7 +228,7 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
     case LOCAL_GL_SUBPIXEL_BITS: {
       GLint i = 0;
       gl->fGetIntegerv(pname, &i);
-      return AsSomeVariant(i);
+      return Some(i);
     }
 
     case LOCAL_GL_RED_BITS:
@@ -376,68 +310,46 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
             break;
         }
       }
-      return AsSomeVariant(ret);
+      return Some(ret);
     }
-
-    case LOCAL_GL_MAX_TEXTURE_SIZE:
-      return AsSomeVariant(mGLMaxTextureSize);
-
-    case LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE:
-      return AsSomeVariant(mGLMaxCubeMapTextureSize);
 
     case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
-      return AsSomeVariant(mGLMaxRenderbufferSize);
+      return Some(mGLMaxRenderbufferSize);
 
     case LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
-      return AsSomeVariant(mGLMaxVertexTextureImageUnits);
+      return Some(mGLMaxVertexTextureImageUnits);
 
     case LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS:
-      return AsSomeVariant(mGLMaxFragmentTextureImageUnits);
-
-    case LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
-      return AsSomeVariant(mGLMaxCombinedTextureImageUnits);
-
-    case LOCAL_GL_MAX_VERTEX_ATTRIBS:
-      return AsSomeVariant(mGLMaxVertexAttribs);
+      return Some(mGLMaxFragmentTextureImageUnits);
 
     case LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS:
-      return AsSomeVariant(mGLMaxVertexUniformVectors);
+      return Some(mGLMaxVertexUniformVectors);
 
     case LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS:
-      return AsSomeVariant(mGLMaxFragmentUniformVectors);
+      return Some(mGLMaxFragmentUniformVectors);
 
     case LOCAL_GL_MAX_VARYING_VECTORS:
-      return AsSomeVariant(mGLMaxFragmentInputVectors);
-
-    case LOCAL_GL_MAX_VIEWS_OVR:
-      if (IsExtensionEnabled(WebGLExtensionID::OVR_multiview2)) {
-        return JS::NumberValue(mGLMaxMultiviewViews);
-      }
-      break;
-
-    case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS: {
-      return AsSomeVariant(mCompressedTextureFormats);
-    }
+      return Some(mGLMaxFragmentInputVectors);
 
     // unsigned int. here we may have to return very large values like 2^32-1
     // that can't be represented as javascript integer values. We just return
     // them as doubles and javascript doesn't care.
     case LOCAL_GL_STENCIL_BACK_VALUE_MASK:
-      return AsSomeVariant((double)mStencilValueMaskBack);
+      return Some((double)mStencilValueMaskBack);
       // pass as FP value to allow large values such as 2^32-1.
 
     case LOCAL_GL_STENCIL_BACK_WRITEMASK:
-      return AsSomeVariant((double)mStencilWriteMaskBack);
+      return Some((double)mStencilWriteMaskBack);
 
     case LOCAL_GL_STENCIL_VALUE_MASK:
-      return AsSomeVariant((double)mStencilValueMaskFront);
+      return Some((double)mStencilValueMaskFront);
 
     case LOCAL_GL_STENCIL_WRITEMASK:
-      return AsSomeVariant((double)mStencilWriteMaskFront);
+      return Some((double)mStencilWriteMaskFront);
 
     // float
     case LOCAL_GL_LINE_WIDTH:
-      return AsSomeVariant((double)mLineWidth);
+      return Some((double)mLineWidth);
 
     case LOCAL_GL_DEPTH_CLEAR_VALUE:
     case LOCAL_GL_POLYGON_OFFSET_FACTOR:
@@ -445,14 +357,14 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
     case LOCAL_GL_SAMPLE_COVERAGE_VALUE: {
       GLfloat f = 0.f;
       gl->fGetFloatv(pname, &f);
-      return AsSomeVariant((double)f);
+      return Some((double)f);
     }
 
     // bool
     case LOCAL_GL_DEPTH_TEST:
-      return AsSomeVariant((bool)mDepthTestEnabled);
+      return Some((bool)mDepthTestEnabled);
     case LOCAL_GL_STENCIL_TEST:
-      return AsSomeVariant((bool)mStencilTestEnabled);
+      return Some((bool)mStencilTestEnabled);
 
     case LOCAL_GL_BLEND:
     case LOCAL_GL_CULL_FACE:
@@ -465,119 +377,18 @@ MaybeWebGLVariant WebGLContext::GetParameter(GLenum pname) {
     case LOCAL_GL_DEPTH_WRITEMASK: {
       realGLboolean b = 0;
       gl->fGetBooleanv(pname, &b);
-      return AsSomeVariant(bool(b));
+      return Some(bool(b));
     }
 
     // bool, WebGL-specific
     case UNPACK_FLIP_Y_WEBGL:
-      return AsSomeVariant((bool)mPixelStore.mFlipY);
+      return Some((bool)mPixelStore.mFlipY);
     case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
-      return AsSomeVariant((bool)mPixelStore.mPremultiplyAlpha);
+      return Some((bool)mPixelStore.mPremultiplyAlpha);
 
     // uint, WebGL-specific
     case UNPACK_COLORSPACE_CONVERSION_WEBGL:
-      return AsSomeVariant(uint32_t(mPixelStore.mColorspaceConversion));
-
-    ////////////////////////////////
-    // Complex values
-
-    // 2 floats
-    case LOCAL_GL_DEPTH_RANGE:
-    case LOCAL_GL_ALIASED_POINT_SIZE_RANGE:
-    case LOCAL_GL_ALIASED_LINE_WIDTH_RANGE: {
-      Float32Array2 obj;
-      GLfloat fv[2] = {0};
-      switch (pname) {
-        case LOCAL_GL_ALIASED_POINT_SIZE_RANGE:
-          fv[0] = mGLAliasedPointSizeRange[0];
-          fv[1] = mGLAliasedPointSizeRange[1];
-          break;
-        case LOCAL_GL_ALIASED_LINE_WIDTH_RANGE:
-          fv[0] = mGLAliasedLineWidthRange[0];
-          fv[1] = mGLAliasedLineWidthRange[1];
-          break;
-        // case LOCAL_GL_DEPTH_RANGE:
-        default:
-          gl->fGetFloatv(pname, fv);
-          break;
-      }
-      for (uint32_t i = 0; i < 2; ++i) {
-        obj[i] = fv[i];
-      }
-      return AsSomeVariant(obj);
-    }
-
-    // 4 floats
-    case LOCAL_GL_COLOR_CLEAR_VALUE:
-    case LOCAL_GL_BLEND_COLOR: {
-      Float32Array2 obj;
-      GLfloat fv[4] = {0};
-      gl->fGetFloatv(pname, fv);
-      for (uint32_t i = 0; i < 4; ++i) {
-        obj[i] = fv[i];
-      }
-      return AsSomeVariant(obj);
-    }
-
-    // 2 ints
-    case LOCAL_GL_MAX_VIEWPORT_DIMS: {
-      Int32Array2 obj;
-      GLint iv[2] = {GLint(mGLMaxViewportDims[0]),
-                     GLint(mGLMaxViewportDims[1])};
-      for (uint32_t i = 0; i < 2; ++i) {
-        obj[i] = iv[i];
-      }
-      return AsSomeVariant(obj);
-    }
-
-    // 4 ints
-    case LOCAL_GL_SCISSOR_BOX:
-    case LOCAL_GL_VIEWPORT: {
-      Int32Array4 obj;
-      GLint iv[4] = {0};
-      gl->fGetIntegerv(pname, iv);
-      for (uint32_t i = 0; i < 4; ++i) {
-        obj[i] = iv[i];
-      }
-      return AsSomeVariant(obj);
-    }
-
-    // 4 bools
-    case LOCAL_GL_COLOR_WRITEMASK: {
-      BoolArray4 obj = {
-          bool(mColorWriteMask & (1 << 0)), bool(mColorWriteMask & (1 << 1)),
-          bool(mColorWriteMask & (1 << 2)), bool(mColorWriteMask & (1 << 3))};
-      return AsSomeVariant(obj);
-    }
-
-    case LOCAL_GL_ARRAY_BUFFER_BINDING: {
-      return AsSomeVariant(mBoundArrayBuffer);
-    }
-
-    case LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING: {
-      return AsSomeVariant(mBoundVertexArray->mElementArrayBuffer);
-    }
-
-    case LOCAL_GL_RENDERBUFFER_BINDING: {
-      return AsSomeVariant(mBoundRenderbuffer);
-    }
-
-    // DRAW_FRAMEBUFFER_BINDING is the same as FRAMEBUFFER_BINDING.
-    case LOCAL_GL_FRAMEBUFFER_BINDING: {
-      return AsSomeVariant(mBoundDrawFramebuffer);
-    }
-
-    case LOCAL_GL_CURRENT_PROGRAM: {
-      return AsSomeVariant(mCurrentProgram);
-    }
-
-    case LOCAL_GL_TEXTURE_BINDING_2D: {
-      return AsSomeVariant(mBound2DTextures[mActiveTexture]);
-    }
-
-    case LOCAL_GL_TEXTURE_BINDING_CUBE_MAP: {
-      return AsSomeVariant(mBoundCubeMapTextures[mActiveTexture]);
-    }
+      return Some(uint32_t(mPixelStore.mColorspaceConversion));
 
     default:
       break;

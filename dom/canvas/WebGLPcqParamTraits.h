@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/ProducerConsumerQueue.h"
 #include "TexUnpackBlob.h"
-#include "WebGLActiveInfo.h"
 #include "WebGLContext.h"
 #include "WebGLTypes.h"
 
@@ -18,14 +17,11 @@ namespace webgl {
 template <typename T>
 struct PcqParamTraits;
 
-template <typename WebGLType>
-struct IsTriviallySerializable<WebGLId<WebGLType>> : TrueType {};
-
 template <>
 struct IsTriviallySerializable<FloatOrInt> : TrueType {};
 
 template <>
-struct IsTriviallySerializable<WebGLShaderPrecisionFormat> : TrueType {};
+struct IsTriviallySerializable<webgl::ShaderPrecisionFormat> : TrueType {};
 
 template <>
 struct IsTriviallySerializable<WebGLContextOptions> : TrueType {};
@@ -40,7 +36,9 @@ template <>
 struct IsTriviallySerializable<WebGLTexPboOffset> : TrueType {};
 
 template <>
-struct IsTriviallySerializable<SetDimensionsData> : TrueType {};
+struct IsTriviallySerializable<webgl::ExtensionBits> : TrueType {};
+template <>
+struct IsTriviallySerializable<webgl::GetUniformData> : TrueType {};
 
 template <>
 struct IsTriviallySerializable<ICRData> : TrueType {};
@@ -48,30 +46,14 @@ struct IsTriviallySerializable<ICRData> : TrueType {};
 template <>
 struct IsTriviallySerializable<gfx::IntSize> : TrueType {};
 
+template <typename T>
+struct IsTriviallySerializable<avec2<T>> : TrueType {};
+template <typename T>
+struct IsTriviallySerializable<avec3<T>> : TrueType {};
+
 template <>
 struct IsTriviallySerializable<webgl::TexUnpackBlob> : TrueType {};
-
-template <>
-struct PcqParamTraits<ExtensionSets> {
-  using ParamType = ExtensionSets;
-
-  static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
-    aProducerView.WriteParam(aArg.mNonSystem);
-    return aProducerView.WriteParam(aArg.mSystem);
-  }
-
-  static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
-    aConsumerView.ReadParam(aArg ? &aArg->mNonSystem : nullptr);
-    return aConsumerView.ReadParam(aArg ? &aArg->mSystem : nullptr);
-  }
-
-  template <typename View>
-  static size_t MinSize(View& aView, const ParamType* aArg) {
-    return aView.MinSizeParam(aArg ? (&aArg->mNonSystem) : nullptr) +
-           aView.MinSizeParam(aArg ? (&aArg->mSystem) : nullptr);
-  }
-};
-
+/*
 template <>
 struct PcqParamTraits<WebGLActiveInfo> {
   using ParamType = WebGLActiveInfo;
@@ -107,7 +89,7 @@ struct PcqParamTraits<WebGLActiveInfo> {
            aView.MinSizeParam(aArg ? &aArg->mBaseType : nullptr);
   }
 };
-
+*/
 template <typename T>
 struct PcqParamTraits<RawBuffer<T>> {
   using ParamType = RawBuffer<T>;
@@ -176,6 +158,7 @@ struct PcqParamTraits<RawBuffer<T>> {
   }
 };
 
+/*
 enum TexUnpackTypes : uint8_t { Bytes, Surface, Image, Pbo };
 
 template <>
@@ -314,6 +297,175 @@ struct PcqParamTraits<WebGLTexUnpackVariant> {
       View& mView;
     };
     return ret + aArg->match(TexUnpackMinSizeMatcher{aView});
+  }
+};
+*/
+template <>
+struct PcqParamTraits<webgl::ContextLossReason> {
+  using ParamType = webgl::ContextLossReason;
+
+  static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
+    return aProducerView.WriteParam(static_cast<uint8_t>(aArg));
+  }
+
+  static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
+    uint8_t val;
+    auto status = aConsumerView.ReadParam(&val);
+    if (!status) return status;
+    if (!ReadContextLossReason(val, aArg)) {
+      MOZ_ASSERT_UNREACHABLE("Invalid ContextLossReason");
+      return PcqStatus::PcqFatalError;
+    }
+    return status;
+  }
+
+  template <typename View>
+  static size_t MinSize(View& aView, const ParamType* aArg) {
+    return aView.template MinSizeParam<uint8_t>();
+  }
+};
+
+template <typename V, typename E>
+struct PcqParamTraits<Result<V, E>> {
+  using T = Result<V, E>;
+
+  static PcqStatus Write(ProducerView& aProducerView, const T& aArg) {
+    const auto ok = aArg.isOk();
+    auto status = aProducerView.WriteParam(ok);
+    if (!status) return status;
+    if (ok) {
+      status = aProducerView.WriteParam(aArg.unwrap());
+    } else {
+      status = aProducerView.WriteParam(aArg.unwrapErr());
+    }
+    return status;
+  }
+
+  static PcqStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+    bool ok;
+    auto status = aConsumerView.ReadParam(&ok);
+    if (!status) return status;
+    if (ok) {
+      V val;
+      status = aConsumerView.ReadParam(&val);
+      *aArg = val;
+    } else {
+      E val;
+      status = aConsumerView.ReadParam(&val);
+      *aArg = Err(val);
+    }
+    return status;
+  }
+
+  template <typename View>
+  static size_t MinSize(View& aView, const T* const aArg) {
+    auto size = aView.template MinSizeParam<bool>();
+    if (aArg) {
+      if (aArg->isOk()) {
+        const auto& val = aArg->unwrap();
+        size += aView.MinSizeParam(&val);
+      } else {
+        const auto& val = aArg->unwrapErr();
+        size += aView.MinSizeParam(&val);
+      }
+    }
+    return size;
+  }
+};
+
+template <>
+struct PcqParamTraits<std::string> {
+  using T = std::string;
+
+  static PcqStatus Write(ProducerView& aProducerView, const T& aArg) {
+    auto status = aProducerView.WriteParam(aArg.size());
+    if (!status) return status;
+    status = aProducerView.Write(aArg.data(), aArg.size());
+    return status;
+  }
+
+  static PcqStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+    size_t size;
+    auto status = aConsumerView.ReadParam(&size);
+    if (!status) return status;
+
+    const UniqueBuffer temp = malloc(size);
+    const auto dest = static_cast<char*>(temp.get());
+    if (!dest) return PcqStatus::PcqFatalError;
+
+    status = aConsumerView.Read(dest, size);
+    if (aArg) {
+      aArg->assign(dest, size);
+    }
+    return status;
+  }
+
+  template <typename View>
+  static size_t MinSize(View& aView, const T* const aArg) {
+    auto size = aView.template MinSizeParam<size_t>();
+    if (aArg) {
+      size += aArg->size();
+    }
+    return size;
+  }
+};
+
+template <typename U>
+struct PcqParamTraits<std::vector<U>> {
+  using T = std::string;
+
+  static PcqStatus Write(ProducerView& aProducerView, const T& aArg) {
+    auto status = aProducerView.WriteParam(aArg.size());
+    if (!status) return status;
+    status = aProducerView.Write(aArg.data(), aArg.size());
+    return status;
+  }
+
+  static PcqStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+    MOZ_CRASH("no way to fallibly resize vectors without exceptions");
+    size_t size;
+    auto status = aConsumerView.ReadParam(&size);
+    if (!status) return status;
+
+    aArg->resize(size);
+    status = aConsumerView.Read(aArg->data(), aArg->size());
+    return status;
+  }
+
+  template <typename View>
+  static size_t MinSize(View& aView, const T* const aArg) {
+    auto size = aView.template MinSizeParam<size_t>();
+    if (aArg) {
+      size += aArg->size() * sizeof(U);
+    }
+    return size;
+  }
+};
+
+template <>
+struct PcqParamTraits<WebGLExtensionID> {
+  using T = WebGLExtensionID;
+
+  static PcqStatus Write(ProducerView& aProducerView, const T& aArg) {
+    return aProducerView.WriteParam(mozilla::EnumValue(aArg));
+  }
+
+  static PcqStatus Read(ConsumerView& aConsumerView, T* const aArg) {
+    PcqStatus status = PcqStatus::Success;
+    if (aArg) {
+      status = aConsumerView.ReadParam(
+          reinterpret_cast<typename std::underlying_type<T>::type*>(aArg));
+      if (*aArg >= WebGLExtensionID::Max) {
+        MOZ_ASSERT(false);
+        return PcqStatus::PcqFatalError;
+      }
+    }
+    return status;
+  }
+
+  template <typename View>
+  static size_t MinSize(View& aView, const T* const aArg) {
+    return sizeof(T);
   }
 };
 

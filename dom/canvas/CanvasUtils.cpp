@@ -13,6 +13,7 @@
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "nsIPrincipal.h"
 
 #include "nsGfxCIID.h"
@@ -199,7 +200,7 @@ bool GetCanvasContextType(const nsAString& str,
     return true;
   }
 
-  if (WebGL2Context::IsSupported()) {
+  if (StaticPrefs::webgl_enable_webgl2()) {
     if (str.EqualsLiteral("webgl2")) {
       *out_type = dom::CanvasContextType::WebGL2;
       return true;

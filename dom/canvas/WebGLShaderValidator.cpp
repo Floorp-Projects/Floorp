@@ -150,10 +150,12 @@ std::unique_ptr<webgl::ShaderValidator> WebGLContext::CreateShaderValidator(
 
   resources.HashFunction = webgl::IdentifierHashFunc;
 
-  resources.MaxVertexAttribs = mGLMaxVertexAttribs;
+  const auto& limits = Limits();
+
+  resources.MaxVertexAttribs = limits.maxVertexAttribs;
   resources.MaxVertexUniformVectors = mGLMaxVertexUniformVectors;
   resources.MaxVertexTextureImageUnits = mGLMaxVertexTextureImageUnits;
-  resources.MaxCombinedTextureImageUnits = mGLMaxCombinedTextureImageUnits;
+  resources.MaxCombinedTextureImageUnits = limits.maxTexUnits;
   resources.MaxTextureImageUnits = mGLMaxFragmentTextureImageUnits;
   resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
 
@@ -166,9 +168,7 @@ std::unique_ptr<webgl::ShaderValidator> WebGLContext::CreateShaderValidator(
     resources.MaxProgramTexelOffset = mGLMaxProgramTexelOffset;
   }
 
-  const bool hasMRTs =
-      (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers));
-  resources.MaxDrawBuffers = (hasMRTs ? mGLMaxDrawBuffers : 1);
+  resources.MaxDrawBuffers = MaxValidDrawBuffers();
 
   if (IsExtensionEnabled(WebGLExtensionID::EXT_frag_depth))
     resources.EXT_frag_depth = 1;
@@ -184,7 +184,7 @@ std::unique_ptr<webgl::ShaderValidator> WebGLContext::CreateShaderValidator(
 
   if (IsExtensionEnabled(WebGLExtensionID::OVR_multiview2)) {
     resources.OVR_multiview2 = 1;
-    resources.MaxViewsOVR = mGLMaxMultiviewViews;
+    resources.MaxViewsOVR = limits.maxMultiviewLayers;
   }
 
   // Tell ANGLE to allow highp in frag shaders. (unless disabled)
@@ -248,6 +248,11 @@ ShaderValidator::ValidateAndTranslate(const char* const source) const {
     ret->mVaryings = *sh::GetVaryings(mHandle);
 
     ret->mMaxVaryingVectors = mMaxVaryingVectors;
+
+    const auto& nameMap = *sh::GetNameHashingMap(mHandle);
+    for (const auto& pair : nameMap) {
+      ret->mNameMap.insert(pair);
+    }
   }
 
   sh::ClearResults(mHandle);
@@ -411,59 +416,6 @@ bool ShaderValidatorResults::CanLinkTo(const ShaderValidatorResults& vert,
   }
 
   return true;
-}
-
-// This must handle names like "foo.bar[0]".
-bool ShaderValidatorResults::FindUniformByMappedName(
-    const std::string& mappedName, std::string* const out_userName,
-    bool* const out_isArray) const {
-  for (const auto& cur : mUniforms) {
-    const sh::ShaderVariable* found;
-    if (!cur.findInfoByMappedName(mappedName, &found, out_userName)) continue;
-
-    *out_isArray = found->isArray();
-    return true;
-  }
-
-  const size_t dotPos = mappedName.find(".");
-
-  for (const auto& interface : mInterfaceBlocks) {
-    std::string mappedFieldName;
-    const bool hasInstanceName = !interface.instanceName.empty();
-
-    // If the InterfaceBlock has an instanceName, all variables defined
-    // within the block are qualified with the block name, as opposed
-    // to being placed in the global scope.
-    if (hasInstanceName) {
-      // If mappedName has no block name prefix, skip
-      if (std::string::npos == dotPos) continue;
-
-      // If mappedName has a block name prefix that doesn't match, skip
-      const std::string mappedInterfaceBlockName = mappedName.substr(0, dotPos);
-      if (interface.mappedName != mappedInterfaceBlockName) continue;
-
-      mappedFieldName = mappedName.substr(dotPos + 1);
-    } else {
-      mappedFieldName = mappedName;
-    }
-
-    for (const auto& field : interface.fields) {
-      const sh::ShaderVariable* found;
-
-      if (!field.findInfoByMappedName(mappedFieldName, &found, out_userName))
-        continue;
-
-      if (hasInstanceName) {
-        // Prepend the user name of the interface that matched
-        *out_userName = interface.name + "." + *out_userName;
-      }
-
-      *out_isArray = found->isArray();
-      return true;
-    }
-  }
-
-  return false;
 }
 
 size_t ShaderValidatorResults::SizeOfIncludingThis(

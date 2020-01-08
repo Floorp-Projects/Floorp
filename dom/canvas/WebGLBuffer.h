@@ -10,18 +10,18 @@
 
 #include "CacheInvalidator.h"
 #include "GLDefs.h"
-#include "mozilla/LinkedList.h"
-#include "nsWrapperCache.h"
 #include "WebGLObjectModel.h"
 #include "WebGLTypes.h"
 
 namespace mozilla {
 
-class WebGLBuffer final : public WebGLRefCountedObject<WebGLBuffer>,
-                          public LinkedListElement<WebGLBuffer> {
+class WebGLBuffer final : public WebGLContextBoundObject {
   friend class WebGLContext;
   friend class WebGL2Context;
+  friend class WebGLMemoryTracker;
   friend class WebGLTexture;
+
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(WebGLBuffer, override)
 
  public:
   enum class Kind { Undefined, ElementArray, OtherData };
@@ -30,8 +30,6 @@ class WebGLBuffer final : public WebGLRefCountedObject<WebGLBuffer>,
 
   void SetContentAfterBind(GLenum target);
   Kind Content() const { return mContent; }
-
-  void Delete();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -51,10 +49,8 @@ class WebGLBuffer final : public WebGLRefCountedObject<WebGLBuffer>,
 
   const GLenum mGLName;
 
-  NS_INLINE_DECL_REFCOUNTING(WebGLBuffer)
-
  protected:
-  ~WebGLBuffer();
+  ~WebGLBuffer() override;
 
   void InvalidateCacheRange(uint64_t byteOffset, uint64_t byteLength) const;
 

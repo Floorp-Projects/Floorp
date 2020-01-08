@@ -30,6 +30,4 @@ WebGLExtensionTextureFloatLinear::WebGLExtensionTextureFloatLinear(
   }
 }
 
-WebGLExtensionTextureFloatLinear::~WebGLExtensionTextureFloatLinear() {}
-
 }  // namespace mozilla

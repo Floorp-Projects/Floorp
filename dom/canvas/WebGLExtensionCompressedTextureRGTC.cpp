@@ -23,8 +23,6 @@ WebGLExtensionCompressedTextureRGTC::WebGLExtensionCompressedTextureRGTC(
     auto usage = fua->EditUsage(effFormat);
     usage->isFilterable = true;
     fua->AllowSizedTexFormat(sizedFormat, usage);
-
-    webgl->mCompressedTextureFormats.AppendElement(sizedFormat);
   };
 
 #define _(X) LOCAL_GL_##X, webgl::EffectiveFormat::X

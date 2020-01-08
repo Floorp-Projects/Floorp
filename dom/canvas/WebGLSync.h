@@ -6,8 +6,6 @@
 #ifndef WEBGL_SYNC_H_
 #define WEBGL_SYNC_H_
 
-#include "mozilla/LinkedList.h"
-#include "nsWrapperCache.h"
 #include "WebGLObjectModel.h"
 
 namespace mozilla {
@@ -15,10 +13,11 @@ namespace webgl {
 class AvailabilityRunnable;
 }  // namespace webgl
 
-class WebGLSync final : public WebGLRefCountedObject<WebGLSync>,
-                        public LinkedListElement<WebGLSync> {
+class WebGLSync final : public WebGLContextBoundObject {
   friend class WebGL2Context;
   friend class webgl::AvailabilityRunnable;
+
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(WebGLSync, override)
 
   const GLsync mGLName;
   const uint64_t mFenceId;
@@ -27,14 +26,10 @@ class WebGLSync final : public WebGLRefCountedObject<WebGLSync>,
  public:
   WebGLSync(WebGLContext* webgl, GLenum condition, GLbitfield flags);
 
-  void Delete();
-
-  NS_INLINE_DECL_REFCOUNTING(WebGLSync)
-
   void MarkSignaled() const;
 
  private:
-  ~WebGLSync();
+  ~WebGLSync() override;
 };
 
 }  // namespace mozilla

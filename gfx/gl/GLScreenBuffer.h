@@ -28,6 +28,7 @@ namespace layers {
 class KnowsCompositor;
 class LayersIPCChannel;
 class SharedSurfaceTextureClient;
+enum class LayersBackend : int8_t;
 }  // namespace layers
 
 namespace gl {

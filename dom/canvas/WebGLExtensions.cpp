@@ -12,15 +12,15 @@
 
 namespace mozilla {
 
-WebGLExtensionBase::WebGLExtensionBase(WebGLContext* webgl)
-    : WebGLContextBoundObject(webgl) {}
+WebGLExtensionBlendMinMax::WebGLExtensionBlendMinMax(WebGLContext* webgl)
+    : WebGLExtensionBase(webgl) {
+  MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+}
 
-WebGLExtensionBase::~WebGLExtensionBase() {}
+bool WebGLExtensionBlendMinMax::IsSupported(const WebGLContext* webgl) {
+  if (webgl->IsWebGL2()) return false;
 
-void WebGLExtensionBase::MarkLost() {
-  mIsLost = true;
-
-  OnMarkLost();
+  return webgl->GL()->IsSupported(gl::GLFeature::blend_minmax);
 }
 
 // -
@@ -36,19 +36,12 @@ bool WebGLExtensionExplicitPresent::IsSupported(
   return StaticPrefs::webgl_enable_draft_extensions();
 }
 
-void WebGLExtensionExplicitPresent::Present() const {
-  if (mIsLost || !mContext) return;
-  mContext->PresentScreenBuffer();
-}
-
 // -
 
 WebGLExtensionFloatBlend::WebGLExtensionFloatBlend(WebGLContext* const webgl)
     : WebGLExtensionBase(webgl) {
   MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 }
-
-WebGLExtensionFloatBlend::~WebGLExtensionFloatBlend() = default;
 
 bool WebGLExtensionFloatBlend::IsSupported(const WebGLContext* const webgl) {
   if (!WebGLExtensionColorBufferFloat::IsSupported(webgl) &&
@@ -69,8 +62,6 @@ WebGLExtensionFBORenderMipmap::WebGLExtensionFBORenderMipmap(
   MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 }
 
-WebGLExtensionFBORenderMipmap::~WebGLExtensionFBORenderMipmap() = default;
-
 bool WebGLExtensionFBORenderMipmap::IsSupported(
     const WebGLContext* const webgl) {
   if (webgl->IsWebGL2()) return false;
@@ -88,28 +79,11 @@ WebGLExtensionMultiview::WebGLExtensionMultiview(WebGLContext* const webgl)
   MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 }
 
-WebGLExtensionMultiview::~WebGLExtensionMultiview() = default;
-
 bool WebGLExtensionMultiview::IsSupported(const WebGLContext* const webgl) {
   if (!webgl->IsWebGL2()) return false;
 
   const auto& gl = webgl->gl;
   return gl->IsSupported(gl::GLFeature::multiview);
-}
-
-void WebGLExtensionMultiview::FramebufferTextureMultiviewOVR(
-    const GLenum target, const GLenum attachment, WebGLTexture* const texture,
-    const GLint level, const GLint baseViewIndex,
-    const GLsizei numViews) const {
-  const WebGLContext::FuncScope funcScope(*mContext,
-                                          "framebufferTextureMultiviewOVR");
-  if (mIsLost) {
-    mContext->ErrorInvalidOperation("Extension is lost.");
-    return;
-  }
-
-  mContext->FramebufferTextureMultiview(target, attachment, texture, level,
-                                        baseViewIndex, numViews);
 }
 
 }  // namespace mozilla

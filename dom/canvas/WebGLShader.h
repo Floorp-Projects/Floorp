@@ -12,10 +12,7 @@
 #include <vector>
 
 #include "GLDefs.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
-#include "nsString.h"
-#include "nsWrapperCache.h"
 
 #include "WebGLObjectModel.h"
 
@@ -25,69 +22,53 @@ namespace webgl {
 class ShaderValidatorResults;
 }  // namespace webgl
 
-class WebGLShader final : public WebGLRefCountedObject<WebGLShader>,
-                          public LinkedListElement<WebGLShader> {
+class WebGLShader final : public WebGLContextBoundObject {
   friend class WebGLContext;
   friend class WebGLProgram;
+
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(WebGLShader, override)
 
  public:
   WebGLShader(WebGLContext* webgl, GLenum type);
 
  protected:
-  ~WebGLShader();
+  ~WebGLShader() override;
 
  public:
   // GL funcs
   void CompileShader();
-  MaybeWebGLVariant GetShaderParameter(GLenum pname) const;
-  nsString GetShaderInfoLog() const;
-  nsString GetShaderSource() const;
-  nsString GetShaderTranslatedSource() const;
-  void ShaderSource(const nsAString& source);
+  void ShaderSource(const std::string& source);
 
   // Util funcs
   size_t CalcNumSamplerUniforms() const;
   size_t NumAttributes() const;
-  bool FindAttribUserNameByMappedName(const nsACString& mappedName,
-                                      nsCString* const out_userName) const;
-  bool FindVaryingByMappedName(const nsACString& mappedName,
-                               nsCString* const out_userName,
-                               bool* const out_isArray) const;
-  bool FindUniformByMappedName(const nsACString& mappedName,
-                               nsCString* const out_userName,
-                               bool* const out_isArray) const;
-  bool UnmapUniformBlockName(const nsACString& baseMappedName,
-                             nsCString* const out_baseUserName) const;
 
-  bool IsCompiled() const { return mCompilationSuccessful; }
   const auto& CompileResults() const { return mCompileResults; }
+  const auto& CompileLog() const { return mCompilationLog; }
+  bool IsCompiled() const { return mCompilationSuccessful; }
 
  private:
   void BindAttribLocation(GLuint prog, const std::string& userName,
                           GLuint index) const;
   void MapTransformFeedbackVaryings(
-      const std::vector<nsString>& varyings,
+      const std::vector<std::string>& varyings,
       std::vector<std::string>* out_mappedVaryings) const;
 
  public:
   // Other funcs
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-  void Delete();
-
-  NS_INLINE_DECL_REFCOUNTING(WebGLShader)
 
  public:
   const GLuint mGLName;
   const GLenum mType;
 
  protected:
-  nsString mSource;
-  nsCString mCleanSource;
+  std::string mSource;
 
   std::unique_ptr<const webgl::ShaderValidatorResults>
       mCompileResults;  // Never null.
   bool mCompilationSuccessful = false;
-  nsCString mCompilationLog;
+  std::string mCompilationLog;
 };
 
 }  // namespace mozilla

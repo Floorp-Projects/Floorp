@@ -24,8 +24,6 @@ WebGLExtensionCompressedTextureASTC::WebGLExtensionCompressedTextureASTC(
     auto usage = fua->EditUsage(effFormat);
     usage->isFilterable = true;
     fua->AllowSizedTexFormat(sizedFormat, usage);
-
-    webgl_->mCompressedTextureFormats.AppendElement(sizedFormat);
   };
 
 #define FOO(x) LOCAL_GL_##x, webgl::EffectiveFormat::x
@@ -61,27 +59,6 @@ WebGLExtensionCompressedTextureASTC::WebGLExtensionCompressedTextureASTC(
   fnAdd(FOO(COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR));
 
 #undef FOO
-}
-
-WebGLExtensionCompressedTextureASTC::~WebGLExtensionCompressedTextureASTC() {}
-
-Maybe<nsTArray<nsString>>
-WebGLExtensionCompressedTextureASTC::GetSupportedProfiles() const {
-  if (mIsLost || !mContext) {
-    if (mContext) {
-      mContext->ErrorInvalidOperation("%s: Extension is lost.",
-                                      "drawElementsInstancedANGLE");
-    }
-    return {};
-  }
-
-  nsTArray<nsString> arr;
-  arr.AppendElement(NS_LITERAL_STRING("ldr"));
-  if (mContext->gl->IsExtensionSupported(
-          gl::GLContext::KHR_texture_compression_astc_hdr)) {
-    arr.AppendElement(NS_LITERAL_STRING("hdr"));
-  }
-  return Some(arr);
 }
 
 bool WebGLExtensionCompressedTextureASTC::IsSupported(

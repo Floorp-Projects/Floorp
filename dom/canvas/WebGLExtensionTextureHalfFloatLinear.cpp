@@ -25,6 +25,4 @@ WebGLExtensionTextureHalfFloatLinear::WebGLExtensionTextureHalfFloatLinear(
   fua->EditUsage(webgl::EffectiveFormat::Alpha16F)->isFilterable = true;
 }
 
-WebGLExtensionTextureHalfFloatLinear::~WebGLExtensionTextureHalfFloatLinear() {}
-
 }  // namespace mozilla

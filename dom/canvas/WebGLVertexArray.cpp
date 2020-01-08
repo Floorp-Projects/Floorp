@@ -14,14 +14,9 @@
 
 namespace mozilla {
 
-WebGLVertexArray::WebGLVertexArray(WebGLContext* const webgl, const GLuint name)
-    : WebGLRefCountedObject(webgl),
-      mGLName(name),
-      mAttribs(mContext->mGLMaxVertexAttribs) {
-  mContext->mVertexArrays.insertBack(this);
-}
-
-WebGLVertexArray::~WebGLVertexArray() { MOZ_ASSERT(IsDeleted()); }
+WebGLVertexArray::WebGLVertexArray(WebGLContext* const webgl)
+    : WebGLContextBoundObject(webgl),
+      mAttribs(mContext->Limits().maxVertexAttribs) {}
 
 WebGLVertexArray* WebGLVertexArray::Create(WebGLContext* webgl) {
   WebGLVertexArray* array;
@@ -31,32 +26,6 @@ WebGLVertexArray* WebGLVertexArray::Create(WebGLContext* webgl) {
     array = new WebGLVertexArrayFake(webgl);
   }
   return array;
-}
-
-void WebGLVertexArray::Delete() {
-  DeleteImpl();
-
-  LinkedListElement<WebGLVertexArray>::removeFrom(mContext->mVertexArrays);
-  mElementArrayBuffer = nullptr;
-  mAttribs.clear();
-}
-
-// -
-
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& callback,
-    const std::vector<WebGLVertexAttribData>& field, const char* name,
-    uint32_t flags = 0) {
-  for (auto& cur : field) {
-    ImplCycleCollectionTraverse(callback, cur.mBuf, name, flags);
-  }
-}
-
-inline void ImplCycleCollectionUnlink(
-    std::vector<WebGLVertexAttribData>& field) {
-  for (auto& cur : field) {
-    cur.mBuf = nullptr;
-  }
 }
 
 }  // namespace mozilla

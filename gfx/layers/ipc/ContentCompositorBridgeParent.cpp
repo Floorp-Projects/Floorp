@@ -19,7 +19,6 @@
 #  include "mozilla/layers/ImageDataSerializer.h"
 #endif
 #include "mozilla/dom/WebGLCrossProcessCommandQueue.h"
-#include "mozilla/dom/WebGLErrorQueue.h"
 #include "mozilla/dom/WebGLParent.h"
 #include "mozilla/ipc/Transport.h"           // for Transport
 #include "mozilla/layers/AnimationHelper.h"  // for CompositorAnimationStorage
@@ -767,17 +766,12 @@ mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvPreferredDXGIAdapter(
   return IPC_OK();
 }
 
-dom::PWebGLParent* ContentCompositorBridgeParent::AllocPWebGLParent(
-    const WebGLVersion& aVersion, HostWebGLCommandSink&& aCommandSink,
-    HostWebGLErrorSource&& aErrorSource) {
-  MOZ_ASSERT_UNREACHABLE("Unimplemented");
-  return nullptr;
-}
-
-bool ContentCompositorBridgeParent::DeallocPWebGLParent(
-    PWebGLParent* aWebGLParent) {
-  delete aWebGLParent;
-  return true;
+already_AddRefed<dom::PWebGLParent>
+ContentCompositorBridgeParent::AllocPWebGLParent(
+    const webgl::InitContextDesc& aInitDesc,
+    webgl::InitContextResult* const out) {
+  RefPtr<dom::PWebGLParent> ret = dom::WebGLParent::Create(aInitDesc, out);
+  return ret.forget();
 }
 
 }  // namespace layers

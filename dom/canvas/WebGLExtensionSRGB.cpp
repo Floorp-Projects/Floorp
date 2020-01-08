@@ -50,8 +50,6 @@ WebGLExtensionSRGB::WebGLExtensionSRGB(WebGLContext* webgl)
   fua->AllowRBFormat(LOCAL_GL_SRGB8_ALPHA8, usage);
 }
 
-WebGLExtensionSRGB::~WebGLExtensionSRGB() {}
-
 bool WebGLExtensionSRGB::IsSupported(const WebGLContext* const webgl) {
   if (webgl->IsWebGL2()) return false;
 

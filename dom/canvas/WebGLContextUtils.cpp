@@ -40,161 +40,6 @@ TexTarget TexImageTargetToTexTarget(TexImageTarget texImageTarget) {
   }
 }
 
-void WebGLContext::GenerateWarning(const char* fmt, ...) const {
-  va_list ap;
-  va_start(ap, fmt);
-
-  GenerateWarning(fmt, ap);
-
-  va_end(ap);
-}
-
-void WebGLContext::GenerateWarning(const char* fmt, va_list ap) const {
-  if (!ShouldGenerateWarnings()) return;
-
-  mAlreadyGeneratedWarnings++;
-
-  char buf[1024];
-  VsprintfLiteral(buf, fmt, ap);
-
-  // JS::WarnASCII will print to stderr for us.
-  const auto funcName = FuncName();
-  nsCString msg;
-  msg.AppendPrintf("WebGL warning: %s: %s", funcName, buf);
-  if (!ShouldGenerateWarnings()) {
-    msg.AppendPrintf(
-        "WebGL: No further warnings will be reported for"
-        " this WebGL context."
-        " (already reported %d warnings)",
-        mAlreadyGeneratedWarnings);
-  }
-
-  mHost->PostWarning(msg);
-}
-
-bool WebGLContext::ShouldGenerateWarnings() const {
-  if (mMaxWarnings == -1) return true;
-
-  return mAlreadyGeneratedWarnings < mMaxWarnings;
-}
-
-void WebGLContext::GeneratePerfWarning(const char* fmt, ...) const {
-  if (!ShouldGeneratePerfWarnings()) return;
-
-  va_list ap;
-  va_start(ap, fmt);
-
-  char buf[1024];
-  VsprintfLiteral(buf, fmt, ap);
-
-  va_end(ap);
-
-  ////
-
-  const auto funcName = FuncName();
-  nsCString msg;
-  msg.AppendPrintf("WebGL perf warning: %s: %s", funcName, buf);
-  mNumPerfWarnings++;
-
-  if (!ShouldGeneratePerfWarnings()) {
-    msg.AppendPrintf(
-        "WebGL: After reporting %u, no further perf warnings will"
-        " be reported for this WebGL context.",
-        uint32_t(mNumPerfWarnings));
-  }
-
-  mHost->PostWarning(msg);
-}
-
-void WebGLContext::SynthesizeGLError(GLenum err) const {
-  /* ES2 section 2.5 "GL Errors" states that implementations can have
-   * multiple 'flags', as errors might be caught in different parts of
-   * a distributed implementation.
-   * We're signing up as a distributed implementation here, with
-   * separate flags for WebGL and the underlying GLContext.
-   */
-  if (!mWebGLError) mWebGLError = err;
-}
-
-void WebGLContext::GenerateError(const GLenum err, const char* const fmt,
-                                 ...) const {
-  va_list va;
-  va_start(va, fmt);
-  GenerateWarning(fmt, va);
-  va_end(va);
-
-  return SynthesizeGLError(err);
-}
-
-void WebGLContext::ErrorInvalidEnum(const char* fmt, ...) const {
-  va_list va;
-  va_start(va, fmt);
-  GenerateWarning(fmt, va);
-  va_end(va);
-
-  return SynthesizeGLError(LOCAL_GL_INVALID_ENUM);
-}
-
-void WebGLContext::ErrorInvalidEnumInfo(const char* info,
-                                        GLenum enumValue) const {
-  nsCString name;
-  EnumName(enumValue, &name);
-
-  return ErrorInvalidEnum("%s: invalid enum value %s", info,
-                          name.BeginReading());
-}
-
-void WebGLContext::ErrorInvalidOperation(const char* fmt, ...) const {
-  va_list va;
-  va_start(va, fmt);
-  GenerateWarning(fmt, va);
-  va_end(va);
-
-  return SynthesizeGLError(LOCAL_GL_INVALID_OPERATION);
-}
-
-void WebGLContext::ErrorInvalidValue(const char* fmt, ...) const {
-  va_list va;
-  va_start(va, fmt);
-  GenerateWarning(fmt, va);
-  va_end(va);
-
-  return SynthesizeGLError(LOCAL_GL_INVALID_VALUE);
-}
-
-void WebGLContext::ErrorInvalidFramebufferOperation(const char* fmt,
-                                                    ...) const {
-  va_list va;
-  va_start(va, fmt);
-  GenerateWarning(fmt, va);
-  va_end(va);
-
-  return SynthesizeGLError(LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION);
-}
-
-void WebGLContext::ErrorOutOfMemory(const char* fmt, ...) const {
-  va_list va;
-  va_start(va, fmt);
-  GenerateWarning(fmt, va);
-  va_end(va);
-
-  return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY);
-}
-
-void WebGLContext::ErrorImplementationBug(const char* fmt, ...) const {
-  const nsPrintfCString warning("Implementation bug, please file at %s! %s",
-                                "https://bugzilla.mozilla.org/", fmt);
-
-  va_list va;
-  va_start(va, fmt);
-  GenerateWarning(warning.BeginReading(), va);
-  va_end(va);
-
-  MOZ_ASSERT(false, "WebGLContext::ErrorImplementationBug");
-  NS_ERROR("WebGLContext::ErrorImplementationBug");
-  return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY);
-}
-
 /*static*/ const char* WebGLContext::ErrorName(GLenum error) {
   switch (error) {
     case LOCAL_GL_INVALID_ENUM:
@@ -563,10 +408,19 @@ std::string EnumString(const GLenum val) {
   return hex.BeginReading();
 }
 
-void WebGLContext::ErrorInvalidEnumArg(const char* argName, GLenum val) const {
+void WebGLContext::ErrorInvalidEnumArg(const char* const argName,
+                                       const GLenum val) const {
   nsCString enumName;
   EnumName(val, &enumName);
   ErrorInvalidEnum("Bad `%s`: %s", argName, enumName.BeginReading());
+}
+
+void WebGLContext::ErrorInvalidEnumInfo(const char* const info,
+                                        const GLenum enumValue) const {
+  nsCString name;
+  EnumName(enumValue, &name);
+  return ErrorInvalidEnum("%s: Invalid enum value %s", info,
+                          name.BeginReading());
 }
 
 #ifdef DEBUG
@@ -613,12 +467,6 @@ void WebGLContext::AssertCachedBindings() const {
 #ifdef DEBUG
   gl::GLContext::LocalErrorScope errorScope(*gl);
 
-  if (IsWebGL2() ||
-      IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
-    AssertUintParamCorrect(gl, LOCAL_GL_VERTEX_ARRAY_BINDING,
-                           mBoundVertexArray->mGLName);
-  }
-
   GLint stencilBits = 0;
   if (GetStencilBits(&stencilBits)) {  // Depends on current draw framebuffer.
     const GLuint stencilRefMask = (1 << stencilBits) - 1;
@@ -632,18 +480,6 @@ void WebGLContext::AssertCachedBindings() const {
   // Program
   GLuint bound = mCurrentProgram ? mCurrentProgram->mGLName : 0;
   AssertUintParamCorrect(gl, LOCAL_GL_CURRENT_PROGRAM, bound);
-
-  // Textures
-  GLenum activeTexture = mActiveTexture + LOCAL_GL_TEXTURE0;
-  AssertUintParamCorrect(gl, LOCAL_GL_ACTIVE_TEXTURE, activeTexture);
-
-  WebGLTexture* curTex = ActiveBoundTextureForTarget(LOCAL_GL_TEXTURE_2D);
-  bound = curTex ? curTex->mGLName : 0;
-  AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_2D, bound);
-
-  curTex = ActiveBoundTextureForTarget(LOCAL_GL_TEXTURE_CUBE_MAP);
-  bound = curTex ? curTex->mGLName : 0;
-  AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_CUBE_MAP, bound);
 
   // Buffers
   bound = mBoundArrayBuffer ? mBoundArrayBuffer->mGLName : 0;
