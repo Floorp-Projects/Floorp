@@ -21,13 +21,12 @@ static const int32_t kNameSpaceID_None = 0;
 #define kNameSpaceID_XHTML 3
 #define kNameSpaceID_XLink 4
 #define kNameSpaceID_XSLT 5
-#define kNameSpaceID_XBL 6
-#define kNameSpaceID_MathML 7
-#define kNameSpaceID_RDF 8
-#define kNameSpaceID_XUL 9
-#define kNameSpaceID_SVG 10
-#define kNameSpaceID_disabled_MathML 11
-#define kNameSpaceID_disabled_SVG 12
-#define kNameSpaceID_LastBuiltin 12  // last 'built-in' namespace
+#define kNameSpaceID_MathML 6
+#define kNameSpaceID_RDF 7
+#define kNameSpaceID_XUL 8
+#define kNameSpaceID_SVG 9
+#define kNameSpaceID_disabled_MathML 10
+#define kNameSpaceID_disabled_SVG 11
+#define kNameSpaceID_LastBuiltin 11  // last 'built-in' namespace
 
 #endif  // mozilla_dom_NameSpaceConstants_h__
