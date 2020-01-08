@@ -6,31 +6,24 @@
 #include "WebGLChild.h"
 
 #include "ClientWebGLContext.h"
-#include "nsICanvasRenderingContextInternal.h"
-#include "nsQueryObject.h"
 
 namespace mozilla {
-
 namespace dom {
 
-mozilla::ipc::IPCResult WebGLChild::RecvQueueFailed() {
-  mozilla::ClientWebGLContext* context = GetContext();
-  if (context) {
-    context->OnQueueFailed();
-  }
-  return Send__delete__(this) ? IPC_OK() : IPC_FAIL_NO_REASON(this);
+WebGLChild::WebGLChild(ClientWebGLContext& context) : mContext(context) {}
+
+WebGLChild::~WebGLChild() { (void)Send__delete__(this); }
+
+mozilla::ipc::IPCResult WebGLChild::RecvJsWarning(
+    const std::string& text) const {
+  mContext.JsWarning(text);
+  return IPC_OK();
 }
 
-mozilla::ClientWebGLContext* WebGLChild::GetContext() {
-  nsCOMPtr<nsICanvasRenderingContextInternal> ret = do_QueryReferent(mContext);
-  if (!ret) {
-    return nullptr;
-  }
-  return static_cast<mozilla::ClientWebGLContext*>(ret.get());
-}
-
-void WebGLChild::SetContext(mozilla::ClientWebGLContext* aContext) {
-  mContext = do_GetWeakReference(aContext);
+mozilla::ipc::IPCResult WebGLChild::RecvOnContextLoss(
+    const webgl::ContextLossReason reason) const {
+  mContext.OnContextLoss(reason);
+  return IPC_OK();
 }
 
 }  // namespace dom

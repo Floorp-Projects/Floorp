@@ -34,8 +34,8 @@ namespace mozilla {
 class WebGLContext;
 
 bool TruncateComments(const nsAString& src, nsAString* const out);
-bool ValidateGLSLPreprocString(WebGLContext* webgl, const nsAString& string);
-bool ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl);
+bool ValidateGLSLPreprocString(WebGLContext* webgl, const std::string& string);
+bool ValidateGLSLVariableName(const std::string& name, WebGLContext* webgl);
 
 }  // namespace mozilla
 

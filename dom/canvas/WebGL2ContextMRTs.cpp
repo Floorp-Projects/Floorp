@@ -10,33 +10,21 @@
 
 namespace mozilla {
 
-bool WebGL2Context::ValidateClearBuffer(GLenum buffer, GLint drawBuffer,
-                                        size_t availElemCount,
-                                        GLuint elemOffset, GLenum funcType) {
-  if (elemOffset > availElemCount) {
-    ErrorInvalidValue("Offset too big for list.");
-    return false;
-  }
-  availElemCount -= elemOffset;
-
-  ////
-
-  size_t requiredElements;
+bool WebGL2Context::ValidateClearBuffer(const GLenum buffer,
+                                        const GLint drawBuffer,
+                                        const webgl::AttribBaseType funcType) {
   GLint maxDrawBuffer;
   switch (buffer) {
     case LOCAL_GL_COLOR:
-      requiredElements = 4;
-      maxDrawBuffer = mGLMaxDrawBuffers - 1;
+      maxDrawBuffer = Limits().maxColorDrawBuffers - 1;
       break;
 
     case LOCAL_GL_DEPTH:
     case LOCAL_GL_STENCIL:
-      requiredElements = 1;
       maxDrawBuffer = 0;
       break;
 
     case LOCAL_GL_DEPTH_STENCIL:
-      requiredElements = 2;
       maxDrawBuffer = 0;
       break;
 
@@ -53,12 +41,6 @@ bool WebGL2Context::ValidateClearBuffer(GLenum buffer, GLint drawBuffer,
     return false;
   }
 
-  if (availElemCount < requiredElements) {
-    ErrorInvalidValue("Not enough elements. Require %zu. Given %zu.",
-                      requiredElements, availElemCount);
-    return false;
-  }
-
   ////
 
   if (!BindCurFBForDraw()) return false;
@@ -72,7 +54,7 @@ bool WebGL2Context::ValidateClearBuffer(GLenum buffer, GLint drawBuffer,
 
     if (mDefaultFB_DrawBuffer0 == LOCAL_GL_NONE) return true;
 
-    if (funcType != LOCAL_GL_FLOAT) {
+    if (funcType != webgl::AttribBaseType::Float) {
       ErrorInvalidOperation(
           "For default framebuffer, COLOR is always of type"
           " FLOAT.");
@@ -85,74 +67,71 @@ bool WebGL2Context::ValidateClearBuffer(GLenum buffer, GLint drawBuffer,
 
 ////
 
-void WebGL2Context::ClearBufferfv(GLenum buffer, GLint drawBuffer,
-                                  const RawBuffer<const float>& src,
-                                  GLuint srcElemOffset) {
-  const FuncScope funcScope(*this, "clearBufferfv");
+void WebGL2Context::ClearBufferTv(GLenum buffer, GLint drawBuffer,
+                                  const webgl::TypedQuad& data) {
+  const FuncScope funcScope(*this, "clearBufferu?[fi]v");
   if (IsContextLost()) return;
 
-  if (buffer != LOCAL_GL_COLOR && buffer != LOCAL_GL_DEPTH) {
-    ErrorInvalidEnum("`buffer` must be COLOR or DEPTH.");
-    return;
+  switch (data.type) {
+    case webgl::AttribBaseType::Boolean:
+      MOZ_ASSERT(false);
+      return;
+
+    case webgl::AttribBaseType::Float:
+      if (buffer != LOCAL_GL_COLOR && buffer != LOCAL_GL_DEPTH) {
+        ErrorInvalidEnum("`buffer` must be COLOR or DEPTH.");
+        return;
+      }
+      break;
+
+    case webgl::AttribBaseType::Int:
+      if (buffer != LOCAL_GL_COLOR && buffer != LOCAL_GL_STENCIL) {
+        ErrorInvalidEnum("`buffer` must be COLOR or STENCIL.");
+        return;
+      }
+      break;
+
+    case webgl::AttribBaseType::Uint:
+      if (buffer != LOCAL_GL_COLOR) {
+        ErrorInvalidEnum("`buffer` must be COLOR.");
+        return;
+      }
+      break;
   }
 
-  if (!ValidateClearBuffer(buffer, drawBuffer, src.Length(), srcElemOffset,
-                           LOCAL_GL_FLOAT)) {
+  if (!ValidateClearBuffer(buffer, drawBuffer, data.type)) {
     return;
   }
 
   if (!mBoundDrawFramebuffer && buffer == LOCAL_GL_DEPTH && mNeedsFakeNoDepth) {
     return;
   }
-
-  ScopedDrawCallWrapper wrapper(*this);
-  const auto ptr = &src[0] + srcElemOffset;
-  gl->fClearBufferfv(buffer, drawBuffer, ptr);
-}
-
-void WebGL2Context::ClearBufferiv(GLenum buffer, GLint drawBuffer,
-                                  const RawBuffer<const int32_t>& src,
-                                  GLuint srcElemOffset) {
-  const FuncScope funcScope(*this, "clearBufferiv");
-  if (IsContextLost()) return;
-
-  if (buffer != LOCAL_GL_COLOR && buffer != LOCAL_GL_STENCIL) {
-    ErrorInvalidEnum("`buffer` must be COLOR or STENCIL.");
-    return;
-  }
-
-  if (!ValidateClearBuffer(buffer, drawBuffer, src.Length(), srcElemOffset,
-                           LOCAL_GL_INT)) {
-    return;
-  }
-
   if (!mBoundDrawFramebuffer && buffer == LOCAL_GL_STENCIL &&
       mNeedsFakeNoStencil) {
     return;
   }
 
   ScopedDrawCallWrapper wrapper(*this);
-  const auto ptr = &src[0] + srcElemOffset;
-  gl->fClearBufferiv(buffer, drawBuffer, ptr);
-}
+  switch (data.type) {
+    case webgl::AttribBaseType::Boolean:
+      MOZ_ASSERT(false);
+      return;
 
-void WebGL2Context::ClearBufferuiv(GLenum buffer, GLint drawBuffer,
-                                   const RawBuffer<const uint32_t>& src,
-                                   GLuint srcElemOffset) {
-  const FuncScope funcScope(*this, "clearBufferuiv");
-  if (IsContextLost()) return;
+    case webgl::AttribBaseType::Float:
+      gl->fClearBufferfv(buffer, drawBuffer,
+                         reinterpret_cast<const float*>(data.data));
+      break;
 
-  if (buffer != LOCAL_GL_COLOR)
-    return ErrorInvalidEnum("`buffer` must be COLOR.");
+    case webgl::AttribBaseType::Int:
+      gl->fClearBufferiv(buffer, drawBuffer,
+                         reinterpret_cast<const int32_t*>(data.data));
+      break;
 
-  if (!ValidateClearBuffer(buffer, drawBuffer, src.Length(), srcElemOffset,
-                           LOCAL_GL_UNSIGNED_INT)) {
-    return;
+    case webgl::AttribBaseType::Uint:
+      gl->fClearBufferuiv(buffer, drawBuffer,
+                          reinterpret_cast<const uint32_t*>(data.data));
+      break;
   }
-
-  ScopedDrawCallWrapper wrapper(*this);
-  const auto ptr = &src[0] + srcElemOffset;
-  gl->fClearBufferuiv(buffer, drawBuffer, ptr);
 }
 
 ////
@@ -165,7 +144,8 @@ void WebGL2Context::ClearBufferfi(GLenum buffer, GLint drawBuffer,
   if (buffer != LOCAL_GL_DEPTH_STENCIL)
     return ErrorInvalidEnum("`buffer` must be DEPTH_STENCIL.");
 
-  if (!ValidateClearBuffer(buffer, drawBuffer, 2, 0, 0)) return;
+  const auto ignored = webgl::AttribBaseType::Float;
+  if (!ValidateClearBuffer(buffer, drawBuffer, ignored)) return;
 
   auto driverDepth = depth;
   auto driverStencil = stencil;

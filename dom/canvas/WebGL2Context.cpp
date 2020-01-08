@@ -22,9 +22,6 @@ UniquePtr<webgl::FormatUsageAuthority> WebGL2Context::CreateFormatUsage(
   return webgl::FormatUsageAuthority::CreateForWebGL2(gl);
 }
 
-/*static*/
-bool WebGL2Context::IsSupported() { return StaticPrefs::webgl_enable_webgl2(); }
-
 ////////////////////////////////////////////////////////////////////////////////
 // WebGL 2 initialisation
 
@@ -120,18 +117,12 @@ bool WebGLContext::InitWebGL2(FailureReason* const out_failReason) {
     return false;
   }
 
-  // we initialise WebGL 2 related stuff.
-  gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
-                   &mGLMaxTransformFeedbackSeparateAttribs);
-  gl->GetUIntegerv(LOCAL_GL_MAX_UNIFORM_BUFFER_BINDINGS,
-                   &mGLMaxUniformBufferBindings);
-
   mGLMinProgramTexelOffset =
       gl->GetIntAs<uint32_t>(LOCAL_GL_MIN_PROGRAM_TEXEL_OFFSET);
   mGLMaxProgramTexelOffset =
       gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_PROGRAM_TEXEL_OFFSET);
 
-  mIndexedUniformBufferBindings.resize(mGLMaxUniformBufferBindings);
+  mIndexedUniformBufferBindings.resize(mLimits->maxUniformBufferBindings);
 
   mDefaultTransformFeedback = new WebGLTransformFeedback(this, 0);
   mBoundTransformFeedback = mDefaultTransformFeedback;
@@ -155,6 +146,27 @@ bool WebGLContext::InitWebGL2(FailureReason* const out_failReason) {
   //////
 
   return true;
+}
+
+// -
+
+/*virtual*/
+bool WebGL2Context::IsTexParamValid(GLenum pname) const {
+  switch (pname) {
+    case LOCAL_GL_TEXTURE_BASE_LEVEL:
+    case LOCAL_GL_TEXTURE_COMPARE_FUNC:
+    case LOCAL_GL_TEXTURE_COMPARE_MODE:
+    case LOCAL_GL_TEXTURE_IMMUTABLE_FORMAT:
+    case LOCAL_GL_TEXTURE_IMMUTABLE_LEVELS:
+    case LOCAL_GL_TEXTURE_MAX_LEVEL:
+    case LOCAL_GL_TEXTURE_WRAP_R:
+    case LOCAL_GL_TEXTURE_MAX_LOD:
+    case LOCAL_GL_TEXTURE_MIN_LOD:
+      return true;
+
+    default:
+      return WebGLContext::IsTexParamValid(pname);
+  }
 }
 
 }  // namespace mozilla

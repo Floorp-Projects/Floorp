@@ -7,6 +7,7 @@
 #define WEBGL_SHADER_VALIDATOR_H_
 
 #include <string>
+#include <unordered_map>
 
 #include "GLDefs.h"
 #include "GLSLANG/ShaderLang.h"
@@ -30,13 +31,12 @@ class ShaderValidatorResults final {
   std::vector<sh::Uniform> mUniforms;
   std::vector<sh::Varying> mVaryings;
 
+  std::unordered_map<std::string, std::string> mNameMap;
+
   int mMaxVaryingVectors = 0;
 
   bool CanLinkTo(const ShaderValidatorResults& vert,
                  nsCString* const out_log) const;
-  bool FindUniformByMappedName(const std::string& mappedName,
-                               std::string* const out_userName,
-                               bool* const out_isArray) const;
   size_t SizeOfIncludingThis(MallocSizeOf) const;
 };
 

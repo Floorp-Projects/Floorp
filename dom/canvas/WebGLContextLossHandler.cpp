@@ -6,26 +6,23 @@
 #include "WebGLContextLossHandler.h"
 #include "WebGLContext.h"
 
+#include "base/message_loop.h"
+
 namespace mozilla {
 
-void MaybeUpdateContextLoss(WeakPtr<WebGLContext> weakCxt) {
-  RefPtr<WebGLContext> cxt = weakCxt.get();
-  if (!cxt) {
-    return;
-  }
-  cxt->UpdateContextLossStatus();
-}
-
-WebGLContextLossHandler::WebGLContextLossHandler(WebGLContext* webgl) {
-  MOZ_ASSERT(webgl);
-  WeakPtr<WebGLContext> weakCxt = webgl;
-  mRunnable = NS_NewRunnableFunction("WebGLContextLossHandler", [weakCxt]() {
-    MaybeUpdateContextLoss(weakCxt);
+WebGLContextLossHandler::WebGLContextLossHandler(WebGLContext* const webgl)
+    : mTimerIsScheduled(false) {
+  const auto weak = WeakPtr<WebGLContext>(webgl);
+  mRunnable = NS_NewRunnableFunction("WebGLContextLossHandler", [weak]() {
+    const auto strong = RefPtr<WebGLContext>(weak);
+    if (!strong) {
+      return;
+    }
+    strong->CheckForContextLoss();
   });
-  MOZ_ASSERT(mRunnable);
 }
 
-WebGLContextLossHandler::~WebGLContextLossHandler() {}
+WebGLContextLossHandler::~WebGLContextLossHandler() = default;
 
 ////////////////////
 

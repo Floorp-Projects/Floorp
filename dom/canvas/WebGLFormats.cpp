@@ -13,6 +13,22 @@
 namespace mozilla {
 namespace webgl {
 
+const char* ToString(const ComponentType type) {
+  switch (type) {
+    case ComponentType::Int:
+      return "Int";
+    case ComponentType::UInt:
+      return "UInt";
+    case ComponentType::NormInt:
+      return "NormInt";
+    case ComponentType::NormUInt:
+      return "NormUInt";
+    case ComponentType::Float:
+      return "Float";
+  }
+  MOZ_CRASH("pacify gcc6 warning");
+}
+
 static TextureBaseType ToBaseType(const ComponentType type) {
   switch (type) {
     case ComponentType::Int:

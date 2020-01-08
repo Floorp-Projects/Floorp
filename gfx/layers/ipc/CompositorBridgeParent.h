@@ -56,7 +56,6 @@ class CancelableRunnable;
 
 namespace dom {
 class HostWebGLCommandSink;
-class HostWebGLErrorSource;
 class WebGLParent;
 }  // namespace dom
 
@@ -304,15 +303,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  virtual PWebGLParent* AllocPWebGLParent(
-      const WebGLVersion& aVersion, const HostWebGLCommandSink& aCommandSink,
-      const HostWebGLErrorSource& aErrorSource) = 0;
-
-  virtual PWebGLParent* AllocPWebGLParent(
-      const WebGLVersion& aVersion, HostWebGLCommandSink&& aCommandSink,
-      HostWebGLErrorSource&& aErrorSource) = 0;
-
-  virtual bool DeallocPWebGLParent(PWebGLParent* aWebGLParent) = 0;
+  virtual already_AddRefed<PWebGLParent> AllocPWebGLParent(
+      const webgl::InitContextDesc&, webgl::InitContextResult* out) = 0;
 
   bool mCanSend;
 
@@ -702,26 +694,11 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   WebRenderBridgeParent* GetWrBridge() { return mWrBridge; }
   webgpu::WebGPUParent* GetWebGPUBridge() { return mWebGPUBridge; }
 
-  PWebGLParent* AllocPWebGLParent(
-      const WebGLVersion& aVersion, const HostWebGLCommandSink& aCommandSink,
-      const HostWebGLErrorSource& aErrorSource) override {
+  already_AddRefed<PWebGLParent> AllocPWebGLParent(
+      const webgl::InitContextDesc&, webgl::InitContextResult*) override {
     MOZ_ASSERT_UNREACHABLE(
         "This message is CrossProcessCompositorBridgeParent only");
     return nullptr;
-  }
-
-  PWebGLParent* AllocPWebGLParent(
-      const WebGLVersion& aVersion, HostWebGLCommandSink&& aCommandSink,
-      HostWebGLErrorSource&& aErrorSource) override {
-    MOZ_ASSERT_UNREACHABLE(
-        "This message is CrossProcessCompositorBridgeParent only");
-    return nullptr;
-  }
-
-  bool DeallocPWebGLParent(PWebGLParent* aWebGLParent) override {
-    MOZ_ASSERT_UNREACHABLE(
-        "This message is CrossProcessCompositorBridgeParent only");
-    return false;
   }
 
  private:

@@ -11,37 +11,26 @@
 
 namespace mozilla {
 
-/**
- * The ClientWebGLExtension... classes back the JS Extension classes.  They
- * direct their calls to the ClientWebGLContext, adding a boolean first
- * parameter, set to true, to indicate that an extension was the origin of
- * the call.
- */
 class ClientWebGLExtensionBase : public nsWrapperCache {
+  friend ClientWebGLContext;
+
+ protected:
+  WeakPtr<ClientWebGLContext> mContext;
+
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ClientWebGLExtensionBase)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ClientWebGLExtensionBase)
 
-  ClientWebGLExtensionBase(RefPtr<ClientWebGLContext> aClient)
-      : mContext(aClient) {}
-
-  ClientWebGLContext* GetParentObject() const { return mContext; }
-
  protected:
-  friend ClientWebGLContext;
-  virtual ~ClientWebGLExtensionBase() {}
-  RefPtr<ClientWebGLContext> mContext;
+  explicit ClientWebGLExtensionBase(ClientWebGLContext& context)
+      : mContext(&context) {}
+  virtual ~ClientWebGLExtensionBase() = default;
+
+ public:
+  auto GetParentObject() const { return mContext.get(); }
 };
 
-// To be used for implementations of ClientWebGLExtensionBase
-#define DECLARE_WEBGL_EXTENSION_GOOP(_Extension)                           \
- protected:                                                                \
-  virtual ~Client##_Extension() {}                                         \
-                                                                           \
- public:                                                                   \
-  virtual JSObject* WrapObject(JSContext* cx,                              \
-                               JS::Handle<JSObject*> givenProto) override; \
-  Client##_Extension(RefPtr<ClientWebGLContext> aClient);
+// -
 
 // To be used for implementations of ClientWebGLExtensionBase
 #define DEFINE_WEBGL_EXTENSION_GOOP(_WebGLBindingType, _Extension)             \
@@ -49,30 +38,34 @@ class ClientWebGLExtensionBase : public nsWrapperCache {
                                            JS::Handle<JSObject*> givenProto) { \
     return dom::_WebGLBindingType##_Binding::Wrap(cx, this, givenProto);       \
   }                                                                            \
-  Client##_Extension::Client##_Extension(RefPtr<ClientWebGLContext> aClient)   \
+  Client##_Extension::Client##_Extension(ClientWebGLContext& aClient)          \
       : ClientWebGLExtensionBase(aClient) {}
 
 // Many extensions have no methods.  This is a shorthand for declaring client
 // versions of such classes.
 #define DECLARE_SIMPLE_WEBGL_EXTENSION(_Extension)                           \
   class Client##_Extension : public ClientWebGLExtensionBase {               \
-   protected:                                                                \
-    virtual ~Client##_Extension() {}                                         \
-                                                                             \
    public:                                                                   \
     virtual JSObject* WrapObject(JSContext* cx,                              \
                                  JS::Handle<JSObject*> givenProto) override; \
-    Client##_Extension(RefPtr<ClientWebGLContext> aClient);                  \
+    Client##_Extension(ClientWebGLContext&);                                 \
   };
 
 ////
 
 class ClientWebGLExtensionCompressedTextureASTC
     : public ClientWebGLExtensionBase {
-  DECLARE_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureASTC)
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  ClientWebGLExtensionCompressedTextureASTC(ClientWebGLContext&);
 
-  void GetSupportedProfiles(dom::Nullable<nsTArray<nsString> >& retval) const {
-    mContext->GetASTCExtensionSupportedProfiles(retval);
+  void GetSupportedProfiles(dom::Nullable<nsTArray<nsString>>& retval) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("getSupportedProfiles: Extension is `invalidated`.");
+      return;
+    }
+    mContext->GetSupportedProfilesASTC(retval);
   }
 };
 
@@ -97,10 +90,17 @@ DECLARE_SIMPLE_WEBGL_EXTENSION(WebGLExtensionCompressedTextureS3TC_SRGB)
 DECLARE_SIMPLE_WEBGL_EXTENSION(WebGLExtensionDebugRendererInfo)
 
 class ClientWebGLExtensionDebugShaders : public ClientWebGLExtensionBase {
-  DECLARE_WEBGL_EXTENSION_GOOP(WebGLExtensionDebugShaders)
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  ClientWebGLExtensionDebugShaders(ClientWebGLContext&);
 
-  void GetTranslatedShaderSource(const ClientWebGLShader& shader,
+  void GetTranslatedShaderSource(const WebGLShaderJS& shader,
                                  nsAString& retval) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("getTranslatedShaderSource: Extension is `invalidated`.");
+      return;
+    }
     mContext->GetTranslatedShaderSource(shader, retval);
   }
 };
@@ -114,10 +114,25 @@ DECLARE_SIMPLE_WEBGL_EXTENSION(WebGLExtensionEXTColorBufferFloat)
 DECLARE_SIMPLE_WEBGL_EXTENSION(WebGLExtensionFragDepth)
 
 class ClientWebGLExtensionLoseContext : public ClientWebGLExtensionBase {
-  DECLARE_WEBGL_EXTENSION_GOOP(WebGLExtensionLoseContext)
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  ClientWebGLExtensionLoseContext(ClientWebGLContext&);
 
-  void LoseContext() { mContext->LoseContext(); }
-  void RestoreContext() { mContext->RestoreContext(); }
+  void LoseContext() {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("loseContext: Extension is `invalidated`.");
+      return;
+    }
+    mContext->EmulateLoseContext();
+  }
+  void RestoreContext() {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("restoreContext: Extension is `invalidated`.");
+      return;
+    }
+    mContext->RestoreContext(webgl::LossStatus::LostManually);
+  }
 };
 
 DECLARE_SIMPLE_WEBGL_EXTENSION(WebGLExtensionSRGB)
@@ -141,86 +156,207 @@ DECLARE_SIMPLE_WEBGL_EXTENSION(WebGLExtensionColorBufferFloat)
 DECLARE_SIMPLE_WEBGL_EXTENSION(WebGLExtensionColorBufferHalfFloat)
 
 class ClientWebGLExtensionDrawBuffers : public ClientWebGLExtensionBase {
-  DECLARE_WEBGL_EXTENSION_GOOP(WebGLExtensionDrawBuffers)
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  ClientWebGLExtensionDrawBuffers(ClientWebGLContext&);
 
   void DrawBuffersWEBGL(const dom::Sequence<GLenum>& buffers) {
-    mContext->DrawBuffers(buffers, true);
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("drawBuffersWEBGL: Extension is `invalidated`.");
+      return;
+    }
+    mContext->DrawBuffers(buffers);
   }
 };
 
 class ClientWebGLExtensionVertexArray : public ClientWebGLExtensionBase {
-  DECLARE_WEBGL_EXTENSION_GOOP(WebGLExtensionVertexArray)
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  ClientWebGLExtensionVertexArray(ClientWebGLContext&);
 
-  already_AddRefed<ClientWebGLVertexArray> CreateVertexArrayOES() {
-    return mContext->CreateVertexArray(true);
+  already_AddRefed<WebGLVertexArrayJS> CreateVertexArrayOES() {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("createVertexArrayOES: Extension is `invalidated`.");
+      return nullptr;
+    }
+    return mContext->CreateVertexArray();
   }
-  void DeleteVertexArrayOES(ClientWebGLVertexArray* array) {
-    mContext->DeleteVertexArray(array, true);
+  void DeleteVertexArrayOES(WebGLVertexArrayJS* array) {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("deleteVertexArrayOES: Extension is `invalidated`.");
+      return;
+    }
+    mContext->DeleteVertexArray(array);
   }
-  bool IsVertexArrayOES(const ClientWebGLVertexArray* array) {
-    return mContext->IsVertexArray(array, true);
+  bool IsVertexArrayOES(const WebGLVertexArrayJS* array) {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("isVertexArrayOES: Extension is `invalidated`.");
+      return false;
+    }
+    return mContext->IsVertexArray(array);
   }
-  void BindVertexArrayOES(ClientWebGLVertexArray* array) {
-    mContext->BindVertexArray(array, true);
+  void BindVertexArrayOES(WebGLVertexArrayJS* array) {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("bindVertexArrayOES: Extension is `invalidated`.");
+      return;
+    }
+    mContext->BindVertexArray(array);
   }
 };
 
 class ClientWebGLExtensionInstancedArrays : public ClientWebGLExtensionBase {
-  DECLARE_WEBGL_EXTENSION_GOOP(WebGLExtensionInstancedArrays)
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  ClientWebGLExtensionInstancedArrays(ClientWebGLContext&);
 
   void DrawArraysInstancedANGLE(GLenum mode, GLint first, GLsizei count,
                                 GLsizei primcount) {
-    mContext->DrawArraysInstanced(mode, first, count, primcount, true);
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("drawArraysInstancedANGLE: Extension is `invalidated`.");
+      return;
+    }
+    mContext->DrawArraysInstanced(mode, first, count, primcount);
   }
   void DrawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type,
                                   WebGLintptr offset, GLsizei primcount) {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("drawElementsInstancedANGLE: Extension is `invalidated`.");
+      return;
+    }
     mContext->DrawElementsInstanced(mode, count, type, offset, primcount,
-                                    WebGLContextEndpoint::drawElementsInstanced,
-                                    true);
+                                    FuncScopeId::drawElementsInstanced);
   }
   void VertexAttribDivisorANGLE(GLuint index, GLuint divisor) {
-    mContext->VertexAttribDivisor(index, divisor, true);
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("vertexAttribDivisorANGLE: Extension is `invalidated`.");
+      return;
+    }
+    mContext->VertexAttribDivisor(index, divisor);
   }
 };
 
 DECLARE_SIMPLE_WEBGL_EXTENSION(WebGLExtensionBlendMinMax)
 
 class ClientWebGLExtensionDisjointTimerQuery : public ClientWebGLExtensionBase {
-  DECLARE_WEBGL_EXTENSION_GOOP(WebGLExtensionDisjointTimerQuery)
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  ClientWebGLExtensionDisjointTimerQuery(ClientWebGLContext&);
 
-  already_AddRefed<ClientWebGLQuery> CreateQueryEXT() const {
-    return mContext->CreateQuery(true);
+  already_AddRefed<WebGLQueryJS> CreateQueryEXT() const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("createQueryEXT: Extension is `invalidated`.");
+      return nullptr;
+    }
+    return mContext->CreateQuery();
   }
-  void DeleteQueryEXT(ClientWebGLQuery* query) const {
-    mContext->DeleteQuery(query, true);
+  void DeleteQueryEXT(WebGLQueryJS* query) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("deleteQueryEXT: Extension is `invalidated`.");
+      return;
+    }
+    mContext->DeleteQuery(query);
   }
-  bool IsQueryEXT(const ClientWebGLQuery* query) const {
-    return mContext->IsQuery(query, true);
+  bool IsQueryEXT(const WebGLQueryJS* query) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("isQueryEXT: Extension is `invalidated`.");
+      return false;
+    }
+    return mContext->IsQuery(query);
   }
-  void BeginQueryEXT(GLenum target, ClientWebGLQuery& query) const {
-    mContext->BeginQuery(target, query, true);
+  void BeginQueryEXT(GLenum target, WebGLQueryJS& query) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("beginQueryEXT: Extension is `invalidated`.");
+      return;
+    }
+    mContext->BeginQuery(target, query);
   }
-  void EndQueryEXT(GLenum target) const { mContext->EndQuery(target, true); }
-  void QueryCounterEXT(ClientWebGLQuery& query, GLenum target) const {
+  void EndQueryEXT(GLenum target) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("endQueryEXT: Extension is `invalidated`.");
+      return;
+    }
+    mContext->EndQuery(target);
+  }
+  void QueryCounterEXT(WebGLQueryJS& query, GLenum target) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("queryCounterEXT: Extension is `invalidated`.");
+      return;
+    }
     mContext->QueryCounter(query, target);
   }
   void GetQueryEXT(JSContext* cx, GLenum target, GLenum pname,
-                   JS::MutableHandleValue retval) const {
-    mContext->GetQuery(cx, target, pname, retval, true);
+                   JS::MutableHandle<JS::Value> retval) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("getQueryEXT: Extension is `invalidated`.");
+      return;
+    }
+    mContext->GetQuery(cx, target, pname, retval);
   }
-  void GetQueryObjectEXT(JSContext* cx, const ClientWebGLQuery& query,
-                         GLenum pname, JS::MutableHandleValue retval) const {
-    mContext->GetQueryParameter(cx, query, pname, retval, true);
+  void GetQueryObjectEXT(JSContext* cx, WebGLQueryJS& query, GLenum pname,
+                         JS::MutableHandle<JS::Value> retval) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("getQueryObjectEXT: Extension is `invalidated`.");
+      return;
+    }
+    mContext->GetQueryParameter(cx, query, pname, retval);
+  }
+};
+
+class ClientWebGLExtensionExplicitPresent : public ClientWebGLExtensionBase {
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  ClientWebGLExtensionExplicitPresent(ClientWebGLContext&);
+
+  void Present() const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("present: Extension is `invalidated`.");
+      return;
+    }
+    mContext->Present();
   }
 };
 
 class ClientWebGLExtensionMOZDebug : public ClientWebGLExtensionBase {
-  DECLARE_WEBGL_EXTENSION_GOOP(WebGLExtensionMOZDebug)
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  ClientWebGLExtensionMOZDebug(ClientWebGLContext&);
 
   void GetParameter(JSContext* cx, GLenum pname,
                     JS::MutableHandle<JS::Value> retval,
                     ErrorResult& er) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning("getParameter: Extension is `invalidated`.");
+      return;
+    }
     mContext->MOZDebugGetParameter(cx, pname, retval, er);
+  }
+};
+
+class ClientWebGLExtensionMultiview : public ClientWebGLExtensionBase {
+ public:
+  virtual JSObject* WrapObject(JSContext* cx,
+                               JS::Handle<JSObject*> givenProto) override;
+  ClientWebGLExtensionMultiview(ClientWebGLContext&);
+
+  void FramebufferTextureMultiviewOVR(const GLenum target,
+                                      const GLenum attachment,
+                                      WebGLTextureJS* const texture,
+                                      const GLint level,
+                                      const GLint baseViewIndex,
+                                      const GLsizei numViews) const {
+    if (MOZ_UNLIKELY(!mContext)) {
+      AutoJsWarning(
+          "framebufferTextureMultiviewOVR: Extension is `invalidated`.");
+      return;
+    }
+    mContext->FramebufferTextureMultiview(target, attachment, texture, level,
+                                          baseViewIndex, numViews);
   }
 };
 

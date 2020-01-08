@@ -1061,24 +1061,7 @@ bool CompositorBridgeChild::DeallocPAPZCTreeManagerChild(
   return true;
 }
 
-dom::PWebGLChild* CompositorBridgeChild::AllocPWebGLChild(
-    const WebGLVersion& aVersion, HostWebGLCommandSink&& aCommandSink,
-    HostWebGLErrorSource&& aErrorSource) {
-  MOZ_CRASH("Should create PWebGLChild outside of IPDL");
-  return nullptr;
-}
-
-dom::PWebGLChild* CompositorBridgeChild::AllocPWebGLChild(
-    const WebGLVersion& aVersion, const HostWebGLCommandSink& aCommandSink,
-    const HostWebGLErrorSource& aErrorSource) {
-  MOZ_CRASH("Should create PWebGLChild outside of IPDL");
-  return nullptr;
-}
-
-bool CompositorBridgeChild::DeallocPWebGLChild(PWebGLChild* aActor) {
-  delete static_cast<dom::WebGLChild*>(aActor);
-  return true;
-}
+// -
 
 void CompositorBridgeChild::WillEndTransaction() { ResetShmemCounter(); }
 

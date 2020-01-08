@@ -8,46 +8,45 @@
 
 #include "mozilla/StaticPtr.h"
 #include "nsIMemoryReporter.h"
+#include <unordered_set>
 
 namespace mozilla {
 
-class WebGLContext;
+class HostWebGLContext;
 
 class WebGLMemoryTracker : public nsIMemoryReporter {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
-  WebGLMemoryTracker();
   static StaticRefPtr<WebGLMemoryTracker> sUniqueInstance;
+
+  static RefPtr<WebGLMemoryTracker> Create();
+
+  static RefPtr<WebGLMemoryTracker> Get() {
+    if (!sUniqueInstance) {
+      sUniqueInstance = WebGLMemoryTracker::Create().get();
+    }
+    return sUniqueInstance;
+  }
 
   // Here we store plain pointers, not RefPtrs: we don't want the
   // WebGLMemoryTracker unique instance to keep alive all
   // WebGLContexts ever created.
-  typedef nsTArray<const WebGLContext*> ContextsArrayType;
-  ContextsArrayType mContexts;
-
-  void InitMemoryReporter();
-
-  static WebGLMemoryTracker* UniqueInstance();
-
-  static ContextsArrayType& Contexts() { return UniqueInstance()->mContexts; }
-
-  friend class WebGLContext;
+  std::unordered_set<const HostWebGLContext*> mContexts;
 
  public:
-  static void AddWebGLContext(const WebGLContext* c) {
-    Contexts().AppendElement(c);
+  static void AddContext(const HostWebGLContext* c) {
+    const auto tracker = Get();
+    tracker->mContexts.insert(c);
   }
 
-  static void RemoveWebGLContext(const WebGLContext* c) {
-    ContextsArrayType& contexts = Contexts();
-    contexts.RemoveElement(c);
-    if (contexts.IsEmpty()) {
-      sUniqueInstance = nullptr;
-    }
+  static void RemoveContext(const HostWebGLContext* c) {
+    const auto tracker = Get();
+    tracker->mContexts.erase(c);
   }
 
  private:
+  WebGLMemoryTracker();
   virtual ~WebGLMemoryTracker();
 
   static int64_t GetTextureMemoryUsed();
@@ -68,7 +67,7 @@ class WebGLMemoryTracker : public nsIMemoryReporter {
 
   static int64_t GetShaderCount();
 
-  static int64_t GetContextCount() { return Contexts().Length(); }
+  static int64_t GetContextCount() { return Get()->mContexts.size(); }
 };
 
 }  // namespace mozilla

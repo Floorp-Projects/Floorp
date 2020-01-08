@@ -34,8 +34,6 @@ WebGLExtensionCompressedTextureES3::WebGLExtensionCompressedTextureES3(
     auto usage = fua->EditUsage(effFormat);
     usage->isFilterable = true;
     fua->AllowSizedTexFormat(sizedFormat, usage);
-
-    webgl_->mCompressedTextureFormats.AppendElement(sizedFormat);
   };
 
 #define FOO(x) LOCAL_GL_##x, webgl::EffectiveFormat::x
@@ -56,7 +54,5 @@ WebGLExtensionCompressedTextureES3::WebGLExtensionCompressedTextureES3(
 
 #undef FOO
 }
-
-WebGLExtensionCompressedTextureES3::~WebGLExtensionCompressedTextureES3() {}
 
 }  // namespace mozilla

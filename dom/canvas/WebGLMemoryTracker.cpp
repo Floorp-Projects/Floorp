@@ -5,14 +5,11 @@
 
 #include "WebGLMemoryTracker.h"
 
+#include "HostWebGLContext.h"
 #include "WebGLBuffer.h"
-#include "WebGLContext.h"
-#include "WebGLVertexAttribData.h"
-#include "WebGLProgram.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLShader.h"
 #include "WebGLTexture.h"
-#include "WebGLUniformLocation.h"
 
 namespace mozilla {
 
@@ -76,35 +73,55 @@ NS_IMPL_ISUPPORTS(WebGLMemoryTracker, nsIMemoryReporter)
 
 StaticRefPtr<WebGLMemoryTracker> WebGLMemoryTracker::sUniqueInstance;
 
-WebGLMemoryTracker* WebGLMemoryTracker::UniqueInstance() {
-  if (!sUniqueInstance) {
-    sUniqueInstance = new WebGLMemoryTracker;
-    sUniqueInstance->InitMemoryReporter();
-  }
-  return sUniqueInstance;
+/*static*/
+RefPtr<WebGLMemoryTracker> WebGLMemoryTracker::Create() {
+  RefPtr<WebGLMemoryTracker> ret = new WebGLMemoryTracker;
+  RegisterWeakMemoryReporter(ret);
+  return ret;
 }
 
-WebGLMemoryTracker::WebGLMemoryTracker() {}
-
-void WebGLMemoryTracker::InitMemoryReporter() {
-  RegisterWeakMemoryReporter(this);
-}
+WebGLMemoryTracker::WebGLMemoryTracker() = default;
 
 WebGLMemoryTracker::~WebGLMemoryTracker() {
   UnregisterWeakMemoryReporter(this);
 }
 
-MOZ_DEFINE_MALLOC_SIZE_OF(WebGLBufferMallocSizeOf)
+// -
+
+/*static*/
+int64_t WebGLMemoryTracker::GetBufferCount() {
+  const auto& contexts = Get()->mContexts;
+  int64_t result = 0;
+  for (const auto& context : contexts) {
+    result += context->mBufferMap.size();
+  }
+  return result;
+}
+
+/*static*/
+int64_t WebGLMemoryTracker::GetBufferMemoryUsed() {
+  const auto& contexts = Get()->mContexts;
+  int64_t result = 0;
+  for (const auto& context : contexts) {
+    for (const auto& pair : context->mBufferMap) {
+      const auto& buffer = *pair.second;
+      result += buffer.mByteLength;
+    }
+  }
+  return result;
+}
 
 int64_t WebGLMemoryTracker::GetBufferCacheMemoryUsed() {
-  const ContextsArrayType& contexts = Contexts();
+  const auto& contexts = Get()->mContexts;
   int64_t result = 0;
-  for (size_t i = 0; i < contexts.Length(); ++i) {
-    for (const WebGLBuffer* buffer = contexts[i]->mBuffers.getFirst(); buffer;
-         buffer = buffer->getNext()) {
-      if (buffer->Content() == WebGLBuffer::Kind::ElementArray) {
-        result += buffer->SizeOfIncludingThis(WebGLBufferMallocSizeOf);
+  for (const auto& context : contexts) {
+    for (const auto& pair : context->mBufferMap) {
+      const auto& buffer = *pair.second;
+      if (buffer.mIndexCache) {
+        result += buffer.mByteLength;
       }
+      result += buffer.mIndexRanges.size() *
+                sizeof(decltype(buffer.mIndexRanges)::value_type);
     }
   }
   return result;
@@ -113,11 +130,11 @@ int64_t WebGLMemoryTracker::GetBufferCacheMemoryUsed() {
 MOZ_DEFINE_MALLOC_SIZE_OF(WebGLShaderMallocSizeOf)
 
 int64_t WebGLMemoryTracker::GetShaderSize() {
-  const ContextsArrayType& contexts = Contexts();
+  const auto& contexts = Get()->mContexts;
   int64_t result = 0;
-  for (size_t i = 0; i < contexts.Length(); ++i) {
-    for (const WebGLShader* shader = contexts[i]->mShaders.getFirst(); shader;
-         shader = shader->getNext()) {
+  for (const auto& context : contexts) {
+    for (const auto& pair : context->mShaderMap) {
+      const auto& shader = pair.second;
       result += shader->SizeOfIncludingThis(WebGLShaderMallocSizeOf);
     }
   }
@@ -126,11 +143,11 @@ int64_t WebGLMemoryTracker::GetShaderSize() {
 
 /*static*/
 int64_t WebGLMemoryTracker::GetTextureMemoryUsed() {
-  const ContextsArrayType& contexts = Contexts();
+  const auto& contexts = Get()->mContexts;
   int64_t result = 0;
-  for (size_t i = 0; i < contexts.Length(); ++i) {
-    for (const WebGLTexture* texture = contexts[i]->mTextures.getFirst();
-         texture; texture = texture->getNext()) {
+  for (const auto& context : contexts) {
+    for (const auto& pair : context->mTextureMap) {
+      const auto& texture = pair.second;
       result += texture->MemoryUsage();
     }
   }
@@ -139,50 +156,21 @@ int64_t WebGLMemoryTracker::GetTextureMemoryUsed() {
 
 /*static*/
 int64_t WebGLMemoryTracker::GetTextureCount() {
-  const ContextsArrayType& contexts = Contexts();
+  const auto& contexts = Get()->mContexts;
   int64_t result = 0;
-  for (size_t i = 0; i < contexts.Length(); ++i) {
-    for (const WebGLTexture* texture = contexts[i]->mTextures.getFirst();
-         texture; texture = texture->getNext()) {
-      result++;
-    }
-  }
-  return result;
-}
-
-/*static*/
-int64_t WebGLMemoryTracker::GetBufferMemoryUsed() {
-  const ContextsArrayType& contexts = Contexts();
-  int64_t result = 0;
-  for (size_t i = 0; i < contexts.Length(); ++i) {
-    for (const WebGLBuffer* buffer = contexts[i]->mBuffers.getFirst(); buffer;
-         buffer = buffer->getNext()) {
-      result += buffer->ByteLength();
-    }
-  }
-  return result;
-}
-
-/*static*/
-int64_t WebGLMemoryTracker::GetBufferCount() {
-  const ContextsArrayType& contexts = Contexts();
-  int64_t result = 0;
-  for (size_t i = 0; i < contexts.Length(); ++i) {
-    for (const WebGLBuffer* buffer = contexts[i]->mBuffers.getFirst(); buffer;
-         buffer = buffer->getNext()) {
-      result++;
-    }
+  for (const auto& context : contexts) {
+    result += context->mTextureMap.size();
   }
   return result;
 }
 
 /*static*/
 int64_t WebGLMemoryTracker::GetRenderbufferMemoryUsed() {
-  const ContextsArrayType& contexts = Contexts();
+  const auto& contexts = Get()->mContexts;
   int64_t result = 0;
-  for (size_t i = 0; i < contexts.Length(); ++i) {
-    for (const WebGLRenderbuffer* rb = contexts[i]->mRenderbuffers.getFirst();
-         rb; rb = rb->getNext()) {
+  for (const auto& context : contexts) {
+    for (const auto& pair : context->mRenderbufferMap) {
+      const auto& rb = pair.second;
       result += rb->MemoryUsage();
     }
   }
@@ -191,26 +179,20 @@ int64_t WebGLMemoryTracker::GetRenderbufferMemoryUsed() {
 
 /*static*/
 int64_t WebGLMemoryTracker::GetRenderbufferCount() {
-  const ContextsArrayType& contexts = Contexts();
+  const auto& contexts = Get()->mContexts;
   int64_t result = 0;
-  for (size_t i = 0; i < contexts.Length(); ++i) {
-    for (const WebGLRenderbuffer* rb = contexts[i]->mRenderbuffers.getFirst();
-         rb; rb = rb->getNext()) {
-      result++;
-    }
+  for (const auto& context : contexts) {
+    result += context->mRenderbufferMap.size();
   }
   return result;
 }
 
 /*static*/
 int64_t WebGLMemoryTracker::GetShaderCount() {
-  const ContextsArrayType& contexts = Contexts();
+  const auto& contexts = Get()->mContexts;
   int64_t result = 0;
-  for (size_t i = 0; i < contexts.Length(); ++i) {
-    for (const WebGLShader* shader = contexts[i]->mShaders.getFirst(); shader;
-         shader = shader->getNext()) {
-      result++;
-    }
+  for (const auto& context : contexts) {
+    result += context->mShaderMap.size();
   }
   return result;
 }

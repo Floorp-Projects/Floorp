@@ -684,15 +684,23 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
       return BlitImage(static_cast<PlanarYCbCrImage*>(srcImage), destSize,
                        destOrigin);
 
-#ifdef MOZ_WIDGET_ANDROID
     case ImageFormat::SURFACE_TEXTURE:
+#ifdef MOZ_WIDGET_ANDROID
       return BlitImage(static_cast<layers::SurfaceTextureImage*>(srcImage),
                        destSize, destOrigin);
+#else
+      MOZ_ASSERT(false);
+      return false;
 #endif
-#ifdef XP_MACOSX
+
     case ImageFormat::MAC_IOSURFACE:
+#ifdef XP_MACOSX
       return BlitImage(srcImage->AsMacIOSurfaceImage(), destSize, destOrigin);
+#else
+      MOZ_ASSERT(false);
+      return false;
 #endif
+
 #ifdef XP_WIN
     case ImageFormat::GPU_VIDEO:
       return BlitImage(static_cast<layers::GPUVideoImage*>(srcImage), destSize,
@@ -705,11 +713,21 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
                        destSize, destOrigin);
     case ImageFormat::D3D9_RGB32_TEXTURE:
       return false;  // todo
-#endif
-    default:
-      gfxCriticalError() << "Unhandled srcImage->GetFormat(): "
-                         << uint32_t(srcImage->GetFormat());
+#else
+    case ImageFormat::GPU_VIDEO:
+    case ImageFormat::D3D11_SHARE_HANDLE_TEXTURE:
+    case ImageFormat::D3D11_YCBCR_IMAGE:
+    case ImageFormat::D3D9_RGB32_TEXTURE:
+      MOZ_ASSERT(false);
       return false;
+#endif
+
+    case ImageFormat::CAIRO_SURFACE:
+    case ImageFormat::NV_IMAGE:
+    case ImageFormat::OVERLAY_IMAGE:
+    case ImageFormat::SHARED_RGB:
+    case ImageFormat::TEXTURE_WRAPPER:
+      return false;  // todo
   }
 }
 

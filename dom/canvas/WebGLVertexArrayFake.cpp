@@ -11,18 +11,18 @@
 namespace mozilla {
 
 WebGLVertexArrayFake::WebGLVertexArrayFake(WebGLContext* webgl)
-    : WebGLVertexArray(webgl, 0) {}
+    : WebGLVertexArray(webgl) {}
 
 void WebGLVertexArrayFake::BindVertexArray() {
   // Go through and re-bind all buffers and setup all
   // vertex attribute pointers
   gl::GLContext* gl = mContext->gl;
 
-  WebGLRefPtr<WebGLVertexArray> prevVertexArray = mContext->mBoundVertexArray;
+  RefPtr<WebGLVertexArray> prevVertexArray = mContext->mBoundVertexArray;
 
   mContext->mBoundVertexArray = this;
 
-  WebGLRefPtr<WebGLBuffer> prevBuffer = mContext->mBoundArrayBuffer;
+  RefPtr<WebGLBuffer> prevBuffer = mContext->mBoundArrayBuffer;
   mContext->BindBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
 
   size_t i = 0;

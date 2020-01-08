@@ -9,6 +9,8 @@ include protocol PCompositorBridge;
 include protocol PLayerTransaction;
 
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::webgl::ContextLossReason from "mozilla/dom/WebGLIpdl.h";
+using std::string from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -18,7 +20,7 @@ namespace dom {
  * command from the content process, and a WebGLParent in the compositor
  * process that runs the commands.
  */
-sync protocol PWebGL
+sync refcounted protocol PWebGL
 {
   manager PCompositorBridge;
 
@@ -30,8 +32,10 @@ parent:
                          CompositableHandle aHandle);
 
 child:
+  async JsWarning(string text);
+
   // Tell client that this queue needs to be shut down
-  async QueueFailed();
+  async OnContextLoss(ContextLossReason aReason);
 };
 
 } // dom

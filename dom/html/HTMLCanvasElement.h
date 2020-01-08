@@ -339,8 +339,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
   layers::OOPCanvasRenderer* GetOOPCanvasRenderer();
 
-  PWebGLChild* GetWebGLChild();
-
  protected:
   virtual ~HTMLCanvasElement();
 
@@ -371,8 +369,10 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
                                           const nsAttrValueOrString& aValue,
                                           bool aNotify) override;
 
-  ClientWebGLContext* GetClientWebGLContext();
+ public:
+  ClientWebGLContext* GetWebGLContext();
 
+ protected:
   bool mResetLayer;
   bool mMaybeModified;  // we fetched the context, so we may have written to the
                         // canvas

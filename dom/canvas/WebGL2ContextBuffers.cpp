@@ -16,9 +16,8 @@ namespace mozilla {
 // Buffer objects
 
 void WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
-                                      WebGLintptr readOffset,
-                                      WebGLintptr writeOffset,
-                                      WebGLsizeiptr size) {
+                                      uint64_t readOffset, uint64_t writeOffset,
+                                      uint64_t size) const {
   const FuncScope funcScope(*this, "copyBufferSubData");
   if (IsContextLost()) return;
 
@@ -27,12 +26,6 @@ void WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
 
   const auto& writeBuffer = ValidateBufferSelection(writeTarget);
   if (!writeBuffer) return;
-
-  if (!ValidateNonNegative("readOffset", readOffset) ||
-      !ValidateNonNegative("writeOffset", writeOffset) ||
-      !ValidateNonNegative("size", size)) {
-    return;
-  }
 
   if (!CheckedInt<GLintptr>(readOffset).isValid() ||
       !CheckedInt<GLintptr>(writeOffset).isValid() ||
@@ -85,22 +78,23 @@ void WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
   writeBuffer->ResetLastUpdateFenceId();
 }
 
-Maybe<UniquePtr<RawBuffer<>>> WebGL2Context::GetBufferSubData(
-    GLenum target, WebGLintptr srcByteOffset, size_t byteLen) {
+void WebGL2Context::GetBufferSubData(GLenum target, uint64_t srcByteOffset,
+                                     const Range<uint8_t>& dest) const {
   const FuncScope funcScope(*this, "getBufferSubData");
-  if (IsContextLost()) return Nothing();
+  if (IsContextLost()) return;
 
   const auto& buffer = ValidateBufferSelection(target);
-  if (!buffer) return Nothing();
+  if (!buffer) return;
 
-  if (!buffer->ValidateRange(srcByteOffset, byteLen)) return Nothing();
+  const auto byteLen = dest.length();
+  if (!buffer->ValidateRange(srcByteOffset, byteLen)) return;
 
   ////
 
   if (!CheckedInt<GLintptr>(srcByteOffset).isValid() ||
       !CheckedInt<GLsizeiptr>(byteLen).isValid()) {
     ErrorOutOfMemory("offset or size too large for platform.");
-    return Nothing();
+    return;
   }
   const GLsizeiptr glByteLen(byteLen);
 
@@ -126,12 +120,6 @@ Maybe<UniquePtr<RawBuffer<>>> WebGL2Context::GetBufferSubData(
 
   ////
 
-  uint8_t* bytes = new uint8_t[byteLen];
-  if (!bytes) {
-    ErrorOutOfMemory("Could not allocate temp array");
-    return Nothing();
-  }
-
   const ScopedLazyBind readBind(gl, target, buffer);
 
   if (byteLen) {
@@ -145,7 +133,7 @@ Maybe<UniquePtr<RawBuffer<>>> WebGL2Context::GetBufferSubData(
 
     const auto mappedBytes = gl->fMapBufferRange(
         mapTarget, srcByteOffset, glByteLen, LOCAL_GL_MAP_READ_BIT);
-    memcpy(bytes, mappedBytes, byteLen);
+    memcpy(dest.begin().get(), mappedBytes, dest.length());
     gl->fUnmapBuffer(mapTarget);
 
     if (isTF) {
@@ -156,9 +144,6 @@ Maybe<UniquePtr<RawBuffer<>>> WebGL2Context::GetBufferSubData(
       gl->fBindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, tfo);
     }
   }
-
-  UniquePtr<RawBuffer<>> ret = MakeUnique<RawBuffer<>>(byteLen, bytes, true);
-  return Some(std::move(ret));
 }
 
 }  // namespace mozilla
