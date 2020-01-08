@@ -34,6 +34,11 @@ logger.warning("The Glean sdk_generator.gradle script is deprecated. Use the Gle
 // so that it will be shared between all libraries that use Glean.  This is
 // important because it is approximately 300MB in installed size.
 
+///////////////////////////////////////////////////////////////////////////
+// NOTE: SINCE THIS FILE HAS BEEN DEPRECATED, THIS VERSION SHOULD NO LONGER BE
+// UPDATED. THE CANONICAL SOURCE FOR THE glean_parser VERSION IS IN THE
+// glean-gradle-plugin IN https://github.com/mozilla/glean
+///////////////////////////////////////////////////////////////////////////
 String GLEAN_PARSER_VERSION = "1.15.3"
 // The version of Miniconda is explicitly specified.
 // Miniconda3-4.5.12 is known to not work on Windows.
