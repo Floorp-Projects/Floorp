@@ -12,7 +12,8 @@ namespace widget {
 
 CompositorWidgetChild::CompositorWidgetChild(
     RefPtr<CompositorVsyncDispatcher> aVsyncDispatcher,
-    RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver)
+    RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver,
+    const CompositorWidgetInitData&)
     : mVsyncDispatcher(aVsyncDispatcher), mVsyncObserver(aVsyncObserver) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!gfxPlatform::IsHeadless());

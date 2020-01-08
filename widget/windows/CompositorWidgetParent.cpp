@@ -52,12 +52,6 @@ CompositorWidgetParent::CompositorWidgetParent(
 
 CompositorWidgetParent::~CompositorWidgetParent() {}
 
-void CompositorWidgetParent::OnDestroyWindow() {
-  MutexAutoLock lock(mTransparentSurfaceLock);
-  mTransparentSurface = nullptr;
-  mMemoryDC = nullptr;
-}
-
 bool CompositorWidgetParent::PreRender(WidgetRenderingContext* aContext) {
   // This can block waiting for WM_SETTEXT to finish
   // Using PreRender is unnecessarily pessimistic because
@@ -210,10 +204,6 @@ bool CompositorWidgetParent::InitCompositor(layers::Compositor* aCompositor) {
   return true;
 }
 
-void CompositorWidgetParent::EnterPresentLock() { mPresentLock.Enter(); }
-
-void CompositorWidgetParent::LeavePresentLock() { mPresentLock.Leave(); }
-
 RefPtr<gfxASurface> CompositorWidgetParent::EnsureTransparentSurface() {
   mTransparentSurfaceLock.AssertCurrentThreadOwns();
   MOZ_ASSERT(mTransparencyMode == eTransparencyTransparent);
@@ -239,21 +229,6 @@ void CompositorWidgetParent::CreateTransparentSurface(
   mMemoryDC = surface->GetDC();
 }
 
-void CompositorWidgetParent::UpdateTransparency(nsTransparencyMode aMode) {
-  MutexAutoLock lock(mTransparentSurfaceLock);
-  if (mTransparencyMode == aMode) {
-    return;
-  }
-
-  mTransparencyMode = aMode;
-  mTransparentSurface = nullptr;
-  mMemoryDC = nullptr;
-
-  if (mTransparencyMode == eTransparencyTransparent) {
-    EnsureTransparentSurface();
-  }
-}
-
 bool CompositorWidgetParent::HasGlass() const {
   MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread() ||
              wr::RenderThread::IsInRenderThread());
@@ -261,26 +236,6 @@ bool CompositorWidgetParent::HasGlass() const {
   nsTransparencyMode transparencyMode = mTransparencyMode;
   return transparencyMode == eTransparencyGlass ||
          transparencyMode == eTransparencyBorderlessGlass;
-}
-
-void CompositorWidgetParent::ClearTransparentWindow() {
-  MutexAutoLock lock(mTransparentSurfaceLock);
-  if (!mTransparentSurface) {
-    return;
-  }
-
-  EnsureTransparentSurface();
-
-  IntSize size = mTransparentSurface->GetSize();
-  if (!size.IsEmpty()) {
-    RefPtr<DrawTarget> drawTarget =
-        gfxPlatform::CreateDrawTargetForSurface(mTransparentSurface, size);
-    if (!drawTarget) {
-      return;
-    }
-    drawTarget->ClearRect(Rect(0, 0, size.width, size.height));
-    RedrawTransparentWindow();
-  }
 }
 
 bool CompositorWidgetParent::RedrawTransparentWindow() {
@@ -314,23 +269,50 @@ void CompositorWidgetParent::FreeWindowSurface(HDC dc) {
 bool CompositorWidgetParent::IsHidden() const { return ::IsIconic(mWnd); }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvEnterPresentLock() {
-  EnterPresentLock();
+  mPresentLock.Enter();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvLeavePresentLock() {
-  LeavePresentLock();
+  mPresentLock.Leave();
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvUpdateTransparency(
     const nsTransparencyMode& aMode) {
-  UpdateTransparency(aMode);
+  MutexAutoLock lock(mTransparentSurfaceLock);
+  if (mTransparencyMode == aMode) {
+    return IPC_OK();
+  }
+
+  mTransparencyMode = aMode;
+  mTransparentSurface = nullptr;
+  mMemoryDC = nullptr;
+
+  if (mTransparencyMode == eTransparencyTransparent) {
+    EnsureTransparentSurface();
+  }
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvClearTransparentWindow() {
-  ClearTransparentWindow();
+  MutexAutoLock lock(mTransparentSurfaceLock);
+  if (!mTransparentSurface) {
+    return IPC_OK();
+  }
+
+  EnsureTransparentSurface();
+
+  IntSize size = mTransparentSurface->GetSize();
+  if (!size.IsEmpty()) {
+    RefPtr<DrawTarget> drawTarget =
+        gfxPlatform::CreateDrawTargetForSurface(mTransparentSurface, size);
+    if (!drawTarget) {
+      return IPC_OK();
+    }
+    drawTarget->ClearRect(Rect(0, 0, size.width, size.height));
+    RedrawTransparentWindow();
+  }
   return IPC_OK();
 }
 
