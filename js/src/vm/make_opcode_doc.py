@@ -63,13 +63,6 @@ except ImportError as exc:
 SOURCE_BASE = 'http://dxr.mozilla.org/mozilla-central/source'
 
 
-def override(value, override_value):
-    if override_value != '':
-        return override_value
-
-    return value
-
-
 def format_flags(flags):
     flags = [flag for flag in flags if flag != 'JOF_BYTE']
     if len(flags) == 0:
@@ -115,8 +108,7 @@ def print_opcode(opcode):
         names='<br>'.join(names),
         values='<br>'.join(values),
         operands=escape(opcode.operands) or "&nbsp;",
-        length=escape(override(opcode.length,
-                               opcode.length_override)),
+        length=escape(opcode.length),
         stack_uses=escape(opcode.stack_uses) or "&nbsp;",
         stack_defs=escape(opcode.stack_defs) or "&nbsp;",
         desc=markdown.markdown(opcode.desc)))
