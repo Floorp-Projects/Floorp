@@ -3811,11 +3811,11 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
 
 static void SetFlagsOnSubtree(nsIContent* aNode, uintptr_t aFlagsToSet) {
 #ifdef DEBUG
-  // Make sure that the node passed to us doesn't have any XBL children
+  // Make sure that the node passed to us doesn't have any Shadow DOM children
   {
     FlattenedChildIterator iter(aNode);
-    NS_ASSERTION(!iter.XBLInvolved() || !iter.GetNextChild(),
-                 "The node should not have any XBL children");
+    NS_ASSERTION(!iter.ShadowDOMInvolved() || !iter.GetNextChild(),
+                 "The node should not have any Shadow DOM children");
   }
 #endif
 
@@ -5374,7 +5374,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
       AddFrameConstructionItems(aState, child, aSuppressWhiteSpaceOptimizations,
                                 insertion, aItems, aFlags);
     }
-    aItems.SetParentHasNoXBLChildren(!iter.XBLInvolved());
+    aItems.SetParentHasNoXBLChildren(!iter.ShadowDOMInvolved());
 
     CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
                                *aComputedStyle, PseudoStyleType::after, aItems);
@@ -6212,7 +6212,7 @@ nsIFrame* nsCSSFrameConstructor::GetInsertionPrevSibling(
   // XBL insertion point is involved, we'll need to use _that_ to find
   // the preceding frame.
   FlattenedChildIterator iter(aInsertion->mContainer);
-  if (iter.XBLInvolved() || !aChild->IsRootOfAnonymousSubtree()) {
+  if (iter.ShadowDOMInvolved() || !aChild->IsRootOfAnonymousSubtree()) {
     // The check for IsRootOfAnonymousSubtree() is because editor is
     // severely broken and calls us directly for native anonymous
     // nodes that it creates.
@@ -6742,7 +6742,8 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   LayoutFrameType frameType = parentFrame->Type();
 
   FlattenedChildIterator iter(insertion.mContainer);
-  const bool haveNoXBLChildren = !iter.XBLInvolved() || !iter.GetNextChild();
+  const bool haveNoXBLChildren =
+      !iter.ShadowDOMInvolved() || !iter.GetNextChild();
 
   AutoFrameConstructionItemList items(this);
   if (aFirstNewContent->GetPreviousSibling() &&
@@ -7164,7 +7165,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(
   AutoFrameConstructionItemList items(this);
   ParentType parentType = GetParentType(frameType);
   FlattenedChildIterator iter(insertion.mContainer);
-  bool haveNoXBLChildren = !iter.XBLInvolved() || !iter.GetNextChild();
+  bool haveNoXBLChildren = !iter.ShadowDOMInvolved() || !iter.GetNextChild();
   if (aStartChild->GetPreviousSibling() && parentType == eTypeBlock &&
       haveNoXBLChildren) {
     // If there's a text node in the normal content list just before the
@@ -9634,13 +9635,13 @@ void nsCSSFrameConstructor::ProcessChildren(
       MOZ_ASSERT(insertion.mContainer == GetInsertionPoint(child).mContainer,
                  "GetInsertionPoint should agree with us");
       if (addChildItems) {
-        AddFrameConstructionItems(aState, child, iter.XBLInvolved(), insertion,
-                                  itemsToConstruct);
+        AddFrameConstructionItems(aState, child, iter.ShadowDOMInvolved(),
+                                  insertion, itemsToConstruct);
       } else {
         ClearLazyBits(child, child->GetNextSibling());
       }
     }
-    itemsToConstruct.SetParentHasNoXBLChildren(!iter.XBLInvolved());
+    itemsToConstruct.SetParentHasNoXBLChildren(!iter.ShadowDOMInvolved());
 
     if (aCanHaveGeneratedContent) {
       // Probe for generated content after
@@ -11116,7 +11117,7 @@ void nsCSSFrameConstructor::BuildInlineChildItems(
   FlattenedChildIterator iter(parentContent);
   for (nsIContent* content = iter.GetNextChild(); content;
        content = iter.GetNextChild()) {
-    AddFrameConstructionItems(aState, content, iter.XBLInvolved(),
+    AddFrameConstructionItems(aState, content, iter.ShadowDOMInvolved(),
                               InsertionPoint(), aParentItem.mChildItems, flags);
   }
 
