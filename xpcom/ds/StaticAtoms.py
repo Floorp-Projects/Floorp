@@ -2385,7 +2385,6 @@ STATIC_ATOMS = [
     Atom("nsuri_xhtml", "http://www.w3.org/1999/xhtml"),
     Atom("nsuri_xlink", "http://www.w3.org/1999/xlink"),
     Atom("nsuri_xslt", "http://www.w3.org/1999/XSL/Transform"),
-    Atom("nsuri_xbl", "http://www.mozilla.org/xbl"),
     Atom("nsuri_mathml", "http://www.w3.org/1998/Math/MathML"),
     Atom("nsuri_rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
     Atom("nsuri_xul", "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"),

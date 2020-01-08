@@ -1699,8 +1699,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
 
     static const char* kNSURIs[] = {" ([none])", " (xmlns)",  " (xml)",
                                     " (xhtml)",  " (XLink)",  " (XSLT)",
-                                    " (XBL)",    " (MathML)", " (RDF)",
-                                    " (XUL)",    " (SVG)",    " (XML Events)"};
+                                    " (MathML)", " (RDF)", " (XUL)",
+                                    " (SVG)",    " (XML Events)"};
     const char* nsuri = nsid < ArrayLength(kNSURIs) ? kNSURIs[nsid] : "";
     SprintfLiteral(name, "FragmentOrElement%s %s%s%s%s %s", nsuri,
                    localName.get(), NS_ConvertUTF16toUTF8(id).get(),

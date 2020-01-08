@@ -2082,8 +2082,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
     nsAutoCString uri;
     if (tmp->mDocumentURI) uri = tmp->mDocumentURI->GetSpecOrDefault();
     static const char* kNSURIs[] = {"([none])", "(xmlns)", "(xml)", "(xhtml)",
-                                    "(XLink)",  "(XSLT)",  "(XBL)", "(MathML)",
-                                    "(RDF)",    "(XUL)"};
+                                    "(XLink)",  "(XSLT)", "(MathML)", "(RDF)",
+                                    "(XUL)"};
     if (nsid < ArrayLength(kNSURIs)) {
       SprintfLiteral(name, "Document %s %s %s", loadedAsData.get(),
                      kNSURIs[nsid], uri.get());

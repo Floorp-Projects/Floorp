@@ -112,8 +112,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(NodeInfo)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(NodeInfo)
 
 static const char* kNodeInfoNSURIs[] = {
-    " ([none])", " (xmlns)", " (xml)",    " (xhtml)", " (XLink)",
-    " (XSLT)",   " (XBL)",   " (MathML)", " (RDF)",   " (XUL)"};
+    " ([none])", " (xmlns)",  " (xml)", " (xhtml)", " (XLink)",
+    " (XSLT)",   " (MathML)", " (RDF)", " (XUL)"};
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(NodeInfo)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
