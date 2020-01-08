@@ -26,6 +26,8 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
+#include <type_traits>
+
 class nsIPrincipal;
 class nsWrapperCache;
 
@@ -61,13 +63,15 @@ struct DictionaryBase {
 };
 
 template <typename T>
-inline typename EnableIf<std::is_base_of<DictionaryBase, T>::value, void>::Type
+inline typename std::enable_if<std::is_base_of<DictionaryBase, T>::value,
+                               void>::type
 ImplCycleCollectionUnlink(T& aDictionary) {
   aDictionary.UnlinkForCC();
 }
 
 template <typename T>
-inline typename EnableIf<std::is_base_of<DictionaryBase, T>::value, void>::Type
+inline typename std::enable_if<std::is_base_of<DictionaryBase, T>::value,
+                               void>::type
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             T& aDictionary, const char* aName,
                             uint32_t aFlags = 0) {
@@ -75,8 +79,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 // Struct that serves as a base class for all typed arrays and array buffers and
-// array buffer views.  Particularly useful so we can use std::is_base_of to detect
-// typed array/buffer/view template arguments.
+// array buffer views.  Particularly useful so we can use std::is_base_of to
+// detect typed array/buffer/view template arguments.
 struct AllTypedArraysBase {};
 
 // Struct that serves as a base class for all owning unions.
