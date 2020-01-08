@@ -268,7 +268,7 @@ class PageloaderTest(Test):
             'format_pagename', 'filters', 'preferences', 'extensions', 'setup', 'cleanup',
             'lower_is_better', 'alert_threshold', 'unit', 'webextensions', 'profile',
             'suite_should_alert', 'subtest_alerts', 'perfherder_framework', 'pdfpaint',
-            'webextensions_folder']
+            'webextensions_folder', 'a11y']
 
 
 class QuantumPageloadTest(PageloaderTest):
@@ -840,6 +840,7 @@ class a11yr(PageloaderTest):
     preferences = {'dom.send_after_paint_to_content': False}
     unit = 'ms'
     alert_threshold = 5.0
+    a11y = True
 
 
 class WebkitBenchmark(PageloaderTest):

@@ -49,6 +49,7 @@ var scrollTest = false;
 var profilingInfo = false;
 var baseVsRef = false;
 var useBrowserChrome = false;
+var useA11y = false;
 
 var isIdleCallbackPending = false;
 
@@ -146,6 +147,7 @@ function plInit() {
     loadNoCache = Services.prefs.getBoolPref("talos.tploadnocache", false);
     scrollTest = Services.prefs.getBoolPref("talos.tpscrolltest", false);
     useBrowserChrome = Services.prefs.getBoolPref("talos.tpchrome", false);
+    useA11y = Services.prefs.getBoolPref("talos.a11y", false);
 
     // for pageloader tests the profiling info is found in an env variable
     // because it is not available early enough to set it as a browser pref
@@ -304,6 +306,13 @@ function plInit() {
           false,
           true
         );
+        if (useA11y) {
+          content.selectedBrowser.messageManager.loadFrameScript(
+            "chrome://pageloader/content/a11y.js",
+            false,
+            true
+          );
+        }
 
         // Ensure that any webextensions that need to do setup have a chance
         // to do so. e.g. the 'tabswitch' talos test registers a about:tabswitch
