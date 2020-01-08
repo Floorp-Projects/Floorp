@@ -303,6 +303,7 @@ button > hbox > label {
 
 #downloadFolder {
   -moz-box-flex: 1;
+  margin-block: 4px;
   margin-inline-start: 0;
   padding-inline-start: 30px;
   background-repeat: no-repeat;
