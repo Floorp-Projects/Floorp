@@ -1503,8 +1503,9 @@ void AutoEnterOOMUnsafeRegion::crash(const char* reason) {
   MOZ_CRASH_UNSAFE(msgbuf);
 }
 
-AutoEnterOOMUnsafeRegion::AnnotateOOMAllocationSizeCallback
-    AutoEnterOOMUnsafeRegion::annotateOOMSizeCallback = nullptr;
+mozilla::Atomic<AutoEnterOOMUnsafeRegion::AnnotateOOMAllocationSizeCallback,
+                mozilla::Relaxed>
+    AutoEnterOOMUnsafeRegion::annotateOOMSizeCallback(nullptr);
 
 void AutoEnterOOMUnsafeRegion::crash(size_t size, const char* reason) {
   {
