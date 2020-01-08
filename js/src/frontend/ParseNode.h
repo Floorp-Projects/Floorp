@@ -42,6 +42,9 @@
 //   garbage-collected.
 
 namespace js {
+
+class ArrayObject;
+
 namespace frontend {
 
 class ParseContext;
@@ -739,7 +742,7 @@ class ParseNode {
   // True iff this is a for-in/of loop variable declaration (var/let/const).
   inline bool isForLoopDeclaration() const;
 
-  MOZ_MUST_USE bool getConstantValue(JSContext* cx, MutableHandleValue vp);
+  MOZ_MUST_USE ArrayObject* getConstantValue(JSContext* cx);
   inline bool isConstant();
 
   template <class NodeType>
@@ -1948,8 +1951,8 @@ class CallSiteNode : public ListNode {
     return match;
   }
 
-  MOZ_MUST_USE bool getRawArrayValue(JSContext* cx, MutableHandleValue vp) {
-    return head()->getConstantValue(cx, vp);
+  MOZ_MUST_USE ArrayObject* getRawArrayValue(JSContext* cx) {
+    return head()->getConstantValue(cx);
   }
 
   ListNode* rawNodes() const {
