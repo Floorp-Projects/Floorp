@@ -839,9 +839,8 @@ static Maybe<TransformData> CreateAnimationData(
 
 static void AddNonAnimatingTransformLikePropertiesStyles(
     const nsCSSPropertyIDSet& aNonAnimatingProperties, nsIFrame* aFrame,
-    const Maybe<TransformData>& aData, Send aSendFlag,
-    AnimationInfo& aAnimationInfo) {
-  auto appendFakeAnimation = [&aAnimationInfo, &aData, aSendFlag](
+    Send aSendFlag, AnimationInfo& aAnimationInfo) {
+  auto appendFakeAnimation = [&aAnimationInfo, aSendFlag](
                                  nsCSSPropertyID aProperty,
                                  Animatable&& aBaseStyle) {
     layers::Animation* animation =
@@ -850,7 +849,6 @@ static void AddNonAnimatingTransformLikePropertiesStyles(
             : aAnimationInfo.AddAnimation();
     animation->property() = aProperty;
     animation->baseStyle() = std::move(aBaseStyle);
-    animation->data() = aData;
     animation->easingFunction() = null_t();
     animation->isNotAnimating() = true;
   };
@@ -963,10 +961,7 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
     return;
   }
 
-  // FIXME: Bug 1591629: We create TransformData for all animating properties
-  // and copy it to every animation property, and pass them through IPC. We
-  // should avoid the duplicates.
-  const Maybe<TransformData> data =
+  Maybe<TransformData> data =
       CreateAnimationData(aFrame, aItem, aType, aLayersBackend);
   const HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>>
       compositorAnimations =
@@ -989,6 +984,11 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
     bool added =
         AddAnimationsForProperty(aFrame, effects, iter.get().value(), data,
                                  iter.get().key(), aSendFlag, aAnimationInfo);
+    if (added && data) {
+      // Only copy TrasnfromData in the first animation property.
+      data.reset();
+    }
+
     if (hasMultipleTransformLikeProperties && added) {
       nonAnimatingProperties.RemoveProperty(iter.get().key());
     }
@@ -1009,8 +1009,8 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
       !nonAnimatingProperties.Equals(
           nsCSSPropertyIDSet::TransformLikeProperties()) &&
       !nonAnimatingProperties.IsEmpty()) {
-    AddNonAnimatingTransformLikePropertiesStyles(
-        nonAnimatingProperties, aFrame, data, aSendFlag, aAnimationInfo);
+    AddNonAnimatingTransformLikePropertiesStyles(nonAnimatingProperties, aFrame,
+                                                 aSendFlag, aAnimationInfo);
   }
 }
 

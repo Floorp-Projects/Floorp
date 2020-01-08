@@ -729,18 +729,12 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvGetTransform(
   float scale = 1;
   Point3D scaledOrigin;
   Point3D transformOrigin;
-  for (const PropertyAnimationGroup& group :
-       layer->GetPropertyAnimationGroups()) {
-    if (group.mAnimationData.isNothing()) {
-      continue;
-    }
-    const TransformData& data = group.mAnimationData.ref();
-    scale = data.appUnitsPerDevPixel();
+  if (const TransformData* data = layer->GetTransformLikeMetaData()) {
+    scale = data->appUnitsPerDevPixel();
     scaledOrigin = Point3D(
-        NS_round(NSAppUnitsToFloatPixels(data.origin().x, scale)),
-        NS_round(NSAppUnitsToFloatPixels(data.origin().y, scale)), 0.0f);
-    transformOrigin = data.transformOrigin();
-    break;
+        NS_round(NSAppUnitsToFloatPixels(data->origin().x, scale)),
+        NS_round(NSAppUnitsToFloatPixels(data->origin().y, scale)), 0.0f);
+    transformOrigin = data->transformOrigin();
   }
 
   // If our parent isn't a perspective layer, then the offset into reference
