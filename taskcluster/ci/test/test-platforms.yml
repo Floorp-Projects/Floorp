@@ -30,6 +30,7 @@ linux1804-64/opt:
         - awsy
         - desktop-screenshot-capture
         - linux1804-tests
+        - mochitest-headless
 
 linux1804-64/debug:
     build-platform: linux64/debug
@@ -43,6 +44,7 @@ linux1804-64-shippable/opt:
         - desktop-screenshot-capture
         - linux1804-tests
         - marionette-headless
+        - mochitest-headless
 
 linux1804-64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
@@ -103,7 +105,6 @@ linux64/opt:
         - web-platform-tests
         - opt-only-tests
         - talos
-        - mochitest-headless
         - linux-talos-flex
         - raptor-firefox
         - browsertime
@@ -117,7 +118,6 @@ linux64-shippable/opt:
         - web-platform-tests-wdspec-headless
         - opt-only-tests
         - talos
-        - mochitest-headless
         - linux-talos-flex
         - raptor-chrome
         - raptor-chromium
