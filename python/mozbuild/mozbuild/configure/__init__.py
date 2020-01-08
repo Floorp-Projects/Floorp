@@ -913,7 +913,7 @@ class ConfigureSandbox(dict):
         # fails with "IOError: file() constructor not accessible in
         # restricted mode". We also make open() look more like python 3's,
         # decoding to unicode strings unless the mode says otherwise.
-        if what == '__builtin__.open':
+        if what == '__builtin__.open' or what == 'builtins.open':
             if six.PY3:
                 return open
             def wrapped_open(name, mode=None, buffering=None):
@@ -948,6 +948,8 @@ class ConfigureSandbox(dict):
             if _from == '__builtin__' or _from.startswith('__builtin__.'):
                 _from = _from.replace('__builtin__', 'six.moves.builtins')
             import_line += 'from %s ' % _from
+        if what == '__builtin__':
+            what = 'six.moves.builtins'
         import_line += 'import %s as imported' % what
         glob = {}
         exec_(import_line, {}, glob)

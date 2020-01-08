@@ -170,7 +170,7 @@ class MockedOpen(object):
         for name, content in files.items():
             self.files[normcase(os.path.abspath(name))] = content
 
-    def __call__(self, name, mode='r', buffering=None):
+    def __call__(self, name, mode='r', buffering=None, encoding=None):
         # buffering is ignored.
         absname = normcase(os.path.abspath(name))
         if 'w' in mode:
