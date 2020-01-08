@@ -22,8 +22,6 @@ WebGLExtensionCompressedTextureS3TC_SRGB::
     auto usage = fua->EditUsage(effFormat);
     usage->isFilterable = true;
     fua->AllowSizedTexFormat(sizedFormat, usage);
-
-    webgl_->mCompressedTextureFormats.AppendElement(sizedFormat);
   };
 
 #define FOO(x) LOCAL_GL_##x, webgl::EffectiveFormat::x
@@ -35,9 +33,6 @@ WebGLExtensionCompressedTextureS3TC_SRGB::
 
 #undef FOO
 }
-
-WebGLExtensionCompressedTextureS3TC_SRGB::
-    ~WebGLExtensionCompressedTextureS3TC_SRGB() {}
 
 bool WebGLExtensionCompressedTextureS3TC_SRGB::IsSupported(
     const WebGLContext* webgl) {

@@ -213,6 +213,7 @@ enum class ComponentType : uint8_t {
   NormUInt,  // RGBA8
   Float,     // RGBA32F
 };
+const char* ToString(ComponentType);
 
 enum class TextureBaseType : uint8_t {
   Int = uint8_t(ComponentType::Int),

@@ -97,13 +97,14 @@ struct PcqStatus {
     PcqOOMError,
   } mValue;
 
-  PcqStatus(EStatus status = Success) : mValue(status) {}
-  operator bool() { return mValue == Success; }
-  bool operator==(const EStatus& o) { return mValue == o; }
-  bool operator!=(const EStatus& o) { return !(*this == o); }
+  MOZ_IMPLICIT PcqStatus(const EStatus status = Success) : mValue(status) {}
+  explicit operator bool() const { return mValue == Success; }
+  explicit operator int() const { return static_cast<int>(mValue); }
+  bool operator==(const EStatus& o) const { return mValue == o; }
+  bool operator!=(const EStatus& o) const { return !(*this == o); }
 };
 
-bool IsSuccess(PcqStatus status) { return status == PcqStatus::Success; }
+inline bool IsSuccess(PcqStatus status) { return status == PcqStatus::Success; }
 
 template <typename T>
 struct RemoveCVR {
@@ -197,6 +198,11 @@ class ProducerView {
    */
   inline PcqStatus Write(const void* aBuffer, size_t aBufferSize);
 
+  template <typename T>
+  inline PcqStatus Write(const T* src, size_t count) {
+    return Write(reinterpret_cast<const void*>(src), count * sizeof(T));
+  }
+
   /**
    * Serialize aArg using Arg's PcqParamTraits.
    */
@@ -212,7 +218,7 @@ class ProducerView {
   template <typename Arg>
   PcqStatus WriteTypedParam(const Arg& aArg) {
     return mozilla::webgl::PcqParamTraits<PcqTypedArg<Arg>>::Write(
-        *this, PcqTypedArg(aArg));
+        *this, PcqTypedArg<Arg>(aArg));
   }
 
   /**
@@ -259,6 +265,11 @@ class ConsumerView {
    * be null (in which case the data is skipped)
    */
   inline PcqStatus Read(void* aBuffer, size_t aBufferSize);
+
+  template <typename T>
+  inline PcqStatus Read(T* dest, size_t count) {
+    return Read(reinterpret_cast<void*>(dest), count * sizeof(T));
+  }
 
   /**
    * Calls a Matcher that returns a PcqStatus when told that the next bytes are
@@ -355,12 +366,12 @@ constexpr size_t GetMaxHeaderSize() {
   return maxAlign1 + readAndAlign2 + writeAndAlign3;
 }
 
-size_t UsedBytes(size_t aQueueBufferSize, size_t aRead, size_t aWrite) {
+inline size_t UsedBytes(size_t aQueueBufferSize, size_t aRead, size_t aWrite) {
   return (aRead <= aWrite) ? aWrite - aRead
                            : (aQueueBufferSize - aRead) + aWrite;
 }
 
-size_t FreeBytes(size_t aQueueBufferSize, size_t aRead, size_t aWrite) {
+inline size_t FreeBytes(size_t aQueueBufferSize, size_t aRead, size_t aWrite) {
   // Remember, queueSize is queueBufferSize-1
   return (aQueueBufferSize - 1) - UsedBytes(aQueueBufferSize, aRead, aWrite);
 }
@@ -377,7 +388,7 @@ size_t MinSizeofArgs(View&) {
 
 template <typename View, typename Arg1, typename Arg2, typename... Args>
 size_t MinSizeofArgs(View& aView) {
-  return aView.MinSizeParam<Arg1>(nullptr) +
+  return aView.template MinSizeParam<Arg1>(nullptr) +
          MinSizeofArgs<Arg2, Args...>(aView);
 }
 
@@ -391,7 +402,7 @@ size_t MinSizeofArgs(View& aView) {
 // TODO: Base this heuristic on something.  Also, if I made the PCQ size
 // (aTotal) a template parameter then this could be a compile-time check
 // in nearly all cases.
-bool NeedsSharedMemory(size_t aRequested, size_t aTotal) {
+inline bool NeedsSharedMemory(size_t aRequested, size_t aTotal) {
   return (aTotal / 16) < aRequested;
 }
 
@@ -446,7 +457,9 @@ class Marshaller {
 class PcqRCSemaphore {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PcqRCSemaphore)
-  PcqRCSemaphore(CrossProcessSemaphore* aSem) : mSem(aSem) { MOZ_ASSERT(mSem); }
+  explicit PcqRCSemaphore(CrossProcessSemaphore* aSem) : mSem(aSem) {
+    MOZ_ASSERT(mSem);
+  }
 
   bool Wait(const Maybe<TimeDuration>& aTime) { return mSem->Wait(aTime); }
   void Signal() { mSem->Signal(); }
@@ -787,7 +800,8 @@ class Producer : public detail::PcqBase {
    * succeed in the time allotted then the queue is unchanged.
    */
   template <typename... Args>
-  PcqStatus TryWaitInsert(Maybe<TimeDuration> aDuration, Args&&... aArgs) {
+  PcqStatus TryWaitInsert(const Maybe<TimeDuration>& aDuration,
+                          Args&&... aArgs) {
     return TryWaitInsertImpl(false, aDuration, std::forward<Args>(aArgs)...);
   }
 
@@ -815,7 +829,8 @@ class Producer : public detail::PcqBase {
   }
 
   template <typename... Args>
-  PcqStatus TryWaitInsertImpl(bool aRecursed, Maybe<TimeDuration> aDuration,
+  PcqStatus TryWaitInsertImpl(bool aRecursed,
+                              const Maybe<TimeDuration>& aDuration,
                               Args&&... aArgs) {
     // Wait up to aDuration for the not-full semaphore to be signaled.
     // If we run out of time then quit.
@@ -940,7 +955,7 @@ class Consumer : public detail::PcqBase {
    * unchanged. Pass Nothing to wait until peek succeeds.
    */
   template <typename... Args>
-  PcqStatus TryWaitPeek(Maybe<TimeDuration> aDuration, Args&... aArgs) {
+  PcqStatus TryWaitPeek(const Maybe<TimeDuration>& aDuration, Args&... aArgs) {
     return TryWaitPeekOrRemove<false>(aDuration, aArgs...);
   }
 
@@ -949,7 +964,8 @@ class Consumer : public detail::PcqBase {
    * Pass Nothing to wait until removal succeeds.
    */
   template <typename... Args>
-  PcqStatus TryWaitRemove(Maybe<TimeDuration> aDuration, Args&... aArgs) {
+  PcqStatus TryWaitRemove(const Maybe<TimeDuration>& aDuration,
+                          Args&... aArgs) {
     return TryWaitPeekOrRemove<true>(aDuration, aArgs...);
   }
 
@@ -960,7 +976,7 @@ class Consumer : public detail::PcqBase {
    * Pass Nothing to wait until removal succeeds.
    */
   template <typename... Args>
-  PcqStatus TryWaitRemove(Maybe<TimeDuration> aDuration) {
+  PcqStatus TryWaitRemove(const Maybe<TimeDuration>& aDuration) {
     // Wait up to aDuration for the not-empty semaphore to be signaled.
     // If we run out of time then quit.
     TimeStamp start(TimeStamp::Now());
@@ -1086,7 +1102,7 @@ class Consumer : public detail::PcqBase {
   }
 
   template <bool isRemove, typename... Args>
-  PcqStatus TryWaitPeekOrRemove(Maybe<TimeDuration> aDuration,
+  PcqStatus TryWaitPeekOrRemove(const Maybe<TimeDuration>& aDuration,
                                 Args&&... aArgs) {
     return TryWaitPeekOrRemoveImpl<isRemove>(false, aDuration,
                                              std::forward<Args>(aArgs)...);
@@ -1094,7 +1110,7 @@ class Consumer : public detail::PcqBase {
 
   template <bool isRemove, typename... Args>
   PcqStatus TryWaitPeekOrRemoveImpl(bool aRecursed,
-                                    Maybe<TimeDuration> aDuration,
+                                    const Maybe<TimeDuration>& aDuration,
                                     Args&... aArgs) {
     // Wait up to aDuration for the not-empty semaphore to be signaled.
     // If we run out of time then quit.
@@ -1673,7 +1689,7 @@ struct PcqParamTraits<nsAString> {
 
     if (len == 0) {
       if (aArg) {
-        *aArg = L"";
+        *aArg = nsString();
       }
       return PcqStatus::Success;
     }
@@ -1731,10 +1747,10 @@ template <typename NSTArrayType,
 struct NSArrayPcqParamTraits;
 
 // For ElementTypes that are !IsTriviallySerializable
-template <typename ElementType>
-struct NSArrayPcqParamTraits<nsTArray<ElementType>, false> {
+template <typename _ElementType>
+struct NSArrayPcqParamTraits<nsTArray<_ElementType>, false> {
+  using ElementType = _ElementType;
   using ParamType = nsTArray<ElementType>;
-  using ElementType = ElementType;
 
   static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
     size_t arrayLen = aArg.Length();
@@ -1778,10 +1794,10 @@ struct NSArrayPcqParamTraits<nsTArray<ElementType>, false> {
 };
 
 // For ElementTypes that are IsTriviallySerializable
-template <typename ElementType>
-struct NSArrayPcqParamTraits<nsTArray<ElementType>, true> {
+template <typename _ElementType>
+struct NSArrayPcqParamTraits<nsTArray<_ElementType>, true> {
+  using ElementType = _ElementType;
   using ParamType = nsTArray<ElementType>;
-  using ElementType = ElementType;
 
   // TODO: Are there alignment issues?
 
@@ -1830,10 +1846,10 @@ template <typename ArrayType,
 struct ArrayPcqParamTraits;
 
 // For ElementTypes that are !IsTriviallySerializable
-template <typename ElementType, size_t Length>
-struct ArrayPcqParamTraits<Array<ElementType, Length>, false> {
+template <typename _ElementType, size_t Length>
+struct ArrayPcqParamTraits<Array<_ElementType, Length>, false> {
+  using ElementType = _ElementType;
   using ParamType = Array<ElementType, Length>;
-  using ElementType = ElementType;
 
   static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
     for (size_t i = 0; i < Length; ++i) {
@@ -1852,6 +1868,7 @@ struct ArrayPcqParamTraits<Array<ElementType, Length>, false> {
 
   template <typename View>
   static size_t MinSize(View& aView, const ParamType* aArg) {
+    size_t ret = 0;
     for (size_t i = 0; i < Length; ++i) {
       ret += aView.MinSizeParam(&((*aArg)[i]));
     }
@@ -1860,10 +1877,10 @@ struct ArrayPcqParamTraits<Array<ElementType, Length>, false> {
 };
 
 // For ElementTypes that are IsTriviallySerializable
-template <typename ElementType, size_t Length>
-struct ArrayPcqParamTraits<Array<ElementType, Length>, true> {
+template <typename _ElementType, size_t Length>
+struct ArrayPcqParamTraits<Array<_ElementType, Length>, true> {
+  using ElementType = _ElementType;
   using ParamType = Array<ElementType, Length>;
-  using ElementType = ElementType;
 
   static PcqStatus Write(ProducerView& aProducerView, const ParamType& aArg) {
     return aProducerView.Write(aArg.begin(), sizeof(ElementType[Length]));

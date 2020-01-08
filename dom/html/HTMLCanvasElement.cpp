@@ -1354,7 +1354,7 @@ AsyncCanvasRenderer* HTMLCanvasElement::GetAsyncCanvasRenderer() {
 
 layers::OOPCanvasRenderer* HTMLCanvasElement::GetOOPCanvasRenderer() {
   if (!mOOPCanvasRenderer) {
-    ClientWebGLContext* context = GetClientWebGLContext();
+    const auto context = GetWebGLContext();
     MOZ_ASSERT(context);
     mOOPCanvasRenderer = new OOPCanvasRenderer(context);
   }
@@ -1487,36 +1487,13 @@ void HTMLCanvasElement::InvalidateFromAsyncCanvasRenderer(
   element->InvalidateCanvasContent(nullptr);
 }
 
-ClientWebGLContext* HTMLCanvasElement::GetClientWebGLContext() {
+ClientWebGLContext* HTMLCanvasElement::GetWebGLContext() {
   if (GetCurrentContextType() != CanvasContextType::WebGL1 &&
       GetCurrentContextType() != CanvasContextType::WebGL2) {
     return nullptr;
   }
 
   return static_cast<ClientWebGLContext*>(GetContextAtIndex(0));
-}
-
-PWebGLChild* HTMLCanvasElement::GetWebGLChild() {
-  ClientWebGLContext* webgl = GetClientWebGLContext();
-  if (!webgl) {
-    return nullptr;
-  }
-
-  return webgl->GetWebGLChild();
-}
-
-void HTMLCanvasElement::ClearVRFrame() {
-  if (GetCurrentContextType() != CanvasContextType::WebGL1 &&
-      GetCurrentContextType() != CanvasContextType::WebGL2) {
-    return;
-  }
-
-  WebGLContext* webgl = static_cast<WebGLContext*>(GetContextAtIndex(0));
-  if (!webgl) {
-    return;
-  }
-
-  webgl->ClearVRFrame();
 }
 
 }  // namespace dom

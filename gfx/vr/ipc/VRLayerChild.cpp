@@ -5,8 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRLayerChild.h"
+
 #include "gfxPlatform.h"
+#include "../../../dom/canvas/ClientWebGLContext.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/WebGLChild.h"
 
 namespace mozilla {
 namespace gfx {
@@ -44,12 +47,16 @@ void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
 
   mLastSubmittedFrameId = frameId;
 
-  PWebGLChild* webGLChild = mCanvasElement->GetWebGLChild();
-  if (!webGLChild) {
+  const auto webgl = mCanvasElement->GetWebGLContext();
+  if (!webgl) {
+    return;
+  }
+  const auto webglChild = webgl->GetChild();
+  if (!webglChild) {
     return;
   }
 
-  SendSubmitFrame(webGLChild, frameId,
+  SendSubmitFrame(webglChild, frameId,
                   aDisplayInfo.mDisplayState.lastSubmittedFrameId, mLeftEyeRect,
                   mRightEyeRect);
 }
@@ -57,7 +64,10 @@ void VRLayerChild::SubmitFrame(const VRDisplayInfo& aDisplayInfo) {
 bool VRLayerChild::IsIPCOpen() { return mIPCOpen; }
 
 void VRLayerChild::ClearSurfaces() {
-  mCanvasElement->ClearVRFrame();
+  const auto webgl = mCanvasElement->GetWebGLContext();
+  if (webgl) {
+    webgl->ClearVRFrame();
+  }
   SendClearSurfaces();
 }
 

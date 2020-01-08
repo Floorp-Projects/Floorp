@@ -56,7 +56,7 @@ static webgl::AttribBaseType AttribPointerBaseType(bool integerFunc,
     case LOCAL_GL_UNSIGNED_BYTE:
     case LOCAL_GL_UNSIGNED_SHORT:
     case LOCAL_GL_UNSIGNED_INT:
-      return webgl::AttribBaseType::UInt;
+      return webgl::AttribBaseType::Uint;
 
     default:
       MOZ_CRASH();

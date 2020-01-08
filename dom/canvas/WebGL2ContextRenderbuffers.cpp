@@ -12,8 +12,8 @@
 
 namespace mozilla {
 
-Maybe<nsTArray<int32_t>> WebGL2Context::GetInternalformatParameter(
-    GLenum target, GLenum internalformat, GLenum pname) {
+Maybe<std::vector<int32_t>> WebGL2Context::GetInternalformatParameter(
+    GLenum target, GLenum internalformat, GLenum pname) const {
   const FuncScope funcScope(*this, "getInternalfomratParameter");
   if (IsContextLost()) return Nothing();
 
@@ -58,23 +58,17 @@ Maybe<nsTArray<int32_t>> WebGL2Context::GetInternalformatParameter(
     return Nothing();
   }
 
-  nsTArray<int32_t> obj;
+  std::vector<int32_t> ret;
   GLint sampleCount = 0;
   gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat,
                            LOCAL_GL_NUM_SAMPLE_COUNTS, 1, &sampleCount);
-  if (sampleCount > 0) {
-    GLint* samples =
-        static_cast<GLint*>(obj.AppendElements(sampleCount, fallible));
-    // If we don't have 'samples' then we will return a zero-length array, which
-    // will be interpreted by the ClientWebGLContext as an out-of-memory
-    // condition.
-    if (samples) {
-      gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat,
-                               LOCAL_GL_SAMPLES, sampleCount, samples);
-    }
+  if (sampleCount) {
+    ret.resize(sampleCount);
+    gl->fGetInternalformativ(LOCAL_GL_RENDERBUFFER, internalformat,
+                             LOCAL_GL_SAMPLES, ret.size(), ret.data());
   }
 
-  return Some(obj);
+  return Some(ret);
 }
 
 }  // namespace mozilla

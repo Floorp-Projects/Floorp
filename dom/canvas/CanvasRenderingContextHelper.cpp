@@ -126,7 +126,7 @@ CanvasRenderingContextHelper::CreateContextHelper(
     case CanvasContextType::WebGL1:
       Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
 
-      ret = ClientWebGLContext::Create(WEBGL1);
+      ret = new ClientWebGLContext(/*webgl2:*/ false);
       if (!ret) return nullptr;
 
       break;
@@ -134,7 +134,7 @@ CanvasRenderingContextHelper::CreateContextHelper(
     case CanvasContextType::WebGL2:
       Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
 
-      ret = ClientWebGLContext::Create(WEBGL2);
+      ret = new ClientWebGLContext(/*webgl2:*/ true);
       if (!ret) return nullptr;
 
       break;

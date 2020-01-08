@@ -32,13 +32,10 @@ using ClientWebGLCommandSource = SyncCommandSource<size_t>;
 class HostWebGLCommandSink : public SyncCommandSink<size_t> {
  public:
   HostWebGLCommandSink(UniquePtr<Consumer>&& aConsumer,
-                       UniquePtr<ProducerConsumerQueue>& aResponsePcq);
+                       UniquePtr<Producer>&& aResponseProducer)
+      : SyncCommandSink(std::move(aConsumer), std::move(aResponseProducer)) {}
 
-  ~HostWebGLCommandSink() {}
-
-  void SetHostContext(HostWebGLContext* aHostContext) {
-    mHostContext = aHostContext;
-  }
+  HostWebGLContext* mHostContext = nullptr;
 
  protected:
   // For IPDL:
@@ -47,17 +44,7 @@ class HostWebGLCommandSink : public SyncCommandSink<size_t> {
   HostWebGLCommandSink() {}
 
   bool DispatchCommand(size_t command) override;
-
-  void ReportOOM() override;
-
-  HostWebGLContext* mHostContext;
 };
-
-/**
- * Factory for the WebGL command queue.
- */
-using WebGLCrossProcessCommandQueue =
-    CommandQueue<ClientWebGLCommandSource, HostWebGLCommandSink>;
 
 namespace ipc {
 

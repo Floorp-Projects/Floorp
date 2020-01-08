@@ -8,21 +8,12 @@
 
 namespace mozilla {
 
-HostWebGLCommandSink::HostWebGLCommandSink(
-    UniquePtr<Consumer>&& aConsumer,
-    UniquePtr<ProducerConsumerQueue>& aResponsePcq)
-    : SyncCommandSink(std::move(aConsumer), aResponsePcq) {}
-
 bool HostWebGLCommandSink::DispatchCommand(size_t command) {
   if (!mHostContext) {
     return false;
   }
 
   return WebGLMethodDispatcher::DispatchCommand(command, *this, *mHostContext);
-}
-
-void HostWebGLCommandSink::ReportOOM() {
-  mHostContext->ReportOOMAndLoseContext();
 }
 
 }  // namespace mozilla

@@ -42,8 +42,6 @@ void WebGLExtensionColorBufferFloat::OnSetExplicit() {
   SetRenderable(webgl::FormatRenderableState::Explicit());
 }
 
-WebGLExtensionColorBufferFloat::~WebGLExtensionColorBufferFloat() {}
-
 bool WebGLExtensionColorBufferFloat::IsSupported(const WebGLContext* webgl) {
   if (webgl->IsWebGL2()) return false;
 

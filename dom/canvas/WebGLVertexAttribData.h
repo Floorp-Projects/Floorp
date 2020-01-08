@@ -23,7 +23,7 @@ class WebGLVertexAttribData final {
   bool mIntegerFunc;
 
  public:
-  WebGLRefPtr<WebGLBuffer> mBuf;
+  RefPtr<WebGLBuffer> mBuf;
 
  private:
   GLenum mType;

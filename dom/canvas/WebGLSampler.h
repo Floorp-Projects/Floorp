@@ -6,18 +6,15 @@
 #ifndef WEBGL_SAMPLER_H_
 #define WEBGL_SAMPLER_H_
 
-#include "mozilla/LinkedList.h"
-#include "nsWrapperCache.h"
 #include "WebGLObjectModel.h"
 #include "WebGLStrongTypes.h"
 #include "WebGLTexture.h"
 
 namespace mozilla {
 
-class WebGLSampler final : public WebGLRefCountedObject<WebGLSampler>,
-                           public LinkedListElement<WebGLSampler>,
+class WebGLSampler final : public WebGLContextBoundObject,
                            public CacheInvalidator {
-  NS_INLINE_DECL_REFCOUNTING(WebGLSampler)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(WebGLSampler, override)
 
  public:
   const GLuint mGLName;
@@ -32,10 +29,7 @@ class WebGLSampler final : public WebGLRefCountedObject<WebGLSampler>,
   ~WebGLSampler();
 
  public:
-  void Delete();
-
   void SamplerParameter(GLenum pname, const FloatOrInt& param);
-
   const auto& State() const { return mState; }
 };
 

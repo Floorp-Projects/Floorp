@@ -6,8 +6,9 @@
 #ifndef WEBGLCHILD_H_
 #define WEBGLCHILD_H_
 
+#include <string>
+
 #include "mozilla/dom/PWebGLChild.h"
-#include "nsWeakReference.h"
 
 namespace mozilla {
 
@@ -15,16 +16,20 @@ class ClientWebGLContext;
 
 namespace dom {
 
-class WebGLChild : public PWebGLChild {
+class WebGLChild final : public PWebGLChild {
  public:
-  mozilla::ipc::IPCResult RecvQueueFailed();
-  mozilla::ClientWebGLContext* GetContext();
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGLChild, override);
 
- protected:
-  friend mozilla::ClientWebGLContext;
-  void SetContext(mozilla::ClientWebGLContext* aContext);
+  ClientWebGLContext& mContext;
 
-  nsWeakPtr mContext;
+  explicit WebGLChild(ClientWebGLContext&);
+
+ private:
+  virtual ~WebGLChild();
+
+ public:
+  mozilla::ipc::IPCResult RecvJsWarning(const std::string&) const;
+  mozilla::ipc::IPCResult RecvOnContextLoss(webgl::ContextLossReason) const;
 };
 
 }  // namespace dom

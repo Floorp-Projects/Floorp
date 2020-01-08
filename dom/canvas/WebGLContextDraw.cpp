@@ -79,13 +79,14 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
   const auto& fb = mWebGL->mBoundDrawFramebuffer;
 
   MOZ_ASSERT(mWebGL->mActiveProgramLinkInfo);
-  const auto& uniformSamplers = mWebGL->mActiveProgramLinkInfo->uniformSamplers;
-  for (const auto& uniform : uniformSamplers) {
-    const auto& texList = *(uniform->mSamplerTexList);
+  const auto& samplerUniforms = mWebGL->mActiveProgramLinkInfo->samplerUniforms;
+  for (const auto& pUniform : samplerUniforms) {
+    const auto& uniform = *pUniform;
+    const auto& texList = uniform.texListForType;
 
-    const auto& uniformBaseType = uniform->mTexBaseType;
-    for (const auto& texUnit : uniform->mSamplerValues) {
-      if (texUnit >= texList.Length()) continue;
+    const auto& uniformBaseType = uniform.texBaseType;
+    for (const auto& texUnit : uniform.texUnits) {
+      MOZ_ASSERT(texUnit < texList.Length());
 
       const auto& tex = texList[texUnit];
       if (!tex) continue;
@@ -120,7 +121,7 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
         return;
       }
 
-      if (uniform->mIsShadowSampler != samplingInfo->isDepthTexCompare) {
+      if (uniform.isShadowSampler != samplingInfo->isDepthTexCompare) {
         const auto& targetName = GetEnumName(tex->Target().get());
         mWebGL->ErrorInvalidOperation(
             "%s at unit %u is%s a depth texture"
@@ -128,7 +129,7 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(
             " the shader sampler is%s a shadow"
             " sampler.",
             targetName, texUnit, samplingInfo->isDepthTexCompare ? "" : " not",
-            uniform->mIsShadowSampler ? "" : " not");
+            uniform.isShadowSampler ? "" : " not");
         *out_error = true;
         return;
       }
@@ -254,7 +255,7 @@ bool WebGLContext::ValidateBuffersForTf(
       break;
 
     case LOCAL_GL_SEPARATE_ATTRIBS:
-      numUsed = linkInfo.transformFeedbackVaryings.size();
+      numUsed = linkInfo.active.activeTfVaryings.size();
       break;
 
     default:
@@ -372,8 +373,8 @@ const webgl::CachedDrawFetchLimits* ValidateDraw(WebGLContext* const webgl,
 
   for (const auto i : IntegerRange(linkInfo->uniformBlocks.size())) {
     const auto& cur = linkInfo->uniformBlocks[i];
-    const auto& dataSize = cur->mDataSize;
-    const auto& binding = cur->mBinding;
+    const auto& dataSize = cur.info.dataSize;
+    const auto& binding = cur.binding;
     if (!binding) {
       webgl->ErrorInvalidOperation("Buffer for uniform block is null.");
       return nullptr;
@@ -948,7 +949,7 @@ WebGLVertexAttrib0Status WebGLContext::WhatDoesVertexAttrib0Need() const {
 
     // Also programs with no attribs:
     // conformance/attribs/gl-vertex-attrib-unconsumed-out-of-bounds.html
-    legacyAttrib0 |= !mActiveProgramLinkInfo->attribs.size();
+    legacyAttrib0 |= !mActiveProgramLinkInfo->active.activeAttribs.size();
   }
 #endif
 
@@ -1000,7 +1001,7 @@ bool WebGLContext::DoFakeVertexAttrib0(const uint64_t vertexCount) {
       gl->fVertexAttribIPointer(0, 4, LOCAL_GL_INT, 0, 0);
       break;
 
-    case webgl::AttribBaseType::UInt:
+    case webgl::AttribBaseType::Uint:
       gl->fVertexAttribIPointer(0, 4, LOCAL_GL_UNSIGNED_INT, 0, 0);
       break;
   }

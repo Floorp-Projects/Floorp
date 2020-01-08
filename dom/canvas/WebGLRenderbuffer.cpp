@@ -36,27 +36,26 @@ static bool EmulatePackedDepthStencil(gl::GLContext* gl) {
 }
 
 WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* webgl)
-    : WebGLRefCountedObject(webgl),
+    : WebGLContextBoundObject(webgl),
       mPrimaryRB(DoCreateRenderbuffer(webgl->gl)),
       mEmulatePackedDepthStencil(EmulatePackedDepthStencil(webgl->gl)),
       mSecondaryRB(0) {
-  mContext->mRenderbuffers.insertBack(this);
-
   // Bind our RB, or we might end up calling FramebufferRenderbuffer before we
   // ever call BindRenderbuffer, since webgl.bindRenderbuffer doesn't actually
   // call glBindRenderbuffer anymore.
   mContext->gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mPrimaryRB);
+  mContext->gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, 0);
 }
 
-void WebGLRenderbuffer::Delete() {
+WebGLRenderbuffer::~WebGLRenderbuffer() {
+  mImageInfo = webgl::ImageInfo();
+
+  if (!mContext) return;
+
   mContext->gl->fDeleteRenderbuffers(1, &mPrimaryRB);
   if (mSecondaryRB) {
     mContext->gl->fDeleteRenderbuffers(1, &mSecondaryRB);
   }
-
-  mImageInfo = webgl::ImageInfo();
-
-  LinkedListElement<WebGLRenderbuffer>::removeFrom(mContext->mRenderbuffers);
 }
 
 static GLenum DoRenderbufferStorageMaybeMultisample(gl::GLContext* gl,
@@ -111,8 +110,6 @@ static GLenum DoRenderbufferStorageMaybeMultisample(gl::GLContext* gl,
 GLenum WebGLRenderbuffer::DoRenderbufferStorage(
     uint32_t samples, const webgl::FormatUsageInfo* format, uint32_t width,
     uint32_t height) {
-  MOZ_ASSERT(mContext->mBoundRenderbuffer == this);
-
   gl::GLContext* gl = mContext->gl;
   MOZ_ASSERT(samples <= 256);  // Sanity check.
 
@@ -128,6 +125,7 @@ GLenum WebGLRenderbuffer::DoRenderbufferStorage(
   gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mPrimaryRB);
   GLenum error = DoRenderbufferStorageMaybeMultisample(
       gl, samples, primaryFormat, width, height);
+  gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, 0);
   if (error) return error;
 
   if (secondaryFormat) {
@@ -138,6 +136,7 @@ GLenum WebGLRenderbuffer::DoRenderbufferStorage(
     gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mSecondaryRB);
     error = DoRenderbufferStorageMaybeMultisample(gl, samples, secondaryFormat,
                                                   width, height);
+    gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, 0);
     if (error) return error;
   } else if (mSecondaryRB) {
     gl->fDeleteRenderbuffers(1, &mSecondaryRB);
@@ -213,8 +212,7 @@ void WebGLRenderbuffer::DoFramebufferRenderbuffer(
                                LOCAL_GL_RENDERBUFFER, mPrimaryRB);
 }
 
-GLint WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
-                                                  RBParam pname) const {
+GLint WebGLRenderbuffer::GetRenderbufferParameter(RBParam pname) const {
   gl::GLContext* gl = mContext->gl;
 
   switch (pname.get()) {
@@ -235,7 +233,8 @@ GLint WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
     case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE: {
       gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mPrimaryRB);
       GLint i = 0;
-      gl->fGetRenderbufferParameteriv(target.get(), pname.get(), &i);
+      gl->fGetRenderbufferParameteriv(LOCAL_GL_RENDERBUFFER, pname.get(), &i);
+      gl->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, 0);
       return i;
     }
 
