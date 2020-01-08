@@ -63,15 +63,13 @@ struct DictionaryBase {
 };
 
 template <typename T>
-inline typename std::enable_if<std::is_base_of<DictionaryBase, T>::value,
-                               void>::type
+inline std::enable_if_t<std::is_base_of<DictionaryBase, T>::value, void>
 ImplCycleCollectionUnlink(T& aDictionary) {
   aDictionary.UnlinkForCC();
 }
 
 template <typename T>
-inline typename std::enable_if<std::is_base_of<DictionaryBase, T>::value,
-                               void>::type
+inline std::enable_if_t<std::is_base_of<DictionaryBase, T>::value, void>
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             T& aDictionary, const char* aName,
                             uint32_t aFlags = 0) {
