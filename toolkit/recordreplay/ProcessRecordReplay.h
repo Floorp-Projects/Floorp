@@ -109,6 +109,9 @@ void SetMainChild();
 // Whether we are replaying a recording on a machine in the cloud.
 bool ReplayingInCloud();
 
+// Location of the firefox install directory.
+const char* InstallDirectory();
+
 // Get the process kind and recording file specified at the command line.
 // These are available in the middleman as well as while recording/replaying.
 extern ProcessKind gProcessKind;
