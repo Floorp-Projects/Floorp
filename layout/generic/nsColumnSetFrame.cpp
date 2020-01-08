@@ -1199,13 +1199,6 @@ void nsColumnSetFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(aReflowInput.mParentReflowInput->mFrame->IsColumnSetWrapperFrame(),
              "The column container should be ColumnSetWrapperFrame!");
 
-  // Our children depend on our block-size if we have a fixed block-size.
-  if (aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
-    AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
-  } else {
-    RemoveStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
-  }
-
 #ifdef DEBUG
   nsFrameList::Enumerator oc(GetChildList(kOverflowContainersList));
   for (; !oc.AtEnd(); oc.Next()) {
