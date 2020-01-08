@@ -18,6 +18,7 @@ import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.WebExtensionController
 import org.mozilla.geckoview.WebExtension as GeckoNativeWebExtension
 import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionAction
 
@@ -28,17 +29,22 @@ import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionActio
 class GeckoWebExtension(
     id: String,
     url: String,
+    webExtensionController: WebExtensionController,
     allowContentMessaging: Boolean = true,
     supportActions: Boolean = false,
     val nativeExtension: GeckoNativeWebExtension = GeckoNativeWebExtension(
         url,
         id,
-        createWebExtensionFlags(allowContentMessaging)
+        createWebExtensionFlags(allowContentMessaging),
+        webExtensionController
     ),
     private val connectedPorts: MutableMap<PortId, Port> = mutableMapOf()
 ) : WebExtension(id, url, supportActions) {
 
     private val logger = Logger("GeckoWebExtension")
+
+    constructor(native: GeckoNativeWebExtension, webExtensionController: WebExtensionController) :
+        this(native.id, native.location, webExtensionController, true, true, native)
 
     /**
      * Uniquely identifies a port using its name and the session it
@@ -220,9 +226,30 @@ class GeckoWebExtension(
         return geckoSession.getWebExtensionActionDelegate(nativeExtension) != null
     }
 
-    // Not yet supported
-    override fun getMetadata(): Metadata? = null
-    override fun isEnabled(): Boolean = true
+    /**
+     * See [WebExtension.getMetadata].
+     */
+    override fun getMetadata(): Metadata? {
+        return nativeExtension.metaData?.let {
+            Metadata(
+                name = it.name,
+                description = it.description,
+                developerName = it.creatorName,
+                developerUrl = it.creatorUrl,
+                homePageUrl = it.homepageUrl,
+                version = it.version,
+                permissions = it.permissions.toList(),
+                hostPermissions = it.origins.toList(),
+                optionsPageUrl = null, // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
+                openOptionsPageInTab = null // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
+            )
+        }
+    }
+
+    override fun isEnabled(): Boolean {
+        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
+        return true
+    }
 }
 
 /**

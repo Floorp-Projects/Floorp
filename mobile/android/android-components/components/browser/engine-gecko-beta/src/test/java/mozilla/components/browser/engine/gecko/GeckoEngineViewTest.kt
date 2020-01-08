@@ -89,6 +89,17 @@ class GeckoEngineViewTest {
     }
 
     @Test
+    fun `clearSelection is forwarded to BasicSelectionAction instance`() {
+        val engineView = GeckoEngineView(context)
+        engineView.currentGeckoView = mock()
+        engineView.currentSelection = mock()
+
+        engineView.clearSelection()
+
+        verify(engineView.currentSelection)?.clearSelection()
+    }
+
+    @Test
     fun `setVerticalClipping is forwarded to GeckoView instance`() {
         val engineView = GeckoEngineView(context)
         engineView.currentGeckoView = mock()
