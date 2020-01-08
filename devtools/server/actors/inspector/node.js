@@ -518,7 +518,26 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
     // Create debugger object for the customElement function.
     const global = Cu.getGlobalForObject(customElement);
+
     const dbg = this.parent().targetActor.makeDebugger();
+
+    // If we hit a <browser> element of Firefox, its global will be the chrome window
+    // which is system principal and will be in the same compartment as the debuggee.
+    // For some reason, this happens when we run the content toolbox. As for the content
+    // toolboxes, the modules are loaded in the same compartment as the <browser> element,
+    // this throws as the debugger can _not_ be in the same compartment as the debugger.
+    // This happens when we toggle fission for content toolbox because we try to reparent
+    // the Walker of the tab. This happens because we do not detect in Walker.reparentRemoteFrame
+    // that the target of the tab is the top level. That's because the target is a FrameTargetActor
+    // which is retrieved via Node.getEmbedderElement and doesn't return the LocalTabTargetActor.
+    // We should probably work on TabDescriptor so that the LocalTabTargetActor has a descriptor,
+    // and see if we can possibly move the local tab specific out of the TargetActor and have
+    // the TabDescriptor expose a pure FrameTargetActor??
+    if (Cu.getObjectPrincipal(global) == Cu.getObjectPrincipal(dbg)) {
+      dump("Ignored system principal in getEmbedderElement!\n");
+      return undefined;
+    }
+
     const globalDO = dbg.addDebuggee(global);
     const customElementDO = globalDO.makeDebuggeeValue(customElement);
 
