@@ -8,7 +8,7 @@ from __future__ import absolute_import
 from setuptools import setup
 
 PACKAGE_NAME = 'mozdevice'
-PACKAGE_VERSION = '3.0.6'
+PACKAGE_VERSION = '3.0.7'
 
 deps = ['mozlog >= 5.0']
 
