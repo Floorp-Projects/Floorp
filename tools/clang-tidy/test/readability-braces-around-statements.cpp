@@ -12,3 +12,14 @@ if (cond("if0") /*comment*/) do_something("same-line");
 void foo() {
 if (1) while (2) if (3) for (;;) do ; while(false) /**/;/**/
 }
+
+void f() {}
+
+void foo2() {
+  constexpr bool a = true;
+  if constexpr (a) {
+    f();
+  } else {
+    f();
+  }
+}
