@@ -21,6 +21,8 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
                         const CompositorWidgetInitData&);
   ~CompositorWidgetChild() override;
 
+  bool Initialize();
+
   mozilla::ipc::IPCResult RecvObserveVsync() override;
   mozilla::ipc::IPCResult RecvUnobserveVsync() override;
 

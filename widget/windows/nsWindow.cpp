@@ -3357,8 +3357,9 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
     taskbarInfo->PrepareFullScreenHWND(mWnd, FALSE);
   }
 
+  OnSizeModeChange(mSizeMode);
+
   if (mWidgetListener) {
-    mWidgetListener->SizeModeChanged(mSizeMode);
     mWidgetListener->FullscreenChanged(aFullScreen);
   }
 
@@ -3771,7 +3772,7 @@ LayerManager* nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     WinCompositorWidgetInitData initData(
         reinterpret_cast<uintptr_t>(mWnd),
         reinterpret_cast<uintptr_t>(static_cast<nsIWidget*>(this)),
-        mTransparencyMode);
+        mTransparencyMode, mSizeMode);
     // If we're not using the compositor, the options don't actually matter.
     CompositorOptions options(false, false);
     mBasicLayersSurface =
@@ -6535,8 +6536,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
     }
 #endif
 
-    if (mWidgetListener && mSizeMode != previousSizeMode)
-      mWidgetListener->SizeModeChanged(mSizeMode);
+    if (mSizeMode != previousSizeMode) OnSizeModeChange(mSizeMode);
 
     // If window was restored, window activation was bypassed during the
     // SetSizeMode call originating from OnWindowPosChanging to avoid saving
@@ -6674,7 +6674,7 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info) {
     else
       sizeMode = nsSizeMode_Normal;
 
-    if (mWidgetListener) mWidgetListener->SizeModeChanged(sizeMode);
+    OnSizeModeChange(sizeMode);
 
     UpdateNonClientMargins(sizeMode, false);
   }
@@ -7247,6 +7247,11 @@ void nsWindow::OnDestroy() {
 
 // Send a resize message to the listener
 bool nsWindow::OnResize(const LayoutDeviceIntSize& aSize) {
+  if (mCompositorWidgetDelegate &&
+      !mCompositorWidgetDelegate->OnWindowResize(aSize)) {
+    return false;
+  }
+
   bool result = false;
   if (mWidgetListener) {
     result = mWidgetListener->WindowResized(this, aSize.width, aSize.height);
@@ -7260,6 +7265,16 @@ bool nsWindow::OnResize(const LayoutDeviceIntSize& aSize) {
   }
 
   return result;
+}
+
+void nsWindow::OnSizeModeChange(nsSizeMode aSizeMode) {
+  if (mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->OnWindowModeChange(aSizeMode);
+  }
+
+  if (mWidgetListener) {
+    mWidgetListener->SizeModeChanged(aSizeMode);
+  }
 }
 
 bool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam) { return true; }
@@ -8475,7 +8490,7 @@ void nsWindow::GetCompositorWidgetInitData(
   *aInitData = WinCompositorWidgetInitData(
       reinterpret_cast<uintptr_t>(mWnd),
       reinterpret_cast<uintptr_t>(static_cast<nsIWidget*>(this)),
-      mTransparencyMode);
+      mTransparencyMode, mSizeMode);
 }
 
 bool nsWindow::SynchronouslyRepaintOnResize() {
