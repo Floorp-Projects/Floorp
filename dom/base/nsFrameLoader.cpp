@@ -3311,8 +3311,8 @@ void nsFrameLoader::MaybeUpdatePrimaryBrowserParent(
     return;
   }
 
-  int32_t parentType = docShell->ItemType();
-  if (parentType != nsIDocShellTreeItem::typeChrome) {
+  BrowsingContext* browsingContext = docShell->GetBrowsingContext();
+  if (!browsingContext->IsChrome()) {
     return;
   }
 
