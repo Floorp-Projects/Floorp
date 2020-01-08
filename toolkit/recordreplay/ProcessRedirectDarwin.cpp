@@ -436,6 +436,58 @@ static PreambleResult MiddlemanPreamble_sendmsg(CallArguments* aArguments) {
   return PreambleResult::Veto;
 }
 
+// When recording, this tracks open file descriptors referring to files within
+// the installation directory.
+struct InstallDirectoryFd {
+  size_t mFd;
+  UniquePtr<char[]> mSuffix;
+
+  InstallDirectoryFd(size_t aFd, UniquePtr<char[]> aSuffix)
+      : mFd(aFd), mSuffix(std::move(aSuffix)) {}
+};
+static StaticInfallibleVector<InstallDirectoryFd> gInstallDirectoryFds;
+static SpinLock gInstallDirectoryFdsLock;
+
+static void RR_open(Stream& aEvents, CallArguments* aArguments,
+                    ErrorType* aError) {
+  RR_SaveRvalHadErrorNegative(aEvents, aArguments, aError);
+  auto fd = aArguments->Rval<ssize_t>();
+
+  // Keep track of which fds refer to a file within the install directory,
+  // in case they are mmap'ed later.
+  if (IsRecording() && fd >= 0) {
+    auto path = aArguments->Arg<0, const char*>();
+    const char* installDirectory = InstallDirectory();
+    if (installDirectory) {
+      size_t installLength = strlen(installDirectory);
+      if (!strncmp(installDirectory, path, installLength)) {
+        size_t pathLength = strlen(path);
+        UniquePtr<char[]> suffix(new char[pathLength - installLength + 1]);
+        strcpy(suffix.get(), path + installLength);
+
+        AutoSpinLock lock(gInstallDirectoryFdsLock);
+        gInstallDirectoryFds.emplaceBack(fd, std::move(suffix));
+      }
+    }
+  }
+}
+
+static void RR_close(Stream& aEvents, CallArguments* aArguments,
+                    ErrorType* aError) {
+  RR_SaveRvalHadErrorNegative(aEvents, aArguments, aError);
+
+  if (IsRecording()) {
+    auto fd = aArguments->Arg<0, size_t>();
+    AutoSpinLock lock(gInstallDirectoryFdsLock);
+    for (auto& info : gInstallDirectoryFds) {
+      if (info.mFd == fd) {
+        gInstallDirectoryFds.erase(&info);
+        break;
+      }
+    }
+  }
+}
+
 static PreambleResult Preamble_mmap(CallArguments* aArguments) {
   auto& address = aArguments->Arg<0, void*>();
   auto& size = aArguments->Arg<1, size_t>();
@@ -463,9 +515,57 @@ static PreambleResult Preamble_mmap(CallArguments* aArguments) {
                                      fd, offset);
 
   if (mappingFile) {
-    // Include the data just mapped in the recording.
-    MOZ_RELEASE_ASSERT(memory && memory != (void*)-1);
-    RecordReplayBytes(memory, size);
+    // When replaying, we need to be able to recover the file contents.
+    // If the file descriptor is associated with a file in the install
+    // directory, we only need to include its suffix and a hash.
+    // Otherwise include all contents of the mapped file.
+    MOZ_RELEASE_ASSERT(memory != MAP_FAILED);
+
+    if (IsRecording()) {
+      AutoSpinLock lock(gInstallDirectoryFdsLock);
+      bool found = false;
+      for (const auto& info : gInstallDirectoryFds) {
+        if (info.mFd == fd) {
+          size_t len = strlen(info.mSuffix.get()) + 1;
+          RecordReplayValue(len);
+          RecordReplayBytes(info.mSuffix.get(), len);
+          RecordReplayValue(HashBytes(memory, size));
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        RecordReplayValue(0);
+        RecordReplayBytes(memory, size);
+      }
+    } else {
+      size_t len = RecordReplayValue(0);
+      if (len) {
+        const char* installDirectory = InstallDirectory();
+        MOZ_RELEASE_ASSERT(installDirectory);
+
+        size_t installLength = strlen(installDirectory);
+
+        UniquePtr<char[]> path(new char[installLength + len]);
+        strcpy(path.get(), installDirectory);
+        RecordReplayBytes(path.get() + installLength, len);
+        size_t hash = RecordReplayValue(0);
+
+        int fd = DirectOpenFile(path.get(), /* aWriting */ false);
+        void* fileContents = CallFunction<void*>(gOriginal_mmap, nullptr, size,
+                                                 PROT_READ, MAP_PRIVATE,
+                                                 fd, offset);
+        MOZ_RELEASE_ASSERT(fileContents != MAP_FAILED);
+
+        memcpy(memory, fileContents, size);
+        MOZ_RELEASE_ASSERT(hash == HashBytes(memory, size));
+
+        munmap(fileContents, size);
+        DirectCloseFile(fd);
+      } else {
+        RecordReplayBytes(memory, size);
+      }
+    }
   }
 
   aArguments->Rval<void*>() = memory;
@@ -2059,7 +2159,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"write", RR_SaveRvalHadErrorNegative, nullptr, nullptr,
      MiddlemanPreamble_write},
     {"__write_nocancel", RR_SaveRvalHadErrorNegative},
-    {"open", RR_SaveRvalHadErrorNegative},
+    {"open", RR_open},
     {"__open_nocancel", RR_SaveRvalHadErrorNegative},
     {"recv", RR_SaveRvalHadErrorNegative<RR_WriteBufferViaRval<1, 2>>},
     {"recvmsg", RR_SaveRvalHadErrorNegative<RR_recvmsg>, nullptr, nullptr,
@@ -2072,7 +2172,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"pipe",
      RR_SaveRvalHadErrorNegative<RR_WriteBufferFixedSize<0, 2 * sizeof(int)>>,
      nullptr, nullptr, Preamble_SetError},
-    {"close", RR_SaveRvalHadErrorNegative, nullptr, nullptr, Preamble_Veto<0>},
+    {"close", RR_close, nullptr, nullptr, Preamble_Veto<0>},
     {"__close_nocancel", RR_SaveRvalHadErrorNegative},
     {"mkdir", RR_SaveRvalHadErrorNegative},
     {"dup", RR_SaveRvalHadErrorNegative},
