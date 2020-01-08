@@ -2531,7 +2531,8 @@ nsDOMWindowUtils::ComputeAnimationDistance(Element* aElement,
                                            double* aResult) {
   NS_ENSURE_ARG_POINTER(aElement);
 
-  nsCSSPropertyID property = nsCSSProps::LookupProperty(aProperty);
+  nsCSSPropertyID property =
+      nsCSSProps::LookupProperty(NS_ConvertUTF16toUTF8(aProperty));
   if (property == eCSSProperty_UNKNOWN || nsCSSProps::IsShorthand(property)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -2558,7 +2559,8 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCSSPropertyID propertyID = nsCSSProps::LookupProperty(aProperty);
+  nsCSSPropertyID propertyID =
+      nsCSSProps::LookupProperty(NS_ConvertUTF16toUTF8(aProperty));
   if (propertyID == eCSSProperty_UNKNOWN ||
       nsCSSProps::IsShorthand(propertyID)) {
     return NS_ERROR_INVALID_ARG;

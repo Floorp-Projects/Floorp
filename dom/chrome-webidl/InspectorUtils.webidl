@@ -33,22 +33,23 @@ namespace InspectorUtils {
       unsigned long selectorIndex,
       optional [TreatNullAs=EmptyString] DOMString pseudo = "",
       optional boolean includeVisitedStyle = false);
-  boolean isInheritedProperty(DOMString property);
+  boolean isInheritedProperty(UTF8String property);
   sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options = {});
   sequence<PropertyPref> getCSSPropertyPrefs();
-  [Throws] sequence<DOMString> getCSSValuesForProperty(DOMString property);
+  [Throws] sequence<DOMString> getCSSValuesForProperty(UTF8String property);
   [Throws] DOMString rgbToColorName(octet r, octet g, octet b);
-  InspectorRGBATuple? colorToRGBA(DOMString colorString);
-  boolean isValidCSSColor(DOMString colorString);
-  [Throws] sequence<DOMString> getSubpropertiesForCSSProperty(DOMString property);
-  [Throws] boolean cssPropertyIsShorthand(DOMString property);
+  InspectorRGBATuple? colorToRGBA(UTF8String colorString);
+  boolean isValidCSSColor(UTF8String colorString);
+  [Throws] sequence<DOMString> getSubpropertiesForCSSProperty(UTF8String property);
+  [Throws] boolean cssPropertyIsShorthand(UTF8String property);
 
-  [Throws] boolean cssPropertySupportsType(DOMString property, InspectorPropertyType type);
+  [Throws] boolean cssPropertySupportsType(UTF8String property, InspectorPropertyType type);
 
   boolean isIgnorableWhitespace(CharacterData dataNode);
   Node? getParentForNode(Node node, boolean showingAnonymousContent);
   [NewObject] NodeList getChildrenForNode(Node node,
                                           boolean showingAnonymousContent);
+  // FIXME(emilio, bug 1607408): Remove this.
   sequence<DOMString> getBindingURLs(Element element);
   [Throws] boolean setContentState(Element element, unsigned long long state);
   [Throws] boolean removeContentState(
@@ -74,7 +75,7 @@ namespace InspectorUtils {
   void removePseudoClassLock(Element element, DOMString pseudoClass);
   boolean hasPseudoClassLock(Element element, DOMString pseudoClass);
   void clearPseudoClassLocks(Element element);
-  [Throws] void parseStyleSheet(CSSStyleSheet sheet, DOMString input);
+  [Throws] void parseStyleSheet(CSSStyleSheet sheet, UTF8String input);
   boolean isCustomElementName([TreatNullAs=EmptyString] DOMString name,
                               DOMString? namespaceURI);
 

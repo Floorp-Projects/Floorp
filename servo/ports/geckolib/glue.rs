@@ -6411,64 +6411,61 @@ fn parse_color(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_IsValidCSSColor(value: *const nsAString) -> bool {
-    let value = unsafe { (*value).to_string() };
-    parse_color(&value, None).is_ok()
+pub unsafe extern "C" fn Servo_IsValidCSSColor(value: &nsACString) -> bool {
+    parse_color(value.as_str_unchecked(), None).is_ok()
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ComputeColor(
+pub unsafe extern "C" fn Servo_ComputeColor(
     raw_data: Option<&RawServoStyleSet>,
     current_color: structs::nscolor,
-    value: *const nsAString,
-    result_color: *mut structs::nscolor,
+    value: &nsACString,
+    result_color: &mut structs::nscolor,
     was_current_color: *mut bool,
     loader: *mut Loader,
 ) -> bool {
     use style::gecko;
 
     let current_color = gecko::values::convert_nscolor_to_rgba(current_color);
-    let value = unsafe { (*value).to_string() };
-    let result_color = unsafe { result_color.as_mut().unwrap() };
 
-    let reporter = unsafe { loader.as_mut() }.and_then(|loader| {
+    let reporter = loader.as_mut().and_then(|loader| {
         // Make an ErrorReporter that will report errors as being "from DOM".
         ErrorReporter::new(ptr::null_mut(), loader, ptr::null_mut())
     });
 
-    match parse_color(
-        &value,
+    let specified_color = match parse_color(
+        value.as_str_unchecked(),
         reporter.as_ref().map(|r| r as &dyn ParseErrorReporter),
     ) {
-        Ok(specified_color) => {
-            let computed_color = match raw_data {
-                Some(raw_data) => {
-                    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
-                    let device = data.stylist.device();
-                    let quirks_mode = data.stylist.quirks_mode();
-                    Context::for_media_query_evaluation(device, quirks_mode, |context| {
-                        specified_color.to_computed_color(Some(&context))
-                    })
-                },
-                None => specified_color.to_computed_color(None),
-            };
+        Ok(c) => c,
+        Err(..) => return false,
+    };
 
-            match computed_color {
-                Some(computed_color) => {
-                    let rgba = computed_color.to_rgba(current_color);
-                    *result_color = gecko::values::convert_rgba_to_nscolor(&rgba);
-                    if !was_current_color.is_null() {
-                        unsafe {
-                            *was_current_color = computed_color.is_currentcolor();
-                        }
-                    }
-                    true
-                },
-                None => false,
-            }
+    let computed_color = match raw_data {
+        Some(raw_data) => {
+            let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+            let device = data.stylist.device();
+            let quirks_mode = data.stylist.quirks_mode();
+            Context::for_media_query_evaluation(device, quirks_mode, |context| {
+                specified_color.to_computed_color(Some(&context))
+            })
         },
-        Err(_) => false,
+        None => specified_color.to_computed_color(None),
+    };
+
+    let computed_color = match computed_color {
+        Some(c) => c,
+        None => return false,
+    };
+
+    let rgba = computed_color.to_rgba(current_color);
+    *result_color = gecko::values::convert_rgba_to_nscolor(&rgba);
+
+    if !was_current_color.is_null() {
+        *was_current_color = computed_color.is_currentcolor();
     }
+
+    true
 }
 
 #[no_mangle]

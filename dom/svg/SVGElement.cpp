@@ -1111,10 +1111,11 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
 
   // Get the nsCSSPropertyID ID for our mapped attribute.
   nsCSSPropertyID propertyID =
-      nsCSSProps::LookupProperty(nsDependentAtomString(aMappedAttrName));
+      nsCSSProps::LookupProperty(nsAtomCString(aMappedAttrName));
   if (propertyID != eCSSProperty_UNKNOWN) {
     bool changed = false;  // outparam for ParseProperty.
     NS_ConvertUTF16toUTF8 value(aMappedAttrValue);
+
     // FIXME (bug 1343964): Figure out a better solution for sending the base
     // uri to servo
     nsCOMPtr<nsIReferrerInfo> referrerInfo =
@@ -1139,7 +1140,7 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
   }
   MOZ_ASSERT(aMappedAttrName == nsGkAtoms::lang,
              "Only 'lang' should be unrecognized!");
-  // nsCSSParser doesn't know about 'lang', so we need to handle it specially.
+  // CSS parser doesn't know about 'lang', so we need to handle it specially.
   if (aMappedAttrName == nsGkAtoms::lang) {
     propertyID = eCSSProperty__x_lang;
     RefPtr<nsAtom> atom = NS_Atomize(aMappedAttrValue);
@@ -1152,9 +1153,7 @@ void MappedAttrParser::TellStyleAlreadyParsedResult(
   if (!mDecl) {
     mDecl = new DeclarationBlock();
   }
-  nsCSSPropertyID propertyID =
-      nsCSSProps::LookupProperty(nsDependentAtomString(aAtom));
-
+  nsCSSPropertyID propertyID = nsCSSProps::LookupProperty(nsAtomCString(aAtom));
   SVGElement::UpdateDeclarationBlockFromLength(*mDecl, propertyID, aLength,
                                                SVGElement::ValToUse::Base);
 }

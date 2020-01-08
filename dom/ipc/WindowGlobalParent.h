@@ -113,7 +113,7 @@ class WindowGlobalParent final : public WindowGlobalActor,
   bool HasBeforeUnload() { return mHasBeforeUnload; }
 
   already_AddRefed<mozilla::dom::Promise> DrawSnapshot(
-      const DOMRect* aRect, double aScale, const nsAString& aBackgroundColor,
+      const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,
       mozilla::ErrorResult& aRv);
 
   already_AddRefed<Promise> GetSecurityInfo(ErrorResult& aRv);

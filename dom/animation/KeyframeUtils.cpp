@@ -502,7 +502,7 @@ static bool GetPropertyValuesPairs(JSContext* aCx,
     return false;
   }
   for (size_t i = 0, n = ids.length(); i < n; i++) {
-    nsAutoJSString propName;
+    nsAutoJSCString propName;
     if (!propName.init(aCx, ids[i])) {
       return false;
     }

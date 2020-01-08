@@ -707,7 +707,7 @@ void CanvasPattern::SetTransform(SVGMatrix& aMatrix) {
   mTransform = ToMatrix(aMatrix.GetMatrix());
 }
 
-void CanvasGradient::AddColorStop(float aOffset, const nsAString& aColorstr,
+void CanvasGradient::AddColorStop(float aOffset, const nsACString& aColorstr,
                                   ErrorResult& aRv) {
   if (aOffset < 0.0 || aOffset > 1.0) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
@@ -720,7 +720,6 @@ void CanvasGradient::AddColorStop(float aOffset, const nsAString& aColorstr,
   nscolor color;
   bool ok = ServoCSSParser::ComputeColor(styleSet, NS_RGB(0, 0, 0), aColorstr,
                                          &color);
-
   if (!ok) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
@@ -995,7 +994,7 @@ JSObject* CanvasRenderingContext2D::WrapObject(
   return CanvasRenderingContext2D_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool CanvasRenderingContext2D::ParseColor(const nsAString& aString,
+bool CanvasRenderingContext2D::ParseColor(const nsACString& aString,
                                           nscolor* aColor) {
   Document* document = mCanvasElement ? mCanvasElement->OwnerDoc() : nullptr;
   css::Loader* loader = document ? document->CSSLoader() : nullptr;
@@ -1075,7 +1074,7 @@ void CanvasRenderingContext2D::SetStyleFromString(const nsAString& aStr,
   MOZ_ASSERT(!aStr.IsVoid());
 
   nscolor color;
-  if (!ParseColor(aStr, &color)) {
+  if (!ParseColor(NS_ConvertUTF16toUTF8(aStr), &color)) {
     return;
   }
 
@@ -2193,7 +2192,7 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
 //
 void CanvasRenderingContext2D::SetShadowColor(const nsAString& aShadowColor) {
   nscolor color;
-  if (!ParseColor(aShadowColor, &color)) {
+  if (!ParseColor(NS_ConvertUTF16toUTF8(aShadowColor), &color)) {
     return;
   }
 
@@ -4699,7 +4698,7 @@ void CanvasRenderingContext2D::GetGlobalCompositeOperation(
 
 void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
                                           double aX, double aY, double aW,
-                                          double aH, const nsAString& aBgColor,
+                                          double aH, const nsACString& aBgColor,
                                           uint32_t aFlags,
                                           ErrorResult& aError) {
   if (int32_t(aW) == 0 || int32_t(aH) == 0) {
