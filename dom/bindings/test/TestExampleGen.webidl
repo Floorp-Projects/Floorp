@@ -662,11 +662,11 @@ interface TestExampleInterface {
   void exerciseTypedefInterfaces3(YetAnotherNameForTestInterface arg);
 
   // Deprecated methods and attributes
-  [Deprecated="EnablePrivilege"]
+  [Deprecated="Components"]
   attribute boolean deprecatedAttribute;
-  [Deprecated="EnablePrivilege"]
+  [Deprecated="Components"]
   void deprecatedMethod(boolean arg);
-  [Deprecated="EnablePrivilege"]
+  [Deprecated="Components"]
   void deprecatedMethodWithContext(any arg);
 
   // Static methods and attributes
@@ -675,11 +675,11 @@ interface TestExampleInterface {
   static void staticMethodWithContext(any arg);
 
   // Deprecated methods and attributes;
-  [Deprecated="EnablePrivilege"]
+  [Deprecated="Components"]
   static attribute boolean staticDeprecatedAttribute;
-  [Deprecated="EnablePrivilege"]
+  [Deprecated="Components"]
   static void staticDeprecatedMethod(boolean arg);
-  [Deprecated="EnablePrivilege"]
+  [Deprecated="Components"]
   static void staticDeprecatedMethodWithContext(any arg);
 
   // Overload resolution tests

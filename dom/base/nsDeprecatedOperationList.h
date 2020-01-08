@@ -10,7 +10,6 @@
  * designed to be used as input to the C preprocessor *only*.
  */
 
-DEPRECATED_OPERATION(EnablePrivilege)
 DEPRECATED_OPERATION(MutationEvent)
 DEPRECATED_OPERATION(Components)
 DEPRECATED_OPERATION(NodeIteratorDetach)
