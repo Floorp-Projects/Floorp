@@ -6,11 +6,15 @@
 /* global docShell */
 // eslint-env mozilla/frame-script
 
-addEventListener("TalosContentProfilerCommand", e => {
-  let name = e.detail.name;
-  let data = e.detail.data;
-  sendAsyncMessage("TalosContentProfiler:Command", { name, data });
-});
+addEventListener(
+  "TalosContentProfilerCommand",
+  e => {
+    let name = e.detail.name;
+    let data = e.detail.data;
+    sendAsyncMessage("TalosContentProfiler:Command", { name, data });
+  },
+  { wantUntrusted: true } // since we're exposing to unprivileged
+);
 
 addMessageListener("TalosContentProfiler:Response", msg => {
   let name = msg.data.name;
@@ -31,12 +35,16 @@ addMessageListener("TalosContentProfiler:Response", msg => {
   );
 });
 
-addEventListener("TalosPowersContentForceCCAndGC", e => {
-  Cu.forceGC();
-  Cu.forceCC();
-  Cu.forceShrinkingGC();
-  sendSyncMessage("TalosPowersContent:ForceCCAndGC");
-});
+addEventListener(
+  "TalosPowersContentForceCCAndGC",
+  e => {
+    Cu.forceGC();
+    Cu.forceCC();
+    Cu.forceShrinkingGC();
+    sendSyncMessage("TalosPowersContent:ForceCCAndGC");
+  },
+  { wantUntrusted: true } // since we're exposing to unprivileged
+);
 
 addEventListener(
   "TalosPowersContentFocus",
@@ -61,33 +69,39 @@ addEventListener(
       new content.CustomEvent("TalosPowersContentFocused", contentEvent)
     );
   },
-  true,
-  true
+  { capture: true, wantUntrusted: true } // since we're exposing to unprivileged
 );
 
-addEventListener("TalosPowersContentGetStartupInfo", e => {
-  sendAsyncMessage("TalosPowersContent:GetStartupInfo");
-  addMessageListener(
-    "TalosPowersContent:GetStartupInfo:Result",
-    function onResult(msg) {
-      removeMessageListener(
-        "TalosPowersContent:GetStartupInfo:Result",
-        onResult
-      );
-      let event = Cu.cloneInto(
-        {
-          bubbles: true,
-          detail: msg.data,
-        },
-        content
-      );
+addEventListener(
+  "TalosPowersContentGetStartupInfo",
+  e => {
+    sendAsyncMessage("TalosPowersContent:GetStartupInfo");
+    addMessageListener(
+      "TalosPowersContent:GetStartupInfo:Result",
+      function onResult(msg) {
+        removeMessageListener(
+          "TalosPowersContent:GetStartupInfo:Result",
+          onResult
+        );
+        let event = Cu.cloneInto(
+          {
+            bubbles: true,
+            detail: msg.data,
+          },
+          content
+        );
 
-      content.dispatchEvent(
-        new content.CustomEvent("TalosPowersContentGetStartupInfoResult", event)
-      );
-    }
-  );
-});
+        content.dispatchEvent(
+          new content.CustomEvent(
+            "TalosPowersContentGetStartupInfoResult",
+            event
+          )
+        );
+      }
+    );
+  },
+  { wantUntrusted: true } // since we're exposing to unprivileged
+);
 
 addEventListener(
   "TalosPowersContentDumpConsole",
@@ -112,18 +126,22 @@ addEventListener(
  * fire the TalosPowersGoQuitApplication custom event. This will
  * attempt to force-quit the browser.
  */
-addEventListener("TalosPowersGoQuitApplication", e => {
-  // If we're loaded in a low-priority background process, like
-  // the background page thumbnailer, then we shouldn't be allowed
-  // to quit the whole application. This is a workaround until
-  // bug 1164459 is fixed.
-  let priority = docShell
-    .QueryInterface(Ci.nsIDocumentLoader)
-    .loadGroup.QueryInterface(Ci.nsISupportsPriority).priority;
-  if (priority != Ci.nsISupportsPriority.PRIORITY_LOWEST) {
-    sendAsyncMessage("Talos:ForceQuit", e.detail);
-  }
-});
+addEventListener(
+  "TalosPowersGoQuitApplication",
+  e => {
+    // If we're loaded in a low-priority background process, like
+    // the background page thumbnailer, then we shouldn't be allowed
+    // to quit the whole application. This is a workaround until
+    // bug 1164459 is fixed.
+    let priority = docShell
+      .QueryInterface(Ci.nsIDocumentLoader)
+      .loadGroup.QueryInterface(Ci.nsISupportsPriority).priority;
+    if (priority != Ci.nsISupportsPriority.PRIORITY_LOWEST) {
+      sendAsyncMessage("Talos:ForceQuit", e.detail);
+    }
+  },
+  { wantUntrusted: true } // since we're exposing to unprivileged
+);
 
 /* *
  * Mediator for the generic ParentExec mechanism.
@@ -179,6 +197,5 @@ addEventListener(
       id: uniqueMessageId,
     });
   },
-  false,
-  true
-); // wantsUntrusted since we're exposing to unprivileged
+  { wantUntrusted: true } // since we're exposing to unprivileged
+);
