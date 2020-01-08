@@ -7,7 +7,10 @@
 const TEST_URI = `data:text/html;charset=utf-8,
 <script>
 let x = 3, y = 4;
-function foo() {
+function zzyzx() {
+  x = 10;
+}
+function zzyzx2() {
   x = 10;
 }
 </script>
@@ -35,7 +38,7 @@ add_task(async function() {
   setInputValue(hud, "x + 1");
   await waitForEagerEvaluationResult(hud, "4");
 
-  setInputValue(hud, "foo()");
+  setInputValue(hud, "zzyzx()");
   await waitForNoEagerEvaluationResult(hud);
 
   setInputValue(hud, "x + 2");
@@ -67,4 +70,22 @@ add_task(async function() {
 
   setInputValue(hud, "Math.round(3.2)");
   await waitForEagerEvaluationResult(hud, "3");
+});
+
+// Test that the currently selected autocomplete result is eagerly evaluated.
+add_task(async function() {
+  await pushPref("devtools.webconsole.input.eagerEvaluation", true);
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
+
+  const { autocompletePopup: popup } = jsterm;
+
+  ok(!popup.isOpen, "popup is not open");
+  const onPopupOpen = popup.once("popup-opened");
+  EventUtils.sendString("zzy");
+  await onPopupOpen;
+
+  await waitForEagerEvaluationResult(hud, "function zzyzx()");
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  await waitForEagerEvaluationResult(hud, "function zzyzx2()");
 });
