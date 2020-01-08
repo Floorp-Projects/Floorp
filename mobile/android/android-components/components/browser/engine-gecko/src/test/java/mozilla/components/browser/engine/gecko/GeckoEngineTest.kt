@@ -18,6 +18,8 @@ import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
+import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
@@ -30,6 +32,7 @@ import mozilla.components.test.ReflectionUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -38,6 +41,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.ContentBlocking
@@ -50,6 +54,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.StorageController
 import org.mozilla.geckoview.WebExtensionController
+import org.mozilla.geckoview.WebPushController
 import org.robolectric.Robolectric
 import java.io.IOException
 import java.lang.Exception
@@ -210,35 +215,6 @@ class GeckoEngineTest {
     }
 
     @Test
-    fun `setEnhancedTrackingProtectionLevel MUST always be set to DEFAULT unless the tracking protection policy is none`() {
-        val mockRuntime = mock<GeckoRuntime>()
-        whenever(mockRuntime.settings).thenReturn(mock())
-        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
-
-        val engine = GeckoEngine(testContext, runtime = mockRuntime)
-
-        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
-
-        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
-            ContentBlocking.EtpLevel.DEFAULT
-        )
-
-        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
-
-        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
-            ContentBlocking.EtpLevel.NONE
-        )
-
-        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
-            arrayOf(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
-        )
-
-        verify(mockRuntime.settings.contentBlocking, times(2)).setEnhancedTrackingProtectionLevel(
-            ContentBlocking.EtpLevel.DEFAULT
-        )
-    }
-
-    @Test
     fun `WHEN a strict tracking protection policy is set THEN the strict social list must be activated`() {
         val mockRuntime = mock<GeckoRuntime>()
         whenever(mockRuntime.settings).thenReturn(mock())
@@ -249,6 +225,48 @@ class GeckoEngineTest {
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
 
         verify(mockRuntime.settings.contentBlocking).setStrictSocialTrackingProtection(true)
+    }
+
+    @Test
+    fun `WHEN a strict tracking protection policy is set THEN the setEnhancedTrackingProtectionLevel must be STRICT`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.STRICT
+        )
+    }
+
+    @Test
+    fun `setEnhancedTrackingProtectionLevel MUST always be set to STRICT unless the tracking protection policy is none`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.recommended()
+
+        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.STRICT
+        )
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        verify(mockRuntime.settings.contentBlocking, times(2)).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.STRICT
+        )
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
+
+        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.NONE
+        )
     }
 
     @Test
@@ -480,7 +498,7 @@ class GeckoEngineTest {
 
         geckoDelegateCaptor.value.onNewTab(null, "https://www.mozilla.org")
         verify(webExtensionsDelegate).onNewTab(eq(null), eq("https://www.mozilla.org"),
-                engineSessionCaptor.capture())
+            engineSessionCaptor.capture())
         assertNotNull(engineSessionCaptor.value)
         assertFalse(engineSessionCaptor.value.geckoSession.isOpen)
 
@@ -488,7 +506,7 @@ class GeckoEngineTest {
         val geckoExtCap = argumentCaptor<mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension>()
         geckoDelegateCaptor.value.onNewTab(webExt, "https://test-moz.org")
         verify(webExtensionsDelegate).onNewTab(geckoExtCap.capture(), eq("https://test-moz.org"),
-                engineSessionCaptor.capture())
+            engineSessionCaptor.capture())
         assertNotNull(geckoExtCap.value)
         assertEquals(geckoExtCap.value.id, webExt.id)
         assertNotNull(engineSessionCaptor.value)
@@ -547,6 +565,57 @@ class GeckoEngineTest {
         verify(webExtensionsDelegate).onInstalled(extCaptor.capture())
         assertEquals("test-webext", extCaptor.value.id)
         assertEquals("resource://android/assets/extensions/test", extCaptor.value.url)
+    }
+
+    @Test
+    fun `web extension delegate notified of browser actions`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val result = GeckoResult<Void>()
+        whenever(runtime.registerWebExtension(any())).thenReturn(result)
+
+        val extension = spy(mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            "test-webext",
+            "resource://android/assets/extensions/test",
+            true,
+            true
+        ))
+        engine.installWebExtension(extension)
+        result.complete(null)
+
+        val actionHandlerCaptor = argumentCaptor<ActionHandler>()
+        verify(extension).registerActionHandler(actionHandlerCaptor.capture())
+
+        val browserAction: BrowserAction = mock()
+        actionHandlerCaptor.value.onBrowserAction(extension, null, browserAction)
+        verify(webExtensionsDelegate).onBrowserActionDefined(eq(extension), eq(browserAction))
+        assertNull(actionHandlerCaptor.value.onToggleBrowserActionPopup(extension, browserAction))
+        verify(webExtensionsDelegate).onToggleBrowserActionPopup(eq(extension), any(), eq(browserAction))
+
+        whenever(webExtensionsDelegate.onToggleBrowserActionPopup(any(), any(), any())).thenReturn(mock())
+        assertNotNull(actionHandlerCaptor.value.onToggleBrowserActionPopup(extension, browserAction))
+    }
+
+    @Test
+    fun `list web extensions successfully`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = GeckoEngine(context, runtime = runtime)
+        var extensions: List<WebExtension>? = null
+        var onErrorCalled = false
+
+        engine.listInstalledWebExtensions(
+            onSuccess = { extensions = it },
+            onError = { onErrorCalled = true }
+        )
+
+        assertFalse(onErrorCalled)
+        assertNotNull(extensions)
     }
 
     @Test(expected = RuntimeException::class)
@@ -677,11 +746,18 @@ class GeckoEngineTest {
         var onSuccessCalled = false
         var onErrorCalled = false
         val mockSession = mock<GeckoEngineSession>()
+        val mockGeckoSetting = mock<GeckoRuntimeSettings>()
+        val mockGeckoContentBlockingSetting = mock<ContentBlocking.Settings>()
         var trackersLog: List<TrackerLog>? = null
 
         val mockContentBlockingController = mock<ContentBlockingController>()
         var logEntriesResult = GeckoResult<List<ContentBlockingController.LogEntry>>()
 
+        whenever(runtime.settings).thenReturn(mockGeckoSetting)
+        whenever(mockGeckoSetting.contentBlocking).thenReturn(mockGeckoContentBlockingSetting)
+        whenever(mockGeckoContentBlockingSetting.getEnhancedTrackingProtectionLevel()).thenReturn(
+            ContentBlocking.EtpLevel.STRICT
+        )
         whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
         whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
 
@@ -728,6 +804,76 @@ class GeckoEngineTest {
         assertTrue(onErrorCalled)
     }
 
+    @Test
+    fun `fetch trackers logged of the level 2 list`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = GeckoEngine(context, runtime = runtime)
+        val mockSession = mock<GeckoEngineSession>()
+        val mockGeckoSetting = mock<GeckoRuntimeSettings>()
+        val mockGeckoContentBlockingSetting = mock<ContentBlocking.Settings>()
+        var trackersLog: List<TrackerLog>? = null
+
+        val mockContentBlockingController = mock<ContentBlockingController>()
+        var logEntriesResult = GeckoResult<List<ContentBlockingController.LogEntry>>()
+
+        whenever(runtime.settings).thenReturn(mockGeckoSetting)
+        whenever(mockGeckoSetting.contentBlocking).thenReturn(mockGeckoContentBlockingSetting)
+        whenever(mockGeckoContentBlockingSetting.getEnhancedTrackingProtectionLevel()).thenReturn(
+            ContentBlocking.EtpLevel.STRICT
+        )
+        whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            arrayOf(
+                TrackingCategory.STRICT,
+                TrackingCategory.CONTENT
+            )
+        )
+
+        logEntriesResult = GeckoResult()
+        whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+
+        engine.getTrackersLog(
+            mockSession,
+            onSuccess = {
+                trackersLog = it
+            },
+            onError = { }
+        )
+        logEntriesResult.complete(createDummyLogEntryList())
+
+        val trackerLog = trackersLog!![1]
+        assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
+    }
+
+    @Test
+    fun `registerWebNotificationDelegate sets delegate`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = GeckoEngine(context, runtime = runtime)
+
+        engine.registerWebNotificationDelegate(mock())
+
+        verify(runtime).webNotificationDelegate = any()
+    }
+
+    @Test
+    fun `registerWebPushDelegate sets delegate and returns same handler`() {
+        val runtime = mock<GeckoRuntime>()
+        val controller: WebPushController = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+
+        whenever(runtime.webPushController).thenReturn(controller)
+
+        val handler1 = engine.registerWebPushDelegate(mock())
+        val handler2 = engine.registerWebPushDelegate(mock())
+
+        verify(controller, times(2)).setDelegate(any())
+
+        assert(handler1 == handler2)
+    }
+
     private fun createDummyLogEntryList(): List<ContentBlockingController.LogEntry> {
         val addLogEntry = object : ContentBlockingController.LogEntry() {}
 
@@ -739,14 +885,16 @@ class GeckoEngineTest {
         val blockedCyptominingContent = createBlockingData(Event.BLOCKED_CRYPTOMINING_CONTENT)
         val blockedSocialContent = createBlockingData(Event.BLOCKED_SOCIALTRACKING_CONTENT)
 
-        val loadedTrackingContent = createBlockingData(Event.LOADED_TRACKING_CONTENT)
+        val loadedTrackingLevel1Content = createBlockingData(Event.LOADED_LEVEL_1_TRACKING_CONTENT)
+        val loadedTrackingLevel2Content = createBlockingData(Event.LOADED_LEVEL_2_TRACKING_CONTENT)
         val loadedFingerprintingContent = createBlockingData(Event.LOADED_FINGERPRINTING_CONTENT)
         val loadedCyptominingContent = createBlockingData(Event.LOADED_CRYPTOMINING_CONTENT)
         val loadedSocialContent = createBlockingData(Event.LOADED_SOCIALTRACKING_CONTENT)
 
         val contentBlockingList = listOf(
             blockedTrackingContent,
-            loadedTrackingContent,
+            loadedTrackingLevel1Content,
+            loadedTrackingLevel2Content,
             blockedFingerprintingContent,
             loadedFingerprintingContent,
             blockedCyptominingContent,
@@ -756,9 +904,14 @@ class GeckoEngineTest {
             loadedSocialContent
         )
 
-        ReflectionUtils.setField(addLogEntry, "blockingData", contentBlockingList)
+        val addLogSecondEntry = object : ContentBlockingController.LogEntry() {}
+        ReflectionUtils.setField(addLogSecondEntry, "origin", "www.tracker2.com")
+        val contentBlockingSecondEntryList = listOf(loadedTrackingLevel2Content)
 
-        return listOf(addLogEntry)
+        ReflectionUtils.setField(addLogEntry, "blockingData", contentBlockingList)
+        ReflectionUtils.setField(addLogSecondEntry, "blockingData", contentBlockingSecondEntryList)
+
+        return listOf(addLogEntry, addLogSecondEntry)
     }
 
     private fun createBlockingData(category: Int): ContentBlockingController.LogEntry.BlockingData {

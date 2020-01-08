@@ -66,6 +66,11 @@ class GeckoEngineSession(
     internal lateinit var geckoSession: GeckoSession
     internal var currentUrl: String? = null
     internal var scrollY: Int = 0
+
+    // This is set once the first content paint has occurred and can be used to
+    // decide if it's safe to call capturePixels on the view.
+    internal var firstContentfulPaint = false
+
     internal var job: Job = Job()
     private var lastSessionState: GeckoSession.SessionState? = null
     private var stateBeforeCrash: GeckoSession.SessionState? = null
@@ -86,8 +91,6 @@ class GeckoEngineSession(
 
     private var initialLoad = true
 
-    private var requestFromWebContent = false
-
     override val coroutineContext: CoroutineContext
         get() = context + job
 
@@ -99,7 +102,6 @@ class GeckoEngineSession(
      * See [EngineSession.loadUrl]
      */
     override fun loadUrl(url: String, parent: EngineSession?, flags: LoadUrlFlags) {
-        requestFromWebContent = false
         geckoSession.loadUri(url, (parent as? GeckoEngineSession)?.geckoSession, flags.value)
     }
 
@@ -107,7 +109,6 @@ class GeckoEngineSession(
      * See [EngineSession.loadData]
      */
     override fun loadData(data: String, mimeType: String, encoding: String) {
-        requestFromWebContent = false
         when (encoding) {
             "base64" -> geckoSession.loadData(data.toByteArray(), mimeType)
             else -> geckoSession.loadString(data, mimeType)
@@ -125,7 +126,6 @@ class GeckoEngineSession(
      * See [EngineSession.reload]
      */
     override fun reload() {
-        requestFromWebContent = false
         geckoSession.reload()
     }
 
@@ -133,7 +133,6 @@ class GeckoEngineSession(
      * See [EngineSession.goBack]
      */
     override fun goBack() {
-        requestFromWebContent = false
         geckoSession.goBack()
     }
 
@@ -141,7 +140,6 @@ class GeckoEngineSession(
      * See [EngineSession.goForward]
      */
     override fun goForward() {
-        requestFromWebContent = false
         geckoSession.goForward()
     }
 
@@ -322,6 +320,7 @@ class GeckoEngineSession(
         super.close()
         job.cancel()
         geckoSession.close()
+        firstContentfulPaint = false
     }
 
     /**
@@ -360,7 +359,7 @@ class GeckoEngineSession(
             val response = settings.requestInterceptor?.onLoadRequest(
                 this@GeckoEngineSession,
                 request.uri,
-                requestFromWebContent,
+                request.hasUserGesture,
                 isSameDomain
             )?.apply {
                 when (this) {
@@ -381,7 +380,7 @@ class GeckoEngineSession(
                     onLoadRequest(
                         url = request.uri,
                         triggeredByRedirect = request.isRedirect,
-                        triggeredByWebContent = requestFromWebContent
+                        triggeredByWebContent = request.hasUserGesture
                     )
                 }
 
@@ -461,7 +460,6 @@ class GeckoEngineSession(
             // by the time we reach here, any new request will come from web content.
             // If it comes from the chrome, loadUrl(url) or loadData(string) will set it to
             // false.
-            requestFromWebContent = true
             notifyObservers {
                 onProgress(PROGRESS_STOP)
                 onLoadingStateChange(false)
@@ -556,6 +554,10 @@ class GeckoEngineSession(
     @Suppress("ComplexMethod")
     internal fun createContentDelegate() = object : GeckoSession.ContentDelegate {
         override fun onFirstComposite(session: GeckoSession) = Unit
+
+        override fun onFirstContentfulPaint(session: GeckoSession) {
+            firstContentfulPaint = true
+        }
 
         override fun onContextMenu(
             session: GeckoSession,

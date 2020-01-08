@@ -4,16 +4,22 @@
 
 package mozilla.components.browser.engine.gecko.webextension
 
+import android.graphics.Bitmap
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoResult
+import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.WebExtension as GeckoNativeWebExtension
+import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionAction
 
 /**
  * Gecko-based implementation of [WebExtension], wrapping the native web
@@ -31,6 +37,8 @@ class GeckoWebExtension(
     ),
     private val connectedPorts: MutableMap<PortId, Port> = mutableMapOf()
 ) : WebExtension(id, url, supportActions) {
+
+    private val logger = Logger("GeckoWebExtension")
 
     /**
      * Uniquely identifies a port using its name and the session it
@@ -146,10 +154,73 @@ class GeckoWebExtension(
         }
     }
 
+    /**
+     * See [WebExtension.registerActionHandler].
+     */
+    override fun registerActionHandler(actionHandler: ActionHandler) {
+        if (!supportActions) {
+            logger.error("Attempt to register default action handler but browser and page " +
+                "action support is turned off for this extension: $id")
+            return
+        }
+
+        val actionDelegate = object : GeckoNativeWebExtension.ActionDelegate {
+
+            override fun onBrowserAction(
+                ext: GeckoNativeWebExtension,
+                // Session will always be null here for the global default delegate
+                session: GeckoSession?,
+                action: GeckoNativeWebExtensionAction
+            ) {
+                actionHandler.onBrowserAction(this@GeckoWebExtension, null, action.toBrowserAction())
+            }
+
+            override fun onTogglePopup(
+                ext: GeckoNativeWebExtension,
+                action: GeckoNativeWebExtensionAction
+            ): GeckoResult<GeckoSession>? {
+                val session = actionHandler.onToggleBrowserActionPopup(this@GeckoWebExtension, action.toBrowserAction())
+                return session?.let { GeckoResult.fromValue((session as GeckoEngineSession).geckoSession) }
+            }
+        }
+
+        nativeExtension.setActionDelegate(actionDelegate)
+    }
+
+    /**
+     * See [WebExtension.registerActionHandler].
+     */
+    override fun registerActionHandler(session: EngineSession, actionHandler: ActionHandler) {
+        if (!supportActions) {
+            logger.error("Attempt to register action handler on session but browser and page " +
+                "action support is turned off for this extension: $id")
+            return
+        }
+
+        val actionDelegate = object : GeckoNativeWebExtension.ActionDelegate {
+
+            override fun onBrowserAction(
+                ext: GeckoNativeWebExtension,
+                geckoSession: GeckoSession?,
+                action: GeckoNativeWebExtensionAction
+            ) {
+                actionHandler.onBrowserAction(this@GeckoWebExtension, session, action.toBrowserAction())
+            }
+        }
+
+        val geckoSession = (session as GeckoEngineSession).geckoSession
+        geckoSession.setWebExtensionActionDelegate(nativeExtension, actionDelegate)
+    }
+
+    /**
+     * See [WebExtension.hasActionHandler].
+     */
+    override fun hasActionHandler(session: EngineSession): Boolean {
+        val geckoSession = (session as GeckoEngineSession).geckoSession
+        return geckoSession.getWebExtensionActionDelegate(nativeExtension) != null
+    }
+
     // Not yet supported
-    override fun registerActionHandler(actionHandler: ActionHandler) = Unit
-    override fun registerActionHandler(session: EngineSession, actionHandler: ActionHandler) = Unit
-    override fun hasActionHandler(session: EngineSession) = false
     override fun getMetadata(): Metadata? = null
     override fun isEnabled(): Boolean = true
 }
@@ -181,4 +252,22 @@ private fun createWebExtensionFlags(allowContentMessaging: Boolean): Long {
     } else {
         GeckoNativeWebExtension.Flags.NONE
     }
+}
+
+private fun GeckoNativeWebExtensionAction.toBrowserAction(): BrowserAction {
+    val loadIcon: (suspend (Int) -> Bitmap?)? = icon?.let {
+        { size -> icon?.get(size)?.await() }
+    }
+
+    val onClick = { click() }
+
+    return BrowserAction(
+        title,
+        enabled,
+        loadIcon,
+        badgeText,
+        badgeTextColor,
+        badgeBackgroundColor,
+        onClick
+    )
 }

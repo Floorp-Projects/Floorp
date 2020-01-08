@@ -10,6 +10,9 @@ import mozilla.components.browser.engine.gecko.integration.LocaleSettingUpdater
 import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+import mozilla.components.browser.engine.gecko.webnotifications.GeckoWebNotificationDelegate
+import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushDelegate
+import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushHandler
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -23,8 +26,13 @@ import mozilla.components.concept.engine.content.blocking.TrackingProtectionExce
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
+import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
+import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
+import mozilla.components.concept.engine.webpush.WebPushDelegate
+import mozilla.components.concept.engine.webpush.WebPushHandler
 import org.json.JSONObject
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
@@ -42,6 +50,7 @@ import java.util.WeakHashMap
 /**
  * Gecko-based implementation of Engine interface.
  */
+@Suppress("TooManyFunctions", "LargeClass")
 class GeckoEngine(
     context: Context,
     private val defaultSettings: Settings? = null,
@@ -53,6 +62,7 @@ class GeckoEngine(
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
     private var webExtensionDelegate: WebExtensionDelegate? = null
+    private var webPushHandler: WebPushHandler? = null
 
     init {
         runtime.delegate = GeckoRuntime.Delegate {
@@ -140,16 +150,46 @@ class GeckoEngine(
         onSuccess: ((WebExtension) -> Unit),
         onError: ((String, Throwable) -> Unit)
     ) {
-        GeckoWebExtension(id, url, allowContentMessaging, supportActions).also { ext ->
-            runtime.registerWebExtension(ext.nativeExtension).then({
-                webExtensionDelegate?.onInstalled(ext)
-                onSuccess(ext)
-                GeckoResult<Void>()
-            }, {
-                throwable -> onError(id, throwable)
-                GeckoResult<Void>()
+        val ext = GeckoWebExtension(id, url, allowContentMessaging, supportActions)
+        installWebExtension(ext, onSuccess, onError)
+    }
+
+    internal fun installWebExtension(
+        ext: GeckoWebExtension,
+        onSuccess: ((WebExtension) -> Unit) = { },
+        onError: ((String, Throwable) -> Unit) = { _, _ -> }
+    ) {
+        if (ext.supportActions) {
+            // We currently have to install the global action handler before we
+            // install the extension which is why this is done here directly.
+            // This code can be removed from the engine once the new GV addon
+            // management API lands. Then the global handlers will be invoked
+            // with the latest state whenever they are registered:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1599897
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1582185
+            ext.registerActionHandler(object : ActionHandler {
+                override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: BrowserAction) {
+                    webExtensionDelegate?.onBrowserActionDefined(extension, action)
+                }
+
+                override fun onToggleBrowserActionPopup(
+                    extension: WebExtension,
+                    action: BrowserAction
+                ): EngineSession? {
+                    val session = GeckoEngineSession(runtime)
+                    return webExtensionDelegate?.onToggleBrowserActionPopup(extension, session, action)
+                }
             })
         }
+
+        runtime.registerWebExtension(ext.nativeExtension).then({
+            webExtensionDelegate?.onInstalled(ext)
+            onSuccess(ext)
+            GeckoResult<Void>()
+        }, {
+            throwable -> onError(ext.id, throwable)
+            GeckoResult<Void>()
+        })
     }
 
     /**
@@ -200,6 +240,38 @@ class GeckoEngine(
         }
 
         runtime.webExtensionController.tabDelegate = tabsDelegate
+    }
+
+    /**
+     * See [Engine.listInstalledWebExtensions].
+     */
+    override fun listInstalledWebExtensions(onSuccess: (List<WebExtension>) -> Unit, onError: (Throwable) -> Unit) {
+        // TODO https://github.com/mozilla-mobile/android-components/issues/4500
+        onSuccess(emptyList())
+    }
+
+    /**
+     * See [Engine.registerWebNotificationDelegate].
+     */
+    override fun registerWebNotificationDelegate(
+        webNotificationDelegate: WebNotificationDelegate
+    ) {
+        runtime.webNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
+    }
+
+    /**
+     * See [Engine.registerWebPushDelegate].
+     */
+    override fun registerWebPushDelegate(
+        webPushDelegate: WebPushDelegate
+    ): WebPushHandler {
+        runtime.webPushController.setDelegate(GeckoWebPushDelegate(webPushDelegate))
+
+        if (webPushHandler == null) {
+            webPushHandler = GeckoWebPushHandler(runtime)
+        }
+
+        return requireNotNull(webPushHandler)
     }
 
     /**
@@ -272,7 +344,7 @@ class GeckoEngine(
                         when {
                             policy.trackingCategories.contains(TrackingCategory.NONE) ->
                                 ContentBlocking.EtpLevel.NONE
-                            else -> ContentBlocking.EtpLevel.DEFAULT
+                            else -> ContentBlocking.EtpLevel.STRICT
                         }
                     runtime.settings.contentBlocking.setEnhancedTrackingProtectionLevel(etpLevel)
                     runtime.settings.contentBlocking.setStrictSocialTrackingProtection(
@@ -383,6 +455,48 @@ class GeckoEngine(
             this.forceUserScalableContent = it.forceUserScalableContent
         }
     }
+
+    internal fun ContentBlockingController.LogEntry.BlockingData.getLoadedCategory(): TrackingCategory {
+        return when (category) {
+            Event.LOADED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
+            Event.LOADED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
+            Event.LOADED_SOCIALTRACKING_CONTENT -> TrackingCategory.MOZILLA_SOCIAL
+            Event.LOADED_LEVEL_1_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
+            Event.LOADED_LEVEL_2_TRACKING_CONTENT -> {
+
+                // We are making sure that we are only showing trackers that our settings are
+                // taking into consideration.
+                val isContentListActive =
+                    settings.trackingProtectionPolicy?.contains(TrackingCategory.CONTENT)
+                        ?: false
+                val isStrictLevelActive =
+                    runtime.settings
+                        .contentBlocking
+                        .getEnhancedTrackingProtectionLevel() == ContentBlocking.EtpLevel.STRICT
+
+                if (isStrictLevelActive && isContentListActive) {
+                    TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
+                } else {
+                    TrackingCategory.NONE
+                }
+            }
+            else -> TrackingCategory.NONE
+        }
+    }
+
+    internal fun ContentBlockingController.LogEntry.toTrackerLog(): TrackerLog {
+        val cookiesHasBeenBlocked = this.blockingData.any { it.hasBlockedCookies() }
+        return TrackerLog(
+            url = origin,
+            loadedCategories = blockingData.map { it.getLoadedCategory() }
+                .filterNot { it == TrackingCategory.NONE }
+                .distinct(),
+            blockedCategories = blockingData.map { it.getBlockedCategory() }
+                .filterNot { it == TrackingCategory.NONE }
+                .distinct(),
+            cookiesHasBeenBlocked = cookiesHasBeenBlocked
+        )
+    }
 }
 
 internal fun ContentBlockingController.LogEntry.BlockingData.hasBlockedCookies(): Boolean {
@@ -401,24 +515,4 @@ internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(
         Event.BLOCKED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
         else -> TrackingCategory.NONE
     }
-}
-
-internal fun ContentBlockingController.LogEntry.BlockingData.getLoadedCategory(): TrackingCategory {
-    return when (category) {
-        Event.LOADED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
-        Event.LOADED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
-        Event.LOADED_SOCIALTRACKING_CONTENT -> TrackingCategory.MOZILLA_SOCIAL
-        Event.LOADED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
-        else -> TrackingCategory.NONE
-    }
-}
-
-internal fun ContentBlockingController.LogEntry.toTrackerLog(): TrackerLog {
-    val cookiesHasBeenBlocked = this.blockingData.any { it.hasBlockedCookies() }
-    return TrackerLog(
-        url = origin,
-        loadedCategories = blockingData.map { it.getLoadedCategory() }.filterNot { it == TrackingCategory.NONE },
-        blockedCategories = blockingData.map { it.getBlockedCategory() }.filterNot { it == TrackingCategory.NONE },
-        cookiesHasBeenBlocked = cookiesHasBeenBlocked
-    )
 }

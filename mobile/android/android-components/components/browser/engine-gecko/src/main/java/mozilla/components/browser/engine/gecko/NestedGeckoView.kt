@@ -4,13 +4,12 @@
 
 package mozilla.components.browser.engine.gecko
 
-import android.annotation.SuppressLint
 import android.content.Context
+import android.view.MotionEvent
+import androidx.annotation.VisibleForTesting
 import androidx.core.view.NestedScrollingChild
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat
-import android.view.MotionEvent
-import androidx.annotation.VisibleForTesting
 import org.mozilla.geckoview.GeckoView
 
 /**
@@ -44,8 +43,7 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
         isNestedScrollingEnabled = true
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(ev: MotionEvent): Boolean {
+    override fun onTouchEventForResult(ev: MotionEvent): Int {
         val event = MotionEvent.obtain(ev)
         val action = ev.actionMasked
         val eventY = event.y.toInt()
@@ -83,7 +81,7 @@ open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrolli
         }
 
         // Execute event handler from parent class in all cases
-        val eventHandled = super.onTouchEvent(event)
+        val eventHandled = super.onTouchEventForResult(event)
 
         // Recycle previously obtained event
         event.recycle()

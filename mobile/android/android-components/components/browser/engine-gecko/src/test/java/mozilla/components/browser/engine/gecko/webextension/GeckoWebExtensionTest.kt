@@ -6,6 +6,8 @@ package mozilla.components.browser.engine.gecko.webextension
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.support.test.argumentCaptor
@@ -17,8 +19,10 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoSession
@@ -42,8 +46,8 @@ class GeckoWebExtensionTest {
             supportActions = true,
             nativeExtension = nativeGeckoWebExt
         )
-        extension.registerBackgroundMessageHandler("mozacTest", messageHandler)
 
+        extension.registerBackgroundMessageHandler("mozacTest", messageHandler)
         verify(nativeGeckoWebExt).setMessageDelegate(messageDelegateCaptor.capture(), eq("mozacTest"))
 
         // Verify messages are forwarded to message handler
@@ -196,5 +200,87 @@ class GeckoWebExtensionTest {
         extension.disconnectPort("mozacTest")
         verify(port).disconnect()
         assertNull(extension.getConnectedPort("mozacTest"))
+    }
+
+    @Test
+    fun `register global default action handler`() {
+        val nativeGeckoWebExt: WebExtension = mock()
+        val actionHandler: ActionHandler = mock()
+        val actionDelegateCaptor = argumentCaptor<WebExtension.ActionDelegate>()
+        val actionCaptor = argumentCaptor<BrowserAction>()
+        val nativeBrowserAction: WebExtension.Action = mock()
+
+        // Verify actions will not be acted on when not supported
+        val extensionWithActions = GeckoWebExtension(
+            "mozacTest",
+            "url",
+            false,
+            false,
+            nativeGeckoWebExt
+        )
+        extensionWithActions.registerActionHandler(actionHandler)
+        verify(nativeGeckoWebExt, never()).setActionDelegate(actionDelegateCaptor.capture())
+
+        // Create extension and register global default action handler
+        val extension = GeckoWebExtension(
+            id = "mozacTest",
+            url = "url",
+            allowContentMessaging = true,
+            supportActions = true,
+            nativeExtension = nativeGeckoWebExt
+        )
+        extension.registerActionHandler(actionHandler)
+        verify(nativeGeckoWebExt).setActionDelegate(actionDelegateCaptor.capture())
+
+        // Verify that browser actions are forwarded to the handler
+        actionDelegateCaptor.value.onBrowserAction(nativeGeckoWebExt, null, nativeBrowserAction)
+        verify(actionHandler).onBrowserAction(eq(extension), eq(null), actionCaptor.capture())
+
+        // Verify that toggle popup is forwarded to the handler
+        actionDelegateCaptor.value.onTogglePopup(nativeGeckoWebExt, nativeBrowserAction)
+        verify(actionHandler).onToggleBrowserActionPopup(eq(extension), actionCaptor.capture())
+
+        // We don't have access to the native WebExtension.Action fields and
+        // can't mock them either, but we can verify that we've linked
+        // the actions by simulating a click.
+        actionCaptor.value.onClick()
+        verify(nativeBrowserAction).click()
+    }
+
+    @Test
+    fun `register session-specific action handler`() {
+        val session: GeckoEngineSession = mock()
+        val geckoSession: GeckoSession = mock()
+        whenever(session.geckoSession).thenReturn(geckoSession)
+
+        val nativeGeckoWebExt: WebExtension = mock()
+        val actionHandler: ActionHandler = mock()
+        val actionDelegateCaptor = argumentCaptor<WebExtension.ActionDelegate>()
+        val actionCaptor = argumentCaptor<BrowserAction>()
+        val nativeBrowserAction: WebExtension.Action = mock()
+
+        // Create extension and register action handler for session
+        val extension = GeckoWebExtension(
+            id = "mozacTest",
+            url = "url",
+            allowContentMessaging = true,
+            supportActions = true,
+            nativeExtension = nativeGeckoWebExt
+        )
+        extension.registerActionHandler(session, actionHandler)
+        verify(geckoSession).setWebExtensionActionDelegate(eq(nativeGeckoWebExt), actionDelegateCaptor.capture())
+
+        whenever(geckoSession.getWebExtensionActionDelegate(nativeGeckoWebExt)).thenReturn(actionDelegateCaptor.value)
+        assertTrue(extension.hasActionHandler(session))
+
+        // Verify that browser actions are forwarded to the handler
+        actionDelegateCaptor.value.onBrowserAction(nativeGeckoWebExt, null, nativeBrowserAction)
+        verify(actionHandler).onBrowserAction(eq(extension), eq(session), actionCaptor.capture())
+
+        // We don't have access to the native WebExtension.Action fields and
+        // can't mock them either, but we can verify that we've linked
+        // the actions by simulating a click.
+        actionCaptor.value.onClick()
+        verify(nativeBrowserAction).click()
     }
 }
