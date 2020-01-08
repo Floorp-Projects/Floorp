@@ -8,12 +8,33 @@ interface nsIURI;
 interface mozIDOMWindowProxy;
 interface nsIChannel;
 interface nsIPrincipal;
+interface nsILoadInfo;
+
+%{C++
+
+#include "mozilla/EnumSet.h"
+
+enum class ThirdPartyAnalysis {
+  IsForeign,
+  IsTrackingResource,
+  IsSocialTrackingResource,
+  IsFirstPartyStorageAccessGranted,
+};
+
+using ThirdPartyAnalysisResult = mozilla::EnumSet<ThirdPartyAnalysis>;
+
+typedef bool (*RequireThirdPartyCheck)(nsILoadInfo*);
+
+%}
+
+native ThirdPartyAnalysisResult(ThirdPartyAnalysisResult);
+native RequireThirdPartyCheck(RequireThirdPartyCheck);
 
 /**
  * Utility functions for determining whether a given URI, channel, or window
  * hierarchy is third party with respect to a known URI.
  */
-[scriptable, uuid(fd82700e-ffb4-4932-b7d6-08f0b5697dda)]
+[scriptable, builtinclass, uuid(fd82700e-ffb4-4932-b7d6-08f0b5697dda)]
 interface mozIThirdPartyUtil : nsISupports
 {
   /**
@@ -193,6 +214,21 @@ interface mozIThirdPartyUtil : nsISupports
    */
   [noscript]
   mozIDOMWindowProxy getTopWindowForChannel(in nsIChannel aChannel, [optional] in nsIURI aURIBeingLoaded);
+
+  /*
+   * Performs a full analysis of a channel.
+   *
+   * aChannel the input channel
+   * aNotify whether to send content blocking notifications if access control checks fail
+   * aURI optional URI to check for (the channel URI will be used instead if not provided)
+   * aRequireThirdPartyCheck a functor used to determine whether the load info requires third-party checks
+   */
+  [noscript, notxpcom]
+  ThirdPartyAnalysisResult analyzeChannel(in nsIChannel aChannel,
+                                          in boolean aNotify,
+                                          [optional] in nsIURI aURI,
+                                          [optional] in RequireThirdPartyCheck aRequireThirdPartyCheck,
+                                          out uint32_t aRejectedReason);
 };
 
 %{ C++
