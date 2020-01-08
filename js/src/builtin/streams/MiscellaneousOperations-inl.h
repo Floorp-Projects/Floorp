@@ -15,7 +15,7 @@
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "builtin/Promise.h"  // js::PromiseObject
-#include "js/Promise.h"       // JS::{Resolve,Reject}Promise
+#include "js/Promise.h"       // JS::{Resolve,Reject}Promise, JS::PromiseState
 #include "js/RootingAPI.h"    // JS::Rooted, JS::{,Mutable}Handle
 #include "js/Value.h"         // JS::UndefinedHandleValue, JS::Value
 #include "vm/Compartment.h"   // JS::Compartment
@@ -111,13 +111,18 @@ inline MOZ_MUST_USE bool RejectUnwrappedPromiseWithError(
 }
 
 /**
- * Sets Promise.[[PromiseIsHandled]] to true and removes rejection from
- * the list of unhandled rejected promise.
+ * Given a settled (i.e. fulfilled or rejected, not pending) promise, sets
+ * |promise.[[PromiseIsHandled]]| to true and removes it from the list of
+ * unhandled rejected promises.
+ *
+ * NOTE: If you need to set |promise.[[PromiseIsHandled]]| on a pending promise,
+ *       use |PromiseObject::setHandled()| directly.
  */
-inline void SetPromiseIsHandled(JSContext* cx,
-                                JS::Handle<PromiseObject*> promise) {
-  promise->setHandled();
-  cx->runtime()->removeUnhandledRejectedPromise(cx, promise);
+inline void SetSettledPromiseIsHandled(
+    JSContext* cx, JS::Handle<PromiseObject*> unwrappedPromise) {
+  MOZ_ASSERT(unwrappedPromise->state() != JS::PromiseState::Pending);
+  unwrappedPromise->setHandled();
+  cx->runtime()->removeUnhandledRejectedPromise(cx, unwrappedPromise);
 }
 
 }  // namespace js

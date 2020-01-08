@@ -33,7 +33,7 @@
 #include "vm/Realm.h"         // JS::Realm
 #include "vm/StringType.h"    // js::PropertyName
 
-#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::{Reject,Resolve}UnwrappedPromiseWithUndefined, js::SetPromiseIsHandled
+#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::{Reject,Resolve}UnwrappedPromiseWithUndefined, js::SetSettledPromiseIsHandled
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::js::UnwrapReaderFromStream{,NoThrow}
 #include "vm/Compartment-inl.h"                        // JS::Compartment::wrap
 #include "vm/JSContext-inl.h"                          // JSContext::check
@@ -353,7 +353,7 @@ MOZ_MUST_USE bool js::ReadableStreamErrorInternal(
   // 3.8.5 ReadableStreamReaderGenericRelease step 6 sets
   // stream.[[reader]] to undefined.
   Rooted<JSObject*> closedPromise(cx, unwrappedReader->closedPromise());
-  SetPromiseIsHandled(cx, closedPromise.as<PromiseObject>());
+  SetSettledPromiseIsHandled(cx, closedPromise.as<PromiseObject>());
 
   if (unwrappedStream->mode() == JS::ReadableStreamMode::ExternalSource) {
     // Make sure we're in the stream's compartment.

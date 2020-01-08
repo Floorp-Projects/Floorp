@@ -5158,8 +5158,7 @@ static MOZ_MUST_USE bool PerformPromiseThenWithReaction(
   }
 
   // Step 11: Set promise.[[PromiseIsHandled]] to true.
-  unwrappedPromise->setFixedSlot(PromiseSlot_Flags,
-                                 Int32Value(flags | PROMISE_FLAG_HANDLED));
+  unwrappedPromise->setHandled();
 
   return true;
 }
