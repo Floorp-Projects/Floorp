@@ -880,21 +880,19 @@ impl Tile {
         // Invalidate the tile based on the content changing.
         self.update_content_validity(ctx, state);
 
-        // TODO(gw): This is a hack / temporary bug fix. With the recent changes
-        //           to treat native surfaces as an entire surface, we need to
-        //           skip the optimization that drops empty tiles within the
-        //           surface area. This has some unfortunate performance implications
-        //           in some cases, so we'll need a proper fix for this, but this
-        //           should fix correctness for now, at least.
-        match state.composite_state.compositor_kind {
-            CompositorKind::Draw { .. } => {
-                // If there are no primitives there is no need to draw or cache it.
-                if self.current_descriptor.prims.is_empty() {
-                    return false;
+        // If there are no primitives there is no need to draw or cache it.
+        if self.current_descriptor.prims.is_empty() {
+            // If there is a native compositor surface allocated for this (now empty) tile
+            // it must be freed here, otherwise the stale tile with previous contents will
+            // be composited. If the tile subsequently gets new primitives added to it, the
+            // surface will be re-allocated when it's added to the composite draw list.
+            if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { mut id, .. }, .. }) = self.surface.take() {
+                if let Some(id) = id.take() {
+                    state.resource_cache.destroy_compositor_tile(id);
                 }
             }
-            CompositorKind::Native { .. } => {
-            }
+
+            return false;
         }
 
         // Check if this tile can be considered opaque. Opacity state must be updated only
