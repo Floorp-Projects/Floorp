@@ -4382,7 +4382,7 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
   return true;
 }
 
-bool ParseNode::getConstantValue(JSContext* cx, MutableHandleValue vp) {
+ArrayObject* ParseNode::getConstantValue(JSContext* cx) {
   MOZ_ASSERT(isKind(ParseNodeKind::CallSiteObj) ||
              isKind(ParseNodeKind::ArrayExpr));
   unsigned count;
@@ -4399,7 +4399,7 @@ bool ParseNode::getConstantValue(JSContext* cx, MutableHandleValue vp) {
 
   RootedValueVector values(cx);
   if (!values.appendN(MagicValue(JS_ELEMENTS_HOLE), count)) {
-    return false;
+    return nullptr;
   }
   size_t idx;
   for (idx = 0; pn; idx++, pn = pn->pn_next) {
@@ -4412,36 +4412,27 @@ bool ParseNode::getConstantValue(JSContext* cx, MutableHandleValue vp) {
   }
   MOZ_ASSERT(idx == count);
 
-  ArrayObject* obj = ObjectGroup::newArrayObject(
-      cx, values.begin(), values.length(), TenuredObject);
-  if (!obj) {
-    return false;
-  }
-
-  vp.setObject(*obj);
-  return true;
+  return ObjectGroup::newArrayObject(cx, values.begin(), values.length(),
+                                     TenuredObject);
 }
 
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
-  RootedValue value(cx);
-  if (!callSiteObj->getConstantValue(cx, &value)) {
+  ArrayObject* cookedValues = callSiteObj->getConstantValue(cx);
+  if (!cookedValues) {
     return false;
   }
 
-  MOZ_ASSERT(value.isObject());
-
-  ObjectBox* objbox1 = parser->newObjectBox(&value.toObject());
+  ObjectBox* objbox1 = parser->newObjectBox(cookedValues);
   if (!objbox1) {
     return false;
   }
 
-  if (!callSiteObj->getRawArrayValue(cx, &value)) {
+  ArrayObject* rawValues = callSiteObj->getRawArrayValue(cx);
+  if (!rawValues) {
     return false;
   }
 
-  MOZ_ASSERT(value.isObject());
-
-  ObjectBox* objbox2 = parser->newObjectBox(&value.toObject());
+  ObjectBox* objbox2 = parser->newObjectBox(rawValues);
   if (!objbox2) {
     return false;
   }
