@@ -49,6 +49,7 @@ void RemoteServiceWorkerRegistrationImpl::ClearServiceWorkerRegistration(
 }
 
 void RemoteServiceWorkerRegistrationImpl::Update(
+    const nsCString& aNewestWorkerScriptUrl,
     ServiceWorkerRegistrationCallback&& aSuccessCB,
     ServiceWorkerFailureCallback&& aFailureCB) {
   if (!mActor) {
@@ -57,6 +58,7 @@ void RemoteServiceWorkerRegistrationImpl::Update(
   }
 
   mActor->SendUpdate(
+      aNewestWorkerScriptUrl,
       [successCB = std::move(aSuccessCB), aFailureCB](
           const IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult&
               aResult) {

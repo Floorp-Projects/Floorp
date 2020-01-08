@@ -138,9 +138,11 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   void DispatchFetchEvent(nsIInterceptedChannel* aChannel, ErrorResult& aRv);
 
   void Update(nsIPrincipal* aPrincipal, const nsACString& aScope,
+              nsCString aNewestWorkerScriptUrl,
               ServiceWorkerUpdateFinishCallback* aCallback);
 
   void UpdateInternal(nsIPrincipal* aPrincipal, const nsACString& aScope,
+                      nsCString&& aNewestWorkerScriptUrl,
                       ServiceWorkerUpdateFinishCallback* aCallback);
 
   void SoftUpdate(const OriginAttributes& aOriginAttributes,

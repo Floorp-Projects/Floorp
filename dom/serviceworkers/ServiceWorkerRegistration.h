@@ -45,7 +45,8 @@ class ServiceWorkerRegistration final : public DOMEventTargetHelper {
     virtual void ClearServiceWorkerRegistration(
         ServiceWorkerRegistration* aReg) = 0;
 
-    virtual void Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+    virtual void Update(const nsCString& aNewestWorkerScriptUrl,
+                        ServiceWorkerRegistrationCallback&& aSuccessCB,
                         ServiceWorkerFailureCallback&& aFailureCB) = 0;
 
     virtual void Unregister(ServiceWorkerBoolCallback&& aSuccessCB,

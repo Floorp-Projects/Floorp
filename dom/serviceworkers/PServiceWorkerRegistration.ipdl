@@ -17,7 +17,8 @@ parent:
   async Teardown();
 
   async Unregister() returns (bool aSuccess, CopyableErrorResult aRv);
-  async Update() returns (IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
+  async Update(nsCString aNewestWorkerScriptUrl) returns (
+    IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult aResult);
 
 child:
   async __delete__();
