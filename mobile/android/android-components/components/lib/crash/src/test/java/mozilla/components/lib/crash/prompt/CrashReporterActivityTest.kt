@@ -14,6 +14,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ActivityScenario.launch
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.lib.crash.Crash
@@ -24,10 +25,12 @@ import mozilla.components.lib.crash.prompt.CrashReporterActivity.Companion.SHARE
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
@@ -37,6 +40,11 @@ import org.mockito.MockitoAnnotations.initMocks
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class CrashReporterActivityTest {
+    private val testDispatcher = TestCoroutineDispatcher()
+    private val scope = TestCoroutineScope(testDispatcher)
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Mock
     lateinit var service: CrashReporterService
@@ -50,7 +58,8 @@ class CrashReporterActivityTest {
     fun `Pressing close button sends report`() = runBlockingTest {
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
-            services = listOf(service)
+            services = listOf(service),
+            scope = scope
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"), arrayListOf())
@@ -72,7 +81,8 @@ class CrashReporterActivityTest {
     fun `Pressing restart button sends report`() = runBlockingTest {
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
-            services = listOf(service)
+            services = listOf(service),
+            scope = scope
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"), arrayListOf())
@@ -114,7 +124,8 @@ class CrashReporterActivityTest {
     fun `Sending crash report saves checkbox state`() = runBlockingTest {
         CrashReporter(
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
-            services = listOf(service)
+            services = listOf(service),
+            scope = scope
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Hello World"), arrayListOf())

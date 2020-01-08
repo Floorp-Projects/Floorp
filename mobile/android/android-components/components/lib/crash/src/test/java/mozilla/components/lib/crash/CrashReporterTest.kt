@@ -10,6 +10,8 @@ import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -34,12 +36,14 @@ import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import java.lang.reflect.Modifier
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class CrashReporterTest {
+    private val testDispatcher = TestCoroutineDispatcher()
+    private val scope = TestCoroutineScope(testDispatcher)
 
-    @ExperimentalCoroutinesApi
     @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Before
     fun setUp() {
@@ -72,7 +76,8 @@ class CrashReporterTest {
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.NEVER
+            shouldPrompt = CrashReporter.Prompt.NEVER,
+            scope = scope
         ).install(testContext))
 
         val crash: Crash.UncaughtExceptionCrash = mock()
@@ -91,7 +96,8 @@ class CrashReporterTest {
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.ALWAYS
+            shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            scope = scope
         ).install(testContext))
 
         val crash: Crash.UncaughtExceptionCrash = mock()
@@ -110,7 +116,8 @@ class CrashReporterTest {
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH
+            shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
+            scope = scope
         ).install(testContext))
 
         val crash: Crash.UncaughtExceptionCrash = mock()
@@ -129,7 +136,8 @@ class CrashReporterTest {
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH
+            shouldPrompt = CrashReporter.Prompt.ONLY_NATIVE_CRASH,
+            scope = scope
         ).install(testContext))
 
         val crash: Crash.NativeCodeCrash = mock()
@@ -158,7 +166,8 @@ class CrashReporterTest {
 
         val reporter = spy(CrashReporter(
             services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.ALWAYS
+            shouldPrompt = CrashReporter.Prompt.ALWAYS,
+            scope = scope
         ).install(testContext))
 
         reporter.enabled = false
@@ -178,7 +187,8 @@ class CrashReporterTest {
         val service = mock<CrashReporterService>()
         val reporter = spy(CrashReporter(
             services = listOf(service),
-            shouldPrompt = CrashReporter.Prompt.NEVER
+            shouldPrompt = CrashReporter.Prompt.NEVER,
+            scope = scope
         ).install(testContext))
 
         doReturn(mock<Job>()).`when`(reporter).submitReport(crash)
