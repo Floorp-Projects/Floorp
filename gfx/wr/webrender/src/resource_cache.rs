@@ -937,7 +937,7 @@ impl ResourceCache {
                                     tile,
                                 ).into();
 
-                                rect.intersection(&tile_rect).unwrap_or(DeviceIntRect::zero())
+                                rect.intersection(&tile_rect).unwrap_or_else(DeviceIntRect::zero)
                             })
                         }
                         (None, Some(..)) => DirtyRect::All,
@@ -1020,7 +1020,7 @@ impl ResourceCache {
 
         match (image.valid_tiles_after_bounds_change, valid_tiles_after_bounds_change) {
             (Some(old), Some(ref mut new)) => {
-                *new = new.intersection(&old).unwrap_or(TileRange::zero());
+                *new = new.intersection(&old).unwrap_or_else(TileRange::zero);
             }
             (Some(old), None) => {
                 valid_tiles_after_bounds_change = Some(old);
