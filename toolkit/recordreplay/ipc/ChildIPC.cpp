@@ -462,6 +462,22 @@ void RegisterFork(size_t aForkId) {
   gChannel->ExitIfNotInitializedBefore(deadline);
 }
 
+static void SendFatalErrorMessage(size_t aForkId, const char* aMessage) {
+  // Construct a FatalErrorMessage on the stack, to avoid touching the heap.
+  char msgBuf[4096];
+  size_t header = sizeof(FatalErrorMessage);
+  size_t len = std::min(strlen(aMessage) + 1, sizeof(msgBuf) - header);
+  FatalErrorMessage* msg = new (msgBuf) FatalErrorMessage(header + len, aForkId);
+  memcpy(&msgBuf[header], aMessage, len);
+  msgBuf[sizeof(msgBuf) - 1] = 0;
+
+  // Don't take the message lock when sending this, to avoid touching the heap.
+  gChannel->SendMessage(std::move(*msg));
+
+  Print("***** Fatal Record/Replay Error #%lu:%lu *****\n%s\n", GetId(), aForkId,
+        aMessage);
+}
+
 void ReportCrash(const MinidumpInfo& aInfo, void* aFaultingAddress) {
   int pid;
   pid_for_task(aInfo.mTask, &pid);
@@ -494,19 +510,7 @@ void ReportCrash(const MinidumpInfo& aInfo, void* aFaultingAddress) {
     SprintfLiteral(buf, "Fault %p", aFaultingAddress);
   }
 
-  // Construct a FatalErrorMessage on the stack, to avoid touching the heap.
-  char msgBuf[4096];
-  size_t header = sizeof(FatalErrorMessage);
-  size_t len = std::min(strlen(buf) + 1, sizeof(msgBuf) - header);
-  FatalErrorMessage* msg = new (msgBuf) FatalErrorMessage(header + len, forkId);
-  memcpy(&msgBuf[header], buf, len);
-  msgBuf[sizeof(msgBuf) - 1] = 0;
-
-  // Don't take the message lock when sending this, to avoid touching the heap.
-  gChannel->SendMessage(std::move(*msg));
-
-  Print("***** Fatal Record/Replay Error #%lu:%lu *****\n%s\n", GetId(), forkId,
-        buf);
+  SendFatalErrorMessage(forkId, buf);
 }
 
 void ReportFatalError(const char* aFormat, ...) {
@@ -523,6 +527,17 @@ void ReportFatalError(const char* aFormat, ...) {
 
   MOZ_CRASH("ReportFatalError");
 }
+
+extern "C" {
+
+// When running in the cloud the translation layer detects crashes that have
+// occurred in the current process, and uses this interface to report those
+// crashes to the middleman.
+MOZ_EXPORT void RecordReplayInterface_ReportCrash(const char* aMessage) {
+  SendFatalErrorMessage(gForkId, aMessage);
+}
+
+} // extern "C"
 
 void ReportUnhandledDivergence() {
   gChannel->SendMessage(UnhandledDivergenceMessage(gForkId));
