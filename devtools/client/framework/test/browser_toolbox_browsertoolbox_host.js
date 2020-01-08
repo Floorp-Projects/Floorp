@@ -6,31 +6,10 @@ const TEST_URL = "data:text/html,test browsertoolbox host";
 add_task(async function() {
   const { Toolbox } = require("devtools/client/framework/toolbox");
 
-  const messageReceived = new Promise(resolve => {
-    function onMessage(event) {
-      if (!event.data) {
-        return;
-      }
-      const msg = event.data;
-      info(`onMessage: ${JSON.stringify(msg)}`);
-      switch (msg.name) {
-        case "toolbox-close":
-          ok(true, "Got the `toolbox-close` message");
-          window.removeEventListener("message", onMessage);
-          resolve();
-          break;
-      }
-    }
-    window.addEventListener("message", onMessage);
-  });
-
-  let iframe = document.createXULElement("iframe");
-  document.documentElement.appendChild(iframe);
-
   const tab = await addTab(TEST_URL);
-  let target = await TargetFactory.forTab(tab);
-  const options = { customIframe: iframe };
-  let toolbox = await gDevTools.showToolbox(
+  const target = await TargetFactory.forTab(tab);
+  const options = { doc: document };
+  const toolbox = await gDevTools.showToolbox(
     target,
     null,
     Toolbox.HostType.BROWSERTOOLBOX,
@@ -38,11 +17,12 @@ add_task(async function() {
   );
 
   is(toolbox.topWindow, window, "Toolbox is included in browser.xhtml");
+  const iframe = document.querySelector(
+    ".devtools-toolbox-browsertoolbox-iframe"
+  );
+  ok(iframe, "A toolbox iframe was created in the provided document");
   is(toolbox.doc, iframe.contentDocument, "Toolbox is in the custom iframe");
 
-  iframe.remove();
   await toolbox.destroy();
-  await messageReceived;
-
-  iframe = toolbox = target = null;
+  iframe.remove();
 });

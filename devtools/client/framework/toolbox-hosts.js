@@ -81,19 +81,11 @@ BottomHost.prototype = {
     this._browserContainer.appendChild(this._splitter);
     this._browserContainer.appendChild(this.frame);
 
-    // we have to load something so we can switch documents if we have to
-    this.frame.setAttribute("src", "about:blank");
+    focusTab(this.hostTab);
+    await createBlankDocument(this.frame);
+    this.emit("ready", this.frame);
 
-    const frame = await new Promise(resolve => {
-      const frameLoad = () => {
-        this.emit("ready", this.frame);
-        resolve(this.frame);
-      };
-      DOMHelpers.onceDOMReady(this.frame.contentWindow, frameLoad);
-      focusTab(this.hostTab);
-    });
-
-    return frame;
+    return this.frame;
   },
 
   /**
@@ -177,18 +169,11 @@ class SidebarHost {
       this._browserPanel.insertBefore(this._splitter, this._browserContainer);
     }
 
-    this.frame.setAttribute("src", "about:blank");
+    focusTab(this.hostTab);
+    await createBlankDocument(this.frame);
+    this.emit("ready", this.frame);
 
-    const frame = await new Promise(resolve => {
-      const frameLoad = () => {
-        this.emit("ready", this.frame);
-        resolve(this.frame);
-      };
-      DOMHelpers.onceDOMReady(this.frame.contentWindow, frameLoad);
-      focusTab(this.hostTab);
-    });
-
-    return frame;
+    return this.frame;
   }
 
   /**
@@ -351,58 +336,43 @@ WindowHost.prototype = {
  * Host object for the Browser Toolbox
  */
 function BrowserToolboxHost(hostTab, options) {
-  this.frame = options.customIframe;
-  this.uid = options.uid;
+  this.doc = options.doc;
   EventEmitter.decorate(this);
 }
 
 BrowserToolboxHost.prototype = {
   type: "browsertoolbox",
 
-  _sendMessageToTopWindow: function(msg, data) {
-    // It's up to the custom frame owner (parent window) to honor
-    // "close" or "raise" instructions.
-    const topWindow = this.frame.ownerDocument.defaultView;
-    if (!topWindow) {
-      return;
-    }
-    const message = {
-      name: "toolbox-" + msg,
-      uid: this.uid,
-      data,
-    };
-    topWindow.postMessage(message, "*");
-  },
+  create: async function() {
+    this.frame = createDevToolsFrame(
+      this.doc,
+      "devtools-toolbox-browsertoolbox-iframe"
+    );
 
-  /**
-   * Create a new xul window to contain the toolbox.
-   */
-  create: function() {
-    return promise.resolve(this.frame);
+    this.doc.body.appendChild(this.frame);
+
+    await createBlankDocument(this.frame);
+    this.emit("ready", this.frame);
+
+    return this.frame;
   },
 
   /**
    * Raise the host.
    */
   raise: function() {
-    this._sendMessageToTopWindow("raise");
+    this.doc.defaultView.focus();
   },
 
   /**
    * Set the toolbox title.
    */
   setTitle: function(title) {
-    this._sendMessageToTopWindow("title", { value: title });
+    this.doc.title = title;
   },
 
-  /**
-   * Destroy the window.
-   */
+  // Do nothing. The BrowserToolbox is destroyed by quitting the application.
   destroy: function() {
-    if (!this._destroyed) {
-      this._destroyed = true;
-      this._sendMessageToTopWindow("close");
-    }
     return promise.resolve(null);
   },
 };
@@ -461,6 +431,19 @@ function createDevToolsFrame(doc, className) {
   frame.className = className;
   frame.tooltip = "aHTMLTooltip";
   return frame;
+}
+
+/**
+ * Load a blank document in the host frame.
+ * This is mandatory if the host is created for switching hosts. In that case,
+ * the new host's frame needs to have a valid document before we can swap the
+ * content of the previous host.
+ */
+function createBlankDocument(frame) {
+  return new Promise(resolve => {
+    frame.setAttribute("src", "about:blank");
+    DOMHelpers.onceDOMReady(frame.contentWindow, resolve);
+  });
 }
 
 exports.Hosts = {
