@@ -738,7 +738,7 @@
      * [1]: https://tc39.es/ecma262/#sec-tostring
      *
      *   Category: Expressions
-     *   Operands: Conversions
+     *   Type: Conversions
      *   Stack: val => ToString(val)
      */ \
     MACRO(JSOP_TOSTRING, "tostring", NULL, 1, 1, 1, JOF_BYTE) \
