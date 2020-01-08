@@ -1491,14 +1491,24 @@ class UrlbarInput {
       Cu.reportError(ex);
     }
 
-    // Reset DOS mitigations for the basic auth prompt.
     // TODO: When bug 1498553 is resolved, we should be able to
     // remove the !triggeringPrincipal condition here.
     if (
       !params.triggeringPrincipal ||
       params.triggeringPrincipal.isSystemPrincipal
     ) {
+      // Reset DOS mitigations for the basic auth prompt.
       delete browser.authPromptAbuseCounter;
+
+      // Reset temporary permissions on the current tab if the user reloads
+      // the tab via the urlbar.
+      if (
+        openUILinkWhere == "current" &&
+        browser.currentURI &&
+        url === browser.currentURI.spec
+      ) {
+        this.window.SitePermissions.clearTemporaryPermissions(browser);
+      }
     }
 
     params.allowThirdPartyFixup = true;
