@@ -337,9 +337,7 @@ function wrapWithIFrame(doc, options = {}) {
     ...iframeDocBodyAttrs,
   };
   if (options.remoteIframe) {
-    const srcURL = new URL(
-      `${CURRENT_CONTENT_DIR}fission_document_builder.sjs`
-    );
+    const srcURL = new URL(`http://example.net/document-builder.sjs`);
     if (doc.endsWith("html")) {
       srcURL.searchParams.append("file", `${CURRENT_FILE_DIR}e10s/${doc}`);
     } else {

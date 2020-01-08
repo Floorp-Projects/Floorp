@@ -168,7 +168,8 @@ body > div > div {width: 1000px;height: 1000px;}\
 <!doctype html>
 <head><meta content="text/html;charset=utf-8"></head><body>
 <div id="scroller" style="width: 300px; height: 300px; overflow-y: scroll; overflow-x: hidden; border: solid 1px blue;">
-  <iframe id="noscroll-outofprocess-iframe" src="https://example.com/browser/toolkit/content/tests/browser/file_contentTitle.html"
+  <iframe id="noscroll-outofprocess-iframe"
+          src="https://example.com/document-builder.sjs?html=<html><body>Hey!</body></html>"
           style="border: solid 1px green; margin: 2px;"></iframe>
   <div style="width: 100%; height: 200px;"></div>
 </div></body>
