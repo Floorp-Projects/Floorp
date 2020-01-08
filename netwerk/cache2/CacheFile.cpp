@@ -2300,7 +2300,11 @@ void CacheFile::NotifyListenersAboutOutputRemoval() {
     RefPtr<CacheFileChunk> chunk;
     mChunks.Get(idx, getter_AddRefs(chunk));
     if (chunk) {
-      MOZ_ASSERT(!chunk->IsReady());
+      // Skip these listeners because the chunk is being read. We don't have
+      // assertion here to check its state because it might be already in READY
+      // state while CacheFile::OnChunkRead() is waiting on Cache I/O thread for
+      // a lock so the listeners hasn't been notified yet. In any case, the
+      // listeners will be notified from CacheFile::OnChunkRead().
       continue;
     }
 
