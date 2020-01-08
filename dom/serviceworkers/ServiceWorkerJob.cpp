@@ -96,18 +96,20 @@ void ServiceWorkerJob::Cancel() {
 
 ServiceWorkerJob::ServiceWorkerJob(Type aType, nsIPrincipal* aPrincipal,
                                    const nsACString& aScope,
-                                   const nsACString& aScriptSpec)
+                                   nsCString aScriptSpec)
     : mType(aType),
       mPrincipal(aPrincipal),
       mScope(aScope),
-      mScriptSpec(aScriptSpec),
+      mScriptSpec(std::move(aScriptSpec)),
       mState(State::Initial),
       mCanceled(false),
       mResultCallbacksInvoked(false) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPrincipal);
   MOZ_ASSERT(!mScope.IsEmpty());
-  // Some job types may have an empty script spec
+
+  // Empty script URL if and only if this is an unregister job.
+  MOZ_ASSERT((mType == Type::Unregister) == mScriptSpec.IsEmpty());
 }
 
 ServiceWorkerJob::~ServiceWorkerJob() {

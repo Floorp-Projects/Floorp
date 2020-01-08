@@ -41,7 +41,8 @@ class ServiceWorkerRegistrationMainThread final
 
   void ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  void Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+  void Update(const nsCString& aNewestWorkerScriptUrl,
+              ServiceWorkerRegistrationCallback&& aSuccessCB,
               ServiceWorkerFailureCallback&& aFailureCB) override;
 
   void Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
@@ -98,7 +99,8 @@ class ServiceWorkerRegistrationWorkerThread final
 
   void ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  void Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+  void Update(const nsCString& aNewestWorkerScriptUrl,
+              ServiceWorkerRegistrationCallback&& aSuccessCB,
               ServiceWorkerFailureCallback&& aFailureCB) override;
 
   void Unregister(ServiceWorkerBoolCallback&& aSuccessCB,
