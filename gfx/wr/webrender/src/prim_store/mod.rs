@@ -2018,10 +2018,8 @@ impl PrimitiveStore {
                         let pic = &self.pictures[pic_index.0];
                         prim_instance.prim_origin = pic.precise_local_rect.origin;
 
-                        if prim_instance.is_chased() {
-                            if pic.estimated_local_rect != pic.precise_local_rect {
-                                println!("\testimate {:?} adjusted to {:?}", pic.estimated_local_rect, pic.precise_local_rect);
-                            }
+                        if prim_instance.is_chased() && pic.estimated_local_rect != pic.precise_local_rect {
+                            println!("\testimate {:?} adjusted to {:?}", pic.estimated_local_rect, pic.precise_local_rect);
                         }
 
                         let mut shadow_rect = pic.precise_local_rect;
@@ -2253,9 +2251,11 @@ impl PrimitiveStore {
                             frame_state.scratch.push_debug_rect(debug_rect, debug_color, debug_color.scale_alpha(0.5));
                         }
                     } else if frame_context.debug_flags.contains(::api::DebugFlags::OBSCURE_IMAGES) {
-                        if matches!(prim_instance.kind, PrimitiveInstanceKind::Image { .. } |
-                                                        PrimitiveInstanceKind::YuvImage { .. })
-                        {
+                        let is_image = matches!(
+                            prim_instance.kind,
+                            PrimitiveInstanceKind::Image { .. } | PrimitiveInstanceKind::YuvImage { .. }
+                        );
+                        if is_image {
                             // We allow "small" images, since they're generally UI elements.
                             let rect = clipped_world_rect * frame_context.global_device_pixel_scale;
                             if rect.size.width > 70.0 && rect.size.height > 70.0 {

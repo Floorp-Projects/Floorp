@@ -3131,7 +3131,7 @@ impl Renderer {
                     doc_index == 0,
                 );
 
-                if let Some(_) = device_size {
+                if device_size.is_some() {
                     self.draw_frame_debug_items(&frame.debug_items);
                 }
                 if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
