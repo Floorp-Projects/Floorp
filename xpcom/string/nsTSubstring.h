@@ -955,14 +955,14 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
 
   void Append(mozilla::Span<const char_type> aSpan) {
     auto len = aSpan.Length();
-    MOZ_RELEASE_ASSERT(len <= mozilla::MaxValue<size_type>::value);
+    MOZ_RELEASE_ASSERT(len <= std::numeric_limits<size_type>::max());
     Append(aSpan.Elements(), len);
   }
 
   MOZ_MUST_USE bool Append(mozilla::Span<const char_type> aSpan,
                            const fallible_t& aFallible) {
     auto len = aSpan.Length();
-    if (len > mozilla::MaxValue<size_type>::value) {
+    if (len > std::numeric_limits<size_type>::max()) {
       return false;
     }
     return Append(aSpan.Elements(), len, aFallible);
@@ -996,7 +996,7 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
   void Append(mozilla::Span<const uint8_t> aSpan) {
     auto len = aSpan.Length();
-    MOZ_RELEASE_ASSERT(len <= mozilla::MaxValue<size_type>::value);
+    MOZ_RELEASE_ASSERT(len <= std::numeric_limits<size_type>::max());
     Append(reinterpret_cast<const char*>(aSpan.Elements()), len);
   }
 
@@ -1004,7 +1004,7 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
   MOZ_MUST_USE bool Append(mozilla::Span<const uint8_t> aSpan,
                            const fallible_t& aFallible) {
     auto len = aSpan.Length();
-    if (len > mozilla::MaxValue<size_type>::value) {
+    if (len > std::numeric_limits<size_type>::max()) {
       return false;
     }
     return Append(reinterpret_cast<const char*>(aSpan.Elements()), len,

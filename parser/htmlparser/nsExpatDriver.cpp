@@ -282,7 +282,7 @@ void nsExpatDriver::HandleStartElement(void* aUserData, const char16_t* aName,
     // We store the tagdepth in a PRUint16, so make sure the limit fits in a
     // PRUint16.
     static_assert(sMaxXMLTreeDepth <=
-                  mozilla::MaxValue<decltype(nsExpatDriver::mTagDepth)>::value);
+                  std::numeric_limits<decltype(nsExpatDriver::mTagDepth)>::max());
 
     if (++self->mTagDepth > sMaxXMLTreeDepth) {
       self->MaybeStopParser(NS_ERROR_HTMLPARSER_HIERARCHYTOODEEP);

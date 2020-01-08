@@ -642,7 +642,7 @@ Result<Ok, nsresult> WriteHangDetailsToFile(HangDetails& aDetails,
   MOZ_TRY(WriteData(fd, (void*)MAGIC, sizeof(MAGIC)));
 
   double duration = aDetails.duration().ToMilliseconds();
-  if (duration > double(MaxValue<uint32_t>::value)) {
+  if (duration > double(std::numeric_limits<uint32_t>::max())) {
     // Something has gone terribly wrong if we've hung for more than 2^32 ms.
     return Err(NS_ERROR_FAILURE);
   }

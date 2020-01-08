@@ -608,7 +608,7 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
 bool TokenStreamAnyChars::checkOptions() {
   // Constrain starting columns to half of the range of a signed 32-bit value,
   // to avoid overflow.
-  if (options().column >= mozilla::MaxValue<int32_t>::value / 2 + 1) {
+  if (options().column >= std::numeric_limits<int32_t>::max() / 2 + 1) {
     reportErrorNoOffset(JSMSG_BAD_COLUMN_NUMBER);
     return false;
   }
