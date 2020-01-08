@@ -580,7 +580,6 @@ class PaintedLayerData {
         mHideAllLayersBelow(false),
         mOpaqueForAnimatedGeometryRootParent(false),
         mBackfaceHidden(false),
-        mShouldPaintOnContentSide(false),
         mDTCRequiresTargetConfirmation(false),
         mImage(nullptr),
         mItemClip(nullptr),
@@ -802,11 +801,6 @@ class PaintedLayerData {
    * with visible backface.
    */
   bool mBackfaceHidden;
-  /**
-   * Set if it is better to render this layer on the content process, for
-   * example if it contains native theme widgets.
-   */
-  bool mShouldPaintOnContentSide;
   /**
    * Set to true if events targeting the dispatch-to-content region
    * require target confirmation.
@@ -3883,10 +3877,6 @@ void PaintedLayerData::Accumulate(
         item.mType = DisplayItemEntryType::PushOpacityWithBg;
       }
     }
-  }
-
-  if (aItem->MustPaintOnContentSide()) {
-    mShouldPaintOnContentSide = true;
   }
 
   if (aTransform && aType == DisplayItemEntryType::Item) {
