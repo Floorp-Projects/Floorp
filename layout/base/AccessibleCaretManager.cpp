@@ -23,6 +23,7 @@
 #include "nsCaret.h"
 #include "nsContainerFrame.h"
 #include "nsContentUtils.h"
+#include "nsDebug.h"
 #include "nsFocusManager.h"
 #include "nsFrame.h"
 #include "nsFrameSelection.h"
@@ -1121,8 +1122,14 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
 
   // Compare the active caret's new position (aOffsets) to the inactive caret's
   // position.
-  int32_t cmpToInactiveCaretPos = nsContentUtils::ComparePoints_Deprecated(
+  const Maybe<int32_t> cmpToInactiveCaretPos = nsContentUtils::ComparePoints(
       aOffsets.content, aOffsets.StartOffset(), content, contentOffset);
+  if (NS_WARN_IF(!cmpToInactiveCaretPos)) {
+    // Potentially handle this properly when Selection across Shadow DOM
+    // boundary is implemented
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
+    return false;
+  }
 
   // Move one character (in the direction of dir) from the inactive caret's
   // position. This is the limit for the active caret's new position.
@@ -1135,9 +1142,15 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
   }
 
   // Compare the active caret's new position (aOffsets) to the limit.
-  int32_t cmpToLimit = nsContentUtils::ComparePoints_Deprecated(
-      aOffsets.content, aOffsets.StartOffset(), limit.mResultContent,
-      limit.mContentOffset);
+  const Maybe<int32_t> cmpToLimit =
+      nsContentUtils::ComparePoints(aOffsets.content, aOffsets.StartOffset(),
+                                    limit.mResultContent, limit.mContentOffset);
+  if (NS_WARN_IF(!cmpToLimit)) {
+    // Potentially handle this properly when Selection across Shadow DOM
+    // boundary is implemented
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
+    return false;
+  }
 
   auto SetOffsetsToLimit = [&aOffsets, &limit]() {
     aOffsets.content = limit.mResultContent;
@@ -1147,15 +1160,15 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
 
   if (!StaticPrefs::
           layout_accessiblecaret_allow_dragging_across_other_caret()) {
-    if ((mActiveCaret == mFirstCaret.get() && cmpToLimit == 1) ||
-        (mActiveCaret == mSecondCaret.get() && cmpToLimit == -1)) {
+    if ((mActiveCaret == mFirstCaret.get() && *cmpToLimit == 1) ||
+        (mActiveCaret == mSecondCaret.get() && *cmpToLimit == -1)) {
       // The active caret's position is past the limit, which we don't allow
       // here. So set it to the limit, resulting in one character being
       // selected.
       SetOffsetsToLimit();
     }
   } else {
-    switch (cmpToInactiveCaretPos) {
+    switch (*cmpToInactiveCaretPos) {
       case 0:
         // The active caret's position is the same as the position of the
         // inactive caret. So set it to the limit to prevent the selection from
