@@ -1006,18 +1006,18 @@ bool TypedArrayObjectTemplate<NativeType>::convertValue(JSContext* cx,
 #endif
 
   // Assign based on characteristics of the destination type
-  if (ArrayTypeIsFloatingPoint()) {
+  if constexpr (ArrayTypeIsFloatingPoint()) {
     *result = NativeType(d);
-  } else if (ArrayTypeIsUnsigned()) {
-    MOZ_ASSERT(sizeof(NativeType) <= 4);
+  } else if constexpr (ArrayTypeIsUnsigned()) {
+    static_assert(sizeof(NativeType) <= 4);
     uint32_t n = ToUint32(d);
     *result = NativeType(n);
-  } else if (ArrayTypeID() == Scalar::Uint8Clamped) {
+  } else if constexpr (ArrayTypeID() == Scalar::Uint8Clamped) {
     // The uint8_clamped type has a special rounding converter
     // for doubles.
     *result = NativeType(d);
   } else {
-    MOZ_ASSERT(sizeof(NativeType) <= 4);
+    static_assert(sizeof(NativeType) <= 4);
     int32_t n = ToInt32(d);
     *result = NativeType(n);
   }
