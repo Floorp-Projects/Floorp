@@ -57,7 +57,6 @@ using JS::MapTypeToTraceKind;
 
 using mozilla::DebugOnly;
 using mozilla::IntegerRange;
-using mozilla::IsBaseOf;
 using mozilla::IsSame;
 using mozilla::PodCopy;
 

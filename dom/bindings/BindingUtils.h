@@ -821,8 +821,8 @@ struct IsRefcounted {
 
  private:
   // This struct only works if T is fully declared (not just forward declared).
-  // The IsBaseOf check will ensure that, we don't really need it for any other
-  // reason (the static assert will of course always be true).
+  // The std::is_base_of check will ensure that, we don't really need it for any
+  // other reason (the static assert will of course always be true).
   static_assert(!std::is_base_of<nsISupports, T>::value || IsRefcounted::value,
                 "Classes derived from nsISupports are refcounted!");
 };
