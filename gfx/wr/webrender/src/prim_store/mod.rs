@@ -125,7 +125,7 @@ impl PrimitiveOpacity {
         }
     }
 
-    pub fn combine(&self, other: PrimitiveOpacity) -> PrimitiveOpacity {
+    pub fn combine(self, other: PrimitiveOpacity) -> PrimitiveOpacity {
         PrimitiveOpacity{
             is_opaque: self.is_opaque && other.is_opaque
         }
@@ -378,13 +378,13 @@ impl ClipTaskIndex {
 pub struct PictureIndex(pub usize);
 
 impl GpuCacheHandle {
-    pub fn as_int(&self, gpu_cache: &GpuCache) -> i32 {
+    pub fn as_int(self, gpu_cache: &GpuCache) -> i32 {
         gpu_cache.get_address(self).as_int()
     }
 }
 
 impl GpuCacheAddress {
-    pub fn as_int(&self) -> i32 {
+    pub fn as_int(self) -> i32 {
         // TODO(gw): Temporarily encode GPU Cache addresses as a single int.
         //           In the future, we can change the PrimitiveInstanceData struct
         //           to use 2x u16 for the vertex attribute instead of an i32.
