@@ -49,6 +49,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellInlines.h"
 #include "mozilla/Span.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/TextEvents.h"
@@ -2579,7 +2580,8 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
       return NS_ERROR_INVALID_ARG;
   }
 
-  if (!GetPresShell()) {
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (!presShell) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2596,7 +2598,11 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
   if (!value) {
     return NS_ERROR_FAILURE;
   }
-  Servo_AnimationValue_Serialize(value, propertyID, &aResult);
+  if (!aElement->GetComposedDoc()) {
+    return NS_ERROR_FAILURE;
+  }
+  Servo_AnimationValue_Serialize(value, propertyID,
+                                 presShell->StyleSet()->RawSet(), &aResult);
   return NS_OK;
 }
 

@@ -314,9 +314,10 @@ Size AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
 }
 
 void AnimationValue::SerializeSpecifiedValue(nsCSSPropertyID aProperty,
+                                             const RawServoStyleSet* aRawSet,
                                              nsAString& aString) const {
   MOZ_ASSERT(mServo);
-  Servo_AnimationValue_Serialize(mServo, aProperty, &aString);
+  Servo_AnimationValue_Serialize(mServo, aProperty, aRawSet, &aString);
 }
 
 bool AnimationValue::IsInterpolableWith(nsCSSPropertyID aProperty,
