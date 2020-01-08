@@ -36,6 +36,11 @@ inline PropertyName* BytecodeLocation::getPropertyName(
   return script->getName(this->rawBytecode_);
 }
 
+inline Scope* BytecodeLocation::innermostScope(const JSScript* script) const {
+  MOZ_ASSERT(this->isValid());
+  return script->innermostScope(this->rawBytecode_);
+}
+
 inline uint32_t BytecodeLocation::tableSwitchCaseOffset(
     const JSScript* script, uint32_t caseIndex) const {
   return script->tableSwitchCaseOffset(this->rawBytecode_, caseIndex);
