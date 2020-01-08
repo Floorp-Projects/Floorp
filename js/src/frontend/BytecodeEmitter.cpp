@@ -4385,24 +4385,8 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
 bool ParseNode::getConstantValue(JSContext* cx, MutableHandleValue vp,
                                  Value* compare, size_t ncompare) {
   switch (getKind()) {
-    case ParseNodeKind::NumberExpr:
-      vp.setNumber(as<NumericLiteral>().value());
-      return true;
-    case ParseNodeKind::BigIntExpr:
-      vp.setBigInt(as<BigIntLiteral>().value());
-      return true;
     case ParseNodeKind::TemplateStringExpr:
-    case ParseNodeKind::StringExpr:
       vp.setString(as<NameNode>().atom());
-      return true;
-    case ParseNodeKind::TrueExpr:
-      vp.setBoolean(true);
-      return true;
-    case ParseNodeKind::FalseExpr:
-      vp.setBoolean(false);
-      return true;
-    case ParseNodeKind::NullExpr:
-      vp.setNull();
       return true;
     case ParseNodeKind::RawUndefinedExpr:
       vp.setUndefined();
@@ -4446,62 +4430,6 @@ bool ParseNode::getConstantValue(JSContext* cx, MutableHandleValue vp,
       }
 
       if (!CombineArrayElementTypes(cx, obj, compare, ncompare)) {
-        return false;
-      }
-
-      vp.setObject(*obj);
-      return true;
-    }
-    case ParseNodeKind::ObjectExpr: {
-      MOZ_ASSERT(!as<ListNode>().hasNonConstInitializer());
-
-      if (allowObjects == DontAllowObjects) {
-        vp.setMagic(JS_GENERIC_MAGIC);
-        return true;
-      }
-      MOZ_ASSERT(allowObjects == AllowObjects);
-
-      Rooted<IdValueVector> properties(cx, IdValueVector(cx));
-
-      RootedValue value(cx), idvalue(cx);
-      for (ParseNode* item : as<ListNode>().contents()) {
-        // MutateProto and Spread, both are unary, cannot appear here.
-        BinaryNode* prop = &item->as<BinaryNode>();
-        if (!prop->right()->getConstantValue(cx, &value)) {
-          return false;
-        }
-        if (value.isMagic(JS_GENERIC_MAGIC)) {
-          vp.setMagic(JS_GENERIC_MAGIC);
-          return true;
-        }
-
-        ParseNode* key = prop->left();
-        if (key->isKind(ParseNodeKind::NumberExpr)) {
-          idvalue = NumberValue(key->as<NumericLiteral>().value());
-        } else {
-          MOZ_ASSERT(key->isKind(ParseNodeKind::ObjectPropertyName) ||
-                     key->isKind(ParseNodeKind::StringExpr));
-          MOZ_ASSERT(key->as<NameNode>().atom() != cx->names().proto);
-          idvalue = StringValue(key->as<NameNode>().atom());
-        }
-
-        RootedId id(cx);
-        if (!ValueToId<CanGC>(cx, idvalue, &id)) {
-          return false;
-        }
-
-        if (!properties.append(IdValuePair(id, value))) {
-          return false;
-        }
-      }
-
-      JSObject* obj = ObjectGroup::newPlainObject(cx, properties.begin(),
-                                                  properties.length(), newKind);
-      if (!obj) {
-        return false;
-      }
-
-      if (!CombinePlainObjectPropertyTypes(cx, obj, compare, ncompare)) {
         return false;
       }
 
