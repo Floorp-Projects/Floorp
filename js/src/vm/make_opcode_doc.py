@@ -82,7 +82,7 @@ def format_flags(flags):
     flags = [flag for flag in flags if flag not in FLAGS_TO_IGNORE]
     if len(flags) == 0:
         return ''
-    return '<p>Flags: {flags}</p>\n'.format(flags=', '.join(flags))
+    return '<div>Flags: {flags}</div>\n'.format(flags=', '.join(flags))
 
 
 def maybe_escape(value, format_str, fallback=""):
@@ -94,30 +94,30 @@ def maybe_escape(value, format_str, fallback=""):
 OPCODE_FORMAT = """\
 <dt id="{id}">{names}</dt>
 <dd>
-<table class="standard-table">
-<tbody>
-<tr><th>Operands</th><td>{operands}</td></tr>
-<tr><th>Stack</th><td>{stack_uses}&rArr;{stack_defs}</td></tr>
-</tbody>
-</table>
-
-{desc}
+{operands}{stack}{desc}
 {flags}</dd>
 """
 
 
 def print_opcode(opcode):
     opcodes = [opcode] + opcode.group
-    names = ', '.join(escape(code.name) for code in opcodes)
+    names = ', '.join(maybe_escape(code.name, "<code>{}</code>") for code in opcodes)
+    operands = maybe_escape(opcode.operands, "<div>Operands: <code>({})</code></div>\n")
+    stack_uses = maybe_escape(opcode.stack_uses, "<code>{}</code> ")
+    stack_defs = maybe_escape(opcode.stack_defs, " <code>{}</code>")
+    if stack_uses or stack_defs:
+        stack = "<div>Stack: {}&rArr;{}</div>\n".format(stack_uses, stack_defs)
+    else:
+        stack = ""
 
     print(OPCODE_FORMAT.format(
         id=opcodes[0].name,
         names=names,
+        operands=operands,
+        stack=stack,
+        desc=markdown.markdown(opcode.desc),
         flags=format_flags(opcode.flags),
-        operands=maybe_escape(opcode.operands, "<code>({})</code>", "none"),
-        stack_uses=maybe_escape(opcode.stack_uses, "<code>{}</code> "),
-        stack_defs=maybe_escape(opcode.stack_defs, " <code>{}</code>"),
-        desc=markdown.markdown(opcode.desc)))
+    ))
 
 
 id_cache = dict()
