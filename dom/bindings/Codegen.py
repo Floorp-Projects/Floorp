@@ -8183,7 +8183,7 @@ class CGPerSignatureCall(CGThing):
              self.returnType.isPromise())):
             wrapCode += dedent(
                 """
-                static_assert(!IsPointer<decltype(result)>::value,
+                static_assert(!std::is_pointer_v<decltype(result)>,
                               "NewObject implies that we need to keep the object alive with a strong reference.");
                 """)
 
