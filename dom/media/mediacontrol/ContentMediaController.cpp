@@ -97,7 +97,7 @@ void ContentMediaController::NotifyMediaStateChanged(
     return;
   }
 
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(mTopLevelBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetTopLevelBrowsingContext();
   if (!bc || bc->IsDiscarded()) {
     return;
   }
@@ -123,7 +123,7 @@ void ContentMediaController::NotifyAudibleStateChanged(
     return;
   }
 
-  RefPtr<BrowsingContext> bc = BrowsingContext::Get(mTopLevelBrowsingContextId);
+  RefPtr<BrowsingContext> bc = GetTopLevelBrowsingContext();
   if (!bc || bc->IsDiscarded()) {
     return;
   }
@@ -161,6 +161,16 @@ void ContentMediaController::Close() {
   if (sControllers) {
     sControllers->Remove(mTopLevelBrowsingContextId);
   }
+}
+
+already_AddRefed<BrowsingContext>
+ContentMediaController::GetTopLevelBrowsingContext() const {
+  if (!sControllers) {
+    // `sControllers` would be destroyed when XPCOM is shutdown, which means
+    // we are not able to access browsing context anymore.
+    return nullptr;
+  }
+  return BrowsingContext::Get(mTopLevelBrowsingContextId);
 }
 
 }  // namespace dom
