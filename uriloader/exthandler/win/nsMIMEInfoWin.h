@@ -62,6 +62,9 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
   void ProcessPath(nsCOMPtr<nsIMutableArray>& appList,
                    nsTArray<nsString>& trackList,
                    const nsAString& appFilesystemCommand);
+
+  // Helper routine to call mozilla::ShellExecuteByExplorer
+  nsresult ShellExecuteWithIFile(nsIFile* aExecutable, const nsString& aArgs);
 };
 
 #endif
