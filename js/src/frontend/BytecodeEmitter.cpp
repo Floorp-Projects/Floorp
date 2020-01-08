@@ -4382,19 +4382,17 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
   return true;
 }
 
-ArrayObject* ParseNode::getConstantValue(JSContext* cx) {
-  MOZ_ASSERT(isKind(ParseNodeKind::CallSiteObj) ||
-             isKind(ParseNodeKind::ArrayExpr));
-  unsigned count;
-  ParseNode* pn;
+ArrayObject* CallSiteNode::getArrayValue(JSContext* cx, ListNode* cookedOrRaw) {
+  uint32_t count = cookedOrRaw->count();
+  ParseNode* pn = cookedOrRaw->head();
 
-  if (getKind() == ParseNodeKind::CallSiteObj) {
-    count = as<CallSiteNode>().count() - 1;
-    pn = as<CallSiteNode>().head()->pn_next;
+  // The first element of a call-site node is the raw-values list. Skip over it.
+  if (cookedOrRaw->isKind(ParseNodeKind::CallSiteObj)) {
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::ArrayExpr));
+    pn = pn->pn_next;
+    count--;
   } else {
-    MOZ_ASSERT(!as<ListNode>().hasNonConstInitializer());
-    count = as<ListNode>().count();
-    pn = as<ListNode>().head();
+    MOZ_ASSERT(cookedOrRaw->isKind(ParseNodeKind::ArrayExpr));
   }
 
   RootedValueVector values(cx);
@@ -4417,7 +4415,7 @@ ArrayObject* ParseNode::getConstantValue(JSContext* cx) {
 }
 
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
-  ArrayObject* cookedValues = callSiteObj->getConstantValue(cx);
+  ArrayObject* cookedValues = callSiteObj->getCookedArrayValue(cx);
   if (!cookedValues) {
     return false;
   }
