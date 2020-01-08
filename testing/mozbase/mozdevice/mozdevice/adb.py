@@ -715,7 +715,7 @@ class ADBDevice(ADBCommand):
                 self._ls += " -1A"
             except ADBError as e:
                 self._logger.info("detect ls -1A: {}".format(e))
-                if 'No such file or directory' not in e.message:
+                if 'No such file or directory' not in str(e):
                     boot_completed = True
                     self._ls += " -a"
             if not boot_completed:
@@ -733,10 +733,10 @@ class ADBDevice(ADBCommand):
                 boot_completed = True
                 self._have_cp = True
             except ADBError as e:
-                if 'not found' in e.message:
+                if 'not found' in str(e):
                     self._have_cp = False
                     boot_completed = True
-                elif 'known option' in e.message:
+                elif 'known option' in str(e):
                     self._have_cp = True
                     boot_completed = True
             if not boot_completed:
@@ -755,7 +755,7 @@ class ADBDevice(ADBCommand):
                 self._chmod_R = True
         except ADBError as e:
             self._logger.debug("Check chmod -R: {}".format(e))
-            match = re_recurse.search(e.message)
+            match = re_recurse.search(str(e))
             if match:
                 self._chmod_R = True
         self._logger.info("Native chmod -R support: {}".format(self._chmod_R))
@@ -793,10 +793,10 @@ class ADBDevice(ADBCommand):
                     boot_completed = True
                     self._have_pidof = True
                 except ADBError as e:
-                    if 'not found' in e.message:
+                    if 'not found' in str(e):
                         self._have_pidof = False
                         boot_completed = True
-                    elif 'known option' in e.message:
+                    elif 'known option' in str(e):
                         self._have_pidof = True
                         boot_completed = True
                 if not boot_completed:
@@ -2486,7 +2486,7 @@ class ADBDevice(ADBCommand):
             if self.exists(path, timeout=timeout, root=root):
                 raise ADBError('rm("%s") failed to remove path.' % path)
         except ADBError as e:
-            if not force and 'No such file or directory' in e.message:
+            if not force and 'No such file or directory' in str(e):
                 raise
 
     def rmdir(self, path, timeout=None, root=False):
@@ -2607,7 +2607,7 @@ class ADBDevice(ADBCommand):
             try:
                 self.shell_output(' '.join(args), timeout=timeout, root=root)
             except ADBError as e:
-                if 'No such process' not in e.message:
+                if 'No such process' not in str(e):
                     raise
             pid_set = set(pid_list)
             current_pid_set = set([str(proc[0]) for proc in
@@ -2765,7 +2765,7 @@ class ADBDevice(ADBCommand):
             # Do not create parent directories since cp does not.
             self.mkdir(destination_dir, timeout=timeout, root=root)
         except ADBError as e:
-            if 'File exists' not in e.message:
+            if 'File exists' not in str(e):
                 raise
 
         for i in self.list_files(source, timeout=timeout, root=root):
@@ -3067,7 +3067,7 @@ class ADBDevice(ADBCommand):
                             break
             except ADBError as e:
                 success = False
-                failure = e.message
+                failure = str(e)
 
             if not success:
                 self._logger.debug('Attempt %s of %s device not ready: %s' % (
@@ -3097,7 +3097,7 @@ class ADBDevice(ADBCommand):
         except ADBError as e:
             # Executing this via adb shell errors, but not interactively.
             # Any other exitcode is a real error.
-            if 'exitcode: 137' not in e.message:
+            if 'exitcode: 137' not in str(e):
                 raise
             self._logger.warning('Unable to set power stayon true: %s' % e)
 
