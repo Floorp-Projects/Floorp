@@ -9,6 +9,7 @@ import itertools
 import hashlib
 import os
 import unittest
+import six
 import string
 import sys
 import textwrap
@@ -29,8 +30,8 @@ from mozbuild.util import (
     HierarchicalStringList,
     EnumString,
     EnumStringComparisonError,
-    ListWithAction,
     StrictOrderingOnAppendList,
+    StrictOrderingOnAppendListWithAction,
     StrictOrderingOnAppendListWithFlagsFactory,
     TypedList,
     TypedNamedTuple,
@@ -145,19 +146,19 @@ class TestHierarchicalStringList(unittest.TestCase):
     def test_exports_subdir(self):
         self.assertEqual(self.EXPORTS._children, {})
         self.EXPORTS.foo += ["foo.h"]
-        self.assertItemsEqual(self.EXPORTS._children, {"foo": True})
+        six.assertCountEqual(self, self.EXPORTS._children, {"foo": True})
         self.assertEqual(self.EXPORTS.foo._strings, ["foo.h"])
         self.EXPORTS.bar += ["bar.h"]
-        self.assertItemsEqual(self.EXPORTS._children,
-                              {"foo": True, "bar": True})
+        six.assertCountEqual(self, self.EXPORTS._children,
+                             {"foo": True, "bar": True})
         self.assertEqual(self.EXPORTS.foo._strings, ["foo.h"])
         self.assertEqual(self.EXPORTS.bar._strings, ["bar.h"])
 
     def test_exports_multiple_subdir(self):
         self.EXPORTS.foo.bar = ["foobar.h"]
-        self.assertItemsEqual(self.EXPORTS._children, {"foo": True})
-        self.assertItemsEqual(self.EXPORTS.foo._children, {"bar": True})
-        self.assertItemsEqual(self.EXPORTS.foo.bar._children, {})
+        six.assertCountEqual(self, self.EXPORTS._children, {"foo": True})
+        six.assertCountEqual(self, self.EXPORTS.foo._children, {"bar": True})
+        six.assertCountEqual(self, self.EXPORTS.foo.bar._children, {})
         self.assertEqual(self.EXPORTS._strings, [])
         self.assertEqual(self.EXPORTS.foo._strings, [])
         self.assertEqual(self.EXPORTS.foo.bar._strings, ["foobar.h"])
@@ -165,30 +166,34 @@ class TestHierarchicalStringList(unittest.TestCase):
     def test_invalid_exports_append(self):
         with self.assertRaises(ValueError) as ve:
             self.EXPORTS += "foo.h"
-        self.assertEqual(str(ve.exception),
-                         "Expected a list of strings, not <type '%s'>" % str_type)
+        six.assertRegex(
+            self, str(ve.exception),
+            "Expected a list of strings, not <(?:type|class) '%s'>" % str_type)
 
     def test_invalid_exports_set(self):
         with self.assertRaises(ValueError) as ve:
             self.EXPORTS.foo = "foo.h"
 
-        self.assertEqual(str(ve.exception),
-                         "Expected a list of strings, not <type '%s'>" % str_type)
+        six.assertRegex(
+            self, str(ve.exception),
+            "Expected a list of strings, not <(?:type|class) '%s'>" % str_type)
 
     def test_invalid_exports_append_base(self):
         with self.assertRaises(ValueError) as ve:
             self.EXPORTS += "foo.h"
 
-        self.assertEqual(str(ve.exception),
-                         "Expected a list of strings, not <type '%s'>" % str_type)
+        six.assertRegex(
+            self, str(ve.exception),
+            "Expected a list of strings, not <(?:type|class) '%s'>" % str_type)
 
     def test_invalid_exports_bool(self):
         with self.assertRaises(ValueError) as ve:
             self.EXPORTS += [True]
 
-        self.assertEqual(str(ve.exception),
-                         "Expected a list of strings, not an element of "
-                         "<type 'bool'>")
+        six.assertRegex(
+            self, str(ve.exception),
+            "Expected a list of strings, not an element of "
+            "<(?:type|class) 'bool'>")
 
     def test_del_exports(self):
         with self.assertRaises(MozbuildDeletionError):
@@ -339,7 +344,7 @@ class TestStrictOrderingOnAppendList(unittest.TestCase):
         l2 += l
 
 
-class TestListWithAction(unittest.TestCase):
+class TestStrictOrderingOnAppendListWithAction(unittest.TestCase):
     def setUp(self):
         self.action = lambda a: (a, id(a))
 
@@ -349,54 +354,54 @@ class TestListWithAction(unittest.TestCase):
             self.assertEqual(item, expected[idx])
 
     def test_init(self):
-        l = ListWithAction(action=self.action)
+        l = StrictOrderingOnAppendListWithAction(action=self.action)
         self.assertEqual(len(l), 0)
         original = ['a', 'b', 'c']
-        l = ListWithAction(['a', 'b', 'c'], action=self.action)
-        expected = map(self.action, original)
+        l = StrictOrderingOnAppendListWithAction(['a', 'b', 'c'], action=self.action)
+        expected = [self.action(i) for i in original]
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
-            ListWithAction('abc', action=self.action)
+            StrictOrderingOnAppendListWithAction('abc', action=self.action)
 
         with self.assertRaises(ValueError):
-            ListWithAction()
+            StrictOrderingOnAppendListWithAction()
 
     def test_extend(self):
-        l = ListWithAction(action=self.action)
+        l = StrictOrderingOnAppendListWithAction(action=self.action)
         original = ['a', 'b']
         l.extend(original)
-        expected = map(self.action, original)
+        expected = [self.action(i) for i in original]
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
             l.extend('ab')
 
     def test_slicing(self):
-        l = ListWithAction(action=self.action)
+        l = StrictOrderingOnAppendListWithAction(action=self.action)
         original = ['a', 'b']
         l[:] = original
-        expected = map(self.action, original)
+        expected = [self.action(i) for i in original]
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
             l[:] = 'ab'
 
     def test_add(self):
-        l = ListWithAction(action=self.action)
+        l = StrictOrderingOnAppendListWithAction(action=self.action)
         original = ['a', 'b']
         l2 = l + original
-        expected = map(self.action, original)
+        expected = [self.action(i) for i in original]
         self.assertSameList(expected, l2)
 
         with self.assertRaises(ValueError):
             l + 'abc'
 
     def test_iadd(self):
-        l = ListWithAction(action=self.action)
+        l = StrictOrderingOnAppendListWithAction(action=self.action)
         original = ['a', 'b']
         l += original
-        expected = map(self.action, original)
+        expected = [self.action(i) for i in original]
         self.assertSameList(expected, l)
 
         with self.assertRaises(ValueError):
@@ -445,7 +450,7 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
 
     def test_strict_ordering_on_append_list_with_flags_factory_extend(self):
         FooList = StrictOrderingOnAppendListWithFlagsFactory({
-            'foo': bool, 'bar': unicode
+            'foo': bool, 'bar': six.text_type
         })
         foo = FooList(['a', 'b', 'c'])
         foo['a'].foo = True
@@ -453,7 +458,7 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
 
         # Don't allow extending lists with different flag definitions.
         BarList = StrictOrderingOnAppendListWithFlagsFactory({
-            'foo': unicode, 'baz': bool
+            'foo': six.text_type, 'baz': bool
         })
         bar = BarList(['d', 'e', 'f'])
         bar['d'].foo = 'foo'
@@ -495,7 +500,7 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
         foo += zot
         assertExtended(foo)
 
-        # Test __setslice__.
+        # Test __setitem__.
         foo[3:] = []
         self.assertEqual(len(foo), 3)
         foo[3:] = zot
@@ -658,7 +663,7 @@ class TestTypedList(unittest.TestCase):
         # Adding a TypedList to a TypedList shouldn't even trigger the code
         # that does coercion at all.
         l2 = cls()
-        list.__setslice__(l, 0, -1, [1, 2])
+        list.__setitem__(l, slice(0, -1), [1, 2])
         l2 += l
         self.assertEqual(len(objs), 2)
         self.assertEqual(type(l2[0]), int)
@@ -673,11 +678,11 @@ class TestTypedList(unittest.TestCase):
 
 class TypedTestStrictOrderingOnAppendList(unittest.TestCase):
     def test_init(self):
-        class Unicode(unicode):
-            def __init__(self, other):
-                if not isinstance(other, unicode):
+        class Unicode(six.text_type):
+            def __new__(cls, other):
+                if not isinstance(other, six.text_type):
                     raise ValueError()
-                super(Unicode, self).__init__(other)
+                return six.text_type.__new__(cls, other)
 
         cls = TypedList(Unicode, StrictOrderingOnAppendList)
         l = cls()
@@ -697,7 +702,7 @@ class TypedTestStrictOrderingOnAppendList(unittest.TestCase):
 
 class TestTypedNamedTuple(unittest.TestCase):
     def test_simple(self):
-        FooBar = TypedNamedTuple('FooBar', [('foo', unicode), ('bar', int)])
+        FooBar = TypedNamedTuple('FooBar', [('foo', six.text_type), ('bar', int)])
 
         t = FooBar(foo='foo', bar=2)
         self.assertEquals(type(t), FooBar)
@@ -813,7 +818,8 @@ class TestEnumString(unittest.TestCase):
 
 
 class TestIndentedRepr(unittest.TestCase):
-    def test_indented_repr(self):
+    @unittest.skipUnless(six.PY2, 'requires Python 2')
+    def test_indented_repr_py2(self):
         data = textwrap.dedent(r'''
         {
             'a': 1,
@@ -835,6 +841,24 @@ class TestIndentedRepr(unittest.TestCase):
             'special_chars': '\\\'"\x08\n\t',
             'with_accents': 'éàñ',
         }''').lstrip()
+
+        obj = eval(data)
+
+        self.assertEqual(indented_repr(obj), data)
+
+    @unittest.skipUnless(six.PY3, 'requires Python 3')
+    def test_indented_repr(self):
+        data = textwrap.dedent(r'''
+        {   b'c': 'xyz',
+            'a': 1,
+            'b': b'abc',
+            'd': False,
+            'e': {'a': 1, 'b': b'2', 'c': '3'},
+            'f': [1, b'2', '3'],
+            'pile_of_bytes': b'\xf0\x9f\x92\xa9',
+            'pile_of_poo': '💩',
+            'special_chars': '\\\'"\x08\n\t',
+            'with_accents': 'éàñ'}''').lstrip()
 
         obj = eval(data)
 
