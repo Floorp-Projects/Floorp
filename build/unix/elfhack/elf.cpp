@@ -180,6 +180,14 @@ Elf::Elf(std::ifstream& file) {
   sections = new ElfSection*[ehdr->e_shnum];
   for (int i = 0; i < ehdr->e_shnum; i++) sections[i] = nullptr;
   for (int i = 1; i < ehdr->e_shnum; i++) {
+    // The .dynamic section is going to have references to other sections,
+    // so it's better to start with that one and recursively initialize those
+    // other sections first, to avoid possible infinite recursion (bug 1606739).
+    if (tmp_shdr[i]->sh_type == SHT_DYNAMIC) {
+      getSection(i);
+    }
+  }
+  for (int i = 1; i < ehdr->e_shnum; i++) {
     if (sections[i] != nullptr) continue;
     getSection(i);
   }
