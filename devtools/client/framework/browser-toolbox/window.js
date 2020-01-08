@@ -207,7 +207,6 @@ async function openToolbox(target) {
     Toolbox.HostType.BROWSERTOOLBOX,
     toolboxOptions
   );
-  toolbox.setBrowserToolbox(true);
   await onNewToolbox(toolbox);
 }
 
