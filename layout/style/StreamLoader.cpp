@@ -6,10 +6,11 @@
 
 #include "mozilla/css/StreamLoader.h"
 
-#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Encoding.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
+
+#include <limits>
 
 using namespace mozilla;
 
@@ -35,7 +36,7 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
     int64_t length;
     nsresult rv = channel->GetContentLength(&length);
     if (NS_SUCCEEDED(rv) && length > 0) {
-      if (length > MaxValue<nsACString::size_type>::value) {
+      if (length > std::numeric_limits<nsACString::size_type>::max()) {
         return (mStatus = NS_ERROR_OUT_OF_MEMORY);
       }
       if (!mBytes.SetCapacity(length, fallible)) {
