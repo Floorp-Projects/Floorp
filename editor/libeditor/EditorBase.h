@@ -784,6 +784,7 @@ class EditorBase : public nsIEditor,
     bool CanHandle() const { return mSelection && mEditorBase.IsInitialized(); }
 
     const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
+    nsIPrincipal* GetPrincipal() const { return mPrincipal; }
     EditAction GetEditAction() const { return mEditAction; }
 
     template <typename PT, typename CT>
@@ -948,6 +949,7 @@ class EditorBase : public nsIEditor,
    private:
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
+    nsCOMPtr<nsIPrincipal> mPrincipal;
     // EditAction may be nested, for example, a command may be executed
     // from mutation event listener which is run while editor changes
     // the DOM tree.  In such case, we need to handle edit action separately.
@@ -1030,6 +1032,11 @@ class EditorBase : public nsIEditor,
   const RefPtr<Selection>& SelectionRefPtr() const {
     MOZ_ASSERT(mEditActionData);
     return mEditActionData->SelectionRefPtr();
+  }
+
+  nsIPrincipal* GetEditActionPrincipal() const {
+    MOZ_ASSERT(mEditActionData);
+    return mEditActionData->GetPrincipal();
   }
 
   /**
@@ -2420,6 +2427,10 @@ class EditorBase : public nsIEditor,
  protected:  // helper classes which may be used by friends
   /**
    * Stack based helper class for calling EditorBase::EndTransactionInternal().
+   * NOTE:  This does not suppress multiple input events.  In most cases,
+   *        only one "input" event should be fired for an edit action rather
+   *        than per edit sub-action.  In such case, you should use
+   *        AutoPlaceholderBatch instead.
    */
   class MOZ_RAII AutoTransactionBatch final {
    public:
@@ -2441,7 +2452,9 @@ class EditorBase : public nsIEditor,
 
   /**
    * Stack based helper class for batching a collection of transactions inside
-   * a placeholder transaction.
+   * a placeholder transaction.  Different from AutoTransactionBatch, this
+   * notifies editor observers of before/end edit action handling, and
+   * dispatches "input" event if it's necessary.
    */
   class MOZ_RAII AutoPlaceholderBatch final {
    public:
