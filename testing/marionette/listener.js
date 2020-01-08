@@ -535,13 +535,14 @@ function dispatch(fn) {
   };
 }
 
-let getPageSourceFn = dispatch(getPageSource);
 let getActiveElementFn = dispatch(getActiveElement);
+let getBrowsingContextIdFn = dispatch(getBrowsingContextId);
 let getElementAttributeFn = dispatch(getElementAttribute);
 let getElementPropertyFn = dispatch(getElementProperty);
 let getElementTextFn = dispatch(getElementText);
 let getElementTagNameFn = dispatch(getElementTagName);
 let getElementRectFn = dispatch(getElementRect);
+let getPageSourceFn = dispatch(getPageSource);
 let getScreenshotRectFn = dispatch(getScreenshotRect);
 let isElementEnabledFn = dispatch(isElementEnabled);
 let findElementContentFn = dispatch(findElementContent);
@@ -577,6 +578,7 @@ function startListeners() {
   addMessageListener("Marionette:findElementContent", findElementContentFn);
   addMessageListener("Marionette:findElementsContent", findElementsContentFn);
   addMessageListener("Marionette:getActiveElement", getActiveElementFn);
+  addMessageListener("Marionette:getBrowsingContextId", getBrowsingContextIdFn);
   addMessageListener("Marionette:getElementAttribute", getElementAttributeFn);
   addMessageListener("Marionette:getElementProperty", getElementPropertyFn);
   addMessageListener("Marionette:getElementRect", getElementRectFn);
@@ -622,6 +624,10 @@ function deregister() {
     findElementsContentFn
   );
   removeMessageListener("Marionette:getActiveElement", getActiveElementFn);
+  removeMessageListener(
+    "Marionette:getBrowsingContextId",
+    getBrowsingContextIdFn
+  );
   removeMessageListener(
     "Marionette:getElementAttribute",
     getElementAttributeFn
@@ -1284,6 +1290,24 @@ function getActiveElement() {
     throw new NoSuchElementError();
   }
   return evaluate.toJSON(el, seenEls);
+}
+
+/**
+ * Return the current browsing context id.
+ *
+ * @param {boolean=} topContext
+ *     If set to true use the window's top-level browsing context,
+ *     otherwise the one from the currently selected frame. Defaults to false.
+ *
+ * @return {number}
+ *     Id of the browsing context.
+ */
+function getBrowsingContextId(topContext = false) {
+  if (topContext) {
+    return content.docShell.browsingContext.id;
+  }
+
+  return curContainer.frame.docShell.browsingContext.id;
 }
 
 /**
