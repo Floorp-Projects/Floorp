@@ -174,20 +174,33 @@
   display: none;
 }
 
-.content-blocking-warning.reload-tabs description {
-  width: 318px;
+.content-blocking-warning.reload-tabs:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  /* Match .indent's horizontal padding: */
+  padding-inline: 28px;
+}
+
+.content-blocking-reload-desc-container {
+  /* 345px is enough for (almost) twice the size of the default English
+   * string at default font sizes. If this and the button do not fit
+   * on one line, the button will get wrapped to the next line and this
+   * item will stretch to fill all available space. */
+  flex: 1 1 345px;
+  display: flex;
+}
+
+.content-blocking-reload-description {
+  line-height: 1.8em;
   margin-inline-end: 5px;
 }
 
-.content-blocking-warning.reload-tabs .indent {
-  min-height: 30px;
-  display: flex; /* We don't use -moz-box because of bug 1599783, flex is used to center the elements */
-}
-
-.content-blocking-warning.reload-tabs .content-blocking-info-image {
+.content-blocking-reload-desc-container > .content-blocking-info-image {
   list-style-image: url(chrome://browser/skin/identity-icon.svg);
-  margin-top: 5px;
-  margin-inline: 4px 8px;
+  margin-inline-end: 12px;
+  margin-top: 0.4em;
+  flex-shrink: 0;
+  align-self: start;
 }
 
 .reload-tabs-button {
@@ -196,6 +209,7 @@
   padding: 0 20px;
   list-style-image: url("chrome://browser/skin/reload.svg");
   background-color: var(--blue-50);
+  align-self: center;
 }
 
 .reload-tabs-button:not([disabled="true"]):hover {
@@ -241,9 +255,19 @@
   margin-top: 18px;
 }
 
+/* Apply display: block to the containers of all the category information, as
+ * without this the flex-wrapped blocks inside don't stretch vertically to
+ * enclose their content. */
+.content-blocking-category > .indent {
+  display: block;
+}
+
 .content-blocking-category.expanded .content-blocking-extra-information,
 .content-blocking-category.selected .content-blocking-extra-information {
   visibility: visible;
+  display: flex;
+  flex-direction: column;
+  align-content: stretch;
 }
 
 .content-blocking-extra-information > .indent {
