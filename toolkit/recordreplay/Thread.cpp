@@ -158,7 +158,6 @@ void Thread::ThreadMain(void* aArgument) {
 
   if (forked) {
     AutoPassThroughThreadEvents pt;
-    thread->ReleaseOrAcquireOwnedLocks(OwnedLockState::NeedAcquire);
     RestoreThreadStack(thread->Id());
   }
 
@@ -554,7 +553,7 @@ void Thread::Wait() {
   thread->SetPassThrough(true);
   int stackSeparator = 0;
   if (!SaveThreadState(thread->Id(), &stackSeparator)) {
-    // We just installed a stack, notify the main thread since it is waiting
+    // We just restored the stack, notify the main thread since it is waiting
     // for all threads to restore their stacks.
     Notify(MainThreadId);
   }

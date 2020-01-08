@@ -183,6 +183,7 @@ bool ForkProcess() {
   ResetPid();
 
   Thread::RespawnAllThreadsAfterFork();
+  Thread::OperateOnIdleThreadLocks(Thread::OwnedLockState::NeedAcquire);
   Thread::ResumeIdleThreads();
   return false;
 }
