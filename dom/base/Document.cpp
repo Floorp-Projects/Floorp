@@ -15316,20 +15316,13 @@ bool Document::IsThirdPartyForFlashClassifier() {
     return mIsThirdPartyForFlashClassifier.value();
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> docshell = this->GetDocShell();
-  if (!docshell) {
+  BrowsingContext* browsingContext = this->GetBrowsingContext();
+  if (!browsingContext) {
     mIsThirdPartyForFlashClassifier.emplace(true);
     return mIsThirdPartyForFlashClassifier.value();
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> parent;
-  nsresult rv = docshell->GetInProcessSameTypeParent(getter_AddRefs(parent));
-  MOZ_ASSERT(
-      NS_SUCCEEDED(rv),
-      "nsIDocShellTreeItem::GetInProcessSameTypeParent should never fail");
-  bool isTopLevel = !parent;
-
-  if (isTopLevel) {
+  if (browsingContext->IsTop()) {
     mIsThirdPartyForFlashClassifier.emplace(false);
     return mIsThirdPartyForFlashClassifier.value();
   }
@@ -15350,7 +15343,7 @@ bool Document::IsThirdPartyForFlashClassifier() {
   nsCOMPtr<nsIPrincipal> parentPrincipal = parentDocument->GetPrincipal();
 
   bool principalsMatch = false;
-  rv = principal->Equals(parentPrincipal, &principalsMatch);
+  nsresult rv = principal->Equals(parentPrincipal, &principalsMatch);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Failure
