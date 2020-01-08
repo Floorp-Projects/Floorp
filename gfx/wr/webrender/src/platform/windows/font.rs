@@ -253,7 +253,7 @@ impl FontContext {
                 let b = pixel[2];
                 print!("({}, {}, {}) ", r, g, b,);
             }
-            println!();
+            println!("");
         }
     }
 

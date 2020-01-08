@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #![allow(dead_code)]
-#![cfg_attr(feature = "cargo-clippy", allow(clippy::excessive_precision))]
 
 use api::ColorF;
 

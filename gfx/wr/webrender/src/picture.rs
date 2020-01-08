@@ -742,7 +742,7 @@ impl Tile {
         self.clipped_rect = self.rect
             .intersection(&ctx.local_rect)
             .and_then(|r| r.intersection(&ctx.local_clip_rect))
-            .unwrap_or_else(PictureRect::zero);
+            .unwrap_or(PictureRect::zero());
 
         self.world_rect = ctx.pic_to_world_mapper
             .map(&self.rect)
@@ -938,7 +938,7 @@ impl Tile {
         // Ensure that the dirty rect doesn't extend outside the local tile rect.
         self.dirty_rect = self.dirty_rect
             .intersection(&self.rect)
-            .unwrap_or_else(PictureRect::zero);
+            .unwrap_or(PictureRect::zero());
 
         // See if this tile is a simple color, in which case we can just draw
         // it as a rect, and avoid allocating a texture surface and drawing it.
@@ -1350,7 +1350,7 @@ impl DirtyRegion {
     /// Creates a record of this dirty region for exporting to test infrastructure.
     pub fn record(&self) -> RecordedDirtyRegion {
         let mut rects: Vec<WorldRect> =
-            self.dirty_rects.iter().map(|r| r.world_rect).collect();
+            self.dirty_rects.iter().map(|r| r.world_rect.clone()).collect();
         rects.sort_unstable_by_key(|r| (r.origin.y as usize, r.origin.x as usize));
         RecordedDirtyRegion { rects }
     }
@@ -1828,7 +1828,7 @@ impl TileCacheInstance {
 
         let needed_rect_in_pic_space = desired_rect_in_pic_space
             .intersection(&pic_rect)
-            .unwrap_or_else(PictureRect::zero);
+            .unwrap_or(PictureRect::zero());
 
         let p0 = needed_rect_in_pic_space.origin;
         let p1 = needed_rect_in_pic_space.bottom_right();
@@ -2009,9 +2009,10 @@ impl TileCacheInstance {
             // If the clip has the same spatial node, the relative transform
             // will always be the same, so there's no need to depend on it.
             let clip_node = &data_stores.clip[clip_instance.handle];
-            if clip_node.item.spatial_node_index != self.spatial_node_index
-                && !prim_info.spatial_nodes.contains(&clip_node.item.spatial_node_index) {
-                prim_info.spatial_nodes.push(clip_node.item.spatial_node_index);
+            if clip_node.item.spatial_node_index != self.spatial_node_index {
+                if !prim_info.spatial_nodes.contains(&clip_node.item.spatial_node_index) {
+                    prim_info.spatial_nodes.push(clip_node.item.spatial_node_index);
+                }
             }
         }
 
@@ -2122,10 +2123,10 @@ impl TileCacheInstance {
 
                     // If a text run is on a child surface, the subpx mode will be
                     // correctly determined as we recurse through pictures in take_context.
-                    if on_picture_surface
-                        && subpx_requested
-                        && !self.backdrop.rect.contains_rect(&pic_clip_rect) {
-                        self.subpixel_mode = SubpixelMode::Deny;
+                    if on_picture_surface && subpx_requested {
+                        if !self.backdrop.rect.contains_rect(&pic_clip_rect) {
+                            self.subpixel_mode = SubpixelMode::Deny;
+                        }
                     }
                 }
             }
@@ -2174,13 +2175,13 @@ impl TileCacheInstance {
                 }
             };
 
-            if is_suitable_backdrop
-                && !prim_clip_chain.needs_mask
-                && pic_clip_rect.contains_rect(&self.backdrop.rect) {
-                self.backdrop = BackdropInfo {
-                    rect: pic_clip_rect,
-                    kind: backdrop_candidate,
-                };
+            if is_suitable_backdrop {
+                if !prim_clip_chain.needs_mask && pic_clip_rect.contains_rect(&self.backdrop.rect) {
+                    self.backdrop = BackdropInfo {
+                        rect: pic_clip_rect,
+                        kind: backdrop_candidate,
+                    }
+                }
             }
         }
 
@@ -3610,7 +3611,7 @@ impl PicturePrimitive {
                         // the tile rects below for occlusion testing to the relevant area.
                         let local_clip_rect = tile_cache.local_rect
                             .intersection(&tile_cache.local_clip_rect)
-                            .unwrap_or_else(PictureRect::zero);
+                            .unwrap_or(PictureRect::zero());
 
                         let world_clip_rect = map_pic_to_world
                             .map(&local_clip_rect)
@@ -4404,11 +4405,13 @@ impl PicturePrimitive {
             debug_assert_eq!(surface_index, raster_config.surface_index);
 
             // Check if any of the surfaces can't be rasterized in local space but want to.
-            if raster_config.establishes_raster_root
-                && (surface_rect.size.width > MAX_SURFACE_SIZE
-                    || surface_rect.size.height > MAX_SURFACE_SIZE) {
-                raster_config.establishes_raster_root = false;
-                state.are_raster_roots_assigned = false;
+            if raster_config.establishes_raster_root {
+                if surface_rect.size.width > MAX_SURFACE_SIZE ||
+                    surface_rect.size.height > MAX_SURFACE_SIZE
+                {
+                    raster_config.establishes_raster_root = false;
+                    state.are_raster_roots_assigned = false;
+                }
             }
 
             // Set the estimated and precise local rects. The precise local rect
@@ -5105,7 +5108,7 @@ impl TileNode {
                     .collect();
 
                 self.kind = TileNodeKind::Node {
-                    children,
+                    children: children,
                 };
             }
             Some(TileModification::Merge) => {

@@ -988,7 +988,7 @@ impl TextureCache {
             // If the swizzling is supported, we always upload in the internal
             // texture format (thus avoiding the conversion by the driver).
             // Otherwise, pass the external format to the driver.
-            let use_upload_format = self.swizzle.is_none();
+            let use_upload_format = !self.swizzle.is_some();
             let (layer_index, origin) = entry.details.describe();
             let op = TextureCacheUpdate::new_update(
                 data,

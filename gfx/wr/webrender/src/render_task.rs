@@ -1452,7 +1452,7 @@ impl RenderTask {
         if let RenderTaskKind::SvgFilter(ref mut filter_task) = self.kind {
             match filter_task.info {
                 SvgFilterInfo::ColorMatrix(ref matrix) => {
-                    let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                    let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(|| GpuCacheHandle::new());
                     if let Some(mut request) = gpu_cache.request(handle) {
                         for i in 0..5 {
                             request.push([matrix[i*4], matrix[i*4+1], matrix[i*4+2], matrix[i*4+3]]);
@@ -1461,20 +1461,20 @@ impl RenderTask {
                 }
                 SvgFilterInfo::DropShadow(color) |
                 SvgFilterInfo::Flood(color) => {
-                    let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                    let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(|| GpuCacheHandle::new());
                     if let Some(mut request) = gpu_cache.request(handle) {
                         request.push(color.to_array());
                     }
                 }
                 SvgFilterInfo::ComponentTransfer(ref data) => {
-                    let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                    let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(|| GpuCacheHandle::new());
                     if let Some(request) = gpu_cache.request(handle) {
                         data.update(request);
                     }
                 }
                 SvgFilterInfo::Composite(ref operator) => {
                     if let CompositeOperator::Arithmetic(k_vals) = operator {
-                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(GpuCacheHandle::new);
+                        let handle = filter_task.extra_gpu_cache_handle.get_or_insert_with(|| GpuCacheHandle::new());
                         if let Some(mut request) = gpu_cache.request(handle) {
                             request.push(*k_vals);
                         }
