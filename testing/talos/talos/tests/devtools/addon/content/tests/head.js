@@ -24,8 +24,12 @@ const PAGES_BASE_URL = BASE_DOMAIN + "/tests/devtools/addon/content/pages/";
 
 exports.PAGES_BASE_URL = PAGES_BASE_URL;
 exports.SIMPLE_URL = PAGES_BASE_URL + "simple.html";
+
+// The test page in fis/tp5n/bild.de contains a modified version of the initial
+// bild.de test website, where same-site iframes have been replaced with remote
+// frames.
 exports.COMPLICATED_URL =
-  BASE_DOMAIN + "/tests/tp5n/bild.de/www.bild.de/index.html";
+  "http://www.bild.de-talos/fis/tp5n/bild.de/www.bild.de/index.html";
 
 let damp = null;
 /*
@@ -162,4 +166,8 @@ exports.reloadPageAndLog = async function(name, toolbox, onReload) {
   test.done();
 
   await recordPendingPaints(`${name}.reload`, toolbox);
+};
+
+exports.isFissionEnabled = function() {
+  return Services.prefs.getBoolPref("fission.autostart", false);
 };
