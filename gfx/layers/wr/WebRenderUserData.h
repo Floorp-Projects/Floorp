@@ -246,6 +246,7 @@ class WebRenderCanvasData : public WebRenderUserData {
   WebRenderCanvasRendererAsync* GetCanvasRenderer();
   WebRenderCanvasRendererAsync* CreateCanvasRenderer();
 
+  void SetImageContainer(ImageContainer* aImageContainer);
   ImageContainer* GetImageContainer();
   void ClearImageContainer();
 
