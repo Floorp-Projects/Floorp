@@ -18,3 +18,4 @@ Generic interface for a [State](./-state.md) maintained by a [Store](-store/inde
 |---|---|
 | [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md) | `data class BrowserState : `[`State`](./-state.md)<br>Value type that represents the complete state of the browser/engine. |
 | [CustomTabsServiceState](../mozilla.components.feature.customtabs.store/-custom-tabs-service-state/index.md) | `data class CustomTabsServiceState : `[`State`](./-state.md)<br>Value type that represents the custom tabs state accessible from both the service and activity. |
+| [MigrationState](../mozilla.components.support.migration.state/-migration-state/index.md) | `data class MigrationState : `[`State`](./-state.md)<br>Value type that represents the state of the migration. |
