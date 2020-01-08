@@ -658,16 +658,19 @@ function runUndoRedoTest()
 }
 
 function checkInputEvent(aEvent, aIsComposing, aInputType, aData, aDescription) {
-  if (aEvent.type != "input") {
+  if (aEvent.type !== "input" && aEvent.type !== "beforeinput") {
     return;
   }
-  ok(aEvent instanceof InputEvent, `"input" event should be dispatched with InputEvent interface: ${aDescription}`);
-  is(aEvent.cancelable, false, `"input" event should be never cancelable: ${aDescription}`);
-  is(aEvent.bubbles, true, `"input" event should always bubble: ${aDescription}`);
-  is(aEvent.isComposing, aIsComposing, `isComposing should be ${aIsComposing}: ${aDescription}`);
-  is(aEvent.inputType, aInputType, `inputType should be "${aInputType}": ${aDescription}`);
-  is(aEvent.data, aData, `data should be ${aData}: ${aDescription}`);
-  is(aEvent.dataTransfer, null, `dataTransfer should be null: ${aDescription}`);
+  ok(aEvent instanceof InputEvent, `"${aEvent.type}" event should be dispatched with InputEvent interface: ${aDescription}`);
+  let cancelable = aEvent.type === "beforeinput" &&
+                   aInputType !== "insertCompositionText" &&
+                   aInputType !== "deleteCompositionText";
+  is(aEvent.cancelable, cancelable, `"${aEvent.type}" event should ${cancelable ? "be" : "be never"} cancelable: ${aDescription}`);
+  is(aEvent.bubbles, true, `"${aEvent.type}" event should always bubble: ${aDescription}`);
+  is(aEvent.isComposing, aIsComposing, `isComposing of "${aEvent.type}" event should be ${aIsComposing}: ${aDescription}`);
+  is(aEvent.inputType, aInputType, `inputType of "${aEvent.type}" event should be "${aInputType}": ${aDescription}`);
+  is(aEvent.data, aData, `data of "${aEvent.type}" event should be ${aData}: ${aDescription}`);
+  is(aEvent.dataTransfer, null, `dataTransfer of "${aEvent.type}" event should be null: ${aDescription}`);
 }
 
 function runCompositionCommitAsIsTest()
@@ -687,6 +690,7 @@ function runCompositionCommitAsIsTest()
 
   textarea.addEventListener("compositionupdate", handler, true);
   textarea.addEventListener("compositionend", handler, true);
+  textarea.addEventListener("beforeinput", handler, true);
   textarea.addEventListener("input", handler, true);
   textarea.addEventListener("text", handler, true);
 
@@ -712,6 +716,8 @@ function runCompositionCommitAsIsTest()
      "runCompositionCommitAsIsTest: 3 events should be fired after dispatching compositioncommitasis #1");
   is(result[0].type, "text",
      "runCompositionCommitAsIsTest: text should be fired after dispatching compositioncommitasis because it's dispatched when there is composing string #1");
+  todo_is(result[1].type, "beforeinput",
+     "runCompositionCommitAsIsTest: beforeinput should be fired after dispatching compositioncommitasis because it's dispatched when there is composing string #1");
   is(result[1].type, "compositionend",
      "runCompositionCommitAsIsTest: compositionend should be fired after dispatching compositioncommitasis #1");
   is(result[2].type, "input",
@@ -752,6 +758,7 @@ function runCompositionCommitAsIsTest()
 
   is(result.length, 2,
      "runCompositionCommitAsIsTest: 2 events should be fired after dispatching compositioncommitasis #2");
+  // XXX Do we need a "beforeinput" event here? Not sure.
   is(result[0].type, "compositionend",
      "runCompositionCommitAsIsTest: compositionend should be fired after dispatching compositioncommitasis #2");
   is(result[1].type, "input",
@@ -792,6 +799,7 @@ function runCompositionCommitAsIsTest()
 
   is(result.length, 2,
      "runCompositionCommitAsIsTest: 2 events should be fired after dispatching compositioncommitasis #3");
+  // XXX Do we need a "beforeinput" event here? Not sure.
   is(result[0].type, "compositionend",
      "runCompositionCommitAsIsTest: compositionend shouldn't be fired after dispatching compositioncommitasis #3");
   is(result[1].type, "input",
@@ -802,6 +810,7 @@ function runCompositionCommitAsIsTest()
 
   textarea.removeEventListener("compositionupdate", handler, true);
   textarea.removeEventListener("compositionend", handler, true);
+  textarea.removeEventListener("beforeinput", handler, true);
   textarea.removeEventListener("input", handler, true);
   textarea.removeEventListener("text", handler, true);
 }
@@ -823,6 +832,7 @@ function runCompositionCommitTest()
 
   textarea.addEventListener("compositionupdate", handler, true);
   textarea.addEventListener("compositionend", handler, true);
+  textarea.addEventListener("beforeinput", handler, true);
   textarea.addEventListener("input", handler, true);
   textarea.addEventListener("text", handler, true);
 
@@ -850,6 +860,8 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionupdate should be fired after dispatching compositioncommit because it's dispatched when there is composing string #1");
   is(result[1].type, "text",
      "runCompositionCommitTest: text should be fired after dispatching compositioncommit #1");
+  todo_is(result[2].type, "beforeinput",
+     "runCompositionCommitTest: beforeinput should be fired after dispatching compositioncommit because it's dispatched when there is composing string #1");
   is(result[2].type, "compositionend",
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #1");
   is(result[3].type, "input",
@@ -894,6 +906,8 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionupdate should be fired after dispatching compositioncommit #2");
   is(result[1].type, "text",
      "runCompositionCommitTest: text should be fired after dispatching compositioncommit #2");
+  todo_is(result[2].type, "beforeinput",
+     "runCompositionCommitTest: beforeinput should be fired after dispatching compositioncommit #2");
   is(result[2].type, "compositionend",
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #2");
   is(result[3].type, "input",
@@ -938,6 +952,8 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionupdate should be fired after dispatching compositioncommit #3");
   is(result[1].type, "text",
      "runCompositionCommitTest: text should be fired after dispatching compositioncommit #3");
+  todo_is(result[2].type, "beforeinput",
+     "runCompositionCommitTest: beforeinput should be fired after dispatching compositioncommit #3");
   is(result[2].type, "compositionend",
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #3");
   is(result[3].type, "input",
@@ -958,6 +974,8 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: 3 events should be fired when inserting empty string with composition");
   is(result[0].type, "text",
      "runCompositionCommitTest: text should be fired when inserting empty string with composition");
+  todo_is(result[1].type, "beforeinput",
+     "runCompositionCommitTest: beforeinput should be fired when inserting empty string with composition");
   is(result[1].type, "compositionend",
      "runCompositionCommitTest: compositionend should be fired when inserting empty string with composition");
   is(result[2].type, "input",
@@ -979,6 +997,8 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: 3 events should be fired when replacing with empty string with composition");
   is(result[0].type, "text",
      "runCompositionCommitTest: text should be fired when replacing with empty string with composition");
+  todo_is(result[1].type, "beforeinput",
+     "runCompositionCommitTest: beforeinput should be fired when replacing with empty string with composition");
   is(result[1].type, "compositionend",
      "runCompositionCommitTest: compositionend should be fired when replacing with empty string with composition");
   is(result[2].type, "input",
@@ -1002,6 +1022,8 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionupdate should be fired when replacing selection with same string with composition");
   is(result[1].type, "text",
      "runCompositionCommitTest: text should be fired when replacing selection with same string with composition");
+  todo_is(result[2].type, "beforeinput",
+     "runCompositionCommitTest: beforeinput should be fired when replacing selection with same string with composition");
   is(result[2].type, "compositionend",
      "runCompositionCommitTest: compositionend should be fired when replacing selection with same string with composition");
   is(result[3].type, "input",
@@ -1035,6 +1057,8 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionupdate should be fired after dispatching compositioncommit #4");
   is(result[1].type, "text",
      "runCompositionCommitTest: text should be fired after dispatching compositioncommit #4");
+  todo_is(result[2].type, "beforeinput",
+     "runCompositionCommitTest: beforeinput should be fired after dispatching compositioncommit #4");
   is(result[2].type, "compositionend",
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #4");
   is(result[3].type, "input",
@@ -1055,6 +1079,8 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: compositionupdate should be fired after dispatching compositioncommit #5");
   is(result[1].type, "text",
      "runCompositionCommitTest: text should be fired after dispatching compositioncommit #5");
+  todo_is(result[2].type, "beforeinput",
+     "runCompositionCommitTest: beforeinput should be fired after dispatching compositioncommit #5");
   is(result[2].type, "compositionend",
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #5");
   is(result[3].type, "input",
@@ -1085,6 +1111,8 @@ function runCompositionCommitTest()
      "runCompositionCommitTest: 3 events should be fired after dispatching compositioncommit #6");
   is(result[0].type, "text",
      "runCompositionCommitTest: text should be fired after dispatching compositioncommit #6");
+  todo_is(result[1].type, "beforeinput",
+     "runCompositionCommitTest: beforeinput should be fired after dispatching compositioncommit #6");
   is(result[1].type, "compositionend",
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #6");
   is(result[2].type, "input",
@@ -1126,6 +1154,7 @@ function runCompositionCommitTest()
 
   is(result.length, 2,
      "runCompositionCommitTest: 2 events should be fired after dispatching compositioncommit #7");
+  // XXX Do we need a "beforeinput" event here? Not sure.
   is(result[0].type, "compositionend",
      "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #7");
   is(result[1].type, "input",
@@ -1136,6 +1165,7 @@ function runCompositionCommitTest()
 
   textarea.removeEventListener("compositionupdate", handler, true);
   textarea.removeEventListener("compositionend", handler, true);
+  textarea.removeEventListener("beforeinput", handler, true);
   textarea.removeEventListener("input", handler, true);
   textarea.removeEventListener("text", handler, true);
 }
@@ -5552,6 +5582,7 @@ function runForceCommitTest()
   window.addEventListener("compositionstart", eventHandler, true);
   window.addEventListener("compositionupdate", eventHandler, true);
   window.addEventListener("compositionend", eventHandler, true);
+  window.addEventListener("beforeinput", eventHandler, true);
   window.addEventListener("input", eventHandler, true);
   window.addEventListener("text", eventHandler, true);
 
@@ -5579,8 +5610,10 @@ function runForceCommitTest()
      "runForceCommitTest: the 2nd event must be compositionupdate #1");
   is(events[2].type, "text",
      "runForceCommitTest: the 3rd event must be text #1");
+  todo_is(events[3].type, "beforeinput",
+     "runForceCommitTest: the 4th event must be beforeinput #1");
   is(events[3].type, "input",
-     "runForceCommitTest: the 4th event must be input #1");
+     "runForceCommitTest: the 5th event must be input #1");
   checkInputEvent(events[3], true, "insertCompositionText", "\u306E",
                   "runForceCommitTest #1");
 
@@ -5591,10 +5624,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #2");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #2");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #2");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #2");
+     "runForceCommitTest: the 3rd event must be compositionend #2");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #2");
+     "runForceCommitTest: the 4th event must be input #2");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #2");
   is(events[1].data, "\u306E",
@@ -5633,10 +5668,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #3");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #3");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #3");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #3");
+     "runForceCommitTest: the 3rd event must be compositionend #3");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #3");
+     "runForceCommitTest: the 4th event must be input #3");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #3");
   is(events[1].data, "\u306E",
@@ -5678,10 +5715,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #4");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #4");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #4");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #4");
+     "runForceCommitTest: the 3rd event must be compositionend #4");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #4");
+     "runForceCommitTest: the 4th event must be input #4");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #4");
   is(events[1].data, "\u306E",
@@ -5720,10 +5759,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #5");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #5");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #5");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #5");
+     "runForceCommitTest: the 3rd event must be compositionend #5");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #5");
+     "runForceCommitTest: the 4th event must be input #5");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #5");
   is(events[1].data, "\u306E",
@@ -5766,10 +5807,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #6");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #6");
+  todo_is(events[0].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #6");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #6");
+     "runForceCommitTest: the 3rd event must be compositionend #6");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #6");
+     "runForceCommitTest: the 4th event must be input #6");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #6");
   is(events[1].data, "\u306E",
@@ -5812,10 +5855,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #7");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #7");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #7");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #7");
+     "runForceCommitTest: the 3rd event must be compositionend #7");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #7");
+     "runForceCommitTest: the 4th event must be input #7");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #7");
   is(events[1].data, "\u306E",
@@ -5859,10 +5904,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #8");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #8");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #8");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #8");
+     "runForceCommitTest: the 3rd event must be compositionend #8");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #8");
+     "runForceCommitTest: the 4th event must be input #8");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #8");
   is(events[1].data, "\u306E",
@@ -5905,10 +5952,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #9");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #9");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #9");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #9");
+     "runForceCommitTest: the 3rd event must be compositionend #9");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #9");
+     "runForceCommitTest: the 4th event must be input #9");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #9");
   is(events[1].data, "\u306E",
@@ -5949,10 +5998,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #10");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #10");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #10");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #10");
+     "runForceCommitTest: the 3rd event must be compositionend #10");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #10");
+     "runForceCommitTest: the 4th event must be input #10");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #10");
   is(events[1].data, "\u306E",
@@ -5998,10 +6049,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #11");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #11");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #11");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #11");
+     "runForceCommitTest: the 3rd event must be compositionend #11");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #11");
+     "runForceCommitTest: the 4th event must be input #11");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #11");
   is(events[1].data, "\u306E",
@@ -6043,10 +6096,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #12");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #12");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #12");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #12");
+     "runForceCommitTest: the 3rd event must be compositionend #12");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #12");
+     "runForceCommitTest: the 4th event must be input #12");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #12");
   is(events[1].data, "\u306E",
@@ -6083,10 +6138,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #13");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #13");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #13");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #13");
+     "runForceCommitTest: the 3rd event must be compositionend #13");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #13");
+     "runForceCommitTest: the 4th event must be input #13");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #13");
   is(events[1].data, "\u306E",
@@ -6123,10 +6180,12 @@ function runForceCommitTest()
      "runForceCommitTest: wrong event count #14");
   is(events[0].type, "text",
      "runForceCommitTest: the 1st event must be text #14");
+  todo_is(events[1].type, "beforeinput",
+     "runForceCommitTest: the 2nd event must be beforeinput #14");
   is(events[1].type, "compositionend",
-     "runForceCommitTest: the 2nd event must be compositionend #14");
+     "runForceCommitTest: the 3rd event must be compositionend #14");
   is(events[2].type, "input",
-     "runForceCommitTest: the 3rd event must be input #14");
+     "runForceCommitTest: the 4th event must be input #14");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runForceCommitTest #14");
   is(events[1].data, "\u306E",
@@ -6193,6 +6252,7 @@ function runForceCommitTest()
   window.removeEventListener("compositionstart", eventHandler, true);
   window.removeEventListener("compositionupdate", eventHandler, true);
   window.removeEventListener("compositionend", eventHandler, true);
+  window.removeEventListener("beforeinput", eventHandler, true);
   window.removeEventListener("input", eventHandler, true);
   window.removeEventListener("text", eventHandler, true);
 }
@@ -6211,6 +6271,7 @@ function runNestedSettingValue()
   window.addEventListener("compositionstart", eventHandler, true);
   window.addEventListener("compositionupdate", eventHandler, true);
   window.addEventListener("compositionend", eventHandler, true);
+  window.addEventListener("beforeinput", eventHandler, true);
   window.addEventListener("input", eventHandler, true);
   window.addEventListener("text", eventHandler, true);
 
@@ -6237,10 +6298,12 @@ function runNestedSettingValue()
      "runNestedSettingValue: wrong event count #1");
   is(events[0].type, "text",
      "runNestedSettingValue: the 1st event must be text #1");
+  todo_is(events[1].type, "beforeinput",
+     "runNestedSettingValue: the 2nd event must be beforeinput #1");
   is(events[1].type, "compositionend",
-     "runNestedSettingValue: the 2nd event must be compositionend #1");
+     "runNestedSettingValue: the 3rd event must be compositionend #1");
   is(events[2].type, "input",
-     "runNestedSettingValue: the 3rd event must be input #1");
+     "runNestedSettingValue: the 4th event must be input #1");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runNestedSettingValue #1");
   is(events[1].data, "\u306E",
@@ -6279,10 +6342,12 @@ function runNestedSettingValue()
      "runNestedSettingValue: wrong event count #2");
   is(events[0].type, "text",
      "runNestedSettingValue: the 1st event must be text #2");
+  todo_is(events[1].type, "beforeinput",
+     "runNestedSettingValue: the 2nd event must be beforeinput #2");
   is(events[1].type, "compositionend",
-     "runNestedSettingValue: the 2nd event must be compositionend #2");
+     "runNestedSettingValue: the 3rd event must be compositionend #2");
   is(events[2].type, "input",
-     "runNestedSettingValue: the 3rd event must be input #2");
+     "runNestedSettingValue: the 4th event must be input #2");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runNestedSettingValue #2");
   is(events[1].data, "\u306E",
@@ -6321,10 +6386,12 @@ function runNestedSettingValue()
      "runNestedSettingValue: wrong event count #3");
   is(events[0].type, "text",
      "runNestedSettingValue: the 1st event must be text #3");
+  todo_is(events[1].type, "beforeinput",
+     "runNestedSettingValue: the 2nd event must be beforeinput #3");
   is(events[1].type, "compositionend",
-     "runNestedSettingValue: the 2nd event must be compositionend #3");
+     "runNestedSettingValue: the 3rd event must be compositionend #3");
   is(events[2].type, "input",
-     "runNestedSettingValue: the 3rd event must be input #3");
+     "runNestedSettingValue: the 4th event must be input #3");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runNestedSettingValue #3");
   is(events[1].data, "\u306E",
@@ -6363,10 +6430,12 @@ function runNestedSettingValue()
      "runNestedSettingValue: wrong event count #4");
   is(events[0].type, "text",
      "runNestedSettingValue: the 1st event must be text #4");
+  todo_is(events[1].type, "beforeinput",
+     "runNestedSettingValue: the 2nd event must be beforeinput #4");
   is(events[1].type, "compositionend",
-     "runNestedSettingValue: the 2nd event must be compositionend #4");
+     "runNestedSettingValue: the 3rd event must be compositionend #4");
   is(events[2].type, "input",
-     "runNestedSettingValue: the 3rd event must be input #4");
+     "runNestedSettingValue: the 4th event must be input #4");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runNestedSettingValue #4");
   is(events[1].data, "\u306E",
@@ -6385,6 +6454,7 @@ function runNestedSettingValue()
   window.removeEventListener("compositionstart", eventHandler, true);
   window.removeEventListener("compositionupdate", eventHandler, true);
   window.removeEventListener("compositionend", eventHandler, true);
+  window.removeEventListener("beforeinput", eventHandler, true);
   window.removeEventListener("input", eventHandler, true);
   window.removeEventListener("text", eventHandler, true);
 
@@ -6436,6 +6506,7 @@ async function runAsyncForceCommitTest()
   window.addEventListener("compositionstart", eventHandler, true);
   window.addEventListener("compositionupdate", eventHandler, true);
   window.addEventListener("compositionend", eventHandler, true);
+  window.addEventListener("beforeinput", eventHandler, true);
   window.addEventListener("input", eventHandler, true);
   window.addEventListener("text", eventHandler, true);
 
@@ -6463,8 +6534,10 @@ async function runAsyncForceCommitTest()
      "runAsyncForceCommitTest: the 2nd event must be compositionupdate #1");
   is(events[2].type, "text",
      "runAsyncForceCommitTest: the 3rd event must be text #1");
+  todo_is(events[3].type, "beforeinput",
+     "runAsyncForceCommitTest: the 4th event must be beforeinput #1");
   is(events[3].type, "input",
-     "runAsyncForceCommitTest: the 4th event must be input #1");
+     "runAsyncForceCommitTest: the 5th event must be input #1");
   checkInputEvent(events[3], true, "insertCompositionText", "\u306E",
                   "runAsyncForceCommitTest #1");
 
@@ -6479,10 +6552,12 @@ async function runAsyncForceCommitTest()
      "runAsyncForceCommitTest: wrong event count #2");
   is(events[0].type, "text",
      "runAsyncForceCommitTest: the 1st event must be text #2");
+  todo_is(events[1].type, "beforeinput",
+     "runAsyncForceCommitTest: the 2nd event must be beforeinput #2");
   is(events[1].type, "compositionend",
-     "runAsyncForceCommitTest: the 2nd event must be compositionend #2");
+     "runAsyncForceCommitTest: the 3rd event must be compositionend #2");
   is(events[2].type, "input",
-     "runAsyncForceCommitTest: the 3rd event must be input #2");
+     "runAsyncForceCommitTest: the 4th event must be input #2");
   checkInputEvent(events[2], false, "insertCompositionText", "\u306E",
                   "runAsyncForceCommitTest #2");
   is(events[1].data, "\u306E",
@@ -6503,6 +6578,7 @@ async function runAsyncForceCommitTest()
   window.removeEventListener("compositionstart", eventHandler, true);
   window.removeEventListener("compositionupdate", eventHandler, true);
   window.removeEventListener("compositionend", eventHandler, true);
+  window.removeEventListener("beforeinput", eventHandler, true);
   window.removeEventListener("input", eventHandler, true);
   window.removeEventListener("text", eventHandler, true);
 }
@@ -6561,6 +6637,7 @@ function runIsComposingTest()
   textarea.addEventListener("keydown", eventHandler, true);
   textarea.addEventListener("keypress", eventHandler, true);
   textarea.addEventListener("keyup", eventHandler, true);
+  textarea.addEventListener("beforeinput", eventHandler, true);
   textarea.addEventListener("input", eventHandler, true);
   textarea.addEventListener("compositionstart", onComposition, true);
   textarea.addEventListener("compositionend", onComposition, true);
@@ -6605,6 +6682,7 @@ function runIsComposingTest()
   textarea.removeEventListener("keydown", eventHandler, true);
   textarea.removeEventListener("keypress", eventHandler, true);
   textarea.removeEventListener("keyup", eventHandler, true);
+  textarea.removeEventListener("beforeinput", eventHandler, true);
   textarea.removeEventListener("input", eventHandler, true);
   textarea.removeEventListener("compositionstart", onComposition, true);
   textarea.removeEventListener("compositionend", onComposition, true);
@@ -6629,6 +6707,7 @@ function runRedundantChangeTest()
 
   textarea.addEventListener("compositionupdate", handler, true);
   textarea.addEventListener("compositionend", handler, true);
+  textarea.addEventListener("beforeinput", handler, true);
   textarea.addEventListener("input", handler, true);
   textarea.addEventListener("text", handler, true);
 
@@ -6653,6 +6732,8 @@ function runRedundantChangeTest()
      "runRedundantChangeTest: compositionupdate should be fired after synthesizing composition change #1");
   is(result[1].type, "text",
      "runRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string #1");
+  todo_is(result[2].type, "beforeinput",
+     "runRedundantChangeTest: beforeinput should be fired after synthesizing composition change #1");
   is(result[2].type, "input",
      "runRedundantChangeTest: input should be fired after synthesizing composition change #1");
   checkInputEvent(result[2], true, "insertCompositionText", "\u3042",
@@ -6678,6 +6759,8 @@ function runRedundantChangeTest()
      "runRedundantChangeTest: compositionupdate should be fired after synthesizing composition change #2");
   is(result[1].type, "text",
      "runRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string #2");
+  todo_is(result[2].type, "beforeinput",
+     "runRedundantChangeTest: beforeinput should be fired after synthesizing composition change #2");
   is(result[2].type, "input",
      "runRedundantChangeTest: input should be fired after synthesizing composition change #2");
   checkInputEvent(result[2], true, "insertCompositionText", "\u3042\u3044",
@@ -6704,19 +6787,22 @@ function runRedundantChangeTest()
   clearResult();
   synthesizeComposition({ type: "compositioncommitasis" });
   is(result.length, 3,
-     "runRedundantChangeTest: 3 events be fired after synthesizing composition commit-as-is");
+     "runRedundantChangeTest: 3 events should be fired after synthesizing composition commit-as-is");
   is(result[0].type, "text",
-     "runRedundantChangeTest: text shouldn't be fired after synthesizing composition commit-as-is for removing the ranges");
+     "runRedundantChangeTest: text should be fired after synthesizing composition commit-as-is for removing the ranges");
+  todo_is(result[1].type, "beforeinput",
+     "runRedundantChangeTest: beforeinput should be fired after synthesizing composition commit-as-is for removing the ranges");
   is(result[1].type, "compositionend",
      "runRedundantChangeTest: compositionend should be fired after synthesizing composition commit-as-is");
   is(result[2].type, "input",
-     "runRedundantChangeTest: input shouldn't be fired before compositionend at synthesizing commit-as-is");
+     "runRedundantChangeTest: input should be fired before compositionend at synthesizing commit-as-is");
   checkInputEvent(result[2], false, "insertCompositionText", "\u3042\u3044",
                   "runRedundantChangeTest: at synthesizing commit-as-is");
   is(textarea.value, "\u3042\u3044", "runRedundantChangeTest: textarea has the commit string");
 
   textarea.removeEventListener("compositionupdate", handler, true);
   textarea.removeEventListener("compositionend", handler, true);
+  textarea.removeEventListener("beforeinput", handler, true);
   textarea.removeEventListener("input", handler, true);
   textarea.removeEventListener("text", handler, true);
 }
@@ -6738,6 +6824,7 @@ function runNotRedundantChangeTest()
 
   textarea.addEventListener("compositionupdate", handler, true);
   textarea.addEventListener("compositionend", handler, true);
+  textarea.addEventListener("beforeinput", handler, true);
   textarea.addEventListener("input", handler, true);
   textarea.addEventListener("text", handler, true);
 
@@ -6762,6 +6849,8 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: compositionupdate should be fired after synthesizing composition change with non-null ranges");
   is(result[1].type, "text",
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with non-null ranges");
+  todo_is(result[2].type, "beforeinput",
+     "runNotRedundantChangeTest: beforeinput should be fired after synthesizing composition change with non-null ranges");
   is(result[2].type, "input",
      "runNotRedundantChangeTest: input should be fired after synthesizing composition change with non-null ranges");
   checkInputEvent(result[2], true, "insertCompositionText", "ABCDE",
@@ -6783,6 +6872,8 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: 2 events should be fired after synthesizing composition change with null ranges after non-null ranges");
   is(result[0].type, "text",
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with null ranges after non-null ranges");
+  todo_is(result[1].type, "beforeinput",
+     "runNotRedundantChangeTest: beforeinput should be fired after synthesizing composition change because it's dispatched when there is composing string with null ranges after non-null ranges");
   is(result[1].type, "input",
      "runNotRedundantChangeTest: input should be fired after synthesizing composition change with null ranges after non-null ranges");
   checkInputEvent(result[1], true, "insertCompositionText", "ABCDE",
@@ -6806,6 +6897,8 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: 2 events should be fired after synthesizing composition change with null ranges after non-null ranges");
   is(result[0].type, "text",
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with non-null ranges after null ranges");
+  todo_is(result[1].type, "beforeinput",
+     "runNotRedundantChangeTest: beforeinput should be fired after synthesizing composition change because it's dispatched when there is composing string with non-null ranges after null ranges");
   is(result[1].type, "input",
      "runNotRedundantChangeTest: input should be fired after synthesizing composition change with non-null ranges after null ranges");
   checkInputEvent(result[1], true, "insertCompositionText", "ABCDE",
@@ -6829,6 +6922,8 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: compositionupdate should be fired after synthesizing composition change with empty data and null ranges after non-null ranges");
   is(result[1].type, "text",
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with empty data and null ranges after non-null ranges");
+  todo_is(result[2].type, "beforeinput",
+     "runNotRedundantChangeTest: beforeinput should be fired after synthesizing composition change with empty data and null ranges after non-null ranges");
   is(result[2].type, "input",
      "runNotRedundantChangeTest: input should be fired after synthesizing composition change with empty data and null ranges after non-null ranges");
   checkInputEvent(result[2], true, "insertCompositionText", "",
@@ -6854,6 +6949,8 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: compositionupdate should be fired after synthesizing composition change with non-null ranges after empty data and null ranges");
   is(result[1].type, "text",
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with non-null ranges after empty data and null ranges");
+  todo_is(result[2].type, "beforeinput",
+     "runNotRedundantChangeTest: beforeinput should be fired after synthesizing composition change with non-null ranges after empty data and null ranges");
   is(result[2].type, "input",
      "runNotRedundantChangeTest: input should be fired after synthesizing composition change with non-null ranges after empty data and null ranges");
   checkInputEvent(result[2], true, "insertCompositionText", "ABCDE",
@@ -6869,6 +6966,8 @@ function runNotRedundantChangeTest()
      "runNotRedundantChangeTest: compositionupdate should be fired after synthesizing composition commit with empty data after non-empty data");
   is(result[1].type, "text",
      "runNotRedundantChangeTest: text should be fired after synthesizing composition change because it's dispatched when there is composing string with empty data after non-empty data");
+  todo_is(result[2].type, "beforeinput",
+     "runNotRedundantChangeTest: beforeinput should be fired after synthesizing composition commit with empty data after non-empty data");
   is(result[2].type, "compositionend",
      "runNotRedundantChangeTest: compositionend should be fired after synthesizing composition commit with empty data after non-empty data");
   is(result[3].type, "input",
@@ -6879,6 +6978,7 @@ function runNotRedundantChangeTest()
 
   textarea.removeEventListener("compositionupdate", handler, true);
   textarea.removeEventListener("compositionend", handler, true);
+  textarea.removeEventListener("beforeinput", handler, true);
   textarea.removeEventListener("input", handler, true);
   textarea.removeEventListener("text", handler, true);
 }
@@ -7120,6 +7220,7 @@ async function runRemoveContentTest()
   textarea.addEventListener("compositionstart", eventHandler, true);
   textarea.addEventListener("compositionupdate", eventHandler, true);
   textarea.addEventListener("compositionend", eventHandler, true);
+  textarea.addEventListener("beforeinput", eventHandler, true);
   textarea.addEventListener("input", eventHandler, true);
   textarea.addEventListener("text", eventHandler, true);
 
@@ -7151,9 +7252,11 @@ async function runRemoveContentTest()
   is(events[0].type, "compositionupdate",
      "runRemoveContentTest: the 1st event must be compositionupdate #1");
   is(events[1].type, "text",
-     "runRemoveContentTest: the 2nd event must be text #1");
+     "runRemoveContentTest: the 3rd event must be text #1");
+  todo_is(events[2].type, "beforeinput",
+     "runRemoveContentTest: the 2nd event must be beforeinput #1");
   is(events[2].type, "compositionend",
-     "runRemoveContentTest: the 3rd event must be compositionend #1");
+     "runRemoveContentTest: the 4th event must be compositionend #1");
   is(events[0].data, "",
      "runRemoveContentTest: compositionupdate has wrong data #1");
   is(events[2].data, "",
@@ -7185,13 +7288,15 @@ async function runRemoveContentTest()
   is(events.length, 2,
      "runRemoveContentTest: wrong event count #2");
   is(events[0].type, "text",
-     "runRemoveContentTest: the 1st event must be text #2");
+     "runRemoveContentTest: the 2nd event must be text #2");
+  todo_is(events[1].type, "beforeinput",
+     "runRemoveContentTest: the 1st event must be beforeinput #2");
   is(events[1].type, "compositionend",
-     "runRemoveContentTest: the 1st event must be compositionend #2");
+     "runRemoveContentTest: the 3rd event must be compositionend #2");
   is(events[1].data, "",
      "runRemoveContentTest: compositionupdate has wrong data #2");
   is(events[1].target, textarea,
-     "runRemoveContentTest: The 1st event was fired on wrong event target #2");
+     "runRemoveContentTest: The 2nd event was fired on wrong event target #2");
   ok(!getEditor(textarea).isComposing,
      "runRemoveContentTest: the textarea still has composition #2");
   is(textarea.value, "",
@@ -7202,6 +7307,7 @@ async function runRemoveContentTest()
   textarea.removeEventListener("compositionstart", eventHandler, true);
   textarea.removeEventListener("compositionupdate", eventHandler, true);
   textarea.removeEventListener("compositionend", eventHandler, true);
+  textarea.removeEventListener("beforeinput", eventHandler, true);
   textarea.removeEventListener("input", eventHandler, true);
   textarea.removeEventListener("text", eventHandler, true);
 
@@ -7945,6 +8051,7 @@ async function runEditorReframeTests()
     });
   }
 
+  // TODO: Add "beforeinput" case.
   input.value = "";
   await runEditorReframeTest(input, window, "input");
   input.value = "";
@@ -9218,6 +9325,10 @@ async function runPasswordMaskDelayTest() {
 
 async function runTest()
 {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.input_events.beforeinput.enabled", true]],
+  });
+
   window.addEventListener("unload", window.arguments[0].SimpleTest.finish, {once: true, capture: true});
 
   contenteditable = document.getElementById("iframe4").contentDocument.getElementById("contenteditable");

@@ -2195,8 +2195,23 @@ class SpecialPowersChild extends JSWindowActorChild {
     });
   }
 
-  doCommand(window, cmd) {
-    return window.docShell.doCommand(cmd);
+  doCommand(window, cmd, param) {
+    switch (cmd) {
+      case "cmd_align":
+      case "cmd_backgroundColor":
+      case "cmd_fontColor":
+      case "cmd_fontFace":
+      case "cmd_fontSize":
+      case "cmd_highlight":
+      case "cmd_insertImageNoUI":
+      case "cmd_insertLinkNoUI":
+      case "cmd_paragraphState":
+        let params = Cu.createCommandParams();
+        params.setStringValue("state_attribute", param);
+        return window.docShell.doCommandWithParams(cmd, params);
+      default:
+        return window.docShell.doCommand(cmd);
+    }
   }
 
   isCommandEnabled(window, cmd) {
