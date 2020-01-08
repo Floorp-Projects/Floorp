@@ -92,6 +92,9 @@ ifdef ENABLE_MOZSEARCH_PLUGIN
 	cd $(topobjdir)/ && cp _build_manifests/install/dist_include '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_INCLUDEMAP_BASENAME).map'
 endif
 ifeq (Darwin, $(OS_ARCH))
+	@echo 'Generating macOS codesigning bundle ($(MACOS_CODESIGN_ARCHIVE_BASENAME).zip)'
+	cd $(topsrcdir)/security/mac && \
+	  zip -rD '$(ABS_DIST)/$(PKG_PATH)$(MACOS_CODESIGN_ARCHIVE_BASENAME).zip' hardenedruntime
 ifdef MOZ_ASAN
 	@echo "Rewriting ASan runtime dylib paths for all binaries in $(DIST)/$(MOZ_PKG_DIR)$(_BINPATH) ..."
 	$(PYTHON3) $(MOZILLA_DIR)/build/unix/rewrite_asan_dylib.py $(DIST)/$(MOZ_PKG_DIR)$(_BINPATH)
