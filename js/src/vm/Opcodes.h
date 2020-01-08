@@ -2083,7 +2083,7 @@
      *
      *   Category: Functions
      *   Type: Generators and async functions
-     *   Operands: resumeKind (GeneratorResumeKind)
+     *   Operands: GeneratorResumeKind resumeKind (encoded as uint8_t)
      *   Stack: => resumeKind
      */ \
     MACRO(JSOP_RESUMEKIND, "resumekind", NULL, 2, 0, 1, JOF_UINT8) \

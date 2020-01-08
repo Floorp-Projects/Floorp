@@ -62,13 +62,26 @@ except ImportError as exc:
 
 SOURCE_BASE = 'http://dxr.mozilla.org/mozilla-central/source'
 
+FLAGS_TO_IGNORE = {
+    "JOF_BYTE",
+    "JOF_UINT8",
+    "JOF_UINT16",
+    "JOF_UINT24",
+    "JOF_UINT32",
+    "JOF_INT8",
+    "JOF_INT32",
+    "JOF_TABLESWITCH",
+    "JOF_REGEXP",
+    "JOF_DOUBLE",
+    "JOF_LOOPHEAD",
+    "JOF_BIGINT",
+}
+
 
 def format_flags(flags):
-    flags = [flag for flag in flags if flag != 'JOF_BYTE']
+    flags = [flag for flag in flags if flag not in FLAGS_TO_IGNORE]
     if len(flags) == 0:
         return ''
-
-    flags = map(lambda x: x.replace('JOF_', ''), flags)
     return '<p>Flags: {flags}</p>\n'.format(flags=', '.join(flags))
 
 
