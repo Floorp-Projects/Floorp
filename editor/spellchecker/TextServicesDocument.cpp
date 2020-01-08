@@ -1888,12 +1888,16 @@ nsresult TextServicesDocument::GetCollapsedSelection(
 
   uint32_t offset = range->StartOffset();
 
-  int32_t e1s1 = nsContentUtils::ComparePoints_Deprecated(
+  const Maybe<int32_t> e1s1 = nsContentUtils::ComparePoints(
       eStart->mNode, eStartOffset, parent, static_cast<int32_t>(offset));
-  int32_t e2s1 = nsContentUtils::ComparePoints_Deprecated(
+  const Maybe<int32_t> e2s1 = nsContentUtils::ComparePoints(
       eEnd->mNode, eEndOffset, parent, static_cast<int32_t>(offset));
 
-  if (e1s1 > 0 || e2s1 < 0) {
+  if (NS_WARN_IF(!e1s1) || NS_WARN_IF(!e2s1)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (*e1s1 > 0 || *e2s1 < 0) {
     // We're done if the caret is outside the current text block.
     return NS_OK;
   }
@@ -2058,7 +2062,6 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   nsCOMPtr<nsINode> startContainer, endContainer;
   int32_t startOffset, endOffset;
   int32_t tableCount;
-  int32_t e1s1 = 0, e1s2 = 0, e2s1 = 0, e2s2 = 0;
 
   OffsetEntry *eStart, *eEnd;
   int32_t eStartOffset, eEndOffset;
@@ -2079,11 +2082,12 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   eStartOffset = eStart->mNodeOffset;
   eEndOffset = eEnd->mNodeOffset + eEnd->mLength;
 
-  uint32_t rangeCount = selection->RangeCount();
+  const uint32_t rangeCount = selection->RangeCount();
 
   // Find the first range in the selection that intersects
   // the current text block.
-
+  Maybe<int32_t> e1s2;
+  Maybe<int32_t> e2s1;
   for (uint32_t i = 0; i < rangeCount; i++) {
     range = selection->GetRangeAt(i);
     NS_ENSURE_STATE(range);
@@ -2094,43 +2098,56 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    e1s2 = nsContentUtils::ComparePoints_Deprecated(eStart->mNode, eStartOffset,
-                                                    endContainer, endOffset);
-    e2s1 = nsContentUtils::ComparePoints_Deprecated(
-        eEnd->mNode, eEndOffset, startContainer, startOffset);
+    e1s2 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
+                                         endContainer, endOffset);
+    if (NS_WARN_IF(!e1s2)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
+                                         startContainer, startOffset);
+    if (NS_WARN_IF(!e2s1)) {
+      return NS_ERROR_FAILURE;
+    }
 
     // Break out of the loop if the text block intersects the current range.
 
-    if (e1s2 <= 0 && e2s1 >= 0) {
+    if (*e1s2 <= 0 && *e2s1 >= 0) {
       break;
     }
   }
 
   // We're done if we didn't find an intersecting range.
 
-  if (rangeCount < 1 || e1s2 > 0 || e2s1 < 0) {
+  if (rangeCount < 1 || *e1s2 > 0 || *e2s1 < 0) {
     *aSelStatus = BlockSelectionStatus::eBlockOutside;
     *aSelOffset = *aSelLength = -1;
     return NS_OK;
   }
 
   // Now that we have an intersecting range, find out more info:
+  const Maybe<int32_t> e1s1 = nsContentUtils::ComparePoints(
+      eStart->mNode, eStartOffset, startContainer, startOffset);
+  if (NS_WARN_IF(!e1s1)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  e1s1 = nsContentUtils::ComparePoints_Deprecated(eStart->mNode, eStartOffset,
-                                                  startContainer, startOffset);
-  e2s2 = nsContentUtils::ComparePoints_Deprecated(eEnd->mNode, eEndOffset,
-                                                  endContainer, endOffset);
+  const Maybe<int32_t> e2s2 = nsContentUtils::ComparePoints(
+      eEnd->mNode, eEndOffset, endContainer, endOffset);
+  if (NS_WARN_IF(!e2s2)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (rangeCount > 1) {
     // There are multiple selection ranges, we only deal
     // with the first one that intersects the current,
     // text block, so mark this a as a partial.
     *aSelStatus = BlockSelectionStatus::eBlockPartial;
-  } else if (e1s1 > 0 && e2s2 < 0) {
+  } else if (*e1s1 > 0 && *e2s2 < 0) {
     // The range extends beyond the start and
     // end of the current text block.
     *aSelStatus = BlockSelectionStatus::eBlockInside;
-  } else if (e1s1 <= 0 && e2s2 >= 0) {
+  } else if (*e1s1 <= 0 && *e2s2 >= 0) {
     // The current text block contains the entire
     // range.
     *aSelStatus = BlockSelectionStatus::eBlockContains;
@@ -2148,7 +2165,7 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   // The start of the range will be the rightmost
   // start node.
 
-  if (e1s1 >= 0) {
+  if (*e1s1 >= 0) {
     p1 = eStart->mNode;
     o1 = eStartOffset;
   } else {
@@ -2159,7 +2176,7 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   // The end of the range will be the leftmost
   // end node.
 
-  if (e2s2 <= 0) {
+  if (*e2s2 <= 0) {
     p2 = eEnd->mNode;
     o2 = eEndOffset;
   } else {
