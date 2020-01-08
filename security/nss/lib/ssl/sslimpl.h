@@ -810,7 +810,7 @@ typedef struct {
     /* |seqNum| eventually contains the reconstructed sequence number. */
     sslSequenceNumber seqNum;
     /* The header of the cipherText. */
-    const PRUint8 *hdr;
+    PRUint8 *hdr;
     unsigned int hdrLen;
 
     /* |buf| is the payload of the ciphertext. */
@@ -1848,6 +1848,30 @@ SSLExp_HkdfExpandLabelWithMech(PRUint16 version, PRUint16 cipherSuite, PK11SymKe
                                PK11SymKey **keyp);
 
 SECStatus SSLExp_SetTimeFunc(PRFileDesc *fd, SSLTimeFunc f, void *arg);
+
+extern SECStatus ssl_CreateMaskingContextInner(PRUint16 version, PRUint16 cipherSuite,
+                                               PK11SymKey *secret,
+                                               const char *label,
+                                               unsigned int labelLen,
+                                               SSLMaskingContext **ctx);
+
+extern SECStatus ssl_CreateMaskInner(SSLMaskingContext *ctx, const PRUint8 *sample,
+                                     unsigned int sampleLen, PRUint8 *outMask,
+                                     unsigned int maskLen);
+
+extern SECStatus ssl_DestroyMaskingContextInner(SSLMaskingContext *ctx);
+
+SECStatus SSLExp_CreateMaskingContext(PRUint16 version, PRUint16 cipherSuite,
+                                      PK11SymKey *secret,
+                                      const char *label,
+                                      unsigned int labelLen,
+                                      SSLMaskingContext **ctx);
+
+SECStatus SSLExp_CreateMask(SSLMaskingContext *ctx, const PRUint8 *sample,
+                            unsigned int sampleLen, PRUint8 *mask,
+                            unsigned int len);
+
+SECStatus SSLExp_DestroyMaskingContext(SSLMaskingContext *ctx);
 
 SEC_END_PROTOS
 

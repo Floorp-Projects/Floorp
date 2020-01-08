@@ -1,0 +1,4 @@
+Vectors taken from:
+https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/Key-Derivation
+
+Modified to remove CMAC TDES2/TDES3 test vectors.

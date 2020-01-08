@@ -268,6 +268,7 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
     PRUint8 contentType;
     unsigned int headerLen;
     SECStatus rv;
+    PRBool dtlsLengthPresent = PR_TRUE;
 
     SSL_TRC(30, ("dtls_GatherData"));
 
@@ -316,8 +317,20 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
         headerLen = 13;
     } else if (contentType == ssl_ct_application_data) {
         headerLen = 7;
-    } else if ((contentType & 0xe0) == 0x20) {
-        headerLen = 2;
+    } else if (dtls_IsDtls13Ciphertext(ss->version, contentType)) {
+        /* We don't support CIDs. */
+        if (contentType & 0x10) {
+            PORT_Assert(PR_FALSE);
+            PORT_SetError(SSL_ERROR_RX_UNKNOWN_RECORD_TYPE);
+            gs->dtlsPacketOffset = 0;
+            gs->dtlsPacket.len = 0;
+            return -1;
+        }
+
+        dtlsLengthPresent = (contentType & 0x04) == 0x04;
+        PRUint8 dtlsSeqNoSize = (contentType & 0x08) ? 2 : 1;
+        PRUint8 dtlsLengthBytes = dtlsLengthPresent ? 2 : 0;
+        headerLen = 1 + dtlsSeqNoSize + dtlsLengthBytes;
     } else {
         SSL_DBG(("%d: SSL3[%d]: invalid first octet (%d) for DTLS",
                  SSL_GETPID(), ss->fd, contentType));
@@ -345,12 +358,10 @@ dtls_GatherData(sslSocket *ss, sslGather *gs, int flags)
     gs->dtlsPacketOffset += headerLen;
 
     /* Have received SSL3 record header in gs->hdr. */
-    if (headerLen == 13) {
-        gs->remainder = (gs->hdr[11] << 8) | gs->hdr[12];
-    } else if (headerLen == 7) {
-        gs->remainder = (gs->hdr[5] << 8) | gs->hdr[6];
+    if (dtlsLengthPresent) {
+        gs->remainder = (gs->hdr[headerLen - 2] << 8) |
+                        gs->hdr[headerLen - 1];
     } else {
-        PORT_Assert(headerLen == 2);
         gs->remainder = gs->dtlsPacket.len - gs->dtlsPacketOffset;
     }
 

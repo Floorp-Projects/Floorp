@@ -48,6 +48,7 @@
           'fipstest.c',
           'fipstokn.c',
           'jpakesftk.c',
+          'kbkdf.c',
           'lgglue.c',
           'lowkey.c',
           'lowpbe.c',

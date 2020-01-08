@@ -25,6 +25,7 @@
         'pk11_encrypt_derive_unittest.cc',
         'pk11_find_certs_unittest.cc',
         'pk11_import_unittest.cc',
+        'pk11_kbkdf.cc',
         'pk11_keygen.cc',
         'pk11_key_unittest.cc',
         'pk11_module_unittest.cc',

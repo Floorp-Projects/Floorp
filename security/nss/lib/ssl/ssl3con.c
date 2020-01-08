@@ -2406,7 +2406,6 @@ ssl_ProtectRecord(sslSocket *ss, ssl3CipherSpec *cwSpec, SSLContentType ct,
     PORT_Assert(cwSpec->cipherDef->max_records <= RECORD_SEQ_MAX);
 
     if (cwSpec->nextSeqNum >= cwSpec->cipherDef->max_records) {
-        /* We should have automatically updated before here in TLS 1.3. */
         PORT_Assert(cwSpec->version < SSL_LIBRARY_VERSION_TLS_1_3);
         SSL_TRC(3, ("%d: SSL[-]: write sequence number at limit 0x%0llx",
                     SSL_GETPID(), cwSpec->nextSeqNum));
@@ -2438,7 +2437,28 @@ ssl_ProtectRecord(sslSocket *ss, ssl3CipherSpec *cwSpec, SSLContentType ct,
     }
 #else
     if (cwSpec->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
+        PRUint8 *cipherText = SSL_BUFFER_NEXT(wrBuf);
+        unsigned int bufLen = SSL_BUFFER_LEN(wrBuf);
         rv = tls13_ProtectRecord(ss, cwSpec, ct, pIn, contentLen, wrBuf);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+        if (IS_DTLS(ss)) {
+            bufLen = SSL_BUFFER_LEN(wrBuf) - bufLen;
+#ifdef UNSAFE_FUZZER_MODE
+            /* The null cipher doesn't add a tag. Make sure the "ciphertext"
+             * is long enough for mask creation. */
+            unsigned char tmpCt[AES_BLOCK_SIZE] = { 0 };
+            if (bufLen < 16) {
+                memcpy(tmpCt, cipherText, bufLen);
+                bufLen = sizeof(tmpCt);
+                cipherText = tmpCt;
+            }
+#endif
+            rv = dtls13_MaskSequenceNumber(ss, cwSpec,
+                                           SSL_BUFFER_BASE(wrBuf),
+                                           cipherText, bufLen);
+        }
     } else {
         rv = ssl3_MACEncryptRecord(cwSpec, ss->sec.isServer, IS_DTLS(ss), ct,
                                    pIn, contentLen, wrBuf);
@@ -12899,6 +12919,24 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
     }
     isTLS = (PRBool)(spec->version > SSL_LIBRARY_VERSION_3_0);
     if (IS_DTLS(ss)) {
+        unsigned int bufLen = SSL_BUFFER_LEN(cText->buf);
+        unsigned char *cipherText = SSL_BUFFER_BASE(cText->buf);
+#ifdef UNSAFE_FUZZER_MODE
+        /* The null cipher doesn't add a tag. Make sure the "ciphertext"
+         * is long enough for mask creation. */
+        unsigned char tmpCt[AES_BLOCK_SIZE] = { 0 };
+        if (bufLen < 16) {
+            memcpy(tmpCt, cipherText, bufLen);
+            bufLen = sizeof(tmpCt);
+            cipherText = tmpCt;
+        }
+#endif
+        if (dtls13_MaskSequenceNumber(ss, spec, cText->hdr,
+                                      cipherText, bufLen) != SECSuccess) {
+            ssl_ReleaseSpecReadLock(ss); /*****************************/
+            PORT_SetError(SSL_ERROR_DECRYPTION_FAILURE);
+            return SECFailure;
+        }
         if (!dtls_IsRelevant(ss, spec, cText, &cText->seqNum)) {
             ssl_ReleaseSpecReadLock(ss); /*****************************/
             return SECSuccess;
@@ -12940,7 +12978,10 @@ ssl3_HandleRecord(sslSocket *ss, SSL3Ciphertext *cText)
     /* Encrypted application data records could arrive before the handshake
      * completes in DTLS 1.3. These can look like valid TLS 1.2 application_data
      * records in epoch 0, which is never valid. Pretend they didn't decrypt. */
-    if (spec->epoch == 0 && rType == ssl_ct_application_data) {
+
+    if (spec->epoch == 0 && ((IS_DTLS(ss) &&
+                              dtls_IsDtls13Ciphertext(0, rType)) ||
+                             rType == ssl_ct_application_data)) {
         PORT_SetError(SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA);
         alert = unexpected_message;
         rv = SECFailure;

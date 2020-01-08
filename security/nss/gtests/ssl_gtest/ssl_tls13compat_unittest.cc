@@ -384,14 +384,16 @@ TEST_F(TlsConnectDatagram13, CompatModeDtlsClient) {
 
   ASSERT_EQ(2U, client_records->count());  // CH, Fin
   EXPECT_EQ(ssl_ct_handshake, client_records->record(0).header.content_type());
-  EXPECT_EQ(ssl_ct_application_data,
-            client_records->record(1).header.content_type());
+  EXPECT_EQ(kCtDtlsCiphertext,
+            (client_records->record(1).header.content_type() &
+             kCtDtlsCiphertextMask));
 
   ASSERT_EQ(6U, server_records->count());  // SH, EE, CT, CV, Fin, Ack
   EXPECT_EQ(ssl_ct_handshake, server_records->record(0).header.content_type());
   for (size_t i = 1; i < server_records->count(); ++i) {
-    EXPECT_EQ(ssl_ct_application_data,
-              server_records->record(i).header.content_type());
+    EXPECT_EQ(kCtDtlsCiphertext,
+              (server_records->record(i).header.content_type() &
+               kCtDtlsCiphertextMask));
   }
 }
 
@@ -440,8 +442,9 @@ TEST_F(TlsConnectDatagram13, CompatModeDtlsServer) {
   ASSERT_EQ(5U, server_records->count());  // SH, EE, CT, CV, Fin
   EXPECT_EQ(ssl_ct_handshake, server_records->record(0).header.content_type());
   for (size_t i = 1; i < server_records->count(); ++i) {
-    EXPECT_EQ(ssl_ct_application_data,
-              server_records->record(i).header.content_type());
+    EXPECT_EQ(kCtDtlsCiphertext,
+              (server_records->record(i).header.content_type() &
+               kCtDtlsCiphertextMask));
   }
 
   uint32_t session_id_len = 0;

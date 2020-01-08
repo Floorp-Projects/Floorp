@@ -1335,6 +1335,14 @@ dtls_IsLongHeader(SSL3ProtocolVersion version, PRUint8 firstOctet)
 #endif
 }
 
+PRBool
+dtls_IsDtls13Ciphertext(SSL3ProtocolVersion version, PRUint8 firstOctet)
+{
+    // Allow no version in case we haven't negotiated one yet.
+    return (version == 0 || version >= SSL_LIBRARY_VERSION_TLS_1_3) &&
+           (firstOctet & 0xe0) == 0x20;
+}
+
 DTLSEpoch
 dtls_ReadEpoch(const ssl3CipherSpec *crSpec, const PRUint8 *hdr)
 {
@@ -1349,13 +1357,12 @@ dtls_ReadEpoch(const ssl3CipherSpec *crSpec, const PRUint8 *hdr)
     /* A lot of how we recover the epoch here will depend on how we plan to
      * manage KeyUpdate.  In the case that we decide to install a new read spec
      * as a KeyUpdate is handled, crSpec will always be the highest epoch we can
-     * possibly receive.  That makes this easier to manage. */
-    if ((hdr[0] & 0xe0) == 0x20) {
+     * possibly receive.  That makes this easier to manage.
+     */
+    if (dtls_IsDtls13Ciphertext(crSpec->version, hdr[0])) {
+        /* TODO(ekr@rtfm.com: do something with the two-bit epoch. */
         /* Use crSpec->epoch, or crSpec->epoch - 1 if the last bit differs. */
-        if (((hdr[0] >> 4) & 1) == (crSpec->epoch & 1)) {
-            return crSpec->epoch;
-        }
-        return crSpec->epoch - 1;
+        return crSpec->epoch - ((hdr[0] ^ crSpec->epoch) & 0x3);
     }
 
     /* dtls_GatherData should ensure that this works. */
@@ -1398,20 +1405,15 @@ dtls_ReadSequenceNumber(const ssl3CipherSpec *spec, const PRUint8 *hdr)
      * sequence number is replaced.  If that causes the value to exceed the
      * maximum, subtract an entire range.
      */
-    if ((hdr[0] & 0xe0) == 0x20) {
-        /* A 12-bit sequence number. */
-        cap = spec->nextSeqNum + (1ULL << 11);
-        partial = (((sslSequenceNumber)hdr[0] & 0xf) << 8) |
-                  (sslSequenceNumber)hdr[1];
-        mask = (1ULL << 12) - 1;
+    if (hdr[0] & 0x08) {
+        cap = spec->nextSeqNum + (1ULL << 15);
+        partial = (((sslSequenceNumber)hdr[1]) << 8) |
+                  (sslSequenceNumber)hdr[2];
+        mask = (1ULL << 16) - 1;
     } else {
-        /* A 30-bit sequence number. */
-        cap = spec->nextSeqNum + (1ULL << 29);
-        partial = (((sslSequenceNumber)hdr[1] & 0x3f) << 24) |
-                  ((sslSequenceNumber)hdr[2] << 16) |
-                  ((sslSequenceNumber)hdr[3] << 8) |
-                  (sslSequenceNumber)hdr[4];
-        mask = (1ULL << 30) - 1;
+        cap = spec->nextSeqNum + (1ULL << 7);
+        partial = (sslSequenceNumber)hdr[1];
+        mask = (1ULL << 8) - 1;
     }
     seqNum = (cap & ~mask) | partial;
     /* The second check prevents the value from underflowing if we get a large

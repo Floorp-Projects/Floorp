@@ -54,7 +54,7 @@ class AeadTest : public ::testing::Test {
     ASSERT_GE(kMaxSize, ciphertext_len);
     ASSERT_LT(0U, ciphertext_len);
 
-    uint8_t output[kMaxSize];
+    uint8_t output[kMaxSize] = {0};
     unsigned int output_len = 0;
     EXPECT_EQ(SECSuccess, SSL_AeadEncrypt(ctx.get(), 0, kAad, sizeof(kAad),
                                           kPlaintext, sizeof(kPlaintext),
@@ -181,7 +181,7 @@ TEST_F(AeadTest, AeadNoPointer) {
 }
 
 TEST_F(AeadTest, AeadAes128Gcm) {
-  SSLAeadContext *ctxInit;
+  SSLAeadContext *ctxInit = nullptr;
   ASSERT_EQ(SECSuccess,
             SSL_MakeAead(SSL_LIBRARY_VERSION_TLS_1_3, TLS_AES_128_GCM_SHA256,
                          secret_.get(), kLabel, strlen(kLabel), &ctxInit));
@@ -203,7 +203,7 @@ TEST_F(AeadTest, AeadAes256Gcm) {
 }
 
 TEST_F(AeadTest, AeadChaCha20Poly1305) {
-  SSLAeadContext *ctxInit;
+  SSLAeadContext *ctxInit = nullptr;
   ASSERT_EQ(
       SECSuccess,
       SSL_MakeAead(SSL_LIBRARY_VERSION_TLS_1_3, TLS_CHACHA20_POLY1305_SHA256,

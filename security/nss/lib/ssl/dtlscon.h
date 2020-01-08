@@ -47,4 +47,5 @@ extern PRBool dtls_IsRelevant(sslSocket *ss, const ssl3CipherSpec *spec,
                               sslSequenceNumber *seqNum);
 void dtls_ReceivedFirstMessageInFlight(sslSocket *ss);
 PRBool dtls_IsLongHeader(SSL3ProtocolVersion version, PRUint8 firstOctet);
+PRBool dtls_IsDtls13Ciphertext(SSL3ProtocolVersion version, PRUint8 firstOctet);
 #endif

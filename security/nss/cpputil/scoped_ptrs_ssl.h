@@ -12,6 +12,7 @@
 
 struct ScopedDeleteSSL {
   void operator()(SSLAeadContext* ctx) { SSL_DestroyAead(ctx); }
+  void operator()(SSLMaskingContext* ctx) { SSL_DestroyMaskingContext(ctx); }
   void operator()(SSLAntiReplayContext* ctx) {
     SSL_ReleaseAntiReplayContext(ctx);
   }
@@ -34,6 +35,7 @@ struct ScopedMaybeDeleteSSL {
 
 SCOPED(SSLAeadContext);
 SCOPED(SSLAntiReplayContext);
+SCOPED(SSLMaskingContext);
 SCOPED(SSLResumptionTokenInfo);
 
 #undef SCOPED

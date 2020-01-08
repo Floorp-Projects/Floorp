@@ -169,6 +169,9 @@ struct ssl3CipherSpecStr {
      * negotiated value for TLS 1.3; it is reduced by one to account for the
      * content type octet. */
     PRUint16 recordSizeLimit;
+
+    /* Masking context used for DTLS 1.3 */
+    SSLMaskingContext *maskContext;
 };
 
 typedef void (*sslCipherSpecChangedFunc)(void *arg,

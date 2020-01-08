@@ -14,6 +14,7 @@ CSRCS = \
 CPPSRCS = \
       bloomfilter_unittest.cc \
       ssl_0rtt_unittest.cc \
+      ssl_aead_unittest.cc \
       ssl_agent_unittest.cc \
       ssl_auth_unittest.cc \
       ssl_cert_ext_unittest.cc \
@@ -35,8 +36,8 @@ CPPSRCS = \
       ssl_hrr_unittest.cc \
       ssl_keyupdate_unittest.cc \
       ssl_loopback_unittest.cc \
+      ssl_masking_unittest.cc \
       ssl_misc_unittest.cc \
-      ssl_primitive_unittest.cc \
       ssl_record_unittest.cc \
       ssl_recordsep_unittest.cc \
       ssl_recordsize_unittest.cc \

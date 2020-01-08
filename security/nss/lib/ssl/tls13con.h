@@ -44,10 +44,12 @@ PRBool tls13_InHsState(sslSocket *ss, ...);
 
 PRBool tls13_IsPostHandshake(const sslSocket *ss);
 
-SSLHashType tls13_GetHashForCipherSuite(ssl3CipherSuite suite);
 SSLHashType tls13_GetHash(const sslSocket *ss);
-unsigned int tls13_GetHashSizeForHash(SSLHashType hash);
+SECStatus tls13_GetHashAndCipher(PRUint16 version, PRUint16 cipherSuite,
+                                 SSLHashType *hash, const ssl3BulkCipherDef **cipher);
+SSLHashType tls13_GetHashForCipherSuite(ssl3CipherSuite suite);
 unsigned int tls13_GetHashSize(const sslSocket *ss);
+unsigned int tls13_GetHashSizeForHash(SSLHashType hash);
 CK_MECHANISM_TYPE tls13_GetHkdfMechanism(sslSocket *ss);
 CK_MECHANISM_TYPE tls13_GetHkdfMechanismForHash(SSLHashType hash);
 SECStatus tls13_ComputeHash(sslSocket *ss, SSL3Hashes *hashes,

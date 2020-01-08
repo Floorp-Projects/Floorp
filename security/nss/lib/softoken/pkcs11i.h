@@ -781,6 +781,8 @@ extern CK_RV sftk_PutPubKey(SFTKObject *publicKey, SFTKObject *privKey, CK_KEY_T
 extern void sftk_FormatDESKey(unsigned char *key, int length);
 extern PRBool sftk_CheckDESKey(unsigned char *key);
 extern PRBool sftk_IsWeakKey(unsigned char *key, CK_KEY_TYPE key_type);
+extern void sftk_EncodeInteger(PRUint64 integer, CK_ULONG num_bits, CK_BBOOL littleEndian,
+                               CK_BYTE_PTR output, CK_ULONG_PTR output_len);
 
 /* ike and xcbc helpers */
 extern CK_RV sftk_ike_prf(CK_SESSION_HANDLE hSession,
@@ -870,6 +872,7 @@ sftk_TLSPRFInit(SFTKSessionContext *context,
 
 /* PKCS#11 MAC implementation. See sftk_MACCtxStr declaration above for
  * calling semantics for these functions. */
+HASH_HashType sftk_HMACMechanismToHash(CK_MECHANISM_TYPE mech);
 CK_RV sftk_MAC_Create(CK_MECHANISM_TYPE mech, SFTKObject *key, sftk_MACCtx **ret_ctx);
 CK_RV sftk_MAC_Init(sftk_MACCtx *ctx, CK_MECHANISM_TYPE mech, SFTKObject *key);
 CK_RV sftk_MAC_InitRaw(sftk_MACCtx *ctx, CK_MECHANISM_TYPE mech, const unsigned char *key, unsigned int key_len, PRBool isFIPS);
@@ -882,6 +885,10 @@ void sftk_MAC_Destroy(sftk_MACCtx *ctx, PRBool free_it);
 unsigned int sftk_CKRVToMask(CK_RV rv);
 CK_RV sftk_CheckCBCPadding(CK_BYTE_PTR pBuf, unsigned int bufLen,
                            unsigned int blockSize, unsigned int *outPadSize);
+
+/* NIST 800-108 (kbkdf.c) implementations */
+extern CK_RV kbkdf_Dispatch(CK_MECHANISM_TYPE mech, CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, SFTKObject *base_key, SFTKObject *ret_key, CK_ULONG keySize);
+
 SEC_END_PROTOS
 
 #endif /* _PKCS11I_H_ */
