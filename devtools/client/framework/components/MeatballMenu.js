@@ -57,7 +57,7 @@ class MeatballMenu extends PureComponent {
       ),
 
       // Current docking type. Typically one of the position values in
-      // |hostTypes| but this is not always the case (e.g. when it is "custom").
+      // |hostTypes| but this is not always the case (e.g. for "browsertoolbox").
       currentHostType: PropTypes.string,
 
       // Is the split console currently visible?

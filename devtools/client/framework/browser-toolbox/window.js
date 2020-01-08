@@ -205,7 +205,7 @@ async function openToolbox(target) {
   const toolbox = await gDevTools.showToolbox(
     target,
     selectedTool,
-    Toolbox.HostType.CUSTOM,
+    Toolbox.HostType.BROWSERTOOLBOX,
     toolboxOptions
   );
   toolbox.setBrowserToolbox(true);
