@@ -89,11 +89,11 @@ void FlattenedChildIterator::Init(bool aIgnoreXBL) {
   if (mParent->IsElement()) {
     if (ShadowRoot* shadow = mParent->AsElement()->GetShadowRoot()) {
       mParent = shadow;
-      mXBLInvolved = true;
+      mShadowDOMInvolved = true;
       return;
     }
     if (mParentAsSlot) {
-      mXBLInvolved = true;
+      mShadowDOMInvolved = true;
       return;
     }
   }
