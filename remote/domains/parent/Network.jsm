@@ -151,6 +151,26 @@ class Network extends Domain {
   }
 
   /**
+   * Toggles ignoring cache for each request. If true, cache will not be used.
+   *
+   * @param {Object} options
+   * @param {boolean} options.cacheDisabled
+   *     Cache disabled state.
+   */
+  async setCacheDisabled(options = {}) {
+    const { cacheDisabled = false } = options;
+
+    const { INHIBIT_CACHING, LOAD_BYPASS_CACHE, LOAD_NORMAL } = Ci.nsIRequest;
+
+    let loadFlags = LOAD_NORMAL;
+    if (cacheDisabled) {
+      loadFlags = LOAD_BYPASS_CACHE | INHIBIT_CACHING;
+    }
+
+    await this.executeInChild("_updateLoadFlags", loadFlags);
+  }
+
+  /**
    * Allows overriding user agent with the given string.
    *
    * Redirected to Emulation.setUserAgentOverride.
