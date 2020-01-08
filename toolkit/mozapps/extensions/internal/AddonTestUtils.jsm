@@ -637,13 +637,29 @@ var AddonTestUtils = {
   },
 
   cleanupTempXPIs() {
+    let didGC = false;
+
     for (let file of this.tempXPIs.splice(0)) {
       if (file.exists()) {
         try {
           Services.obs.notifyObservers(file, "flush-cache-entry");
           file.remove(false);
         } catch (e) {
-          Cu.reportError(e);
+          if (didGC) {
+            Cu.reportError(`Failed to remove ${file.path}: ${e}`);
+          } else {
+            // Bug 1606684 - Sometimes XPI files are still in use by a process
+            // after the test has been finished. Force a GC once and try again.
+            this.info(`Force a GC`);
+            Cu.forceGC();
+            didGC = true;
+
+            try {
+              file.remove(false);
+            } catch (e) {
+              Cu.reportError(`Failed to remove ${file.path} after GC: ${e}`);
+            }
+          }
         }
       }
     }
