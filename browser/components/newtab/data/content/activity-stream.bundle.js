@@ -6988,7 +6988,7 @@ class DSPrivacyModal extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureCo
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h3", {
       "data-l10n-id": "newtab-privacy-modal-header"
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
-      "data-l10n-id": "newtab-privacy-modal-paragraph"
+      "data-l10n-id": "newtab-privacy-modal-paragraph-2"
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
       className: "modal-link modal-link-privacy",
       "data-l10n-id": "newtab-privacy-modal-link",
