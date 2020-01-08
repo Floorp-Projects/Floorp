@@ -675,6 +675,10 @@ promise. There are several different sorts of reaction records:
     promise and enqueues a job to call `A`'s `then` method; this may produce
     more indirect chains from awaitees to awaiters.
 
+-   `JS::AddPromiseReactions` and
+    `JS::AddPromiseReactionsIgnoringUnhandledRejection` create a reaction record
+    whose promise field is `null`.
+
 [debugger-object]: Debugger.md
 [script]: Debugger.Script.md
 [environment]: Debugger.Environment.md
