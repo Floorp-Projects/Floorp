@@ -1254,12 +1254,6 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   }
 #endif
 
-  // ColumnSetWrapper's children depend on ColumnSetWrapper's block-size or
-  // max-block-size because both affect the children's available block-size.
-  if (IsColumnSetWrapperFrame()) {
-    AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
-  }
-
   const ReflowInput* reflowInput = &aReflowInput;
   WritingMode wm = aReflowInput.GetWritingMode();
   nscoord consumedBSize = ConsumedBSize(wm);
@@ -1935,6 +1929,9 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     }
     const nscoord maxBSize = aReflowInput.ComputedMaxBSize();
     if (maxBSize != NS_UNCONSTRAINEDSIZE &&
+        // FIXME: wallpaper for bug 1603088
+        !(Style()->GetPseudoType() == PseudoStyleType::columnContent ||
+          Style()->GetPseudoType() == PseudoStyleType::columnSet) &&
         aState.mConsumedBSize + bSize - borderPadding.BStart(wm) > maxBSize) {
       nscoord bEnd = std::max(0, maxBSize - aState.mConsumedBSize) +
                      borderPadding.BStart(wm);

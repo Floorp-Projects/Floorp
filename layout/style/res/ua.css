@@ -260,6 +260,9 @@
   text-overflow: inherit;
   /* Both -moz-column-set and -moz-column-content need to be blocks. */
   display: block;
+  /* -moz-column-set and -moz-column-content's max block size cannot exceed
+   * ColumnSetWrapperFrame's block size. */
+  max-block-size: 100%;
 }
 
 *|*::-moz-column-set {
