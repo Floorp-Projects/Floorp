@@ -40,9 +40,8 @@ nsresult nsMIMEInfoWin::LaunchDefaultWithFile(nsIFile* aFile) {
   return aFile->Launch();
 }
 
-// Helper routine to call mozilla::ShellExecuteByExplorer
-static nsresult ShellExecuteWithIFile(const nsCOMPtr<nsIFile>& aExecutable,
-                                      const nsString& aArgs) {
+nsresult nsMIMEInfoWin::ShellExecuteWithIFile(nsIFile* aExecutable,
+                                              const nsString& aArgs) {
   nsresult rv;
 
   nsAutoString execPath;
@@ -69,10 +68,15 @@ static nsresult ShellExecuteWithIFile(const nsCOMPtr<nsIFile>& aExecutable,
   // Ask Explorer to ShellExecute on our behalf, as some applications such as
   // Skype for Business do not start correctly when inheriting our process's
   // migitation policies.
+  // It does not work in a special environment such as Citrix.  In such a case
+  // we fall back to launching an application as a child process.  We need to
+  // find a way to handle the combination of these interop issues.
   mozilla::LauncherVoidResult shellExecuteOk = mozilla::ShellExecuteByExplorer(
       execPathBStr, assembledArgs.get(), verbDefault, workingDir, showCmd);
   if (shellExecuteOk.isErr()) {
-    return NS_ERROR_FILE_EXECUTION_FAILED;
+    // No need to pass assembledArgs to LaunchWithIProcess.  aArgs will be
+    // processed in nsProcess::RunProcess.
+    return LaunchWithIProcess(aExecutable, aArgs);
   }
 
   return NS_OK;
