@@ -5198,7 +5198,7 @@ class nsDisplayBoxShadowInner : public nsPaintedDisplayItem {
 /**
  * The standard display item to paint the CSS outline of a frame.
  */
-class nsDisplayOutline final : public nsPaintedDisplayItem {
+class nsDisplayOutline : public nsPaintedDisplayItem {
  public:
   nsDisplayOutline(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
       : nsPaintedDisplayItem(aBuilder, aFrame) {
@@ -5211,12 +5211,6 @@ class nsDisplayOutline final : public nsPaintedDisplayItem {
 
   NS_DISPLAY_DECL_NAME("Outline", TYPE_OUTLINE)
 
-  bool MustPaintOnContentSide() const override {
-    MOZ_ASSERT(IsThemedOutline(),
-               "The only fallback path we have is for themed outlines");
-    return true;
-  }
-
   bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -5226,9 +5220,6 @@ class nsDisplayOutline final : public nsPaintedDisplayItem {
   bool IsInvisibleInRect(const nsRect& aRect) const override;
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
-
- private:
-  bool IsThemedOutline() const;
 };
 
 /**
