@@ -27,7 +27,6 @@ from mozbuild.util import (
     ImmutableStrictOrderingOnAppendList,
     KeyedDefaultDict,
     List,
-    ListWithAction,
     memoize,
     memoized_property,
     ReadOnlyKeyedDefaultDict,
@@ -996,22 +995,6 @@ def OrderedPathListWithAction(action):
             super(_OrderedListWithAction, self).__init__(context, action=_action, *args)
 
     return _OrderedListWithAction
-
-
-def TypedListWithAction(typ, action):
-    """Returns a class which behaves as a TypedList with the provided type, but
-    invokes the given given callable with each input and a context as it is
-    read, storing a tuple including the result and the original item.
-
-    This used to extend moz.build reading to make more data available in
-    filesystem-reading mode.
-    """
-    class _TypedListWithAction(ContextDerivedValue, TypedList(typ), ListWithAction):
-        def __init__(self, context, *args):
-            def _action(item):
-                return item, action(context, item)
-            super(_TypedListWithAction, self).__init__(action=_action, *args)
-    return _TypedListWithAction
 
 
 ManifestparserManifestList = OrderedPathListWithAction(read_manifestparser_manifest)
