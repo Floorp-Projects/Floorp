@@ -96,6 +96,7 @@ struct AnimationValue {
 
   // Uncompute this AnimationValue and then serialize it.
   void SerializeSpecifiedValue(nsCSSPropertyID aProperty,
+                               const RawServoStyleSet* aRawSet,
                                nsAString& aString) const;
 
   // Check if |*this| and |aToValue| can be interpolated.
