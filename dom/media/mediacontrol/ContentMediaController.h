@@ -124,6 +124,7 @@ class ContentMediaController final : public ContentMediaAgent,
  private:
   ~ContentMediaController() = default;
   void Close() override;
+  already_AddRefed<BrowsingContext> GetTopLevelBrowsingContext() const;
 
   uint64_t mTopLevelBrowsingContextId;
 };
