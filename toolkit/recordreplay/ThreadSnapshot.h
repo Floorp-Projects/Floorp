@@ -13,10 +13,13 @@
 namespace mozilla {
 namespace recordreplay {
 
-// aStackSeparator is a pointer into the stack. Values shallower than this in
-// the stack will be preserved as they are at the time of the SaveThreadState
-// call, whereas deeper values will be preserved as they are at the point where
-// the main thread saves the remainder of the stack.
+// Save the current thread's registers and the top of the stack, such that the
+// state can be restored later. Returns true if the state was just saved, and
+// false if the state was just restored. aStackSeparator is a pointer into the
+// stack. Values shallower than this in the stack will be preserved as they are
+// at the time of the SaveThreadState call, whereas deeper values will be
+// preserved as they are at the point where the main thread saves the remainder
+// of the stack.
 bool SaveThreadState(size_t aId, int* aStackSeparator);
 
 // Remember the entire stack contents for a thread, after forking.
