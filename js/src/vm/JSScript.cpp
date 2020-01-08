@@ -4594,6 +4594,12 @@ void JSScript::assertValidJumpTargets() const {
       MOZ_ASSERT_IF(target < loc, target.is(JSOP_LOOPHEAD));
       MOZ_ASSERT_IF(target < loc, IsBackedgePC(loc.toRawBytecode()));
 
+      // All forward jumps must be to a JSOP_JUMPTARGET op.
+      MOZ_ASSERT_IF(target > loc, target.is(JSOP_JUMPTARGET));
+
+      // Jumps must not cross scope boundaries.
+      MOZ_ASSERT(loc.innermostScope(this) == target.innermostScope(this));
+
       // Check fallthrough of conditional jump instructions.
       if (loc.fallsThrough()) {
         BytecodeLocation fallthrough = loc.next();
@@ -4608,7 +4614,7 @@ void JSScript::assertValidJumpTargets() const {
 
       // Default target.
       MOZ_ASSERT(mainLoc <= target && target < endLoc);
-      MOZ_ASSERT(target.isJumpTarget());
+      MOZ_ASSERT(target.is(JSOP_JUMPTARGET));
 
       int32_t low = loc.getTableSwitchLow();
       int32_t high = loc.getTableSwitchHigh();
@@ -4617,7 +4623,7 @@ void JSScript::assertValidJumpTargets() const {
         BytecodeLocation switchCase(this,
                                     tableSwitchCasePC(loc.toRawBytecode(), i));
         MOZ_ASSERT(mainLoc <= switchCase && switchCase < endLoc);
-        MOZ_ASSERT(switchCase.isJumpTarget());
+        MOZ_ASSERT(switchCase.is(JSOP_JUMPTARGET));
       }
     }
   }
@@ -5352,7 +5358,7 @@ size_t JSScript::calculateLiveFixed(jsbytecode* pc) {
   return nlivefixed;
 }
 
-Scope* JSScript::lookupScope(jsbytecode* pc) {
+Scope* JSScript::lookupScope(jsbytecode* pc) const {
   MOZ_ASSERT(containsPC(pc));
 
   size_t offset = pc - code();
@@ -5401,7 +5407,7 @@ Scope* JSScript::lookupScope(jsbytecode* pc) {
   return scope;
 }
 
-Scope* JSScript::innermostScope(jsbytecode* pc) {
+Scope* JSScript::innermostScope(jsbytecode* pc) const {
   if (Scope* scope = lookupScope(pc)) {
     return scope;
   }

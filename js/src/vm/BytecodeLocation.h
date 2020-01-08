@@ -91,6 +91,8 @@ class BytecodeLocation {
 
   PropertyName* getPropertyName(const JSScript* script) const;
 
+  Scope* innermostScope(const JSScript* script) const;
+
 #ifdef DEBUG
   bool hasSameScript(const BytecodeLocation& other) const {
     return debugOnlyScript_ == other.debugOnlyScript_;
