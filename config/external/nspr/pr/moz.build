@@ -118,7 +118,6 @@ LOCAL_INCLUDES += [
 SOURCES += [
     '/nsprpub/pr/src/io/prpolevt.c', # conflicting definition of PRFilePrivate
     '/nsprpub/pr/src/misc/praton.c', # duplicate definition of index_hex
-    '/nsprpub/pr/src/misc/prcountr.c', # duplicate definition of QName, RName
  ]
 
 UNIFIED_SOURCES += [
@@ -138,9 +137,7 @@ UNIFIED_SOURCES += [
     '/nsprpub/pr/src/malloc/prmem.c',
     '/nsprpub/pr/src/md/prosdep.c',
     '/nsprpub/pr/src/memory/prseg.c',
-    '/nsprpub/pr/src/memory/prshm.c',
     '/nsprpub/pr/src/memory/prshma.c',
-    '/nsprpub/pr/src/misc/pralarm.c',
     '/nsprpub/pr/src/misc/pratom.c',
     '/nsprpub/pr/src/misc/prdtoa.c',
     '/nsprpub/pr/src/misc/prenv.c',
@@ -151,15 +148,11 @@ UNIFIED_SOURCES += [
     '/nsprpub/pr/src/misc/prinrval.c',
     '/nsprpub/pr/src/misc/pripc.c',
     '/nsprpub/pr/src/misc/prlog2.c',
-    '/nsprpub/pr/src/misc/prlong.c',
     '/nsprpub/pr/src/misc/prnetdb.c',
-    '/nsprpub/pr/src/misc/prolock.c',
     '/nsprpub/pr/src/misc/prrng.c',
     '/nsprpub/pr/src/misc/prsystem.c',
-    '/nsprpub/pr/src/misc/prthinfo.c',
     '/nsprpub/pr/src/misc/prtime.c',
     '/nsprpub/pr/src/misc/prtpool.c',
-    '/nsprpub/pr/src/misc/prtrace.c',
     '/nsprpub/pr/src/threads/prcmon.c',
     '/nsprpub/pr/src/threads/prrwlock.c',
     '/nsprpub/pr/src/threads/prtpd.c',
@@ -173,7 +166,6 @@ if CONFIG['OS_TARGET'] != 'WINNT':
         '/nsprpub/pr/src/md/unix/uxproces.c',
         '/nsprpub/pr/src/md/unix/uxrng.c',
         '/nsprpub/pr/src/md/unix/uxshm.c',
-        '/nsprpub/pr/src/md/unix/uxwrap.c',
         '/nsprpub/pr/src/pthreads/ptio.c',
         '/nsprpub/pr/src/pthreads/ptmisc.c',
         '/nsprpub/pr/src/pthreads/ptsynch.c',
@@ -223,7 +215,6 @@ EXPORTS.nspr += [
     '/nsprpub/pr/include/prbit.h',
     '/nsprpub/pr/include/prclist.h',
     '/nsprpub/pr/include/prcmon.h',
-    '/nsprpub/pr/include/prcountr.h',
     '/nsprpub/pr/include/prcvar.h',
     '/nsprpub/pr/include/prdtoa.h',
     '/nsprpub/pr/include/prenv.h',
@@ -242,7 +233,6 @@ EXPORTS.nspr += [
     '/nsprpub/pr/include/prmon.h',
     '/nsprpub/pr/include/prmwait.h',
     '/nsprpub/pr/include/prnetdb.h',
-    '/nsprpub/pr/include/prolock.h',
     '/nsprpub/pr/include/prpdce.h',
     '/nsprpub/pr/include/prprf.h',
     '/nsprpub/pr/include/prproces.h',
