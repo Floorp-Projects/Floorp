@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // - NOTE: This file is duplicated verbatim at:
-//         - talos/scripts/Profiler.js
 //         - talos/pageloader/chrome/Profiler.js
 //         - talos/tests/tart/addon/content/Profiler.js
 //         - talos/startup_test/tresize/addon/content/Profiler.js
@@ -33,14 +32,6 @@ var Profiler;
 
   // Profiling settings.
   var profiler_interval, profiler_entries, profiler_threadsArray, profiler_dir;
-
-  try {
-    // Outside of talos, this throws a security exception which no-op this file.
-    // (It's not required nor allowed for addons since Firefox 17)
-    // It's used inside talos from non-privileged pages (like during tscroll),
-    // and it works because talos disables all/most security measures.
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  } catch (e) {}
 
   try {
     // eslint-disable-next-line mozilla/use-services
