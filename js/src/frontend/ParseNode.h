@@ -739,18 +739,9 @@ class ParseNode {
   // True iff this is a for-in/of loop variable declaration (var/let/const).
   inline bool isForLoopDeclaration() const;
 
-  enum AllowConstantObjects {
-    DontAllowObjects = 0,
-    AllowObjects,
-    ForCopyOnWriteArray
-  };
-
-  MOZ_MUST_USE bool getConstantValue(JSContext* cx,
-                                     AllowConstantObjects allowObjects,
-                                     MutableHandleValue vp,
+  MOZ_MUST_USE bool getConstantValue(JSContext* cx, MutableHandleValue vp,
                                      Value* compare = nullptr,
-                                     size_t ncompare = 0,
-                                     NewObjectKind newKind = TenuredObject);
+                                     size_t ncompare = 0);
   inline bool isConstant();
 
   template <class NodeType>
@@ -1960,7 +1951,7 @@ class CallSiteNode : public ListNode {
   }
 
   MOZ_MUST_USE bool getRawArrayValue(JSContext* cx, MutableHandleValue vp) {
-    return head()->getConstantValue(cx, AllowObjects, vp);
+    return head()->getConstantValue(cx, vp);
   }
 
   ListNode* rawNodes() const {
