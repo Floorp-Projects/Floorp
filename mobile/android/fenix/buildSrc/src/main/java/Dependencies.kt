@@ -40,7 +40,7 @@ object Versions {
     // sync with the version used by android-components above.
     const val mozilla_appservices = "0.44.0"
 
-    const val mozilla_glean = "19.0.0"
+    const val mozilla_glean = "22.1.0"
 
     const val adjust = "4.18.3"
     const val installreferrer = "1.0"
