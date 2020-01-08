@@ -44,6 +44,8 @@ class InProcessWinCompositorWidget final
   void EnterPresentLock() override;
   void LeavePresentLock() override;
   void OnDestroyWindow() override;
+  bool OnWindowResize(const LayoutDeviceIntSize& aSize) override;
+  void OnWindowModeChange(nsSizeMode aSizeMode) override;
   void UpdateTransparency(nsTransparencyMode aMode) override;
   void ClearTransparentWindow() override;
 
