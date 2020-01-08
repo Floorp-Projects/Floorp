@@ -16,24 +16,26 @@ class WebGLBuffer;
 
 class WebGLVertexAttribData final {
  public:
-  uint32_t mDivisor;
-  bool mEnabled;
+  uint32_t mDivisor = 0;
+  bool mEnabled = false;
 
  private:
-  bool mIntegerFunc;
+  bool mIntegerFunc = false;
 
  public:
   RefPtr<WebGLBuffer> mBuf;
 
  private:
-  GLenum mType;
+  // This and other members below are initialized to dummies here, and later
+  // fully initialized in the ctor.
+  GLenum mType = 0;
   webgl::AttribBaseType mBaseType = webgl::AttribBaseType::Float;
-  uint8_t mSize;  // num of mType vals per vert
-  uint8_t mBytesPerVertex;
-  bool mNormalized;
-  uint32_t mStride;  // bytes
-  uint32_t mExplicitStride;
-  uint64_t mByteOffset;
+  uint8_t mSize = 0;  // num of mType vals per vert
+  uint8_t mBytesPerVertex = 0;
+  bool mNormalized = false;
+  uint32_t mStride = 0;  // bytes
+  uint32_t mExplicitStride = 0;
+  uint64_t mByteOffset = 0;
 
  public:
 #define GETTER(X) \
@@ -52,17 +54,7 @@ class WebGLVertexAttribData final {
 #undef GETTER
 
   // note that these initial values are what GL initializes vertex attribs to
-  WebGLVertexAttribData()
-      : mDivisor(0),
-        mEnabled(false),
-        mIntegerFunc(false),
-        mType(0),
-        mSize(0),
-        mBytesPerVertex(0),
-        mNormalized(false),
-        mStride(0),
-        mExplicitStride(0),
-        mByteOffset(0) {
+  WebGLVertexAttribData() {
     VertexAttribPointer(false, nullptr, 4, LOCAL_GL_FLOAT, false, 0, 0);
   }
 

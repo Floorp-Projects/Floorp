@@ -111,8 +111,7 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
         if (gl->IsExtensionSupported(gl::GLContext::EXT_disjoint_timer_query)) {
           gl->fGetBooleanv(pname, &val);
         }
-        bool boolVal = static_cast<bool>(val);
-        return Some(boolVal);
+        return Some(bool(val));
       }
 
       default:
@@ -133,8 +132,13 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
     if (pname == LOCAL_GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT) {
       GLfloat f = 0.f;
       gl->fGetFloatv(pname, &f);
-      double df = static_cast<double>(f);
-      return Some(df);
+      return Some(f);
+    }
+  }
+
+  if (IsExtensionEnabled(WebGLExtensionID::MOZ_debug)) {
+    if (pname == dom::MOZ_debug_Binding::DOES_INDEX_VALIDATION) {
+      return Some(mNeedsIndexValidation);
     }
   }
 
@@ -163,7 +167,7 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
     case LOCAL_GL_BLEND_EQUATION_ALPHA: {
       GLint i = 0;
       gl->fGetIntegerv(pname, &i);
-      return Some(uint32_t(i));
+      return Some(i);
     }
 
     case LOCAL_GL_GENERATE_MIPMAP_HINT:
@@ -173,7 +177,9 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
     case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
       const webgl::FormatUsageInfo* usage;
       uint32_t width, height;
-      if (!BindCurFBForColorRead(&usage, &width, &height)) return Nothing();
+      if (!BindCurFBForColorRead(&usage, &width, &height,
+                                 LOCAL_GL_INVALID_OPERATION))
+        return Nothing();
 
       const auto implPI = ValidImplementationColorReadPI(usage);
 
@@ -183,7 +189,7 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
       } else {
         ret = implPI.type;
       }
-      return Some(uint32_t(ret));
+      return Some(ret);
     }
 
     // int
@@ -335,17 +341,17 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
     // that can't be represented as javascript integer values. We just return
     // them as doubles and javascript doesn't care.
     case LOCAL_GL_STENCIL_BACK_VALUE_MASK:
-      return Some((double)mStencilValueMaskBack);
+      return Some(mStencilValueMaskBack);
       // pass as FP value to allow large values such as 2^32-1.
 
     case LOCAL_GL_STENCIL_BACK_WRITEMASK:
-      return Some((double)mStencilWriteMaskBack);
+      return Some(mStencilWriteMaskBack);
 
     case LOCAL_GL_STENCIL_VALUE_MASK:
-      return Some((double)mStencilValueMaskFront);
+      return Some(mStencilValueMaskFront);
 
     case LOCAL_GL_STENCIL_WRITEMASK:
-      return Some((double)mStencilWriteMaskFront);
+      return Some(mStencilWriteMaskFront);
 
     // float
     case LOCAL_GL_LINE_WIDTH:
@@ -357,7 +363,7 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
     case LOCAL_GL_SAMPLE_COVERAGE_VALUE: {
       GLfloat f = 0.f;
       gl->fGetFloatv(pname, &f);
-      return Some((double)f);
+      return Some(f);
     }
 
     // bool
@@ -388,7 +394,7 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
 
     // uint, WebGL-specific
     case UNPACK_COLORSPACE_CONVERSION_WEBGL:
-      return Some(uint32_t(mPixelStore.mColorspaceConversion));
+      return Some(mPixelStore.mColorspaceConversion);
 
     default:
       break;
