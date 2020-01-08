@@ -83,7 +83,7 @@ OPCODE_FORMAT = """\
 <dd>
 <table class="standard-table">
 <tbody>
-<tr><th>Operands</th><td><code>{operands}</code></td></tr>
+<tr><th>Operands</th><td>{operands}</td></tr>
 <tr><th>Stack</th><td>{stack_uses}&rArr;{stack_defs}</td></tr>
 </tbody>
 </table>
@@ -103,7 +103,7 @@ def print_opcode(opcode):
     print(OPCODE_FORMAT.format(
         id=opcodes[0].name,
         names='<br>'.join(names),
-        operands=escape(opcode.operands) or "&nbsp;",
+        operands=maybe_escape(opcode.operands, "<code>({})</code>", "none"),
         stack_uses=maybe_escape(opcode.stack_uses, "<code>{}</code> "),
         stack_defs=maybe_escape(opcode.stack_defs, " <code>{}</code>"),
         desc=markdown.markdown(opcode.desc)))
