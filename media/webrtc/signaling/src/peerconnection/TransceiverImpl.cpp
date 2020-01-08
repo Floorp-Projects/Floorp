@@ -24,6 +24,7 @@
 #include "mozilla/dom/RTCRtpSenderBinding.h"
 #include "mozilla/dom/RTCRtpTransceiverBinding.h"
 #include "mozilla/dom/TransceiverImplBinding.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 
@@ -59,7 +60,12 @@ TransceiverImpl::TransceiverImpl(
 
   mConduit->SetPCHandle(mPCHandle);
 
-  mConduit->SetRtcpEventObserver(this);
+  // Until Bug 1232234 is fixed, we'll get extra RTCP BYES during renegotiation,
+  // so we'll disable muting on RTCP BYE and timeout for now.
+  if (Preferences::GetBool("media.peerconnection.mute_on_bye_or_timeout",
+                           false)) {
+    mConduit->SetRtcpEventObserver(this);
+  }
 
   mTransmitPipeline =
       new MediaPipelineTransmit(mPCHandle, mTransportHandler, mMainThread.get(),
