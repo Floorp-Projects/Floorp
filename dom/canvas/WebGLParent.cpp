@@ -134,7 +134,7 @@ mozilla::ipc::IPCResult WebGLParent::RecvUpdateCompositableHandle(
   return IPC_OK();
 }
 
-already_AddRefed<layers::SharedSurfaceTextureClient> WebGLParent::GetVRFrame() {
+RefPtr<layers::SharedSurfaceTextureClient> WebGLParent::GetVRFrame() {
   if (!mHost) {
     return nullptr;
   }
