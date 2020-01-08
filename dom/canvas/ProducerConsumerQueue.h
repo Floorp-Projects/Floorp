@@ -1020,7 +1020,7 @@ class Consumer : public detail::PcqBase {
   using PeekOrRemoveOperation = std::function<PcqStatus(ConsumerView&)>;
 
   template <bool isRemove, typename... Args>
-  PcqStatus TryPeekOrRemove(PeekOrRemoveOperation aOperation) {
+  PcqStatus TryPeekOrRemove(const PeekOrRemoveOperation& aOperation) {
     size_t write = mWrite->load(std::memory_order_acquire);
     size_t read = mRead->load(std::memory_order_relaxed);
     const size_t initRead = read;
@@ -1485,7 +1485,7 @@ struct IPDLParamTraits<mozilla::detail::PcqBase> {
       return false;
     }
 
-    MOZ_ASSERT(notEmptyHandle && notFullHandle);
+    MOZ_ASSERT(IsHandleValid(notEmptyHandle) && IsHandleValid(notFullHandle));
     aResult->Set(shmem, aActor->OtherPid(), queueSize,
                  MakeRefPtr<detail::PcqRCSemaphore>(
                      CrossProcessSemaphore::Create(notEmptyHandle)),
@@ -1530,7 +1530,7 @@ struct PcqParamTraits<PcqTypedArg<Arg>> {
 
   template <PcqTypeInfoID ArgTypeId = PcqTypeInfo<Arg>::ID>
   static PcqStatus Read(ConsumerView& aConsumerView, ParamType* aArg) {
-    MOZ_ASSERT(aArg.mRead);
+    MOZ_ASSERT(aArg->mRead);
     PcqTypeInfoID typeId;
     if (!aConsumerView.ReadParam(&typeId)) {
       return aConsumerView.Status();

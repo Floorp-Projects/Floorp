@@ -63,8 +63,6 @@ class WebGL2Context final : public WebGLContext {
   // -------------------------------------------------------------------------
   // Texture objects - WebGL2ContextTextures.cpp
 
-  GLint GetFragDataLocation(const WebGLProgram& prog, const nsAString& name);
-
   // GL 3.0 & ES 3.0
   void VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w);
   void VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);

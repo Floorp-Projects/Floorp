@@ -11,7 +11,6 @@
 #include "mozilla/Range.h"
 #include "mozilla/RefCounted.h"
 #include "nsICanvasRenderingContextInternal.h"
-#include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
@@ -103,12 +102,14 @@ class WebGLShaderPrecisionFormatJS final
 
 // -----------------------
 
-struct WebGLProgramInner;
+class ClientWebGLContext;
 class WebGLBufferJS;
 class WebGLFramebufferJS;
+class WebGLProgramJS;
 class WebGLQueryJS;
 class WebGLRenderbufferJS;
 class WebGLSamplerJS;
+class WebGLShaderJS;
 class WebGLTextureJS;
 class WebGLTransformFeedbackJS;
 class WebGLVertexArrayJS;
@@ -117,17 +118,35 @@ namespace webgl {
 
 struct LinkResult;
 
-class ContextGenerationInfo final {
- public:
-  ClientWebGLContext& mContext;
+class ProgramKeepAlive final {
+  friend class mozilla::WebGLProgramJS;
 
+  WebGLProgramJS* mParent;
+
+ public:
+  explicit ProgramKeepAlive(WebGLProgramJS& parent) : mParent(&parent) {}
+  ~ProgramKeepAlive();
+};
+
+class ShaderKeepAlive final {
+  friend class mozilla::WebGLShaderJS;
+
+  const WebGLShaderJS* mParent;
+
+ public:
+  explicit ShaderKeepAlive(const WebGLShaderJS& parent) : mParent(&parent) {}
+  ~ShaderKeepAlive();
+};
+
+class ContextGenerationInfo final {
  private:
   ObjectId mLastId = 0;
 
  public:
   webgl::ExtensionBits mEnabledExtensions;
+  RefPtr<WebGLProgramJS> mCurrentProgram;
+  std::shared_ptr<webgl::ProgramKeepAlive> mProgramKeepAlive;
   mutable std::shared_ptr<webgl::LinkResult> mActiveLinkResult;
-  RefPtr<WebGLProgramInner> mCurrentProgram;
 
   RefPtr<WebGLTransformFeedbackJS> mDefaultTfo;
   RefPtr<WebGLVertexArrayJS> mDefaultVao;
@@ -155,24 +174,55 @@ class ContextGenerationInfo final {
   std::array<bool, 4> mColorWriteMask = {true, true, true, true};
   std::array<int32_t, 4> mScissor = {};
   std::array<int32_t, 4> mViewport = {};
-  std::array<float, 4> mClearColor = {1, 1, 1, 1};
-  std::array<float, 4> mBlendColor = {1, 1, 1, 1};
+  std::array<float, 4> mClearColor = {0, 0, 0, 0};
+  std::array<float, 4> mBlendColor = {0, 0, 0, 0};
   std::array<float, 2> mDepthRange = {0, 1};
 
   std::vector<GLenum> mCompressedTextureFormats;
 
  public:
-  explicit ContextGenerationInfo(ClientWebGLContext& context);
-  ~ContextGenerationInfo();
+  // explicit ContextGenerationInfo(ClientWebGLContext& context);
+  //~ContextGenerationInfo();
 
   ObjectId NextId() { return mLastId += 1; }
 };
+
+// -
+
+struct RemotingData final {
+  // In the cross process case, the WebGL actor's ownership relationship looks
+  // like this:
+  // ---------------------------------------------------------------------
+  // | ClientWebGLContext -> WebGLChild -> WebGLParent -> HostWebGLContext
+  // ---------------------------------------------------------------------
+  //
+  // where 'A -> B' means "A owns B"
+  RefPtr<mozilla::dom::WebGLChild> mWebGLChild;
+  UniquePtr<ClientWebGLCommandSource> mCommandSource;
+};
+
+struct NotLostData final {
+  ClientWebGLContext& context;
+  webgl::InitContextResult info;
+
+  Maybe<RemotingData> outOfProcess;
+  UniquePtr<HostWebGLContext> inProcess;
+
+  webgl::ContextGenerationInfo state;
+  std::array<RefPtr<ClientWebGLExtensionBase>, EnumValue(WebGLExtensionID::Max)>
+      extensions;
+
+  explicit NotLostData(ClientWebGLContext& context);
+  ~NotLostData();
+};
+
+// -
 
 class ObjectJS {
   friend ClientWebGLContext;
 
  public:
-  const std::weak_ptr<ContextGenerationInfo> mGeneration;
+  const std::weak_ptr<NotLostData> mGeneration;
   const ObjectId mId;
 
  protected:
@@ -185,13 +235,20 @@ class ObjectJS {
   ClientWebGLContext* Context() const {
     const auto locked = mGeneration.lock();
     if (!locked) return nullptr;
-    return &(locked->mContext);
+    return &(locked->context);
   }
 
   ClientWebGLContext* GetParentObject() const { return Context(); }
 
-  bool IsUsable(const ClientWebGLContext&) const;
+  // A la carte:
+  bool IsForContext(const ClientWebGLContext&) const;
+  virtual bool IsDeleted() const { return mDeleteRequested; }
 
+  bool IsUsable(const ClientWebGLContext& context) const {
+    return IsForContext(context) && !IsDeleted();
+  }
+
+  // The workhorse:
   bool ValidateUsable(const ClientWebGLContext& context,
                       const char* const argName) const {
     if (MOZ_LIKELY(IsUsable(context))) return true;
@@ -199,11 +256,15 @@ class ObjectJS {
     return false;
   }
 
+  // Use by DeleteFoo:
+  bool ValidateForContext(const ClientWebGLContext& context,
+                          const char* const argName) const;
+
  private:
   void WarnInvalidUse(const ClientWebGLContext&, const char* argName) const;
 
- public:
-  virtual bool IsDeleted() const { return mDeleteRequested; }
+  // The enum is INVALID_VALUE for Program/Shader :(
+  virtual GLenum ErrorOnDeleted() const { return LOCAL_GL_INVALID_OPERATION; }
 };
 
 }  // namespace webgl
@@ -271,21 +332,6 @@ class WebGLFramebufferJS final : public nsWrapperCache, public webgl::ObjectJS {
 
 // -
 
-struct WebGLProgramInner final : public SupportsWeakPtr<WebGLProgramInner> {
-  const RefPtr<WebGLProgramJS> js;
-
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(WebGLProgramInner)
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLProgramInner)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLProgramInner)
-
-  explicit WebGLProgramInner(const RefPtr<WebGLProgramJS>& _js) : js(_js) {}
-
- private:
-  virtual ~WebGLProgramInner() = default;
-};
-
-struct WebGLShaderInner;
-
 class WebGLProgramJS final : public nsWrapperCache, public webgl::ObjectJS {
   friend class ClientWebGLContext;
 
@@ -297,11 +343,16 @@ class WebGLProgramJS final : public nsWrapperCache, public webgl::ObjectJS {
   // mInnerRef->js will panic when REFCOUNTING's "owning thread" var is still
   // uninitialized.
 
- private:
-  RefPtr<WebGLProgramInner> mInnerRef;
-  const WeakPtr<WebGLProgramInner> mInnerWeak;
+  struct Attachment final {
+    RefPtr<WebGLShaderJS> shader;
+    std::shared_ptr<webgl::ShaderKeepAlive> keepAlive;
+  };
 
-  std::unordered_map<GLenum, RefPtr<WebGLShaderInner>> mNextLink_Shaders;
+ private:
+  std::shared_ptr<webgl::ProgramKeepAlive> mKeepAlive;
+  const std::weak_ptr<webgl::ProgramKeepAlive> mKeepAliveWeak;
+
+  std::unordered_map<GLenum, Attachment> mNextLink_Shaders;
   bool mLastValidate = false;
   mutable std::shared_ptr<webgl::LinkResult>
       mResult;  // Never null, often defaulted.
@@ -318,10 +369,19 @@ class WebGLProgramJS final : public nsWrapperCache, public webgl::ObjectJS {
   std::unordered_set<const WebGLTransformFeedbackJS*> mActiveTfos;
 
   explicit WebGLProgramJS(const ClientWebGLContext&);
-  ~WebGLProgramJS() = default;
+
+  ~WebGLProgramJS() {
+    mKeepAlive = nullptr;  // Try to delete.
+
+    const auto& maybe = mKeepAliveWeak.lock();
+    if (maybe) {
+      maybe->mParent = nullptr;
+    }
+  }
 
  public:
-  bool IsDeleted() const override { return !mInnerWeak.get(); }
+  bool IsDeleted() const override { return !mKeepAliveWeak.lock(); }
+  GLenum ErrorOnDeleted() const override { return LOCAL_GL_INVALID_VALUE; }
 
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
 };
@@ -332,6 +392,7 @@ class WebGLQueryJS final : public nsWrapperCache, public webgl::ObjectJS {
   friend class ClientWebGLContext;
 
   GLenum mTarget = 0;  // !IsQuery until Bind
+  bool mIsFullyDeleted = false;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLQueryJS)
@@ -344,6 +405,7 @@ class WebGLQueryJS final : public nsWrapperCache, public webgl::ObjectJS {
   ~WebGLQueryJS() = default;
 
  public:
+  bool IsDeleted() const override { return mIsFullyDeleted; }
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
 };
 
@@ -388,42 +450,35 @@ class WebGLSamplerJS final : public nsWrapperCache, public webgl::ObjectJS {
 
 // -
 
-struct WebGLShaderInner final : public SupportsWeakPtr<WebGLShaderInner> {
-  const RefPtr<WebGLShaderJS> js;
-
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(WebGLShaderInner)
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLShaderInner)
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLShaderInner)
-
-  explicit WebGLShaderInner(const RefPtr<WebGLShaderJS>& _js) : js(_js) {}
-
- private:
-  virtual ~WebGLShaderInner() = default;
-};
-
 class WebGLShaderJS final : public nsWrapperCache, public webgl::ObjectJS {
   friend class ClientWebGLContext;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLShaderJS)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLShaderJS)
-  // If the REFCOUNTING macro isn't declared first, the AddRef at
-  // mInnerRef->js will panic when REFCOUNTING's "owning thread" var is still
-  // uninitialized.
 
  private:
   const GLenum mType;
-  RefPtr<WebGLShaderInner> mInnerRef;
-  const WeakPtr<WebGLShaderInner> mInnerWeak;
   std::string mSource;
+  std::shared_ptr<webgl::ShaderKeepAlive> mKeepAlive;
+  const std::weak_ptr<webgl::ShaderKeepAlive> mKeepAliveWeak;
 
   mutable webgl::CompileResult mResult;
 
   WebGLShaderJS(const ClientWebGLContext&, GLenum type);
-  ~WebGLShaderJS() = default;
+
+  ~WebGLShaderJS() {
+    mKeepAlive = nullptr;  // Try to delete.
+
+    const auto& maybe = mKeepAliveWeak.lock();
+    if (maybe) {
+      maybe->mParent = nullptr;
+    }
+  }
 
  public:
-  bool IsDeleted() const override { return !mInnerWeak.get(); }
+  bool IsDeleted() const override { return !mKeepAliveWeak.lock(); }
+  GLenum ErrorOnDeleted() const override { return LOCAL_GL_INVALID_VALUE; }
 
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
 };
@@ -479,7 +534,8 @@ class WebGLTransformFeedbackJS final : public nsWrapperCache,
   bool mHasBeenBound = false;  // !IsTransformFeedback until Bind
   bool mActiveOrPaused = false;
   std::vector<RefPtr<WebGLBufferJS>> mAttribBuffers;
-  RefPtr<WebGLProgramInner> mActiveProgram;
+  RefPtr<WebGLProgramJS> mActiveProgram;
+  std::shared_ptr<webgl::ProgramKeepAlive> mActiveProgramKeepAlive;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLTransformFeedbackJS)
@@ -571,6 +627,14 @@ inline Range<const uint32_t> MakeRange(const Uint32ListU& list) {
   return MakeRange(list.GetAsUnsignedLongSequence());
 }
 
+template <typename T>
+inline Range<const uint8_t> MakeByteRange(const T& x) {
+  const auto typed = MakeRange(x);
+  return Range<const uint8_t>(
+      reinterpret_cast<const uint8_t*>(typed.begin().get()),
+      typed.length() * sizeof(typed[0]));
+}
+
 // -
 
 struct TexImageSourceAdapter final : public TexImageSource {
@@ -630,10 +694,12 @@ struct TexImageSourceAdapter final : public TexImageSource {
  * Base class for all IDL implementations of WebGLContext
  */
 class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
-                                 public SupportsWeakPtr<ClientWebGLContext>,
-                                 public nsWrapperCache {
+                                 public nsWrapperCache,
+                                 public SupportsWeakPtr<ClientWebGLContext> {
   friend class WebGLContextUserData;
   friend class webgl::ObjectJS;
+  friend class webgl::ProgramKeepAlive;
+  friend class webgl::ShaderKeepAlive;
 
  public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ClientWebGLContext)
@@ -641,8 +707,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // ----------------------------- Lifetime and DOM ---------------------------
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
-      ClientWebGLContext, nsICanvasRenderingContextInternal)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ClientWebGLContext)
 
   JSObject* WrapObject(JSContext* cx,
                        JS::Handle<JSObject*> givenProto) override {
@@ -670,37 +735,17 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   bool mAwaitingRestore = false;
 
   // -
- public:
-  struct RemotingData final {
-    // In the cross process case, the WebGL actor's ownership relationship looks
-    // like this:
-    // ---------------------------------------------------------------------
-    // | ClientWebGLContext -> WebGLChild -> WebGLParent -> HostWebGLContext
-    // ---------------------------------------------------------------------
-    //
-    // where 'A -> B' means "A owns B"
-    RefPtr<mozilla::dom::WebGLChild> mWebGLChild;
-    UniquePtr<ClientWebGLCommandSource> mCommandSource;
-  };
-  struct NotLostData final {
-    std::shared_ptr<webgl::ContextGenerationInfo> generation;
-    Maybe<RemotingData> outOfProcess;
-    UniquePtr<HostWebGLContext> inProcess;
-    webgl::InitContextResult info;
-    std::array<RefPtr<ClientWebGLExtensionBase>,
-               EnumValue(WebGLExtensionID::Max)>
-        extensions;
-  };
-
  private:
-  Maybe<NotLostData> mNotLost;
+  std::shared_ptr<webgl::NotLostData> mNotLost;
   mutable GLenum mNextError = 0;
 
  public:
   const auto& Limits() const { return mNotLost->info.limits; }
 
-  const auto& State() const { return *mNotLost->generation; }
-  auto& State() { return *mNotLost->generation; }
+  auto& State() { return mNotLost->state; }
+  const auto& State() const {
+    return const_cast<ClientWebGLContext*>(this)->State();
+  }
 
   // -
 
@@ -776,18 +821,21 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
  public:
   template <typename... Args>
   void EnqueueError(const GLenum error, const char* const format,
-                    const Args&... args) const MOZ_FORMAT_PRINTF(3, 4) {
+                    const Args&... args) const {
     MOZ_ASSERT(FuncName());
     nsCString text;
     text.AppendPrintf("WebGL warning: %s: ", FuncName());
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-security"
     text.AppendPrintf(format, args...);
+#pragma clang diagnostic pop
 
     EnqueueErrorImpl(error, text);
   }
 
   template <typename... Args>
-  void EnqueueWarning(const char* const format, const Args&... args) const
-      MOZ_FORMAT_PRINTF(2, 3) {
+  void EnqueueWarning(const char* const format, const Args&... args) const {
     EnqueueError(0, format, args...);
   }
 
@@ -941,7 +989,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   void AfterDrawCall() {
     if (!mNotLost) return;
-    const auto& state = *(mNotLost->generation);
+    const auto& state = State();
     const bool isBackbuffer = !state.mBoundDrawFb;
     if (isBackbuffer) {
       Invalidate();
@@ -982,7 +1030,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   already_AddRefed<WebGLShaderPrecisionFormatJS> GetShaderPrecisionFormat(
       GLenum shadertype, GLenum precisiontype);
 
-  void UseProgram(const WebGLProgramJS*);
+  void UseProgram(WebGLProgramJS*);
   void ValidateProgram(WebGLProgramJS&) const;
 
   // -
@@ -1003,15 +1051,20 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void DeleteBuffer(WebGLBufferJS*);
   void DeleteFramebuffer(WebGLFramebufferJS*);
   void DeleteProgram(WebGLProgramJS*) const;
-  void DeleteQuery(WebGLQueryJS*) const;
+  void DeleteQuery(WebGLQueryJS*);
   void DeleteRenderbuffer(WebGLRenderbufferJS*);
   void DeleteSampler(WebGLSamplerJS*);
   void DeleteShader(WebGLShaderJS*) const;
   void DeleteSync(WebGLSyncJS*) const;
   void DeleteTexture(WebGLTextureJS*);
-  void DeleteTransformFeedback(WebGLTransformFeedbackJS*) const;
+  void DeleteTransformFeedback(WebGLTransformFeedbackJS*);
   void DeleteVertexArray(WebGLVertexArrayJS*);
 
+ private:
+  void DoDeleteProgram(WebGLProgramJS&) const;
+  void DoDeleteShader(const WebGLShaderJS&) const;
+
+ public:
   // -
 
   bool IsBuffer(const WebGLBufferJS*) const;
@@ -1033,7 +1086,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   const webgl::LinkResult& GetLinkResult(const WebGLProgramJS&) const;
 
  public:
-  void AttachShader(WebGLProgramJS&, const WebGLShaderJS&) const;
+  void AttachShader(WebGLProgramJS&, WebGLShaderJS&) const;
   void BindAttribLocation(WebGLProgramJS&, GLuint location,
                           const nsAString& name) const;
   void DetachShader(WebGLProgramJS&, const WebGLShaderJS&) const;
@@ -1639,7 +1692,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   const webgl::LinkResult* GetActiveLinkResult() const {
     const auto& state = State();
     if (state.mCurrentProgram) {
-      (void)GetLinkResult(*state.mCurrentProgram->js);
+      (void)GetLinkResult(*state.mCurrentProgram);
     }
     return state.mActiveLinkResult.get();
   }
@@ -2084,9 +2137,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   bool ShouldResistFingerprinting() const;
 
-  void LoseOldestWebGLContextIfLimitExceeded();
-  void UpdateLastUseIndex();
-
   // Prepare the context for capture before compositing
   void BeginComposition();
 
@@ -2095,7 +2145,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   mozilla::dom::Document* GetOwnerDoc() const;
 
-  uint64_t mLastUseIndex = 0;
   bool mResetLayer = true;
   Maybe<const WebGLContextOptions> mInitialOptions;
   WebGLPixelStore mPixelStore;
@@ -2110,11 +2159,12 @@ const char* GetExtensionName(WebGLExtensionID);
 
 // -
 
-inline bool webgl::ObjectJS::IsUsable(const ClientWebGLContext& context) const {
+inline bool webgl::ObjectJS::IsForContext(
+    const ClientWebGLContext& context) const {
   const auto& notLost = context.mNotLost;
   if (!notLost) return false;
-  if (notLost->generation.get() != mGeneration.lock().get()) return false;
-  return !IsDeleted();
+  if (notLost.get() != mGeneration.lock().get()) return false;
+  return true;
 }
 
 void AutoJsWarning(const std::string& utf8);

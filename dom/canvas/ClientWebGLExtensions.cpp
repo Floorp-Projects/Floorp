@@ -72,7 +72,7 @@ ClientWebGLExtensionDisjointTimerQuery::ClientWebGLExtensionDisjointTimerQuery(
 // Compressed textures
 
 void ClientWebGLContext::AddCompressedFormat(const GLenum format) {
-  auto& state = *(mNotLost->generation);
+  auto& state = State();
   state.mCompressedTextureFormats.push_back(format);
 }
 

@@ -59,19 +59,19 @@ UniquePtr<GLScreenBuffer> GLScreenBuffer::Create(GLContext* gl,
 /* static */
 UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
     GLContext* gl, const SurfaceCaps& caps,
-    KnowsCompositor* compositorConnection, const layers::TextureFlags& flags) {
-  LayersIPCChannel* ipcChannel = compositorConnection->GetTextureForwarder();
-  layers::LayersBackend backend =
-      compositorConnection->GetCompositorBackendType();
+    layers::KnowsCompositor* compositorConnection,
+    const layers::TextureFlags& flags) {
+  const auto& ipcChannel = compositorConnection->GetTextureForwarder();
+  const auto& backend = compositorConnection->GetCompositorBackendType();
   bool useANGLE = compositorConnection->GetCompositorUseANGLE();
   return CreateFactory(gl, caps, ipcChannel, backend, useANGLE, flags);
 }
 
 /* static */
 UniquePtr<SurfaceFactory> GLScreenBuffer::CreateFactory(
-    GLContext* gl, const SurfaceCaps& caps, LayersIPCChannel* ipcChannel,
-    layers::LayersBackend backend, bool useANGLE,
-    const layers::TextureFlags& flags) {
+    GLContext* gl, const SurfaceCaps& caps,
+    layers::LayersIPCChannel* ipcChannel, layers::LayersBackend backend,
+    bool useANGLE, const layers::TextureFlags& flags) {
   const bool useGl =
       !StaticPrefs::webgl_force_layers_readback() &&
       (backend == layers::LayersBackend::LAYERS_OPENGL ||
@@ -457,7 +457,8 @@ bool GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size) {
 }
 
 bool GLScreenBuffer::Swap(const gfx::IntSize& size) {
-  RefPtr<SharedSurfaceTextureClient> newBack = mFactory->NewTexClient(size);
+  RefPtr<layers::SharedSurfaceTextureClient> newBack =
+      mFactory->NewTexClient(size);
   if (!newBack) return false;
 
   // In the case of DXGL interop, the new surface needs to be acquired before
@@ -520,7 +521,8 @@ bool GLScreenBuffer::PublishFrame(const gfx::IntSize& size) {
 }
 
 bool GLScreenBuffer::Resize(const gfx::IntSize& size) {
-  RefPtr<SharedSurfaceTextureClient> newBack = mFactory->NewTexClient(size);
+  RefPtr<layers::SharedSurfaceTextureClient> newBack =
+      mFactory->NewTexClient(size);
   if (!newBack) return false;
 
   if (!Attach(newBack->Surf(), size)) return false;

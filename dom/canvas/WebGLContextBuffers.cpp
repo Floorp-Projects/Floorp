@@ -100,6 +100,11 @@ IndexedBufferBinding* WebGLContext::ValidateIndexedBufferSlot(GLenum target,
   const char* maxIndexEnum;
   switch (target) {
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
+      if (mBoundTransformFeedback->mIsActive &&
+          !mBoundTransformFeedback->mIsPaused) {
+        ErrorInvalidOperation("Transform feedback active and not paused.");
+        return nullptr;
+      }
       bindings = &(mBoundTransformFeedback->mIndexedBindings);
       maxIndexEnum = "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS";
       break;

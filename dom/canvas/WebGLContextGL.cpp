@@ -1284,6 +1284,7 @@ void WebGLContext::UniformData(const uint32_t loc, const bool transpose,
   if (!locInfo) return;
 
   const auto& validationInfo = locInfo->info;
+  const auto& activeInfo = validationInfo.info;
   const auto& channels = validationInfo.channelsPerElem;
   const auto& pfn = validationInfo.pfn;
 
@@ -1291,14 +1292,23 @@ void WebGLContext::UniformData(const uint32_t loc, const bool transpose,
 
   const auto lengthInType = data.length() / sizeof(float);
   if (!lengthInType || lengthInType % channels != 0) {
-    const auto& activeInfo = validationInfo.info;
     GenerateError(LOCAL_GL_INVALID_VALUE,
-                  "`values` length (%u) must be a positive integer multiple of "
+                  "(uniform %s) `values` length (%u) must be a positive "
+                  "integer multiple of "
                   "size of %s.",
-                  lengthInType, EnumString(activeInfo.elemType).c_str());
+                  activeInfo.name.c_str(), lengthInType,
+                  EnumString(activeInfo.elemType).c_str());
     return;
   }
   const auto elemCount = lengthInType / channels;
+  if (elemCount > 1 && !validationInfo.isArray) {
+    GenerateError(
+        LOCAL_GL_INVALID_OPERATION,
+        "(uniform %s) `values` length (%u) must exactle match size of %s.",
+        activeInfo.name.c_str(), lengthInType,
+        EnumString(activeInfo.elemType).c_str());
+    return;
+  }
 
   // -
 
@@ -1362,11 +1372,11 @@ void WebGLContext::UseProgram(WebGLProgram* prog) {
   funcScope.mBindFailureGuard = false;
 }
 
-void WebGLContext::ValidateProgram(const WebGLProgram& prog) {
+bool WebGLContext::ValidateProgram(const WebGLProgram& prog) const {
   const FuncScope funcScope(*this, "validateProgram");
-  if (IsContextLost()) return;
+  if (IsContextLost()) return false;
 
-  prog.ValidateProgram();
+  return prog.ValidateProgram();
 }
 
 RefPtr<WebGLFramebuffer> WebGLContext::CreateFramebuffer() {

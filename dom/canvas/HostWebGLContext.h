@@ -13,11 +13,10 @@
 #include "WebGLContext.h"
 #include "WebGL2Context.h"
 #include "WebGLFramebuffer.h"
-//#include "WebGLSync.h"
-//#include "WebGLTransformFeedback.h"
 #include "WebGLTypes.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #ifndef WEBGL_BRIDGE_LOG_
@@ -40,6 +39,18 @@ namespace layers {
 class CompositableHost;
 }
 
+struct LockedOutstandingContexts final {
+ private:
+  // StaticMutexAutoLock lock; // We can't use it directly (STACK_CLASS), but
+  // this is effectively what we hold via RAII.
+
+ public:
+  const std::unordered_set<HostWebGLContext*>& contexts;
+
+  LockedOutstandingContexts();
+  ~LockedOutstandingContexts();
+};
+
 /**
  * Host endpoint of a WebGLContext.  HostWebGLContext owns a WebGLContext
  * that it uses to execute commands sent from its ClientWebGLContext.
@@ -58,6 +69,10 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
   friend class WebGLMemoryTracker;
 
   using ObjectId = webgl::ObjectId;
+
+  static std::unique_ptr<LockedOutstandingContexts> OutstandingContexts() {
+    return std::make_unique<LockedOutstandingContexts>();
+  }
 
  public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(HostWebGLContext)
@@ -363,8 +378,8 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
   Maybe<double> GetFramebufferAttachmentParameter(ObjectId id,
                                                   GLenum attachment,
                                                   GLenum pname) const {
-    const auto obj = ById<WebGLFramebuffer>(id);
-    return mContext->GetFramebufferAttachmentParameter(obj, attachment, pname);
+    return mContext->GetFramebufferAttachmentParameter(AutoResolve(id),
+                                                       attachment, pname);
   }
 
   webgl::LinkResult GetLinkResult(ObjectId id) const {
@@ -532,7 +547,7 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
                           GLenum format, const uvec3& offset, const uvec3& size,
                           const RawBuffer<const uint8_t>& src,
                           const uint32_t pboImageSize,
-                          const Maybe<uint64_t> pboOffset) const {
+                          const Maybe<uint64_t>& pboOffset) const {
     mContext->CompressedTexImage(sub, imageTarget, level, format, offset, size,
                                  MakeRange(src), pboImageSize, pboOffset);
   }
@@ -573,10 +588,10 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
   // ------------------- Programs and shaders --------------------------------
   void UseProgram(ObjectId id) const { mContext->UseProgram(AutoResolve(id)); }
 
-  void ValidateProgram(ObjectId id) const {
+  bool ValidateProgram(ObjectId id) const {
     const auto obj = ById<WebGLProgram>(id);
-    if (!obj) return;
-    mContext->ValidateProgram(*obj);
+    if (!obj) return false;
+    return mContext->ValidateProgram(*obj);
   }
 
   // ------------------------ Uniforms and attributes ------------------------
