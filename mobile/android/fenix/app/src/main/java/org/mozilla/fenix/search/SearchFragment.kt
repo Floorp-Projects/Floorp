@@ -196,7 +196,7 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         }
 
         view.back_button.setOnClickListener {
-            findNavController().popBackStack()
+            findNavController().navigateUp()
         }
 
         val stubListener = ViewStub.OnInflateListener { _, inflated ->
