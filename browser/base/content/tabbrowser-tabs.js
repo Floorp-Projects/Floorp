@@ -612,14 +612,11 @@
       }
 
       ind.hidden = false;
-
       newMargin += ind.clientWidth / 2;
       if (RTL_UI) {
         newMargin *= -1;
       }
-
       ind.style.transform = "translate(" + Math.round(newMargin) + "px)";
-      ind.style.marginInlineStart = -ind.clientWidth + "px";
     }
 
     on_drop(event) {
