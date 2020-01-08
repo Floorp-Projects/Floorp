@@ -14,11 +14,8 @@ job-defaults:
         by-test-name:
             raptor-tp6-\d{1,2}-firefox(?!-cold):
                 by-test-platform:
-                    windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
                     windows10-aarch64/opt: ['try']
-                    (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try', 'ash']
-                    macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
-                    default: ['try', 'mozilla-beta']
+                    default: ['try', 'mozilla-central']
             default:
                 by-test-platform:
                     windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
