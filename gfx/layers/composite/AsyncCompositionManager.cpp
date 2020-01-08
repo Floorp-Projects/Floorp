@@ -641,12 +641,14 @@ static void ApplyAnimatedValue(
     case eCSSProperty_offset_rotate:
     case eCSSProperty_offset_anchor: {
       MOZ_ASSERT(aLayer->GetTransformLikeMetaData());
-      const TransformData& transformData = *aLayer->GetTransformLikeMetaData();
-
       Matrix4x4 frameTransform =
           AnimationHelper::ServoAnimationValueToMatrix4x4(
-              aValues, transformData, aLayer->CachedMotionPath());
+              aValues, *aLayer->GetTransformLikeMetaData(),
+              aLayer->CachedMotionPath());
 
+      MOZ_ASSERT(aLayer->GetTransformLikeMetaData()->mTransform);
+      const TransformData& transformData =
+          *aLayer->GetTransformLikeMetaData()->mTransform;
       Matrix4x4 transform = FrameTransformToTransformInDevice(
           frameTransform, aLayer, transformData);
 
@@ -733,15 +735,16 @@ static bool SampleAnimations(Layer* aLayer,
             MOZ_ASSERT(
                 layer->AsHostLayer()->GetShadowTransformSetByAnimation());
             MOZ_ASSERT(previousValue);
-            MOZ_ASSERT(layer->GetTransformLikeMetaData());
+            MOZ_ASSERT(layer->GetTransformLikeMetaData() &&
+                       layer->GetTransformLikeMetaData()->mTransform);
 #ifdef DEBUG
-            const TransformData& transformData =
-                *layer->GetTransformLikeMetaData();
             Matrix4x4 frameTransform =
                 AnimationHelper::ServoAnimationValueToMatrix4x4(
-                    animationValues, transformData, layer->CachedMotionPath());
+                    animationValues, *layer->GetTransformLikeMetaData(),
+                    layer->CachedMotionPath());
             Matrix4x4 transformInDevice = FrameTransformToTransformInDevice(
-                frameTransform, layer, transformData);
+                frameTransform, layer,
+                *layer->GetTransformLikeMetaData()->mTransform);
             MOZ_ASSERT(previousValue->Transform()
                            .mTransformInDevSpace.FuzzyEqualsMultiplicative(
                                transformInDevice));
