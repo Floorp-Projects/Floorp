@@ -328,7 +328,7 @@ void SessionStorageManager::SendSessionStorageCache(
   nsTArray<KeyValuePair> sessionData =
       aCache->SerializeData(SessionStorageCache::eSessionSetType);
   Unused << aActor->SendSessionStorageData(
-      mBrowsingContext, nsCString{aOriginAttrs}, nsCString{aOriginKey},
+      mBrowsingContext->Id(), nsCString{aOriginAttrs}, nsCString{aOriginKey},
       defaultData, sessionData);
 }
 

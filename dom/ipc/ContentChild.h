@@ -694,7 +694,7 @@ class ContentChild final
       nsTArray<uint64_t>&& aToEvictSharedStateIDs);
 
   mozilla::ipc::IPCResult RecvSessionStorageData(
-      BrowsingContext* aTop, const nsACString& aOriginAttrs,
+      uint64_t aTopContextId, const nsACString& aOriginAttrs,
       const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
       const nsTArray<KeyValuePair>& aSessionData);
 
