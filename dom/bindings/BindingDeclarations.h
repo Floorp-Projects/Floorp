@@ -33,7 +33,7 @@ namespace mozilla {
 namespace dom {
 
 // Struct that serves as a base class for all dictionaries.  Particularly useful
-// so we can use IsBaseOf to detect dictionary template arguments.
+// so we can use std::is_base_of to detect dictionary template arguments.
 struct DictionaryBase {
  protected:
   bool ParseJSON(JSContext* aCx, const nsAString& aJSON,
@@ -75,12 +75,12 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 // Struct that serves as a base class for all typed arrays and array buffers and
-// array buffer views.  Particularly useful so we can use IsBaseOf to detect
+// array buffer views.  Particularly useful so we can use std::is_base_of to detect
 // typed array/buffer/view template arguments.
 struct AllTypedArraysBase {};
 
 // Struct that serves as a base class for all owning unions.
-// Particularly useful so we can use IsBaseOf to detect owning union
+// Particularly useful so we can use std::is_base_of to detect owning union
 // template arguments.
 struct AllOwningUnionBase {};
 
