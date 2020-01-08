@@ -6644,6 +6644,11 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
             extractValue = PR_FALSE;
             classType = CKO_PUBLIC_KEY;
             break;
+        case CKM_NSS_SP800_108_COUNTER_KDF_DERIVE_DATA:  /* fall through */
+        case CKM_NSS_SP800_108_FEEDBACK_KDF_DERIVE_DATA: /* fall through */
+        case CKM_NSS_SP800_108_DOUBLE_PIPELINE_KDF_DERIVE_DATA:
+            classType = CKO_DATA;
+            break;
         case CKM_NSS_JPAKE_FINAL_SHA1:   /* fall through */
         case CKM_NSS_JPAKE_FINAL_SHA256: /* fall through */
         case CKM_NSS_JPAKE_FINAL_SHA384: /* fall through */
@@ -8148,6 +8153,19 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
                                   sourceKey, key);
             break;
 
+        case CKM_NSS_SP800_108_COUNTER_KDF_DERIVE_DATA:         /* fall through */
+        case CKM_NSS_SP800_108_FEEDBACK_KDF_DERIVE_DATA:        /* fall through */
+        case CKM_NSS_SP800_108_DOUBLE_PIPELINE_KDF_DERIVE_DATA: /* fall through */
+        case CKM_SP800_108_COUNTER_KDF:                         /* fall through */
+        case CKM_SP800_108_FEEDBACK_KDF:                        /* fall through */
+        case CKM_SP800_108_DOUBLE_PIPELINE_KDF:
+            crv = sftk_DeriveSensitiveCheck(sourceKey, key);
+            if (crv != CKR_OK) {
+                break;
+            }
+
+            crv = kbkdf_Dispatch(mechanism, hSession, pMechanism, sourceKey, key, keySize);
+            break;
         default:
             crv = CKR_MECHANISM_INVALID;
     }

@@ -23,6 +23,7 @@ class DataBuffer {
   DataBuffer(const DataBuffer& other) : data_(nullptr), len_(0) {
     Assign(other);
   }
+  explicit DataBuffer(size_t l) : data_(nullptr), len_(0) { Allocate(l); }
   ~DataBuffer() { delete[] data_; }
 
   DataBuffer& operator=(const DataBuffer& other) {

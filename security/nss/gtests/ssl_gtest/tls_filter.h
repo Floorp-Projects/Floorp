@@ -12,6 +12,7 @@
 #include <set>
 #include <vector>
 #include "sslt.h"
+#include "sslproto.h"
 #include "test_io.h"
 #include "tls_agent.h"
 #include "tls_parser.h"
@@ -24,6 +25,59 @@ extern "C" {
 namespace nss_test {
 
 class TlsCipherSpec;
+
+class TlsSendCipherSpecCapturer {
+ public:
+  TlsSendCipherSpecCapturer(const std::shared_ptr<TlsAgent>& agent)
+      : agent_(agent), send_cipher_specs_() {
+    EXPECT_EQ(SECSuccess,
+              SSL_SecretCallback(agent_->ssl_fd(), SecretCallback, this));
+  }
+
+  std::shared_ptr<TlsCipherSpec> spec(size_t i) {
+    if (i >= send_cipher_specs_.size()) {
+      return nullptr;
+    }
+    return send_cipher_specs_[i];
+  }
+
+ private:
+  static void SecretCallback(PRFileDesc* fd, PRUint16 epoch,
+                             SSLSecretDirection dir, PK11SymKey* secret,
+                             void* arg) {
+    auto self = static_cast<TlsSendCipherSpecCapturer*>(arg);
+    std::cerr << self->agent_->role_str() << ": capture " << dir
+              << " secret for epoch " << epoch << std::endl;
+
+    if (dir == ssl_secret_read) {
+      return;
+    }
+
+    SSLPreliminaryChannelInfo preinfo;
+    EXPECT_EQ(SECSuccess,
+              SSL_GetPreliminaryChannelInfo(self->agent_->ssl_fd(), &preinfo,
+                                            sizeof(preinfo)));
+    EXPECT_EQ(sizeof(preinfo), preinfo.length);
+    EXPECT_TRUE(preinfo.valuesSet & ssl_preinfo_cipher_suite);
+
+    // Check the version:
+    EXPECT_TRUE(preinfo.valuesSet & ssl_preinfo_version);
+    ASSERT_GE(SSL_LIBRARY_VERSION_TLS_1_3, preinfo.protocolVersion);
+
+    SSLCipherSuiteInfo cipherinfo;
+    EXPECT_EQ(SECSuccess,
+              SSL_GetCipherSuiteInfo(preinfo.cipherSuite, &cipherinfo,
+                                     sizeof(cipherinfo)));
+    EXPECT_EQ(sizeof(cipherinfo), cipherinfo.length);
+
+    auto spec = std::make_shared<TlsCipherSpec>(true, epoch);
+    EXPECT_TRUE(spec->SetKeys(&cipherinfo, secret));
+    self->send_cipher_specs_.push_back(spec);
+  }
+
+  std::shared_ptr<TlsAgent> agent_;
+  std::vector<std::shared_ptr<TlsCipherSpec>> send_cipher_specs_;
+};
 
 class TlsVersioned {
  public:
@@ -45,21 +99,56 @@ class TlsVersioned {
 class TlsRecordHeader : public TlsVersioned {
  public:
   TlsRecordHeader()
-      : TlsVersioned(), content_type_(0), sequence_number_(0), header_() {}
+      : TlsVersioned(),
+        content_type_(0),
+        guess_seqno_(0),
+        seqno_is_masked_(false),
+        sequence_number_(0),
+        header_() {}
   TlsRecordHeader(SSLProtocolVariant var, uint16_t ver, uint8_t ct,
                   uint64_t seqno)
       : TlsVersioned(var, ver),
         content_type_(ct),
+        guess_seqno_(0),
+        seqno_is_masked_(false),
         sequence_number_(seqno),
-        header_() {}
+        header_(),
+        sn_mask_() {}
+
+  bool is_protected() const {
+    // *TLS < 1.3
+    if (version() < SSL_LIBRARY_VERSION_TLS_1_3 &&
+        content_type() == ssl_ct_application_data) {
+      return true;
+    }
+
+    // TLS 1.3
+    if (!is_dtls() && version() >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+        content_type() == ssl_ct_application_data) {
+      return true;
+    }
+
+    // DTLS 1.3
+    return is_dtls13_ciphertext();
+  }
 
   uint8_t content_type() const { return content_type_; }
-  uint64_t sequence_number() const { return sequence_number_; }
   uint16_t epoch() const {
     return static_cast<uint16_t>(sequence_number_ >> 48);
   }
+  uint64_t sequence_number() const { return sequence_number_; }
+  void sequence_number(uint64_t seqno) { sequence_number_ = seqno; }
+  const DataBuffer& sn_mask() const { return sn_mask_; }
+  bool is_dtls13_ciphertext() const {
+    return is_dtls() && (version() >= SSL_LIBRARY_VERSION_TLS_1_3) &&
+           (content_type() & kCtDtlsCiphertextMask) == kCtDtlsCiphertext;
+  }
+
   size_t header_length() const;
   const DataBuffer& header() const { return header_; }
+
+  bool MaskSequenceNumber();
+  bool MaskSequenceNumber(const DataBuffer& mask);
 
   // Parse the header; return true if successful; body in an outparam if OK.
   bool Parse(bool is_dtls13, uint64_t sequence_number, TlsParser* parser,
@@ -70,14 +159,17 @@ class TlsRecordHeader : public TlsVersioned {
   size_t WriteHeader(DataBuffer* buffer, size_t offset, size_t body_len) const;
 
  private:
-  static uint64_t RecoverSequenceNumber(uint64_t expected, uint32_t partial,
+  static uint64_t RecoverSequenceNumber(uint64_t guess_seqno, uint32_t partial,
                                         size_t partial_bits);
-  static uint64_t ParseSequenceNumber(uint64_t expected, uint32_t raw,
-                                      size_t seq_no_bits, size_t epoch_bits);
+  uint64_t ParseSequenceNumber(uint64_t expected, uint64_t raw,
+                               size_t seq_no_bits, size_t epoch_bits);
 
   uint8_t content_type_;
+  uint64_t guess_seqno_;
+  bool seqno_is_masked_;
   uint64_t sequence_number_;
   DataBuffer header_;
+  DataBuffer sn_mask_;
 };
 
 struct TlsRecord {
@@ -111,12 +203,14 @@ class TlsRecordFilter : public PacketFilter {
   // Enabling it for lower version tests will cause undefined
   // behavior.
   void EnableDecryption();
+  bool decrypting() const { return decrypting_; };
   bool Unprotect(const TlsRecordHeader& header, const DataBuffer& cipherText,
                  uint16_t* protection_epoch, uint8_t* inner_content_type,
-                 DataBuffer* plaintext);
+                 DataBuffer* plaintext, TlsRecordHeader* out_header);
   bool Protect(TlsCipherSpec& protection_spec, const TlsRecordHeader& header,
                uint8_t inner_content_type, const DataBuffer& plaintext,
-               DataBuffer* ciphertext, size_t padding = 0);
+               DataBuffer* ciphertext, TlsRecordHeader* out_header,
+               size_t padding = 0);
 
  protected:
   // There are two filter functions which can be overriden. Both are
@@ -141,6 +235,7 @@ class TlsRecordFilter : public PacketFilter {
   }
 
   bool is_dtls13() const;
+  bool is_dtls13_ciphertext(uint8_t ct) const;
   TlsCipherSpec& spec(uint16_t epoch);
 
  private:
@@ -471,8 +566,9 @@ class TlsEncryptedHandshakeMessageReplacer : public TlsRecordFilter {
     uint16_t protection_epoch = 0;
     uint8_t inner_content_type;
     DataBuffer plaintext;
+    TlsRecordHeader out_header;
     if (!Unprotect(header, record, &protection_epoch, &inner_content_type,
-                   &plaintext) ||
+                   &plaintext, &out_header) ||
         !plaintext.len()) {
       return KEEP;
     }
@@ -501,12 +597,12 @@ class TlsEncryptedHandshakeMessageReplacer : public TlsRecordFilter {
     }
 
     DataBuffer ciphertext;
-    bool ok = Protect(spec(protection_epoch), header, inner_content_type,
-                      plaintext, &ciphertext, 0);
+    bool ok = Protect(spec(protection_epoch), out_header, inner_content_type,
+                      plaintext, &ciphertext, &out_header);
     if (!ok) {
       return KEEP;
     }
-    *offset = header.Write(output, *offset, ciphertext);
+    *offset = out_header.Write(output, *offset, ciphertext);
     return CHANGE;
   }
 

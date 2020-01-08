@@ -243,6 +243,11 @@
 
 #define CKM_NSS_PUB_FROM_PRIV (CKM_NSS + 40)
 
+/* SP800-108 NSS mechanism with support for data object derivation */
+#define CKM_NSS_SP800_108_COUNTER_KDF_DERIVE_DATA (CKM_NSS + 42)
+#define CKM_NSS_SP800_108_FEEDBACK_KDF_DERIVE_DATA (CKM_NSS + 43)
+#define CKM_NSS_SP800_108_DOUBLE_PIPELINE_KDF_DERIVE_DATA (CKM_NSS + 44)
+
 /*
  * HISTORICAL:
  * Do not attempt to use these. They are only used by NETSCAPE's internal

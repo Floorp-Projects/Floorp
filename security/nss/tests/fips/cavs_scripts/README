@@ -2,7 +2,7 @@ These scripts are used to run fipstest on a directory of CAVS vectors.
 
 individual cipher scripts:
 aesgcm.sh aes.sh dsa.sh ecdsa.sh hmac.sh ike.sh kas.sh
-rng.sh rsa.sh sha.sh tdea.sh tls.sh
+kbkdf.sh rng.sh rsa.sh sha.sh tdea.sh tls.sh
 
 Each individual cipher script handles all the tests in a particular directory.
 The scripts have 2 modes:

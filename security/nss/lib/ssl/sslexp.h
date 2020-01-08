@@ -826,6 +826,56 @@ typedef PRTime(PR_CALLBACK *SSLTimeFunc)(void *arg);
                           PRUint16 _numCiphers),                          \
                          (fd, cipherOrder, numCiphers))
 
+/*
+ * The following functions expose a masking primitive that uses ciphersuite and
+ * version information to set paramaters for the masking key and mask generation
+ * logic. This is only supported for TLS 1.3.
+ *
+ * The key and IV are generated using the TLS KDF with a custom label.  That is
+ * HKDF-Expand-Label(secret, label, "", L), where |label| is an input to
+ * SSL_CreateMaskingContext.
+ *
+ * The mask generation logic in SSL_CreateMask is determined by the underlying
+ * symmetric cipher:
+ *  - For AES-ECB, mask = AES-ECB(mask_key, sample). |len| must be <= 16 as
+ *    the output is limited to a single block.
+ *  - For CHACHA20, mask = ChaCha20(mask_key, sample[0..3], sample[4..15], {0}.len)
+ *    That is, the low 4 bytes of |sample| used as the counter, the remaining 12 bytes
+ *    the nonce. We encrypt |len| bytes of zeros, returning the raw key stream.
+ *
+ *  The caller must pre-allocate at least |len| bytes for output. If the underlying
+ *  cipher cannot produce the requested amount of data, SECFailure is returned.
+ */
+
+typedef struct SSLMaskingContextStr {
+    CK_MECHANISM_TYPE mech;
+    PRUint16 version;
+    PRUint16 cipherSuite;
+    PK11SymKey *secret;
+} SSLMaskingContext;
+
+#define SSL_CreateMaskingContext(version, cipherSuite, secret,      \
+                                 label, labelLen, ctx)              \
+    SSL_EXPERIMENTAL_API("SSL_CreateMaskingContext",                \
+                         (PRUint16 _version, PRUint16 _cipherSuite, \
+                          PK11SymKey * _secret,                     \
+                          const char *_label,                       \
+                          unsigned int _labelLen,                   \
+                          SSLMaskingContext **_ctx),                \
+                         (version, cipherSuite, secret, label, labelLen, ctx))
+
+#define SSL_DestroyMaskingContext(ctx)                \
+    SSL_EXPERIMENTAL_API("SSL_DestroyMaskingContext", \
+                         (SSLMaskingContext * _ctx),  \
+                         (ctx))
+
+#define SSL_CreateMask(ctx, sample, sampleLen, mask, maskLen)               \
+    SSL_EXPERIMENTAL_API("SSL_CreateMask",                                  \
+                         (SSLMaskingContext * _ctx, const PRUint8 *_sample, \
+                          unsigned int _sampleLen, PRUint8 *_mask,          \
+                          unsigned int _maskLen),                           \
+                         (ctx, sample, sampleLen, mask, maskLen))
+
 /* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API
 #define SSL_SetupAntiReplay(a, b, c) SSL_DEPRECATED_EXPERIMENTAL_API

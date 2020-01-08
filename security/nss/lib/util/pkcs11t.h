@@ -940,6 +940,11 @@ typedef CK_ULONG CK_MECHANISM_TYPE;
 #define CKM_DH_PKCS_PARAMETER_GEN 0x00002001
 #define CKM_X9_42_DH_PARAMETER_GEN 0x00002002
 
+/* CKM_SP800_108_xxx_KDF are new for v3.0 */
+#define CKM_SP800_108_COUNTER_KDF 0x000003acUL
+#define CKM_SP800_108_FEEDBACK_KDF 0x000003adUL
+#define CKM_SP800_108_DOUBLE_PIPELINE_KDF 0x000003aeUL
+
 #define CKM_VENDOR_DEFINED 0x80000000
 
 typedef CK_MECHANISM_TYPE CK_PTR CK_MECHANISM_TYPE_PTR;
@@ -1723,6 +1728,94 @@ typedef struct CK_WTLS_KEY_MAT_PARAMS {
 } CK_WTLS_KEY_MAT_PARAMS;
 
 typedef CK_WTLS_KEY_MAT_PARAMS CK_PTR CK_WTLS_KEY_MAT_PARAMS_PTR;
+
+/* The following types for NIST 800-108 KBKDF are defined in PKCS#11 v3.0 */
+typedef CK_MECHANISM_TYPE CK_SP800_108_PRF_TYPE;
+typedef CK_ULONG CK_PRF_DATA_TYPE;
+
+#define CK_SP800_108_ITERATION_VARIABLE 0x00000001UL
+#define CK_SP800_108_OPTIONAL_COUNTER 0x00000002UL
+#define CK_SP800_108_DKM_LENGTH 0x00000003UL
+#define CK_SP800_108_BYTE_ARRAY 0x00000004UL
+
+/* ERRATA: PKCS#11 v3.0 Cryptographic Token Interface Current Mechanisms
+ * specification specifies a CK_SP800_108_COUNTER, while the pkcs11t.h from
+ * PKCS#11 v3.0 Cryptographic Token Interface Base Specification specifies
+ * CK_SP800_108_OPTIONAL_COUNTER. */
+#define CK_SP800_108_COUNTER CK_SP800_108_OPTIONAL_COUNTER
+
+typedef struct CK_PRF_DATA_PARAM {
+    CK_PRF_DATA_TYPE type;
+    CK_VOID_PTR pValue;
+    CK_ULONG ulValueLen;
+} CK_PRF_DATA_PARAM;
+
+typedef CK_PRF_DATA_PARAM CK_PTR CK_PRF_DATA_PARAM_PTR;
+
+typedef struct CK_SP800_108_COUNTER_FORMAT {
+    CK_BBOOL bLittleEndian;
+    CK_ULONG ulWidthInBits;
+} CK_SP800_108_COUNTER_FORMAT;
+
+typedef CK_SP800_108_COUNTER_FORMAT CK_PTR CK_SP800_108_COUNTER_FORMAT_PTR;
+
+typedef CK_ULONG CK_SP800_108_DKM_LENGTH_METHOD;
+
+/* ERRATA: PKCS#11 v3.0 Cryptographic Token Interface Current Mechanisms
+ * defines that these constants exist, but doesn't specify values. pkcs11t.h
+ * from PKCS#11 v3.0 Cryptographic Token Interface Base Specification doesn't
+ * define these constants either. */
+#define CK_SP800_108_DKM_LENGTH_SUM_OF_KEYS 0x00000001UL
+#define CK_SP800_108_DKM_LENGTH_SUM_OF_SEGMENTS 0x00000002UL
+
+typedef struct CK_SP800_108_DKM_LENGTH_FORMAT {
+    CK_SP800_108_DKM_LENGTH_METHOD dkmLengthMethod;
+    CK_BBOOL bLittleEndian;
+    CK_ULONG ulWidthInBits;
+} CK_SP800_108_DKM_LENGTH_FORMAT;
+
+typedef CK_SP800_108_DKM_LENGTH_FORMAT CK_PTR CK_SP800_108_DKM_LENGTH_FORMAT_PTR;
+
+typedef struct CK_DERIVED_KEY {
+    CK_ATTRIBUTE_PTR pTemplate;
+    CK_ULONG ulAttributeCount;
+    CK_OBJECT_HANDLE_PTR phKey;
+} CK_DERIVED_KEY;
+
+typedef CK_DERIVED_KEY CK_PTR CK_DERIVED_KEY_PTR;
+
+/* UNFIXED ERRATA: NIST SP800-108 specifies that implementer can decide the
+ * number of bits to take from each PRF invocation. However, all three forms
+ * of the PKCS#11 v3.0 implementation lack a bitwidth for the PRF and only
+ * allow the full-width mechanism varieties. Additionally, outside of the
+ * base key (used as the key to the PRF), there is no way to pass any
+ * additional, PRF-mechanism specific data. */
+
+typedef struct CK_SP800_108_KDF_PARAMS {
+    CK_SP800_108_PRF_TYPE prfType;
+    CK_ULONG ulNumberOfDataParams;
+    CK_PRF_DATA_PARAM_PTR pDataParams;
+    CK_ULONG ulAdditionalDerivedKeys;
+    /* ERRATA: in PKCS#11 v3.0, pAdditionalDerivedKeys is typed as
+     * CK_DERVIED_KEY; it needs to be of type CK_DERIVED_KEY_PTR. */
+    CK_DERIVED_KEY_PTR pAdditionalDerivedKeys;
+} CK_SP800_108_KDF_PARAMS;
+
+typedef CK_SP800_108_KDF_PARAMS CK_PTR CK_SP800_108_KDF_PARAMS_PTR;
+
+typedef struct CK_SP800_108_FEEDBACK_KDF_PARAMS {
+    CK_SP800_108_PRF_TYPE prfType;
+    CK_ULONG ulNumberOfDataParams;
+    CK_PRF_DATA_PARAM_PTR pDataParams;
+    CK_ULONG ulIVLen;
+    CK_BYTE_PTR pIV;
+    CK_ULONG ulAdditionalDerivedKeys;
+    /* ERRATA: in PKCS#11 v3.0, pAdditionalDerivedKeys is typed as
+     * CK_DERVIED_KEY; it needs to be of type CK_DERIVED_KEY_PTR. */
+    CK_DERIVED_KEY_PTR pAdditionalDerivedKeys;
+} CK_SP800_108_FEEDBACK_KDF_PARAMS;
+
+typedef CK_SP800_108_FEEDBACK_KDF_PARAMS CK_PTR CK_SP800_108_FEEDBACK_KDF_PARAMS_PTR;
 
 /* CMS is new for version 2.20 */
 typedef struct CK_CMS_SIG_PARAMS {

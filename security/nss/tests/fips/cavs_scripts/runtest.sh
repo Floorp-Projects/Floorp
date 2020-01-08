@@ -6,7 +6,7 @@
 #
 TESTDIR=${1-.}
 COMMAND=${2-run}
-DEFAULT_TESTS="aes aesgcm dsa ecdsa hmac kas tls ike rng rsa sha tdea"
+DEFAULT_TESTS="aes aesgcm dsa ecdsa hmac kas kbkdf tls ike rng rsa sha tdea"
 shift;
 shift;
 TESTS=${@-$DEFAULT_TESTS}

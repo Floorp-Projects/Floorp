@@ -1064,21 +1064,28 @@ void TlsAgent::SendBuffer(const DataBuffer& buf) {
 bool TlsAgent::SendEncryptedRecord(const std::shared_ptr<TlsCipherSpec>& spec,
                                    uint64_t seq, uint8_t ct,
                                    const DataBuffer& buf) {
-  LOGV("Encrypting " << buf.len() << " bytes");
   // Ensure that we are doing TLS 1.3.
   EXPECT_GE(expected_version_, SSL_LIBRARY_VERSION_TLS_1_3);
-  TlsRecordHeader header(variant_, expected_version_, ssl_ct_application_data,
-                         seq);
+  if (variant_ != ssl_variant_datagram) {
+    ADD_FAILURE();
+    return false;
+  }
+
+  LOGV("Encrypting " << buf.len() << " bytes");
+  uint8_t dtls13_ct = kCtDtlsCiphertext | kCtDtlsCiphertext16bSeqno |
+                      kCtDtlsCiphertextLengthPresent;
+  TlsRecordHeader header(variant_, expected_version_, dtls13_ct, seq);
+  TlsRecordHeader out_header(header);
   DataBuffer padded = buf;
   padded.Write(padded.len(), ct, 1);
   DataBuffer ciphertext;
-  if (!spec->Protect(header, padded, &ciphertext)) {
+  if (!spec->Protect(header, padded, &ciphertext, &out_header)) {
     return false;
   }
 
   DataBuffer record;
-  auto rv = header.Write(&record, 0, ciphertext);
-  EXPECT_EQ(header.header_length() + ciphertext.len(), rv);
+  auto rv = out_header.Write(&record, 0, ciphertext);
+  EXPECT_EQ(out_header.header_length() + ciphertext.len(), rv);
   SendDirect(record);
   return true;
 }
@@ -1202,16 +1209,26 @@ void TlsAgentTestBase::MakeRecord(SSLProtocolVariant variant, uint8_t type,
                                   uint16_t version, const uint8_t* buf,
                                   size_t len, DataBuffer* out,
                                   uint64_t sequence_number) {
+  // Fixup the content type for DTLSCiphertext
+  if (variant == ssl_variant_datagram &&
+      version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+      type == ssl_ct_application_data) {
+    type = kCtDtlsCiphertext | kCtDtlsCiphertext16bSeqno |
+           kCtDtlsCiphertextLengthPresent;
+  }
+
   size_t index = 0;
-  index = out->Write(index, type, 1);
   if (variant == ssl_variant_stream) {
+    index = out->Write(index, type, 1);
     index = out->Write(index, version, 2);
   } else if (version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
-             type == ssl_ct_application_data) {
+             (type & kCtDtlsCiphertextMask) == kCtDtlsCiphertext) {
     uint32_t epoch = (sequence_number >> 48) & 0x3;
-    uint32_t seqno = sequence_number & ((1ULL << 30) - 1);
-    index = out->Write(index, (epoch << 30) | seqno, 4);
+    index = out->Write(index, type | epoch, 1);
+    uint32_t seqno = sequence_number & ((1ULL << 16) - 1);
+    index = out->Write(index, seqno, 2);
   } else {
+    index = out->Write(index, type, 1);
     index = out->Write(index, TlsVersionToDtlsVersion(version), 2);
     index = out->Write(index, sequence_number >> 32, 4);
     index = out->Write(index, sequence_number & PR_UINT32_MAX, 4);

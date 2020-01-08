@@ -10,7 +10,7 @@
 #define __dtls13con_h_
 
 SECStatus dtls13_InsertCipherTextHeader(const sslSocket *ss,
-                                        ssl3CipherSpec *cwSpec,
+                                        const ssl3CipherSpec *cwSpec,
                                         sslBuffer *wrBuf,
                                         PRBool *needsLength);
 SECStatus dtls13_RememberFragment(sslSocket *ss, PRCList *list,
@@ -29,5 +29,9 @@ SECStatus dtls13_SendAck(sslSocket *ss);
 void dtls13_SendAckCb(sslSocket *ss);
 void dtls13_HolddownTimerCb(sslSocket *ss);
 void dtls_ReceivedFirstMessageInFlight(sslSocket *ss);
+SECStatus dtls13_MaskSequenceNumber(sslSocket *ss, ssl3CipherSpec *spec,
+                                    PRUint8 *hdr, PRUint8 *cipherText, PRUint32 cipherTextLen);
+
+CK_MECHANISM_TYPE tls13_SequenceNumberEncryptionMechanism(SSLCipherAlgorithm bulkAlgorithm);
 
 #endif
