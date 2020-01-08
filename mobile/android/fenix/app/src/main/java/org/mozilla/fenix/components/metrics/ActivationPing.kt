@@ -166,7 +166,7 @@ class ActivationPing(private val context: Context) {
             }
 
             Logger.info("ActivationPing - generating ping (has `identifier`: ${hashedId != null})")
-            Pings.activation.send()
+            Pings.activation.submit()
             markAsTriggered()
         }
     }

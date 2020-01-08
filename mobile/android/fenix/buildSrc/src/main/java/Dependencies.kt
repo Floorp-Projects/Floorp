@@ -31,16 +31,16 @@ object Versions {
     const val androidx_work = "2.2.0"
     const val google_material = "1.1.0-beta01"
 
-    const val mozilla_android_components = "27.0.0-SNAPSHOT"
+    const val mozilla_android_components = "28.0.0-SNAPSHOT"
     // Note that android-components also depends on application-services,
     // and in fact is our main source of appservices-related functionality.
     // The version number below tracks the application-services version
     // that we depend on directly for the fenix-megazord (and for it's
     // forUnitTest variant), and it's important that it be kept in
     // sync with the version used by android-components above.
-    const val mozilla_appservices = "0.44.0"
+    const val mozilla_appservices = "0.47.0"
 
-    const val mozilla_glean = "22.1.0"
+    const val mozilla_glean = "23.0.0"
 
     const val adjust = "4.18.3"
     const val installreferrer = "1.0"

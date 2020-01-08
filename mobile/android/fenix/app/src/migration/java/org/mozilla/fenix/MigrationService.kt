@@ -5,10 +5,12 @@
 package org.mozilla.fenix
 
 import mozilla.components.support.migration.AbstractMigrationService
+import mozilla.components.support.migration.state.MigrationStore
 
 /**
  * Background service for running the migration from legacy Firefox for Android (Fennec).
  */
 class MigrationService : AbstractMigrationService() {
     override val migrator by lazy { getMigratorFromApplication() }
+    override val store: MigrationStore by lazy { getMigrationStoreFromApplication() }
 }

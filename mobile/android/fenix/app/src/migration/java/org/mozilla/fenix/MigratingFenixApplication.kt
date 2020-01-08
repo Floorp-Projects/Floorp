@@ -7,6 +7,7 @@ package org.mozilla.fenix
 import android.content.Context
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.migration.FennecMigrator
+import mozilla.components.support.migration.state.MigrationStore
 
 /**
  * An application class which knows how to migrate Fennec data.
@@ -26,12 +27,14 @@ class MigratingFenixApplication : FenixApplication() {
             .build()
     }
 
+    val migrationStore by lazy { MigrationStore() }
+
     override fun setupInMainProcessOnly() {
         migrateGeckoBlocking()
 
         super.setupInMainProcessOnly()
 
-        migrator.startMigrationServiceIfNeeded(MigrationService::class.java)
+        migrator.startMigrationIfNeeded(migrationStore, MigrationService::class.java)
     }
 
     private fun migrateGeckoBlocking() {
@@ -47,4 +50,8 @@ class MigratingFenixApplication : FenixApplication() {
 
 fun Context.getMigratorFromApplication(): FennecMigrator {
     return (applicationContext as MigratingFenixApplication).migrator
+}
+
+fun Context.getMigrationStoreFromApplication(): MigrationStore {
+    return (applicationContext as MigratingFenixApplication).migrationStore
 }

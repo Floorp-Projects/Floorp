@@ -5,7 +5,7 @@
 package org.mozilla.fenix
 
 enum class ReleaseChannel {
-    FenixDebug, FenixNightly, FenixBeta, FenixProduction, FennecProduction;
+    FenixDebug, FenixNightly, FenixBeta, FenixProduction, FennecProduction, FennecBeta, FennecNightly;
 
     val isReleased: Boolean
         get() = when (this) {
@@ -27,12 +27,15 @@ enum class ReleaseChannel {
         get() = when (this) {
             FenixProduction -> true
             FenixBeta -> true
+            FennecProduction -> true
+            FennecBeta -> true
             else -> false
         }
 
     val isNightlyOrDebug: Boolean
         get() = when (this) {
             FenixNightly -> true
+            FennecNightly -> true
             FenixDebug -> true
             else -> false
         }
@@ -45,6 +48,8 @@ object Config {
         "fenixNightly" -> ReleaseChannel.FenixNightly
         "debug" -> ReleaseChannel.FenixDebug
         "fennecProduction" -> ReleaseChannel.FennecProduction
+        "fennecBeta" -> ReleaseChannel.FennecBeta
+        "fennecNightly" -> ReleaseChannel.FennecNightly
 
         // Builds for local performance analysis, recording benchmarks, automation, etc.
         // This should be treated like a released channel because we want to test
