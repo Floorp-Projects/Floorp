@@ -47,7 +47,7 @@
                     <input class="pref-name" id="new-pref-name" type="text" placeholder="&newPref.namePlaceholder;"
                         onfocus="NewPrefDialog.focusName(event);"
                         oninput="NewPrefDialog.updateName(event);"/>
-                    <select class="pref-value" id="new-pref-type" onchange="NewPrefDialog.type = event.target.value;">
+                    <select id="new-pref-type" onchange="NewPrefDialog.type = event.target.value;">
                         <option value="boolean">&newPref.valueBoolean;</option>
                         <option value="string">&newPref.valueString;</option>
                         <option value="int">&newPref.valueInteger;</option>
@@ -59,7 +59,7 @@
                     <div class="pref-button toggle" onclick="NewPrefDialog.toggleBoolValue();">&newPref.toggleButton;</div>
                 </div>
 
-                <div class="pref-item-line">
+                <div class="pref-item-line" id="new-pref-line-input">
                     <input class="pref-value" id="new-pref-value-string" placeholder="&newPref.stringPlaceholder;"/>
                     <input class="pref-value" id="new-pref-value-int" placeholder="&newPref.numberPlaceholder;" type="number"/>
                 </div>
@@ -75,7 +75,7 @@
 
         <ul id="prefs-container"/>
 
-        <ul id="loading-container"><li></li></ul>
+        <div id="loading-container"></div>
 
     </div>
 
