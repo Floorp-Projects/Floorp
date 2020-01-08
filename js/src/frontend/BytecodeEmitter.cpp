@@ -4382,64 +4382,46 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
   return true;
 }
 
-bool ParseNode::getConstantValue(JSContext* cx, MutableHandleValue vp,
-                                 Value* compare, size_t ncompare) {
-  switch (getKind()) {
-    case ParseNodeKind::TemplateStringExpr:
-      vp.setString(as<NameNode>().atom());
-      return true;
-    case ParseNodeKind::RawUndefinedExpr:
-      vp.setUndefined();
-      return true;
-    case ParseNodeKind::CallSiteObj:
-    case ParseNodeKind::ArrayExpr: {
-      unsigned count;
-      ParseNode* pn;
+bool ParseNode::getConstantValue(JSContext* cx, MutableHandleValue vp) {
+  MOZ_ASSERT(isKind(ParseNodeKind::CallSiteObj) ||
+             isKind(ParseNodeKind::ArrayExpr));
+  unsigned count;
+  ParseNode* pn;
 
-      ObjectGroup::NewArrayKind arrayKind = ObjectGroup::NewArrayKind::Normal;
+  ObjectGroup::NewArrayKind arrayKind = ObjectGroup::NewArrayKind::Normal;
 
-      if (getKind() == ParseNodeKind::CallSiteObj) {
-        count = as<CallSiteNode>().count() - 1;
-        pn = as<CallSiteNode>().head()->pn_next;
-      } else {
-        MOZ_ASSERT(!as<ListNode>().hasNonConstInitializer());
-        count = as<ListNode>().count();
-        pn = as<ListNode>().head();
-      }
-
-      RootedValueVector values(cx);
-      if (!values.appendN(MagicValue(JS_ELEMENTS_HOLE), count)) {
-        return false;
-      }
-      size_t idx;
-      for (idx = 0; pn; idx++, pn = pn->pn_next) {
-        if (!pn->getConstantValue(cx, values[idx], values.begin(), idx)) {
-          return false;
-        }
-        if (values[idx].isMagic(JS_GENERIC_MAGIC)) {
-          vp.setMagic(JS_GENERIC_MAGIC);
-          return true;
-        }
-      }
-      MOZ_ASSERT(idx == count);
-
-      ArrayObject* obj = ObjectGroup::newArrayObject(
-          cx, values.begin(), values.length(), TenuredObject, arrayKind);
-      if (!obj) {
-        return false;
-      }
-
-      if (!CombineArrayElementTypes(cx, obj, compare, ncompare)) {
-        return false;
-      }
-
-      vp.setObject(*obj);
-      return true;
-    }
-    default:
-      MOZ_CRASH("Unexpected node");
+  if (getKind() == ParseNodeKind::CallSiteObj) {
+    count = as<CallSiteNode>().count() - 1;
+    pn = as<CallSiteNode>().head()->pn_next;
+  } else {
+    MOZ_ASSERT(!as<ListNode>().hasNonConstInitializer());
+    count = as<ListNode>().count();
+    pn = as<ListNode>().head();
   }
-  return false;
+
+  RootedValueVector values(cx);
+  if (!values.appendN(MagicValue(JS_ELEMENTS_HOLE), count)) {
+    return false;
+  }
+  size_t idx;
+  for (idx = 0; pn; idx++, pn = pn->pn_next) {
+    if (pn->isKind(ParseNodeKind::TemplateStringExpr)) {
+      values[idx].setString(pn->as<NameNode>().atom());
+    } else {
+      MOZ_ASSERT(pn->isKind(ParseNodeKind::RawUndefinedExpr));
+      values[idx].setUndefined();
+    }
+  }
+  MOZ_ASSERT(idx == count);
+
+  ArrayObject* obj = ObjectGroup::newArrayObject(
+      cx, values.begin(), values.length(), TenuredObject, arrayKind);
+  if (!obj) {
+    return false;
+  }
+
+  vp.setObject(*obj);
+  return true;
 }
 
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {

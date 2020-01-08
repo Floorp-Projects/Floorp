@@ -739,9 +739,7 @@ class ParseNode {
   // True iff this is a for-in/of loop variable declaration (var/let/const).
   inline bool isForLoopDeclaration() const;
 
-  MOZ_MUST_USE bool getConstantValue(JSContext* cx, MutableHandleValue vp,
-                                     Value* compare = nullptr,
-                                     size_t ncompare = 0);
+  MOZ_MUST_USE bool getConstantValue(JSContext* cx, MutableHandleValue vp);
   inline bool isConstant();
 
   template <class NodeType>
