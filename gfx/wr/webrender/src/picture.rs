@@ -2009,10 +2009,9 @@ impl TileCacheInstance {
             // If the clip has the same spatial node, the relative transform
             // will always be the same, so there's no need to depend on it.
             let clip_node = &data_stores.clip[clip_instance.handle];
-            if clip_node.item.spatial_node_index != self.spatial_node_index {
-                if !prim_info.spatial_nodes.contains(&clip_node.item.spatial_node_index) {
-                    prim_info.spatial_nodes.push(clip_node.item.spatial_node_index);
-                }
+            if clip_node.item.spatial_node_index != self.spatial_node_index
+                && !prim_info.spatial_nodes.contains(&clip_node.item.spatial_node_index) {
+                prim_info.spatial_nodes.push(clip_node.item.spatial_node_index);
             }
         }
 
@@ -2123,10 +2122,10 @@ impl TileCacheInstance {
 
                     // If a text run is on a child surface, the subpx mode will be
                     // correctly determined as we recurse through pictures in take_context.
-                    if on_picture_surface && subpx_requested {
-                        if !self.backdrop.rect.contains_rect(&pic_clip_rect) {
-                            self.subpixel_mode = SubpixelMode::Deny;
-                        }
+                    if on_picture_surface
+                        && subpx_requested
+                        && !self.backdrop.rect.contains_rect(&pic_clip_rect) {
+                        self.subpixel_mode = SubpixelMode::Deny;
                     }
                 }
             }
@@ -2175,13 +2174,13 @@ impl TileCacheInstance {
                 }
             };
 
-            if is_suitable_backdrop {
-                if !prim_clip_chain.needs_mask && pic_clip_rect.contains_rect(&self.backdrop.rect) {
-                    self.backdrop = BackdropInfo {
-                        rect: pic_clip_rect,
-                        kind: backdrop_candidate,
-                    }
-                }
+            if is_suitable_backdrop
+                && !prim_clip_chain.needs_mask
+                && pic_clip_rect.contains_rect(&self.backdrop.rect) {
+                self.backdrop = BackdropInfo {
+                    rect: pic_clip_rect,
+                    kind: backdrop_candidate,
+                };
             }
         }
 
@@ -4405,13 +4404,11 @@ impl PicturePrimitive {
             debug_assert_eq!(surface_index, raster_config.surface_index);
 
             // Check if any of the surfaces can't be rasterized in local space but want to.
-            if raster_config.establishes_raster_root {
-                if surface_rect.size.width > MAX_SURFACE_SIZE ||
-                    surface_rect.size.height > MAX_SURFACE_SIZE
-                {
-                    raster_config.establishes_raster_root = false;
-                    state.are_raster_roots_assigned = false;
-                }
+            if raster_config.establishes_raster_root
+                && (surface_rect.size.width > MAX_SURFACE_SIZE
+                    || surface_rect.size.height > MAX_SURFACE_SIZE) {
+                raster_config.establishes_raster_root = false;
+                state.are_raster_roots_assigned = false;
             }
 
             // Set the estimated and precise local rects. The precise local rect
