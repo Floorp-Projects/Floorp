@@ -241,6 +241,25 @@ MOZ_MUST_USE bool OriginalPromiseThen(JSContext* cx, HandleObject promiseObj,
                                       CreateDependentPromise createDependent);
 
 /**
+ * React to[0] `unwrappedPromise` (which may not be from the current realm)
+ * using the provided fulfill/reject functions, as though by calling the
+ * original value of `Promise.prototype.then`.
+ *
+ * However, no dependent Promise will be created, and mucking with `Promise` and
+ * `Promise[Symbol.species]` will not alter this function's behavior.
+ *
+ * Note: Reactions pushed using this function contain a null `promise` field.
+ * That field is only ever used by devtools, which have to treat these reactions
+ * specially.
+ *
+ * 0. The sense of "react" here is the sense of the term as defined by Web IDL:
+ *    https://heycam.github.io/webidl/#dfn-perform-steps-once-promise-is-settled
+ */
+extern MOZ_MUST_USE bool ReactIgnoringUnhandledRejection(
+    JSContext* cx, Handle<PromiseObject*> unwrappedPromise,
+    HandleObject onFulfilled_, HandleObject onRejected_);
+
+/**
  * PromiseResolve ( C, x )
  *
  * The abstract operation PromiseResolve, given a constructor and a value,
