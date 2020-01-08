@@ -10,17 +10,6 @@ const PREF = "security.aboutcertificate.enabled";
 const TEST_CERT_BASE64 =
   "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";
 
-function checkAndClickButton(document, id) {
-  let button = document.getElementById(id);
-  Assert.ok(button, `${id} button found`);
-  Assert.equal(
-    button.hasAttribute("disabled"),
-    false,
-    "button should be clickable"
-  );
-  button.click();
-}
-
 function checkSpec(spec) {
   Assert.ok(
     spec.startsWith("about:certificate"),
@@ -92,60 +81,6 @@ add_task(async function openFromPopUp() {
   win.document.getElementById("download_cert").cancelDialog();
   await BrowserTestUtils.windowClosed(win);
 });
-
-function injectErrorPageFrame(tab, src) {
-  return SpecialPowers.spawn(
-    tab.linkedBrowser,
-    [{ frameSrc: src }],
-    async function({ frameSrc }) {
-      let loaded = ContentTaskUtils.waitForEvent(
-        content.wrappedJSObject,
-        "DOMFrameContentLoaded"
-      );
-      let iframe = content.document.createElement("iframe");
-      iframe.src = frameSrc;
-      content.document.body.appendChild(iframe);
-      await loaded;
-      // We will have race conditions when accessing the frame content after setting a src,
-      // so we can't wait for AboutNetErrorLoad. Let's wait for the certerror class to
-      // appear instead (which should happen at the same time as AboutNetErrorLoad).
-      await ContentTaskUtils.waitForCondition(() =>
-        iframe.contentDocument.body.classList.contains("certerror")
-      );
-    }
-  );
-}
-
-async function openErrorPage(useFrame) {
-  let src = "https://expired.example.com/";
-  let dummyPage =
-    getRootDirectory(gTestPath).replace(
-      "chrome://mochitests/content",
-      "https://example.com"
-    ) + "dummy_page.html";
-
-  let tab;
-  if (useFrame) {
-    info("Loading cert error page in an iframe");
-    tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, dummyPage);
-    await injectErrorPageFrame(tab, src);
-  } else {
-    let certErrorLoaded;
-    tab = await BrowserTestUtils.openNewForegroundTab(
-      gBrowser,
-      () => {
-        gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, src);
-        let browser = gBrowser.selectedBrowser;
-        certErrorLoaded = BrowserTestUtils.waitForErrorPage(browser);
-      },
-      false
-    );
-    info("Loading and waiting for the cert error");
-    await certErrorLoaded;
-  }
-
-  return tab;
-}
 
 add_task(async function testBadCert() {
   info("Testing bad cert");
@@ -262,63 +197,6 @@ add_task(async function testGoodCert() {
 
   gBrowser.removeCurrentTab(); // closes about:certificate
 });
-
-// Extracted from https://searchfox.org/mozilla-central/rev/40ef22080910c2e2c27d9e2120642376b1d8b8b2/browser/components/preferences/in-content/tests/head.js#8
-function is_element_visible(aElement, aMsg) {
-  isnot(aElement, null, "Element should not be null, when checking visibility");
-  Assert.ok(!BrowserTestUtils.is_hidden(aElement), aMsg);
-}
-
-// Extracted from https://searchfox.org/mozilla-central/rev/40ef22080910c2e2c27d9e2120642376b1d8b8b2/browser/components/preferences/in-content/tests/head.js#41
-function promiseLoadSubDialog(aURL) {
-  return new Promise((resolve, reject) => {
-    content.gSubDialog._dialogStack.addEventListener(
-      "dialogopen",
-      function dialogopen(aEvent) {
-        if (
-          aEvent.detail.dialog._frame.contentWindow.location == "about:blank"
-        ) {
-          return;
-        }
-        content.gSubDialog._dialogStack.removeEventListener(
-          "dialogopen",
-          dialogopen
-        );
-
-        Assert.equal(
-          aEvent.detail.dialog._frame.contentWindow.location.toString(),
-          aURL,
-          "Check the proper URL is loaded"
-        );
-
-        // Check visibility
-        is_element_visible(aEvent.detail.dialog._overlay, "Overlay is visible");
-
-        // Check that stylesheets were injected
-        let expectedStyleSheetURLs = aEvent.detail.dialog._injectedStyleSheets.slice(
-          0
-        );
-        for (let styleSheet of aEvent.detail.dialog._frame.contentDocument
-          .styleSheets) {
-          let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
-          if (i >= 0) {
-            info("found " + styleSheet.href);
-            expectedStyleSheetURLs.splice(i, 1);
-          }
-        }
-        Assert.equal(
-          expectedStyleSheetURLs.length,
-          0,
-          "All expectedStyleSheetURLs should have been found"
-        );
-
-        // Wait for the next event tick to make sure the remaining part of the
-        // testcase runs after the dialog gets ready for input.
-        executeSoon(() => resolve(aEvent.detail.dialog._frame.contentWindow));
-      }
-    );
-  });
-}
 
 add_task(async function testPreferencesCert() {
   info("Testing preferences cert");
