@@ -174,8 +174,7 @@ static bool XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp) {
  *
  * 1) 'foo' really is an XPConnect wrapper around a JSObject.
  * 3) The caller must be system JS and not content. Double-wrapped XPCWJS should
- *    not be exposed to content except with enablePrivilege or a remote-XUL
- *    domain.
+ *    not be exposed to content except with a remote-XUL domain.
  *
  * Notes:
  *

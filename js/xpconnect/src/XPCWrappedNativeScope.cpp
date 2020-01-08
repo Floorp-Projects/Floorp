@@ -117,13 +117,6 @@ bool XPCWrappedNativeScope::GetComponentsJSObject(JSContext* cx,
   return true;
 }
 
-void XPCWrappedNativeScope::ForcePrivilegedComponents() {
-  nsCOMPtr<nsIXPCComponents> c = do_QueryInterface(mComponents);
-  if (!c) {
-    mComponents = new nsXPCComponents(this);
-  }
-}
-
 static bool DefineSubcomponentProperty(JSContext* aCx, HandleObject aGlobal,
                                        nsISupports* aSubcomponent,
                                        const nsID* aIID,
@@ -148,14 +141,8 @@ bool XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx) {
 
   RootedObject global(aCx, CurrentGlobalOrNull(aCx));
 
-  // The global Components property is non-configurable if it's a full
-  // nsXPCComponents object. That way, if it's an nsXPCComponentsBase,
-  // enableUniversalXPConnect can upgrade it later.
-  unsigned attrs = JSPROP_READONLY | JSPROP_RESOLVING;
+  const unsigned attrs = JSPROP_READONLY | JSPROP_RESOLVING | JSPROP_PERMANENT;
   nsCOMPtr<nsIXPCComponents> c = do_QueryInterface(mComponents);
-  if (c) {
-    attrs |= JSPROP_PERMANENT;
-  }
 
   RootedId id(aCx,
               XPCJSContext::Get()->GetStringID(XPCJSContext::IDX_COMPONENTS));

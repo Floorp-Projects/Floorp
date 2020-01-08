@@ -359,7 +359,7 @@ class EventDispatcher {
    * Dispatches an event.
    * If aDOMEvent is not nullptr, it is used for dispatching
    * (aEvent can then be nullptr) and (if aDOMEvent is not |trusted| already),
-   * the |trusted| flag is set based on the UniversalXPConnect capability.
+   * the |trusted| flag is set if the caller uses the system principal.
    * Otherwise this works like EventDispatcher::Dispatch.
    * @note Use this method when dispatching a dom::Event.
    */

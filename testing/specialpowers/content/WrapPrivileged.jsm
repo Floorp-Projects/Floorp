@@ -5,8 +5,7 @@
 
 /**
  * This module handles wrapping privileged objects so that they can be exposed
- * to unprivileged contexts without involving UniversalXPConnect. It is only
- * to be used in automated tests.
+ * to unprivileged contexts. It is only to be used in automated tests.
  *
  * Its exact semantics are also liable to change at any time, so any callers
  * relying on undocumented behavior or subtle platform features should expect

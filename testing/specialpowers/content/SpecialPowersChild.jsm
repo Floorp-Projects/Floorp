@@ -1,8 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* This code is loaded in every child process that is started by mochitest in
- * order to be used as a replacement for UniversalXPConnect
+/* This code is loaded in every child process that is started by mochitest.
  */
 
 "use strict";

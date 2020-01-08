@@ -825,10 +825,6 @@ class XPCWrappedNativeScope final
 
   nsXPCComponentsBase* GetComponents() const { return mComponents; }
 
-  // Forces the creation of a privileged |Components| object, even in
-  // content scopes. This will crash if used outside of automation.
-  void ForcePrivilegedComponents();
-
   bool AttachComponentsObject(JSContext* aCx);
 
   // Returns the JS object reflection of the Components object.
@@ -2640,8 +2636,7 @@ class CompartmentPrivate {
 
     // Don't share if we have any weird state set.
     return !wantXrays && !isWebExtensionContentScript &&
-           !isUAWidgetCompartment && !universalXPConnectEnabled &&
-           mScope->XBLScopeStateMatches(principal);
+           !isUAWidgetCompartment && mScope->XBLScopeStateMatches(principal);
   }
 
   CompartmentOriginInfo originInfo;
@@ -2673,14 +2668,6 @@ class CompartmentPrivate {
 
   // See CompartmentHasExclusiveExpandos.
   bool hasExclusiveExpandos;
-
-  // This is only ever set during mochitest runs when enablePrivilege is called.
-  // It's intended as a temporary stopgap measure until we can finish ripping
-  // out enablePrivilege. Once set, this value is never unset (i.e., it doesn't
-  // follow the old scoping rules of enablePrivilege).
-  //
-  // Using it in production is inherently unsafe.
-  bool universalXPConnectEnabled;
 
   // Whether SystemIsBeingShutDown has been called on this compartment.
   bool wasShutdown;
@@ -2717,10 +2704,6 @@ class CompartmentPrivate {
   // Our XPCWrappedNativeScope.
   mozilla::UniquePtr<XPCWrappedNativeScope> mScope;
 };
-
-bool IsUniversalXPConnectEnabled(JS::Compartment* compartment);
-bool IsUniversalXPConnectEnabled(JSContext* cx);
-bool EnableUniversalXPConnect(JSContext* cx);
 
 inline void CrashIfNotInAutomation() { MOZ_RELEASE_ASSERT(IsInAutomation()); }
 

@@ -200,7 +200,6 @@ CompartmentPrivate::CompartmentPrivate(
       allowCPOWs(false),
       isUAWidgetCompartment(false),
       hasExclusiveExpandos(false),
-      universalXPConnectEnabled(false),
       wasShutdown(false),
       mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_LENGTH)),
       mScope(std::move(scope)) {
@@ -525,57 +524,6 @@ bool MightBeWebContentCompartment(JS::Compartment* compartment) {
 
   // No CompartmentPrivate; try IsSystemCompartment.
   return !js::IsSystemCompartment(compartment);
-}
-
-bool IsUniversalXPConnectEnabled(JS::Compartment* compartment) {
-  CompartmentPrivate* priv = CompartmentPrivate::Get(compartment);
-  if (!priv) {
-    return false;
-  }
-  return priv->universalXPConnectEnabled;
-}
-
-bool IsUniversalXPConnectEnabled(JSContext* cx) {
-  JS::Compartment* compartment = js::GetContextCompartment(cx);
-  if (!compartment) {
-    return false;
-  }
-  return IsUniversalXPConnectEnabled(compartment);
-}
-
-bool EnableUniversalXPConnect(JSContext* cx) {
-  JS::Compartment* compartment = js::GetContextCompartment(cx);
-  if (!compartment) {
-    return true;
-  }
-  // Never set universalXPConnectEnabled on a chrome compartment - it confuses
-  // the security wrapping code.
-  if (AccessCheck::isChrome(compartment)) {
-    return true;
-  }
-  CompartmentPrivate* priv = CompartmentPrivate::Get(compartment);
-  if (!priv) {
-    return true;
-  }
-  if (priv->universalXPConnectEnabled) {
-    return true;
-  }
-  priv->universalXPConnectEnabled = true;
-
-  // Recompute all the cross-compartment wrappers leaving the newly-privileged
-  // compartment.
-  bool ok = js::RecomputeWrappers(cx, js::SingleCompartment(compartment),
-                                  js::AllCompartments());
-  NS_ENSURE_TRUE(ok, false);
-
-  // The Components object normally isn't defined for unprivileged web content,
-  // but we define it when UniversalXPConnect is enabled to support legacy
-  // tests.
-  Compartment* comp = js::GetContextCompartment(cx);
-  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(comp)->GetScope();
-  MOZ_ASSERT(scope);
-  scope->ForcePrivilegedComponents();
-  return scope->AttachComponentsObject(cx);
 }
 
 bool CompartmentOriginInfo::IsSameOrigin(nsIPrincipal* aOther) const {
