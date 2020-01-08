@@ -19,7 +19,8 @@ namespace nss_test {
 
 // This class tracks the maximum size of record that was sent, both cleartext
 // and plain.  It only tracks records that have an outer type of
-// application_data.  In TLS 1.3, this includes handshake messages.
+// application_data or DTLSCiphertext.  In TLS 1.3, this includes handshake
+// messages.
 class TlsRecordMaximum : public TlsRecordFilter {
  public:
   TlsRecordMaximum(const std::shared_ptr<TlsAgent>& a)
@@ -34,7 +35,7 @@ class TlsRecordMaximum : public TlsRecordFilter {
                                     DataBuffer* output) override {
     std::cerr << "max: " << record << std::endl;
     // Ignore unprotected packets.
-    if (header.content_type() != ssl_ct_application_data) {
+    if (!header.is_protected()) {
       return KEEP;
     }
 
@@ -195,9 +196,23 @@ class TlsRecordExpander : public TlsRecordFilter {
   virtual PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                             const DataBuffer& data,
                                             DataBuffer* changed) {
-    if (header.content_type() != ssl_ct_application_data) {
-      return KEEP;
+    if (!header.is_protected()) {
+      // We're targeting application_data records. If the record is
+      // |!is_protected()|, we have two possibilities:
+      if (!decrypting()) {
+        //  1) We're not decrypting, in which this case this is truly an
+        //  unencrypted record (Keep).
+        return KEEP;
+      }
+      if (header.content_type() != ssl_ct_application_data) {
+        //  2) We are decrypting, so is_protected() read the internal
+        //  content_type. If the internal ct IS NOT application_data, then
+        //  it's not our target (Keep).
+        return KEEP;
+      }
+      // Otherwise, the the internal ct IS application_data (Change).
     }
+
     changed->Allocate(data.len() + expansion_);
     changed->Write(0, data.data(), data.len());
     return CHANGE;
@@ -261,30 +276,31 @@ class TlsRecordPadder : public TlsRecordFilter {
   PacketFilter::Action FilterRecord(const TlsRecordHeader& header,
                                     const DataBuffer& record, size_t* offset,
                                     DataBuffer* output) override {
-    if (header.content_type() != ssl_ct_application_data) {
+    if (!header.is_protected()) {
       return KEEP;
     }
 
     uint16_t protection_epoch;
     uint8_t inner_content_type;
     DataBuffer plaintext;
+    TlsRecordHeader out_header;
     if (!Unprotect(header, record, &protection_epoch, &inner_content_type,
-                   &plaintext)) {
+                   &plaintext, &out_header)) {
       return KEEP;
     }
 
-    if (inner_content_type != ssl_ct_application_data) {
+    if (decrypting() && inner_content_type != ssl_ct_application_data) {
       return KEEP;
     }
 
     DataBuffer ciphertext;
-    bool ok = Protect(spec(protection_epoch), header, inner_content_type,
-                      plaintext, &ciphertext, padding_);
+    bool ok = Protect(spec(protection_epoch), out_header, inner_content_type,
+                      plaintext, &ciphertext, &out_header, padding_);
     EXPECT_TRUE(ok);
     if (!ok) {
       return KEEP;
     }
-    *offset = header.Write(output, *offset, ciphertext);
+    *offset = out_header.Write(output, *offset, ciphertext);
     return CHANGE;
   }
 

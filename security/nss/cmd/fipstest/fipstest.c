@@ -8231,6 +8231,527 @@ loser:
         fclose(ikereq);
 }
 
+void
+kbkdf(char *path)
+{
+    /* == Parser data == */
+    char buf[610]; /* holds one line from the input REQUEST file. Needs to
+                    * be large enough to hold the longest line:
+                    * "KO = <600 hex digits>\n". */
+    CK_ULONG L;
+    unsigned char KI[64];
+    unsigned int KI_len = 64;
+    unsigned char KO[300];
+    unsigned int KO_len = 300;
+    /* This is used only with feedback mode. */
+    unsigned char IV[64];
+    unsigned int IV_len = 64;
+    /* These are only used in counter mode with counter location as
+     * MIDDLE_FIXED. */
+    unsigned char BeforeFixedInputData[50];
+    unsigned int BeforeFixedInputData_len = 50;
+    unsigned char AfterFixedInputData[10];
+    unsigned int AfterFixedInputData_len = 10;
+    /* These are used with every KDF type. */
+    unsigned char FixedInputData[60];
+    unsigned int FixedInputData_len = 60;
+
+    /* Counter locations:
+     *
+     * 0: not used
+     * 1: beginning
+     * 2: middle
+     * 3: end */
+    int ctr_location = 0;
+    CK_ULONG counter_bitlen = 0;
+
+    size_t buf_offset;
+    size_t offset;
+
+    FILE *kbkdf_req = NULL;
+    FILE *kbkdf_resp = NULL;
+
+    /* == PKCS#11 data == */
+    CK_RV crv;
+
+    CK_SLOT_ID slotList[10];
+    CK_SLOT_ID slotID;
+    CK_ULONG slotListCount = sizeof(slotList) / sizeof(slotList[0]);
+    CK_ULONG slotCount = 0;
+
+    CK_MECHANISM kdf = { 0 };
+
+    CK_MECHANISM_TYPE prf_mech = 0;
+    CK_BBOOL ck_true = CK_TRUE;
+
+    /* We never need more than 3 data parameters. */
+    CK_PRF_DATA_PARAM dataParams[3];
+    CK_ULONG dataParams_len = 3;
+
+    CK_SP800_108_COUNTER_FORMAT iterator = { CK_FALSE, 0 };
+
+    CK_SP800_108_KDF_PARAMS kdfParams = { 0 };
+    CK_SP800_108_FEEDBACK_KDF_PARAMS feedbackParams = { 0 };
+
+    CK_OBJECT_CLASS ck_secret_key = CKO_SECRET_KEY;
+    CK_KEY_TYPE ck_generic = CKK_GENERIC_SECRET;
+
+    CK_ATTRIBUTE prf_template[] = {
+        { CKA_VALUE, &KI, sizeof(KI) },
+        { CKA_CLASS, &ck_secret_key, sizeof(ck_secret_key) },
+        { CKA_KEY_TYPE, &ck_generic, sizeof(ck_generic) },
+        { CKA_DERIVE, &ck_true, sizeof(ck_true) }
+    };
+    CK_ULONG prf_template_count = sizeof(prf_template) / sizeof(prf_template[0]);
+
+    CK_ATTRIBUTE derive_template[] = {
+        { CKA_CLASS, &ck_secret_key, sizeof(ck_secret_key) },
+        { CKA_KEY_TYPE, &ck_generic, sizeof(ck_generic) },
+        { CKA_DERIVE, &ck_true, sizeof(ck_true) },
+        { CKA_VALUE_LEN, &L, sizeof(L) }
+    };
+    CK_ULONG derive_template_count = sizeof(derive_template) / sizeof(derive_template[0]);
+
+    CK_ATTRIBUTE output_key = { CKA_VALUE, KO, KO_len };
+
+    const CK_C_INITIALIZE_ARGS pk11args = {
+        NULL, NULL, NULL, NULL, CKF_LIBRARY_CANT_CREATE_OS_THREADS,
+        (void *)"flags=readOnly,noCertDB,noModDB", NULL
+    };
+
+    /* == Start up PKCS#11 == */
+    crv = NSC_Initialize((CK_VOID_PTR)&pk11args);
+    if (crv != CKR_OK) {
+        fprintf(stderr, "NSC_Initialize failed crv=0x%x\n", (unsigned int)crv);
+        goto done;
+    }
+
+    slotCount = slotListCount;
+    crv = NSC_GetSlotList(PR_TRUE, slotList, &slotCount);
+    if (crv != CKR_OK) {
+        fprintf(stderr, "NSC_GetSlotList failed crv=0x%x\n", (unsigned int)crv);
+        goto done;
+    }
+    if ((slotCount > slotListCount) || slotCount < 1) {
+        fprintf(stderr,
+                "NSC_GetSlotList returned too many or too few slots: %d slots max=%d min=1\n",
+                (int)slotCount, (int)slotListCount);
+        goto done;
+    }
+    slotID = slotList[0];
+
+    /* == Start parsing the file == */
+    kbkdf_req = fopen(path, "r");
+    kbkdf_resp = stdout;
+
+    while (fgets(buf, sizeof buf, kbkdf_req) != NULL) {
+        /* If we have a comment, check if it tells us the type of KDF to use.
+         * This differs per-file, so we have to parse it. */
+        if (buf[0] == '#' || buf[0] == '\n' || buf[0] == '\r') {
+            if (strncmp(buf, "# KDF Mode Supported: Counter Mode", 34) == 0) {
+                kdf.mechanism = CKM_SP800_108_COUNTER_KDF;
+            }
+            if (strncmp(buf, "# KDF Mode Supported: Feedback Mode", 35) == 0) {
+                kdf.mechanism = CKM_SP800_108_FEEDBACK_KDF;
+            }
+            if (strncmp(buf, "# KDF Mode Supported: DblPipeline Mode", 38) == 0) {
+                kdf.mechanism = CKM_SP800_108_DOUBLE_PIPELINE_KDF;
+            }
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+
+        /* [....] - context directive */
+        if (buf[0] == '[') {
+            /* PRF begins each new section. */
+            if (strncmp(buf, "[PRF=CMAC_AES128]", 17) == 0) {
+                prf_mech = CKM_AES_CMAC;
+            } else if (strncmp(buf, "[PRF=CMAC_AES192]", 17) == 0) {
+                prf_mech = CKM_AES_CMAC;
+            } else if (strncmp(buf, "[PRF=CMAC_AES256]", 17) == 0) {
+                prf_mech = CKM_AES_CMAC;
+            } else if (strncmp(buf, "[PRF=HMAC_SHA1]", 15) == 0) {
+                prf_mech = CKM_SHA_1_HMAC;
+            } else if (strncmp(buf, "[PRF=HMAC_SHA224]", 17) == 0) {
+                prf_mech = CKM_SHA224_HMAC;
+            } else if (strncmp(buf, "[PRF=HMAC_SHA256]", 17) == 0) {
+                prf_mech = CKM_SHA256_HMAC;
+            } else if (strncmp(buf, "[PRF=HMAC_SHA384]", 17) == 0) {
+                prf_mech = CKM_SHA384_HMAC;
+            } else if (strncmp(buf, "[PRF=HMAC_SHA512]", 17) == 0) {
+                prf_mech = CKM_SHA512_HMAC;
+            } else if (strncmp(buf, "[PRF=", 5) == 0) {
+                fprintf(stderr, "Invalid or unsupported PRF mechanism: %s\n", buf);
+                goto done;
+            }
+
+            /* Then comes counter, if present. */
+            if (strncmp(buf, "[CTRLOCATION=BEFORE_FIXED]", 26) == 0 ||
+                strncmp(buf, "[CTRLOCATION=BEFORE_ITER]", 24) == 0) {
+                ctr_location = 1;
+            }
+            if (strncmp(buf, "[CTRLOCATION=MIDDLE_FIXED]", 26) == 0 ||
+                strncmp(buf, "[CTRLOCATION=AFTER_ITER]", 24) == 0) {
+                ctr_location = 2;
+            }
+            if (strncmp(buf, "[CTRLOCATION=AFTER_FIXED]", 25) == 0) {
+                ctr_location = 3;
+            }
+
+            /* If counter is present, then we need to know its size. */
+            if (strncmp(buf, "[RLEN=", 6) == 0) {
+                if (sscanf(buf, "[RLEN=%lu_BITS]", &counter_bitlen) != 1) {
+                    goto done;
+                }
+            }
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+
+        /* Each test contains a counter, an output length L, an input key KI,
+         * maybe an initialization vector IV, one of a couple of fixed data
+         * buffers, and finally the output key KO. */
+
+        /* First comes COUNT. */
+        if (strncmp(buf, "COUNT=", 6) == 0) {
+            /* Clear all out data fields on each test. */
+            memset(KI, 0, KI_len);
+            memset(KO, 0, KO_len);
+            memset(IV, 0, IV_len);
+            memset(BeforeFixedInputData, 0, BeforeFixedInputData_len);
+            memset(AfterFixedInputData, 0, AfterFixedInputData_len);
+            memset(FixedInputData, 0, FixedInputData_len);
+
+            /* Then reset lengths. */
+            KI_len = 0;
+            KO_len = 0;
+            IV_len = 0;
+            BeforeFixedInputData_len = 0;
+            AfterFixedInputData_len = 0;
+            FixedInputData_len = 0;
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+
+        /* Then comes L. */
+        if (strncmp(buf, "L = ", 4) == 0) {
+            if (sscanf(buf, "L = %lu", &L) != 1) {
+                goto done;
+            }
+
+            if ((L % 8) != 0) {
+                fprintf(stderr, "Assumption that L was length in bits incorrect: %lu - %s", L, buf);
+                fprintf(stderr, "Note that NSS only supports byte-aligned outputs and not bit-aligned outputs.\n");
+                goto done;
+            }
+
+            L = L / 8;
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+
+        /* Then comes KI. */
+        if (strncmp(buf, "KI = ", 5) == 0) {
+            buf_offset = 5;
+            offset = 0;
+
+            /* KI's length depends on the key size of the underlying PRF, but
+             * we can't detect that as the conversion to PKCS#11 mechanisms is
+             * lossy (namely, CMAC_AES{128,192,256} all map to CKM_AES_CMAC).
+             */
+            while (buf[buf_offset] != '\0') {
+                hex_to_byteval(buf + buf_offset, KI + offset);
+                offset += 1;
+                buf_offset += 2;
+            }
+            KI_len = offset - 1;
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+
+        /* Then comes IVlen and IV, if present. */
+        if (strncmp(buf, "IVlen = ", 8) == 0) {
+            if (sscanf(buf, "IVlen = %u", &IV_len) != 1) {
+                goto done;
+            }
+
+            if ((IV_len % 8) != 0) {
+                fprintf(stderr, "Assumption that IV_len was length in bits incorrect: %u - %s", IV_len, buf);
+                fprintf(stderr, "Note that NSS only supports byte-aligned inputs and not bit-aligned inputs.\n");
+                goto done;
+            }
+
+            /* Need the IV length in bytes, not bits. */
+            IV_len = IV_len / 8;
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+        if (strncmp(buf, "IV = ", 5) == 0) {
+            buf_offset = 5;
+
+            for (offset = 0; offset < IV_len; offset++, buf_offset += 2) {
+                hex_to_byteval(buf + buf_offset, IV + offset);
+            }
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+
+        /* We might have DataBeforeCtr and DataAfterCtr if present. */
+        if (strncmp(buf, "DataBeforeCtrLen = ", 19) == 0) {
+            if (sscanf(buf, "DataBeforeCtrLen = %u", &BeforeFixedInputData_len) != 1) {
+                goto done;
+            }
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+        if (strncmp(buf, "DataBeforeCtrData = ", 20) == 0) {
+            buf_offset = 20;
+
+            for (offset = 0; offset < BeforeFixedInputData_len; offset++, buf_offset += 2) {
+                hex_to_byteval(buf + buf_offset, BeforeFixedInputData + offset);
+            }
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+        if (strncmp(buf, "DataAfterCtrLen = ", 18) == 0) {
+            if (sscanf(buf, "DataAfterCtrLen = %u", &AfterFixedInputData_len) != 1) {
+                goto done;
+            }
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+        if (strncmp(buf, "DataAfterCtrData = ", 19) == 0) {
+            buf_offset = 19;
+
+            for (offset = 0; offset < AfterFixedInputData_len; offset++, buf_offset += 2) {
+                hex_to_byteval(buf + buf_offset, AfterFixedInputData + offset);
+            }
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+
+        /* Otherwise, we might have FixedInputData, if present. */
+        if (strncmp(buf, "FixedInputDataByteLen = ", 24) == 0) {
+            if (sscanf(buf, "FixedInputDataByteLen = %u", &FixedInputData_len) != 1) {
+                goto done;
+            }
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+        if (strncmp(buf, "FixedInputData = ", 17) == 0) {
+            buf_offset = 17;
+
+            for (offset = 0; offset < FixedInputData_len; offset++, buf_offset += 2) {
+                hex_to_byteval(buf + buf_offset, FixedInputData + offset);
+            }
+
+            fputs(buf, kbkdf_resp);
+            continue;
+        }
+
+        /* Finally, run the KBKDF calculation when KO is passed. */
+        if (strncmp(buf, "KO = ", 5) == 0) {
+            CK_SESSION_HANDLE session;
+            CK_OBJECT_HANDLE prf_key;
+            CK_OBJECT_HANDLE derived_key;
+
+            /* Open the session. */
+            crv = NSC_OpenSession(slotID, 0, NULL, NULL, &session);
+            if (crv != CKR_OK) {
+                fprintf(stderr, "NSC_OpenSession failed crv=0x%x\n", (unsigned int)crv);
+                goto done;
+            }
+
+            /* Create the PRF key object. */
+            prf_template[0].ulValueLen = KI_len;
+            crv = NSC_CreateObject(session, prf_template, prf_template_count, &prf_key);
+            if (crv != CKR_OK) {
+                fprintf(stderr, "NSC_CreateObject (prf_key) failed crv=0x%x\n", (unsigned int)crv);
+                goto done;
+            }
+
+            /* Set up the KDF parameters. */
+            if (kdf.mechanism == CKM_SP800_108_COUNTER_KDF) {
+                /* Counter operates in one of three ways: counter before fixed
+                 * input data, counter between fixed input data, and counter
+                 * after fixed input data. In all cases, we have an iterator.
+                 */
+                iterator.ulWidthInBits = counter_bitlen;
+
+                if (ctr_location == 0 || ctr_location > 3) {
+                    fprintf(stderr, "Expected ctr_location != 0 for Counter Mode KDF but got 0.\n");
+                    goto done;
+                } else if (ctr_location == 1) {
+                    /* Counter before */
+                    dataParams[0].type = CK_SP800_108_ITERATION_VARIABLE;
+                    dataParams[0].pValue = &iterator;
+                    dataParams[0].ulValueLen = sizeof(iterator);
+
+                    dataParams[1].type = CK_SP800_108_BYTE_ARRAY;
+                    dataParams[1].pValue = FixedInputData;
+                    dataParams[1].ulValueLen = FixedInputData_len;
+
+                    dataParams_len = 2;
+                } else if (ctr_location == 2) {
+                    /* Counter between */
+                    dataParams[0].type = CK_SP800_108_BYTE_ARRAY;
+                    dataParams[0].pValue = BeforeFixedInputData;
+                    dataParams[0].ulValueLen = BeforeFixedInputData_len;
+
+                    dataParams[1].type = CK_SP800_108_ITERATION_VARIABLE;
+                    dataParams[1].pValue = &iterator;
+                    dataParams[1].ulValueLen = sizeof(iterator);
+
+                    dataParams[2].type = CK_SP800_108_BYTE_ARRAY;
+                    dataParams[2].pValue = AfterFixedInputData;
+                    dataParams[2].ulValueLen = AfterFixedInputData_len;
+
+                    dataParams_len = 3;
+                } else {
+                    /* Counter after */
+                    dataParams[0].type = CK_SP800_108_BYTE_ARRAY;
+                    dataParams[0].pValue = FixedInputData;
+                    dataParams[0].ulValueLen = FixedInputData_len;
+
+                    dataParams[1].type = CK_SP800_108_ITERATION_VARIABLE;
+                    dataParams[1].pValue = &iterator;
+                    dataParams[1].ulValueLen = sizeof(iterator);
+
+                    dataParams_len = 2;
+                }
+            } else if (kdf.mechanism == CKM_SP800_108_FEEDBACK_KDF || kdf.mechanism == CKM_SP800_108_DOUBLE_PIPELINE_KDF) {
+                /* When counter_bitlen != 0, we have an optional counter. */
+                if (counter_bitlen != 0) {
+                    iterator.ulWidthInBits = counter_bitlen;
+
+                    if (ctr_location == 0 || ctr_location > 3) {
+                        fprintf(stderr, "Expected ctr_location != 0 for Counter Mode KDF but got 0.\n");
+                        goto done;
+                    } else if (ctr_location == 1) {
+                        /* Counter before */
+                        dataParams[0].type = CK_SP800_108_OPTIONAL_COUNTER;
+                        dataParams[0].pValue = &iterator;
+                        dataParams[0].ulValueLen = sizeof(iterator);
+
+                        dataParams[1].type = CK_SP800_108_ITERATION_VARIABLE;
+                        dataParams[1].pValue = NULL;
+                        dataParams[1].ulValueLen = 0;
+
+                        dataParams[2].type = CK_SP800_108_BYTE_ARRAY;
+                        dataParams[2].pValue = FixedInputData;
+                        dataParams[2].ulValueLen = FixedInputData_len;
+
+                        dataParams_len = 3;
+                    } else if (ctr_location == 2) {
+                        /* Counter between */
+                        dataParams[0].type = CK_SP800_108_ITERATION_VARIABLE;
+                        dataParams[0].pValue = NULL;
+                        dataParams[0].ulValueLen = 0;
+
+                        dataParams[1].type = CK_SP800_108_OPTIONAL_COUNTER;
+                        dataParams[1].pValue = &iterator;
+                        dataParams[1].ulValueLen = sizeof(iterator);
+
+                        dataParams[2].type = CK_SP800_108_BYTE_ARRAY;
+                        dataParams[2].pValue = FixedInputData;
+                        dataParams[2].ulValueLen = FixedInputData_len;
+
+                        dataParams_len = 3;
+                    } else {
+                        /* Counter after */
+                        dataParams[0].type = CK_SP800_108_ITERATION_VARIABLE;
+                        dataParams[0].pValue = NULL;
+                        dataParams[0].ulValueLen = 0;
+
+                        dataParams[1].type = CK_SP800_108_BYTE_ARRAY;
+                        dataParams[1].pValue = FixedInputData;
+                        dataParams[1].ulValueLen = FixedInputData_len;
+
+                        dataParams[2].type = CK_SP800_108_OPTIONAL_COUNTER;
+                        dataParams[2].pValue = &iterator;
+                        dataParams[2].ulValueLen = sizeof(iterator);
+
+                        dataParams_len = 3;
+                    }
+                } else {
+                    dataParams[0].type = CK_SP800_108_ITERATION_VARIABLE;
+                    dataParams[0].pValue = NULL;
+                    dataParams[0].ulValueLen = 0;
+
+                    dataParams[1].type = CK_SP800_108_BYTE_ARRAY;
+                    dataParams[1].pValue = FixedInputData;
+                    dataParams[1].ulValueLen = FixedInputData_len;
+
+                    dataParams_len = 2;
+                }
+            }
+
+            if (kdf.mechanism != CKM_SP800_108_FEEDBACK_KDF) {
+                kdfParams.prfType = prf_mech;
+                kdfParams.ulNumberOfDataParams = dataParams_len;
+                kdfParams.pDataParams = dataParams;
+
+                kdf.pParameter = &kdfParams;
+                kdf.ulParameterLen = sizeof(kdfParams);
+            } else {
+                feedbackParams.prfType = prf_mech;
+                feedbackParams.ulNumberOfDataParams = dataParams_len;
+                feedbackParams.pDataParams = dataParams;
+                feedbackParams.ulIVLen = IV_len;
+                if (IV_len == 0) {
+                    feedbackParams.pIV = NULL;
+                } else {
+                    feedbackParams.pIV = IV;
+                }
+
+                kdf.pParameter = &feedbackParams;
+                kdf.ulParameterLen = sizeof(feedbackParams);
+            }
+
+            crv = NSC_DeriveKey(session, &kdf, prf_key, derive_template, derive_template_count, &derived_key);
+            if (crv != CKR_OK) {
+                fprintf(stderr, "NSC_DeriveKey(derived_key) failed crv=0x%x\n", (unsigned int)crv);
+                goto done;
+            }
+
+            crv = NSC_GetAttributeValue(session, derived_key, &output_key, 1);
+            if (crv != CKR_OK) {
+                fprintf(stderr, "NSC_GetAttribute(derived_value) failed crv=0x%x\n", (unsigned int)crv);
+                goto done;
+            }
+
+            fputs("KO = ", kbkdf_resp);
+            to_hex_str(buf, KO, output_key.ulValueLen);
+            fputs(buf, kbkdf_resp);
+            fputs("\r\n", kbkdf_resp);
+
+            continue;
+        }
+    }
+
+done:
+    if (kbkdf_req != NULL) {
+        fclose(kbkdf_req);
+    }
+    if (kbkdf_resp != stdout && kbkdf_resp != NULL) {
+        fclose(kbkdf_resp);
+    }
+
+    return;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -8410,6 +8931,8 @@ main(int argc, char **argv)
         ikev1_psk(argv[2]);
     } else if (strcmp(argv[1], "ikev2") == 0) {
         ikev2(argv[2]);
+    } else if (strcmp(argv[1], "kbkdf") == 0) {
+        kbkdf(argv[2]);
     }
     return 0;
 }

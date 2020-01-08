@@ -2061,3 +2061,25 @@ sftk_CheckCBCPadding(CK_BYTE_PTR pBuf, unsigned int bufLen,
     /* Return OK if the pad is valid */
     return CT_SEL(goodPad, CKR_OK, CKR_ENCRYPTED_DATA_INVALID);
 }
+
+void
+sftk_EncodeInteger(PRUint64 integer, CK_ULONG num_bits, CK_BBOOL littleEndian,
+                   CK_BYTE_PTR output, CK_ULONG_PTR output_len)
+{
+    if (output_len) {
+        *output_len = (num_bits / 8);
+    }
+
+    PR_ASSERT(num_bits > 0 && num_bits <= 64 && (num_bits % 8) == 0);
+
+    if (littleEndian == CK_TRUE) {
+        for (size_t offset = 0; offset < num_bits / 8; offset++) {
+            output[offset] = (unsigned char)((integer >> (offset * 8)) & 0xFF);
+        }
+    } else {
+        for (size_t offset = 0; offset < num_bits / 8; offset++) {
+            PRUint64 shift = num_bits - (offset + 1) * 8;
+            output[offset] = (unsigned char)((integer >> shift) & 0xFF);
+        }
+    }
+}

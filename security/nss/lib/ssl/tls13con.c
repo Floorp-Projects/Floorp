@@ -131,6 +131,7 @@ const char kHkdfLabelExporterMasterSecret[] = "exp master";
 const char kHkdfLabelResumption[] = "resumption";
 const char kHkdfLabelTrafficUpdate[] = "traffic upd";
 const char kHkdfPurposeKey[] = "key";
+const char kHkdfPurposeSn[] = "sn";
 const char kHkdfPurposeIv[] = "iv";
 
 const char keylogLabelClientEarlyTrafficSecret[] = "CLIENT_EARLY_TRAFFIC_SECRET";
@@ -284,6 +285,34 @@ tls13_GetHash(const sslSocket *ss)
     /* All TLS 1.3 cipher suites must have an explict PRF hash. */
     PORT_Assert(ss->ssl3.hs.suite_def->prf_hash != ssl_hash_none);
     return ss->ssl3.hs.suite_def->prf_hash;
+}
+
+SECStatus
+tls13_GetHashAndCipher(PRUint16 version, PRUint16 cipherSuite,
+                       SSLHashType *hash, const ssl3BulkCipherDef **cipher)
+{
+    if (version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    // Lookup and check the suite.
+    SSLVersionRange vrange = { version, version };
+    if (!ssl3_CipherSuiteAllowedForVersionRange(cipherSuite, &vrange)) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    const ssl3CipherSuiteDef *suiteDef = ssl_LookupCipherSuiteDef(cipherSuite);
+    const ssl3BulkCipherDef *cipherDef = ssl_GetBulkCipherDef(suiteDef);
+    if (cipherDef->type != type_aead) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    *hash = suiteDef->prf_hash;
+    if (cipher != NULL) {
+        *cipher = cipherDef;
+    }
+    return SECSuccess;
 }
 
 unsigned int
@@ -3472,6 +3501,17 @@ tls13_DeriveTrafficKeys(sslSocket *ss, ssl3CipherSpec *spec,
         LOG_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE);
         PORT_Assert(0);
         goto loser;
+    }
+
+    if (IS_DTLS(ss) && spec->epoch > 0) {
+        rv = ssl_CreateMaskingContextInner(spec->version,
+                                           ss->ssl3.hs.cipher_suite, prk, kHkdfPurposeSn,
+                                           strlen(kHkdfPurposeSn), &spec->maskContext);
+        if (rv != SECSuccess) {
+            LOG_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE);
+            PORT_Assert(0);
+            goto loser;
+        }
     }
 
     rv = tls13_HkdfExpandLabelRaw(prk, tls13_GetHash(ss),

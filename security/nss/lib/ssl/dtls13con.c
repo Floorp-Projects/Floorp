@@ -10,38 +10,52 @@
 #include "ssl.h"
 #include "sslimpl.h"
 #include "sslproto.h"
+#include "keyhi.h"
+#include "pk11func.h"
 
+/*
+ * 0 1 2 3 4 5 6 7
+ * +-+-+-+-+-+-+-+-+
+ * |0|0|1|C|S|L|E E|
+ * +-+-+-+-+-+-+-+-+
+ * | Connection ID |   Legend:
+ * | (if any,      |
+ * /  length as    /   C   - CID present
+ * |  negotiated)  |   S   - Sequence number length
+ * +-+-+-+-+-+-+-+-+   L   - Length present
+ * |  8 or 16 bit  |   E   - Epoch
+ * |Sequence Number|
+ * +-+-+-+-+-+-+-+-+
+ * | 16 bit Length |
+ * | (if present)  |
+ * +-+-+-+-+-+-+-+-+
+ */
 SECStatus
-dtls13_InsertCipherTextHeader(const sslSocket *ss, ssl3CipherSpec *cwSpec,
+dtls13_InsertCipherTextHeader(const sslSocket *ss, const ssl3CipherSpec *cwSpec,
                               sslBuffer *wrBuf, PRBool *needsLength)
 {
-    PRUint32 seq;
-    SECStatus rv;
-
     /* Avoid using short records for the handshake.  We pack multiple records
      * into the one datagram for the handshake. */
     if (ss->opt.enableDtlsShortHeader &&
-        cwSpec->epoch != TrafficKeyHandshake) {
+        cwSpec->epoch > TrafficKeyHandshake) {
         *needsLength = PR_FALSE;
         /* The short header is comprised of two octets in the form
-         * 0b001essssssssssss where 'e' is the low bit of the epoch and 's' is
-         * the low 12 bits of the sequence number. */
-        seq = 0x2000 |
-              (((uint64_t)cwSpec->epoch & 1) << 12) |
-              (cwSpec->nextSeqNum & 0xfff);
-        return sslBuffer_AppendNumber(wrBuf, seq, 2);
+         * 0b001000eessssssss where 'e' is the low two bits of the
+         * epoch and 's' is the low 8 bits of the sequence number. */
+        PRUint8 ct = 0x20 | ((uint64_t)cwSpec->epoch & 0x3);
+        if (sslBuffer_AppendNumber(wrBuf, ct, 1) != SECSuccess) {
+            return SECFailure;
+        }
+        PRUint8 seq = cwSpec->nextSeqNum & 0xff;
+        return sslBuffer_AppendNumber(wrBuf, seq, 1);
     }
 
-    rv = sslBuffer_AppendNumber(wrBuf, ssl_ct_application_data, 1);
-    if (rv != SECSuccess) {
+    PRUint8 ct = 0x2c | ((PRUint8)cwSpec->epoch & 0x3);
+    if (sslBuffer_AppendNumber(wrBuf, ct, 1) != SECSuccess) {
         return SECFailure;
     }
-
-    /* The epoch and sequence number are encoded on 4 octets, with the epoch
-     * consuming the first two bits. */
-    seq = (((uint64_t)cwSpec->epoch & 3) << 30) | (cwSpec->nextSeqNum & 0x3fffffff);
-    rv = sslBuffer_AppendNumber(wrBuf, seq, 4);
-    if (rv != SECSuccess) {
+    if (sslBuffer_AppendNumber(wrBuf,
+                               (cwSpec->nextSeqNum & 0xffff), 2) != SECSuccess) {
         return SECFailure;
     }
     *needsLength = PR_TRUE;
@@ -511,4 +525,44 @@ dtls13_HolddownTimerCb(sslSocket *ss)
                  SSL_GETPID(), ss->fd));
     ssl_CipherSpecReleaseByEpoch(ss, ssl_secret_read, TrafficKeyHandshake);
     ssl_ClearPRCList(&ss->ssl3.hs.dtlsRcvdHandshake, NULL);
+}
+
+SECStatus
+dtls13_MaskSequenceNumber(sslSocket *ss, ssl3CipherSpec *spec,
+                          PRUint8 *hdr, PRUint8 *cipherText, PRUint32 cipherTextLen)
+{
+    PORT_Assert(IS_DTLS(ss));
+    if (spec->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        return SECSuccess;
+    }
+
+    if (spec->maskContext) {
+        PRUint8 mask[2];
+        SECStatus rv = ssl_CreateMaskInner(spec->maskContext, cipherText, cipherTextLen, mask, sizeof(mask));
+
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+
+        hdr[1] ^= mask[0];
+        if (hdr[0] & 0x08) {
+            hdr[2] ^= mask[1];
+        }
+    }
+
+    return SECSuccess;
+}
+
+CK_MECHANISM_TYPE
+tls13_SequenceNumberEncryptionMechanism(SSLCipherAlgorithm bulkAlgorithm)
+{
+    switch (bulkAlgorithm) {
+        case ssl_calg_aes_gcm:
+            return CKM_AES_ECB;
+        case ssl_calg_chacha20:
+            return CKM_NSS_CHACHA20_CTR;
+        default:
+            PORT_Assert(PR_FALSE);
+    }
+    return CKM_INVALID_MECHANISM;
 }

@@ -27,9 +27,9 @@ class TlsCipherSpec {
   bool SetKeys(SSLCipherSuiteInfo* cipherinfo, PK11SymKey* secret);
 
   bool Protect(const TlsRecordHeader& header, const DataBuffer& plaintext,
-               DataBuffer* ciphertext);
+               DataBuffer* ciphertext, TlsRecordHeader* out_header);
   bool Unprotect(const TlsRecordHeader& header, const DataBuffer& ciphertext,
-                 DataBuffer* plaintext);
+                 DataBuffer* plaintext, TlsRecordHeader* out_header);
 
   uint16_t epoch() const { return epoch_; }
   uint64_t next_in_seqno() const { return in_seqno_; }
@@ -52,6 +52,7 @@ class TlsCipherSpec {
   uint64_t out_seqno_;
   bool record_dropped_ = false;
   ScopedSSLAeadContext aead_;
+  ScopedSSLMaskingContext mask_;
 };
 
 }  // namespace nss_test

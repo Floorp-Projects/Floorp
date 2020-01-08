@@ -5,6 +5,10 @@ CORE_DEPTH = ../..
 
 # DEFINES = -DTRACE
 
+ifdef ZLIB_INCLUDE_DIR
+INCLUDES += -I$(ZLIB_INCLUDE_DIR)
+endif
+
 EXPORTS = \
         ssl.h \
         sslt.h \

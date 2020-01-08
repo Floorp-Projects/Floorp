@@ -263,6 +263,7 @@ TEST_P(TlsCipherSuiteTest, ResumeCipherSuite) {
 TEST_P(TlsCipherSuiteTest, ReadLimit) {
   SetupCertificate();
   EnableSingleCipher();
+  TlsSendCipherSpecCapturer capturer(client_);
   ConnectAndCheckCipherSuite();
   if (version_ < SSL_LIBRARY_VERSION_TLS_1_3) {
     uint64_t last = last_safe_write();
@@ -295,9 +296,31 @@ TEST_P(TlsCipherSuiteTest, ReadLimit) {
   } else {
     epoch = 0;
   }
-  TlsAgentTestBase::MakeRecord(variant_, ssl_ct_application_data, version_,
-                               payload, sizeof(payload), &record,
-                               (epoch << 48) | record_limit());
+
+  uint64_t seqno = (epoch << 48) | record_limit();
+
+  // DTLS 1.3 masks the sequence number
+  if (variant_ == ssl_variant_datagram &&
+      version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
+    auto spec = capturer.spec(1);
+    ASSERT_NE(nullptr, spec.get());
+    ASSERT_EQ(3, spec->epoch());
+
+    DataBuffer pt, ct;
+    uint8_t dtls13_ctype = kCtDtlsCiphertext | kCtDtlsCiphertext16bSeqno |
+                           kCtDtlsCiphertextLengthPresent;
+    TlsRecordHeader hdr(variant_, version_, dtls13_ctype, seqno);
+    pt.Assign(payload, sizeof(payload));
+    TlsRecordHeader out_hdr;
+    spec->Protect(hdr, pt, &ct, &out_hdr);
+
+    auto rv = out_hdr.Write(&record, 0, ct);
+    EXPECT_EQ(out_hdr.header_length() + ct.len(), rv);
+  } else {
+    TlsAgentTestBase::MakeRecord(variant_, ssl_ct_application_data, version_,
+                                 payload, sizeof(payload), &record, seqno);
+  }
+
   client_->SendDirect(record);
   server_->ExpectReadWriteError();
   server_->ReadBytes();
