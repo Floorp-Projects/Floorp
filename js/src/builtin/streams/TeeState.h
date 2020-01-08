@@ -61,10 +61,14 @@ class TeeState : public NativeObject {
 
  private:
   enum Flags {
-    Flag_ClosedOrErrored = 1 << 0,
+    Flag_Reading = 1 << 0,
     Flag_Canceled1 = 1 << 1,
     Flag_Canceled2 = 1 << 2,
-    Flag_CloneForBranch2 = 1 << 3,
+
+    // No internal user ever sets the cloneForBranch2 flag to true, and the
+    // streams spec doesn't expose a way to set the flag to true.  So for the
+    // moment, don't even reserve flag-space to store it.
+    // Flag_CloneForBranch2 = 1 << 3,
   };
   uint32_t flags() const { return getFixedSlot(Slot_Flags).toInt32(); }
   void setFlags(uint32_t flags) {
@@ -74,12 +78,18 @@ class TeeState : public NativeObject {
  public:
   static const JSClass class_;
 
-  bool cloneForBranch2() const { return flags() & Flag_CloneForBranch2; }
+  // Consistent with not even storing this always-false flag, expose it as
+  // compile-time constant false.
+  static constexpr bool cloneForBranch2() { return false; }
 
-  bool closedOrErrored() const { return flags() & Flag_ClosedOrErrored; }
-  void setClosedOrErrored() {
-    MOZ_ASSERT(!(flags() & Flag_ClosedOrErrored));
-    setFlags(flags() | Flag_ClosedOrErrored);
+  bool reading() const { return flags() & Flag_Reading; }
+  void setReading() {
+    MOZ_ASSERT(!(flags() & Flag_Reading));
+    setFlags(flags() | Flag_Reading);
+  }
+  void unsetReading() {
+    MOZ_ASSERT(flags() & Flag_Reading);
+    setFlags(flags() & ~Flag_Reading);
   }
 
   bool canceled1() const { return flags() & Flag_Canceled1; }
