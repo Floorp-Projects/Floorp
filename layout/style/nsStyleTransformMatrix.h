@@ -24,7 +24,7 @@ struct gfxQuaternion;
 struct nsRect;
 
 namespace mozilla {
-struct MotionPathData;
+struct ResolvedMotionPathData;
 }
 
 /**
@@ -172,7 +172,7 @@ mozilla::gfx::Matrix4x4 ReadTransforms(const mozilla::StyleTransform& aList,
 mozilla::gfx::Matrix4x4 ReadTransforms(
     const mozilla::StyleTranslate&, const mozilla::StyleRotate&,
     const mozilla::StyleScale&,
-    const mozilla::Maybe<mozilla::MotionPathData>& aMotion,
+    const mozilla::Maybe<mozilla::ResolvedMotionPathData>& aMotion,
     const mozilla::StyleTransform&, TransformReferenceBox& aRefBox,
     float aAppUnitsPerMatrixUnit);
 

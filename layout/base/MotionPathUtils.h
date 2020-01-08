@@ -23,7 +23,7 @@ class MotionPathData;
 class PathCommand;
 }  // namespace layers
 
-struct MotionPathData {
+struct ResolvedMotionPathData {
   gfx::Point mTranslate;
   float mRotate;
   // The delta value between transform-origin and offset-anchor.
@@ -159,7 +159,7 @@ class MotionPathUtils final {
    * Generate the motion path transform result. This function may be called on
    * the compositor thread.
    **/
-  static Maybe<mozilla::MotionPathData> ResolveMotionPath(
+  static Maybe<ResolvedMotionPathData> ResolveMotionPath(
       const OffsetPathData& aPath, const LengthPercentage& aDistance,
       const StyleOffsetRotate& aRotate, const StylePositionOrAuto& aAnchor,
       const CSSPoint& aTransformOrigin, const CSSSize& aFrameSize,
@@ -169,7 +169,7 @@ class MotionPathUtils final {
    * Generate the motion path transform result with |nsIFrame|. This is only
    * called in the main thread.
    **/
-  static Maybe<mozilla::MotionPathData> ResolveMotionPath(
+  static Maybe<ResolvedMotionPathData> ResolveMotionPath(
       const nsIFrame* aFrame);
 
   /**
@@ -177,7 +177,7 @@ class MotionPathUtils final {
    * layers::MotionPathData.
    * This is only called by the compositor.
    */
-  static Maybe<mozilla::MotionPathData> ResolveMotionPath(
+  static Maybe<ResolvedMotionPathData> ResolveMotionPath(
       const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
       const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
       const Maybe<layers::MotionPathData>& aMotionPathData,
