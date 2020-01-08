@@ -348,9 +348,8 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     return IPC_OK();
   }
 
-  RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);
-  if (httpChild) {
-    rv = httpChild->SetChannelId(aArgs.channelId());
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel)) {
+    rv = httpChannel->SetChannelId(aArgs.channelId());
   }
   if (NS_FAILED(rv)) {
     return IPC_OK();
@@ -361,8 +360,9 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     return IPC_OK();
   }
 
-  if (httpChild) {
-    rv = httpChild->SetRedirectMode(aArgs.redirectMode());
+  if (nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+          do_QueryInterface(newChannel)) {
+    rv = httpChannelInternal->SetRedirectMode(aArgs.redirectMode());
   }
   if (NS_FAILED(rv)) {
     return IPC_OK();
