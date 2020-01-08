@@ -1160,10 +1160,7 @@ class Consumer : public detail::PcqBase {
                              : status;
   }
 
-  template <>
-  PcqStatus TryPeekRemoveHelper<>(ConsumerView&) {
-    return PcqStatus::Success;
-  }
+  PcqStatus TryPeekRemoveHelper(ConsumerView&) { return PcqStatus::Success; }
 
   // If an item is available then it is copied into aArg.  The item is skipped
   // over if aArg is null.

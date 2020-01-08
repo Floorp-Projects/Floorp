@@ -213,3 +213,6 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
 
 if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
     CXXFLAGS += ['-Werror=implicit-int-conversion']
+
+if CONFIG['CC_TYPE'] == 'gcc':
+    CXXFLAGS += ['-Wno-error=unused-result'] # GCC doesn't ignore (void)MustUse();

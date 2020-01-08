@@ -171,12 +171,12 @@ class ContextGenerationInfo final {
 
   std::vector<TypedQuad> mGenericVertexAttribs;
 
-  std::array<bool, 4> mColorWriteMask = {true, true, true, true};
+  std::array<bool, 4> mColorWriteMask = {{true, true, true, true}};
   std::array<int32_t, 4> mScissor = {};
   std::array<int32_t, 4> mViewport = {};
-  std::array<float, 4> mClearColor = {0, 0, 0, 0};
-  std::array<float, 4> mBlendColor = {0, 0, 0, 0};
-  std::array<float, 2> mDepthRange = {0, 1};
+  std::array<float, 4> mClearColor = {{0, 0, 0, 0}};
+  std::array<float, 4> mBlendColor = {{0, 0, 0, 0}};
+  std::array<float, 2> mDepthRange = {{0, 1}};
 
   std::vector<GLenum> mCompressedTextureFormats;
 
@@ -826,10 +826,14 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
     nsCString text;
     text.AppendPrintf("WebGL warning: %s: ", FuncName());
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wformat-security"
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wformat-security"
+#endif
     text.AppendPrintf(format, args...);
-#pragma clang diagnostic pop
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 
     EnqueueErrorImpl(error, text);
   }
@@ -979,7 +983,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   void Present();
 
-  void ClearVRFrame();
+  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame() const;
+  void ClearVRFrame() const;
 
  private:
   const uvec2& DrawingBufferSize();
@@ -2114,10 +2119,21 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   template <typename ReturnType>
   friend struct WebGLClientDispatcher;
 
-  // If we are running WebGL in this process then call the HostWebGLContext
-  // method directly.  Otherwise, dispatch over IPC.
   template <typename MethodType, MethodType method, typename ReturnType,
             size_t Id, typename... Args>
+  friend ReturnType RunOn(const ClientWebGLContext& context, Args&&... aArgs);
+
+  // If we are running WebGL in this process then call the HostWebGLContext
+  // method directly.  Otherwise, dispatch over IPC.
+  // template <typename MethodType, MethodType method,
+  //          typename ReturnType = typename
+  //          FunctionTypeTraits<MethodType>::ReturnType, size_t Id =
+  //          WebGLMethodDispatcher::Id<MethodType, method>(), typename... Args>
+  // ReturnType Run(Args&&... aArgs) const;
+  template <
+      typename MethodType, MethodType method,
+      typename ReturnType = typename FunctionTypeTraits<MethodType>::ReturnType,
+      typename... Args>
   ReturnType Run(Args&&... aArgs) const;
 
   // -------------------------------------------------------------------------

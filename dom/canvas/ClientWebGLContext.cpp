@@ -359,24 +359,33 @@ inline void DefaultOrVoid<void>() {
   return;
 }
 
-// If we are running WebGL in this process then call the HostWebGLContext
-// method directly.  Otherwise, dispatch over IPC.
-template <
-    typename MethodType, MethodType method,
-    typename ReturnType = typename FunctionTypeTraits<MethodType>::ReturnType,
-    size_t Id = WebGLMethodDispatcher::Id<MethodType, method>(),
-    typename... Args>
-ReturnType ClientWebGLContext::Run(Args&&... aArgs) const {
+template <typename MethodType, MethodType method, typename ReturnType,
+          size_t Id, typename... Args>
+ReturnType RunOn(const ClientWebGLContext& context, Args&&... aArgs) {
   const auto notLost =
-      mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
-  if (!mNotLost) return DefaultOrVoid<ReturnType>();
-  const auto& inProcessContext = mNotLost->inProcess;
+      context.mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
+  if (!notLost) return DefaultOrVoid<ReturnType>();
+  const auto& inProcessContext = notLost->inProcess;
   if (inProcessContext) {
     return ((inProcessContext.get())->*method)(std::forward<Args>(aArgs)...);
   }
   MOZ_CRASH("todo");
   // return WebGLClientDispatcher<ReturnType>::template Run<Id>(*this, method,
   //                                                           aArgs...);
+}
+
+// If we are running WebGL in this process then call the HostWebGLContext
+// method directly.  Otherwise, dispatch over IPC.
+template <typename MethodType, MethodType method, typename ReturnType,
+          typename... Args>
+// template <
+//    typename MethodType, MethodType method,
+//    typename ReturnType, size_t Id,
+//    typename... Args>
+ReturnType ClientWebGLContext::Run(Args&&... aArgs) const {
+  return RunOn<MethodType, method, ReturnType,
+               WebGLMethodDispatcher::Id<MethodType, method>(), Args...>(
+      *this, std::forward<Args>(aArgs)...);
 }
 
 // -------------------------------------------------------------------------
@@ -446,7 +455,12 @@ void ClientWebGLContext::EndComposition() {
 
 void ClientWebGLContext::Present() { Run<RPROC(Present)>(); }
 
-void ClientWebGLContext::ClearVRFrame() { Run<RPROC(ClearVRFrame)>(); }
+void ClientWebGLContext::ClearVRFrame() const { Run<RPROC(ClearVRFrame)>(); }
+
+RefPtr<layers::SharedSurfaceTextureClient> ClientWebGLContext::GetVRFrame()
+    const {
+  return Run<RPROC(GetVRFrame)>();
+}
 
 already_AddRefed<layers::Layer> ClientWebGLContext::GetCanvasLayer(
     nsDisplayListBuilder* builder, Layer* oldLayer, LayerManager* manager) {

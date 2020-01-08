@@ -7,7 +7,6 @@
 
 include LayersSurfaces;
 include protocol PVRManager;
-include protocol PWebGL;
 
 using mozilla::gfx::Rect from "mozilla/gfx/Rect.h";
 
@@ -19,11 +18,9 @@ async protocol PVRLayer
   manager PVRManager;
 
 parent:
-  async SubmitFrame(PWebGL webgl, uint64_t aFrameId, uint64_t aLastFrameId,
+  async SubmitFrame(SurfaceDescriptor aTexture, uint64_t aFrameId,
                     Rect aLeftEyeRect, Rect aRightEyeRect);
 
-  async ClearSurfaces();
-  
   async Destroy();
 
 child:

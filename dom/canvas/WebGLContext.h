@@ -436,10 +436,14 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
     nsCString text;
     text.AppendPrintf("WebGL warning: %s: ", FuncName());
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wformat-security"
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wformat-security"
+#endif
     text.AppendPrintf(fmt, args...);
-#pragma clang diagnostic pop
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 
     GenerateErrorImpl(err, text);
   }
@@ -612,7 +616,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
   void PixelStorei(GLenum pname, GLint param);
   void PolygonOffset(GLfloat factor, GLfloat units);
 
-  already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
+  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame();
   void ClearVRFrame();
   void EnsureVRReady();
 
@@ -1290,10 +1294,14 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr<WebGLContext> {
     nsCString msg;
     msg.AppendPrintf("WebGL perf warning: %s: ", funcName);
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wformat-security"
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wformat-security"
+#endif
     msg.AppendPrintf(fmt, args...);
-#pragma clang diagnostic pop
+#ifdef __clang__
+#  pragma clang diagnostic pop
+#endif
 
     GenerateErrorImpl(0, msg);
 

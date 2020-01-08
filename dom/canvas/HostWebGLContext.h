@@ -130,12 +130,8 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
     AutoResolveT(const HostWebGLContext& parent, const ObjectId id)
         : mParent(parent), mId(id) {}
 
-    template <typename T>
-    T* As() const = delete;
-
 #define _(X)                                              \
-  template <>                                             \
-  WebGL##X* As<WebGL##X>() const {                        \
+  WebGL##X* As(WebGL##X*) const {                         \
     const auto maybe = MaybeFind(mParent.m##X##Map, mId); \
     if (!maybe) return nullptr;                           \
     return maybe->get();                                  \
@@ -156,19 +152,22 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
 #undef _
     template <typename T>
     MOZ_IMPLICIT operator T*() const {
-      return As<T>();
+      T* coercer = nullptr;
+      return As(coercer);
     }
 
     template <typename T>
     MOZ_IMPLICIT operator const T*() const {
-      return As<T>();
+      T* coercer = nullptr;
+      return As(coercer);
     }
   };
 
   AutoResolveT AutoResolve(const ObjectId id) const { return {*this, id}; }
   template <typename T>
   T* ById(const ObjectId id) const {
-    return AutoResolve(id).As<T>();
+    T* coercer = nullptr;
+    return AutoResolve(id).As(coercer);
   }
 
   // -------------------------------------------------------------------------
@@ -183,7 +182,7 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
   }
 
   void Present() { mContext->Present(); }
-  void ClearVRFrame() { mContext->ClearVRFrame(); }
+  void ClearVRFrame() const { mContext->ClearVRFrame(); }
 
   Maybe<ICRData> InitializeCanvasRenderer(layers::LayersBackend backend) {
     return mContext->InitializeCanvasRenderer(backend);
@@ -782,9 +781,7 @@ class HostWebGLContext final : public SupportsWeakPtr<HostWebGLContext> {
 
   // Etc
  public:
-  already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame() const {
-    return mContext->GetVRFrame();
-  }
+  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame() const;
 
  protected:
   WebGL2Context* GetWebGL2Context() const {

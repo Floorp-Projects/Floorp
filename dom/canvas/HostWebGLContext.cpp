@@ -100,6 +100,11 @@ void HostWebGLContext::JsWarning(const std::string& text) const {
   (void)mOwnerData.outOfProcess->mParent.SendJsWarning(text);
 }
 
+RefPtr<layers::SharedSurfaceTextureClient> HostWebGLContext::GetVRFrame()
+    const {
+  return mContext->GetVRFrame();
+}
+
 //////////////////////////////////////////////
 // Creation
 

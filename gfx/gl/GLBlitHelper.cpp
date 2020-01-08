@@ -729,6 +729,7 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
     case ImageFormat::TEXTURE_WRAPPER:
       return false;  // todo
   }
+  return false;
 }
 
 // -------------------------------------
