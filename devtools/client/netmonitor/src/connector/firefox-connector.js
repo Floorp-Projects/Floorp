@@ -45,6 +45,7 @@ class FirefoxConnector {
     // Internals
     this.getLongString = this.getLongString.bind(this);
     this.getNetworkRequest = this.getNetworkRequest.bind(this);
+    this.onTargetAvailable = this.onTargetAvailable.bind(this);
   }
 
   get currentTarget() {
@@ -66,61 +67,30 @@ class FirefoxConnector {
     // The owner object (NetMonitorAPI) received all events.
     this.owner = connection.owner;
 
-    this.webConsoleFront = await this.currentTarget.getFront("console");
-
-    this.dataProvider = new FirefoxDataProvider({
-      webConsoleFront: this.webConsoleFront,
-      actions: this.actions,
-      owner: this.owner,
-    });
-
-    // Register all listeners
-    await this.addListeners();
-
-    // Listener for `will-navigate` event is (un)registered outside
-    // of the `addListeners` and `removeListeners` methods since
-    // these are used to pause/resume the connector.
-    // Paused network panel should be automatically resumed when page
-    // reload, so `will-navigate` listener needs to be there all the time.
-    this.currentTarget.on("will-navigate", this.willNavigate);
-    this.currentTarget.on("navigate", this.navigate);
-
-    // Initialize Responsive Emulation front for network throttling.
-    try {
-      this.responsiveFront = await this.currentTarget.getFront("responsive");
-    } catch (e) {
-        console.error(e);
-    }
-
-    // Bug 1606852: For backwards compatibility, we need to get the emulation actor. The Responsive
-    // actor is only available in Firefox 73 or newer. We can remove this call when Firefox 73
-    // is on release.
-    if (!this.responsiveFront) {
-      this.responsiveFront = await this.currentTarget.getFront("emulation");
-    }
-
-    // Displaying cache events is only intended for the UI panel.
-    if (this.actions) {
-      this.displayCachedEvents();
-    }
+    await this.toolbox.targetList.watchTargets(
+      [this.toolbox.targetList.TYPES.FRAME],
+      this.onTargetAvailable
+    );
   }
 
   disconnect() {
+    // As this function might be called twice, we need to guard if already called.
+    if (this._destroyed) {
+      return;
+    }
+
+    this._destroyed = true;
+
+    this.toolbox.targetList.unwatchTargets(
+      [this.toolbox.targetList.TYPES.FRAME],
+      this.onTargetAvailable
+    );
+
     if (this.actions) {
       this.actions.batchReset();
     }
 
     this.removeListeners();
-
-    if (this.responsiveFront) {
-      this.responsiveFront.destroy();
-      this.responsiveFront = null;
-    }
-
-    if (this.webSocketFront) {
-      this.webSocketFront.destroy();
-      this.webSocketFront = null;
-    }
 
     this.currentTarget.off("will-navigate", this.willNavigate);
     this.currentTarget.off("navigate", this.navigate);
@@ -137,8 +107,55 @@ class FirefoxConnector {
     await this.addListeners();
   }
 
+  async onTargetAvailable({ targetFront, isTopLevel, isTargetSwitching }) {
+    if (!isTopLevel) {
+      return;
+    }
+
+    if (isTargetSwitching) {
+      this.willNavigate();
+    }
+
+    // Listener for `will-navigate` event is (un)registered outside
+    // of the `addListeners` and `removeListeners` methods since
+    // these are used to pause/resume the connector.
+    // Paused network panel should be automatically resumed when page
+    // reload, so `will-navigate` listener needs to be there all the time.
+    targetFront.on("will-navigate", this.willNavigate);
+    targetFront.on("navigate", this.navigate);
+
+    this.webConsoleFront = await this.currentTarget.getFront("console");
+
+    this.dataProvider = new FirefoxDataProvider({
+      webConsoleFront: this.webConsoleFront,
+      actions: this.actions,
+      owner: this.owner,
+    });
+
+    // Register all listeners
+    await this.addListeners();
+
+    // Initialize Responsive Emulation front for network throttling.
+    try {
+      this.responsiveFront = await this.currentTarget.getFront("responsive");
+    } catch (e) {
+      console.error(e);
+    }
+
+    // Bug 1606852: For backwards compatibility, we need to get the emulation actor. The Responsive
+    // actor is only available in Firefox 73 or newer. We can remove this call when Firefox 73
+    // is on release.
+    if (!this.responsiveFront) {
+      this.responsiveFront = await this.currentTarget.getFront("emulation");
+    }
+
+    // Displaying cache events is only intended for the UI panel.
+    if (this.actions) {
+      this.displayCachedEvents();
+    }
+  }
+
   async addListeners() {
-    this.currentTarget.on("close", this.disconnect);
     this.webConsoleFront.on("networkEvent", this.dataProvider.onNetworkEvent);
     this.webConsoleFront.on(
       "networkEventUpdate",
@@ -150,22 +167,19 @@ class FirefoxConnector {
     if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
       try {
         // Initialize WebSocket front to intercept websocket traffic.
-        this.webSocketFront = await this.currentTarget.getFront("webSocket");
-        this.webSocketFront.startListening();
+        const webSocketFront = await this.currentTarget.getFront("webSocket");
+        webSocketFront.startListening();
 
-        this.webSocketFront.on(
+        webSocketFront.on(
           "webSocketOpened",
           this.dataProvider.onWebSocketOpened
         );
-        this.webSocketFront.on(
+        webSocketFront.on(
           "webSocketClosed",
           this.dataProvider.onWebSocketClosed
         );
-        this.webSocketFront.on(
-          "frameReceived",
-          this.dataProvider.onFrameReceived
-        );
-        this.webSocketFront.on("frameSent", this.dataProvider.onFrameSent);
+        webSocketFront.on("frameReceived", this.dataProvider.onFrameReceived);
+        webSocketFront.on("frameSent", this.dataProvider.onFrameSent);
       } catch (e) {
         // Support for FF68 or older
       }
@@ -177,22 +191,20 @@ class FirefoxConnector {
   }
 
   removeListeners() {
-    this.currentTarget.off("close", this.disconnect);
-    if (this.webSocketFront) {
-      this.webSocketFront.off(
+    const webSocketFront = this.currentTarget.getCachedFront("webSocket");
+    if (webSocketFront) {
+      webSocketFront.off(
         "webSocketOpened",
         this.dataProvider.onWebSocketOpened
       );
-      this.webSocketFront.off(
+      webSocketFront.off(
         "webSocketClosed",
         this.dataProvider.onWebSocketClosed
       );
-      this.webSocketFront.off(
-        "frameReceived",
-        this.dataProvider.onFrameReceived
-      );
-      this.webSocketFront.off("frameSent", this.dataProvider.onFrameSent);
+      webSocketFront.off("frameReceived", this.dataProvider.onFrameReceived);
+      webSocketFront.off("frameSent", this.dataProvider.onFrameSent);
     }
+
     if (this.webConsoleFront) {
       this.webConsoleFront.off(
         "networkEvent",
