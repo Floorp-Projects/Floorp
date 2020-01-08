@@ -2654,6 +2654,13 @@
             pinned,
             bulkOrderedOpen,
           });
+        } else {
+          // When batch inserting, we still need to make sure the tab
+          // ends up after existing tabs. This is especially important for
+          // pinned tabs, which will still get inserted into the DOM
+          // immediately by addMultipleTabs. Using batch insertion for
+          // pinned tabs, too, is bug 1606633.
+          t._tPos = this.tabs.length;
         }
 
         // If we don't have a preferred remote type, and we have a remote
