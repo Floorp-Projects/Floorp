@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from StringIO import StringIO
+from six import StringIO
 import os
 import sys
 import textwrap
@@ -33,71 +33,45 @@ from common import (
 
 class TestChecksConfigure(unittest.TestCase):
     def test_checking(self):
-        out = StringIO()
-        sandbox = ConfigureSandbox({}, stdout=out, stderr=out)
-        base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
-        sandbox.include_file(os.path.join(base_dir, 'checks.configure'))
+        def make_test(to_exec):
+            def test(val, msg):
+                out = StringIO()
+                sandbox = ConfigureSandbox({}, stdout=out, stderr=out)
+                base_dir = os.path.join(topsrcdir, 'build', 'moz.configure')
+                sandbox.include_file(os.path.join(base_dir, 'checks.configure'))
+                exec_(to_exec, sandbox)
+                sandbox['foo'](val)
+                self.assertEqual(out.getvalue(), msg)
 
-        exec_(textwrap.dedent('''
+            return test
+
+        test = make_test(textwrap.dedent('''
             @checking('for a thing')
             def foo(value):
                 return value
-        '''), sandbox)
-
-        foo = sandbox['foo']
-
-        foo(True)
-        self.assertEqual(out.getvalue(), 'checking for a thing... yes\n')
-
-        out.truncate(0)
-        foo(False)
-        self.assertEqual(out.getvalue(), 'checking for a thing... no\n')
-
-        out.truncate(0)
-        foo(42)
-        self.assertEqual(out.getvalue(), 'checking for a thing... 42\n')
-
-        out.truncate(0)
-        foo('foo')
-        self.assertEqual(out.getvalue(), 'checking for a thing... foo\n')
-
-        out.truncate(0)
+        '''))
+        test(True, 'checking for a thing... yes\n')
+        test(False, 'checking for a thing... no\n')
+        test(42, 'checking for a thing... 42\n')
+        test('foo', 'checking for a thing... foo\n')
         data = ['foo', 'bar']
-        foo(data)
-        self.assertEqual(out.getvalue(), 'checking for a thing... %r\n' % data)
+        test(data, 'checking for a thing... %r\n' % data)
 
         # When the function given to checking does nothing interesting, the
         # behavior is not altered
-        exec_(textwrap.dedent('''
+        test = make_test(textwrap.dedent('''
             @checking('for a thing', lambda x: x)
             def foo(value):
                 return value
-        '''), sandbox)
-
-        foo = sandbox['foo']
-
-        out.truncate(0)
-        foo(True)
-        self.assertEqual(out.getvalue(), 'checking for a thing... yes\n')
-
-        out.truncate(0)
-        foo(False)
-        self.assertEqual(out.getvalue(), 'checking for a thing... no\n')
-
-        out.truncate(0)
-        foo(42)
-        self.assertEqual(out.getvalue(), 'checking for a thing... 42\n')
-
-        out.truncate(0)
-        foo('foo')
-        self.assertEqual(out.getvalue(), 'checking for a thing... foo\n')
-
-        out.truncate(0)
+        '''))
+        test(True, 'checking for a thing... yes\n')
+        test(False, 'checking for a thing... no\n')
+        test(42, 'checking for a thing... 42\n')
+        test('foo', 'checking for a thing... foo\n')
         data = ['foo', 'bar']
-        foo(data)
-        self.assertEqual(out.getvalue(), 'checking for a thing... %r\n' % data)
+        test(data, 'checking for a thing... %r\n' % data)
 
-        exec_(textwrap.dedent('''
+        test = make_test(textwrap.dedent('''
             def munge(x):
                 if not x:
                     return 'not found'
@@ -108,29 +82,13 @@ class TestChecksConfigure(unittest.TestCase):
             @checking('for a thing', munge)
             def foo(value):
                 return value
-        '''), sandbox)
-
-        foo = sandbox['foo']
-
-        out.truncate(0)
-        foo(True)
-        self.assertEqual(out.getvalue(), 'checking for a thing... yes\n')
-
-        out.truncate(0)
-        foo(False)
-        self.assertEqual(out.getvalue(), 'checking for a thing... not found\n')
-
-        out.truncate(0)
-        foo(42)
-        self.assertEqual(out.getvalue(), 'checking for a thing... 42\n')
-
-        out.truncate(0)
-        foo('foo')
-        self.assertEqual(out.getvalue(), 'checking for a thing... foo\n')
-
-        out.truncate(0)
-        foo(['foo', 'bar'])
-        self.assertEqual(out.getvalue(), 'checking for a thing... foo bar\n')
+        '''))
+        test(True, 'checking for a thing... yes\n')
+        test(False, 'checking for a thing... not found\n')
+        test(42, 'checking for a thing... 42\n')
+        test('foo', 'checking for a thing... foo\n')
+        data = ['foo', 'bar']
+        test(data, 'checking for a thing... foo bar\n')
 
     KNOWN_A = ensure_exe_extension(mozpath.abspath('/usr/bin/known-a'))
     KNOWN_B = ensure_exe_extension(mozpath.abspath('/usr/local/bin/known-b'))
@@ -406,7 +364,7 @@ class TestChecksConfigure(unittest.TestCase):
         with self.assertRaises(ConfigureError) as e:
             self.get_result('check_prog("FOO", "foo")')
 
-        self.assertEqual(e.exception.message,
+        self.assertEqual(str(e.exception),
                          'progs must resolve to a list or tuple!')
 
         with self.assertRaises(ConfigureError) as e:
@@ -415,7 +373,7 @@ class TestChecksConfigure(unittest.TestCase):
                 'check_prog("FOO", ("known-a",), input=foo)'
             )
 
-        self.assertEqual(e.exception.message,
+        self.assertEqual(str(e.exception),
                          'input must resolve to a tuple or a list with a '
                          'single element, or a string')
 
@@ -425,7 +383,7 @@ class TestChecksConfigure(unittest.TestCase):
                 'check_prog("FOO", ("known-a",), input=foo)'
             )
 
-        self.assertEqual(e.exception.message,
+        self.assertEqual(str(e.exception),
                          'input must resolve to a tuple or a list with a '
                          'single element, or a string')
 
