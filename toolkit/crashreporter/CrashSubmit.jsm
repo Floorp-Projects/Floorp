@@ -182,8 +182,8 @@ Submitter.prototype = {
         toDelete.push(this.memory);
       }
 
-      for (let dump of this.additionalDumps) {
-        toDelete.push(dump);
+      for (let entry of this.additionalDumps) {
+        toDelete.push(entry.dump);
       }
 
       await Promise.all(
