@@ -1220,7 +1220,7 @@ class ContentParent final
       GetModulesTrustResolver&& aResolver);
 
   mozilla::ipc::IPCResult RecvSessionStorageData(
-      BrowsingContext* aTop, const nsACString& aOriginAttrs,
+      uint64_t aTopContextId, const nsACString& aOriginAttrs,
       const nsACString& aOriginKey, const nsTArray<KeyValuePair>& aDefaultData,
       const nsTArray<KeyValuePair>& aSessionData);
 

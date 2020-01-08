@@ -1597,7 +1597,7 @@ both:
      * Move sessionStorage data between parent and content processes. See
      * SessionStorageManager documentation for more details.
      */
-    async SessionStorageData(BrowsingContext aTop, nsCString aOriginAttrs,
+    async SessionStorageData(uint64_t aTopContextId, nsCString aOriginAttrs,
                              nsCString aOriginKey, KeyValuePair[] aDefaultData,
                              KeyValuePair[] aSessionData);
 };
