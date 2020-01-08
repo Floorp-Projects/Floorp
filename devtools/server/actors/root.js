@@ -612,7 +612,19 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
     // for all other contexts, since we do not need to get contexts of
     // a different type, we can just get the children directly from
     // the BrowsingContext.
-    return parentBrowsingContext.getChildren();
+    return (
+      parentBrowsingContext
+        .getChildren()
+        // For now, we only return the "remote frames".
+        // i.e. the frames which are in a distinct process compared to their parent document
+        .filter(browsingContext => {
+          return (
+            !browsingContext.parent ||
+            browsingContext.currentWindowGlobal.osPid !=
+              browsingContext.parent.currentWindowGlobal.osPid
+          );
+        })
+    );
   },
 
   async listRemoteFrames(id) {
