@@ -10,163 +10,111 @@
 
 <!-- LOCALIZATION NOTE (options.context.advancedSettings): This is the label for
   -  the heading of the advanced settings group in the options panel. -->
-<!ENTITY options.context.advancedSettings "Advanced settings">
 
 <!-- LOCALIZATION NOTE (options.context.inspector): This is the label for
   -  the heading of the Inspector group in the options panel. -->
-<!ENTITY options.context.inspector "Inspector">
 
 <!-- LOCALIZATION NOTE (options.showUserAgentStyles.label): This is the label
   -  for the checkbox option to show user agent styles in the Inspector
   -  panel. -->
-<!ENTITY options.showUserAgentStyles.label "Show Browser Styles">
-<!ENTITY options.showUserAgentStyles.tooltip "Turning this on will show default styles that are loaded by the browser.">
 
 <!-- LOCALIZATION NOTE (options.collapseAttrs.label): This is the label
   -  for the checkbox option to enable collapse attributes in the Inspector
   -  panel. -->
-<!ENTITY options.collapseAttrs.label "Truncate DOM attributes">
-<!ENTITY options.collapseAttrs.tooltip "Truncate long attributes in the inspector">
 
 <!-- LOCALIZATION NOTE (options.defaultColorUnit.label): This is the label for a
   -  dropdown list that controls the default color unit used in the inspector.
   -  This label is visible in the options panel. -->
-<!ENTITY options.defaultColorUnit.label "Default color unit">
 
 <!-- LOCALIZATION NOTE (options.defaultColorUnit.authored): This is used in the
   -  'Default color unit' dropdown list and is visible in the options panel. -->
-<!ENTITY options.defaultColorUnit.authored "As Authored">
 
 <!-- LOCALIZATION NOTE (options.defaultColorUnit.hex): This is used in the
   -  'Default color unit' dropdown list and is visible in the options panel. -->
-<!ENTITY options.defaultColorUnit.hex "Hex">
 
 <!-- LOCALIZATION NOTE (options.defaultColorUnit.hsl): This is used in the
   -  'Default color unit' dropdown list and is visible in the options panel. -->
-<!ENTITY options.defaultColorUnit.hsl "HSL(A)">
 
 <!-- LOCALIZATION NOTE (options.defaultColorUnit.rgb): This is used in the
   -  'Default color unit' dropdown list and is visible in the options panel. -->
-<!ENTITY options.defaultColorUnit.rgb "RGB(A)">
 
 <!-- LOCALIZATION NOTE (options.defaultColorUnit.name): This is used in
   -  the 'Default color unit' dropdown list and is visible in the options panel.
   -  -->
-<!ENTITY options.defaultColorUnit.name "Color Names">
 
 <!-- LOCALIZATION NOTE (options.context.triggersPageRefresh): This is the
   -  triggers page refresh footnote under the advanced settings group in the
   -  options panel and is used for settings that trigger page reload. -->
-<!ENTITY options.context.triggersPageRefresh  "* Current session only, reloads the page">
 
 <!-- LOCALIZATION NOTE (options.enableChrome.label5): This is the label for the
   -  checkbox that toggles chrome debugging, i.e. devtools.chrome.enabled
   -  boolean preference in about:config, in the options panel. -->
-<!ENTITY options.enableChrome.label5    "Enable browser chrome and add-on debugging toolboxes">
-<!ENTITY options.enableChrome.tooltip3  "Turning this option on will allow you to use various developer tools in browser context (via Tools > Web Developer > Browser Toolbox) and debug add-ons from the Add-ons Manager">
 
 <!-- LOCALIZATION NOTE (options.enableRemote.label3): This is the label for the
   -  checkbox that toggles remote debugging, i.e. devtools.debugger.remote-enabled
   -  boolean preference in about:config, in the options panel. -->
-<!ENTITY options.enableRemote.label3    "Enable remote debugging">
-<!ENTITY options.enableRemote.tooltip2  "Turning this option on will allow the developer tools to debug a remote instance like Firefox OS">
 
 <!-- LOCALIZATION NOTE (options.disableJavaScript.label,
   -  options.disableJavaScript.tooltip): This is the options panel label and
   -  tooltip for the checkbox that toggles JavaScript on or off. -->
-<!ENTITY options.disableJavaScript.label     "Disable JavaScript *">
-<!ENTITY options.disableJavaScript.tooltip   "Turning this option on will disable JavaScript for the current tab. If the tab or the toolbox is closed then this setting will be forgotten.">
 
 <!-- LOCALIZATION NOTE (options.disableHTTPCache.label,
   -  options.disableHTTPCache.tooltip): This is the options panel label and
   -  tooltip for the checkbox that toggles the HTTP cache on or off. -->
-<!ENTITY options.disableHTTPCache.label     "Disable HTTP Cache (when toolbox is open)">
-<!ENTITY options.disableHTTPCache.tooltip   "Turning this option on will disable the HTTP cache for all tabs that have the toolbox open. Service Workers are not affected by this option.">
 
 <!-- LOCALIZATION NOTE (options.enableServiceWorkersHTTP.label,
   -  options.enableServiceWorkersHTTP.tooltip): This is the options panel label and
   -  tooltip for the checkbox that toggles the service workers testing features on or off. This option enables service workers over HTTP. -->
-<!ENTITY options.enableServiceWorkersHTTP.label     "Enable Service Workers over HTTP (when toolbox is open)">
-<!ENTITY options.enableServiceWorkersHTTP.tooltip   "Turning this option on will enable the service workers over HTTP for all tabs that have the toolbox open.">
 
 <!-- LOCALIZATION NOTE (options.selectDefaultTools.label2): This is the label for
   -  the heading of group of checkboxes corresponding to the default developer
   -  tools. -->
-<!ENTITY options.selectDefaultTools.label2    "Default Developer Tools">
 
 <!-- LOCALIZATION NOTE (options.selectAdditionalTools.label): This is the label for
   -  the heading of group of checkboxes corresponding to the developer tools
   -  added by add-ons. This heading is hidden when there is no developer tool
   -  installed by add-ons. -->
-<!ENTITY options.selectAdditionalTools.label  "Developer Tools installed by add-ons">
 
 <!-- LOCALIZATION NOTE (options.selectEnabledToolboxButtons.label): This is the label for
   -  the heading of group of checkboxes corresponding to the default developer
   -  tool buttons. -->
-<!ENTITY options.selectEnabledToolboxButtons.label     "Available Toolbox Buttons">
 
 <!-- LOCALIZATION NOTE (options.toolNotSupported.label): This is the label for
   -  the explanation of the * marker on a tool which is currently not supported
   -  for the target of the toolbox. -->
-<!ENTITY options.toolNotSupported.label  "* Not supported for current toolbox target">
 
 <!-- LOCALIZATION NOTE (options.selectDevToolsTheme.label2): This is the label for
   -  the heading of the radiobox corresponding to the theme of the developer
   -  tools. -->
-<!ENTITY options.selectDevToolsTheme.label2   "Themes">
 
 <!-- LOCALIZATION NOTE (options.debugger.label): This is the label for the
   -  heading of the group of Debugger preferences in the options panel. -->
-<!ENTITY options.debugger.label            "Debugger">
 
 <!-- LOCALIZATION NOTE (options.sourceMaps.label): This is the
    - label for the checkbox that toggles source maps in all tools -->
-<!ENTITY options.sourceMaps.label      "Enable Source Maps">
-<!ENTITY options.sourceMaps.tooltip1   "If you enable this option sources will be mapped in the tools.">
 
 <!-- LOCALIZATION NOTE (options.styleeditor.label): This is the label for the
   -  heading of the group of Style Editor preferences in the options
   -  panel. -->
-<!ENTITY options.styleeditor.label            "Style Editor">
 
 <!-- LOCALIZATION NOTE (options.stylesheetAutocompletion.label): This is the
    - label for the checkbox that toggles autocompletion of css in the Style Editor -->
-<!ENTITY options.stylesheetAutocompletion.label      "Autocomplete CSS">
-<!ENTITY options.stylesheetAutocompletion.tooltip    "Autocomplete CSS properties, values and selectors in Style Editor as you type">
 
 <!-- LOCALIZATION NOTE (options.screenshot.label): This is the label for the
    -  heading of the group of Screenshot preferences in the options
    -  panel. -->
-<!ENTITY options.screenshot.label            "Screenshot Behavior">
 
 <!-- LOCALIZATION NOTE (options.screenshot.clipboard.label): This is the
    - label for the checkbox that toggles screenshot to clipboard feature. -->
-<!ENTITY options.screenshot.clipboard.label      "Screenshot to clipboard">
-<!ENTITY options.screenshot.clipboard.tooltip    "Saves to the screenshot directly to the clipboard">
 
 <!-- LOCALIZATION NOTE (options.screenshot.audio.label): This is the
    - label for the checkbox that toggles the camera shutter audio for screenshot tool -->
-<!ENTITY options.screenshot.audio.label      "Play camera shutter sound">
-<!ENTITY options.screenshot.audio.tooltip    "Enables the camera audio sound when taking screenshot">
 
 <!-- LOCALIZATION NOTE (options.showPlatformData.label): This is the
   -  label for the checkbox that toggles the display of the platform data in the,
   -  Profiler i.e. devtools.profiler.ui.show-platform-data a boolean preference
   -  in about:config, in the options panel. -->
-<!ENTITY options.showPlatformData.label    "Show Gecko platform data">
-<!ENTITY options.showPlatformData.tooltip  "If you enable this option the JavaScript Profiler reports will include
-Gecko platform symbols">
 
 <!-- LOCALIZATION NOTE (options.sourceeditor.*): Options under the editor
   -  section. -->
 
-<!ENTITY options.sourceeditor.label                     "Editor Preferences">
-<!ENTITY options.sourceeditor.detectindentation.label   "Detect indentation">
-<!ENTITY options.sourceeditor.detectindentation.tooltip "Guess indentation based on source content">
-<!ENTITY options.sourceeditor.autoclosebrackets.label   "Autoclose brackets">
-<!ENTITY options.sourceeditor.autoclosebrackets.tooltip "Automatically insert closing brackets">
-<!ENTITY options.sourceeditor.expandtab.label           "Indent using spaces">
-<!ENTITY options.sourceeditor.expandtab.tooltip         "Use spaces instead of the tab character">
-<!ENTITY options.sourceeditor.tabsize.label             "Tab size">
-<!ENTITY options.sourceeditor.keybinding.label          "Keybindings">
-<!ENTITY options.sourceeditor.keybinding.default.label  "Default">
