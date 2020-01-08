@@ -720,7 +720,7 @@ pub extern "C" fn Servo_AnimationValue_Serialize(
             buffer,
             None,
             None, /* No extra custom properties */
-            &data.stylist.device().environment()
+            &data.stylist.device(),
         );
     debug_assert!(rv.is_ok());
 }
@@ -4266,7 +4266,7 @@ pub extern "C" fn Servo_DeclarationBlock_SerializeOneValue(
         Locked::<PropertyDeclarationBlock>::arc_from_borrowed(&custom_properties);
     let custom_properties = custom_properties.map(|block| block.read_with(&guard));
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
-    let rv = decls.single_value_to_css(&property_id, buffer, computed_values, custom_properties, &data.stylist.device().environment());
+    let rv = decls.single_value_to_css(&property_id, buffer, computed_values, custom_properties, &data.stylist.device());
     debug_assert!(rv.is_ok());
 }
 
