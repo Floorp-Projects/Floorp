@@ -94,6 +94,30 @@ add_task(async function testTempPermissionOnReload() {
       scope: SitePermissions.SCOPE_PERSISTENT,
     });
 
+    // Set the permission again.
+    SitePermissions.setForPrincipal(
+      principal,
+      id,
+      SitePermissions.BLOCK,
+      SitePermissions.SCOPE_TEMPORARY,
+      browser
+    );
+
+    // Reload as user via return key in urlbar (should remove the temp permission)
+    let urlBarInput = document.getElementById("urlbar-input");
+    await EventUtils.synthesizeMouseAtCenter(urlBarInput, {});
+
+    reloaded = BrowserTestUtils.browserLoaded(browser, false, origin);
+
+    EventUtils.synthesizeAndWaitKey("VK_RETURN", {});
+
+    await reloaded;
+
+    Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
+      state: SitePermissions.UNKNOWN,
+      scope: SitePermissions.SCOPE_PERSISTENT,
+    });
+
     SitePermissions.removeFromPrincipal(principal, id, browser);
   });
 });
