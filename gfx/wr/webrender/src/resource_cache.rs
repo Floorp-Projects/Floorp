@@ -400,7 +400,7 @@ impl ImageResult {
                 entry.mark_unused(texture_cache);
             },
             ImageResult::Multi(ref mut entries) => {
-                for entry in entries.resources.values_mut() {
+                for (_, entry) in &mut entries.resources {
                     entry.mark_unused(texture_cache);
                 }
             },
@@ -786,15 +786,17 @@ impl ResourceCache {
                     _ => {}
                 }
 
-            } else if let RasterizedBlob::NonTiled(ref mut queue) = *image {
-                // If our new rasterized rect overwrites items in the queue, discard them.
-                queue.retain(|img| {
-                    !data.rasterized_rect.contains_rect(&img.rasterized_rect)
-                });
-
-                queue.push(data);
             } else {
-                *image = RasterizedBlob::NonTiled(vec![data]);
+                if let RasterizedBlob::NonTiled(ref mut queue) = *image {
+                    // If our new rasterized rect overwrites items in the queue, discard them.
+                    queue.retain(|img| {
+                        !data.rasterized_rect.contains_rect(&img.rasterized_rect)
+                    });
+
+                    queue.push(data);
+                } else {
+                    *image = RasterizedBlob::NonTiled(vec![data]);
+                }
             }
         }
     }
@@ -935,7 +937,7 @@ impl ResourceCache {
                                     tile,
                                 ).into();
 
-                                rect.intersection(&tile_rect).unwrap_or_else(DeviceIntRect::zero)
+                                rect.intersection(&tile_rect).unwrap_or(DeviceIntRect::zero())
                             })
                         }
                         (None, Some(..)) => DirtyRect::All,
@@ -1018,7 +1020,7 @@ impl ResourceCache {
 
         match (image.valid_tiles_after_bounds_change, valid_tiles_after_bounds_change) {
             (Some(old), Some(ref mut new)) => {
-                *new = new.intersection(&old).unwrap_or_else(TileRange::zero);
+                *new = new.intersection(&old).unwrap_or(TileRange::zero());
             }
             (Some(old), None) => {
                 valid_tiles_after_bounds_change = Some(old);

@@ -1009,7 +1009,7 @@ pub enum ApiMsg {
     /// Flush from the caches anything that isn't necessary, to free some memory.
     MemoryPressure,
     /// Collects a memory report.
-    ReportMemory(MsgSender<Box<MemoryReport>>),
+    ReportMemory(MsgSender<MemoryReport>),
     /// Change debugging options.
     DebugCommand(DebugCommand),
     /// Wakes the render backend's event loop up. Needed when an event is communicated
@@ -1538,7 +1538,7 @@ impl RenderApi {
     pub fn report_memory(&self) -> MemoryReport {
         let (tx, rx) = channel::msg_channel().unwrap();
         self.api_sender.send(ApiMsg::ReportMemory(tx)).unwrap();
-        *rx.recv().unwrap()
+        rx.recv().unwrap()
     }
 
     /// Update debugging flags.
@@ -1636,7 +1636,7 @@ impl RenderApi {
         for payload in document_payloads.drain(..).flatten() {
             self.payload_sender.send_payload(payload).unwrap();
         }
-        self.api_sender.send(ApiMsg::UpdateDocuments(document_ids, msgs)).unwrap();
+        self.api_sender.send(ApiMsg::UpdateDocuments(document_ids.clone(), msgs)).unwrap();
     }
 
     /// Does a hit test on display items in the specified document, at the given
@@ -1779,7 +1779,7 @@ impl ZoomFactor {
     }
 
     /// Get the zoom factor as an untyped float.
-    pub fn get(self) -> f32 {
+    pub fn get(&self) -> f32 {
         self.0
     }
 }
@@ -1815,8 +1815,8 @@ pub struct PropertyBindingKey<T> {
 /// Construct a property value from a given key and value.
 impl<T: Copy> PropertyBindingKey<T> {
     ///
-    pub fn with(self, value: T) -> PropertyValue<T> {
-        PropertyValue { key: self, value }
+    pub fn with(&self, value: T) -> PropertyValue<T> {
+        PropertyValue { key: *self, value }
     }
 }
 
