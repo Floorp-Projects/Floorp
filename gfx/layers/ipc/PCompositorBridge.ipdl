@@ -17,6 +17,7 @@ include protocol PCompositorManager;
 include protocol PCompositorWidget;
 include protocol PLayerTransaction;
 include protocol PTexture;
+include protocol PWebGL;
 include protocol PWebRenderBridge;
 include protocol PWebGPU;
 include "mozilla/GfxMessageUtils.h";
@@ -47,6 +48,10 @@ using mozilla::wr::MaybeExternalImageId from "mozilla/webrender/WebRenderTypes.h
 using mozilla::layers::LayersObserverEpoch from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 using struct DxgiAdapterDesc from "mozilla/D3DMessageUtils.h";
+
+using mozilla::WebGLVersion from "mozilla/GfxMessageUtils.h";
+using shmemholder mozilla::HostWebGLCommandSink from "mozilla/dom/WebGLCrossProcessCommandQueue.h";
+using shmemholder mozilla::HostWebGLErrorSource from "mozilla/dom/WebGLErrorQueue.h";
 
 namespace mozilla {
 namespace layers {
@@ -103,6 +108,7 @@ sync refcounted protocol PCompositorBridge
   manages PTexture;
   manages PCompositorWidget;
   manages PWebRenderBridge;
+  manages PWebGL;
   manages PWebGPU;
 
 child:
@@ -293,6 +299,11 @@ parent:
 
   // To set up sharing the composited output to Firefox Reality on Desktop
   async RequestFxrOutput();
+
+  // Actor that represents one WebGL context.
+  sync PWebGL(WebGLVersion aWebGLVersion,
+              HostWebGLCommandSink aCommandSink,
+              HostWebGLErrorSource aErrorSource);
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can

@@ -30,6 +30,4 @@ bool WebGLExtensionFragDepth::IsSupported(const WebGLContext* webgl) {
   return gl->IsSupported(gl::GLFeature::frag_depth);
 }
 
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionFragDepth, EXT_frag_depth)
-
 }  // namespace mozilla

@@ -107,22 +107,19 @@ void WebGL2Context::WaitSync(const WebGLSync& sync, GLbitfield flags,
   gl->fWaitSync(sync.mGLName, flags, LOCAL_GL_TIMEOUT_IGNORED);
 }
 
-void WebGL2Context::GetSyncParameter(JSContext*, const WebGLSync& sync,
-                                     GLenum pname,
-                                     JS::MutableHandleValue retval) {
+MaybeWebGLVariant WebGL2Context::GetSyncParameter(const WebGLSync& sync,
+                                                  GLenum pname) {
   const FuncScope funcScope(*this, "getSyncParameter");
-  retval.setNull();
-  if (IsContextLost()) return;
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObject("sync", sync)) return;
+  if (!ValidateObject("sync", sync)) return Nothing();
 
   ////
 
   const bool canBeAvailable =
       (sync.mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
   if (!canBeAvailable && pname == LOCAL_GL_SYNC_STATUS) {
-    retval.set(JS::Int32Value(LOCAL_GL_UNSIGNALED));
-    return;
+    return AsSomeVariant(LOCAL_GL_UNSIGNALED);
   }
 
   GLint result = 0;
@@ -137,12 +134,11 @@ void WebGL2Context::GetSyncParameter(JSContext*, const WebGLSync& sync,
         sync.MarkSignaled();
       }
 
-      retval.set(JS::Int32Value(result));
-      return;
+      return AsSomeVariant(result);
 
     default:
       ErrorInvalidEnumInfo("pname", pname);
-      return;
+      return Nothing();
   }
 }
 

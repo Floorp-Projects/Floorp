@@ -14,12 +14,10 @@
 
 namespace mozilla {
 
-class WebGLSampler final : public nsWrapperCache,
-                           public WebGLRefCountedObject<WebGLSampler>,
+class WebGLSampler final : public WebGLRefCountedObject<WebGLSampler>,
                            public LinkedListElement<WebGLSampler>,
                            public CacheInvalidator {
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLSampler)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLSampler)
+  NS_INLINE_DECL_REFCOUNTING(WebGLSampler)
 
  public:
   const GLuint mGLName;
@@ -35,10 +33,6 @@ class WebGLSampler final : public nsWrapperCache,
 
  public:
   void Delete();
-  WebGLContext* GetParentObject() const;
-
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> givenProto) override;
 
   void SamplerParameter(GLenum pname, const FloatOrInt& param);
 

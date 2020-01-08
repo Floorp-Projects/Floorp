@@ -69,11 +69,6 @@ Maybe<ImageInfo> ImageInfo::NextMip(const GLenum target) const {
 
 ////////////////////////////////////////
 
-JSObject* WebGLTexture::WrapObject(JSContext* cx,
-                                   JS::Handle<JSObject*> givenProto) {
-  return dom::WebGLTexture_Binding::Wrap(cx, this, givenProto);
-}
-
 WebGLTexture::WebGLTexture(WebGLContext* webgl, GLuint tex)
     : WebGLRefCountedObject(webgl),
       mGLName(tex),
@@ -824,22 +819,23 @@ void WebGLTexture::GenerateMipmap() {
   PopulateMipChain(maxLevel);
 }
 
-JS::Value WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname) {
+MaybeWebGLVariant WebGLTexture::GetTexParameter(TexTarget texTarget,
+                                                GLenum pname) {
   GLint i = 0;
   GLfloat f = 0.0f;
 
   switch (pname) {
     case LOCAL_GL_TEXTURE_BASE_LEVEL:
-      return JS::NumberValue(mBaseMipmapLevel);
+      return AsSomeVariant(mBaseMipmapLevel);
 
     case LOCAL_GL_TEXTURE_MAX_LEVEL:
-      return JS::NumberValue(mMaxMipmapLevel);
+      return AsSomeVariant(mMaxMipmapLevel);
 
     case LOCAL_GL_TEXTURE_IMMUTABLE_FORMAT:
-      return JS::BooleanValue(mImmutable);
+      return AsSomeVariant(mImmutable);
 
     case LOCAL_GL_TEXTURE_IMMUTABLE_LEVELS:
-      return JS::NumberValue(uint32_t(mImmutableLevelCount));
+      return AsSomeVariant(uint32_t(mImmutableLevelCount));
 
     case LOCAL_GL_TEXTURE_MIN_FILTER:
     case LOCAL_GL_TEXTURE_MAG_FILTER:
@@ -849,13 +845,13 @@ JS::Value WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname) {
     case LOCAL_GL_TEXTURE_COMPARE_MODE:
     case LOCAL_GL_TEXTURE_COMPARE_FUNC:
       mContext->gl->fGetTexParameteriv(texTarget.get(), pname, &i);
-      return JS::NumberValue(uint32_t(i));
+      return AsSomeVariant(uint32_t(i));
 
     case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
     case LOCAL_GL_TEXTURE_MAX_LOD:
     case LOCAL_GL_TEXTURE_MIN_LOD:
       mContext->gl->fGetTexParameterfv(texTarget.get(), pname, &f);
-      return JS::NumberValue(float(f));
+      return AsSomeVariant(float(f));
 
     default:
       MOZ_CRASH("GFX: Unhandled pname.");
@@ -1076,12 +1072,5 @@ void WebGLTexture::Truncate() {
   }
   InvalidateCaches();
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLTexture)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLTexture, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLTexture, Release)
 
 }  // namespace mozilla

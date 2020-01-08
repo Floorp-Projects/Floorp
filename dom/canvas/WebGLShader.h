@@ -25,8 +25,7 @@ namespace webgl {
 class ShaderValidatorResults;
 }  // namespace webgl
 
-class WebGLShader final : public nsWrapperCache,
-                          public WebGLRefCountedObject<WebGLShader>,
+class WebGLShader final : public WebGLRefCountedObject<WebGLShader>,
                           public LinkedListElement<WebGLShader> {
   friend class WebGLContext;
   friend class WebGLProgram;
@@ -40,10 +39,10 @@ class WebGLShader final : public nsWrapperCache,
  public:
   // GL funcs
   void CompileShader();
-  JS::Value GetShaderParameter(GLenum pname) const;
-  void GetShaderInfoLog(nsAString* out) const;
-  void GetShaderSource(nsAString* out) const;
-  void GetShaderTranslatedSource(nsAString* out) const;
+  MaybeWebGLVariant GetShaderParameter(GLenum pname) const;
+  nsString GetShaderInfoLog() const;
+  nsString GetShaderSource() const;
+  nsString GetShaderTranslatedSource() const;
   void ShaderSource(const nsAString& source);
 
   // Util funcs
@@ -75,13 +74,7 @@ class WebGLShader final : public nsWrapperCache,
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   void Delete();
 
-  WebGLContext* GetParentObject() const { return mContext; }
-
-  virtual JSObject* WrapObject(JSContext* js,
-                               JS::Handle<JSObject*> givenProto) override;
-
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLShader)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLShader)
+  NS_INLINE_DECL_REFCOUNTING(WebGLShader)
 
  public:
   const GLuint mGLName;

@@ -78,34 +78,31 @@ static void AssembleName(const nsCString& baseName, bool isArray,
 
 ////
 
-/*static*/
-const webgl::UniformInfo::TexListT* webgl::UniformInfo::GetTexList(
-    WebGLActiveInfo* activeInfo) {
-  const auto& webgl = activeInfo->mWebGL;
-
+/*static*/ const webgl::UniformInfo::TexListT* webgl::UniformInfo::GetTexList(
+    const WebGLContext* aWebGL, WebGLActiveInfo* activeInfo) {
   switch (activeInfo->mElemType) {
     case LOCAL_GL_SAMPLER_2D:
     case LOCAL_GL_SAMPLER_2D_SHADOW:
     case LOCAL_GL_INT_SAMPLER_2D:
     case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D:
-      return &webgl->mBound2DTextures;
+      return &aWebGL->mBound2DTextures;
 
     case LOCAL_GL_SAMPLER_CUBE:
     case LOCAL_GL_SAMPLER_CUBE_SHADOW:
     case LOCAL_GL_INT_SAMPLER_CUBE:
     case LOCAL_GL_UNSIGNED_INT_SAMPLER_CUBE:
-      return &webgl->mBoundCubeMapTextures;
+      return &aWebGL->mBoundCubeMapTextures;
 
     case LOCAL_GL_SAMPLER_3D:
     case LOCAL_GL_INT_SAMPLER_3D:
     case LOCAL_GL_UNSIGNED_INT_SAMPLER_3D:
-      return &webgl->mBound3DTextures;
+      return &aWebGL->mBound3DTextures;
 
     case LOCAL_GL_SAMPLER_2D_ARRAY:
     case LOCAL_GL_SAMPLER_2D_ARRAY_SHADOW:
     case LOCAL_GL_INT_SAMPLER_2D_ARRAY:
     case LOCAL_GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
-      return &webgl->mBound2DArrayTextures;
+      return &aWebGL->mBound2DArrayTextures;
 
     default:
       return nullptr;
@@ -151,13 +148,14 @@ static webgl::TextureBaseType SamplerBaseType(const GLenum elemType) {
   }
 }
 
-webgl::UniformInfo::UniformInfo(WebGLActiveInfo* activeInfo)
+webgl::UniformInfo::UniformInfo(const WebGLContext* webgl,
+                                WebGLActiveInfo& activeInfo)
     : mActiveInfo(activeInfo),
-      mSamplerTexList(GetTexList(activeInfo)),
-      mTexBaseType(SamplerBaseType(mActiveInfo->mElemType)),
-      mIsShadowSampler(IsShadowSampler(mActiveInfo->mElemType)) {
+      mSamplerTexList(GetTexList(webgl, &activeInfo)),
+      mTexBaseType(SamplerBaseType(mActiveInfo.mElemType)),
+      mIsShadowSampler(IsShadowSampler(mActiveInfo.mElemType)) {
   if (mSamplerTexList) {
-    mSamplerValues.assign(mActiveInfo->mElemCount, 0);
+    mSamplerValues.assign(mActiveInfo.mElemCount, 0);
   }
 }
 
@@ -281,8 +279,8 @@ static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
     ///////
 
     const bool isArray = false;
-    const RefPtr<WebGLActiveInfo> activeInfo = new WebGLActiveInfo(
-        webgl, elemCount, elemType, isArray, userName, mappedName);
+    const WebGLActiveInfo activeInfo(elemCount, elemType, isArray, userName,
+                                     mappedName);
     const webgl::AttribInfo attrib = {activeInfo, loc};
     info->attribs.push_back(attrib);
 
@@ -361,10 +359,10 @@ static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
 
     ///////
 
-    const RefPtr<WebGLActiveInfo> activeInfo = new WebGLActiveInfo(
-        webgl, elemCount, elemType, isArray, baseUserName, baseMappedName);
+    WebGLActiveInfo activeInfo(elemCount, elemType, isArray, baseUserName,
+                               baseMappedName);
 
-    auto* uniform = new webgl::UniformInfo(activeInfo);
+    auto* uniform = new webgl::UniformInfo(webgl, activeInfo);
     info->uniforms.push_back(uniform);
 
     if (uniform->mSamplerTexList) {
@@ -464,8 +462,8 @@ static RefPtr<const webgl::LinkedProgramInfo> QueryProgramInfo(
                     mappedName.BeginReading());
 #endif
 
-      const RefPtr<WebGLActiveInfo> activeInfo = new WebGLActiveInfo(
-          webgl, elemCount, elemType, isArray, baseUserName, mappedName);
+      WebGLActiveInfo activeInfo(elemCount, elemType, isArray, baseUserName,
+                                 mappedName);
       info->transformFeedbackVaryings.push_back(activeInfo);
     }
   }
@@ -646,7 +644,7 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits() const {
       attribDataBaseType = webgl->mGenericVertexAttribTypes[loc];
     }
 
-    const auto& progBaseType = progAttrib.mActiveInfo->mBaseType;
+    const auto& progBaseType = progAttrib.mActiveInfo.mBaseType;
     if ((attribDataBaseType != progBaseType) &
         (progBaseType != webgl::AttribBaseType::Boolean)) {
       const auto& dataType = ToString(attribDataBaseType);
@@ -787,11 +785,9 @@ void WebGLProgram::DetachShader(const WebGLShader* shader) {
   mContext->gl->fDetachShader(mGLName, shader->mGLName);
 }
 
-already_AddRefed<WebGLActiveInfo> WebGLProgram::GetActiveAttrib(
-    GLuint index) const {
+Maybe<WebGLActiveInfo> WebGLProgram::GetActiveAttrib(GLuint index) const {
   if (!mMostRecentLinkInfo) {
-    RefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
-    return ret.forget();
+    return Some(WebGLActiveInfo::CreateInvalid());
   }
 
   const auto& attribs = mMostRecentLinkInfo->attribs;
@@ -799,19 +795,16 @@ already_AddRefed<WebGLActiveInfo> WebGLProgram::GetActiveAttrib(
   if (index >= attribs.size()) {
     mContext->ErrorInvalidValue("`index` (%i) must be less than %s (%zu).",
                                 index, "ACTIVE_ATTRIBS", attribs.size());
-    return nullptr;
+    return Nothing();
   }
 
-  RefPtr<WebGLActiveInfo> ret = attribs[index].mActiveInfo;
-  return ret.forget();
+  return Some(attribs[index].mActiveInfo);
 }
 
-already_AddRefed<WebGLActiveInfo> WebGLProgram::GetActiveUniform(
-    GLuint index) const {
+Maybe<WebGLActiveInfo> WebGLProgram::GetActiveUniform(GLuint index) const {
   if (!mMostRecentLinkInfo) {
     // According to the spec, this can return null.
-    RefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
-    return ret.forget();
+    return Some(WebGLActiveInfo::CreateInvalid());
   }
 
   const auto& uniforms = mMostRecentLinkInfo->uniforms;
@@ -819,20 +812,24 @@ already_AddRefed<WebGLActiveInfo> WebGLProgram::GetActiveUniform(
   if (index >= uniforms.size()) {
     mContext->ErrorInvalidValue("`index` (%i) must be less than %s (%zu).",
                                 index, "ACTIVE_UNIFORMS", uniforms.size());
-    return nullptr;
+    return Nothing();
   }
 
-  RefPtr<WebGLActiveInfo> ret = uniforms[index]->mActiveInfo;
-  return ret.forget();
+  return Some(uniforms[index]->mActiveInfo);
 }
 
-void WebGLProgram::GetAttachedShaders(
-    nsTArray<RefPtr<WebGLShader>>* const out) const {
-  out->TruncateLength(0);
+MaybeAttachedShaders WebGLProgram::GetAttachedShaders() const {
+  MaybeAttachedShaders ret;
+  ret.emplace();
+  Array<WebGLId<WebGLShader>, 2>& out = ret.ref();
 
-  if (mVertShader) out->AppendElement(mVertShader);
-
-  if (mFragShader) out->AppendElement(mFragShader);
+  if (mVertShader) {
+    out[0] = mVertShader.get();
+  }
+  if (mFragShader) {
+    out[1] = mFragShader.get();
+  }
+  return ret;
 }
 
 GLint WebGLProgram::GetAttribLocation(const nsAString& userName_wide) const {
@@ -872,8 +869,10 @@ GLint WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const {
   return -1;
 }
 
-void WebGLProgram::GetProgramInfoLog(nsAString* const out) const {
-  CopyASCIItoUTF16(mLinkLog, *out);
+nsString WebGLProgram::GetProgramInfoLog() const {
+  nsString out;
+  CopyASCIItoUTF16(mLinkLog, out);
+  return out;
 }
 
 static GLint GetProgramiv(gl::GLContext* gl, GLuint program, GLenum pname) {
@@ -882,55 +881,55 @@ static GLint GetProgramiv(gl::GLContext* gl, GLuint program, GLenum pname) {
   return ret;
 }
 
-JS::Value WebGLProgram::GetProgramParameter(GLenum pname) const {
+MaybeWebGLVariant WebGLProgram::GetProgramParameter(GLenum pname) const {
   gl::GLContext* gl = mContext->gl;
 
   if (mContext->IsWebGL2()) {
     switch (pname) {
       case LOCAL_GL_ACTIVE_UNIFORM_BLOCKS:
-        if (!IsLinked()) return JS::NumberValue(0);
-        return JS::NumberValue(LinkInfo()->uniformBlocks.size());
+        if (!IsLinked()) return AsSomeVariant(0);
+        return AsSomeVariant(LinkInfo()->uniformBlocks.size());
 
       case LOCAL_GL_TRANSFORM_FEEDBACK_VARYINGS:
-        if (!IsLinked()) return JS::NumberValue(0);
-        return JS::NumberValue(LinkInfo()->transformFeedbackVaryings.size());
+        if (!IsLinked()) return AsSomeVariant(0);
+        return AsSomeVariant(LinkInfo()->transformFeedbackVaryings.size());
 
       case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
-        if (!IsLinked()) return JS::NumberValue(LOCAL_GL_INTERLEAVED_ATTRIBS);
-        return JS::NumberValue(LinkInfo()->transformFeedbackBufferMode);
+        if (!IsLinked()) return AsSomeVariant(LOCAL_GL_INTERLEAVED_ATTRIBS);
+        return AsSomeVariant(LinkInfo()->transformFeedbackBufferMode);
     }
   }
 
   switch (pname) {
     case LOCAL_GL_ATTACHED_SHADERS:
-      return JS::NumberValue(int(bool(mVertShader.get())) +
-                             int(bool(mFragShader)));
+      return AsSomeVariant(int(bool(mVertShader.get())) +
+                           int(bool(mFragShader)));
 
     case LOCAL_GL_ACTIVE_UNIFORMS:
-      if (!IsLinked()) return JS::NumberValue(0);
-      return JS::NumberValue(LinkInfo()->uniforms.size());
+      if (!IsLinked()) return AsSomeVariant(0);
+      return AsSomeVariant(LinkInfo()->uniforms.size());
 
     case LOCAL_GL_ACTIVE_ATTRIBUTES:
-      if (!IsLinked()) return JS::NumberValue(0);
-      return JS::NumberValue(LinkInfo()->attribs.size());
+      if (!IsLinked()) return AsSomeVariant(0);
+      return AsSomeVariant(LinkInfo()->attribs.size());
 
     case LOCAL_GL_DELETE_STATUS:
-      return JS::BooleanValue(IsDeleteRequested());
+      return AsSomeVariant(IsDeleteRequested());
 
     case LOCAL_GL_LINK_STATUS:
-      return JS::BooleanValue(IsLinked());
+      return AsSomeVariant(IsLinked());
 
     case LOCAL_GL_VALIDATE_STATUS:
 #ifdef XP_MACOSX
       // See comment in ValidateProgram.
-      if (gl->WorkAroundDriverBugs()) return JS::BooleanValue(true);
+      if (gl->WorkAroundDriverBugs()) return AsSomeVariant(true);
 #endif
       // Todo: Implement this in our code.
-      return JS::BooleanValue(bool(GetProgramiv(gl, mGLName, pname)));
+      return AsSomeVariant(bool(GetProgramiv(gl, mGLName, pname)));
 
     default:
       mContext->ErrorInvalidEnumInfo("pname", pname);
-      return JS::NullValue();
+      return Nothing();
   }
 }
 
@@ -961,36 +960,36 @@ GLuint WebGLProgram::GetUniformBlockIndex(
   return gl->fGetUniformBlockIndex(mGLName, mappedName.BeginReading());
 }
 
-void WebGLProgram::GetActiveUniformBlockName(GLuint uniformBlockIndex,
-                                             nsAString& retval) const {
+nsString WebGLProgram::GetActiveUniformBlockName(
+    GLuint uniformBlockIndex) const {
   if (!IsLinked()) {
     mContext->ErrorInvalidOperation("`program` must be linked.");
-    return;
+    return EmptyString();
   }
 
   const webgl::LinkedProgramInfo* linkInfo = LinkInfo();
   GLuint uniformBlockCount = (GLuint)linkInfo->uniformBlocks.size();
   if (uniformBlockIndex >= uniformBlockCount) {
     mContext->ErrorInvalidValue("index %u invalid.", uniformBlockIndex);
-    return;
+    return EmptyString();
   }
 
   const auto& blockInfo = linkInfo->uniformBlocks[uniformBlockIndex];
-  retval.Assign(NS_ConvertASCIItoUTF16(blockInfo->mUserName));
+  return NS_ConvertASCIItoUTF16(blockInfo->mUserName);
 }
 
-JS::Value WebGLProgram::GetActiveUniformBlockParam(GLuint uniformBlockIndex,
-                                                   GLenum pname) const {
+MaybeWebGLVariant WebGLProgram::GetActiveUniformBlockParam(
+    GLuint uniformBlockIndex, GLenum pname) const {
   if (!IsLinked()) {
     mContext->ErrorInvalidOperation("`program` must be linked.");
-    return JS::NullValue();
+    return Nothing();
   }
 
   const webgl::LinkedProgramInfo* linkInfo = LinkInfo();
   GLuint uniformBlockCount = (GLuint)linkInfo->uniformBlocks.size();
   if (uniformBlockIndex >= uniformBlockCount) {
     mContext->ErrorInvalidValue("Index %u invalid.", uniformBlockIndex);
-    return JS::NullValue();
+    return Nothing();
   }
 
   gl::GLContext* gl = mContext->GL();
@@ -1000,32 +999,31 @@ JS::Value WebGLProgram::GetActiveUniformBlockParam(GLuint uniformBlockIndex,
     case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:
     case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER:
       gl->fGetActiveUniformBlockiv(mGLName, uniformBlockIndex, pname, &param);
-      return JS::BooleanValue(bool(param));
+      return AsSomeVariant(bool(param));
 
     case LOCAL_GL_UNIFORM_BLOCK_BINDING:
     case LOCAL_GL_UNIFORM_BLOCK_DATA_SIZE:
     case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS:
       gl->fGetActiveUniformBlockiv(mGLName, uniformBlockIndex, pname, &param);
-      return JS::NumberValue(param);
+      return AsSomeVariant(param);
 
     default:
       MOZ_CRASH("bad `pname`.");
   }
 }
 
-JS::Value WebGLProgram::GetActiveUniformBlockActiveUniforms(
-    JSContext* cx, GLuint uniformBlockIndex,
-    ErrorResult* const out_error) const {
+MaybeWebGLVariant WebGLProgram::GetActiveUniformBlockActiveUniforms(
+    GLuint uniformBlockIndex) const {
   if (!IsLinked()) {
     mContext->ErrorInvalidOperation("`program` must be linked.");
-    return JS::NullValue();
+    return Nothing();
   }
 
   const webgl::LinkedProgramInfo* linkInfo = LinkInfo();
   GLuint uniformBlockCount = (GLuint)linkInfo->uniformBlocks.size();
   if (uniformBlockIndex >= uniformBlockCount) {
     mContext->ErrorInvalidValue("Index %u invalid.", uniformBlockIndex);
-    return JS::NullValue();
+    return Nothing();
   }
 
   gl::GLContext* gl = mContext->GL();
@@ -1033,22 +1031,15 @@ JS::Value WebGLProgram::GetActiveUniformBlockActiveUniforms(
   gl->fGetActiveUniformBlockiv(mGLName, uniformBlockIndex,
                                LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS,
                                &activeUniformCount);
-  JS::RootedObject obj(
-      cx, dom::Uint32Array::Create(cx, mContext, activeUniformCount, nullptr));
-  if (!obj) {
-    *out_error = NS_ERROR_OUT_OF_MEMORY;
-    return JS::NullValue();
-  }
 
-  dom::Uint32Array result;
-  DebugOnly<bool> inited = result.Init(obj);
-  MOZ_ASSERT(inited);
-  result.ComputeLengthAndData();
+  MaybeWebGLVariant ret = AsSomeVariant(nsTArray<uint32_t>());
+  nsTArray<uint32_t>& array = ret.ref().as<nsTArray<uint32_t>>();
+  array.AppendElements(activeUniformCount);
   gl->fGetActiveUniformBlockiv(mGLName, uniformBlockIndex,
                                LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES,
-                               (GLint*)result.Data());
+                               (GLint*)&array[0]);
 
-  return JS::ObjectValue(*obj);
+  return ret;
 }
 
 already_AddRefed<WebGLUniformLocation> WebGLProgram::GetUniformLocation(
@@ -1082,16 +1073,17 @@ already_AddRefed<WebGLUniformLocation> WebGLProgram::GetUniformLocation(
   return locObj.forget();
 }
 
-void WebGLProgram::GetUniformIndices(
-    const dom::Sequence<nsString>& uniformNames,
-    dom::Nullable<nsTArray<GLuint>>& retval) const {
+MaybeWebGLVariant WebGLProgram::GetUniformIndices(
+    const nsTArray<nsString>& uniformNames) const {
   if (!IsLinked()) {
     mContext->ErrorInvalidOperation("`program` must be linked.");
-    return;
+    return Nothing();
   }
 
+  MaybeWebGLVariant ret = AsSomeVariant(nsTArray<uint32_t>());
+  nsTArray<uint32_t>& arr = ret.ref().as<nsTArray<uint32_t>>();
+
   size_t count = uniformNames.Length();
-  nsTArray<GLuint>& arr = retval.SetValue();
 
   gl::GLContext* gl = mContext->GL();
 
@@ -1112,6 +1104,8 @@ void WebGLProgram::GetUniformIndices(
     gl->fGetUniformIndices(mGLName, 1, &mappedNameBegin, &index);
     arr.AppendElement(index);
   }
+
+  return ret;
 }
 
 void WebGLProgram::UniformBlockBinding(GLuint uniformBlockIndex,
@@ -1330,10 +1324,10 @@ bool WebGLProgram::ValidateAfterTentativeLink(
 
   // Check if the attrib name conflicting to uniform name
   for (const auto& attrib : linkInfo->attribs) {
-    const auto& attribName = attrib.mActiveInfo->mBaseUserName;
+    const auto& attribName = attrib.mActiveInfo.mBaseUserName;
 
     for (const auto& uniform : linkInfo->uniforms) {
-      const auto& uniformName = uniform->mActiveInfo->mBaseUserName;
+      const auto& uniformName = uniform->mActiveInfo.mBaseUserName;
       if (attribName == uniformName) {
         *out_linkLog = nsPrintfCString(
             "Attrib name conflicts with uniform name:"
@@ -1348,7 +1342,7 @@ bool WebGLProgram::ValidateAfterTentativeLink(
   for (const auto& attrib : linkInfo->attribs) {
     if (attrib.mLoc == -1) continue;
 
-    const auto& elemType = attrib.mActiveInfo->mElemType;
+    const auto& elemType = attrib.mActiveInfo.mElemType;
     const auto numUsedLocs = NumUsedLocationsByElemType(elemType);
     for (uint32_t i = 0; i < numUsedLocs; i++) {
       const uint32_t usedLoc = attrib.mLoc + i;
@@ -1356,10 +1350,10 @@ bool WebGLProgram::ValidateAfterTentativeLink(
       const auto res = attribsByLoc.insert({usedLoc, &attrib});
       const bool& didInsert = res.second;
       if (!didInsert) {
-        const auto& aliasingName = attrib.mActiveInfo->mBaseUserName;
+        const auto& aliasingName = attrib.mActiveInfo.mBaseUserName;
         const auto& itrExisting = res.first;
         const auto& existingInfo = itrExisting->second;
-        const auto& existingName = existingInfo->mActiveInfo->mBaseUserName;
+        const auto& existingName = existingInfo->mActiveInfo.mBaseUserName;
         *out_linkLog = nsPrintfCString(
             "Attrib \"%s\" aliases locations used by"
             " attrib \"%s\".",
@@ -1391,8 +1385,8 @@ bool WebGLProgram::ValidateAfterTentativeLink(
     }
 
     std::vector<size_t> componentsPerVert;
-    std::set<const WebGLActiveInfo*> alreadyUsed;
-    for (const auto& wideUserName : mNextLink_TransformFeedbackVaryings) {
+    std::set<nsString> alreadyUsed;
+    for (const nsString& wideUserName : mNextLink_TransformFeedbackVaryings) {
       if (componentsPerVert.empty() ||
           mNextLink_TransformFeedbackBufferMode == LOCAL_GL_SEPARATE_ATTRIBS) {
         componentsPerVert.push_back(0);
@@ -1400,16 +1394,18 @@ bool WebGLProgram::ValidateAfterTentativeLink(
 
       ////
 
-      const WebGLActiveInfo* curInfo = nullptr;
+      WebGLActiveInfo curInfo = WebGLActiveInfo::CreateInvalid();
+      bool found = false;
       for (const auto& info : linkInfo->transformFeedbackVaryings) {
-        const NS_ConvertASCIItoUTF16 info_wideUserName(info->mBaseUserName);
+        const NS_ConvertASCIItoUTF16 info_wideUserName(info.mBaseUserName);
         if (info_wideUserName == wideUserName) {
-          curInfo = info.get();
+          curInfo = info;
+          found = true;
           break;
         }
       }
 
-      if (!curInfo) {
+      if (!found) {
         const NS_LossyConvertUTF16toASCII asciiUserName(wideUserName);
         *out_linkLog = nsPrintfCString(
             "Transform feedback varying \"%s\" not"
@@ -1418,7 +1414,7 @@ bool WebGLProgram::ValidateAfterTentativeLink(
         return false;
       }
 
-      const auto insertResPair = alreadyUsed.insert(curInfo);
+      const auto insertResPair = alreadyUsed.insert(wideUserName);
       const auto& didInsert = insertResPair.second;
       if (!didInsert) {
         const NS_LossyConvertUTF16toASCII asciiUserName(wideUserName);
@@ -1431,8 +1427,8 @@ bool WebGLProgram::ValidateAfterTentativeLink(
 
       ////
 
-      size_t varyingComponents = NumComponents(curInfo->mElemType);
-      varyingComponents *= curInfo->mElemCount;
+      size_t varyingComponents = NumComponents(curInfo.mElemType);
+      varyingComponents *= curInfo.mElemCount;
 
       auto& totalComponentsForIndex = *(componentsPerVert.rbegin());
       totalComponentsForIndex += varyingComponents;
@@ -1549,8 +1545,8 @@ bool WebGLProgram::FindUniformByMappedName(const nsACString& mappedName,
   return false;
 }
 
-void WebGLProgram::TransformFeedbackVaryings(
-    const dom::Sequence<nsString>& varyings, GLenum bufferMode) {
+void WebGLProgram::TransformFeedbackVaryings(const nsTArray<nsString>& varyings,
+                                             GLenum bufferMode) {
   const auto& gl = mContext->gl;
 
   switch (bufferMode) {
@@ -1580,24 +1576,23 @@ void WebGLProgram::TransformFeedbackVaryings(
   mNextLink_TransformFeedbackBufferMode = bufferMode;
 }
 
-already_AddRefed<WebGLActiveInfo> WebGLProgram::GetTransformFeedbackVarying(
+Maybe<WebGLActiveInfo> WebGLProgram::GetTransformFeedbackVarying(
     GLuint index) const {
   // No docs in the WebGL 2 spec for this function. Taking the language for
   // getActiveAttrib, which states that the function returns null on any error.
   if (!IsLinked()) {
     mContext->ErrorInvalidOperation("`program` must be linked.");
-    return nullptr;
+    return Nothing();
   }
 
   if (index >= LinkInfo()->transformFeedbackVaryings.size()) {
     mContext->ErrorInvalidValue(
         "`index` is greater or "
         "equal to TRANSFORM_FEEDBACK_VARYINGS.");
-    return nullptr;
+    return Nothing();
   }
 
-  RefPtr<WebGLActiveInfo> ret = LinkInfo()->transformFeedbackVaryings[index];
-  return ret.forget();
+  return Some(LinkInfo()->transformFeedbackVaryings[index]);
 }
 
 bool WebGLProgram::UnmapUniformBlockName(const nsCString& mappedName,
@@ -1631,7 +1626,7 @@ bool webgl::LinkedProgramInfo::FindAttrib(
   // VS inputs cannot be arrays or structures.
   // `userName` is thus always `baseUserName`.
   for (const auto& attrib : attribs) {
-    if (attrib.mActiveInfo->mBaseUserName == userName) {
+    if (attrib.mActiveInfo.mBaseUserName == userName) {
       *out = &attrib;
       return true;
     }
@@ -1650,31 +1645,19 @@ bool webgl::LinkedProgramInfo::FindUniform(
 
   webgl::UniformInfo* info = nullptr;
   for (const auto& uniform : uniforms) {
-    if (uniform->mActiveInfo->mBaseUserName == baseUserName) {
+    if (uniform->mActiveInfo.mBaseUserName == baseUserName) {
       info = uniform;
       break;
     }
   }
   if (!info) return false;
 
-  const auto& baseMappedName = info->mActiveInfo->mBaseMappedName;
+  const auto& baseMappedName = info->mActiveInfo.mBaseMappedName;
   AssembleName(baseMappedName, isArray, arrayIndex, out_mappedName);
 
   *out_arrayIndex = arrayIndex;
   *out_info = info;
   return true;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-JSObject* WebGLProgram::WrapObject(JSContext* js,
-                                   JS::Handle<JSObject*> givenProto) {
-  return dom::WebGLProgram_Binding::Wrap(js, this, givenProto);
-}
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLProgram, mVertShader, mFragShader)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLProgram, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLProgram, Release)
 
 }  // namespace mozilla

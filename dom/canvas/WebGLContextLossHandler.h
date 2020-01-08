@@ -6,27 +6,18 @@
 #ifndef WEBGL_CONTEXT_LOSS_HANDLER_H_
 #define WEBGL_CONTEXT_LOSS_HANDLER_H_
 
+#include "mozilla/Atomics.h"
 #include "mozilla/WeakPtr.h"
-#include "nsCOMPtr.h"
-
-class nsIThread;
-class nsITimer;
+#include "mozilla/RefPtr.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 class WebGLContext;
 
 class WebGLContextLossHandler final
     : public SupportsWeakPtr<WebGLContextLossHandler> {
-  WebGLContext* const mWebGL;
-  const nsCOMPtr<nsITimer>
-      mTimer;          // If we don't hold a ref to the timer, it will think
-  bool mTimerPending;  // that it's been discarded, and be canceled 'for our
-  bool mShouldRunTimerAgain;  // convenience'.
-#ifdef DEBUG
-  nsISerialEventTarget* const mEventTarget;
-#endif
-
-  friend class WatchdogTimerEvent;
+  RefPtr<Runnable> mRunnable;
+  Atomic<bool> mTimerIsScheduled;
 
  public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLContextLossHandler)
@@ -35,9 +26,8 @@ class WebGLContextLossHandler final
   ~WebGLContextLossHandler();
 
   void RunTimer();
-
- private:
-  void TimerCallback();
+  // Allow future queueing of context loss timer.
+  void ClearTimer();
 };
 
 }  // namespace mozilla

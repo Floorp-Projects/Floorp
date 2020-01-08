@@ -86,7 +86,8 @@ bool WebGL2Context::ValidateClearBuffer(GLenum buffer, GLint drawBuffer,
 ////
 
 void WebGL2Context::ClearBufferfv(GLenum buffer, GLint drawBuffer,
-                                  const Float32Arr& src, GLuint srcElemOffset) {
+                                  const RawBuffer<const float>& src,
+                                  GLuint srcElemOffset) {
   const FuncScope funcScope(*this, "clearBufferfv");
   if (IsContextLost()) return;
 
@@ -95,7 +96,7 @@ void WebGL2Context::ClearBufferfv(GLenum buffer, GLint drawBuffer,
     return;
   }
 
-  if (!ValidateClearBuffer(buffer, drawBuffer, src.elemCount, srcElemOffset,
+  if (!ValidateClearBuffer(buffer, drawBuffer, src.Length(), srcElemOffset,
                            LOCAL_GL_FLOAT)) {
     return;
   }
@@ -105,12 +106,13 @@ void WebGL2Context::ClearBufferfv(GLenum buffer, GLint drawBuffer,
   }
 
   ScopedDrawCallWrapper wrapper(*this);
-  const auto ptr = src.elemBytes + srcElemOffset;
+  const auto ptr = &src[0] + srcElemOffset;
   gl->fClearBufferfv(buffer, drawBuffer, ptr);
 }
 
 void WebGL2Context::ClearBufferiv(GLenum buffer, GLint drawBuffer,
-                                  const Int32Arr& src, GLuint srcElemOffset) {
+                                  const RawBuffer<const int32_t>& src,
+                                  GLuint srcElemOffset) {
   const FuncScope funcScope(*this, "clearBufferiv");
   if (IsContextLost()) return;
 
@@ -119,7 +121,7 @@ void WebGL2Context::ClearBufferiv(GLenum buffer, GLint drawBuffer,
     return;
   }
 
-  if (!ValidateClearBuffer(buffer, drawBuffer, src.elemCount, srcElemOffset,
+  if (!ValidateClearBuffer(buffer, drawBuffer, src.Length(), srcElemOffset,
                            LOCAL_GL_INT)) {
     return;
   }
@@ -130,25 +132,26 @@ void WebGL2Context::ClearBufferiv(GLenum buffer, GLint drawBuffer,
   }
 
   ScopedDrawCallWrapper wrapper(*this);
-  const auto ptr = src.elemBytes + srcElemOffset;
+  const auto ptr = &src[0] + srcElemOffset;
   gl->fClearBufferiv(buffer, drawBuffer, ptr);
 }
 
 void WebGL2Context::ClearBufferuiv(GLenum buffer, GLint drawBuffer,
-                                   const Uint32Arr& src, GLuint srcElemOffset) {
+                                   const RawBuffer<const uint32_t>& src,
+                                   GLuint srcElemOffset) {
   const FuncScope funcScope(*this, "clearBufferuiv");
   if (IsContextLost()) return;
 
   if (buffer != LOCAL_GL_COLOR)
     return ErrorInvalidEnum("`buffer` must be COLOR.");
 
-  if (!ValidateClearBuffer(buffer, drawBuffer, src.elemCount, srcElemOffset,
+  if (!ValidateClearBuffer(buffer, drawBuffer, src.Length(), srcElemOffset,
                            LOCAL_GL_UNSIGNED_INT)) {
     return;
   }
 
   ScopedDrawCallWrapper wrapper(*this);
-  const auto ptr = src.elemBytes + srcElemOffset;
+  const auto ptr = &src[0] + srcElemOffset;
   gl->fClearBufferuiv(buffer, drawBuffer, ptr);
 }
 

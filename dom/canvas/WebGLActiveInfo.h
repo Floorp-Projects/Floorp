@@ -16,37 +16,33 @@
 
 namespace mozilla {
 
+namespace ipc {
+template <typename T>
+struct PcqParamTraits;
+}
+
 class WebGLContext;
 
-class WebGLActiveInfo final : public nsWrapperCache {
+class WebGLActiveInfo {
  public:
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLActiveInfo)
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLActiveInfo)
-
-  virtual JSObject* WrapObject(JSContext* js,
-                               JS::Handle<JSObject*> givenProto) override;
-
-  WebGLContext* GetParentObject() const { return mWebGL; }
-
-  WebGLContext* const mWebGL;
-
   // ActiveInfo state:
-  const uint32_t mElemCount;  // `size`
-  const GLenum mElemType;     // `type`
-  const nsCString
-      mBaseUserName;  // `name`, but ASCII, and without any final "[0]".
+  uint32_t mElemCount;      // `size`
+  GLenum mElemType;         // `type`
+  nsCString mBaseUserName;  // `name`, but ASCII, and without any final "[0]".
 
   // Not actually part of ActiveInfo:
-  const bool mIsArray;
-  const uint8_t mElemSize;
-  const nsCString mBaseMappedName;  // Without any final "[0]".
-  const webgl::AttribBaseType mBaseType = webgl::AttribBaseType::Float;
+  bool mIsArray;
+  uint8_t mElemSize;
+  nsCString mBaseMappedName;  // Without any final "[0]".
+  webgl::AttribBaseType mBaseType = webgl::AttribBaseType::Float;
 
   bool IsSampler() const;
 
-  WebGLActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType,
-                  bool isArray, const nsACString& baseUserName,
+  WebGLActiveInfo(GLint elemCount, GLenum elemType, bool isArray,
+                  const nsACString& baseUserName,
                   const nsACString& baseMappedName);
+
+  WebGLActiveInfo(const WebGLActiveInfo& aOther);
 
   /* GLES 2.0.25, p33:
    *   This command will return as much information about active
@@ -56,9 +52,7 @@ class WebGLActiveInfo final : public nsWrapperCache {
    *
    * It's the same for GetActiveUniform.
    */
-  static WebGLActiveInfo* CreateInvalid(WebGLContext* webgl) {
-    return new WebGLActiveInfo(webgl);
-  }
+  static WebGLActiveInfo CreateInvalid() { return WebGLActiveInfo(); }
 
   // WebIDL attributes
   GLint Size() const { return mElemCount; }
@@ -70,18 +64,46 @@ class WebGLActiveInfo final : public nsWrapperCache {
     if (mIsArray) retval.AppendLiteral("[0]");
   }
 
- private:
-  explicit WebGLActiveInfo(WebGLContext* webgl)
-      : mWebGL(webgl),
-        mElemCount(0),
+ protected:
+  friend mozilla::ipc::PcqParamTraits<WebGLActiveInfo>;
+  friend Maybe<WebGLActiveInfo>;
+
+  explicit WebGLActiveInfo()
+      : mElemCount(0),
         mElemType(0),
         mBaseUserName(""),
         mIsArray(false),
         mElemSize(0),
         mBaseMappedName("") {}
+};
 
-  // Private destructor, to discourage deletion outside of Release():
-  ~WebGLActiveInfo() {}
+class ClientWebGLActiveInfo final : public WebGLActiveInfo,
+                                    public nsWrapperCache {
+ public:
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(ClientWebGLActiveInfo)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ClientWebGLActiveInfo)
+
+  virtual JSObject* WrapObject(JSContext* js,
+                               JS::Handle<JSObject*> givenProto) override;
+
+  ClientWebGLContext* GetParentObject() const { return mWebGL; }
+
+  ClientWebGLActiveInfo(ClientWebGLContext* webgl, GLint elemCount,
+                        GLenum elemType, bool isArray,
+                        const nsACString& baseUserName,
+                        const nsACString& baseMappedName)
+      : WebGLActiveInfo(elemCount, elemType, isArray, baseUserName,
+                        baseMappedName),
+        mWebGL(webgl) {}
+
+  ClientWebGLActiveInfo(ClientWebGLContext* webgl,
+                        const WebGLActiveInfo& aOther)
+      : WebGLActiveInfo(aOther), mWebGL(webgl) {}
+
+  ClientWebGLContext* const mWebGL;
+
+ protected:
+  ~ClientWebGLActiveInfo() {}
 };
 
 //////////

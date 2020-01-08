@@ -28,13 +28,6 @@ void WebGLSampler::Delete() {
   removeFrom(mContext->mSamplers);
 }
 
-WebGLContext* WebGLSampler::GetParentObject() const { return mContext; }
-
-JSObject* WebGLSampler::WrapObject(JSContext* cx,
-                                   JS::Handle<JSObject*> givenProto) {
-  return dom::WebGLSampler_Binding::Wrap(cx, this, givenProto);
-}
-
 static bool ValidateSamplerParameterParams(WebGLContext* webgl, GLenum pname,
                                            const FloatOrInt& param) {
   const auto& paramInt = param.i;
@@ -163,11 +156,5 @@ void WebGLSampler::SamplerParameter(GLenum pname, const FloatOrInt& param) {
     mContext->gl->fSamplerParameteri(mGLName, pname, param.i);
   }
 }
-
-////
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLSampler)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLSampler, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLSampler, Release)
 
 }  // namespace mozilla

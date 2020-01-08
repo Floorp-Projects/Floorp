@@ -67,6 +67,8 @@ void CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData) {
   } else if (aData.mRenderer) {
     mAsyncRenderer = aData.mRenderer;
     mOriginPos = gl::OriginPos::BottomLeft;
+  } else if (aData.mOOPRenderer) {
+    mOOPRenderer = aData.mOOPRenderer;
   }
 
   mOpaque = !aData.mHasAlpha;
@@ -74,7 +76,8 @@ void CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData) {
 
 bool CopyableCanvasRenderer::IsDataValid(const CanvasInitializeData& aData) {
   return mGLContext == aData.mGLContext &&
-         mBufferProvider == aData.mBufferProvider;
+         mBufferProvider == aData.mBufferProvider &&
+         mOOPRenderer == aData.mOOPRenderer;
 }
 
 void CopyableCanvasRenderer::ClearCachedResources() {
@@ -161,6 +164,8 @@ already_AddRefed<SourceSurface> CopyableCanvasRenderer::ReadbackSurface() {
 
 DataSourceSurface* CopyableCanvasRenderer::GetTempSurface(
     const IntSize& aSize, const SurfaceFormat aFormat) {
+  MOZ_ASSERT(!mOOPRenderer);
+
   if (!mCachedTempSurface || aSize != mCachedTempSurface->GetSize() ||
       aFormat != mCachedTempSurface->GetFormat()) {
     // Create a surface aligned to 8 bytes since that's the highest alignment

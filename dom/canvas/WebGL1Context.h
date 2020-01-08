@@ -9,25 +9,22 @@
 #include "WebGLContext.h"
 
 namespace mozilla {
+class HostWebGLContext;
 
 class WebGL1Context : public WebGLContext {
  public:
-  static WebGL1Context* Create();
+  static WebGL1Context* Create() { return new WebGL1Context(); }
 
  private:
-  WebGL1Context();
+  WebGL1Context() {}
 
   virtual UniquePtr<webgl::FormatUsageAuthority> CreateFormatUsage(
       gl::GLContext* gl) const override;
 
  public:
-  virtual ~WebGL1Context();
+  virtual ~WebGL1Context(){};
 
   virtual bool IsWebGL2() const override { return false; }
-
-  // nsWrapperCache
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> givenProto) override;
 };
 
 }  // namespace mozilla

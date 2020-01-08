@@ -110,7 +110,7 @@ void WebGL2Context::ResumeTransformFeedback() {
 }
 
 void WebGL2Context::TransformFeedbackVaryings(
-    WebGLProgram& program, const dom::Sequence<nsString>& varyings,
+    WebGLProgram& program, const nsTArray<nsString>& varyings,
     GLenum bufferMode) {
   const FuncScope funcScope(*this, "transformFeedbackVaryings");
   if (IsContextLost()) return;
@@ -120,12 +120,12 @@ void WebGL2Context::TransformFeedbackVaryings(
   program.TransformFeedbackVaryings(varyings, bufferMode);
 }
 
-already_AddRefed<WebGLActiveInfo> WebGL2Context::GetTransformFeedbackVarying(
+Maybe<WebGLActiveInfo> WebGL2Context::GetTransformFeedbackVarying(
     const WebGLProgram& program, GLuint index) {
   const FuncScope funcScope(*this, "getTransformFeedbackVarying");
-  if (IsContextLost()) return nullptr;
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObject("program", program)) return nullptr;
+  if (!ValidateObject("program", program)) return Nothing();
 
   return program.GetTransformFeedbackVarying(index);
 }

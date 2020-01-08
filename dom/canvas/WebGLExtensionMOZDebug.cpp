@@ -17,10 +17,8 @@ WebGLExtensionMOZDebug::WebGLExtensionMOZDebug(WebGLContext* webgl)
 
 WebGLExtensionMOZDebug::~WebGLExtensionMOZDebug() {}
 
-void WebGLExtensionMOZDebug::GetParameter(JSContext* cx, GLenum pname,
-                                          JS::MutableHandle<JS::Value> retval,
-                                          ErrorResult& er) const {
-  if (mIsLost || !mContext) return;
+MaybeWebGLVariant WebGLExtensionMOZDebug::GetParameter(GLenum pname) const {
+  if (mIsLost || !mContext) return {};
   const WebGLContext::FuncScope funcScope(*mContext, "MOZ_debug.getParameter");
   MOZ_ASSERT(!mContext->IsContextLost());
 
@@ -43,36 +41,31 @@ void WebGLExtensionMOZDebug::GetParameter(JSContext* cx, GLenum pname,
           ret.Append(NS_ConvertUTF8toUTF16(rawExt));
         }
       }
-      retval.set(StringValue(cx, ret, er));
-      return;
+      return AsSomeVariant(ret);
     }
 
     case LOCAL_GL_RENDERER:
     case LOCAL_GL_VENDOR:
     case LOCAL_GL_VERSION: {
       const auto raw = (const char*)gl->fGetString(pname);
-      retval.set(StringValue(cx, NS_ConvertUTF8toUTF16(raw), er));
-      return;
+      nsString ret = NS_ConvertUTF8toUTF16(raw);
+      return AsSomeVariant(ret);
     }
 
     case dom::MOZ_debug_Binding::WSI_INFO: {
       nsCString info;
       gl->GetWSIInfo(&info);
-      retval.set(StringValue(cx, NS_ConvertUTF8toUTF16(info), er));
-      return;
+      nsString ret = NS_ConvertUTF8toUTF16(info);
+      return AsSomeVariant(ret);
     }
 
     case dom::MOZ_debug_Binding::DOES_INDEX_VALIDATION:
-      retval.set(JS::BooleanValue(mContext->mNeedsIndexValidation));
-      return;
+      return AsSomeVariant(std::move(mContext->mNeedsIndexValidation));
 
     default:
       mContext->ErrorInvalidEnumInfo("pname", pname);
-      retval.set(JS::NullValue());
-      return;
+      return Nothing();
   }
 }
-
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionMOZDebug, MOZ_debug)
 
 }  // namespace mozilla

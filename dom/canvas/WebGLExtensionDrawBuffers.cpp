@@ -25,7 +25,7 @@ WebGLExtensionDrawBuffers::WebGLExtensionDrawBuffers(WebGLContext* webgl)
 WebGLExtensionDrawBuffers::~WebGLExtensionDrawBuffers() {}
 
 void WebGLExtensionDrawBuffers::DrawBuffersWEBGL(
-    const dom::Sequence<GLenum>& buffers) {
+    const nsTArray<GLenum>& buffers) {
   if (mIsLost) {
     if (mContext) {
       mContext->ErrorInvalidOperation("drawBuffersWEBGL: Extension is lost.");
@@ -47,7 +47,5 @@ bool WebGLExtensionDrawBuffers::IsSupported(const WebGLContext* webgl) {
   }
   return gl->IsSupported(gl::GLFeature::draw_buffers);
 }
-
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDrawBuffers, WEBGL_draw_buffers)
 
 }  // namespace mozilla

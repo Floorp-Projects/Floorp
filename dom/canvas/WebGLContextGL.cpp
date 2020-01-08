@@ -659,36 +659,34 @@ void WebGLContext::FrontFace(GLenum mode) {
   gl->fFrontFace(mode);
 }
 
-already_AddRefed<WebGLActiveInfo> WebGLContext::GetActiveAttrib(
-    const WebGLProgram& prog, GLuint index) {
+Maybe<WebGLActiveInfo> WebGLContext::GetActiveAttrib(const WebGLProgram& prog,
+                                                     GLuint index) {
   const FuncScope funcScope(*this, "getActiveAttrib");
-  if (IsContextLost()) return nullptr;
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObject("program", prog)) return nullptr;
+  if (!ValidateObject("program", prog)) return Nothing();
 
   return prog.GetActiveAttrib(index);
 }
 
-already_AddRefed<WebGLActiveInfo> WebGLContext::GetActiveUniform(
-    const WebGLProgram& prog, GLuint index) {
+Maybe<WebGLActiveInfo> WebGLContext::GetActiveUniform(const WebGLProgram& prog,
+                                                      GLuint index) {
   const FuncScope funcScope(*this, "getActiveUniform");
-  if (IsContextLost()) return nullptr;
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObject("program", prog)) return nullptr;
+  if (!ValidateObject("program", prog)) return Nothing();
 
   return prog.GetActiveUniform(index);
 }
 
-void WebGLContext::GetAttachedShaders(
-    const WebGLProgram& prog,
-    dom::Nullable<nsTArray<RefPtr<WebGLShader>>>& retval) {
-  retval.SetNull();
+MaybeAttachedShaders WebGLContext::GetAttachedShaders(
+    const WebGLProgram& prog) {
   const FuncScope funcScope(*this, "getAttachedShaders");
-  if (IsContextLost()) return;
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObject("prog", prog)) return;
+  if (!ValidateObject("prog", prog)) return Nothing();
 
-  prog.GetAttachedShaders(&retval.SetValue());
+  return prog.GetAttachedShaders();
 }
 
 GLint WebGLContext::GetAttribLocation(const WebGLProgram& prog,
@@ -701,41 +699,39 @@ GLint WebGLContext::GetAttribLocation(const WebGLProgram& prog,
   return prog.GetAttribLocation(name);
 }
 
-JS::Value WebGLContext::GetBufferParameter(GLenum target, GLenum pname) {
+MaybeWebGLVariant WebGLContext::GetBufferParameter(GLenum target,
+                                                   GLenum pname) {
   const FuncScope funcScope(*this, "getBufferParameter");
-  if (IsContextLost()) return JS::NullValue();
+  if (IsContextLost()) return Nothing();
 
   const auto& slot = ValidateBufferSlot(target);
-  if (!slot) return JS::NullValue();
+  if (!slot) return Nothing();
   const auto& buffer = *slot;
 
   if (!buffer) {
     ErrorInvalidOperation("Buffer for `target` is null.");
-    return JS::NullValue();
+    return Nothing();
   }
 
   switch (pname) {
     case LOCAL_GL_BUFFER_SIZE:
-      return JS::NumberValue(buffer->ByteLength());
+      return AsSomeVariant(buffer->ByteLength());
 
     case LOCAL_GL_BUFFER_USAGE:
-      return JS::NumberValue(buffer->Usage());
+      return AsSomeVariant(buffer->Usage());
 
     default:
       ErrorInvalidEnumInfo("pname", pname);
-      return JS::NullValue();
+      return Nothing();
   }
 }
 
-JS::Value WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
-                                                          GLenum target,
-                                                          GLenum attachment,
-                                                          GLenum pname,
-                                                          ErrorResult& rv) {
+MaybeWebGLVariant WebGLContext::GetFramebufferAttachmentParameter(
+    GLenum target, GLenum attachment, GLenum pname) {
   const FuncScope funcScope(*this, "getFramebufferAttachmentParameter");
-  if (IsContextLost()) return JS::NullValue();
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateFramebufferTarget(target)) return JS::NullValue();
+  if (!ValidateFramebufferTarget(target)) return Nothing();
 
   WebGLFramebuffer* fb;
   switch (target) {
@@ -752,7 +748,7 @@ JS::Value WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
       MOZ_CRASH("GFX: Bad target.");
   }
 
-  if (fb) return fb->GetAttachmentParameter(cx, target, attachment, pname, &rv);
+  if (fb) return fb->GetAttachmentParameter(target, attachment, pname);
 
   ////////////////////////////////////
 
@@ -760,7 +756,7 @@ JS::Value WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     ErrorInvalidOperation(
         "Querying against the default framebuffer is not"
         " allowed in WebGL 1.");
-    return JS::NullValue();
+    return Nothing();
   }
 
   switch (attachment) {
@@ -773,7 +769,7 @@ JS::Value WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
       ErrorInvalidEnum(
           "For the default framebuffer, can only query COLOR, DEPTH,"
           " or STENCIL.");
-      return JS::NullValue();
+      return Nothing();
   }
 
   switch (pname) {
@@ -783,114 +779,115 @@ JS::Value WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
           break;
         case LOCAL_GL_DEPTH:
           if (!mOptions.depth) {
-            return JS::Int32Value(LOCAL_GL_NONE);
+            return AsSomeVariant(LOCAL_GL_NONE);
           }
           break;
         case LOCAL_GL_STENCIL:
           if (!mOptions.stencil) {
-            return JS::Int32Value(LOCAL_GL_NONE);
+            return AsSomeVariant(LOCAL_GL_NONE);
           }
           break;
         default:
           ErrorInvalidEnum(
               "With the default framebuffer, can only query COLOR, DEPTH,"
               " or STENCIL for GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE");
-          return JS::NullValue();
+          return Nothing();
       }
-      return JS::Int32Value(LOCAL_GL_FRAMEBUFFER_DEFAULT);
+      return AsSomeVariant(LOCAL_GL_FRAMEBUFFER_DEFAULT);
 
       ////////////////
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
-      if (attachment == LOCAL_GL_BACK) return JS::NumberValue(8);
-      return JS::NumberValue(0);
+      if (attachment == LOCAL_GL_BACK) return AsSomeVariant(8);
+      return AsSomeVariant(0);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
       if (attachment == LOCAL_GL_BACK) {
         if (mOptions.alpha) {
-          return JS::NumberValue(8);
+          return AsSomeVariant(8);
         }
         ErrorInvalidOperation(
             "The default framebuffer doesn't contain an alpha buffer");
-        return JS::NullValue();
+        return Nothing();
       }
-      return JS::NumberValue(0);
+      return AsSomeVariant(0);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
       if (attachment == LOCAL_GL_DEPTH) {
         if (mOptions.depth) {
-          return JS::NumberValue(24);
+          return AsSomeVariant(24);
         }
         ErrorInvalidOperation(
             "The default framebuffer doesn't contain an depth buffer");
-        return JS::NullValue();
+        return Nothing();
       }
-      return JS::NumberValue(0);
+      return AsSomeVariant(0);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
       if (attachment == LOCAL_GL_STENCIL) {
         if (mOptions.stencil) {
-          return JS::NumberValue(8);
+          return AsSomeVariant(8);
         }
         ErrorInvalidOperation(
             "The default framebuffer doesn't contain an stencil buffer");
-        return JS::NullValue();
+        return Nothing();
       }
-      return JS::NumberValue(0);
+      return AsSomeVariant(0);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
       if (attachment == LOCAL_GL_STENCIL) {
         if (mOptions.stencil) {
-          return JS::NumberValue(LOCAL_GL_UNSIGNED_INT);
+          return AsSomeVariant(LOCAL_GL_UNSIGNED_INT);
         }
         ErrorInvalidOperation(
             "The default framebuffer doesn't contain an stencil buffer");
       } else if (attachment == LOCAL_GL_DEPTH) {
         if (mOptions.depth) {
-          return JS::NumberValue(LOCAL_GL_UNSIGNED_NORMALIZED);
+          return AsSomeVariant(LOCAL_GL_UNSIGNED_NORMALIZED);
         }
         ErrorInvalidOperation(
             "The default framebuffer doesn't contain an depth buffer");
       } else {  // LOCAL_GL_BACK
-        return JS::NumberValue(LOCAL_GL_UNSIGNED_NORMALIZED);
+        return AsSomeVariant(LOCAL_GL_UNSIGNED_NORMALIZED);
       }
-      return JS::NullValue();
+      return Nothing();
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
       if (attachment == LOCAL_GL_STENCIL) {
         if (!mOptions.stencil) {
           ErrorInvalidOperation(
               "The default framebuffer doesn't contain an stencil buffer");
-          return JS::NullValue();
+          return Nothing();
         }
       } else if (attachment == LOCAL_GL_DEPTH) {
         if (!mOptions.depth) {
           ErrorInvalidOperation(
               "The default framebuffer doesn't contain an depth buffer");
-          return JS::NullValue();
+          return Nothing();
         }
       }
-      return JS::NumberValue(LOCAL_GL_LINEAR);
+      return AsSomeVariant(LOCAL_GL_LINEAR);
   }
 
   ErrorInvalidEnumInfo("pname", pname);
-  return JS::NullValue();
+  return Nothing();
 }
 
-JS::Value WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname) {
+MaybeWebGLVariant WebGLContext::GetRenderbufferParameter(GLenum target,
+                                                         GLenum pname) {
   const FuncScope funcScope(*this, "getRenderbufferParameter");
-  if (IsContextLost()) return JS::NullValue();
+  if (IsContextLost()) return Nothing();
 
   if (target != LOCAL_GL_RENDERBUFFER) {
     ErrorInvalidEnumInfo("target", target);
-    return JS::NullValue();
+    return Nothing();
   }
 
   if (!mBoundRenderbuffer) {
     ErrorInvalidOperation("No renderbuffer is bound.");
-    return JS::NullValue();
+    return Nothing();
   }
 
   switch (pname) {
@@ -909,7 +906,7 @@ JS::Value WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname) {
     case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT: {
       // RB emulation means we have to ask the RB itself.
       GLint i = mBoundRenderbuffer->GetRenderbufferParameter(target, pname);
-      return JS::Int32Value(i);
+      return AsSomeVariant(i);
     }
 
     default:
@@ -917,7 +914,7 @@ JS::Value WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname) {
   }
 
   ErrorInvalidEnumInfo("pname", pname);
-  return JS::NullValue();
+  return Nothing();
 }
 
 already_AddRefed<WebGLTexture> WebGLContext::CreateTexture() {
@@ -970,40 +967,38 @@ GLenum WebGLContext::GetError() {
   return err;
 }
 
-JS::Value WebGLContext::GetProgramParameter(const WebGLProgram& prog,
-                                            GLenum pname) {
+MaybeWebGLVariant WebGLContext::GetProgramParameter(const WebGLProgram& prog,
+                                                    GLenum pname) {
   const FuncScope funcScope(*this, "getProgramParameter");
-  if (IsContextLost()) return JS::NullValue();
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObjectAllowDeleted("program", prog)) return JS::NullValue();
+  if (!ValidateObjectAllowDeleted("program", prog)) return Nothing();
 
   return prog.GetProgramParameter(pname);
 }
 
-void WebGLContext::GetProgramInfoLog(const WebGLProgram& prog,
-                                     nsAString& retval) {
-  retval.SetIsVoid(true);
+nsString WebGLContext::GetProgramInfoLog(const WebGLProgram& prog) {
   const FuncScope funcScope(*this, "getProgramInfoLog");
 
-  if (IsContextLost()) return;
+  if (IsContextLost()) return EmptyString();
 
-  if (!ValidateObject("program", prog)) return;
+  if (!ValidateObject("program", prog)) return EmptyString();
 
-  prog.GetProgramInfoLog(&retval);
+  return prog.GetProgramInfoLog();
 }
 
-JS::Value WebGLContext::GetUniform(JSContext* js, const WebGLProgram& prog,
-                                   const WebGLUniformLocation& loc) {
+MaybeWebGLVariant WebGLContext::GetUniform(const WebGLProgram& prog,
+                                           const WebGLUniformLocation& loc) {
   const FuncScope funcScope(*this, "getUniform");
-  if (IsContextLost()) return JS::NullValue();
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObject("program", prog)) return JS::NullValue();
+  if (!ValidateObject("program", prog)) return Nothing();
 
-  if (!ValidateObjectAllowDeleted("location", loc)) return JS::NullValue();
+  if (!ValidateObjectAllowDeleted("location", loc)) return Nothing();
 
-  if (!loc.ValidateForProgram(&prog)) return JS::NullValue();
+  if (!loc.ValidateForProgram(&prog)) return Nothing();
 
-  return loc.GetUniform(js);
+  return loc.GetUniform();
 }
 
 already_AddRefed<WebGLUniformLocation> WebGLContext::GetUniformLocation(
@@ -1136,80 +1131,80 @@ void WebGLContext::LinkProgram(WebGLProgram& prog) {
   }
 }
 
-void WebGLContext::PixelStorei(GLenum pname, GLint param) {
+WebGLPixelStore WebGLContext::PixelStorei(GLenum pname, GLint param) {
   const FuncScope funcScope(*this, "pixelStorei");
-  if (IsContextLost()) return;
+  if (IsContextLost()) return mPixelStore;
 
   if (IsWebGL2()) {
     uint32_t* pValueSlot = nullptr;
     switch (pname) {
       case LOCAL_GL_UNPACK_IMAGE_HEIGHT:
-        pValueSlot = &mPixelStore_UnpackImageHeight;
+        pValueSlot = &mPixelStore.mUnpackImageHeight;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_IMAGES:
-        pValueSlot = &mPixelStore_UnpackSkipImages;
+        pValueSlot = &mPixelStore.mUnpackSkipImages;
         break;
 
       case LOCAL_GL_UNPACK_ROW_LENGTH:
-        pValueSlot = &mPixelStore_UnpackRowLength;
+        pValueSlot = &mPixelStore.mUnpackRowLength;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_ROWS:
-        pValueSlot = &mPixelStore_UnpackSkipRows;
+        pValueSlot = &mPixelStore.mUnpackSkipRows;
         break;
 
       case LOCAL_GL_UNPACK_SKIP_PIXELS:
-        pValueSlot = &mPixelStore_UnpackSkipPixels;
+        pValueSlot = &mPixelStore.mUnpackSkipPixels;
         break;
 
       case LOCAL_GL_PACK_ROW_LENGTH:
-        pValueSlot = &mPixelStore_PackRowLength;
+        pValueSlot = &mPixelStore.mPackRowLength;
         break;
 
       case LOCAL_GL_PACK_SKIP_ROWS:
-        pValueSlot = &mPixelStore_PackSkipRows;
+        pValueSlot = &mPixelStore.mPackSkipRows;
         break;
 
       case LOCAL_GL_PACK_SKIP_PIXELS:
-        pValueSlot = &mPixelStore_PackSkipPixels;
+        pValueSlot = &mPixelStore.mPackSkipPixels;
         break;
     }
 
     if (pValueSlot) {
-      if (!ValidateNonNegative("param", param)) return;
+      if (!ValidateNonNegative("param", param)) return mPixelStore;
 
       gl->fPixelStorei(pname, param);
       *pValueSlot = param;
-      return;
+      return mPixelStore;
     }
   }
 
   switch (pname) {
     case UNPACK_FLIP_Y_WEBGL:
-      mPixelStore_FlipY = bool(param);
-      return;
+      mPixelStore.mFlipY = bool(param);
+      return mPixelStore;
 
     case UNPACK_PREMULTIPLY_ALPHA_WEBGL:
-      mPixelStore_PremultiplyAlpha = bool(param);
-      return;
+      mPixelStore.mPremultiplyAlpha = bool(param);
+      return mPixelStore;
 
     case UNPACK_COLORSPACE_CONVERSION_WEBGL:
       switch (param) {
         case LOCAL_GL_NONE:
         case BROWSER_DEFAULT_WEBGL:
-          mPixelStore_ColorspaceConversion = param;
-          return;
+          mPixelStore.mColorspaceConversion = param;
+          return mPixelStore;
 
         default:
           ErrorInvalidEnumInfo("colorspace conversion parameter", param);
-          return;
+          return mPixelStore;
       }
 
     case UNPACK_REQUIRE_FASTPATH:
       if (IsExtensionEnabled(WebGLExtensionID::MOZ_debug)) {
-        mPixelStore_RequireFastPath = bool(param);
-        return;
+        mPixelStore.mRequireFastPath = bool(param);
+        return mPixelStore;
       }
       break;
 
@@ -1221,16 +1216,16 @@ void WebGLContext::PixelStorei(GLenum pname, GLint param) {
         case 4:
         case 8:
           if (pname == LOCAL_GL_PACK_ALIGNMENT)
-            mPixelStore_PackAlignment = param;
+            mPixelStore.mPackAlignment = param;
           else if (pname == LOCAL_GL_UNPACK_ALIGNMENT)
-            mPixelStore_UnpackAlignment = param;
+            mPixelStore.mUnpackAlignment = param;
 
           gl->fPixelStorei(pname, param);
-          return;
+          return mPixelStore;
 
         default:
           ErrorInvalidValue("Invalid pack/unpack alignment value.");
-          return;
+          return mPixelStore;
       }
 
     default:
@@ -1238,6 +1233,7 @@ void WebGLContext::PixelStorei(GLenum pname, GLint param) {
   }
 
   ErrorInvalidEnumInfo("pname", pname);
+  return mPixelStore;
 }
 
 bool WebGLContext::DoReadPixelsAndConvert(const webgl::FormatInfo* srcFormat,
@@ -1273,65 +1269,9 @@ bool WebGLContext::DoReadPixelsAndConvert(const webgl::FormatInfo* srcFormat,
   const auto tailRowOffset = (char*)dest + rowStride * bodyHeight;
   gl->fReadPixels(x, y + bodyHeight, width, 1, format, destType, tailRowOffset);
 
-  gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mPixelStore_PackAlignment);
-  gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, mPixelStore_PackRowLength);
-  gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mPixelStore_PackSkipRows);
-  return true;
-}
-
-static bool GetJSScalarFromGLType(GLenum type,
-                                  js::Scalar::Type* const out_scalarType) {
-  switch (type) {
-    case LOCAL_GL_BYTE:
-      *out_scalarType = js::Scalar::Int8;
-      return true;
-
-    case LOCAL_GL_UNSIGNED_BYTE:
-      *out_scalarType = js::Scalar::Uint8;
-      return true;
-
-    case LOCAL_GL_SHORT:
-      *out_scalarType = js::Scalar::Int16;
-      return true;
-
-    case LOCAL_GL_HALF_FLOAT:
-    case LOCAL_GL_HALF_FLOAT_OES:
-    case LOCAL_GL_UNSIGNED_SHORT:
-    case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
-    case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-    case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-      *out_scalarType = js::Scalar::Uint16;
-      return true;
-
-    case LOCAL_GL_UNSIGNED_INT:
-    case LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV:
-    case LOCAL_GL_UNSIGNED_INT_5_9_9_9_REV:
-    case LOCAL_GL_UNSIGNED_INT_10F_11F_11F_REV:
-    case LOCAL_GL_UNSIGNED_INT_24_8:
-      *out_scalarType = js::Scalar::Uint32;
-      return true;
-    case LOCAL_GL_INT:
-      *out_scalarType = js::Scalar::Int32;
-      return true;
-
-    case LOCAL_GL_FLOAT:
-      *out_scalarType = js::Scalar::Float32;
-      return true;
-
-    default:
-      return false;
-  }
-}
-
-bool WebGLContext::ReadPixels_SharedPrecheck(CallerType aCallerType,
-                                             ErrorResult& out_error) {
-  if (mCanvasElement && mCanvasElement->IsWriteOnly() &&
-      aCallerType != CallerType::System) {
-    GenerateWarning("readPixels: Not allowed");
-    out_error.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return false;
-  }
-
+  gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mPixelStore.mPackAlignment);
+  gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, mPixelStore.mPackRowLength);
+  gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mPixelStore.mPackSkipRows);
   return true;
 }
 
@@ -1348,10 +1288,10 @@ bool WebGLContext::ValidatePackSize(uint32_t width, uint32_t height,
   // GLES 3.0.4, p116 (PACK_ functions like UNPACK_)
 
   const auto rowLength =
-      (mPixelStore_PackRowLength ? mPixelStore_PackRowLength : width);
-  const auto skipPixels = mPixelStore_PackSkipPixels;
-  const auto skipRows = mPixelStore_PackSkipRows;
-  const auto alignment = mPixelStore_PackAlignment;
+      (mPixelStore.mPackRowLength ? mPixelStore.mPackRowLength : width);
+  const auto skipPixels = mPixelStore.mPackSkipPixels;
+  const auto skipRows = mPixelStore.mPackSkipRows;
+  const auto alignment = mPixelStore.mPackAlignment;
 
   const auto usedPixelsPerRow = CheckedUint32(skipPixels) + width;
   const auto usedRowsPerImage = CheckedUint32(skipRows) + height;
@@ -1378,55 +1318,33 @@ bool WebGLContext::ValidatePackSize(uint32_t width, uint32_t height,
   return true;
 }
 
-void WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                              GLenum format, GLenum type,
-                              const dom::ArrayBufferView& dstView,
-                              GLuint dstElemOffset, CallerType aCallerType,
-                              ErrorResult& out_error) {
+Maybe<UniquePtr<RawBuffer<>>> WebGLContext::ReadPixels(
+    GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type,
+    size_t byteLen) {
   const FuncScope funcScope(*this, "readPixels");
-  if (IsContextLost()) return;
-
-  if (!ReadPixels_SharedPrecheck(aCallerType, out_error)) return;
+  if (IsContextLost()) return Nothing();
 
   if (mBoundPixelPackBuffer) {
     ErrorInvalidOperation("PIXEL_PACK_BUFFER must be null.");
-    return;
+    return Nothing();
   }
 
-  ////
-
-  js::Scalar::Type reqScalarType;
-  if (!GetJSScalarFromGLType(type, &reqScalarType)) {
-    ErrorInvalidEnumInfo("type", type);
-    return;
+  // TODO: Allocate the Shmem earlier so we can use it here instead of copying
+  uint8_t* bytes = new uint8_t[byteLen];
+  if (!bytes) {
+    ErrorOutOfMemory("ReadPixels could not allocate temp memory");
+    return Nothing();
   }
-
-  const auto& viewElemType = dstView.Type();
-  if (viewElemType != reqScalarType) {
-    ErrorInvalidOperation("`pixels` type does not match `type`.");
-    return;
-  }
-
-  ////
-
-  uint8_t* bytes;
-  size_t byteLen;
-  if (!ValidateArrayBufferView(dstView, dstElemOffset, 0,
-                               LOCAL_GL_INVALID_VALUE, &bytes, &byteLen))
-    return;
-
-  ////
-
+  UniquePtr<RawBuffer<>> buf = MakeUnique<RawBuffer<>>(byteLen, bytes, true);
   ReadPixelsImpl(x, y, width, height, format, type, bytes, byteLen);
+  return Some(std::move(buf));
 }
 
 void WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                              GLenum format, GLenum type, WebGLsizeiptr offset,
-                              CallerType aCallerType, ErrorResult& out_error) {
+                              GLenum format, GLenum type,
+                              WebGLsizeiptr offset) {
   const FuncScope funcScope(*this, "readPixels");
   if (IsContextLost()) return;
-
-  if (!ReadPixels_SharedPrecheck(aCallerType, out_error)) return;
 
   const auto& buffer = ValidateBufferSelection(LOCAL_GL_PIXEL_PACK_BUFFER);
   if (!buffer) return;
@@ -1651,21 +1569,21 @@ void WebGLContext::ReadPixelsImpl(GLint x, GLint y, GLsizei rawWidth,
   // Read only the in-bounds pixels.
 
   if (IsWebGL2()) {
-    if (!mPixelStore_PackRowLength) {
+    if (!mPixelStore.mPackRowLength) {
       gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH,
-                       mPixelStore_PackSkipPixels + width);
+                       mPixelStore.mPackSkipPixels + width);
     }
     gl->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS,
-                     mPixelStore_PackSkipPixels + writeX);
+                     mPixelStore.mPackSkipPixels + writeX);
     gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS,
-                     mPixelStore_PackSkipRows + writeY);
+                     mPixelStore.mPackSkipRows + writeY);
 
     DoReadPixelsAndConvert(srcFormat->format, readX, readY, rwWidth, rwHeight,
                            packFormat, packType, dest, dataLen, rowStride);
 
-    gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, mPixelStore_PackRowLength);
-    gl->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, mPixelStore_PackSkipPixels);
-    gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mPixelStore_PackSkipRows);
+    gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, mPixelStore.mPackRowLength);
+    gl->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, mPixelStore.mPackSkipPixels);
+    gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mPixelStore.mPackSkipRows);
   } else {
     // I *did* say "hilariously slow".
 
@@ -1933,16 +1851,17 @@ static bool ValidateArrOffsetAndCount(WebGLContext* webgl, size_t elemsAvail,
 }
 
 void WebGLContext::UniformNiv(const char* funcName, uint8_t N,
-                              WebGLUniformLocation* loc, const Int32Arr& arr,
+                              WebGLUniformLocation* loc,
+                              const RawBuffer<const GLint>& arr,
                               GLuint elemOffset, GLuint elemCountOverride) {
   const FuncScope funcScope(*this, funcName);
 
   size_t elemCount;
-  if (!ValidateArrOffsetAndCount(this, arr.elemCount, elemOffset,
+  if (!ValidateArrOffsetAndCount(this, arr.Length(), elemOffset,
                                  elemCountOverride, &elemCount)) {
     return;
   }
-  const auto elemBytes = arr.elemBytes + elemOffset;
+  const auto elemBytes = arr.Data() + elemOffset;
 
   uint32_t numElementsToUpload;
   if (!ValidateUniformArraySetter(loc, N, webgl::AttribBaseType::Int, elemCount,
@@ -1964,16 +1883,17 @@ void WebGLContext::UniformNiv(const char* funcName, uint8_t N,
 }
 
 void WebGLContext::UniformNuiv(const char* funcName, uint8_t N,
-                               WebGLUniformLocation* loc, const Uint32Arr& arr,
+                               WebGLUniformLocation* loc,
+                               const RawBuffer<const GLuint>& arr,
                                GLuint elemOffset, GLuint elemCountOverride) {
   const FuncScope funcScope(*this, funcName);
 
   size_t elemCount;
-  if (!ValidateArrOffsetAndCount(this, arr.elemCount, elemOffset,
+  if (!ValidateArrOffsetAndCount(this, arr.Length(), elemOffset,
                                  elemCountOverride, &elemCount)) {
     return;
   }
-  const auto elemBytes = arr.elemBytes + elemOffset;
+  const auto elemBytes = arr.Data() + elemOffset;
 
   uint32_t numElementsToUpload;
   if (!ValidateUniformArraySetter(loc, N, webgl::AttribBaseType::UInt,
@@ -1991,16 +1911,17 @@ void WebGLContext::UniformNuiv(const char* funcName, uint8_t N,
 }
 
 void WebGLContext::UniformNfv(const char* funcName, uint8_t N,
-                              WebGLUniformLocation* loc, const Float32Arr& arr,
+                              WebGLUniformLocation* loc,
+                              const RawBuffer<const GLfloat>& arr,
                               GLuint elemOffset, GLuint elemCountOverride) {
   const FuncScope funcScope(*this, funcName);
 
   size_t elemCount;
-  if (!ValidateArrOffsetAndCount(this, arr.elemCount, elemOffset,
+  if (!ValidateArrOffsetAndCount(this, arr.Length(), elemOffset,
                                  elemCountOverride, &elemCount)) {
     return;
   }
-  const auto elemBytes = arr.elemBytes + elemOffset;
+  const auto elemBytes = arr.Data() + elemOffset;
 
   uint32_t numElementsToUpload;
   if (!ValidateUniformArraySetter(loc, N, webgl::AttribBaseType::Float,
@@ -2031,16 +1952,17 @@ static inline void MatrixAxBToRowMajor(const uint8_t width,
 void WebGLContext::UniformMatrixAxBfv(const char* funcName, uint8_t A,
                                       uint8_t B, WebGLUniformLocation* loc,
                                       const bool transpose,
-                                      const Float32Arr& arr, GLuint elemOffset,
+                                      const RawBuffer<const float>& arr,
+                                      GLuint elemOffset,
                                       GLuint elemCountOverride) {
   const FuncScope funcScope(*this, funcName);
 
   size_t elemCount;
-  if (!ValidateArrOffsetAndCount(this, arr.elemCount, elemOffset,
+  if (!ValidateArrOffsetAndCount(this, arr.Length(), elemOffset,
                                  elemCountOverride, &elemCount)) {
     return;
   }
-  const auto elemBytes = arr.elemBytes + elemOffset;
+  const auto elemBytes = arr.Data() + elemOffset;
 
   uint32_t numMatsToUpload;
   if (!ValidateUniformMatrixArraySetter(loc, A, B, webgl::AttribBaseType::Float,
@@ -2174,33 +2096,30 @@ void WebGLContext::CompileShader(WebGLShader& shader) {
   shader.CompileShader();
 }
 
-JS::Value WebGLContext::GetShaderParameter(const WebGLShader& shader,
-                                           GLenum pname) {
+MaybeWebGLVariant WebGLContext::GetShaderParameter(const WebGLShader& shader,
+                                                   GLenum pname) {
   const FuncScope funcScope(*this, "getShaderParameter");
-  if (IsContextLost()) return JS::NullValue();
+  if (IsContextLost()) return Nothing();
 
-  if (!ValidateObjectAllowDeleted("shader", shader)) return JS::NullValue();
+  if (!ValidateObjectAllowDeleted("shader", shader)) return Nothing();
 
   return shader.GetShaderParameter(pname);
 }
 
-void WebGLContext::GetShaderInfoLog(const WebGLShader& shader,
-                                    nsAString& retval) {
-  retval.SetIsVoid(true);
+nsString WebGLContext::GetShaderInfoLog(const WebGLShader& shader) {
   const FuncScope funcScope(*this, "getShaderInfoLog");
 
-  if (IsContextLost()) return;
+  if (IsContextLost()) return EmptyString();
 
-  if (!ValidateObject("shader", shader)) return;
+  if (!ValidateObject("shader", shader)) return EmptyString();
 
-  shader.GetShaderInfoLog(&retval);
+  return shader.GetShaderInfoLog();
 }
 
-already_AddRefed<WebGLShaderPrecisionFormat>
-WebGLContext::GetShaderPrecisionFormat(GLenum shadertype,
-                                       GLenum precisiontype) {
+Maybe<WebGLShaderPrecisionFormat> WebGLContext::GetShaderPrecisionFormat(
+    GLenum shadertype, GLenum precisiontype) {
   const FuncScope funcScope(*this, "getShaderPrecisionFormat");
-  if (IsContextLost()) return nullptr;
+  if (IsContextLost()) return Nothing();
 
   switch (shadertype) {
     case LOCAL_GL_FRAGMENT_SHADER:
@@ -2208,7 +2127,7 @@ WebGLContext::GetShaderPrecisionFormat(GLenum shadertype,
       break;
     default:
       ErrorInvalidEnumInfo("shadertype", shadertype);
-      return nullptr;
+      return Nothing();
   }
 
   switch (precisiontype) {
@@ -2221,7 +2140,7 @@ WebGLContext::GetShaderPrecisionFormat(GLenum shadertype,
       break;
     default:
       ErrorInvalidEnumInfo("precisiontype", precisiontype);
-      return nullptr;
+      return Nothing();
   }
 
   GLint range[2], precision;
@@ -2236,21 +2155,20 @@ WebGLContext::GetShaderPrecisionFormat(GLenum shadertype,
     gl->fGetShaderPrecisionFormat(shadertype, precisiontype, range, &precision);
   }
 
-  RefPtr<WebGLShaderPrecisionFormat> retShaderPrecisionFormat =
-      new WebGLShaderPrecisionFormat(this, range[0], range[1], precision);
-  return retShaderPrecisionFormat.forget();
+  return Some(WebGLShaderPrecisionFormat(range[0], range[1], precision));
 }
 
-void WebGLContext::GetShaderSource(const WebGLShader& shader,
-                                   nsAString& retval) {
-  retval.SetIsVoid(true);
+nsString WebGLContext::GetShaderSource(const WebGLShader& shader) {
+  nsString retVoid;
+  retVoid.SetIsVoid(true);
+
   const FuncScope funcScope(*this, "getShaderSource");
 
-  if (IsContextLost()) return;
+  if (IsContextLost()) return retVoid;
 
-  if (!ValidateObject("shader", shader)) return;
+  if (!ValidateObject("shader", shader)) return retVoid;
 
-  shader.GetShaderSource(&retval);
+  return shader.GetShaderSource();
 }
 
 void WebGLContext::ShaderSource(WebGLShader& shader, const nsAString& source) {

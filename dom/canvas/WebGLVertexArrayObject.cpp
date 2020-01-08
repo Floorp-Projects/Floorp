@@ -24,10 +24,5 @@ WebGLVertexArray* WebGLVertexArrayObject::Create(WebGLContext* webgl) {
   return nullptr;
 }
 
-JSObject* WebGLVertexArrayObject::WrapObject(JSContext* cx,
-                                             JS::Handle<JSObject*> givenProto) {
-  return dom::WebGLVertexArrayObject_Binding::Wrap(cx, this, givenProto);
-}
-
 }  // namespace dom
 }  // namespace mozilla

@@ -25,7 +25,7 @@ class nsITimerCallback;
 
 namespace mozilla {
 
-class WebGLContext;
+class ClientWebGLContext;
 
 namespace layers {
 class AsyncCanvasRenderer;
@@ -34,6 +34,7 @@ class CanvasLayer;
 class Image;
 class Layer;
 class LayerManager;
+class OOPCanvasRenderer;
 class SharedSurfaceTextureClient;
 class WebRenderCanvasData;
 }  // namespace layers
@@ -49,6 +50,7 @@ class File;
 class HTMLCanvasPrintState;
 class OffscreenCanvas;
 class PrintCallback;
+class PWebGLChild;
 class RequestedFrameRefreshObserver;
 
 // Listen visibilitychange and memory-pressure event and inform
@@ -333,6 +335,12 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
   bool MaybeModified() const { return mMaybeModified; };
 
+  AsyncCanvasRenderer* GetAsyncCanvasRenderer();
+
+  layers::OOPCanvasRenderer* GetOOPCanvasRenderer();
+
+  PWebGLChild* GetWebGLChild();
+
  protected:
   virtual ~HTMLCanvasElement();
 
@@ -363,7 +371,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
                                           const nsAttrValueOrString& aValue,
                                           bool aNotify) override;
 
-  AsyncCanvasRenderer* GetAsyncCanvasRenderer();
+  ClientWebGLContext* GetClientWebGLContext();
 
   bool mResetLayer;
   bool mMaybeModified;  // we fetched the context, so we may have written to the
@@ -374,6 +382,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   nsTArray<WeakPtr<FrameCaptureListener>> mRequestedFrameListeners;
   RefPtr<RequestedFrameRefreshObserver> mRequestedFrameRefreshObserver;
   RefPtr<AsyncCanvasRenderer> mAsyncCanvasRenderer;
+  RefPtr<layers::OOPCanvasRenderer> mOOPCanvasRenderer;
   RefPtr<OffscreenCanvas> mOffscreenCanvas;
   RefPtr<HTMLCanvasElementObserver> mContextObserver;
 

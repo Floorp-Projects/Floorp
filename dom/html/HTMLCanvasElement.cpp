@@ -27,6 +27,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/layers/AsyncCanvasRenderer.h"
+#include "mozilla/layers/OOPCanvasRenderer.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/MouseEvents.h"
@@ -46,8 +47,7 @@
 #include "ActiveLayerTracker.h"
 #include "CanvasUtils.h"
 #include "VRManagerChild.h"
-#include "WebGL1Context.h"
-#include "WebGL2Context.h"
+#include "ClientWebGLContext.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;
@@ -1352,6 +1352,16 @@ AsyncCanvasRenderer* HTMLCanvasElement::GetAsyncCanvasRenderer() {
   return mAsyncCanvasRenderer;
 }
 
+layers::OOPCanvasRenderer* HTMLCanvasElement::GetOOPCanvasRenderer() {
+  if (!mOOPCanvasRenderer) {
+    ClientWebGLContext* context = GetClientWebGLContext();
+    MOZ_ASSERT(context);
+    mOOPCanvasRenderer = new OOPCanvasRenderer(context);
+  }
+
+  return mOOPCanvasRenderer;
+}
+
 layers::LayersBackend HTMLCanvasElement::GetCompositorBackendType() const {
   nsIWidget* docWidget = nsContentUtils::WidgetForDocument(OwnerDoc());
   if (docWidget) {
@@ -1477,19 +1487,22 @@ void HTMLCanvasElement::InvalidateFromAsyncCanvasRenderer(
   element->InvalidateCanvasContent(nullptr);
 }
 
-already_AddRefed<layers::SharedSurfaceTextureClient>
-HTMLCanvasElement::GetVRFrame() {
+ClientWebGLContext* HTMLCanvasElement::GetClientWebGLContext() {
   if (GetCurrentContextType() != CanvasContextType::WebGL1 &&
       GetCurrentContextType() != CanvasContextType::WebGL2) {
     return nullptr;
   }
 
-  WebGLContext* webgl = static_cast<WebGLContext*>(GetContextAtIndex(0));
+  return static_cast<ClientWebGLContext*>(GetContextAtIndex(0));
+}
+
+PWebGLChild* HTMLCanvasElement::GetWebGLChild() {
+  ClientWebGLContext* webgl = GetClientWebGLContext();
   if (!webgl) {
     return nullptr;
   }
 
-  return webgl->GetVRFrame();
+  return webgl->GetWebGLChild();
 }
 
 void HTMLCanvasElement::ClearVRFrame() {

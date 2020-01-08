@@ -77,26 +77,22 @@ void WebGLExtensionDisjointTimerQuery::QueryCounterEXT(WebGLQuery& query,
   query.QueryCounter(target);
 }
 
-void WebGLExtensionDisjointTimerQuery::GetQueryEXT(
-    JSContext* cx, GLenum target, GLenum pname,
-    JS::MutableHandleValue retval) const {
-  retval.setNull();
-  if (mIsLost || !mContext) return;
+MaybeWebGLVariant WebGLExtensionDisjointTimerQuery::GetQueryEXT(
+    GLenum target, GLenum pname) const {
+  if (mIsLost || !mContext) return {};
   const WebGLContext::FuncScope funcScope(*mContext, "getQueryEXT");
   MOZ_ASSERT(!mContext->IsContextLost());
 
-  mContext->GetQuery(cx, target, pname, retval);
+  return mContext->GetQuery(target, pname);
 }
 
-void WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(
-    JSContext* cx, const WebGLQuery& query, GLenum pname,
-    JS::MutableHandleValue retval) const {
-  retval.setNull();
-  if (mIsLost || !mContext) return;
+MaybeWebGLVariant WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(
+    const WebGLQuery& query, GLenum pname) const {
+  if (mIsLost || !mContext) return {};
   const WebGLContext::FuncScope funcScope(*mContext, "getQueryObjectEXT");
   MOZ_ASSERT(!mContext->IsContextLost());
 
-  mContext->GetQueryParameter(cx, query, pname, retval);
+  return mContext->GetQueryParameter(query, pname);
 }
 
 bool WebGLExtensionDisjointTimerQuery::IsSupported(const WebGLContext* webgl) {
@@ -106,8 +102,5 @@ bool WebGLExtensionDisjointTimerQuery::IsSupported(const WebGLContext* webgl) {
          gl->IsSupported(
              gl::GLFeature::query_counter);  // provides GL_TIMESTAMP
 }
-
-IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDisjointTimerQuery,
-                          EXT_disjoint_timer_query)
 
 }  // namespace mozilla

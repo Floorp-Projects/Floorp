@@ -140,7 +140,7 @@ void WebGLContext::DepthMask(WebGLboolean b) {
   gl->fDepthMask(b);
 }
 
-void WebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers) {
+void WebGLContext::DrawBuffers(const nsTArray<GLenum>& buffers) {
   const FuncScope funcScope(*this, "drawBuffers");
   if (IsContextLost()) return;
 

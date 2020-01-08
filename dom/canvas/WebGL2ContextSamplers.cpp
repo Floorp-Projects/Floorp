@@ -75,15 +75,12 @@ void WebGL2Context::SamplerParameterf(WebGLSampler& sampler, GLenum pname,
   sampler.SamplerParameter(pname, FloatOrInt(param));
 }
 
-void WebGL2Context::GetSamplerParameter(JSContext*, const WebGLSampler& sampler,
-                                        GLenum pname,
-                                        JS::MutableHandleValue retval) {
+MaybeWebGLVariant WebGL2Context::GetSamplerParameter(
+    const WebGLSampler& sampler, GLenum pname) {
   const FuncScope funcScope(*this, "getSamplerParameter");
-  retval.setNull();
+  if (IsContextLost()) return Nothing();
 
-  if (IsContextLost()) return;
-
-  if (!ValidateObject("sampler", sampler)) return;
+  if (!ValidateObject("sampler", sampler)) return Nothing();
 
   ////
 
@@ -97,21 +94,18 @@ void WebGL2Context::GetSamplerParameter(JSContext*, const WebGLSampler& sampler,
     case LOCAL_GL_TEXTURE_COMPARE_FUNC: {
       GLint param = 0;
       gl->fGetSamplerParameteriv(sampler.mGLName, pname, &param);
-      retval.set(JS::Int32Value(param));
+      return AsSomeVariant(param);
     }
-      return;
-
     case LOCAL_GL_TEXTURE_MIN_LOD:
     case LOCAL_GL_TEXTURE_MAX_LOD: {
       GLfloat param = 0;
       gl->fGetSamplerParameterfv(sampler.mGLName, pname, &param);
-      retval.set(JS::Float32Value(param));
+      return AsSomeVariant(param);
     }
-      return;
 
     default:
       ErrorInvalidEnumInfo("pname", pname);
-      return;
+      return Nothing();
   }
 }
 

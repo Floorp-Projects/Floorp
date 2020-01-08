@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/TypedArray.h"
 
 #include "WebGLStrongTypes.h"
 
@@ -28,9 +29,6 @@ namespace mozilla {
 //
 // Returns GL_NONE if passed an invalid texture image target
 TexTarget TexImageTargetToTexTarget(TexImageTarget texImageTarget);
-
-// Helper function to create a JS::Value from a C string
-JS::Value StringValue(JSContext* cx, const char* str, ErrorResult& rv);
 
 struct GLComponents {
   unsigned char mComponents;
@@ -53,41 +51,11 @@ struct GLComponents {
   bool IsSubsetOf(const GLComponents& other) const;
 };
 
-template <typename WebGLObjectType>
-JS::Value WebGLContext::WebGLObjectAsJSValue(JSContext* cx,
-                                             const WebGLObjectType* object,
-                                             ErrorResult& rv) const {
-  if (!object) return JS::NullValue();
-
-  MOZ_ASSERT(this == object->mContext);
-  JS::Rooted<JS::Value> v(cx);
-  JS::Rooted<JSObject*> wrapper(cx, GetWrapper());
-  JSAutoRealm ar(cx, wrapper);
-  if (!dom::GetOrCreateDOMReflector(cx, const_cast<WebGLObjectType*>(object),
-                                    &v)) {
-    rv.Throw(NS_ERROR_FAILURE);
-    return JS::NullValue();
-  }
-  return v;
-}
-
-template <typename WebGLObjectType>
-JSObject* WebGLContext::WebGLObjectAsJSObject(JSContext* cx,
-                                              const WebGLObjectType* object,
-                                              ErrorResult& rv) const {
-  JS::Value v = WebGLObjectAsJSValue(cx, object, rv);
-  if (v.isNull()) return nullptr;
-
-  return &v.toObject();
-}
-
 /**
  * Return the displayable name for the texture function that is the
  * source for validation.
  */
 const char* InfoFrom(WebGLTexImageFunc func, WebGLTexDimensions dims);
-
-JS::Value StringValue(JSContext* cx, const nsAString& str, ErrorResult& er);
 
 }  // namespace mozilla
 
