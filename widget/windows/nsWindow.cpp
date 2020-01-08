@@ -3813,7 +3813,6 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
     MOZ_ASSERT(mCompositorWidgetDelegate,
                "nsWindow::SetCompositorWidgetDelegate called with a "
                "non-PlatformCompositorWidgetDelegate");
-    mCompositorWidgetDelegate->SetParentWnd(mWnd);
   } else {
     mCompositorWidgetDelegate = nullptr;
   }

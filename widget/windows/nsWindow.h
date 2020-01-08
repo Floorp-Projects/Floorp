@@ -60,7 +60,7 @@ class imgIContainer;
 namespace mozilla {
 namespace widget {
 class NativeKey;
-class WinCompositorWidget;
+class InProcessWinCompositorWidget;
 struct MSGResult;
 }  // namespace widget
 }  // namespace mozilla
@@ -688,7 +688,7 @@ class nsWindow final : public nsWindowBase {
   POINT mCachedHitTestPoint;
   TimeStamp mCachedHitTestTime;
 
-  RefPtr<mozilla::widget::WinCompositorWidget> mBasicLayersSurface;
+  RefPtr<mozilla::widget::InProcessWinCompositorWidget> mBasicLayersSurface;
 
   static bool sNeedsToInitMouseWheelSettings;
   static void InitMouseWheelScrollData();

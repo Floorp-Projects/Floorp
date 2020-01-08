@@ -6,6 +6,7 @@
 #include "CompositorWidgetChild.h"
 #include "mozilla/Unused.h"
 #include "mozilla/widget/CompositorWidgetVsyncObserver.h"
+#include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsBaseWidget.h"
 #include "VsyncDispatcher.h"
 #include "gfxPlatform.h"
@@ -15,13 +16,16 @@ namespace widget {
 
 CompositorWidgetChild::CompositorWidgetChild(
     RefPtr<CompositorVsyncDispatcher> aVsyncDispatcher,
-    RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver)
+    RefPtr<CompositorWidgetVsyncObserver> aVsyncObserver,
+    const CompositorWidgetInitData& aInitData)
     : mVsyncDispatcher(aVsyncDispatcher),
       mVsyncObserver(aVsyncObserver),
       mCompositorWnd(nullptr),
-      mParentWnd(nullptr) {
+      mParentWnd(reinterpret_cast<HWND>(
+          aInitData.get_WinCompositorWidgetInitData().hWnd())) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
+  MOZ_ASSERT(mParentWnd && ::IsWindow(mParentWnd));
 }
 
 CompositorWidgetChild::~CompositorWidgetChild() {}
@@ -42,15 +46,6 @@ void CompositorWidgetChild::UpdateTransparency(nsTransparencyMode aMode) {
 
 void CompositorWidgetChild::ClearTransparentWindow() {
   Unused << SendClearTransparentWindow();
-}
-
-HDC CompositorWidgetChild::GetTransparentDC() const {
-  // Not supported in out-of-process mode.
-  return nullptr;
-}
-
-void CompositorWidgetChild::SetParentWnd(const HWND aParentWnd) {
-  mParentWnd = reinterpret_cast<HWND>(aParentWnd);
 }
 
 mozilla::ipc::IPCResult CompositorWidgetChild::RecvObserveVsync() {
