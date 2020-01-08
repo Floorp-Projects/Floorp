@@ -89,6 +89,24 @@ addEventListener("TalosPowersContentGetStartupInfo", e => {
   );
 });
 
+addEventListener(
+  "TalosPowersContentDumpConsole",
+  e => {
+    var messages;
+    try {
+      messages = Services.console.getMessageArray();
+    } catch (ex) {
+      dump(ex + "\n");
+      messages = [];
+    }
+
+    for (var i = 0; i < messages.length; i++) {
+      dump(messages[i].message + "\n");
+    }
+  },
+  { wantUntrusted: true } // since we're exposing to unprivileged
+);
+
 /**
  * Content that wants to quit the whole session should
  * fire the TalosPowersGoQuitApplication custom event. This will
