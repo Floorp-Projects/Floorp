@@ -88,10 +88,10 @@ class RenderCompositorOGL : public RenderCompositor {
     }
   };
 
-  class Surface {
-   public:
+  struct Surface {
     explicit Surface(wr::DeviceIntSize aTileSize, bool aIsOpaque)
         : mTileSize(aTileSize), mIsOpaque(aIsOpaque) {}
+    IntSize TileSize() { return IntSize(mTileSize.width, mTileSize.height); }
 
     wr::DeviceIntSize mTileSize;
     bool mIsOpaque;
