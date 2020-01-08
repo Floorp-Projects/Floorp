@@ -7,6 +7,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 
 #include "ImageEncoder.h"
+#include "ImageLayers.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "Layers.h"
@@ -1075,6 +1076,13 @@ bool HTMLCanvasElement::GetOpaqueAttr() {
   return HasAttr(kNameSpaceID_None, nsGkAtoms::moz_opaque);
 }
 
+CanvasContextType HTMLCanvasElement::GetCurrentContextType() {
+  if (mAsyncCanvasRenderer) {
+    return mAsyncCanvasRenderer->GetContextType();
+  }
+  return mCurrentContextType;
+}
+
 already_AddRefed<Layer> HTMLCanvasElement::GetCanvasLayer(
     nsDisplayListBuilder* aBuilder, Layer* aOldLayer, LayerManager* aManager) {
   // The address of sOffscreenCanvasLayerUserDataDummy is used as the user
@@ -1082,35 +1090,67 @@ already_AddRefed<Layer> HTMLCanvasElement::GetCanvasLayer(
   // We don't much care about what value in it, so just assign a dummy
   // value for it.
   static uint8_t sOffscreenCanvasLayerUserDataDummy = 0;
+  static uint8_t sOffscreenImageLayerUserDataDummy = 0;
 
   if (mCurrentContext) {
     return mCurrentContext->GetCanvasLayer(aBuilder, aOldLayer, aManager);
   }
 
   if (mOffscreenCanvas) {
-    if (!mResetLayer && aOldLayer &&
-        aOldLayer->HasUserData(&sOffscreenCanvasLayerUserDataDummy)) {
-      RefPtr<Layer> ret = aOldLayer;
-      return ret.forget();
-    }
-
-    RefPtr<CanvasLayer> layer = aManager->CreateCanvasLayer();
-    if (!layer) {
-      NS_WARNING("CreateCanvasLayer failed!");
+    CanvasContextType contentType = mAsyncCanvasRenderer->GetContextType();
+    if (contentType == CanvasContextType::NoContext) {
+      // context is not created yet.
       return nullptr;
     }
+    if (contentType != CanvasContextType::ImageBitmap) {
+      if (!mResetLayer && aOldLayer &&
+          aOldLayer->HasUserData(&sOffscreenCanvasLayerUserDataDummy)) {
+        RefPtr<Layer> ret = aOldLayer;
+        return ret.forget();
+      }
 
-    LayerUserData* userData = nullptr;
-    layer->SetUserData(&sOffscreenCanvasLayerUserDataDummy, userData);
+      RefPtr<CanvasLayer> layer = aManager->CreateCanvasLayer();
+      if (!layer) {
+        NS_WARNING("CreateCanvasLayer failed!");
+        return nullptr;
+      }
 
-    CanvasRenderer* canvasRenderer = layer->CreateOrGetCanvasRenderer();
+      LayerUserData* userData = nullptr;
+      layer->SetUserData(&sOffscreenCanvasLayerUserDataDummy, userData);
 
-    if (!InitializeCanvasRenderer(aBuilder, canvasRenderer)) {
-      return nullptr;
+      CanvasRenderer* canvasRenderer = layer->CreateOrGetCanvasRenderer();
+
+      if (!InitializeCanvasRenderer(aBuilder, canvasRenderer)) {
+        return nullptr;
+      }
+
+      layer->Updated();
+      mResetLayer = false;
+      return layer.forget();
     }
+    if (contentType == CanvasContextType::ImageBitmap) {
+      if (!mResetLayer && aOldLayer &&
+          aOldLayer->HasUserData(&sOffscreenImageLayerUserDataDummy)) {
+        RefPtr<Layer> ret = aOldLayer;
+        return ret.forget();
+      }
 
-    layer->Updated();
-    return layer.forget();
+      RefPtr<ImageLayer> layer = aManager->CreateImageLayer();
+      if (!layer) {
+        NS_WARNING("CreateImageLayer failed!");
+        return nullptr;
+      }
+
+      LayerUserData* userData = nullptr;
+      layer->SetUserData(&sOffscreenImageLayerUserDataDummy, userData);
+
+      RefPtr<ImageContainer> imageContainer =
+          mAsyncCanvasRenderer->GetImageContainer();
+      MOZ_ASSERT(imageContainer);
+      layer->SetContainer(imageContainer);
+      mResetLayer = false;
+      return layer.forget();
+    }
   }
 
   return nullptr;
@@ -1122,22 +1162,37 @@ bool HTMLCanvasElement::UpdateWebRenderCanvasData(
     return mCurrentContext->UpdateWebRenderCanvasData(aBuilder, aCanvasData);
   }
   if (mOffscreenCanvas) {
-    CanvasRenderer* renderer = aCanvasData->GetCanvasRenderer();
-
-    if (!mResetLayer && renderer) {
-      return true;
-    }
-
-    renderer = aCanvasData->CreateCanvasRenderer();
-    if (!InitializeCanvasRenderer(aBuilder, renderer)) {
-      // Clear CanvasRenderer of WebRenderCanvasData
-      aCanvasData->ClearCanvasRenderer();
+    CanvasContextType contentType = mAsyncCanvasRenderer->GetContextType();
+    if (contentType == CanvasContextType::NoContext) {
+      // context is not created yet.
       return false;
     }
+    if (contentType != CanvasContextType::ImageBitmap) {
+      CanvasRenderer* renderer = aCanvasData->GetCanvasRenderer();
 
-    MOZ_ASSERT(renderer);
-    mResetLayer = false;
-    return true;
+      if (!mResetLayer && renderer) {
+        return true;
+      }
+
+      renderer = aCanvasData->CreateCanvasRenderer();
+      if (!InitializeCanvasRenderer(aBuilder, renderer)) {
+        // Clear CanvasRenderer of WebRenderCanvasData
+        aCanvasData->ClearCanvasRenderer();
+        return false;
+      }
+
+      MOZ_ASSERT(renderer);
+      mResetLayer = false;
+      return true;
+    }
+    if (contentType == CanvasContextType::ImageBitmap) {
+      RefPtr<ImageContainer> imageContainer =
+          mAsyncCanvasRenderer->GetImageContainer();
+      MOZ_ASSERT(imageContainer);
+      aCanvasData->SetImageContainer(imageContainer);
+      mResetLayer = false;
+      return true;
+    }
   }
 
   // Clear CanvasRenderer of WebRenderCanvasData
