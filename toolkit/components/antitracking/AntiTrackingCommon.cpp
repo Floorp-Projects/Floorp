@@ -1011,9 +1011,13 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     }
 
     if (!GetParentPrincipalAndTrackingOrigin(
-            parentWindow, behavior, getter_AddRefs(topLevelStoragePrincipal),
-            trackingOrigin, getter_AddRefs(trackingURI),
-            getter_AddRefs(trackingPrincipal))) {
+            parentWindow,
+            // Don't request the ETP specific behaviour of allowing only
+            // singly-nested iframes here, because we are recording an allow
+            // permission.
+            nsICookieService::BEHAVIOR_ACCEPT,
+            getter_AddRefs(topLevelStoragePrincipal), trackingOrigin,
+            getter_AddRefs(trackingURI), getter_AddRefs(trackingPrincipal))) {
       LOG(
           ("Error while computing the parent principal and tracking origin, "
            "bailing out early"));
