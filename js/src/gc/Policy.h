@@ -22,7 +22,7 @@ struct InternalGCPointerPolicy : public JS::GCPointerPolicy<T> {
   using Type = typename mozilla::RemovePointer<T>::Type;
 
 #define IS_BASE_OF_OR(_1, BaseType, _2, _3) \
-  mozilla::IsBaseOf<BaseType, Type>::value ||
+  std::is_base_of<BaseType, Type>::value ||
   static_assert(
       JS_FOR_EACH_TRACEKIND(IS_BASE_OF_OR) false,
       "InternalGCPointerPolicy must only be used for GC thing pointers");

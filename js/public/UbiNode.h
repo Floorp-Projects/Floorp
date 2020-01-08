@@ -322,9 +322,8 @@ class StackFrame {
 
   template <typename T>
   void construct(T* ptr) {
-    static_assert(
-        mozilla::IsBaseOf<BaseStackFrame, ConcreteStackFrame<T>>::value,
-        "ConcreteStackFrame<T> must inherit from BaseStackFrame");
+    static_assert(std::is_base_of<BaseStackFrame, ConcreteStackFrame<T>>::value,
+                  "ConcreteStackFrame<T> must inherit from BaseStackFrame");
     static_assert(
         sizeof(ConcreteStackFrame<T>) == sizeof(*base()),
         "ubi::ConcreteStackFrame<T> specializations must be the same size as "
@@ -711,7 +710,7 @@ class Node {
     static_assert(
         sizeof(Concrete<T>) == sizeof(*base()),
         "ubi::Base specializations must be the same size as ubi::Base");
-    static_assert(mozilla::IsBaseOf<Base, Concrete<T>>::value,
+    static_assert(std::is_base_of<Base, Concrete<T>>::value,
                   "ubi::Concrete<T> must inherit from ubi::Base");
     Concrete<T>::construct(base(), ptr);
   }

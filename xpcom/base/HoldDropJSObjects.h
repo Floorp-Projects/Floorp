@@ -25,7 +25,7 @@ void DropJSObjectsImpl(nsISupports* aHolder);
 
 }  // namespace cyclecollector
 
-template <class T, bool isISupports = IsBaseOf<nsISupports, T>::value>
+template <class T, bool isISupports = std::is_base_of<nsISupports, T>::value>
 struct HoldDropJSObjectsHelper {
   static void Hold(T* aHolder) {
     cyclecollector::HoldJSObjectsImpl(aHolder,

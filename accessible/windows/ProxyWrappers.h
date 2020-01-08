@@ -81,7 +81,7 @@ class DocProxyAccessibleWrap : public HyperTextProxyAccessibleWrap {
 
 template <typename T>
 inline ProxyAccessible* HyperTextProxyFor(T* aWrapper) {
-  static_assert(mozilla::IsBaseOf<IUnknown, T>::value,
+  static_assert(std::is_base_of<IUnknown, T>::value,
                 "only IAccessible* should be passed in");
   auto wrapper = static_cast<HyperTextProxyAccessibleWrap*>(aWrapper);
   return wrapper->IsProxy() ? wrapper->Proxy() : nullptr;

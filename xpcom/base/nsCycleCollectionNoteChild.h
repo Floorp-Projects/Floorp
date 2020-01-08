@@ -48,7 +48,7 @@ nsISupports* ToSupports(
 
 // The default implementation of this class template is empty, because it
 // should never be used: see the partial specializations below.
-template <typename T, bool IsXPCOM = mozilla::IsBaseOf<nsISupports, T>::value>
+template <typename T, bool IsXPCOM = std::is_base_of<nsISupports, T>::value>
 struct CycleCollectionNoteChildImpl {};
 
 template <typename T>

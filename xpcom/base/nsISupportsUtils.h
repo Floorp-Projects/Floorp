@@ -120,7 +120,7 @@ inline nsresult CallQueryInterface(T* aSource, DestinationType** aDestination) {
   // the canonical nsISupports pointer with CallQueryInterface.
   static_assert(
       !(mozilla::IsSame<DestinationType, T>::value ||
-        mozilla::IsBaseOf<DestinationType, T>::value) ||
+        std::is_base_of<DestinationType, T>::value) ||
           mozilla::IsSame<DestinationType, nsISupports>::value,
       "don't use CallQueryInterface for compile-time-determinable casts");
 

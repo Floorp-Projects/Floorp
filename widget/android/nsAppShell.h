@@ -131,9 +131,9 @@ class nsAppShell : public nsBaseAppShell {
       const mozilla::TimeDuration timeout = mozilla::TimeDuration::Forever());
 
   template <typename T>
-  static typename mozilla::EnableIf<!mozilla::IsBaseOf<Event, T>::value,
-                                    void>::Type
-  SyncRunEvent(T&& lambda) {
+  static
+      typename mozilla::EnableIf<!std::is_base_of<Event, T>::value, void>::Type
+      SyncRunEvent(T&& lambda) {
     SyncRunEvent(LambdaEvent<T>(std::forward<T>(lambda)));
   }
 

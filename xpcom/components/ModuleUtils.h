@@ -78,7 +78,7 @@ struct RemoveAlreadyAddRefed<already_AddRefed<T>> {
         mozilla::IsSame<already_AddRefed<T>, decltype(_GetterProc())>::value,  \
         "Singleton constructor must return already_AddRefed");                 \
     static_assert(                                                             \
-        mozilla::IsBaseOf<_InstanceClass, T>::value,                           \
+        std::is_base_of<_InstanceClass, T>::value,                             \
         "Singleton constructor must return correct already_AddRefed");         \
     inst = _GetterProc();                                                      \
     if (nullptr == inst) {                                                     \
