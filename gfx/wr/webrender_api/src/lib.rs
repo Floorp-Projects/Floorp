@@ -12,7 +12,7 @@
 //! there.
 
 #![cfg_attr(feature = "nightly", feature(nonzero))]
-#![cfg_attr(feature = "cargo-clippy", allow(float_cmp, too_many_arguments, unreadable_literal))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::float_cmp, clippy::too_many_arguments, clippy::unreadable_literal, clippy::new_without_default))]
 
 extern crate app_units;
 #[macro_use]
