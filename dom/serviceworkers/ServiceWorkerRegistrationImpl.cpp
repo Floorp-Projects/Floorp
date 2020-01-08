@@ -174,6 +174,7 @@ void ServiceWorkerRegistrationMainThread::ClearServiceWorkerRegistration(
 namespace {
 
 void UpdateInternal(nsIPrincipal* aPrincipal, const nsACString& aScope,
+                    nsCString aNewestWorkerScriptUrl,
                     ServiceWorkerUpdateFinishCallback* aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
@@ -185,7 +186,7 @@ void UpdateInternal(nsIPrincipal* aPrincipal, const nsACString& aScope,
     return;
   }
 
-  swm->Update(aPrincipal, aScope, aCallback);
+  swm->Update(aPrincipal, aScope, std::move(aNewestWorkerScriptUrl), aCallback);
 }
 
 class MainThreadUpdateCallback final
@@ -266,13 +267,15 @@ class SWRUpdateRunnable final : public Runnable {
  public:
   SWRUpdateRunnable(StrongWorkerRef* aWorkerRef,
                     ServiceWorkerRegistrationPromise::Private* aPromise,
-                    const ServiceWorkerDescriptor& aDescriptor)
+                    const ServiceWorkerDescriptor& aDescriptor,
+                    const nsCString& aNewestWorkerScriptUrl)
       : Runnable("dom::SWRUpdateRunnable"),
         mMutex("SWRUpdateRunnable"),
         mWorkerRef(new ThreadSafeWorkerRef(aWorkerRef)),
         mPromise(aPromise),
         mDescriptor(aDescriptor),
-        mDelayed(false) {
+        mDelayed(false),
+        mNewestWorkerScriptUrl(aNewestWorkerScriptUrl) {
     MOZ_DIAGNOSTIC_ASSERT(mWorkerRef);
     MOZ_DIAGNOSTIC_ASSERT(mPromise);
   }
@@ -346,7 +349,8 @@ class SWRUpdateRunnable final : public Runnable {
 
     RefPtr<WorkerThreadUpdateCallback> cb =
         new WorkerThreadUpdateCallback(std::move(mWorkerRef), promise);
-    UpdateInternal(principal, mDescriptor.Scope(), cb);
+    UpdateInternal(principal, mDescriptor.Scope(),
+                   std::move(mNewestWorkerScriptUrl), cb);
 
     return NS_OK;
   }
@@ -366,6 +370,7 @@ class SWRUpdateRunnable final : public Runnable {
   RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
   const ServiceWorkerDescriptor mDescriptor;
   bool mDelayed;
+  nsCString mNewestWorkerScriptUrl;
 };
 
 NS_IMPL_ISUPPORTS(SWRUpdateRunnable::TimerCallback, nsITimerCallback)
@@ -477,6 +482,7 @@ class StartUnregisterRunnable final : public Runnable {
 }  // namespace
 
 void ServiceWorkerRegistrationMainThread::Update(
+    const nsCString& aNewestWorkerScriptUrl,
     ServiceWorkerRegistrationCallback&& aSuccessCB,
     ServiceWorkerFailureCallback&& aFailureCB) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -495,7 +501,8 @@ void ServiceWorkerRegistrationMainThread::Update(
   }
 
   RefPtr<MainThreadUpdateCallback> cb = new MainThreadUpdateCallback();
-  UpdateInternal(principal, NS_ConvertUTF16toUTF8(mScope), cb);
+  UpdateInternal(principal, NS_ConvertUTF16toUTF8(mScope),
+                 aNewestWorkerScriptUrl, cb);
 
   auto holder =
       MakeRefPtr<DOMMozPromiseRequestHolder<ServiceWorkerRegistrationPromise>>(
@@ -727,6 +734,7 @@ void ServiceWorkerRegistrationWorkerThread::ClearServiceWorkerRegistration(
 }
 
 void ServiceWorkerRegistrationWorkerThread::Update(
+    const nsCString& aNewestWorkerScriptUrl,
     ServiceWorkerRegistrationCallback&& aSuccessCB,
     ServiceWorkerFailureCallback&& aFailureCB) {
   if (NS_WARN_IF(!mWorkerRef->GetPrivate())) {
@@ -784,7 +792,8 @@ void ServiceWorkerRegistrationWorkerThread::Update(
       ->Track(*holder);
 
   RefPtr<SWRUpdateRunnable> r = new SWRUpdateRunnable(
-      workerRef, promise, workerRef->Private()->GetServiceWorkerDescriptor());
+      workerRef, promise, workerRef->Private()->GetServiceWorkerDescriptor(),
+      aNewestWorkerScriptUrl);
 
   nsresult rv = workerRef->Private()->DispatchToMainThread(r.forget());
   if (NS_FAILED(rv)) {

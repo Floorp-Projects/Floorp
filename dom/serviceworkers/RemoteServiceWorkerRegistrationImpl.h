@@ -29,7 +29,8 @@ class RemoteServiceWorkerRegistrationImpl final
 
   void ClearServiceWorkerRegistration(ServiceWorkerRegistration* aReg) override;
 
-  void Update(ServiceWorkerRegistrationCallback&& aSuccessCB,
+  void Update(const nsCString& aNewestWorkerScriptUrl,
+              ServiceWorkerRegistrationCallback&& aSuccessCB,
               ServiceWorkerFailureCallback&& aFailureCB) override;
 
   void Unregister(ServiceWorkerBoolCallback&& aSuccessCB,

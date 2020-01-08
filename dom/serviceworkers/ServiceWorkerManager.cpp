@@ -708,29 +708,30 @@ class SoftUpdateRunnable final : public CancelableRunnable {
   RefPtr<GenericPromise::Private> mPromise;
 };
 
-// This runnable is used for 3 different tasks:
-// - to postpone the Update() until the IPC SWM actor is created
-//   (aType == ePostpone)
+// This runnable is used for 2 different tasks:
 // - to call the 'real' Update when the ServiceWorkerUpdaterChild is
 //   notified by the parent (aType == eSuccess)
 // - an error must be propagated (aType == eFailure)
 class UpdateRunnable final : public CancelableRunnable {
  public:
   enum Type {
-    ePostpone,
     eSuccess,
     eFailure,
   };
 
   UpdateRunnable(nsIPrincipal* aPrincipal, const nsACString& aScope,
+                 nsCString aNewestWorkerScriptUrl,
                  ServiceWorkerUpdateFinishCallback* aCallback, Type aType,
                  GenericPromise::Private* aPromise)
       : CancelableRunnable("dom::ServiceWorkerManager::UpdateRunnable"),
         mPrincipal(aPrincipal),
         mScope(aScope),
+        mNewestWorkerScriptUrl(std::move(aNewestWorkerScriptUrl)),
         mCallback(aCallback),
         mType(aType),
-        mPromise(aPromise) {}
+        mPromise(aPromise) {
+    MOZ_ASSERT_IF(mType == eSuccess, !mNewestWorkerScriptUrl.IsEmpty());
+  }
 
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
@@ -740,11 +741,6 @@ class UpdateRunnable final : public CancelableRunnable {
       return NS_ERROR_FAILURE;
     }
 
-    if (mType == ePostpone) {
-      swm->Update(mPrincipal, mScope, mCallback);
-      return NS_OK;
-    }
-
     MOZ_ASSERT(mPromise);
 
     RefPtr<PromiseResolverCallback> callback =
@@ -752,7 +748,8 @@ class UpdateRunnable final : public CancelableRunnable {
     mPromise = nullptr;
 
     if (mType == eSuccess) {
-      swm->UpdateInternal(mPrincipal, mScope, callback);
+      swm->UpdateInternal(mPrincipal, mScope, std::move(mNewestWorkerScriptUrl),
+                          callback);
       return NS_OK;
     }
 
@@ -775,6 +772,7 @@ class UpdateRunnable final : public CancelableRunnable {
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   const nsCString mScope;
+  nsCString mNewestWorkerScriptUrl;
   RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
   Type mType;
 
@@ -2373,22 +2371,27 @@ void ServiceWorkerManager::SoftUpdateInternal(
 
 void ServiceWorkerManager::Update(
     nsIPrincipal* aPrincipal, const nsACString& aScope,
+    nsCString aNewestWorkerScriptUrl,
     ServiceWorkerUpdateFinishCallback* aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aNewestWorkerScriptUrl.IsEmpty());
 
   if (ServiceWorkerParentInterceptEnabled()) {
-    UpdateInternal(aPrincipal, aScope, aCallback);
+    UpdateInternal(aPrincipal, aScope, std::move(aNewestWorkerScriptUrl),
+                   aCallback);
     return;
   }
 
   RefPtr<GenericPromise::Private> promise =
       new GenericPromise::Private(__func__);
 
-  RefPtr<CancelableRunnable> successRunnable = new UpdateRunnable(
-      aPrincipal, aScope, aCallback, UpdateRunnable::eSuccess, promise);
+  RefPtr<CancelableRunnable> successRunnable =
+      new UpdateRunnable(aPrincipal, aScope, std::move(aNewestWorkerScriptUrl),
+                         aCallback, UpdateRunnable::eSuccess, promise);
 
-  RefPtr<CancelableRunnable> failureRunnable = new UpdateRunnable(
-      aPrincipal, aScope, aCallback, UpdateRunnable::eFailure, promise);
+  RefPtr<CancelableRunnable> failureRunnable =
+      new UpdateRunnable(aPrincipal, aScope, EmptyCString(), aCallback,
+                         UpdateRunnable::eFailure, promise);
 
   ServiceWorkerUpdaterChild* actor =
       new ServiceWorkerUpdaterChild(promise, successRunnable, failureRunnable);
@@ -2399,9 +2402,11 @@ void ServiceWorkerManager::Update(
 
 void ServiceWorkerManager::UpdateInternal(
     nsIPrincipal* aPrincipal, const nsACString& aScope,
+    nsCString&& aNewestWorkerScriptUrl,
     ServiceWorkerUpdateFinishCallback* aCallback) {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aCallback);
+  MOZ_ASSERT(!aNewestWorkerScriptUrl.IsEmpty());
 
   nsAutoCString scopeKey;
   nsresult rv = PrincipalToScopeKey(aPrincipal, scopeKey);
@@ -2422,22 +2427,19 @@ void ServiceWorkerManager::UpdateInternal(
     return;
   }
 
-  RefPtr<ServiceWorkerInfo> newest = registration->Newest();
-  MOZ_DIAGNOSTIC_ASSERT(newest,
-                        "The Update algorithm should have been aborted already "
-                        "if there wasn't a newest worker");
-
   RefPtr<ServiceWorkerJobQueue> queue = GetOrCreateJobQueue(scopeKey, aScope);
 
-  // "Invoke Update algorithm, or its equivalent, with client, registration as
-  // its argument."
+  // "Let job be the result of running Create Job with update, registration’s
+  // scope url, newestWorker’s script url, promise, and the context object’s
+  // relevant settings object."
   RefPtr<ServiceWorkerUpdateJob> job = new ServiceWorkerUpdateJob(
-      aPrincipal, registration->Scope(), newest->ScriptSpec(),
+      aPrincipal, registration->Scope(), std::move(aNewestWorkerScriptUrl),
       registration->GetUpdateViaCache());
 
   RefPtr<UpdateJobCallback> cb = new UpdateJobCallback(aCallback);
   job->AppendResultCallback(cb);
 
+  // "Invoke Schedule Job with job."
   queue->ScheduleJob(job);
 }
 

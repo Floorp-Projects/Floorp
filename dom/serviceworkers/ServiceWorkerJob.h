@@ -75,7 +75,7 @@ class ServiceWorkerJob {
 
  protected:
   ServiceWorkerJob(Type aType, nsIPrincipal* aPrincipal,
-                   const nsACString& aScope, const nsACString& aScriptSpec);
+                   const nsACString& aScope, nsCString aScriptSpec);
 
   virtual ~ServiceWorkerJob();
 

@@ -199,29 +199,22 @@ already_AddRefed<Promise> ServiceWorkerRegistration::Update(ErrorResult& aRv) {
     return nullptr;
   }
 
-  /**
-   * `ServiceWorker` objects are not exposed on worker threads yet, so calling
-   * `ServiceWorkerRegistration::Get{Installing,Waiting,Active}` won't work.
-   */
-  const bool hasNewestWorker = mDescriptor.GetInstalling() ||
-                               mDescriptor.GetWaiting() ||
-                               mDescriptor.GetActive();
+  // `ServiceWorker` objects are not exposed on worker threads yet, so calling
+  // `ServiceWorkerRegistration::Get{Installing,Waiting,Active}` won't work.
+  const Maybe<ServiceWorkerDescriptor> newestWorkerDescriptor =
+      mDescriptor.Newest();
 
-  /**
-   * If newestWorker is null, return a promise rejected with an
-   * "InvalidStateError" DOMException and abort these steps.
-   */
-  if (!hasNewestWorker) {
+  // "If newestWorker is null, return a promise rejected with an
+  // "InvalidStateError" DOMException and abort these steps."
+  if (newestWorkerDescriptor.isNothing()) {
     outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return outer.forget();
   }
 
-  /**
-   * If the context object’s relevant settings object’s global object
-   * globalObject is a ServiceWorkerGlobalScope object, and globalObject’s
-   * associated service worker's state is "installing", return a promise
-   * rejected with an "InvalidStateError" DOMException and abort these steps.
-   */
+  // "If the context object’s relevant settings object’s global object
+  // globalObject is a ServiceWorkerGlobalScope object, and globalObject’s
+  // associated service worker's state is "installing", return a promise
+  // rejected with an "InvalidStateError" DOMException and abort these steps."
   if (!NS_IsMainThread()) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
@@ -237,6 +230,7 @@ already_AddRefed<Promise> ServiceWorkerRegistration::Update(ErrorResult& aRv) {
   RefPtr<ServiceWorkerRegistration> self = this;
 
   mInner->Update(
+      newestWorkerDescriptor.ref().ScriptURL(),
       [outer, self](const ServiceWorkerRegistrationDescriptor& aDesc) {
         nsIGlobalObject* global = self->GetParentObject();
         // It's possible this binding was detached from the global.  In cases
