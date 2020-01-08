@@ -2492,17 +2492,6 @@
     "description": "Count of the HTTP redirection that triggered by top-level document or by subresource, keyed by the URL scheme redirected to.",
     "labels": ["topLevel", "subresource"]
   },
-  "NETWORK_CROSS_ORIGIN_STYLESHEET_CONTENT_TYPE": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
-    "bug_numbers": [1531405],
-    "expires_in_version": "75",
-    "releaseChannelCollection": "opt-out",
-    "kind": "categorical",
-    "description": "Records whether a Content-Type header was present when loading a cross origin stylesheet, and if it was parsed successfully.",
-    "labels": ["NoHeader", "EmptyHeader", "FailedToParse", "ParsedTextCSS", "ParsedOther"]
-  },
   "HTTP_AUTH_DIALOG_STATS_3": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
