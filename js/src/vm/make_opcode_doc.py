@@ -72,14 +72,19 @@ def format_flags(flags):
     return ' ({flags})'.format(flags=', '.join(flags))
 
 
+def maybe_escape(value, format_str, fallback=""):
+    if value:
+        return format_str.format(escape(value))
+    return fallback
+
+
 OPCODE_FORMAT = """\
 <dt id="{id}">{names}</dt>
 <dd>
 <table class="standard-table">
 <tbody>
 <tr><th>Operands</th><td><code>{operands}</code></td></tr>
-<tr><th>Stack Uses</th><td><code>{stack_uses}</code></td></tr>
-<tr><th>Stack Defs</th><td><code>{stack_defs}</code></td></tr>
+<tr><th>Stack</th><td>{stack_uses}&rArr;{stack_defs}</td></tr>
 </tbody>
 </table>
 
@@ -107,8 +112,8 @@ def print_opcode(opcode):
         names='<br>'.join(names),
         values='<br>'.join(values),
         operands=escape(opcode.operands) or "&nbsp;",
-        stack_uses=escape(opcode.stack_uses) or "&nbsp;",
-        stack_defs=escape(opcode.stack_defs) or "&nbsp;",
+        stack_uses=maybe_escape(opcode.stack_uses, "<code>{}</code> "),
+        stack_defs=maybe_escape(opcode.stack_defs, " <code>{}</code>"),
         desc=markdown.markdown(opcode.desc)))
 
 
