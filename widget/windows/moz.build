@@ -41,12 +41,10 @@ EXPORTS.mozilla.widget += [
 UNIFIED_SOURCES += [
     'AudioSession.cpp',
     'CompositorWidgetChild.cpp',
-    'CompositorWidgetParent.cpp',
     'GfxInfo.cpp',
     'IEnumFE.cpp',
     'IMMHandler.cpp',
     'InkCollector.cpp',
-    'InProcessWinCompositorWidget.cpp',
     'JumpListItem.cpp',
     'KeyboardLayout.cpp',
     'LSPAnnotator.cpp',
@@ -88,6 +86,8 @@ UNIFIED_SOURCES += [
 
 # The following files cannot be built in unified mode because of name clashes.
 SOURCES += [
+    'CompositorWidgetParent.cpp',
+    'InProcessWinCompositorWidget.cpp',
     'JumpListBuilder.cpp',
     'MediaKeysEventSourceFactory.cpp',
     'nsBidiKeyboard.cpp',
