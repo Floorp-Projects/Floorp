@@ -298,7 +298,6 @@ function Toolbox(
   this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
 
   this.isPaintFlashing = false;
-  this._isBrowserToolbox = false;
 
   if (!selectedTool) {
     selectedTool = Services.prefs.getCharPref(this._prefs.LAST_TOOL);
@@ -593,12 +592,8 @@ Toolbox.prototype = {
     );
   },
 
-  setBrowserToolbox: function(isBrowserToolbox) {
-    this._isBrowserToolbox = isBrowserToolbox;
-  },
-
   isBrowserToolbox: function() {
-    return this._isBrowserToolbox;
+    return this.hostType === Toolbox.HostType.BROWSERTOOLBOX;
   },
 
   _onPausedState: function(packet, threadFront) {
