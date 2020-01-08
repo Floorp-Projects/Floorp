@@ -9287,97 +9287,99 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
   return aTriggeringPrincipal->Equals(tmpResultPrincipal);
 }
 
-/* static */ nsresult nsDocShell::CreateRealChannelForDocument(
-    nsIChannel** aChannel, nsIURI* aURI, nsILoadInfo* aLoadInfo,
-    nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
-    nsLoadFlags aLoadFlags, const nsAString& aSrcdoc, nsIURI* aBaseURI) {
-  nsCOMPtr<nsIChannel> channel;
-  nsresult rv;
-  if (aSrcdoc.IsVoid()) {
-    rv = NS_NewChannelInternal(getter_AddRefs(channel), aURI, aLoadInfo,
-                               nullptr,  // PerformanceStorage
-                               nullptr,  // loadGroup
-                               aCallbacks, aLoadFlags);
-
-    if (NS_FAILED(rv)) {
-      if (rv == NS_ERROR_UNKNOWN_PROTOCOL && aDocShell) {
-        // This is a uri with a protocol scheme we don't know how
-        // to handle.  Embedders might still be interested in
-        // handling the load, though, so we fire a notification
-        // before throwing the load away.
-        bool abort = false;
-        rv = aDocShell->mContentListener->OnStartURIOpen(aURI, &abort);
-        if (NS_SUCCEEDED(rv) && abort) {
-          // Hey, they're handling the load for us!  How convenient!
-          return NS_OK;
-        }
-      }
-      return rv;
-    }
-
-    if (aBaseURI) {
-      nsCOMPtr<nsIViewSourceChannel> vsc = do_QueryInterface(channel);
-      if (vsc) {
-        MOZ_ALWAYS_SUCCEEDS(vsc->SetBaseURI(aBaseURI));
-      }
-    }
-  } else if (SchemeIsViewSource(aURI)) {
-    nsViewSourceHandler* vsh = nsViewSourceHandler::GetInstance();
-    if (!vsh) {
-      return NS_ERROR_FAILURE;
-    }
-
-    MOZ_TRY(vsh->NewSrcdocChannel(aURI, aBaseURI, aSrcdoc, aLoadInfo,
-                                  getter_AddRefs(channel)));
-  } else {
-    MOZ_TRY(NS_NewInputStreamChannelInternal(
-        getter_AddRefs(channel), aURI, aSrcdoc, NS_LITERAL_CSTRING("text/html"),
-        aLoadInfo, true));
-    nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(channel);
-    MOZ_ASSERT(isc);
-    isc->SetBaseURI(aBaseURI);
-  }
-
-  channel.forget(aChannel);
-  return NS_OK;
-}
-
 static bool SchemeUsesDocChannel(nsIURI* aURI) {
-  if (SchemeIsJavascript(aURI) || NS_IsAboutBlank(aURI)) {
-    return false;
-  }
-
-  nsCString spec = aURI->GetSpecOrDefault();
-
-  if (spec.EqualsLiteral("about:printpreview") ||
-      spec.EqualsLiteral("about:privatebrowsing") ||
-      spec.EqualsLiteral("about:crashcontent")) {
-    return false;
-  }
-
-  return true;
+  return !SchemeIsJavascript(aURI) && !SchemeIsViewSource(aURI) &&
+         !NS_IsAboutBlank(aURI) &&
+         !aURI->GetSpecOrDefault().EqualsLiteral("about:printpreview") &&
+         !aURI->GetSpecOrDefault().EqualsLiteral("about:privatebrowsing") &&
+         !aURI->GetSpecOrDefault().EqualsLiteral("about:crashcontent");
 }
 
-/* static */ bool nsDocShell::CreateAndConfigureRealChannelForLoadState(
+/* static */ bool nsDocShell::CreateChannelForLoadState(
     nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
     nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
     const nsString* aInitiatorType, nsLoadFlags aLoadFlags, uint32_t aLoadType,
     uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
     bool aHasNonEmptySandboxingFlags, nsresult& aRv, nsIChannel** aChannel) {
-  nsString srcdoc = VoidString();
+  nsAutoString srcdoc;
   bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
   if (isSrcdoc) {
     srcdoc = aLoadState->SrcdocData();
+  } else {
+    srcdoc = VoidString();
+  }
+
+  // We want to use DocumentChannel if we're a sandboxed srcdoc load or if
+  // we're using a supported scheme. Non-sandboxed srcdoc loads need to share
+  // the same principal object as their outer document (and must load in the
+  // same process), which breaks if we serialize to the parent process.
+  bool isSandboxed = false;
+  aLoadInfo->GetLoadingSandboxed(&isSandboxed);
+  bool canUseDocumentChannel =
+      isSrcdoc ? isSandboxed : SchemeUsesDocChannel(aLoadState->URI());
+
+  if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
+      canUseDocumentChannel) {
+    RefPtr<DocumentChannelChild> child = new DocumentChannelChild(
+        aLoadState, aLoadInfo, aInitiatorType, aLoadFlags, aLoadType, aCacheKey,
+        aIsActive, aIsTopLevelDoc, aHasNonEmptySandboxingFlags);
+    child->SetNotificationCallbacks(aCallbacks);
+    child.forget(aChannel);
+    aRv = NS_OK;
+    return true;
   }
 
   nsCOMPtr<nsIChannel> channel;
-  aRv = CreateRealChannelForDocument(getter_AddRefs(channel), aLoadState->URI(),
-                                     aLoadInfo, aCallbacks, aDocShell,
-                                     aLoadFlags, srcdoc, aLoadState->BaseURI());
-  NS_ENSURE_SUCCESS(aRv, false);
+  nsIURI* baseURI = aLoadState->BaseURI();
+  if (!isSrcdoc) {
+    aRv = NS_NewChannelInternal(getter_AddRefs(channel), aLoadState->URI(),
+                                aLoadInfo,
+                                nullptr,  // PerformanceStorage
+                                nullptr,  // loadGroup
+                                aCallbacks, aLoadFlags);
 
-  if (!channel) {
-    return false;
+    if (NS_FAILED(aRv)) {
+      if (aRv == NS_ERROR_UNKNOWN_PROTOCOL && aDocShell) {
+        // This is a uri with a protocol scheme we don't know how
+        // to handle.  Embedders might still be interested in
+        // handling the load, though, so we fire a notification
+        // before throwing the load away.
+        bool abort = false;
+        nsresult rv = aDocShell->mContentListener->OnStartURIOpen(
+            aLoadState->URI(), &abort);
+        if (NS_SUCCEEDED(rv) && abort) {
+          // Hey, they're handling the load for us!  How convenient!
+          aRv = NS_OK;
+          return false;
+        }
+      }
+      return false;
+    }
+
+    if (baseURI) {
+      nsCOMPtr<nsIViewSourceChannel> vsc = do_QueryInterface(channel);
+      if (vsc) {
+        aRv = vsc->SetBaseURI(baseURI);
+        MOZ_ASSERT(NS_SUCCEEDED(aRv));
+      }
+    }
+  } else if (SchemeIsViewSource(aLoadState->URI())) {
+    nsViewSourceHandler* vsh = nsViewSourceHandler::GetInstance();
+    if (!vsh) {
+      aRv = NS_ERROR_FAILURE;
+      return false;
+    }
+
+    aRv = vsh->NewSrcdocChannel(aLoadState->URI(), baseURI, srcdoc, aLoadInfo,
+                                getter_AddRefs(channel));
+  } else {
+    aRv = NS_NewInputStreamChannelInternal(
+        getter_AddRefs(channel), aLoadState->URI(), srcdoc,
+        NS_LITERAL_CSTRING("text/html"), aLoadInfo, true);
+    NS_ENSURE_SUCCESS(aRv, false);
+    nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(channel);
+    MOZ_ASSERT(isc);
+    isc->SetBaseURI(baseURI);
   }
 
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
@@ -9944,27 +9946,10 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
   bool isActive = mBrowsingContext->GetIsActive() ||
                   (mLoadType & (LOAD_CMD_NORMAL | LOAD_CMD_HISTORY));
-
-  // We want to use DocumentChannel if we're using a supported scheme, or if
-  // we're a sandboxed srcdoc load. Non-sandboxed srcdoc loads need to share
-  // the same principal object as their outer document (and must load in the
-  // same process), which breaks if we serialize to the parent process.
-  bool canUseDocumentChannel =
-      aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC)
-          ? isSandBoxed
-          : SchemeUsesDocChannel(aLoadState->URI());
-
-  if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
-      canUseDocumentChannel) {
-    channel = new DocumentChannelChild(
-        aLoadState, loadInfo, initiatorType, loadFlags, mLoadType, cacheKey,
-        isActive, isTopLevelDoc, mBrowsingContext->GetSandboxFlags());
-    channel->SetNotificationCallbacks(this);
-  } else if (!CreateAndConfigureRealChannelForLoadState(
-                 aLoadState, loadInfo, this, this, initiatorType, loadFlags,
-                 mLoadType, cacheKey, isActive, isTopLevelDoc,
-                 mBrowsingContext->GetSandboxFlags(), rv,
-                 getter_AddRefs(channel))) {
+  if (!CreateChannelForLoadState(
+          aLoadState, loadInfo, this, this, initiatorType, loadFlags, mLoadType,
+          cacheKey, isActive, isTopLevelDoc,
+          mBrowsingContext->GetSandboxFlags(), rv, getter_AddRefs(channel))) {
     return rv;
   }
 

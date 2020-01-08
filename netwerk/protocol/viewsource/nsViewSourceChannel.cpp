@@ -28,7 +28,6 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIWrapperChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannel, mHttpChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIdentChannel, mHttpChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannelInternal,
@@ -39,7 +38,6 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
                                      mApplicationCacheChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIUploadChannel, mUploadChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFormPOSTActionChannel, mPostChannel)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIChildChannel, mChildChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequest, nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIChannel, nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIViewSourceChannel)
@@ -83,7 +81,6 @@ nsresult nsViewSourceChannel::Init(nsIURI* uri, nsILoadInfo* aLoadInfo) {
   mApplicationCacheChannel = do_QueryInterface(mChannel);
   mUploadChannel = do_QueryInterface(mChannel);
   mPostChannel = do_QueryInterface(mChannel);
-  mChildChannel = do_QueryInterface(mChannel);
 
   return NS_OK;
 }
@@ -116,7 +113,6 @@ nsresult nsViewSourceChannel::InitSrcdoc(nsIURI* aURI, nsIURI* aBaseURI,
   mCacheInfoChannel = do_QueryInterface(mChannel);
   mApplicationCacheChannel = do_QueryInterface(mChannel);
   mUploadChannel = do_QueryInterface(mChannel);
-  mChildChannel = do_QueryInterface(mChannel);
 
   rv = UpdateLoadInfoResultPrincipalURI();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -195,11 +191,6 @@ nsresult nsViewSourceChannel::BuildViewSourceURI(nsIURI* aURI,
 
 NS_IMETHODIMP
 nsViewSourceChannel::GetName(nsACString& result) {
-  nsCOMPtr<nsIURI> uri;
-  GetURI(getter_AddRefs(uri));
-  if (uri) {
-    return uri->GetSpec(result);
-  }
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1024,56 +1015,4 @@ void nsViewSourceChannel::SetHasNonEmptySandboxingFlag(
     mHttpChannelInternal->SetHasNonEmptySandboxingFlag(
         aHasNonEmptySandboxingFlag);
   }
-}
-
-// nsIChildChannel methods
-
-NS_IMETHODIMP
-nsViewSourceChannel::ConnectParent(uint32_t aRegistarId) {
-  NS_ENSURE_TRUE(mChildChannel, NS_ERROR_NULL_POINTER);
-
-  return mChildChannel->ConnectParent(aRegistarId);
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::CompleteRedirectSetup(nsIStreamListener* aListener,
-                                           nsISupports* aContext) {
-  NS_ENSURE_TRUE(mChildChannel, NS_ERROR_NULL_POINTER);
-
-  mListener = aListener;
-
-  /*
-   * We want to add ourselves to the loadgroup before opening
-   * mChannel, since we want to make sure we're in the loadgroup
-   * when mChannel finishes and fires OnStopRequest()
-   */
-
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-  if (loadGroup) {
-    loadGroup->AddRequest(static_cast<nsIViewSourceChannel*>(this), nullptr);
-  }
-
-  nsresult rv = NS_OK;
-  rv = mChildChannel->CompleteRedirectSetup(this, aContext);
-
-  if (NS_FAILED(rv) && loadGroup) {
-    loadGroup->RemoveRequest(static_cast<nsIViewSourceChannel*>(this), nullptr,
-                             rv);
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    mOpened = true;
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::GetInnerChannel(nsIChannel** aChannel) {
-  NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsIChannel> chan = mChannel;
-  chan.forget(aChannel);
-  return NS_OK;
 }

@@ -17,8 +17,6 @@
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 #include "nsIViewSourceChannel.h"
-#include "nsIWrapperChannel.h"
-#include "nsIChildChannel.h"
 #include "nsString.h"
 
 class nsViewSourceChannel final : public nsIViewSourceChannel,
@@ -27,9 +25,7 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
                                   public nsIHttpChannelInternal,
                                   public nsICachingChannel,
                                   public nsIApplicationCacheChannel,
-                                  public nsIFormPOSTActionChannel,
-                                  public nsIChildChannel,
-                                  public nsIWrapperChannel {
+                                  public nsIFormPOSTActionChannel {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUEST
@@ -39,8 +35,6 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIHTTPCHANNEL
-  NS_DECL_NSICHILDCHANNEL
-  NS_DECL_NSIWRAPPERCHANNEL
   NS_FORWARD_SAFE_NSICACHEINFOCHANNEL(mCacheInfoChannel)
   NS_FORWARD_SAFE_NSICACHINGCHANNEL(mCachingChannel)
   NS_FORWARD_SAFE_NSIAPPLICATIONCACHECHANNEL(mApplicationCacheChannel)
@@ -81,7 +75,6 @@ class nsViewSourceChannel final : public nsIViewSourceChannel,
   nsCOMPtr<nsIApplicationCacheChannel> mApplicationCacheChannel;
   nsCOMPtr<nsIUploadChannel> mUploadChannel;
   nsCOMPtr<nsIFormPOSTActionChannel> mPostChannel;
-  nsCOMPtr<nsIChildChannel> mChildChannel;
   nsCOMPtr<nsIStreamListener> mListener;
   nsCOMPtr<nsIURI> mOriginalURI;
   nsCOMPtr<nsIURI> mBaseURI;

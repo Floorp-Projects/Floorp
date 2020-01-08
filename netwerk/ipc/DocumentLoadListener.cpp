@@ -33,7 +33,6 @@
 #include "nsExternalHelperAppService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsMimeTypes.h"
-#include "nsIWrapperChannel.h"
 
 mozilla::LazyLogModule gDocumentChannelLog("DocumentChannel");
 #define LOG(fmt) MOZ_LOG(gDocumentChannelLog, mozilla::LogLevel::Verbose, fmt)
@@ -260,8 +259,7 @@ bool DocumentLoadListener::Open(
     bool aPluginsAllowed, nsDOMNavigationTiming* aTiming, nsresult* aRv) {
   LOG(("DocumentLoadListener Open [this=%p, uri=%s]", this,
        aLoadState->URI()->GetSpecOrDefault().get()));
-
-  if (!nsDocShell::CreateAndConfigureRealChannelForLoadState(
+  if (!nsDocShell::CreateChannelForLoadState(
           aLoadState, aLoadInfo, mParentChannelListener, nullptr,
           aInitiatorType, aLoadFlags, aLoadType, aCacheKey, aIsActive,
           aIsTopLevelDoc, aHasNonEmptySandboxingFlags, *aRv,
@@ -673,11 +671,7 @@ void DocumentLoadListener::SerializeRedirectData(
   nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
       RedirectChannelRegistrar::GetOrCreate();
   MOZ_ASSERT(registrar);
-  nsCOMPtr<nsIChannel> chan = mChannel;
-  if (nsCOMPtr<nsIWrapperChannel> wrapper = do_QueryInterface(chan)) {
-    wrapper->GetInnerChannel(getter_AddRefs(chan));
-  }
-  nsresult rv = registrar->RegisterChannel(chan, &mRedirectChannelId);
+  nsresult rv = registrar->RegisterChannel(mChannel, &mRedirectChannelId);
   NS_ENSURE_SUCCESS_VOID(rv);
   aArgs.registrarId() = mRedirectChannelId;
 

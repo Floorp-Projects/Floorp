@@ -3701,12 +3701,24 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   }
 
   nsCOMPtr<nsIChannel> newChannel;
-  MOZ_ASSERT((aArgs.loadStateLoadFlags() &
-              nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC) ||
-             aArgs.srcdocData().IsVoid());
-  rv = nsDocShell::CreateRealChannelForDocument(
-      getter_AddRefs(newChannel), aArgs.uri(), loadInfo, nullptr, nullptr,
-      aArgs.newLoadFlags(), aArgs.srcdocData(), aArgs.baseUri());
+  if (aArgs.loadStateLoadFlags() &
+      nsDocShell::InternalLoad::INTERNAL_LOAD_FLAGS_IS_SRCDOC) {
+    rv = NS_NewInputStreamChannelInternal(
+        getter_AddRefs(newChannel), aArgs.uri(), aArgs.srcdocData(),
+        NS_LITERAL_CSTRING("text/html"), loadInfo, true);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(newChannel);
+      MOZ_ASSERT(isc);
+      isc->SetBaseURI(aArgs.baseUri());
+    }
+  } else {
+    rv =
+        NS_NewChannelInternal(getter_AddRefs(newChannel), aArgs.uri(), loadInfo,
+                              nullptr,  // PerformanceStorage
+                              nullptr,  // aLoadGroup
+                              nullptr,  // aCallbacks
+                              aArgs.newLoadFlags());
+  }
 
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
@@ -3730,24 +3742,21 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     return IPC_OK();
   }
 
-  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel)) {
-    rv = httpChannel->SetChannelId(aArgs.channelId());
-  }
-  if (NS_FAILED(rv)) {
-    return IPC_OK();
-  }
+  if (httpChild) {
+    rv = httpChild->SetChannelId(aArgs.channelId());
+    if (NS_FAILED(rv)) {
+      return IPC_OK();
+    }
 
-  rv = newChannel->SetOriginalURI(aArgs.originalURI());
-  if (NS_FAILED(rv)) {
-    return IPC_OK();
-  }
+    rv = httpChild->SetOriginalURI(aArgs.originalURI());
+    if (NS_FAILED(rv)) {
+      return IPC_OK();
+    }
 
-  if (nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
-          do_QueryInterface(newChannel)) {
-    rv = httpChannelInternal->SetRedirectMode(aArgs.redirectMode());
-  }
-  if (NS_FAILED(rv)) {
-    return IPC_OK();
+    rv = httpChild->SetRedirectMode(aArgs.redirectMode());
+    if (NS_FAILED(rv)) {
+      return IPC_OK();
+    }
   }
 
   if (aArgs.init()) {
