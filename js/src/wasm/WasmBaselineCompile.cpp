@@ -1935,6 +1935,29 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     }
   }
 
+  // Copy results from the top of the current stack frame to an area of memory,
+  // and pop the stack accordingly.  `dest` is the address of the low byte of
+  // that memory.
+  void popStackResultsToMemory(Register dest, uint32_t bytes, Register temp) {
+    MOZ_ASSERT(bytes <= currentStackHeight());
+    MOZ_ASSERT(bytes % sizeof(uint32_t) == 0);
+    uint32_t srcOffset = stackOffset(currentStackHeight());
+    uint32_t destOffset = 0;
+    while (bytes >= sizeof(intptr_t)) {
+      masm.loadPtr(Address(sp_, srcOffset), temp);
+      masm.storePtr(temp, Address(dest, destOffset));
+      destOffset += sizeof(intptr_t);
+      srcOffset += sizeof(intptr_t);
+      bytes -= sizeof(intptr_t);
+    }
+    if (bytes) {
+      MOZ_ASSERT(bytes == sizeof(uint32_t));
+      masm.load32(Address(sp_, srcOffset), temp);
+      masm.store32(temp, Address(dest, destOffset));
+    }
+    popBytes(bytes);
+  }
+
   void storeImmediateToStack(int32_t imm, uint32_t destHeight, Register temp) {
     masm.move32(Imm32(imm), temp);
     masm.store32(temp, Address(sp_, stackOffset(destHeight)));
@@ -4704,59 +4727,90 @@ class BaseCompiler final : public BaseCompilerInterface {
     return true;
   }
 
-  void saveResult() {
+  void popStackReturnValues(const ResultType& resultType) {
+    uint32_t bytes = ABIResultIter::MeasureStackBytes(resultType);
+    if (bytes == 0) {
+      return;
+    }
+    Register target = ABINonArgReturnReg0;
+    Register temp = ABINonArgReturnReg1;
+    fr.loadIncomingStackResultAreaPtr(RegPtr(target));
+    fr.popStackResultsToMemory(target, bytes, temp);
+  }
+
+  void saveRegisterReturnValues(const ResultType& resultType) {
     MOZ_ASSERT(env_.debugEnabled());
     size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
     Address resultsAddress(masm.getStackPointer(),
                            debugFrameOffset + DebugFrame::offsetOfResults());
-    Maybe<ValType> ret = funcType().ret();
-    if (!ret) {
-      return;
-    }
-    switch (ret.ref().kind()) {
-      case ValType::I32:
-        masm.store32(RegI32(ReturnReg), resultsAddress);
+
+    for (ABIResultIter i(resultType); !i.done(); i.next()) {
+      const ABIResult result = i.cur();
+      if (!result.inRegister()) {
+#ifdef DEBUG
+        for (i.next(); !i.done(); i.next()) {
+          MOZ_ASSERT(!i.cur().inRegister());
+        }
+#endif
         break;
-      case ValType::I64:
-        masm.store64(RegI64(ReturnReg64), resultsAddress);
-        break;
-      case ValType::F64:
-        masm.storeDouble(RegF64(ReturnDoubleReg), resultsAddress);
-        break;
-      case ValType::F32:
-        masm.storeFloat32(RegF32(ReturnFloat32Reg), resultsAddress);
-        break;
-      case ValType::Ref:
-        masm.storePtr(RegPtr(ReturnReg), resultsAddress);
-        break;
+      }
+      MOZ_ASSERT(i.index() == 0,
+                 "debug frame only has space for one stored register result");
+      switch (result.type().kind()) {
+        case ValType::I32:
+          masm.store32(RegI32(result.gpr()), resultsAddress);
+          break;
+        case ValType::I64:
+          masm.store64(RegI64(result.gpr64()), resultsAddress);
+          break;
+        case ValType::F64:
+          masm.storeDouble(RegF64(result.fpr()), resultsAddress);
+          break;
+        case ValType::F32:
+          masm.storeFloat32(RegF32(result.fpr()), resultsAddress);
+          break;
+        case ValType::Ref:
+          masm.storePtr(RegPtr(result.gpr()), resultsAddress);
+          break;
+      }
     }
   }
 
-  void restoreResult() {
+  void restoreRegisterReturnValues(const ResultType& resultType) {
     MOZ_ASSERT(env_.debugEnabled());
     size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
     Address resultsAddress(masm.getStackPointer(),
                            debugFrameOffset + DebugFrame::offsetOfResults());
-    Maybe<ValType> ret = funcType().ret();
-    if (!ret) {
-      return;
-    }
-    switch (ret.ref().kind()) {
-      case ValType::I32:
-        masm.load32(resultsAddress, RegI32(ReturnReg));
+
+    for (ABIResultIter i(resultType); !i.done(); i.next()) {
+      const ABIResult result = i.cur();
+      if (!result.inRegister()) {
+#ifdef DEBUG
+        for (i.next(); !i.done(); i.next()) {
+          MOZ_ASSERT(!i.cur().inRegister());
+        }
+#endif
         break;
-      case ValType::I64:
-        masm.load64(resultsAddress, RegI64(ReturnReg64));
-        break;
-      case ValType::F64:
-        masm.loadDouble(resultsAddress, RegF64(ReturnDoubleReg));
-        break;
-      case ValType::F32:
-        masm.loadFloat32(resultsAddress, RegF32(ReturnFloat32Reg));
-        break;
-      case ValType::Ref:
-        masm.loadPtr(resultsAddress, RegPtr(ReturnReg));
-        break;
+      }
+      MOZ_ASSERT(i.index() == 0,
+                 "debug frame only has space for one stored register result");
+      switch (result.type().kind()) {
+        case ValType::I32:
+          masm.load32(resultsAddress, RegI32(result.gpr()));
+          break;
+        case ValType::I64:
+          masm.load64(resultsAddress, RegI64(result.gpr64()));
+          break;
+        case ValType::F64:
+          masm.loadDouble(resultsAddress, RegF64(result.fpr()));
+          break;
+        case ValType::F32:
+          masm.loadFloat32(resultsAddress, RegF32(result.fpr()));
+          break;
+        case ValType::Ref:
+          masm.loadPtr(resultsAddress, RegPtr(result.gpr()));
+          break;
+      }
     }
   }
 
@@ -4779,6 +4833,10 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     masm.bind(&returnLabel_);
 
+    ResultType resultType(ResultType::Vector(funcType().results()));
+
+    popStackReturnValues(resultType);
+
     if (env_.debugEnabled()) {
       // If a return type is a ref, we need to note that in the stack maps
       // generated here.  Note that this assumes that DebugFrame::result* and
@@ -4794,7 +4852,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       }
       // Store and reload the return value from DebugFrame::return so that
       // it can be clobbered, and/or modified by the debug trap.
-      saveResult();
+      saveRegisterReturnValues(resultType);
       insertBreakablePoint(CallSiteDesc::Breakpoint);
       if (!createStackMap("debug: breakpoint", refDebugFrame)) {
         return false;
@@ -4803,7 +4861,7 @@ class BaseCompiler final : public BaseCompilerInterface {
       if (!createStackMap("debug: leave frame", refDebugFrame)) {
         return false;
       }
-      restoreResult();
+      restoreRegisterReturnValues(resultType);
     }
 
     GenerateFunctionEpilogue(masm, fr.fixedAllocSize(), &offsets_);
