@@ -191,7 +191,6 @@ async function openToolbox(target) {
   appendStatusMessage(
     `Create toolbox target: ${JSON.stringify({ form }, null, 2)}`
   );
-  const frame = document.getElementById("toolbox-iframe");
 
   // Remember the last panel that was used inside of this profile.
   // But if we are testing, then it should always open the debugger panel.
@@ -200,7 +199,7 @@ async function openToolbox(target) {
     Services.prefs.getCharPref("devtools.toolbox.selectedTool", "jsdebugger")
   );
 
-  const toolboxOptions = { customIframe: frame };
+  const toolboxOptions = { doc: document };
   appendStatusMessage(`Show toolbox with ${selectedTool} selected`);
   const toolbox = await gDevTools.showToolbox(
     target,
@@ -215,7 +214,7 @@ async function openToolbox(target) {
 async function onNewToolbox(toolbox) {
   gToolbox = toolbox;
   bindToolboxHandlers();
-  raise();
+  toolbox.raise();
 
   // Enable some testing features if the browser toolbox test pref is set.
   if (
@@ -278,33 +277,7 @@ function updateBadgeText(paused) {
 
 function onUnload() {
   window.removeEventListener("unload", onUnload);
-  window.removeEventListener("message", onMessage);
   gToolbox.destroy();
-}
-
-function onMessage(event) {
-  if (!event.data) {
-    return;
-  }
-  const msg = event.data;
-  switch (msg.name) {
-    case "toolbox-raise":
-      raise();
-      break;
-    case "toolbox-title":
-      setTitle(msg.data.value);
-      break;
-  }
-}
-
-window.addEventListener("message", onMessage);
-
-function raise() {
-  window.focus();
-}
-
-function setTitle(title) {
-  document.title = title;
 }
 
 function quitApp() {
