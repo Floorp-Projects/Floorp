@@ -8,7 +8,6 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const actions = require("devtools/client/webconsole/actions/messages");
 const {
   l10n,
   getArrayTypeNames,
@@ -39,8 +38,6 @@ class ConsoleTable extends Component {
       parameters: PropTypes.array.isRequired,
       serviceContainer: PropTypes.object.isRequired,
       id: PropTypes.string.isRequired,
-      // Remove in Firefox 74. See Bug 1597955.
-      tableData: PropTypes.object,
     };
   }
 
@@ -48,35 +45,6 @@ class ConsoleTable extends Component {
     super(props);
     this.getHeaders = this.getHeaders.bind(this);
     this.getRows = this.getRows.bind(this);
-  }
-
-  // Remove in Firefox 74. See Bug 1597955.
-  componentWillMount() {
-    const { id, dispatch, parameters, tableData } = this.props;
-
-    const firstParam = Array.isArray(parameters) && parameters[0];
-    if (!firstParam) {
-      return;
-    }
-
-    const data =
-      tableData ||
-      (firstParam.getGrip
-        ? firstParam.getGrip().ownProperties
-        : firstParam.ownProperties);
-
-    if (data) {
-      return;
-    }
-
-    // Get all the object properties.
-    dispatch(
-      actions.messageGetTableData(
-        id,
-        parameters[0],
-        getParametersDataType(parameters)
-      )
-    );
   }
 
   getHeaders(columns) {
@@ -133,16 +101,13 @@ class ConsoleTable extends Component {
   }
 
   render() {
-    const { parameters, tableData } = this.props;
+    const { parameters } = this.props;
     const { valueGrip, headersGrip } = getValueAndHeadersGrip(parameters);
 
     const headers =
       headersGrip && headersGrip.preview ? headersGrip.preview.items : null;
 
-    const data =
-      valueGrip && valueGrip.ownProperties
-        ? valueGrip.ownProperties
-        : tableData;
+    const data = valueGrip && valueGrip.ownProperties;
 
     // if we don't have any data, don't show anything.
     if (!data) {
@@ -150,12 +115,7 @@ class ConsoleTable extends Component {
     }
 
     const dataType = getParametersDataType(parameters);
-
-    // Remove deprecatedGetTableItems in Firefox 74. See Bug 1597955.
-    const { columns, items } =
-      valueGrip && valueGrip.ownProperties
-        ? getTableItems(data, dataType, headers)
-        : deprecatedGetTableItems(data, dataType, headers);
+    const { columns, items } = getTableItems(data, dataType, headers);
 
     return dom.div(
       {
@@ -280,110 +240,6 @@ function getTableItems(data = {}, type, headers = null) {
       item[VALUE_NAME] = propertyValueGrip.preview.value;
     } else {
       item[VALUE_NAME] = propertyValue;
-    }
-
-    addItem(item);
-
-    if (items.length === TABLE_ROW_MAX_ITEMS) {
-      break;
-    }
-  }
-
-  // Some headers might not be present in the items, so we make sure to
-  // return all the headers set by the user.
-  if (validCustomHeaders) {
-    headers.forEach(header => addColumn(header));
-  }
-
-  // We want to always have the index column first
-  if (columns.has(INDEX_NAME)) {
-    const index = columns.get(INDEX_NAME);
-    columns.delete(INDEX_NAME);
-    columns = new Map([[INDEX_NAME, index], ...columns.entries()]);
-  }
-
-  // We want to always have the values column last
-  if (columns.has(VALUE_NAME)) {
-    const index = columns.get(VALUE_NAME);
-    columns.delete(VALUE_NAME);
-    columns.set(VALUE_NAME, index);
-  }
-
-  return {
-    columns,
-    items,
-  };
-}
-
-/**
- * This function is handling console.table packets from pre-Firefox72 servers.
- * Remove in Firefox 74. See Bug 1597955.
- */
-function deprecatedGetTableItems(data = {}, type, headers = null) {
-  const namedIndexes = getNamedIndexes(type);
-
-  let columns = new Map();
-  const items = [];
-
-  const addItem = function(item) {
-    items.push(item);
-    Object.keys(item).forEach(key => addColumn(key));
-  };
-
-  const validCustomHeaders = hasValidCustomHeaders(headers);
-
-  const addColumn = function(columnIndex) {
-    const columnExists = columns.has(columnIndex);
-    const hasMaxColumns = columns.size == TABLE_COLUMN_MAX_ITEMS;
-
-    if (
-      !columnExists &&
-      !hasMaxColumns &&
-      (!validCustomHeaders ||
-        headers.includes(columnIndex) ||
-        columnIndex === INDEX_NAME)
-    ) {
-      columns.set(columnIndex, namedIndexes[columnIndex] || columnIndex);
-    }
-  };
-
-  for (let index of Object.keys(data)) {
-    if (type !== "Object" && index == parseInt(index, 10)) {
-      index = parseInt(index, 10);
-    }
-
-    const item = {
-      [INDEX_NAME]: index,
-    };
-
-    const property = data[index] ? data[index].value : undefined;
-    const propertyGrip =
-      property && property.getGrip ? property.getGrip() : property;
-
-    if (propertyGrip && propertyGrip.preview) {
-      const { preview } = propertyGrip;
-      const entries = preview.ownProperties || preview.items;
-      if (entries) {
-        for (const [key, entry] of Object.entries(entries)) {
-          item[key] =
-            entry && Object.prototype.hasOwnProperty.call(entry, "value")
-              ? entry.value
-              : entry;
-        }
-      } else {
-        if (preview.key) {
-          item.key = preview.key;
-        }
-
-        item[VALUE_NAME] = Object.prototype.hasOwnProperty.call(
-          preview,
-          "value"
-        )
-          ? preview.value
-          : property;
-      }
-    } else {
-      item[VALUE_NAME] = property;
     }
 
     addItem(item);
