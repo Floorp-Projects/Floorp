@@ -746,7 +746,7 @@ Toolbox.prototype = {
         );
       });
 
-      await this.targetList.startListening(TargetList.ALL_TYPES);
+      await this.targetList.startListening();
 
       // Optimization: fire up a few other things before waiting on
       // the iframe being ready (makes startup faster)
@@ -3661,7 +3661,7 @@ Toolbox.prototype = {
       this._onTargetDestroyed
     );
 
-    this.targetList.stopListening(TargetList.ALL_TYPES);
+    this.targetList.stopListening();
 
     // Unregister buttons listeners
     this.toolbarButtons.forEach(button => {

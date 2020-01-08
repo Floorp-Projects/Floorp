@@ -35,7 +35,7 @@ async function testWatchTargets(mainRoot) {
   const target = await mainRoot.getMainProcess();
   const targetList = new TargetList(mainRoot, target);
 
-  await targetList.startListening([TargetList.TYPES.PROCESS]);
+  await targetList.startListening();
 
   // Note that ppmm also includes the parent process, which is considered as a frame rather than a process
   const originalProcessesCount = Services.ppmm.childCount - 1;
@@ -168,7 +168,7 @@ async function testWatchTargets(mainRoot) {
     onDestroyed
   );
 
-  targetList.stopListening([TargetList.TYPES.PROCESS]);
+  targetList.stopListening();
 }
 
 async function testContentProcessTarget(mainRoot) {
@@ -178,7 +178,7 @@ async function testContentProcessTarget(mainRoot) {
   const target = await processes[1].getTarget();
   const targetList = new TargetList(mainRoot, target);
 
-  await targetList.startListening([TargetList.TYPES.PROCESS]);
+  await targetList.startListening();
 
   // Assert that watchTargets is only called for the top level content process target
   // as listening for additional target is only enable for the parent process target.
@@ -212,7 +212,7 @@ async function testContentProcessTarget(mainRoot) {
   // to TargetList and registers a duplicated entry
   is(targets.size, 1, "We were only notified about the top level target");
 
-  targetList.stopListening([TargetList.TYPES.PROCESS]);
+  targetList.stopListening();
 }
 
 async function testThrowingInOnAvailable(mainRoot) {
@@ -223,7 +223,7 @@ async function testThrowingInOnAvailable(mainRoot) {
   const target = await mainRoot.getMainProcess();
   const targetList = new TargetList(mainRoot, target);
 
-  await targetList.startListening([TargetList.TYPES.PROCESS]);
+  await targetList.startListening();
 
   // Note that ppmm also includes the parent process, which is considered as a frame rather than a process
   const originalProcessesCount = Services.ppmm.childCount - 1;
@@ -247,5 +247,5 @@ async function testThrowingInOnAvailable(mainRoot) {
     "retrieved the expected number of processes via onAvailable. All but the first one where we have thrown."
   );
 
-  targetList.stopListening([TargetList.TYPES.PROCESS]);
+  targetList.stopListening();
 }

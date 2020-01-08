@@ -74,7 +74,7 @@ class BrowserConsole extends WebConsole {
       // toolbox session id.
       this._telemetry.toolOpened("browserconsole", -1, this);
 
-      await this.targetList.startListening(TargetList.ALL_TYPES);
+      await this.targetList.startListening();
       await super.init();
     })();
     return this._bcInitializer;
@@ -96,7 +96,7 @@ class BrowserConsole extends WebConsole {
       // toolbox session id.
       this._telemetry.toolClosed("browserconsole", -1, this);
 
-      await this.targetList.stopListening(TargetList.ALL_TYPES);
+      await this.targetList.stopListening();
       await super.destroy();
       await this.currentTarget.destroy();
       this.chromeWindow.close();
