@@ -371,7 +371,7 @@
     </style>
 
     <style name="AboutHeaderContentText" parent="TextAppearance.MaterialComponents.Subtitle1">
-        <item name="android:textColor">@color/about_content_text_normal_theme</item>
+        <item name="android:textColor">?primaryText</item>
         <item name="android:lineSpacingExtra">@dimen/about_header_text_line_spacing_extra</item>
     </style>
 

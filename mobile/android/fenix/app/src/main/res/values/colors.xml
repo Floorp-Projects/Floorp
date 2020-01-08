@@ -33,7 +33,7 @@
     <color name="toolbar_end_gradient_light_theme">@color/foundation_light_theme</color>
     <color name="toolbar_divider_color_light_theme">#CDCCCF</color>
     <color name="fill_link_from_clipboard_light_theme">@color/accent_light_theme</color>
-    <color name="about_content_text_light_theme">#232749</color>
+
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">#FBFBFE</color>
@@ -63,7 +63,7 @@
     <color name="toolbar_end_gradient_dark_theme">@color/foundation_dark_theme</color>
     <color name="toolbar_divider_color_dark_theme">@color/neutral_faded_dark_theme</color>
     <color name="fill_link_from_clipboard_dark_theme">@color/accent_on_dark_background_normal_theme</color>
-    <color name="about_content_text_dark_theme">#FBFBFE</color>
+
 
     <!-- Private theme color palette -->
     <color name="primary_text_private_theme">#FBFBFE</color>
@@ -119,7 +119,6 @@
     <color name="toolbar_divider_color_normal_theme">@color/toolbar_divider_color_light_theme</color>
     <color name="fill_link_from_clipboard_normal_theme">@color/fill_link_from_clipboard_light_theme</color>
     <color name="menu_category_normal_theme">@color/accent_light_theme</color>
-    <color name="about_content_text_normal_theme">@color/about_content_text_light_theme</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
