@@ -12,8 +12,13 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
-* **service-glean**
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko-release`: GeckoView 72.0
+    * `browser-engine-gecko-beta`: GeckoView 73.0
+    * `browser-engine-gecko-nightly`: GeckoView 74.0
 
+* **service-glean**
   * Glean was updated to v23.0.0:
     * The Glean Gradle Plugin correctly triggers docs and API updates when registry files
       change, without requiring them to be deleted.
