@@ -485,8 +485,8 @@ def run_test_harness(parser, options):
         log.info("runjunit.py | Received keyboard interrupt")
         result = -1
     except JavaTestHarnessException as e:
-        log.error("runjunit.py | The previous test failed because of an error "
-                  "in the test harness | %s" % (str(e)))
+        log.error("TEST-UNEXPECTED-FAIL | runjunit.py | The previous test failed because "
+                  "of an error in the test harness | %s" % (str(e)))
     except Exception as e:
         traceback.print_exc()
         log.error(
