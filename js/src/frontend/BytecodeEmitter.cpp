@@ -4388,8 +4388,6 @@ bool ParseNode::getConstantValue(JSContext* cx, MutableHandleValue vp) {
   unsigned count;
   ParseNode* pn;
 
-  ObjectGroup::NewArrayKind arrayKind = ObjectGroup::NewArrayKind::Normal;
-
   if (getKind() == ParseNodeKind::CallSiteObj) {
     count = as<CallSiteNode>().count() - 1;
     pn = as<CallSiteNode>().head()->pn_next;
@@ -4415,7 +4413,7 @@ bool ParseNode::getConstantValue(JSContext* cx, MutableHandleValue vp) {
   MOZ_ASSERT(idx == count);
 
   ArrayObject* obj = ObjectGroup::newArrayObject(
-      cx, values.begin(), values.length(), TenuredObject, arrayKind);
+      cx, values.begin(), values.length(), TenuredObject);
   if (!obj) {
     return false;
   }
