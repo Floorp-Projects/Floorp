@@ -505,8 +505,6 @@ class nsHttpChannel final : public HttpBaseChannel,
            rv == NS_ERROR_PORT_ACCESS_NOT_ALLOWED;
   }
 
-  void ReportContentTypeTelemetryForCrossOriginStylesheets();
-
   // Report net vs cache time telemetry
   void ReportNetVSCacheTelemetry();
   int64_t ComputeTelemetryBucketNumber(int64_t difftime_ms);
