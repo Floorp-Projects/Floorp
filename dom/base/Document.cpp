@@ -6822,7 +6822,7 @@ void Document::SetContainer(nsDocShell* aContainer) {
   }
 
   mInChromeDocShell =
-      aContainer && aContainer->ItemType() == nsIDocShellTreeItem::typeChrome;
+      aContainer && aContainer->GetBrowsingContext()->IsChrome();
 
   EnumerateActivityObservers(NotifyActivityChanged, nullptr);
 
