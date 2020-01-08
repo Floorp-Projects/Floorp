@@ -10,6 +10,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
+#include "nsIClassifiedChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsILoadContext.h"
 #include "nsIPrincipal.h"
@@ -446,4 +447,63 @@ ThirdPartyUtil::GetBaseDomainFromSchemeHost(const nsACString& aScheme,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP_(ThirdPartyAnalysisResult)
+ThirdPartyUtil::AnalyzeChannel(nsIChannel* aChannel, bool aNotify, nsIURI* aURI,
+                               RequireThirdPartyCheck aRequireThirdPartyCheck,
+                               uint32_t* aRejectedReason) {
+  MOZ_ASSERT_IF(aNotify, aRejectedReason);
+
+  ThirdPartyAnalysisResult result;
+
+  nsCOMPtr<nsIURI> uri;
+  if (!aURI && aChannel) {
+    aChannel->GetURI(getter_AddRefs(uri));
+  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel ? aChannel->LoadInfo() : nullptr;
+
+  bool isForeign = true;
+  if (aChannel &&
+      (!aRequireThirdPartyCheck || aRequireThirdPartyCheck(loadInfo))) {
+    IsThirdPartyChannel(aChannel, aURI ? aURI : uri.get(), &isForeign);
+  }
+  if (isForeign) {
+    result += ThirdPartyAnalysis::IsForeign;
+  }
+
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(aChannel);
+  if (classifiedChannel) {
+    if (classifiedChannel->IsTrackingResource()) {
+      result += ThirdPartyAnalysis::IsTrackingResource;
+    }
+    if (classifiedChannel->IsSocialTrackingResource()) {
+      result += ThirdPartyAnalysis::IsSocialTrackingResource;
+    }
+
+    // Check first-party storage access even for non-tracking resources, since
+    // we will need the result when computing the access rights for the reject
+    // foreign cookie behavior mode.
+
+    // If the caller has requested third-party checks, we will only perform the
+    // storage access check once we know we're in the third-party context.
+    bool performStorageChecks =
+        aRequireThirdPartyCheck ? result.contains(ThirdPartyAnalysis::IsForeign)
+                                : true;
+    if (performStorageChecks &&
+        AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
+            aChannel, aURI ? aURI : uri.get(), aRejectedReason)) {
+      result += ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted;
+    }
+
+    if (aNotify && !result.contains(
+                       ThirdPartyAnalysis::IsFirstPartyStorageAccessGranted)) {
+      AntiTrackingCommon::NotifyBlockingDecision(
+          aChannel, AntiTrackingCommon::BlockingDecision::eBlock,
+          *aRejectedReason);
+    }
+  }
+
+  return result;
 }
