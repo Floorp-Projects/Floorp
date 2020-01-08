@@ -132,6 +132,8 @@ export class BaseContent extends React.PureComponent {
       props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     let filteredSections = props.Sections;
 
+    const pocketEnabled = prefs["feeds.section.topstories"];
+
     // Filter out highlights for DS
     if (isDiscoveryStream) {
       filteredSections = filteredSections.filter(
@@ -145,7 +147,7 @@ export class BaseContent extends React.PureComponent {
 
     const outerClassName = [
       "outer-wrapper",
-      isDiscoveryStream && "ds-outer-wrapper-search-alignment",
+      isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment",
       isDiscoveryStream && "ds-outer-wrapper-breakpoint-override",
       prefs.showSearch &&
         this.state.fixedSearch &&
