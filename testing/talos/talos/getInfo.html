@@ -10,7 +10,6 @@
       dump(`TEST-UNEXPECTED-FAIL | getInfo | ${source}, line ${lineno}: ${message}\n`);
     };
     </script>
-    <script language="Javascript" type="text/javascript" src="scripts/MozillaFileLogger.js"></script>
     <script type="text/javascript" src="/talos-powers/content/TalosPowersContent.js"></script>
     <title>shutdown script</title>
   </head>
@@ -20,15 +19,15 @@
     await TalosPowers.loadPromise;
     var devicePixelRatio = window.devicePixelRatio;
 
-    dumpLog(`__metrics\n\tScreen width/height: ${screen.width}/${screen.height}`);
+    dump(`__metrics\n\tScreen width/height: ${screen.width}/${screen.height}`);
     if (devicePixelRatio != 1) {
-      dumpLog(` (scaled from ${screen.width * devicePixelRatio}/${screen.height * devicePixelRatio})`);
+      dump(` (scaled from ${screen.width * devicePixelRatio}/${screen.height * devicePixelRatio})`);
     }
-    dumpLog(`\n\tcolorDepth: ${screen.colorDepth}\n`);
-    dumpLog(`\tBrowser inner width/height: ${window.innerWidth}/${window.innerHeight}\n`);
+    dump(`\n\tcolorDepth: ${screen.colorDepth}\n`);
+    dump(`\tBrowser inner width/height: ${window.innerWidth}/${window.innerHeight}\n`);
     // JMAHER: this is temporarily commented out because this hangs the fennec browser
-    //  dumpLog(`\tBrowser outer width/height: ${window.outerWidth}/${window.outerHeight}`);
-    dumpLog("\n__metrics\n");
+    //  dump(`\tBrowser outer width/height: ${window.outerWidth}/${window.outerHeight}`);
+    dump("\n__metrics\n");
     TalosPowersParent.exec("dumpAboutSupport");
     TalosPowersContent.goQuitApplication(true);
   });
