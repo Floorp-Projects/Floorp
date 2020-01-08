@@ -876,13 +876,14 @@ already_AddRefed<ComputedStyle> KeyframeEffect::GetTargetComputedStyle(
 
 #ifdef DEBUG
 void DumpAnimationProperties(
+    const RawServoStyleSet* aRawSet,
     nsTArray<AnimationProperty>& aAnimationProperties) {
   for (auto& p : aAnimationProperties) {
     printf("%s\n", nsCString(nsCSSProps::GetStringValue(p.mProperty)).get());
     for (auto& s : p.mSegments) {
       nsString fromValue, toValue;
-      s.mFromValue.SerializeSpecifiedValue(p.mProperty, fromValue);
-      s.mToValue.SerializeSpecifiedValue(p.mProperty, toValue);
+      s.mFromValue.SerializeSpecifiedValue(p.mProperty, aRawSet, fromValue);
+      s.mToValue.SerializeSpecifiedValue(p.mProperty, aRawSet, toValue);
       printf("  %f..%f: %s..%s\n", s.mFromKey, s.mToKey,
              NS_ConvertUTF16toUTF8(fromValue).get(),
              NS_ConvertUTF16toUTF8(toValue).get());
@@ -1017,12 +1018,12 @@ static void CreatePropertyValue(
     nsCSSPropertyID aProperty, float aOffset,
     const Maybe<ComputedTimingFunction>& aTimingFunction,
     const AnimationValue& aValue, dom::CompositeOperation aComposite,
-    AnimationPropertyValueDetails& aResult) {
+    const RawServoStyleSet* aRawSet, AnimationPropertyValueDetails& aResult) {
   aResult.mOffset = aOffset;
 
   if (!aValue.IsNull()) {
     nsString stringValue;
-    aValue.SerializeSpecifiedValue(aProperty, stringValue);
+    aValue.SerializeSpecifiedValue(aProperty, aRawSet, stringValue);
     aResult.mValue.Construct(stringValue);
   }
 
@@ -1038,6 +1039,9 @@ static void CreatePropertyValue(
 
 void KeyframeEffect::GetProperties(
     nsTArray<AnimationPropertyDetails>& aProperties, ErrorResult& aRv) const {
+  const RawServoStyleSet* rawSet =
+      mDocument->StyleSetForPresShellOrMediaQueryEvaluation()->RawSet();
+
   for (const AnimationProperty& property : mProperties) {
     AnimationPropertyDetails propertyDetails;
     propertyDetails.mProperty =
@@ -1063,7 +1067,7 @@ void KeyframeEffect::GetProperties(
       binding_detail::FastAnimationPropertyValueDetails fromValue;
       CreatePropertyValue(property.mProperty, segment.mFromKey,
                           segment.mTimingFunction, segment.mFromValue,
-                          segment.mFromComposite, fromValue);
+                          segment.mFromComposite, rawSet, fromValue);
       // We don't apply timing functions for zero-length segments, so
       // don't return one here.
       if (segment.mFromKey == segment.mToKey) {
@@ -1082,7 +1086,8 @@ void KeyframeEffect::GetProperties(
           property.mSegments[segmentIdx + 1].mFromValue != segment.mToValue) {
         binding_detail::FastAnimationPropertyValueDetails toValue;
         CreatePropertyValue(property.mProperty, segment.mToKey, Nothing(),
-                            segment.mToValue, segment.mToComposite, toValue);
+                            segment.mToValue, segment.mToComposite, rawSet,
+                            toValue);
         // It doesn't really make sense to have a timing function on the
         // last property value or before a sudden jump so we just drop the
         // easing property altogether.
@@ -1130,6 +1135,9 @@ void KeyframeEffect::GetKeyframes(JSContext*& aCx, nsTArray<JSObject*>& aResult,
     // short-term (and unshipped) behavior until bug 1391537 is fixed.
     computedStyle = GetTargetComputedStyle(Flush::Style);
   }
+
+  const RawServoStyleSet* rawSet =
+      mDocument->StyleSetForPresShellOrMediaQueryEvaluation()->RawSet();
 
   for (const Keyframe& keyframe : mKeyframes) {
     // Set up a dictionary object for the explicit members
@@ -1179,13 +1187,13 @@ void KeyframeEffect::GetKeyframes(JSContext*& aCx, nsTArray<JSObject*>& aResult,
       if (propertyValue.mServoDeclarationBlock) {
         Servo_DeclarationBlock_SerializeOneValue(
             propertyValue.mServoDeclarationBlock, propertyValue.mProperty,
-            &stringValue, computedStyle, customProperties);
+            &stringValue, computedStyle, customProperties, rawSet);
       } else {
         RawServoAnimationValue* value =
             mBaseValues.GetWeak(propertyValue.mProperty);
 
         if (value) {
-          Servo_AnimationValue_Serialize(value, propertyValue.mProperty,
+          Servo_AnimationValue_Serialize(value, propertyValue.mProperty, rawSet,
                                          &stringValue);
         }
       }
