@@ -5,6 +5,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.Observer
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -16,7 +17,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class SearchSuggestionsViewModelTest {
@@ -35,7 +35,7 @@ class SearchSuggestionsViewModelTest {
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         MockitoAnnotations.initMocks(this)
 
-        viewModel = SearchSuggestionsViewModel(RuntimeEnvironment.application)
+        viewModel = SearchSuggestionsViewModel(ApplicationProvider.getApplicationContext())
     }
 
     @Test

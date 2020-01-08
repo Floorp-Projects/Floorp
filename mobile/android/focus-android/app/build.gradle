@@ -1,12 +1,7 @@
-import com.github.spotbugs.SpotBugsTask
-
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: "com.github.spotbugs"
 apply plugin: "de.mannodermaus.android-junit5"
 apply plugin: 'jacoco'
-apply plugin: 'pmd'
-apply plugin: 'checkstyle'
 apply plugin: 'kotlin-android-extensions'
 apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
 
@@ -19,7 +14,7 @@ android {
         targetSdkVersion 28
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
-        versionName "8.0.24"
+        versionName "8.0.25"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true
@@ -149,17 +144,17 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 dependencies {
     implementation "androidx.appcompat:appcompat:$support_libraries_version"
     implementation "androidx.browser:browser:$support_libraries_version"
+    implementation "androidx.core:core-ktx:1.1.0"
     implementation "com.google.android.material:material:$support_libraries_version"
     implementation "androidx.cardview:cardview:$support_libraries_version"
     implementation "androidx.recyclerview:recyclerview:$support_libraries_version"
     implementation "androidx.legacy:legacy-support-v4:$support_libraries_version"
     implementation "androidx.preference:preference:$support_libraries_version"
-    implementation 'io.sentry:sentry-android:1.7.10'
+    implementation 'io.sentry:sentry-android:1.7.21'
 
     implementation "androidx.lifecycle:lifecycle-extensions:$architecture_components_version"
 
     compileOnly 'net.jcip:jcip-annotations:1.0'
-    compileOnly "com.github.spotbugs:spotbugs-annotations:$spotbugs_version"
     implementation("com.google.code.findbugs:jsr305:3.0.2")
 
     implementation "org.mozilla.components:browser-domains:$mozilla_components_version"
@@ -168,6 +163,7 @@ dependencies {
     implementation "org.mozilla.components:browser-session:$mozilla_components_version"
     implementation "org.mozilla.components:browser-state:$mozilla_components_version"
     implementation "org.mozilla.components:concept-engine:$mozilla_components_version"
+    implementation "org.mozilla.components:concept-fetch:$mozilla_components_version"
     implementation "org.mozilla.components:feature-customtabs:$mozilla_components_version"
     implementation "org.mozilla.components:lib-crash:$mozilla_components_version"
     implementation "org.mozilla.components:lib-fetch-httpurlconnection:$mozilla_components_version"
@@ -185,10 +181,10 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
-    focusImplementation 'com.android.installreferrer:installreferrer:1.0' // Required by Adjust
+    focusImplementation 'com.android.installreferrer:installreferrer:1.1' // Required by Adjust
 
-    implementation "org.mozilla.components:browser-engine-gecko-nightly:$mozilla_components_version"
-    implementation "org.mozilla.geckoview:geckoview-nightly:$gecko_nightly_version"
+    implementation "org.mozilla.components:browser-engine-gecko:$mozilla_components_version"
+    implementation "org.mozilla.geckoview:geckoview:$gecko_release_version"
     implementation "androidx.palette:palette:$support_libraries_version"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"
@@ -196,8 +192,8 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.3.1"
     testImplementation "junit:junit:4.12"
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.3.1"
-    testImplementation "org.robolectric:robolectric:4.0-alpha-3" // required to support api level 28
-    testImplementation 'org.mockito:mockito-core:2.21.0'
+    testImplementation "org.robolectric:robolectric:4.3" // required to support api level 28
+    testImplementation 'org.mockito:mockito-core:2.24.5'
     testImplementation "androidx.arch.core:core-testing:${architecture_components_version}"
 
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version", {
@@ -208,10 +204,10 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
 
-    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
-    testImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
 
-    androidTestImplementation "tools.fastlane:screengrab:1.2.0", {
+    androidTestImplementation "tools.fastlane:screengrab:2.0.0", {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.1.0-alpha4', {
@@ -220,9 +216,10 @@ dependencies {
         exclude group: 'com.android.support', module: 'design'
         exclude group: 'com.android.support', module: 'recyclerview-v7'
     }
-    androidTestImplementation 'androidx.test:core:1.2.0'
+    testImplementation 'androidx.test:core:1.2.0'
     testImplementation 'androidx.test:runner:1.2.0'
     testImplementation 'androidx.test:rules:1.2.0'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
 
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     debugImplementation 'com.facebook.stetho:stetho:1.5.1'
@@ -414,72 +411,6 @@ tasks.whenTaskAdded { task ->
 
 clean.doLast {
     file(generatedLocaleListDir).deleteDir()
-}
-
-// -------------------------------------------------------------------------------------------------
-// Static Analysis: findbugs and pmd
-// -------------------------------------------------------------------------------------------------
-spotbugs {
-    ignoreFailures = false
-
-    effort = "min"
-    // This selects what level of bugs to report: low means low priority issues will be reported
-    // (in addition to medium+high), which corresponds to warning about everything.
-    // TODO: boost this to low once low priority issues are fixed.
-    reportLevel = "medium"
-
-    excludeFilter = new File("${project.rootDir}/quality/spotbugs-exclude.xml")
-}
-
-task spotbugs(type: SpotBugsTask, dependsOn: "assemble", group: 'verification') {
-    classes = files("$projectDir.absolutePath/build/intermediates/javac")
-
-    source = fileTree('src/main/java')
-    classpath = files()
-
-    // Only one report format is supported. Html is easier to read, so let's use that
-    // (xml is the one that's enabled by default).
-    reports {
-        xml.enabled = false
-        html.enabled = true
-    }
-}
-
-pmd {
-    toolVersion = '5.5.2'
-    ignoreFailures = true
-    ruleSetFiles = files("${project.rootDir}/quality/pmd-rules.xml")
-    ruleSets = []
-}
-
-task pmd(type: Pmd, group: 'verification') {
-    source 'src'
-    include '**/*.java'
-    exclude('**/gen/**',
-            '**/debug/**',
-            '**/androidTest/**',
-            '**/test**/**')
-
-    reports {
-        xml.enabled = false
-        html.enabled = true
-        html {
-            destination file("$projectDir.absolutePath/build/reports/pmd/pmd.html")
-        }
-    }
-}
-
-task checkstyle(type: Checkstyle) {
-    configFile file("${project.rootDir}/quality/checkstyle.xml")
-    source 'src'
-    include '**/*.java'
-    exclude '**/gen/**'
-
-    classpath = files()
-}
-
-afterEvaluate {
-    check.dependsOn 'spotbugs', 'pmd', 'checkstyle'
 }
 
 if (project.hasProperty("coverage")) {

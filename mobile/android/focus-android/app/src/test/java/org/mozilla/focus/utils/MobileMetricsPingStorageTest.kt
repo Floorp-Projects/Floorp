@@ -1,19 +1,20 @@
 package org.mozilla.focus.utils
 
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.Assert
+import org.mozilla.focus.FocusApplication
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 class MobileMetricsPingStorageTest {
-    private val file = File("${RuntimeEnvironment.application.cacheDir}/${MobileMetricsPingStorage.STORAGE_FOLDER}/${MobileMetricsPingStorage.FILE_NAME}")
-    private var storage = MobileMetricsPingStorage(RuntimeEnvironment.application, file)
+    private val file = File("${(ApplicationProvider.getApplicationContext() as FocusApplication).cacheDir}/${MobileMetricsPingStorage.STORAGE_FOLDER}/${MobileMetricsPingStorage.FILE_NAME}")
+    private var storage = MobileMetricsPingStorage(ApplicationProvider.getApplicationContext(), file)
 
     @Before
     fun init() {

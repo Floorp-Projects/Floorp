@@ -1097,9 +1097,9 @@ class BrowserFragment : WebFragment(), LifecycleObserver, View.OnClickListener,
                 val browsers = Browsers(requireContext(), url)
 
                 val defaultBrowser = browsers.defaultBrowser
-                    ?: // We only add this menu item when a third party default exists, in
+                    ?: throw IllegalStateException("<Open with \$Default> was shown when no default browser is set")
+                    // We only add this menu item when a third party default exists, in
                     // BrowserMenuAdapter.initializeMenu()
-                    throw IllegalStateException("<Open with \$Default> was shown when no default browser is set")
 
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                 intent.setPackage(defaultBrowser.packageName)

@@ -75,7 +75,7 @@ object PopupUtils {
         }
     }
 
-    private fun setSecurityInfoSecure (
+    private fun setSecurityInfoSecure(
         context: Context,
         identityState: TextView,
         verifierInfo: String?,
@@ -99,7 +99,7 @@ object PopupUtils {
         securityInfoIcon.setColorFilter(photonGreen)
     }
 
-    private fun setSecurityInfoInsecure (
+    private fun setSecurityInfoInsecure(
         context: Context,
         identityState: TextView,
         url: String,

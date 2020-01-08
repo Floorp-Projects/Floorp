@@ -63,7 +63,7 @@ class GeneralSettingsFragment : BaseSettingsFragment(),
             // fragment gets replaced at the end of this method anyways.
             localeUpdated = true
 
-            //Set langChanged from InstalledSearchEngines to true
+            // Set langChanged from InstalledSearchEngines to true
             InstalledSearchEnginesSettingsFragment.languageChanged = true
 
             val languagePreference =

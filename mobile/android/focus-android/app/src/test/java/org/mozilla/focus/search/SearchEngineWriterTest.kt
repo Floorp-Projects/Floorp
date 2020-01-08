@@ -19,7 +19,8 @@ class SearchEngineWriterTest {
             "<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">" +
             "<ShortName>testEngine</ShortName>" +
             "<Image height=\"16\" width=\"16\">" +
-            "data:image/png;base64,Qml0bWFwICgyIHggMikgY29tcHJlc3NlZCBhcyBQTkcgd2l0aCBxdWFsaXR5IDEwMA==\n" +
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQAAAABazTCJAAAADElEQVR42mNgYGAAAAAEAAHI6uv5\n" +
+                "AAAAAElFTkSuQmCC\n" +
             "</Image>" +
             "<Description>testEngine</Description>" +
             "<Url template=\"testEngine/?q={searchTerms}\" type=\"text/html\"/>" +
@@ -32,7 +33,8 @@ class SearchEngineWriterTest {
             "<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">" +
             "<ShortName>testEngine</ShortName>" +
             "<Image height=\"16\" width=\"16\">" +
-            "data:image/png;base64,Qml0bWFwICgyIHggMikgY29tcHJlc3NlZCBhcyBQTkcgd2l0aCBxdWFsaXR5IDEwMA==\n" +
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQAAAABazTCJAAAADElEQVR42mNgYGAAAAAEAAHI6uv5\n" +
+                "AAAAAElFTkSuQmCC\n" +
             "</Image>" +
             "<Description>testEngine</Description>" +
             "<Url template=\"testEngine/?q={searchTerms}/tests\" type=\"text/html\"/>" +

@@ -14,9 +14,7 @@
 # Descriptions for each gradle task below can be found in the
 # output of `./gradlew tasks`.
 ./gradlew -q \
-        checkstyle \
         ktlint \
-        pmd \
         detektCheck \
         assembleFocusX86DebugAndroidTest \
         testFocusX86DebugUnitTest

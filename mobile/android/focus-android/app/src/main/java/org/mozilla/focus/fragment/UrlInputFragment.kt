@@ -40,8 +40,6 @@ import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import org.mozilla.focus.R
-import org.mozilla.focus.R.string.pref_key_homescreen_tips
-import org.mozilla.focus.R.string.teaser
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
@@ -264,7 +262,7 @@ class UrlInputFragment :
     }
 
     private fun showFocusSubtitle() {
-        keyboardLinearLayout.homeViewTipsLabel.text = getString(teaser)
+        keyboardLinearLayout.homeViewTipsLabel.text = getString(R.string.teaser)
         keyboardLinearLayout.homeViewTipsLabel.alpha = 1f
         keyboardLinearLayout.homeViewTipsLabel.setOnClickListener(null)
     }
@@ -399,7 +397,7 @@ class UrlInputFragment :
         super.onConfigurationChanged(newConfig)
 
         if (newConfig?.orientation != Configuration.ORIENTATION_UNDEFINED) {
-            //This is a hack to make the HomeMenu actually stick on top of the menuView (#3287)
+            // This is a hack to make the HomeMenu actually stick on top of the menuView (#3287)
 
             displayedPopupMenu?.let {
                 it.dismiss()
@@ -831,6 +829,6 @@ class UrlInputFragment :
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        if (key == activity?.getString(pref_key_homescreen_tips)) { updateTipsLabel() }
+        if (key == activity?.getString(R.string.pref_key_homescreen_tips)) { updateTipsLabel() }
     }
 }

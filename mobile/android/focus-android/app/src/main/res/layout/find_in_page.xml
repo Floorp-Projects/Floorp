@@ -29,7 +29,10 @@
         android:textCursorDrawable="@drawable/cursor"
         android:textSize="14sp"
         app:layout_constraintEnd_toStartOf="@id/resultText"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:importantForAutofill="no" />
 
     <TextView
         android:id="@+id/resultText"

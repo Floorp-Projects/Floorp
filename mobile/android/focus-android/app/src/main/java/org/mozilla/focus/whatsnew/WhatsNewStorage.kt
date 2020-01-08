@@ -29,7 +29,7 @@ interface WhatsNewStorage {
 
 class SharedPreferenceWhatsNewStorage(private val sharedPreference: SharedPreferences) : WhatsNewStorage {
 
-    constructor(context: Context): this(PreferenceManager.getDefaultSharedPreferences(context))
+    constructor(context: Context) : this(PreferenceManager.getDefaultSharedPreferences(context))
 
     override fun getVersion(): WhatsNewVersion? {
         return sharedPreference.getString(WhatsNewStorage.PREFERENCE_KEY_APP_NAME, null)?.let { WhatsNewVersion(it) }
