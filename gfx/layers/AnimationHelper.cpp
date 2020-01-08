@@ -724,7 +724,7 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
   MOZ_ASSERT(aAnimationData.mTransform);
   const TransformData& transformData = *aAnimationData.mTransform;
 
-  Maybe<mozilla::MotionPathData> motion = MotionPathUtils::ResolveMotionPath(
+  Maybe<ResolvedMotionPathData> motion = MotionPathUtils::ResolveMotionPath(
       path, distance, offsetRotate, anchor, aAnimationData.mMotionPath,
       CSSSize::FromAppUnits(transformData.bounds().Size()), aCachedMotionPath);
 

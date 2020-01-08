@@ -330,7 +330,7 @@ static CSSCoord ComputeRayUsedDistance(const RayFunction& aRay,
 }
 
 /* static */
-Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
+Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
     const OffsetPathData& aPath, const LengthPercentage& aDistance,
     const StyleOffsetRotate& aRotate, const StylePositionOrAuto& aAnchor,
     const CSSPoint& aTransformOrigin, const CSSSize& aFrameSize,
@@ -431,8 +431,8 @@ Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
     anchorPoint.y += aFramePosition->y;
   }
 
-  return Some(
-      MotionPathData{point - anchorPoint.ToUnknownPoint(), angle, shift});
+  return Some(ResolvedMotionPathData{point - anchorPoint.ToUnknownPoint(),
+                                     angle, shift});
 }
 
 static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
@@ -454,7 +454,7 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
 }
 
 /* static*/
-Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
+Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
     const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame);
 
@@ -514,7 +514,7 @@ static OffsetPathData GenerateOffsetPathData(
 }
 
 /* static */
-Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
+Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
     const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
     const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
     const Maybe<layers::MotionPathData>& aMotionPathData,
