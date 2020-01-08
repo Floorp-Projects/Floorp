@@ -1715,7 +1715,6 @@
      *   Type: Calls
      *   Operands: uint16_t argc
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
-     *   nuses: (argc+2)
      */ \
     MACRO(JSOP_CALL, "call", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     MACRO(JSOP_CALLITER, "calliter", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
@@ -1779,7 +1778,6 @@
      *   Type: Calls
      *   Operands: uint16_t argc
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
-     *   nuses: (argc+2)
      */ \
     MACRO(JSOP_EVAL, "eval", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
@@ -1800,7 +1798,6 @@
      *   Type: Calls
      *   Operands: uint16_t argc
      *   Stack: evalFn, this, args[0], ..., args[argc-1] => rval
-     *   nuses: (argc+2)
      */ \
     MACRO(JSOP_STRICTEVAL, "strict-eval", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
     /*
@@ -1909,7 +1906,6 @@
      *   Type: Calls
      *   Operands: uint16_t argc
      *   Stack: callee, isConstructing, args[0], ..., args[argc-1], newTarget => rval
-     *   nuses: (argc+3)
      */ \
     MACRO(JSOP_NEW, "new", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC|JOF_IC) \
     MACRO(JSOP_SUPERCALL, "supercall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
@@ -3372,7 +3368,6 @@
      *   Category: Stack operations
      *   Operands: uint16_t n
      *   Stack: v[n-1], ..., v[1], v[0] =>
-     *   nuses: n
      */ \
     MACRO(JSOP_POPN, "popn", NULL, 3, -1, 0, JOF_UINT16) \
     /*

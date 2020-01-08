@@ -97,13 +97,9 @@ OPCODE_FORMAT = """\
 
 
 def print_opcode(opcode):
-    names_template = '{name} [-{nuses}, +{ndefs}]{flags}'
+    names_template = '{name}{flags}'
     opcodes = [opcode] + opcode.group
     names = [names_template.format(name=escape(code.name),
-                                   nuses=override(code.nuses,
-                                                  opcode.nuses_override),
-                                   ndefs=override(code.ndefs,
-                                                  opcode.ndefs_override),
                                    flags=format_flags(code.flags))
              for code in opcodes]
     if len(opcodes) == 1:
