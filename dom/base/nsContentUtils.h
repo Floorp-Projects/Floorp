@@ -1458,15 +1458,19 @@ class nsContentUtils {
   }
 
   /**
-   * This method dispatches "input" event with proper event class.  If it's
-   * unsafe to dispatch, this put the event into the script runner queue.
+   * This method dispatches "beforeinput" event with EditorInputEvent or
+   * "input" event with proper event class.  If it's unsafe to dispatch,
+   * this put the event into the script runner queue.  In such case, the
+   * event becomes not cancelable even if it's defined as cancelable by
+   * the spec.
    * Input Events spec defines as:
    *   Input events are dispatched on elements that act as editing hosts,
    *   including elements with the contenteditable attribute set, textarea
    *   elements, and input elements that permit text input.
    *
-   * @param aEventTarget        The event target element of the "input" event.
-   *                            Must not be nullptr.
+   * @param aEventTarget        The event target element of the "beforeinput"
+   *                            or "input" event.  Must not be nullptr.
+   * @param aEventMessage       Muse be eEditorBeforeInput or eEditorInput.
    * @param aEditorInputType    The inputType value of InputEvent.
    *                            If aEventTarget won't dispatch "input" event
    *                            with InputEvent, set EditorInputType::eUnknown.
@@ -1476,11 +1480,18 @@ class nsContentUtils {
    * @param aOptions            Optional.  If aEditorInputType value requires
    *                            some additional data, they should be properly
    *                            set with this argument.
+   * @param aEventStatus        Returns nsEventStatus_eConsumeNoDefault if
+   *                            the dispatching event is cancelable and the
+   *                            event was canceled by script (including
+   *                            chrome script).  Otherwise, returns given
+   *                            value.  Note that this can be nullptr only
+   *                            when the dispatching event is not cancelable.
    */
   MOZ_CAN_RUN_SCRIPT
   static nsresult DispatchInputEvent(Element* aEventTarget) {
-    return DispatchInputEvent(aEventTarget, mozilla::EditorInputType::eUnknown,
-                              nullptr, InputEventOptions());
+    return DispatchInputEvent(aEventTarget, mozilla::eEditorInput,
+                              mozilla::EditorInputType::eUnknown, nullptr,
+                              InputEventOptions());
   }
   struct MOZ_STACK_CLASS InputEventOptions final {
     InputEventOptions() = default;
@@ -1493,9 +1504,11 @@ class nsContentUtils {
   };
   MOZ_CAN_RUN_SCRIPT
   static nsresult DispatchInputEvent(Element* aEventTarget,
+                                     mozilla::EventMessage aEventMessage,
                                      mozilla::EditorInputType aEditorInputType,
                                      mozilla::TextEditor* aTextEditor,
-                                     const InputEventOptions& aOptions);
+                                     const InputEventOptions& aOptions,
+                                     nsEventStatus* aEventStatus = nullptr);
 
   /**
    * This method creates and dispatches a untrusted event.

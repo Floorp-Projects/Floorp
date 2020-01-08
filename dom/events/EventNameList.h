@@ -180,6 +180,8 @@ EVENT(finish, eMarqueeFinish, EventNameType_HTMLMarqueeOnly, eBasicEventClass)
 EVENT(formdata, eFormData, EventNameType_HTML, eBasicEventClass)
 EVENT(fullscreenchange, eFullscreenChange, EventNameType_HTML, eBasicEventClass)
 EVENT(fullscreenerror, eFullscreenError, EventNameType_HTML, eBasicEventClass)
+EVENT(beforeinput, eEditorBeforeInput, EventNameType_HTMLXUL,
+      eEditorInputEventClass)
 EVENT(input, eEditorInput, EventNameType_HTMLXUL, eEditorInputEventClass)
 EVENT(invalid, eFormInvalid, EventNameType_HTMLXUL, eBasicEventClass)
 EVENT(keydown, eKeyDown, EventNameType_HTMLXUL, eKeyboardEventClass)
