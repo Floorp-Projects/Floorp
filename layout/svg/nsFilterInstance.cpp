@@ -204,19 +204,18 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
           attr.as<ColorMatrixAttributes>();
 
       float transposed[20];
-      if (!gfx::ComputeColorMatrix(attributes, transposed)) {
+      if (gfx::ComputeColorMatrix(attributes, transposed)) {
+        float matrix[20] = {
+            transposed[0], transposed[5], transposed[10], transposed[15],
+            transposed[1], transposed[6], transposed[11], transposed[16],
+            transposed[2], transposed[7], transposed[12], transposed[17],
+            transposed[3], transposed[8], transposed[13], transposed[18],
+            transposed[4], transposed[9], transposed[14], transposed[19]};
+
+        aWrFilters.filters.AppendElement(wr::FilterOp::ColorMatrix(matrix));
+      } else {
         filterIsNoop = true;
-        continue;
       }
-
-      float matrix[20] = {
-          transposed[0], transposed[5], transposed[10], transposed[15],
-          transposed[1], transposed[6], transposed[11], transposed[16],
-          transposed[2], transposed[7], transposed[12], transposed[17],
-          transposed[3], transposed[8], transposed[13], transposed[18],
-          transposed[4], transposed[9], transposed[14], transposed[19]};
-
-      aWrFilters.filters.AppendElement(wr::FilterOp::ColorMatrix(matrix));
     } else if (attr.is<GaussianBlurAttributes>()) {
       if (finalClip) {
         // There's a clip that needs to apply before the blur filter, but
