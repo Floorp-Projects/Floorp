@@ -4382,12 +4382,8 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
   return true;
 }
 
-bool ParseNode::getConstantValue(JSContext* cx,
-                                 AllowConstantObjects allowObjects,
-                                 MutableHandleValue vp, Value* compare,
-                                 size_t ncompare, NewObjectKind newKind) {
-  MOZ_ASSERT(newKind == TenuredObject || newKind == SingletonObject);
-
+bool ParseNode::getConstantValue(JSContext* cx, MutableHandleValue vp,
+                                 Value* compare, size_t ncompare) {
   switch (getKind()) {
     case ParseNodeKind::NumberExpr:
       vp.setNumber(as<NumericLiteral>().value());
@@ -4416,16 +4412,7 @@ bool ParseNode::getConstantValue(JSContext* cx,
       unsigned count;
       ParseNode* pn;
 
-      if (allowObjects == DontAllowObjects) {
-        vp.setMagic(JS_GENERIC_MAGIC);
-        return true;
-      }
-
       ObjectGroup::NewArrayKind arrayKind = ObjectGroup::NewArrayKind::Normal;
-      if (allowObjects == ForCopyOnWriteArray) {
-        arrayKind = ObjectGroup::NewArrayKind::CopyOnWrite;
-        allowObjects = DontAllowObjects;
-      }
 
       if (getKind() == ParseNodeKind::CallSiteObj) {
         count = as<CallSiteNode>().count() - 1;
@@ -4442,8 +4429,7 @@ bool ParseNode::getConstantValue(JSContext* cx,
       }
       size_t idx;
       for (idx = 0; pn; idx++, pn = pn->pn_next) {
-        if (!pn->getConstantValue(cx, allowObjects, values[idx], values.begin(),
-                                  idx)) {
+        if (!pn->getConstantValue(cx, values[idx], values.begin(), idx)) {
           return false;
         }
         if (values[idx].isMagic(JS_GENERIC_MAGIC)) {
@@ -4454,7 +4440,7 @@ bool ParseNode::getConstantValue(JSContext* cx,
       MOZ_ASSERT(idx == count);
 
       ArrayObject* obj = ObjectGroup::newArrayObject(
-          cx, values.begin(), values.length(), newKind, arrayKind);
+          cx, values.begin(), values.length(), TenuredObject, arrayKind);
       if (!obj) {
         return false;
       }
@@ -4481,7 +4467,7 @@ bool ParseNode::getConstantValue(JSContext* cx,
       for (ParseNode* item : as<ListNode>().contents()) {
         // MutateProto and Spread, both are unary, cannot appear here.
         BinaryNode* prop = &item->as<BinaryNode>();
-        if (!prop->right()->getConstantValue(cx, allowObjects, &value)) {
+        if (!prop->right()->getConstantValue(cx, &value)) {
           return false;
         }
         if (value.isMagic(JS_GENERIC_MAGIC)) {
@@ -4530,7 +4516,7 @@ bool ParseNode::getConstantValue(JSContext* cx,
 
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
   RootedValue value(cx);
-  if (!callSiteObj->getConstantValue(cx, ParseNode::AllowObjects, &value)) {
+  if (!callSiteObj->getConstantValue(cx, &value)) {
     return false;
   }
 
