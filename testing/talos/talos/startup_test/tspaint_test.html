@@ -6,6 +6,11 @@
 <!-- Pick off begin time as a cgi argument and print it out -->
 <!-- call this with an arg, e.g. file://foo/startup-test.html?begin=12345678 -->
 <!-- In-line this to avoid compilation. -->
+<script>
+window.onerror = (message, source, lineno) => {
+  dump(`TEST-UNEXPECTED-FAIL | tspaint_test | ${source}, line ${lineno}: ${message}\n`);
+};
+</script>
 <script language="Javascript" type="text/javascript" src="../talos-powers/content/TalosPowersContent.js"></script>
 <script language="Javascript" type="text/javascript" src="../scripts/MozillaFileLogger.js"></script>
 <script language="Javascript" type="text/javascript" src="../talos-powers/content/TalosContentProfiler.js"></script>
