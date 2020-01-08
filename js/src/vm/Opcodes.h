@@ -1166,7 +1166,7 @@
     MACRO(JSOP_HASOWN, "hasown", NULL, 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * Push the SuperBase of the method `callee`. The SuperBase is
-     * `callee`.[[HomeObject]].[[GetPrototypeOf]](), the object where `super`
+     * `callee.[[HomeObject]].[[GetPrototypeOf]]()`, the object where `super`
      * property lookups should begin.
      *
      * `callee` must be a function that has a HomeObject that's an object,
@@ -1185,7 +1185,7 @@
     MACRO(JSOP_SUPERBASE, "superbase", NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Get the value of `receiver.name`, starting the property search at `obj`.
-     * In spec terms, obj.[[Get]](name, receiver).
+     * In spec terms, `obj.[[Get]](name, receiver)`.
      *
      * Implements: [GetValue][1] for references created by [`super.name`][2].
      * The `receiver` is `this` and `obj` is the SuperBase of the enclosing
@@ -1202,7 +1202,7 @@
     MACRO(JSOP_GETPROP_SUPER, "getprop-super", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     /*
      * Get the value of `receiver[key]`, starting the property search at `obj`.
-     * In spec terms, obj.[[Get]](key, receiver).
+     * In spec terms, `obj.[[Get]](key, receiver)`.
      *
      * Implements: [GetValue][1] for references created by [`super[key]`][2]
      * (where the `receiver` is `this` and `obj` is the SuperBase of the enclosing
@@ -1220,7 +1220,7 @@
     MACRO(JSOP_GETELEM_SUPER, "getelem-super", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
     /*
      * Assign `val` to `receiver.name`, starting the search for an existing
-     * property at `obj`. In spec terms, obj.[[Set]](name, val, receiver).
+     * property at `obj`. In spec terms, `obj.[[Set]](name, val, receiver)`.
      *
      * Implements: [PutValue][1] for references created by [`super.name`][2] in
      * non-strict code. The `receiver` is `this` and `obj` is the SuperBase of
@@ -1246,7 +1246,7 @@
     MACRO(JSOP_STRICTSETPROP_SUPER, "strictsetprop-super", NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
     /*
      * Assign `val` to `receiver[key]`, strating the search for an existing
-     * property at `obj`. In spec terms, obj.[[Set]](key, val, receiver).
+     * property at `obj`. In spec terms, `obj.[[Set]](key, val, receiver)`.
      *
      * Implements: [PutValue][1] for references created by [`super[key]`][2] in
      * non-strict code. The `receiver` is `this` and `obj` is the SuperBase of
@@ -1409,7 +1409,7 @@
      *
      * Implements: [CreateAsyncToSyncIterator][1]. The spec says this operation
      * takes one argument, but that argument is a Record with two relevant
-     * fields, [[Iterator]] and [[NextMethod]].
+     * fields, `[[Iterator]]` and `[[NextMethod]]`.
      *
      * Used for `for await` loops.
      *
@@ -1622,7 +1622,7 @@
     MACRO(JSOP_CHECKCLASSHERITAGE, "checkclassheritage", NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Like `JSOP_LAMBDA`, but using `proto` as the new function's
-     * [[Prototype]] (or %FunctionPrototype% if `proto` is `null`).
+     * `[[Prototype]]` (or `%FunctionPrototype%` if `proto` is `null`).
      *
      * `proto` must be either a constructor or `null`. We use
      * `JSOP_CHECKCLASSHERITAGE` to check.
@@ -1651,6 +1651,8 @@
      * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
      * class definition in the source buffer and are used for `toString()`.
      *
+     * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
+     *
      *   Category: Functions
      *   Type: Creating constructors
      *   Operands: uint32_t nameIndex, uint32_t sourceStart, uint32_t sourceEnd
@@ -1668,6 +1670,8 @@
      *
      * The `sourceStart`/`sourceEnd` offsets are the start/end offsets of the
      * class definition in the source buffer and are used for `toString()`.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-classdefinitionevaluation
      *
      *   Category: Functions
      *   Type: Creating constructors
@@ -1768,6 +1772,8 @@
      *
      * Implements: [Function Call Evaluation][1], steps 5-7 and 9, when the
      * syntactic critera for direct eval in step 6 are all met.
+     *
+     * [1]: https://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation
      *
      *   Category: Functions
      *   Type: Calls
@@ -1982,9 +1988,10 @@
     MACRO(JSOP_INITIALYIELD, "initialyield", NULL, 4, 1, 3, JOF_RESUMEINDEX) \
     /*
      * Bytecode emitted after 'yield' expressions. This is useful for the
-     * Debugger and AbstractGeneratorObject::isAfterYieldOrAwait. It's treated
-     * as jump target op so that the Baseline Interpreter can efficiently
-     * restore the frame's interpreterICEntry when resuming a generator.
+     * Debugger and `AbstractGeneratorObject::isAfterYieldOrAwait`. It's
+     * treated as jump target op so that the Baseline Interpreter can
+     * efficiently restore the frame's interpreterICEntry when resuming a
+     * generator.
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2017,7 +2024,7 @@
     MACRO(JSOP_YIELD, "yield", NULL, 4, 2, 3, JOF_RESUMEINDEX) \
     /*
      * Pushes a boolean indicating whether the top of the stack is
-     * MagicValue(JS_GENERATOR_CLOSING).
+     * `MagicValue(JS_GENERATOR_CLOSING)`.
      *
      *   Category: Functions
      *   Type: Generators and async functions
@@ -2347,7 +2354,7 @@
      * returns. `thisval` should be the current value of `this`, or
      * `MagicValue(JS_UNINITIALIZED_LEXICAL)` if `this` is uninitialized.
      *
-     * Implements: [The \[\[Construct\]\] internal method of JS functions][1],
+     * Implements: [The [[Construct]] internal method of JS functions][1],
      * steps 13 and 15.
      *
      * [1]: https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget
