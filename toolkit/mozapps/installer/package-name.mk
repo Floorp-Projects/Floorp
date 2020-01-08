@@ -104,6 +104,9 @@ TALOS_PACKAGE = $(PKG_BASENAME).talos.tests.tar.gz
 AWSY_PACKAGE = $(PKG_BASENAME).awsy.tests.tar.gz
 GTEST_PACKAGE = $(PKG_BASENAME).gtest.tests.tar.gz
 
+# macOS codesigning package naming
+MACOS_CODESIGN_ARCHIVE_BASENAME = $(PKG_BASENAME).codesign-entitlements
+
 ifneq (,$(wildcard $(DIST)/bin/application.ini))
 BUILDID = $(shell $(PYTHON) $(MOZILLA_DIR)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)
 else
