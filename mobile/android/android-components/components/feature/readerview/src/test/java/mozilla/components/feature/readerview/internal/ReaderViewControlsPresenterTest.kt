@@ -29,6 +29,7 @@ class ReaderViewControlsPresenterTest {
 
         presenter.show()
 
+        verify(view).tryInflate()
         verify(view).setColorScheme(any())
         verify(view).setFontSize(5)
         verify(view).setFont(any())

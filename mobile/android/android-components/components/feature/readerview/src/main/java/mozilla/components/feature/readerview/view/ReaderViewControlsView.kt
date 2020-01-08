@@ -45,6 +45,15 @@ interface ReaderViewControlsView {
      */
     fun asView(): View = (this as View)
 
+    /**
+     * Tries to inflate the view if needed.
+     *
+     * See: https://github.com/mozilla-mobile/android-components/issues/5491
+     *
+     * @return true if the inflation was completed, false if the view was already inflated.
+     */
+    fun tryInflate(): Boolean
+
     interface Listener {
         fun onFontChanged(font: FontType)
         fun onFontSizeIncreased(): Int

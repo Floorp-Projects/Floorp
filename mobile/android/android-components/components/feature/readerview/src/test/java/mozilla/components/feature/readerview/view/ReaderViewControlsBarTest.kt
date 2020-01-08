@@ -17,7 +17,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -36,8 +35,7 @@ class ReaderViewControlsBarTest {
     @Test
     fun `font options are set`() {
         val bar = ReaderViewControlsBar(appCompatContext)
-
-        bar.showControls()
+        bar.tryInflate()
 
         val serifButton = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_font_serif)
         val sansSerifButton = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_font_sans_serif)
@@ -58,8 +56,7 @@ class ReaderViewControlsBarTest {
     @Test
     fun `font size buttons are enabled or disabled`() {
         val bar = ReaderViewControlsBar(appCompatContext)
-
-        bar.showControls()
+        bar.tryInflate()
 
         val sizeDecreaseButton = bar.findViewById<AppCompatButton>(R.id.mozac_feature_readerview_font_size_decrease)
         val sizeIncreaseButton = bar.findViewById<AppCompatButton>(R.id.mozac_feature_readerview_font_size_increase)
@@ -93,8 +90,7 @@ class ReaderViewControlsBarTest {
     @Test
     fun `color scheme is set`() {
         val bar = ReaderViewControlsBar(appCompatContext)
-
-        bar.showControls()
+        bar.tryInflate()
 
         val colorOptionDark = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_color_dark)
         val colorOptionSepia = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_color_sepia)
@@ -122,7 +118,6 @@ class ReaderViewControlsBarTest {
     @Test
     fun `showControls updates visibility and requests focus`() {
         val bar = spy(ReaderViewControlsBar(appCompatContext))
-        doNothing().`when`(bar).inflateIfNeeded() // Robolectric has issues with late inflation of merge elements
 
         bar.showControls()
 
@@ -159,11 +154,10 @@ class ReaderViewControlsBarTest {
         val bar = ReaderViewControlsBar(appCompatContext)
         val listener: ReaderViewControlsView.Listener = mock()
 
-        bar.showControls()
-
         assertNull(bar.listener)
 
         bar.listener = listener
+        bar.tryInflate()
 
         bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_font_sans_serif).performClick()
 
@@ -175,11 +169,10 @@ class ReaderViewControlsBarTest {
         val bar = ReaderViewControlsBar(appCompatContext)
         val listener: ReaderViewControlsView.Listener = mock()
 
-        bar.showControls()
-
         assertNull(bar.listener)
 
         bar.listener = listener
+        bar.tryInflate()
 
         bar.findViewById<AppCompatButton>(R.id.mozac_feature_readerview_font_size_increase).performClick()
 
@@ -191,14 +184,21 @@ class ReaderViewControlsBarTest {
         val bar = ReaderViewControlsBar(appCompatContext)
         val listener: ReaderViewControlsView.Listener = mock()
 
-        bar.showControls()
-
         assertNull(bar.listener)
 
         bar.listener = listener
+        bar.tryInflate()
 
         bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_color_sepia).performClick()
 
         verify(listener).onColorSchemeChanged(ReaderViewFeature.ColorScheme.SEPIA)
+    }
+
+    @Test
+    fun `tryInflate is only successfully once`() {
+        val bar = ReaderViewControlsBar(appCompatContext)
+
+        assertTrue(bar.tryInflate())
+        assertFalse(bar.tryInflate())
     }
 }
