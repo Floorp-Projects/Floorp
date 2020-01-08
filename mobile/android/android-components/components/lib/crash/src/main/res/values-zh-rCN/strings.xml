@@ -19,5 +19,5 @@
     <string name="mozac_lib_crash_notification_action_report">反馈</string>
 
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
-    <string name="mozac_lib_send_crash_report_in_progress">向 %1$s 发送崩溃报告</string>
+    <string name="mozac_lib_send_crash_report_in_progress">正在向 %1$s 发送崩溃报告</string>
 </resources>

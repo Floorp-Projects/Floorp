@@ -37,7 +37,7 @@
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">向您显示通知</string>
     <!-- Description for pkcs11 permission. -->
-    <string name="mozac_feature_addons_permissions_pkcs11_description">提供密码认证服务</string>
+    <string name="mozac_feature_addons_permissions_pkcs11_description">提供密码学身份认证服务</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">控制浏览器的代理设置</string>
     <!-- Description for sessions permission. -->

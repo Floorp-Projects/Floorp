@@ -13,7 +13,7 @@
     <string name="mozac_feature_readerview_font_size_decrease_desc">缩小字号</string>
 
     <!-- Accessible description for increasing the font size -->
-    <string name="mozac_feature_readerview_font_size_increase_desc">放大字号</string>
+    <string name="mozac_feature_readerview_font_size_increase_desc">增大字号</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">深邃</string>
     <!-- Accessible description for the color option -->
