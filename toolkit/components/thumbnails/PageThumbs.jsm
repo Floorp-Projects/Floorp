@@ -310,8 +310,8 @@ var PageThumbs = {
         PageThumbUtils.HTML_NAMESPACE,
         "canvas"
       );
-      thumbnail.width = aWidth;
-      thumbnail.height = aHeight;
+      thumbnail.width = fullScale ? contentWidth : aWidth;
+      thumbnail.height = fullScale ? contentHeight : aHeight;
       let ctx = thumbnail.getContext("2d");
       ctx.drawImage(image, 0, 0);
       return thumbnail;
