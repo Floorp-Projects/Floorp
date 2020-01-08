@@ -10,16 +10,21 @@ const { Preferences } = ChromeUtils.import(
 const URL = Services.io.newURI("http://localhost:0");
 
 // set up test conditions and clean up
-function add_agent_task(taskFn) {
-  add_plain_task(async () => {
+function add_agent_task(originalTask) {
+  const task = async function() {
     try {
       await RemoteAgent.close();
-      await taskFn();
+      await originalTask();
     } finally {
       Preferences.reset("remote.enabled");
       Preferences.reset("remote.force-local");
     }
+  };
+  Object.defineProperty(task, "name", {
+    value: originalTask.name,
+    writable: false,
   });
+  add_plain_task(task);
 }
 
 add_agent_task(async function listening() {
