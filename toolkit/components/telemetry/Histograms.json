@@ -9031,13 +9031,6 @@
     "kind": "boolean",
     "description": "If we are on Windows and neither the Windows countryCode nor the geoip countryCode indicates we are in the US, set to false if they both agree on the value or true otherwise"
   },
-  "ENABLE_PRIVILEGE_EVER_CALLED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "flag",
-    "description": "Whether enablePrivilege has ever been called during the current session"
-  },
   "TOUCH_ENABLED_DEVICE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],

@@ -1704,14 +1704,6 @@ static bool TreatAsRemoteXUL(nsIPrincipal* aPrincipal) {
          !Preferences::GetBool("dom.use_xbl_scopes_for_remote_xul", false);
 }
 
-static bool EnablePrivilege(JSContext* cx, unsigned argc, JS::Value* vp) {
-  Telemetry::Accumulate(Telemetry::ENABLE_PRIVILEGE_EVER_CALLED, true);
-  return xpc::EnableUniversalXPConnect(cx);
-}
-
-static const JSFunctionSpec EnablePrivilegeSpec[] = {
-    JS_FN("enablePrivilege", EnablePrivilege, 1, 0), JS_FS_END};
-
 static bool InitializeLegacyNetscapeObject(JSContext* aCx,
                                            JS::Handle<JSObject*> aGlobal) {
   JSAutoRealm ar(aCx, aGlobal);
@@ -1724,21 +1716,7 @@ static bool InitializeLegacyNetscapeObject(JSContext* aCx,
   obj = JS_DefineObject(aCx, obj, "security", nullptr);
   NS_ENSURE_TRUE(obj, false);
 
-  // We hide enablePrivilege behind a pref because it has been altered in a
-  // way that makes it fundamentally insecure to use in production. Mozilla
-  // uses this pref during automated testing to support legacy test code that
-  // uses enablePrivilege. If you're not doing test automation, you _must_ not
-  // flip this pref, or you will be exposing all your users to security
-  // vulnerabilities.
-  if (!xpc::IsInAutomation()) {
-    return true;
-  }
-
-  /* Define PrivilegeManager object with the necessary "static" methods. */
-  obj = JS_DefineObject(aCx, obj, "PrivilegeManager", nullptr);
-  NS_ENSURE_TRUE(obj, false);
-
-  return JS_DefineFunctions(aCx, obj, EnablePrivilegeSpec);
+  return true;
 }
 
 struct MOZ_STACK_CLASS CompartmentFinderState {

@@ -6423,7 +6423,6 @@ NS_CycleCollectorSuspectUsingNursery
 ?AddRef@nsXBLWindowKeyHandler@@UEAAKXZ
 ?InstallKeyboardEventListenersTo@nsXBLWindowKeyHandler@@QEAAXPEAVEventListenerManager@mozilla@@@Z
 ?AddEventListenerByType@EventListenerManager@mozilla@@QEAAXPEAVnsIDOMEventListener@@AEBV?$nsTSubstring@_S@@AEBUEventListenerFlags@2@@Z
-?IsUniversalXPConnectEnabled@xpc@@YA_NPEAUJSContext@@@Z
 ?EventListenerAdded@EventTarget@dom@mozilla@@UEAAXPEAVnsAtom@@@Z
 ?Release@nsXBLWindowKeyHandler@@UEAAKXZ
 ??$NewRunnableMethod@PEAVnsGlobalWindowOuter@@P81@EAAXXZ@mozilla@@YA?AU?$already_AddRefed@V?$nsRunnableMethod@VnsGlobalWindowOuter@@X$00$0A@@@@@PEBD$$QEAPEAVnsGlobalWindowOuter@@P82@EAAXXZ@Z
