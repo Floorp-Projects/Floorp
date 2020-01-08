@@ -3366,7 +3366,7 @@ impl Renderer {
 
         let mut upload_time = TimeProfileCounter::new("GPU cache upload time", false, Some(0.0..2.0));
         let updated_rows = upload_time.profile(|| {
-            return self.gpu_cache_texture.flush(&mut self.device);
+            self.gpu_cache_texture.flush(&mut self.device)
         });
         self.gpu_cache_upload_time += upload_time.get();
 
@@ -4566,7 +4566,7 @@ impl Renderer {
             let _gm2 = self.gpu_profile.start_marker("box-shadows");
             let textures = BatchTextures {
                 colors: [
-                    mask_texture_id.clone(),
+                    *mask_texture_id,
                     TextureSource::Invalid,
                     TextureSource::Invalid,
                 ],
@@ -4586,7 +4586,7 @@ impl Renderer {
             let _gm2 = self.gpu_profile.start_marker("clip images");
             let textures = BatchTextures {
                 colors: [
-                    mask_texture_id.clone(),
+                    *mask_texture_id,
                     TextureSource::Invalid,
                     TextureSource::Invalid,
                 ],
@@ -5496,7 +5496,7 @@ impl Renderer {
         self.device.enable_pixel_local_storage(false);
     }
 
-    pub fn debug_renderer<'b>(&'b mut self) -> Option<&'b mut DebugRenderer> {
+    pub fn debug_renderer(&mut self) -> Option<&mut DebugRenderer> {
         self.debug.get_mut(&mut self.device)
     }
 
@@ -5838,7 +5838,7 @@ impl Renderer {
 
         let margin = 10.0;
         debug_renderer.add_quad(
-            &x0 - margin,
+            x0 - margin,
             y0 - margin,
             x0 + text_width + margin,
             y + margin,
@@ -6761,9 +6761,7 @@ impl Renderer {
     }
 }
 
-fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
-               vaos: &'a RendererVAOs)
-               -> &'a VAO {
+fn get_vao(vertex_array_kind: VertexArrayKind, vaos: &RendererVAOs) -> &VAO {
     match vertex_array_kind {
         VertexArrayKind::Primitive => &vaos.prim_vao,
         VertexArrayKind::Clip => &vaos.clip_vao,
