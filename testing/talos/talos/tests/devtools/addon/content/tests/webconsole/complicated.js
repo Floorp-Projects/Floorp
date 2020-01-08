@@ -7,19 +7,21 @@
 const {
   openToolboxAndLog,
   closeToolboxAndLog,
+  isFissionEnabled,
   testSetup,
   testTeardown,
   COMPLICATED_URL,
 } = require("../head");
 const { reloadConsoleAndLog } = require("./webconsole-helpers");
 
-const EXPECTED_MESSAGES = 7;
+const EXPECTED_MESSAGES = isFissionEnabled() ? 3 : 7;
 
 module.exports = async function() {
   await testSetup(COMPLICATED_URL);
 
   let toolbox = await openToolboxAndLog("complicated.webconsole", "webconsole");
   await reloadConsoleAndLog("complicated", toolbox, EXPECTED_MESSAGES);
+
   await closeToolboxAndLog("complicated.webconsole", toolbox);
 
   await testTeardown();
