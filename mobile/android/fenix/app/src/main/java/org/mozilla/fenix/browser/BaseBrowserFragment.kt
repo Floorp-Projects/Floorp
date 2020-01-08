@@ -568,7 +568,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
 
     /**
      * Removes the session if it was opened by an ACTION_VIEW intent
-     * or if it has no more history
+     * or if it has a parent session and no more history
      */
     protected open fun removeSessionIfNeeded(): Boolean {
         getSessionById()?.let { session ->
@@ -578,7 +578,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             } else {
                 val isLastSession =
                     sessionManager.sessionsOfType(private = session.private).count() == 1
-                sessionManager.remove(session, session.hasParentSession)
+                if (session.hasParentSession) {
+                    sessionManager.remove(session, true)
+                }
                 val goToOverview = isLastSession || !session.hasParentSession
                 return !goToOverview
             }
