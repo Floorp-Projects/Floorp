@@ -99,18 +99,10 @@ def print_opcode(opcode):
     names = [names_template.format(name=escape(code.name),
                                    flags=format_flags(code.flags))
              for code in opcodes]
-    if len(opcodes) == 1:
-        values = ['{value} (0x{value:02x})'.format(value=opcode.value)]
-    else:
-        values_template = '{name}: {value} (0x{value:02x})'
-        values = map(lambda code: values_template.format(name=escape(code.name),
-                                                         value=code.value),
-                     opcodes)
 
     print(OPCODE_FORMAT.format(
         id=opcodes[0].name,
         names='<br>'.join(names),
-        values='<br>'.join(values),
         operands=escape(opcode.operands) or "&nbsp;",
         stack_uses=maybe_escape(opcode.stack_uses, "<code>{}</code> "),
         stack_defs=maybe_escape(opcode.stack_defs, " <code>{}</code>"),
