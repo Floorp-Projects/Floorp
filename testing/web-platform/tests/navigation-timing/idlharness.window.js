@@ -6,8 +6,8 @@
 // http://www.w3.org/TR/navigation-timing/
 
 idl_test(
-  ['hr-time', 'navigation-timing'],
-  ['resource-timing', 'performance-timeline', 'html', 'dom'],
+  ['navigation-timing'],
+  ['resource-timing', 'performance-timeline', 'hr-time', 'dom'],
   idl_array => {
     idl_array.add_objects({
       Performance: ['performance'],
