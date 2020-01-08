@@ -28,6 +28,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 typealias WebExtensionBrowserAction = BrowserAction
@@ -39,7 +40,7 @@ class WebExtensionToolbarFeatureTest {
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Test
-    fun `render overridden web extension action from browser state`() {
+    fun `render web extension action from browser state`() {
         val defaultBrowserAction =
             WebExtensionBrowserAction("default_title", false, mock(), "", 0, 0) {}
         val overriddenBrowserAction =
@@ -77,7 +78,34 @@ class WebExtensionToolbarFeatureTest {
     }
 
     @Test
-    fun `WebExtensionBrowserAction can be overridden in tab`() {
+    fun `does not render actions from disabled extensions `() {
+        val enabledAction = WebExtensionBrowserAction("enabled", false, mock(), "", 0, 0) {}
+        val disabledAction = WebExtensionBrowserAction("disabled", false, mock(), "", 0, 0) {}
+        val toolbar: Toolbar = mock()
+        val extensions = mapOf(
+            "enabled" to WebExtensionState("enabled", "url", true, enabledAction),
+            "disabled" to WebExtensionState("disabled", "url", false, disabledAction)
+        )
+
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    extensions = extensions
+                )
+            )
+        )
+        val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar, store)
+        testDispatcher.advanceUntilIdle()
+
+        verify(store).observeManually(any())
+        verify(webExtToolbarFeature, times(1)).renderWebExtensionActions(any(), any())
+        val delegateCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        verify(toolbar, times(1)).addBrowserAction(delegateCaptor.capture())
+        assertEquals("enabled", delegateCaptor.value.browserAction.title)
+    }
+
+    @Test
+    fun `browser actions can be overridden per tab`() {
         val webExtToolbarFeature = getWebExtensionToolbarFeature()
 
         val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }

@@ -247,8 +247,7 @@ class GeckoWebExtension(
     }
 
     override fun isEnabled(): Boolean {
-        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
-        return true
+        return nativeExtension.metaData?.enabled == true
     }
 }
 

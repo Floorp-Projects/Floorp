@@ -73,7 +73,7 @@ class WebExtensionToolbarFeature(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun renderWebExtensionActions(state: BrowserState, tab: SessionState? = null) {
         val extensions = state.extensions.values.toList()
-        extensions.forEach { extension ->
+        extensions.filter { it.enabled }.forEach { extension ->
             extension.browserAction?.let { browserAction ->
                 // Add the global browser action if it doesn't exist
                 val toolbarAction = webExtensionBrowserActions.getOrPut(extension.id) {
