@@ -265,6 +265,11 @@ class SettingsPrivacyTest {
         // Return to home screen and verify that all tabs, history and collection are gone
         //
         // Verify xxx
+        //
+        // New: If coming from  tab -> settings -> delete browsing data
+        // then expect to return to home screen
+        // If coming from tab -> home -> settings -> delete browsing data
+        // then expect return to settings (after which you can return to home manually)
     }
 
     @Ignore("This is a stub test, ignore for now")
