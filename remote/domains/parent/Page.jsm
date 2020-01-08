@@ -457,6 +457,19 @@ class Page extends Domain {
   }
 
   /**
+   * Intercept file chooser requests and transfer control to protocol clients.
+   *
+   * When file chooser interception is enabled,
+   * the native file chooser dialog is not shown.
+   * Instead, a protocol event Page.fileChooserOpened is emitted.
+   *
+   * @param {Object} options
+   * @param {boolean=} options.enabled
+   *     Enabled state of file chooser interception.
+   */
+  setInterceptFileChooserDialog(options = {}) {}
+
+  /**
    * Emit the proper CDP event javascriptDialogOpening when a javascript dialog
    * opens for the current target.
    */
