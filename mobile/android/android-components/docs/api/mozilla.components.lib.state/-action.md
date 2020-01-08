@@ -22,3 +22,4 @@ state changes.
 |---|---|
 | [BrowserAction](../mozilla.components.browser.state.action/-browser-action.md) | `sealed class BrowserAction : `[`Action`](./-action.md)<br>[Action](./-action.md) implementation related to [BrowserState](../mozilla.components.browser.state.state/-browser-state/index.md). |
 | [CustomTabsAction](../mozilla.components.feature.customtabs.store/-custom-tabs-action/index.md) | `sealed class CustomTabsAction : `[`Action`](./-action.md) |
+| [MigrationAction](../mozilla.components.support.migration.state/-migration-action/index.md) | `sealed class MigrationAction : `[`Action`](./-action.md)<br>Actions supported by the [MigrationStore](../mozilla.components.support.migration.state/-migration-store/index.md). |

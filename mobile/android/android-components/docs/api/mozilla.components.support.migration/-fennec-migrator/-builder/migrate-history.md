@@ -2,7 +2,7 @@
 
 # migrateHistory
 
-`fun migrateHistory(storage: `[`PlacesHistoryStorage`](../../../mozilla.components.browser.storage.sync/-places-history-storage/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.History.currentVersion): `[`Builder`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L187)
+`fun migrateHistory(storage: `[`PlacesHistoryStorage`](../../../mozilla.components.browser.storage.sync/-places-history-storage/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.History.currentVersion): `[`Builder`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L190)
 
 Enable history migration.
 

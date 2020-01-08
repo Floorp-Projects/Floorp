@@ -2,7 +2,7 @@
 
 # AbstractMigrationService
 
-`abstract class AbstractMigrationService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AbstractMigrationService.kt#L37)
+`abstract class AbstractMigrationService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/AbstractMigrationService.kt#L39)
 
 Abstract implementation of a background service running a configured [FennecMigrator](../-fennec-migrator/index.md).
 
@@ -20,6 +20,7 @@ An application using this implementation needs to extend this class and provide 
 | Name | Summary |
 |---|---|
 | [migrator](migrator.md) | `abstract val migrator: `[`FennecMigrator`](../-fennec-migrator/index.md) |
+| [store](store.md) | `abstract val store: `[`MigrationStore`](../../mozilla.components.support.migration.state/-migration-store/index.md) |
 
 ### Functions
 

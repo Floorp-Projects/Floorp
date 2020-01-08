@@ -211,6 +211,7 @@
 | [mozilla.components.support.ktx.util](mozilla.components.support.ktx.util/index.md) |  |
 | [mozilla.components.support.locale](mozilla.components.support.locale/index.md) |  |
 | [mozilla.components.support.migration](mozilla.components.support.migration/index.md) |  |
+| [mozilla.components.support.migration.state](mozilla.components.support.migration.state/index.md) |  |
 | [mozilla.components.support.rusthttp](mozilla.components.support.rusthttp/index.md) |  |
 | [mozilla.components.support.rustlog](mozilla.components.support.rustlog/index.md) |  |
 | [mozilla.components.support.sync.telemetry](mozilla.components.support.sync.telemetry/index.md) |  |

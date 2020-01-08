@@ -2,7 +2,7 @@
 
 # FennecMigrator
 
-`class FennecMigrator` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L140)
+`class FennecMigrator` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L143)
 
 Entrypoint for Fennec data migration. See [Builder](-builder/index.md) for public API.
 
@@ -29,7 +29,7 @@ Entrypoint for Fennec data migration. See [Builder](-builder/index.md) for publi
 | Name | Summary |
 |---|---|
 | [migrateAsync](migrate-async.md) | `fun migrateAsync(): Deferred<`[`MigrationResults`](../-migration-results.md)`>`<br>Performs configured data migration. See [Builder](-builder/index.md) for how to configure a data migration. |
-| [startMigrationServiceIfNeeded](start-migration-service-if-needed.md) | `fun <T : `[`AbstractMigrationService`](../-abstract-migration-service/index.md)`> startMigrationServiceIfNeeded(service: `[`Class`](https://developer.android.com/reference/java/lang/Class.html)`<`[`T`](start-migration-service-if-needed.md#T)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts the provided [AbstractMigrationService](../-abstract-migration-service/index.md) implementation if there are migrations to be run for this installation. |
+| [startMigrationIfNeeded](start-migration-if-needed.md) | `fun <T : `[`AbstractMigrationService`](../-abstract-migration-service/index.md)`> startMigrationIfNeeded(store: `[`MigrationStore`](../../mozilla.components.support.migration.state/-migration-store/index.md)`, service: `[`Class`](https://developer.android.com/reference/java/lang/Class.html)`<`[`T`](start-migration-if-needed.md#T)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>If a migration is needed then invoking this method will update the [MigrationStore](../../mozilla.components.support.migration.state/-migration-store/index.md) and launch the provided [AbstractMigrationService](../-abstract-migration-service/index.md) implementation. |
 
 ### Extension Functions
 

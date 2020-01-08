@@ -275,6 +275,7 @@ mozilla.components.support.ktx.kotlinx.coroutines.flow
 mozilla.components.support.ktx.util
 mozilla.components.support.locale
 mozilla.components.support.migration
+mozilla.components.support.migration.state
 mozilla.components.support.rusthttp
 mozilla.components.support.rustlog
 mozilla.components.support.sync.telemetry
