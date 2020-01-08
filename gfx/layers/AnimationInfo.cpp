@@ -60,6 +60,7 @@ void AnimationInfo::ClearAnimations() {
 
   mAnimations.Clear();
   mPropertyAnimationGroups.Clear();
+  mTransformLikeMetaData.reset();
   mCachedMotionPath = nullptr;
 
   mMutated = true;
@@ -81,6 +82,7 @@ void AnimationInfo::SetCompositorAnimations(
   AnimationStorageData data =
       AnimationHelper::ExtractAnimations(aCompositorAnimations.animations());
   mPropertyAnimationGroups.SwapElements(data.mAnimation);
+  mTransformLikeMetaData.swap(data.mTransformLikeMetaData);
   mCachedMotionPath.swap(data.mCachedMotionPath);
 }
 
