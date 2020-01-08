@@ -8,6 +8,7 @@ const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
+const CONTENTTOOLBOX_FISSION_ENABLED = "devtools.contenttoolbox.fission";
 
 // Intermediate components which implement the watch + unwatch
 // using existing listFoo methods and fooListChanged events.
@@ -288,6 +289,13 @@ class TargetList {
       );
       if (fissionBrowserToolboxEnabled) {
         types = TargetList.ALL_TYPES;
+      }
+    } else if (this.targetFront.isLocalTab) {
+      const fissionContentToolboxEnabled = Services.prefs.getBoolPref(
+        CONTENTTOOLBOX_FISSION_ENABLED
+      );
+      if (fissionContentToolboxEnabled) {
+        types = [TargetList.TYPES.FRAME];
       }
     }
     if (this.listenForWorkers && !types.includes(TargetList.TYPES.WORKER)) {

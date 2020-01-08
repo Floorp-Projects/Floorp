@@ -22,7 +22,12 @@ add_task(async function() {
 
   // Assert the limited behavior of this API with fission preffed off
   await pushPref("devtools.browsertoolbox.fission", false);
+  await pushPref("devtools.contenttoolbox.fission", false);
+
+  // Test with Main process targets as top level target
   await testPreffedOffMainProcess(mainRoot, mainProcess);
+
+  // Test with Tab target as top level target
   await testPreffedOffTab(mainRoot);
 
   await client.close();
