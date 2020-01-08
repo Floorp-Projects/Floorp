@@ -4528,27 +4528,6 @@ bool ParseNode::getConstantValue(JSContext* cx,
   return false;
 }
 
-bool BytecodeEmitter::emitSingletonInitialiser(ListNode* objOrArray) {
-  NewObjectKind newKind = (objOrArray->getKind() == ParseNodeKind::ObjectExpr)
-                              ? SingletonObject
-                              : TenuredObject;
-
-  RootedValue value(cx);
-  if (!objOrArray->getConstantValue(cx, ParseNode::AllowObjects, &value,
-                                    nullptr, 0, newKind)) {
-    return false;
-  }
-
-  MOZ_ASSERT_IF(newKind == SingletonObject, value.toObject().isSingleton());
-
-  ObjectBox* objbox = parser->newObjectBox(&value.toObject());
-  if (!objbox) {
-    return false;
-  }
-
-  return emitObjectOp(objbox, JSOP_OBJECT);
-}
-
 bool BytecodeEmitter::emitCallSiteObject(CallSiteNode* callSiteObj) {
   RootedValue value(cx);
   if (!callSiteObj->getConstantValue(cx, ParseNode::AllowObjects, &value)) {
