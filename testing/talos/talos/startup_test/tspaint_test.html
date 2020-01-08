@@ -12,7 +12,6 @@ window.onerror = (message, source, lineno) => {
 };
 </script>
 <script language="Javascript" type="text/javascript" src="../talos-powers/content/TalosPowersContent.js"></script>
-<script language="Javascript" type="text/javascript" src="../scripts/MozillaFileLogger.js"></script>
 <script language="Javascript" type="text/javascript" src="../talos-powers/content/TalosContentProfiler.js"></script>
 <script language="javascript" type="text/javascript">
 
@@ -31,14 +30,14 @@ async function painted() {
 
   document.body.textContent = "Startup time = " + startupTime + " ms";
   if (window.dump) {
-    dumpLog("__start_report" + startupTime + "__end_report\n\n");
+    dump("__start_report" + startupTime + "__end_report\n\n");
   }
   dumpConsoleAndQuit();
 }
 
 function failed() {
   if (window.dump) {
-    dumpLog("BROWSER FAILED TO GENERATE MOZAFTERPAINT IN 5 SECONDS\n");
+    dump("BROWSER FAILED TO GENERATE MOZAFTERPAINT IN 5 SECONDS\n");
   }
   dumpConsoleAndQuit();
 }
@@ -52,18 +51,18 @@ function dumpConsoleAndQuit() {
     Cu.import("resource://gre/modules/Services.jsm");
     messages = Services.console.getMessageArray();
   } catch (ex) {
-    dumpLog(ex + "\n");
+    dump(ex + "\n");
     messages = [];
   }
 
   for (var i = 0; i < messages.length; i++)
-    dumpLog(messages[i].message + "\n");
+    dump(messages[i].message + "\n");
 
   // Close window asynchronously, there might still be startup operations that still need to run
   window.setTimeout(function() {
     if (window.dump) {
       // eslint-disable-next-line mozilla/avoid-Date-timing
-      dumpLog("__startTimestamp" + Date.now() + "__endTimestamp\n");
+      dump("__startTimestamp" + Date.now() + "__endTimestamp\n");
     }
     TalosPowersContent.goQuitApplication();
   }, 0);
