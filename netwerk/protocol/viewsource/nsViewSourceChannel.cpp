@@ -28,6 +28,7 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIWrapperChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannel, mHttpChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIdentChannel, mHttpChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannelInternal,
@@ -1066,4 +1067,13 @@ nsViewSourceChannel::CompleteRedirectSetup(nsIStreamListener* aListener,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetInnerChannel(nsIChannel** aChannel) {
+  NS_ENSURE_TRUE(mChannel, NS_ERROR_NOT_INITIALIZED);
+
+  nsCOMPtr<nsIChannel> chan = mChannel;
+  chan.forget(aChannel);
+  return NS_OK;
 }
