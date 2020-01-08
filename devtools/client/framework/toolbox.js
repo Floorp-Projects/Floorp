@@ -347,7 +347,7 @@ Toolbox.HostType = {
   RIGHT: "right",
   LEFT: "left",
   WINDOW: "window",
-  CUSTOM: "custom",
+  BROWSERTOOLBOX: "browsertoolbox",
   // This is typically used by `about:debugging`, when opening toolbox in a new tab,
   // via `about:devtools-toolbox` URLs.
   PAGE: "page",
@@ -1366,7 +1366,7 @@ Toolbox.prototype = {
         return 1;
       case Toolbox.HostType.WINDOW:
         return 2;
-      case Toolbox.HostType.CUSTOM:
+      case Toolbox.HostType.BROWSERTOOLBOX:
         return 3;
       case Toolbox.HostType.LEFT:
         return 4;
@@ -1390,7 +1390,7 @@ Toolbox.prototype = {
         return "window";
       case Toolbox.HostType.PAGE:
         return "page";
-      case Toolbox.HostType.CUSTOM:
+      case Toolbox.HostType.BROWSERTOOLBOX:
         return "other";
       default:
         return "bottom";
@@ -1697,7 +1697,7 @@ Toolbox.prototype = {
     for (const type in Toolbox.HostType) {
       const position = Toolbox.HostType[type];
       if (
-        position == Toolbox.HostType.CUSTOM ||
+        position == Toolbox.HostType.BROWSERTOOLBOX ||
         position == Toolbox.HostType.PAGE ||
         (!sideEnabled &&
           (position == Toolbox.HostType.LEFT ||

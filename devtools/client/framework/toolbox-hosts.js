@@ -348,16 +348,16 @@ WindowHost.prototype = {
 };
 
 /**
- * Host object for the toolbox in its own tab
+ * Host object for the Browser Toolbox
  */
-function CustomHost(hostTab, options) {
+function BrowserToolboxHost(hostTab, options) {
   this.frame = options.customIframe;
   this.uid = options.uid;
   EventEmitter.decorate(this);
 }
 
-CustomHost.prototype = {
-  type: "custom",
+BrowserToolboxHost.prototype = {
+  type: "browsertoolbox",
 
   _sendMessageToTopWindow: function(msg, data) {
     // It's up to the custom frame owner (parent window) to honor
@@ -468,6 +468,6 @@ exports.Hosts = {
   left: LeftHost,
   right: RightHost,
   window: WindowHost,
-  custom: CustomHost,
+  browsertoolbox: BrowserToolboxHost,
   page: PageHost,
 };
