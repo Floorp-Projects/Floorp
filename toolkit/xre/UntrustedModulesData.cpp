@@ -9,6 +9,7 @@
 #include <windows.h>
 
 #include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/FileUtilsWin.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
@@ -228,23 +229,26 @@ Maybe<LONGLONG>
 ProcessedModuleLoadEvent::ComputeQPCTimeStampForProcessCreation() {
   // This is similar to the algorithm used by TimeStamp::ProcessCreation:
 
-  // 1. Get current timestamps as both QPC and FILETIME;
-  LARGE_INTEGER nowQPC;
-  ::QueryPerformanceCounter(&nowQPC);
-
-  SYSTEMTIME nowSys;
-  ::GetSystemTime(&nowSys);
-
-  FILETIME nowFile;
-  if (!::SystemTimeToFileTime(&nowSys, &nowFile)) {
-    return Nothing();
-  }
-
-  // 2. Get the process creation timestamp as FILETIME;
+  // 1. Get the process creation timestamp as FILETIME;
   FILETIME creationTime, exitTime, kernelTime, userTime;
   if (!::GetProcessTimes(::GetCurrentProcess(), &creationTime, &exitTime,
                          &kernelTime, &userTime)) {
     return Nothing();
+  }
+
+  // 2. Get current timestamps as both QPC and FILETIME;
+  LARGE_INTEGER nowQPC;
+  ::QueryPerformanceCounter(&nowQPC);
+
+  static const StaticDynamicallyLinkedFunctionPtr<void(WINAPI*)(LPFILETIME)>
+      pGetSystemTimePreciseAsFileTime(L"kernel32.dll",
+                                      "GetSystemTimePreciseAsFileTime");
+
+  FILETIME nowFile;
+  if (pGetSystemTimePreciseAsFileTime) {
+    pGetSystemTimePreciseAsFileTime(&nowFile);
+  } else {
+    ::GetSystemTimeAsFileTime(&nowFile);
   }
 
   // 3. Take the difference between the FILETIMEs from (1) and (2),
