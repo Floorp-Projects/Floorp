@@ -283,6 +283,15 @@ class InlineAutocompleteEditTextTest {
         // Empty text isn't autocompleted either.
         et.setText("")
         assertEquals(1, invokedCounter)
+
+        // Autocomplete for the first letter
+        et.setText("t")
+        assertEquals(2, invokedCounter)
+        et.applyAutocompleteResult(AutocompleteResult("text", "source", 1))
+
+        // Autocomplete should be called for the next letter that doesn't match the result
+        et.setText("ta")
+        assertEquals(3, invokedCounter)
     }
 
     @Test
