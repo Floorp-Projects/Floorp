@@ -424,25 +424,23 @@ void DCSurface::DestroyTile(int aX, int aY) {
 #ifdef USE_VIRTUAL_SURFACES
 void DCSurface::UpdateAllocatedRect() {
   if (mAllocatedRectDirty) {
-    RECT rect = {1000000, 1000000, -1000000, -1000000};
+    // The virtual surface may have holes in it (for example, an empty tile
+    // that has no primitives). Instead of trimming to a single bounding
+    // rect, supply the rect of each valid tile to handle this case.
+    std::vector<RECT> validRects;
 
     for (auto it = mDCLayers.begin(); it != mDCLayers.end(); ++it) {
-      int x = it->first.mX;
-      int y = it->first.mY;
+      RECT rect;
 
-      rect.left = std::min((int)rect.left, x * mTileSize.width);
-      rect.right = std::max((int)rect.right, (x + 1) * mTileSize.width);
+      rect.left = (LONG) (VIRTUAL_OFFSET + it->first.mX * mTileSize.width);
+      rect.top = (LONG) (VIRTUAL_OFFSET + it->first.mY * mTileSize.height);
+      rect.right = rect.left + mTileSize.width;
+      rect.bottom = rect.top + mTileSize.height;
 
-      rect.top = std::min((int)rect.top, y * mTileSize.height);
-      rect.bottom = std::max((int)rect.bottom, (y + 1) * mTileSize.height);
+      validRects.push_back(rect);
     }
 
-    rect.left += VIRTUAL_OFFSET;
-    rect.top += VIRTUAL_OFFSET;
-    rect.bottom += VIRTUAL_OFFSET;
-    rect.right += VIRTUAL_OFFSET;
-
-    mVirtualSurface->Trim(&rect, 1);
+    mVirtualSurface->Trim(validRects.data(), validRects.size());
     mAllocatedRectDirty = false;
   }
 }
