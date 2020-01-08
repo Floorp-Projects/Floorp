@@ -115,7 +115,7 @@ interface CanvasRenderingContext2D {
    */
   [Throws, Func="CanvasUtils::HasDrawWindowPrivilege"]
   void drawWindow(Window window, double x, double y, double w, double h,
-                  DOMString bgColor, optional unsigned long flags = 0);
+                  UTF8String bgColor, optional unsigned long flags = 0);
 
   /**
    * This causes a context that is currently using a hardware-accelerated
@@ -339,7 +339,7 @@ interface CanvasGradient {
   // opaque object
   [Throws]
   // addColorStop should take a double
-  void addColorStop(float offset, DOMString color);
+  void addColorStop(float offset, UTF8String color);
 };
 
 [Exposed=Window]

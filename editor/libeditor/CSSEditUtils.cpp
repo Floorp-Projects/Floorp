@@ -455,7 +455,8 @@ nsresult CSSEditUtils::GetCSSInlinePropertyBase(nsINode* aNode,
 
     // from these declarations, get the one we want and that one only
     //
-    // FIXME(bug 1606994): nsAtomCString copies unnecessarily.
+    // FIXME(bug 1606994): nsAtomCString copies, we should just keep around the
+    // property id.
     MOZ_ALWAYS_SUCCEEDS(
         cssDecl->GetPropertyValue(nsAtomCString(aProperty), aValue));
 
@@ -468,8 +469,7 @@ nsresult CSSEditUtils::GetCSSInlinePropertyBase(nsINode* aNode,
     return NS_OK;
   }
 
-  nsCSSPropertyID prop =
-      nsCSSProps::LookupProperty(nsDependentAtomString(aProperty));
+  nsCSSPropertyID prop = nsCSSProps::LookupProperty(nsAtomCString(aProperty));
   MOZ_ASSERT(prop != eCSSProperty_UNKNOWN);
 
   decl->GetPropertyValueByID(prop, aValue);

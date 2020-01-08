@@ -411,7 +411,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvShare(
 }
 
 already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
-    const DOMRect* aRect, double aScale, const nsAString& aBackgroundColor,
+    const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,
     mozilla::ErrorResult& aRv) {
   nsIGlobalObject* global = GetParentObject();
   RefPtr<Promise> promise = Promise::Create(global, aRv);

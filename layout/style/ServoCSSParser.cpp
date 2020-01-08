@@ -16,14 +16,14 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 /* static */
-bool ServoCSSParser::IsValidCSSColor(const nsAString& aValue) {
+bool ServoCSSParser::IsValidCSSColor(const nsACString& aValue) {
   return Servo_IsValidCSSColor(&aValue);
 }
 
 /* static */
 bool ServoCSSParser::ComputeColor(ServoStyleSet* aStyleSet,
                                   nscolor aCurrentColor,
-                                  const nsAString& aValue,
+                                  const nsACString& aValue,
                                   nscolor* aResultColor, bool* aWasCurrentColor,
                                   css::Loader* aLoader) {
   return Servo_ComputeColor(aStyleSet ? aStyleSet->RawSet() : nullptr,
