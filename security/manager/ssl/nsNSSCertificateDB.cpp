@@ -694,7 +694,11 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert* cert, uint32_t certType,
   UniqueCERTCertificate nsscert(cert->GetCert());
   CERTCertTrust nsstrust;
   srv = CERT_GetCertTrust(nsscert.get(), &nsstrust);
-  if (srv != SECSuccess) return NS_ERROR_FAILURE;
+  if (srv != SECSuccess) {
+    // CERT_GetCertTrust returns SECFailure if given a temporary cert that
+    // doesn't have any trust information yet. This isn't an error.
+    return NS_OK;
+  }
 
   nsNSSCertTrust trust(&nsstrust);
   if (certType == nsIX509Cert::CA_CERT) {
