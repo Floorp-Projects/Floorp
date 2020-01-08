@@ -24,6 +24,7 @@ class Animation;
 class CompositorAnimations;
 class Layer;
 class LayerManager;
+class TransformData;
 struct PropertyAnimationGroup;
 
 class AnimationInfo final {
@@ -70,6 +71,9 @@ class AnimationInfo final {
   nsTArray<PropertyAnimationGroup>& GetPropertyAnimationGroups() {
     return mPropertyAnimationGroups;
   }
+  const TransformData* GetTransformLikeMetaData() const {
+    return mTransformLikeMetaData.get();
+  }
   bool ApplyPendingUpdatesForThisTransaction();
   bool HasTransformAnimation() const;
 
@@ -115,6 +119,7 @@ class AnimationInfo final {
   // AnimationHelper.h causes build errors (because other modules may include
   // this file but cannot see LayersMessages.h).
   nsTArray<PropertyAnimationGroup> mPropertyAnimationGroups;
+  UniquePtr<TransformData> mTransformLikeMetaData;
   // For motion path. We cached the gfx path for optimization.
   RefPtr<gfx::Path> mCachedMotionPath;
   // If this layer is used for OMTA, then this counter is used to ensure we

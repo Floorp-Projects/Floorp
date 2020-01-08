@@ -62,7 +62,6 @@ struct PropertyAnimation {
 
 struct PropertyAnimationGroup {
   nsCSSPropertyID mProperty;
-  Maybe<TransformData> mAnimationData;
 
   nsTArray<PropertyAnimation> mAnimations;
   RefPtr<RawServoAnimationValue> mBaseStyle;
@@ -118,6 +117,7 @@ struct AnimatedValue final {
 
 struct AnimationStorageData {
   nsTArray<PropertyAnimationGroup> mAnimation;
+  UniquePtr<TransformData> mTransformLikeMetaData;
   RefPtr<gfx::Path> mCachedMotionPath;
 
   AnimationStorageData() = default;

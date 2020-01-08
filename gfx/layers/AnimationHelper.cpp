@@ -361,31 +361,6 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
     aAnimationValues.AppendElement(std::move(currValue));
   }
 
-#ifdef DEBUG
-  // Sanity check that all of animation data are the same.
-  const Maybe<TransformData>& lastData =
-      aPropertyAnimationGroups.LastElement().mAnimationData;
-  for (const PropertyAnimationGroup& group : aPropertyAnimationGroups) {
-    const Maybe<TransformData>& data = group.mAnimationData;
-    MOZ_ASSERT(data.isSome() == lastData.isSome(),
-               "The type of AnimationData should be the same");
-    if (data.isNothing()) {
-      continue;
-    }
-
-    MOZ_ASSERT(data.isSome());
-    const TransformData& transformData = data.ref();
-    const TransformData& lastTransformData = lastData.ref();
-    MOZ_ASSERT(transformData.origin() == lastTransformData.origin() &&
-                   transformData.transformOrigin() ==
-                       lastTransformData.transformOrigin() &&
-                   transformData.bounds() == lastTransformData.bounds() &&
-                   transformData.appUnitsPerDevPixel() ==
-                       lastTransformData.appUnitsPerDevPixel(),
-               "All of members of TransformData should be the same");
-  }
-#endif
-
   SampleResult rv =
       aAnimationValues.IsEmpty() ? SampleResult::None : SampleResult::Sampled;
   if (rv == SampleResult::Sampled) {
@@ -459,7 +434,12 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
       // Got a different group, we should create a different array.
       currData = storageData.mAnimation.AppendElement();
       currData->mProperty = animation.property();
-      currData->mAnimationData = animation.data();
+      if (animation.data()) {
+        MOZ_ASSERT(!storageData.mTransformLikeMetaData,
+                   "Only one entry has animation data");
+        storageData.mTransformLikeMetaData =
+            MakeUnique<TransformData>(animation.data().ref());
+      }
       prevID = animation.property();
 
       // Reset the debug pointer.
@@ -565,6 +545,12 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
                 DisplayItemType::TYPE_BACKGROUND_COLOR)),
         "The property set of output should be the subset of transform-like "
         "properties, opacity, or background_color.");
+
+    if (seenProperties.IsSubsetOf(LayerAnimationInfo::GetCSSPropertiesFor(
+            DisplayItemType::TYPE_TRANSFORM))) {
+      MOZ_ASSERT(storageData.mTransformLikeMetaData,
+                 "Should have TransformData");
+    }
   }
 #endif
 
@@ -631,8 +617,9 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
       case eCSSProperty_offset_distance:
       case eCSSProperty_offset_rotate:
       case eCSSProperty_offset_anchor: {
+        MOZ_ASSERT(animationStorageData.mTransformLikeMetaData);
         const TransformData& transformData =
-            lastPropertyAnimationGroup.mAnimationData.ref();
+            *animationStorageData.mTransformLikeMetaData;
 
         gfx::Matrix4x4 transform = ServoAnimationValueToMatrix4x4(
             animationValues, transformData,
