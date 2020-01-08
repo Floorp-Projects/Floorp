@@ -6,38 +6,32 @@
 const DOC = toDataURL(`<script>document.write(navigator.userAgent);</script>`);
 
 add_task(async function setAndResetUserAgent({ Emulation }) {
-  const userAgent = "foo bar";
+  const userAgent = "Mozilla/5.0 (rv: 23) Romanesco/42.0";
 
   await loadURL(DOC);
-  isnot(
+  const originalUserAgent = await getNavigatorProperty("userAgent");
+
+  isnot(originalUserAgent, userAgent, "Custom user agent hasn't been set");
+
+  await Emulation.setUserAgentOverride({ userAgent });
+  await loadURL(DOC);
+  is(
     await getNavigatorProperty("userAgent"),
     userAgent,
-    "Custom user agent hasn't been set"
+    "Custom user agent has been set"
   );
 
-  try {
-    await Emulation.setUserAgentOverride({ userAgent });
-    await loadURL(DOC);
-    is(
-      await getNavigatorProperty("userAgent"),
-      userAgent,
-      "Custom user agent has been set"
-    );
-
-    await Emulation.setUserAgentOverride({ userAgent: "" });
-    await loadURL(DOC);
-    isnot(
-      await getNavigatorProperty("userAgent"),
-      userAgent,
-      "Custom user agent hasn't been set anymore"
-    );
-  } finally {
-    Services.prefs.clearUserPref("general.useragent.override");
-  }
+  await Emulation.setUserAgentOverride({ userAgent: "" });
+  await loadURL(DOC);
+  is(
+    await getNavigatorProperty("userAgent"),
+    originalUserAgent,
+    "Custom user agent has been reset"
+  );
 });
 
 add_task(async function invalidUserAgent({ Emulation }) {
-  const userAgent = "foobar\n";
+  const userAgent = "Mozilla/5.0 (rv: 23) Romanesco/42.0\n";
 
   await loadURL(DOC);
   isnot(
@@ -55,61 +49,29 @@ add_task(async function invalidUserAgent({ Emulation }) {
   ok(errorThrown, "Invalid user agent format raised error");
 });
 
-// Network.setUserAgentOverride is a redirect to Emulation.setUserAgentOverride.
-// Run duplicated tests for Network to ensure the redirect works.
+add_task(async function notSetForNewContext({ Emulation, Target }) {
+  const userAgent = "Mozilla/5.0 (rv: 23) Romanesco/42.0";
 
-add_task(async function networkSetAndResetUserAgent({ Network }) {
-  const userAgent = "foo bar";
-
+  await Emulation.setUserAgentOverride({ userAgent });
   await loadURL(DOC);
+  is(
+    await getNavigatorProperty("userAgent"),
+    userAgent,
+    "Custom user agent has been set"
+  );
+
+  const { targetInfo } = await openTab(Target);
+  await Target.activateTarget({ targetId: targetInfo.targetId });
+
   isnot(
     await getNavigatorProperty("userAgent"),
     userAgent,
-    "Custom user agent hasn't been set"
+    "Custom user agent has been set"
   );
-
-  try {
-    await Network.setUserAgentOverride({ userAgent });
-    await loadURL(DOC);
-    is(
-      await getNavigatorProperty("userAgent"),
-      userAgent,
-      "Custom user agent has been set"
-    );
-
-    await Network.setUserAgentOverride({ userAgent: "" });
-    await loadURL(DOC);
-    isnot(
-      await getNavigatorProperty("userAgent"),
-      userAgent,
-      "Custom user agent hasn't been set anymore"
-    );
-  } finally {
-    Services.prefs.clearUserPref("general.useragent.override");
-  }
-});
-
-add_task(async function networkInvalidUserAgent({ Network }) {
-  const userAgent = "foobar\n";
-
-  await loadURL(DOC);
-  isnot(
-    await getNavigatorProperty("userAgent"),
-    userAgent,
-    "Custom user agent hasn't been set"
-  );
-
-  let errorThrown = false;
-  try {
-    await Network.setUserAgentOverride({ userAgent });
-  } catch (e) {
-    errorThrown = true;
-  }
-  ok(errorThrown, "Invalid user agent format raised error");
 });
 
 async function getNavigatorProperty(prop) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, prop, _prop => {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [prop], _prop => {
     return content.navigator[_prop];
   });
 }

@@ -14,5 +14,15 @@ class Emulation extends ContentProcessDomain {
   // commands
 
   setDeviceMetricsOverride() {}
+
   setTouchEmulationEnabled() {}
+
+  /**
+   * Internal methods: the following methods are not part of CDP;
+   * note the _ prefix.
+   */
+
+  _setCustomUserAgent(userAgent) {
+    this.docShell.customUserAgent = userAgent;
+  }
 }

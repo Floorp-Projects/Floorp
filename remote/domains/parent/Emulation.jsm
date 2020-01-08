@@ -6,16 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["Emulation"];
 
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+
 const { Domain } = ChromeUtils.import(
   "chrome://remote/content/domains/Domain.jsm"
 );
-const { UnsupportedError } = ChromeUtils.import(
-  "chrome://remote/content/Error.jsm"
-);
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-const PREF_USER_AGENT_OVERRIDE = "general.useragent.override";
 
 class Emulation extends Domain {
   destructor() {
@@ -35,23 +30,21 @@ class Emulation extends Domain {
    * @param {number=} options.platform [not yet supported]
    *     The platform navigator.platform should return.
    */
-  setUserAgentOverride(options = {}) {
+  async setUserAgentOverride(options = {}) {
     const { userAgent } = options;
 
-    if (options.acceptLanguage) {
-      throw new UnsupportedError("'acceptLanguage' not supported");
-    }
-    if (options.platform) {
-      throw new UnsupportedError("'platform' not supported");
+    if (typeof userAgent != "string") {
+      throw new TypeError(
+        "Invalid parameters (userAgent: string value expected)"
+      );
     }
 
-    // TODO: Set the user agent for the current session only (Bug 1596136)
     if (userAgent.length == 0) {
-      Services.prefs.clearUserPref(PREF_USER_AGENT_OVERRIDE);
+      await this.executeInChild("_setCustomUserAgent", null);
     } else if (this._isValidHTTPRequestHeaderValue(userAgent)) {
-      Services.prefs.setStringPref(PREF_USER_AGENT_OVERRIDE, userAgent);
+      await this.executeInChild("_setCustomUserAgent", userAgent);
     } else {
-      throw new Error("Invalid characters found in userAgent");
+      throw new TypeError("Invalid characters found in userAgent");
     }
   }
 
