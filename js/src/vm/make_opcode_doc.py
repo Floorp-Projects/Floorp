@@ -78,7 +78,6 @@ OPCODE_FORMAT = """\
 <table class="standard-table">
 <tbody>
 <tr><th>Operands</th><td><code>{operands}</code></td></tr>
-<tr><th>Length</th><td><code>{length}</code></td></tr>
 <tr><th>Stack Uses</th><td><code>{stack_uses}</code></td></tr>
 <tr><th>Stack Defs</th><td><code>{stack_defs}</code></td></tr>
 </tbody>
@@ -108,7 +107,6 @@ def print_opcode(opcode):
         names='<br>'.join(names),
         values='<br>'.join(values),
         operands=escape(opcode.operands) or "&nbsp;",
-        length=escape(opcode.length),
         stack_uses=escape(opcode.stack_uses) or "&nbsp;",
         stack_defs=escape(opcode.stack_defs) or "&nbsp;",
         desc=markdown.markdown(opcode.desc)))
