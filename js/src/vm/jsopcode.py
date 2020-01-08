@@ -83,7 +83,6 @@ def parse_index(comment):
 #    *   Type: {type_name}
 #    *   Operands: {operands}
 #    *   Stack: {stack_uses} => {stack_defs}
-#    *   length: {length_override}
 #    */
 
 
@@ -95,7 +94,6 @@ class CommentInfo:
         self.operands = ''
         self.stack_uses = ''
         self.stack_defs = ''
-        self.length_override = ''
 
 # Holds the information stored in the macro with the following format:
 #   MACRO({name}, {display_name}, {image}, {length}, {nuses}, {ndefs}, {flags})
@@ -126,7 +124,6 @@ class OpcodeInfo:
         self.stack_uses_array = comment_info.stack_uses_array
         self.stack_defs = comment_info.stack_defs
         self.stack_defs_array = comment_info.stack_defs_array
-        self.length_override = comment_info.length_override
 
         # List of OpcodeInfo that corresponds to macros after this.
         #   /*
@@ -234,9 +231,6 @@ def get_opcodes(dir):
                 elif line.startswith('  Stack:'):
                     state = 'stack'
                     stack = get_tag_value(line)
-                elif line.startswith('  len:'):
-                    state = 'len'
-                    comment_info.length_override = get_tag_value(line)
                 elif state == 'desc':
                     desc += line + "\n"
                 elif line.startswith('  '):
@@ -244,8 +238,6 @@ def get_opcodes(dir):
                         comment_info.operands += line.strip()
                     elif state == 'stack':
                         stack += line.strip()
-                    elif state == 'len':
-                        comment_info.length_override += line.strip()
 
             comment_info.desc = desc
 
