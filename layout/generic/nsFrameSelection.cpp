@@ -19,6 +19,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 
 #include "nsCOMPtr.h"
+#include "nsDebug.h"
 #include "nsString.h"
 #include "nsISelectionListener.h"
 #include "nsContentCID.h"
@@ -1052,26 +1053,40 @@ bool nsFrameSelection::AdjustForMaintainedSelection(nsIContent* aContent,
   int32_t rangeStartOffset = mMaintainRange->StartOffset();
   int32_t rangeEndOffset = mMaintainRange->EndOffset();
 
-  int32_t relToStart = nsContentUtils::ComparePoints_Deprecated(
+  const Maybe<int32_t> relToStart = nsContentUtils::ComparePoints(
       rangeStartNode, rangeStartOffset, aContent, aOffset);
-  int32_t relToEnd = nsContentUtils::ComparePoints_Deprecated(
+  if (NS_WARN_IF(!relToStart)) {
+    // Potentially handle this properly when Selection across Shadow DOM
+    // boundary is implemented
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
+    return false;
+  }
+
+  const Maybe<int32_t> relToEnd = nsContentUtils::ComparePoints(
       rangeEndNode, rangeEndOffset, aContent, aOffset);
+  if (NS_WARN_IF(!relToEnd)) {
+    // Potentially handle this properly when Selection across Shadow DOM
+    // boundary is implemented
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
+    return false;
+  }
 
   // If aContent/aOffset is inside the maintained selection, or if it is on the
   // "anchor" side of the maintained selection, we need to do something.
-  if ((relToStart < 0 && relToEnd > 0) ||
-      (relToStart > 0 && mDomSelections[index]->GetDirection() == eDirNext) ||
-      (relToEnd < 0 && mDomSelections[index]->GetDirection() == eDirPrevious)) {
+  if ((*relToStart < 0 && *relToEnd > 0) ||
+      (*relToStart > 0 && mDomSelections[index]->GetDirection() == eDirNext) ||
+      (*relToEnd < 0 &&
+       mDomSelections[index]->GetDirection() == eDirPrevious)) {
     // Set the current range to the maintained range.
     mDomSelections[index]->ReplaceAnchorFocusRange(mMaintainRange);
-    if (relToStart < 0 && relToEnd > 0) {
+    if (*relToStart < 0 && *relToEnd > 0) {
       // We're inside the maintained selection, just keep it selected.
       return true;
     }
     // Reverse the direction of the selection so that the anchor will be on the
     // far side of the maintained selection, relative to aContent/aOffset.
-    mDomSelections[index]->SetDirection(relToStart > 0 ? eDirPrevious
-                                                       : eDirNext);
+    mDomSelections[index]->SetDirection(*relToStart > 0 ? eDirPrevious
+                                                        : eDirNext);
   }
   return false;
 }
@@ -1138,10 +1153,16 @@ void nsFrameSelection::HandleDrag(nsIFrame* aFrame, const nsPoint& aPoint) {
   if (mMaintainRange && mMaintainedAmount != eSelectNoAmount) {
     nsINode* rangenode = mMaintainRange->GetStartContainer();
     int32_t rangeOffset = mMaintainRange->StartOffset();
-    int32_t relativePosition = nsContentUtils::ComparePoints_Deprecated(
+    const Maybe<int32_t> relativePosition = nsContentUtils::ComparePoints(
         rangenode, rangeOffset, offsets.content, offsets.offset);
+    if (NS_WARN_IF(!relativePosition)) {
+      // Potentially handle this properly when Selection across Shadow DOM
+      // boundary is implemented
+      // (https://bugzilla.mozilla.org/show_bug.cgi?id=1607497).
+      return;
+    }
 
-    nsDirection direction = relativePosition > 0 ? eDirPrevious : eDirNext;
+    nsDirection direction = *relativePosition > 0 ? eDirPrevious : eDirNext;
     nsSelectionAmount amount = mMaintainedAmount;
     if (amount == eSelectBeginLine && direction == eDirNext)
       amount = eSelectEndLine;
