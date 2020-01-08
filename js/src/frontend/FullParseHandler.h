@@ -202,6 +202,9 @@ class FullParseHandler {
   void addToCallSiteObject(CallSiteNodeType callSiteObj, Node rawNode,
                            Node cookedNode) {
     MOZ_ASSERT(callSiteObj->isKind(ParseNodeKind::CallSiteObj));
+    MOZ_ASSERT(rawNode->isKind(ParseNodeKind::TemplateStringExpr));
+    MOZ_ASSERT(cookedNode->isKind(ParseNodeKind::TemplateStringExpr) ||
+               cookedNode->isKind(ParseNodeKind::RawUndefinedExpr));
 
     addArrayElement(callSiteObj, cookedNode);
     addArrayElement(callSiteObj->rawNodes(), rawNode);
