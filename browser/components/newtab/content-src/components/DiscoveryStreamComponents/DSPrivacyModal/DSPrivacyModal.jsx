@@ -47,7 +47,7 @@ export class DSPrivacyModal extends React.PureComponent {
             className="modal-link modal-link-privacy"
             data-l10n-id="newtab-privacy-modal-link"
             onClick={this.onLearnLinkClick}
-            href="https://www.mozilla.org/en-US/privacy/firefox/"
+            href="https://help.getpocket.com/article/1142-firefox-new-tab-recommendations-faq"
           />
           <button
             className="modal-link modal-link-manage"
