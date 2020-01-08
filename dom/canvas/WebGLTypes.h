@@ -414,8 +414,8 @@ struct avec2 {
   static auto From(const U& val) {
     return From(val.x, val.y);
   }
-  template <>
-  static auto From(const gfx::IntSize& val) {
+  template <typename U>
+  static auto FromSize(const U& val) {
     return From(val.width, val.height);
   }
 
@@ -528,8 +528,8 @@ struct Limits final {
   uint32_t maxTexCubeSize = 0;
   uint32_t maxVertexAttribs = 0;
   std::array<uint32_t, 2> maxViewportDims = {};
-  std::array<float, 2> pointSizeRange = {1, 1};
-  std::array<float, 2> lineWidthRange = {1, 1};
+  std::array<float, 2> pointSizeRange = {{1, 1}};
+  std::array<float, 2> lineWidthRange = {{1, 1}};
 
   // WebGL 2
   uint32_t maxTexArrayLayers = 0;

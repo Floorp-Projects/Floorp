@@ -40,8 +40,6 @@ UNIFIED_SOURCES += [
     'ipc/VRChild.cpp',
     'ipc/VRGPUChild.cpp',
     'ipc/VRGPUParent.cpp',
-    'ipc/VRLayerChild.cpp',
-    'ipc/VRLayerParent.cpp',
     'ipc/VRManagerChild.cpp',
     'ipc/VRManagerParent.cpp',
     'ipc/VRParent.cpp',
@@ -54,6 +52,8 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
+    'ipc/VRLayerChild.cpp',
+    'ipc/VRLayerParent.cpp',
     'VRManager.cpp',
     'VRPuppetCommandBuffer.cpp',
     'VRShMem.cpp'

@@ -32,7 +32,7 @@ class WebGLParent final : public PWebGLParent,
   static RefPtr<WebGLParent> Create(const webgl::InitContextDesc&,
                                     webgl::InitContextResult* out);
 
-  already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
+  RefPtr<layers::SharedSurfaceTextureClient> GetVRFrame();
 
  private:
   WebGLParent();

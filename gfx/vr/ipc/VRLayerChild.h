@@ -61,6 +61,9 @@ class VRLayerChild : public PVRLayerChild {
   gfx::Rect mLeftEyeRect;
   gfx::Rect mRightEyeRect;
 
+  RefPtr<layers::SharedSurfaceTextureClient> mThisFrameTexture;
+  RefPtr<layers::SharedSurfaceTextureClient> mLastFrameTexture;
+
   uint64_t mLastSubmittedFrameId;
 };
 
