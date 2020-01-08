@@ -3730,21 +3730,24 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     return IPC_OK();
   }
 
-  if (httpChild) {
-    rv = httpChild->SetChannelId(aArgs.channelId());
-    if (NS_FAILED(rv)) {
-      return IPC_OK();
-    }
+  if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel)) {
+    rv = httpChannel->SetChannelId(aArgs.channelId());
+  }
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
 
-    rv = httpChild->SetOriginalURI(aArgs.originalURI());
-    if (NS_FAILED(rv)) {
-      return IPC_OK();
-    }
+  rv = newChannel->SetOriginalURI(aArgs.originalURI());
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
+  }
 
-    rv = httpChild->SetRedirectMode(aArgs.redirectMode());
-    if (NS_FAILED(rv)) {
-      return IPC_OK();
-    }
+  if (nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+          do_QueryInterface(newChannel)) {
+    rv = httpChannelInternal->SetRedirectMode(aArgs.redirectMode());
+  }
+  if (NS_FAILED(rv)) {
+    return IPC_OK();
   }
 
   if (aArgs.init()) {
