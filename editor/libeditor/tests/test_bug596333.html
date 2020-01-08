@@ -51,13 +51,22 @@ function paste(str) {
   s.data = str;
   trans.setTransferData("text/unicode", s, str.length * 2);
 
+  let beforeInputEvent = null;
   let inputEvent = null;
+  window.addEventListener("beforeinput", aEvent => { beforeInputEvent = aEvent; }, {once: true});
   window.addEventListener("input", aEvent => { inputEvent = aEvent; }, {once: true});
   getEditor().pasteTransferable(trans);
-  is(inputEvent.type, "input", "input event should be fired");
-  is(inputEvent.inputType, "insertFromPaste", "inputType should be insertFromPaste");
-  is(inputEvent.data, str, `data should be "${str}"`);
-  is(inputEvent.dataTransfer, null, "dataTransfer should be null on <textarea>");
+  todo_isnot(beforeInputEvent, null, '"beforeinput" event should be fired');
+  if (beforeInputEvent) {
+    is(beforeInputEvent.cancelable, true, '"beforeinput" event for "insertFromPaste" should be cancelable');
+    is(beforeInputEvent.inputType, "insertFromPaste", 'inputType of "beforeinput" event should be "insertFromPaste"');
+    is(beforeInputEvent.data, str, `data of "beforeinput" event should be "${str}"`);
+    is(beforeInputEvent.dataTransfer, null, 'dataTransfer of "beforeinput" event should be null on <textarea>');
+  }
+  is(inputEvent.type, "input", '"input" event should be fired');
+  is(inputEvent.inputType, "insertFromPaste", '"inputType of "input" event should be "insertFromPaste"');
+  is(inputEvent.data, str, `data of "input" event should be "${str}"`);
+  is(inputEvent.dataTransfer, null, 'dataTransfer of "input" event should be null on <textarea>');
 }
 
 function runOnFocus() {
@@ -106,7 +115,11 @@ function runOnFocus() {
   });
 }
 
-function runTest() {
+async function runTest() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.input_events.beforeinput.enabled", true]],
+  });
+
   var edit = document.getElementById("edit");
   edit.focus();
 

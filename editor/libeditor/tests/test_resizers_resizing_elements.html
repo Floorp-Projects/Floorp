@@ -21,7 +21,11 @@
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(async function() {
+SimpleTest.waitForFocus(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.input_events.beforeinput.enabled", true]],
+  });
+
   document.execCommand("enableObjectResizing", false, true);
   ok(document.queryCommandState("enableObjectResizing"),
      "Object resizer should be enabled by the call of execCommand");
@@ -62,6 +66,7 @@ SimpleTest.waitForFocus(async function() {
      * In specifying baseX, W can be considered to be the width of the image, and for baseY, H
      * can be considered to be the height of the image. deltaX and deltaY are regular pixel values
      * which can be positive or negative.
+     * TODO: Should test canceling "beforeinput" events case.
      */
     const W = 1;
     const H = 1;
@@ -88,23 +93,24 @@ SimpleTest.waitForFocus(async function() {
       let inputEventExpected = true;
       function onInput(aEvent) {
         if (!inputEventExpected) {
-          ok(false, "\"input\" event shouldn't be fired after stopping resizing");
+          ok(false, `"${aEvent.type}" event shouldn't be fired after stopping resizing`);
           return;
         }
         ok(aEvent instanceof InputEvent,
-           '"input" event should be dispatched with InputEvent interface');
+           `"${aEvent.type}" event should be dispatched with InputEvent interface`);
         is(aEvent.cancelable, false,
-           '"input" event should be never cancelable');
+           `"${aEvent.type}" event should be never cancelable`);
         is(aEvent.bubbles, true,
-           '"input" event should always bubble');
+           `"${aEvent.type}" event should always bubble`);
         is(aEvent.inputType, "",
-           `inputType should be empty string when an element is resized`);
+           `inputType of "${aEvent.type}" event should be empty string when an element is resized`);
         is(aEvent.data, null,
-           `data should be null ${aDescription}`);
+           `data of "${aEvent.type}" event should be null ${aDescription}`);
         is(aEvent.dataTransfer, null,
-           `data should be null ${aDescription}`);
+           `data of "${aEvent.type}" event should be null ${aDescription}`);
       }
 
+      content.addEventListener("beforeinput", onInput);
       content.addEventListener("input", onInput);
 
       // Click on the correct resizer
@@ -130,6 +136,7 @@ SimpleTest.waitForFocus(async function() {
       isfuzzy(newRect.width, rect.width + expectedDeltaX, 2, description + "The width should be increased by " + expectedDeltaX + " pixels");
       isfuzzy(newRect.height, rect.height + expectedDeltaY, 2, description + "The height should be increased by " + expectedDeltaY + "pixels");
 
+      content.removeEventListener("beforeinput", onInput);
       content.removeEventListener("input", onInput);
     }
 
