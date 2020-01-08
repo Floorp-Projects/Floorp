@@ -148,8 +148,11 @@ SimpleTest.waitForFocus(async () => {
       if (!test.result.fireBeforeInputEvent) {
         is(beforeInputEvents.length, 0,
            `No "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-      } else {
+      } else if (test.element === "textarea" || test.type === "number") {
         todo_is(beforeInputEvents.length, 1,
+           `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+      } else {
+        is(beforeInputEvents.length, 1,
            `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
       }
       if (!test.result.fireInputEvent) {
