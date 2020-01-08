@@ -131,7 +131,7 @@ struct AlignedChecker<AlignType, Pointee> {
  * particular alignment).
  */
 template <typename T, typename U>
-inline typename EnableIf<IsSame<T, U>::value || IsBaseOf<T, U>::value ||
+inline typename EnableIf<IsSame<T, U>::value || std::is_base_of<T, U>::value ||
                              IsVoid<T>::value,
                          bool>::Type
 IsInRange(const T* aPtr, const U* aBegin, const U* aEnd) {

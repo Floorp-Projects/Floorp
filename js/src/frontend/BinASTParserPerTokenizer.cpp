@@ -789,7 +789,7 @@ BinASTParserPerTokenizer<Tok>::asFinalParser() {
   // Same as GeneralParser::asFinalParser, verify the inheritance to
   // make sure the static downcast works.
   static_assert(
-      mozilla::IsBaseOf<BinASTParserPerTokenizer<Tok>, FinalParser>::value,
+      std::is_base_of<BinASTParserPerTokenizer<Tok>, FinalParser>::value,
       "inheritance relationship required by the static_cast<> below");
 
   return static_cast<FinalParser*>(this);
@@ -799,7 +799,7 @@ template <typename Tok>
 inline const typename BinASTParserPerTokenizer<Tok>::FinalParser*
 BinASTParserPerTokenizer<Tok>::asFinalParser() const {
   static_assert(
-      mozilla::IsBaseOf<BinASTParserPerTokenizer<Tok>, FinalParser>::value,
+      std::is_base_of<BinASTParserPerTokenizer<Tok>, FinalParser>::value,
       "inheritance relationship required by the static_cast<> below");
 
   return static_cast<const FinalParser*>(this);

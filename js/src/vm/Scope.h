@@ -361,7 +361,7 @@ class BaseScopeData {};
 
 template <class Data>
 inline size_t SizeOfData(uint32_t numBindings) {
-  static_assert(mozilla::IsBaseOf<BaseScopeData, Data>::value,
+  static_assert(std::is_base_of<BaseScopeData, Data>::value,
                 "Data must be the correct sort of data, i.e. it must "
                 "inherit from BaseScopeData");
   return sizeof(Data) +

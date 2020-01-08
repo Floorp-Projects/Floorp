@@ -68,7 +68,7 @@ class CommandBufferBuilder {
   /// This must be used between BeginCommandBuffer and EndCommandBuffer.
   template <typename T, typename... Args>
   ptrdiff_t AddCommand(Args&&... aArgs) {
-    static_assert(IsBaseOf<DrawingCommand, T>::value,
+    static_assert(std::is_base_of<DrawingCommand, T>::value,
                   "T must derive from DrawingCommand");
     return mCommands->mStorage.Alloc<T>(std::forward<Args>(aArgs)...);
   }

@@ -485,8 +485,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
   MOZ_IMPLICIT nsCOMPtr(const nsCOMPtr<U>& aSmartPtr)
       : NSCAP_CTOR_BASE(aSmartPtr.get()) {
     // Make sure that U actually inherits from T
-    static_assert(mozilla::IsBaseOf<T, U>::value,
-                  "U should be a subclass of T");
+    static_assert(std::is_base_of<T, U>::value, "U should be a subclass of T");
     assert_validity();
     if (mRawPtr) {
       NSCAP_ADDREF(this, mRawPtr);
@@ -504,8 +503,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
   MOZ_IMPLICIT nsCOMPtr(nsCOMPtr<U>&& aSmartPtr)
       : NSCAP_CTOR_BASE(aSmartPtr.forget().template downcast<T>().take()) {
     // Make sure that U actually inherits from T
-    static_assert(mozilla::IsBaseOf<T, U>::value,
-                  "U should be a subclass of T");
+    static_assert(std::is_base_of<T, U>::value, "U should be a subclass of T");
     assert_validity();
     NSCAP_LOG_ASSIGNMENT(this, mRawPtr);
     NSCAP_ASSERT_NO_QUERY_NEEDED();
@@ -541,7 +539,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
       : NSCAP_CTOR_BASE(static_cast<T*>(aSmartPtr.take())) {
     assert_validity();
     // But make sure that U actually inherits from T.
-    static_assert(mozilla::IsBaseOf<T, U>::value, "U is not a subclass of T");
+    static_assert(std::is_base_of<T, U>::value, "U is not a subclass of T");
     NSCAP_LOG_ASSIGNMENT(this, static_cast<T*>(mRawPtr));
     NSCAP_ASSERT_NO_QUERY_NEEDED();
   }
@@ -552,7 +550,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
       : NSCAP_CTOR_BASE(static_cast<T*>(aSmartPtr.take())) {
     assert_validity();
     // But make sure that U actually inherits from T.
-    static_assert(mozilla::IsBaseOf<T, U>::value, "U is not a subclass of T");
+    static_assert(std::is_base_of<T, U>::value, "U is not a subclass of T");
     NSCAP_LOG_ASSIGNMENT(this, static_cast<T*>(mRawPtr));
     NSCAP_ASSERT_NO_QUERY_NEEDED();
   }
@@ -647,8 +645,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
   template <class U>
   nsCOMPtr<T>& operator=(const nsCOMPtr<U>& aRhs) {
     // Make sure that U actually inherits from T
-    static_assert(mozilla::IsBaseOf<T, U>::value,
-                  "U should be a subclass of T");
+    static_assert(std::is_base_of<T, U>::value, "U should be a subclass of T");
     assign_with_AddRef(ToSupports(static_cast<T*>(aRhs.get())));
     return *this;
   }
@@ -661,8 +658,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
   template <class U>
   nsCOMPtr<T>& operator=(nsCOMPtr<U>&& aRhs) {
     // Make sure that U actually inherits from T
-    static_assert(mozilla::IsBaseOf<T, U>::value,
-                  "U should be a subclass of T");
+    static_assert(std::is_base_of<T, U>::value, "U should be a subclass of T");
     assign_assuming_AddRef(aRhs.forget().template downcast<T>().take());
     NSCAP_ASSERT_NO_QUERY_NEEDED();
     return *this;
@@ -683,7 +679,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
   template <typename U>
   nsCOMPtr<T>& operator=(already_AddRefed<U>& aRhs) {
     // Make sure that U actually inherits from T
-    static_assert(mozilla::IsBaseOf<T, U>::value, "U is not a subclass of T");
+    static_assert(std::is_base_of<T, U>::value, "U is not a subclass of T");
     assign_assuming_AddRef(static_cast<T*>(aRhs.take()));
     NSCAP_ASSERT_NO_QUERY_NEEDED();
     return *this;
@@ -693,7 +689,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
   template <typename U>
   nsCOMPtr<T>& operator=(already_AddRefed<U>&& aRhs) {
     // Make sure that U actually inherits from T
-    static_assert(mozilla::IsBaseOf<T, U>::value, "U is not a subclass of T");
+    static_assert(std::is_base_of<T, U>::value, "U is not a subclass of T");
     assign_assuming_AddRef(static_cast<T*>(aRhs.take()));
     NSCAP_ASSERT_NO_QUERY_NEEDED();
     return *this;
@@ -1156,7 +1152,7 @@ template <typename U>
 void nsCOMPtr<T>::assign_from_qi(const nsQueryInterface<U> aQI,
                                  const nsIID& aIID) {
   static_assert(
-      !(mozilla::IsSame<T, U>::value || mozilla::IsBaseOf<T, U>::value),
+      !(mozilla::IsSame<T, U>::value || std::is_base_of<T, U>::value),
       "don't use do_QueryInterface for compile-time-determinable casts");
   void* newRawPtr;
   if (NS_FAILED(aQI(aIID, &newRawPtr))) {
@@ -1170,7 +1166,7 @@ template <typename U>
 void nsCOMPtr<T>::assign_from_qi_with_error(
     const nsQueryInterfaceWithError<U>& aQI, const nsIID& aIID) {
   static_assert(
-      !(mozilla::IsSame<T, U>::value || mozilla::IsBaseOf<T, U>::value),
+      !(mozilla::IsSame<T, U>::value || std::is_base_of<T, U>::value),
       "don't use do_QueryInterface for compile-time-determinable casts");
   void* newRawPtr;
   if (NS_FAILED(aQI(aIID, &newRawPtr))) {

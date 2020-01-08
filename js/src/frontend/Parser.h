@@ -1825,7 +1825,7 @@ ParserAnyCharsAccess<Parser>::anyChars(const GeneralTokenStreamChars* ts) {
   // member within.
 
   static_assert(
-      mozilla::IsBaseOf<GeneralTokenStreamChars, TokenStreamSpecific>::value,
+      std::is_base_of<GeneralTokenStreamChars, TokenStreamSpecific>::value,
       "the static_cast<> below assumes a base-class relationship");
   const auto* tss = static_cast<const TokenStreamSpecific*>(ts);
 

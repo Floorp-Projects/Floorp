@@ -440,7 +440,7 @@ def DOMClass(descriptor):
     return fill(
         """
           { ${protoChain} },
-          IsBaseOf<nsISupports, ${nativeType} >::value,
+          std::is_base_of<nsISupports, ${nativeType} >::value,
           ${hooks},
           FindAssociatedGlobalForNative<${nativeType}>::Get,
           GetProtoObjectHandle,
@@ -3887,7 +3887,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
         return fill(
             """
-            static_assert(!IsBaseOf<NonRefcountedDOMObject, ${nativeType}>::value,
+            static_assert(!std::is_base_of<NonRefcountedDOMObject, ${nativeType}>::value,
                           "Shouldn't have wrappercached things that are not refcounted.");
             $*{assertInheritance}
             MOZ_ASSERT_IF(aGivenProto, js::IsObjectInContextCompartment(aGivenProto, aCx));
@@ -13607,7 +13607,7 @@ class CGDescriptor(CGThing):
             if descriptor.proxy:
                 cgThings.append(CGGeneric(fill(
                     """
-                    static_assert(IsBaseOf<nsISupports, ${nativeType} >::value,
+                    static_assert(std::is_base_of<nsISupports, ${nativeType} >::value,
                                       "We don't support non-nsISupports native classes for "
                                       "proxy-based bindings yet");
 

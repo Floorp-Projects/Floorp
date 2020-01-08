@@ -108,7 +108,7 @@ template <class ParseHandler, typename Unit>
 inline typename GeneralParser<ParseHandler, Unit>::FinalParser*
 GeneralParser<ParseHandler, Unit>::asFinalParser() {
   static_assert(
-      mozilla::IsBaseOf<GeneralParser<ParseHandler, Unit>, FinalParser>::value,
+      std::is_base_of<GeneralParser<ParseHandler, Unit>, FinalParser>::value,
       "inheritance relationship required by the static_cast<> below");
 
   return static_cast<FinalParser*>(this);
@@ -118,7 +118,7 @@ template <class ParseHandler, typename Unit>
 inline const typename GeneralParser<ParseHandler, Unit>::FinalParser*
 GeneralParser<ParseHandler, Unit>::asFinalParser() const {
   static_assert(
-      mozilla::IsBaseOf<GeneralParser<ParseHandler, Unit>, FinalParser>::value,
+      std::is_base_of<GeneralParser<ParseHandler, Unit>, FinalParser>::value,
       "inheritance relationship required by the static_cast<> below");
 
   return static_cast<const FinalParser*>(this);

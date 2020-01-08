@@ -95,7 +95,7 @@ class nsAutoOwningThread {
                   "Token '" #_type "' is not a class type.")
 
 #  define MOZ_ASSERT_NOT_ISUPPORTS(_type)                                     \
-    static_assert(!mozilla::IsBaseOf<nsISupports, _type>::value,              \
+    static_assert(!std::is_base_of<nsISupports, _type>::value,                \
                   "nsISupports classes don't need to call MOZ_COUNT_CTOR or " \
                   "MOZ_COUNT_DTOR");
 
