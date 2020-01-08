@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerTypeTraits.h"
+#include <limits>
 
 #define MOZILLA_CHECKEDINT_COMPARABLE_VERSION(major, minor, patch) \
   (major << 16 | minor << 8 | patch)
@@ -235,27 +236,31 @@ struct IsInRangeImpl<T, U, IsTSigned, IsUSigned, true> {
 template <typename T, typename U>
 struct IsInRangeImpl<T, U, true, true, false> {
   static constexpr bool run(U aX) {
-    return aX <= MaxValue<T>::value && aX >= MinValue<T>::value;
+    return aX <= std::numeric_limits<T>::max() &&
+           aX >= std::numeric_limits<T>::min();
   }
 };
 
 template <typename T, typename U>
 struct IsInRangeImpl<T, U, false, false, false> {
-  static constexpr bool run(U aX) { return aX <= MaxValue<T>::value; }
+  static constexpr bool run(U aX) {
+    return aX <= std::numeric_limits<T>::max();
+  }
 };
 
 template <typename T, typename U>
 struct IsInRangeImpl<T, U, true, false, false> {
   static constexpr bool run(U aX) {
-    return sizeof(T) > sizeof(U) || aX <= U(MaxValue<T>::value);
+    return sizeof(T) > sizeof(U) || aX <= U(std::numeric_limits<T>::max());
   }
 };
 
 template <typename T, typename U>
 struct IsInRangeImpl<T, U, false, true, false> {
   static constexpr bool run(U aX) {
-    return sizeof(T) >= sizeof(U) ? aX >= 0
-                                  : aX >= 0 && aX <= U(MaxValue<T>::value);
+    return sizeof(T) >= sizeof(U)
+               ? aX >= 0
+               : aX >= 0 && aX <= U(std::numeric_limits<T>::max());
   }
 };
 
@@ -321,8 +326,8 @@ struct IsMulValidImpl<T, IsTSigned, true> {
 template <typename T>
 struct IsMulValidImpl<T, true, false> {
   static constexpr bool run(T aX, T aY) {
-    const T max = MaxValue<T>::value;
-    const T min = MinValue<T>::value;
+    const T max = std::numeric_limits<T>::max();
+    const T min = std::numeric_limits<T>::min();
 
     if (aX == 0 || aY == 0) {
       return true;
@@ -339,7 +344,7 @@ struct IsMulValidImpl<T, true, false> {
 template <typename T>
 struct IsMulValidImpl<T, false, false> {
   static constexpr bool run(T aX, T aY) {
-    return aY == 0 || aX <= MaxValue<T>::value / aY;
+    return aY == 0 || aX <= std::numeric_limits<T>::max() / aY;
   }
 };
 
@@ -357,8 +362,8 @@ template <typename T>
 constexpr bool IsDivValid(T aX, T aY) {
   // Keep in mind that in the signed case, min/-1 is invalid because
   // abs(min)>max.
-  return aY != 0 &&
-         !(IsSigned<T>::value && aX == MinValue<T>::value && aY == T(-1));
+  return aY != 0 && !(IsSigned<T>::value &&
+                      aX == std::numeric_limits<T>::min() && aY == T(-1));
 }
 
 template <typename T, bool IsTSigned = IsSigned<T>::value>
@@ -412,7 +417,7 @@ struct NegateImpl<T, true> {
   static constexpr CheckedInt<T> negate(const CheckedInt<T>& aVal) {
     // Watch out for the min-value, which (with twos-complement) can't be
     // negated as -min-value is then (max-value + 1).
-    if (!aVal.isValid() || aVal.mValue == MinValue<T>::value) {
+    if (!aVal.isValid() || aVal.mValue == std::numeric_limits<T>::min()) {
       return CheckedInt<T>(aVal.mValue, false);
     }
     return CheckedInt<T>(-aVal.mValue, true);

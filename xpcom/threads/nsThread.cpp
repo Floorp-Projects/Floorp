@@ -50,6 +50,8 @@
 #include "ThreadEventTarget.h"
 #include "ThreadDelay.h"
 
+#include <limits>
+
 #ifdef XP_LINUX
 #  ifdef __GLIBC__
 #    include <gnu/libc-version.h>
@@ -604,7 +606,7 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mScriptObserver(nullptr),
       mStackSize(aStackSize),
       mNestedEventLoopDepth(0),
-      mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
+      mCurrentEventLoopDepth(std::numeric_limits<uint32_t>::max()),
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(aMainThread == MAIN_THREAD),
@@ -627,7 +629,7 @@ nsThread::nsThread()
       mScriptObserver(nullptr),
       mStackSize(0),
       mNestedEventLoopDepth(0),
-      mCurrentEventLoopDepth(MaxValue<uint32_t>::value),
+      mCurrentEventLoopDepth(std::numeric_limits<uint32_t>::max()),
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(false),
@@ -1283,7 +1285,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
               duration.ToMicroseconds());
         }
         mCurrentEvent = nullptr;
-        mCurrentEventLoopDepth = MaxValue<uint32_t>::value;
+        mCurrentEventLoopDepth = std::numeric_limits<uint32_t>::max();
         mCurrentPerformanceCounter = nullptr;
       }
     } else {
