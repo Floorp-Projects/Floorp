@@ -155,6 +155,8 @@ bool IsPreloadPermission(const nsACString& aType) {
 
 // Array of permission types which should not be isolated by origin attributes,
 // for user context and private browsing.
+// Keep this array in sync with 'STRIPPED_PERMS' in
+// 'test_permmanager_oa_strip.js'
 static constexpr std::array<nsLiteralCString, 1> kStripOAPermissions = {
     {NS_LITERAL_CSTRING("cookie")}};
 
