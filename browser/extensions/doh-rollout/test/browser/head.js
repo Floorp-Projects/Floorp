@@ -12,10 +12,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Preferences.jsm"
 );
 
-SpecialPowers.pushPrefEnv({
-  set: [["security.notification_enable_delay", 0]],
-});
-
 const ADDON_ID = "doh-rollout@mozilla.org";
 
 const prefs = {
@@ -54,6 +50,20 @@ const fakeFailingHeuristics = JSON.stringify({
   thirdPartyRoots: "disable_doh",
   policy: "disable_doh",
 });
+
+async function setup() {
+  SpecialPowers.pushPrefEnv({
+    set: [["security.notification_enable_delay", 0]],
+  });
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
+  Services.telemetry.clearEvents();
+
+  registerCleanupFunction(() => {
+    Services.telemetry.canRecordExtended = oldCanRecord;
+    Services.telemetry.clearEvents();
+  });
+}
 
 function setPassingHeuristics() {
   Preferences.set(prefs.MOCK_HEURISTICS_PREF, fakePassingHeuristics);
