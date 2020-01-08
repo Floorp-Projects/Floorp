@@ -1963,7 +1963,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_LINENO)
     END_CASE(JSOP_LINENO)
 
-    CASE(JSOP_FORCEINTERPRETER)
+    CASE(JSOP_FORCEINTERPRETER) {
+      // Ensure pattern matching still works.
+      MOZ_ASSERT(script->hasForceInterpreterOp());
+    }
     END_CASE(JSOP_FORCEINTERPRETER)
 
     CASE(JSOP_UNDEFINED) {
