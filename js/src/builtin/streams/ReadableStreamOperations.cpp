@@ -179,46 +179,45 @@ bool ReadableStream::locked() const {
 // Not implemented.
 
 /**
- * Streams spec, 3.4.10. ReadableStreamTee steps 12.c.i-ix.
- *
- * BEWARE: This algorithm isn't up-to-date with the current specification.
+ * Streams spec, 3.4.10. ReadableStreamTee steps 12.c.i-x.
  */
 static bool TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+
   Rooted<TeeState*> unwrappedTeeState(cx,
                                       UnwrapCalleeSlot<TeeState>(cx, args, 0));
+  if (!unwrappedTeeState) {
+    return false;
+  }
+
   Handle<Value> resultVal = args.get(0);
 
-  // XXX The step numbers and algorithm below are inconsistent with the current
-  //     spec!  (For one example -- there may be others -- the current spec gets
-  //     the "done" property before it gets the "value" property.)  This code
-  //     really needs an audit for spec-correctness.  See bug 1570398.
+  // Step 12.c.i: Set reading to false.
+  unwrappedTeeState->unsetReading();
 
-  // Step i: Assert: Type(result) is Object.
+  // Step 12.c.ii: Assert: Type(result) is Object.
   Rooted<JSObject*> result(cx, &resultVal.toObject());
 
-  // Step ii: Let value be ? Get(result, "value").
-  // (This can fail only if `result` was nuked.)
-  Rooted<Value> value(cx);
-  if (!GetProperty(cx, result, result, cx->names().value, &value)) {
-    return false;
+  bool done;
+  {
+    // Step 12.c.iii: Let done be ? Get(result, "done").
+    // (This can fail only if `result` was nuked.)
+    Rooted<Value> doneVal(cx);
+    if (!GetProperty(cx, result, result, cx->names().done, &doneVal)) {
+      return false;
+    }
+
+    // Step 12.c.iv: Assert: Type(done) is Boolean.
+    done = doneVal.toBoolean();
   }
 
-  // Step iii: Let done be ? Get(result, "done").
-  Rooted<Value> doneVal(cx);
-  if (!GetProperty(cx, result, result, cx->names().done, &doneVal)) {
-    return false;
-  }
-
-  // Step iv: Assert: Type(done) is Boolean.
-  bool done = doneVal.toBoolean();
-
-  // Step v: If done is true and closedOrErrored is false,
-  if (done && !unwrappedTeeState->closedOrErrored()) {
-    // Step v.1: If canceled1 is false,
+  // Step 12.c.v: If done is true,
+  if (done) {
+    // Step 12.c.v.1: If canceled1 is false,
     if (!unwrappedTeeState->canceled1()) {
-      // Step v.1.a: Perform ! ReadableStreamDefaultControllerClose(
-      //             branch1.[[readableStreamController]]).
+      // Step 12.c.v.1.a: Perform
+      //                  ! ReadableStreamDefaultControllerClose(
+      //                        branch1.[[readableStreamController]]).
       Rooted<ReadableStreamDefaultController*> unwrappedBranch1(
           cx, unwrappedTeeState->branch1());
       if (!ReadableStreamDefaultControllerClose(cx, unwrappedBranch1)) {
@@ -226,10 +225,11 @@ static bool TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    // Step v.2: If teeState.[[canceled2]] is false,
+    // Step 12.c.v.2: If canceled2 is false,
     if (!unwrappedTeeState->canceled2()) {
-      // Step v.2.a: Perform ! ReadableStreamDefaultControllerClose(
-      //             branch2.[[readableStreamController]]).
+      // Step 12.c.v.2.a: Perform
+      //                  ! ReadableStreamDefaultControllerClose(
+      //                        branch2.[[readableStreamController]]).
       Rooted<ReadableStreamDefaultController*> unwrappedBranch2(
           cx, unwrappedTeeState->branch2());
       if (!ReadableStreamDefaultControllerClose(cx, unwrappedBranch2)) {
@@ -237,32 +237,35 @@ static bool TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    // Step v.3: Set closedOrErrored to true.
-    unwrappedTeeState->setClosedOrErrored();
-  }
-
-  // Step vi: If closedOrErrored is true, return.
-  if (unwrappedTeeState->closedOrErrored()) {
+    args.rval().setUndefined();
     return true;
   }
 
-  // Step vii: Let value1 and value2 be value.
-  Rooted<Value> value1(cx, value);
-  Rooted<Value> value2(cx, value);
+  // Step 12.c.vi: Let value be ! Get(result, "value").
+  // (This can fail only if `result` was nuked.)
+  Rooted<Value> value(cx);
+  if (!GetProperty(cx, result, result, cx->names().value, &value)) {
+    return false;
+  }
 
-  // Step viii: If canceled2 is false and cloneForBranch2 is true,
-  //            set value2 to
-  //            ? StructuredDeserialize(? StructuredSerialize(value2),
-  //                                    the current Realm Record).
+  // Step 12.c.vii: Let value1 and value2 be value.
+  // Step 12.c.viii: If canceled2 is false and cloneForBranch2 is true, set
+  //                 value2 to
+  //                 ? StructuredDeserialize(? StructuredSerialize(value2),
+  //                                         the current Realm Record).
   // We don't yet support any specifications that use cloneForBranch2, and
   // the Streams spec doesn't offer any way for author code to enable it,
   // so it's always false here.
-  MOZ_ASSERT(!unwrappedTeeState->cloneForBranch2());
+  auto& value1 = value;
+  MOZ_ASSERT(!unwrappedTeeState->cloneForBranch2(),
+             "support for cloneForBranch2=true is not yet implemented");
+  auto& value2 = value;
 
-  // Step ix: If canceled1 is false, perform
-  //          ? ReadableStreamDefaultControllerEnqueue(
-  //                branch1.[[readableStreamController]], value1).
   Rooted<ReadableStreamDefaultController*> unwrappedController(cx);
+
+  // Step 12.c.ix: If canceled1 is false, perform
+  //               ? ReadableStreamDefaultControllerEnqueue(
+  //                     branch1.[[readableStreamController]], value1).
   if (!unwrappedTeeState->canceled1()) {
     unwrappedController = unwrappedTeeState->branch1();
     if (!ReadableStreamDefaultControllerEnqueue(cx, unwrappedController,
@@ -271,9 +274,9 @@ static bool TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  // Step x: If canceled2 is false, perform
-  //         ? ReadableStreamDefaultControllerEnqueue(
-  //               branch2.[[readableStreamController]], value2).
+  // Step 12.c.x: If canceled2 is false, perform
+  //              ? ReadableStreamDefaultControllerEnqueue(
+  //                    branch2.[[readableStreamController]], value2).
   if (!unwrappedTeeState->canceled2()) {
     unwrappedController = unwrappedTeeState->branch2();
     if (!ReadableStreamDefaultControllerEnqueue(cx, unwrappedController,
@@ -292,44 +295,77 @@ static bool TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp) {
  */
 MOZ_MUST_USE JSObject* js::ReadableStreamTee_Pull(
     JSContext* cx, JS::Handle<TeeState*> unwrappedTeeState) {
-  // Implicit in the spec: Unpack the closed-over variables `stream` and
-  // `reader` from the TeeState.
-  Rooted<ReadableStream*> unwrappedStream(
-      cx, UnwrapInternalSlot<ReadableStream>(cx, unwrappedTeeState,
-                                             TeeState::Slot_Stream));
-  if (!unwrappedStream) {
-    return nullptr;
-  }
-  Rooted<ReadableStreamReader*> unwrappedReaderObj(
-      cx, UnwrapReaderFromStream(cx, unwrappedStream));
-  if (!unwrappedReaderObj) {
-    return nullptr;
-  }
-  Rooted<ReadableStreamDefaultReader*> unwrappedReader(
-      cx, &unwrappedReaderObj->as<ReadableStreamDefaultReader>());
+  // Combine step 12.a/12.e far below, and handle steps 12.b-12.d after
+  // inverting step 12.a's "If reading is true" condition.
+  if (!unwrappedTeeState->reading()) {
+    // Step 12.b: Set reading to true.
+    unwrappedTeeState->setReading();
 
-  // Step 12.a: Return the result of transforming
-  // ! ReadableStreamDefaultReaderRead(reader) with a fulfillment handler
-  // which takes the argument result and performs the following steps:
-  //
-  // The steps under 12.a are implemented in TeeReaderReadHandler.
-  Rooted<JSObject*> readPromise(
-      cx, js::ReadableStreamDefaultReaderRead(cx, unwrappedReader));
-  if (!readPromise) {
-    return nullptr;
+    // Implicit in the spec: Unpack `reader` from the TeeState (by way of the
+    // stream stored in one of its slots).
+    Rooted<ReadableStreamDefaultReader*> unwrappedReader(cx);
+    {
+      Rooted<ReadableStream*> unwrappedStream(
+          cx, UnwrapInternalSlot<ReadableStream>(cx, unwrappedTeeState,
+                                                 TeeState::Slot_Stream));
+      if (!unwrappedStream) {
+        return nullptr;
+      }
+      ReadableStreamReader* unwrappedReaderObj =
+          UnwrapReaderFromStream(cx, unwrappedStream);
+      if (!unwrappedReaderObj) {
+        return nullptr;
+      }
+
+      unwrappedReader = &unwrappedReaderObj->as<ReadableStreamDefaultReader>();
+    }
+
+    // Step 12.c: Let readPromise be the result of reacting to
+    //            ! ReadableStreamDefaultReaderRead(reader) with the following
+    //            fulfillment steps given the argument result: [...]
+    // Step 12.d: Set readPromise.[[PromiseIsHandled]] to true.
+
+    // First, perform |ReadableStreamDefaultReaderRead(reader)|.
+    Rooted<JSObject*> readerReadResultPromise(
+        cx, js::ReadableStreamDefaultReaderRead(cx, unwrappedReader));
+    if (!readerReadResultPromise) {
+      return nullptr;
+    }
+
+    // Next, create a function to perform the fulfillment steps under step 12.c
+    // (implemented in the |TeeReaderReadHandler| C++ function).
+    Rooted<JSObject*> teeState(cx, unwrappedTeeState);
+    if (!cx->compartment()->wrap(cx, &teeState)) {
+      return nullptr;
+    }
+
+    Rooted<JSObject*> onFulfilled(
+        cx, NewHandler(cx, TeeReaderReadHandler, teeState));
+    if (!onFulfilled) {
+      return nullptr;
+    }
+
+    // Finally, perform those fulfillment steps when |readerReadResultPromise|
+    // fulfills.  (Step 12.c doesn't provide rejection steps, so don't handle
+    // rejection.)
+    //
+    // The spec's |readPromise| promise is unobservable, so implement this using
+    // a JSAPI function that acts as if it created |readPromise| but doesn't
+    // actually do so.
+    //
+    // Step 12.d causes |readPromise| to be treated as handled, even if it
+    // rejects.  Use |JS::AddPromiseReactionsIgnoringUnhandledRejection|, not
+    // |JS::AddPromiseReactions|, to avoid reporting a freshly-consed-up promise
+    // as rejected if |readerReadResultPromise| rejects.
+    if (!JS::AddPromiseReactionsIgnoringUnhandledRejection(
+            cx, readerReadResultPromise, onFulfilled, nullptr)) {
+      return nullptr;
+    }
   }
 
-  Rooted<JSObject*> teeState(cx, unwrappedTeeState);
-  if (!cx->compartment()->wrap(cx, &teeState)) {
-    return nullptr;
-  }
-  Rooted<JSObject*> onFulfilled(cx,
-                                NewHandler(cx, TeeReaderReadHandler, teeState));
-  if (!onFulfilled) {
-    return nullptr;
-  }
-
-  return JS::CallOriginalPromiseThen(cx, readPromise, onFulfilled, nullptr);
+  // Step 12.a: (If reading is true,) return a promise resolved with undefined.
+  // Step 12.e: Return a promise resolved with undefined.
+  return PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
 }
 
 /**
@@ -355,13 +391,13 @@ MOZ_MUST_USE JSObject* js::ReadableStreamTee_Cancel(
   // Step 13/14.a: Set canceled1/canceled2 to true.
   // Step 13/14.b: Set reason1/reason2 to reason.
   {
+    AutoRealm ar(cx, unwrappedTeeState);
+
     Rooted<Value> unwrappedReason(cx, reason);
-    {
-      AutoRealm ar(cx, unwrappedTeeState);
-      if (!cx->compartment()->wrap(cx, &unwrappedReason)) {
-        return nullptr;
-      }
+    if (!cx->compartment()->wrap(cx, &unwrappedReason)) {
+      return nullptr;
     }
+
     if (unwrappedBranch->isTeeBranch1()) {
       unwrappedTeeState->setCanceled1(unwrappedReason);
       bothBranchesCanceled = unwrappedTeeState->canceled2();
@@ -376,29 +412,37 @@ MOZ_MUST_USE JSObject* js::ReadableStreamTee_Cancel(
   if (bothBranchesCanceled) {
     // Step 13/14.c.i: Let compositeReason be
     //                 ! CreateArrayFromList(« reason1, reason2 »).
-    Rooted<Value> reason1(cx, unwrappedTeeState->reason1());
-    Rooted<Value> reason2(cx, unwrappedTeeState->reason2());
-    if (!cx->compartment()->wrap(cx, &reason1) ||
-        !cx->compartment()->wrap(cx, &reason2)) {
-      return nullptr;
-    }
+    Rooted<Value> compositeReason(cx);
+    {
+      Rooted<Value> reason1(cx, unwrappedTeeState->reason1());
+      Rooted<Value> reason2(cx, unwrappedTeeState->reason2());
+      if (!cx->compartment()->wrap(cx, &reason1) ||
+          !cx->compartment()->wrap(cx, &reason2)) {
+        return nullptr;
+      }
 
-    Rooted<NativeObject*> compositeReason(cx,
-                                          NewDenseFullyAllocatedArray(cx, 2));
-    if (!compositeReason) {
-      return nullptr;
+      ArrayObject* reasonArray = NewDenseFullyAllocatedArray(cx, 2);
+      if (!reasonArray) {
+        return nullptr;
+      }
+      reasonArray->setDenseInitializedLength(2);
+      reasonArray->initDenseElement(0, reason1);
+      reasonArray->initDenseElement(1, reason2);
+
+      compositeReason = ObjectValue(*reasonArray);
     }
-    compositeReason->setDenseInitializedLength(2);
-    compositeReason->initDenseElement(0, reason1);
-    compositeReason->initDenseElement(1, reason2);
-    Rooted<Value> compositeReasonVal(cx, ObjectValue(*compositeReason));
 
     // Step 13/14.c.ii: Let cancelResult be
     //                  ! ReadableStreamCancel(stream, compositeReason).
     // In our implementation, this can fail with OOM. The best course then
     // is to reject cancelPromise with an OOM error.
-    RootedObject cancelResult(
-        cx, js::ReadableStreamCancel(cx, unwrappedStream, compositeReasonVal));
+    // XXX Why is this rejecting with an OOM in the *cancel promise*'s
+    //     compartment, instead of just the current compartment (which should be
+    //     the compartment ReadableStreamCancel would have returned a promise
+    //     from)?  This would also let us use RejectUnwrappedPromiseWithError
+    //     and avoid manually wrapping |cancelResult| in the success case...
+    Rooted<JSObject*> cancelResult(
+        cx, js::ReadableStreamCancel(cx, unwrappedStream, compositeReason));
     {
       Rooted<PromiseObject*> cancelPromise(cx,
                                            unwrappedTeeState->cancelPromise());
@@ -437,31 +481,26 @@ MOZ_MUST_USE JSObject* js::ReadableStreamTee_Cancel(
 static bool TeeReaderErroredHandler(JSContext* cx, unsigned argc,
                                     JS::Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
+
   Rooted<TeeState*> teeState(cx, TargetFromHandler<TeeState>(args));
   Handle<Value> reason = args.get(0);
 
-  // Step a: If closedOrErrored is false, then:
-  if (!teeState->closedOrErrored()) {
-    // Step a.iii: Set closedOrErrored to true.
-    // Reordered to ensure that internal errors in the other steps don't
-    // leave the teeState in an undefined state.
-    teeState->setClosedOrErrored();
+  Rooted<ReadableStreamDefaultController*> unwrappedBranchController(cx);
 
-    // Step a.i: Perform
-    //           ! ReadableStreamDefaultControllerError(
-    //               branch1.[[readableStreamController]], r).
-    Rooted<ReadableStreamDefaultController*> branch1(cx, teeState->branch1());
-    if (!ReadableStreamControllerError(cx, branch1, reason)) {
-      return false;
-    }
+  // Step 18.a.i: Perform
+  //               ! ReadableStreamDefaultControllerError(
+  //                   branch1.[[readableStreamController]], r).
+  unwrappedBranchController = teeState->branch1();
+  if (!ReadableStreamControllerError(cx, unwrappedBranchController, reason)) {
+    return false;
+  }
 
-    // Step a.ii: Perform
-    //            ! ReadableStreamDefaultControllerError(
-    //                branch2.[[readableStreamController]], r).
-    Rooted<ReadableStreamDefaultController*> branch2(cx, teeState->branch2());
-    if (!ReadableStreamControllerError(cx, branch2, reason)) {
-      return false;
-    }
+  // Step a.ii: Perform
+  //            ! ReadableStreamDefaultControllerError(
+  //                branch2.[[readableStreamController]], r).
+  unwrappedBranchController = teeState->branch2();
+  if (!ReadableStreamControllerError(cx, unwrappedBranchController, reason)) {
+    return false;
   }
 
   args.rval().setUndefined();
@@ -476,7 +515,14 @@ MOZ_MUST_USE bool js::ReadableStreamTee(
     bool cloneForBranch2, JS::MutableHandle<ReadableStream*> branch1Stream,
     JS::MutableHandle<ReadableStream*> branch2Stream) {
   // Step 1: Assert: ! IsReadableStream(stream) is true (implicit).
+
   // Step 2: Assert: Type(cloneForBranch2) is Boolean (implicit).
+  //
+  // The streams spec only ever passes |cloneForBranch2 = false|.  It's expected
+  // that external specs that pass |cloneForBranch2 = true| will at some point
+  // come into existence, but we don't presently implement any such specs.
+  MOZ_ASSERT(!cloneForBranch2,
+             "support for cloneForBranch2=true is not yet implemented");
 
   // Step 3: Let reader be ? AcquireReadableStreamDefaultReader(stream).
   Rooted<ReadableStreamDefaultReader*> reader(
@@ -490,7 +536,7 @@ MOZ_MUST_USE bool js::ReadableStreamTee(
   // also close over `stream` and `reader`, so TeeState gets a reference to
   // the stream.
   //
-  // Step 4: Let closedOrErrored be false.
+  // Step 4: Let reading be false.
   // Step 5: Let canceled1 be false.
   // Step 6: Let canceled2 be false.
   // Step 7: Let reason1 be undefined.
@@ -502,6 +548,10 @@ MOZ_MUST_USE bool js::ReadableStreamTee(
   if (!teeState) {
     return false;
   }
+
+  MOZ_ASSERT(!teeState->reading());
+  MOZ_ASSERT(!teeState->canceled1());
+  MOZ_ASSERT(!teeState->canceled2());
 
   // Step 12: Let pullAlgorithm be the following steps: [...]
   // Step 13: Let cancel1Algorithm be the following steps: [...]
