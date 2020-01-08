@@ -619,12 +619,11 @@
 
 /* Tab drag and drop */
 
-.tab-drop-indicator-box {
-  -moz-box-align: center;
-}
-
 .tab-drop-indicator {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-drag-indicator.svg);
+  width: 12px;
+  margin-inline-start: -12px;
+  background: url(chrome://browser/skin/tabbrowser/tab-drag-indicator.svg) no-repeat center;
+  position: relative;
   /* The z-index needs to be big enough to trump other positioned UI pieces
      that we want to overlay. The selected tab uses 2. */
   z-index: 3;
