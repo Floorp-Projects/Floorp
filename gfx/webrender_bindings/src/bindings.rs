@@ -7,10 +7,6 @@ use std::ffi::{CStr, CString};
 use std::ffi::OsString;
 #[cfg(target_os = "windows")]
 use std::os::windows::ffi::OsStringExt;
-#[cfg(target_os = "windows")]
-use winapi::um::processthreadsapi::{SetThreadPriority,GetCurrentThread};
-#[cfg(target_os = "windows")]
-use winapi::um::winbase::{SetThreadAffinityMask};
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 use std::os::unix::ffi::OsStringExt;
 use std::io::Cursor;
@@ -42,7 +38,6 @@ use rayon;
 use num_cpus;
 use euclid::SideOffsets2D;
 use nsstring::nsAString;
-//linux only//use thread_priority::*;
 
 #[cfg(target_os = "macos")]
 use core_foundation::string::CFString;
@@ -1070,21 +1065,6 @@ pub unsafe extern "C" fn wr_thread_pool_new(low_priority: bool) -> *mut WrThread
         .thread_name(move |idx|{ format!("WRWorker{}#{}", priority_tag, idx) })
         .num_threads(num_threads)
         .start_handler(move |idx| {
-            #[cfg(target_os = "windows")]
-            {
-                SetThreadPriority(
-                    GetCurrentThread(),
-                    if low_priority {
-                        -1 /* THREAD_PRIORITY_BELOW_NORMAL */
-                    } else {
-                        0 /* THREAD_PRIORITY_NORMAL */
-                    });
-                SetThreadAffinityMask(GetCurrentThread(), 1usize << idx);
-            }
-            /*let thread_id = thread_native_id();
-            set_thread_priority(thread_id,
-                if low_priority { ThreadPriority::Min } else { ThreadPriority::Max },
-                ThreadSchedulePolicy::Normal(NormalThreadSchedulePolicy::Normal));*/
             wr_register_thread_local_arena();
             let name = format!("WRWorker{}#{}",priority_tag, idx);
             register_thread_with_profiler(name.clone());
