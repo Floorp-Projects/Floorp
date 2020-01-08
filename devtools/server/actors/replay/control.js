@@ -362,6 +362,7 @@ ChildProcess.prototype = {
       const id = gNextPingId++;
       RecordReplayControl.ping(this.rootId, this.forkId, id);
       this.pings.push({ id });
+      this.lastPingTime = now;
     }
   },
 
