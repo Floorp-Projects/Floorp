@@ -1597,6 +1597,26 @@ security.ui.protections:
     extra_keys:
       category: The category of protections the user is in, standard, strict or custom.
 
+security.ui.app_menu:
+  click:
+    bug_numbers:
+      - 1603545 
+    description: >
+      Privacy and Security click events on app menu.
+    objects: [
+      "open_full_report",
+    ]
+    expiry_version: "76"
+    record_in_processes: 
+      - main
+    release_channel_collection: opt-out
+    notification_emails:
+      - chsiang@mozilla.com
+      - ewright@mozilla.com 
+      - seceng-telemetry@mozilla.com
+    products:
+      - firefox
+
 security.ui.protectionspopup:
   open:
     objects: ["protections_popup"]
