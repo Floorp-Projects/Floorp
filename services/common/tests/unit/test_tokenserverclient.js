@@ -39,12 +39,55 @@ add_task(async function test_working_bid_exchange() {
   let url = server.baseURI + "/1.0/foo/1.0";
   let result = await client.getTokenFromBrowserIDAssertion(url, "assertion");
   Assert.equal("object", typeof result);
-  do_check_attribute_count(result, 6);
+  do_check_attribute_count(result, 7);
   Assert.equal(service, result.endpoint);
   Assert.equal("id", result.id);
   Assert.equal("key", result.key);
   Assert.equal("uid", result.uid);
   Assert.equal(duration, result.duration);
+  Assert.deepEqual(undefined, result.node_type);
+  await promiseStopServer(server);
+});
+
+add_task(async function test_working_bid_exchange_with_nodetype() {
+  _("Ensure that a token response with a node type as expected.");
+
+  let service = "http://example.com/foo";
+  let duration = 300;
+  let nodeType = "the-node-type";
+
+  let server = httpd_setup({
+    "/1.0/foo/1.0": function (request, response) {
+      Assert.ok(request.hasHeader("accept"));
+      Assert.ok(!request.hasHeader("x-conditions-accepted"));
+      Assert.equal("application/json", request.getHeader("accept"));
+
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "application/json");
+
+      let body = JSON.stringify({
+        id: "id",
+        key: "key",
+        api_endpoint: service,
+        uid: "uid",
+        duration,
+        node_type: nodeType,
+      });
+      response.bodyOutputStream.write(body, body.length);
+    },
+  });
+
+  let client = new TokenServerClient();
+  let url = server.baseURI + "/1.0/foo/1.0";
+  let result = await client.getTokenFromBrowserIDAssertion(url, "assertion");
+  Assert.equal("object", typeof result);
+  do_check_attribute_count(result, 7);
+  Assert.equal(service, result.endpoint);
+  Assert.equal("id", result.id);
+  Assert.equal("key", result.key);
+  Assert.equal("uid", result.uid);
+  Assert.equal(duration, result.duration);
+  Assert.equal(nodeType, result.node_type);
   await promiseStopServer(server);
 });
 
