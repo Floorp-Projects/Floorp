@@ -79,7 +79,7 @@ CycleCollectedJSContext::~CycleCollectedJSContext() {
 
   JS_SetContextPrivate(mJSContext, nullptr);
 
-  mRuntime->RemoveContext(this);
+  mRuntime->SetContext(nullptr);
   mRuntime->Shutdown(mJSContext);
 
   // Last chance to process any events.
@@ -126,7 +126,7 @@ nsresult CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
   }
 
   mRuntime = CreateRuntime(mJSContext);
-  mRuntime->AddContext(this);
+  mRuntime->SetContext(this);
 
   mOwningThread->SetScriptObserver(this);
   // The main thread has a base recursion depth of 0, workers of 1.
