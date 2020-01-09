@@ -38,7 +38,6 @@ UNSUPPORTED_FEATURES = set([
     "Intl.DateTimeFormat-formatRange",
     "Intl.DisplayNames",
     "Intl.Segmenter",
-    "WeakRef",
     "optional-chaining",
     "top-level-await",
 ])
@@ -46,6 +45,7 @@ FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
     "FinalizationGroup": "!this.hasOwnProperty('FinalizationGroup')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
+    "WeakRef": "!this.hasOwnProperty('WeakRef')",
 }
 RELEASE_OR_BETA = set([
     "Intl.NumberFormat-unified",

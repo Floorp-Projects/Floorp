@@ -555,3 +555,36 @@ shell-option(--enable-weak-refs) script test262/built-ins/FinalizationGroup/Fina
 shell-option(--enable-weak-refs) script test262/built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/Symbol.toStringTag.js
 shell-option(--enable-weak-refs) script test262/built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/proto.js
 shell-option(--enable-weak-refs) script test262/built-ins/FinalizationGroup/FinalizationGroupCleanupIteratorPrototype/next-not-object-throws.js
+
+####################################################
+# Enable WeakRef tests in the shell #
+####################################################
+
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/instance-extensible.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/undefined-newtarget-throws.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/target-not-object-throws.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prop-desc.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/browser.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/Symbol.toStringTag.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/deref/browser.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/deref/gc-cleanup-not-prevented-with-wr-deref.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/deref/return-target.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/deref/prop-desc.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/deref/this-not-object-throws.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/deref/this-does-not-have-internal-target-throws.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/deref/custom-this.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/deref/name.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/deref/length.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/prop-desc.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/constructor.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype/proto.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype-from-newtarget-abrupt.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/name.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/proto-from-ctor-realm.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/constructor.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype-from-newtarget.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/proto.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/prototype-from-newtarget-custom.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/returns-new-object-from-constructor.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/length.js
+shell-option(--enable-weak-refs) script test262/built-ins/WeakRef/newtarget-prototype-is-not-object.js
