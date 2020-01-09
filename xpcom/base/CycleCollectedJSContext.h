@@ -86,7 +86,6 @@ class MicroTaskRunnable {
 
 class CycleCollectedJSContext
     : dom::PerThreadAtomCache,
-      public LinkedListElement<CycleCollectedJSContext>,
       private JS::JobQueue {
   friend class CycleCollectedJSRuntime;
 

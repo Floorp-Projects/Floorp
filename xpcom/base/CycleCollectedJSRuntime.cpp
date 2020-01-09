@@ -472,7 +472,8 @@ static void MozCrashWarningReporter(JSContext*, JSErrorReport*) {
 }
 
 CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
-    : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal),
+    : mContext(nullptr),
+      mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal),
       mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal),
       mJSRuntime(JS_GetRuntime(aCx)),
       mHasPendingIdleGCTask(false),
@@ -573,12 +574,9 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime() {
   MOZ_ASSERT(mShutdownCalled);
 }
 
-void CycleCollectedJSRuntime::AddContext(CycleCollectedJSContext* aContext) {
-  mContexts.insertBack(aContext);
-}
-
-void CycleCollectedJSRuntime::RemoveContext(CycleCollectedJSContext* aContext) {
-  aContext->removeFrom(mContexts);
+void CycleCollectedJSRuntime::SetContext(CycleCollectedJSContext* aContext) {
+  MOZ_ASSERT(!mContext || !aContext, "Don't replace the context!");
+  mContext = aContext;
 }
 
 size_t CycleCollectedJSRuntime::SizeOfExcludingThis(
