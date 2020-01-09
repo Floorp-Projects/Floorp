@@ -9699,28 +9699,24 @@ void nsHttpChannel::MaybeWarnAboutAppCache() {
 
 // Step 10 of HTTP-network-or-cache fetch
 void nsHttpChannel::SetOriginHeader() {
+  if (mRequestHead.IsGet() || mRequestHead.IsHead()) {
+    return;
+  }
   nsresult rv;
 
   nsAutoCString existingHeader;
   Unused << mRequestHead.GetHeader(nsHttp::Origin, existingHeader);
-  if (!existingHeader.IsEmpty() && !existingHeader.EqualsLiteral("null")) {
-    LOG(
-        ("nsHttpChannel::SetOriginHeader Origin header already present "
-         "[this=%p]",
-         this));
+  if (!existingHeader.IsEmpty()) {
+    LOG(("nsHttpChannel::SetOriginHeader Origin header already present"));
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), existingHeader);
-    if (NS_FAILED(rv) || !dom::ReferrerInfo::IsReferrerSchemeAllowed(uri) ||
+    if (NS_SUCCEEDED(rv) &&
         ReferrerInfo::ShouldSetNullOriginHeader(this, uri)) {
-      LOG(("nsHttpChannel::SetOriginHeader to null Origin [this=%p]", this));
-      DebugOnly<nsresult> success = mRequestHead.SetHeader(
-          nsHttp::Origin, NS_LITERAL_CSTRING("null"), false /* merge */);
-      MOZ_ASSERT(NS_SUCCEEDED(success));
+      LOG(("nsHttpChannel::SetOriginHeader null Origin by Referrer-Policy"));
+      rv = mRequestHead.SetHeader(nsHttp::Origin, NS_LITERAL_CSTRING("null"),
+                                  false /* merge */);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
-    return;
-  }
-
-  if (mRequestHead.IsGet() || mRequestHead.IsHead()) {
     return;
   }
 
