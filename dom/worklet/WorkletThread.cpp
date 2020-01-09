@@ -83,7 +83,7 @@ class WorkletJSRuntime final : public mozilla::CycleCollectedJSRuntime {
     // destructor will trigger a final GC.  The nsCycleCollector_collect()
     // call can be skipped in this GC as ~CycleCollectedJSContext removes the
     // context from |this|.
-    if (aStatus == JSGC_END && !Contexts().isEmpty()) {
+    if (aStatus == JSGC_END && GetContext()) {
       nsCycleCollector_collect(nullptr);
     }
   }

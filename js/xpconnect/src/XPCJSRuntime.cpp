@@ -658,7 +658,7 @@ bool XPCJSRuntime::UsefulToMergeZones() const {
 }
 
 void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc) {
-  for (CycleCollectedJSContext* ccx : Contexts()) {
+  if (CycleCollectedJSContext* ccx = GetContext()) {
     auto* cx = static_cast<const XPCJSContext*>(ccx);
     if (AutoMarkingPtr* roots = cx->mAutoRoots) {
       roots->TraceJSAll(trc);
@@ -814,7 +814,7 @@ void XPCJSRuntime::FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
       MOZ_ASSERT(!self->mGCIsRunning, "bad state");
       self->mGCIsRunning = true;
 
-      for (CycleCollectedJSContext* ccx : self->Contexts()) {
+      if (CycleCollectedJSContext* ccx = self->GetContext()) {
         auto* cx = static_cast<const XPCJSContext*>(ccx);
         if (AutoMarkingPtr* roots = cx->mAutoRoots) {
           roots->MarkAfterJSFinalizeAll();
