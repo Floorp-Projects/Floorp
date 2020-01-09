@@ -4706,9 +4706,8 @@ static inline void MaybeCheckWeakMapMarking(GCRuntime* gc) {
 
 IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
     JSFreeOp* fop, SliceBudget& budget) {
-  joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK);
-
-  if (sweepMarkTaskStarted && (sweepMarkResult == NotFinished)) {
+  // Wait for sweepMarkTask finishes sweep-marking.
+  if (joinSweepMarkTask() == NotFinished) {
     return NotFinished;
   }
 
@@ -4762,9 +4761,8 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
 
 IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
                                                     SliceBudget& budget) {
-  joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK);
-
-  if (sweepMarkTaskStarted && (sweepMarkResult == NotFinished)) {
+  // Wait for sweepMarkTask finishes sweep-marking.
+  if (joinSweepMarkTask() == NotFinished) {
     return NotFinished;
   }
 
@@ -5260,6 +5258,12 @@ bool GCRuntime::shouldYieldForZeal(ZealMode mode) {
 
 IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
                                                      SliceBudget& budget) {
+  // This is to prevent TSan data race, sweepMarkTask will check if the GC state
+  // is Marking, but later below we will change GC state to Finished.
+  if (joinSweepMarkTask() == NotFinished) {
+    return NotFinished;
+  }
+
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::FINALIZE_END);
     JSFreeOp fop(rt);
@@ -5367,6 +5371,12 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
 
 void js::gc::SweepMarkTask::run() {
   gc->sweepMarkResult = gc->markUntilBudgetExhausted(this->budget);
+}
+
+IncrementalProgress GCRuntime::joinSweepMarkTask() {
+  joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK);
+
+  return sweepMarkTaskStarted ? sweepMarkResult : Finished;
 }
 
 IncrementalProgress GCRuntime::markUntilBudgetExhausted(
