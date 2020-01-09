@@ -420,8 +420,10 @@ function ReadTests() {
             manifestURLs.sort(function(a,b) {return a.length - b.length})
             manifestURLs.forEach(function(manifestURL) {
                 logger.info("Reading manifest " + manifestURL);
-                var filter = manifests[manifestURL] ? new RegExp(manifests[manifestURL]) : null;
-                ReadTopManifest(manifestURL, [globalFilter, filter, false]);
+                var manifestInfo = manifests[manifestURL];
+                var filter = manifestInfo[0] ? new RegExp(manifestInfo[0]) : null;
+                var manifestID = manifestInfo[1];
+                ReadTopManifest(manifestURL, [globalFilter, filter, false], manifestID);
             });
 
             if (dumpTests) {
