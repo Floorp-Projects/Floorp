@@ -110,11 +110,8 @@ nsresult PermissionRequestBase::PromptIfNeeded(PermissionValue* aCurrentValue) {
 
   // Tricky, we want to release the window and principal in all cases except
   // when we successfully prompt.
-  nsCOMPtr<Element> element;
-  mOwnerElement.swap(element);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  mPrincipal.swap(principal);
+  nsCOMPtr<Element> element = std::move(mOwnerElement);
+  nsCOMPtr<nsIPrincipal> principal = std::move(mPrincipal);
 
   PermissionValue currentValue;
   nsresult rv = GetCurrentPermission(principal, &currentValue);
@@ -130,9 +127,9 @@ nsresult PermissionRequestBase::PromptIfNeeded(PermissionValue* aCurrentValue) {
       return NS_ERROR_FAILURE;
     }
 
-    // We're about to prompt so swap the members back.
-    element.swap(mOwnerElement);
-    principal.swap(mPrincipal);
+    // We're about to prompt so move the members back.
+    mOwnerElement = std::move(element);
+    mPrincipal = std::move(principal);
 
     rv = obsSvc->NotifyObservers(static_cast<nsIObserver*>(this),
                                  kPermissionPromptTopic, nullptr);
@@ -193,11 +190,9 @@ PermissionRequestBase::Observe(nsISupports* aSubject, const char* aTopic,
   MOZ_ASSERT(mOwnerElement);
   MOZ_ASSERT(mPrincipal);
 
-  nsCOMPtr<Element> element;
-  element.swap(mOwnerElement);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  mPrincipal.swap(principal);
+  const nsCOMPtr<Element> element = std::move(mOwnerElement);
+  Unused << element;
+  const nsCOMPtr<nsIPrincipal> principal = std::move(mPrincipal);
 
   nsresult rv;
   uint32_t promptResult = nsDependentString(aData).ToInteger(&rv);
