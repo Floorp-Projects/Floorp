@@ -169,9 +169,7 @@ class WasmToken {
     int64_t sint_;
     FloatLiteralKind floatLiteralKind_;
     ValType valueType_;
-    Op op_;
-    MiscOp miscOp_;
-    ThreadOp threadOp_;
+    Opcode opcode_;
     U() : index_(0) {}
   } u;
 
@@ -211,30 +209,26 @@ class WasmToken {
     MOZ_ASSERT(kind_ == ValueType || kind_ == Const);
     u.valueType_ = valueType;
   }
-  explicit WasmToken(Kind kind, Op op, const char16_t* begin,
+  explicit WasmToken(Kind kind, Opcode op, const char16_t* begin,
                      const char16_t* end)
       : kind_(kind), begin_(begin), end_(end) {
     MOZ_ASSERT(begin != end);
-    MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode ||
-               kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
-               kind_ == Load || kind_ == Store);
-    u.op_ = op;
-  }
-  explicit WasmToken(Kind kind, MiscOp op, const char16_t* begin,
-                     const char16_t* end)
-      : kind_(kind), begin_(begin), end_(end) {
-    MOZ_ASSERT(begin != end);
-    MOZ_ASSERT(kind_ == ExtraConversionOpcode);
-    u.miscOp_ = op;
-  }
-  explicit WasmToken(Kind kind, ThreadOp op, const char16_t* begin,
-                     const char16_t* end)
-      : kind_(kind), begin_(begin), end_(end) {
-    MOZ_ASSERT(begin != end);
-    MOZ_ASSERT(kind_ == AtomicCmpXchg || kind_ == AtomicLoad ||
-               kind_ == AtomicRMW || kind_ == AtomicStore || kind_ == Wait ||
-               kind_ == Wake || kind_ == Fence);
-    u.threadOp_ = op;
+#ifdef DEBUG
+    if (op.isOp()) {
+      MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode ||
+                 kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
+                 kind_ == Load || kind_ == Store);
+    } else if (op.isMisc()) {
+      MOZ_ASSERT(kind_ == ExtraConversionOpcode);
+    } else if (op.isThread()) {
+      MOZ_ASSERT(kind_ == AtomicCmpXchg || kind_ == AtomicLoad ||
+                 kind_ == AtomicRMW || kind_ == AtomicStore || kind_ == Wait ||
+                 kind_ == Wake || kind_ == Fence);
+    } else {
+      MOZ_CRASH();
+    }
+#endif
+    u.opcode_ = op;
   }
   explicit WasmToken(const char16_t* begin)
       : kind_(Error), begin_(begin), end_(begin), u{} {}
@@ -276,17 +270,17 @@ class WasmToken {
     MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode ||
                kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
                kind_ == Load || kind_ == Store);
-    return u.op_;
+    return u.opcode_.asOp();
   }
   MiscOp miscOp() const {
     MOZ_ASSERT(kind_ == ExtraConversionOpcode);
-    return u.miscOp_;
+    return u.opcode_.asMisc();
   }
   ThreadOp threadOp() const {
     MOZ_ASSERT(kind_ == AtomicCmpXchg || kind_ == AtomicLoad ||
                kind_ == AtomicRMW || kind_ == AtomicStore || kind_ == Wait ||
                kind_ == Wake);
-    return u.threadOp_;
+    return u.opcode_.asThread();
   }
   bool isOpcode() const {
     switch (kind_) {
