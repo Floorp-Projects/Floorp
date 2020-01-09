@@ -81,42 +81,85 @@ add_task(
   })
 );
 
+add_task(
+  withMockApiServer(async function test_fetchRecipes() {
+    const recipes = await NormandyApi.fetchRecipes();
+    equal(recipes.length, 1);
+    equal(recipes[0].name, "system-addon-test");
+  })
+);
+
+add_task(async function test_fetchSignedObjects_canonical_mismatch() {
+  const getApiUrl = sinon.stub(NormandyApi, "getApiUrl");
+
+  // The object is non-canonical (it has whitespace, properties are out of order)
+  const response = new MockResponse(`[
+    {
+      "object": {"b": 1, "a": 2},
+      "signature": {"signature": "", "x5u": ""}
+    }
+  ]`);
+  const get = sinon.stub(NormandyApi, "get").resolves(response);
+
+  try {
+    await NormandyApi.fetchSignedObjects("object");
+    ok(false, "fetchSignedObjects did not throw for canonical JSON mismatch");
+  } catch (err) {
+    ok(
+      err instanceof NormandyApi.InvalidSignatureError,
+      "Error is an InvalidSignatureError"
+    );
+    ok(/Canonical/.test(err), "Error is due to canonical JSON mismatch");
+  }
+
+  getApiUrl.restore();
+  get.restore();
+});
+
 // Test validation errors due to validation throwing an exception (e.g. when
 // parameters passed to validation are malformed).
 add_task(
-  withMockApiServer(
-    async function test_validateSignedObject_validation_error() {
-      // Mock the x5u URL
-      const getStub = sinon.stub(NormandyApi, "get").callsFake(async url => {
-        ok(url.endsWith("x5u/"), "the only request should be to fetch the x5u");
+  withMockApiServer(async function test_fetchSignedObjects_validation_error() {
+    const getApiUrl = sinon
+      .stub(NormandyApi, "getApiUrl")
+      .resolves("http://localhost/object/");
+
+    // Mock two URLs: object and the x5u
+    const get = sinon.stub(NormandyApi, "get").callsFake(async url => {
+      if (url.endsWith("object/")) {
+        return new MockResponse(
+          CanonicalJSON.stringify([
+            {
+              object: { a: 1, b: 2 },
+              signature: {
+                signature: "invalidsignature",
+                x5u: "http://localhost/x5u/",
+              },
+            },
+          ])
+        );
+      } else if (url.endsWith("x5u/")) {
         return new MockResponse("certchain");
-      });
-
-      const signedObject = { a: 1, b: 2 };
-      const signature = {
-        signature: "invalidsignature",
-        x5u: "http://localhost/x5u/",
-      };
-
-      // Validation should fail due to a malformed x5u and signature.
-      try {
-        await NormandyApi.verifyObjectSignature(
-          signedObject,
-          signature,
-          "object"
-        );
-        ok(false, "validateSignedObject did not throw for a validation error");
-      } catch (err) {
-        ok(
-          err instanceof NormandyApi.InvalidSignatureError,
-          "Error is an InvalidSignatureError"
-        );
-        ok(/signature/.test(err), "Error is due to a validation error");
       }
 
-      getStub.restore();
+      return null;
+    });
+
+    // Validation should fail due to a malformed x5u and signature.
+    try {
+      await NormandyApi.fetchSignedObjects("object");
+      ok(false, "fetchSignedObjects did not throw for a validation error");
+    } catch (err) {
+      ok(
+        err instanceof NormandyApi.InvalidSignatureError,
+        "Error is an InvalidSignatureError"
+      );
+      ok(/signature/.test(err), "Error is due to a validation error");
     }
-  )
+
+    getApiUrl.restore();
+    get.restore();
+  })
 );
 
 // Test validation errors due to validation returning false (e.g. when parameters
@@ -127,20 +170,10 @@ const invalidSignatureServer = makeMockApiServer(
 add_task(
   withServer(
     invalidSignatureServer,
-    async function test_verifySignedObject_invalid_signature() {
-      // Get the test recipe and signature from the mock server.
-      const recipesUrl = await NormandyApi.getApiUrl("recipe-signed");
-      const recipeResponse = await NormandyApi.get(recipesUrl);
-      const recipes = await recipeResponse.json();
-      equal(recipes.length, 1, "Test data has one recipe");
-      const [{ recipe, signature }] = recipes;
-
+    async function test_fetchSignedObjects_invalid_signature() {
       try {
-        await NormandyApi.verifyObjectSignature(recipe, signature, "recipe");
-        ok(
-          false,
-          "verifyObjectSignature did not throw for an invalid signature"
-        );
+        await NormandyApi.fetchSignedObjects("recipe");
+        ok(false, "fetchSignedObjects did not throw for an invalid signature");
       } catch (err) {
         ok(
           err instanceof NormandyApi.InvalidSignatureError,
@@ -206,6 +239,22 @@ add_task(
     Assert.deepEqual(
       data,
       { queryString: { foo: "bar", baz: "biff" }, body: {} },
+      "NormandyApi sent an incorrect query string."
+    );
+  })
+);
+
+add_task(
+  withScriptServer("query_server.sjs", async function test_postData(serverUrl) {
+    // Test that NormandyApi can POST JSON-formatted data to the test server.
+    const response = await NormandyApi.post(serverUrl, {
+      foo: "bar",
+      baz: "biff",
+    });
+    const data = await response.json();
+    Assert.deepEqual(
+      data,
+      { queryString: {}, body: { foo: "bar", baz: "biff" } },
       "NormandyApi sent an incorrect query string."
     );
   })
