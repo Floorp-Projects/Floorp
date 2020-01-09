@@ -1443,17 +1443,29 @@ static nsresult GetNSSProfilePath(nsAutoCString& aProfilePath) {
 // memory), returns a failing nsresult. If execution could conceivably proceed,
 // returns NS_OK even if renaming the file didn't work. This simplifies the
 // logic of the calling code.
+// |profilePath| is encoded in UTF-8.
 static nsresult AttemptToRenamePKCS11ModuleDB(
     const nsACString& profilePath, const nsACString& moduleDBFilename) {
-  nsAutoCString destModuleDBFilename(moduleDBFilename);
-  destModuleDBFilename.Append(".fips");
-  nsCOMPtr<nsIFile> dbFile = do_CreateInstance("@mozilla.org/file/local;1");
-  if (!dbFile) {
+  nsCOMPtr<nsIFile> profileDir = do_CreateInstance("@mozilla.org/file/local;1");
+  if (!profileDir) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = dbFile->InitWithNativePath(profilePath);
+#  ifdef XP_WIN
+  // |profilePath| is encoded in UTF-8 because SQLite always takes UTF-8 file
+  // paths regardless of the current system code page.
+  nsresult rv = profileDir->InitWithPath(NS_ConvertUTF8toUTF16(profilePath));
+#  else
+  nsresult rv = profileDir->InitWithNativePath(profilePath);
+#  endif
   if (NS_FAILED(rv)) {
     return rv;
+  }
+  nsAutoCString destModuleDBFilename(moduleDBFilename);
+  destModuleDBFilename.Append(".fips");
+  nsCOMPtr<nsIFile> dbFile;
+  rv = profileDir->Clone(getter_AddRefs(dbFile));
+  if (NS_FAILED(rv) || !dbFile) {
+    return NS_ERROR_FAILURE;
   }
   rv = dbFile->AppendNative(moduleDBFilename);
   if (NS_FAILED(rv)) {
@@ -1471,13 +1483,10 @@ static nsresult AttemptToRenamePKCS11ModuleDB(
             ("%s doesn't exist?", PromiseFlatCString(moduleDBFilename).get()));
     return NS_OK;
   }
-  nsCOMPtr<nsIFile> destDBFile = do_CreateInstance("@mozilla.org/file/local;1");
-  if (!destDBFile) {
+  nsCOMPtr<nsIFile> destDBFile;
+  rv = profileDir->Clone(getter_AddRefs(destDBFile));
+  if (NS_FAILED(rv) || !destDBFile) {
     return NS_ERROR_FAILURE;
-  }
-  rv = destDBFile->InitWithNativePath(profilePath);
-  if (NS_FAILED(rv)) {
-    return rv;
   }
   rv = destDBFile->AppendNative(destModuleDBFilename);
   if (NS_FAILED(rv)) {
@@ -1497,14 +1506,6 @@ static nsresult AttemptToRenamePKCS11ModuleDB(
     return NS_OK;
   }
   // Now do the actual move.
-  nsCOMPtr<nsIFile> profileDir = do_CreateInstance("@mozilla.org/file/local;1");
-  if (!profileDir) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = profileDir->InitWithNativePath(profilePath);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
   // This may fail on, e.g., a read-only file system. This would be unfortunate,
   // but again it isn't catastropic and we would want to fall back to
   // initializing NSS in no-DB mode.
@@ -1517,6 +1518,7 @@ static nsresult AttemptToRenamePKCS11ModuleDB(
 // old format, we need to try to rename the old "secmod.db" as well (if we were
 // to only rename "pkcs11.txt", initializing NSS will still fail due to the old
 // database being in FIPS mode).
+// |profilePath| is encoded in UTF-8.
 static nsresult AttemptToRenameBothPKCS11ModuleDBVersions(
     const nsACString& profilePath) {
   NS_NAMED_LITERAL_CSTRING(legacyModuleDBFilename, "secmod.db");
@@ -1530,7 +1532,7 @@ static nsresult AttemptToRenameBothPKCS11ModuleDBVersions(
 }
 
 // Helper function to take a path and a file name and create a handle for the
-// file in that location, if it exists.
+// file in that location, if it exists. |path| is encoded in UTF-8.
 static nsresult GetFileIfExists(const nsACString& path,
                                 const nsACString& filename,
                                 /* out */ nsIFile** result) {
@@ -1543,7 +1545,13 @@ static nsresult GetFileIfExists(const nsACString& path,
   if (!file) {
     return NS_ERROR_FAILURE;
   }
+#  ifdef XP_WIN
+  // |path| is encoded in UTF-8 because SQLite always takes UTF-8 file paths
+  // regardless of the current system code page.
+  nsresult rv = file->InitWithPath(NS_ConvertUTF8toUTF16(path));
+#  else
   nsresult rv = file->InitWithNativePath(path);
+#  endif
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1574,6 +1582,7 @@ static nsresult GetFileIfExists(const nsACString& path,
 // password).
 // This was never an issue on Android because we always used the new
 // implementation.
+// |profilePath| is encoded in UTF-8.
 static void MaybeCleanUpOldNSSFiles(const nsACString& profilePath) {
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
@@ -1626,6 +1635,7 @@ static void MaybeCleanUpOldNSSFiles(const nsACString& profilePath) {
 // read-only mode if that fails. Finally, fall back to no DB mode. On Android
 // we can skip the FIPS workaround since it was never possible to enable FIPS
 // there anyway.
+// |profilePath| is encoded in UTF-8.
 static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
                                            bool nocertdb, bool safeMode) {
   if (nocertdb || profilePath.IsEmpty()) {
