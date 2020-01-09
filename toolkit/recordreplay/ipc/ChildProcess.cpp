@@ -188,9 +188,11 @@ void ChildProcessInfo::OnCrash(size_t aForkId, const char* aWhy) {
       CrashReporter::Annotation::RecordReplayError, nsAutoCString(aWhy));
 
   if (!IsRecording()) {
-    // Notify the parent when a replaying process crashes so that a report can
-    // be generated.
-    dom::ContentChild::GetSingleton()->SendGenerateReplayCrashReport(GetId());
+    if (!UseCloudForReplayingProcesses()) {
+      // Notify the parent when a replaying process crashes so that a report can
+      // be generated.
+      dom::ContentChild::GetSingleton()->SendGenerateReplayCrashReport(GetId());
+    }
 
     // Continue execution if we were able to recover from the crash.
     if (js::RecoverFromCrash(GetId(), aForkId)) {
