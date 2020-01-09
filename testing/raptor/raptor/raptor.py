@@ -12,7 +12,6 @@ import os
 import posixpath
 import re
 import shutil
-import signal
 import six
 import subprocess
 import sys
@@ -73,26 +72,14 @@ from results import RaptorResultsHandler, BrowsertimeResultsHandler
 from utils import view_gecko_profile, write_yml_file
 from cpu import start_android_cpu_profiler
 
+from signal_handler import SignalHandler, SignalHandlerException
+
 LOG = RaptorLogger(component='raptor-main')
 # Bug 1547943 - Intermittent mozrunner.errors.RunnerNotStartedError
 # - mozproxy.utils LOG displayed INFO messages even when LOG.error() was used in mitm.py
 mpu.LOG = RaptorLogger(component='raptor-mitmproxy')
 
 DEFAULT_CHROMEVERSION = '77'
-
-
-class SignalHandler:
-
-    def __init__(self):
-        signal.signal(signal.SIGINT, self.handle_signal)
-        signal.signal(signal.SIGTERM, self.handle_signal)
-
-    def handle_signal(self, signum, frame):
-        raise SignalHandlerException("Program aborted due to signal %s" % signum)
-
-
-class SignalHandlerException(Exception):
-    pass
 
 
 class Perftest(object):
