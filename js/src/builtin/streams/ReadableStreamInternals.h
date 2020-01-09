@@ -20,9 +20,10 @@ struct JS_PUBLIC_API JSContext;
 
 namespace js {
 
+class PromiseObject;
 class ReadableStream;
 
-extern MOZ_MUST_USE JSObject* ReadableStreamAddReadOrReadIntoRequest(
+extern MOZ_MUST_USE PromiseObject* ReadableStreamAddReadOrReadIntoRequest(
     JSContext* cx, JS::Handle<ReadableStream*> unwrappedStream);
 
 extern MOZ_MUST_USE JSObject* ReadableStreamCancel(
