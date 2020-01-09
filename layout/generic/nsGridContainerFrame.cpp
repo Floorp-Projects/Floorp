@@ -7578,11 +7578,16 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
 
       col++;
     }
-    ComputedGridTrackInfo* colInfo = new ComputedGridTrackInfo(
-        gridReflowInput.mColFunctions.mExplicitGridOffset,
+    // Get the number of explicit tracks first. The order of argument evaluation
+    // is implementation-defined. We should be OK here because colTrackSizes is
+    // taken by rvalue, but computing the size first prevents any changes in the
+    // argument types of the constructor from breaking this.
+    const uint32_t numColExplicitTracks =
         IsSubgrid(eLogicalAxisInline)
             ? colTrackSizes.Length()
-            : gridReflowInput.mColFunctions.NumExplicitTracks(),
+            : gridReflowInput.mColFunctions.NumExplicitTracks();
+    ComputedGridTrackInfo* colInfo = new ComputedGridTrackInfo(
+        gridReflowInput.mColFunctions.mExplicitGridOffset, numColExplicitTracks,
         0, col, std::move(colTrackPositions), std::move(colTrackSizes),
         std::move(colTrackStates), std::move(colRemovedRepeatTracks),
         gridReflowInput.mColFunctions.mRepeatAutoStart,
@@ -7615,14 +7620,19 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
 
       row++;
     }
+    // Get the number of explicit tracks first. The order of argument evaluation
+    // is implementation-defined. We should be OK here because colTrackSizes is
+    // taken by rvalue, but computing the size first prevents any changes in the
+    // argument types of the constructor from breaking this.
+    const uint32_t numRowExplicitTracks =
+        IsSubgrid(eLogicalAxisBlock)
+            ? rowTrackSizes.Length()
+            : gridReflowInput.mRowFunctions.NumExplicitTracks();
     // Row info has to accommodate fragmentation of the grid, which may happen
     // in later calls to Reflow. For now, presume that no more fragmentation
     // will occur.
     ComputedGridTrackInfo* rowInfo = new ComputedGridTrackInfo(
-        gridReflowInput.mRowFunctions.mExplicitGridOffset,
-        IsSubgrid(eLogicalAxisBlock)
-            ? rowTrackSizes.Length()
-            : gridReflowInput.mRowFunctions.NumExplicitTracks(),
+        gridReflowInput.mRowFunctions.mExplicitGridOffset, numRowExplicitTracks,
         gridReflowInput.mStartRow, row, std::move(rowTrackPositions),
         std::move(rowTrackSizes), std::move(rowTrackStates),
         std::move(rowRemovedRepeatTracks),
