@@ -649,7 +649,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         }
 
         override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-            textLengthBeforeChange = s.length
+            textLengthBeforeChange = autoCompletePrefixLength
         }
 
         override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
