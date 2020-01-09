@@ -37,12 +37,15 @@ bool IsServiceWorker(const RemoteWorkerData& aData) {
          OptionalServiceWorkerData::TServiceWorkerData;
 }
 
-void TransmitPermissionsForPrincipalInfo(ContentParent* aContentParent,
-                                         const PrincipalInfo& aPrincipalInfo) {
+void TransmitPermissionsAndBlobURLsForPrincipalInfo(
+    ContentParent* aContentParent, const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aContentParent);
 
   nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(aPrincipalInfo);
+
+  aContentParent->TransmitBlobURLsForPrincipal(principal);
+
   MOZ_ALWAYS_SUCCEEDS(
       aContentParent->TransmitPermissionsForPrincipal(principal));
 }
@@ -271,7 +274,8 @@ RemoteWorkerManager::SelectTargetActorForServiceWorker(
         nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
             __func__, [contentParent = std::move(aContentParent),
                        principalInfo = aData.principalInfo()] {
-              TransmitPermissionsForPrincipalInfo(contentParent, principalInfo);
+              TransmitPermissionsAndBlobURLsForPrincipalInfo(contentParent,
+                                                             principalInfo);
             });
 
         MOZ_ALWAYS_SUCCEEDS(
@@ -367,8 +371,8 @@ void RemoteWorkerManager::LaunchNewContentProcess(
                      }
                      RefPtr<ContentParent> contentParent =
                          aResult.IsResolve() ? aResult.ResolveValue() : nullptr;
-                     TransmitPermissionsForPrincipalInfo(contentParent,
-                                                         principalInfo);
+                     TransmitPermissionsAndBlobURLsForPrincipalInfo(
+                         contentParent, principalInfo);
                    });
       });
 
