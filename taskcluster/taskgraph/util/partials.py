@@ -76,13 +76,14 @@ FTP_PLATFORM_MAP = {
 
 
 def get_balrog_platform_name(platform):
-    """Convert build platform names into balrog platform names"""
-    if '-nightly' in platform:
-        platform = platform.replace('-nightly', '')
-    if '-devedition' in platform:
-        platform = platform.replace('-devedition', '')
-    if '-shippable' in platform:
-        platform = platform.replace('-shippable', '')
+    """Convert build platform names into balrog platform names.
+
+    Remove known values instead to catch aarch64 and other platforms
+    that may be added.
+    """
+    removals = ["-devedition", "-nightly", "-shippable"]
+    for remove in removals:
+        platform = platform.replace(remove, '')
     return PLATFORM_RENAMES.get(platform, platform)
 
 
