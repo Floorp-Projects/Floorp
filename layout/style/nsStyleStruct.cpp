@@ -654,7 +654,8 @@ nsStyleXUL::nsStyleXUL(const Document& aDocument)
       mBoxAlign(StyleBoxAlign::Stretch),
       mBoxDirection(StyleBoxDirection::Normal),
       mBoxOrient(StyleBoxOrient::Horizontal),
-      mBoxPack(StyleBoxPack::Start) {
+      mBoxPack(StyleBoxPack::Start),
+      mStackSizing(StyleStackSizing::StretchToFit) {
   MOZ_COUNT_CTOR(nsStyleXUL);
 }
 
@@ -666,7 +667,8 @@ nsStyleXUL::nsStyleXUL(const nsStyleXUL& aSource)
       mBoxAlign(aSource.mBoxAlign),
       mBoxDirection(aSource.mBoxDirection),
       mBoxOrient(aSource.mBoxOrient),
-      mBoxPack(aSource.mBoxPack) {
+      mBoxPack(aSource.mBoxPack),
+      mStackSizing(aSource.mStackSizing) {
   MOZ_COUNT_CTOR(nsStyleXUL);
 }
 
@@ -674,7 +676,8 @@ nsChangeHint nsStyleXUL::CalcDifference(const nsStyleXUL& aNewData) const {
   if (mBoxAlign == aNewData.mBoxAlign &&
       mBoxDirection == aNewData.mBoxDirection &&
       mBoxFlex == aNewData.mBoxFlex && mBoxOrient == aNewData.mBoxOrient &&
-      mBoxPack == aNewData.mBoxPack && mBoxOrdinal == aNewData.mBoxOrdinal) {
+      mBoxPack == aNewData.mBoxPack && mBoxOrdinal == aNewData.mBoxOrdinal &&
+      mStackSizing == aNewData.mStackSizing) {
     return nsChangeHint(0);
   }
   if (mBoxOrdinal != aNewData.mBoxOrdinal) {
