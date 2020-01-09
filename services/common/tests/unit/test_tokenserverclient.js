@@ -57,7 +57,7 @@ add_task(async function test_working_bid_exchange_with_nodetype() {
   let nodeType = "the-node-type";
 
   let server = httpd_setup({
-    "/1.0/foo/1.0": function (request, response) {
+    "/1.0/foo/1.0": function(request, response) {
       Assert.ok(request.hasHeader("accept"));
       Assert.ok(!request.hasHeader("x-conditions-accepted"));
       Assert.equal("application/json", request.getHeader("accept"));
