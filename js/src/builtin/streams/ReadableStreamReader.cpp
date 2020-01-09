@@ -86,7 +86,7 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
   // Step 3 is moved to the end.
 
   // Step 4: If stream.[[state]] is "readable",
-  Rooted<JSObject*> promise(cx);
+  Rooted<PromiseObject*> promise(cx);
   if (unwrappedStream->readable()) {
     // Step a: Set reader.[[closedPromise]] to a new promise.
     promise = PromiseObject::createSkippingExecutor(cx);
@@ -94,7 +94,8 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
     // Step 5: Otherwise, if stream.[[state]] is "closed",
     // Step a: Set reader.[[closedPromise]] to a promise resolved with
     //         undefined.
-    promise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+    promise = PromiseObject::unforgeableResolveWithNonPromise(
+        cx, UndefinedHandleValue);
   } else {
     // Step 6: Otherwise,
     // Step a: Assert: stream.[[state]] is "errored".
@@ -112,7 +113,7 @@ MOZ_MUST_USE bool js::ReadableStreamReaderGenericInitialize(
     }
 
     // Step c. Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
-    SetSettledPromiseIsHandled(cx, promise.as<PromiseObject>());
+    SetSettledPromiseIsHandled(cx, promise);
   }
 
   if (!promise) {

@@ -127,7 +127,8 @@ MOZ_MUST_USE JSObject* js::ReadableStreamCancel(
   // Step 2: If stream.[[state]] is "closed", return a new promise resolved
   //         with undefined.
   if (unwrappedStream->closed()) {
-    return PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+    return PromiseObject::unforgeableResolveWithNonPromise(
+        cx, UndefinedHandleValue);
   }
 
   // Step 3: If stream.[[state]] is "errored", return a new promise rejected
