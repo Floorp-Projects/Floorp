@@ -5,12 +5,17 @@
 package org.mozilla.fenix
 
 import android.content.Intent
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.utils.toSafeIntent
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.HomeActivity.Companion.PRIVATE_BROWSING_MODE
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.settings
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -32,5 +37,27 @@ class HomeActivityTest {
 
         val otherIntent = Intent().toSafeIntent()
         assertNull(activity.getIntentSource(otherIntent))
+    }
+
+    @Test
+    fun `getModeFromIntentOrLastKnown returns mode from settings when intent does not set`() {
+        val activity = HomeActivity()
+
+        testContext.settings().lastKnownMode = BrowsingMode.Private
+
+        assertEquals(testContext.settings().lastKnownMode, activity.getModeFromIntentOrLastKnown(null))
+    }
+
+    @Test
+    fun `getModeFromIntentOrLastKnown returns mode from intent when set`() {
+        val activity = HomeActivity()
+
+        testContext.settings().lastKnownMode = BrowsingMode.Normal
+
+        val intent = Intent()
+        intent.putExtra(PRIVATE_BROWSING_MODE, true)
+
+        assertNotEquals(testContext.settings().lastKnownMode, activity.getModeFromIntentOrLastKnown(intent))
+        assertEquals(BrowsingMode.Private, activity.getModeFromIntentOrLastKnown(intent))
     }
 }

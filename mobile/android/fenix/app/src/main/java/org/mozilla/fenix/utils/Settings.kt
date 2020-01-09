@@ -24,6 +24,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.ext.components
@@ -207,6 +208,32 @@ class Settings private constructor(
     val shouldUseFixedTopToolbar: Boolean
         get() {
             return touchExplorationIsEnabled || switchServiceIsEnabled
+        }
+
+    var lastKnownMode: BrowsingMode = BrowsingMode.Normal
+        get() {
+            val lastKnownModeWasPrivate = preferences.getBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_last_known_mode_private),
+                false
+            )
+
+            return if (lastKnownModeWasPrivate) {
+                BrowsingMode.Private
+            } else {
+                BrowsingMode.Normal
+            }
+        }
+
+        set(value) {
+            val lastKnownModeWasPrivate = (value == BrowsingMode.Private)
+
+            preferences.edit()
+                .putBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_last_known_mode_private),
+                    lastKnownModeWasPrivate)
+                .apply()
+
+            field = value
         }
 
     var shouldDeleteBrowsingDataOnQuit by booleanPreference(

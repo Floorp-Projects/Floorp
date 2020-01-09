@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.browser.browsingmode
 
+import org.mozilla.fenix.utils.Settings
+
 /**
  * Enum that represents whether or not private browsing is active.
  */
@@ -42,5 +44,6 @@ class DefaultBrowsingModeManager(
         set(value) {
             _mode = value
             modeDidChange(value)
+            Settings.instance?.lastKnownMode = value
         }
 }

@@ -54,10 +54,10 @@ import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.perf.HotStartPerformanceMonitor
 import org.mozilla.fenix.search.SearchFragmentDirections
-import org.mozilla.fenix.settings.about.AboutFragmentDirections
 import org.mozilla.fenix.settings.DefaultBrowserSettingsFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
+import org.mozilla.fenix.settings.about.AboutFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
@@ -88,13 +88,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
     final override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val mode = getPrivateModeFromIntent(intent)
-
         components.publicSuffixList.prefetch()
-        setupThemeAndBrowsingMode(mode)
 
+        setupThemeAndBrowsingMode(getModeFromIntentOrLastKnown(intent))
         setContentView(R.layout.activity_home)
-
         setupToolbarAndNavigation()
 
         if (intent.getBooleanExtra(EXTRA_FINISH_ONBOARDING, false)) {
@@ -159,7 +156,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
         val intentProcessors = listOf(CrashReporterIntentProcessor()) + externalSourceIntentProcessors
         intentProcessors.any { it.process(intent, navHost.navController, this.intent) }
-        browsingModeManager.mode = getPrivateModeFromIntent(intent)
+        browsingModeManager.mode = getModeFromIntentOrLastKnown(intent)
     }
 
     /**
@@ -200,21 +197,21 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     /**
      * External sources such as 3rd party links and shortcuts use this function to enter
-     * private mode directly before the content view is created.
+     * private mode directly before the content view is created. Returns the mode set by the intent
+     * otherwise falls back to the last known mode.
      */
-    private fun getPrivateModeFromIntent(intent: Intent?): BrowsingMode {
+    internal fun getModeFromIntentOrLastKnown(intent: Intent?): BrowsingMode {
         intent?.toSafeIntent()?.let {
             if (it.hasExtra(PRIVATE_BROWSING_MODE)) {
                 val startPrivateMode = it.getBooleanExtra(PRIVATE_BROWSING_MODE, false)
-                intent.removeExtra(PRIVATE_BROWSING_MODE)
-
                 return BrowsingMode.fromBoolean(isPrivate = startPrivateMode)
             }
         }
-        return BrowsingMode.Normal
+        return settings().lastKnownMode
     }
 
     private fun setupThemeAndBrowsingMode(mode: BrowsingMode) {
+        settings().lastKnownMode = mode
         browsingModeManager = createBrowsingModeManager(mode)
         themeManager = createThemeManager()
         themeManager.setActivityTheme(this)
