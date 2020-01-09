@@ -230,23 +230,50 @@ var gSync = {
     this.updateSyncButtonsTooltip(state);
     this.updateSyncStatus(state);
     this.updateFxAPanel(state);
-    // Refresh the device list in the background.
-    this.refreshFxaDevices();
+    // Ensure we have something in the device list in the background.
+    this.ensureFxaDevices();
   },
 
-  async refreshFxaDevices(options) {
+  // Ensure we have *something* in `fxAccounts.device.recentDeviceList` as some
+  // of our UI logic depends on it not being null. When FxA is notified of a
+  // device change it will auto refresh `recentDeviceList`, and all UI which
+  // shows the device list will start with `recentDeviceList`, but should also
+  // force a refresh, both of which should mean in the worst-case, the UI is up
+  // to date after a very short delay.
+  async ensureFxaDevices(options) {
     if (UIState.get().status != UIState.STATUS_SIGNED_IN) {
       console.info("Skipping device list refresh; not signed in");
       return;
     }
+    if (!fxAccounts.device.recentDeviceList) {
+      if (await this.refreshFxaDevices()) {
+        // Assuming we made the call successfully it should be impossible to end
+        // up with a falsey recentDeviceList, so make noise if that's false.
+        if (!fxAccounts.device.recentDeviceList) {
+          console.warn("Refreshing device list didn't find any devices.");
+        }
+      }
+    }
+  },
+
+  // Force a refresh of the fxa device list.  Note that while it's theoretically
+  // OK to call `fxAccounts.device.refreshDeviceList` multiple times concurrently
+  // and regularly, this call tells it to avoid those protections, so will always
+  // hit the FxA servers - therefore, you should be very careful how often you
+  // call this.
+  // Returns Promise<bool> to indicate whether a refresh was actually done.
+  async refreshFxaDevices() {
+    if (UIState.get().status != UIState.STATUS_SIGNED_IN) {
+      console.info("Skipping device list refresh; not signed in");
+      return false;
+    }
     try {
-      // Poke FxA to refresh the recent device list. It's safe to call
-      // `refreshDeviceList` multiple times in the background, as it avoids
-      // making new requests if one is already active, and caches the list for
-      // 1 minute by default.
-      await fxAccounts.device.refreshDeviceList(options);
+      // Do the actual refresh telling it to avoid the "flooding" protections.
+      await fxAccounts.device.refreshDeviceList({ ignoreCached: true });
+      return true;
     } catch (e) {
       console.error("Refreshing device list failed.", e);
+      return false;
     }
   },
 
@@ -346,23 +373,23 @@ var gSync = {
       bodyNode.setAttribute("state", "notready");
     }
     if (reloadDevices) {
-      if (UIState.get().syncEnabled) {
-        Services.tm.dispatchToMainThread(async () => {
-          // `engines: []` = clients engine only + refresh FxA Devices.
-          await Weave.Service.sync({ why: "pageactions", engines: [] });
-          if (!window.closed) {
-            this.populateSendTabToDevicesView(panelViewNode, false);
-          }
-        });
-      } else {
-        // Force a refresh, since the user probably connected a new device, and
-        // is waiting for it to show up.
-        this.refreshFxaDevices({ ignoreCached: true }).then(_ => {
-          if (!window.closed) {
-            this.populateSendTabToDevicesView(panelViewNode, false);
-          }
-        });
-      }
+      // We will only pick up new Fennec clients if we sync the clients engine,
+      // but all other send-tab targets can be identified purely from the fxa
+      // device list. Syncing the clients engine doesn't force a refresh of the
+      // fxa list, and it seems overkill to force *both* a clients engine sync
+      // and an fxa device list refresh, especially given (a) the clients engine
+      // will sync by itself every 10 minutes and (b) Fennec is (at time of
+      // writing) about to be replaced by Fenix.
+      // So we suck up the fact that new Fennec clients may not appear for 10
+      // minutes and don't bother syncing the clients engine.
+
+      // Force a refresh of the fxa device list in case the user connected a new
+      // device, and is waiting for it to show up.
+      this.refreshFxaDevices().then(_ => {
+        if (!window.closed) {
+          this.populateSendTabToDevicesView(panelViewNode, false);
+        }
+      });
     }
   },
 

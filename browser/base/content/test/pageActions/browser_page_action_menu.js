@@ -771,10 +771,8 @@ add_task(async function sendTabToDevice_syncEnabled() {
     ];
     checkSendToDeviceItems(expectedItems);
 
-    Assert.ok(
-      Weave.Service.sync.calledWith({ why: "pageactions", engines: [] })
-    );
-    Assert.ok(fxAccounts.device.refreshDeviceList.notCalled);
+    Assert.ok(Weave.Service.sync.notCalled);
+    Assert.equal(fxAccounts.device.refreshDeviceList.callCount, 1);
 
     // Done, hide the panel.
     let hiddenPromise = promisePageActionPanelHidden();
