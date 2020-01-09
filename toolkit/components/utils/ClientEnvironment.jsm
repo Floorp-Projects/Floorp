@@ -23,6 +23,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "TelemetryController",
+  "resource://gre/modules/TelemetryController.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
@@ -92,6 +97,33 @@ class ClientEnvironmentBase {
       }
       return telemetry;
     })();
+  }
+
+  static get liveTelemetry() {
+    // Construct a proxy object that forwards access to the main ping, and
+    // throws errors for other ping types. The intent is to allow using
+    // `telemetry` and `liveTelemetry` in similar ways, but to fail fast if
+    // the wrong telemetry types are accessed.
+    let target = {};
+    try {
+      target.main = TelemetryController.getCurrentPingData();
+    } catch (err) {
+      Cu.reportError(err);
+    }
+
+    return new Proxy(target, {
+      get(target, prop, receiver) {
+        if (prop == "main") {
+          return target.main;
+        }
+        throw new Error(
+          `Live telemetry only includes the main ping, not the ${prop} ping`
+        );
+      },
+      has(target, prop) {
+        return prop == "main";
+      },
+    });
   }
 
   static get version() {
