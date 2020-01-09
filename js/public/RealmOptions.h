@@ -312,7 +312,7 @@ class JS_PUBLIC_API RealmBehaviors {
   // singleton, instead of returning the value which is baked in the JSScript.
   bool singletonsAsTemplates_ = true;
   bool isNonLive_ = false;
-  bool deferredParserAlloc_ = false;
+  bool deferredParserAlloc_ = true;
 };
 
 /**

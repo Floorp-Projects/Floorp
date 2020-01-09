@@ -472,7 +472,7 @@ struct MOZ_STACK_CLASS EnvironmentPreparer
   void invoke(JS::HandleObject global, Closure& closure) override;
 };
 
-bool shell::enableDeferredMode = false;
+bool shell::enableDeferredMode = true;
 bool shell::enableCodeCoverage = false;
 bool shell::enableDisassemblyDumps = false;
 bool shell::offthreadCompilation = false;
@@ -11107,8 +11107,9 @@ int main(int argc, char** argv, char** envp) {
                         "Print sub-ms runtime for each file that's run") ||
       !op.addBoolOption('\0', "code-coverage",
                         "Enable code coverage instrumentation.") ||
-      !op.addBoolOption('\0', "parser-deferred-alloc",
-                        "Defer allocation of GC objects until after parser") ||
+      !op.addBoolOption(
+          '\0', "disable-parser-deferred-alloc",
+          "Disable deferred allocation of GC objects until after parser") ||
 #ifdef DEBUG
       !op.addBoolOption('O', "print-alloc",
                         "Print the number of allocations at exit") ||
@@ -11431,8 +11432,8 @@ int main(int argc, char** argv, char** envp) {
     coverage::EnableLCov();
   }
 
-  enableDeferredMode = op.getBoolOption("parser-deferred-alloc") ||
-                       getenv("PARSER_DEFERRED_ALLOC") != nullptr;
+  enableDeferredMode = !op.getBoolOption("disable-parser-deferred-alloc") &&
+                       getenv("DISABLE_PARSER_DEFERRED_ALLOC") == nullptr;
 
 #ifdef JS_WITHOUT_NSPR
   if (!op.getMultiStringOption("dll").empty()) {
