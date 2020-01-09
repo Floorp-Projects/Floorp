@@ -347,9 +347,6 @@ const rollout = {
   async trrModePrefHasUserValue(event, results) {
     results.evaluateReason = event;
 
-    // Reset skipHeuristicsCheck
-    await this.setSetting(DOH_SKIP_HEURISTICS_PREF, false);
-
     // This confirms if a user has modified DoH (via the TRR_MODE_PREF) outside of the addon
     // This runs only on the FIRST time that add-on is enabled and if the stored pref
     // mismatches the current pref (Meaning something outside of the add-on has changed it)
@@ -363,6 +360,7 @@ const rollout = {
       );
 
       browser.experiments.preferences.clearUserPref(DOH_SELF_ENABLED_PREF);
+      await this.setSetting(DOH_SKIP_HEURISTICS_PREF, true);
       await stateManager.rememberDisableHeuristics();
     }
   },
@@ -370,8 +368,15 @@ const rollout = {
   async enterprisePolicyCheck(event, results) {
     results.evaluateReason = event;
 
-    // Reset skipHeuristicsCheck
-    await this.setSetting(DOH_SKIP_HEURISTICS_PREF, false);
+    // Check if trrModePrefHasUserValue determined to not enable add-on on first run
+    let skipHeuristicsCheck = await rollout.getSetting(
+      DOH_SKIP_HEURISTICS_PREF,
+      false
+    );
+
+    if (skipHeuristicsCheck) {
+      return;
+    }
 
     // Check for Policies before running the rest of the heuristics
     let policyEnableDoH = await browser.experiments.heuristics.checkEnterprisePolicies();
