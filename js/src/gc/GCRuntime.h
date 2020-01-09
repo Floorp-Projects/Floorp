@@ -753,6 +753,7 @@ class GCRuntime {
   void releaseRelocatedArenasWithoutUnlocking(Arena* arenaList,
                                               const AutoLockGC& lock);
   void finishCollection();
+  IncrementalProgress joinSweepMarkTask();
 
 #ifdef JS_GC_ZEAL
   void computeNonIncrementalMarkingForValidation(AutoGCSession& session);
