@@ -40,6 +40,7 @@
 #include "frontend/ValueUsage.h"     // ValueUsage
 #include "js/RootingAPI.h"           // JS::Rooted, JS::Handle
 #include "js/TypeDecls.h"            // jsbytecode
+#include "vm/BigIntType.h"           // BigInt
 #include "vm/BytecodeUtil.h"         // JSOp
 #include "vm/Instrumentation.h"      // InstrumentationKind
 #include "vm/Interpreter.h"          // CheckIsObjectKind, CheckIsCallableKind

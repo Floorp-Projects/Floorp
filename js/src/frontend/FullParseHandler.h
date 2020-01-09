@@ -924,7 +924,6 @@ class FullParseHandler {
 
   bool isUsableAsObjectPropertyName(Node node) {
     return node->isKind(ParseNodeKind::NumberExpr) ||
-           node->isKind(ParseNodeKind::BigIntExpr) ||
            node->isKind(ParseNodeKind::ObjectPropertyName) ||
            node->isKind(ParseNodeKind::StringExpr) ||
            node->isKind(ParseNodeKind::ComputedName);
