@@ -11,7 +11,7 @@
 #include "mozilla/HashFunctions.h"       // for HashGeneric
 #include "mozilla/gfx/Logging.h"         // for Log
 #include "mozilla/layers/LayersTypes.h"  // for LayersId
-#include "nsHashKeys.h"             // for nsPrintfCString
+#include "nsHashKeys.h"                  // for nsPrintfCString
 #include "nsPrintfCString.h"             // for nsPrintfCString
 
 namespace mozilla {

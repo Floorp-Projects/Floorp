@@ -33,7 +33,7 @@ namespace mozilla {
 namespace ipc {
 class MiniTransceiver;
 }
-}
+}  // namespace mozilla
 
 class FileDescriptorSet;
 

@@ -12,18 +12,19 @@
 namespace mozilla {
 
 class RTCStatsIdGenerator {
-public:
-	RTCStatsIdGenerator();
-	nsString Id(const nsString& aKey);
-	NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RTCStatsIdGenerator);
-private:
-	virtual ~RTCStatsIdGenerator() {};
-	nsString Generate();
+ public:
+  RTCStatsIdGenerator();
+  nsString Id(const nsString& aKey);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RTCStatsIdGenerator);
 
-	const uint64_t mSalt;
-	uint64_t mCounter;
-	std::map<nsString, nsString> mAllocated;
+ private:
+  virtual ~RTCStatsIdGenerator(){};
+  nsString Generate();
+
+  const uint64_t mSalt;
+  uint64_t mCounter;
+  std::map<nsString, nsString> mAllocated;
 };
 
-}
+}  // namespace mozilla
 #endif

@@ -615,9 +615,9 @@ ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent) {
 
   BrowsingContext* bc = doc->GetBrowsingContext();
   if (bc && bc->GetCurrentOrientationType() !=
-      orientation->DeviceType(CallerType::System)) {
+                orientation->DeviceType(CallerType::System)) {
     bc->SetCurrentOrientation(orientation->DeviceType(CallerType::System),
-                               orientation->DeviceAngle(CallerType::System));
+                              orientation->DeviceAngle(CallerType::System));
 
     nsCOMPtr<nsIRunnable> runnable =
         orientation->DispatchChangeEventAndResolvePromise();

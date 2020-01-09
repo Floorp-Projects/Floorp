@@ -188,19 +188,19 @@ class Optional : public Optional_base<T, T> {
 };
 
 template <typename T>
-class Optional<JS::Handle<T> >
-    : public Optional_base<JS::Handle<T>, JS::Rooted<T> > {
+class Optional<JS::Handle<T>>
+    : public Optional_base<JS::Handle<T>, JS::Rooted<T>> {
  public:
   MOZ_ALLOW_TEMPORARY Optional()
-      : Optional_base<JS::Handle<T>, JS::Rooted<T> >() {}
+      : Optional_base<JS::Handle<T>, JS::Rooted<T>>() {}
 
   explicit Optional(JSContext* cx)
-      : Optional_base<JS::Handle<T>, JS::Rooted<T> >() {
+      : Optional_base<JS::Handle<T>, JS::Rooted<T>>() {
     this->Construct(cx);
   }
 
   Optional(JSContext* cx, const T& aValue)
-      : Optional_base<JS::Handle<T>, JS::Rooted<T> >(cx, aValue) {}
+      : Optional_base<JS::Handle<T>, JS::Rooted<T>>(cx, aValue) {}
 
   // Override the const Value() to return the right thing so we're not
   // returning references to temporaries.
@@ -249,7 +249,7 @@ class Optional<JS::Value> {
 template <typename U>
 class NonNull;
 template <typename T>
-class Optional<NonNull<T> > : public Optional_base<T, NonNull<T> > {
+class Optional<NonNull<T>> : public Optional_base<T, NonNull<T>> {
  public:
   // We want our Value to actually return a non-const reference, even
   // if we're const.  At least for things that are normally pointer
@@ -264,7 +264,7 @@ class Optional<NonNull<T> > : public Optional_base<T, NonNull<T> > {
 // A specialization of Optional for OwningNonNull that lets us get a
 // T& from Value()
 template <typename T>
-class Optional<OwningNonNull<T> > : public Optional_base<T, OwningNonNull<T> > {
+class Optional<OwningNonNull<T>> : public Optional_base<T, OwningNonNull<T>> {
  public:
   // We want our Value to actually return a non-const reference, even
   // if we're const.  At least for things that are normally pointer
@@ -412,8 +412,10 @@ template <typename T>
 class Sequence : public FallibleTArray<T> {
  public:
   Sequence() : FallibleTArray<T>() {}
-  MOZ_IMPLICIT Sequence(FallibleTArray<T>&& aArray) : FallibleTArray<T>(std::move(aArray)) {}
-  MOZ_IMPLICIT Sequence(nsTArray<T>&& aArray) : FallibleTArray<T>(std::move(aArray)) {}
+  MOZ_IMPLICIT Sequence(FallibleTArray<T>&& aArray)
+      : FallibleTArray<T>(std::move(aArray)) {}
+  MOZ_IMPLICIT Sequence(nsTArray<T>&& aArray)
+      : FallibleTArray<T>(std::move(aArray)) {}
 };
 
 inline nsWrapperCache* GetWrapperCache(nsWrapperCache* cache) { return cache; }

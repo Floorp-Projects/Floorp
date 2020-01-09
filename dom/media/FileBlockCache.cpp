@@ -114,13 +114,14 @@ void FileBlockCache::Flush() {
   // Dispatch a task so we won't clear the arrays while PerformBlockIOs() is
   // dropping the data lock and cause InvalidArrayIndex.
   RefPtr<FileBlockCache> self = this;
-  mBackgroundET->Dispatch(NS_NewRunnableFunction("FileBlockCache::Flush", [self]() {
-    MutexAutoLock mon(self->mDataMutex);
-    // Just discard pending changes, assume MediaCache won't read from
-    // blocks it hasn't written to.
-    self->mChangeIndexList.clear();
-    self->mBlockChanges.Clear();
-  }));
+  mBackgroundET->Dispatch(
+      NS_NewRunnableFunction("FileBlockCache::Flush", [self]() {
+        MutexAutoLock mon(self->mDataMutex);
+        // Just discard pending changes, assume MediaCache won't read from
+        // blocks it hasn't written to.
+        self->mChangeIndexList.clear();
+        self->mBlockChanges.Clear();
+      }));
 }
 
 size_t FileBlockCache::GetMaxBlocks(size_t aCacheSizeInKB) const {
@@ -175,18 +176,19 @@ void FileBlockCache::Close() {
   }
 
   // Let the thread close the FD, and then trigger its own shutdown.
-  // Note that mBackgroundET is now empty, so no other task will be posted there.
-  // Also mBackgroundET and mFD are empty and therefore can be reused immediately.
-  nsresult rv = thread->Dispatch(
-      NS_NewRunnableFunction(
-          "FileBlockCache::Close",
-          [thread, fd] {
-            if (fd) {
-              CloseFD(fd);
-            }
-            // No need to shutdown background task queues.
-          }),
-      NS_DISPATCH_EVENT_MAY_BLOCK);
+  // Note that mBackgroundET is now empty, so no other task will be posted
+  // there. Also mBackgroundET and mFD are empty and therefore can be reused
+  // immediately.
+  nsresult rv = thread->Dispatch(NS_NewRunnableFunction("FileBlockCache::Close",
+                                                        [thread, fd] {
+                                                          if (fd) {
+                                                            CloseFD(fd);
+                                                          }
+                                                          // No need to shutdown
+                                                          // background task
+                                                          // queues.
+                                                        }),
+                                 NS_DISPATCH_EVENT_MAY_BLOCK);
   NS_ENSURE_SUCCESS_VOID(rv);
 }
 

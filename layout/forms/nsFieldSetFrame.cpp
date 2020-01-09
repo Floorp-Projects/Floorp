@@ -915,7 +915,7 @@ void nsFieldSetFrame::EnsureChildContinuation(nsIFrame* aChild,
     }
     if (aStatus.IsOverflowIncomplete()) {
       if (nsFrameList* eoc =
-          GetPropTableFrames(ExcessOverflowContainersProperty())) {
+              GetPropTableFrames(ExcessOverflowContainersProperty())) {
         eoc->AppendFrames(nullptr, nifs);
       } else {
         SetPropTableFrames(new (PresShell()) nsFrameList(nifs),

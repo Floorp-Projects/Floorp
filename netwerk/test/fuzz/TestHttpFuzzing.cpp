@@ -221,9 +221,8 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
     bool mainPingBack = false;
 
     NS_DispatchBackgroundTask(NS_NewRunnableFunction("Dummy", [&]() {
-      NS_DispatchToMainThread(NS_NewRunnableFunction("Dummy", [&]() {
-        mainPingBack = true;
-      }));
+      NS_DispatchToMainThread(
+          NS_NewRunnableFunction("Dummy", [&]() { mainPingBack = true; }));
     }));
 
     SpinEventLoopUntil([&]() -> bool { return mainPingBack; });

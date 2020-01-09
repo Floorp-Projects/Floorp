@@ -28,8 +28,8 @@ class LSSnapshotInitInfo;
 class LSWriteAndNotifyInfo;
 class SnapshotWriteOptimizer;
 
-template <typename> class Optional;
-
+template <typename>
+class Optional;
 
 class LSSnapshot final : public nsIRunnable {
  public:

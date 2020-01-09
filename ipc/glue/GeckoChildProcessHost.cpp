@@ -831,7 +831,8 @@ void BaseProcessLauncher::GetChildLogName(const char* origLogName,
 //
 // Fork server needs a dedicated thread for accessing
 // |ForkServiceChild|.
-#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ENABLE_FORKSERVER)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) || \
+    defined(MOZ_ENABLE_FORKSERVER)
 
 static mozilla::StaticMutex gIPCLaunchThreadMutex;
 static mozilla::StaticRefPtr<nsIThread> gIPCLaunchThread;
@@ -884,7 +885,8 @@ nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
   return thread;
 }
 
-#else  // defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ENABLE_FORKSERVER)
+#else  // defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID) ||
+       // defined(MOZ_ENABLE_FORKSERVER)
 
 // Other platforms use an on-demand thread pool.
 

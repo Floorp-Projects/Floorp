@@ -13,8 +13,7 @@
 
 using namespace mozilla;
 
-static bool
-UseForkServer(int argc, char* argv[]) {
+static bool UseForkServer(int argc, char* argv[]) {
 #if defined(MOZ_ENABLE_FORKSERVER)
   return strcmp(argv[argc - 1], "forkserver") == 0;
 #else
@@ -22,8 +21,8 @@ UseForkServer(int argc, char* argv[]) {
 #endif
 }
 
-static int
-RunForkServer(Bootstrap::UniquePtr&& bootstrap, int argc, char* argv[]) {
+static int RunForkServer(Bootstrap::UniquePtr&& bootstrap, int argc,
+                         char* argv[]) {
 #if defined(MOZ_ENABLE_FORKSERVER)
   int ret = 0;
 
@@ -38,7 +37,7 @@ RunForkServer(Bootstrap::UniquePtr&& bootstrap, int argc, char* argv[]) {
   // argc & argv will be updated with the values passing from the
   // chrome process.  With the new values, this function
   // continues the reset of the code acting as a content process.
-  if(bootstrap->XRE_ForkServer(&argc, &argv)) {
+  if (bootstrap->XRE_ForkServer(&argc, &argv)) {
     // Return from the fork server in the fork server process.
     // Stop the fork server.
   } else {
