@@ -8,6 +8,7 @@
 #define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLLER_H_
 
 #include "ContentMediaController.h"
+#include "MediaEventSource.h"
 #include "nsDataHashtable.h"
 #include "nsISupportsImpl.h"
 
@@ -63,9 +64,13 @@ class MediaController final {
   void Shutdown();
 
   uint64_t Id() const;
-  bool IsPlaying() const;
   bool IsAudible() const;
   uint64_t ControlledMediaNum() const;
+  PlaybackState GetState() const;
+
+  MediaEventSource<PlaybackState>& PlaybackStateChangedEvent() {
+    return mPlaybackStateChangedEvent;
+  }
 
   // These methods are only being used to notify the state changes of controlled
   // media in ContentParent or MediaControlUtils.
@@ -85,11 +90,15 @@ class MediaController final {
   void Activate();
   void Deactivate();
 
+  void SetPlayState(PlaybackState aState);
+
   uint64_t mBrowsingContextId;
-  bool mIsPlaying = false;
   bool mAudible = false;
   int64_t mControlledMediaNum = 0;
   int64_t mPlayingControlledMediaNum = 0;
+
+  PlaybackState mState = PlaybackState::eStopped;
+  MediaEventProducer<PlaybackState> mPlaybackStateChangedEvent;
 };
 
 }  // namespace dom
