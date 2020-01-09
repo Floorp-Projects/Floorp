@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.13)
+
+project(rlbox_lucet_testlib
+        VERSION 0.1
+        DESCRIPTION "RLBox integration with WASM modules compiled with lucet")
 
 if(NOT DEFINED ENV{rlbox_SOURCE_DIR})
   message(FATAL_ERROR "Set rlbox_SOURCE_DIR environment variable")

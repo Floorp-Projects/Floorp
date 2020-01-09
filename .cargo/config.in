@@ -50,12 +50,12 @@ replace-with = "vendored-sources"
 [source."https://github.com/PLSysSec/rlbox_lucet_sandbox/"]
 git = "https://github.com/PLSysSec/rlbox_lucet_sandbox/"
 replace-with = "vendored-sources"
-rev = "a31b9119bd01893ae1e930331ca4fe1738a088f7"
+rev = "5f8bca975d8206e4837786d6bdb57a5c2fbd4016"
 
 [source."https://github.com/PLSysSec/lucet_sandbox_compiler"]
 git = "https://github.com/PLSysSec/lucet_sandbox_compiler"
 replace-with = "vendored-sources"
-rev = "36f0e4deb5b080dfee73042fec655d3723c7a12b"
+rev = "58498599272e23ef797bb4304d0f181d7455ca57"
 
 [source."https://github.com/NikVolf/tokio-named-pipes"]
 branch = "stable"

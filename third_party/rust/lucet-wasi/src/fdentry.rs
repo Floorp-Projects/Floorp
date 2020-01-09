@@ -15,6 +15,32 @@ impl FdEntry {
     pub fn from_file(file: File) -> FdEntry {
         unsafe { FdEntry::from_raw_fd(file.into_raw_fd()) }
     }
+    pub unsafe fn from_raw_fd_for_io_desc(rawfd: RawFd, writable : bool) -> FdEntry {
+        let (ty, mut rights_base, rights_inheriting) =
+        (
+            host::__WASI_FILETYPE_CHARACTER_DEVICE,
+            host::RIGHTS_TTY_BASE,
+            host::RIGHTS_TTY_BASE,
+        );
+
+        if !writable {
+            rights_base &= !host::__WASI_RIGHT_FD_WRITE as host::__wasi_rights_t;
+        } else {
+            rights_base &= !host::__WASI_RIGHT_FD_READ as host::__wasi_rights_t;
+        }
+
+        FdEntry {
+            fd_object: FdObject {
+                ty: ty as u8,
+                rawfd,
+                needs_close: true,
+            },
+            rights_base,
+            rights_inheriting,
+            preopen_path: None,
+        }
+    }
+
 }
 
 impl FromRawFd for FdEntry {

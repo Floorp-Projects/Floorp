@@ -99,12 +99,13 @@ sudo apt install clang-tidy
 sudo pacman -S clang-tidy
 ```
 
-2. It is recommended you treat warnings as errors during development. Also, you
-probably want to use the debug build. To do this, adjust your build settings as
-shown below
+2. It is recommended you use the dev mode for building during development. This
+treat warnings as errors, enables clang-tidy checks, runs address sanitizer etc.
+Also, you probably want to use the debug build. To do this, adjust your build
+settings as shown below
 
 ```bash
-cmake -DCMAKE_BUILD_TYPE=Debug -DWERR=ON -S . -B ./build
+cmake -DCMAKE_BUILD_TYPE=Debug -DDEV=ON -S . -B ./build
 ```
 
 3. After making changes to the source, add any new required tests and run all
