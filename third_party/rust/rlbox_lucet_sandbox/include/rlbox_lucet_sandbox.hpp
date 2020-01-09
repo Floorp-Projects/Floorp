@@ -357,10 +357,10 @@ private:
       callback_slots = shared_slots;
       // Sometimes, dlopen and process forking seem to act a little weird.
       // Writes to the writable page of the dynamic lib section seem to not
-      // always be propogated (possibly when the dynamic library is opened
+      // always be propagated (possibly when the dynamic library is opened
       // externally - "external_loads_exist")). This occurred in when RLBox was
-      // used in ASAN builds of Firefox. In general, we take the precaustion of
-      // rechecking this on each sandbix creation.
+      // used in ASAN builds of Firefox. In general, we take the precaution of
+      // rechecking this on each sandbox creation.
       reinit_callback_ref_data(functionPointerTable, callback_slots);
       return;
     }
@@ -475,10 +475,11 @@ protected:
   // library lucet_module_path outside of rlbox_lucet_sandbox such as via dlopen
   // or the Windows equivalent
   inline void impl_create_sandbox(const char* lucet_module_path,
-                                  bool external_loads_exist)
+                                  bool external_loads_exist,
+                                  bool allow_stdio)
   {
     detail::dynamic_check(sandbox == nullptr, "Sandbox already initialized");
-    sandbox = lucet_load_module(lucet_module_path);
+    sandbox = lucet_load_module(lucet_module_path, allow_stdio);
     detail::dynamic_check(sandbox != nullptr, "Sandbox could not be created");
 
     heap_base = reinterpret_cast<uintptr_t>(impl_get_memory_location());
@@ -505,7 +506,8 @@ protected:
     // Default is to assume that no external code will load the wasm library as
     // this is usually the case
     const bool external_loads_exist = false;
-    impl_create_sandbox(lucet_module_path, external_loads_exist);
+    const bool allow_stdio = true;
+    impl_create_sandbox(lucet_module_path, external_loads_exist, allow_stdio);
   }
 
   inline void impl_destroy_sandbox() { lucet_drop_module(sandbox); }
