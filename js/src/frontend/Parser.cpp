@@ -46,6 +46,7 @@
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpParser.h"
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
+#include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -9690,9 +9691,9 @@ GeneralParser<ParseHandler, Unit>::newRegExp() {
 template <typename Unit>
 BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // The token's charBuffer contains the DecimalIntegerLiteral or
-  // NumericLiteralBase production, and as such does not include the
-  // BigIntLiteralSuffix (the trailing "n").  Note that NumericLiteralBase
-  // productions may start with 0[bBoOxX], indicating binary/octal/hex.
+  // NonDecimalIntegerLiteral production, and as such does not include the
+  // BigIntLiteralSuffix (the trailing "n").  Note that NonDecimalIntegerLiteral
+  // productions start with 0[bBoOxX], indicating binary/octal/hex.
   const auto& chars = tokenStream.getCharBuffer();
 
   if (this->parseInfo_.isDeferred()) {
@@ -9735,6 +9736,19 @@ template <class ParseHandler, typename Unit>
 typename ParseHandler::BigIntLiteralType
 GeneralParser<ParseHandler, Unit>::newBigInt() {
   return asFinalParser()->newBigInt();
+}
+
+template <class ParseHandler, typename Unit>
+JSAtom* GeneralParser<ParseHandler, Unit>::bigIntAtom() {
+  // See newBigInt() for a description about |chars'| contents.
+  const auto& chars = tokenStream.getCharBuffer();
+  mozilla::Range<const char16_t> source(chars.begin(), chars.length());
+
+  RootedBigInt bi(cx_, js::ParseBigIntLiteral(cx_, source));
+  if (!bi) {
+    return nullptr;
+  }
+  return BigIntToAtom<CanGC>(cx_, bi);
 }
 
 // |exprPossibleError| is the PossibleError state within |expr|,
@@ -10005,6 +10019,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       }
       return newNumber(anyChars.currentToken());
 
+    case TokenKind::BigInt:
+      propAtom.set(bigIntAtom());
+      if (!propAtom.get()) {
+        return null();
+      }
+      return newBigInt();
+
     case TokenKind::String: {
       propAtom.set(anyChars.currentToken().atom());
       uint32_t index;
@@ -10034,7 +10055,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
 static bool TokenKindCanStartPropertyName(TokenKind tt) {
   return TokenKindIsPossibleIdentifierName(tt) || tt == TokenKind::String ||
          tt == TokenKind::Number || tt == TokenKind::LeftBracket ||
-         tt == TokenKind::Mul;
+         tt == TokenKind::Mul || tt == TokenKind::BigInt;
 }
 
 template <class ParseHandler, typename Unit>

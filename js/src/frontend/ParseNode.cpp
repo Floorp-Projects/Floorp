@@ -12,6 +12,7 @@
 #include "jsnum.h"
 
 #include "frontend/Parser.h"
+#include "vm/BigIntType.h"
 #include "vm/RegExpObject.h"
 
 #include "vm/JSContext-inl.h"
@@ -416,6 +417,18 @@ bool BigIntLiteral::isZero() {
 }
 
 BigInt* BigIntLiteral::value() { return box()->value(); }
+
+JSAtom* BigIntLiteral::toAtom(JSContext* cx) {
+  RootedBigInt bi(cx, getOrCreate(cx));
+  if (!bi) {
+    return nullptr;
+  }
+  return BigIntToAtom<CanGC>(cx, bi);
+}
+
+JSAtom* NumericLiteral::toAtom(JSContext* cx) const {
+  return NumberToAtom(cx, value());
+}
 
 RegExpObject* RegExpCreationData::createRegExp(JSContext* cx) const {
   MOZ_ASSERT(buf_);
