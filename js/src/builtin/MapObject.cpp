@@ -51,6 +51,17 @@ bool HashableValue::setValue(JSContext* cx, HandleValue v) {
       // Normalize the sign bit of a NaN.
       value = JS::CanonicalizedDoubleValue(d);
     }
+  } else if (v.isBigInt()) {
+    // NurseryKeysVector currently only supports objects, so we must ensure all
+    // BigInt hash-values are tenured. (bug 1608056)
+    RootedBigInt bi(cx, v.toBigInt());
+    if (IsInsideNursery(bi)) {
+      bi = BigInt::copy(cx, bi, gc::TenuredHeap);
+      if (!bi) {
+        return false;
+      }
+    }
+    value = BigIntValue(bi);
   } else {
     value = v;
   }
@@ -521,6 +532,7 @@ template <typename ObjectT>
 inline static MOZ_MUST_USE bool WriteBarrierPostImpl(ObjectT* obj,
                                                      const Value& keyValue) {
   if (MOZ_LIKELY(!keyValue.isObject())) {
+    MOZ_ASSERT_IF(keyValue.isGCThing(), !IsInsideNursery(keyValue.toGCThing()));
     return true;
   }
 
