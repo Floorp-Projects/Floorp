@@ -16,6 +16,11 @@ const REMOVE_DIALOG_URL =
   "chrome://browser/content/preferences/siteDataRemoveSelected.xhtml";
 const TEST_ORIGIN_CERT_ERROR = "https://expired.example.com";
 
+const TEST_PATH = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "https://example.com"
+);
+
 // Test opening the correct certificate information when clicking "Show certificate".
 add_task(async function test_ShowCertificate() {
   SpecialPowers.pushPrefEnv({
@@ -87,6 +92,52 @@ add_task(async function test_ShowCertificate() {
   pageInfo.close();
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
+});
+
+// Test displaying website identity information when loading images.
+add_task(async function test_image() {
+  let url = TEST_PATH + "moz.png";
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
+  let pageInfo = BrowserPageInfo(url, "securityTab");
+  await BrowserTestUtils.waitForEvent(pageInfo, "load");
+  let pageInfoDoc = pageInfo.document;
+  let securityTab = pageInfoDoc.getElementById("securityTab");
+
+  await TestUtils.waitForCondition(
+    () => BrowserTestUtils.is_visible(securityTab),
+    "Security tab should be visible."
+  );
+
+  let owner = pageInfoDoc.getElementById("security-identity-owner-value");
+  let verifier = pageInfoDoc.getElementById("security-identity-verifier-value");
+  let domain = pageInfoDoc.getElementById("security-identity-domain-value");
+
+  await TestUtils.waitForCondition(
+    () => owner.value === "This website does not supply ownership information.",
+    `Value of owner should be should be "This website does not supply ownership information." instead got "${
+      owner.value
+    }".`
+  );
+
+  await TestUtils.waitForCondition(
+    () => verifier.value === "Mozilla Testing",
+    `Value of verifier should be "Mozilla Testing", instead got "${
+      verifier.value
+    }".`
+  );
+
+  let browser = gBrowser.selectedBrowser;
+
+  await TestUtils.waitForCondition(
+    () => domain.value === browser.currentURI.displayHost,
+    `Value of domain should be ${
+      browser.currentURI.displayHost
+    }, instead got "${domain.value}".`
+  );
+
+  pageInfo.close();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // Test displaying website identity information on certificate error pages.
