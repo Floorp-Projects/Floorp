@@ -466,9 +466,6 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
-  // Store the security info for future use.
-  aChannel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
-
   nsCOMPtr<nsIURI> uri;
   rv = aChannel->GetURI(getter_AddRefs(uri));
   if (NS_FAILED(rv)) {
