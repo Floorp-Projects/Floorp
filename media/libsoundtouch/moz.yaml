@@ -16,5 +16,5 @@ origin:
   url: "http://www.surina.net/soundtouch"
   license: "LGPL-2.1"
 
-  # from https://soundtouch.svn.sourceforge.net/svnroot/soundtouch/trunk
-  release: "r222"
+  # From https://gitlab.com/soundtouch/soundtouch
+  release: v2.1.2
