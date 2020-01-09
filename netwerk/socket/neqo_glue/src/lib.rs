@@ -471,6 +471,7 @@ pub enum Http3Event {
     },
     RequestsCreatable,
     AuthenticationNeeded,
+    ZeroRttRejected,
     ConnectionConnected,
     GoawayReceived,
     ConnectionClosing {
@@ -522,6 +523,7 @@ impl From<Http3ClientEvent> for Http3Event {
             }
             Http3ClientEvent::RequestsCreatable => Http3Event::RequestsCreatable,
             Http3ClientEvent::AuthenticationNeeded => Http3Event::AuthenticationNeeded,
+            Http3ClientEvent::ZeroRttRejected => Http3Event::ZeroRttRejected,
             Http3ClientEvent::GoawayReceived => Http3Event::GoawayReceived,
             Http3ClientEvent::StateChange(state) => match state {
                 Http3State::Connected => Http3Event::ConnectionConnected,

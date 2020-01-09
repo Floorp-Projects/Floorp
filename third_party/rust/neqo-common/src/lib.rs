@@ -5,6 +5,7 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
+#![warn(clippy::pedantic)]
 
 mod codec;
 mod datagram;
@@ -31,6 +32,7 @@ macro_rules! matches {
     }
 }
 
+#[must_use]
 pub fn hex(buf: &[u8]) -> String {
     let mut ret = String::with_capacity(10 + buf.len() * 3);
     ret.push_str(&format!("[{}]: ", buf.len()));
@@ -38,4 +40,13 @@ pub fn hex(buf: &[u8]) -> String {
         ret.push_str(&format!("{:02x}", b));
     }
     ret
+}
+
+#[must_use]
+pub const fn const_max(a: usize, b: usize) -> usize {
+    [a, b][(a < b) as usize]
+}
+#[must_use]
+pub const fn const_min(a: usize, b: usize) -> usize {
+    [a, b][(a >= b) as usize]
 }

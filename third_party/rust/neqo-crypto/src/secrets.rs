@@ -27,10 +27,11 @@ pub enum SecretDirection {
 }
 
 impl From<SSLSecretDirection::Type> for SecretDirection {
+    #[must_use]
     fn from(dir: SSLSecretDirection::Type) -> Self {
         match dir {
-            SSLSecretDirection::ssl_secret_read => SecretDirection::Read,
-            SSLSecretDirection::ssl_secret_write => SecretDirection::Write,
+            SSLSecretDirection::ssl_secret_read => Self::Read,
+            SSLSecretDirection::ssl_secret_write => Self::Write,
             _ => unreachable!(),
         }
     }

@@ -9,11 +9,11 @@
 use neqo_common::{matches, qdebug, Decoder, Encoder};
 use neqo_crypto::Epoch;
 
-use crate::stream_id::StreamIndex;
+use crate::stream_id::{StreamId, StreamIndex};
 use crate::{AppError, TransportError};
 use crate::{ConnectionError, Error, Res};
 
-use std::cmp::min;
+use std::cmp::{min, Ordering};
 use std::convert::TryFrom;
 
 #[allow(clippy::module_name_repetitions)]
@@ -126,12 +126,12 @@ pub enum Frame {
         ack_ranges: Vec<AckRange>,
     },
     ResetStream {
-        stream_id: u64,
+        stream_id: StreamId,
         application_error_code: AppError,
         final_size: u64,
     },
     StopSending {
-        stream_id: u64,
+        stream_id: StreamId,
         application_error_code: AppError,
     },
     Crypto {
@@ -143,7 +143,7 @@ pub enum Frame {
     },
     Stream {
         fin: bool,
-        stream_id: u64,
+        stream_id: StreamId,
         offset: u64,
         data: Vec<u8>,
         fill: bool,
@@ -152,7 +152,7 @@ pub enum Frame {
         maximum_data: u64,
     },
     MaxStreamData {
-        stream_id: u64,
+        stream_id: StreamId,
         maximum_stream_data: u64,
     },
     MaxStreams {
@@ -163,7 +163,7 @@ pub enum Frame {
         data_limit: u64,
     },
     StreamDataBlocked {
-        stream_id: u64,
+        stream_id: StreamId,
         stream_data_limit: u64,
     },
     StreamsBlocked {
@@ -262,41 +262,62 @@ impl Frame {
         data: &[u8],
         fin: bool,
         space: usize,
-    ) -> (Frame, usize) {
-        let mut remaining = space - 1 - Encoder::varint_len(stream_id);
+    ) -> Option<(Frame, usize)> {
+        let mut overhead = 1 + Encoder::varint_len(stream_id);
         if offset > 0 {
-            remaining -= Encoder::varint_len(offset);
+            overhead += Encoder::varint_len(offset);
         }
-        let (fin, fill) = if data.len() > remaining {
+
+        let (fin, fill) = match (data.len() + overhead).cmp(&space) {
             // More data than fits, fill the packet and negate |fin|.
-            (false, true)
-        } else if data.len() == remaining {
+            Ordering::Greater => (false, true),
             // Exact fit, fill the packet, keep |fin|.
-            (fin, true)
-        } else {
+            Ordering::Equal => (fin, true),
             // Too small, so include a length.
-            let data_len = min(remaining - 1, data.len());
-            remaining -= Encoder::varint_len(u64::try_from(data_len).unwrap());
-            remaining = min(data.len(), remaining);
-            // In case the added length causes this to spill over, check |fin| again.
-            (fin && remaining == data.len(), false)
+            Ordering::Less => {
+                let data_len = min(space.saturating_sub(overhead + 1), data.len());
+                overhead += Encoder::varint_len(u64::try_from(data_len).unwrap());
+
+                // If all data isn't going to make it in the frame, don't keep fin.
+                let keep_fin = data.len() + overhead <= space;
+                (fin && keep_fin, false)
+            }
         };
+
+        if overhead > space {
+            qdebug!(
+                "Frame::new_stream -> None; ovr {} > space {}",
+                overhead,
+                space
+            );
+            return None;
+        }
+
+        let data_len = min(data.len(), space - overhead);
+        if data_len == 0 && !fin {
+            qdebug!("Frame::new_stream -> None; no data, no fin");
+            return None;
+        }
+
         qdebug!(
-            "Frame::new_stream fill {} fin {} data {}",
+            "Frame::new_stream fill {} fin {} data {} space {} ovr {}",
             fill,
             fin,
-            remaining
+            data_len,
+            space,
+            overhead
         );
-        (
+
+        Some((
             Frame::Stream {
-                stream_id,
+                stream_id: stream_id.into(),
                 offset,
-                data: data[..remaining].to_vec(),
+                data: data[..data_len].to_vec(),
                 fin,
                 fill,
             },
-            remaining,
-        )
+            data_len,
+        ))
     }
 
     pub fn marshal(&self, enc: &mut Encoder) {
@@ -324,7 +345,7 @@ impl Frame {
                 application_error_code,
                 final_size,
             } => {
-                enc.encode_varint(*stream_id);
+                enc.encode_varint(stream_id.as_u64());
                 enc.encode_varint(*application_error_code);
                 enc.encode_varint(*final_size);
             }
@@ -332,7 +353,7 @@ impl Frame {
                 stream_id,
                 application_error_code,
             } => {
-                enc.encode_varint(*stream_id);
+                enc.encode_varint(stream_id.as_u64());
                 enc.encode_varint(*application_error_code);
             }
             Frame::Crypto { offset, data } => {
@@ -349,7 +370,7 @@ impl Frame {
                 fill,
                 ..
             } => {
-                enc.encode_varint(*stream_id);
+                enc.encode_varint(stream_id.as_u64());
                 if *offset > 0 {
                     enc.encode_varint(*offset);
                 }
@@ -366,7 +387,7 @@ impl Frame {
                 stream_id,
                 maximum_stream_data,
             } => {
-                enc.encode_varint(*stream_id);
+                enc.encode_varint(stream_id.as_u64());
                 enc.encode_varint(*maximum_stream_data);
             }
             Frame::MaxStreams {
@@ -381,7 +402,7 @@ impl Frame {
                 stream_id,
                 stream_data_limit,
             } => {
-                enc.encode_varint(*stream_id);
+                enc.encode_varint(stream_id.as_u64());
                 enc.encode_varint(*stream_data_limit);
             }
             Frame::StreamsBlocked { stream_limit, .. } => {
@@ -482,7 +503,7 @@ impl Frame {
                 fin,
             } => Some(format!(
                 "Stream {{ stream_id: {}, offset: {}, len: {}{} fin: {} }}",
-                stream_id,
+                stream_id.as_u64(),
                 offset,
                 if *fill { ">>" } else { "" },
                 data.len(),
@@ -531,7 +552,7 @@ pub fn decode_frame(dec: &mut Decoder) -> Res<Frame> {
         FRAME_TYPE_PADDING => Ok(Frame::Padding),
         FRAME_TYPE_PING => Ok(Frame::Ping),
         FRAME_TYPE_RST_STREAM => Ok(Frame::ResetStream {
-            stream_id: dv!(dec),
+            stream_id: dv!(dec).into(),
             application_error_code: d!(dec.decode_varint()),
             final_size: match dec.decode_varint() {
                 Some(v) => v,
@@ -567,7 +588,7 @@ pub fn decode_frame(dec: &mut Decoder) -> Res<Frame> {
             })
         }
         FRAME_TYPE_STOP_SENDING => Ok(Frame::StopSending {
-            stream_id: dv!(dec),
+            stream_id: dv!(dec).into(),
             application_error_code: d!(dec.decode_varint()),
         }),
         FRAME_TYPE_CRYPTO => {
@@ -600,7 +621,7 @@ pub fn decode_frame(dec: &mut Decoder) -> Res<Frame> {
             };
             Ok(Frame::Stream {
                 fin: (t & STREAM_FRAME_BIT_FIN) != 0,
-                stream_id: s,
+                stream_id: s.into(),
                 offset: o,
                 data: data.to_vec(), // TODO(mt) unnecessary copy.
                 fill,
@@ -610,7 +631,7 @@ pub fn decode_frame(dec: &mut Decoder) -> Res<Frame> {
             maximum_data: dv!(dec),
         }),
         FRAME_TYPE_MAX_STREAM_DATA => Ok(Frame::MaxStreamData {
-            stream_id: dv!(dec),
+            stream_id: dv!(dec).into(),
             maximum_stream_data: dv!(dec),
         }),
         FRAME_TYPE_MAX_STREAMS_BIDI | FRAME_TYPE_MAX_STREAMS_UNIDI => Ok(Frame::MaxStreams {
@@ -622,7 +643,7 @@ pub fn decode_frame(dec: &mut Decoder) -> Res<Frame> {
             data_limit: dv!(dec),
         }),
         FRAME_TYPE_STREAM_DATA_BLOCKED => Ok(Frame::StreamDataBlocked {
-            stream_id: dv!(dec),
+            stream_id: dv!(dec).into(),
             stream_data_limit: dv!(dec),
         }),
         FRAME_TYPE_STREAMS_BLOCKED_BIDI | FRAME_TYPE_STREAMS_BLOCKED_UNIDI => {
@@ -732,7 +753,7 @@ mod tests {
     #[test]
     fn test_reset_stream() {
         let f = Frame::ResetStream {
-            stream_id: 0x1234,
+            stream_id: 0x1234.into(),
             application_error_code: 0x77,
             final_size: 0x3456,
         };
@@ -743,7 +764,7 @@ mod tests {
     #[test]
     fn test_stop_sending() {
         let f = Frame::StopSending {
-            stream_id: 63,
+            stream_id: 63.into(),
             application_error_code: 0x77,
         };
 
@@ -774,7 +795,7 @@ mod tests {
         // First, just set the length bit.
         let f = Frame::Stream {
             fin: false,
-            stream_id: 5,
+            stream_id: 5.into(),
             offset: 0,
             data: vec![1, 2, 3],
             fill: false,
@@ -785,7 +806,7 @@ mod tests {
         // Now with offset != 0 and FIN
         let f = Frame::Stream {
             fin: true,
-            stream_id: 5,
+            stream_id: 5.into(),
             offset: 1,
             data: vec![1, 2, 3],
             fill: false,
@@ -795,7 +816,7 @@ mod tests {
         // Now to fill the packet.
         let f = Frame::Stream {
             fin: true,
-            stream_id: 5,
+            stream_id: 5.into(),
             offset: 0,
             data: vec![1, 2, 3],
             fill: true,
@@ -815,7 +836,7 @@ mod tests {
     #[test]
     fn test_max_stream_data() {
         let f = Frame::MaxStreamData {
-            stream_id: 5,
+            stream_id: 5.into(),
             maximum_stream_data: 0x1234,
         };
 
@@ -849,7 +870,7 @@ mod tests {
     #[test]
     fn test_stream_data_blocked() {
         let f = Frame::StreamDataBlocked {
-            stream_id: 5,
+            stream_id: 5.into(),
             stream_data_limit: 0x1234,
         };
 
@@ -992,5 +1013,146 @@ mod tests {
         let res = Frame::decode_ack_frame(7, 2, vec![AckRange { gap: 0, range: 3 }]);
         assert!(res.is_ok());
         assert_eq!(res.unwrap(), vec![(7, 5), (3, 0)]);
+    }
+
+    #[test]
+    fn new_stream_empty() {
+        // Stream frames with empty data and no fin never work.
+        assert!(Frame::new_stream(0, 10, &[], false, 2).is_none());
+        assert!(Frame::new_stream(0, 10, &[], false, 3).is_none());
+        assert!(Frame::new_stream(0, 10, &[], false, 4).is_none());
+        assert!(Frame::new_stream(0, 10, &[], false, 5).is_none());
+        assert!(Frame::new_stream(0, 10, &[], false, 100).is_none());
+
+        // Empty data with fin is only a problem if there is no space.
+        assert!(Frame::new_stream(0, 0, &[], true, 1).is_none());
+        assert!(Frame::new_stream(0, 0, &[], true, 2).is_some());
+        assert!(Frame::new_stream(0, 10, &[], true, 2).is_none());
+        assert!(Frame::new_stream(0, 10, &[], true, 3).is_some());
+        assert!(Frame::new_stream(0, 10, &[], true, 4).is_some());
+        assert!(Frame::new_stream(0, 10, &[], true, 5).is_some());
+        assert!(Frame::new_stream(0, 10, &[], true, 100).is_some());
+    }
+
+    #[test]
+    fn new_stream_minimum() {
+        // Add minimum data
+        assert!(Frame::new_stream(0, 10, &[0x42; 1], false, 3).is_none());
+        assert!(Frame::new_stream(0, 10, &[0x42; 1], true, 3).is_none());
+        assert!(Frame::new_stream(0, 10, &[0x42; 1], false, 4).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 1], true, 4).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 1], false, 5).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 1], true, 5).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 1], false, 100).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 1], true, 100).is_some());
+    }
+
+    #[test]
+    fn new_stream_more() {
+        // Try more data
+        assert!(Frame::new_stream(0, 10, &[0x42; 100], false, 3).is_none());
+        assert!(Frame::new_stream(0, 10, &[0x42; 100], true, 3).is_none());
+        assert!(Frame::new_stream(0, 10, &[0x42; 100], false, 4).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 100], true, 4).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 100], false, 5).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 100], true, 5).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 100], false, 100).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 100], true, 100).is_some());
+
+        assert!(Frame::new_stream(0, 10, &[0x42; 100], false, 1000).is_some());
+        assert!(Frame::new_stream(0, 10, &[0x42; 100], true, 1000).is_some());
+    }
+
+    #[test]
+    fn new_stream_big_id() {
+        // A value that encodes to the largest varint.
+        const BIG: u64 = 1 << 30;
+
+        assert!(Frame::new_stream(BIG, BIG, &[], false, 16).is_none());
+        assert!(Frame::new_stream(BIG, BIG, &[], true, 16).is_none());
+        assert!(Frame::new_stream(BIG, BIG, &[], false, 17).is_none());
+        assert!(Frame::new_stream(BIG, BIG, &[], true, 17).is_some());
+        assert!(Frame::new_stream(BIG, BIG, &[], false, 18).is_none());
+        assert!(Frame::new_stream(BIG, BIG, &[], true, 18).is_some());
+
+        assert!(Frame::new_stream(BIG, BIG, &[0x42; 1], false, 17).is_none());
+        assert!(Frame::new_stream(BIG, BIG, &[0x42; 1], true, 17).is_none());
+        assert!(Frame::new_stream(BIG, BIG, &[0x42; 1], false, 18).is_some());
+        assert!(Frame::new_stream(BIG, BIG, &[0x42; 1], true, 18).is_some());
+        assert!(Frame::new_stream(BIG, BIG, &[0x42; 1], false, 19).is_some());
+        assert!(Frame::new_stream(BIG, BIG, &[0x42; 1], true, 19).is_some());
+        assert!(Frame::new_stream(BIG, BIG, &[0x42; 1], false, 100).is_some());
+        assert!(Frame::new_stream(BIG, BIG, &[0x42; 1], true, 100).is_some());
+    }
+
+    #[test]
+    fn new_stream_16384() {
+        // 16383/16384 is an odd boundary in STREAM frame construction.
+        // That is the boundary where a length goes from 2 bytes to 4 bytes.
+        // If the data fits in the available space, then it is simple:
+        let r = Frame::new_stream(0, 0, &[0x43; 16384], true, 16386);
+        let (f, used) = r.expect("Fit frame");
+        assert_eq!(used, 16384);
+        if let Frame::Stream {
+            fin, fill, data, ..
+        } = f
+        {
+            assert_eq!(data.len(), 16384);
+            assert!(fin);
+            assert!(fill);
+        } else {
+            panic!("Wrong frame type");
+        }
+
+        // However, if there is one extra byte of space, we will try to add a length.
+        // That length will then make the frame to be too large and the data will be
+        // truncated.  The frame could carry one more byte of data, but it's a corner
+        // case we don't want to address as it should be rare (if not impossible).
+        let r = Frame::new_stream(0, 0, &[0x43; 16384], true, 16387);
+        let (f, used) = r.expect("a frame");
+        assert_eq!(used, 16381);
+        if let Frame::Stream {
+            fin, fill, data, ..
+        } = f
+        {
+            assert_eq!(data.len(), 16381);
+            assert!(!fin);
+            assert!(!fill);
+        } else {
+            panic!("Wrong frame type");
+        }
+    }
+
+    #[test]
+    fn new_stream_64() {
+        // Unlike 16383/16384, the boundary at 63/64 is easy because the difference
+        // is just one byte.  We lose just the last byte when there is more space.
+        let r = Frame::new_stream(0, 0, &[0x43; 64], true, 66);
+        let (f, used) = r.expect("Fit frame");
+        assert_eq!(used, 64);
+        if let Frame::Stream {
+            fin, fill, data, ..
+        } = f
+        {
+            assert_eq!(data.len(), 64);
+            assert!(fin);
+            assert!(fill);
+        } else {
+            panic!("Wrong frame type");
+        }
+
+        let r = Frame::new_stream(0, 0, &[0x43; 64], true, 67);
+        let (f, used) = r.expect("a frame");
+        assert_eq!(used, 63);
+        if let Frame::Stream {
+            fin, fill, data, ..
+        } = f
+        {
+            assert_eq!(data.len(), 63);
+            assert!(!fin);
+            assert!(!fill);
+        } else {
+            panic!("Wrong frame type");
+        }
     }
 }

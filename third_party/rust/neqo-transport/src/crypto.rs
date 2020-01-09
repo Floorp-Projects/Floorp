@@ -29,8 +29,8 @@ const MAX_AUTH_TAG: usize = 32;
 #[derive(Debug)]
 pub struct Crypto {
     pub(crate) tls: Agent,
-    pub(crate) streams: [CryptoStream; 4],
-    pub(crate) states: [Option<CryptoState>; 4],
+    pub(crate) streams: CryptoStreams,
+    pub(crate) states: CryptoStates,
 }
 
 impl Crypto {
@@ -77,8 +77,7 @@ impl Crypto {
             Role::Server => (SERVER_INITIAL_LABEL, CLIENT_INITIAL_LABEL),
         };
 
-        self.states[0] = Some(CryptoState {
-            epoch: 0,
+        self.states.states[0] = Some(CryptoState {
             tx: CryptoDxState::new_initial(CryptoDxDirection::Write, write_label, dcid),
             rx: CryptoDxState::new_initial(CryptoDxDirection::Read, read_label, dcid),
         });
@@ -89,58 +88,8 @@ impl Crypto {
         for r in records {
             assert_eq!(r.ct, 22);
             qdebug!([self], "Adding CRYPTO data {:?}", r);
-            self.streams[r.epoch as usize].tx.send(&r.data);
+            self.streams.send(r.epoch, &r.data);
         }
-    }
-
-    // Get a crypto state, making it if necessary, otherwise return an error.
-    pub fn obtain_crypto_state(&mut self, role: Role, epoch: Epoch) -> Res<&mut CryptoState> {
-        #[cfg(debug_assertions)]
-        let label = format!("{}", self);
-        #[cfg(not(debug_assertions))]
-        let label = "";
-
-        let cs = &mut self.states[epoch as usize];
-        if cs.is_none() {
-            qtrace!([label], "Build crypto state for epoch {}", epoch);
-            assert!(epoch != 0); // This state is made directly.
-
-            let cipher = match (epoch, self.tls.info()) {
-                (1, _) => self.tls.preinfo()?.early_data_cipher(),
-                (_, None) => self.tls.preinfo()?.cipher_suite(),
-                (_, Some(info)) => Some(info.cipher_suite()),
-            };
-            if cipher.is_none() {
-                qdebug!([label], "cipher info not available yet");
-                return Err(Error::KeysNotFound);
-            }
-            let cipher = cipher.unwrap();
-
-            let rx = self
-                .tls
-                .read_secret(epoch)
-                .map(|rs| CryptoDxState::new(CryptoDxDirection::Read, epoch, rs, cipher));
-            let tx = self
-                .tls
-                .write_secret(epoch)
-                .map(|ws| CryptoDxState::new(CryptoDxDirection::Write, epoch, ws, cipher));
-
-            // Validate the key setup.
-            match (&rx, &tx, role, epoch) {
-                (None, Some(_), Role::Client, 1)
-                | (Some(_), None, Role::Server, 1)
-                | (Some(_), Some(_), _, _) => {}
-                (None, None, _, _) => {
-                    qdebug!([label], "Keying material not available for epoch {}", epoch);
-                    return Err(Error::KeysNotFound);
-                }
-                _ => panic!("bad configuration of keys"),
-            }
-
-            *cs = Some(CryptoState { epoch, rx, tx });
-        }
-
-        Ok(cs.as_mut().unwrap())
     }
 
     pub fn acked(&mut self, token: CryptoRecoveryToken) {
@@ -150,51 +99,17 @@ impl Crypto {
             token.offset,
             token.length
         );
-        self.streams[token.epoch as usize]
-            .tx
-            .mark_as_acked(token.offset, token.length);
+        self.streams.acked(token);
     }
 
-    pub fn lost(&mut self, token: CryptoRecoveryToken) {
+    pub fn lost(&mut self, token: &CryptoRecoveryToken) {
         qinfo!(
             "Lost crypto frame epoch={} offset={} length={}",
             token.epoch,
             token.offset,
             token.length
         );
-        self.streams[token.epoch as usize]
-            .tx
-            .mark_as_lost(token.offset, token.length);
-    }
-
-    pub fn get_frame(
-        &mut self,
-        epoch: u16,
-        mode: TxMode,
-        remaining: usize,
-    ) -> Option<(Frame, Option<RecoveryToken>)> {
-        let tx_stream = &mut self.streams[epoch as usize].tx;
-        if let Some((offset, data)) = tx_stream.next_bytes(mode) {
-            let (frame, length) = Frame::new_crypto(offset, data, remaining);
-            tx_stream.mark_as_sent(offset, length);
-
-            qdebug!(
-                "Emitting crypto frame epoch={}, offset={}, len={}",
-                epoch,
-                offset,
-                length
-            );
-            Some((
-                frame,
-                Some(RecoveryToken::Crypto(CryptoRecoveryToken {
-                    epoch,
-                    offset,
-                    length,
-                })),
-            ))
-        } else {
-            None
-        }
+        self.streams.lost(token);
     }
 }
 
@@ -315,17 +230,148 @@ impl std::fmt::Display for CryptoDxState {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct CryptoState {
-    pub epoch: Epoch,
     pub tx: Option<CryptoDxState>,
     pub rx: Option<CryptoDxState>,
+}
+
+#[derive(Debug, Default)]
+pub struct CryptoStates {
+    pub states: [Option<CryptoState>; 4],
+}
+
+impl std::fmt::Display for CryptoStates {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "CryptoStates")
+    }
+}
+
+impl CryptoStates {
+    // Get a crypto state, making it if necessary, otherwise return an error.
+    pub fn obtain(&mut self, role: Role, epoch: Epoch, tls: &Agent) -> Res<&mut CryptoState> {
+        #[cfg(debug_assertions)]
+        let label = format!("{}", self);
+        #[cfg(not(debug_assertions))]
+        let label = "";
+
+        let cs = &mut self.states[epoch as usize];
+        if cs.is_none() {
+            qtrace!([label], "Build crypto state for epoch {}", epoch);
+            assert!(epoch != 0); // This state is made directly.
+
+            let cipher = match (epoch, tls.info()) {
+                (1, _) => tls.preinfo()?.early_data_cipher(),
+                (_, None) => tls.preinfo()?.cipher_suite(),
+                (_, Some(info)) => Some(info.cipher_suite()),
+            }
+            .ok_or_else(|| {
+                qdebug!([label], "cipher info not available yet");
+                Error::KeysNotFound
+            })?;
+
+            let rx = tls
+                .read_secret(epoch)
+                .map(|rs| CryptoDxState::new(CryptoDxDirection::Read, epoch, rs, cipher));
+            let tx = tls
+                .write_secret(epoch)
+                .map(|ws| CryptoDxState::new(CryptoDxDirection::Write, epoch, ws, cipher));
+
+            // Validate the key setup.
+            match (&rx, &tx, role, epoch) {
+                (None, Some(_), Role::Client, 1)
+                | (Some(_), None, Role::Server, 1)
+                | (Some(_), Some(_), _, _) => {}
+                (None, None, _, _) => {
+                    qdebug!([label], "Keying material not available for epoch {}", epoch);
+                    return Err(Error::KeysNotFound);
+                }
+                _ => panic!("bad configuration of keys"),
+            }
+
+            *cs = Some(CryptoState { rx, tx });
+        }
+
+        Ok(cs.as_mut().unwrap())
+    }
 }
 
 #[derive(Debug, Default)]
 pub struct CryptoStream {
     pub tx: TxBuffer,
     pub rx: RxStreamOrderer,
+}
+
+#[derive(Debug, Default)]
+pub struct CryptoStreams {
+    streams: [CryptoStream; 4],
+}
+
+impl CryptoStreams {
+    pub fn send(&mut self, epoch: u16, data: &[u8]) {
+        self.streams[epoch as usize].tx.send(data);
+    }
+
+    pub fn inbound_frame(&mut self, epoch: u16, offset: u64, data: Vec<u8>) -> Res<()> {
+        self.streams[epoch as usize].rx.inbound_frame(offset, data)
+    }
+
+    pub fn data_ready(&self, epoch: u16) -> bool {
+        self.streams[epoch as usize].rx.data_ready()
+    }
+
+    pub fn read_to_end(&mut self, epoch: u16, buf: &mut Vec<u8>) -> Res<u64> {
+        self.streams[epoch as usize].rx.read_to_end(buf)
+    }
+
+    pub fn acked(&mut self, token: CryptoRecoveryToken) {
+        self.streams[token.epoch as usize]
+            .tx
+            .mark_as_acked(token.offset, token.length)
+    }
+
+    pub fn lost(&mut self, token: &CryptoRecoveryToken) {
+        self.streams[token.epoch as usize]
+            .tx
+            .mark_as_lost(token.offset, token.length)
+    }
+
+    pub fn sent(&mut self, epoch: u16, offset: u64, length: usize) {
+        self.streams[epoch as usize].tx.mark_as_sent(offset, length)
+    }
+
+    pub fn next_bytes(&self, epoch: u16, mode: TxMode) -> Option<(u64, &[u8])> {
+        self.streams[epoch as usize].tx.next_bytes(mode)
+    }
+
+    pub fn get_frame(
+        &mut self,
+        epoch: u16,
+        mode: TxMode,
+        remaining: usize,
+    ) -> Option<(Frame, Option<RecoveryToken>)> {
+        if let Some((offset, data)) = self.next_bytes(epoch, mode) {
+            let (frame, length) = Frame::new_crypto(offset, data, remaining);
+            self.sent(epoch, offset, length);
+
+            qdebug!(
+                "Emitting crypto frame epoch={}, offset={}, len={}",
+                epoch,
+                offset,
+                length
+            );
+            Some((
+                frame,
+                Some(RecoveryToken::Crypto(CryptoRecoveryToken {
+                    epoch,
+                    offset,
+                    length,
+                })),
+            ))
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

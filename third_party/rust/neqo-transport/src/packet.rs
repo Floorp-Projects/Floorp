@@ -12,9 +12,10 @@
 use rand::Rng;
 
 use neqo_common::{hex, matches, qtrace, Decoder, Encoder};
+use neqo_crypto::aead::Aead;
 use neqo_crypto::Epoch;
 
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 use crate::{Error, Res};
 
@@ -155,6 +156,41 @@ impl PacketHdr {
 
     pub fn body_len(&self) -> usize {
         self.body_len
+    }
+
+    // header length plus auth tag
+    pub fn overhead(&self, aead: &Aead, pmtu: usize) -> usize {
+        match &self.tipe {
+            PacketType::Short => {
+                // Leading byte.
+                let mut len = 1;
+                len += self.dcid.0.len();
+                len += pn_length(self.pn);
+                len + aead.expansion()
+            }
+            PacketType::VN(_) => unimplemented!("Can't get overhead for VN"),
+            PacketType::Retry { .. } => unimplemented!("Can't get overhead for Retry"),
+            PacketType::Initial(..) | PacketType::ZeroRTT | PacketType::Handshake => {
+                let pnl = pn_length(self.pn);
+
+                // Leading byte.
+                let mut len = 1;
+                len += 4; // Version
+                len += 1; // DCID length
+                len += self.dcid.len();
+                len += 1; // SCID length
+                len += self.scid.as_ref().unwrap().len();
+
+                if let PacketType::Initial(token) = &self.tipe {
+                    len += Encoder::varint_len(token.len().try_into().unwrap());
+                    len += token.len();
+                }
+
+                len += Encoder::varint_len((pnl + pmtu + aead.expansion()) as u64);
+                len += pnl;
+                len + aead.expansion()
+            }
+        }
     }
 }
 
@@ -534,6 +570,7 @@ pub fn encode_packet(crypto: &dyn CryptoCtx, hdr: &PacketHdr, body: &[u8]) -> Ve
 #[allow(unused_variables)]
 mod tests {
     use super::*;
+    use neqo_common::matches;
 
     const TEST_BODY: [u8; 6] = [0x01, 0x23, 0x45, 0x67, 0x89, 0x10];
 

@@ -4,10 +4,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::connection::{Http3Connection, Http3ServerHandler, Http3State};
-use crate::server_connection_events::{Http3ServerConnEvent, Http3ServerConnEvents};
-use crate::transaction_server::TransactionServer;
-use crate::{Error, Header, Res};
+use crate::connection::Http3State;
+use crate::connection_server::Http3ServerHandler;
+use crate::{Header, Res};
 use neqo_common::{qdebug, qinfo};
 use neqo_transport::server::ActiveConnectionRef;
 use neqo_transport::{AppError, Connection};
@@ -15,58 +14,11 @@ use neqo_transport::{AppError, Connection};
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
-use std::time::Instant;
-
-pub type Http3ServerConnection =
-    Http3Connection<Http3ServerConnEvents, TransactionServer, Http3ServerHandler>;
-
-#[derive(Debug)]
-pub struct Http3Handler {
-    handler: Http3ServerConnection,
-}
-
-impl Http3Handler {
-    pub fn new(max_table_size: u32, max_blocked_streams: u16) -> Self {
-        Http3Handler {
-            handler: Http3Connection::new(max_table_size, max_blocked_streams),
-        }
-    }
-    pub fn set_response(&mut self, stream_id: u64, headers: &[Header], data: Vec<u8>) -> Res<()> {
-        self.handler
-            .transactions
-            .get_mut(&stream_id)
-            .ok_or(Error::InvalidStreamId)?
-            .set_response(headers, data, &mut self.handler.qpack_encoder);
-        self.handler.insert_streams_have_data_to_send(stream_id);
-        Ok(())
-    }
-
-    pub fn stream_reset(
-        &mut self,
-        conn: &mut Connection,
-        stream_id: u64,
-        app_error: AppError,
-    ) -> Res<()> {
-        self.handler.stream_reset(conn, stream_id, app_error)
-    }
-
-    pub fn process_http3(&mut self, conn: &mut Connection, now: Instant) {
-        self.handler.process_http3(conn, now);
-    }
-
-    pub fn next_event(&mut self) -> Option<Http3ServerConnEvent> {
-        self.handler.events.next_event()
-    }
-
-    pub fn should_be_processed(&self) -> bool {
-        self.handler.has_data_to_send() | self.handler.events.has_events()
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct ClientRequestStream {
     conn: ActiveConnectionRef,
-    handler: Rc<RefCell<Http3Handler>>,
+    handler: Rc<RefCell<Http3ServerHandler>>,
     stream_id: u64,
 }
 
@@ -84,7 +36,7 @@ impl ::std::fmt::Display for ClientRequestStream {
 impl ClientRequestStream {
     pub fn new(
         conn: ActiveConnectionRef,
-        handler: Rc<RefCell<Http3Handler>>,
+        handler: Rc<RefCell<Http3ServerHandler>>,
         stream_id: u64,
     ) -> Self {
         ClientRequestStream {

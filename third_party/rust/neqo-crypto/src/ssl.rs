@@ -47,16 +47,16 @@ impl Opt {
     #[allow(clippy::cast_possible_wrap)]
     pub fn as_int(self) -> PRInt32 {
         let i = match self {
-            Opt::Locking => SSLOption::SSL_NO_LOCKS,
-            Opt::Tickets => SSLOption::SSL_ENABLE_SESSION_TICKETS,
-            Opt::OcspStapling => SSLOption::SSL_ENABLE_OCSP_STAPLING,
-            Opt::Alpn => SSLOption::SSL_ENABLE_ALPN,
-            Opt::ExtendedMasterSecret => SSLOption::SSL_ENABLE_EXTENDED_MASTER_SECRET,
-            Opt::SignedCertificateTimestamps => SSLOption::SSL_ENABLE_SIGNED_CERT_TIMESTAMPS,
-            Opt::EarlyData => SSLOption::SSL_ENABLE_0RTT_DATA,
-            Opt::RecordSizeLimit => SSLOption::SSL_RECORD_SIZE_LIMIT,
-            Opt::Tls13CompatMode => SSLOption::SSL_ENABLE_TLS13_COMPAT_MODE,
-            Opt::HelloDowngradeCheck => SSLOption::SSL_ENABLE_HELLO_DOWNGRADE_CHECK,
+            Self::Locking => SSLOption::SSL_NO_LOCKS,
+            Self::Tickets => SSLOption::SSL_ENABLE_SESSION_TICKETS,
+            Self::OcspStapling => SSLOption::SSL_ENABLE_OCSP_STAPLING,
+            Self::Alpn => SSLOption::SSL_ENABLE_ALPN,
+            Self::ExtendedMasterSecret => SSLOption::SSL_ENABLE_EXTENDED_MASTER_SECRET,
+            Self::SignedCertificateTimestamps => SSLOption::SSL_ENABLE_SIGNED_CERT_TIMESTAMPS,
+            Self::EarlyData => SSLOption::SSL_ENABLE_0RTT_DATA,
+            Self::RecordSizeLimit => SSLOption::SSL_RECORD_SIZE_LIMIT,
+            Self::Tls13CompatMode => SSLOption::SSL_ENABLE_TLS13_COMPAT_MODE,
+            Self::HelloDowngradeCheck => SSLOption::SSL_ENABLE_HELLO_DOWNGRADE_CHECK,
         };
         i as PRInt32
     }
@@ -64,7 +64,7 @@ impl Opt {
     // Some options are backwards, like SSL_NO_LOCKS, so use this to manage that.
     pub fn map_enabled(self, enabled: bool) -> PRIntn {
         let v = match self {
-            Opt::Locking => !enabled,
+            Self::Locking => !enabled,
             _ => enabled,
         };
         PRIntn::from(v)

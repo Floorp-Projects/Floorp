@@ -4,6 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::hsettings_frame::HSettings;
 use neqo_common::{
     hex, qdebug, qtrace, Decoder, Encoder, IncrementalDecoder, IncrementalDecoderResult,
 };
@@ -24,25 +25,11 @@ const H3_FRAME_TYPE_GOAWAY: HFrameType = 0x7;
 const H3_FRAME_TYPE_MAX_PUSH_ID: HFrameType = 0xd;
 const H3_FRAME_TYPE_DUPLICATE_PUSH: HFrameType = 0xe;
 
-type SettingsType = u64;
-
-const SETTINGS_MAX_HEADER_LIST_SIZE: SettingsType = 0x6;
-const SETTINGS_QPACK_MAX_TABLE_CAPACITY: SettingsType = 0x1;
-const SETTINGS_QPACK_BLOCKED_STREAMS: SettingsType = 0x7;
-
 #[derive(Copy, Clone, PartialEq)]
 pub enum HStreamType {
     Control,
     Request,
     Push,
-}
-
-#[derive(PartialEq, Debug)]
-pub enum HSettingType {
-    MaxHeaderListSize,
-    MaxTableSize,
-    BlockedStreams,
-    UnknownType,
 }
 
 // data for DATA and header blocks for HEADERS anf PUSH_PROMISE are not read into HFrame.
@@ -58,7 +45,7 @@ pub enum HFrame {
         push_id: u64,
     },
     Settings {
-        settings: Vec<(HSettingType, u64)>,
+        settings: HSettings,
     },
     PushPromise {
         push_id: u64,
@@ -103,25 +90,7 @@ impl HFrame {
                 });
             }
             HFrame::Settings { settings } => {
-                enc.encode_vvec_with(|enc_inner| {
-                    for iter in settings.iter() {
-                        match iter.0 {
-                            HSettingType::MaxHeaderListSize => {
-                                enc_inner.encode_varint(SETTINGS_MAX_HEADER_LIST_SIZE as u64);
-                                enc_inner.encode_varint(iter.1);
-                            }
-                            HSettingType::MaxTableSize => {
-                                enc_inner.encode_varint(SETTINGS_QPACK_MAX_TABLE_CAPACITY as u64);
-                                enc_inner.encode_varint(iter.1);
-                            }
-                            HSettingType::BlockedStreams => {
-                                enc_inner.encode_varint(SETTINGS_QPACK_BLOCKED_STREAMS as u64);
-                                enc_inner.encode_varint(iter.1);
-                            }
-                            HSettingType::UnknownType => {}
-                        }
-                    }
-                });
+                settings.encode_frame_contents(enc);
             }
             HFrame::PushPromise {
                 push_id,
@@ -369,26 +338,8 @@ impl HFrameReader {
                 },
             },
             H3_FRAME_TYPE_SETTINGS => {
-                let mut settings: Vec<(HSettingType, u64)> = Vec::new();
-                while dec.remaining() > 0 {
-                    let st_read = match dec.decode_varint() {
-                        Some(v) => v,
-                        _ => return Err(Error::NotEnoughData),
-                    };
-                    let st = match st_read {
-                        SETTINGS_MAX_HEADER_LIST_SIZE => HSettingType::MaxHeaderListSize,
-                        SETTINGS_QPACK_MAX_TABLE_CAPACITY => HSettingType::MaxTableSize,
-                        SETTINGS_QPACK_BLOCKED_STREAMS => HSettingType::BlockedStreams,
-                        _ => HSettingType::UnknownType,
-                    };
-                    let v = match dec.decode_varint() {
-                        Some(v) => v,
-                        _ => return Err(Error::NotEnoughData),
-                    };
-                    if st != HSettingType::UnknownType {
-                        settings.push((st, v));
-                    }
-                }
+                let mut settings = HSettings::default();
+                settings.decode_frame_contents(&mut dec)?;
                 HFrame::Settings { settings }
             }
             H3_FRAME_TYPE_PUSH_PROMISE => {
@@ -429,6 +380,7 @@ impl HFrameReader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::hsettings_frame::{HSetting, HSettingType};
     use neqo_crypto::AuthenticationStatus;
     use neqo_transport::StreamType;
     use num_traits::Num;
@@ -509,7 +461,7 @@ mod tests {
     #[test]
     fn test_settings_frame4() {
         let f = HFrame::Settings {
-            settings: vec![(HSettingType::MaxHeaderListSize, 4)],
+            settings: HSettings::new(&[HSetting::new(HSettingType::MaxHeaderListSize, 4)]),
         };
         enc_dec(&f, "04020604", 0);
     }
@@ -592,7 +544,7 @@ mod tests {
         if let HFrame::Settings { settings } = f.unwrap() {
             assert!(settings.len() == 1);
             //            for i in settings.iter() {
-            assert!(settings[0] == (HSettingType::MaxHeaderListSize, 4));
+            assert!(settings[0] == HSetting::new(HSettingType::MaxHeaderListSize, 4));
         } else {
             panic!("wrong frame type");
         }
@@ -659,7 +611,7 @@ mod tests {
         assert!(f.is_ok());
         if let HFrame::Settings { settings } = f.unwrap() {
             assert!(settings.len() == 1);
-            assert!(settings[0] == (HSettingType::MaxHeaderListSize, 4));
+            assert!(settings[0] == HSetting::new(HSettingType::MaxHeaderListSize, 4));
         } else {
             panic!("wrong frame type");
         }
@@ -900,6 +852,7 @@ mod tests {
 
     // if we read more than done_state bytes HFrameReader will be in done state.
     fn test_complete_and_incomplete_frame(buf: &[u8], done_state: usize) {
+        use std::cmp::Ordering;
         // Let's consume partial frames. It is enough to test partal frames
         // up to 10 byte. 10 byte is greater than frame type and frame
         // length and bit of data.
@@ -917,23 +870,19 @@ mod tests {
             test_reading_frame(
                 &buf[..i],
                 FrameReadingTestSend::DataWithFin,
-                if i == done_state {
-                    FrameReadingTestExpect::FrameAndStreamComplete
-                } else if i > done_state {
-                    FrameReadingTestExpect::FrameComplete
-                } else {
-                    FrameReadingTestExpect::Error
+                match i.cmp(&done_state) {
+                    Ordering::Greater => FrameReadingTestExpect::FrameComplete,
+                    Ordering::Equal => FrameReadingTestExpect::FrameAndStreamComplete,
+                    Ordering::Less => FrameReadingTestExpect::Error,
                 },
             );
             test_reading_frame(
                 &buf[..i],
                 FrameReadingTestSend::DataThenFin,
-                if i == done_state {
-                    FrameReadingTestExpect::FrameAndStreamComplete
-                } else if i > done_state {
-                    FrameReadingTestExpect::FrameComplete
-                } else {
-                    FrameReadingTestExpect::Error
+                match i.cmp(&done_state) {
+                    Ordering::Greater => FrameReadingTestExpect::FrameComplete,
+                    Ordering::Equal => FrameReadingTestExpect::FrameAndStreamComplete,
+                    Ordering::Less => FrameReadingTestExpect::Error,
                 },
             );
         }
@@ -1009,7 +958,7 @@ mod tests {
 
         // H3_FRAME_TYPE_SETTINGS
         let f = HFrame::Settings {
-            settings: vec![(HSettingType::MaxHeaderListSize, 4)],
+            settings: HSettings::new(&[HSetting::new(HSettingType::MaxHeaderListSize, 4)]),
         };
         let mut enc = Encoder::default();
         f.encode(&mut enc);

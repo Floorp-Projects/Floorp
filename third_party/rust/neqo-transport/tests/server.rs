@@ -6,7 +6,7 @@
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
 
-use neqo_common::{hex, qdebug, qtrace, Datagram, Decoder, Encoder};
+use neqo_common::{hex, matches, qdebug, qtrace, Datagram, Decoder, Encoder};
 use neqo_crypto::{
     aead::Aead,
     constants::{TLS_AES_128_GCM_SHA256, TLS_VERSION_1_3},
@@ -267,7 +267,7 @@ fn retry_bad_token() {
     assert!(client_initial1.is_some());
     let retry = retry_server.process(client_initial1, now()).dgram();
     assert!(retry.is_some());
-    let client_initial2 = client.process(retry.clone(), now()).dgram();
+    let client_initial2 = client.process(retry, now()).dgram();
     assert!(client_initial2.is_some());
 
     let dgram = server.process(client_initial2, now()).dgram();
@@ -330,7 +330,7 @@ fn mitm_retry() {
     assert!(client_initial1.is_some());
     let retry = retry_server.process(client_initial1, now()).dgram();
     assert!(retry.is_some());
-    let client_initial2 = client.process(retry.clone(), now()).dgram();
+    let client_initial2 = client.process(retry, now()).dgram();
     assert!(client_initial2.is_some());
 
     // Now to start the epic process of decrypting the packet,
@@ -436,11 +436,14 @@ fn mitm_retry() {
     assert!(dgram.is_none());
     assert!(test_fixture::maybe_authenticate(&mut client));
     let dgram = client.process(dgram, now()).dgram();
-    assert!(dgram.is_none());
-    assert_eq!(
+    assert!(dgram.is_some()); // Client sending CLOSE_CONNECTIONs
+    assert!(matches!(
         *client.state(),
-        State::Closed(ConnectionError::Transport(Error::InvalidRetry))
-    );
+        State::Closing{
+            error: ConnectionError::Transport(Error::InvalidRetry),
+            ..
+        }
+    ));
 }
 
 #[test]
