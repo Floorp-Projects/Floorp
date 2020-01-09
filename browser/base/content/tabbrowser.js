@@ -1811,6 +1811,7 @@
         sameProcessAsFrameLoader,
         recordExecution,
         replaceBrowsingContext,
+        redirectLoadSwitchId,
       } = {}
     ) {
       let isRemote = aBrowser.getAttribute("remote") == "true";
@@ -1944,7 +1945,11 @@
         // This call actually switches out our frameloaders. Do this as late as
         // possible before rebuilding the browser, as we'll need the new browser
         // state set up completely first.
-        aBrowser.changeRemoteness({ remoteType, replaceBrowsingContext });
+        aBrowser.changeRemoteness({
+          remoteType,
+          replaceBrowsingContext,
+          switchingInProgressLoad: redirectLoadSwitchId != null,
+        });
         // Once we have new frameloaders, this call sets the browser back up.
         //
         // FIXME(emilio): Shouldn't we call destroy() first? What hides the
