@@ -1063,7 +1063,7 @@ main {
   .search-wrapper .search-inner-wrapper {
     cursor: default;
     display: flex;
-    height: 48px;
+    min-height: 48px;
     margin: 0 auto;
     position: relative;
     width: 224px; }
@@ -1190,7 +1190,7 @@ main {
   body:not(.inline-onboarding) .fixed-search .search-wrapper {
     background-color: var(--newtab-search-header-background-color);
     border-bottom: solid 1px var(--newtab-border-secondary-color);
-    height: 95px;
+    min-height: 95px;
     left: 0;
     padding: 30px 0;
     position: fixed;
@@ -1198,7 +1198,7 @@ main {
     width: 100%;
     z-index: 9; }
     body:not(.inline-onboarding) .fixed-search .search-wrapper .search-inner-wrapper {
-      height: 35px; }
+      min-height: 35px; }
     body:not(.inline-onboarding) .fixed-search .search-wrapper input {
       background-position-x: 16px;
       background-size: 16px; }
