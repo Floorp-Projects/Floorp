@@ -129,11 +129,6 @@ options-source-maps-tooltip =
 # The message shown for settings that trigger page reload
 options-context-triggers-page-refresh = * Current session only, reloads the page
 
-##
-
-# The heading for the Debugger section
-options-debugger-label = Debugger
-
 # The label for the checkbox that toggles the display of the platform data in the
 # Profiler i.e. devtools.profiler.ui.show-platform-data a boolean preference in about:config
 options-show-platform-data-label = Show Gecko platform data
