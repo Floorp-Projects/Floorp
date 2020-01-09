@@ -107,6 +107,8 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   // Parses a stylesheet. The load data argument corresponds to the
   // SheetLoadData for this stylesheet.
+  // NOTE: ParseSheet can run synchronously or asynchronously
+  //       based on the result of `AllowParallelParse`
   RefPtr<StyleSheetParsePromise> ParseSheet(css::Loader&,
                                             const nsACString& aBytes,
                                             css::SheetLoadData&);
@@ -116,8 +118,10 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   void FinishAsyncParse(
       already_AddRefed<RawServoStyleSheetContents> aSheetContents);
 
-  // Similar to the above, but guarantees that parsing will be performed
-  // synchronously.
+  // Similar to `ParseSheet`, but guarantees that
+  // parsing will be performed synchronously.
+  // NOTE: ParseSheet can still run synchronously.
+  //       This is not a strict alternative.
   //
   // The load data may be null sometimes.
   void ParseSheetSync(
