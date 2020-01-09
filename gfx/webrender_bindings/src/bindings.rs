@@ -104,6 +104,7 @@ type WrColorDepth = ColorDepth;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrColorRange = ColorRange;
 
+
 #[repr(C)]
 pub struct WrSpaceAndClip {
     space: WrSpatialId,
@@ -1821,16 +1822,6 @@ pub extern "C" fn wr_transaction_set_is_transform_async_zooming(
     is_zooming: bool
 ) {
     txn.set_is_transform_async_zooming(is_zooming, PropertyBindingId::new(animation_id));
-}
-
-#[no_mangle]
-pub extern "C" fn wr_transaction_set_quality_settings(
-    txn: &mut Transaction,
-    allow_sacrificing_subpixel_aa: bool
-) {
-    txn.set_quality_settings(QualitySettings {
-        allow_sacrificing_subpixel_aa
-    });
 }
 
 #[no_mangle]
