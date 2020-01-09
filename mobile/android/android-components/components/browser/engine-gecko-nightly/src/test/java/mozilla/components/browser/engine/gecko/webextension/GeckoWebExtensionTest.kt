@@ -321,6 +321,7 @@ class GeckoWebExtensionTest {
         metaDataBundle.putString("name", "myextension")
         metaDataBundle.putString("optionsPageUrl", "")
         metaDataBundle.putBoolean("openOptionsPageInTab", false)
+        metaDataBundle.putStringArray("disabledFlags", emptyArray())
         val bundle = GeckoBundle()
         bundle.putString("webExtensionId", "id")
         bundle.putString("locationURI", "uri")
@@ -358,6 +359,7 @@ class GeckoWebExtensionTest {
         val bundle = GeckoBundle()
         bundle.putString("webExtensionId", "id")
         bundle.putString("locationURI", "uri")
+        metaDataBundle.putStringArray("disabledFlags", emptyArray())
         bundle.putBundle("metaData", metaDataBundle)
 
         val nativeWebExtension = MockWebExtension(bundle)
