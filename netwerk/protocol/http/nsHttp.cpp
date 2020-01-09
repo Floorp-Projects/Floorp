@@ -31,7 +31,7 @@ const nsCString kHttp3Version = NS_LITERAL_CSTRING("h3-24");
 
 // define storage for all atoms
 namespace nsHttp {
-#define HTTP_ATOM(_name, _value) nsHttpAtom _name = {_value};
+#define HTTP_ATOM(_name, _value) nsHttpAtom _name(_value);
 #include "nsHttpAtomList.h"
 #undef HTTP_ATOM
 }  // namespace nsHttp
@@ -142,7 +142,7 @@ Mutex* GetLock() { return sLock; }
 
 // this function may be called from multiple threads
 nsHttpAtom ResolveAtom(const char* str) {
-  nsHttpAtom atom = {nullptr};
+  nsHttpAtom atom;
 
   if (!str || !sAtomTable) return atom;
 

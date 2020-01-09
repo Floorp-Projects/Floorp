@@ -2461,7 +2461,7 @@ void nsHttpTransaction::SetHttpTrailers(nsCString& aTrailers) {
     int32_t end =
         (newline && aTrailers[newline - 1] == '\r') ? newline - 1 : newline;
     nsDependentCSubstring line(aTrailers, cur, end);
-    nsHttpAtom hdr = {nullptr};
+    nsHttpAtom hdr;
     nsAutoCString hdrNameOriginal;
     nsAutoCString val;
     if (NS_SUCCEEDED(httpTrailers->ParseHeaderLine(line, &hdr, &hdrNameOriginal,
