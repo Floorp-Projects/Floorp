@@ -4,24 +4,19 @@
 
 package org.mozilla.fenix.ext
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.TestApplication
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import java.util.UUID
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
-@RunWith(RobolectricTestRunner::class)
-@Config(application = TestApplication::class)
 class BookmarkNodeTest {
 
     private val bookmarkChild1 = newBookmarkNode("Child 1", 1, null)
     private val bookmarkChild2 = newBookmarkNode("Child 2", 2, null)
     private val bookmarkChild3 = newBookmarkNode("Child 3", 3, null)
     private val allChildren = listOf(bookmarkChild1, bookmarkChild2)
+
+    private var uniqueId = 0
 
     @Test
     fun `GIVEN a bookmark node with children WHEN minusing a sub set of children THEN the children subset is removed and rest remains`() {
@@ -85,7 +80,7 @@ class BookmarkNodeTest {
 
     private fun newBookmarkNode(title: String, position: Int, children: List<BookmarkNode>?) = BookmarkNode(
             type = BookmarkNodeType.ITEM,
-            guid = UUID.randomUUID().toString(),
+            guid = uniqueId++.toString(),
             parentGuid = "12",
             position = position,
             title = title,
