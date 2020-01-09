@@ -91,14 +91,9 @@ h2 {
   line-height: initial;
 }
 
-.card:not(.has-logins) .wrapper div:nth-child(1),
-.etp-card.custom-not-blocking .wrapper div:nth-child(1) {
+.card:not(.has-logins) .wrapper div:nth-child(1) {
   grid-area: 1 / 1 / 1 / 5;
   padding-inline-end: 15px;
-}
-
-.etp-card:not(.custom-not-blocking) .wrapper div:nth-child(1) {
-  grid-area: 1 / 1 / 1 / 8;
 }
 
 .card.has-logins .wrapper div:nth-child(1) {
@@ -106,9 +101,6 @@ h2 {
 }
 
 /* We want to hide certain components depending on its state. */
-.etp-card.custom-not-blocking .card-body,
-.etp-card.custom-not-blocking #protection-details,
-#manage-protections,
 .etp-card .icon.dark,
 a.hidden,
 .loading .card-body.hidden,
@@ -192,8 +184,9 @@ a.hidden,
   margin-block-end: 5px;
 }
 
-.custom-not-blocking #manage-protections {
-  display: initial;
+.etp-card.custom-not-blocking .card-body,
+.etp-card.custom-not-blocking #protection-details {
+  display: none;
 }
 
 #protection-details {
