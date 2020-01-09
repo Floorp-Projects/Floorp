@@ -13,6 +13,36 @@
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">ບໍ່ສາມາດຕອບສະຫນອງຕາມຄຳຮ້ອງຂໍໄດ້</string>
 
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>ຂໍ້ມູນເພີ່ມເຕີ່ມກ່ຽວກັບບັນຫານີ້ແມ່ນຫຍັງບໍ່ທັນມີເທື່ອໃນຕອນນີ້.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">ການເຊື່ອມຕໍ່ທີປອດໄພຫລົ້ມເຫລວ</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>ບໍ່ສາມາດສະແດງໜ້າທີ່ທ່ານກຳລັງພະຍາຍາມເຂົ້າໄປເບິ່ງໃຫ້ເຫັນໄດ້ເພາະວ່າຄວາມຖືກຕ້ອງຂອງຂໍ້ມູນທີ່ໄດ້ຮັບບໍ່ສາມາດຢັ້ງຢືນໄດ້.</li>
+        <li>ກະລຸນາຕິດຕໍ່ຫາເຈົ້າຂອງເວັບໄຊທເພື່ອແຈ້ງໃຫ້ພວກເຂົາຮູ້ກ່ຽວກັບບັນຫານີ້.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">ການເຊື່ອມຕໍ່ທີປອດໄພຫລົ້ມເຫລວ</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>ປັນຫານີ້ອາດຈະເກີດມາຈາກການຕັ້ງຄ່າຂອງເຊີບເວີ ຫລື ອາດຈະມີຄົນພະຍາຍາມປອມແປງເຊີບເວີ. </li>
+        <li>ຖ້າທ່ານຫາກເຄີຍເຊື່ອມຕໍ່ກັບເຊີບເວີນີ້ໄດ້ມາກ່ອນ, ຂໍ້ຜິດພາດນີ້ອາດຈະເກີດຂື້ນຊົ່ວຄາວ  ແລະ ທ່ານສາມາດລອງໃໝ່ອີກຄັ້ງໃນພາຍຫຼັງ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">ການເຊື່ອມຕໍ່ຖືກລົບກວນ</string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">ບໍ່​ສາ​ມາດ​ທີ່​ຈະ​ເຊື່ອມ​ຕໍ່</string>
 

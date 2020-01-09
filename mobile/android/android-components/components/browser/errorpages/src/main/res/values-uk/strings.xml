@@ -36,4 +36,45 @@
       </ul>
     ]]></string>
 
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">З’єднання перервано</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Браузер успішно підключився, але при передачі інформації з’єднання було перервано. Будь ласка, спробуйте знову.</p>
+      <ul>
+        <li>Сайт може бути тимчасово недоступним, або перевантаженим запитами. Спробуйте знову через кілька хвилин.</li>
+        <li>Якщо вам не вдається завантажити жодну сторінку, перевірте з’єднання з Інтернетом свого пристрою.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Перевищено термін очікування з’єднання</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Завершився час очікування відповіді під час спроби з’єднання з сайтом.</p>
+      <ul>
+        <li>Можливо, сайт тимчасово недоступний, або перевантажений запитами. Спробуйте знову пізніше.</li>
+        <li>Якщо жодна сторінка не завантажується, перевірте з’єднання свого пристрою з Інтернетом.</li>
+        <li>Якщо ваш комп’ютер чи мережа захищені мережевим екраном чи проксі-сервером, переконайтеся, що для браузера дозволено доступ до Інтернету.</li>
+        <li>Якщо проблема не зникає, проконсультуйтесь зі своїм системним адміністратором чи інтернет-провайдером.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Неможливо з’єднатися</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Сайт може бути тимчасово недоступний або перевантажений. Спробуйте знову через деякий час.</li>
+        <li>Якщо ви не можете завантажити жодної сторінки, перевірте з’єднання вашого пристрою з мобільною або Wi-Fi мережею.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Неочікувана відповідь сервера</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Сайт надав неочікувану відповідь на мережевий запит і браузер не може його обробити.</p>
+    ]]></string>
+
     </resources>

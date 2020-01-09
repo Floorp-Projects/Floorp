@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The version on an addon. -->
+    <string name="mozac_feature_addons_version">ເວີຊັນ</string>
+    <!-- The authors of an addon. -->
+    <string name="mozac_feature_addons_authors">ຜູ້ສ້າງ</string>
+    <!-- The last date that the addon was updated. -->
+    <string name="mozac_feature_addons_last_updated">ອັດເດດຫຼ້າສຸດ</string>
+    <!-- The developer website (Homepage) of the addon. -->
+    <string name="mozac_feature_addons_home_page">ຫນ້າທຳອິດ</string>
+    <!-- A link where users can find more information about addons permissions. -->
+    <string name="mozac_feature_addons_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມກ່ຽວກັບສິດທິ</string>
+    <!-- The rating of the addon. -->
+    <string name="mozac_feature_addons_rating">ການໃຫ້ຄະແນນ</string>
+    <!-- The settings of the addon. -->
+    <string name="mozac_feature_addons_settings">ການຕັ້ງຄ່າ</string>
+    <!-- Indicates the addon is enable. -->
+    <string name="mozac_feature_addons_settings_on">ເປີດ</string>
+    <!-- Indicates the addon is disable. -->
+    <string name="mozac_feature_addons_settings_off">ປິດ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the installed section. -->
+    <string name="mozac_feature_addons_installed_section">ຕິດ​ຕັ້ງ​ແລ້ວ</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
+    <string name="mozac_feature_addons_recommended_section">ແນະນຳ</string>
+    <!-- Displays a page with all the details of an addon. -->
+    <string name="mozac_feature_addons_details">ລາຍລະອຽດ</string>
+    <!-- Displays a page with all the permissions of an addon. -->
+    <string name="mozac_feature_addons_permissions">ສິດທິ</string>
+    <!-- This is button that remove (uninstall an addon). -->
+    <string name="mozac_feature_addons_remove">ລຶບ</string>
+    <!-- This is the title of a dialog that indicates to the user if wants to install or not an addon. %1$s is the addon name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">ເພີ່ມ %1$s?</string>
+    <!-- This is the subtitle of a dialog that indicate to the user if wants to install or not an addon, the subtitle list the permissions that this addon requires, the permissions will dynamically listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">ຕ້ອງໄດ້ຮັບການອະນຸຍາດຈາກທ່ານເພື່ອ:</string>
+    <!-- This a button to add (installs) an addon . -->
+    <string name="mozac_feature_addons_permissions_dialog_add">ເພີ່ມ</string>
+    <!-- This a button to cancel the addon installation . -->
+    <string name="mozac_feature_addons_permissions_dialog_cancel">ຍົກເລີກ</string>
+    <!-- Accessibility content description to install addon button. -->
+    <string name="mozac_feature_addons_install_addon_content_description">ຕິດຕັ້ງ Add-on</string>
+    <!-- Indicate how many user has rated an addon. %1$s will be replace with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">ຜູ້ໃຊ້: %1$s</string>
+    <!-- Accessibility content description for the amount of stars that addon has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
+    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <!-- This is the title of page where all the add-ons are listed-->
+    <string name="mozac_feature_addons_addons">Add-ons</string>
+    <!-- This is the caption for the addon installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">ກຳລັງດາວໂຫລດ ແລະ ກວດສອບ add-on…</string>
+</resources>
