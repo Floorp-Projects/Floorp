@@ -344,7 +344,6 @@ linux-common-tests:
     - jittest
     - marionette
     - mochitest
-    - mochitest-a11y
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-devtools-chrome
@@ -364,6 +363,7 @@ linux1804-tests:
     - crashtest
     - gtest
     - jsreftest
+    - mochitest-a11y
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgpu
@@ -375,6 +375,7 @@ linux1804-qr-tests:
     - crashtest
     - gtest
     - jsreftest
+    - mochitest-a11y
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgpu
@@ -384,7 +385,6 @@ linux1804-qr-tests:
 linux-qr-tests:
     - jittest
     - mochitest
-    - mochitest-a11y
     - mochitest-chrome
     - mochitest-webgl1-core
     - mochitest-webgl2-core
