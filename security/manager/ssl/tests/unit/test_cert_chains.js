@@ -53,6 +53,26 @@ v0swx/+oUxCfLb0VIl/kdUqLkbGYrAmtjeOKZLaqVtRH0BnmbPowLak1pi6nQYOU
 /hKYHFGr7rb4JTGEPAJpWcv9WtZYAvwT78a2xpHp5XNglj16IjWEukvJuU1W
 -----END CERTIFICATE-----`;
 
+const gExpiredEEPEM = `-----BEGIN CERTIFICATE-----
+MIIDHDCCAgSgAwIBAgIUY9ERAIKj0js/YbhJoMrcLnj++uowDQYJKoZIhvcNAQEL
+BQAwEjEQMA4GA1UEAwwHVGVzdCBDQTAiGA8yMDEzMDEwMTAwMDAwMFoYDzIwMTQw
+MTAxMDAwMDAwWjAiMSAwHgYDVQQDDBdFeHBpcmVkIFRlc3QgRW5kLWVudGl0eTCC
+ASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALqIUahEjhbWQf1utogGNhA9
+PBPZ6uQ1SrTs9WhXbCR7wcclqODYH72xnAabbhqG8mvir1p1a2pkcQh6pVqnRYf3
+HNUknAJ+zUP8HmnQOCApk6sgw0nk27lMwmtsDu0Vgg/xfq1pGrHTAjqLKkHup3Dg
+Dw2N/WYLK7AkkqR9uYhheZCxV5A90jvF4LhIH6g304hD7ycW2FW3ZlqqfgKQLzp7
+EIAGJMwcbJetlmFbt+KWEsB1MaMMkd20yvf8rR0l0wnvuRcOp2jhs3svIm9p47SK
+lWEd7ibWJZ2rkQhONsscJAQsvxaLL+Xxj5kXMbiz/kkj+nJRxDHVA6zaGAo17Y0C
+AwEAAaNWMFQwHgYDVR0RBBcwFYITZXhwaXJlZC5leGFtcGxlLmNvbTAyBggrBgEF
+BQcBAQQmMCQwIgYIKwYBBQUHMAGGFmh0dHA6Ly9sb2NhbGhvc3Q6ODg4OC8wDQYJ
+KoZIhvcNAQELBQADggEBAImiFuy275T6b+Ud6gl/El6qpgWHUXeYiv2sp7d+HVzf
+T+ow5WVsxI/GMKhdA43JaKT9gfMsbnP1qiI2zel3U+F7IAMO1CEr5FVdCOVTma5h
+mu/81rkJLmZ8RQDWWOhZKyn/7aD7TH1C1e768yCt5E2DDl8mHil9zR8BPsoXwuS3
+L9zJ2JqNc60+hB8l297ZaSl0nbKffb47ukvn5kSJ7tI9n/fSXdj1JrukwjZP+74V
+kQyNobaFzDZ+Zr3QmfbejEsY2EYnq8XuENgIO4DuYrm80/p6bMO6laB0Uv5W6uXZ
+gBZdRTe1WMdYWGhmvnFFQmf+naeOOl6ryFwWwtnoK7I=
+-----END CERTIFICATE-----`;
+
 const gTestCAPEM = `-----BEGIN CERTIFICATE-----
 MIIC0zCCAbugAwIBAgIUKaFwIwCwHXUgKRuOhAX4pjYsmbgwDQYJKoZIhvcNAQEL
 BQAwEjEQMA4GA1UEAwwHVGVzdCBDQTAiGA8yMDE3MTEyNzAwMDAwMFoYDzIwMjAw
@@ -425,7 +445,7 @@ function test_old_succeeded_certlist_deseralization_v1() {
     0,
     "failedCertChain for a successful connection should be empty"
   );
-  let certChain = build_cert_chain(["default-ee", "test-ca"]);
+  let certChain = build_cert_list_from_pem_list([gDefaultEEPEM, gTestCAPEM]);
   ok(
     areCertArraysEqual(certChain, deserialized.succeededCertChain),
     "succeededCertChain should be deserialized correctly"
@@ -502,7 +522,7 @@ function test_old_succeeded_certlist_deseralization_v2() {
     [],
     "failedCertChain for a successful connection should be empty"
   );
-  let certChain = build_cert_chain(["default-ee", "test-ca"]);
+  let certChain = build_cert_list_from_pem_list([gDefaultEEPEM, gTestCAPEM]);
   ok(
     areCertArraysEqual(certChain, deserialized.succeededCertChain),
     "succeededCertChain should be deserialized correctly"
@@ -581,7 +601,7 @@ function test_old_failed_certlist_deseralization_v1() {
     0,
     "succeededCertChain should be empty"
   );
-  let certChain = build_cert_chain(["expired-ee", "test-ca"]);
+  let certChain = build_cert_list_from_pem_list([gExpiredEEPEM, gTestCAPEM]);
   ok(
     areCertArraysEqual(certChain, deserialized.failedCertChain),
     "failedCertChain should be deserialized correctly"
@@ -649,7 +669,7 @@ function test_old_failed_certlist_deseralization_v2() {
   let deserialized = serHelper.deserializeObject(serialized);
   deserialized.QueryInterface(Ci.nsITransportSecurityInfo);
 
-  let certChain = build_cert_chain(["expired-ee", "test-ca"]);
+  let certChain = build_cert_list_from_pem_list([gExpiredEEPEM, gTestCAPEM]);
   ok(
     areCertArraysEqual(certChain, deserialized.failedCertChain),
     "failedCertChain should be deserialized correctly"
