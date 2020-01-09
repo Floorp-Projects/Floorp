@@ -534,7 +534,7 @@ nsresult NS_DispatchBackgroundTask(nsIRunnable* aEvent,
 nsresult NS_CreateBackgroundTaskQueue(const char* aName,
                                       nsISerialEventTarget** aTarget) {
   nsCOMPtr<nsISerialEventTarget> target =
-    nsThreadManager::get().CreateBackgroundTaskQueue(aName);
+      nsThreadManager::get().CreateBackgroundTaskQueue(aName);
   if (!target) {
     return NS_ERROR_FAILURE;
   }

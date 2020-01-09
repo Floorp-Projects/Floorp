@@ -569,10 +569,11 @@ static void DoInitTraceLog(const char* aProcType) {
     return;
   }
 
-  bool defined =
-    InitLog(ENVVAR("XPCOM_MEM_BLOAT_LOG"), "bloat/leaks", &gBloatLog, aProcType);
+  bool defined = InitLog(ENVVAR("XPCOM_MEM_BLOAT_LOG"), "bloat/leaks",
+                         &gBloatLog, aProcType);
   if (!defined) {
-    gLogLeaksOnly = InitLog(ENVVAR("XPCOM_MEM_LEAK_LOG"), "leaks", &gBloatLog, aProcType);
+    gLogLeaksOnly =
+        InitLog(ENVVAR("XPCOM_MEM_LEAK_LOG"), "leaks", &gBloatLog, aProcType);
   }
   if (defined || gLogLeaksOnly) {
     // Use the same bloat view, if there is, to keep it consistent
@@ -1182,9 +1183,7 @@ static void ClearLogs(bool aKeepCounters) {
   maybeUnregisterAndCloseFile(gCOMPtrLog);
 }
 
-void nsTraceRefcnt::Shutdown() {
-  ClearLogs(false);
-}
+void nsTraceRefcnt::Shutdown() { ClearLogs(false); }
 
 void nsTraceRefcnt::SetActivityIsLegal(bool aLegal) {
   if (gActivityTLS == BAD_TLS_INDEX) {

@@ -363,8 +363,7 @@ void HLSTrackDemuxer::UpdateMediaInfo(int index) {
     audioInfo->mBitDepth = audioInfoObj->BitDepth();
     audioInfo->mMimeType =
         NS_ConvertUTF16toUTF8(audioInfoObj->MimeType()->ToString());
-    audioInfo->mDuration =
-        TimeUnit::FromMicroseconds(audioInfoObj->Duration());
+    audioInfo->mDuration = TimeUnit::FromMicroseconds(audioInfoObj->Duration());
     jni::ByteArray::LocalRef csdBytes = audioInfoObj->CodecSpecificData();
     if (csdBytes) {
       auto&& csd = csdBytes->GetElements();
@@ -389,11 +388,9 @@ void HLSTrackDemuxer::UpdateMediaInfo(int index) {
     videoInfo->mDisplay.height = videoInfoObj->PictureHeight();
     videoInfo->mMimeType =
         NS_ConvertUTF16toUTF8(videoInfoObj->MimeType()->ToString());
-    videoInfo->mDuration =
-        TimeUnit::FromMicroseconds(videoInfoObj->Duration());
-    HLS_DEBUG("HLSTrackDemuxer",
-              "Update video info (%d) / I(%dx%d) / D(%dx%d)", index,
-              videoInfo->mImage.width, videoInfo->mImage.height,
+    videoInfo->mDuration = TimeUnit::FromMicroseconds(videoInfoObj->Duration());
+    HLS_DEBUG("HLSTrackDemuxer", "Update video info (%d) / I(%dx%d) / D(%dx%d)",
+              index, videoInfo->mImage.width, videoInfo->mImage.height,
               videoInfo->mDisplay.width, videoInfo->mDisplay.height);
   }
 }

@@ -262,7 +262,7 @@ int main(int argc, char* argv[], char* envp[]) {
     // argc & argv will be updated with the values passing from the
     // chrome process.  With the new values, this function
     // continues the reset of the code acting as a content process.
-    if(gBootstrap->XRE_ForkServer(&argc, &argv)) {
+    if (gBootstrap->XRE_ForkServer(&argc, &argv)) {
       // Return from the fork server in the fork server process.
       // Stop the fork server.
       gBootstrap->NS_LogTerm();

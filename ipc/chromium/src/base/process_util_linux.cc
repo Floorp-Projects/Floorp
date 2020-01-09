@@ -14,18 +14,18 @@
 #include "algorithm"
 
 #if defined(MOZ_ENABLE_FORKSERVER)
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#  include <stdlib.h>
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#  include <fcntl.h>
 #  if defined(DEBUG)
-#include "base/message_loop.h"
+#    include "base/message_loop.h"
 #  endif
-#include "mozilla/DebugOnly.h"
-#include "mozilla/ipc/ForkServiceChild.h"
+#  include "mozilla/DebugOnly.h"
+#  include "mozilla/ipc/ForkServiceChild.h"
 
-#include "mozilla/Unused.h"
-#include "mozilla/ScopeExit.h"
+#  include "mozilla/Unused.h"
+#  include "mozilla/ScopeExit.h"
 
 using namespace mozilla::ipc;
 #endif
@@ -51,16 +51,14 @@ namespace base {
 #if defined(MOZ_ENABLE_FORKSERVER)
 static mozilla::StaticAutoPtr<std::vector<int> > sNoCloseFDs;
 
-void
-RegisterForkServerNoCloseFD(int fd) {
+void RegisterForkServerNoCloseFD(int fd) {
   if (!sNoCloseFDs) {
     sNoCloseFDs = new std::vector<int>();
   }
   sNoCloseFDs->push_back(fd);
 }
 
-static bool
-IsNoCloseFd(int fd) {
+static bool IsNoCloseFd(int fd) {
   if (!sNoCloseFDs) {
     return false;
   }
@@ -68,19 +66,17 @@ IsNoCloseFd(int fd) {
                      [fd](int regfd) -> bool { return regfd == fd; });
 }
 
-AppProcessBuilder::AppProcessBuilder() {
-}
+AppProcessBuilder::AppProcessBuilder() {}
 
-static void
-ReplaceEnviroment(const LaunchOptions& options) {
+static void ReplaceEnviroment(const LaunchOptions& options) {
   for (auto& elt : options.env_map) {
     setenv(elt.first.c_str(), elt.second.c_str(), 1);
   }
 }
 
-bool
-AppProcessBuilder::ForkProcess(const std::vector<std::string>& argv,
-                               const LaunchOptions& options, ProcessHandle* process_handle) {
+bool AppProcessBuilder::ForkProcess(const std::vector<std::string>& argv,
+                                    const LaunchOptions& options,
+                                    ProcessHandle* process_handle) {
   auto cleanFDs = mozilla::MakeScopeExit([&] {
     for (auto& elt : options.fds_to_remap) {
       auto fd = std::get<0>(elt);
@@ -98,16 +94,16 @@ AppProcessBuilder::ForkProcess(const std::vector<std::string>& argv,
   fflush(stdout);
   fflush(stderr);
 
-#ifdef OS_LINUX
+#  ifdef OS_LINUX
   pid_t pid = options.fork_delegate ? options.fork_delegate->Fork() : fork();
   // WARNING: if pid == 0, only async signal safe operations are permitted from
   // here until exec or _exit.
   //
   // Specifically, heap allocation is not safe: the sandbox's fork substitute
   // won't run the pthread_atfork handlers that fix up the malloc locks.
-#else
+#  else
   pid_t pid = fork();
-#endif
+#  endif
 
   if (pid < 0) {
     return false;
@@ -127,8 +123,7 @@ AppProcessBuilder::ForkProcess(const std::vector<std::string>& argv,
   return true;
 }
 
-void
-AppProcessBuilder::ReplaceArguments(int *argcp, char*** argvp) {
+void AppProcessBuilder::ReplaceArguments(int* argcp, char*** argvp) {
   // Change argc & argv of main() with the arguments passing
   // through IPC.
   char** argv = new char*[argv_.size() + 1];
@@ -141,8 +136,7 @@ AppProcessBuilder::ReplaceArguments(int *argcp, char*** argvp) {
   *argcp = argv_.size();
 }
 
-void
-AppProcessBuilder::InitAppProcess(int *argcp, char*** argvp) {
+void AppProcessBuilder::InitAppProcess(int* argcp, char*** argvp) {
   MOZ_ASSERT(MessageLoop::current() == nullptr,
              "The message loop of the main thread should have been destroyed");
 
@@ -157,8 +151,7 @@ AppProcessBuilder::InitAppProcess(int *argcp, char*** argvp) {
   }
 
   CloseSuperfluousFds(&shuffle_, [](void* ctx, int fd) {
-    return static_cast<decltype(&shuffle_)>(ctx)->MapsTo(fd) ||
-      IsNoCloseFd(fd);
+    return static_cast<decltype(&shuffle_)>(ctx)->MapsTo(fd) || IsNoCloseFd(fd);
   });
   // Without this, the destructor of |shuffle_| would try to close FDs
   // created by it, but they have been closed by
@@ -168,21 +161,16 @@ AppProcessBuilder::InitAppProcess(int *argcp, char*** argvp) {
   ReplaceArguments(argcp, argvp);
 }
 
-static void
-handle_sigchld(int s) {
-  waitpid(-1, nullptr, WNOHANG);
-}
+static void handle_sigchld(int s) { waitpid(-1, nullptr, WNOHANG); }
 
-static void
-InstallChildSignalHandler() {
+static void InstallChildSignalHandler() {
   // Since content processes are not children of the chrome process
   // any more, the fork server process has to handle SIGCHLD, or
   // content process would remain zombie after dead.
   signal(SIGCHLD, handle_sigchld);
 }
 
-static void
-ReserveFileDescriptors() {
+static void ReserveFileDescriptors() {
   // Reserve the lower positions of the file descriptors to make sure
   // debug files and other files don't take these positions.  So we
   // can keep their file descriptors during CloseSuperfluousFds() with
@@ -193,16 +181,14 @@ ReserveFileDescriptors() {
   }
 }
 
-void
-InitForkServerProcess() {
+void InitForkServerProcess() {
   InstallChildSignalHandler();
   ReserveFileDescriptors();
 }
 
-static bool
-LaunchAppWithForkServer(const std::vector<std::string>& argv,
-                      const LaunchOptions& options,
-                      ProcessHandle* process_handle) {
+static bool LaunchAppWithForkServer(const std::vector<std::string>& argv,
+                                    const LaunchOptions& options,
+                                    ProcessHandle* process_handle) {
   MOZ_ASSERT(ForkServiceChild::Get());
 
   nsTArray<nsCString> _argv(argv.size());
@@ -217,13 +203,12 @@ LaunchAppWithForkServer(const std::vector<std::string>& argv,
                                       nsCString(vv.second.c_str())));
   }
   for (auto& fdmapping : options.fds_to_remap) {
-    fdsremap.AppendElement(mozilla::FdMapping(mozilla::ipc::FileDescriptor(fdmapping.first),
-                                              fdmapping.second));
+    fdsremap.AppendElement(mozilla::FdMapping(
+        mozilla::ipc::FileDescriptor(fdmapping.first), fdmapping.second));
   }
 
-  return ForkServiceChild::Get()->SendForkNewSubprocess(_argv, env,
-                                                       fdsremap,
-                                                       process_handle);
+  return ForkServiceChild::Get()->SendForkNewSubprocess(_argv, env, fdsremap,
+                                                        process_handle);
 }
 #endif  // MOZ_ENABLE_FORKSERVER
 

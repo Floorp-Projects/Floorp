@@ -1075,7 +1075,7 @@ class OutboundMessage {
 class OutboundEnqueuer final : public Runnable {
  public:
   OutboundEnqueuer(WebSocketChannel* aChannel, OutboundMessage* aMsg)
-    : Runnable("OutboundEnquerer"), mChannel(aChannel), mMessage(aMsg) {}
+      : Runnable("OutboundEnquerer"), mChannel(aChannel), mMessage(aMsg) {}
 
   NS_IMETHOD Run() override {
     mChannel->EnqueueOutgoingMessage(mChannel->mOutgoingMessages, mMessage);

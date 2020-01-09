@@ -1407,7 +1407,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFsNegotiatedThenSinkWants) {
   SendVideoFrame(1280, 720, frame++);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 540);
-  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame - 1) * 1000);
   ASSERT_EQ(sink->mOnFrameCount, frame);
 
   wants.max_pixel_count = 3600 * 16 * 16;
@@ -1416,7 +1416,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFsNegotiatedThenSinkWants) {
   SendVideoFrame(1280, 720, frame++);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 540);
-  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame - 1) * 1000);
   ASSERT_EQ(sink->mOnFrameCount, frame);
 
   mVideoConduit->StopTransmitting();
@@ -1445,7 +1445,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFsCodecChange) {
   SendVideoFrame(1280, 720, frame++);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 540);
-  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame - 1) * 1000);
   ASSERT_EQ(sink->mOnFrameCount, frame);
 
   VideoCodecConfig codecConfigVP9(121, "VP9", constraints);
@@ -1457,7 +1457,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFsCodecChange) {
   SendVideoFrame(1280, 720, frame++);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 540);
-  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame - 1) * 1000);
   ASSERT_EQ(sink->mOnFrameCount, frame);
 
   mVideoConduit->StopTransmitting();
@@ -1486,7 +1486,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFsSinkWantsThenCodecChange) {
   SendVideoFrame(1280, 720, frame++);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 540);
-  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame - 1) * 1000);
   ASSERT_EQ(sink->mOnFrameCount, frame);
 
   VideoCodecConfig codecConfigVP9(121, "VP9", constraints);
@@ -1497,7 +1497,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFsSinkWantsThenCodecChange) {
   SendVideoFrame(1280, 720, frame++);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 540);
-  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame - 1) * 1000);
   ASSERT_EQ(sink->mOnFrameCount, frame);
 
   mVideoConduit->StopTransmitting();
@@ -1524,7 +1524,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFsNegotiated) {
   SendVideoFrame(1280, 720, frame++);
   ASSERT_EQ(sink->mVideoFrame.width(), 1280);
   ASSERT_EQ(sink->mVideoFrame.height(), 720);
-  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame - 1) * 1000);
   ASSERT_EQ(sink->mOnFrameCount, frame);
 
   // Ensure that negotiating a new max-fs works
@@ -1535,7 +1535,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFsNegotiated) {
   SendVideoFrame(1280, 720, frame++);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 540);
-  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame - 1) * 1000);
   ASSERT_EQ(sink->mOnFrameCount, frame);
 
   // Ensure that negotiating max-fs away works
@@ -1546,7 +1546,7 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFsNegotiated) {
   SendVideoFrame(1280, 720, frame++);
   ASSERT_EQ(sink->mVideoFrame.width(), 1280);
   ASSERT_EQ(sink->mVideoFrame.height(), 720);
-  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame-1)*1000);
+  ASSERT_EQ(sink->mVideoFrame.timestamp_us(), (frame - 1) * 1000);
   ASSERT_EQ(sink->mOnFrameCount, frame);
 
   mVideoConduit->StopTransmitting();

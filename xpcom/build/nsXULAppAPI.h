@@ -513,6 +513,6 @@ XRE_API(void, XRE_LibFuzzerSetDriver, (LibFuzzerDriver))
 
 XRE_API(int, XRE_ForkServer, (int* aArgc, char*** aArgv))
 
-#endif // MOZ_ENABLE_FORKSERVER
+#endif  // MOZ_ENABLE_FORKSERVER
 
 #endif  // _nsXULAppAPI_h__

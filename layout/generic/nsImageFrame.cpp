@@ -485,8 +485,7 @@ bool nsImageFrame::UpdateIntrinsicSize() {
   return mIntrinsicSize != oldIntrinsicSize;
 }
 
-static AspectRatio ComputeAspectRatio(imgIContainer* aImage,
-                                      bool aHasRequest,
+static AspectRatio ComputeAspectRatio(imgIContainer* aImage, bool aHasRequest,
                                       const nsImageFrame& aFrame) {
   const ComputedStyle& style = *aFrame.Style();
   if (style.StyleDisplay()->IsContainSize()) {
@@ -718,8 +717,7 @@ void nsImageFrame::UpdateImage(imgIRequest* aRequest, imgIContainer* aImage) {
   }
   // NOTE(emilio): Intentionally using `|` instead of `||` to avoid
   // short-circuiting.
-  bool intrinsicSizeChanged =
-      UpdateIntrinsicSize() | UpdateIntrinsicRatio();
+  bool intrinsicSizeChanged = UpdateIntrinsicSize() | UpdateIntrinsicRatio();
   if (!GotInitialReflow()) {
     return;
   }

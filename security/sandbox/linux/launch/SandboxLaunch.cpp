@@ -209,8 +209,7 @@ static void AttachSandboxReporter(base::file_handle_mapping_vector* aFdMap) {
 
 class SandboxFork : public base::LaunchOptions::ForkDelegate {
  public:
-  explicit SandboxFork(int aFlags, bool aChroot,
-                       int aServerFd = -1,
+  explicit SandboxFork(int aFlags, bool aChroot, int aServerFd = -1,
                        int aClientFd = -1);
   virtual ~SandboxFork();
 
@@ -335,7 +334,7 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
     aOptions->fork_delegate = std::move(forker);
     // Pass to |SandboxLaunchForkServerPrepare()| in the fork server.
     aOptions->env_map[kSandboxChrootEnvFlag] =
-      std::to_string(canChroot ? 1 : 0) + std::to_string(flags);
+        std::to_string(canChroot ? 1 : 0) + std::to_string(flags);
   }
 }
 
@@ -349,11 +348,9 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
  */
 void SandboxLaunchForkServerPrepare(const std::vector<std::string>& aArgv,
                                     base::LaunchOptions& aOptions) {
-  auto chroot = std::find_if(aOptions.env_map.begin(),
-                             aOptions.env_map.end(),
-                             [](auto& elt) {
-                               return elt.first == kSandboxChrootEnvFlag;
-                             });
+  auto chroot = std::find_if(
+      aOptions.env_map.begin(), aOptions.env_map.end(),
+      [](auto& elt) { return elt.first == kSandboxChrootEnvFlag; });
   if (chroot == aOptions.env_map.end()) {
     return;
   }
@@ -363,11 +360,9 @@ void SandboxLaunchForkServerPrepare(const std::vector<std::string>& aArgv,
 
   // Find chroot server fd.  It is supposed to be map to
   // kSandboxChrootServerFd so that we find it out from the mapping.
-  auto fdmap = std::find_if(aOptions.fds_to_remap.begin(),
-                            aOptions.fds_to_remap.end(),
-                            [](auto& elt) {
-                              return elt.second == kSandboxChrootServerFd;
-                            });
+  auto fdmap = std::find_if(
+      aOptions.fds_to_remap.begin(), aOptions.fds_to_remap.end(),
+      [](auto& elt) { return elt.second == kSandboxChrootServerFd; });
   MOZ_ASSERT(fdmap != aOptions.fds_to_remap.end(),
              "ChrootServerFd is not found with sandbox chroot");
   int chrootserverfd = fdmap->first;
