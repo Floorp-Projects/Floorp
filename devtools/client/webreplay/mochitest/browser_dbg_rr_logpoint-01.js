@@ -12,7 +12,8 @@ add_task(async function() {
   });
 
   await selectSource(dbg, "doc_rr_basic.html");
-  await addBreakpoint(dbg, "doc_rr_basic.html", 21, undefined, {
+  await addBreakpoint(dbg, "doc_rr_basic.html", 21);
+  await setBreakpointOptions(dbg, "doc_rr_basic.html", 21, undefined, {
     logValue: `"Logpoint Number " + number`,
   });
   await addBreakpoint(dbg, "doc_rr_basic.html", 6, undefined, {
@@ -42,6 +43,9 @@ add_task(async function() {
 
   await checkEvaluateInTopFrame(dbg, "number", 5);
   await reverseStepOverToLine(dbg, 20);
+
+  await addBreakpoint(dbg, "doc_rr_basic.html", 22);
+  await resumeToLine(dbg, 22);
 
   await shutdownDebugger(dbg);
 });

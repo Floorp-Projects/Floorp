@@ -2037,16 +2037,14 @@ const gControl = {
       RecordReplayControl.clearGraphics();
     } else {
       addPauseData(gPausePoint, data, /* trackCached */ true);
-      if (data.paintData) {
-        RecordReplayControl.hadRepaint(data.paintData);
-      }
+      RecordReplayControl.hadRepaint(data.paintData);
     }
     return data;
   },
 
   paint(point) {
     const data = maybeGetPauseData(point);
-    if (data && data.paintData) {
+    if (data) {
       RecordReplayControl.hadRepaint(data.paintData);
     }
   },
