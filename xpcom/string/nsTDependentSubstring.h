@@ -94,8 +94,8 @@ class nsTDependentSubstring : public nsTSubstring<T> {
 
  private:
   // NOT USED
-  void operator=(
-      const self_type&);  // we're immutable, you can't assign into a substring
+  void operator=(const self_type&) =
+      delete;  // we're immutable, you can't assign into a substring
 };
 
 extern template class nsTDependentSubstring<char>;

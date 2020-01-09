@@ -322,6 +322,7 @@ inline TimeDelta TimeDelta::FromMicroseconds(int64_t us) {
 class TimeTicks {
  public:
   TimeTicks() : ticks_(0) {}
+  TimeTicks(const TimeTicks&) = default;
 
   // Platform-dependent tick count representing "right now."
   // The resolution of this clock is ~1-15ms.  Resolution varies depending

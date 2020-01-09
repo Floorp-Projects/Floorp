@@ -289,7 +289,7 @@ nsresult nsHttpResponseHead::ParseCachedOriginalHeaders(char* block) {
   }
 
   char* p = block;
-  nsHttpAtom hdr = {nullptr};
+  nsHttpAtom hdr;
   nsAutoCString headerNameOriginal;
   nsAutoCString val;
   nsresult rv;
@@ -527,7 +527,7 @@ nsresult nsHttpResponseHead::ParseHeaderLine(const nsACString& line) {
 
 nsresult nsHttpResponseHead::ParseHeaderLine_locked(
     const nsACString& line, bool originalFromNetHeaders) {
-  nsHttpAtom hdr = {nullptr};
+  nsHttpAtom hdr;
   nsAutoCString headerNameOriginal;
   nsAutoCString val;
 
