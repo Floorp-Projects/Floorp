@@ -3094,6 +3094,9 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
         IsSynthesized() && XRE_IsContentProcess()) {
       ContentChild::UpdateCookieStatus(mChannel);
     }
+
+    // Store the security info for future use.
+    mChannel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
   }
 
   // If this document is being loaded by a docshell, copy its sandbox flags
