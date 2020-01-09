@@ -29,7 +29,7 @@ devtools.jar:
     content/performance-new/popup/popup.xhtml (performance-new/popup/popup.xhtml)
     content/memory/index.xhtml (memory/index.xhtml)
     content/framework/toolbox-window.xhtml (framework/toolbox-window.xhtml)
-    content/framework/toolbox-options.xhtml (framework/toolbox-options.xhtml)
+    content/framework/toolbox-options.html (framework/toolbox-options.html)
     content/framework/toolbox.xhtml (framework/toolbox.xhtml)
     content/framework/toolbox-init.js (framework/toolbox-init.js)
     content/framework/options-panel.css (framework/options-panel.css)
