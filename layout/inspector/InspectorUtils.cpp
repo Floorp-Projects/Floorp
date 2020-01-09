@@ -510,10 +510,6 @@ bool InspectorUtils::IsValidCSSColor(GlobalObject& aGlobalObject,
   return ServoCSSParser::IsValidCSSColor(aColorString);
 }
 
-void InspectorUtils::GetBindingURLs(GlobalObject& aGlobalObject,
-                                    Element& aElement,
-                                    nsTArray<nsString>& aResult) {}
-
 /* static */
 bool InspectorUtils::SetContentState(GlobalObject& aGlobalObject,
                                      Element& aElement, uint64_t aState,
