@@ -876,7 +876,10 @@ class TestInfoReport(TestInfo):
                 manifest_info = None
                 if relpath in files_info:
                     bug_component = files_info[relpath].get('BUG_COMPONENT')
-                    key = "{}::{}".format(bug_component.product, bug_component.component)
+                    if bug_component:
+                        key = "{}::{}".format(bug_component.product, bug_component.component)
+                    else:
+                        key = "<unknown bug component>"
                     if (not components) or (key in components):
                         manifest_info = {
                             'manifest': relpath,
@@ -951,7 +954,10 @@ class TestInfoReport(TestInfo):
                 relpath = t.get('srcdir_relpath')
                 if relpath in files_info:
                     bug_component = files_info[relpath].get('BUG_COMPONENT')
-                    key = "{}::{}".format(bug_component.product, bug_component.component)
+                    if bug_component:
+                        key = "{}::{}".format(bug_component.product, bug_component.component)
+                    else:
+                        key = "<unknown bug component>"
                     if (not components) or (key in components):
                         component_set.add(key)
                         test_info = {'test': relpath}
