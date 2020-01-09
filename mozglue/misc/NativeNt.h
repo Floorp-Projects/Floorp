@@ -241,9 +241,7 @@ struct MemorySectionNameBuf : public _MEMORY_SECTION_NAME {
     mSectionFileName.Buffer = mBuf;
   }
 
-  MemorySectionNameBuf(const MemorySectionNameBuf& aOther) {
-    *this = aOther;
-  }
+  MemorySectionNameBuf(const MemorySectionNameBuf& aOther) { *this = aOther; }
 
   MemorySectionNameBuf(MemorySectionNameBuf&& aOther) {
     *this = std::move(aOther);

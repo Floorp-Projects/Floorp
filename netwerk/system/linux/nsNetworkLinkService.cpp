@@ -169,8 +169,8 @@ void nsNetworkLinkService::OnLinkStatusKnown() { mStatusIsKnown = true; }
 
 void nsNetworkLinkService::OnDnsSuffixListUpdated() {
   RefPtr<nsNetworkLinkService> self = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction("nsNetworkLinkService::OnDnsSuffixListUpdated", [self]() {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "nsNetworkLinkService::OnDnsSuffixListUpdated", [self]() {
         self->NotifyObservers(NS_DNS_SUFFIX_LIST_UPDATED_TOPIC, nullptr);
       }));
 }

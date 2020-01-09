@@ -120,7 +120,7 @@ class RangedPtr {
   }
 
   MOZ_IMPLICIT RangedPtr(const RangedPtr<T>& aOther)
-    : mPtr(aOther.mPtr)
+      : mPtr(aOther.mPtr)
 #ifdef DEBUG
         ,
         mRangeStart(aOther.mRangeStart),

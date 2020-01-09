@@ -13,7 +13,8 @@
 class mozIStorageStatement;
 
 namespace IPC {
-  template <typename> struct ParamTraits;
+template <typename>
+struct ParamTraits;
 }
 
 namespace mozilla {

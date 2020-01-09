@@ -51,9 +51,7 @@ class FileDescriptorShuffle {
 
   // Forget the information, so that it's destructor will not try to
   // delete FDs duped by itself.
-  void Forget() {
-    mTempFds.Clear();
-  }
+  void Forget() { mTempFds.Clear(); }
 
  private:
   nsTArray<std::pair<int, int>> mMapping;

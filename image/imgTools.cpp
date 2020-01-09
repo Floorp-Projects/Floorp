@@ -86,7 +86,8 @@ class ImageDecoderListener final : public nsIStreamListener,
       : mURI(aURI),
         mImage(nullptr),
         mCallback(aCallback),
-        mObserver(aObserver ? new NotificationObserverWrapper(aObserver) : nullptr) {
+        mObserver(aObserver ? new NotificationObserverWrapper(aObserver)
+                            : nullptr) {
     MOZ_ASSERT(NS_IsMainThread());
   }
 

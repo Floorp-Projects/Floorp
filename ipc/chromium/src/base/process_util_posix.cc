@@ -213,7 +213,7 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
   // them.
   const int r = kill(handle, 0);
   if (r < 0 && errno == ESRCH) {
-      if (child_exited) *child_exited = true;
+    if (child_exited) *child_exited = true;
   } else {
     if (child_exited) *child_exited = false;
   }
@@ -261,7 +261,7 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
   if (WIFEXITED(status)) return WEXITSTATUS(status) != 0;
 
   return false;
-#endif // MOZ_ENABLE_FORKSERVER
+#endif  // MOZ_ENABLE_FORKSERVER
 }
 
 void FreeEnvVarsArray::operator()(char** array) {

@@ -71,8 +71,7 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
     if (aFlags & (eLineParticipant | eSupportsContainLayoutAndPaint)) {
       return false;
     }
-    return nsContainerFrame::IsFrameOfType(
-        aFlags & ~eMathML);
+    return nsContainerFrame::IsFrameOfType(aFlags & ~eMathML);
   }
 
   virtual void AppendFrames(ChildListID aListID,
@@ -419,8 +418,7 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
   }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsBlockFrame::IsFrameOfType(
-        aFlags & ~nsIFrame::eMathML);
+    return nsBlockFrame::IsFrameOfType(aFlags & ~nsIFrame::eMathML);
   }
 
   // See nsIMathMLFrame.h
@@ -488,8 +486,7 @@ class nsMathMLmathInlineFrame final : public nsInlineFrame,
   }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsInlineFrame::IsFrameOfType(
-        aFlags & ~nsIFrame::eMathML);
+    return nsInlineFrame::IsFrameOfType(aFlags & ~nsIFrame::eMathML);
   }
 
   bool IsMrowLike() override {

@@ -44,15 +44,15 @@
 #include "mozilla/ipc/EnvironmentMap.h"
 
 #if defined(MOZ_ENABLE_FORKSERVER)
-#include "nsString.h"
-#include "mozilla/Tuple.h"
-#include "mozilla/ipc/FileDescriptorShuffle.h"
+#  include "nsString.h"
+#  include "mozilla/Tuple.h"
+#  include "mozilla/ipc/FileDescriptorShuffle.h"
 
 namespace mozilla {
 namespace ipc {
 class FileDescriptor;
 }
-}
+}  // namespace mozilla
 #endif
 
 #if defined(OS_MACOSX)
@@ -195,7 +195,7 @@ EnvironmentArray BuildEnvironmentArray(const environment_map& env_vars_to_set);
  * and second step, that is why two steps.
  */
 class AppProcessBuilder {
-public:
+ public:
   AppProcessBuilder();
   // This function will fork a new process for use as a
   // content processes.
@@ -209,10 +209,10 @@ public:
   // The message loop may allocate resources like file descriptors.
   // If this function is called before the end of the loop, the
   // reosurces may be destroyed while the loop is still alive.
-  void InitAppProcess(int *argcp, char*** argvp);
+  void InitAppProcess(int* argcp, char*** argvp);
 
-private:
-  void ReplaceArguments(int *argcp, char*** argvp);
+ private:
+  void ReplaceArguments(int* argcp, char*** argvp);
 
   mozilla::ipc::FileDescriptorShuffle shuffle_;
   std::vector<std::string> argv_;

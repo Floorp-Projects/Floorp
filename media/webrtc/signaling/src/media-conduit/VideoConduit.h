@@ -208,8 +208,9 @@ class WebrtcVideoConduit
    */
   void AddOrUpdateSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
                        const rtc::VideoSinkWants& wants) override;
-  void AddOrUpdateSinkNotLocked(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
-                                const rtc::VideoSinkWants& wants);
+  void AddOrUpdateSinkNotLocked(
+      rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
+      const rtc::VideoSinkWants& wants);
 
   void RemoveSink(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
   void RemoveSinkNotLocked(rtc::VideoSinkInterface<webrtc::VideoFrame>* sink);
