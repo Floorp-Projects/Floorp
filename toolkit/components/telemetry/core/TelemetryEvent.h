@@ -7,8 +7,11 @@
 #define TelemetryEvent_h__
 
 #include <stdint.h>
+#include "js/TypeDecls.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/TelemetryProcessEnums.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace Telemetry {
