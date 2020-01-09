@@ -91,17 +91,6 @@ class BrowserElementParent extends JSWindowActorParent {
         }
         break;
       }
-      case "ContentRequestedPrint": {
-        // Note: this is not yet fully Fission compatible. That requires
-        // further work to change the PrintUtils API and the underlying code
-        // that it uses.
-        let bc = this.manager.browsingContext;
-        let topWin = bc.top.embedderElement.ownerGlobal;
-        if (topWin.PrintUtils) {
-          topWin.PrintUtils.printWindow(bc);
-        }
-        break;
-      }
     }
   }
 }
