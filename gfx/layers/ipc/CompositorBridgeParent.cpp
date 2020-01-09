@@ -262,6 +262,18 @@ inline void CompositorBridgeParent::ForEachIndirectLayerTree(
   }
 }
 
+/*static*/ template <typename Lambda>
+inline void CompositorBridgeParent::ForEachWebRenderBridgeParent(
+    const Lambda& aCallback) {
+  sIndirectLayerTreesLock->AssertCurrentThreadOwns();
+  for (auto it : sIndirectLayerTrees) {
+    LayerTreeState* state = &it.second;
+    if (state->mWrBridge) {
+      aCallback(state->mWrBridge);
+    }
+  }
+}
+
 /**
  * A global map referencing each compositor by ID.
  *
@@ -1994,6 +2006,52 @@ void CompositorBridgeParent::AccumulateMemoryReport(wr::MemoryReport* aReport) {
       api->AccumulateMemoryReport(aReport);
     }
   }
+}
+
+/*static*/
+void CompositorBridgeParent::InitializeStatics() {
+  gfxVars::SetAllowSacrificingSubpixelAAListener(&UpdateQualitySettings);
+  gfxVars::SetWebRenderDebugFlagsListener(&UpdateDebugFlags);
+}
+
+/*static*/
+void CompositorBridgeParent::UpdateQualitySettings() {
+  if (!CompositorThreadHolder::IsInCompositorThread()) {
+    if (CompositorLoop()) {
+      CompositorLoop()->PostTask(
+          NewRunnableFunction("CompositorBridgeParent::UpdateQualitySettings",
+                              &CompositorBridgeParent::UpdateQualitySettings));
+    }
+
+    // If there is no compositor loop, e.g. due to shutdown, then we can
+    // safefully just ignore this request.
+    return;
+  }
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  ForEachWebRenderBridgeParent([&](WebRenderBridgeParent* wrBridge) -> void {
+    wrBridge->UpdateQualitySettings();
+  });
+}
+
+/*static*/
+void CompositorBridgeParent::UpdateDebugFlags() {
+  if (!CompositorThreadHolder::IsInCompositorThread()) {
+    if (CompositorLoop()) {
+      CompositorLoop()->PostTask(
+          NewRunnableFunction("CompositorBridgeParent::UpdateDebugFlags",
+                              &CompositorBridgeParent::UpdateDebugFlags));
+    }
+
+    // If there is no compositor loop, e.g. due to shutdown, then we can
+    // safefully just ignore this request.
+    return;
+  }
+
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  ForEachWebRenderBridgeParent([&](WebRenderBridgeParent* wrBridge) -> void {
+    wrBridge->UpdateDebugFlags();
+  });
 }
 
 RefPtr<WebRenderBridgeParent> CompositorBridgeParent::GetWebRenderBridgeParent()

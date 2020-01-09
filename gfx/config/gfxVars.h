@@ -56,7 +56,8 @@ class gfxVarReceiver;
   _(LayersWindowRecordingPath, nsCString, nsCString())             \
   _(RemoteCanvasEnabled, bool, false)                              \
   _(UseDoubleBufferingWithCompositor, bool, false)                 \
-  _(UseGLSwizzle, bool, true)
+  _(UseGLSwizzle, bool, true)                                      \
+  _(AllowSacrificingSubpixelAA, bool, false)
 
 /* Add new entries above this line. */
 
