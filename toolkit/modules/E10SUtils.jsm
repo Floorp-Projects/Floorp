@@ -137,6 +137,8 @@ const kSafeSchemes = [
   "xmpp",
 ];
 
+const kDocumentChannelAllowedSchemes = ["http", "https", "ftp", "data"];
+
 // Note that even if the scheme fits the criteria for a web-handled scheme
 // (ie it is compatible with the checks registerProtocolHandler uses), it may
 // not be web-handled - it could still be handled via the OS by another app.
@@ -716,6 +718,18 @@ var E10SUtils = {
     }
 
     let mustChangeProcess = requiredRemoteType != currentRemoteType;
+
+    // If we already have a content process, and the load will be
+    // handled using DocumentChannel, then we can skip switching
+    // for now, and let DocumentChannel do it during the response.
+    if (
+      currentRemoteType != NOT_REMOTE &&
+      uriObject &&
+      (remoteSubframes || documentChannel) &&
+      kDocumentChannelAllowedSchemes.includes(uriObject.scheme)
+    ) {
+      mustChangeProcess = false;
+    }
     let newFrameloader = false;
     if (
       browser.getAttribute("preloadedState") === "consumed" &&
@@ -781,11 +795,9 @@ var E10SUtils = {
     // We should never be sending a POST request from the parent process to a
     // http(s) uri, so make sure we switch if we're currently in that process.
     if (
+      Services.appinfo.remoteType != NOT_REMOTE &&
       (useRemoteSubframes || documentChannel) &&
-      (aURI.scheme == "http" ||
-        aURI.scheme == "https" ||
-        aURI.scheme == "data") &&
-      Services.appinfo.remoteType != NOT_REMOTE
+      kDocumentChannelAllowedSchemes.includes(aURI.scheme)
     ) {
       return true;
     }
