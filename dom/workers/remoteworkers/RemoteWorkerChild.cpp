@@ -174,27 +174,46 @@ class MessagePortIdentifierRunnable final : public WorkerRunnable {
   UniqueMessagePortId mPortIdentifier;
 };
 
+// This is used to release WeakWorkerRefs which can only have their refcount
+// modified on the owning thread (worker thread in this case). It also keeps
+// alive the associated WorkerPrivate until the WeakWorkerRef is released.
 class ReleaseWorkerRunnable final : public WorkerRunnable {
  public:
-  ReleaseWorkerRunnable(RefPtr<WorkerPrivate> aWorkerPrivate,
-                        already_AddRefed<WeakWorkerRef> aWeakRef)
+  ReleaseWorkerRunnable(RefPtr<WorkerPrivate>&& aWorkerPrivate,
+                        RefPtr<WeakWorkerRef>&& aWeakRef)
       : WorkerRunnable(aWorkerPrivate),
         mWorkerPrivate(std::move(aWorkerPrivate)),
-        mWeakRef(aWeakRef) {}
+        mWeakRef(std::move(aWeakRef)) {
+    MOZ_ASSERT(mWorkerPrivate);
+    MOZ_ASSERT(!mWorkerPrivate->IsOnWorkerThread());
+    MOZ_ASSERT(mWeakRef);
+  }
 
  private:
-  bool WorkerRun(JSContext*, WorkerPrivate*) override {
-    mWeakRef = nullptr;
-    mWorkerPrivate = nullptr;
+  ~ReleaseWorkerRunnable() { ReleaseMembers(); }
 
+  bool WorkerRun(JSContext*, WorkerPrivate*) override {
+    ReleaseMembers();
     return true;
   }
 
   nsresult Cancel() override {
-    mWeakRef = nullptr;
-    mWorkerPrivate = nullptr;
-
+    ReleaseMembers();
     return NS_OK;
+  }
+
+  void ReleaseMembers() {
+    if (!mWorkerPrivate) {
+      MOZ_ASSERT(!mWeakRef);
+      return;
+    }
+
+    mWeakRef = nullptr;
+
+    nsCOMPtr<nsIEventTarget> target =
+        SystemGroup::EventTargetFor(TaskCategory::Other);
+    NS_ProxyRelease("ReleaseWorkerRunnable::mWorkerPrivate", target,
+                    mWorkerPrivate.forget());
   }
 
   RefPtr<WorkerPrivate> mWorkerPrivate;
@@ -206,12 +225,8 @@ class ReleaseWorkerRunnable final : public WorkerRunnable {
 class RemoteWorkerChild::InitializeWorkerRunnable final
     : public WorkerRunnable {
  public:
-  InitializeWorkerRunnable(RefPtr<WorkerPrivate> aWorkerPrivate,
-                           SelfHolder aActor)
-      : WorkerRunnable(aWorkerPrivate),
-        mWorkerPrivate(std::move(aWorkerPrivate)),
-        mActor(std::move(aActor)) {
-    MOZ_ASSERT(mWorkerPrivate);
+  InitializeWorkerRunnable(WorkerPrivate* aWorkerPrivate, SelfHolder aActor)
+      : WorkerRunnable(aWorkerPrivate), mActor(std::move(aActor)) {
     MOZ_ASSERT(mActor);
   }
 
@@ -219,7 +234,13 @@ class RemoteWorkerChild::InitializeWorkerRunnable final
   ~InitializeWorkerRunnable() { MaybeAbort(); }
 
   bool WorkerRun(JSContext*, WorkerPrivate*) override {
-    mActor->InitializeOnWorker(mWorkerPrivate.forget());
+    MOZ_ASSERT(mActor);
+
+    mActor->InitializeOnWorker();
+
+    SelfHolder holder = std::move(mActor);
+    MOZ_ASSERT(!mActor);
+
     return true;
   }
 
@@ -231,21 +252,19 @@ class RemoteWorkerChild::InitializeWorkerRunnable final
 
   // Slowly running out of synonyms for cancel, abort, terminate, etc...
   void MaybeAbort() {
-    if (!mWorkerPrivate) {
+    if (!mActor) {
       return;
     }
-
-    nsCOMPtr<nsIEventTarget> target =
-        SystemGroup::EventTargetFor(TaskCategory::Other);
-    NS_ProxyRelease("InitializeWorkerRunnable::mWorkerPrivate", target,
-                    mWorkerPrivate.forget());
 
     mActor->TransitionStateToTerminated();
     mActor->CreationFailedOnAnyThread();
     mActor->ShutdownOnWorker();
+
+    SelfHolder holder = std::move(mActor);
+    MOZ_ASSERT(!mActor);
   }
 
-  RefPtr<WorkerPrivate> mWorkerPrivate;
+  // Falsy indicates that WorkerRun or MaybeAbort has already been called.
   SelfHolder mActor;
 };
 
@@ -280,22 +299,6 @@ void RemoteWorkerChild::ActorDestroy(ActorDestroyReason) {
   auto lock = mState.Lock();
 
   Unused << NS_WARN_IF(!lock->is<Terminated>());
-
-  if (NS_WARN_IF(lock->is<Running>())) {
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        __func__,
-        [workerPrivate = std::move(lock->as<Running>().mWorkerPrivate),
-         workerRef = std::move(lock->as<Running>().mWorkerRef)]() mutable {
-          RefPtr<ReleaseWorkerRunnable> r =
-              new ReleaseWorkerRunnable(workerPrivate, workerRef.forget());
-
-          Unused << NS_WARN_IF(!r->Dispatch());
-
-          workerPrivate->Cancel();
-        });
-
-    MOZ_ALWAYS_SUCCEEDS(SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
-  }
 
   *lock = VariantType<Terminated>();
 }
@@ -456,7 +459,13 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   }
 
   RefPtr<InitializeWorkerRunnable> runnable =
-      new InitializeWorkerRunnable(std::move(workerPrivate), SelfHolder(this));
+      new InitializeWorkerRunnable(workerPrivate, SelfHolder(this));
+
+  {
+    MOZ_ASSERT(workerPrivate);
+    auto lock = mState.Lock();
+    lock->as<Pending>().mWorkerPrivate = std::move(workerPrivate);
+  }
 
   if (mIsServiceWorker) {
     SelfHolder self = this;
@@ -488,23 +497,21 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   return NS_OK;
 }
 
-void RemoteWorkerChild::InitializeOnWorker(
-    already_AddRefed<WorkerPrivate> aWorkerPrivate) {
+void RemoteWorkerChild::InitializeOnWorker() {
+  RefPtr<WorkerPrivate> workerPrivate;
+
   {
     auto lock = mState.Lock();
 
     if (lock->is<PendingTerminated>()) {
-      nsCOMPtr<nsIEventTarget> target =
-          SystemGroup::EventTargetFor(TaskCategory::Other);
-      NS_ProxyRelease(__func__, target, std::move(aWorkerPrivate));
-
       TransitionStateToTerminated(lock.ref());
       ShutdownOnWorker();
       return;
     }
+
+    workerPrivate = std::move(lock->as<Pending>().mWorkerPrivate);
   }
 
-  RefPtr<WorkerPrivate> workerPrivate = aWorkerPrivate;
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
@@ -604,12 +611,15 @@ void RemoteWorkerChild::CloseWorkerOnMainThread(State& aState) {
   AssertIsOnMainThread();
   MOZ_ASSERT(!aState.is<PendingTerminated>());
 
+  // WeakWorkerRef callback will be asynchronously invoked after
+  // WorkerPrivate::Cancel.
+
   if (aState.is<Pending>()) {
+    aState.as<Pending>().mWorkerPrivate->Cancel();
     TransitionStateToPendingTerminated(aState);
     return;
   }
 
-  // The holder will be notified by this.
   if (aState.is<Running>()) {
     aState.as<Running>().mWorkerPrivate->Cancel();
   }
@@ -695,15 +705,44 @@ void RemoteWorkerChild::FlushReportsOnMainThread(
 /**
  * Worker state transition methods
  */
-RemoteWorkerChild::Running::~Running() {
-  if (!mWorkerPrivate) {
+RemoteWorkerChild::WorkerPrivateAccessibleState::
+    ~WorkerPrivateAccessibleState() {
+  // mWorkerPrivate can be safely released on the main thread.
+  if (!mWorkerPrivate || NS_IsMainThread()) {
     return;
   }
 
   nsCOMPtr<nsIEventTarget> target =
       SystemGroup::EventTargetFor(TaskCategory::Other);
-  NS_ProxyRelease("RemoteWorkerChild::Running::mWorkerPrivate", target,
-                  mWorkerPrivate.forget());
+  NS_ProxyRelease(
+      "RemoteWorkerChild::WorkerPrivateAccessibleState::mWorkerPrivate", target,
+      mWorkerPrivate.forget());
+}
+
+RemoteWorkerChild::Running::~Running() {
+  // This can occur if the current object is a temporary.
+  if (!mWorkerPrivate) {
+    return;
+  }
+
+  if (mWorkerPrivate->IsOnWorkerThread()) {
+    return;
+  }
+
+  RefPtr<ReleaseWorkerRunnable> runnable = new ReleaseWorkerRunnable(
+      std::move(mWorkerPrivate), std::move(mWorkerRef));
+
+  nsCOMPtr<nsIRunnable> dispatchWorkerRunnableRunnable =
+      NS_NewRunnableFunction(__func__, [runnable = std::move(runnable)] {
+        Unused << NS_WARN_IF(!runnable->Dispatch());
+      });
+
+  if (NS_IsMainThread()) {
+    dispatchWorkerRunnableRunnable->Run();
+  } else {
+    SystemGroup::Dispatch(TaskCategory::Other,
+                          dispatchWorkerRunnableRunnable.forget());
+  }
 }
 
 void RemoteWorkerChild::TransitionStateToPendingTerminated(State& aState) {
