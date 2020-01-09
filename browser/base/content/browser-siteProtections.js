@@ -1491,9 +1491,9 @@ var gProtectionsHandler = {
     );
   },
 
-  recordClick(object, value = null, source = "protectionspopup") {
+  recordClick(object, value = null) {
     Services.telemetry.recordEvent(
-      `security.ui.${source}`,
+      "security.ui.protectionspopup",
       "click",
       object,
       value
