@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsWeakReference.h"
+#include <functional>
 
 #define BLOBURI_SCHEME "blob"
 
@@ -62,8 +63,14 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
   static void Traverse(const nsACString& aUri,
                        nsCycleCollectionTraversalCallback& aCallback);
 
-  static bool GetAllBlobURLEntries(
-      nsTArray<BlobURLRegistrationData>& aRegistrations, ContentParent*);
+  // Main-thread only method to invoke a helper function that gets called for
+  // every known and recently revoked Blob URL. The helper function should
+  // return true to keep going or false to stop enumerating (presumably because
+  // of an unexpected XPCOM or IPC error). This method returns false if already
+  // shutdown or if the helper method returns false, true otherwise.
+  static bool ForEachBlobURL(
+      std::function<bool(BlobImpl*, nsIPrincipal*, const nsACString&,
+                         bool aRevoked)>&& aCb);
 
   // This method returns false if aURI is not a known BlobURL. Otherwise it
   // returns true.
