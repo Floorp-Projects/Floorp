@@ -61,7 +61,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   .search-inner-wrapper {
     cursor: default;
     display: flex;
-    height: $search-height;
+    min-height: $search-height;
     margin: 0 auto;
     position: relative;
     width: $searchbar-width-small;
@@ -253,7 +253,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
       background-color: var(--newtab-search-header-background-color);
       border-bottom: solid 1px var(--newtab-border-secondary-color);
-      height: $search-header-bar-height;
+      min-height: $search-header-bar-height;
       left: 0;
       padding: 30px 0;
       position: fixed;
@@ -262,7 +262,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       z-index: 9;
 
       .search-inner-wrapper {
-        height: $search-height;
+        min-height: $search-height;
       }
 
       input {
