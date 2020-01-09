@@ -174,8 +174,6 @@
             "startsWith": ["bn", "en"]
           }
         }
-      }, {
-        "included": { "regions": ["default"] }
       }]
     },
     {
@@ -224,8 +222,6 @@
         ]
       },
       "appliesTo": [{
-        "included": { "regions": ["default"] }
-      }, {
         "included": {
           "locales": {
             "matches": [
@@ -505,8 +501,6 @@
         ]
       },
       "appliesTo": [{
-        "included": { "regions": ["default"] }
-      }, {
         "included": { "locales": { "matches": ["en-US"] } },
         "excluded": { "regions": ["by", "ca", "ch", "gb", "kz", "nl", "ru", "tr"] }
       }, {

@@ -3,7 +3,10 @@
 
 "use strict";
 
-let availableRegions = Services.intl.getAvailableLocaleDisplayNames("region");
+const availableRegions = [
+  ...Services.intl.getAvailableLocaleDisplayNames("region"),
+  null,
+];
 
 const DOMAIN_LOCALES = {
   "ebay-ca": ["en-CA"],
