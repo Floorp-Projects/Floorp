@@ -717,7 +717,7 @@ void FontList::SetLocalNames(
   header.mLocalFaceCount.store(count);
 }
 
-Family* FontList::FindFamily(const nsCString& aName) {
+Family* FontList::FindFamily(const nsCString& aName, bool aAllowHidden) {
   struct FamilyNameComparator {
     FamilyNameComparator(FontList* aList, const nsCString& aTarget)
         : mList(aList), mTarget(aTarget) {}
@@ -737,7 +737,8 @@ Family* FontList::FindFamily(const nsCString& aName) {
   size_t match;
   if (BinarySearchIf(families, 0, header.mFamilyCount,
                      FamilyNameComparator(this, aName), &match)) {
-    return &families[match];
+    return !aAllowHidden && families[match].IsHidden() ? nullptr
+                                                       : &families[match];
   }
 
   if (header.mAliasCount) {
@@ -745,7 +746,8 @@ Family* FontList::FindFamily(const nsCString& aName) {
     size_t match;
     if (BinarySearchIf(families, 0, header.mAliasCount,
                        FamilyNameComparator(this, aName), &match)) {
-      return &families[match];
+      return !aAllowHidden && families[match].IsHidden() ? nullptr
+                                                         : &families[match];
     }
   }
 

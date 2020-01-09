@@ -987,7 +987,8 @@ bool gfxPlatformFontList::FindAndAddFamilies(
   GenerateFontListKey(aFamily, key);
 
   if (SharedFontList()) {
-    fontlist::Family* family = SharedFontList()->FindFamily(key);
+    bool allowHidden = bool(aFlags & FindFamiliesFlags::eSearchHiddenFamilies);
+    fontlist::Family* family = SharedFontList()->FindFamily(key, allowHidden);
     if (family) {
       aOutput->AppendElement(FamilyAndGeneric(family, aGeneric));
       return true;
