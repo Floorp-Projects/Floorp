@@ -26,9 +26,9 @@ impl WasiCtxBuilder {
             args: vec![],
             env: HashMap::new(),
         }
-        .fd_dup(0, &null)
-        .fd_dup(1, &null)
-        .fd_dup(2, &null)
+        .fd_dup_for_io_desc(0, &null, false /* writeable */)
+        .fd_dup_for_io_desc(1, &null, true  /* writeable */)
+        .fd_dup_for_io_desc(2, &null, true  /* writeable */)
     }
 
     pub fn args(mut self, args: &[&str]) -> Self {
@@ -62,6 +62,12 @@ impl WasiCtxBuilder {
         self.fd_dup(0, &stdin())
             .fd_dup(1, &stdout())
             .fd_dup(2, &stderr())
+    }
+
+    pub fn inherit_stdio_no_syscall(self) -> Self {
+        self.fd_dup_for_io_desc(0, &stdin(),  false /* writeable */)
+            .fd_dup_for_io_desc(1, &stdout(), true  /* writeable */)
+            .fd_dup_for_io_desc(2, &stderr(), true  /* writeable */)
     }
 
     pub fn inherit_env(mut self) -> Self {
@@ -116,12 +122,22 @@ impl WasiCtxBuilder {
         unsafe { self.raw_fd(wasm_fd, dup(fd.as_raw_fd()).unwrap()) }
     }
 
+    pub fn fd_dup_for_io_desc<F: AsRawFd>(self, wasm_fd: host::__wasi_fd_t, fd: &F, writable : bool) -> Self {
+        // safe because we're getting a valid RawFd from the F directly
+        unsafe { self.raw_fd_for_io_desc(wasm_fd, dup(fd.as_raw_fd()).unwrap(), writable) }
+    }
+
     /// Add an existing file descriptor to the context.
     ///
     /// When the `WasiCtx` is dropped, this file descriptor will be `close`d. If you do not want to
     /// close the existing descriptor, use `WasiCtxBuilder::raw_fd_dup()`.
     pub unsafe fn raw_fd(mut self, wasm_fd: host::__wasi_fd_t, fd: RawFd) -> Self {
         self.fds.insert(wasm_fd, FdEntry::from_raw_fd(fd));
+        self
+    }
+
+    pub unsafe fn raw_fd_for_io_desc(mut self, wasm_fd: host::__wasi_fd_t, fd: RawFd, writable : bool) -> Self {
+        self.fds.insert(wasm_fd, FdEntry::from_raw_fd_for_io_desc(fd, writable));
         self
     }
 

@@ -46,7 +46,8 @@ typedef struct {
 } LucetFunctionTable;
 
 void lucet_ensure_linked();
-LucetSandboxInstance *lucet_load_module(const char *lucet_module_path);
+LucetSandboxInstance *lucet_load_module(const char *lucet_module_path,
+                                        bool allow_stdio);
 void lucet_drop_module(LucetSandboxInstance *inst);
 
 void* lucet_lookup_function(LucetSandboxInstance *inst,
