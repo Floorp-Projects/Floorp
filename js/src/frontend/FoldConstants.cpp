@@ -459,7 +459,7 @@ static bool FoldType(JSContext* cx, FullParseHandler* handler, ParseNode** pnp,
 
       case ParseNodeKind::StringExpr:
         if (pn->isKind(ParseNodeKind::NumberExpr)) {
-          JSAtom* atom = NumberToAtom(cx, pn->as<NumericLiteral>().value());
+          JSAtom* atom = pn->as<NumericLiteral>().toAtom(cx);
           if (!atom) {
             return false;
           }
@@ -1090,12 +1090,13 @@ static bool FoldElement(JSContext* cx, FullParseHandler* handler,
       name = atom->asPropertyName();
     }
   } else if (key->isKind(ParseNodeKind::NumberExpr)) {
-    double number = key->as<NumericLiteral>().value();
+    auto* numeric = &key->as<NumericLiteral>();
+    double number = numeric->value();
     if (number != ToUint32(number)) {
       // Optimization 2: We have something like expr[3.14]. The number
       // isn't an array index, so it converts to a string ("3.14"),
       // enabling optimization 3 below.
-      JSAtom* atom = NumberToAtom(cx, number);
+      JSAtom* atom = numeric->toAtom(cx);
       if (!atom) {
         return false;
       }
