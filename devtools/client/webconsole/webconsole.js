@@ -254,7 +254,7 @@ class WebConsole {
     }
 
     await toolbox.viewSourceInDebugger(sourceURL, sourceLine, sourceColumn);
-    this.ui.emitForTests("source-in-debugger-opened");
+    this.ui.emit("source-in-debugger-opened");
   }
 
   /**
@@ -376,7 +376,7 @@ class WebConsole {
       );
 
       this.recordEvent("jump_to_source");
-      this.emitForTests("source-in-debugger-opened");
+      this.emit("source-in-debugger-opened");
     }
   }
 

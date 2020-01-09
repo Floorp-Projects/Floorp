@@ -47,9 +47,7 @@ function enableActorReleaser(webConsoleUI) {
         });
 
         // Emit an event we can listen to to make sure all the fronts were released.
-        Promise.all(promises).then(() =>
-          webConsoleUI.emitForTests("fronts-released")
-        );
+        Promise.all(promises).then(() => webConsoleUI.emit("fronts-released"));
 
         // Reset `frontsToRelease` in message reducer.
         state = reducer(state, {
