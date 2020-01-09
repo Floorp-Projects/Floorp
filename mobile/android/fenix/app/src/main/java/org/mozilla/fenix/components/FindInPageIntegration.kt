@@ -7,7 +7,6 @@ package org.mozilla.fenix.components
 import android.view.View
 import android.view.ViewStub
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
-import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
@@ -33,11 +32,8 @@ class FindInPageIntegration(
 
     override fun onLaunch(view: View, feature: LifecycleAwareFeature) {
         store.state.findCustomTabOrSelectedTab(sessionId)?.let { tab ->
-            if (tab !is CustomTabSessionState) {
-                // Hide the toolbar to display find in page query (only
-                // needs to be done for regular tabs with bottom toolbar).
-                toolbar.visibility = View.GONE
-            }
+            // Always hide the toolbar and display find in page query
+            toolbar.visibility = View.GONE
             view.visibility = View.VISIBLE
             (feature as FindInPageFeature).bind(tab)
             view.layoutParams.height = toolbar.height
