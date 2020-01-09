@@ -15,7 +15,7 @@ use std::rc::Rc;
 
 use smallvec::SmallVec;
 
-use neqo_common::{matches, qdebug, qerror, qinfo, qtrace, qwarn};
+use neqo_common::{matches, qdebug, qerror, qinfo, qtrace};
 
 use crate::events::ConnectionEvents;
 use crate::flow_mgr::FlowMgr;
@@ -121,7 +121,7 @@ impl RangeTracker {
             let sub_len = min(*len, tmp_len);
             let remaining_len = len - sub_len;
             if new_state == RangeState::Sent && *state == RangeState::Acked {
-                qwarn!(
+                qinfo!(
                     "Attempted to downgrade overlapping range Acked range {}-{} with Sent {}-{}",
                     off,
                     len,
@@ -222,12 +222,12 @@ impl RangeTracker {
                 // Check for overlap
                 if *cur_off + *cur_len > off {
                     if *cur_state == RangeState::Acked {
-                        qwarn!(
+                        qinfo!(
                             "Attempted to unmark Acked range {}-{} with unmark_range {}-{}",
                             cur_off,
                             cur_len,
                             off,
-                            len
+                            off + len
                         );
                     } else {
                         *cur_len = off - cur_off;
@@ -237,12 +237,12 @@ impl RangeTracker {
             }
 
             if *cur_state == RangeState::Acked {
-                qwarn!(
+                qinfo!(
                     "Attempted to unmark Acked range {}-{} with unmark_range {}-{}",
                     cur_off,
                     cur_len,
                     off,
-                    len
+                    off + len
                 );
                 continue;
             }
@@ -335,8 +335,6 @@ impl TxBuffer {
     }
 
     pub fn mark_as_acked(&mut self, offset: u64, len: usize) {
-        assert!(self.ranges.highest_offset() >= offset + len as u64);
-
         self.ranges.mark_range(offset, len, RangeState::Acked);
 
         // We can drop contig acked range from the buffer
@@ -352,10 +350,6 @@ impl TxBuffer {
     }
 
     pub fn mark_as_lost(&mut self, offset: u64, len: usize) {
-        assert!(self.ranges.highest_offset() >= offset + len as u64);
-        assert!(offset >= self.retired);
-
-        // Make eligible for sending again
         self.ranges.unmark_range(offset, len)
     }
 
@@ -776,29 +770,31 @@ impl SendStreams {
         for (stream_id, stream) in self {
             let complete = stream.final_size().is_some();
             if let Some((offset, data)) = stream.next_bytes(mode) {
-                let (frame, length) =
-                    Frame::new_stream(stream_id.as_u64(), offset, data, complete, remaining);
-                qdebug!(
-                    "Stream {} sending bytes {}-{}, epoch {}, mode {:?}",
-                    stream_id.as_u64(),
-                    offset,
-                    offset + length as u64,
-                    epoch,
-                    mode,
-                );
-                let fin = complete && length == data.len();
-                debug_assert!(!fin || matches!(frame, Frame::Stream{fin: true, .. }));
-                stream.mark_as_sent(offset, length, fin);
-
-                return Some((
-                    frame,
-                    Some(RecoveryToken::Stream(StreamRecoveryToken {
-                        id: *stream_id,
+                if let Some((frame, length)) =
+                    Frame::new_stream(stream_id.as_u64(), offset, data, complete, remaining)
+                {
+                    qdebug!(
+                        "Stream {} sending bytes {}-{}, epoch {}, mode {:?}",
+                        stream_id.as_u64(),
                         offset,
-                        length,
-                        fin,
-                    })),
-                ));
+                        offset + length as u64,
+                        epoch,
+                        mode,
+                    );
+                    let fin = complete && length == data.len();
+                    debug_assert!(!fin || matches!(frame, Frame::Stream{fin: true, .. }));
+                    stream.mark_as_sent(offset, length, fin);
+
+                    return Some((
+                        frame,
+                        Some(RecoveryToken::Stream(StreamRecoveryToken {
+                            id: *stream_id,
+                            offset,
+                            length,
+                            fin,
+                        })),
+                    ));
+                }
             }
         }
         None
@@ -916,7 +912,7 @@ mod tests {
         flow_mgr.borrow_mut().conn_increase_max_credit(4096);
         let conn_events = ConnectionEvents::default();
 
-        let mut s = SendStream::new(4.into(), 1024, flow_mgr.clone(), conn_events.clone());
+        let mut s = SendStream::new(4.into(), 1024, Rc::clone(&flow_mgr), conn_events);
 
         let res = s.send(&[4; 100]).unwrap();
         assert_eq!(res, 100);
@@ -970,7 +966,7 @@ mod tests {
         flow_mgr.borrow_mut().conn_increase_max_credit(2);
         let conn_events = ConnectionEvents::default();
 
-        let mut s = SendStream::new(4.into(), 0, flow_mgr.clone(), conn_events.clone());
+        let mut s = SendStream::new(4.into(), 0, Rc::clone(&flow_mgr), conn_events.clone());
 
         // Stream is initially blocked (conn:2, stream:0)
         // and will not accept data.
@@ -1034,7 +1030,7 @@ mod tests {
         flow_mgr.borrow_mut().conn_increase_max_credit(2);
         let conn_events = ConnectionEvents::default();
 
-        let _s = SendStream::new(4.into(), 100, flow_mgr.clone(), conn_events.clone());
+        let _s = SendStream::new(4.into(), 100, flow_mgr, conn_events.clone());
 
         // Creating a new stream with conn and stream credits should result in
         // an event.

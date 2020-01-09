@@ -200,6 +200,10 @@ mod test {
     }
 
     #[test]
+    // We allow replace_consts here because
+    // std::u64::max_value() isn't available
+    // in all of our targets
+    #[allow(clippy::replace_consts)]
     fn overflow_interval() {
         init();
         let interval = Interval::from(Duration::from_micros(std::u64::MAX));

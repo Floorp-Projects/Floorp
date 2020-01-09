@@ -2,6 +2,8 @@
 
 use neqo_crypto::*;
 
+use std::boxed::Box;
+
 mod handshake;
 use crate::handshake::*;
 use test_fixture::{fixture_init, now};
@@ -284,7 +286,7 @@ fn zero_rtt() {
         .enable_0rtt(
             anti_replay.as_ref().unwrap(),
             0xffff_ffff,
-            PermissiveZeroRttChecker::make(),
+            Box::new(PermissiveZeroRttChecker::default()),
         )
         .expect("should enable 0-RTT");
 
@@ -309,7 +311,7 @@ fn zero_rtt_no_eoed() {
         .enable_0rtt(
             anti_replay.as_ref().unwrap(),
             0xffff_ffff,
-            PermissiveZeroRttChecker::make(),
+            Box::new(PermissiveZeroRttChecker::default()),
         )
         .expect("should enable 0-RTT");
     server.disable_end_of_early_data();

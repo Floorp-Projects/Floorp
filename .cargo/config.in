@@ -15,7 +15,7 @@ rev = "6a866fdad2ca880df9b87fcbc9921abac1e91914"
 [source."https://github.com/mozilla/neqo"]
 git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
-tag = "v0.1.7"
+tag = "v0.1.12"
 
 [source."https://github.com/kvark/spirv_cross"]
 branch = "wgpu"

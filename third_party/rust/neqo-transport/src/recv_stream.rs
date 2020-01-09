@@ -523,7 +523,7 @@ mod tests {
         let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
         let conn_events = ConnectionEvents::default();
 
-        let mut s = RecvStream::new(567.into(), 1024, flow_mgr.clone(), conn_events.clone());
+        let mut s = RecvStream::new(567.into(), 1024, Rc::clone(&flow_mgr), conn_events);
 
         // test receiving a contig frame and reading it works
         s.inbound_stream_frame(false, 0, vec![1; 10]).unwrap();
@@ -576,7 +576,7 @@ mod tests {
         let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
         let conn_events = ConnectionEvents::default();
 
-        let mut s = RecvStream::new(3.into(), 1024, flow_mgr.clone(), conn_events.clone());
+        let mut s = RecvStream::new(3.into(), 1024, Rc::clone(&flow_mgr), conn_events);
 
         let mut buf = vec![0u8; 100];
 
@@ -670,8 +670,8 @@ mod tests {
         let mut s = RecvStream::new(
             4.into(),
             RX_STREAM_DATA_WINDOW,
-            flow_mgr.clone(),
-            conn_events.clone(),
+            Rc::clone(&flow_mgr),
+            conn_events,
         );
 
         let mut buf = vec![0u8; RX_STREAM_DATA_WINDOW as usize * 4]; // Make it overlarge
@@ -706,8 +706,8 @@ mod tests {
         let mut s = RecvStream::new(
             67.into(),
             RX_STREAM_DATA_WINDOW,
-            flow_mgr.clone(),
-            conn_events.clone(),
+            Rc::clone(&flow_mgr),
+            conn_events,
         );
 
         s.maybe_send_flowc_update();

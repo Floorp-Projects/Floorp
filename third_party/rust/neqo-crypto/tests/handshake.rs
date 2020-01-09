@@ -82,11 +82,13 @@ pub const ZERO_RTT_TOKEN_DATA: &[u8] = b"zero-rtt-token";
 pub struct PermissiveZeroRttChecker {
     resuming: bool,
 }
-impl PermissiveZeroRttChecker {
-    pub fn make() -> Box<dyn ZeroRttChecker> {
-        Box::new(PermissiveZeroRttChecker { resuming: true })
+
+impl Default for PermissiveZeroRttChecker {
+    fn default() -> Self {
+        PermissiveZeroRttChecker { resuming: true }
     }
 }
+
 impl ZeroRttChecker for PermissiveZeroRttChecker {
     fn check(&self, token: &[u8]) -> ZeroRttCheckResult {
         if self.resuming {

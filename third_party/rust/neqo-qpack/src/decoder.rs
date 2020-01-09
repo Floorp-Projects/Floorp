@@ -911,7 +911,7 @@ mod tests {
     fn test_duplicate() {
         let (mut decoder, mut conn_c, mut conn_s, recv_stream_id, send_stream_id) = connect();
 
-        assert!(decoder.set_capacity(60).is_ok());
+        assert!(decoder.set_capacity(100).is_ok());
 
         // send an instruction
         let _ = conn_s.stream_send(

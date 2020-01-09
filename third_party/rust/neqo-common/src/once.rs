@@ -13,6 +13,7 @@ pub struct OnceResult<T> {
 }
 
 impl<T> OnceResult<T> {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             once: Once::new(),
