@@ -265,9 +265,7 @@ void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
       MOZ_ASSERT_UNREACHABLE();
   }
 
-  if (NS_WARN_IF(error.Failed())) {
-    MOZ_ALWAYS_TRUE(error.MaybeSetPendingException(cx));
-  }
+  Unused << error.MaybeSetPendingException(cx);
 }
 
 void JSWindowActor::ReceiveMessageOrQuery(
@@ -304,7 +302,8 @@ void JSWindowActor::ReceiveMessageOrQuery(
   RefPtr<MessageListener> messageListener =
       new MessageListener(self, global, nullptr, nullptr);
   messageListener->ReceiveMessage(argument, &retval, aRv,
-                                  "JSWindowActor receive message");
+                                  "JSWindowActor receive message",
+                                  MessageListener::eRethrowExceptions);
 
   // If we have a promise, resolve or reject it respectively.
   if (promise) {
