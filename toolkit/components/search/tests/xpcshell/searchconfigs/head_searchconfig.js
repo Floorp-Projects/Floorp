@@ -243,7 +243,7 @@ class SearchConfigTest {
    */
   async _getLocales() {
     if (TEST_DEBUG) {
-      return ["be", "en-US", "kk", "tr", "ru", "zh-CN", "ach"];
+      return ["be", "en-US", "kk", "tr", "ru", "zh-CN", "ach", "unknown"];
     }
     const data = await OS.File.read(do_get_file("all-locales").path, {
       encoding: "utf-8",
@@ -255,6 +255,10 @@ class SearchConfigTest {
     // build sytem uses the short `mac` variant, this is invalid, and inside
     // the app we turn it into `ja-JP-macos`
     locales = locales.map(l => (l == "ja-JP-mac" ? "ja-JP-macos" : l));
+    // The locale sometimes can be unknown or a strange name, e.g. if the updater
+    // is disabled, it may be "und", add one here so we know what happens if we
+    // hit it.
+    locales.push("unknown");
     return locales;
   }
 
