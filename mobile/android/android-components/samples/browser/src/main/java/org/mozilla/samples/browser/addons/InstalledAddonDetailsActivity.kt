@@ -50,27 +50,10 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
         switch.setState(addon.isEnabled())
         switch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                this.components.addonManager.disableAddon(
-                    addon,
-                    onSuccess = {
-                        Toast.makeText(
-                            this,
-                            "Successfully disabled ${addon.translatableName.translate()}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    },
-                    onError = {
-                        Toast.makeText(
-                            this,
-                            "Failed to disable ${addon.translatableName.translate()}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                )
-            } else {
                 this.components.addonManager.enableAddon(
                     addon,
                     onSuccess = {
+                        switch.setState(true)
                         Toast.makeText(
                             this,
                             "Successfully enabled ${addon.translatableName.translate()}",
@@ -81,6 +64,25 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
                         Toast.makeText(
                             this,
                             "Failed to enable ${addon.translatableName.translate()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+            } else {
+                this.components.addonManager.disableAddon(
+                    addon,
+                    onSuccess = {
+                        switch.setState(false)
+                        Toast.makeText(
+                            this,
+                            "Successfully disabled ${addon.translatableName.translate()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    onError = {
+                        Toast.makeText(
+                            this,
+                            "Failed to disable ${addon.translatableName.translate()}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }

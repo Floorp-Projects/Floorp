@@ -10,6 +10,7 @@ import androidx.annotation.MainThread
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.utils.EngineVersion
+import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
@@ -192,6 +193,8 @@ interface Engine {
      * Enables the provided [WebExtension]. If the extension is already enabled the [onSuccess]
      * callback will be invoked, but this method has no effect on the extension.
      *
+     * @param extension the extension to enable.
+     * @param source [EnableSource] to indicate why the extension is enabled.
      * @param onSuccess (optional) callback invoked with the enabled [WebExtension]
      * @param onError (optional) callback invoked if there was an error enabling
      * the extensions. This callback is invoked with an [UnsupportedOperationException]
@@ -199,6 +202,7 @@ interface Engine {
      */
     fun enableWebExtension(
         extension: WebExtension,
+        source: EnableSource = EnableSource.USER,
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((Throwable) -> Unit) = { }
     ): Unit = onError(UnsupportedOperationException("Web extension support is not available in this engine"))
@@ -207,6 +211,8 @@ interface Engine {
      * Disables the provided [WebExtension]. If the extension is already disabled the [onSuccess]
      * callback will be invoked, but this method has no effect on the extension.
      *
+     * @param extension the extension to disable.
+     * @param source [EnableSource] to indicate why the extension is disabled.
      * @param onSuccess (optional) callback invoked with the enabled [WebExtension]
      * @param onError (optional) callback invoked if there was an error disabling
      * the installed extensions. This callback is invoked with an [UnsupportedOperationException]
@@ -214,6 +220,7 @@ interface Engine {
      */
     fun disableWebExtension(
         extension: WebExtension,
+        source: EnableSource = EnableSource.USER,
         onSuccess: ((WebExtension) -> Unit),
         onError: ((Throwable) -> Unit) = { }
     ): Unit = onError(UnsupportedOperationException("Web extension support is not available in this engine"))

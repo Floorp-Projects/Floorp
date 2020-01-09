@@ -28,6 +28,7 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.BrowserAction
+import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
@@ -329,12 +330,19 @@ class GeckoEngine(
      */
     override fun enableWebExtension(
         extension: WebExtension,
+        source: EnableSource,
         onSuccess: (WebExtension) -> Unit,
         onError: (Throwable) -> Unit
     ) {
-        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
-        webExtensionDelegate?.onEnabled(extension)
-        onSuccess(extension)
+        runtime.webExtensionController.enable((extension as GeckoWebExtension).nativeExtension, source.id).then({
+            val enabledExtension = GeckoWebExtension(it!!, runtime.webExtensionController)
+            webExtensionDelegate?.onEnabled(enabledExtension)
+            onSuccess(enabledExtension)
+            GeckoResult<Void>()
+        }, { throwable ->
+            onError(throwable)
+            GeckoResult<Void>()
+        })
     }
 
     /**
@@ -342,12 +350,19 @@ class GeckoEngine(
      */
     override fun disableWebExtension(
         extension: WebExtension,
+        source: EnableSource,
         onSuccess: (WebExtension) -> Unit,
         onError: (Throwable) -> Unit
     ) {
-        // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1599585
-        webExtensionDelegate?.onDisabled(extension)
-        onSuccess(extension)
+        runtime.webExtensionController.disable((extension as GeckoWebExtension).nativeExtension, source.id).then({
+            val disabledExtension = GeckoWebExtension(it!!, runtime.webExtensionController)
+            webExtensionDelegate?.onDisabled(disabledExtension)
+            onSuccess(disabledExtension)
+            GeckoResult<Void>()
+        }, { throwable ->
+            onError(throwable)
+            GeckoResult<Void>()
+        })
     }
 
     /**

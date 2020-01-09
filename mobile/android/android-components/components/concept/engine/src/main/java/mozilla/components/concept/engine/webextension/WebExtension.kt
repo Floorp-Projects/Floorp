@@ -303,3 +303,20 @@ data class Metadata(
      */
     val openOptionsPageInTab: Boolean?
 )
+
+/**
+ * Provides additional information about why an extension was enabled or disabled.
+ */
+@Suppress("MagicNumber")
+enum class EnableSource(val id: Int) {
+    /**
+     * The extension is enabled or disabled by the user.
+     */
+    USER(1),
+
+    /**
+     * The extension is enabled or disabled by the application based
+     * on available support.
+     */
+    APP_SUPPORT(1 shl 1),
+}
