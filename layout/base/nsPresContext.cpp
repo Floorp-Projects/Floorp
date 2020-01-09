@@ -87,7 +87,6 @@
 #include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "MobileViewportManager.h"
-#include "mozilla/dom/ImageTracker.h"
 
 // Needed for Start/Stop of Image Animation
 #include "imgIContainer.h"
@@ -1523,15 +1522,7 @@ static CallState MediaFeatureValuesChangedAllDocumentsCallback(
 
 void nsPresContext::MediaFeatureValuesChangedAllDocuments(
     const MediaFeatureChange& aChange) {
-  // Handle the media feature value change in this document.
   MediaFeatureValuesChanged(aChange);
-
-  // Propagate the media feature value change down to any SVG images the
-  // document is using.
-  mDocument->StyleImageLoader()->MediaFeatureValuesChangedAllDocuments(aChange);
-  mDocument->ImageTracker()->MediaFeatureValuesChangedAllDocuments(aChange);
-
-  // And then into any subdocuments.
   mDocument->EnumerateSubDocuments(
       MediaFeatureValuesChangedAllDocumentsCallback,
       const_cast<MediaFeatureChange*>(&aChange));
