@@ -188,7 +188,10 @@ class InactivePropertyHelper {
       // (max-|min-)width used on inline elements, table rows, or row groups.
       {
         invalidProperties: ["max-width", "min-width", "width"],
-        when: () => this.nonReplacedInlineBox || this.tableRow || this.rowGroup,
+        when: () =>
+          this.nonReplacedInlineBox ||
+          this.horizontalTableTrack ||
+          this.horizontalTableTrackGroup,
         fixId: "inactive-css-non-replaced-inline-or-table-row-or-row-group-fix",
         msgId: "inactive-css-property-because-of-display",
         numFixProps: 2,
@@ -197,7 +200,9 @@ class InactivePropertyHelper {
       {
         invalidProperties: ["max-height", "min-height", "height"],
         when: () =>
-          this.nonReplacedInlineBox || this.tableColumn || this.columnGroup,
+          this.nonReplacedInlineBox ||
+          this.verticalTableTrack ||
+          this.verticalTableTrackGroup,
         fixId:
           "inactive-css-non-replaced-inline-or-table-column-or-column-group-fix",
         msgId: "inactive-css-property-because-of-display",
@@ -493,18 +498,6 @@ class InactivePropertyHelper {
   }
 
   /**
-   * Check if the current node is a row group.
-   */
-  get rowGroup() {
-    return (
-      this.style &&
-      (this.style.display === "table-row-group" ||
-        this.style.display === "table-header-group" ||
-        this.style.display === "table-footer-group")
-    );
-  }
-
-  /**
    * Check if the current node is a table column.
    */
   get tableColumn() {
@@ -512,10 +505,87 @@ class InactivePropertyHelper {
   }
 
   /**
+   * Check if the curent node is a horizontal table track. That is: either a table row
+   * displayed in horizontal writing mode, or a table column displayed in vertical writing
+   * mode.
+   */
+  get horizontalTableTrack() {
+    if (!this.tableRow && !this.tableColumn) {
+      return false;
+    }
+
+    const wm = this.getTableTrackParentWritingMode();
+    const isVertical = wm.includes("vertical") || wm.includes("sideways");
+
+    return isVertical ? this.tableColumn : this.tableRow;
+  }
+
+  /**
+   * Check if the curent node is a vertical table track. That is: either a table row
+   * displayed in vertical writing mode, or a table column displayed in horizontal writing
+   * mode.
+   */
+  get verticalTableTrack() {
+    if (!this.tableRow && !this.tableColumn) {
+      return false;
+    }
+
+    const wm = this.getTableTrackParentWritingMode();
+    const isVertical = wm.includes("vertical") || wm.includes("sideways");
+
+    return isVertical ? this.tableRow : this.tableColumn;
+  }
+
+  /**
+   * Check if the current node is a row group.
+   */
+  get rowGroup() {
+    return this.isRowGroup(this.node);
+  }
+
+  /**
    * Check if the current node is a table column group.
    */
   get columnGroup() {
-    return this.style && this.style.display === "table-column-group";
+    return this.isColumnGroup(this.node);
+  }
+
+  /**
+   * Check if the curent node is a horizontal table track group. That is: either a table
+   * row group displayed in horizontal writing mode, or a table column group displayed in
+   * vertical writing mode.
+   */
+  get horizontalTableTrackGroup() {
+    if (!this.rowGroup && !this.columnGroup) {
+      return false;
+    }
+
+    const wm = this.getTableTrackParentWritingMode(true);
+    const isVertical = wm.includes("vertical") || wm.includes("sideways");
+
+    const isHorizontalRowGroup = this.rowGroup && !isVertical;
+    const isHorizontalColumnGroup = this.columnGroup && isVertical;
+
+    return isHorizontalRowGroup || isHorizontalColumnGroup;
+  }
+
+  /**
+   * Check if the curent node is a vertical table track group. That is: either a table row
+   * group displayed in vertical writing mode, or a table column group displayed in
+   * horizontal writing mode.
+   */
+  get verticalTableTrackGroup() {
+    if (!this.rowGroup && !this.columnGroup) {
+      return false;
+    }
+
+    const wm = this.getTableTrackParentWritingMode(true);
+    const isVertical = wm.includes("vertical") || wm.includes("sideways");
+
+    const isVerticalRowGroup = this.rowGroup && isVertical;
+    const isVerticalColumnGroup = this.columnGroup && !isVertical;
+
+    return isVerticalRowGroup || isVerticalColumnGroup;
   }
 
   /**
@@ -766,7 +836,7 @@ class InactivePropertyHelper {
         return p;
       }
 
-      const style = node.ownerGlobal.getComputedStyle(p);
+      const style = computedStyle(p, node.ownerGlobal);
       const display = style.display;
 
       if (display !== "contents") {
@@ -775,6 +845,55 @@ class InactivePropertyHelper {
       // display: contents, walk to the parent
     }
     return null;
+  }
+
+  isRowGroup(node) {
+    const style = node === this.node ? this.style : computedStyle(node);
+
+    return (
+      style &&
+      (style.display === "table-row-group" ||
+        style.display === "table-header-group" ||
+        style.display === "table-footer-group")
+    );
+  }
+
+  isColumnGroup(node) {
+    const style = node === this.node ? this.style : computedStyle(node);
+
+    return style && style.display === "table-column-group";
+  }
+
+  /**
+   * Assuming the current element is a table track (row or column) or table track group,
+   * get the parent table writing mode.
+   * This is either going to be the table element if there is one, or the parent element.
+   * If the current element is not a table track, this returns its own writing mode.
+   *
+   * @param  {Boolean} isGroup
+   *         Whether the element is a table track group, instead of a table track.
+   * @return {String}
+   *         The writing-mode value
+   */
+  getTableTrackParentWritingMode(isGroup) {
+    let current = this.node.parentNode;
+
+    // Skip over unrendered elements.
+    while (computedStyle(current).display === "contents") {
+      current = current.parentNode;
+    }
+
+    // Skip over groups if the initial element wasn't already one.
+    if (!isGroup && (this.isRowGroup(current) || this.isColumnGroup(current))) {
+      current = current.parentNode;
+    }
+
+    // Once more over unrendered elements above the group.
+    while (computedStyle(current).display === "contents") {
+      current = current.parentNode;
+    }
+
+    return computedStyle(current).writingMode;
   }
 }
 
@@ -798,4 +917,17 @@ function allCssPropertiesExcept(propertiesToIgnore) {
   }
 
   return [...properties];
+}
+
+/**
+ * Helper for getting an element's computed styles.
+ *
+ * @param  {DOMNode} node
+ *         The node to get the styles for.
+ * @param  {Window} window
+ *         Optional window object. If omitted, will get the node's window.
+ * @return {Object}
+ */
+function computedStyle(node, window = node.ownerGlobal) {
+  return window.getComputedStyle(node);
 }

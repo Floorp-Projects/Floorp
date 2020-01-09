@@ -292,4 +292,76 @@ export default [
     rules: ["rect { height: 100px; }"],
     isActive: true,
   },
+  createTableElementTestCase("width", false, "table-row"),
+  createTableElementTestCase("width", false, "table-row-group"),
+  createTableElementTestCase("width", true, "table-column"),
+  createTableElementTestCase("width", true, "table-column-group"),
+  createTableElementTestCase("height", false, "table-column"),
+  createTableElementTestCase("height", false, "table-column-group"),
+  createTableElementTestCase("height", true, "table-row"),
+  createTableElementTestCase("height", true, "table-row-group"),
+  createVerticalTableElementTestCase("width", true, "table-row"),
+  createVerticalTableElementTestCase("width", true, "table-row-group"),
+  createVerticalTableElementTestCase("width", false, "table-column"),
+  createVerticalTableElementTestCase("width", false, "table-column-group"),
+  createVerticalTableElementTestCase("height", true, "table-column"),
+  createVerticalTableElementTestCase("height", true, "table-column-group"),
+  createVerticalTableElementTestCase("height", false, "table-row"),
+  createVerticalTableElementTestCase("height", false, "table-row-group"),
+  {
+    info:
+      "width's inactivity status for a row takes the table's writing mode into account",
+    property: "width",
+    createTestElement: rootNode => {
+      const table = document.createElement("table");
+      table.style.writingMode = "vertical-lr";
+      rootNode.appendChild(table);
+
+      const tbody = document.createElement("tbody");
+      table.appendChild(tbody);
+
+      const tr = document.createElement("tr");
+      tbody.appendChild(tr);
+
+      const td = document.createElement("td");
+      tr.appendChild(td);
+
+      return tr;
+    },
+    rules: ["tr { writing-mode: horizontal-tb; width: 360px; }"],
+    isActive: true,
+  },
 ];
+
+function createTableElementTestCase(property, isActive, displayType) {
+  return {
+    info: `${property} is ${
+      isActive ? "active" : "inactive"
+    } on a ${displayType}`,
+    property,
+    tagName: "div",
+    rules: [`div { display: ${displayType}; ${property}: 100px; }`],
+    isActive,
+  };
+}
+
+function createVerticalTableElementTestCase(property, isActive, displayType) {
+  return {
+    info: `${property} is ${
+      isActive ? "active" : "inactive"
+    } on a vertical ${displayType}`,
+    property,
+    createTestElement: rootNode => {
+      const container = document.createElement("div");
+      container.style.writingMode = "vertical-lr";
+      rootNode.append(container);
+
+      const element = document.createElement("span");
+      container.append(element);
+
+      return element;
+    },
+    rules: [`span { display: ${displayType}; ${property}: 100px; }`],
+    isActive,
+  };
+}
