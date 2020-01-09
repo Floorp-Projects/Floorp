@@ -129,8 +129,38 @@ class WebConsoleWrapper {
     });
   }
 
-  dispatchMessageAdd(packet) {
-    this.batchedMessagesAdd([packet]);
+  dispatchMessageAdd(packet, waitForResponse) {
+    // Wait for the message to render to resolve with the DOM node.
+    // This is just for backwards compatibility with old tests, and should
+    // be removed once it's not needed anymore.
+    // Can only wait for response if the action contains a valid message.
+    let promise;
+    // Also, do not expect any update while the panel is in background.
+    if (waitForResponse && document.visibilityState === "visible") {
+      const timeStampToMatch = packet.message
+        ? packet.message.timeStamp
+        : packet.timestamp;
+
+      promise = new Promise(resolve => {
+        this.webConsoleUI.on(
+          "new-messages",
+          function onThisMessage(messages) {
+            for (const m of messages) {
+              if (m.timeStamp === timeStampToMatch) {
+                resolve(m.node);
+                this.webConsoleUI.off("new-messages", onThisMessage);
+                return;
+              }
+            }
+          }.bind(this)
+        );
+      });
+    } else {
+      promise = Promise.resolve();
+    }
+
+    this.batchedMessageAdd(packet);
+    return promise;
   }
 
   dispatchMessagesAdd(messages) {
@@ -145,7 +175,7 @@ class WebConsoleWrapper {
     this.queuedMessageUpdates = [];
     this.queuedRequestUpdates = [];
     store.dispatch(actions.messagesClear());
-    this.webConsoleUI.emitForTests("messages-cleared");
+    this.webConsoleUI.emit("messages-cleared");
   }
 
   dispatchPrivateMessagesClear() {
@@ -275,6 +305,11 @@ class WebConsoleWrapper {
     return this.setTimeoutIfNeeded();
   }
 
+  batchedMessageAdd(message) {
+    this.queuedMessageAdds.push(message);
+    this.setTimeoutIfNeeded();
+  }
+
   batchedMessagesAdd(messages) {
     this.queuedMessageAdds = this.queuedMessageAdds.concat(messages);
     this.setTimeoutIfNeeded();
@@ -349,7 +384,7 @@ class WebConsoleWrapper {
             await store.dispatch(
               actions.networkMessageUpdate(message, null, res)
             );
-            this.webConsoleUI.emitForTests("network-message-updated", res);
+            this.webConsoleUI.emit("network-message-updated", res);
           }
           this.queuedMessageUpdates = [];
         }
@@ -366,7 +401,7 @@ class WebConsoleWrapper {
           // (netmonitor/src/connector/firefox-data-provider).
           // This event might be utilized in tests to find the right
           // time when to finish.
-          this.webConsoleUI.emitForTests("network-request-payload-ready");
+          this.webConsoleUI.emit("network-request-payload-ready");
         }
         done();
       }, 50);
