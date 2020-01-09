@@ -124,6 +124,7 @@ extern bool enableReadableStreamPipeTo;
 extern bool enableFields;
 extern bool enableAwaitFix;
 extern bool enableWeakRefs;
+extern bool enableToSource;
 #ifdef JS_GC_ZEAL
 extern uint32_t gZealBits;
 extern uint32_t gZealFrequency;

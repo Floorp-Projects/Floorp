@@ -499,6 +499,7 @@ bool shell::enableReadableStreamPipeTo = false;
 bool shell::enableFields = false;
 bool shell::enableAwaitFix = false;
 bool shell::enableWeakRefs = false;
+bool shell::enableToSource = false;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
 uint32_t shell::gZealFrequency = 0;
@@ -3713,7 +3714,8 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setReadableStreamPipeToEnabled(enableReadableStreamPipeTo)
       .setFieldsEnabled(enableFields)
       .setAwaitFixEnabled(enableAwaitFix)
-      .setWeakRefsEnabled(enableWeakRefs);
+      .setWeakRefsEnabled(enableWeakRefs)
+      .setToSourceEnabled(enableToSource);
   options.behaviors().setDeferredParserAlloc(enableDeferredMode);
 }
 
@@ -10385,6 +10387,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableFields = !op.getBoolOption("disable-experimental-fields");
   enableAwaitFix = op.getBoolOption("enable-experimental-await-fix");
   enableWeakRefs = op.getBoolOption("enable-weak-refs");
+  enableToSource = !op.getBoolOption("disable-tosource");
 
   JS::ContextOptionsRef(cx)
       .setAsmJS(enableAsmJS)
@@ -11177,6 +11180,7 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "enable-experimental-await-fix",
                         "Enable new, faster await semantics") ||
       !op.addBoolOption('\0', "enable-weak-refs", "Enable weak references") ||
+      !op.addBoolOption('\0', "disable-tosource", "Disable toSource/uneval") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT
