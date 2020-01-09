@@ -3585,6 +3585,14 @@ var gCSSProperties = {
     other_values: ["both", "horizontal", "vertical", "inline", "block"],
     invalid_values: [],
   },
+  "-moz-stack-sizing": {
+    domProp: "MozStackSizing",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["stretch-to-fit"],
+    other_values: ["ignore", "ignore-horizontal", "ignore-vertical"],
+    invalid_values: [],
+  },
   "-moz-tab-size": {
     domProp: "MozTabSize",
     inherited: true,

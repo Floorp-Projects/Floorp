@@ -107,6 +107,8 @@ class nsTextControlFrame final : public nsContainerFrame,
 #endif
 
   virtual bool IsFrameOfType(uint32_t aFlags) const override {
+    // nsStackFrame is already both of these, but that's somewhat bogus,
+    // and we really mean it.
     return nsContainerFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
