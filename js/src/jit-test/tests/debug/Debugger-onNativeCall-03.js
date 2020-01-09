@@ -21,11 +21,4 @@ gdbg.executeInGlobal(`
   x.sort((a, b) => {print(a)});
 `);
 
-// When running self-hosted code, we will see native calls to internal
-// self-hosted JS functions and intrinsic natives. Drop these from the result
-// array.
-const validNames = ["EnterFrame", "sort", "print"];
-const filtered = rv.filter(name => validNames.includes(name));
-
-assertEq(filtered.length < rv.length, true);
-assertEqArray(filtered, ["EnterFrame", "sort", "EnterFrame", "print", "EnterFrame", "print"]);
+assertEqArray(rv, ["EnterFrame", "sort", "EnterFrame", "print", "EnterFrame", "print"]);
