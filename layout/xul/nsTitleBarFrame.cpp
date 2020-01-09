@@ -71,7 +71,7 @@ nsresult nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 
           // start capture.
           PresShell::SetCapturingContent(GetContent(),
-                                          CaptureFlags::IgnoreAllowedState);
+                                         CaptureFlags::IgnoreAllowedState);
 
           // remember current mouse coordinates.
           mLastPoint = aEvent->mRefPoint;
