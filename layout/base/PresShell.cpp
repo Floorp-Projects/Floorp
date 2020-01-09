@@ -8088,8 +8088,8 @@ void PresShell::EventHandler::RecordEventHandlingResponsePerformance(
 }
 
 // static
-already_AddRefed<nsIURI>
-PresShell::EventHandler::GetDocumentURIToCompareWithBlacklist(
+nsIPrincipal*
+PresShell::EventHandler::GetDocumentPrincipalToCompareWithBlacklist(
     PresShell& aPresShell) {
   nsPresContext* presContext = aPresShell.GetPresContext();
   if (NS_WARN_IF(!presContext)) {
@@ -8106,9 +8106,7 @@ PresShell::EventHandler::GetDocumentURIToCompareWithBlacklist(
     if (principal->GetIsNullPrincipal()) {
       continue;
     }
-    nsCOMPtr<nsIURI> uri;
-    principal->GetURI(getter_AddRefs(uri));
-    return uri.forget();
+    return principal;
   }
   return nullptr;
 }
@@ -8150,26 +8148,42 @@ nsresult PresShell::EventHandler::DispatchEventToDOM(
       // behave so, however, some web apps may be broken.  On such web apps,
       // we should keep using legacy our behavior.
       if (!mPresShell->mInitializedWithKeyPressEventDispatchingBlacklist) {
+        bool isInPrefList = false;
         mPresShell->mInitializedWithKeyPressEventDispatchingBlacklist = true;
-        nsCOMPtr<nsIURI> uri =
-            GetDocumentURIToCompareWithBlacklist(*mPresShell);
-        mPresShell->mForceDispatchKeyPressEventsForNonPrintableKeys =
-            nsContentUtils::IsURIInPrefList(
-                uri,
-                "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys");
-        mPresShell->mForceDispatchKeyPressEventsForNonPrintableKeys |=
-            nsContentUtils::IsURIInPrefList(uri,
-                                            "dom.keyboardevent.keypress.hack."
-                                            "dispatch_non_printable_keys.addl");
-        mPresShell->mForceUseLegacyKeyCodeAndCharCodeValues |=
-            nsContentUtils::IsURIInPrefList(uri,
-                                            "dom.keyboardevent.keypress.hack."
-                                            "use_legacy_keycode_and_charcode");
-        mPresShell->mForceUseLegacyKeyCodeAndCharCodeValues |=
-            nsContentUtils::IsURIInPrefList(
-                uri,
-                "dom.keyboardevent.keypress.hack."
-                "use_legacy_keycode_and_charcode.addl");
+        nsCOMPtr<nsIPrincipal> principal =
+            GetDocumentPrincipalToCompareWithBlacklist(*mPresShell);
+        if (principal) {
+          principal->IsURIInPrefList(
+              "dom.keyboardevent.keypress.hack.dispatch_non_printable_keys",
+              &isInPrefList);
+          mPresShell->mForceDispatchKeyPressEventsForNonPrintableKeys =
+              isInPrefList;
+
+          principal->IsURIInPrefList(
+              "dom.keyboardevent.keypress.hack."
+              "dispatch_non_printable_keys.addl",
+              &isInPrefList);
+          mPresShell->mForceDispatchKeyPressEventsForNonPrintableKeys |=
+              isInPrefList;
+
+          principal->IsURIInPrefList(
+              "dom.keyboardevent.keypress.hack."
+              "use_legacy_keycode_and_charcode",
+              &isInPrefList);
+          mPresShell->mForceUseLegacyKeyCodeAndCharCodeValues |= isInPrefList;
+
+          principal->IsURIInPrefList(
+              "dom.keyboardevent.keypress.hack."
+              "use_legacy_keycode_and_charcode",
+              &isInPrefList);
+          mPresShell->mForceUseLegacyKeyCodeAndCharCodeValues |= isInPrefList;
+
+          principal->IsURIInPrefList(
+              "dom.keyboardevent.keypress.hack."
+              "use_legacy_keycode_and_charcode.addl",
+              &isInPrefList);
+          mPresShell->mForceUseLegacyKeyCodeAndCharCodeValues |= isInPrefList;
+        }
       }
       if (mPresShell->mForceDispatchKeyPressEventsForNonPrintableKeys) {
         aEvent->mFlags.mOnlySystemGroupDispatchInContent = false;
@@ -8187,12 +8201,17 @@ nsresult PresShell::EventHandler::DispatchEventToDOM(
       // need to revert to the historial non-standard behaviour
       if (!mPresShell->mInitializedWithClickEventDispatchingBlacklist) {
         mPresShell->mInitializedWithClickEventDispatchingBlacklist = true;
-        nsCOMPtr<nsIURI> uri =
-            GetDocumentURIToCompareWithBlacklist(*mPresShell);
-        mPresShell->mForceUseLegacyNonPrimaryDispatch =
-            nsContentUtils::IsURIInPrefList(
-                uri,
-                "dom.mouseevent.click.hack.use_legacy_non-primary_dispatch");
+
+        nsCOMPtr<nsIPrincipal> principal =
+            GetDocumentPrincipalToCompareWithBlacklist(*mPresShell);
+
+        if (principal) {
+          bool isInPrefList = false;
+          principal->IsURIInPrefList(
+              "dom.mouseevent.click.hack.use_legacy_non-primary_dispatch",
+              &isInPrefList);
+          mPresShell->mForceUseLegacyNonPrimaryDispatch = isInPrefList;
+        }
       }
       if (mPresShell->mForceUseLegacyNonPrimaryDispatch) {
         aEvent->AsMouseEvent()->mUseLegacyNonPrimaryDispatch = true;
