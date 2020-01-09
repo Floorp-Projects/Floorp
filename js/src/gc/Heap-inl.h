@@ -41,6 +41,7 @@ inline void js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind,
     bufferedCells() = &ArenaCellSet::Empty;
   }
 
+  unmarkAll();
   setAsFullyUnused();
 }
 

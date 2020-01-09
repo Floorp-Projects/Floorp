@@ -35,6 +35,10 @@ namespace js {
 template <XDRMode mode>
 XDRResult XDRBigInt(XDRState<mode>* xdr, MutableHandle<JS::BigInt*> bi);
 
+namespace gc {
+constexpr size_t BigIntCellSize = 16;
+}
+
 }  // namespace js
 
 namespace JS {
@@ -52,7 +56,7 @@ class BigInt final : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
   static constexpr uintptr_t SignBit = js::Bit(Base::NumFlagBitsReservedForGC);
 
   static constexpr size_t InlineDigitsLength =
-      (js::gc::MinCellSize - sizeof(Base)) / sizeof(Digit);
+      (js::gc::BigIntCellSize - sizeof(Base)) / sizeof(Digit);
 
   // Note: 32-bit length and flags fields are inherited from
   // CellWithLengthAndFlags.
@@ -482,12 +486,12 @@ class BigInt final : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
 };
 
 static_assert(
-    sizeof(BigInt) >= js::gc::MinCellSize,
-    "sizeof(BigInt) must be greater than the minimum allocation size");
+    sizeof(BigInt) == js::gc::BigIntCellSize,
+    "sizeof(BigInt) need to match the predefined constant BigIntCellSize");
 
 static_assert(
-    sizeof(BigInt) == js::gc::MinCellSize,
-    "sizeof(BigInt) intended to be the same as the minimum allocation size");
+    sizeof(BigInt) >= js::gc::MinCellSize,
+    "sizeof(BigInt) must be greater than the minimum allocation size");
 
 }  // namespace JS
 

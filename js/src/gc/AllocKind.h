@@ -116,6 +116,8 @@ static_assert(int(AllocKind::FIRST) == 0,
 static_assert(int(AllocKind::OBJECT_FIRST) == 0,
               "OBJECT_FIRST must be defined as the first object kind");
 
+constexpr size_t AllocKindCount = size_t(AllocKind::LIMIT);
+
 inline bool IsAllocKind(AllocKind kind) {
   return kind >= AllocKind::FIRST && kind <= AllocKind::LIMIT;
 }
@@ -177,7 +179,7 @@ static inline JS::TraceKind MapAllocToTraceKind(AllocKind kind) {
 #undef EXPAND_ELEMENT
   };
 
-  static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
+  static_assert(mozilla::ArrayLength(map) == AllocKindCount,
                 "AllocKind-to-TraceKind mapping must be in sync");
   return map[size_t(kind)];
 }
@@ -187,7 +189,7 @@ static inline JS::TraceKind MapAllocToTraceKind(AllocKind kind) {
  * we just exclude non-background objects.
  */
 static const size_t MAX_BACKGROUND_FINALIZE_KINDS =
-    size_t(AllocKind::LIMIT) - size_t(AllocKind::OBJECT_LIMIT) / 2;
+    AllocKindCount - size_t(AllocKind::OBJECT_LIMIT) / 2;
 
 static inline bool IsNurseryAllocable(AllocKind kind) {
   MOZ_ASSERT(IsValidAllocKind(kind));
@@ -198,7 +200,7 @@ static inline bool IsNurseryAllocable(AllocKind kind) {
 #undef DEFINE_NURSERY_ALLOCABLE
   };
 
-  static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
+  static_assert(mozilla::ArrayLength(map) == AllocKindCount,
                 "IsNurseryAllocable sanity check");
   return map[size_t(kind)];
 }
@@ -212,7 +214,7 @@ static inline bool IsBackgroundFinalized(AllocKind kind) {
 #undef DEFINE_BACKGROUND_FINALIZED
   };
 
-  static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
+  static_assert(mozilla::ArrayLength(map) == AllocKindCount,
                 "IsBackgroundFinalized sanity check");
   return map[size_t(kind)];
 }
@@ -230,7 +232,7 @@ static inline bool IsCompactingKind(AllocKind kind) {
 #undef DEFINE_COMPACTING_KIND
   };
 
-  static_assert(mozilla::ArrayLength(map) == size_t(AllocKind::LIMIT),
+  static_assert(mozilla::ArrayLength(map) == AllocKindCount,
                 "IsCompactingKind sanity check");
   return map[size_t(kind)];
 }
