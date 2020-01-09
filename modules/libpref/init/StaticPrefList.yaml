@@ -5721,8 +5721,6 @@
 # Prefs starting with "media."
 #---------------------------------------------------------------------------
 
-# These prefs use camel case instead of snake case for the getter because one
-# reviewer had an unshakeable preference for that. Who could that be?
 
 # If "media.autoplay.default" is not ALLOWED, and this pref is true,
 # then audible media would only be allowed to autoplay after website has
