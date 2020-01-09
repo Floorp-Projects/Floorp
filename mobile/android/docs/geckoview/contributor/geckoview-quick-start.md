@@ -61,6 +61,7 @@ In order to pick up the configuration changes we just made we need to build from
 * Choose File->Open from the toolbar
 * Navigate to the root of your `mozilla-central` source directory and click "Open"
 * Click yes if it asks if you want to use the gradle wrapper.
+  * If the gradle sync does not automatically start, select File > Sync Project with Gradle Files.
 * Wait for the project to index and gradle to sync. Once synced, the workspace will reconfigure to display the different projects.
   * annotations contains custom annotations used inside GeckoView and Fennec.
   * app is Fennec - Firefox for Android. Here is where you will find code specific to that app.
