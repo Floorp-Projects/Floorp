@@ -23,10 +23,6 @@ import mozilla.components.support.migration.state.MigrationStore
 private const val NOTIFICATION_TAG = "mozac.support.migration.notification"
 private const val NOTIFICATION_CHANNEL_ID = "mozac.support.migration.generic"
 
-// Non-final strings and icon.
-// https://github.com/mozilla-mobile/android-components/issues/5141
-private const val TEMPORARY_NOTIFICATION_TITLE = "Migrating"
-private const val TEMPORARY_NOTIFICATION_TEXT = "Migrating user data."
 private const val TEMPORARY_NOTIFICATION_CHANNEL_NAME = "Migration"
 private val temporaryNotificationIcon = R.drawable.mozac_lib_crash_notification
 
@@ -86,8 +82,8 @@ abstract class AbstractMigrationService : Service() {
 
         val builder = NotificationCompat.Builder(this, channel)
             .setSmallIcon(temporaryNotificationIcon)
-            .setContentTitle(TEMPORARY_NOTIFICATION_TITLE)
-            .setContentText(TEMPORARY_NOTIFICATION_TEXT)
+            .setContentTitle(getString(R.string.mozac_support_migration_ongoing_notification_title))
+            .setContentText(getString(R.string.mozac_support_migration_ongoing_notification_text))
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
