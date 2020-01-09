@@ -1514,9 +1514,6 @@ class NumericLiteral : public ParseNode {
   void setValue(double v) { value_ = v; }
 
   void setDecimalPoint(DecimalPoint d) { decimalPoint_ = d; }
-
-  // Return the decimal string representation of this numeric literal.
-  JSAtom* toAtom(JSContext* cx) const;
 };
 
 class BigIntLiteral : public ParseNode {
@@ -1565,9 +1562,6 @@ class BigIntLiteral : public ParseNode {
   // Get the contained BigIntValue, or parse it from the creation data
   // Can be used when deferred allocation mode is enabled.
   BigInt* getOrCreate(JSContext* cx);
-
-  // Return the decimal string representation of this BigInt literal.
-  JSAtom* toAtom(JSContext* cx);
 
   bool isZero();
 };
