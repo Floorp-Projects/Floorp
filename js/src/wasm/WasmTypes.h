@@ -202,6 +202,61 @@ struct ShareableBytes : ShareableBase<ShareableBytes> {
 typedef RefPtr<ShareableBytes> MutableBytes;
 typedef RefPtr<const ShareableBytes> SharedBytes;
 
+// The Opcode compactly and safely represents the primary opcode plus any
+// extension, with convenient predicates and accessors.
+
+class Opcode {
+  uint32_t bits_;
+
+ public:
+  MOZ_IMPLICIT Opcode(Op op) : bits_(uint32_t(op)) {
+    static_assert(size_t(Op::Limit) == 256, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(Op::Limit));
+  }
+  MOZ_IMPLICIT Opcode(MiscOp op)
+      : bits_((uint32_t(op) << 8) | uint32_t(Op::MiscPrefix)) {
+    static_assert(size_t(MiscOp::Limit) <= 0xFFFFFF, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(MiscOp::Limit));
+  }
+  MOZ_IMPLICIT Opcode(ThreadOp op)
+      : bits_((uint32_t(op) << 8) | uint32_t(Op::ThreadPrefix)) {
+    static_assert(size_t(ThreadOp::Limit) <= 0xFFFFFF, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(ThreadOp::Limit));
+  }
+  MOZ_IMPLICIT Opcode(MozOp op)
+      : bits_((uint32_t(op) << 8) | uint32_t(Op::MozPrefix)) {
+    static_assert(size_t(MozOp::Limit) <= 0xFFFFFF, "fits");
+    MOZ_ASSERT(size_t(op) < size_t(MozOp::Limit));
+  }
+
+  bool isOp() const { return bits_ < uint32_t(Op::FirstPrefix); }
+  bool isMisc() const { return (bits_ & 255) == uint32_t(Op::MiscPrefix); }
+  bool isThread() const { return (bits_ & 255) == uint32_t(Op::ThreadPrefix); }
+  bool isMoz() const { return (bits_ & 255) == uint32_t(Op::MozPrefix); }
+
+  Op asOp() const {
+    MOZ_ASSERT(isOp());
+    return Op(bits_);
+  }
+  MiscOp asMisc() const {
+    MOZ_ASSERT(isMisc());
+    return MiscOp(bits_ >> 8);
+  }
+  ThreadOp asThread() const {
+    MOZ_ASSERT(isThread());
+    return ThreadOp(bits_ >> 8);
+  }
+  MozOp asMoz() const {
+    MOZ_ASSERT(isMoz());
+    return MozOp(bits_ >> 8);
+  }
+
+  uint32_t bits() const { return bits_; }
+
+  bool operator==(const Opcode& that) const { return bits_ == that.bits_; }
+  bool operator!=(const Opcode& that) const { return bits_ != that.bits_; }
+};
+
 // A PackedTypeCode represents a TypeCode paired with a refTypeIndex (valid only
 // for TypeCode::Ref).  PackedTypeCode is guaranteed to be POD.  The TypeCode
 // spans the full range of type codes including the specialized AnyRef, FuncRef,
