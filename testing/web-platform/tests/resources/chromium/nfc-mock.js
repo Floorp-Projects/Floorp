@@ -145,8 +145,11 @@ function matchesWatchOptions(message, options) {
 }
 
 function createNDEFError(type) {
-  return { error: type ?
-      new device.mojom.NDEFError({ errorType: type }) : null };
+  return {
+    error: type ?
+        new device.mojom.NDEFError({errorType: type, errorMessage: ''}) :
+        null
+  };
 }
 
 var WebNFCTest = (() => {
@@ -357,7 +360,10 @@ var WebNFCTest = (() => {
     simulateNonNDEFTagDiscovered() {
       // Notify NotSupportedError to all active readers.
       if (this.watchers_.length != 0) {
-        this.client_.onError(device.mojom.NDEFErrorType.NOT_SUPPORTED);
+        this.client_.onError(new device.mojom.NDEFError({
+          errorType: device.mojom.NDEFErrorType.NOT_SUPPORTED,
+          errorMessage: ''
+        }));
       }
       // Reject the pending push with NotSupportedError.
       if (this.pending_promise_func_) {
