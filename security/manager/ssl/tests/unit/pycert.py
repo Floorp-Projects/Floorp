@@ -771,7 +771,7 @@ class Certificate(object):
 # midnight.
 def main(output, inputPath):
     with open(inputPath) as configStream:
-        output.write(Certificate(configStream).toPEM())
+        output.write(Certificate(configStream).toPEM() + '\n')
 
 
 # When run as a standalone program, this will read a specification from
