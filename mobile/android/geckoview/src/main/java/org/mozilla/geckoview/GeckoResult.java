@@ -2,7 +2,9 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.mozglue.JNIObject;
+import org.mozilla.gecko.util.IXPCOMEventTarget;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.XPCOMEventTarget;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -188,6 +190,19 @@ public class GeckoResult<T> {
         Handler mHandler;
     }
 
+    private static class XPCOMEventTargetDispatcher implements Dispatcher {
+        private IXPCOMEventTarget mEventTarget;
+
+        public XPCOMEventTargetDispatcher(final IXPCOMEventTarget eventTarget) {
+            mEventTarget = eventTarget;
+        }
+
+        @Override
+        public void dispatch(final Runnable r) {
+            mEventTarget.dispatch(r);
+        }
+    }
+
     private static class DirectDispatcher implements Dispatcher {
         public void dispatch(final Runnable r) {
             r.run();
@@ -232,6 +247,8 @@ public class GeckoResult<T> {
             mDispatcher = new HandlerDispatcher(ThreadUtils.getUiHandler());
         } else if (Looper.myLooper() != null) {
             mDispatcher = new HandlerDispatcher(new Handler());
+        } else if (XPCOMEventTarget.launcherThread().isOnCurrentThread()) {
+            mDispatcher = new XPCOMEventTargetDispatcher(XPCOMEventTarget.launcherThread());
         } else {
             mDispatcher = null;
         }
