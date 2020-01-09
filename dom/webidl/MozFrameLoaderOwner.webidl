@@ -16,6 +16,10 @@ dictionary RemotenessOptions {
   // frameloader to control the load behaviour.
   unsigned long long pendingSwitchID;
   boolean replaceBrowsingContext = false;
+
+  // True if we have an existing channel that we will resume in the
+  // target process, either via pendingSwitchID or using messageManager.
+  boolean switchingInProgressLoad = false;
 };
 
 /**
