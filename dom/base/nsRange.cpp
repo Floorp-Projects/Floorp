@@ -132,19 +132,26 @@ static nsINode* GetNextRangeCommonAncestor(nsINode* aNode) {
  * A Comparator suitable for mozilla::BinarySearchIf for searching a collection
  * of nsRange* for an overlap of (mNode, mStartOffset) .. (mNode, mEndOffset).
  */
-struct IsItemInRangeComparator {
-  nsINode* mNode;
-  uint32_t mStartOffset;
-  uint32_t mEndOffset;
-  nsContentUtils::ComparePointsCache* mCache;
+class IsItemInRangeComparator {
+ public:
+  // @param aStartOffset has to be less or equal to aEndOffset.
+  IsItemInRangeComparator(const nsINode& aNode, const uint32_t aStartOffset,
+                          const uint32_t aEndOffset,
+                          nsContentUtils::ComparePointsCache* aCache)
+      : mNode(aNode),
+        mStartOffset(aStartOffset),
+        mEndOffset(aEndOffset),
+        mCache(aCache) {
+    MOZ_ASSERT(aStartOffset <= aEndOffset);
+  }
 
   int operator()(const nsRange* const aRange) const {
     int32_t cmp = nsContentUtils::ComparePoints_Deprecated(
-        mNode, static_cast<int32_t>(mEndOffset), aRange->GetStartContainer(),
+        &mNode, static_cast<int32_t>(mEndOffset), aRange->GetStartContainer(),
         static_cast<int32_t>(aRange->StartOffset()), nullptr, mCache);
     if (cmp == 1) {
       cmp = nsContentUtils::ComparePoints_Deprecated(
-          mNode, static_cast<int32_t>(mStartOffset), aRange->GetEndContainer(),
+          &mNode, static_cast<int32_t>(mStartOffset), aRange->GetEndContainer(),
           static_cast<int32_t>(aRange->EndOffset()), nullptr, mCache);
       if (cmp == -1) {
         return 0;
@@ -153,12 +160,19 @@ struct IsItemInRangeComparator {
     }
     return -1;
   }
+
+ private:
+  const nsINode& mNode;
+  const uint32_t mStartOffset;
+  const uint32_t mEndOffset;
+  nsContentUtils::ComparePointsCache* mCache;
 };
 
 /* static */
-bool nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
-                             uint32_t aEndOffset) {
+bool nsRange::IsNodeSelected(nsINode* aNode, const uint32_t aStartOffset,
+                             const uint32_t aEndOffset) {
   MOZ_ASSERT(aNode, "bad arg");
+  MOZ_ASSERT(aStartOffset <= aEndOffset);
 
   nsINode* n = GetNextRangeCommonAncestor(aNode);
   NS_ASSERTION(n || !aNode->IsSelectionDescendant(),
@@ -189,8 +203,7 @@ bool nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
   }
 
   nsContentUtils::ComparePointsCache cache;
-  IsItemInRangeComparator comparator = {aNode, aStartOffset, aEndOffset,
-                                        &cache};
+  IsItemInRangeComparator comparator{*aNode, aStartOffset, aEndOffset, &cache};
   if (!ancestorSelections.IsEmpty()) {
     for (auto iter = ancestorSelections.ConstIter(); !iter.Done();
          iter.Next()) {

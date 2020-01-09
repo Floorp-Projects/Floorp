@@ -329,6 +329,8 @@ class nsRange final : public mozilla::dom::AbstractRange,
    * If a nsRange starts in (aNode, aEndOffset) or if it ends in
    * (aNode, aStartOffset) then it is non-overlapping and the result is false
    * for that nsRange.  Collapsed ranges always counts as non-overlapping.
+   *
+   * @param aStartOffset has to be less or equal to aEndOffset.
    */
   static bool IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
                              uint32_t aEndOffset);
