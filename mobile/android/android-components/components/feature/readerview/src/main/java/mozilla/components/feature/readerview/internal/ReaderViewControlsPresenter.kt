@@ -20,6 +20,7 @@ internal class ReaderViewControlsPresenter(
      */
     fun show() {
         view.apply {
+            tryInflate()
             setColorScheme(config.colorScheme)
             setFont(config.fontType)
             setFontSize(config.fontSize)

@@ -35,6 +35,8 @@ class ReaderViewControlsBarTest {
     @Test
     fun `font options are set`() {
         val bar = ReaderViewControlsBar(appCompatContext)
+        bar.tryInflate()
+
         val serifButton = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_font_serif)
         val sansSerifButton = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_font_sans_serif)
 
@@ -54,6 +56,7 @@ class ReaderViewControlsBarTest {
     @Test
     fun `font size buttons are enabled or disabled`() {
         val bar = ReaderViewControlsBar(appCompatContext)
+        bar.tryInflate()
 
         val sizeDecreaseButton = bar.findViewById<AppCompatButton>(R.id.mozac_feature_readerview_font_size_decrease)
         val sizeIncreaseButton = bar.findViewById<AppCompatButton>(R.id.mozac_feature_readerview_font_size_increase)
@@ -87,6 +90,8 @@ class ReaderViewControlsBarTest {
     @Test
     fun `color scheme is set`() {
         val bar = ReaderViewControlsBar(appCompatContext)
+        bar.tryInflate()
+
         val colorOptionDark = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_color_dark)
         val colorOptionSepia = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_color_sepia)
         val colorOptionLight = bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_color_light)
@@ -152,6 +157,7 @@ class ReaderViewControlsBarTest {
         assertNull(bar.listener)
 
         bar.listener = listener
+        bar.tryInflate()
 
         bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_font_sans_serif).performClick()
 
@@ -166,6 +172,7 @@ class ReaderViewControlsBarTest {
         assertNull(bar.listener)
 
         bar.listener = listener
+        bar.tryInflate()
 
         bar.findViewById<AppCompatButton>(R.id.mozac_feature_readerview_font_size_increase).performClick()
 
@@ -180,9 +187,18 @@ class ReaderViewControlsBarTest {
         assertNull(bar.listener)
 
         bar.listener = listener
+        bar.tryInflate()
 
         bar.findViewById<AppCompatRadioButton>(R.id.mozac_feature_readerview_color_sepia).performClick()
 
         verify(listener).onColorSchemeChanged(ReaderViewFeature.ColorScheme.SEPIA)
+    }
+
+    @Test
+    fun `tryInflate is only successfully once`() {
+        val bar = ReaderViewControlsBar(appCompatContext)
+
+        assertTrue(bar.tryInflate())
+        assertFalse(bar.tryInflate())
     }
 }
