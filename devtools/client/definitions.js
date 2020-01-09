@@ -127,7 +127,7 @@ exports.Tools = Tools;
 Tools.options = {
   id: "options",
   ordinal: 0,
-  url: "chrome://devtools/content/framework/toolbox-options.xhtml",
+  url: "chrome://devtools/content/framework/toolbox-options.html",
   icon: "chrome://devtools/skin/images/settings.svg",
   bgTheme: "theme-body",
   label: l10n("options.label"),
