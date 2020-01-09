@@ -608,6 +608,7 @@ RefPtr<MediaDataDecoder::FlushPromise> RemoteDataDecoder::Flush() {
 
 RefPtr<MediaDataDecoder::FlushPromise> RemoteDataDecoder::ProcessFlush() {
   AssertOnTaskQueue();
+  MOZ_ASSERT(GetState() != State::SHUTDOWN);
 
   mDecodedData = DecodedData();
   UpdatePendingInputStatus(PendingOp::CLEAR);
@@ -741,6 +742,7 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Decode(
 RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::ProcessDecode(
     MediaRawData* aSample) {
   AssertOnTaskQueue();
+  MOZ_ASSERT(GetState() != State::SHUTDOWN);
   MOZ_ASSERT(aSample != nullptr);
   jni::ByteBuffer::LocalRef bytes = jni::ByteBuffer::New(
       const_cast<uint8_t*>(aSample->Data()), aSample->Size());
