@@ -434,6 +434,7 @@ function $DONOTEVALUATE() {
     var evalInWorker = global.evalInWorker;
     var monotonicNow = global.monotonicNow;
     var gc = global.gc;
+    var clearKeptObjects = global.clearKeptObjects;
 
     var hasCreateIsHTMLDDA = "createIsHTMLDDA" in global;
     var hasThreads = ("helperThreadCount" in global ? global.helperThreadCount() > 0 : true);
@@ -467,6 +468,9 @@ function $DONOTEVALUATE() {
         IsHTMLDDA,
         gc() {
             gc();
+        },
+        clearKeptObjects() {
+            clearKeptObjects();
         },
         agent: (function () {
 
