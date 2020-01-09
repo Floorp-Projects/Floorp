@@ -32,6 +32,13 @@ void CheckNumberOfProperties(const char* aName, JSContext* aCx,
                              JS::HandleValue aSnapshot,
                              uint32_t expectedNumProperties);
 
+bool EventPresent(JSContext* aCx, const JS::RootedValue& aSnapshot,
+                  const nsACString& aCategory, const nsACString& aMethod,
+                  const nsACString& aObject);
+
+void GetEventSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                      ProcessID aProcessType = ProcessID::Parent);
+
 void GetScalarsSnapshot(bool aKeyed, JSContext* aCx,
                         JS::MutableHandle<JS::Value> aResult,
                         ProcessID aProcessType = ProcessID::Parent);
