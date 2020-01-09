@@ -635,7 +635,7 @@ def hg_clone_firefox(hg, dest):
     # Strictly speaking, this could overwrite a config based on a template
     # the user has installed. Let's pretend this problem doesn't exist
     # unless someone complains about it.
-    with open(os.path.join(dest, '.hg', 'hgrc'), 'ab') as fh:
+    with open(os.path.join(dest, '.hg', 'hgrc'), 'a') as fh:
         fh.write('[paths]\n')
         fh.write('default = https://hg.mozilla.org/mozilla-unified\n')
         fh.write('\n')
