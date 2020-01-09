@@ -413,7 +413,7 @@ linux/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['try', 'release']
     fetches:
         toolchain:
             - linux64-binutils
@@ -453,6 +453,7 @@ linux/debug:
         mozconfig-variant: debug
         tooltool-downloads: public
         need-xvfb: true
+    run-on-projects: ['try', 'release']
     fetches:
         toolchain:
             - linux64-binutils
@@ -493,7 +494,7 @@ linux-rusttests/opt:
         mozconfig-variant: rusttests
         tooltool-downloads: public
         keep-artifacts: false
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['try', 'mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -533,7 +534,7 @@ linux-rusttests/debug:
         mozconfig-variant: rusttests-debug
         tooltool-downloads: public
         keep-artifacts: false
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['try', 'mozilla-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -622,7 +623,7 @@ linux-shippable/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['try', 'release']
     fetches:
         toolchain:
             - linux64-binutils
@@ -646,8 +647,6 @@ linux-reproduced/opt:
     treeherder:
         platform: linux32-shippable/opt
         symbol: Bpgo(repr)
-    # Limited to trunk until bug 1596350 is fixed.
-    run-on-projects: ['trunk', 'try']
     worker-type: b-linux
     worker:
         docker-image: {in-tree: debian7-i386-build}
@@ -665,6 +664,9 @@ linux-reproduced/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
+    # Original comment: Limited to trunk until bug 1596350 is fixed.
+    # Addendum: Do not run on autoland, Bug 1599197
+    run-on-projects: ['try', 'mozilla-central', 'comm-central']
     fetches:
         toolchain:
             - linux64-binutils
@@ -1388,7 +1390,7 @@ linux-gcp/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['try', 'release']
     fetches:
         toolchain:
             - linux64-binutils
