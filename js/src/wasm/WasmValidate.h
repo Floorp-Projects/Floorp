@@ -441,6 +441,18 @@ class Encoder {
     MOZ_ASSERT(size_t(op) < size_t(MozOp::Limit));
     return writeFixedU8(uint8_t(Op::MozPrefix)) && writeVarU32(uint32_t(op));
   }
+  MOZ_MUST_USE bool writeOp(Opcode opcode) {
+    // The Opcode constructor has asserted that `opcode` is meaningful, so no
+    // further correctness checking is necessary here.
+    uint32_t bits = opcode.bits();
+    if (!writeFixedU8(bits & 255)) {
+      return false;
+    }
+    if (opcode.isOp()) {
+      return true;
+    }
+    return writeVarU32(bits >> 8);
+  }
 
   // Fixed-length encodings that allow back-patching.
 
