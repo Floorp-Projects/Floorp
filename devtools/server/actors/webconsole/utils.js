@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Ci, Cu } = require("chrome");
+const { Ci, Cu, Cc } = require("chrome");
 
 // Note that this is only used in WebConsoleCommands, see $0, screenshot and pprint().
 if (!isWorker) {
@@ -557,6 +557,27 @@ WebConsoleCommands._registerOriginal("help", function(owner) {
  *        eval scope is cleared back to its default (the top window).
  */
 WebConsoleCommands._registerOriginal("cd", function(owner, window) {
+  // Log a deprecation warning.
+  const scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
+  const scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
+
+  const deprecationMessage =
+    "The `cd` command will be disabled in a future release. " +
+    "See https://bugzilla.mozilla.org/show_bug.cgi?id=1605327 for more information.";
+
+  scriptError.initWithWindowID(
+    deprecationMessage,
+    null,
+    null,
+    0,
+    0,
+    1,
+    "content javascript",
+    owner.window.windowUtils.currentInnerWindowID
+  );
+  const Services = require("Services");
+  Services.console.logMessage(scriptError);
+
   if (!window) {
     owner.consoleActor.evalWindow = null;
     owner.helperResult = { type: "cd" };
