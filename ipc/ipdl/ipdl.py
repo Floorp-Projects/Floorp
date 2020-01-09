@@ -75,6 +75,11 @@ parser = RawConfigParser()
 parser.readfp(open(options.syncMsgList))
 syncMsgList = parser.sections()
 
+for section in syncMsgList:
+    if not parser.get(section, "description"):
+        print('Error: Sync message %s lacks a description' % section, file=sys.stderr)
+        sys.exit(1)
+
 # Read message metadata. Right now we only have 'segment_capacity'
 # for the standard segment size used for serialization.
 log(2, 'Reading message metadata...')
