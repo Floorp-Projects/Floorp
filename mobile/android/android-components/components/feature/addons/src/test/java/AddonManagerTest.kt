@@ -32,6 +32,7 @@ import mozilla.components.support.test.whenever
 import mozilla.components.support.webextensions.WebExtensionSupport
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -95,7 +96,10 @@ class AddonManagerTest {
         }
         val store = BrowserStore(
             BrowserState(
-                extensions = mapOf("ext1" to WebExtensionState("ext1", "url"))
+                extensions = mapOf(
+                    "ext1" to WebExtensionState("ext1", "url"),
+                    "unsupported_ext" to WebExtensionState("unsupported_ext", "url", enabled = false)
+                )
             )
         )
 
@@ -104,15 +108,24 @@ class AddonManagerTest {
         whenever(extension.id).thenReturn("ext1")
         WebExtensionSupport.installedExtensions["ext1"] = extension
 
+        val unsupportedExtension: WebExtension = mock()
+        whenever(unsupportedExtension.id).thenReturn("unsupported_ext")
+        whenever(unsupportedExtension.url).thenReturn("site_url")
+        WebExtensionSupport.installedExtensions["unsupported_ext"] = unsupportedExtension
+
         // Verify add-ons were updated with state provided by the engine/store
         val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
-        assertEquals(2, addons.size)
+        assertEquals(3, addons.size)
         assertEquals("ext1", addons[0].id)
         assertNotNull(addons[0].installedState)
         assertEquals("ext1", addons[0].installedState!!.id)
 
         assertEquals("ext2", addons[1].id)
         assertNull(addons[1].installedState)
+
+        // Verify the unsupported add-on was included in addons
+        assertEquals("unsupported_ext", addons[2].id)
+        assertFalse(addons[2].installedState!!.supported)
     }
 
     @Test(expected = AddonManagerException::class)

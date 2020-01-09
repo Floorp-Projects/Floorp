@@ -29,6 +29,7 @@ import mozilla.components.feature.addons.AddonManagerException
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.addons.AddonsFragment.CustomViewHolder.AddonViewHolder
 import org.mozilla.samples.browser.addons.AddonsFragment.CustomViewHolder.SectionViewHolder
+import org.mozilla.samples.browser.addons.AddonsFragment.CustomViewHolder.UnsupportedSectionViewHolder
 import org.mozilla.samples.browser.addons.PermissionsDialogFragment.PromptsStyling
 import org.mozilla.samples.browser.ext.components
 
@@ -84,21 +85,25 @@ class AddonsFragment : Fragment(), View.OnClickListener {
     /**
      * An adapter for displaying add-on items.
      */
+    @Suppress("TooManyFunctions", "LargeClass")
     inner class AddonsAdapter(
         private val clickListener: View.OnClickListener,
         addons: List<Addon>
     ) : RecyclerView.Adapter<CustomViewHolder>() {
         private val items: List<Any>
 
+        private val unsupportedAddons = ArrayList<Addon>()
+
         init {
             items = createListWithSections(addons)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomViewHolder {
-            return if (viewType == VIEW_HOLDER_TYPE_ADDON) {
-                createAddonViewHolder(parent)
-            } else {
-                createSectionViewHolder(parent)
+            return when (viewType) {
+                VIEW_HOLDER_TYPE_ADDON -> createAddonViewHolder(parent)
+                VIEW_HOLDER_TYPE_SECTION -> createSectionViewHolder(parent)
+                VIEW_HOLDER_TYPE_NOT_YET_SUPPORTED_SECTION -> createUnsupportedSectionViewHolder(parent)
+                else -> throw IllegalArgumentException("Unrecognized viewType")
             }
         }
 
@@ -109,6 +114,15 @@ class AddonsFragment : Fragment(), View.OnClickListener {
             val titleView = view.findViewById<TextView>(R.id.title)
 
             return SectionViewHolder(view, titleView)
+        }
+
+        private fun createUnsupportedSectionViewHolder(parent: ViewGroup): CustomViewHolder {
+            val context = parent.context
+            val inflater = LayoutInflater.from(context)
+            val view = inflater.inflate(R.layout.addons_section_unsupported_section_item, parent, false)
+            val titleView = view.findViewById<TextView>(R.id.title)
+
+            return UnsupportedSectionViewHolder(view, titleView)
         }
 
         private fun createAddonViewHolder(parent: ViewGroup): AddonViewHolder {
@@ -135,8 +149,12 @@ class AddonsFragment : Fragment(), View.OnClickListener {
         override fun getItemCount() = items.size
 
         override fun getItemViewType(position: Int): Int {
-            val isSection = items[position] !is Addon
-            return if (isSection) VIEW_HOLDER_TYPE_SECTION else VIEW_HOLDER_TYPE_ADDON
+            return when (items[position]) {
+                is Addon -> VIEW_HOLDER_TYPE_ADDON
+                is Section -> VIEW_HOLDER_TYPE_SECTION
+                is NotYetSupportedSection -> VIEW_HOLDER_TYPE_NOT_YET_SUPPORTED_SECTION
+                else -> throw IllegalArgumentException("items[position] has unrecognized type")
+            }
         }
 
         override fun onBindViewHolder(holder: CustomViewHolder, position: Int) {
@@ -145,11 +163,21 @@ class AddonsFragment : Fragment(), View.OnClickListener {
             when (holder) {
                 is SectionViewHolder -> bindSection(holder, item as Section)
                 is AddonViewHolder -> bindAddon(holder, item as Addon)
+                is UnsupportedSectionViewHolder -> bindNotYetSupportedSection(holder, item as NotYetSupportedSection)
             }
         }
 
         private fun bindSection(holder: SectionViewHolder, section: Section) {
             holder.titleView.setText(section.title)
+        }
+
+        private fun bindNotYetSupportedSection(holder: UnsupportedSectionViewHolder, section: NotYetSupportedSection) {
+            holder.titleView.setText(section.title)
+            holder.itemView.setOnClickListener {
+                val intent = Intent(context, NotYetSupportedAddonActivity::class.java)
+                intent.putExtra("add_ons", unsupportedAddons)
+                context!!.startActivity(intent)
+            }
         }
 
         private fun bindAddon(holder: AddonViewHolder, addon: Addon) {
@@ -164,8 +192,19 @@ class AddonsFragment : Fragment(), View.OnClickListener {
                 holder.userCountView.text = String.format(userCount, getFormattedAmount(it.reviews))
             }
 
-            holder.titleView.text = addon.translatableName.translate()
-            holder.summaryView.text = addon.translatableSummary.translate()
+            holder.titleView.text =
+                if (addon.translatableName.isNotEmpty()) {
+                    addon.translatableName.translate()
+                } else {
+                    addon.id
+                }
+
+            if (addon.translatableSummary.isNotEmpty()) {
+                holder.summaryView.text = addon.translatableSummary.translate()
+            } else {
+                holder.summaryView.visibility = View.GONE
+            }
+
             holder.itemView.tag = addon
             holder.itemView.setOnClickListener(clickListener)
             holder.addButton.isVisible = !addon.isInstalled()
@@ -188,25 +227,41 @@ class AddonsFragment : Fragment(), View.OnClickListener {
         }
 
         private fun createListWithSections(addons: List<Addon>): List<Any> {
-            // We want to have the installed add-ons first in the list.
-            val sortedAddons = addons.sortedBy { !it.isInstalled() }
-
             val itemsWithSections = ArrayList<Any>()
-            val shouldAddInstalledSection = sortedAddons.first().isInstalled()
-            var isRecommendedSectionAdded = false
+            val installedAddons = ArrayList<Addon>()
+            val recommendedAddons = ArrayList<Addon>()
 
-            if (shouldAddInstalledSection) {
-                itemsWithSections.add(Section(R.string.mozac_feature_addons_installed_section))
-            }
-
-            sortedAddons.forEach { addon ->
-                if (!isRecommendedSectionAdded && !addon.isInstalled()) {
-                    itemsWithSections.add(Section(R.string.mozac_feature_addons_recommended_section))
-                    isRecommendedSectionAdded = true
+            addons.forEach { addon ->
+                if (addon.isInstalled()) {
+                    if (!addon.isSupported()) {
+                        unsupportedAddons.add(addon)
+                    } else {
+                        installedAddons.add(addon)
+                    }
+                } else {
+                    recommendedAddons.add(addon)
                 }
-
-                itemsWithSections.add(addon)
             }
+
+            // Add installed section and addons if available
+            if (installedAddons.isNotEmpty()) {
+                itemsWithSections.add(Section(R.string.mozac_feature_addons_installed_section))
+
+                itemsWithSections.addAll(installedAddons)
+            }
+
+            // Add recommended section and addons if available
+            if (recommendedAddons.isNotEmpty()) {
+                itemsWithSections.add(Section(R.string.mozac_feature_addons_recommended_section))
+
+                itemsWithSections.addAll(recommendedAddons)
+            }
+
+            // Add unsupported section
+            if (unsupportedAddons.isNotEmpty()) {
+                itemsWithSections.add(NotYetSupportedSection(R.string.mozac_feature_addons_unsupported_section))
+            }
+
             return itemsWithSections
         }
     }
@@ -219,6 +274,14 @@ class AddonsFragment : Fragment(), View.OnClickListener {
          * A view holder for displaying section items.
          */
         class SectionViewHolder(
+            view: View,
+            val titleView: TextView
+        ) : CustomViewHolder(view)
+
+        /**
+         * A view holder for displaying Not yet supported section items.
+         */
+        class UnsupportedSectionViewHolder(
             view: View,
             val titleView: TextView
         ) : CustomViewHolder(view)
@@ -256,8 +319,7 @@ class AddonsFragment : Fragment(), View.OnClickListener {
                     this.startActivity(intent)
                 }
             }
-            else -> {
-            }
+            else -> {}
         }
     }
 
@@ -318,8 +380,11 @@ class AddonsFragment : Fragment(), View.OnClickListener {
     companion object {
         private const val PERMISSIONS_DIALOG_FRAGMENT_TAG = "ADDONS_PERMISSIONS_DIALOG_FRAGMENT"
         private const val VIEW_HOLDER_TYPE_SECTION = 0
-        private const val VIEW_HOLDER_TYPE_ADDON = 1
+        private const val VIEW_HOLDER_TYPE_NOT_YET_SUPPORTED_SECTION = 1
+        private const val VIEW_HOLDER_TYPE_ADDON = 2
     }
 
     private inner class Section(@StringRes val title: Int)
+
+    private inner class NotYetSupportedSection(@StringRes val title: Int)
 }

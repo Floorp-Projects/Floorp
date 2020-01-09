@@ -34,10 +34,10 @@ import kotlinx.android.parcel.Parcelize
 @Parcelize
 data class Addon(
     val id: String,
-    val authors: List<Author>,
-    val categories: List<String>,
-    val downloadUrl: String,
-    val version: String,
+    val authors: List<Author> = emptyList(),
+    val categories: List<String> = emptyList(),
+    val downloadUrl: String = "",
+    val version: String = "",
     val permissions: List<String> = emptyList(),
     val translatableName: Map<String, String> = emptyMap(),
     val translatableDescription: Map<String, String> = emptyMap(),
@@ -45,8 +45,8 @@ data class Addon(
     val iconUrl: String = "",
     val siteUrl: String = "",
     val rating: Rating? = null,
-    val createdAt: String,
-    val updatedAt: String,
+    val createdAt: String = "",
+    val updatedAt: String = "",
     val installedState: InstalledState? = null
 ) : Parcelable {
     /**
@@ -85,6 +85,8 @@ data class Addon(
      * @property version The installed version.
      * @property enabled Indicates if this [Addon] is enabled to interact with web content or not,
      * defaults to false.
+     * @property supported Indicates if this [Addon] is supported by the browser or not, defaults
+     * to true.
      * @property optionsPageUrl the URL of the page displaying the
      * options page (options_ui in the extension's manifest).
      */
@@ -93,7 +95,8 @@ data class Addon(
         val id: String,
         val version: String,
         val optionsPageUrl: String,
-        val enabled: Boolean = false
+        val enabled: Boolean = false,
+        val supported: Boolean = true
     ) : Parcelable
 
     /**
@@ -112,6 +115,11 @@ data class Addon(
      * Returns whether or not this [Addon] is currently enabled.
      */
     fun isEnabled() = installedState?.enabled == true
+
+    /**
+     * Returns whether or not this [Addon] is currently supported by the browser.
+     */
+    fun isSupported() = installedState?.supported == true
 
     companion object {
         /**
