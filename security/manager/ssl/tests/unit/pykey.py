@@ -814,7 +814,7 @@ def keyFromSpecification(specification):
 
 def main(output, inputPath):
     with open(inputPath) as configStream:
-        output.write(keyFromSpecification(configStream.read().strip()).toPEM())
+        output.write(keyFromSpecification(configStream.read().strip()).toPEM() + '\n')
 
 
 # When run as a standalone program, this will read a specification from
