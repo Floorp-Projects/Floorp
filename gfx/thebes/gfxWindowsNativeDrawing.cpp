@@ -266,10 +266,7 @@ void gfxWindowsNativeDrawing::PaintToContext() {
 
       Rect rect(Point(0.0, 0.0), ToSize(mNativeRect.Size()));
       Matrix m = Matrix::Scaling(1.0 / mScale.width, 1.0 / mScale.height);
-      SamplingFilter filter = (mNativeDrawFlags & DO_NEAREST_NEIGHBOR_FILTERING)
-                                  ? SamplingFilter::LINEAR
-                                  : SamplingFilter::GOOD;
-      SurfacePattern pat(source, ExtendMode::CLAMP, m, filter);
+      SurfacePattern pat(source, ExtendMode::CLAMP, m);
       dt->FillRect(rect, pat);
     }
 
