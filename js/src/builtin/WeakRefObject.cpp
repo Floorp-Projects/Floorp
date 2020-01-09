@@ -130,7 +130,7 @@ const JSClassOps WeakRefObject::classOps_ = {
 };
 
 const ClassSpec WeakRefObject::classSpec_ = {
-    GenericCreateConstructor<WeakRefObject::construct, 0,
+    GenericCreateConstructor<WeakRefObject::construct, 1,
                              gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<WeakRefObject>,
     nullptr,
@@ -154,7 +154,7 @@ const JSClass WeakRefObject::protoClass_ = {
 const JSPropertySpec WeakRefObject::properties[] = {
     JS_STRING_SYM_PS(toStringTag, "WeakRef", JSPROP_READONLY), JS_PS_END};
 
-const JSFunctionSpec WeakRefObject::methods[] = {JS_FN("deref", deref, 2, 0),
+const JSFunctionSpec WeakRefObject::methods[] = {JS_FN("deref", deref, 0, 0),
                                                  JS_FS_END};
 
 /* static */
