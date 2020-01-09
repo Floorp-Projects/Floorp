@@ -222,7 +222,12 @@ bool WakeLockTopic::InhibitXScreenSaver(bool inhibit) {
 
 /* static */
 bool WakeLockTopic::CheckWaylandIdleInhibitSupport() {
+  // Gtk is not guaranteed to be built with Wayland support, so we have to
+  // check for every non-Wayland backend instead of checking for Wayland
+  if (gfxPlatform::IsHeadless()) return false;
+
   GdkDisplay* gDisplay = gdk_display_get_default();
+  if (!gDisplay) return false;
   if (GDK_IS_X11_DISPLAY(gDisplay)) return false;
 
   widget::nsWaylandDisplay* waylandDisplay =
