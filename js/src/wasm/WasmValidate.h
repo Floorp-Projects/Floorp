@@ -424,23 +424,6 @@ class Encoder {
     MOZ_ASSERT(size_t(tc) < size_t(TypeCode::Limit));
     return writeFixedU8(uint8_t(tc));
   }
-  MOZ_MUST_USE bool writeOp(Op op) {
-    static_assert(size_t(Op::Limit) == 256, "fits");
-    MOZ_ASSERT(size_t(op) < size_t(Op::Limit));
-    return writeFixedU8(uint8_t(op));
-  }
-  MOZ_MUST_USE bool writeOp(MiscOp op) {
-    MOZ_ASSERT(size_t(op) < size_t(MiscOp::Limit));
-    return writeFixedU8(uint8_t(Op::MiscPrefix)) && writeVarU32(uint32_t(op));
-  }
-  MOZ_MUST_USE bool writeOp(ThreadOp op) {
-    MOZ_ASSERT(size_t(op) < size_t(ThreadOp::Limit));
-    return writeFixedU8(uint8_t(Op::ThreadPrefix)) && writeVarU32(uint32_t(op));
-  }
-  MOZ_MUST_USE bool writeOp(MozOp op) {
-    MOZ_ASSERT(size_t(op) < size_t(MozOp::Limit));
-    return writeFixedU8(uint8_t(Op::MozPrefix)) && writeVarU32(uint32_t(op));
-  }
   MOZ_MUST_USE bool writeOp(Opcode opcode) {
     // The Opcode constructor has asserted that `opcode` is meaningful, so no
     // further correctness checking is necessary here.
