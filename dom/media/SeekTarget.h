@@ -57,6 +57,7 @@ struct SeekTarget {
   bool IsAccurate() const { return mType == SeekTarget::Type::Accurate; }
   bool IsNextFrame() const { return mType == SeekTarget::Type::NextFrame; }
   bool IsVideoOnly() const { return mVideoOnly; }
+  Type GetType() const { return mType; }
 
  private:
   // Seek target time.
