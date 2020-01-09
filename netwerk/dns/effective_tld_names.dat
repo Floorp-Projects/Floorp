@@ -7074,7 +7074,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-12-25T17:26:24Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2020-01-06T17:33:31Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8797,9 +8797,6 @@ lexus
 
 // lgbt : 2014-05-08 Afilias Limited
 lgbt
-
-// liaison : 2014-10-02 Liaison Technologies, Incorporated
-liaison
 
 // lidl : 2014-09-18 Schwarz Domains und Services GmbH & Co. KG
 lidl
