@@ -149,6 +149,10 @@ const char kHttp3VersionHEX[] = "ff00000018";  // this is draft 24.
 //-----------------------------------------------------------------------------
 
 struct nsHttpAtom {
+  nsHttpAtom() : _val(nullptr){};
+  explicit nsHttpAtom(const char* val) : _val(val) {}
+  nsHttpAtom(const nsHttpAtom& other) = default;
+
   operator const char*() const { return _val; }
   const char* get() const { return _val; }
 
