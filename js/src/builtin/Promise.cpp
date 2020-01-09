@@ -3968,13 +3968,25 @@ static bool Promise_reject(JSContext* cx, unsigned argc, Value* vp) {
  * Unforgeable version of ES2016, 25.4.4.4, Promise.reject.
  */
 /* static */
-JSObject* PromiseObject::unforgeableReject(JSContext* cx, HandleValue value) {
-  JSObject* promiseCtor = JS::GetPromiseConstructor(cx);
-  if (!promiseCtor) {
+PromiseObject* PromiseObject::unforgeableReject(JSContext* cx,
+                                                HandleValue value) {
+  cx->check(value);
+
+  Rooted<PromiseObject*> promise(
+      cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+  if (!promise) {
     return nullptr;
   }
-  RootedValue cVal(cx, ObjectValue(*promiseCtor));
-  return CommonStaticResolveRejectImpl(cx, cVal, value, RejectMode);
+
+  MOZ_ASSERT(promise->state() == JS::PromiseState::Pending);
+  MOZ_ASSERT(
+      PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS));
+
+  if (!RejectPromiseInternal(cx, promise, value)) {
+    return nullptr;
+  }
+
+  return promise;
 }
 
 /**
@@ -4004,6 +4016,52 @@ JSObject* PromiseObject::unforgeableResolve(JSContext* cx, HandleValue value) {
   }
   RootedValue cVal(cx, ObjectValue(*promiseCtor));
   return CommonStaticResolveRejectImpl(cx, cVal, value, ResolveMode);
+}
+
+/**
+ * Unforgeable version of ES2016, 25.4.4.5, Promise.resolve(value), where
+ * value is guaranteed not to be a promise.
+ */
+/* static */
+PromiseObject* PromiseObject::unforgeableResolveWithNonPromise(
+    JSContext* cx, HandleValue value) {
+  cx->check(value);
+
+#ifdef DEBUG
+  auto IsPromise = [](HandleValue value) {
+    if (!value.isObject()) {
+      return false;
+    }
+
+    JSObject* obj = &value.toObject();
+    if (obj->is<PromiseObject>()) {
+      return true;
+    }
+
+    if (!IsWrapper(obj)) {
+      return false;
+    }
+
+    return obj->canUnwrapAs<PromiseObject>();
+  };
+  MOZ_ASSERT(!IsPromise(value), "must use unforgeableResolve with this value");
+#endif
+
+  Rooted<PromiseObject*> promise(
+      cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+  if (!promise) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(promise->state() == JS::PromiseState::Pending);
+  MOZ_ASSERT(
+      PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS));
+
+  if (!ResolvePromiseInternal(cx, promise, value)) {
+    return nullptr;
+  }
+
+  return promise;
 }
 
 /**
