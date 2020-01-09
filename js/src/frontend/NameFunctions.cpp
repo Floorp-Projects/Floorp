@@ -286,7 +286,8 @@ class NameResolver : public ParseNodeVisitor<NameResolver> {
             return false;
           }
         } else {
-          MOZ_ASSERT(left->isKind(ParseNodeKind::ComputedName));
+          MOZ_ASSERT(left->isKind(ParseNodeKind::ComputedName) ||
+                     left->isKind(ParseNodeKind::BigIntExpr));
         }
       } else {
         // Don't have consecutive '<' characters, and also don't start
