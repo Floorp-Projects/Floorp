@@ -10,7 +10,6 @@
 #define nsGridContainerFrame_h___
 
 #include "mozilla/Maybe.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/HashTable.h"
 #include "nsContainerFrame.h"
 

@@ -105,8 +105,7 @@ class nsCSSValue {
   nsCSSValue(nsCSSValue&& aOther) : mUnit(aOther.mUnit), mValue(aOther.mValue) {
     aOther.mUnit = eCSSUnit_Null;
   }
-  template <typename T,
-            typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  template <typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
   explicit nsCSSValue(T aValue) : mUnit(eCSSUnit_Enumerated) {
     static_assert(mozilla::EnumTypeFitsWithin<T, int32_t>::value,
                   "aValue must be an enum that fits within mValue.mInt");
@@ -193,8 +192,7 @@ class nsCSSValue {
 
  public:
   void SetIntValue(int32_t aValue, nsCSSUnit aUnit);
-  template <typename T,
-            typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  template <typename T, typename = std::enable_if_t<std::is_enum<T>::value>>
   void SetEnumValue(T aValue) {
     static_assert(mozilla::EnumTypeFitsWithin<T, int32_t>::value,
                   "aValue must be an enum that fits within mValue.mInt");
