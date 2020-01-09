@@ -80,7 +80,7 @@ Now you're set up and ready to go.
 
 One you have got GeckoView building and running, you will want to start contributing. There is a general guide to [Performing a Bug Fix for Git Developers](contributing-to-mc) for you to follow. To contribute to GeckoView specifically, you will need the following additional information.
 
-### Running tests locally
+### Running tests and linter locally
 
 To ensure that your patch does not break existing functionality in GeckoView, you can run the junit test suite with the following command
 
@@ -93,6 +93,12 @@ This command also allows you to run individual tests or test classes, e.g.
 ```
 ./mach geckoview-junit org.mozilla.geckoview.test.NavigationDelegateTest
 ./mach geckoview-junit org.mozilla.geckoview.test.NavigationDelegateTest#loadUnknownHost
+```
+
+If your patch makes a GeckoView JavaScript module, you should run ESLint as well:
+
+```
+./mach lint -l eslint mobile/android/modules/geckoview/
 ```
 
 To see information on other options, simply run `./mach geckoview-junit --help`; of particular note for dealing with intermittent test failures are `--repeat N` and `--run-until-failure`, both of which do exactly what you’d expect.
