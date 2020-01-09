@@ -6940,14 +6940,14 @@
     "alert_emails": ["tdsmith@mozilla.com"]
   },
   "FX_PAGE_LOAD_MS_2": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
     "kind": "linear",
     "high": 10000,
     "n_buckets": 200,
-    "description": "Firefox: Time taken to load a page (ms). This includes all static contents, no dynamic content. Loading of about: pages is not counted.",
-    "bug_numbers": [1504247],
+    "description": "Firefox: Time taken to load a page (ms). This includes all static contents, no dynamic content. Page reloads and loading of about: pages are not included.",
+    "bug_numbers": [1504247, 1549519],
     "alert_emails": ["tdsmith@mozilla.com", "perfteam@mozilla.com", "product-metrics-telemetry-alerts@mozilla.com"],
     "releaseChannelCollection": "opt-out"
   },
