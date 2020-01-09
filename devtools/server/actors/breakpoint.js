@@ -91,6 +91,12 @@ BreakpointActor.prototype = {
    * Called on changes to this breakpoint's script offsets or options.
    */
   _newOffsetsOrOptions(script, offsets, oldOptions) {
+    // Clear any existing handler first in case this is called multiple times
+    // after options change.
+    for (const offset of offsets) {
+      script.clearBreakpoint(this, offset);
+    }
+
     // When replaying, logging breakpoints are handled using an API to get logged
     // messages from throughout the recording.
     if (this.threadActor.dbg.replaying && this.options.logGroupId) {
@@ -125,10 +131,7 @@ BreakpointActor.prototype = {
     }
 
     // In all other cases, this is used as a script breakpoint handler.
-    // Clear any existing handler first in case this is called multiple times
-    // after options change.
     for (const offset of offsets) {
-      script.clearBreakpoint(this, offset);
       script.setBreakpoint(offset, this);
     }
   },
