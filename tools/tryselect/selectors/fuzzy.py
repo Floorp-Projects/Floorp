@@ -46,7 +46,8 @@ TARGET_TASK_FILTERS = (
     '.*win64-aarch64-laptop.*',
     'android-hw.*',
     '.*android-geckoview-docs.*',
-    'linux1804-32.*',  # Bug 1599197
+    'linux1804-32.*',   # hide linux32 tests - bug 1599197
+    r'linux-.*',  # hide all linux32 tasks by default - bug 1599197
 )
 
 
