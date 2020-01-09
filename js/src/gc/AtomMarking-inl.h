@@ -17,8 +17,9 @@ namespace gc {
 inline size_t GetAtomBit(TenuredCell* thing) {
   MOZ_ASSERT(thing->zoneFromAnyThread()->isAtomsZone());
   Arena* arena = thing->arena();
-  size_t arenaBit = (reinterpret_cast<uintptr_t>(thing) - arena->address()) /
-                    CellBytesPerMarkBit;
+  // TODO: This currently uses one byte per cell for the atom marking bitmap. We
+  // could investigate compressing this to one bit per cell.
+  size_t arenaBit = thing->indexInArena() * 8;
   return arena->atomBitmapStart() * JS_BITS_PER_WORD + arenaBit;
 }
 
