@@ -295,13 +295,13 @@ class chunk_by_manifest(InstanceFilter):
         for manifest in manifests:
             mtests = [t for t in tests if t['manifest'] == manifest]
             tests_by_manifest.append(mtests)
-        tests_by_manifest.sort(reverse=True, key=lambda x: len(x))
+        tests_by_manifest.sort(reverse=True, key=lambda x: (len(x), x))
 
         tests_by_chunk = [[] for i in range(self.total_chunks)]
         for batch in tests_by_manifest:
             # Sort to guarantee the chunk with the lowest score will always
             # get the next batch of tests.
-            tests_by_chunk.sort(key=lambda x: len(x))
+            tests_by_chunk.sort(key=lambda x: (len(x), x))
             tests_by_chunk[0].extend(batch)
 
         return (t for t in tests_by_chunk[self.this_chunk - 1])
@@ -356,7 +356,7 @@ class chunk_by_runtime(InstanceFilter):
         for runtime, manifest in sorted(runtimes, reverse=True):
             # Sort chunks from fastest -> slowest. This guarantees the fastest
             # chunk will be assigned the slowest remaining manifest.
-            chunks.sort(key=lambda x: (x[0], len(x[1])))
+            chunks.sort(key=lambda x: (x[0], len(x[1]), x[1]))
             chunks[0][0] += runtime
             chunks[0][1].append(manifest)
 
