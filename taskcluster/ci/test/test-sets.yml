@@ -351,10 +351,6 @@ linux-common-tests:
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - reftest-no-accel
-    - telemetry-tests-client
-    - test-verify
-    - test-verify-gpu
-    - test-verify-wpt
 
 # List of tests that are green on ubuntu1804 docker image.
 # See Bug 1602863 for information.
@@ -368,6 +364,10 @@ linux1804-tests:
     - mochitest-media
     - mochitest-webgpu
     - reftest
+    - telemetry-tests-client
+    - test-verify
+    - test-verify-gpu
+    - test-verify-wpt
     - xpcshell
 
 linux1804-qr-tests:
