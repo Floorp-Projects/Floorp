@@ -126,7 +126,7 @@ depending on the user's locale.
 ---------
 
 You can specify ``"default"`` as a region in the configuration if
-the engine is to be included when no region is specified.
+the engine is to be included when we do not know the user's region.
 
 Application Scoping
 ===================
