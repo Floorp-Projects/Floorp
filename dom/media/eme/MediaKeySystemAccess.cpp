@@ -302,19 +302,6 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
           NS_LITERAL_STRING("SW_SECURE_DECODE"));
       widevine.mEncryptionSchemes.AppendElement(NS_LITERAL_STRING("cenc"));
       widevine.mEncryptionSchemes.AppendElement(NS_LITERAL_STRING("cbcs"));
-#if defined(XP_WIN)
-      // Widevine CDM doesn't include an AAC decoder. So if WMF can't
-      // decode AAC, and a codec wasn't specified, be conservative
-      // and reject the MediaKeys request, since we assume Widevine
-      // will be used with AAC.
-      if (WMFDecoderModule::HasAAC()) {
-        widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
-      }
-#elif !defined(MOZ_WIDGET_ANDROID)
-      widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
-      widevine.mMP4.SetCanDecrypt(EME_CODEC_FLAC);
-      widevine.mMP4.SetCanDecrypt(EME_CODEC_OPUS);
-#endif
 
 #if defined(MOZ_WIDGET_ANDROID)
       using namespace mozilla::java;
@@ -362,6 +349,19 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
         }
       }
 #else
+#  if defined(XP_WIN)
+      // Widevine CDM doesn't include an AAC decoder. So if WMF can't
+      // decode AAC, and a codec wasn't specified, be conservative
+      // and reject the MediaKeys request, since we assume Widevine
+      // will be used with AAC.
+      if (WMFDecoderModule::HasAAC()) {
+        widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
+      }
+#  else
+      widevine.mMP4.SetCanDecrypt(EME_CODEC_AAC);
+#  endif
+      widevine.mMP4.SetCanDecrypt(EME_CODEC_FLAC);
+      widevine.mMP4.SetCanDecrypt(EME_CODEC_OPUS);
       widevine.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
       widevine.mMP4.SetCanDecryptAndDecode(EME_CODEC_VP9);
       widevine.mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
