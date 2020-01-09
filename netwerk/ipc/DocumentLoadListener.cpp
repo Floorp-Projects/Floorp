@@ -937,9 +937,11 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
   // SessionStore.jsm. This will determine if a new process needs to be
   // spawned and if so SwitchProcessTo() will be called which will set a
   // ContentProcessIdPromise.
-  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
-  obsService->NotifyObservers(ToSupports(this), "channel-on-may-change-process",
-                              nullptr);
+  if (status != NS_BINDING_ABORTED) {
+    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+    obsService->NotifyObservers(ToSupports(this),
+                                "channel-on-may-change-process", nullptr);
+  }
 
   if (mRedirectContentProcessIdPromise) {
     TriggerCrossProcessSwitch();
