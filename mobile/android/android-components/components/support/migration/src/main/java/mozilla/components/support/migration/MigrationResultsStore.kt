@@ -61,6 +61,7 @@ internal class MigrationResultsStore(context: Context) : SharedPreferencesCache<
                 Migration.FxA.javaClass.simpleName -> Migration.FxA
                 Migration.Logins.javaClass.simpleName -> Migration.Logins
                 Migration.Settings.javaClass.simpleName -> Migration.Settings
+                Migration.Addons.javaClass.simpleName -> Migration.Addons
                 else -> throw IllegalStateException("Unrecognized migration type: $migrationName")
             }
             result[migration] = MigrationRun(version = migrationVersion, success = migrationSuccess)

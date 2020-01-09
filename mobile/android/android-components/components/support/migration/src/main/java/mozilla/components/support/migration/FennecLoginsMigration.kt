@@ -533,10 +533,7 @@ internal object FennecLoginsMigration {
         try {
             block()
         } catch (e: Exception) {
-            // In extreme cases, VM is allowed to return an empty stacktrace.
-            val topStackFrameString = e.stackTrace.getOrNull(0)?.toString() ?: ""
-            val exceptionKey = "${e::class.java.canonicalName} $topStackFrameString"
-            collector[exceptionKey] = e
+            collector[e.uniqueId()] = e
         }
     }
 }
