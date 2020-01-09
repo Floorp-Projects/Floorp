@@ -79,7 +79,7 @@ class Message extends Component {
       timeStamp: PropTypes.number,
       timestampsVisible: PropTypes.bool.isRequired,
       serviceContainer: PropTypes.shape({
-        emitForTests: PropTypes.func.isRequired,
+        emitEvent: PropTypes.func.isRequired,
         onViewSource: PropTypes.func.isRequired,
         onViewSourceInDebugger: PropTypes.func,
         onViewSourceInStyleEditor: PropTypes.func,
@@ -135,7 +135,7 @@ class Message extends Component {
   // did not emit for them.
   emitNewMessage(node) {
     const { serviceContainer, messageId, timeStamp } = this.props;
-    serviceContainer.emitForTests(
+    serviceContainer.emitEvent(
       "new-messages",
       new Set([{ node, messageId, timeStamp }])
     );
