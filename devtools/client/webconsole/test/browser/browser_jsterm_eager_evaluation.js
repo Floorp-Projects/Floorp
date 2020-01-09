@@ -52,4 +52,19 @@ add_task(async function() {
 
   setInputValue(hud, "x + a");
   await waitForEagerEvaluationResult(hud, /ReferenceError/);
+
+  setInputValue(hud, '"foobar".slice(1, 5)');
+  await waitForEagerEvaluationResult(hud, '"ooba"');
+
+  setInputValue(hud, '"foobar".toString()');
+  await waitForEagerEvaluationResult(hud, '"foobar"');
+
+  setInputValue(hud, "(new Array()).push(3)");
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "(new Uint32Array([1,2,3])).includes(2)");
+  await waitForEagerEvaluationResult(hud, "true");
+
+  setInputValue(hud, "Math.round(3.2)");
+  await waitForEagerEvaluationResult(hud, "3");
 });
