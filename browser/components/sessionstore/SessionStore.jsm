@@ -3721,6 +3721,7 @@ var SessionStoreInternal = {
       // Make sure that SessionStore knows that this restoration is due
       // to a navigation, as opposed to us restoring a closed window or tab.
       restoreContentReason: RESTORE_TAB_CONTENT_REASON.NAVIGATE_AND_RESTORE,
+      redirectLoadSwitchId: loadArguments.redirectLoadSwitchId,
     };
 
     if (historyIndex >= 0) {
@@ -4672,6 +4673,7 @@ var SessionStoreInternal = {
 
     let newFrameloader = aOptions.newFrameloader;
     let replaceBrowsingContext = aOptions.replaceBrowsingContext;
+    let redirectLoadSwitchId = aOptions.redirectLoadSwitchId;
     let isRemotenessUpdate;
     if (aOptions.remoteType !== undefined) {
       // We already have a selected remote type so we update to that.
@@ -4679,6 +4681,7 @@ var SessionStoreInternal = {
         remoteType: aOptions.remoteType,
         newFrameloader,
         replaceBrowsingContext,
+        redirectLoadSwitchId,
       });
     } else {
       isRemotenessUpdate = tabbrowser.updateBrowserRemotenessByURL(
@@ -4687,6 +4690,7 @@ var SessionStoreInternal = {
         {
           newFrameloader,
           replaceBrowsingContext,
+          redirectLoadSwitchId,
         }
       );
     }

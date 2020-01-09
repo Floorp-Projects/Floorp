@@ -746,6 +746,8 @@ class BrowserParent final : public PBrowserParent,
                           uint32_t aPresShellId);
   void StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
 
+  void SetDestroyingForProcessSwitch() { mIsDestroyingForProcessSwitch = true; }
+
  protected:
   friend BrowserBridgeParent;
   friend BrowserHost;
@@ -933,51 +935,56 @@ class BrowserParent final : public PBrowserParent,
 #endif
 
   // Cached value indicating the docshell active state of the remote browser.
-  bool mDocShellIsActive;
+  bool mDocShellIsActive : 1;
 
   // When true, we've initiated normal shutdown and notified our managing
   // PContent.
-  bool mMarkedDestroying;
+  bool mMarkedDestroying : 1;
   // When true, the BrowserParent is invalid and we should not send IPC messages
   // anymore.
-  bool mIsDestroyed;
+  bool mIsDestroyed : 1;
   // True if the cursor changes from the BrowserChild should change the widget
   // cursor.  This happens whenever the cursor is in the tab's region.
-  bool mTabSetsCursor;
+  bool mTabSetsCursor : 1;
 
   // If this flag is set, then the tab's layers will be preserved even when
   // the tab's docshell is inactive.
-  bool mPreserveLayers;
+  bool mPreserveLayers : 1;
 
   // Holds the most recent value passed to the RenderLayers function. This
   // does not necessarily mean that the layers have finished rendering
   // and have uploaded - for that, use mHasLayers.
-  bool mRenderLayers;
+  bool mRenderLayers : 1;
 
   // Whether this is active for the ProcessPriorityManager or not.
-  bool mActiveInPriorityManager;
+  bool mActiveInPriorityManager : 1;
 
   // True if the compositor has reported that the BrowserChild has uploaded
   // layers.
-  bool mHasLayers;
+  bool mHasLayers : 1;
 
   // True if this BrowserParent has had its layer tree sent to the compositor
   // at least once.
-  bool mHasPresented;
+  bool mHasPresented : 1;
 
   // True when the remote browser is created and ready to handle input events.
-  bool mIsReadyToHandleInputEvents;
+  bool mIsReadyToHandleInputEvents : 1;
 
   // True if we suppress the eMouseEnterIntoWidget event due to the BrowserChild
   // was not ready to handle it. We will resend it when the next time we fire a
   // mouse event and the BrowserChild is ready.
-  bool mIsMouseEnterIntoWidgetEventSuppressed;
+  bool mIsMouseEnterIntoWidgetEventSuppressed : 1;
+
+  // Set to true if we're currently in the middle of replacing this
+  // BrowserParent with a new one connected to a different process, and we
+  // should ignore nsIWebProgressListener stop requests.
+  bool mIsDestroyingForProcessSwitch : 1;
 
   // How many record/replay tabs have active docshells in this process.
   static size_t gNumActiveRecordReplayTabs;
 
   // Whether this tab is contributing to gNumActiveRecordReplayTabs.
-  bool mIsActiveRecordReplayTab;
+  bool mIsActiveRecordReplayTab : 1;
 
   // Update whether this is an active record/replay tab.
   void SetIsActiveRecordReplayTab(bool aIsActive);

@@ -61,6 +61,7 @@ class nsFrameLoaderOwner : public nsISupports {
   bool ShouldPreserveBrowsingContext(
       const mozilla::dom::RemotenessOptions& aOptions);
   void ChangeRemotenessCommon(bool aPreserveContext,
+                              bool aSwitchingInProgressLoad,
                               const nsAString& aRemoteType,
                               std::function<void()>& aFrameLoaderInit,
                               mozilla::ErrorResult& aRv);

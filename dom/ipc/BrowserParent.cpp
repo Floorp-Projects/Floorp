@@ -219,6 +219,7 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mHasPresented(false),
       mIsReadyToHandleInputEvents(false),
       mIsMouseEnterIntoWidgetEventSuppressed(false),
+      mIsDestroyingForProcessSwitch(false),
       mIsActiveRecordReplayTab(false) {
   MOZ_ASSERT(aManager);
   // When the input event queue is disabled, we don't need to handle the case
@@ -2507,6 +2508,17 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
     const RequestData& aRequestData, const uint32_t aStateFlags,
     const nsresult aStatus,
     const Maybe<WebProgressStateChangeData>& aStateChangeData) {
+  // If we're being destroyed because we're swapping to a new process,
+  // then suppress the generated STATE_STOP state changes, since from
+  // the parent process' perspective we aren't really stop, just changing
+  // where the load is happening.
+  uint32_t stopFlags = nsIWebProgressListener::STATE_STOP |
+                       nsIWebProgressListener::STATE_IS_WINDOW |
+                       nsIWebProgressListener::STATE_IS_NETWORK;
+  if (mIsDestroyingForProcessSwitch && (aStateFlags & stopFlags) == stopFlags) {
+    return IPC_OK();
+  }
+
   nsCOMPtr<nsIBrowser> browser;
   nsCOMPtr<nsIWebProgress> manager;
   nsCOMPtr<nsIWebProgressListener> managerAsListener;
