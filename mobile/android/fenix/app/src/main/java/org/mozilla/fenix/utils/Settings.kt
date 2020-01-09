@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.utils
 
+import android.accessibilityservice.AccessibilityServiceInfo.CAPABILITY_CAN_PERFORM_GESTURES
 import android.app.Application
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
@@ -205,9 +206,7 @@ class Settings private constructor(
 
     val shouldUseFixedTopToolbar: Boolean
         get() {
-            val accessibilityManager =
-                appContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
-            return accessibilityManager?.isTouchExplorationEnabled ?: false
+            return touchExplorationIsEnabled || switchServiceIsEnabled
         }
 
     var shouldDeleteBrowsingDataOnQuit by booleanPreference(
@@ -217,8 +216,36 @@ class Settings private constructor(
 
     var shouldUseBottomToolbar by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_toolbar_bottom),
-        default = true
+        // Default accessibility users to top toolbar
+        default = !touchExplorationIsEnabled && !switchServiceIsEnabled
     )
+
+    /**
+     * Check each active accessibility service to see if it can perform gestures, if any can,
+     * then it is *likely* a switch service is enabled. We are assuming this to be the case based on #7486
+     */
+    private val switchServiceIsEnabled: Boolean
+        get() {
+            val accessibilityManager =
+                appContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+
+            accessibilityManager?.getEnabledAccessibilityServiceList(0)?.let { activeServices ->
+                for (service in activeServices) {
+                    if (service.capabilities.and(CAPABILITY_CAN_PERFORM_GESTURES) == 1) {
+                        return true
+                    }
+                }
+            }
+
+            return false
+        }
+
+    private val touchExplorationIsEnabled: Boolean
+        get() {
+            val accessibilityManager =
+                appContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+            return accessibilityManager?.isTouchExplorationEnabled ?: false
+        }
 
     val toolbarSettingString: String
         get() = when {

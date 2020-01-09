@@ -92,6 +92,11 @@ open class RadioButtonPreference @JvmOverloads constructor(
         }
     }
 
+    fun setCheckedWithoutClickListener(isChecked: Boolean) {
+        updateRadioValue(isChecked)
+        toggleRadioGroups()
+    }
+
     private fun updateRadioValue(isChecked: Boolean) {
         persistBoolean(isChecked)
         radioButton?.isChecked = isChecked

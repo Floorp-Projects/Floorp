@@ -10,6 +10,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 
 /**
@@ -44,6 +45,9 @@ class ToolbarSettingsFragment : PreferenceFragmentCompat() {
                 Event.ToolbarPositionChanged.Position.BOTTOM
             ))
         }
+
+        topPreference.setCheckedWithoutClickListener(!requireContext().settings().shouldUseBottomToolbar)
+        bottomPreference.setCheckedWithoutClickListener(requireContext().settings().shouldUseBottomToolbar)
 
         topPreference.addToRadioGroup(bottomPreference)
         bottomPreference.addToRadioGroup(topPreference)

@@ -4,11 +4,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <org.mozilla.fenix.settings.RadioButtonPreference
-        android:defaultValue="false"
         android:key="@string/pref_key_toolbar_top"
         android:title="@string/preference_top_toolbar" />
     <org.mozilla.fenix.settings.RadioButtonPreference
-        android:defaultValue="true"
         android:key="@string/pref_key_toolbar_bottom"
         android:title="@string/preference_bottom_toolbar" />
 </PreferenceScreen>
