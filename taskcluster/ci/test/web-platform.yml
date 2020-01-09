@@ -94,8 +94,8 @@ web-platform-tests-reftests:
     chunks:
         by-test-platform:
             .*-ccov/.*: 8
-            linux64(-qr|-asan)/.*: 6
-            linux64(-shippable|-devedition)?/opt: 3
+            linux1804-64(-qr|-asan)/.*: 6
+            linux1804-64(-shippable|-devedition)?/opt: 3
             macosx10.*-64/debug: 6
             windows.*-(32|64)(-qr)?/debug: 5
             android.*: 6
@@ -107,7 +107,7 @@ web-platform-tests-reftests:
             default: built-projects
     tier:
         by-test-platform:
-            linux64-asan/opt: 2
+            linux1804-64-asan/opt: 2
             windows10-aarch64.*: 2
             default: default
     mozharness:
@@ -177,7 +177,7 @@ web-platform-tests-crashtests:
             default: built-projects
     tier:
         by-test-platform:
-            linux64-asan/opt: 2
+            linux1804-64-asan/opt: 2
             windows10-aarch64.*: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             linux64-ccov/opt: 3
