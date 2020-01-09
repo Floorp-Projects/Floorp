@@ -68,7 +68,7 @@ def make_task_description(config, jobs):
 
         build_locale = locale or 'en-US'
 
-        builds = get_builds(config.params['release_history'], dep_th_platform,
+        builds = get_builds(config.params['release_history'], attributes["build_platform"],
                             build_locale)
 
         # If the list is empty there's no available history for this platform
