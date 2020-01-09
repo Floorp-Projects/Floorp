@@ -57,9 +57,26 @@ function run_test() {
     MockRegistrar.unregister(windowWatcherCID);
   });
 
-  let profile = do_get_profile();
-  let keyDBFile = do_get_file("test_sdr_preexisting_with_password/key4.db");
-  keyDBFile.copyTo(profile, "key4.db");
+  // Append a single quote and non-ASCII characters to the profile path.
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+  );
+  let profd = env.get("XPCSHELL_TEST_PROFILE_DIR");
+  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  file.initWithPath(profd);
+  file.append("'÷1");
+  env.set("XPCSHELL_TEST_PROFILE_DIR", file.path);
+
+  let profile = do_get_profile(); // must be called before getting nsIX509CertDB
+  Assert.ok(
+    /[^\x20-\x7f]/.test(profile.path),
+    "the profile path should contain a non-ASCII character"
+  );
+
+  let key3DBFile = do_get_file("test_sdr_preexisting_with_password/key3.db");
+  key3DBFile.copyTo(profile, "key3.db");
+  let key4DBFile = do_get_file("test_sdr_preexisting_with_password/key4.db");
+  key4DBFile.copyTo(profile, "key4.db");
 
   let sdr = Cc["@mozilla.org/security/sdr;1"].getService(
     Ci.nsISecretDecoderRing
@@ -123,5 +140,12 @@ function run_test() {
     gMockPrompter.numPrompts,
     1,
     "Should have been prompted for a password once"
+  );
+
+  let key3DBInProfile = do_get_profile();
+  key3DBInProfile.append("key3.db");
+  ok(
+    !key3DBInProfile.exists(),
+    "key3.db should not exist after running with key4.db with a password"
   );
 }
