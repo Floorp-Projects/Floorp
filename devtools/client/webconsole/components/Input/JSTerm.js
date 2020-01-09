@@ -655,7 +655,7 @@ class JSTerm extends Component {
       });
     }
 
-    this.emit("set-input-value");
+    this.emitForTests("set-input-value");
   }
 
   /**
