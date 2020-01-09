@@ -265,7 +265,7 @@ void GetEncodedOriginStrings(
 }
 
 void GetEventSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
-                      ProcessID aProcessType = ProcessID::Parent) {
+                      ProcessID aProcessType) {
   nsCOMPtr<nsITelemetry> telemetry =
       do_GetService("@mozilla.org/base/telemetry;1");
 
