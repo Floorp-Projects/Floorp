@@ -4966,7 +4966,10 @@ OverflowableToolbar.prototype = {
           continue;
         }
         style = win.getComputedStyle(child);
-        if (style.display == "none") {
+        if (
+          style.display == "none" ||
+          (style.position != "static" && style.position != "relative")
+        ) {
           continue;
         }
         totalAvailWidth -=
