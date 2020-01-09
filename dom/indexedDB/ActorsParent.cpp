@@ -8380,23 +8380,23 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
 };
 
 struct Maintenance::DirectoryInfo final {
-  const nsCString mGroup;
-  const nsCString mOrigin;
-  nsTArray<nsString> mDatabasePaths;
+  InitializedOnce<const nsCString> mGroup;
+  InitializedOnce<const nsCString> mOrigin;
+  InitializedOnce<const nsTArray<nsString>> mDatabasePaths;
   const PersistenceType mPersistenceType;
 
-  DirectoryInfo(PersistenceType aPersistenceType, const nsACString& aGroup,
-                const nsACString& aOrigin, nsTArray<nsString>&& aDatabasePaths)
-      : mGroup(aGroup),
-        mOrigin(aOrigin),
+  DirectoryInfo(PersistenceType aPersistenceType, nsCString aGroup,
+                nsCString aOrigin, nsTArray<nsString>&& aDatabasePaths)
+      : mGroup(std::move(aGroup)),
+        mOrigin(std::move(aOrigin)),
         mDatabasePaths(std::move(aDatabasePaths)),
         mPersistenceType(aPersistenceType) {
     MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
-    MOZ_ASSERT(!aGroup.IsEmpty());
-    MOZ_ASSERT(!aOrigin.IsEmpty());
+    MOZ_ASSERT(!mGroup->IsEmpty());
+    MOZ_ASSERT(!mOrigin->IsEmpty());
 #ifdef DEBUG
-    MOZ_ASSERT(!mDatabasePaths.IsEmpty());
-    for (const nsString& databasePath : mDatabasePaths) {
+    MOZ_ASSERT(!mDatabasePaths->IsEmpty());
+    for (const nsString& databasePath : *mDatabasePaths) {
       MOZ_ASSERT(!databasePath.IsEmpty());
     }
 #endif
@@ -8408,10 +8408,10 @@ struct Maintenance::DirectoryInfo final {
       : mGroup(std::move(aOther.mGroup)),
         mOrigin(std::move(aOther.mOrigin)),
         mDatabasePaths(std::move(aOther.mDatabasePaths)),
-        mPersistenceType(std::move(aOther.mPersistenceType)) {
+        mPersistenceType(aOther.mPersistenceType) {
 #ifdef DEBUG
-    MOZ_ASSERT(!mDatabasePaths.IsEmpty());
-    for (const nsString& databasePath : mDatabasePaths) {
+    MOZ_ASSERT(!mDatabasePaths->IsEmpty());
+    for (const nsString& databasePath : *mDatabasePaths) {
       MOZ_ASSERT(!databasePath.IsEmpty());
     }
 #endif
@@ -17662,8 +17662,8 @@ nsresult Maintenance::DirectoryWork() {
       }
 
       if (!databasePaths.IsEmpty()) {
-        mDirectoryInfos.AppendElement(DirectoryInfo(
-            persistenceType, group, origin, std::move(databasePaths)));
+        mDirectoryInfos.EmplaceBack(persistenceType, group, origin,
+                                    std::move(databasePaths));
 
         nsCOMPtr<nsIFile> directory;
 
@@ -17737,18 +17737,18 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
   for (DirectoryInfo& directoryInfo : mDirectoryInfos) {
     RefPtr<DirectoryLock> directoryLock;
 
-    for (const nsString& databasePath : directoryInfo.mDatabasePaths) {
+    for (const nsString& databasePath : *directoryInfo.mDatabasePaths) {
       if (Helper::IsSafeToRunMaintenance(databasePath)) {
         if (!directoryLock) {
           directoryLock = mDirectoryLock->Specialize(
-              directoryInfo.mPersistenceType, directoryInfo.mGroup,
-              directoryInfo.mOrigin, Client::IDB);
+              directoryInfo.mPersistenceType, *directoryInfo.mGroup,
+              *directoryInfo.mOrigin, Client::IDB);
           MOZ_ASSERT(directoryLock);
         }
 
         const auto databaseMaintenance = MakeRefPtr<DatabaseMaintenance>(
             this, directoryLock, directoryInfo.mPersistenceType,
-            directoryInfo.mGroup, directoryInfo.mOrigin, databasePath);
+            *directoryInfo.mGroup, *directoryInfo.mOrigin, databasePath);
 
         if (!threadPool) {
           threadPool = mQuotaClient->GetOrCreateThreadPool();
