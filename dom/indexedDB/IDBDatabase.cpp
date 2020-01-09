@@ -70,10 +70,10 @@ class CancelableRunnableWrapper final : public CancelableRunnable {
   nsCOMPtr<nsIRunnable> mRunnable;
 
  public:
-  explicit CancelableRunnableWrapper(nsIRunnable* aRunnable)
+  explicit CancelableRunnableWrapper(nsCOMPtr<nsIRunnable> aRunnable)
       : CancelableRunnable("dom::CancelableRunnableWrapper"),
-        mRunnable(aRunnable) {
-    MOZ_ASSERT(aRunnable);
+        mRunnable(std::move(aRunnable)) {
+    MOZ_ASSERT(mRunnable);
   }
 
  private:
@@ -208,7 +208,7 @@ RefPtr<IDBDatabase> IDBDatabase::Create(IDBOpenDBRequest* aRequest,
         NS_WARNING("Failed to add additional memory observers!");
       }
 
-      db->mObserver.swap(observer);
+      db->mObserver = std::move(observer);
     }
   }
 
@@ -871,8 +871,7 @@ void IDBDatabase::NoteInactiveTransaction() {
 
   if (!NS_IsMainThread()) {
     // Wrap as a nsICancelableRunnable to make workers happy.
-    RefPtr<Runnable> cancelable = new CancelableRunnableWrapper(runnable);
-    cancelable.swap(runnable);
+    runnable = MakeRefPtr<CancelableRunnableWrapper>(runnable.forget());
   }
 
   MOZ_ALWAYS_SUCCEEDS(
@@ -1082,8 +1081,7 @@ JSObject* IDBDatabase::WrapObject(JSContext* aCx,
 
 NS_IMETHODIMP
 CancelableRunnableWrapper::Run() {
-  nsCOMPtr<nsIRunnable> runnable;
-  mRunnable.swap(runnable);
+  const nsCOMPtr<nsIRunnable> runnable = std::move(mRunnable);
 
   if (runnable) {
     return runnable->Run();

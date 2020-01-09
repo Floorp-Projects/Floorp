@@ -365,7 +365,7 @@ StreamWrapper::OnInputStreamReady(nsIAsyncInputStream* aStream) {
       return NS_OK;
     }
 
-    callback.swap(mAsyncWaitCallback);
+    callback = std::move(mAsyncWaitCallback);
   }
 
   MOZ_ASSERT(callback);
