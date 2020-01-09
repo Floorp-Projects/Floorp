@@ -72,16 +72,19 @@ class RemoteWorkerChild final
   class Op;
   class SharedWorkerOp;
 
-  struct Pending {
+  struct WorkerPrivateAccessibleState {
+    ~WorkerPrivateAccessibleState();
+    RefPtr<WorkerPrivate> mWorkerPrivate;
+  };
+
+  struct Pending : WorkerPrivateAccessibleState {
     nsTArray<RefPtr<Op>> mPendingOps;
   };
 
   struct PendingTerminated {};
 
-  struct Running {
+  struct Running : WorkerPrivateAccessibleState {
     ~Running();
-
-    RefPtr<WorkerPrivate> mWorkerPrivate;
     RefPtr<WeakWorkerRef> mWorkerRef;
   };
 
@@ -120,7 +123,7 @@ class RemoteWorkerChild final
 
   nsresult ExecWorkerOnMainThread(RemoteWorkerData&& aData);
 
-  void InitializeOnWorker(already_AddRefed<WorkerPrivate> aWorkerPrivate);
+  void InitializeOnWorker();
 
   void ShutdownOnWorker();
 
