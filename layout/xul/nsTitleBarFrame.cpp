@@ -65,19 +65,16 @@ nsresult nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
     case eMouseDown: {
       if (aEvent->AsMouseEvent()->mButton == MouseButton::eLeft) {
         // titlebar has no effect in non-chrome shells
-        nsCOMPtr<nsIDocShellTreeItem> dsti = aPresContext->GetDocShell();
-        if (dsti) {
-          if (dsti->ItemType() == nsIDocShellTreeItem::typeChrome) {
-            // we're tracking.
-            mTrackingMouseMove = true;
+        if (aPresContext->IsChrome()) {
+          // we're tracking.
+          mTrackingMouseMove = true;
 
-            // start capture.
-            PresShell::SetCapturingContent(GetContent(),
-                                           CaptureFlags::IgnoreAllowedState);
+          // start capture.
+          PresShell::SetCapturingContent(GetContent(),
+                                          CaptureFlags::IgnoreAllowedState);
 
-            // remember current mouse coordinates.
-            mLastPoint = aEvent->mRefPoint;
-          }
+          // remember current mouse coordinates.
+          mLastPoint = aEvent->mRefPoint;
         }
 
         *aEventStatus = nsEventStatus_eConsumeNoDefault;
