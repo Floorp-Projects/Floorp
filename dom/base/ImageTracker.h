@@ -14,9 +14,6 @@
 #include "nsHashKeys.h"
 
 class imgIRequest;
-namespace mozilla {
-struct MediaFeatureChange;
-}
 
 namespace mozilla {
 namespace dom {
@@ -56,8 +53,6 @@ class ImageTracker {
   void SetAnimatingState(bool aAnimating);
 
   void RequestDiscardAll();
-
-  void MediaFeatureValuesChangedAllDocuments(const MediaFeatureChange&);
 
  private:
   ~ImageTracker();

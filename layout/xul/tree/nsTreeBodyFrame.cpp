@@ -1926,11 +1926,6 @@ nsresult nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol,
           imgNotificationObserver, nsIRequest::LOAD_NORMAL, EmptyString(),
           getter_AddRefs(imageRequest));
       NS_ENSURE_SUCCESS(rv, rv);
-
-      // NOTE(heycam): If it's an SVG image, and we need to want the image to
-      // able to respond to media query changes, it needs to be added to the
-      // document's ImageTracker (like nsImageBoxFrame does).  For now, assume
-      // we don't need this.
     }
     listener->UnsuppressInvalidation();
 
