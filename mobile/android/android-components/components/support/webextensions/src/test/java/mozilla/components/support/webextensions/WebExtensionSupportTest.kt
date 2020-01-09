@@ -26,6 +26,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.After
@@ -374,6 +375,8 @@ class WebExtensionSupportTest {
         actionCaptor = argumentCaptor()
         verify(store, times(6)).dispatch(actionCaptor.capture())
         assertEquals(popupSessionId, (actionCaptor.value as TabListAction.SelectTabAction).tabId)
+
+        store.waitUntilIdle()
 
         // Toggling again should close tab
         delegateCaptor.value.onToggleBrowserActionPopup(ext, engineSession, browserAction)
