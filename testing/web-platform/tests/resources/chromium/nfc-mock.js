@@ -133,7 +133,7 @@ function matchesWatchOptions(message, options) {
         options.recordType !== record.recordType) {
       continue;
     }
-    if (options.mediaType !== '' && options.mediaType !== record.mediaType) {
+    if (options.mediaType != null && options.mediaType !== record.mediaType) {
       continue;
     }
 
