@@ -103,7 +103,6 @@ static void SimpleParseKeyValuePairs(
 #ifdef XP_WIN
 // Lifted from media/webrtc/trunk/webrtc/base/systeminfo.cc,
 // so keeping the _ instead of switching to camel case for now.
-typedef BOOL(WINAPI* LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 static void GetProcessorInformation(int* physical_cpus, int* cache_size_L2,
                                     int* cache_size_L3) {
   MOZ_ASSERT(physical_cpus && cache_size_L2 && cache_size_L3);
@@ -112,18 +111,12 @@ static void GetProcessorInformation(int* physical_cpus, int* cache_size_L2,
   *cache_size_L2 = 0;  // This will be in kbytes
   *cache_size_L3 = 0;  // This will be in kbytes
 
-  // GetLogicalProcessorInformation() is available on Windows XP SP3 and beyond.
-  LPFN_GLPI glpi = reinterpret_cast<LPFN_GLPI>(GetProcAddress(
-      GetModuleHandle(L"kernel32"), "GetLogicalProcessorInformation"));
-  if (nullptr == glpi) {
-    return;
-  }
   // Determine buffer size, allocate and get processor information.
   // Size can change between calls (unlikely), so a loop is done.
   SYSTEM_LOGICAL_PROCESSOR_INFORMATION info_buffer[32];
   SYSTEM_LOGICAL_PROCESSOR_INFORMATION* infos = &info_buffer[0];
   DWORD return_length = sizeof(info_buffer);
-  while (!glpi(infos, &return_length)) {
+  while (!::GetLogicalProcessorInformation(infos, &return_length)) {
     if (GetLastError() == ERROR_INSUFFICIENT_BUFFER &&
         infos == &info_buffer[0]) {
       infos = new SYSTEM_LOGICAL_PROCESSOR_INFORMATION
