@@ -229,7 +229,7 @@ class WebConsoleUI {
     if (clearStorage) {
       this.clearMessagesCache();
     }
-    this.emit("messages-cleared");
+    this.emitForTests("messages-cleared");
   }
 
   clearNetworkRequests() {
@@ -252,7 +252,7 @@ class WebConsoleUI {
   clearPrivateMessages() {
     if (this.wrapper) {
       this.wrapper.dispatchPrivateMessagesClear();
-      this.emit("private-messages-cleared");
+      this.emitForTests("private-messages-cleared");
     }
   }
 
