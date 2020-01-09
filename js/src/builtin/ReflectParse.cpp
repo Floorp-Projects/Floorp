@@ -3123,7 +3123,8 @@ bool ASTSerializer::propertyName(ParseNode* key, MutableHandleValue dst) {
   }
 
   LOCAL_ASSERT(key->isKind(ParseNodeKind::StringExpr) ||
-               key->isKind(ParseNodeKind::NumberExpr));
+               key->isKind(ParseNodeKind::NumberExpr) ||
+               key->isKind(ParseNodeKind::BigIntExpr));
 
   return literal(key, dst);
 }
