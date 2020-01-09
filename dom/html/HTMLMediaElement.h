@@ -1170,11 +1170,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void SetVolumeInternal();
 
   /**
-   * Suspend (if aPauseForInactiveDocument) or resume element playback and
-   * resource download.  If aSuspendEvents is true, event delivery is
-   * suspended (and events queued) until the element is resumed.
+   * Suspend or resume element playback and resource download.  When we suspend
+   * playback, event delivery would also be suspended (and events queued) until
+   * the element is resumed.
    */
-  void SuspendOrResumeElement(bool aPauseElement, bool aSuspendEvents);
+  void SuspendOrResumeElement(bool aSuspendElement);
 
   // Get the HTMLMediaElement object if the decoder is being used from an
   // HTML media element, and null otherwise.
@@ -1223,9 +1223,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Recomputes ready state and fires events as necessary based on current
   // state.
   void UpdateReadyStateInternal();
-
-  // Determine if the element should be paused because of suspend conditions.
-  bool ShouldElementBePaused();
 
   // Create or destroy the captured stream.
   void AudioCaptureTrackChange(bool aCapture);
@@ -1614,11 +1611,10 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // to raise the 'waiting' event as per 4.7.1.8 in HTML 5 specification.
   bool mPlayingBeforeSeek = false;
 
-  // True iff this element is paused because the document is inactive or has
-  // been suspended by the audio channel service.
-  bool mPausedForInactiveDocumentOrChannel = false;
+  // True if this element is suspended because the document is inactive.
+  bool mSuspendedForInactiveDocument = false;
 
-  // True iff event delivery is suspended (mPausedForInactiveDocumentOrChannel
+  // True if event delivery is suspended (mSuspendedForInactiveDocument
   // must also be true).
   bool mEventDeliveryPaused = false;
 
