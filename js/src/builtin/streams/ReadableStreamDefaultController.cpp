@@ -494,7 +494,7 @@ JSObject* js::ReadableStreamDefaultControllerPullSteps(
 
   // Step 3: Let pendingPromise be
   //         ! ReadableStreamAddReadRequest(stream, forAuthorCode).
-  Rooted<JSObject*> pendingPromise(
+  Rooted<PromiseObject*> pendingPromise(
       cx, ReadableStreamAddReadOrReadIntoRequest(cx, unwrappedStream));
   if (!pendingPromise) {
     return nullptr;
