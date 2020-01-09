@@ -487,6 +487,8 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
   bool isSystem = aPrincipal->IsSystemPrincipal();
 
   if (isSystem) {
+    // Make toSource functions [ChromeOnly]
+    aOptions.creationOptions().setToSourceEnabled(true);
     // Make sure [SecureContext] APIs are visible:
     aOptions.creationOptions().setSecureContext(true);
     aOptions.behaviors().setClampAndJitterTime(false);

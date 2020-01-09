@@ -14469,7 +14469,7 @@ class CGDictionary(CGThing):
         # If you have to change this list (which you shouldn't!), make sure it
         # continues to match the list in test_Object.prototype_props.html
         if (member.identifier.name in
-            ["constructor", "toSource", "toString", "toLocaleString", "valueOf",
+            ["constructor", "toString", "toLocaleString", "valueOf",
              "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable",
              "__defineGetter__", "__defineSetter__", "__lookupGetter__",
              "__lookupSetter__", "__proto__"]):

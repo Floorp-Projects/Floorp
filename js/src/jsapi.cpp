@@ -897,6 +897,11 @@ static const JSStdName builtin_property_names[] = {
 
     {0, JSProto_LIMIT}};
 
+static bool SkipUneval(JSContext* cx, jsid id) {
+  return !cx->realm()->creationOptions().getToSourceEnabled() &&
+          id == NameToId(cx->names().uneval);
+}
+
 JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
                                            HandleId id, bool* resolved) {
   const JSStdName* stdnm;
@@ -935,6 +940,9 @@ JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
   }
 
   if (stdnm && GlobalObject::skipDeselectedConstructor(cx, stdnm->key)) {
+    stdnm = nullptr;
+  }
+  if (stdnm && SkipUneval(cx, id)) {
     stdnm = nullptr;
   }
 
@@ -1024,6 +1032,11 @@ static bool EnumerateStandardClassesInTable(JSContext* cx,
     }
 
     jsid id = NameToId(AtomStateOffsetToName(cx->names(), table[i].atomOffset));
+
+    if (SkipUneval(cx, id)) {
+      continue;
+    }
+
     if (!properties.append(id)) {
       return false;
     }
@@ -1137,7 +1150,11 @@ JS_PUBLIC_API JSProtoKey JS_IdToProtoKey(JSContext* cx, HandleId id) {
     return JSProto_Null;
   }
 
-  MOZ_ASSERT(MOZ_ARRAY_LENGTH(standard_class_names) == JSProto_LIMIT + 1);
+  if (SkipUneval(cx, id)) {
+    return JSProto_Null;
+  }
+
+  static_assert(mozilla::ArrayLength(standard_class_names) == JSProto_LIMIT + 1);
   return static_cast<JSProtoKey>(stdnm - standard_class_names);
 }
 
