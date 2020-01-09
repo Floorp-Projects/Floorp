@@ -432,6 +432,7 @@ class FennecMigrator private constructor(
         // Note that we're depending on coroutineContext to be backed by a single-threaded executor, in order to ensure
         // non-overlapping execution of our migrations.
 
+        val migrationStore = MigrationResultsStore(context)
         val results = mutableMapOf<Migration, MigrationRun>()
 
         migrations.forEach { versionedMigration ->
@@ -447,7 +448,7 @@ class FennecMigrator private constructor(
                 Migration.Settings -> migrateSharedPrefs()
             }
 
-            results[versionedMigration.migration] = when (migrationResult) {
+            val migrationRun = when (migrationResult) {
                 is Result.Failure<*> -> {
                     logger.error(
                         "Failed to migrate $versionedMigration",
@@ -462,10 +463,14 @@ class FennecMigrator private constructor(
                     MigrationRun(versionedMigration.version, true)
                 }
             }
+
+            // Save result of this migration immediately, so that we keep it even if we crash later
+            // in the process and do not rerun this migration version.
+            migrationStore.setOrUpdate(mapOf(versionedMigration.migration to migrationRun))
+
+            results[versionedMigration.migration] = migrationRun
         }
 
-        val migrationStore = MigrationResultsStore(context)
-        migrationStore.setOrUpdate(results)
         results
     }
 
