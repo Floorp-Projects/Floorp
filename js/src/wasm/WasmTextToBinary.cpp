@@ -85,7 +85,6 @@ class WasmToken {
     Equal,
     Error,
     Export,
-    ExtraConversionOpcode,
     Fence,
     Field,
     Float,
@@ -219,7 +218,7 @@ class WasmToken {
                  kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
                  kind_ == Load || kind_ == Store);
     } else if (op.isMisc()) {
-      MOZ_ASSERT(kind_ == ExtraConversionOpcode);
+      MOZ_ASSERT(kind_ == ConversionOpcode);
     } else if (op.isThread()) {
       MOZ_ASSERT(kind_ == AtomicCmpXchg || kind_ == AtomicLoad ||
                  kind_ == AtomicRMW || kind_ == AtomicStore || kind_ == Wait ||
@@ -266,22 +265,7 @@ class WasmToken {
     MOZ_ASSERT(kind_ == ValueType || kind_ == Const);
     return u.valueType_;
   }
-  Op op() const {
-    MOZ_ASSERT(kind_ == UnaryOpcode || kind_ == BinaryOpcode ||
-               kind_ == ComparisonOpcode || kind_ == ConversionOpcode ||
-               kind_ == Load || kind_ == Store);
-    return u.opcode_.asOp();
-  }
-  MiscOp miscOp() const {
-    MOZ_ASSERT(kind_ == ExtraConversionOpcode);
-    return u.opcode_.asMisc();
-  }
-  ThreadOp threadOp() const {
-    MOZ_ASSERT(kind_ == AtomicCmpXchg || kind_ == AtomicLoad ||
-               kind_ == AtomicRMW || kind_ == AtomicStore || kind_ == Wait ||
-               kind_ == Wake);
-    return u.opcode_.asThread();
-  }
+  Opcode op() const { return u.opcode_; }
   bool isOpcode() const {
     switch (kind_) {
       case AtomicCmpXchg:
@@ -298,7 +282,6 @@ class WasmToken {
       case ComparisonOpcode:
       case Const:
       case ConversionOpcode:
-      case ExtraConversionOpcode:
       case DataDrop:
       case Drop:
       case ElemDrop:
@@ -1658,19 +1641,19 @@ WasmToken WasmTokenStream::next() {
                                begin, cur_);
             }
             if (consume(u"trunc_sat_f32_s") || consume(u"trunc_s:sat/f32")) {
-              return WasmToken(WasmToken::ExtraConversionOpcode,
+              return WasmToken(WasmToken::ConversionOpcode,
                                MiscOp::I32TruncSSatF32, begin, cur_);
             }
             if (consume(u"trunc_sat_f64_s") || consume(u"trunc_s:sat/f64")) {
-              return WasmToken(WasmToken::ExtraConversionOpcode,
+              return WasmToken(WasmToken::ConversionOpcode,
                                MiscOp::I32TruncSSatF64, begin, cur_);
             }
             if (consume(u"trunc_sat_f32_u") || consume(u"trunc_u:sat/f32")) {
-              return WasmToken(WasmToken::ExtraConversionOpcode,
+              return WasmToken(WasmToken::ConversionOpcode,
                                MiscOp::I32TruncUSatF32, begin, cur_);
             }
             if (consume(u"trunc_sat_f64_u") || consume(u"trunc_u:sat/f64")) {
-              return WasmToken(WasmToken::ExtraConversionOpcode,
+              return WasmToken(WasmToken::ConversionOpcode,
                                MiscOp::I32TruncUSatF64, begin, cur_);
             }
             break;
@@ -2061,19 +2044,19 @@ WasmToken WasmTokenStream::next() {
                                begin, cur_);
             }
             if (consume(u"trunc_sat_f32_s") || consume(u"trunc_s:sat/f32")) {
-              return WasmToken(WasmToken::ExtraConversionOpcode,
+              return WasmToken(WasmToken::ConversionOpcode,
                                MiscOp::I64TruncSSatF32, begin, cur_);
             }
             if (consume(u"trunc_sat_f64_s") || consume(u"trunc_s:sat/f64")) {
-              return WasmToken(WasmToken::ExtraConversionOpcode,
+              return WasmToken(WasmToken::ConversionOpcode,
                                MiscOp::I64TruncSSatF64, begin, cur_);
             }
             if (consume(u"trunc_sat_f32_u") || consume(u"trunc_u:sat/f32")) {
-              return WasmToken(WasmToken::ExtraConversionOpcode,
+              return WasmToken(WasmToken::ConversionOpcode,
                                MiscOp::I64TruncUSatF32, begin, cur_);
             }
             if (consume(u"trunc_sat_f64_u") || consume(u"trunc_u:sat/f64")) {
-              return WasmToken(WasmToken::ExtraConversionOpcode,
+              return WasmToken(WasmToken::ConversionOpcode,
                                MiscOp::I64TruncUSatF64, begin, cur_);
             }
             break;
@@ -3107,7 +3090,7 @@ static AstReturn* ParseReturn(WasmParseContext& c, bool inParens) {
   return new (c.lifo) AstReturn(maybeExpr);
 }
 
-static AstUnaryOperator* ParseUnaryOperator(WasmParseContext& c, Op op,
+static AstUnaryOperator* ParseUnaryOperator(WasmParseContext& c, Opcode op,
                                             bool inParens) {
   AstExpr* operand = ParseExpr(c, inParens);
   if (!operand) {
@@ -3117,7 +3100,7 @@ static AstUnaryOperator* ParseUnaryOperator(WasmParseContext& c, Op op,
   return new (c.lifo) AstUnaryOperator(op, operand);
 }
 
-static AstBinaryOperator* ParseBinaryOperator(WasmParseContext& c, Op op,
+static AstBinaryOperator* ParseBinaryOperator(WasmParseContext& c, Opcode op,
                                               bool inParens) {
   AstExpr* lhs = ParseExpr(c, inParens);
   if (!lhs) {
@@ -3133,7 +3116,8 @@ static AstBinaryOperator* ParseBinaryOperator(WasmParseContext& c, Op op,
 }
 
 static AstComparisonOperator* ParseComparisonOperator(WasmParseContext& c,
-                                                      Op op, bool inParens) {
+                                                      Opcode op,
+                                                      bool inParens) {
   AstExpr* lhs = ParseExpr(c, inParens);
   if (!lhs) {
     return nullptr;
@@ -3148,23 +3132,14 @@ static AstComparisonOperator* ParseComparisonOperator(WasmParseContext& c,
 }
 
 static AstConversionOperator* ParseConversionOperator(WasmParseContext& c,
-                                                      Op op, bool inParens) {
+                                                      Opcode op,
+                                                      bool inParens) {
   AstExpr* operand = ParseExpr(c, inParens);
   if (!operand) {
     return nullptr;
   }
 
   return new (c.lifo) AstConversionOperator(op, operand);
-}
-
-static AstExtraConversionOperator* ParseExtraConversionOperator(
-    WasmParseContext& c, MiscOp op, bool inParens) {
-  AstExpr* operand = ParseExpr(c, inParens);
-  if (!operand) {
-    return nullptr;
-  }
-
-  return new (c.lifo) AstExtraConversionOperator(op, operand);
 }
 
 static AstDrop* ParseDrop(WasmParseContext& c, bool inParens) {
@@ -3338,7 +3313,7 @@ static bool ParseLoadStoreAddress(WasmParseContext& c, int32_t* offset,
   return true;
 }
 
-static AstLoad* ParseLoad(WasmParseContext& c, Op op, bool inParens) {
+static AstLoad* ParseLoad(WasmParseContext& c, Opcode op, bool inParens) {
   int32_t offset;
   uint32_t alignLog2;
   AstExpr* base;
@@ -3347,7 +3322,7 @@ static AstLoad* ParseLoad(WasmParseContext& c, Op op, bool inParens) {
   }
 
   if (alignLog2 == UINT32_MAX) {
-    switch (op) {
+    switch (op.asOp()) {
       case Op::I32Load8S:
       case Op::I32Load8U:
       case Op::I64Load8S:
@@ -3380,7 +3355,7 @@ static AstLoad* ParseLoad(WasmParseContext& c, Op op, bool inParens) {
   return new (c.lifo) AstLoad(op, AstLoadStoreAddress(base, flags, offset));
 }
 
-static AstStore* ParseStore(WasmParseContext& c, Op op, bool inParens) {
+static AstStore* ParseStore(WasmParseContext& c, Opcode op, bool inParens) {
   int32_t offset;
   uint32_t alignLog2;
   AstExpr* base;
@@ -3389,7 +3364,7 @@ static AstStore* ParseStore(WasmParseContext& c, Op op, bool inParens) {
   }
 
   if (alignLog2 == UINT32_MAX) {
-    switch (op) {
+    switch (op.asOp()) {
       case Op::I32Store8:
       case Op::I64Store8:
         alignLog2 = 0;
@@ -3423,7 +3398,7 @@ static AstStore* ParseStore(WasmParseContext& c, Op op, bool inParens) {
       AstStore(op, AstLoadStoreAddress(base, flags, offset), value);
 }
 
-static AstAtomicCmpXchg* ParseAtomicCmpXchg(WasmParseContext& c, ThreadOp op,
+static AstAtomicCmpXchg* ParseAtomicCmpXchg(WasmParseContext& c, Opcode op,
                                             bool inParens) {
   int32_t offset;
   uint32_t alignLog2;
@@ -3433,7 +3408,7 @@ static AstAtomicCmpXchg* ParseAtomicCmpXchg(WasmParseContext& c, ThreadOp op,
   }
 
   if (alignLog2 == UINT32_MAX) {
-    switch (op) {
+    switch (op.asThread()) {
       case ThreadOp::I32AtomicCmpXchg8U:
       case ThreadOp::I64AtomicCmpXchg8U:
         alignLog2 = 0;
@@ -3470,7 +3445,7 @@ static AstAtomicCmpXchg* ParseAtomicCmpXchg(WasmParseContext& c, ThreadOp op,
       op, AstLoadStoreAddress(base, flags, offset), expected, replacement);
 }
 
-static AstAtomicLoad* ParseAtomicLoad(WasmParseContext& c, ThreadOp op,
+static AstAtomicLoad* ParseAtomicLoad(WasmParseContext& c, Opcode op,
                                       bool inParens) {
   int32_t offset;
   uint32_t alignLog2;
@@ -3480,7 +3455,7 @@ static AstAtomicLoad* ParseAtomicLoad(WasmParseContext& c, ThreadOp op,
   }
 
   if (alignLog2 == UINT32_MAX) {
-    switch (op) {
+    switch (op.asThread()) {
       case ThreadOp::I32AtomicLoad8U:
       case ThreadOp::I64AtomicLoad8U:
         alignLog2 = 0;
@@ -3507,7 +3482,7 @@ static AstAtomicLoad* ParseAtomicLoad(WasmParseContext& c, ThreadOp op,
       AstAtomicLoad(op, AstLoadStoreAddress(base, flags, offset));
 }
 
-static AstAtomicRMW* ParseAtomicRMW(WasmParseContext& c, ThreadOp op,
+static AstAtomicRMW* ParseAtomicRMW(WasmParseContext& c, Opcode op,
                                     bool inParens) {
   int32_t offset;
   uint32_t alignLog2;
@@ -3517,7 +3492,7 @@ static AstAtomicRMW* ParseAtomicRMW(WasmParseContext& c, ThreadOp op,
   }
 
   if (alignLog2 == UINT32_MAX) {
-    switch (op) {
+    switch (op.asThread()) {
       case ThreadOp::I32AtomicAdd8U:
       case ThreadOp::I64AtomicAdd8U:
       case ThreadOp::I32AtomicAnd8U:
@@ -3584,7 +3559,7 @@ static AstAtomicRMW* ParseAtomicRMW(WasmParseContext& c, ThreadOp op,
       AstAtomicRMW(op, AstLoadStoreAddress(base, flags, offset), value);
 }
 
-static AstAtomicStore* ParseAtomicStore(WasmParseContext& c, ThreadOp op,
+static AstAtomicStore* ParseAtomicStore(WasmParseContext& c, Opcode op,
                                         bool inParens) {
   int32_t offset;
   uint32_t alignLog2;
@@ -3594,7 +3569,7 @@ static AstAtomicStore* ParseAtomicStore(WasmParseContext& c, ThreadOp op,
   }
 
   if (alignLog2 == UINT32_MAX) {
-    switch (op) {
+    switch (op.asThread()) {
       case ThreadOp::I32AtomicStore8U:
       case ThreadOp::I64AtomicStore8U:
         alignLog2 = 0;
@@ -3626,7 +3601,7 @@ static AstAtomicStore* ParseAtomicStore(WasmParseContext& c, ThreadOp op,
       AstAtomicStore(op, AstLoadStoreAddress(base, flags, offset), value);
 }
 
-static AstWait* ParseWait(WasmParseContext& c, ThreadOp op, bool inParens) {
+static AstWait* ParseWait(WasmParseContext& c, Opcode op, bool inParens) {
   int32_t offset;
   uint32_t alignLog2;
   AstExpr* base;
@@ -3635,7 +3610,7 @@ static AstWait* ParseWait(WasmParseContext& c, ThreadOp op, bool inParens) {
   }
 
   if (alignLog2 == UINT32_MAX) {
-    switch (op) {
+    switch (op.asThread()) {
       case ThreadOp::I32Wait:
         alignLog2 = 2;
         break;
@@ -4061,15 +4036,15 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
     case WasmToken::Unreachable:
       return new (c.lifo) AstUnreachable;
     case WasmToken::AtomicCmpXchg:
-      return ParseAtomicCmpXchg(c, token.threadOp(), inParens);
+      return ParseAtomicCmpXchg(c, token.op(), inParens);
     case WasmToken::AtomicLoad:
-      return ParseAtomicLoad(c, token.threadOp(), inParens);
+      return ParseAtomicLoad(c, token.op(), inParens);
     case WasmToken::AtomicRMW:
-      return ParseAtomicRMW(c, token.threadOp(), inParens);
+      return ParseAtomicRMW(c, token.op(), inParens);
     case WasmToken::AtomicStore:
-      return ParseAtomicStore(c, token.threadOp(), inParens);
+      return ParseAtomicStore(c, token.op(), inParens);
     case WasmToken::Wait:
-      return ParseWait(c, token.threadOp(), inParens);
+      return ParseWait(c, token.op(), inParens);
     case WasmToken::Wake:
       return ParseWake(c, inParens);
     case WasmToken::Fence:
@@ -4094,8 +4069,6 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
       return ParseConst(c, token);
     case WasmToken::ConversionOpcode:
       return ParseConversionOperator(c, token.op(), inParens);
-    case WasmToken::ExtraConversionOpcode:
-      return ParseExtraConversionOperator(c, token.miscOp(), inParens);
     case WasmToken::Drop:
       return ParseDrop(c, inParens);
     case WasmToken::If:
@@ -5697,11 +5670,6 @@ static bool ResolveConversionOperator(Resolver& r, AstConversionOperator& b) {
   return ResolveExpr(r, *b.operand());
 }
 
-static bool ResolveExtraConversionOperator(Resolver& r,
-                                           AstExtraConversionOperator& b) {
-  return ResolveExpr(r, *b.operand());
-}
-
 static bool ResolveIfElse(Resolver& r, AstIf& i) {
   if (!ResolveType(r, i.type())) {
     return false;
@@ -5907,9 +5875,6 @@ static bool ResolveExpr(Resolver& r, AstExpr& expr) {
       return true;
     case AstExprKind::ConversionOperator:
       return ResolveConversionOperator(r, expr.as<AstConversionOperator>());
-    case AstExprKind::ExtraConversionOperator:
-      return ResolveExtraConversionOperator(
-          r, expr.as<AstExtraConversionOperator>());
     case AstExprKind::First:
       return ResolveFirst(r, expr.as<AstFirst>());
     case AstExprKind::GetGlobal:
@@ -6417,11 +6382,6 @@ static bool EncodeConversionOperator(Encoder& e, AstConversionOperator& b) {
   return EncodeExpr(e, *b.operand()) && e.writeOp(b.op());
 }
 
-static bool EncodeExtraConversionOperator(Encoder& e,
-                                          AstExtraConversionOperator& b) {
-  return EncodeExpr(e, *b.operand()) && e.writeOp(b.op());
-}
-
 static bool EncodeIf(Encoder& e, AstIf& i) {
   if (!EncodeExpr(e, i.cond()) || !e.writeOp(Op::If)) {
     return false;
@@ -6727,9 +6687,6 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
       return EncodeConversionOperator(e, expr.as<AstConversionOperator>());
     case AstExprKind::Drop:
       return EncodeDrop(e, expr.as<AstDrop>());
-    case AstExprKind::ExtraConversionOperator:
-      return EncodeExtraConversionOperator(
-          e, expr.as<AstExtraConversionOperator>());
     case AstExprKind::First:
       return EncodeFirst(e, expr.as<AstFirst>());
     case AstExprKind::GetLocal:
