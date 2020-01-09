@@ -305,8 +305,10 @@ static bool Middleman_HadRepaint(JSContext* aCx, unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
 
   if (!args.get(0).isString()) {
-    JS_ReportErrorASCII(aCx, "Bad arguments");
-    return false;
+    parent::ClearGraphics();
+
+    args.rval().setUndefined();
+    return true;
   }
 
   RootedString data(aCx, args.get(0).toString());
