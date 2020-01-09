@@ -75,13 +75,13 @@ async function closeProtectionsPanel() {
   await popuphiddenPromise;
 }
 
-function checkClickTelemetry(objectName, value, source = "protectionspopup") {
+function checkClickTelemetry(objectName, value) {
   let events = Services.telemetry.snapshotEvents(
     Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
   ).parent;
   let buttonEvents = events.filter(
     e =>
-      e[1] == `security.ui.${source}` &&
+      e[1] == "security.ui.protectionspopup" &&
       e[2] == "click" &&
       e[3] == objectName &&
       e[4] === value
