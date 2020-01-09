@@ -175,6 +175,7 @@ static const char kFontSongtiSC[] = "Songti SC";
 static const char kFontSTHeiti[] = "STHeiti";
 static const char kFontSTIXGeneral[] = "STIXGeneral";
 static const char kFontTamilMN[] = "Tamil MN";
+static const char kFontZapfDingbats[] = "Zapf Dingbats";
 
 void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
                                             Script aRunScript,
@@ -255,6 +256,9 @@ void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
       case 0x1e:
         aFontList.AppendElement(kFontGeneva);
         break;
+      case 0x27:  // For Dingbats block 2700-27BF, prefer Zapf Dingbats
+        aFontList.AppendElement(kFontZapfDingbats);
+        [[fallthrough]];
       case 0x20:  // Symbol ranges
       case 0x21:
       case 0x22:
@@ -262,7 +266,6 @@ void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
       case 0x24:
       case 0x25:
       case 0x26:
-      case 0x27:
       case 0x29:
       case 0x2a:
       case 0x2b:
