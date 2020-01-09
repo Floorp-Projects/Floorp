@@ -19,6 +19,8 @@
 #include "nsISecureBrowserUI.h"
 #include "nsIWindowWatcher.h"
 #include "nsQueryObject.h"
+#include "nsIAuthPrompt.h"
+#include "nsIAuthPrompt2.h"
 
 using mozilla::Unused;
 using mozilla::dom::ServiceWorkerInterceptController;
@@ -178,6 +180,15 @@ ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
 
       prompt.forget(result);
       return NS_OK;
+    }
+  }
+
+  if (mBrowserParent && (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
+                         aIID.Equals(NS_GET_IID(nsIAuthPrompt2)))) {
+    nsCOMPtr<nsIAuthPromptProvider> provider(do_QueryObject(mBrowserParent));
+    if (provider) {
+      return provider->GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL, aIID,
+                                     result);
     }
   }
 
