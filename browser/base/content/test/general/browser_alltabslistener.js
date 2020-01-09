@@ -193,7 +193,14 @@ function setExpectationForCrossDomainFrontBrowserLoad() {
   // notification to ensure the security state shown by the browser remains
   // correct after the remoteness change - we need to account for that:
   if (gFissionBrowser) {
-    gFrontNotifications = ["onSecurityChange"].concat(gAllNotifications);
+    gFrontNotifications = [
+      "onStateChange",
+      "onSecurityChange",
+      "onStateChange",
+      "onLocationChange",
+      "onSecurityChange",
+      "onStateChange",
+    ];
   } else {
     gFrontNotifications = gAllNotifications;
   }
