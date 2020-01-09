@@ -31,11 +31,13 @@ linux1804-64/opt:
         - desktop-screenshot-capture
         - linux1804-tests
         - mochitest-headless
+        - web-platform-tests-1804
 
 linux1804-64/debug:
     build-platform: linux64/debug
     test-sets:
         - linux1804-tests
+        - web-platform-tests-1804
 
 linux1804-64-shippable/opt:
     build-platform: linux64-shippable/opt
@@ -45,6 +47,7 @@ linux1804-64-shippable/opt:
         - linux1804-tests
         - marionette-headless
         - mochitest-headless
+        - web-platform-tests-1804
         - web-platform-tests-wdspec-headless
 
 linux1804-64-devedition/opt:
@@ -52,11 +55,13 @@ linux1804-64-devedition/opt:
     test-sets:
         - desktop-screenshot-capture
         - linux1804-tests
+        - web-platform-tests-1804
 
 linux1804-64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - linux1804-tests
+        - web-platform-tests-1804
 
 # Stylo sequential runs check memory and
 # performance when using a single thread.
@@ -70,17 +75,20 @@ linux1804-64-qr/opt:
     test-sets:
         - awsy
         - linux1804-qr-tests
+        - web-platform-tests-1804
 
 linux1804-64-shippable-qr/opt:
     build-platform: linux64-shippable/opt
     test-sets:
         - awsy
         - linux1804-qr-tests
+        - web-platform-tests-1804
 
 linux1804-64-qr/debug:
     build-platform: linux64/debug
     test-sets:
         - linux1804-qr-tests
+        - web-platform-tests-1804
 
 # Disabled temporarily due to Bug 1602863
 # linux1804-64-asan-qr/opt:
@@ -181,7 +189,7 @@ linux64-ccov/opt:
     build-platform: linux64-ccov/opt
     test-sets:
         - common-tests  # temporary while ccov is excluded from ubuntu1804 migration, see bug 1606861
-        - web-platform-tests
+        - web-platform-tests-linux-ccov  # temporary while ccov is excluded from ubuntu1804 migration.
         - awsy
         - talos
         - ccov-code-coverage-tests
