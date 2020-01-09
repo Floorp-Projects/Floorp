@@ -18,4 +18,8 @@
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">ເປີດແທັບໃຫມ່ແລ້ວ</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">ເປີດແທັບສ່ວນຕົວໃຫມ່ແລ້ວ </string>
-    </resources>
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">ສຳເນົາລີ້ງໄປໄວ້ໃນຄຣິບບອດແລ້ວ</string>
+    <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
+    <string name="mozac_feature_contextmenu_snackbar_action_switch">ສັບປ່ຽນ</string>
+</resources>
