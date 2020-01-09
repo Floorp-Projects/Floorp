@@ -115,13 +115,6 @@
         ]
       }
     },
-    "as": {
-      "default": {
-        "visibleDefaultEngines": [
-          "google-b-d", "amazon-in", "ddg", "wikipedia-as"
-        ]
-      }
-    },
     "ast": {
       "default": {
         "visibleDefaultEngines": [
@@ -229,13 +222,6 @@
       "default": {
         "visibleDefaultEngines": [
           "google-b-d", "bing", "amazondotcom", "ddg", "wikipedia-es"
-        ]
-      }
-    },
-    "crh": {
-      "default": {
-        "visibleDefaultEngines": [
-          "google-b-d", "ddg", "twitter", "wikipedia-crh"
         ]
       }
     },
@@ -352,37 +338,6 @@
         "visibleDefaultEngines": [
           "yandex-en"
         ]
-      }
-    },
-    "en-ZA": {
-      "default": {
-        "visibleDefaultEngines": [
-          "google-b-d", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
-        ]
-      },
-      "KZ": {
-        "visibleDefaultEngines": [
-          "yandex-en", "google-b-d", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
-        ],
-        "searchDefault": "Yandex"
-      },
-      "BY": {
-        "visibleDefaultEngines": [
-          "yandex-en", "google-b-d", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
-        ],
-        "searchDefault": "Yandex"
-      },
-      "RU": {
-        "visibleDefaultEngines": [
-          "yandex-en", "google-b-d", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
-        ],
-        "searchDefault": "Yandex"
-      },
-      "TR": {
-        "visibleDefaultEngines": [
-          "yandex-en", "google-b-d", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
-        ],
-        "searchDefault": "Yandex"
       }
     },
     "eo": {
@@ -689,24 +644,10 @@
         ]
       }
     },
-    "mai": {
-      "default": {
-        "visibleDefaultEngines": [
-          "google-b-d", "bing", "amazon-in", "ddg", "twitter", "wikipedia-hi"
-        ]
-      }
-    },
     "mk": {
       "default": {
         "visibleDefaultEngines": [
           "google-b-d", "bing", "amazondotcom", "ddg", "wikipedia-mk"
-        ]
-      }
-    },
-    "ml": {
-      "default": {
-        "visibleDefaultEngines": [
-          "google-b-d", "bing", "amazon-in", "ddg", "wikipedia", "wikipedia-ml"
         ]
       }
     },
@@ -768,13 +709,6 @@
       "default": {
         "visibleDefaultEngines": [
           "google-b-d", "bing", "ddg", "twitter", "wikipedia-oc", "wiktionary-oc"
-        ]
-      }
-    },
-    "or": {
-      "default": {
-        "visibleDefaultEngines": [
-          "google-b-d", "bing", "amazon-in", "ddg", "wikipedia-or"
         ]
       }
     },

@@ -166,8 +166,8 @@
               "es-MX", "eu", "fa", "ff", "fi", "fr", "fy-NL", "gn",
               "gu-IN", "hi-IN", "hr", "hsb", "ia", "is", "it",
               "ja-JP-macos", "ja", "ka", "kab", "km", "kn", "lij", "lo",
-              "lt", "mai", "mk", "ml", "ms", "my", "nb-NO", "ne-NP", "nl",
-              "nn-NO", "oc", "or", "pa-IN", "pt-BR", "rm", "ro", "son",
+              "lt", "mk", "ms", "my", "nb-NO", "ne-NP", "nl",
+              "nn-NO", "oc", "pa-IN", "pt-BR", "rm", "ro", "son",
               "sq", "sr", "sv-SE", "th", "tl", "trs", "uk", "ur", "uz",
               "wo", "xh", "zh-CN"
             ],
@@ -340,8 +340,7 @@
       "appliesTo": [{
         "included": {
           "locales": { "matches": [
-            "as", "bn", "bn-IN", "kn", "gu-IN", "mai", "ml", "mr",
-            "or", "pa-IN", "ta", "te", "ur"
+            "bn", "bn-IN", "kn", "gu-IN", "mr", "pa-IN", "ta", "te", "ur"
           ]}
         },
         "webExtension": {
@@ -1411,8 +1410,8 @@
       "appliesTo": [{
         "included": { "locales": { "matches": [
           "default", "en-US", "ach", "an", "bs", "ca", "ca-valencia",
-          "crh", "en-CA", "ga-IE", "gn", "hr", "ia", "ka", "kk", "km",
-          "lo", "lt", "mai",  "ms", "my", "ne-NP", "oc", "pt-BR",
+          "en-CA", "ga-IE", "gn", "hr", "ia", "ka", "kk", "km",
+          "lo", "lt", "ms", "my", "ne-NP", "oc", "pt-BR",
           "sl", "tl", "tr", "ur", "uz", "wo"
         ]}}
       }, {
@@ -1490,13 +1489,13 @@
         "included": { "everywhere": true }
       }, {
         "included": { "locales": { "matches": [
-          "af", "an", "ar", "as", "ast", "az", "bg",
-          "br", "bs", "crh", "cy", "da", "de", "dsb",
+          "af", "an", "ar", "ast", "az", "bg",
+          "br", "bs", "cy", "da", "de", "dsb",
           "el", "eo", "et", "eu", "fa", "fi", "fy-NL", "ga-IE",
           "gd", "gl", "gn", "he", "hr", "hsb", "hu", "ia",
           "id", "is", "it", "ka", "kab", "kk", "km", "kn",
-          "lij", "lo", "lt", "ltg", "lv", "mk", "ml", "mr",
-          "ms", "my", "nl", "oc", "or", "pl", "rm", "ro", "ru",
+          "lij", "lo", "lt", "ltg", "lv", "mk", "mr",
+          "ms", "my", "nl", "oc", "pl", "rm", "ro", "ru",
           "si", "sk", "sl", "sq", "sr", "sv-SE", "ta", "te",
           "th", "tl", "tr", "uk", "ur", "uz", "vi", "wo",
           "zh-CN", "zh-TW"
@@ -1560,16 +1559,6 @@
         "included": { "locales": { "matches": [ "ko" ] } },
         "webExtension": {
           "locales": ["kr"]
-        }
-      }, {
-        "included": { "locales": { "matches": [ "mai" ] } },
-        "webExtension": {
-          "locales": ["hi"]
-        }
-      }, {
-        "included": { "locales": { "matches": [ "ml" ] } },
-        "webExtension": {
-          "locales": ["en", "ml"]
         }
       }, {
         "included": { "locales": { "matches": [ "nb-NO" ] } },
