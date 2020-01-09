@@ -539,7 +539,7 @@ def GetFilePathListForDir(baseDir):
 
 if __name__ == '__main__':
     file_dir = Path(__file__).parent
-    os.chdir(file_dir)
+    os.chdir(str(file_dir))
 
     testEntryList = GetTestList()
     wrapperPathStrList = WriteWrappers(testEntryList)
