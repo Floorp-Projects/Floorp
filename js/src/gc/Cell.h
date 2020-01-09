@@ -238,9 +238,8 @@ class TenuredCell : public Cell {
   }
 
   // The return value indicates if the cell went from unmarked to marked.
-  MOZ_ALWAYS_INLINE bool markIfUnmarked(
-      MarkColor color = MarkColor::Black) const;
-  MOZ_ALWAYS_INLINE void markBlack() const;
+  MOZ_ALWAYS_INLINE bool markIfUnmarked(MarkColor color = MarkColor::Black);
+  MOZ_ALWAYS_INLINE void markBlack();
   MOZ_ALWAYS_INLINE void copyMarkBitsFrom(const TenuredCell* src);
   MOZ_ALWAYS_INLINE void unmark();
 
@@ -251,6 +250,10 @@ class TenuredCell : public Cell {
   inline JS::Zone* zone() const;
   inline JS::Zone* zoneFromAnyThread() const;
   inline bool isInsideZone(JS::Zone* zone) const;
+
+  inline size_t indexInArena() const;
+  inline uint8_t markBits() const;
+  inline uint8_t& markBitsRef();
 
   MOZ_ALWAYS_INLINE JS::shadow::Zone* shadowZone() const {
     return JS::shadow::Zone::from(zone());
@@ -293,6 +296,9 @@ class TenuredCell : public Cell {
 #ifdef DEBUG
   inline bool isAligned() const;
 #endif
+
+ private:
+  inline size_t divideByThingSize(size_t numerator) const;
 };
 
 MOZ_ALWAYS_INLINE const TenuredCell& Cell::asTenured() const {
@@ -382,34 +388,72 @@ inline JS::TraceKind Cell::getTraceKind() const {
   return JS::shadow::Zone::from(zone)->needsIncrementalBarrier();
 }
 
+uint8_t TenuredCell::markBits() const {
+  return arena()->markBits()[indexInArena()];
+}
+
+uint8_t& TenuredCell::markBitsRef() {
+  return arena()->markBits()[indexInArena()];
+}
+
+size_t TenuredCell::indexInArena() const {
+  // Cells are numbered in reverse order from the end of the arena because this
+  // doesn't require looking up the offset of the first cell.
+  size_t offsetFromStart = uintptr_t(this) & ArenaMask;
+  size_t offsetFromLastByte = offsetFromStart ^ ArenaMask;
+  size_t index = divideByThingSize(offsetFromLastByte);
+  MOZ_ASSERT(index < arena()->getThingsPerArena());
+  return index;
+}
+
+size_t TenuredCell::divideByThingSize(size_t numerator) const {
+  // Perform division by multiplying by fixed-point representation of reciprocal
+  // and shifting the result.
+  size_t reciprocal = arena()->getReciprocalOfThingSize();
+  return (numerator * reciprocal) >> ReciprocalThingSizeShift;
+}
+
 bool TenuredCell::isMarkedAny() const {
   MOZ_ASSERT(arena()->allocated());
-  return chunk()->bitmap.isMarkedAny(this);
+  return markBits() & MarkBitMaskBothBits;
 }
 
 bool TenuredCell::isMarkedBlack() const {
   MOZ_ASSERT(arena()->allocated());
-  return chunk()->bitmap.isMarkedBlack(this);
+  return markBits() & MarkBitMaskBlack;
 }
 
 bool TenuredCell::isMarkedGray() const {
   MOZ_ASSERT(arena()->allocated());
-  return chunk()->bitmap.isMarkedGray(this);
+  return (markBits() & MarkBitMaskBothBits) == MarkBitMaskGrayOrBlack;
 }
 
-bool TenuredCell::markIfUnmarked(MarkColor color /* = Black */) const {
-  return chunk()->bitmap.markIfUnmarked(this, color);
+bool TenuredCell::markIfUnmarked(MarkColor color /* = Black */) {
+  uint8_t& markBits = markBitsRef();
+  if (markBits & MarkBitMaskBlack) {
+    return false;
+  }
+
+  if (color == MarkColor::Black) {
+    markBits |= MarkBitMaskBlack;
+    return true;
+  }
+
+  if (markBits & MarkBitMaskGrayOrBlack) {
+    return false;
+  }
+
+  markBits |= MarkBitMaskGrayOrBlack;
+  return true;
 }
 
-void TenuredCell::markBlack() const { chunk()->bitmap.markBlack(this); }
+void TenuredCell::markBlack() { markIfUnmarked(MarkColor::Black); }
 
 void TenuredCell::copyMarkBitsFrom(const TenuredCell* src) {
-  ChunkBitmap& bitmap = chunk()->bitmap;
-  bitmap.copyMarkBit(this, src, ColorBit::BlackBit);
-  bitmap.copyMarkBit(this, src, ColorBit::GrayOrBlackBit);
+  markBitsRef() = src->markBits();
 }
 
-void TenuredCell::unmark() { chunk()->bitmap.unmark(this); }
+void TenuredCell::unmark() { markBitsRef() = 0; }
 
 inline Arena* TenuredCell::arena() const {
   MOZ_ASSERT(isTenured());

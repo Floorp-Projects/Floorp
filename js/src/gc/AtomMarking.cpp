@@ -45,6 +45,16 @@ namespace gc {
 // bits for space between things being unused when things are larger than a
 // single Cell.
 
+static inline size_t ArenaBitmapWords(Arena* arena) {
+  return HowMany(arena->getThingsPerArena(), JS_BITS_PER_WORD / 8);
+}
+
+static inline uintptr_t* ArenaBitmapPointer(Arena* arena) {
+  uint8_t* ptr = arena->markBits();
+  MOZ_ASSERT((uintptr_t(ptr) & (sizeof(uintptr_t) - 1)) == 0);
+  return reinterpret_cast<uintptr_t*>(ptr);
+}
+
 void AtomMarkingRuntime::registerArena(Arena* arena, const AutoLockGC& lock) {
   MOZ_ASSERT(arena->getThingSize() != 0);
   MOZ_ASSERT(arena->getThingSize() % CellAlignBytes == 0);
@@ -53,22 +63,23 @@ void AtomMarkingRuntime::registerArena(Arena* arena, const AutoLockGC& lock) {
   // We need to find a range of bits from the atoms bitmap for this arena.
 
   // Look for a free range of bits compatible with this arena.
-  if (freeArenaIndexes.ref().length()) {
-    arena->atomBitmapStart() = freeArenaIndexes.ref().popCopy();
+  auto& freeList = freeArenaIndexes.ref()[size_t(arena->getAllocKind())];
+  if (freeList.length()) {
+    arena->atomBitmapStart() = freeList.popCopy();
     return;
   }
 
   // Allocate a range of bits from the end for this arena.
   arena->atomBitmapStart() = allocatedWords;
-  allocatedWords += ArenaBitmapWords;
+  allocatedWords += ArenaBitmapWords(arena);
 }
 
 void AtomMarkingRuntime::unregisterArena(Arena* arena, const AutoLockGC& lock) {
   MOZ_ASSERT(arena->zone->isAtomsZone());
 
   // Leak these atom bits if we run out of memory.
-  mozilla::Unused << freeArenaIndexes.ref().emplaceBack(
-      arena->atomBitmapStart());
+  auto& freeList = freeArenaIndexes.ref()[size_t(arena->getAllocKind())];
+  mozilla::Unused << freeList.emplaceBack(arena->atomBitmapStart());
 }
 
 bool AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime,
@@ -84,9 +95,8 @@ bool AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime,
   for (auto thingKind : AllAllocKinds()) {
     for (ArenaIter aiter(atomsZone, thingKind); !aiter.done(); aiter.next()) {
       Arena* arena = aiter.get();
-      uintptr_t* chunkWords = arena->chunk()->bitmap.arenaBits(arena);
-      bitmap.copyBitsFrom(arena->atomBitmapStart(), ArenaBitmapWords,
-                          chunkWords);
+      bitmap.copyBitsFrom(arena->atomBitmapStart(), ArenaBitmapWords(arena),
+                          ArenaBitmapPointer(arena));
     }
   }
 
@@ -110,18 +120,13 @@ void AtomMarkingRuntime::refineZoneBitmapForCollectedZone(
 // Set any bits in the chunk mark bitmaps for atoms which are marked in bitmap.
 template <typename Bitmap>
 static void BitwiseOrIntoChunkMarkBits(JSRuntime* runtime, Bitmap& bitmap) {
-  // Make sure that by copying the mark bits for one arena in word sizes we
-  // do not affect the mark bits for other arenas.
-  static_assert(ArenaBitmapBits == ArenaBitmapWords * JS_BITS_PER_WORD,
-                "ArenaBitmapWords must evenly divide ArenaBitmapBits");
-
   Zone* atomsZone = runtime->unsafeAtomsZone();
   for (auto thingKind : AllAllocKinds()) {
     for (ArenaIter aiter(atomsZone, thingKind); !aiter.done(); aiter.next()) {
       Arena* arena = aiter.get();
-      uintptr_t* chunkWords = arena->chunk()->bitmap.arenaBits(arena);
-      bitmap.bitwiseOrRangeInto(arena->atomBitmapStart(), ArenaBitmapWords,
-                                chunkWords);
+      bitmap.bitwiseOrRangeInto(arena->atomBitmapStart(),
+                                ArenaBitmapWords(arena),
+                                ArenaBitmapPointer(arena));
     }
   }
 }
