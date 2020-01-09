@@ -2051,7 +2051,7 @@ class PresShell final : public nsStubDocumentObserver,
    private:
     static bool InZombieDocument(nsIContent* aContent);
     static nsIFrame* GetNearestFrameContainingPresShell(PresShell* aPresShell);
-    static already_AddRefed<nsIURI> GetDocumentURIToCompareWithBlacklist(
+    static nsIPrincipal* GetDocumentPrincipalToCompareWithBlacklist(
         PresShell& aPresShell);
 
     /**
