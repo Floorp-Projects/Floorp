@@ -169,22 +169,26 @@ config = {
     # local reftest suites
     "all_reftest_suites": {
         "crashtest": {
-            "options": ["--suite=crashtest"],
+            "options": ["--suite=crashtest",
+                        "--topsrcdir=tests/reftest/tests"],
             "tests": ["tests/reftest/tests/testing/crashtest/crashtests.list"]
         },
         "jsreftest": {
-            "options": ["--extra-profile-file=tests/jsreftest/tests/user.js",
-                       "--suite=jstestbrowser"],
-            "tests": ["tests/jsreftest/tests/jstests.list"]
+            "options": ["--extra-profile-file=tests/jsreftest/tests/js/src/tests/user.js",
+                       "--suite=jstestbrowser",
+                       "--topsrcdir=tests/jsreftest/tests"],
+            "tests": ["tests/jsreftest/tests/js/src/tests/jstests.list"]
         },
         "reftest": {
             "options": ["--suite=reftest",
-                        "--setpref=layers.acceleration.force-enabled=true"],
+                        "--setpref=layers.acceleration.force-enabled=true",
+                        "--topsrcdir=tests/reftest/tests"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
         "reftest-no-accel": {
             "options": ["--suite=reftest",
-                        "--setpref=layers.acceleration.disabled=true"],
+                        "--setpref=layers.acceleration.disabled=true",
+                        "--topsrcdir=tests/reftest/tests"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
         },
     },
