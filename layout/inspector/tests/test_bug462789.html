@@ -59,13 +59,6 @@ function do_test() {
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 
   try {
-    var res = InspectorUtils.getBindingURLs(docElement);
-    ok(Array.isArray(SpecialPowers.unwrap(res)), "getBindingURLs result type");
-    is(res.length, 0, "getBindingURLs array length");
-  }
-  catch(e) { ok(false, "got an unexpected exception:" + e); }
-
-  try {
     InspectorUtils.getContentState(docElement);
     ok(true, "Should not throw"); 
   }

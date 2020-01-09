@@ -49,8 +49,6 @@ namespace InspectorUtils {
   Node? getParentForNode(Node node, boolean showingAnonymousContent);
   [NewObject] NodeList getChildrenForNode(Node node,
                                           boolean showingAnonymousContent);
-  // FIXME(emilio, bug 1607408): Remove this.
-  sequence<DOMString> getBindingURLs(Element element);
   [Throws] boolean setContentState(Element element, unsigned long long state);
   [Throws] boolean removeContentState(
       Element element,
