@@ -42,6 +42,7 @@ class AccountDeviceViewHolder(
                     // nothing we are offline
                 }
             }
+            it.setOnClickListener(null)
         }
     }
 
