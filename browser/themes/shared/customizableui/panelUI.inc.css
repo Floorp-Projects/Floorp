@@ -1838,6 +1838,10 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   color: white;
 }
 
+#protections-popup-message:-moz-locale-dir(rtl) {
+  background-position: top left;
+}
+
 #protections-popup-message > .whatsNew-message-body > .text-link {
   text-decoration: underline;
 }
