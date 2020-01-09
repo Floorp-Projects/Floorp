@@ -6526,6 +6526,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
     if (mDecoder) {
       mDecoder->Pause();
       mDecoder->Suspend();
+      mDecoder->SetDelaySeekMode(true);
     }
     mEventDeliveryPaused = true;
     // We won't want to resume media element from the bfcache.
@@ -6540,6 +6541,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aSuspendElement) {
       if (!mPaused && !mDecoder->IsEnded()) {
         mDecoder->Play();
       }
+      mDecoder->SetDelaySeekMode(false);
     }
     if (mEventDeliveryPaused) {
       mEventDeliveryPaused = false;

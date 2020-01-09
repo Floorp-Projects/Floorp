@@ -159,6 +159,14 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   bool GetMinimizePreroll() const { return mMinimizePreroll; }
 
+  // When we enable delay seek mode, media decoder won't actually ask MDSM to do
+  // seeking. During this period, we would store the latest seeking target and
+  // perform the seek to that target when we leave the mode. If we have any
+  // delayed seeks stored `IsSeeking()` will return true. E.g. During delay
+  // seeking mode, if we get seek target to 5s, 10s, 7s. When we stop delaying
+  // seeking, we would only seek to 7s.
+  void SetDelaySeekMode(bool aShouldDelaySeek);
+
   // All MediaStream-related data is protected by mReentrantMonitor.
   // We have at most one DecodedStreamData per MediaDecoder. Its stream
   // is used as the input for each ProcessedMediaTrack created by calls to
@@ -663,6 +671,11 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // True if we want to resume video decoding even the media element is in the
   // background.
   bool mIsBackgroundVideoDecodingAllowed;
+
+  // True if we want to delay seeking, and and save the latest seeking target to
+  // resume to when we stop delaying seeking.
+  bool mShouldDelaySeek = false;
+  Maybe<SeekTarget> mDelayedSeekTarget;
 
  public:
   AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }
