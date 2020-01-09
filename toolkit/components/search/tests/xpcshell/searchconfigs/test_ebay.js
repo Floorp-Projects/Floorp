@@ -82,7 +82,9 @@ const test = new SearchConfigTest({
       included: [
         {
           regions: ["be"],
-          locales: { matches: ["br", "en-US", "fr", "fy-NL", "nl", "wo"] },
+          locales: {
+            matches: ["br", "unknown", "en-US", "fr", "fy-NL", "nl", "wo"],
+          },
         },
       ],
       searchUrlEnd: "1553-53471-19255-0/1",
@@ -158,7 +160,7 @@ const test = new SearchConfigTest({
       telemetryId: "ebay",
       included: [
         {
-          locales: { matches: ["en-US"] },
+          locales: { matches: ["unknown", "en-US"] },
         },
       ],
       excluded: [{ regions: ["au", "be", "ca", "ch", "gb", "ie", "nl"] }],
@@ -170,7 +172,7 @@ const test = new SearchConfigTest({
       included: [
         {
           regions: ["au"],
-          locales: { matches: ["cy", "en-GB", "en-US", "gd"] },
+          locales: { matches: ["cy", "unknown", "en-GB", "en-US", "gd"] },
         },
       ],
       searchUrlEnd: "705-53470-19255-0/1",
@@ -184,7 +186,7 @@ const test = new SearchConfigTest({
         },
         {
           regions: ["ie"],
-          locales: { matches: ["cy", "en-GB", "en-US", "gd"] },
+          locales: { matches: ["cy", "unknown", "en-GB", "en-US", "gd"] },
         },
       ],
       searchUrlEnd: "5282-53468-19255-0/1",
@@ -197,7 +199,7 @@ const test = new SearchConfigTest({
           locales: { matches: DOMAIN_LOCALES["ebay-uk"] },
         },
         {
-          locales: { matches: ["en-US"] },
+          locales: { matches: ["unknown", "en-US"] },
           regions: ["gb"],
         },
       ],
@@ -256,7 +258,7 @@ const test = new SearchConfigTest({
           locales: { matches: DOMAIN_LOCALES["ebay-nl"] },
         },
         {
-          locales: { matches: ["en-US"] },
+          locales: { matches: ["unknown", "en-US"] },
           regions: ["nl"],
         },
       ],
@@ -272,6 +274,10 @@ add_task(async function setup() {
 });
 
 add_task(async function test_searchConfig_ebay() {
-  await test.run(false);
   await test.run(true);
+  // Only applies to the default locale fallback for the legacy config.
+  // Note: when we remove the legacy config, we should remove the "unknown"
+  // references in the 'details' section of the test above.
+  test._config.available.included[0].locales.matches.push("unknown");
+  await test.run(false);
 });
