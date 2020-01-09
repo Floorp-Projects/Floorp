@@ -7,9 +7,10 @@
 #ifndef nsQueryFrame_h
 #define nsQueryFrame_h
 
+#include <type_traits>
+
 #include "nscore.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/TypeTraits.h"
 
 // NOTE: the long lines in this file are intentional to make compiler error
 // messages more readable.
@@ -126,9 +127,8 @@ class do_QueryFrameHelper {
   // downcasting is safe.
   template <class Src, class Dst>
   struct FastQueryFrame<
-      Src, Dst,
-      typename mozilla::EnableIf<std::is_base_of<nsIFrame, Src>::value>::Type,
-      typename mozilla::EnableIf<std::is_base_of<nsIFrame, Dst>::value>::Type> {
+      Src, Dst, std::enable_if_t<std::is_base_of<nsIFrame, Src>::value>,
+      std::enable_if_t<std::is_base_of<nsIFrame, Dst>::value>> {
     static Dst* QueryFrame(Src* aFrame) {
       return nsQueryFrame::FrameIID(aFrame->mClass) == Dst::kFrameIID
                  ? reinterpret_cast<Dst*>(aFrame)
