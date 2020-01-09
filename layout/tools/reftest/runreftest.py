@@ -230,17 +230,20 @@ class ReftestResolver(object):
         manifests = {}
         for testPath in tests:
             for manifest, filter_str in self.findManifest(suite, testPath):
-                manifest = self.manifestURL(options, manifest)
                 if manifest not in manifests:
                     manifests[manifest] = set()
                 manifests[manifest].add(filter_str)
-
+        manifests_by_url = {}
         for key in manifests.iterkeys():
+            id = os.path.relpath(os.path.abspath(os.path.dirname(key)), options.topsrcdir)
+            id = id.replace(os.sep, posixpath.sep)
             if None in manifests[key]:
-                manifests[key] = None
+                manifests[key] = (None, id)
             else:
-                manifests[key] = "|".join(list(manifests[key]))
-        return manifests
+                manifests[key] = ("|".join(list(manifests[key])), id)
+            url = self.manifestURL(options, key)
+            manifests_by_url[url] = manifests[key]
+        return manifests_by_url
 
 
 class RefTest(object):
@@ -448,7 +451,7 @@ class RefTest(object):
         browserEnv = self.environment(
             xrePath=options.xrePath, debugger=options.debugger)
         browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
-        if hasattr(options, "topsrcdir"):
+        if options.topsrcdir:
             browserEnv["MOZ_DEVELOPER_REPO_DIR"] = options.topsrcdir
         if hasattr(options, "topobjdir"):
             browserEnv["MOZ_DEVELOPER_OBJ_DIR"] = options.topobjdir
@@ -604,7 +607,7 @@ class RefTest(object):
 
         manifests = self.resolver.resolveManifests(options, tests)
         if options.filter:
-            manifests[""] = options.filter
+            manifests[""] = (options.filter, None)
 
         if not getattr(options, 'runTestsInParallel', False):
             return self.runSerialTests(manifests, options, cmdargs)

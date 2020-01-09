@@ -23,7 +23,7 @@ def parse(get_reftest, normalize):
 
     def inner(*manifests):
         assert len(manifests) > 0
-        manifests = {m: None for m in map(resolve, manifests)}
+        manifests = {m: (None, "id") for m in map(resolve, manifests)}
         return reftest.getActiveTests(manifests, options)
 
     return inner
