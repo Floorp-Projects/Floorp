@@ -16,12 +16,13 @@
 
 namespace js {
 
+class PromiseObject;
 class ReadableStream;
 class ReadableStreamDefaultController;
 class TeeState;
 class WritableStream;
 
-extern MOZ_MUST_USE JSObject* ReadableStreamTee_Pull(
+extern MOZ_MUST_USE PromiseObject* ReadableStreamTee_Pull(
     JSContext* cx, JS::Handle<TeeState*> unwrappedTeeState);
 
 extern MOZ_MUST_USE JSObject* ReadableStreamTee_Cancel(

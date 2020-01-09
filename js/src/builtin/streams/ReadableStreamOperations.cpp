@@ -38,6 +38,7 @@
 using js::IsCallable;
 using js::NewHandler;
 using js::NewObjectWithClassProto;
+using js::PromiseObject;
 using js::ReadableStream;
 using js::ReadableStreamDefaultController;
 using js::ReadableStreamDefaultControllerEnqueue;
@@ -293,7 +294,7 @@ static bool TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp) {
  * Streams spec, 3.4.10. ReadableStreamTee step 12, "Let pullAlgorithm be the
  * following steps:"
  */
-MOZ_MUST_USE JSObject* js::ReadableStreamTee_Pull(
+MOZ_MUST_USE PromiseObject* js::ReadableStreamTee_Pull(
     JSContext* cx, JS::Handle<TeeState*> unwrappedTeeState) {
   // Combine step 12.a/12.e far below, and handle steps 12.b-12.d after
   // inverting step 12.a's "If reading is true" condition.
@@ -365,7 +366,8 @@ MOZ_MUST_USE JSObject* js::ReadableStreamTee_Pull(
 
   // Step 12.a: (If reading is true,) return a promise resolved with undefined.
   // Step 12.e: Return a promise resolved with undefined.
-  return PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+  return PromiseObject::unforgeableResolveWithNonPromise(cx,
+                                                         UndefinedHandleValue);
 }
 
 /**

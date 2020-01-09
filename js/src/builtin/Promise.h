@@ -99,8 +99,22 @@ class PromiseObject : public NativeObject {
 
   static PromiseObject* createSkippingExecutor(JSContext* cx);
 
+  // Create an instance of the original Promise binding, rejected with the given
+  // value.
+  static PromiseObject* unforgeableReject(JSContext* cx, HandleValue value);
+
+  // Create an instance of the original Promise binding, resolved with the given
+  // value.
+  //
+  // However, if |value| is itself a promise -- including from another realm --
+  // |value| itself will in some circumstances be returned.  This sadly means
+  // this function must return |JSObject*| and can't return |PromiseObject*|.
   static JSObject* unforgeableResolve(JSContext* cx, HandleValue value);
-  static JSObject* unforgeableReject(JSContext* cx, HandleValue value);
+
+  // Create an instance of the original Promise binding, rejected with the given
+  // value.
+  static PromiseObject* unforgeableResolveWithNonPromise(JSContext* cx,
+                                                         HandleValue value);
 
   int32_t flags() { return getFixedSlot(PromiseSlot_Flags).toInt32(); }
   void setHandled() {

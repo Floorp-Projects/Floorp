@@ -393,7 +393,8 @@ MOZ_MUST_USE JSObject* js::ReadableStreamControllerCancelSteps(
                                         unwrappedController->cancelMethod());
     if (unwrappedCancelMethod.isUndefined()) {
       // CreateAlgorithmFromUnderlyingMethod step 7.
-      result = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+      result = PromiseObject::unforgeableResolveWithNonPromise(
+          cx, UndefinedHandleValue);
     } else {
       // CreateAlgorithmFromUnderlyingMethod steps 6.c.i-ii.
       {

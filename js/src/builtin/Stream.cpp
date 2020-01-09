@@ -10,6 +10,7 @@
 
 #include <stdint.h>  // int32_t
 
+#include "builtin/Promise.h"                          // js::PromiseObject
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::CreateAlgorithmFromUnderlyingMethod, js::InvokeOrNoop, js::IsMaybeWrapped, js::PromiseCall, js::PromiseRejectedWithPendingError
 #include "builtin/streams/PullIntoDescriptor.h"       // js::PullIntoDescriptor
@@ -315,8 +316,9 @@ MOZ_MUST_USE bool js::SetUpExternalReadableByteStreamController(
   // Step 14: Let startResult be the result of performing startAlgorithm.
   // (For external sources, this algorithm does nothing and returns undefined.)
   // Step 15: Let startPromise be a promise resolved with startResult.
-  RootedObject startPromise(
-      cx, PromiseObject::unforgeableResolve(cx, UndefinedHandleValue));
+  Rooted<PromiseObject*> startPromise(
+      cx, PromiseObject::unforgeableResolveWithNonPromise(
+              cx, UndefinedHandleValue));
   if (!startPromise) {
     return false;
   }
