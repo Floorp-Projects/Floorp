@@ -48,6 +48,7 @@ jobs:
                 - builds/releng_base_linux_32_builds.py
             mozconfig-variant: profile-generate
             tooltool-downloads: public
+        run-on-projects: ['try', 'release']
         fetches:
             toolchain:
                 - linux64-binutils
