@@ -64,7 +64,7 @@ using JS::Value;
  * places as the standard, but the effect is the same. See the comment on
  * `ReadableStreamReader::forAuthorCode()`.
  */
-MOZ_MUST_USE JSObject* js::ReadableStreamAddReadOrReadIntoRequest(
+MOZ_MUST_USE js::PromiseObject* js::ReadableStreamAddReadOrReadIntoRequest(
     JSContext* cx, Handle<ReadableStream*> unwrappedStream) {
   // Step 1: Assert: ! IsReadableStream{BYOB,Default}Reader(stream.[[reader]])
   //         is true.
@@ -83,7 +83,7 @@ MOZ_MUST_USE JSObject* js::ReadableStreamAddReadOrReadIntoRequest(
                 unwrappedStream->readable());
 
   // Step 3: Let promise be a new promise.
-  Rooted<JSObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
+  Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
   if (!promise) {
     return nullptr;
   }
