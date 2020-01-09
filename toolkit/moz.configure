@@ -1813,15 +1813,20 @@ def wasi_sysroot(wasi_sysroot, mozbuild_state_path):
 set_config('WASI_SYSROOT', wasi_sysroot)
 
 
-def wasm_compiler_with_flags(wasm_compiler, provided_wasm_compiler, sysroot):
+def wasm_compiler_with_flags(wasm_compiler, provided_wasm_compiler, sysroot,
+                             compiler_wrapper):
     if not sysroot:
         return
     if provided_wasm_compiler:
         return ' '.join(
+            list(compiler_wrapper or []) +
             provided_wasm_compiler.wrapper + [provided_wasm_compiler.program]
             + provided_wasm_compiler.flags + ['--sysroot=%s' % sysroot])
     elif wasm_compiler:
-        return '%s --target=wasm32-wasi --sysroot=%s' % (wasm_compiler, sysroot)
+        return ' '.join(
+            list(compiler_wrapper or []) +
+            [wasm_compiler] +
+            ['--target=wasm32-wasi', '--sysroot=%s' % sysroot])
 
 option(env='WASM_CC', nargs=1, help='Path to the C->WASM compiler',
        when=requires_wasm_sandboxing)
@@ -1829,9 +1834,12 @@ provided_wasm_cc = provided_program('WASM_CC', when=requires_wasm_sandboxing)
 wasm_cc = check_prog('_WASM_CC', ['clang'], input=provided_wasm_cc.program,
                      paths=toolchain_search_path, allow_missing=True,
                      what='the C->WASM compiler', when=requires_wasm_sandboxing)
-@depends(wasm_cc, provided_wasm_cc, wasi_sysroot, when=requires_wasm_sandboxing)
-def wasm_cc_with_flags(wasm_cc, provided_wasm_cc, wasi_sysroot):
-    return wasm_compiler_with_flags(wasm_cc, provided_wasm_cc, wasi_sysroot)
+@depends(wasm_cc, provided_wasm_cc, wasi_sysroot, compiler_wrapper,
+         when=requires_wasm_sandboxing)
+def wasm_cc_with_flags(wasm_cc, provided_wasm_cc, wasi_sysroot,
+                       compiler_wrapper):
+    return wasm_compiler_with_flags(wasm_cc, provided_wasm_cc, wasi_sysroot,
+                                    compiler_wrapper)
 set_config('WASM_CC', wasm_cc_with_flags, when=requires_wasm_sandboxing)
 
 option(env='WASM_CXX', nargs=1, help='Path to the C++->WASM compiler',
@@ -1841,10 +1849,13 @@ wasm_cxx = check_prog(
     '_WASM_CXX', ['clang++'], input=provided_wasm_cxx.program,
     paths=toolchain_search_path, allow_missing=True,
     what='the C++->WASM compiler', when=requires_wasm_sandboxing)
-@depends(wasm_cxx, provided_wasm_cxx, wasi_sysroot,
+@depends(wasm_cxx, provided_wasm_cxx, wasi_sysroot, compiler_wrapper,
          when=requires_wasm_sandboxing)
-def wasm_cxx_with_flags(wasm_cxx, provided_wasm_cxx, wasi_sysroot):
-    return wasm_compiler_with_flags(wasm_cxx, provided_wasm_cxx, wasi_sysroot)
+def wasm_cxx_with_flags(wasm_cxx, provided_wasm_cxx, wasi_sysroot,
+                        compiler_wrapper):
+    return wasm_compiler_with_flags(wasm_cxx, provided_wasm_cxx, wasi_sysroot,
+                                    compiler_wrapper)
+
 set_config('WASM_CXX', wasm_cxx_with_flags, when=requires_wasm_sandboxing)
 
 
