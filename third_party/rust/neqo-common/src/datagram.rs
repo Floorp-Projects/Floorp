@@ -23,10 +23,12 @@ impl Datagram {
         }
     }
 
+    #[must_use]
     pub fn source(&self) -> SocketAddr {
         self.src
     }
 
+    #[must_use]
     pub fn destination(&self) -> SocketAddr {
         self.dst
     }
@@ -34,6 +36,7 @@ impl Datagram {
 
 impl Deref for Datagram {
     type Target = Vec<u8>;
+    #[must_use]
     fn deref(&self) -> &Self::Target {
         &self.d
     }

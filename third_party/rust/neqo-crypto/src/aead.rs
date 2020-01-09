@@ -59,6 +59,7 @@ impl Aead {
         unsafe { Self::from_raw(version, cipher, s, prefix) }
     }
 
+    #[must_use]
     pub fn expansion(&self) -> usize {
         16
     }

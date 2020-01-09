@@ -201,7 +201,7 @@ impl RecvdPackets {
 
     /// Add the packet to the tracked set.
     pub fn set_received(&mut self, now: Instant, pn: u64, ack_eliciting: bool) {
-        let next_in_order_pn = self.ranges.get(0).map(|pr| pr.largest + 1).unwrap_or(0);
+        let next_in_order_pn = self.ranges.front().map_or(0, |pr| pr.largest + 1);
         qdebug!("next in order pn: {}", next_in_order_pn);
         let i = self.add(pn);
 

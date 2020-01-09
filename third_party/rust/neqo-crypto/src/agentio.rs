@@ -16,6 +16,7 @@ use std::fmt;
 use std::mem;
 use std::ops::Deref;
 use std::os::raw::{c_uint, c_void};
+use std::pin::Pin;
 use std::ptr::{null, null_mut};
 use std::vec::Vec;
 
@@ -42,6 +43,7 @@ pub struct Record {
 }
 
 impl Record {
+    #[must_use]
     pub fn new(epoch: Epoch, ct: ssl::SSLContentType::Type, data: &[u8]) -> Self {
         Self {
             epoch,
@@ -87,7 +89,7 @@ impl RecordList {
         self.records.push(Record::new(epoch, ct, data));
     }
 
-    /// Filter out EndOfEarlyData messages.
+    /// Filter out `EndOfEarlyData` messages.
     pub fn remove_eoed(&mut self) {
         self.records.retain(|rec| rec.epoch != 1);
     }
@@ -100,7 +102,7 @@ impl RecordList {
         len: c_uint,
         arg: *mut c_void,
     ) -> ssl::SECStatus {
-        let a = arg as *mut RecordList;
+        let a = arg as *mut Self;
         let records = a.as_mut().unwrap();
 
         let slice = std::slice::from_raw_parts(data, len as usize);
@@ -109,16 +111,17 @@ impl RecordList {
     }
 
     /// Create a new record list.
-    pub(crate) fn setup(fd: *mut ssl::PRFileDesc) -> Res<Box<RecordList>> {
-        let mut records = Box::new(RecordList::default());
-        let records_ptr = &mut *records as *mut RecordList as *mut c_void;
-        unsafe { ssl::SSL_RecordLayerWriteCallback(fd, Some(RecordList::ingest), records_ptr) }?;
+    pub(crate) fn setup(fd: *mut ssl::PRFileDesc) -> Res<Pin<Box<Self>>> {
+        let mut records = Pin::new(Box::new(Self::default()));
+        let records_ptr = &mut *records as *mut Self as *mut c_void;
+        unsafe { ssl::SSL_RecordLayerWriteCallback(fd, Some(Self::ingest), records_ptr) }?;
         Ok(records)
     }
 }
 
 impl Deref for RecordList {
     type Target = Vec<Record>;
+    #[must_use]
     fn deref(&self) -> &Vec<Record> {
         &self.records
     }
@@ -136,6 +139,7 @@ impl Iterator for RecordListIter {
 impl IntoIterator for RecordList {
     type Item = Record;
     type IntoIter = RecordListIter;
+    #[must_use]
     fn into_iter(self) -> Self::IntoIter {
         RecordListIter(self.records.into_iter())
     }

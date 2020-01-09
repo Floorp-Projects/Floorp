@@ -5,10 +5,9 @@
 // except according to those terms.
 
 use crate::connection::Http3State;
+use crate::connection_server::Http3ServerHandler;
 use crate::server_connection_events::Http3ServerConnEvent;
-use crate::server_events::{
-    ClientRequestStream, Http3Handler, Http3ServerEvent, Http3ServerEvents,
-};
+use crate::server_events::{ClientRequestStream, Http3ServerEvent, Http3ServerEvents};
 use crate::Res;
 use neqo_common::{qtrace, Datagram};
 use neqo_crypto::AntiReplay;
@@ -19,13 +18,13 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::time::Instant;
 
-type HandlerRef = Rc<RefCell<Http3Handler>>;
+type HandlerRef = Rc<RefCell<Http3ServerHandler>>;
 
 pub struct Http3Server {
     server: Server,
     max_table_size: u32,
     max_blocked_streams: u16,
-    connections: HashMap<ActiveConnectionRef, HandlerRef>,
+    http3_handlers: HashMap<ActiveConnectionRef, HandlerRef>,
     events: Http3ServerEvents,
 }
 
@@ -49,7 +48,7 @@ impl Http3Server {
             server: Server::new(now, certs, protocols, anti_replay, cid_manager)?,
             max_table_size,
             max_blocked_streams,
-            connections: HashMap::new(),
+            http3_handlers: HashMap::new(),
             events: Http3ServerEvents::default(),
         })
     }
@@ -74,7 +73,7 @@ impl Http3Server {
 
         // We need to find connections that needs to be process on http3 level.
         let mut http3_active: Vec<ActiveConnectionRef> = self
-            .connections
+            .http3_handlers
             .iter()
             .filter(|(conn, handler)| {
                 handler.borrow().should_be_processed() && !active_conns.contains(&conn)
@@ -92,8 +91,8 @@ impl Http3Server {
         let max_table_size = self.max_table_size;
         let max_blocked_streams = self.max_blocked_streams;
         for mut conn in active_conns {
-            let handler = self.connections.entry(conn.clone()).or_insert_with(|| {
-                Rc::new(RefCell::new(Http3Handler::new(
+            let handler = self.http3_handlers.entry(conn.clone()).or_insert_with(|| {
+                Rc::new(RefCell::new(Http3ServerHandler::new(
                     max_table_size,
                     max_blocked_streams,
                 )))
@@ -134,7 +133,7 @@ impl Http3Server {
                 }
             }
             if remove {
-                self.connections.remove(&conn.clone());
+                self.http3_handlers.remove(&conn.clone());
             }
         }
     }

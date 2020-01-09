@@ -31,6 +31,7 @@ macro_rules! scoped_ptr {
         }
 
         impl $scoped {
+            #[must_use]
             pub fn new(ptr: NonNull<$target>) -> Self {
                 Self { ptr: ptr.as_ptr() }
             }
@@ -38,6 +39,7 @@ macro_rules! scoped_ptr {
 
         impl Deref for $scoped {
             type Target = *mut $target;
+            #[must_use]
             fn deref(&self) -> &*mut $target {
                 &self.ptr
             }

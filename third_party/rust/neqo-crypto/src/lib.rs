@@ -5,10 +5,12 @@
 // except according to those terms.
 
 #![cfg_attr(feature = "deny-warnings", deny(warnings))]
+#![warn(clippy::pedantic)]
 // Bindgen auto generated code
 // won't adhere to the clippy rules below
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::unseparated_literal_suffix)]
+#![allow(clippy::used_underscore_binding)]
 
 #[macro_use]
 mod exp;
@@ -70,7 +72,7 @@ enum NssLoaded {
 impl Drop for NssLoaded {
     fn drop(&mut self) {
         match self {
-            NssLoaded::NoDb | NssLoaded::Db(_) => unsafe {
+            Self::NoDb | Self::Db(_) => unsafe {
                 secstatus_to_res(nss::NSS_Shutdown()).expect("NSS Shutdown failed")
             },
             _ => {}
@@ -133,7 +135,7 @@ pub fn init_db<P: Into<PathBuf>>(dir: P) {
             ))
             .expect("SSL_ConfigServerSessionIDCache failed");
 
-            NssLoaded::Db(path.to_path_buf().into_boxed_path())
+            NssLoaded::Db(path.into_boxed_path())
         });
     }
 }

@@ -48,6 +48,7 @@ impl<T> Timer<T> {
     }
 
     /// Return a reference to the time of the next entry.
+    #[must_use]
     pub fn next_time(&self) -> Option<Instant> {
         for i in 0..self.items.len() {
             let idx = self.bucket(i);
@@ -63,6 +64,7 @@ impl<T> Timer<T> {
     /// In practice, this value is less by one amount of the timer granularity.
     #[inline]
     #[allow(clippy::cast_possible_truncation)] // guarded by assertion
+    #[must_use]
     pub fn span(&self) -> Duration {
         self.granularity * (self.items.len() as u32)
     }

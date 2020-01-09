@@ -237,7 +237,7 @@ impl TransactionClient {
                 data_frame.encode(&mut enc);
                 match conn.stream_send(self.stream_id, &enc) {
                     Ok(sent) => {
-                        assert_eq!(sent, enc.len());
+                        debug_assert_eq!(sent, enc.len());
                     }
                     Err(e) => return Err(Error::TransportError(e)),
                 }
@@ -451,7 +451,7 @@ impl TransactionClient {
                     *remaining_data_len
                 };
                 let (amount, fin) = conn.stream_recv(self.stream_id, &mut buf[..to_read])?;
-                assert!(amount <= to_read);
+                debug_assert!(amount <= to_read);
                 *remaining_data_len -= amount;
 
                 if fin {
@@ -471,6 +471,10 @@ impl TransactionClient {
             }
             _ => Ok((0, false)),
         }
+    }
+
+    pub fn is_state_sending_data(&self) -> bool {
+        self.send_state == TransactionSendState::SendingData
     }
 }
 
@@ -586,10 +590,6 @@ impl Http3Transaction for TransactionClient {
         } else {
             false
         }
-    }
-
-    fn is_state_sending_data(&self) -> bool {
-        self.send_state == TransactionSendState::SendingData
     }
 
     fn reset_receiving_side(&mut self) {
