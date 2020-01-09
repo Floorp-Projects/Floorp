@@ -2027,9 +2027,9 @@ void ServiceWorkerPrivate::NoteIdleWorkerCallback(nsITimer* aTimer) {
     // There sould only be EITHER mWorkerPrivate or mInner (but not both).
     MOZ_ASSERT(!(mWorkerPrivate && mInner));
 
-    // If we still have a workerPrivate at this point it means there are pending
-    // waitUntil promises. Wait a bit more until we forcibly terminate the
-    // worker.
+    // If we still have a living worker at this point it means that either there
+    // are pending waitUntil promises or the worker is doing some long-running
+    // computation. Wait a bit more until we forcibly terminate the worker.
     uint32_t timeout =
         Preferences::GetInt("dom.serviceWorkers.idle_extended_timeout");
     nsCOMPtr<nsITimerCallback> cb = new ServiceWorkerPrivateTimerCallback(
