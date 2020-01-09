@@ -363,6 +363,7 @@ WebRenderAPI::WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
       mUseDComp(aUseDComp),
       mUseTripleBuffering(aUseTripleBuffering),
       mSyncHandle(aSyncHandle),
+      mDebugFlags({0}),
       mRenderRoot(aRenderRoot) {}
 
 WebRenderAPI::~WebRenderAPI() {
@@ -385,10 +386,14 @@ WebRenderAPI::~WebRenderAPI() {
 }
 
 void WebRenderAPI::UpdateDebugFlags(uint32_t aFlags) {
-  wr_api_set_debug_flags(mDocHandle, wr::DebugFlags{aFlags});
+  if (mDebugFlags.bits != aFlags) {
+    mDebugFlags.bits = aFlags;
+    wr_api_set_debug_flags(mDocHandle, mDebugFlags);
+  }
 }
 
 void WebRenderAPI::SendTransaction(TransactionBuilder& aTxn) {
+  UpdateDebugFlags(gfx::gfxVars::WebRenderDebugFlags());
   wr_api_send_transaction(mDocHandle, aTxn.Raw(), aTxn.UseSceneBuilderThread());
 }
 
@@ -400,6 +405,8 @@ void WebRenderAPI::SendTransactions(
     return;
   }
 
+  aApis[RenderRoot::Default]->UpdateDebugFlags(
+      gfx::gfxVars::WebRenderDebugFlags());
   AutoTArray<DocumentHandle*, kRenderRootCount> documentHandles;
   AutoTArray<Transaction*, kRenderRootCount> txns;
   Maybe<bool> useSceneBuilderThread;
@@ -835,11 +842,6 @@ void TransactionBuilder::AddFontInstance(
 
 void TransactionBuilder::DeleteFontInstance(wr::FontInstanceKey aKey) {
   wr_resource_updates_delete_font_instance(mTxn, aKey);
-}
-
-void TransactionBuilder::UpdateQualitySettings(
-    bool aAllowSacrificingSubpixelAA) {
-  wr_transaction_set_quality_settings(mTxn, aAllowSacrificingSubpixelAA);
 }
 
 class FrameStartTime : public RendererEvent {
