@@ -43,9 +43,26 @@ class AddonManager(
             // Make sure extension support is initialized, i.e. the state of all installed extensions is known.
             WebExtensionSupport.awaitInitialization()
 
-            return addonsProvider.getAvailableAddons().map { addon ->
-                installedExtensions[addon.id]?.let { addon.copy(installedState = it.toInstalledState()) } ?: addon
+            val supportedAddons = addonsProvider.getAvailableAddons().map { addon ->
+                installedExtensions[addon.id]?.let {
+                    addon.copy(installedState = it.toInstalledState())
+                } ?: addon
             }
+
+            val supportedAddonIds = supportedAddons.map { it.id }
+
+            // Get all installed addons that are not yet supported.
+            val unsupportedAddons = installedExtensions
+                    .filterKeys { !supportedAddonIds.contains(it) }
+                    .filterValues { !it.isBuiltIn() }
+                    .map { extensionEntry ->
+                val extension = extensionEntry.value
+
+                val installedState = extension.toInstalledState().copy(enabled = false, supported = false)
+                Addon(extension.id, siteUrl = extension.url, installedState = installedState)
+            }
+
+            return supportedAddons + unsupportedAddons
         } catch (throwable: Throwable) {
             throw AddonManagerException(throwable)
         }

@@ -68,6 +68,11 @@
             android:label="@string/mozac_feature_addons_addons"
             android:theme="@style/Theme.AppCompat.Light" />
 
+        <activity
+            android:name=".addons.NotYetSupportedAddonActivity"
+            android:label="@string/mozac_feature_addons_addons"
+            android:theme="@style/Theme.AppCompat.Light" />
+
         <activity android:name=".IntentReceiverActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
