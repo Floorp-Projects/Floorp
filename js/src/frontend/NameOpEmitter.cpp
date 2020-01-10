@@ -154,7 +154,7 @@ bool NameOpEmitter::prepareForRhs() {
           return false;
         }
       } else {
-        if (!bce_->emitIndexOp(JSOP_BINDNAME, atomIndex_)) {
+        if (!bce_->emitAtomOp(JSOP_BINDNAME, atomIndex_)) {
           //        [stack] ENV
           return false;
         }
@@ -170,7 +170,7 @@ bool NameOpEmitter::prepareForRhs() {
         // need a BINDGNAME.
         MOZ_ASSERT(bce_->innermostScope().is<GlobalScope>());
       } else {
-        if (!bce_->emitIndexOp(JSOP_BINDGNAME, atomIndex_)) {
+        if (!bce_->emitAtomOp(JSOP_BINDGNAME, atomIndex_)) {
           //        [stack] ENV
           return false;
         }
@@ -241,8 +241,8 @@ bool NameOpEmitter::emitAssignment() {
     case NameLocation::Kind::Dynamic:
     case NameLocation::Kind::Import:
     case NameLocation::Kind::DynamicAnnexBVar:
-      if (!bce_->emitIndexOp(bce_->strictifySetNameOp(JSOP_SETNAME),
-                             atomIndex_)) {
+      if (!bce_->emitAtomOp(bce_->strictifySetNameOp(JSOP_SETNAME),
+                            atomIndex_)) {
         return false;
       }
       break;
@@ -253,7 +253,7 @@ bool NameOpEmitter::emitAssignment() {
       } else {
         op = JSOP_INITGLEXICAL;
       }
-      if (!bce_->emitIndexOp(op, atomIndex_)) {
+      if (!bce_->emitAtomOp(op, atomIndex_)) {
         return false;
       }
       break;
