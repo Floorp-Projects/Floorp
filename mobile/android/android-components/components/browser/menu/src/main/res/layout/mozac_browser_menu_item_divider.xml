@@ -4,4 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <View xmlns:android="http://schemas.android.com/apk/res/android"
       style="@style/Mozac.Browser.Menu.Item.Divider.Horizontal"
-      android:importantForAccessibility="no"/>
+      android:importantForAccessibility="no"
+      android:clickable="false"/>

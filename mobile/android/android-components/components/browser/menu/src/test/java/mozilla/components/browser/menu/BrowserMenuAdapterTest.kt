@@ -25,11 +25,11 @@ class BrowserMenuAdapterTest {
     @Test
     fun `items that return false from the visible lambda will be filtered out`() {
         val items = listOf(
-            createMenuItem(1) { true },
-            createMenuItem(2) { true },
-            createMenuItem(3) { false },
-            createMenuItem(4) { false },
-            createMenuItem(5) { true })
+            createMenuItem(1, { true }),
+            createMenuItem(2, { true }),
+            createMenuItem(3, { false }),
+            createMenuItem(4, { false }),
+            createMenuItem(5, { true }))
 
         val adapter = BrowserMenuAdapter(testContext, items)
 
@@ -107,6 +107,19 @@ class BrowserMenuAdapterTest {
         verify(item2, never()).invalidate(view)
     }
 
+    @Test
+    fun `total interactive item count is given provided adapter`() {
+        val items = listOf(
+                createMenuItem(1, { true }, { 1 }),
+                createMenuItem(2, { true }, { 0 }),
+                createMenuItem(3, { false }, { 10 }),
+                createMenuItem(4, { true }, { 5 }))
+
+        val adapter = BrowserMenuAdapter(testContext, items)
+
+        assertEquals(6, adapter.interactiveCount)
+    }
+
     private fun List<BrowserMenuItem>.assertTrueForOne(predicate: (BrowserMenuItem) -> Boolean) {
         for (item in this) {
             if (predicate(item)) {
@@ -126,10 +139,13 @@ class BrowserMenuAdapterTest {
 
     private fun createMenuItem(
         layout: Int = 0,
-        visible: () -> Boolean = { true }
+        visible: () -> Boolean = { true },
+        interactiveCount: () -> Int = { 1 }
     ): BrowserMenuItem {
         return object : BrowserMenuItem {
             override val visible = visible
+
+            override val interactiveCount = interactiveCount
 
             override fun getLayoutResource() = layout
 
