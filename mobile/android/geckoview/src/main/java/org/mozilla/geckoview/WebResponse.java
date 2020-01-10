@@ -38,6 +38,11 @@ public class WebResponse extends WebMessage {
     public final boolean redirected;
 
     /**
+     * Whether or not this response was delivered via a secure connection.
+     */
+    public final boolean isSecure;
+
+    /**
      * An {@link InputStream} containing the response body, if available.
      */
     public final @Nullable InputStream body;
@@ -47,6 +52,7 @@ public class WebResponse extends WebMessage {
         this.statusCode = builder.mStatusCode;
         this.redirected = builder.mRedirected;
         this.body = builder.mBody;
+        this.isSecure = builder.mIsSecure;
 
         this.setReadTimeoutMillis(DEFAULT_READ_TIMEOUT_MS);
     }
@@ -74,6 +80,7 @@ public class WebResponse extends WebMessage {
         /* package */ int mStatusCode;
         /* package */ boolean mRedirected;
         /* package */ InputStream mBody;
+        /* package */ boolean mIsSecure;
 
         /**
          * Constructs a new Builder instance with the specified URI.
@@ -110,6 +117,15 @@ public class WebResponse extends WebMessage {
          */
         public @NonNull Builder body(final @NonNull InputStream stream) {
             mBody = stream;
+            return this;
+        }
+
+        /**
+         * @param isSecure Whether or not this response is secure.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder isSecure(final boolean isSecure) {
+            mIsSecure = isSecure;
             return this;
         }
 
