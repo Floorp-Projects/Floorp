@@ -34,7 +34,7 @@ class IDBRequest;
 class StrongWorkerRef;
 
 namespace indexedDB {
-class BackgroundCursorChild;
+class PBackgroundIDBCursorChild;
 class BackgroundRequestChild;
 class BackgroundTransactionChild;
 class BackgroundVersionChangeTransactionChild;
@@ -48,7 +48,6 @@ class IDBTransaction final
     : public DOMEventTargetHelper,
       public nsIRunnable,
       public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
-  friend class indexedDB::BackgroundCursorChild;
   friend class indexedDB::BackgroundRequestChild;
 
  public:
@@ -163,7 +162,7 @@ class IDBTransaction final
   indexedDB::BackgroundRequestChild* StartRequest(
       IDBRequest* aRequest, const indexedDB::RequestParams& aParams);
 
-  void OpenCursor(indexedDB::BackgroundCursorChild* aBackgroundActor,
+  void OpenCursor(indexedDB::PBackgroundIDBCursorChild* aBackgroundActor,
                   const indexedDB::OpenCursorParams& aParams);
 
   void RefreshSpec(bool aMayDelete);
@@ -366,10 +365,13 @@ class IDBTransaction final
 
   void MaybeNoteInactiveTransaction();
 
+  // TODO consider making private again, or move to the right place
+ public:
   void OnNewRequest();
 
   void OnRequestFinished(bool aRequestCompletedSuccessfully);
 
+ private:
   template <typename Func>
   auto DoWithTransactionChild(const Func& aFunc) const;
 
