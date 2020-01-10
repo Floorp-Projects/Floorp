@@ -354,7 +354,6 @@ linux-common-tests:
     - mochitest-chrome
     - mochitest-devtools-chrome
     - mochitest-remote
-    - reftest-no-accel
 
 # List of tests that are green on ubuntu1804 docker image.
 # See Bug 1602863 for information.
@@ -370,6 +369,7 @@ linux1804-tests:
     - mochitest-media
     - mochitest-webgpu
     - reftest
+    - reftest-no-accel
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
