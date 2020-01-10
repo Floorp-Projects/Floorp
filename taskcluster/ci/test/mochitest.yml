@@ -213,7 +213,7 @@ mochitest-devtools-chrome:
     chunks:
         by-test-platform:
             .*-ccov/.*: 16
-            linux64/debug: 12
+            linux1804-64/debug: 12
             macosx.*64/debug: 8
             .*-asan/opt: 8
             default: 5
@@ -222,7 +222,7 @@ mochitest-devtools-chrome:
         chunked: true
     instance-size:
         by-test-platform:
-            linux64-asan/opt: xlarge  # runs out of memory on default/m3.large
+            linux1804-64-asan/opt: xlarge  # runs out of memory on default/m3.large
             default: default
     # Bug 1296086: high number of intermittents observed with software GL and large instances
     allow-software-gl-layers: false
