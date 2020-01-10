@@ -6342,12 +6342,8 @@ void nsGlobalWindowOuter::NotifyWindowIDDestroyed(const char* aTopic) {
 
 Element* nsGlobalWindowOuter::GetFrameElementOuter(
     nsIPrincipal& aSubjectPrincipal) {
-  if (!mDocShell || mDocShell->GetIsMozBrowser()) {
-    return nullptr;
-  }
-
   // Per HTML5, the frameElement getter returns null in cross-origin situations.
-  Element* element = GetRealFrameElementOuter();
+  Element* element = GetFrameElement();
   if (!element) {
     return nullptr;
   }
@@ -6359,19 +6355,11 @@ Element* nsGlobalWindowOuter::GetFrameElementOuter(
   return element;
 }
 
-Element* nsGlobalWindowOuter::GetRealFrameElementOuter() {
+Element* nsGlobalWindowOuter::GetFrameElement() {
   if (!mBrowsingContext || mBrowsingContext->IsTop()) {
     return nullptr;
   }
   return mBrowsingContext->GetEmbedderElement();
-}
-
-/**
- * nsIGlobalWindow::GetFrameElement (when called from C++) is just a wrapper
- * around GetRealFrameElement.
- */
-Element* nsGlobalWindowOuter::GetFrameElement() {
-  return GetRealFrameElementOuter();
 }
 
 namespace {
