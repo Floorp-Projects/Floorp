@@ -2426,19 +2426,16 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
   int32_t startOffset = range->StartOffset();
   int32_t endOffset = range->EndOffset();
 
-  // compare anchor to old cursor.
   bool shouldClearRange = false;
-  const Maybe<int32_t> result1 = nsContentUtils::ComparePoints(
+  const Maybe<int32_t> anchorOldFocusOrder = nsContentUtils::ComparePoints(
       anchorNode, anchorOffset, focusNode, focusOffset);
-  // compare old cursor to new cursor
-  shouldClearRange |= !result1;
-  const Maybe<int32_t> result2 = nsContentUtils::ComparePoints(
+  shouldClearRange |= !anchorOldFocusOrder;
+  const Maybe<int32_t> oldFocusNewFocusOrder = nsContentUtils::ComparePoints(
       focusNode, focusOffset, &aContainer, aOffset);
-  // compare anchor to new cursor
-  shouldClearRange |= !result2;
-  const Maybe<int32_t> result3 = nsContentUtils::ComparePoints(
+  shouldClearRange |= !oldFocusNewFocusOrder;
+  const Maybe<int32_t> anchorNewFocusOrder = nsContentUtils::ComparePoints(
       anchorNode, anchorOffset, &aContainer, aOffset);
-  shouldClearRange |= !result3;
+  shouldClearRange |= !anchorNewFocusOrder;
 
   // If the points are disconnected, the range will be collapsed below,
   // resulting in a range that selects nothing.
@@ -2459,8 +2456,9 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
     }
   } else {
     RefPtr<nsRange> difRange = new nsRange(&aContainer);
-    if ((*result1 == 0 && *result3 < 0) ||
-        (*result1 <= 0 && *result2 < 0)) {  // a1,2  a,1,2
+    if ((*anchorOldFocusOrder == 0 && *anchorNewFocusOrder < 0) ||
+        (*anchorOldFocusOrder <= 0 &&
+         *oldFocusNewFocusOrder < 0)) {  // a1,2  a,1,2
       // select from 1 to 2 unless they are collapsed
       range->SetEnd(aContainer, aOffset, aRv);
       if (aRv.Failed()) {
@@ -2479,7 +2477,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         aRv.Throw(res);
         return;
       }
-    } else if (*result1 == 0 && *result3 > 0) {  // 2, a1
+    } else if (*anchorOldFocusOrder == 0 &&
+               *anchorNewFocusOrder > 0) {  // 2, a1
       // select from 2 to 1a
       SetDirection(eDirPrevious);
       range->SetStart(aContainer, aOffset, aRv);
@@ -2492,8 +2491,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         aRv.Throw(res);
         return;
       }
-    } else if (*result3 <= 0 &&
-               *result2 >= 0) {  // a,2,1 or a2,1 or a,21 or a21
+    } else if (*anchorNewFocusOrder <= 0 &&
+               *oldFocusNewFocusOrder >= 0) {  // a,2,1 or a2,1 or a,21 or a21
       // deselect from 2 to 1
       res = difRange->SetStartAndEnd(&aContainer, aOffset, focusNode,
                                      focusOffset);
@@ -2515,8 +2514,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
       difRange->SetEnd(range->GetEndContainer(), range->EndOffset());
       SelectFrames(presContext, difRange, true);  // must reselect last node
                                                   // maybe more
-    } else if (*result1 >= 0 &&
-               *result3 <= 0) {  // 1,a,2 or 1a,2 or 1,a2 or 1a2
+    } else if (*anchorOldFocusOrder >= 0 &&
+               *anchorNewFocusOrder <= 0) {  // 1,a,2 or 1a,2 or 1,a2 or 1a2
       if (GetDirection() == eDirPrevious) {
         res = range->SetStart(endNode, endOffset);
         if (NS_FAILED(res)) {
@@ -2556,8 +2555,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
       }
       // select from a to 2
       SelectFrames(presContext, range, true);
-    } else if (*result2 <= 0 &&
-               *result3 >= 0) {  // 1,2,a or 12,a or 1,2a or 12a
+    } else if (*oldFocusNewFocusOrder <= 0 &&
+               *anchorNewFocusOrder >= 0) {  // 1,2,a or 12,a or 1,2a or 12a
       // deselect from 1 to 2
       res = difRange->SetStartAndEnd(focusNode, focusOffset, &aContainer,
                                      aOffset);
@@ -2579,8 +2578,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
       SelectFrames(presContext, difRange, false);
       difRange->SetStart(range->GetStartContainer(), range->StartOffset());
       SelectFrames(presContext, difRange, true);  // must reselect last node
-    } else if (*result3 >= 0 &&
-               *result1 <= 0) {  // 2,a,1 or 2a,1 or 2,a1 or 2a1
+    } else if (*anchorNewFocusOrder >= 0 &&
+               *anchorOldFocusOrder <= 0) {  // 2,a,1 or 2a,1 or 2,a1 or 2a1
       if (GetDirection() == eDirNext) {
         range->SetEnd(startNode, startOffset);
       }
@@ -2612,8 +2611,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
       }
       // select from 2 to a
       SelectFrames(presContext, range, true);
-    } else if (*result2 >= 0 &&
-               *result1 >= 0) {  // 2,1,a or 21,a or 2,1a or 21a
+    } else if (*oldFocusNewFocusOrder >= 0 &&
+               *anchorOldFocusOrder >= 0) {  // 2,1,a or 21,a or 2,1a or 21a
       // select from 2 to 1
       range->SetStart(aContainer, aOffset, aRv);
       if (aRv.Failed()) {
