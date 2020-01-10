@@ -4158,7 +4158,6 @@ var SessionStoreInternal = {
 
     var tabs = tabbrowser.addMultipleTabs(
       restoreTabsLazily,
-      aWindow,
       selectTab,
       winData.tabs
     );
