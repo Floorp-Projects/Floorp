@@ -256,16 +256,9 @@
 
 /* Focus ring. */
 #urlbar:not(.megabar)[focused="true"],
-#urlbar.megabar[focused="true"] > #urlbar-background,
 #searchbar:focus-within {
   box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
               0 0 0 1px var(--toolbar-field-focus-border-color);
-}
-
-#urlbar.megabar[breakout][breakout-extend][focused="true"] > #urlbar-background {
-  box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
-              0 0 0 1px var(--toolbar-field-focus-border-color),
-              0 5px 18px rgba(0, 0, 0, .2);
 }
 
 %include ../shared/identity-block/identity-block.inc.css
