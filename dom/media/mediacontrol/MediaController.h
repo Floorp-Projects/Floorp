@@ -8,7 +8,6 @@
 #define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLLER_H_
 
 #include "ContentMediaController.h"
-#include "MediaControlKeysEvent.h"
 #include "nsDataHashtable.h"
 #include "nsISupportsImpl.h"
 
@@ -16,6 +15,17 @@ namespace mozilla {
 namespace dom {
 
 class BrowsingContext;
+enum class MediaControlKeysEvent : uint32_t;
+
+// This is used to indicate current media playback state for media controller.
+// For those platforms which have virtual control interface, we have to update
+// the playback state correctly in order to show the correct control icon on the
+// interface.
+enum class PlaybackState : uint8_t {
+  ePlaying,
+  ePaused,
+  eStopped,
+};
 
 /**
  * MediaController is a class, which is used to control all media within a tab.
