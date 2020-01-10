@@ -10,9 +10,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -25,16 +22,18 @@ XPCOMUtils.defineLazyServiceGetter(
 
 const kBrowserURL = AppConstants.BROWSER_CHROME_URL;
 
-class WebRTCChild extends ActorChild {
+class WebRTCChild extends JSWindowActorChild {
   // Called only for 'unload' to remove pending gUM prompts in reloaded frames.
   static handleEvent(aEvent) {
     let contentWindow = aEvent.target.defaultView;
-    let mm = getMessageManagerForWindow(contentWindow);
-    for (let key of contentWindow.pendingGetUserMediaRequests.keys()) {
-      mm.sendAsyncMessage("webrtc:CancelRequest", key);
-    }
-    for (let key of contentWindow.pendingPeerConnectionRequests.keys()) {
-      mm.sendAsyncMessage("rtcpeer:CancelRequest", key);
+    let actor = getActorForWindow(contentWindow);
+    if (actor) {
+      for (let key of contentWindow.pendingGetUserMediaRequests.keys()) {
+        actor.sendAsyncMessage("webrtc:CancelRequest", key);
+      }
+      for (let key of contentWindow.pendingPeerConnectionRequests.keys()) {
+        actor.sendAsyncMessage("rtcpeer:CancelRequest", key);
+      }
     }
   }
 
@@ -112,6 +111,19 @@ class WebRTCChild extends ActorChild {
   }
 }
 
+function getActorForWindow(window) {
+  let windowGlobal = window.getWindowGlobalChild();
+  try {
+    if (windowGlobal) {
+      return windowGlobal.getActor("WebRTC");
+    }
+  } catch (ex) {
+    // There might not be an actor for a parent process chrome URL.
+  }
+
+  return null;
+}
+
 function handlePCRequest(aSubject, aTopic, aData) {
   let { windowID, innerWindowID, callID, isSecure } = aSubject;
   let contentWindow = Services.wm.getOuterWindowWithId(windowID);
@@ -140,7 +152,11 @@ function handlePCRequest(aSubject, aTopic, aData) {
     documentURI: contentWindow.document.documentURI,
     secure: isSecure,
   };
-  mm.sendAsyncMessage("rtcpeer:Request", request);
+
+  let actor = getActorForWindow(contentWindow);
+  if (actor) {
+    actor.sendAsyncMessage("rtcpeer:Request", request);
+  }
 }
 
 function handleGUMStop(aSubject, aTopic, aData) {
@@ -152,9 +168,9 @@ function handleGUMStop(aSubject, aTopic, aData) {
     mediaSource: aSubject.mediaSource,
   };
 
-  let mm = getMessageManagerForWindow(contentWindow);
-  if (mm) {
-    mm.sendAsyncMessage("webrtc:StopRecording", request);
+  let actor = getActorForWindow(contentWindow);
+  if (actor) {
+    actor.sendAsyncMessage("webrtc:StopRecording", request);
   }
 }
 
@@ -270,11 +286,6 @@ function prompt(
   }
   aContentWindow.pendingGetUserMediaRequests.set(aCallID, devices);
 
-  // Record third party origins for telemetry.
-  let isThirdPartyOrigin =
-    aContentWindow.document.location.origin !=
-    aContentWindow.top.document.location.origin;
-
   // WebRTC prompts have a bunch of special requirements, such as being able to
   // grant two permissions (microphone and camera), selecting devices and showing
   // a screen sharing preview. All this could have probably been baked into
@@ -295,10 +306,6 @@ function prompt(
   const shouldDelegatePermission =
     permDelegateHandler.permissionDelegateFPEnabled;
 
-  const origin = shouldDelegatePermission
-    ? aContentWindow.top.document.nodePrincipal.origin
-    : aContentWindow.document.nodePrincipal.origin;
-
   let secondOrigin = undefined;
   if (
     shouldDelegatePermission &&
@@ -312,12 +319,10 @@ function prompt(
   let request = {
     callID: aCallID,
     windowID: aWindowID,
-    origin,
     secondOrigin,
     documentURI: aContentWindow.document.documentURI,
     secure: aSecure,
     isHandlingUserInput: aIsHandlingUserInput,
-    isThirdPartyOrigin,
     shouldDelegatePermission,
     requestTypes,
     sharingScreen,
@@ -326,8 +331,10 @@ function prompt(
     videoDevices,
   };
 
-  let mm = getMessageManagerForWindow(aContentWindow);
-  mm.sendAsyncMessage("webrtc:Request", request);
+  let actor = getActorForWindow(aContentWindow);
+  if (actor) {
+    actor.sendAsyncMessage("webrtc:Request", request);
+  }
 }
 
 function denyGUMRequest(aData) {
@@ -388,91 +395,35 @@ function updateIndicators(aSubject, aTopic, aData) {
     return;
   }
 
-  let contentWindowArray = MediaManagerService.activeMediaCaptureWindows;
-  let count = contentWindowArray.length;
+  let contentWindow = aSubject.getProperty("window");
 
-  let state = {
-    showGlobalIndicator: count > 0,
-    showCameraIndicator: false,
-    showMicrophoneIndicator: false,
-    showScreenSharingIndicator: "",
-  };
+  let actor = contentWindow ? getActorForWindow(contentWindow) : null;
+  if (actor) {
+    let tabState = getTabStateForContentWindow(contentWindow, false);
+    tabState.windowId = getInnerWindowIDForWindow(contentWindow);
 
-  Services.cpmm.sendAsyncMessage("webrtc:UpdatingIndicators");
-
-  // If several iframes in the same page use media streams, it's possible to
-  // have the same top level window several times. We use a Set to avoid
-  // sending duplicate notifications.
-  let contentWindows = new Set();
-  for (let i = 0; i < count; ++i) {
-    contentWindows.add(
-      contentWindowArray.queryElementAt(i, Ci.nsISupports).top
-    );
+    actor.sendAsyncMessage("webrtc:UpdateIndicators", tabState);
   }
-
-  for (let contentWindow of contentWindows) {
-    if (contentWindow.document.documentURI == kBrowserURL) {
-      // There may be a preview shown at the same time as other streams.
-      continue;
-    }
-
-    let tabState = getTabStateForContentWindow(contentWindow);
-    if (
-      tabState.camera == MediaManagerService.STATE_CAPTURE_ENABLED ||
-      tabState.camera == MediaManagerService.STATE_CAPTURE_DISABLED
-    ) {
-      state.showCameraIndicator = true;
-    }
-    if (
-      tabState.microphone == MediaManagerService.STATE_CAPTURE_ENABLED ||
-      tabState.microphone == MediaManagerService.STATE_CAPTURE_DISABLED
-    ) {
-      state.showMicrophoneIndicator = true;
-    }
-    if (tabState.screen) {
-      if (tabState.screen.startsWith("Screen")) {
-        state.showScreenSharingIndicator = "Screen";
-      } else if (tabState.screen.startsWith("Window")) {
-        if (state.showScreenSharingIndicator != "Screen") {
-          state.showScreenSharingIndicator = "Window";
-        }
-      } else if (tabState.screen.startsWith("Browser")) {
-        if (!state.showScreenSharingIndicator) {
-          state.showScreenSharingIndicator = "Browser";
-        }
-      }
-    }
-
-    let mm = getMessageManagerForWindow(contentWindow);
-    mm.sendAsyncMessage("webrtc:UpdateBrowserIndicators", tabState);
-  }
-
-  Services.cpmm.sendAsyncMessage("webrtc:UpdateGlobalIndicators", state);
 }
 
 function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {
-  let contentWindow = Services.wm.getOuterWindowWithId(aData).top;
+  let contentWindow = Services.wm.getOuterWindowWithId(aData);
   if (contentWindow.document.documentURI == kBrowserURL) {
     // Ignore notifications caused by the browser UI showing previews.
     return;
   }
 
-  let tabState = getTabStateForContentWindow(contentWindow);
-  if (
-    tabState.camera == MediaManagerService.STATE_NOCAPTURE &&
-    tabState.microphone == MediaManagerService.STATE_NOCAPTURE &&
-    !tabState.screen
-  ) {
-    tabState = { windowId: tabState.windowId };
-  }
+  let tabState = getTabStateForContentWindow(contentWindow, true);
 
-  let mm = getMessageManagerForWindow(contentWindow);
-  if (mm) {
-    mm.sendAsyncMessage("webrtc:UpdateBrowserIndicators", tabState);
+  tabState.windowId = aData;
+
+  let actor = getActorForWindow(contentWindow);
+  if (actor) {
+    actor.sendAsyncMessage("webrtc:UpdateIndicators", tabState);
   }
 }
 
-function getTabStateForContentWindow(aContentWindow) {
+function getTabStateForContentWindow(aContentWindow, aForRemove = false) {
   let camera = {},
     microphone = {},
     screen = {},
@@ -485,55 +436,31 @@ function getTabStateForContentWindow(aContentWindow) {
     screen,
     window,
     browser,
-    true
+    false
   );
-  let tabState = { camera: camera.value, microphone: microphone.value };
-  if (screen.value == MediaManagerService.STATE_CAPTURE_ENABLED) {
-    tabState.screen = "Screen";
-  } else if (window.value == MediaManagerService.STATE_CAPTURE_ENABLED) {
-    tabState.screen = "Window";
-  } else if (browser.value == MediaManagerService.STATE_CAPTURE_ENABLED) {
-    tabState.screen = "Browser";
-  } else if (screen.value == MediaManagerService.STATE_CAPTURE_DISABLED) {
-    tabState.screen = "ScreenPaused";
-  } else if (window.value == MediaManagerService.STATE_CAPTURE_DISABLED) {
-    tabState.screen = "WindowPaused";
-  } else if (browser.value == MediaManagerService.STATE_CAPTURE_DISABLED) {
-    tabState.screen = "BrowserPaused";
+
+  if (
+    camera.value == MediaManagerService.STATE_NOCAPTURE &&
+    microphone.value == MediaManagerService.STATE_NOCAPTURE &&
+    screen.value == MediaManagerService.STATE_NOCAPTURE &&
+    window.value == MediaManagerService.STATE_NOCAPTURE &&
+    browser.value == MediaManagerService.STATE_NOCAPTURE
+  ) {
+    return {};
   }
 
-  let screenEnabled = tabState.screen && !tabState.screen.includes("Paused");
-  let cameraEnabled =
-    tabState.camera == MediaManagerService.STATE_CAPTURE_ENABLED;
-  let microphoneEnabled =
-    tabState.microphone == MediaManagerService.STATE_CAPTURE_ENABLED;
-
-  // tabState.sharing controls which global indicator should be shown
-  // for the tab. It should always be set to the _enabled_ device which
-  // we consider most intrusive (screen > camera > microphone).
-  if (screenEnabled) {
-    tabState.sharing = "screen";
-  } else if (cameraEnabled) {
-    tabState.sharing = "camera";
-  } else if (microphoneEnabled) {
-    tabState.sharing = "microphone";
-  } else if (tabState.screen) {
-    tabState.sharing = "screen";
-  } else if (tabState.camera) {
-    tabState.sharing = "camera";
-  } else if (tabState.microphone) {
-    tabState.sharing = "microphone";
+  if (aForRemove) {
+    return {};
   }
 
-  // The stream is considered paused when we're sharing something
-  // but all devices are off or set to disabled.
-  tabState.paused =
-    tabState.sharing && !screenEnabled && !cameraEnabled && !microphoneEnabled;
-
-  tabState.windowId = getInnerWindowIDForWindow(aContentWindow);
-  tabState.documentURI = aContentWindow.document.documentURI;
-
-  return tabState;
+  return {
+    camera: camera.value,
+    microphone: microphone.value,
+    screen: screen.value,
+    window: window.value,
+    browser: browser.value,
+    documentURI: aContentWindow.document.documentURI,
+  };
 }
 
 function getInnerWindowIDForWindow(aContentWindow) {
