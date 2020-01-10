@@ -702,6 +702,13 @@
   opacity: 0.5;
 }
 
+.webreplay-player .untraversed {
+  position: absolute;
+  height: 100%;
+  background: #000000;
+  opacity: 0.2;
+}
+
 .webreplay-player .unscanned {
   position: absolute;
   height: 100%;
