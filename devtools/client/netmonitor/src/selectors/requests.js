@@ -157,6 +157,12 @@ function getRequestById(state, id) {
   return state.requests.requests.find(item => item.id === id);
 }
 
+function getRequestByChannelId(state, channelId) {
+  return [...state.requests.requests.values()].find(
+    r => r.channelId == channelId
+  );
+}
+
 function getDisplayedRequestById(state, id) {
   return getDisplayedRequests(state).find(r => r.id === id);
 }
@@ -175,6 +181,7 @@ module.exports = {
   getDisplayedRequestsSummary,
   getRecordingState,
   getRequestById,
+  getRequestByChannelId,
   getSelectedRequest,
   getSortedRequests,
   getTypeFilteredRequests,
