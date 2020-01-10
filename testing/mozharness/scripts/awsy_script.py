@@ -50,12 +50,6 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
           "default": [],
           "help": "Extra user prefs.",
           }],
-        [["--single-stylo-traversal"],
-         {"action": "store_true",
-          "dest": "single_stylo_traversal",
-          "default": False,
-          "help": "Set STYLO_THREADS=1.",
-          }],
         [["--enable-webrender"],
          {"action": "store_true",
           "dest": "enable_webrender",
@@ -256,13 +250,7 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
         if self.config['enable_webrender']:
             cmd.append('--enable-webrender')
 
-        if self.config['single_stylo_traversal']:
-            env['STYLO_THREADS'] = '1'
-        else:
-            env['STYLO_THREADS'] = '4'
-
-        # TODO: consider getting rid of this as stylo is enabled by default
-        env['STYLO_FORCE_ENABLED'] = '1'
+        env['STYLO_THREADS'] = '4'
 
         env['MOZ_UPLOAD_DIR'] = dirs['abs_blob_upload_dir']
         if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
