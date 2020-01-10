@@ -727,7 +727,7 @@ impl<'a> SceneBuilder<'a> {
                     ((stats.num_bytes as f32 / total_bytes.max(1) as f32) * 100.0) as usize,
                     stats.num_bytes / stats.total_count.max(1));
             }
-            println!("");
+            println!();
         }
     }
 
@@ -3740,7 +3740,7 @@ impl FlattenedStackingContext {
 
         // We can skip mix-blend modes if they are the first primitive in a stacking context,
         // see pop_stacking_context for a full explanation.
-        if !self.composite_ops.mix_blend_mode.is_none() &&
+        if self.composite_ops.mix_blend_mode.is_some() &&
             !parent.prim_list.is_empty() {
             return false;
         }
@@ -3953,7 +3953,7 @@ fn filter_primitives_for_compositing(
     // TODO(gw): Now that we resolve these later on,
     //           we could probably make it a bit
     //           more efficient than cloning these here.
-    input_filter_primitives.iter().map(|primitive| primitive.into()).collect()
+    input_filter_primitives.iter().map(|primitive| primitive).collect()
 }
 
 fn process_repeat_size(

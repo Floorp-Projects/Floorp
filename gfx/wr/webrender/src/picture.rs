@@ -1350,7 +1350,7 @@ impl DirtyRegion {
     /// Creates a record of this dirty region for exporting to test infrastructure.
     pub fn record(&self) -> RecordedDirtyRegion {
         let mut rects: Vec<WorldRect> =
-            self.dirty_rects.iter().map(|r| r.world_rect.clone()).collect();
+            self.dirty_rects.iter().map(|r| r.world_rect).collect();
         rects.sort_unstable_by_key(|r| (r.origin.y as usize, r.origin.x as usize));
         RecordedDirtyRegion { rects }
     }
@@ -5105,7 +5105,7 @@ impl TileNode {
                     .collect();
 
                 self.kind = TileNodeKind::Node {
-                    children: children,
+                    children,
                 };
             }
             Some(TileModification::Merge) => {

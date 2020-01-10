@@ -165,7 +165,7 @@ fn push_component_transfer_data(
     request: &mut GpuDataRequest,
 ) {
     match func_comp {
-        SFilterDataComponent::Identity => { return; }
+        SFilterDataComponent::Identity => {}
         SFilterDataComponent::Table(values) |
         SFilterDataComponent::Discrete(values) => {
             // Push a 256 entry lookup table.
