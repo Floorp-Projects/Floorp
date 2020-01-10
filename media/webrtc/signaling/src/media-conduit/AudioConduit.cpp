@@ -158,6 +158,7 @@ void WebrtcAudioConduit::SetSyncGroup(const std::string& group) {
 bool WebrtcAudioConduit::GetSendPacketTypeStats(
     webrtc::RtcpPacketTypeCounter* aPacketCounts) {
   ASSERT_ON_THREAD(mStsThread);
+  MutexAutoLock lock(mMutex);
   if (!mSendStream) {
     return false;
   }
@@ -167,6 +168,7 @@ bool WebrtcAudioConduit::GetSendPacketTypeStats(
 bool WebrtcAudioConduit::GetRecvPacketTypeStats(
     webrtc::RtcpPacketTypeCounter* aPacketCounts) {
   ASSERT_ON_THREAD(mStsThread);
+  MutexAutoLock lock(mMutex);
   if (!mEngineReceiving) {
     return false;
   }
@@ -178,6 +180,7 @@ bool WebrtcAudioConduit::GetRTPReceiverStats(unsigned int* jitterMs,
   ASSERT_ON_THREAD(mStsThread);
   *jitterMs = 0;
   *cumulativeLost = 0;
+  MutexAutoLock lock(mMutex);
   if (!mRecvStream) {
     return false;
   }
@@ -197,6 +200,7 @@ bool WebrtcAudioConduit::GetRTCPReceiverReport(uint32_t* jitterMs,
   int64_t timestampTmp = 0;
   int64_t rttMsTmp = 0;
   bool res = false;
+  MutexAutoLock lock(mMutex);
   if (mSendChannelProxy) {
     res = mSendChannelProxy->GetRTCPReceiverStatistics(
         &timestampTmp, jitterMs, cumulativeLost, packetsReceived, bytesReceived,
@@ -232,6 +236,7 @@ bool WebrtcAudioConduit::GetRTCPReceiverReport(uint32_t* jitterMs,
 bool WebrtcAudioConduit::GetRTCPSenderReport(unsigned int* packetsSent,
                                              uint64_t* bytesSent) {
   ASSERT_ON_THREAD(mStsThread);
+  MutexAutoLock lock(mMutex);
   if (!mRecvChannelProxy) {
     return false;
   }
