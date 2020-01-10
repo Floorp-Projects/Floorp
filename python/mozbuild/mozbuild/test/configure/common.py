@@ -7,17 +7,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 import copy
 import errno
 import os
-import six
 import subprocess
 import sys
 import tempfile
 import unittest
-from six import StringIO
 
 from mozbuild.configure import ConfigureSandbox
 from mozbuild.util import ReadOnlyNamespace
 from mozpack import path as mozpath
-from six import string_types
+
+from StringIO import StringIO
+from which import WhichError
 
 from buildconfig import (
     topobjdir,
@@ -79,10 +79,10 @@ class ConfigureTestSandbox(ConfigureSandbox):
         self._search_path = environ.get('PATH', '').split(os.pathsep)
 
         self._subprocess_paths = {
-            mozpath.abspath(k): v for k, v in six.iteritems(paths) if v
+            mozpath.abspath(k): v for k, v in paths.iteritems() if v
         }
 
-        paths = list(paths)
+        paths = paths.keys()
 
         environ = copy.copy(environ)
         if 'CONFIG_SHELL' not in environ:
@@ -110,12 +110,13 @@ class ConfigureTestSandbox(ConfigureSandbox):
         if what in self.modules:
             return self.modules[what]
 
-        if what == 'mozfile.which':
+        if what == 'which.which':
             return self.which
 
-        if what == 'mozfile':
+        if what == 'which':
             return ReadOnlyNamespace(
                 which=self.which,
+                WhichError=WhichError,
             )
 
         if what == 'subprocess.Popen':
@@ -185,20 +186,18 @@ class ConfigureTestSandbox(ConfigureSandbox):
         path_out.value = fake_short_path(path_in)
         return length
 
-    def which(self, command, mode=None, path=None, exts=None):
-        if isinstance(path, string_types):
-            path = path.split(os.pathsep)
-
+    def which(self, command, path=None, exts=None):
         for parent in (path or self._search_path):
             c = mozpath.abspath(mozpath.join(parent, command))
             for candidate in (c, ensure_exe_extension(c)):
                 if self.imported_os.path.exists(candidate):
                     return candidate
-        return None
+        raise WhichError()
 
     def Popen(self, args, stdin=None, stdout=None, stderr=None, **kargs):
-        program = self.which(args[0])
-        if not program:
+        try:
+            program = self.which(args[0])
+        except WhichError:
             raise OSError(errno.ENOENT, 'File not found')
 
         func = self._subprocess_paths.get(program)
