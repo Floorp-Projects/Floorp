@@ -254,13 +254,22 @@ MOZ_MUST_USE bool OriginalPromiseThen(JSContext* cx, HandleObject promiseObj,
                                       MutableHandleObject dependent,
                                       CreateDependentPromise createDependent);
 
+enum class UnhandledRejectionBehavior { Ignore, Report };
+
 /**
- * React to[0] `unwrappedPromise` (which may not be from the current realm)
- * using the provided fulfill/reject functions, as though by calling the
- * original value of `Promise.prototype.then`.
+ * React to[0] `unwrappedPromise` (which may not be from the current realm) as
+ * if by using a fresh promise created for the provided nullable fulfill/reject
+ * IsCallable objects.
  *
- * However, no dependent Promise will be created, and mucking with `Promise` and
- * `Promise[Symbol.species]` will not alter this function's behavior.
+ * However, no dependent Promise will be created, and mucking with `Promise`,
+ * `Promise.prototype.then`, and `Promise[Symbol.species]` will not alter this
+ * function's behavior.
+ *
+ * If `unwrappedPromise` rejects and `onRejected_` is null, handling is
+ * determined by `behavior`.  If `behavior == Report`, a fresh Promise will be
+ * constructed and rejected on the fly (and thus will be reported as unhandled).
+ * But if `behavior == Ignore`, the rejection is ignored and is not reported as
+ * unhandled.
  *
  * Note: Reactions pushed using this function contain a null `promise` field.
  * That field is only ever used by devtools, which have to treat these reactions
@@ -269,9 +278,10 @@ MOZ_MUST_USE bool OriginalPromiseThen(JSContext* cx, HandleObject promiseObj,
  * 0. The sense of "react" here is the sense of the term as defined by Web IDL:
  *    https://heycam.github.io/webidl/#dfn-perform-steps-once-promise-is-settled
  */
-extern MOZ_MUST_USE bool ReactIgnoringUnhandledRejection(
+extern MOZ_MUST_USE bool ReactToUnwrappedPromise(
     JSContext* cx, Handle<PromiseObject*> unwrappedPromise,
-    HandleObject onFulfilled_, HandleObject onRejected_);
+    HandleObject onFulfilled_, HandleObject onRejected_,
+    UnhandledRejectionBehavior behavior);
 
 /**
  * PromiseResolve ( C, x )
