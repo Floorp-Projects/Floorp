@@ -51,7 +51,7 @@ pub unsafe extern "C" fn fog_init(data_dir: &nsAString, pingsender_path: &nsAStr
 }
 
 fn prototype_ping_init(ping_dir: PathBuf, pingsender_path: &nsAString) -> Result<JoinHandle<()>, Error> {
-  let pingsender_path_owned = nsString::from(pingsender_path);
+  let pingsender_path = pingsender_path.to_string();
   thread::Builder::new().name("fogotype_ping".to_owned()).spawn(move || {
     let prototype_ping = PingType::new("prototype", true, true);
     glean_preview::register_ping_type(&prototype_ping);
@@ -65,14 +65,14 @@ fn prototype_ping_init(ping_dir: PathBuf, pingsender_path: &nsAString) -> Result
         continue;
       }
       prototype_ping.submit();
-      if let Err(e) = send_all_pings(&ping_dir, &pingsender_path_owned) {
+      if let Err(e) = send_all_pings(&ping_dir, &pingsender_path) {
         error!("Failed to send all pings due to {:?}", e);
       }
     }
   })
 }
 
-fn send_all_pings(ping_dir: &Path, pingsender_path: &nsAString) -> Result<(), Box<dyn std::error::Error>> {
+fn send_all_pings(ping_dir: &Path, pingsender_path: &str) -> Result<(), Box<dyn std::error::Error>> {
   assert!(ping_dir.is_dir());
   // This will be a multi-step process:
   // 1. Ensure we have an (empty) subdirectory in ping_dir called "telemetry" we can work within.
@@ -113,7 +113,7 @@ fn send_all_pings(ping_dir: &Path, pingsender_path: &nsAString) -> Result<(), Bo
     let pingsender_file: RefPtr<nsIFile>  = xpcom::create_instance(&cstr!("@mozilla.org/file/local;1")).ok_or("couldn't create nsIFile")?;
     let process: RefPtr<nsIProcess> = xpcom::create_instance(&cstr!("@mozilla.org/process/util;1")).ok_or("couldn't create nsIProcess")?;
     unsafe {
-      pingsender_file.InitWithPath(pingsender_path).to_result()?;
+      pingsender_file.InitWithPath(&*nsString::from(pingsender_path) as &nsAString).to_result()?;
       process.Init(&*pingsender_file).to_result()?;
       process.SetStartHidden(true).to_result()?;
       process.SetNoShell(true).to_result()?;
