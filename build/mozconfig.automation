@@ -12,9 +12,12 @@
 mk_add_options "export MOZ_AUTOMATION_BUILD_SYMBOLS=${MOZ_AUTOMATION_BUILD_SYMBOLS-1}"
 mk_add_options "export MOZ_AUTOMATION_L10N_CHECK=${MOZ_AUTOMATION_L10N_CHECK-1}"
 mk_add_options "export MOZ_AUTOMATION_PACKAGE=${MOZ_AUTOMATION_PACKAGE-1}"
-mk_add_options "export MOZ_AUTOMATION_PACKAGE_TESTS=${MOZ_AUTOMATION_PACKAGE_TESTS-1}"
 mk_add_options "export MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=${MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES-1}"
 mk_add_options "export MOZ_AUTOMATION_UPLOAD=${MOZ_AUTOMATION_UPLOAD-1}"
 mk_add_options "export MOZ_AUTOMATION_CHECK=${MOZ_AUTOMATION_CHECK-1}"
+
+# The following variables are expected to be exported by Taskcluster
+# configuration files rather than mozconfig files
+mk_add_options "export MOZ_AUTOMATION_PACKAGE_TESTS=${MOZ_AUTOMATION_PACKAGE_TESTS-0}"
 
 export MOZ_AUTOMATION_MOZCONFIG=1
