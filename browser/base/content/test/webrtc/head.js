@@ -30,6 +30,9 @@ let observerTopics = [
   "recording-window-ended",
 ];
 
+let gObserveSubFrameIds = [];
+let gBrowserContextsToObserve = [];
+
 function whenDelayedStartupFinished(aWindow) {
   return TestUtils.topicObserved(
     "browser-delayed-startup-finished",
@@ -223,11 +226,11 @@ function expectObserverCalled(
     return expectObserverCalledInProcess(aTopic, aCount);
   }
 
-  return BrowserTestUtils.contentTopicObserved(
-    browser.browsingContext,
-    aTopic,
-    aCount
-  );
+  let browsingContext = Element.isInstance(browser)
+    ? browser.browsingContext
+    : browser;
+
+  return BrowserTestUtils.contentTopicObserved(browsingContext, aTopic, aCount);
 }
 
 // This is a special version of expectObserverCalled that should only
@@ -243,9 +246,13 @@ function expectObserverCalledOnClose(
     return expectObserverCalledInProcess(aTopic, aCount);
   }
 
+  let browsingContext = Element.isInstance(browser)
+    ? browser.browsingContext
+    : browser;
+
   return new Promise(resolve => {
     BrowserTestUtils.sendAsyncMessage(
-      browser.browsingContext,
+      browsingContext,
       "BrowserTestUtils:ObserveTopic",
       {
         topic: aTopic,
@@ -460,8 +467,23 @@ async function getMediaCaptureState() {
   return result;
 }
 
-async function stopSharing(aType = "camera", aShouldKeepSharing = false) {
-  let promiseRecordingEvent = expectObserverCalled("recording-device-events");
+async function stopSharing(
+  aType = "camera",
+  aShouldKeepSharing = false,
+  aFrameBC
+) {
+  // If the observers are listening to other frames, listen for a notification
+  // on the right subframe.
+  let frameBCToObserve;
+  if (gBrowserContextsToObserve.length > 1) {
+    frameBCToObserve = aFrameBC;
+  }
+
+  let promiseRecordingEvent = expectObserverCalled(
+    "recording-device-events",
+    1,
+    frameBCToObserve
+  );
   gIdentityHandler._identityBox.click();
   let permissions = document.getElementById("identity-popup-permission-list");
   let cancelButton = permissions.querySelector(
@@ -470,13 +492,21 @@ async function stopSharing(aType = "camera", aShouldKeepSharing = false) {
       "-icon ~ " +
       ".identity-popup-permission-remove-button"
   );
-  let observerPromise1 = expectObserverCalled("getUserMedia:revoke");
+  let observerPromise1 = expectObserverCalled(
+    "getUserMedia:revoke",
+    1,
+    frameBCToObserve
+  );
 
   // If we are stopping screen sharing and expect to still have another stream,
   // "recording-window-ended" won't be fired.
   let observerPromise2 = null;
   if (!aShouldKeepSharing) {
-    observerPromise2 = expectObserverCalled("recording-window-ended");
+    observerPromise2 = expectObserverCalled(
+      "recording-window-ended",
+      1,
+      frameBCToObserve
+    );
   }
 
   cancelButton.click();
@@ -490,7 +520,18 @@ async function stopSharing(aType = "camera", aShouldKeepSharing = false) {
   }
 }
 
-function promiseRequestDevice(
+function getBrowsingContextForFrame(aBrowser, aFrameId) {
+  let bc = aBrowser.browsingContext;
+  if (!aFrameId) {
+    return bc;
+  }
+
+  return SpecialPowers.spawn(bc, [aFrameId], frameId => {
+    return content.document.getElementById(frameId).browsingContext;
+  });
+}
+
+async function promiseRequestDevice(
   aRequestAudio,
   aRequestVideo,
   aFrameId,
@@ -499,14 +540,12 @@ function promiseRequestDevice(
   aBadDevice = false
 ) {
   info("requesting devices");
+  let bc = await getBrowsingContextForFrame(aBrowser, aFrameId);
   return SpecialPowers.spawn(
-    aBrowser,
-    [{ aRequestAudio, aRequestVideo, aFrameId, aType, aBadDevice }],
+    bc,
+    [{ aRequestAudio, aRequestVideo, aType, aBadDevice }],
     async function(args) {
       let global = content.wrappedJSObject;
-      if (args.aFrameId) {
-        global = global.document.getElementById(args.aFrameId).contentWindow;
-      }
       global.requestDevice(
         args.aRequestAudio,
         args.aRequestVideo,
@@ -530,24 +569,31 @@ async function closeStream(
     await enableObserverVerification();
   }
 
+  // If the observers are listening to other frames, listen for a notification
+  // on the right subframe.
+  let frameBC = await getBrowsingContextForFrame(
+    gBrowser.selectedBrowser,
+    aFrameId
+  );
+  let frameBCToObserve;
+  if (gBrowserContextsToObserve.length > 1) {
+    frameBCToObserve = frameBC;
+  }
+
   let observerPromises = [];
   if (!aAlreadyClosed) {
-    observerPromises.push(expectObserverCalled("recording-device-events"));
-    observerPromises.push(expectObserverCalled("recording-window-ended"));
+    observerPromises.push(
+      expectObserverCalled("recording-device-events", 1, frameBCToObserve)
+    );
+    observerPromises.push(
+      expectObserverCalled("recording-window-ended", 1, frameBCToObserve)
+    );
   }
 
   info("closing the stream");
-  await SpecialPowers.spawn(
-    gBrowser.selectedBrowser,
-    [aFrameId],
-    async function(contentFrameId) {
-      let global = content.wrappedJSObject;
-      if (contentFrameId) {
-        global = global.document.getElementById(contentFrameId).contentWindow;
-      }
-      global.closeStream();
-    }
-  );
+  await SpecialPowers.spawn(frameBC, [], async function() {
+    content.wrappedJSObject.closeStream();
+  });
 
   await Promise.all(observerPromises);
 
@@ -561,7 +607,10 @@ async function reloadAndAssertClosedStreams() {
   // the actors listening to the notifications.
   await disableObserverVerification();
 
-  let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  let loadedPromise = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    true
+  );
   await ContentTask.spawn(gBrowser.selectedBrowser, null, () =>
     content.location.reload()
   );
@@ -696,27 +745,19 @@ async function checkNotSharing() {
   await assertWebRTCIndicatorStatus(null);
 }
 
-function promiseReloadFrame(aFrameId) {
-  return SpecialPowers.spawn(
-    gBrowser.selectedBrowser.browsingContext,
-    [aFrameId],
-    async function(contentFrameId) {
-      let frame = content.wrappedJSObject.document.getElementById(
-        contentFrameId
-      );
-      return new Promise(resolve => {
-        function listener() {
-          frame.removeEventListener("load", listener, true);
-          resolve();
-        }
-        frame.addEventListener("load", listener, true);
-
-        content.wrappedJSObject.document
-          .getElementById(contentFrameId)
-          .contentWindow.location.reload();
-      });
+async function promiseReloadFrame(aFrameId) {
+  let loadedPromise = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    true,
+    arg => {
+      return true;
     }
   );
+  let bc = await getBrowsingContextForFrame(gBrowser.selectedBrowser, aFrameId);
+  await SpecialPowers.spawn(bc, [], async function() {
+    content.location.reload();
+  });
+  return loadedPromise;
 }
 
 function promiseChangeLocationFrame(aFrameId, aNewLocation) {
@@ -757,29 +798,41 @@ async function openNewTestTab(leaf = "get_user_media.html") {
 // Enabling observer verification adds listeners for all of the webrtc
 // observer topics. If any notifications occur for those topics that
 // were not explicitly requested, a failure will occur.
-function enableObserverVerification(browser = gBrowser.selectedBrowser) {
+async function enableObserverVerification(browser = gBrowser.selectedBrowser) {
   // Skip these checks in single process mode as it isn't worth implementing it.
   if (!gMultiProcessBrowser) {
-    return Promise.resolve();
+    return;
   }
 
-  return BrowserTestUtils.startObservingTopics(
-    browser.browsingContext,
-    observerTopics
-  );
+  gBrowserContextsToObserve = [browser.browsingContext];
+
+  // A list of subframe indicies to also add observers to. This only
+  // supports one nested level.
+  if (gObserveSubFrameIds) {
+    for (let id of gObserveSubFrameIds) {
+      gBrowserContextsToObserve.push(
+        await getBrowsingContextForFrame(browser, id)
+      );
+    }
+  }
+
+  for (let bc of gBrowserContextsToObserve) {
+    await BrowserTestUtils.startObservingTopics(bc, observerTopics);
+  }
 }
 
-function disableObserverVerification(browser = gBrowser.selectedBrowser) {
+async function disableObserverVerification() {
   if (!gMultiProcessBrowser) {
-    return Promise.resolve();
+    return;
   }
 
-  return BrowserTestUtils.stopObservingTopics(
-    browser.browsingContext,
-    observerTopics
-  ).catch(reason => {
-    ok(false, "Failed " + reason);
-  });
+  for (let bc of gBrowserContextsToObserve) {
+    await BrowserTestUtils.stopObservingTopics(bc, observerTopics).catch(
+      reason => {
+        ok(false, "Failed " + reason);
+      }
+    );
+  }
 }
 
 async function runTests(tests, options = {}) {
@@ -807,6 +860,8 @@ async function runTests(tests, options = {}) {
     [PREF_FOCUS_SOURCE, false],
   ];
   await SpecialPowers.pushPrefEnv({ set: prefs });
+
+  gObserveSubFrameIds = options.observeSubFrameIds;
 
   for (let testCase of tests) {
     info(testCase.desc);

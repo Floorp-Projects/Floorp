@@ -2,11 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let gShouldObserveSubframes;
+
 var gTests = [
   {
     desc: "getUserMedia audio+video",
     run: async function checkAudioVideo() {
-      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let frame1BC = gShouldObserveSubframes
+        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        : undefined;
+
+      let observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame1BC
+      );
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true, "frame1");
       await promise;
@@ -26,9 +36,15 @@ var gTests = [
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
-        "getUserMedia:response:allow"
+        "getUserMedia:response:allow",
+        1,
+        frame1BC
       );
-      let observerPromise2 = expectObserverCalled("recording-device-events");
+      let observerPromise2 = expectObserverCalled(
+        "recording-device-events",
+        1,
+        frame1BC
+      );
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
@@ -49,7 +65,15 @@ var gTests = [
   {
     desc: "getUserMedia audio+video: stop sharing",
     run: async function checkStopSharing() {
-      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let frame1BC = gShouldObserveSubframes
+        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        : undefined;
+
+      let observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame1BC
+      );
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true, "frame1");
       await promise;
@@ -58,9 +82,15 @@ var gTests = [
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
-        "getUserMedia:response:allow"
+        "getUserMedia:response:allow",
+        1,
+        frame1BC
       );
-      let observerPromise2 = expectObserverCalled("recording-device-events");
+      let observerPromise2 = expectObserverCalled(
+        "recording-device-events",
+        1,
+        frame1BC
+      );
       await promiseMessage("ok", () => {
         activateSecondaryAction(kActionAlways);
       });
@@ -87,7 +117,7 @@ var gTests = [
         "camera persistently allowed"
       );
 
-      await stopSharing();
+      await stopSharing("camera", false, frame1BC);
 
       // The persistent permissions for the frame should have been removed.
       is(
@@ -110,7 +140,15 @@ var gTests = [
     desc:
       "getUserMedia audio+video: reloading the frame removes all sharing UI",
     run: async function checkReloading() {
-      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let frame1BC = gShouldObserveSubframes
+        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        : undefined;
+
+      let observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame1BC
+      );
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true, "frame1");
       await promise;
@@ -118,9 +156,15 @@ var gTests = [
       checkDeviceSelectors(true, true);
 
       let observerPromise1 = expectObserverCalled(
-        "getUserMedia:response:allow"
+        "getUserMedia:response:allow",
+        1,
+        frame1BC
       );
-      let observerPromise2 = expectObserverCalled("recording-device-events");
+      let observerPromise2 = expectObserverCalled(
+        "recording-device-events",
+        1,
+        frame1BC
+      );
       let indicator = promiseIndicatorWindow();
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
@@ -141,9 +185,9 @@ var gTests = [
 
       info("reloading the frame");
       let promises = [
-        expectObserverCalled("recording-device-stopped"),
-        expectObserverCalled("recording-device-events"),
-        expectObserverCalled("recording-window-ended"),
+        expectObserverCalledOnClose("recording-device-stopped", 1, frame1BC),
+        expectObserverCalledOnClose("recording-device-events", 1, frame1BC),
+        expectObserverCalledOnClose("recording-window-ended", 1, frame1BC),
       ];
       await promiseReloadFrame("frame1");
       await Promise.all(promises);
@@ -157,7 +201,15 @@ var gTests = [
   {
     desc: "getUserMedia audio+video: reloading the frame removes prompts",
     run: async function checkReloadingRemovesPrompts() {
-      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let frame1BC = gShouldObserveSubframes
+        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        : undefined;
+
+      let observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame1BC
+      );
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true, "frame1");
       await promise;
@@ -165,7 +217,11 @@ var gTests = [
       checkDeviceSelectors(true, true);
 
       info("reloading the frame");
-      promise = expectObserverCalled("recording-window-ended");
+      promise = expectObserverCalledOnClose(
+        "recording-window-ended",
+        1,
+        frame1BC
+      );
       await promiseReloadFrame("frame1");
       await promise;
       await promiseNoPopupNotification("webRTC-shareDevices");
@@ -183,7 +239,15 @@ var gTests = [
       // - Share only video in iframe 2.
       // The WebRTC UI should still show both video and audio indicators.
 
-      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let frame1BC = gShouldObserveSubframes
+        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        : undefined;
+
+      let observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame1BC
+      );
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true, "frame1");
       await promise;
@@ -192,9 +256,15 @@ var gTests = [
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
-        "getUserMedia:response:allow"
+        "getUserMedia:response:allow",
+        1,
+        frame1BC
       );
-      let observerPromise2 = expectObserverCalled("recording-device-events");
+      let observerPromise2 = expectObserverCalled(
+        "recording-device-events",
+        1,
+        frame1BC
+      );
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
@@ -211,15 +281,32 @@ var gTests = [
 
       // Check that requesting a new device from a different frame
       // doesn't override sharing UI.
-      observerPromise = expectObserverCalled("getUserMedia:request");
+      let frame2BC = gShouldObserveSubframes
+        ? gBrowser.selectedBrowser.browsingContext.getChildren()[1]
+        : undefined;
+
+      observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame2BC
+      );
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true, "frame2");
       await promise;
       await observerPromise;
       checkDeviceSelectors(false, true);
 
-      observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
-      observerPromise2 = expectObserverCalled("recording-device-events");
+      observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow",
+        1,
+        frame2BC
+      );
+      observerPromise2 = expectObserverCalled(
+        "recording-device-events",
+        1,
+        frame2BC
+      );
+
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
@@ -235,8 +322,17 @@ var gTests = [
 
       // Check that ending the stream with the other frame
       // doesn't override sharing UI.
-      observerPromise = expectObserverCalled("recording-window-ended");
-      promise = expectObserverCalled("recording-device-events");
+
+      observerPromise = expectObserverCalledOnClose(
+        "recording-window-ended",
+        1,
+        frame2BC
+      );
+      promise = expectObserverCalledOnClose(
+        "recording-device-events",
+        1,
+        frame2BC
+      );
       await promiseReloadFrame("frame2");
       await promise;
 
@@ -254,8 +350,15 @@ var gTests = [
       // We'll share only the cam in the first frame, then share both in the
       // second frame, then reload the second frame. After each step, we'll check
       // the UI is in the correct state.
+      let frame1BC = gShouldObserveSubframes
+        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        : undefined;
 
-      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame1BC
+      );
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true, "frame1");
       await promise;
@@ -264,9 +367,15 @@ var gTests = [
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
-        "getUserMedia:response:allow"
+        "getUserMedia:response:allow",
+        1,
+        frame1BC
       );
-      let observerPromise2 = expectObserverCalled("recording-device-events");
+      let observerPromise2 = expectObserverCalled(
+        "recording-device-events",
+        1,
+        frame1BC
+      );
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
@@ -281,15 +390,31 @@ var gTests = [
       await indicator;
       await checkSharingUI({ video: true, audio: false });
 
-      observerPromise = expectObserverCalled("getUserMedia:request");
+      let frame2BC = gShouldObserveSubframes
+        ? gBrowser.selectedBrowser.browsingContext.getChildren()[1]
+        : undefined;
+
+      observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame2BC
+      );
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true, "frame2");
       await promise;
       await observerPromise;
       checkDeviceSelectors(true, true);
 
-      observerPromise1 = expectObserverCalled("getUserMedia:response:allow");
-      observerPromise2 = expectObserverCalled("recording-device-events");
+      observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow",
+        1,
+        frame2BC
+      );
+      observerPromise2 = expectObserverCalled(
+        "recording-device-events",
+        1,
+        frame2BC
+      );
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
@@ -304,8 +429,17 @@ var gTests = [
       await checkSharingUI({ video: true, audio: true });
 
       info("reloading the second frame");
-      observerPromise1 = expectObserverCalled("recording-device-events");
-      observerPromise2 = expectObserverCalled("recording-window-ended");
+
+      observerPromise1 = expectObserverCalledOnClose(
+        "recording-device-events",
+        1,
+        frame2BC
+      );
+      observerPromise2 = expectObserverCalledOnClose(
+        "recording-window-ended",
+        1,
+        frame2BC
+      );
       await promiseReloadFrame("frame2");
       await observerPromise1;
       await observerPromise2;
@@ -321,7 +455,15 @@ var gTests = [
     desc:
       "getUserMedia audio+video: reloading the top level page removes all sharing UI",
     run: async function checkReloading() {
-      let observerPromise = expectObserverCalled("getUserMedia:request");
+      let frame1BC = gShouldObserveSubframes
+        ? gBrowser.selectedBrowser.browsingContext.getChildren()[0]
+        : undefined;
+
+      let observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame1BC
+      );
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true, "frame1");
       await promise;
@@ -330,9 +472,15 @@ var gTests = [
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
-        "getUserMedia:response:allow"
+        "getUserMedia:response:allow",
+        1,
+        frame1BC
       );
-      let observerPromise2 = expectObserverCalled("recording-device-events");
+      let observerPromise2 = expectObserverCalled(
+        "recording-device-events",
+        1,
+        frame1BC
+      );
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
@@ -352,6 +500,17 @@ var gTests = [
   },
 ];
 
-add_task(async function test() {
+add_task(async function test_inprocess() {
   await runTests(gTests, { relativeURI: "get_user_media_in_frame.html" });
+});
+
+add_task(async function test_outofprocess() {
+  // When the frames are in different processes, add observers to each frame,
+  // to ensure that the notifications don't get sent in the wrong process.
+  gShouldObserveSubframes = Services.prefs.getBoolPref("fission.autostart");
+  let observeSubFrameIds = gShouldObserveSubframes ? ["frame1", "frame2"] : [];
+  await runTests(gTests, {
+    relativeURI: "get_user_media_in_oop_frame.html",
+    observeSubFrameIds,
+  });
 });
