@@ -187,6 +187,9 @@ class FinalizationGroupObject : public NativeObject {
 
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* fop, JSObject* obj);
+
+  static bool hasRegisteredRecordsToBeCleanedUp(
+      HandleFinalizationGroupObject group);
 };
 
 // An iterator over a finalization group's queued holdings. In the spec this is
