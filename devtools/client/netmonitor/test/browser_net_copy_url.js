@@ -23,12 +23,22 @@ add_task(async function() {
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
   );
+
+  const requestItem = getSortedRequests(store.getState())[0];
+
+  info("Simulating CmdOrCtrl+C on a first element of the request table");
+  await waitForClipboardPromise(
+    () => synthesizeKeyShortcut("CmdOrCtrl+C"),
+    requestItem.url
+  );
+
+  emptyClipboard();
+
+  info("Simulating context click on a first element of the request table");
   EventUtils.sendMouseEvent(
     { type: "contextmenu" },
     document.querySelectorAll(".request-list-item")[0]
   );
-
-  const requestItem = getSortedRequests(store.getState())[0];
 
   await waitForClipboardPromise(function setup() {
     getContextMenuItem(monitor, "request-list-context-copy-url").click();
