@@ -5935,6 +5935,9 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
 
 mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaStateChanged(
     BrowsingContext* aContext, ControlledMediaState aState) {
+  if (!aContext || aContext->IsDiscarded()) {
+    return IPC_OK();
+  }
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(!aContext->GetParent(), "Should be top level browsing context!");
   RefPtr<MediaController> controller =
@@ -5945,6 +5948,9 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaStateChanged(
 
 mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
     BrowsingContext* aContext, bool aAudible) {
+  if (!aContext || aContext->IsDiscarded()) {
+    return IPC_OK();
+  }
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(!aContext->GetParent(), "Should be top level browsing context!");
   RefPtr<MediaController> controller =
