@@ -282,6 +282,12 @@ extern MOZ_MUST_USE bool ReactIgnoringUnhandledRejection(
 MOZ_MUST_USE JSObject* PromiseResolve(JSContext* cx, HandleObject constructor,
                                       HandleValue value);
 
+/**
+ * Reject |promise| with the value of the current pending exception.
+ *
+ * |promise| must be from the current realm.  Callers must enter the realm of
+ * |promise| if they are not already in it.
+ */
 MOZ_MUST_USE bool RejectPromiseWithPendingError(JSContext* cx,
                                                 Handle<PromiseObject*> promise);
 
