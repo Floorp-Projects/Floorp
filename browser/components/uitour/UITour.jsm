@@ -1671,6 +1671,9 @@ var UITour = {
       case "fxa":
         this.getFxA(aBrowser, aCallbackID);
         break;
+      case "fxaConnections":
+        this.getFxAConnections(aBrowser, aCallbackID);
+        break;
 
       // NOTE: 'sync' is deprecated and should be removed in Firefox 73 (because
       // by then, all consumers will have upgraded to use 'fxa' in that version
@@ -1727,7 +1730,52 @@ var UITour = {
     }
   },
 
+  // Get data about the local FxA account. This should be a low-latency request
+  // - everything returned here can be obtained locally without hitting any
+  // remote servers. See also `getFxAConnections()`
   getFxA(aBrowser, aCallbackID) {
+    (async () => {
+      let setup = !!(await fxAccounts.getSignedInUser());
+      let result = { setup };
+      if (!setup) {
+        this.sendPageCallback(aBrowser, aCallbackID, result);
+        return;
+      }
+      // We are signed in so need to build a richer result.
+      // Each of the "browser services" - currently only "sync" is supported
+      result.browserServices = {};
+      let hasSync = Services.prefs.prefHasUserValue("services.sync.username");
+      if (hasSync) {
+        result.browserServices.sync = {
+          // We always include 'setup' for b/w compatibility.
+          setup: true,
+          desktopDevices: Services.prefs.getIntPref(
+            "services.sync.clients.devices.desktop",
+            0
+          ),
+          mobileDevices: Services.prefs.getIntPref(
+            "services.sync.clients.devices.mobile",
+            0
+          ),
+          totalDevices: Services.prefs.getIntPref(
+            "services.sync.numClients",
+            0
+          ),
+        };
+      }
+      // And the account state.
+      result.accountStateOK = await fxAccounts.hasLocalSession();
+      this.sendPageCallback(aBrowser, aCallbackID, result);
+    })().catch(err => {
+      log.error(err);
+      this.sendPageCallback(aBrowser, aCallbackID, {});
+    });
+  },
+
+  // Get data about the FxA account "connections" (ie, other devices, other
+  // apps, etc. Note that this is likely to be a high-latency request - we will
+  // usually hit the FxA servers to obtain this info.
+  getFxAConnections(aBrowser, aCallbackID) {
     (async () => {
       let setup = !!(await fxAccounts.getSignedInUser());
       let result = { setup };
@@ -1761,27 +1809,6 @@ var UITour = {
           }, {});
       }
 
-      // Each of the "browser services" - currently only "sync" is supported
-      result.browserServices = {};
-      let hasSync = Services.prefs.prefHasUserValue("services.sync.username");
-      if (hasSync) {
-        result.browserServices.sync = {
-          // We always include 'setup' for b/w compatibility.
-          setup: true,
-          desktopDevices: Services.prefs.getIntPref(
-            "services.sync.clients.devices.desktop",
-            0
-          ),
-          mobileDevices: Services.prefs.getIntPref(
-            "services.sync.clients.devices.mobile",
-            0
-          ),
-          totalDevices: Services.prefs.getIntPref(
-            "services.sync.numClients",
-            0
-          ),
-        };
-      }
       try {
         // Each of the "account services", which we turn into a map keyed by ID.
         let attachedClients = await fxAccounts.listAttachedOAuthClients();
@@ -1799,9 +1826,6 @@ var UITour = {
       } catch (ex) {
         log.warn("Failed to build the attached clients list", ex);
       }
-      // We check the account state last because it's possible any of the above
-      // calls transitioned it from good -> bad.
-      result.accountStateOK = await fxAccounts.hasLocalSession();
       this.sendPageCallback(aBrowser, aCallbackID, result);
     })().catch(err => {
       log.error(err);
