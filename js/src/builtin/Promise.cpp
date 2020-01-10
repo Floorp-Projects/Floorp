@@ -582,8 +582,6 @@ static bool MaybeGetAndClearException(JSContext* cx, MutableHandleValue rval) {
   return GetAndClearException(cx, rval);
 }
 
-enum class UnhandledRejectionBehavior { Ignore, Report };
-
 static MOZ_MUST_USE bool RunRejectFunction(JSContext* cx,
                                            HandleObject onRejectedFunc,
                                            HandleValue result,
@@ -4286,9 +4284,13 @@ static MOZ_MUST_USE bool PerformPromiseThenWithReaction(
     JSContext* cx, Handle<PromiseObject*> promise,
     Handle<PromiseReactionRecord*> reaction);
 
-MOZ_MUST_USE bool js::ReactIgnoringUnhandledRejection(
+MOZ_MUST_USE bool js::ReactToUnwrappedPromise(
     JSContext* cx, Handle<PromiseObject*> unwrappedPromise,
-    HandleObject onFulfilled_, HandleObject onRejected_) {
+    HandleObject onFulfilled_, HandleObject onRejected_,
+    UnhandledRejectionBehavior behavior) {
+  cx->check(onFulfilled_);
+  cx->check(onRejected_);
+
   MOZ_ASSERT_IF(onFulfilled_, IsCallable(onFulfilled_));
   MOZ_ASSERT_IF(onRejected_, IsCallable(onRejected_));
 
@@ -4309,7 +4311,9 @@ MOZ_MUST_USE bool js::ReactIgnoringUnhandledRejection(
     return false;
   }
 
-  reaction->setShouldIgnoreUnhandledRejection();
+  if (behavior == UnhandledRejectionBehavior::Ignore) {
+    reaction->setShouldIgnoreUnhandledRejection();
+  }
 
   return PerformPromiseThenWithReaction(cx, unwrappedPromise, reaction);
 }
