@@ -51,6 +51,17 @@ bool HashableValue::setValue(JSContext* cx, HandleValue v) {
       // Normalize the sign bit of a NaN.
       value = JS::CanonicalizedDoubleValue(d);
     }
+  } else if (v.isBigInt()) {
+    // NurseryKeysVector currently only supports objects, so we must ensure all
+    // BigInt hash-values are tenured. (bug 1608056)
+    RootedBigInt bi(cx, v.toBigInt());
+    if (IsInsideNursery(bi)) {
+      bi = BigInt::copy(cx, bi, gc::TenuredHeap);
+      if (!bi) {
+        return false;
+      }
+    }
+    value = BigIntValue(bi);
   } else {
     value = v;
   }
@@ -521,6 +532,7 @@ template <typename ObjectT>
 inline static MOZ_MUST_USE bool WriteBarrierPostImpl(ObjectT* obj,
                                                      const Value& keyValue) {
   if (MOZ_LIKELY(!keyValue.isObject())) {
+    MOZ_ASSERT_IF(keyValue.isGCThing(), !IsInsideNursery(keyValue.toGCThing()));
     return true;
   }
 
@@ -1320,7 +1332,7 @@ bool SetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       RootedValue keyVal(cx);
       Rooted<HashableValue> key(cx);
       ValueSet* set = obj->getData();
-      ArrayObject* array = &iterable.toObject().as<ArrayObject>();
+      RootedArrayObject array(cx, &iterable.toObject().as<ArrayObject>());
       for (uint32_t index = 0; index < array->getDenseInitializedLength();
            ++index) {
         keyVal.set(array->getDenseElement(index));
@@ -1329,7 +1341,7 @@ bool SetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
         if (!key.setValue(cx, keyVal)) {
           return false;
         }
-        if (!WriteBarrierPost(obj, keyVal) || !set->put(key)) {
+        if (!WriteBarrierPost(obj, key.value()) || !set->put(key)) {
           ReportOutOfMemory(cx);
           return false;
         }
