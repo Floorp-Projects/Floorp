@@ -950,6 +950,8 @@ linux64-asan-reporter-nightly/opt:
         need-xvfb: true
         mar-channel-id:
             firefox-mozilla-central-asan
+        accepted-mar-channel-ids:
+            firefox-mozilla-central-asan
     fetches:
         toolchain:
             - linux64-binutils
