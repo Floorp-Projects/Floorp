@@ -32,6 +32,7 @@
 #include "debugger/DebugAPI-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/ErrorObject-inl.h"
+#include "vm/JSContext-inl.h"  // JSContext::check
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -4361,6 +4362,8 @@ static bool OriginalPromiseThenBuiltin(JSContext* cx, HandleValue promiseVal,
 
 MOZ_MUST_USE bool js::RejectPromiseWithPendingError(
     JSContext* cx, Handle<PromiseObject*> promise) {
+  cx->check(promise);
+
   if (!cx->isExceptionPending()) {
     // Reject the promise, but also propagate this uncatchable error.
     mozilla::Unused << PromiseObject::reject(cx, promise, UndefinedHandleValue);
