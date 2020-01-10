@@ -86,6 +86,12 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             "default": "1200",
             "help": "Specify headless virtual screen height (default: 1200)."}
          ],
+        [["--single-stylo-traversal"], {
+            "action": "store_true",
+            "dest": "single_stylo_traversal",
+            "default": False,
+            "help": "Forcibly enable single thread traversal in Stylo with STYLO_THREADS=1"}
+         ],
         [["--setpref"], {
             "action": "append",
             "metavar": "PREF=VALUE",
