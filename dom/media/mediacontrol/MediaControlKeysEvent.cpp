@@ -6,14 +6,13 @@
 
 #include "MediaControlKeysEvent.h"
 
+#include "MediaController.h"
 #include "MediaControlUtils.h"
 #include "MediaControlService.h"
 #include "mozilla/Logging.h"
 
 namespace mozilla {
 namespace dom {
-
-using PlaybackState = MediaControlKeysEventSource::PlaybackState;
 
 // avoid redefined macro in unified build
 #undef LOG_SOURCE
@@ -70,6 +69,9 @@ void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
       return;
   }
 }
+
+MediaControlKeysEventSource::MediaControlKeysEventSource()
+    : mPlaybackState(PlaybackState::eStopped) {}
 
 void MediaControlKeysEventSource::AddListener(
     MediaControlKeysEventListener* aListener) {
