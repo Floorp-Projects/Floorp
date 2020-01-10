@@ -1420,14 +1420,13 @@ bool gfxMacPlatformFontList::FindAndAddFamilies(mozilla::StyleGenericFontFamily 
   // search for special system font name, -apple-system
   if (SharedFontList()) {
     if (aFamily.EqualsLiteral(kSystemFont_system)) {
-      FindFamiliesFlags flags = aFlags | FindFamiliesFlags::eSearchHiddenFamilies;
       if (mUseSizeSensitiveSystemFont && aStyle &&
           (aStyle->size * aDevToCssSize) >= kTextDisplayCrossover) {
         return gfxPlatformFontList::FindAndAddFamilies(aGeneric, mSystemDisplayFontFamilyName,
-                                                       aOutput, flags, aStyle, aDevToCssSize);
+                                                       aOutput, aFlags, aStyle, aDevToCssSize);
       }
       return gfxPlatformFontList::FindAndAddFamilies(aGeneric, mSystemTextFontFamilyName, aOutput,
-                                                     flags, aStyle, aDevToCssSize);
+                                                     aFlags, aStyle, aDevToCssSize);
     }
   } else {
     if (aFamily.EqualsLiteral(kSystemFont_system)) {
