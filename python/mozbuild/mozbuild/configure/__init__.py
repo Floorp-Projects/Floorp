@@ -373,13 +373,11 @@ class ConfigureSandbox(dict):
 
         def wrapped_log_method(logger, key):
             method = getattr(logger, key)
-            if not encoding:
-                return method
 
             def wrapped(*args, **kwargs):
                 out_args = [
-                    arg.decode(encoding) if isinstance(arg, six.binary_type) else arg
-                    for arg in args
+                    six.ensure_text(arg, encoding=encoding or 'utf-8')
+                    if isinstance(arg, six.binary_type) else arg for arg in args
                 ]
                 return method(*out_args, **kwargs)
             return wrapped
@@ -917,6 +915,9 @@ class ConfigureSandbox(dict):
         # restricted mode". We also make open() look more like python 3's,
         # decoding to unicode strings unless the mode says otherwise.
         if what == '__builtin__.open':
+            if six.PY3:
+                return open
+
             def wrapped_open(name, mode=None, buffering=None):
                 args = (name,)
                 kwargs = {}
