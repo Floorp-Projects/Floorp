@@ -1352,6 +1352,7 @@ linux-gcp/debug:
         mozconfig-variant: debug
         tooltool-downloads: public
         need-xvfb: true
+    run-on-projects: ['try', 'release']
     fetches:
         toolchain:
             - linux64-binutils

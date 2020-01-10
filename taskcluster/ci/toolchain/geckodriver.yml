@@ -24,6 +24,7 @@ linux32-geckodriver:
         symbol: TL32(geckodriver)
     run:
         arguments: ['i686-unknown-linux-gnu']
+    run-on-projects: ['try', 'release']  # Do not run on autoland - Bug 1599197
     fetches:
         toolchain:
             - linux64-rust
