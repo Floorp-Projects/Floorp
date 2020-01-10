@@ -6658,7 +6658,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_compare(JSOp op, MDefinition* left,
   // TODO: Support tracking optimizations for inlining a call and regular
   // optimization tracking at the same time. Currently just drop optimization
   // tracking when that happens.
-  bool canTrackOptimization = !IsCallPC(pc);
+  bool canTrackOptimization = !IsInvokePC(pc);
 
   bool emitted = false;
   if (canTrackOptimization) {
@@ -6718,7 +6718,7 @@ AbortReasonOr<Ok> IonBuilder::compareTryCharacter(bool* emitted, JSOp op,
   // TODO: Support tracking optimizations for inlining a call and regular
   // optimization tracking at the same time. Currently just drop optimization
   // tracking when that happens.
-  bool canTrackOptimization = !IsCallPC(pc);
+  bool canTrackOptimization = !IsInvokePC(pc);
   if (canTrackOptimization) {
     trackOptimizationAttempt(TrackedStrategy::Compare_Character);
   }
@@ -6811,7 +6811,7 @@ AbortReasonOr<Ok> IonBuilder::compareTrySpecialized(bool* emitted, JSOp op,
   // TODO: Support tracking optimizations for inlining a call and regular
   // optimization tracking at the same time. Currently just drop optimization
   // tracking when that happens.
-  bool canTrackOptimization = !IsCallPC(pc);
+  bool canTrackOptimization = !IsInvokePC(pc);
   if (canTrackOptimization) {
     trackOptimizationAttempt(TrackedStrategy::Compare_SpecializedTypes);
   }
@@ -6869,7 +6869,7 @@ AbortReasonOr<Ok> IonBuilder::compareTryBitwise(bool* emitted, JSOp op,
   // TODO: Support tracking optimizations for inlining a call and regular
   // optimization tracking at the same time. Currently just drop optimization
   // tracking when that happens.
-  bool canTrackOptimization = !IsCallPC(pc);
+  bool canTrackOptimization = !IsInvokePC(pc);
   if (canTrackOptimization) {
     trackOptimizationAttempt(TrackedStrategy::Compare_Bitwise);
   }
@@ -6968,7 +6968,7 @@ AbortReasonOr<Ok> IonBuilder::compareTrySpecializedOnBaselineInspector(
   MOZ_ASSERT(*emitted == false);
 
   // Not supported for call expressions.
-  if (IsCallPC(pc)) {
+  if (IsInvokePC(pc)) {
     return Ok();
   }
 
@@ -7013,7 +7013,7 @@ AbortReasonOr<Ok> IonBuilder::compareTryBinaryStub(bool* emitted,
     return Ok();
   }
 
-  if (IsCallPC(pc)) {
+  if (IsInvokePC(pc)) {
     return Ok();
   }
 
@@ -7035,7 +7035,7 @@ AbortReasonOr<Ok> IonBuilder::newArrayTryTemplateObject(
   // TODO: Support tracking optimizations for inlining a call and regular
   // optimization tracking at the same time. Currently just drop optimization
   // tracking when that happens.
-  bool canTrackOptimization = !IsCallPC(pc);
+  bool canTrackOptimization = !IsInvokePC(pc);
 
   if (canTrackOptimization) {
     trackOptimizationAttempt(TrackedStrategy::NewArray_TemplateObject);
@@ -7088,7 +7088,7 @@ AbortReasonOr<Ok> IonBuilder::newArrayTryVM(bool* emitted,
   // TODO: Support tracking optimizations for inlining a call and regular
   // optimization tracking at the same time. Currently just drop optimization
   // tracking when that happens.
-  bool canTrackOptimization = !IsCallPC(pc);
+  bool canTrackOptimization = !IsInvokePC(pc);
 
   // Emit a VM call.
   if (canTrackOptimization) {
@@ -7137,7 +7137,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_newarray(JSObject* templateObject,
   // TODO: Support tracking optimizations for inlining a call and regular
   // optimization tracking at the same time. Currently just drop optimization
   // tracking when that happens.
-  bool canTrackOptimization = !IsCallPC(pc);
+  bool canTrackOptimization = !IsInvokePC(pc);
 
   bool emitted = false;
   if (canTrackOptimization) {
@@ -7189,7 +7189,7 @@ AbortReasonOr<Ok> IonBuilder::newObjectTryTemplateObject(
   // TODO: Support tracking optimizations for inlining a call and regular
   // optimization tracking at the same time. Currently just drop optimization
   // tracking when that happens.
-  bool canTrackOptimization = !IsCallPC(pc);
+  bool canTrackOptimization = !IsInvokePC(pc);
 
   if (canTrackOptimization) {
     trackOptimizationAttempt(TrackedStrategy::NewObject_TemplateObject);

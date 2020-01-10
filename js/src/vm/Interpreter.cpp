@@ -2059,7 +2059,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
       jit_return:
 
-        MOZ_ASSERT(IsCallPC(REGS.pc));
+        MOZ_ASSERT(IsInvokePC(REGS.pc));
         MOZ_ASSERT(cx->realm() == script->realm());
 
         /* Resume execution in the calling frame. */

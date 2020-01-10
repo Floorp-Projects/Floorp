@@ -433,7 +433,7 @@ static inline void* GetStubReturnAddress(JSContext* cx, JSOp op) {
   }
 
   // This should be a call op of some kind, now.
-  MOZ_ASSERT(IsCallOp(op) && !IsSpreadCallOp(op));
+  MOZ_ASSERT(IsInvokeOp(op) && !IsSpreadCallOp(op));
   if (IsConstructorCallOp(op)) {
     return code.bailoutReturnAddr(BailoutReturnKind::New);
   }

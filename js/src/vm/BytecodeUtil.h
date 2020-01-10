@@ -627,9 +627,9 @@ inline bool IsElemPC(const jsbytecode* pc) {
   return CodeSpec[*pc].format & JOF_ELEM;
 }
 
-inline bool IsCallOp(JSOp op) { return CodeSpec[op].format & JOF_INVOKE; }
+inline bool IsInvokeOp(JSOp op) { return CodeSpec[op].format & JOF_INVOKE; }
 
-inline bool IsCallPC(jsbytecode* pc) { return IsCallOp(JSOp(*pc)); }
+inline bool IsInvokePC(jsbytecode* pc) { return IsInvokeOp(JSOp(*pc)); }
 
 inline bool IsStrictEvalPC(jsbytecode* pc) {
   JSOp op = JSOp(*pc);
