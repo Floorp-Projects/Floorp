@@ -1676,6 +1676,7 @@ package org.mozilla.geckoview {
 
   @AnyThread public class WebRequestError extends Exception {
     ctor public WebRequestError(int, int);
+    ctor public WebRequestError(int, int, X509Certificate);
     field public static final int ERROR_CATEGORY_CONTENT = 4;
     field public static final int ERROR_CATEGORY_NETWORK = 3;
     field public static final int ERROR_CATEGORY_PROXY = 6;
@@ -1710,6 +1711,7 @@ package org.mozilla.geckoview {
     field public static final int ERROR_UNKNOWN_SOCKET_TYPE = 83;
     field public static final int ERROR_UNSAFE_CONTENT_TYPE = 36;
     field public final int category;
+    field @Nullable public final X509Certificate certificate;
     field public final int code;
   }
 

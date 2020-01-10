@@ -195,8 +195,14 @@ class WebExecutorTest {
             "https://expired.badssl.com/"
         }
 
-        thrown.expect(equalTo(WebRequestError(WebRequestError.ERROR_SECURITY_BAD_CERT, WebRequestError.ERROR_CATEGORY_SECURITY)))
-        fetch(WebRequest(uri))
+        try {
+            fetch(WebRequest(uri))
+        } catch (e: WebRequestError) {
+            assertThat("Category should match", e.category, equalTo(WebRequestError.ERROR_CATEGORY_SECURITY))
+            assertThat("Code should match", e.code, equalTo(WebRequestError.ERROR_SECURITY_BAD_CERT))
+            assertThat("Certificate should be present", e.certificate, notNullValue())
+            assertThat("Certificate issuer should be present", e.certificate?.issuerX500Principal?.name, not(isEmptyOrNullString()))
+        }
     }
 
     @Test

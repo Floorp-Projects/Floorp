@@ -37,8 +37,35 @@ using namespace net;
 
 namespace widget {
 
+static jni::ByteArray::LocalRef CertificateFromChannel(nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsISupports> securityInfo;
+  aChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
+  if (!securityInfo) {
+    return nullptr;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(securityInfo, &rv);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  nsCOMPtr<nsIX509Cert> cert;
+  tsi->GetServerCert(getter_AddRefs(cert));
+  if (!cert) {
+    return nullptr;
+  }
+
+  nsTArray<uint8_t> derBytes;
+  rv = cert->GetRawDER(derBytes);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return jni::ByteArray::New(
+      reinterpret_cast<const int8_t*>(derBytes.Elements()), derBytes.Length());
+}
+
 static void CompleteWithError(java::GeckoResult::Param aResult,
-                              nsresult aStatus) {
+                              nsresult aStatus, nsIChannel* aChannel) {
   nsCOMPtr<nsINSSErrorsService> errSvc =
       do_GetService("@mozilla.org/nss_errors_service;1");
   MOZ_ASSERT(errSvc);
@@ -49,10 +76,20 @@ static void CompleteWithError(java::GeckoResult::Param aResult,
     errorClass = 0;
   }
 
+  jni::ByteArray::LocalRef certBytes;
+  if (aChannel) {
+    certBytes = CertificateFromChannel(aChannel);
+  }
+
   java::WebRequestError::LocalRef error = java::WebRequestError::FromGeckoError(
-      int64_t(aStatus), NS_ERROR_GET_MODULE(aStatus), errorClass);
+      int64_t(aStatus), NS_ERROR_GET_MODULE(aStatus), errorClass, certBytes);
 
   aResult->CompleteExceptionally(error.Cast<jni::Throwable>());
+}
+
+static void CompleteWithError(java::GeckoResult::Param aResult,
+                              nsresult aStatus) {
+  CompleteWithError(aResult, aStatus, nullptr);
 }
 
 class ByteBufferStream final : public nsIInputStream {
@@ -188,7 +225,8 @@ class LoaderListener final : public nsIStreamListener,
     nsresult status;
     aRequest->GetStatus(&status);
     if (NS_FAILED(status)) {
-      CompleteWithError(mResult, status);
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+      CompleteWithError(mResult, status, channel);
       return NS_OK;
     }
 
@@ -207,7 +245,8 @@ class LoaderListener final : public nsIStreamListener,
 
     nsresult rv = HandleWebResponse(aRequest);
     if (NS_FAILED(rv)) {
-      CompleteWithError(mResult, rv);
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+      CompleteWithError(mResult, rv, channel);
       return NS_OK;
     }
 
@@ -329,12 +368,14 @@ class LoaderListener final : public nsIStreamListener,
     nsCOMPtr<nsISupports> securityInfo;
     channel->GetSecurityInfo(getter_AddRefs(securityInfo));
     if (securityInfo) {
-      nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(securityInfo, &rv);
+      nsCOMPtr<nsITransportSecurityInfo> tsi =
+          do_QueryInterface(securityInfo, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
       uint32_t securityState = 0;
       tsi->GetSecurityState(&securityState);
-      builder->IsSecure(securityState == nsIWebProgressListener::STATE_IS_SECURE);
+      builder->IsSecure(securityState ==
+                        nsIWebProgressListener::STATE_IS_SECURE);
 
       nsCOMPtr<nsIX509Cert> cert;
       tsi->GetServerCert(getter_AddRefs(cert));
@@ -344,7 +385,8 @@ class LoaderListener final : public nsIStreamListener,
         NS_ENSURE_SUCCESS(rv, rv);
 
         auto bytes = jni::ByteArray::New(
-            reinterpret_cast<const int8_t*>(derBytes.Elements()), derBytes.Length());
+            reinterpret_cast<const int8_t*>(derBytes.Elements()),
+            derBytes.Length());
         rv = builder->CertificateBytes(bytes);
         NS_ENSURE_SUCCESS(rv, rv);
       }
