@@ -533,8 +533,8 @@ pub enum BorderStyle {
 }
 
 impl BorderStyle {
-    pub fn is_hidden(&self) -> bool {
-        *self == BorderStyle::Hidden || *self == BorderStyle::None
+    pub fn is_hidden(self) -> bool {
+        self == BorderStyle::Hidden || self == BorderStyle::None
     }
 }
 
@@ -718,8 +718,8 @@ pub enum RasterSpace {
 }
 
 impl RasterSpace {
-    pub fn local_scale(&self) -> Option<f32> {
-        match *self {
+    pub fn local_scale(self) -> Option<f32> {
+        match self {
             RasterSpace::Local(scale) => Some(scale),
             RasterSpace::Screen => None,
         }
@@ -1198,8 +1198,8 @@ pub enum YuvFormat {
 }
 
 impl YuvFormat {
-    pub fn get_plane_num(&self) -> usize {
-        match *self {
+    pub fn get_plane_num(self) -> usize {
+        match self {
             YuvFormat::NV12 => 2,
             YuvFormat::PlanarYCbCr => 3,
             YuvFormat::InterleavedYCbCr => 1,
