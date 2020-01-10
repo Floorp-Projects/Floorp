@@ -7,6 +7,8 @@
 #ifndef MediaEventSource_h_
 #define MediaEventSource_h_
 
+#include <type_traits>
+
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
@@ -79,23 +81,23 @@ struct EventTypeTraits<void> {
 template <typename T>
 class TakeArgsHelper {
   template <typename C>
-  static FalseType test(void (C::*)(), int);
+  static std::false_type test(void (C::*)(), int);
   template <typename C>
-  static FalseType test(void (C::*)() const, int);
+  static std::false_type test(void (C::*)() const, int);
   template <typename C>
-  static FalseType test(void (C::*)() volatile, int);
+  static std::false_type test(void (C::*)() volatile, int);
   template <typename C>
-  static FalseType test(void (C::*)() const volatile, int);
+  static std::false_type test(void (C::*)() const volatile, int);
   template <typename F>
-  static FalseType test(F&&, decltype(DeclVal<F>()(), 0));
-  static TrueType test(...);
+  static std::false_type test(F&&, decltype(DeclVal<F>()(), 0));
+  static std::true_type test(...);
 
  public:
-  typedef decltype(test(DeclVal<T>(), 0)) Type;
+  typedef decltype(test(DeclVal<T>(), 0)) type;
 };
 
 template <typename T>
-struct TakeArgs : public TakeArgsHelper<T>::Type {};
+struct TakeArgs : public TakeArgsHelper<T>::type {};
 
 template <typename T>
 struct EventTarget;
@@ -136,7 +138,7 @@ class Listener : public RevocableToken {
   template <typename... Ts>
   void Dispatch(Ts&&... aEvents) {
     if (CanTakeArgs()) {
-      DispatchTask(NewRunnableMethod<typename Decay<Ts>::Type&&...>(
+      DispatchTask(NewRunnableMethod<std::decay_t<Ts>&&...>(
           "detail::Listener::ApplyWithArgs", this, &Listener::ApplyWithArgs,
           std::forward<Ts>(aEvents)...));
     } else {
@@ -170,7 +172,7 @@ class Listener : public RevocableToken {
 template <typename Target, typename Function, typename... As>
 class ListenerImpl : public Listener<As...> {
   // Strip CV and reference from Function.
-  using FunctionStorage = typename Decay<Function>::Type;
+  using FunctionStorage = std::decay_t<Function>;
 
  public:
   template <typename F>
@@ -186,14 +188,14 @@ class ListenerImpl : public Listener<As...> {
 
   // |F| takes one or more arguments.
   template <typename F>
-  typename EnableIf<TakeArgs<F>::value, void>::Type ApplyWithArgsImpl(
+  std::enable_if_t<TakeArgs<F>::value, void> ApplyWithArgsImpl(
       const F& aFunc, As&&... aEvents) {
     aFunc(std::move(aEvents)...);
   }
 
   // |F| takes no arguments.
   template <typename F>
-  typename EnableIf<!TakeArgs<F>::value, void>::Type ApplyWithArgsImpl(
+  std::enable_if_t<!TakeArgs<F>::value, void> ApplyWithArgsImpl(
       const F& aFunc, As&&... aEvents) {
     MOZ_CRASH("Call ApplyWithNoArgs instead.");
   }
@@ -208,14 +210,14 @@ class ListenerImpl : public Listener<As...> {
 
   // |F| takes one or more arguments.
   template <typename F>
-  typename EnableIf<TakeArgs<F>::value, void>::Type ApplyWithNoArgsImpl(
+  std::enable_if_t<TakeArgs<F>::value, void> ApplyWithNoArgsImpl(
       const F& aFunc) {
     MOZ_CRASH("Call ApplyWithArgs instead.");
   }
 
   // |F| takes no arguments.
   template <typename F>
-  typename EnableIf<!TakeArgs<F>::value, void>::Type ApplyWithNoArgsImpl(
+  std::enable_if_t<!TakeArgs<F>::value, void> ApplyWithNoArgsImpl(
       const F& aFunc) {
     aFunc();
   }
@@ -238,12 +240,12 @@ class ListenerImpl : public Listener<As...> {
 template <typename Head, typename... Tails>
 struct IsAnyReference {
   static const bool value =
-      IsReference<Head>::value || IsAnyReference<Tails...>::value;
+      std::is_reference_v<Head> || IsAnyReference<Tails...>::value;
 };
 
 template <typename T>
 struct IsAnyReference<T> {
-  static const bool value = IsReference<T>::value;
+  static const bool value = std::is_reference_v<T>;
 };
 
 }  // namespace detail
@@ -336,8 +338,8 @@ class MediaEventSourceImpl {
 
   // |Method| takes one or more arguments.
   template <typename Target, typename This, typename Method>
-  typename EnableIf<TakeArgs<Method>::value, MediaEventListener>::Type
-  ConnectInternal(Target* aTarget, This* aThis, Method aMethod) {
+  std::enable_if_t<TakeArgs<Method>::value, MediaEventListener> ConnectInternal(
+      Target* aTarget, This* aThis, Method aMethod) {
     detail::RawPtr<This> thiz(aThis);
     return ConnectInternal(aTarget, [=](ArgType<Es>&&... aEvents) {
       (thiz.get()->*aMethod)(std::move(aEvents)...);
@@ -346,7 +348,7 @@ class MediaEventSourceImpl {
 
   // |Method| takes no arguments. Don't bother passing the event data.
   template <typename Target, typename This, typename Method>
-  typename EnableIf<!TakeArgs<Method>::value, MediaEventListener>::Type
+  std::enable_if_t<!TakeArgs<Method>::value, MediaEventListener>
   ConnectInternal(Target* aTarget, This* aThis, Method aMethod) {
     detail::RawPtr<This> thiz(aThis);
     return ConnectInternal(aTarget, [=]() { (thiz.get()->*aMethod)(); });
