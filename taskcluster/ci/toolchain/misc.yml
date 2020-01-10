@@ -192,7 +192,7 @@ wrench-deps:
         toolchain:
             - linux64-rust-1.39  # whatever m-c is built with
 
-lucetc:
+linux64-lucetc:
     description: "lucetc build process"
     treeherder:
         symbol: TL(lucetc)
