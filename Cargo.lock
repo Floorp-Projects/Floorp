@@ -1180,13 +1180,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "fog"
 version = "0.1.0"
 dependencies = [
- "cstr 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "glean-preview 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "nserror 0.1.0",
- "nsstring 0.1.0",
- "static_prefs 0.1.0",
- "xpcom 0.1.0",
+ "glean-preview 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1551,7 +1545,7 @@ dependencies = [
 
 [[package]]
 name = "glean-preview"
-version = "0.0.4"
+version = "0.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "glean-core 22.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -4768,7 +4762,7 @@ dependencies = [
 "checksum gl_generator 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "39a23d5e872a275135d66895d954269cf5e8661d234eb1c2480f4ce0d586acbd"
 "checksum gleam 0.6.17 (registry+https://github.com/rust-lang/crates.io-index)" = "7f46fd8874e043ffac0d638ed1567a2584f7814f6d72b4db37ab1689004a26c4"
 "checksum glean-core 22.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "37b55f71885fc523ac6327feb24e31bde57d9c5679b4553e942306adb44be408"
-"checksum glean-preview 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "cb3bf34b889307680056e1493552dc6385becaea073ed99743a5e1a340ed2342"
+"checksum glean-preview 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "cc50cdfb3c420f83b14e5f130279af9f66d4b3f693c32edf76bc6e3450321434"
 "checksum glob 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 "checksum goblin 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "88a79ef1f0dad46fd78075b6f80f92d97710eddf87b3e18a15a66761e8942672"
 "checksum guid_win 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "87261686cc5e35b6584f4c2a430c2b153d8a92ab1ef820c16be34c1df8f5f58b"
