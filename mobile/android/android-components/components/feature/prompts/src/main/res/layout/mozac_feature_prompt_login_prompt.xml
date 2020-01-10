@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/feature_prompt_login_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:windowBackground"
+    android:paddingStart="16dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="16dp"
+    tools:ignore="Overdraw">
+
+    <TextView
+        android:id="@+id/host_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/mozac_ic_globe"
+        android:drawablePadding="16dp"
+        android:gravity="center_vertical"
+        android:textColor="?android:textColorPrimary"
+        android:textSize="16sp"
+        app:drawableTint="?android:textColorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="host.com" />
+
+    <TextView
+        android:id="@+id/save_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:drawableStart="@drawable/mozac_ic_login"
+        android:drawablePadding="16dp"
+        android:gravity="center_vertical"
+        android:textColor="?android:textColorPrimary"
+        android:textSize="16sp"
+        app:drawableTint="?android:textColorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/host_name"
+        app:layout_goneMarginTop="8dp"
+        tools:text="@string/mozac_feature_prompt_logins_save_message" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/userNameLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/save_message">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/username_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/mozac_feature_prompt_username_hint"
+            android:textColor="?android:textColorPrimary"
+            android:textSize="15sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/password_text_input_layout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        app:errorEnabled="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/userNameLayout"
+        app:passwordToggleDrawable="@drawable/mozac_ic_password_reveal_two_state"
+        app:passwordToggleEnabled="true"
+        app:passwordToggleTint="?android:textColorPrimary">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/password_field"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/mozac_feature_prompt_password_hint"
+            android:inputType="textPassword"
+            android:textColor="?android:textColorPrimary"
+            android:textSize="15sp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/save_cancel"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="12dp"
+        android:text="@string/mozac_feature_prompt_dont_save"
+        android:textAllCaps="false"
+        android:textColor="?android:colorEdgeEffect"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/save_confirm"
+        app:layout_constraintTop_toBottomOf="@+id/password_text_input_layout"
+        app:rippleColor="?android:textColorSecondary" />
+
+    <Button
+        android:id="@+id/save_confirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="?android:colorEdgeEffect"
+        android:text="@string/mozac_feature_prompt_save_confirmation"
+        android:textAllCaps="false"
+        android:textColor="?android:windowBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/password_text_input_layout"
+        app:rippleColor="?android:textColorSecondary" />
+</androidx.constraintlayout.widget.ConstraintLayout>

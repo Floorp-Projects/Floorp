@@ -33,10 +33,13 @@ dependencies {
     implementation project(':lib-state')
     implementation project(':support-ktx')
     implementation project(':support-utils')
+    implementation project(':ui-icons')
 
     implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.androidx_lifecycle_extensions
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.google_material
+    implementation Dependencies.androidx_constraintlayout
 
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit

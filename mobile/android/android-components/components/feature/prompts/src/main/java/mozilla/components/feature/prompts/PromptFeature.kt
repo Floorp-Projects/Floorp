@@ -20,6 +20,7 @@ import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.storage.Login
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
@@ -32,6 +33,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Share
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
+import mozilla.components.concept.engine.prompt.PromptRequest.LoginPrompt
 import mozilla.components.feature.prompts.dialog.AlertDialogFragment
 import mozilla.components.feature.prompts.dialog.AuthenticationDialogFragment
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
@@ -40,6 +42,7 @@ import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.dialog.ColorPickerDialogFragment
 import mozilla.components.feature.prompts.dialog.ConfirmDialogFragment
+import mozilla.components.feature.prompts.dialog.LoginDialogFragment
 import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
 import mozilla.components.feature.prompts.dialog.PromptAbuserDetector
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
@@ -47,6 +50,8 @@ import mozilla.components.feature.prompts.dialog.Prompter
 import mozilla.components.feature.prompts.dialog.TextPromptDialogFragment
 import mozilla.components.feature.prompts.dialog.TimePickerDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker
+import mozilla.components.concept.storage.NoopLoginValidationDelegate
+import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.share.DefaultShareDelegate
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.lib.state.ext.flowScoped
@@ -83,6 +88,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * @property fragmentManager The [FragmentManager] to be used when displaying
  * a dialog (fragment).
  * @property shareDelegate Delegate used to display share sheet.
+ * @property loginStorageDelegate Delegate used to access login storage.
  * @property onNeedToRequestPermissions A callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
@@ -94,6 +100,7 @@ class PromptFeature private constructor(
     private var customTabId: String?,
     private val fragmentManager: FragmentManager,
     private val shareDelegate: ShareDelegate,
+    override val loginValidationDelegate: LoginValidationDelegate,
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature, Prompter {
     private var scope: CoroutineScope? = null
@@ -107,6 +114,7 @@ class PromptFeature private constructor(
         customTabId: String? = null,
         fragmentManager: FragmentManager,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
+        loginValidationDelegate: LoginValidationDelegate = NoopLoginValidationDelegate(),
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Activity(activity),
@@ -114,14 +122,17 @@ class PromptFeature private constructor(
         customTabId = customTabId,
         fragmentManager = fragmentManager,
         shareDelegate = shareDelegate,
+        loginValidationDelegate = loginValidationDelegate,
         onNeedToRequestPermissions = onNeedToRequestPermissions
     )
+
     constructor(
         fragment: Fragment,
         store: BrowserStore,
         customTabId: String? = null,
         fragmentManager: FragmentManager,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
+        loginValidationDelegate: LoginValidationDelegate = NoopLoginValidationDelegate(),
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Fragment(fragment),
@@ -129,8 +140,10 @@ class PromptFeature private constructor(
         customTabId = customTabId,
         fragmentManager = fragmentManager,
         shareDelegate = shareDelegate,
+        loginValidationDelegate = loginValidationDelegate,
         onNeedToRequestPermissions = onNeedToRequestPermissions
     )
+
     @Deprecated("Pass only activity or fragment instead")
     constructor(
         activity: Activity? = null,
@@ -144,12 +157,13 @@ class PromptFeature private constructor(
             ?: fragment?.let { PromptContainer.Fragment(it) }
             ?: throw IllegalStateException(
                 "activity and fragment references " +
-                    "must not be both null, at least one must be initialized."
+                        "must not be both null, at least one must be initialized."
             ),
         store = store,
         customTabId = customTabId,
         fragmentManager = fragmentManager,
         shareDelegate = DefaultShareDelegate(),
+        loginValidationDelegate = NoopLoginValidationDelegate(),
         onNeedToRequestPermissions = onNeedToRequestPermissions
     )
 
@@ -289,6 +303,8 @@ class PromptFeature private constructor(
 
                 is Share -> it.onSuccess()
 
+                is LoginPrompt -> it.onConfirm(value as Login)
+
                 is PromptRequest.Confirm -> {
                     val (isCheckBoxChecked, buttonType) = value as Pair<Boolean, MultiButtonDialogFragment.ButtonType>
                     promptAbuserDetector.userWantsMoreDialogs(!isCheckBoxChecked)
@@ -352,6 +368,15 @@ class PromptFeature private constructor(
     ) {
         // Requests that are handled with dialogs
         val dialog = when (promptRequest) {
+
+            is LoginPrompt -> {
+                LoginDialogFragment.newInstance(
+                    sessionId = session.id,
+                    hint = promptRequest.hint,
+                    // For v1, we only handle a single login and drop all others on the floor
+                    login = promptRequest.logins[0]
+                )
+            }
 
             is SingleChoice -> ChoiceDialogFragment.newInstance(
                 promptRequest.choices,
@@ -491,6 +516,7 @@ class PromptFeature private constructor(
             is Color,
             is Authentication,
             is PromptRequest.Popup,
+            is LoginPrompt,
             is Share -> true
             is Alert, is TextPrompt, is PromptRequest.Confirm -> promptAbuserDetector.shouldShowMoreDialogs
         }
