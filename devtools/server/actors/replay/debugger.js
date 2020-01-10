@@ -278,7 +278,7 @@ ReplayDebugger.prototype = {
 
   _processResponse(request, response, divergeResponse) {
     dumpv(`SendRequest: ${stringify(request)} -> ${stringify(response)}`);
-    if (response.unhandledDivergence) {
+    if (!response) {
       if (divergeResponse) {
         return divergeResponse;
       }
@@ -535,7 +535,7 @@ ReplayDebugger.prototype = {
     }
 
     const pauseData = this._control.getPauseDataAndRepaint();
-    if (!pauseData.frames) {
+    if (!pauseData || !pauseData.frames) {
       return;
     }
 
