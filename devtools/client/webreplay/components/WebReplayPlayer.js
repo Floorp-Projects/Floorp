@@ -159,7 +159,7 @@ class WebReplayPlayer extends Component {
     this.overlayWidth = this.updateOverlayWidth();
     this.threadFront.on("paused", this.onPaused.bind(this));
     this.threadFront.on("resumed", this.onResumed.bind(this));
-    this.threadFront.on("progress", this.onProgress.bind(this));
+    this.threadFront.on("replayStatusUpdate", this.onStatusUpdate.bind(this));
 
     this.toolbox.getPanelWhenReady("webconsole").then(panel => {
       const consoleFrame = panel.hud.ui;
@@ -270,13 +270,13 @@ class WebReplayPlayer extends Component {
     this.setState({ paused: false, closestMessage: null, pausedMessage: null });
   }
 
-  onProgress(packet) {
+  onStatusUpdate({ status }) {
     const {
       recording,
       executionPoint,
       unscannedRegions,
       cachedPoints,
-    } = packet;
+    } = status;
     log(`progress: ${recording ? "rec" : "play"} ${executionPoint.progress}`);
 
     if (this.state.seeking) {
@@ -689,7 +689,7 @@ class WebReplayPlayer extends Component {
     );
   }
 
-  renderUnscannedRegion({ start, end }) {
+  renderUnscannedRegion({ start, end, traversed }) {
     let startOffset = this.getVisibleOffset({ progress: start });
     let endOffset = this.getVisibleOffset({ progress: end });
 
@@ -706,7 +706,7 @@ class WebReplayPlayer extends Component {
     }
 
     return dom.span({
-      className: classname("unscanned"),
+      className: traversed ? classname("unscanned") : classname("untraversed"),
       style: {
         left: `${startOffset}px`,
         width: `${endOffset - startOffset}px`,
