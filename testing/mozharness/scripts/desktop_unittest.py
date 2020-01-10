@@ -142,6 +142,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             "help": "Permits a software GL implementation (such as LLVMPipe) to use "
                     "the GL compositor."}
          ],
+        [["--single-stylo-traversal"], {
+            "action": "store_true",
+            "dest": "single_stylo_traversal",
+            "default": False,
+            "help": "Forcibly enable single thread traversal in Stylo with STYLO_THREADS=1"}
+         ],
         [["--enable-webrender"], {
             "action": "store_true",
             "dest": "enable_webrender",
