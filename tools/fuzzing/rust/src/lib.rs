@@ -44,6 +44,27 @@ pub extern "C" fn fuzz_rkv_db_file(raw_data: *const u8, size: libc::size_t) -> l
     let reader = env.read().unwrap();
     eat_lmdb_err(store.get(&reader, &[0])).unwrap();
 
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn fuzz_rkv_db_name(raw_data: *const u8, size: libc::size_t) -> libc::c_int {
+    let data = unsafe { std::slice::from_raw_parts(raw_data as *const u8, size as usize) };
+
+    let root = Builder::new().prefix("fuzz_rkv_db_name").tempdir().unwrap();
+    fs::create_dir_all(root.path()).unwrap();
+
+    let env = rkv::Rkv::new(root.path()).unwrap();
+    let name = String::from_utf8_lossy(data);
+    println!("Checking string: '{:?}'", name);
+    // Some strings are invalid database names, and are handled as store errors.
+    // Ignore those errors, but not others.
+    let store = eat_lmdb_err(env.open_single(name.as_ref(), rkv::StoreOptions::create())).unwrap();
+
+    if let Some(store) = store {
+        let reader = env.read().unwrap();
+        eat_lmdb_err(store.get(&reader, &[0])).unwrap();
+    };
 
     0
 }
