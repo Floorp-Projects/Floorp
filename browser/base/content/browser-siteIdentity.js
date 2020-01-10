@@ -1670,10 +1670,11 @@ var gIdentityHandler = {
               }
             }
           }
-          browser.messageManager.sendAsyncMessage(
-            "webrtc:StopSharing",
-            windowId
-          );
+
+          let bc = this._sharingState.webRTC.browsingContext;
+          bc.currentWindowGlobal
+            .getActor("WebRTC")
+            .sendAsyncMessage("webrtc:StopSharing", windowId);
           webrtcUI.forgetActivePermissionsFromBrowser(gBrowser.selectedBrowser);
         }
       }

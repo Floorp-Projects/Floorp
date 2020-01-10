@@ -330,6 +330,17 @@ let ACTORS = {
       },
     },
   },
+
+  WebRTC: {
+    parent: {
+      moduleURI: "resource:///actors/WebRTCParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/WebRTCChild.jsm",
+    },
+
+    allFrames: true,
+  },
 };
 
 let LEGACY_ACTORS = {
@@ -390,19 +401,6 @@ let LEGACY_ACTORS = {
       module: "resource:///actors/URIFixupChild.jsm",
       group: "browsers",
       observers: ["keyword-uri-fixup"],
-    },
-  },
-
-  WebRTC: {
-    child: {
-      module: "resource:///actors/WebRTCChild.jsm",
-      messages: [
-        "rtcpeer:Allow",
-        "rtcpeer:Deny",
-        "webrtc:Allow",
-        "webrtc:Deny",
-        "webrtc:StopSharing",
-      ],
     },
   },
 };
@@ -583,7 +581,6 @@ let initializedModules = {};
   ],
   ["ContentSearch", "resource:///modules/ContentSearch.jsm", "init"],
   ["UpdateListener", "resource://gre/modules/UpdateListener.jsm", "init"],
-  ["webrtcUI", "resource:///modules/webrtcUI.jsm", "init"],
 ].forEach(([name, resource, init]) => {
   XPCOMUtils.defineLazyGetter(this, name, () => {
     ChromeUtils.import(resource, initializedModules);
@@ -639,9 +636,6 @@ const listeners = {
     "AsyncPrefs:SetPref": ["AsyncPrefs"],
     "AsyncPrefs:ResetPref": ["AsyncPrefs"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN AsyncPrefs.init
-
-    "webrtc:UpdateGlobalIndicators": ["webrtcUI"],
-    "webrtc:UpdatingIndicators": ["webrtcUI"],
   },
 
   mm: {
@@ -665,12 +659,6 @@ const listeners = {
     ContentSearch: ["ContentSearch"],
     "Reader:FaviconRequest": ["ReaderParent"],
     "Reader:UpdateReaderButton": ["ReaderParent"],
-    "rtcpeer:CancelRequest": ["webrtcUI"],
-    "rtcpeer:Request": ["webrtcUI"],
-    "webrtc:CancelRequest": ["webrtcUI"],
-    "webrtc:Request": ["webrtcUI"],
-    "webrtc:StopRecording": ["webrtcUI"],
-    "webrtc:UpdateBrowserIndicators": ["webrtcUI"],
   },
 
   observe(subject, topic, data) {
