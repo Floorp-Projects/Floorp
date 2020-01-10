@@ -458,10 +458,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitIndexOp(JSOp op, uint32_t index);
 
   MOZ_MUST_USE bool emitAtomOp(
-      JSAtom* atom, JSOp op,
+      JSOp op, JSAtom* atom,
       ShouldInstrument shouldInstrument = ShouldInstrument::No);
   MOZ_MUST_USE bool emitAtomOp(
-      uint32_t atomIndex, JSOp op,
+      JSOp op, uint32_t atomIndex,
       ShouldInstrument shouldInstrument = ShouldInstrument::No);
 
   MOZ_MUST_USE bool emitArrayLiteral(ListNode* array);

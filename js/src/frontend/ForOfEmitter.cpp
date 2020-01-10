@@ -119,7 +119,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
     //              [stack] NEXT ITER RESULT RESULT
     return false;
   }
-  if (!bce_->emitAtomOp(bce_->cx->names().done, JSOP_GETPROP)) {
+  if (!bce_->emitAtomOp(JSOP_GETPROP, bce_->cx->names().done)) {
     //              [stack] NEXT ITER RESULT DONE
     return false;
   }
@@ -136,7 +136,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
   //
   // Note that ES 13.7.5.13, step 5.c says getting result.value does not
   // call IteratorClose, so start JSTRY_ITERCLOSE after the GETPROP.
-  if (!bce_->emitAtomOp(bce_->cx->names().value, JSOP_GETPROP)) {
+  if (!bce_->emitAtomOp(JSOP_GETPROP, bce_->cx->names().value)) {
     //              [stack] NEXT ITER VALUE
     return false;
   }
