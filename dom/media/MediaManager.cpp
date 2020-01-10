@@ -2232,8 +2232,7 @@ static bool IsFullyActive(nsPIDOMWindowInner* aWindow) {
     if (context->IsTopLevelWindow()) {
       return true;
     }
-    nsCOMPtr<Element> frameElement =
-        nsGlobalWindowOuter::Cast(context)->GetRealFrameElementOuter();
+    nsCOMPtr<Element> frameElement = context->GetFrameElement();
     if (!frameElement) {
       return false;
     }
