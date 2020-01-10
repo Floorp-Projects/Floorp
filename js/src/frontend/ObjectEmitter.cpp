@@ -534,7 +534,7 @@ bool ClassEmitter::emitDerivedClass(JS::Handle<JSAtom*> name,
     //              [stack] HERITAGE HERITAGE
     return false;
   }
-  if (!bce_->emitAtomOp(bce_->cx->names().prototype, JSOP_GETPROP)) {
+  if (!bce_->emitAtomOp(JSOP_GETPROP, bce_->cx->names().prototype)) {
     //              [stack] HERITAGE PROTO
     return false;
   }
@@ -679,11 +679,11 @@ bool ClassEmitter::initProtoAndCtor() {
     //              [stack] NAME? CTOR HOMEOBJ CTOR HOMEOBJ
     return false;
   }
-  if (!bce_->emitAtomOp(bce_->cx->names().prototype, JSOP_INITLOCKEDPROP)) {
+  if (!bce_->emitAtomOp(JSOP_INITLOCKEDPROP, bce_->cx->names().prototype)) {
     //              [stack] NAME? CTOR HOMEOBJ CTOR
     return false;
   }
-  if (!bce_->emitAtomOp(bce_->cx->names().constructor, JSOP_INITHIDDENPROP)) {
+  if (!bce_->emitAtomOp(JSOP_INITHIDDENPROP, bce_->cx->names().constructor)) {
     //              [stack] NAME? CTOR HOMEOBJ
     return false;
   }

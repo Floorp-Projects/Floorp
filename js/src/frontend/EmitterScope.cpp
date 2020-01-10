@@ -926,7 +926,7 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
         continue;
       }
 
-      if (!bce->emitAtomOp(name, bi.bindingOp())) {
+      if (!bce->emitAtomOp(bi.bindingOp(), name)) {
         return false;
       }
     }
@@ -1015,7 +1015,7 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
           continue;
         }
 
-        if (!bce->emitAtomOp(bi.name(), JSOP_DEFVAR)) {
+        if (!bce->emitAtomOp(JSOP_DEFVAR, bi.name())) {
           return false;
         }
       }

@@ -30,19 +30,19 @@ bool NameOpEmitter::emitGet() {
 
   switch (loc_.kind()) {
     case NameLocation::Kind::Dynamic:
-      if (!bce_->emitAtomOp(name_, JSOP_GETNAME)) {
+      if (!bce_->emitAtomOp(JSOP_GETNAME, name_)) {
         //          [stack] VAL
         return false;
       }
       break;
     case NameLocation::Kind::Global:
-      if (!bce_->emitAtomOp(name_, JSOP_GETGNAME)) {
+      if (!bce_->emitAtomOp(JSOP_GETGNAME, name_)) {
         //          [stack] VAL
         return false;
       }
       break;
     case NameLocation::Kind::Intrinsic:
-      if (!bce_->emitAtomOp(name_, JSOP_GETINTRINSIC)) {
+      if (!bce_->emitAtomOp(JSOP_GETINTRINSIC, name_)) {
         //          [stack] VAL
         return false;
       }
@@ -54,7 +54,7 @@ bool NameOpEmitter::emitGet() {
       }
       break;
     case NameLocation::Kind::Import:
-      if (!bce_->emitAtomOp(name_, JSOP_GETIMPORT)) {
+      if (!bce_->emitAtomOp(JSOP_GETIMPORT, name_)) {
         //          [stack] VAL
         return false;
       }
@@ -99,14 +99,14 @@ bool NameOpEmitter::emitGet() {
       case NameLocation::Kind::Dynamic: {
         JSOp thisOp =
             bce_->needsImplicitThis() ? JSOP_IMPLICITTHIS : JSOP_GIMPLICITTHIS;
-        if (!bce_->emitAtomOp(name_, thisOp)) {
+        if (!bce_->emitAtomOp(thisOp, name_)) {
           //        [stack] CALLEE THIS
           return false;
         }
         break;
       }
       case NameLocation::Kind::Global:
-        if (!bce_->emitAtomOp(name_, JSOP_GIMPLICITTHIS)) {
+        if (!bce_->emitAtomOp(JSOP_GIMPLICITTHIS, name_)) {
           //        [stack] CALLEE THIS
           return false;
         }
@@ -216,7 +216,7 @@ bool NameOpEmitter::prepareForRhs() {
         //          [stack] ENV ENV
         return false;
       }
-      if (!bce_->emitAtomOp(name_, JSOP_GETBOUNDNAME)) {
+      if (!bce_->emitAtomOp(JSOP_GETBOUNDNAME, name_)) {
         //          [stack] ENV V
         return false;
       }
@@ -259,7 +259,7 @@ bool NameOpEmitter::emitAssignment() {
       break;
     }
     case NameLocation::Kind::Intrinsic:
-      if (!bce_->emitAtomOp(name_, JSOP_SETINTRINSIC)) {
+      if (!bce_->emitAtomOp(JSOP_SETINTRINSIC, name_)) {
         return false;
       }
       break;
