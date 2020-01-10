@@ -23,13 +23,17 @@ interface nsIMediaManagerService : nsISupports
   const unsigned short STATE_CAPTURE_ENABLED = 1;
   const unsigned short STATE_CAPTURE_DISABLED = 2;
 
-  /* Get the capture state for the given window and all descendant windows (iframes, etc) */
+  /* Get the capture state for the given window and, optionally,
+     all descendant windows (iframes, etc). The aIncludeDescendants
+     flag can be removed once all callers are converted to non-recursive usage.
+   */
   void mediaCaptureWindowState(in nsIDOMWindow aWindow,
                                out unsigned short aCamera,
                                out unsigned short aMicrophone,
-                               [optional] out unsigned short aScreenShare,
-                               [optional] out unsigned short aWindowShare,
-                               [optional] out unsigned short aBrowserShare);
+                               out unsigned short aScreenShare,
+                               out unsigned short aWindowShare,
+                               out unsigned short aBrowserShare,
+                               in boolean aIncludeDescendants);
 
   /* Clear per-orgin list of persistent DeviceIds stored for enumerateDevices
      sinceTime is milliseconds since 1 January 1970 00:00:00 UTC. 0 = clear all */

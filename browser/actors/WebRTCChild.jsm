@@ -484,7 +484,8 @@ function getTabStateForContentWindow(aContentWindow) {
     microphone,
     screen,
     window,
-    browser
+    browser,
+    true
   );
   let tabState = { camera: camera.value, microphone: microphone.value };
   if (screen.value == MediaManagerService.STATE_CAPTURE_ENABLED) {

@@ -117,10 +117,17 @@ var WebrtcUI = {
         let win = windows.queryElementAt(i, Ci.nsIDOMWindow);
         let hasCamera = {};
         let hasMicrophone = {};
+        const screen = {};
+        const window = {};
+        const browser = {};
         MediaManagerService.mediaCaptureWindowState(
           win,
           hasCamera,
-          hasMicrophone
+          hasMicrophone,
+          screen,
+          window,
+          browser,
+          true
         );
         if (hasCamera.value != MediaManagerService.STATE_NOCAPTURE) {
           cameraActive = true;
