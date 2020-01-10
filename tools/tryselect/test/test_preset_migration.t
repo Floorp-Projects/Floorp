@@ -3,7 +3,6 @@
 
 Test migration of syntax preset
 
-  $ rm $MOZBUILD_STATE_PATH/try_presets.yml
   $ cat > $MOZBUILD_STATE_PATH/autotry.ini << EOF
   > [try]
   > foo = -b o -p all -u mochitest -t none --tag bar
