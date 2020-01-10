@@ -4229,37 +4229,44 @@ static bool PromiseThenNewPromiseCapability(
 }
 
 // ES2016, 25.4.5.3., steps 3-5.
-MOZ_MUST_USE bool js::OriginalPromiseThen(
-    JSContext* cx, HandleObject promiseObj, HandleValue onFulfilled,
-    HandleValue onRejected, MutableHandleObject dependent,
-    CreateDependentPromise createDependent) {
+MOZ_MUST_USE JSObject* js::OriginalPromiseThen(JSContext* cx,
+                                               HandleObject promiseObj,
+                                               HandleObject onFulfilled,
+                                               HandleObject onRejected) {
+  cx->check(promiseObj);
+  cx->check(onFulfilled);
+  cx->check(onRejected);
+
   RootedValue promiseVal(cx, ObjectValue(*promiseObj));
-  Rooted<PromiseObject*> promise(
+  Rooted<PromiseObject*> unwrappedPromise(
       cx,
       UnwrapAndTypeCheckValue<PromiseObject>(cx, promiseVal, [cx, promiseObj] {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                                    JSMSG_INCOMPATIBLE_PROTO, "Promise", "then",
                                    promiseObj->getClass()->name);
       }));
-  if (!promise) {
-    return false;
+  if (!unwrappedPromise) {
+    return nullptr;
   }
 
   // Steps 3-4.
   Rooted<PromiseCapability> resultCapability(cx);
-  if (!PromiseThenNewPromiseCapability(cx, promiseObj, createDependent,
-                                       &resultCapability)) {
-    return false;
+  if (!PromiseThenNewPromiseCapability(
+          cx, promiseObj, CreateDependentPromise::Always, &resultCapability)) {
+    return nullptr;
   }
 
   // Step 5.
-  if (!PerformPromiseThen(cx, promise, onFulfilled, onRejected,
-                          resultCapability)) {
-    return false;
+  {
+    RootedValue onFulfilledVal(cx, ObjectOrNullValue(onFulfilled));
+    RootedValue onRejectedVal(cx, ObjectOrNullValue(onRejected));
+    if (!PerformPromiseThen(cx, unwrappedPromise, onFulfilledVal, onRejectedVal,
+                            resultCapability)) {
+      return nullptr;
+    }
   }
 
-  dependent.set(resultCapability.promise());
-  return true;
+  return resultCapability.promise();
 }
 
 static MOZ_MUST_USE bool OriginalPromiseThenWithoutSettleHandlers(
@@ -5157,33 +5164,35 @@ static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal,
   }
 
   RootedObject promiseObj(cx, &promiseVal.toObject());
-
-  if (!promiseObj->is<PromiseObject>()) {
-    JSObject* unwrappedPromiseObj = CheckedUnwrapStatic(promiseObj);
-    if (!unwrappedPromiseObj) {
-      ReportAccessDenied(cx);
-      return false;
-    }
-    if (!unwrappedPromiseObj->is<PromiseObject>()) {
-      JS_ReportErrorNumberLatin1(
-          cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, "Promise",
-          "then", InformalValueTypeName(ObjectValue(*promiseObj)));
-      return false;
-    }
+  Rooted<PromiseObject*> unwrappedPromise(
+      cx,
+      UnwrapAndTypeCheckValue<PromiseObject>(cx, promiseVal, [cx, &promiseVal] {
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                   JSMSG_INCOMPATIBLE_PROTO, "Promise", "then",
+                                   InformalValueTypeName(promiseVal));
+      }));
+  if (!unwrappedPromise) {
+    return false;
   }
 
-  // Steps 3-5.
+  // Steps 3-4.
   CreateDependentPromise createDependent =
       rvalUsed ? CreateDependentPromise::Always
                : CreateDependentPromise::SkipIfCtorUnobservable;
-  RootedObject resultPromise(cx);
-  if (!OriginalPromiseThen(cx, promiseObj, onFulfilled, onRejected,
-                           &resultPromise, createDependent)) {
+  Rooted<PromiseCapability> resultCapability(cx);
+  if (!PromiseThenNewPromiseCapability(cx, promiseObj, createDependent,
+                                       &resultCapability)) {
+    return false;
+  }
+
+  // Step 5.
+  if (!PerformPromiseThen(cx, unwrappedPromise, onFulfilled, onRejected,
+                          resultCapability)) {
     return false;
   }
 
   if (rvalUsed) {
-    rval.setObject(*resultPromise);
+    rval.setObject(*resultCapability.promise());
   } else {
     rval.setUndefined();
   }
