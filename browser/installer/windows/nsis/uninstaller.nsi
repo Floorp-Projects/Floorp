@@ -401,6 +401,18 @@ Section "Uninstall"
     ${EndIf}
   ${EndIf}
 
+  ; Remove our HKCR/Applications key, if it's for this installation.
+  ReadRegStr $0 HKLM "Software\Classes\Applications\${FileMainEXE}\DefaultIcon" ""
+  StrCpy $0 $0 -2
+  ${If} $0 == "$INSTDIR\${FileMainEXE}"
+    DeleteRegKey HKLM "Software\Classes\Applications\${FileMainEXE}"
+  ${EndIf}
+  ReadRegStr $0 HKCU "Software\Classes\Applications\${FileMainEXE}\DefaultIcon" ""
+  StrCpy $0 $0 -2
+  ${If} $0 == "$INSTDIR\${FileMainEXE}"
+    DeleteRegKey HKCU "Software\Classes\Applications\${FileMainEXE}"
+  ${EndIf}
+
   ; Remove directories and files we always control before parsing the uninstall
   ; log so empty directories can be removed.
   ${If} ${FileExists} "$INSTDIR\updates"
