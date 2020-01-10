@@ -108,6 +108,8 @@
                     android:layout_marginStart="44dp"
                     android:clickable="false"
                     android:focusable="false"
+                    android:lines="1"
+                    android:ellipsize="end"
                     android:importantForAccessibility="no"
                     android:text="@string/search_hint"
                     android:textColor="?primaryText"
