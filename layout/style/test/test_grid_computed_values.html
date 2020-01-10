@@ -88,17 +88,10 @@
   function test_grid2() {
     gridElement = document.getElementById("grid2");
     test(function() {
-      const expectedCols = SpecialPowers.getBoolPref("layout.css.serialize-grid-implicit-tracks")
-        ? "10px 10px 10px"
-        : "none";
-      const expectedRows = SpecialPowers.getBoolPref("layout.css.serialize-grid-implicit-tracks")
-        ? "400px"
-        : "none";
-
       assert_equals(getComputedStyle(gridElement).gridTemplateColumns,
-                    expectedCols);
-      assert_equals(getComputedStyle(gridElement).gridTemplateRows,
-                    expectedRows);
+                    "10px 10px 10px");
+      assert_equals(getComputedStyle(gridElement, "").gridTemplateRows,
+                    "400px");
     }, "test #grid2 computed grid-template-{columns,rows} values");
   }
 

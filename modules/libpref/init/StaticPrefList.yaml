@@ -4967,12 +4967,6 @@
   mirror: always
   rust: true
 
-# Are implicit tracks in computed grid templates serialized?
-- name: layout.css.serialize-grid-implicit-tracks
-  type: RelaxedAtomicBool
-  value: @IS_NOT_NIGHTLY_BUILD@
-  mirror: always
-
 # Set the number of device pixels per CSS pixel. A value <= 0 means choose
 # automatically based on user settings for the platform (e.g., "UI scale factor"
 # on Mac). A positive value is used as-is. This effectively controls the size

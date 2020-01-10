@@ -154,10 +154,6 @@ function testGridTemplateColumns(elem, expected) {
               ", EXPECTED=" + expected;
     document.body.appendChild(document.createTextNode(err));
   }
-  if (location.search.indexOf("no-implicit") !== -1) {
-    /* This shouldn't change the layout */
-    elem.style.gridTemplateColumns = actual;
-  }
 }
 var a1 = [
 "3px [a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
@@ -187,39 +183,6 @@ var a2 = [
 "[a b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c d] 3px",
 "3px [a b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c d] 3px"
 ];
-
-if (location.search.indexOf("no-implicit") !== -1) {
-  a1 = [
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
-    "[a b] 20px [c b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
-    "[a b] 20px [c b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
-    "[a b] 20px [c b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
-    "[a b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c d] 20px",
-    "[a b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 0px [c d] 20px",
-    "[a b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 0px [c d] 20px",
-  ]
-
-  a2 = [
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c d]",
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 0px [c b] 0px [c d]",
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 0px [c b] 0px [c d]",
-    "[a b] 20px [c b] 0px [c b] 20px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c b] 0px [c d]",
-    "[a b] 20px [c b] 0px [c b] 20px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c d]",
-    "[a b] 20px [c b] 0px [c b] 20px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c d]",
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c b] 0px [c d]",
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c d]",
-    "[a b] 0px [c b] 20px [c b] 20px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c d]",
-    "[a b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c b] 0px [c d]",
-    "[a b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c d]",
-    "[a b] 0px [c b] 20px [c b] 0px [c b] 20px [c b] 0px [c b] 0px [c b] 0px [c d]",
-  ]
-}
-
 function runTest() {
  var t1 = document.querySelectorAll('.t1');
  for (var i = 0; i < t1.length; ++i) {
