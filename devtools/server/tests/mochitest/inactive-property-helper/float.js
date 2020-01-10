@@ -48,4 +48,29 @@ export default [
     rules: [".table-footer { display: table-footer-group; float: left;}"],
     isActive: false,
   },
+  createGridPlacementOnFloatedItemTest("grid-row"),
+  createGridPlacementOnFloatedItemTest("grid-column"),
+  createGridPlacementOnFloatedItemTest("grid-area", "foo"),
 ];
+
+function createGridPlacementOnFloatedItemTest(property, value = "2") {
+  return {
+    info: `grid placement property ${property} is active on a floated grid item`,
+    property,
+    createTestElement: rootNode => {
+      const grid = document.createElement("div");
+      grid.style.display = "grid";
+      grid.style.gridTemplateRows = "repeat(5, 1fr)";
+      grid.style.gridTemplateColumns = "repeat(5, 1fr)";
+      grid.style.gridTemplateAreas = "'foo foo foo'";
+      rootNode.appendChild(grid);
+
+      const item = document.createElement("span");
+      grid.appendChild(item);
+
+      return item;
+    },
+    rules: [`span { ${property}: ${value}; float: left; }`],
+    isActive: true,
+  };
+}
