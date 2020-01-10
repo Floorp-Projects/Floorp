@@ -30,6 +30,7 @@
 #include "vm/ObjectOperations.h"  // js::GetProperty
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
+#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithValue
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::UnwrapReaderFromStream
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::Unwrap{Callee,Internal}Slot
 #include "vm/JSObject-inl.h"  // js::IsCallable, js::NewObjectWithClassProto
@@ -410,6 +411,10 @@ MOZ_MUST_USE JSObject* js::ReadableStreamTee_Cancel(
     }
   }
 
+  Rooted<PromiseObject*> unwrappedCancelPromise(
+      cx, unwrappedTeeState->cancelPromise());
+  MOZ_ASSERT(unwrappedCancelPromise != nullptr);
+
   // Step 13/14.c: If canceled2/canceled1 is true,
   if (bothBranchesCanceled) {
     // Step 13/14.c.i: Let compositeReason be
@@ -438,41 +443,30 @@ MOZ_MUST_USE JSObject* js::ReadableStreamTee_Cancel(
     //                  ! ReadableStreamCancel(stream, compositeReason).
     // In our implementation, this can fail with OOM. The best course then
     // is to reject cancelPromise with an OOM error.
-    // XXX Why is this rejecting with an OOM in the *cancel promise*'s
-    //     compartment, instead of just the current compartment (which should be
-    //     the compartment ReadableStreamCancel would have returned a promise
-    //     from)?  This would also let us use RejectUnwrappedPromiseWithError
-    //     and avoid manually wrapping |cancelResult| in the success case...
     Rooted<JSObject*> cancelResult(
         cx, js::ReadableStreamCancel(cx, unwrappedStream, compositeReason));
-    {
-      Rooted<PromiseObject*> cancelPromise(cx,
-                                           unwrappedTeeState->cancelPromise());
-      AutoRealm ar(cx, cancelPromise);
-
-      if (!cancelResult) {
-        // Handle the OOM case mentioned above.
-        if (!RejectPromiseWithPendingError(cx, cancelPromise)) {
-          return nullptr;
-        }
-      } else {
-        // Step 13/14.c.iii: Resolve cancelPromise with cancelResult.
-        Rooted<Value> resultVal(cx, ObjectValue(*cancelResult));
-        if (!cx->compartment()->wrap(cx, &resultVal)) {
-          return nullptr;
-        }
-        if (!PromiseObject::resolve(cx, cancelPromise, resultVal)) {
-          return nullptr;
-        }
+    if (!cancelResult) {
+      // Handle the OOM case mentioned above.
+      AutoRealm ar(cx, unwrappedCancelPromise);
+      if (!RejectPromiseWithPendingError(cx, unwrappedCancelPromise)) {
+        return nullptr;
+      }
+    } else {
+      // Step 13/14.c.iii: Resolve cancelPromise with cancelResult.
+      Rooted<Value> cancelResultVal(cx, ObjectValue(*cancelResult));
+      if (!ResolveUnwrappedPromiseWithValue(cx, unwrappedCancelPromise,
+                                            cancelResultVal)) {
+        return nullptr;
       }
     }
   }
 
   // Step 13/14.d: Return cancelPromise.
-  Rooted<JSObject*> cancelPromise(cx, unwrappedTeeState->cancelPromise());
+  Rooted<JSObject*> cancelPromise(cx, unwrappedCancelPromise);
   if (!cx->compartment()->wrap(cx, &cancelPromise)) {
     return nullptr;
   }
+
   return cancelPromise;
 }
 
