@@ -448,8 +448,13 @@ public class GeckoThread extends Thread {
         initGeckoEnvironment();
 
         if ((mInitInfo.flags & FLAG_PRELOAD_CHILD) != 0) {
-            // Preload the content ("tab") child process.
-            GeckoProcessManager.getInstance().preload("tab");
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    // Preload the content ("tab") child process.
+                    GeckoProcessManager.getInstance().preload("tab");
+                }
+            });
         }
 
         if ((mInitInfo.flags & FLAG_DEBUGGING) != 0) {
