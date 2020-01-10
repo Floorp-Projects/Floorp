@@ -656,11 +656,11 @@ win64-rusttests/debug:
             - win64-nasm
             - win64-node
 
-win64-ccov/debug:
-    description: "Win64 Debug Code Coverage"
+win64-ccov/opt:
+    description: "Win64 Opt Code Coverage"
     index:
         product: firefox
-        job-name: win64-ccov-debug
+        job-name: win64-ccov-opt
     attributes:
         enable-build-signing: true
     treeherder:
@@ -685,7 +685,7 @@ win64-ccov/debug:
             - builds/releng_base_firefox.py
             - builds/taskcluster_base_windows.py
             - builds/taskcluster_base_win64.py
-            - builds/taskcluster_sub_win64/ccov_debug.py
+            - builds/taskcluster_sub_win64/ccov_opt.py
         mozconfig-variant: code-coverage
     run-on-projects: ['mozilla-central', 'try']
     fetches:
