@@ -34,6 +34,7 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>Autocomplete popup - invoke getter usage test</body>`;
 
 add_task(async function() {
+  await pushPref("devtools.editor.autoclosebrackets", false);
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
