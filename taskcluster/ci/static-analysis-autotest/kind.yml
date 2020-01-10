@@ -23,6 +23,7 @@ job-defaults:
         max-run-time: 3600
         env:
             PERFHERDER_EXTRA_OPTIONS: static-analysis-autotest
+    run-on-projects: ['mozilla-central', 'try']
     run:
         using: mozharness
         actions: [static-analysis-autotest]
