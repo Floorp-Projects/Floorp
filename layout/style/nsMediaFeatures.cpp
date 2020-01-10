@@ -286,9 +286,14 @@ static PointerCapabilities GetPointerCapabilities(const Document* aDocument,
     }
   }
 
-  // The default value is mouse-type pointer.
+  // The default value for Desktop is mouse-type pointer, and for Android
+  // a coarse pointer.
   const PointerCapabilities kDefaultCapabilities =
+#ifdef ANDROID
+      PointerCapabilities::Coarse;
+#else
       PointerCapabilities::Fine | PointerCapabilities::Hover;
+#endif
 
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return kDefaultCapabilities;
