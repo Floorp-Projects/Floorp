@@ -219,8 +219,8 @@ async function test() {
     assertEq(cancelPromise1 instanceof otherGlobal.Promise, true);
     assertEq(subPromiseCreated, false);
     assertEq(speciesInvoked, false);
-    assertEq(otherGlobal.subPromiseCreated, true);
-    assertEq(otherGlobal.speciesInvoked, true);
+    assertEq(otherGlobal.subPromiseCreated, false);
+    assertEq(otherGlobal.speciesInvoked, false);
     subPromiseCreated = false;
     speciesInvoked = false;
     otherGlobal.subPromiseCreated = false;
@@ -229,8 +229,8 @@ async function test() {
     assertEq(cancelPromise2 instanceof otherGlobal.Promise, true);
     assertEq(subPromiseCreated, false);
     assertEq(speciesInvoked, false);
-    assertEq(otherGlobal.subPromiseCreated, true);
-    assertEq(otherGlobal.speciesInvoked, true);
+    assertEq(otherGlobal.subPromiseCreated, false);
+    assertEq(otherGlobal.speciesInvoked, false);
     await 1;
 
 
@@ -254,21 +254,21 @@ async function test() {
     otherGlobal.subPromiseCreated = false;
     otherGlobal.speciesInvoked = false;
     cancelPromise1 = ReadableStream.prototype.cancel.call(branch1, { name: "cancel 1" });
-    assertEq(cancelPromise1 instanceof otherGlobal.Promise, true);
+    assertEq(cancelPromise1 instanceof Promise, true);
     assertEq(subPromiseCreated, false);
     assertEq(speciesInvoked, false);
-    assertEq(otherGlobal.subPromiseCreated, true);
-    assertEq(otherGlobal.speciesInvoked, true);
+    assertEq(otherGlobal.subPromiseCreated, false);
+    assertEq(otherGlobal.speciesInvoked, false);
     subPromiseCreated = false;
     speciesInvoked = false;
     otherGlobal.subPromiseCreated = false;
     otherGlobal.speciesInvoked = false;
     cancelPromise2 = ReadableStream.prototype.cancel.call(branch2, { name: "cancel 2" });
-    assertEq(cancelPromise2 instanceof otherGlobal.Promise, true);
+    assertEq(cancelPromise2 instanceof Promise, true);
     assertEq(subPromiseCreated, false);
     assertEq(speciesInvoked, false);
-    assertEq(otherGlobal.subPromiseCreated, true);
-    assertEq(otherGlobal.speciesInvoked, true);
+    assertEq(otherGlobal.subPromiseCreated, false);
+    assertEq(otherGlobal.speciesInvoked, false);
 
     if (!byteStreamsSupported) {
         return;
