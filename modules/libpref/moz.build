@@ -34,7 +34,6 @@ pref_groups = [
     'channelclassifier',
     'clipboard',
     'content',
-    'datareporting',
     'device',
     'devtools',
     'docshell',
