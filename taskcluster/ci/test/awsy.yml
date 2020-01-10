@@ -84,3 +84,10 @@ awsy-base-dmd:
         extra-options:
             - --base
             - --dmd
+
+awsy-stylo-sequential:
+    description: "Are we slim yet for Stylo sequential"
+    treeherder-symbol: SYss(sy)
+    mozharness:
+        extra-options:
+            - --single-stylo-traversal
