@@ -76,10 +76,12 @@ enum {
   JOF_DETECTING = 1 << 9,    /* object detection for warning-quelling */
   JOF_CHECKSLOPPY = 1 << 10, /* op can only be generated in sloppy mode */
   JOF_CHECKSTRICT = 1 << 11, /* op can only be generated in strict mode */
-  JOF_INVOKE = 1 << 12,      /* call, construct, or spreadcall instruction */
-  JOF_GNAME = 1 << 13,       /* predicted global name */
-  JOF_TYPESET = 1 << 14,     /* has an entry in a script's type sets */
-  JOF_IC = 1 << 15,          /* baseline may use an IC for this op */
+  JOF_INVOKE = 1 << 12,      /* any call, construct, or eval instruction */
+  JOF_CONSTRUCT = 1 << 13,   /* invoke instruction using [[Construct]] entry */
+  JOF_SPREAD = 1 << 14,      /* invoke instruction using spread argument */
+  JOF_GNAME = 1 << 15,       /* predicted global name */
+  JOF_TYPESET = 1 << 16,     /* has an entry in a script's type sets */
+  JOF_IC = 1 << 17,          /* baseline may use an IC for this op */
 };
 
 /* Shorthand for type from format. */
@@ -636,23 +638,16 @@ inline bool IsStrictEvalPC(jsbytecode* pc) {
   return op == JSOP_STRICTEVAL || op == JSOP_STRICTSPREADEVAL;
 }
 
-inline bool IsConstructorCallOp(JSOp op) {
-  return op == JSOP_NEW || op == JSOP_SUPERCALL || op == JSOP_SPREADNEW ||
-         op == JSOP_SPREADSUPERCALL;
+inline bool IsConstructOp(JSOp op) {
+  return CodeSpec[op].format & JOF_CONSTRUCT;
 }
-inline bool IsConstructorCallPC(const jsbytecode* pc) {
-  return IsConstructorCallOp(JSOp(*pc));
-}
-
-inline bool IsSpreadCallOp(JSOp op) {
-  return op == JSOP_SPREADCALL || op == JSOP_SPREADNEW ||
-         op == JSOP_SPREADSUPERCALL || op == JSOP_SPREADEVAL ||
-         op == JSOP_STRICTSPREADEVAL;
+inline bool IsConstructPC(const jsbytecode* pc) {
+  return IsConstructOp(JSOp(*pc));
 }
 
-inline bool IsSpreadCallPC(const jsbytecode* pc) {
-  return IsSpreadCallOp(JSOp(*pc));
-}
+inline bool IsSpreadOp(JSOp op) { return CodeSpec[op].format & JOF_SPREAD; }
+
+inline bool IsSpreadPC(const jsbytecode* pc) { return IsSpreadOp(JSOp(*pc)); }
 
 static inline int32_t GetBytecodeInteger(jsbytecode* pc) {
   switch (JSOp(*pc)) {

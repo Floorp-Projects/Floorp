@@ -221,7 +221,7 @@ inline bool IsIonInlinableGetterOrSetterOp(JSOp op) {
 inline bool IsIonInlinableOp(JSOp op) {
   // CALL, FUNCALL, FUNAPPLY, EVAL, NEW (Normal Callsites)
   // or an inlinable getter or setter.
-  return (IsInvokeOp(op) && !IsSpreadCallOp(op)) ||
+  return (IsInvokeOp(op) && !IsSpreadOp(op)) ||
          IsIonInlinableGetterOrSetterOp(op);
 }
 
