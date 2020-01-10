@@ -329,7 +329,8 @@ async function testViewportResize(
   expectedViewportSize,
   expectedHandleMove
 ) {
-  const win = ui.toolWindow;
+  const win = ui.getBrowserWindow();
+
   const resized = waitForViewportResizeTo(ui, ...expectedViewportSize);
   const startRect = dragElementBy(selector, ...moveBy, win);
   await resized;
