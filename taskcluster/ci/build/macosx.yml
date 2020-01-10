@@ -284,7 +284,7 @@ macosx64-add-on-devel/opt:
         custom-build-variant-cfg: add-on-devel
         mozconfig-variant: add-on-devel
         tooltool-downloads: internal
-    run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
+    run-on-projects: ['mozilla-beta', 'mozilla-release']
     fetches:
         toolchain:
             - linux64-binutils
