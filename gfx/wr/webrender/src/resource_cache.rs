@@ -400,7 +400,7 @@ impl ImageResult {
                 entry.mark_unused(texture_cache);
             },
             ImageResult::Multi(ref mut entries) => {
-                for (_, entry) in &mut entries.resources {
+                for entry in entries.resources.values_mut() {
                     entry.mark_unused(texture_cache);
                 }
             },
