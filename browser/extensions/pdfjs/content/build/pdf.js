@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * Javascript code in this page
  *
- * Copyright 2019 Mozilla Foundation
+ * Copyright 2020 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.254';
-var pdfjsBuild = 'b833f843';
+var pdfjsVersion = '2.4.264';
+var pdfjsBuild = '4729fdc0';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1234,7 +1234,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.4.254',
+    apiVersion: '2.4.264',
     source: {
       data: source.data,
       url: source.url,
@@ -3173,9 +3173,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.4.254';
+const version = '2.4.264';
 exports.version = version;
-const build = 'b833f843';
+const build = '4729fdc0';
 exports.build = build;
 
 /***/ }),
