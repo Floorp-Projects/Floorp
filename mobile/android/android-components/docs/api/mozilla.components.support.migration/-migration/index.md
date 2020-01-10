@@ -2,7 +2,7 @@
 
 # Migration
 
-`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L38)
+`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L39)
 
 Supported Fennec migrations and their current versions.
 
@@ -10,6 +10,7 @@ Supported Fennec migrations and their current versions.
 
 | Name | Summary |
 |---|---|
+| [Addons](-addons.md) | `object Addons : `[`Migration`](./index.md)<br>Migrates / Disables all currently unsupported Add-ons. |
 | [Bookmarks](-bookmarks.md) | `object Bookmarks : `[`Migration`](./index.md)<br>Migrates bookmarks. Must run after history was migrated. |
 | [FxA](-fx-a.md) | `object FxA : `[`Migration`](./index.md)<br>Migrates FxA state. |
 | [Gecko](-gecko.md) | `object Gecko : `[`Migration`](./index.md)<br>Migrates Gecko(View) internal files. |
@@ -34,6 +35,7 @@ Supported Fennec migrations and their current versions.
 
 | Name | Summary |
 |---|---|
+| [Addons](-addons.md) | `object Addons : `[`Migration`](./index.md)<br>Migrates / Disables all currently unsupported Add-ons. |
 | [Bookmarks](-bookmarks.md) | `object Bookmarks : `[`Migration`](./index.md)<br>Migrates bookmarks. Must run after history was migrated. |
 | [FxA](-fx-a.md) | `object FxA : `[`Migration`](./index.md)<br>Migrates FxA state. |
 | [Gecko](-gecko.md) | `object Gecko : `[`Migration`](./index.md)<br>Migrates Gecko(View) internal files. |

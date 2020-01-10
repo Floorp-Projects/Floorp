@@ -2,12 +2,16 @@
 
 # enableWebExtension
 
-`open fun enableWebExtension(extension: `[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`, onSuccess: (`[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }, onError: (`[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L200)
+`open fun enableWebExtension(extension: `[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`, source: `[`EnableSource`](../../mozilla.components.concept.engine.webextension/-enable-source/index.md)` = EnableSource.USER, onSuccess: (`[`WebExtension`](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }, onError: (`[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { }): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L203)
 
-Enables the provided [WebExtension](../../mozilla.components.concept.engine.webextension/-web-extension/index.md). If the extension is already enabled the [onSuccess](enable-web-extension.md#mozilla.components.concept.engine.Engine$enableWebExtension(mozilla.components.concept.engine.webextension.WebExtension, kotlin.Function1((mozilla.components.concept.engine.webextension.WebExtension, kotlin.Unit)), kotlin.Function1((kotlin.Throwable, kotlin.Unit)))/onSuccess)
+Enables the provided [WebExtension](../../mozilla.components.concept.engine.webextension/-web-extension/index.md). If the extension is already enabled the [onSuccess](enable-web-extension.md#mozilla.components.concept.engine.Engine$enableWebExtension(mozilla.components.concept.engine.webextension.WebExtension, mozilla.components.concept.engine.webextension.EnableSource, kotlin.Function1((mozilla.components.concept.engine.webextension.WebExtension, kotlin.Unit)), kotlin.Function1((kotlin.Throwable, kotlin.Unit)))/onSuccess)
 callback will be invoked, but this method has no effect on the extension.
 
 ### Parameters
+
+`extension` - the extension to enable.
+
+`source` - [EnableSource](../../mozilla.components.concept.engine.webextension/-enable-source/index.md) to indicate why the extension is enabled.
 
 `onSuccess` - (optional) callback invoked with the enabled [WebExtension](../../mozilla.components.concept.engine.webextension/-web-extension/index.md)
 

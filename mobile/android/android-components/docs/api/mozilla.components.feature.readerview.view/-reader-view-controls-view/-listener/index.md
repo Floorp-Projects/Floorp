@@ -2,7 +2,7 @@
 
 # Listener
 
-`interface Listener` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/view/ReaderViewControlsView.kt#L48)
+`interface Listener` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/readerview/src/main/java/mozilla/components/feature/readerview/view/ReaderViewControlsView.kt#L57)
 
 ### Functions
 
