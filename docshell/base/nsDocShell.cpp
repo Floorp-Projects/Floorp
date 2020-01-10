@@ -12445,8 +12445,12 @@ nsresult nsDocShell::OnOverLink(nsIContent* aContent, nsIURI* aURI,
     return rv;
   }
 
+  nsCOMPtr<nsIURI> exposableURI;
+  rv = sURIFixup->CreateExposableURI(aURI, getter_AddRefs(exposableURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsAutoCString spec;
-  rv = aURI->GetDisplaySpec(spec);
+  rv = exposableURI->GetDisplaySpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ConvertUTF8toUTF16 uStr(spec);
