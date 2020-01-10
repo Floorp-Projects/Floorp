@@ -14,7 +14,9 @@
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsINSSErrorsService.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsIUploadChannel2.h"
+#include "nsIWebProgressListener.h"
 
 #include "nsIDNSService.h"
 #include "nsIDNSListener.h"
@@ -320,6 +322,18 @@ class LoaderListener final : public nsIStreamListener,
     // Body stream
     if (mStream) {
       builder->Body(mStream);
+    }
+
+    // Secure status
+    nsCOMPtr<nsISupports> securityInfo;
+    channel->GetSecurityInfo(getter_AddRefs(securityInfo));
+    if (securityInfo) {
+      nsCOMPtr<nsITransportSecurityInfo> tsi = do_QueryInterface(securityInfo, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      uint32_t securityState = 0;
+      tsi->GetSecurityState(&securityState);
+      builder->IsSecure(securityState == nsIWebProgressListener::STATE_IS_SECURE);
     }
 
     mResult->Complete(builder->Build());
