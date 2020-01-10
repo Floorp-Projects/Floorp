@@ -3911,10 +3911,9 @@ JS_PUBLIC_API bool JS::RejectPromise(JSContext* cx, JS::HandleObject promiseObj,
   return ResolveOrRejectPromise(cx, promiseObj, rejectionValue, true);
 }
 
-static MOZ_MUST_USE bool CallOriginalPromiseThenImpl(
+JS_PUBLIC_API JSObject* JS::CallOriginalPromiseThen(
     JSContext* cx, JS::HandleObject promiseObj, JS::HandleObject onFulfilledObj,
-    JS::HandleObject onRejectedObj, JS::MutableHandleObject resultObj,
-    CreateDependentPromise createDependent) {
+    JS::HandleObject onRejectedObj) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(promiseObj, onFulfilledObj, onRejectedObj);
@@ -3924,19 +3923,13 @@ static MOZ_MUST_USE bool CallOriginalPromiseThenImpl(
 
   RootedValue onFulfilled(cx, ObjectOrNullValue(onFulfilledObj));
   RootedValue onRejected(cx, ObjectOrNullValue(onRejectedObj));
-  return OriginalPromiseThen(cx, promiseObj, onFulfilled, onRejected, resultObj,
-                             createDependent);
-}
 
-JS_PUBLIC_API JSObject* JS::CallOriginalPromiseThen(
-    JSContext* cx, JS::HandleObject promiseObj, JS::HandleObject onResolvedObj,
-    JS::HandleObject onRejectedObj) {
   RootedObject resultPromise(cx);
-  if (!CallOriginalPromiseThenImpl(cx, promiseObj, onResolvedObj, onRejectedObj,
-                                   &resultPromise,
-                                   CreateDependentPromise::Always)) {
+  if (!OriginalPromiseThen(cx, promiseObj, onFulfilled, onRejected,
+                           &resultPromise, CreateDependentPromise::Always)) {
     return nullptr;
   }
+
   return resultPromise;
 }
 
