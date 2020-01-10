@@ -320,7 +320,7 @@ bool PropertyEmitter::emitInit(JSOp op, JS::Handle<JSAtom*> key) {
     return false;
   }
 
-  if (!bce_->emitIndex32(op, index)) {
+  if (!bce_->emitAtomOp(op, index)) {
     //              [stack] CTOR? OBJ CTOR?
     return false;
   }

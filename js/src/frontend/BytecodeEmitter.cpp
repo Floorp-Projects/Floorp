@@ -856,24 +856,6 @@ AbstractScope BytecodeEmitter::innermostScope() const {
   return innermostEmitterScope()->scope(this);
 }
 
-bool BytecodeEmitter::emitIndex32(JSOp op, uint32_t index) {
-  MOZ_ASSERT(checkStrictOrSloppy(op));
-
-  const size_t len = 1 + UINT32_INDEX_LEN;
-  MOZ_ASSERT(len == size_t(CodeSpec[op].length));
-
-  BytecodeOffset offset;
-  if (!emitCheck(op, len, &offset)) {
-    return false;
-  }
-
-  jsbytecode* code = bytecodeSection().code(offset);
-  code[0] = jsbytecode(op);
-  SET_UINT32_INDEX(code, index);
-  bytecodeSection().updateDepth(offset);
-  return true;
-}
-
 bool BytecodeEmitter::emitIndexOp(JSOp op, uint32_t index) {
   MOZ_ASSERT(checkStrictOrSloppy(op));
 
@@ -931,13 +913,13 @@ bool BytecodeEmitter::emitAtomOp(JSOp op, uint32_t atomIndex,
 bool BytecodeEmitter::emitInternedScopeOp(uint32_t index, JSOp op) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_SCOPE);
   MOZ_ASSERT(index < perScriptData().gcThingList().length());
-  return emitIndex32(op, index);
+  return emitIndexOp(op, index);
 }
 
 bool BytecodeEmitter::emitInternedObjectOp(uint32_t index, JSOp op) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
   MOZ_ASSERT(index < perScriptData().gcThingList().length());
-  return emitIndex32(op, index);
+  return emitIndexOp(op, index);
 }
 
 bool BytecodeEmitter::emitObjectOp(ObjectBox* objbox, JSOp op) {
@@ -961,7 +943,7 @@ bool BytecodeEmitter::emitObjectPairOp(ObjectBox* objbox1, ObjectBox* objbox2,
 }
 
 bool BytecodeEmitter::emitRegExp(uint32_t index) {
-  return emitIndex32(JSOP_REGEXP, index);
+  return emitIndexOp(JSOP_REGEXP, index);
 }
 
 bool BytecodeEmitter::emitLocalOp(JSOp op, uint32_t slot) {
@@ -1711,7 +1693,7 @@ bool BytecodeEmitter::emitPrepareIteratorResult() {
   if (!iteratorResultShape(&shape)) {
     return false;
   }
-  return emitIndex32(JSOP_NEWOBJECT, shape);
+  return emitIndexOp(JSOP_NEWOBJECT, shape);
 }
 
 bool BytecodeEmitter::emitFinishIteratorResult(bool done) {
@@ -1724,13 +1706,13 @@ bool BytecodeEmitter::emitFinishIteratorResult(bool done) {
     return false;
   }
 
-  if (!emitIndex32(JSOP_INITPROP, value_id)) {
+  if (!emitAtomOp(JSOP_INITPROP, value_id)) {
     return false;
   }
   if (!emit1(done ? JSOP_TRUE : JSOP_FALSE)) {
     return false;
   }
-  if (!emitIndex32(JSOP_INITPROP, done_id)) {
+  if (!emitAtomOp(JSOP_INITPROP, done_id)) {
     return false;
   }
   return true;
@@ -3881,7 +3863,7 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
         }
       }
 
-      if (!emitIndex32(JSOP_INITPROP, index)) {
+      if (!emitAtomOp(JSOP_INITPROP, index)) {
         return false;
       }
     }
@@ -4854,7 +4836,7 @@ bool BytecodeEmitter::emitBigIntOp(BigIntLiteral* bigint) {
   if (!perScriptData().gcThingList().append(bigint, &index)) {
     return false;
   }
-  return emitIndex32(JSOP_BIGINT, index);
+  return emitIndexOp(JSOP_BIGINT, index);
 }
 
 bool BytecodeEmitter::emitIterator() {
@@ -8033,7 +8015,7 @@ bool BytecodeEmitter::emitPropertyListObjLiteral(ListNode* obj,
   JSOp op = singleton
                 ? JSOP_OBJECT
                 : isInnerSingleton ? JSOP_NEWOBJECT_WITHGROUP : JSOP_NEWOBJECT;
-  bool success = emitIndex32(op, gcThingIndex);
+  bool success = emitIndexOp(op, gcThingIndex);
   if (!success) {
     return false;
   }
@@ -8066,7 +8048,7 @@ bool BytecodeEmitter::emitObjLiteralArray(ParseNode* arrayHead, bool isCow) {
   }
 
   JSOp op = isCow ? JSOP_NEWARRAY_COPYONWRITE : JSOP_OBJECT;
-  if (!emitIndex32(op, gcThingIndex)) {
+  if (!emitIndexOp(op, gcThingIndex)) {
     return false;
   }
 

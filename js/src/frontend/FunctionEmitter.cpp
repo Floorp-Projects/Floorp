@@ -273,7 +273,7 @@ bool FunctionEmitter::emitNonHoisted(unsigned index) {
 
   if (syntaxKind_ == FunctionSyntaxKind::DerivedClassConstructor) {
     //              [stack] PROTO
-    if (!bce_->emitIndex32(JSOP_FUNWITHPROTO, index)) {
+    if (!bce_->emitIndexOp(JSOP_FUNWITHPROTO, index)) {
       //            [stack] FUN
       return false;
     }
@@ -284,7 +284,7 @@ bool FunctionEmitter::emitNonHoisted(unsigned index) {
   // constructor. Emit the single instruction (without location info).
   JSOp op = syntaxKind_ == FunctionSyntaxKind::Arrow ? JSOP_LAMBDA_ARROW
                                                      : JSOP_LAMBDA;
-  if (!bce_->emitIndex32(op, index)) {
+  if (!bce_->emitIndexOp(op, index)) {
     //              [stack] FUN
     return false;
   }
@@ -343,7 +343,7 @@ bool FunctionEmitter::emitTopLevelFunction(unsigned index) {
   MOZ_ASSERT(syntaxKind_ == FunctionSyntaxKind::Statement);
   MOZ_ASSERT(bce_->inPrologue());
 
-  if (!bce_->emitIndex32(JSOP_LAMBDA, index)) {
+  if (!bce_->emitIndexOp(JSOP_LAMBDA, index)) {
     //              [stack] FUN
     return false;
   }
