@@ -1171,7 +1171,7 @@ TelemetryImpl::GetIsOfficialTelemetry(bool* ret) {
 // C functions with the "fog_" prefix.
 // See toolkit/components/telemetry/fog/*.
 extern "C" {
-nsresult fog_init(const nsAString* dataDir);
+nsresult fog_init(const nsAString* dataDir, const nsAString* pingsenderPath);
 }
 
 static void internal_initFogotype(bool aUseTelemetry) {
@@ -1187,7 +1187,26 @@ static void internal_initFogotype(bool aUseTelemetry) {
     NS_WARNING("Couldn't get data path. Bailing on FOGotype.");
     return;
   }
-  NS_WARN_IF(NS_FAILED(fog_init(&path)));
+
+  nsCOMPtr<nsIFile> pingsender;
+  rv = NS_GetSpecialDirectory(NS_GRE_BIN_DIR, getter_AddRefs(pingsender));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Couldn't find pingsender. Bailing on FOGotype");
+    return;
+  }
+#ifdef XP_WIN
+  pingsender->Append(NS_LITERAL_STRING("pingsender.exe"));
+#else
+  pingsender->Append(NS_LITERAL_STRING("pingsender"));
+#endif
+  nsAutoString pingsenderPath;
+  rv = pingsender->GetPath(pingsenderPath);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Couldn't get pingsender path. Bailing on FOGotype.");
+    return;
+  }
+
+  Unused << NS_WARN_IF(NS_FAILED(fog_init(&path, &pingsenderPath)));
 }
 #endif  // defined(MOZ_FOGOTYPE)
 
