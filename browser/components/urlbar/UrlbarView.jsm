@@ -380,10 +380,12 @@ class UrlbarView {
       if (!this.isOpen) {
         this._openPanel();
       }
+      this.controller.engagementEvent.discard();
       this.input.startQuery({
         autofillIgnoresSelection: true,
         searchString: this.input.value,
         allowAutofill: this._queryContext.allowAutofill,
+        event: new CustomEvent("urlbar-reopen"),
       });
       return true;
     }
