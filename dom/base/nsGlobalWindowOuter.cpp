@@ -6360,20 +6360,10 @@ Element* nsGlobalWindowOuter::GetFrameElementOuter(
 }
 
 Element* nsGlobalWindowOuter::GetRealFrameElementOuter() {
-  if (!mDocShell) {
+  if (!mBrowsingContext || mBrowsingContext->IsTop()) {
     return nullptr;
   }
-
-  nsCOMPtr<nsIDocShell> parent;
-  mDocShell->GetSameTypeParentIgnoreBrowserBoundaries(getter_AddRefs(parent));
-
-  if (!parent || parent == mDocShell) {
-    // We're at a chrome boundary, don't expose the chrome iframe
-    // element to content code.
-    return nullptr;
-  }
-
-  return mFrameElement;
+  return mBrowsingContext->GetEmbedderElement();
 }
 
 /**
@@ -6381,7 +6371,7 @@ Element* nsGlobalWindowOuter::GetRealFrameElementOuter() {
  * around GetRealFrameElement.
  */
 Element* nsGlobalWindowOuter::GetFrameElement() {
-  FORWARD_TO_INNER(GetFrameElement, (), nullptr);
+  return GetRealFrameElementOuter();
 }
 
 namespace {
