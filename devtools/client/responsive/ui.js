@@ -250,6 +250,14 @@ class ResponsiveUI {
     rdmFrame.src = "chrome://devtools/content/responsive/toolbar.xhtml";
     rdmFrame.classList.add("rdm-toolbar");
 
+    // Create resizer handlers
+    const resizeHandle = doc.createElement("div");
+    resizeHandle.classList.add("viewport-resize-handle");
+    const resizeHandleX = doc.createElement("div");
+    resizeHandleX.classList.add("viewport-horizontal-resize-handle");
+    const resizeHandleY = doc.createElement("div");
+    resizeHandleY.classList.add("viewport-vertical-resize-handle");
+
     this.browserContainerEl = gBrowser.getBrowserContainer(
       gBrowser.getBrowserForTab(this.tab)
     );
@@ -261,6 +269,9 @@ class ResponsiveUI {
 
     // Prepend the RDM iframe inside of the current tab's browser stack.
     this.browserStackEl.prepend(rdmFrame);
+    this.browserStackEl.append(resizeHandle);
+    this.browserStackEl.append(resizeHandleX);
+    this.browserStackEl.append(resizeHandleY);
 
     // Wait for the frame script to be loaded.
     message.wait(rdmFrame.contentWindow, "script-init").then(async () => {
@@ -278,6 +289,9 @@ class ResponsiveUI {
     });
 
     this.rdmFrame = rdmFrame;
+    this.resizeHandle = resizeHandle;
+    this.resizeHandleX = resizeHandleX;
+    this.resizeHandleY = resizeHandleY;
   }
 
   /**
@@ -331,6 +345,11 @@ class ResponsiveUI {
       this.rdmFrame.contentWindow.removeEventListener("message", this);
       this.rdmFrame.remove();
 
+      // Clean up resize handlers
+      this.resizeHandle.remove();
+      this.resizeHandleX.remove();
+      this.resizeHandleY.remove();
+
       this.browserContainerEl.classList.remove("responsive-mode");
       this.browserStackEl.style.removeProperty("--rdm-width");
       this.browserStackEl.style.removeProperty("--rdm-height");
@@ -365,6 +384,9 @@ class ResponsiveUI {
     this.tab = null;
     this.inited = null;
     this.rdmFrame = null;
+    this.resizeHandle = null;
+    this.resizeHandleX = null;
+    this.resizeHandleY = null;
     this.toolWindow = null;
     this.swap = null;
 
