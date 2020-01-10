@@ -73,6 +73,21 @@ button {
   margin: var(--moz-vertical-spacing) 0 0;
 }
 
+.buttonSecondary{
+  /* Force buttons to display: block here to try and enforce collapsing margins */
+  display: block;
+  width: 100%;
+  border: none;
+  padding: 1rem;
+  font-family: sans-serif;
+  background-color: rgba(249, 249, 250, 0.1);
+  color: #FFFFFF;
+  font-weight: 300;
+  border-radius: 2px;
+  background-image: none;
+  margin: var(--moz-vertical-spacing) 0 0;
+}
+
 #errorPageContainer {
   /* If the page is greater than 550px center the content.
    * This number should be kept in sync with the media query for tablets below */
@@ -101,4 +116,42 @@ button {
       min-height: calc(100% - 64px);
     }
   }
+}
+
+#advancedPanelButtonContainer {
+  background-color: rgba(128, 128, 147, 0.1);
+  display: flex;
+  justify-content: center;
+  padding: 0.5em;
+}
+
+#advancedPanelContainer {
+  width: 100%;
+  left: 0;
+}
+
+.advanced-panel {
+  display: none;
+  background-color: #202023;
+  border: 1px solid rgba(249, 249, 250, 0.2);
+  margin: 48px auto;
+  min-width: 13em;
+  max-width: 52em;
+}
+
+.button-container {
+  display: flex;
+  flex-flow: row;
+}
+
+.button-container > button {
+  flex: 1 0 50%;
+  text-align: center;
+  margin: 0em 0.1em 0em 0.1em;
+}
+
+#badCertTechnicalInfo {
+  margin: 0em 1em 1em;
+  overflow: auto;
+  white-space: pre-line;
 }
