@@ -433,8 +433,8 @@ static inline void* GetStubReturnAddress(JSContext* cx, JSOp op) {
   }
 
   // This should be a call op of some kind, now.
-  MOZ_ASSERT(IsInvokeOp(op) && !IsSpreadCallOp(op));
-  if (IsConstructorCallOp(op)) {
+  MOZ_ASSERT(IsInvokeOp(op) && !IsSpreadOp(op));
+  if (IsConstructOp(op)) {
     return code.bailoutReturnAddr(BailoutReturnKind::New);
   }
   return code.bailoutReturnAddr(BailoutReturnKind::Call);
@@ -899,7 +899,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   const JSOp op = JSOp(*pc);
 
   // Inlining of SPREADCALL-like frames not currently supported.
-  MOZ_ASSERT_IF(IsSpreadCallOp(op), !iter.moreFrames());
+  MOZ_ASSERT_IF(IsSpreadOp(op), !iter.moreFrames());
 
   // Fixup inlined JSOP_FUNCALL, JSOP_FUNAPPLY, and accessors on the caller
   // side. On the caller side this must represent like the function wasn't
@@ -1228,7 +1228,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   // BaselineJS frame. Arguments are reversed on the BaselineJS frame's stack
   // values.
   MOZ_ASSERT(IsIonInlinableOp(op));
-  bool pushedNewTarget = IsConstructorCallPC(pc);
+  bool pushedNewTarget = IsConstructPC(pc);
   unsigned actualArgc;
   Value callee;
   if (needToSaveArgs) {

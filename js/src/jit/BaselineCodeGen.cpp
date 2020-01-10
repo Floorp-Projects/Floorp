@@ -4582,7 +4582,7 @@ bool BaselineCompilerCodeGen::emitCall(JSOp op) {
   }
 
   // Update FrameInfo.
-  bool construct = IsConstructorCallOp(op);
+  bool construct = IsConstructOp(op);
   frame.popn(2 + argc + construct);
   frame.push(R0);
   return true;
@@ -4601,7 +4601,7 @@ bool BaselineInterpreterCodeGen::emitCall(JSOp op) {
   // Pop the arguments. We have to reload pc/argc because the IC clobbers them.
   // The return value is in R0 so we can't use that.
   Register scratch = R1.scratchReg();
-  uint32_t extraValuesToPop = IsConstructorCallOp(op) ? 3 : 2;
+  uint32_t extraValuesToPop = IsConstructOp(op) ? 3 : 2;
   Register spReg = AsRegister(masm.getStackPointer());
   LoadUint16Operand(masm, scratch);
   masm.computeEffectiveAddress(
