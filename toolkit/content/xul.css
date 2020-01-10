@@ -577,7 +577,7 @@ tabmodalprompt {
 }
 
 /* Some elements that in HTML blocks should be inline-level by default */
-label, button {
+label, button, image {
   display: -moz-inline-box;
 }
 
