@@ -304,7 +304,7 @@ class Option(object):
                     ', '.join("'%s'" % c for c in choices))
         elif has_choices:
             maxargs = self.maxargs
-            if len(choices) < maxargs and maxargs != sys.maxsize:
+            if len(choices) < maxargs and maxargs != sys.maxint:
                 raise InvalidOptionError('Not enough `choices` for `nargs`')
         self.choices = choices
         self.help = help
@@ -372,7 +372,7 @@ class Option(object):
     def maxargs(self):
         if isinstance(self.nargs, int):
             return self.nargs
-        return 1 if self.nargs == '?' else sys.maxsize
+        return 1 if self.nargs == '?' else sys.maxint
 
     def _validate_nargs(self, num):
         minargs, maxargs = self.minargs, self.maxargs

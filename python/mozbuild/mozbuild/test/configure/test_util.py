@@ -9,10 +9,9 @@ import os
 import tempfile
 import textwrap
 import unittest
-import six
 import sys
 
-from six import StringIO
+from StringIO import StringIO
 
 from mozunit import main
 from mozpack import path as mozpath
@@ -438,8 +437,8 @@ class TestLogSubprocessOutput(unittest.TestCase):
         self.assertEquals(status, 0)
         quote_char = "'"
         if getpreferredencoding().lower() == 'utf-8':
-            quote_char = '\u00B4'
-        self.assertEquals(six.ensure_text(out.getvalue().strip()), quote_char)
+            quote_char = '\u00B4'.encode('utf-8')
+        self.assertEquals(out.getvalue().strip(), quote_char)
 
 
 class TestVersion(unittest.TestCase):
