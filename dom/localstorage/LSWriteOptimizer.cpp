@@ -12,17 +12,13 @@ namespace dom {
 class LSWriteOptimizerBase::WriteInfoComparator {
  public:
   bool Equals(const WriteInfo* a, const WriteInfo* b) const {
-    if (a == b) {
-      return true;
-    }
-    return a && b && a->SerialNumber() == b->SerialNumber();
+    MOZ_ASSERT(a && b);
+    return a->SerialNumber() == b->SerialNumber();
   }
 
   bool LessThan(const WriteInfo* a, const WriteInfo* b) const {
-    if (a && b) {
-      return a->SerialNumber() < b->SerialNumber();
-    }
-    return !!b;
+    MOZ_ASSERT(a && b);
+    return a->SerialNumber() < b->SerialNumber();
   }
 };
 
