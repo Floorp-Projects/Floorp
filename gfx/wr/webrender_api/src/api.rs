@@ -1636,7 +1636,7 @@ impl RenderApi {
         for payload in document_payloads.drain(..).flatten() {
             self.payload_sender.send_payload(payload).unwrap();
         }
-        self.api_sender.send(ApiMsg::UpdateDocuments(document_ids.clone(), msgs)).unwrap();
+        self.api_sender.send(ApiMsg::UpdateDocuments(document_ids, msgs)).unwrap();
     }
 
     /// Does a hit test on display items in the specified document, at the given
@@ -1779,7 +1779,7 @@ impl ZoomFactor {
     }
 
     /// Get the zoom factor as an untyped float.
-    pub fn get(&self) -> f32 {
+    pub fn get(self) -> f32 {
         self.0
     }
 }
@@ -1815,8 +1815,8 @@ pub struct PropertyBindingKey<T> {
 /// Construct a property value from a given key and value.
 impl<T: Copy> PropertyBindingKey<T> {
     ///
-    pub fn with(&self, value: T) -> PropertyValue<T> {
-        PropertyValue { key: *self, value }
+    pub fn with(self, value: T) -> PropertyValue<T> {
+        PropertyValue { key: self, value }
     }
 }
 

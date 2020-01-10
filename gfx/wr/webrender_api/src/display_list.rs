@@ -1360,7 +1360,7 @@ impl DisplayListBuilder {
         filter_datas: &[di::FilterData],
         filter_primitives: &[di::FilterPrimitive],
     ) {
-        if filters.len() > 0 {
+        if !filters.is_empty() {
             self.push_item(&di::DisplayItem::SetFilterOps);
             self.push_iter(filters);
         }
