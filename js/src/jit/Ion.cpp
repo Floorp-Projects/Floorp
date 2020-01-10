@@ -2069,7 +2069,7 @@ static OptimizationLevel GetOptimizationLevel(HandleScript script,
 static MethodStatus Compile(JSContext* cx, HandleScript script,
                             BaselineFrame* osrFrame, uint32_t osrFrameSize,
                             jsbytecode* osrPc, bool forceRecompile = false) {
-  MOZ_ASSERT(jit::IsIonEnabled());
+  MOZ_ASSERT(jit::IsIonEnabled(cx));
   MOZ_ASSERT(jit::IsBaselineJitEnabled());
 
   AutoGeckoProfilerEntry pseudoFrame(
@@ -2169,7 +2169,7 @@ bool jit::OffThreadCompilationAvailable(JSContext* cx) {
 }
 
 MethodStatus jit::CanEnterIon(JSContext* cx, RunState& state) {
-  MOZ_ASSERT(jit::IsIonEnabled());
+  MOZ_ASSERT(jit::IsIonEnabled(cx));
 
   HandleScript script = state.script();
 
@@ -2245,7 +2245,7 @@ MethodStatus jit::CanEnterIon(JSContext* cx, RunState& state) {
 static MethodStatus BaselineCanEnterAtEntry(JSContext* cx, HandleScript script,
                                             BaselineFrame* frame,
                                             uint32_t frameSize) {
-  MOZ_ASSERT(jit::IsIonEnabled());
+  MOZ_ASSERT(jit::IsIonEnabled(cx));
   MOZ_ASSERT(script->canIonCompile());
   MOZ_ASSERT(!script->isIonCompilingOffThread());
   MOZ_ASSERT(!script->hasIonScript());
@@ -2275,7 +2275,7 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
                                              BaselineFrame* osrFrame,
                                              uint32_t osrFrameSize,
                                              jsbytecode* pc) {
-  MOZ_ASSERT(jit::IsIonEnabled());
+  MOZ_ASSERT(jit::IsIonEnabled(cx));
   MOZ_ASSERT((JSOp)*pc == JSOP_LOOPHEAD);
 
   // Skip if the script has been disabled.
@@ -2348,7 +2348,7 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
 
 static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
                                         uint32_t frameSize, jsbytecode* pc) {
-  MOZ_ASSERT(IsIonEnabled());
+  MOZ_ASSERT(IsIonEnabled(cx));
   MOZ_ASSERT(frame->debugFrameSize() == frameSize);
 
   RootedScript script(cx, frame->script());
