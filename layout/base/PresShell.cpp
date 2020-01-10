@@ -10458,19 +10458,6 @@ nsresult PresShell::SetIsActive(bool aIsActive) {
       presContext->UpdateDynamicToolbarOffset(0);
     }
   }
-
-  // When the PresShell is being reactivated, make sure that we repaint
-  // This is needed for pages living in the parent process (like about:support).
-  // Content pages are refreshed by the BrowserHost, which does not exist
-  // in parent process pages
-  if (aIsActive) {
-    if (nsIFrame* root = GetRootFrame()) {
-      FrameLayerBuilder::InvalidateAllLayersForFrame(
-          nsLayoutUtils::GetDisplayRootFrame(root));
-      root->SchedulePaint();
-    }
-  }
-
 #endif
 
   return rv;
