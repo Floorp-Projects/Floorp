@@ -10,6 +10,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {
   getOrientation,
 } = require("devtools/client/responsive/utils/orientation");
+const Constants = require("devtools/client/responsive/constants");
 
 loader.lazyRequireGetter(
   this,
@@ -101,6 +102,11 @@ class ResponsiveUI {
     this.toolWindow = null;
     // The iframe containing the RDM UI.
     this.rdmFrame = null;
+
+    // Bind callbacks for resizers.
+    this.onResizeDrag = this.onResizeDrag.bind(this);
+    this.onResizeStart = this.onResizeStart.bind(this);
+    this.onResizeStop = this.onResizeStop.bind(this);
 
     // Promise resovled when the UI init has completed.
     this.inited = this.init();
@@ -289,9 +295,15 @@ class ResponsiveUI {
     });
 
     this.rdmFrame = rdmFrame;
+
     this.resizeHandle = resizeHandle;
+    this.resizeHandle.addEventListener("mousedown", this.onResizeStart);
+
     this.resizeHandleX = resizeHandleX;
+    this.resizeHandleX.addEventListener("mousedown", this.onResizeStart);
+
     this.resizeHandleY = resizeHandleY;
+    this.resizeHandleY.addEventListener("mousedown", this.onResizeStart);
   }
 
   /**
@@ -600,6 +612,96 @@ class ResponsiveUI {
     }
     // Used by tests
     this.emit("device-association-removed");
+  }
+
+  /**
+   * Resizing the browser on mousemove
+   */
+  onResizeDrag({ screenX, screenY }) {
+    if (!this.isResizing || !this.rdmFrame.contentWindow) {
+      return;
+    }
+
+    const zoom = this.tab.linkedBrowser.fullZoom;
+
+    let deltaX = (screenX - this.lastScreenX) / zoom;
+    let deltaY = (screenY - this.lastScreenY) / zoom;
+
+    const leftAlignmentEnabled = Services.prefs.getBoolPref(
+      "devtools.responsive.leftAlignViewport.enabled",
+      false
+    );
+
+    if (!leftAlignmentEnabled) {
+      // The viewport is centered horizontally, so horizontal resize resizes
+      // by twice the distance the mouse was dragged - on left and right side.
+      deltaX = deltaX * 2;
+    }
+
+    if (this.ignoreX) {
+      deltaX = 0;
+    }
+    if (this.ignoreY) {
+      deltaY = 0;
+    }
+
+    const viewportSize = this.rdmFrame.contentWindow.getViewportSize();
+
+    let width = Math.round(viewportSize.width + deltaX);
+    let height = Math.round(viewportSize.height + deltaY);
+
+    if (width < Constants.MIN_VIEWPORT_DIMENSION) {
+      width = Constants.MIN_VIEWPORT_DIMENSION;
+    } else if (width != viewportSize.width) {
+      this.lastScreenX = screenX;
+    }
+
+    if (height < Constants.MIN_VIEWPORT_DIMENSION) {
+      height = Constants.MIN_VIEWPORT_DIMENSION;
+    } else if (height != viewportSize.height) {
+      this.lastScreenY = screenY;
+    }
+
+    // Update the RDM store and viewport size with the new width and height.
+    this.rdmFrame.contentWindow.setViewportSize({ width, height });
+    this.updateViewportSize(width, height);
+
+    // Change the device selector back to an unselected device
+    if (this.rdmFrame.contentWindow.getAssociatedDevice()) {
+      this.rdmFrame.contentWindow.clearDeviceAssociation();
+    }
+  }
+
+  /**
+   * Start the process of resizing the browser.
+   */
+  onResizeStart({ target, screenX, screenY }) {
+    this.browserWindow.addEventListener("mousemove", this.onResizeDrag, true);
+    this.browserWindow.addEventListener("mouseup", this.onResizeStop, true);
+
+    this.isResizing = true;
+    this.lastScreenX = screenX;
+    this.lastScreenY = screenY;
+    this.ignoreX = target === this.resizeHandleY;
+    this.ignoreY = target === this.resizeHandleX;
+  }
+
+  /**
+   * Stop the process of resizing the browser.
+   */
+  onResizeStop() {
+    this.browserWindow.removeEventListener(
+      "mousemove",
+      this.onResizeDrag,
+      true
+    );
+    this.browserWindow.removeEventListener("mouseup", this.onResizeStop, true);
+
+    this.isResizing = false;
+    this.lastScreenX = 0;
+    this.lastScreenY = 0;
+    this.ignoreX = false;
+    this.ignoreY = false;
   }
 
   onResizeViewport(event) {
