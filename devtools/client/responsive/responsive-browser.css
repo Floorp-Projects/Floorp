@@ -27,11 +27,14 @@
 }
 
 .browserContainer.responsive-mode > .browserStack {
-  position: relative;
+  --resizer-offset: 4px;
+  --browser-viewport-width: calc(var(--rdm-width) + var(--resizer-offset));
+  --browser-viewport-height: calc(var(--rdm-height) + var(--resizer-offset));
   min-height: 0;
   min-width: 0;
   overflow: auto;
-  justify-items: center;
+  grid-template-columns: 15px 1fr [center-align] var(--browser-viewport-width) 1fr;
+  grid-template-rows: 65px [margin-top-offset] var(--browser-viewport-height);
 }
 
 .browserContainer.responsive-mode > .browserStack.device-modal-opened {
@@ -47,18 +50,52 @@
 }
 
 .browserContainer.responsive-mode > .browserStack > *:not(.rdm-toolbar) {
-  margin-top: 65px;
-}
-
-.browserContainer.responsive-mode.left-aligned > .browserStack {
-  justify-items: left;
+  grid-column: center-align;
+  grid-row: margin-top-offset;
 }
 
 .browserContainer.responsive-mode.left-aligned > .browserStack > *:not(.rdm-toolbar) {
-  margin-left: 15px;
+  grid-column: left-align;
+}
+
+.browserContainer.responsive-mode.left-aligned > .browserStack {
+  grid-template-columns: 15px [left-align] var(--browser-viewport-width) 1fr;
+}
+
+html[dir="rtl"] .browserContainer.responsive-mode.left-aligned > .browserStack {
+  grid-template-columns: 1fr [left-align] var(--browser-viewport-width) 15px
 }
 
 .browserContainer.responsive-mode > .browserStack > browser {
   border: 1px solid var(--devtools-splitter-color);
   box-shadow: var(--rdm-browser-box-shadow);
+}
+
+/* Resize handles */
+
+.browserContainer.responsive-mode > .browserStack > .viewport-resize-handle {
+  width: 16px;
+  height: 16px;
+  background-image: url("./images/grippers.svg");
+  margin-inline-end: var(--resizer-offset);
+  margin-block-end: var(--resizer-offset);
+  background-repeat: no-repeat;
+  background-origin: content-box;
+  cursor: nwse-resize;
+  align-self: end;
+  justify-self: right;
+}
+
+.browserContainer.responsive-mode > .browserStack > .viewport-horizontal-resize-handle {
+  width: 5px;
+  height: calc(var(--rdm-height) - 16px);
+  cursor: ew-resize;
+  justify-self: right;
+}
+
+.browserContainer.responsive-mode > .browserStack > .viewport-vertical-resize-handle {
+  width: calc(var(--rdm-width) - 16px);
+  height: 5px;
+  cursor: ns-resize;
+  align-self: end;
 }
