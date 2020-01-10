@@ -307,6 +307,9 @@ class FileHandleOp {
  protected:
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   RefPtr<FileHandle> mFileHandle;
+#ifdef DEBUG
+  bool mEnqueued;
+#endif
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileHandleOp)
@@ -335,7 +338,12 @@ class FileHandleOp {
  protected:
   FileHandleOp(FileHandle* aFileHandle)
       : mOwningEventTarget(GetCurrentThreadSerialEventTarget()),
-        mFileHandle(aFileHandle) {
+        mFileHandle(aFileHandle)
+#ifdef DEBUG
+        ,
+        mEnqueued(false)
+#endif
+  {
     AssertIsOnOwningThread();
     MOZ_ASSERT(aFileHandle);
   }
@@ -1673,6 +1681,10 @@ void FileHandleOp::Enqueue() {
 
   fileHandleThreadPool->Enqueue(mFileHandle, this, false);
 
+#ifdef DEBUG
+  mEnqueued = true;
+#endif
+
   mFileHandle->NoteActiveRequest();
 }
 
@@ -1725,7 +1737,7 @@ bool NormalFileHandleOp::Init(FileHandle* aFileHandle) {
 void NormalFileHandleOp::Cleanup() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mFileHandle);
-  MOZ_ASSERT_IF(!IsActorDestroyed(), mResponseSent);
+  MOZ_ASSERT_IF(mEnqueued && !IsActorDestroyed(), mResponseSent);
 
   mFileHandle = nullptr;
 }
