@@ -20,6 +20,11 @@ graph-total-tracker-summary =
     *[other] <b>{ $count }</b> trackers blocked since { DATETIME($earliestDate, day: "numeric", month: "long", year: "numeric") }
   }
 
+# Text displayed instead of the graph when in Private Mode
+graph-private-window = { -brand-short-name } continues to  block trackers in Private Windows, but does not keep a record of what was blocked.
+# Weekly summary of the graph when the graph is empty in Private Mode
+graph-week-summary-private-window = Trackers { -brand-short-name } blocked this week
+
 # The terminology used to refer to categories of Content Blocking is also used in chrome/browser/browser.properties and should be translated consistently.
 # "Standard" in this case is an adjective, meaning "default" or "normal".
 # The category name in the <b> tag will be bold.
