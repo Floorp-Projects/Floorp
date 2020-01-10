@@ -806,6 +806,8 @@ win64-asan-reporter-nightly/opt:
         mozconfig-variant: nightly-asan-reporter
         mar-channel-id:
             firefox-mozilla-central-asan
+        accepted-mar-channel-ids:
+            firefox-mozilla-central-asan
     run-on-projects: ['mozilla-central']
     fetches:
         toolchain:
