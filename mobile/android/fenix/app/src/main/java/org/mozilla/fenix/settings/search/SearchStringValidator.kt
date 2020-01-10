@@ -20,6 +20,8 @@ object SearchStringValidator {
             client.fetch(request)
         } catch (e: IOException) {
             return Result.CannotReach
+        } catch (e: IllegalArgumentException) {
+            return Result.CannotReach
         }
 
         // read the response stream to ensure the body is closed correctly. workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1603114

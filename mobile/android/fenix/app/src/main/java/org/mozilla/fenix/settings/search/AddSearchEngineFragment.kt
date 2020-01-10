@@ -171,8 +171,7 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
         custom_search_engine_search_string_field.error = when {
             searchString.isEmpty() ->
                 resources.getString(R.string.search_add_custom_engine_error_empty_search_string)
-            !searchString.contains("%s")
-                    || !searchString.contains("http") ->
+            !searchString.contains("%s") ->
                 resources.getString(R.string.search_add_custom_engine_error_missing_template)
             else -> null
         }
