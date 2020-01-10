@@ -40,10 +40,6 @@ registerCleanupFunction(() => {
  * browser in an e10s window, that the new tab will load properly.
  */
 add_task(async function test_new_tab() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["domsecurity.skip_html_fragment_assertion", true]],
-  });
-
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow({
     remote: true,
   });
@@ -88,10 +84,6 @@ add_task(async function test_new_tab() {
  * window. Also tests with a private browsing window.
  */
 add_task(async function test_new_window() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["domsecurity.skip_html_fragment_assertion", true]],
-  });
-
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow(
     {
       remote: true,
