@@ -241,8 +241,8 @@ windows7-32-devedition/opt:
         - web-platform-tests
 
 # win64
-windows10-64-ccov/debug:
-    build-platform: win64-ccov/debug
+windows10-64-ccov/opt:
+    build-platform: win64-ccov/opt
     test-sets:
         - awsy
         - desktop-screenshot-capture
