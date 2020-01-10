@@ -226,10 +226,10 @@ MOZ_MUST_USE JSObject* GetWaitForAllPromise(JSContext* cx,
  * as though by calling the original value of Promise.prototype.then, and
  * without regard to any Promise subclassing used in `promiseObj` itself.
  */
-MOZ_MUST_USE JSObject* OriginalPromiseThen(JSContext* cx,
-                                           HandleObject promiseObj,
-                                           HandleObject onFulfilled,
-                                           HandleObject onRejected);
+MOZ_MUST_USE PromiseObject* OriginalPromiseThen(JSContext* cx,
+                                                HandleObject promiseObj,
+                                                HandleObject onFulfilled,
+                                                HandleObject onRejected);
 
 enum class UnhandledRejectionBehavior { Ignore, Report };
 
