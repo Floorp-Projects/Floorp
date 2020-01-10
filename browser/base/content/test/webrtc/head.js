@@ -1,4 +1,4 @@
-const { AppConstants } = ChromeUtils.import(
+browser/base/content/test/webrtc/head.jsconst { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
@@ -384,7 +384,8 @@ function getMediaCaptureState() {
       hasMicrophone,
       hasScreenShare,
       hasWindowShare,
-      hasBrowserShare
+      hasBrowserShare,
+      true
     );
     let result = {};
 
