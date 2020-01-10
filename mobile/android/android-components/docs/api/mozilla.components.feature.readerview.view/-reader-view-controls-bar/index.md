@@ -28,6 +28,7 @@ A customizable ReaderView control bar implementing [ReaderViewControlsView](../-
 | [setFont](set-font.md) | `fun setFont(font: `[`FontType`](../../mozilla.components.feature.readerview/-reader-view-feature/-font-type/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the font type of the current and future ReaderView sessions. |
 | [setFontSize](set-font-size.md) | `fun setFontSize(size: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the font size of the current and future ReaderView sessions. |
 | [showControls](show-controls.md) | `fun showControls(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Updates visibility to [View.VISIBLE](#) and requests focus for the UI controls. |
+| [tryInflate](try-inflate.md) | `fun tryInflate(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Tries to inflate the view if needed. |
 
 ### Inherited Functions
 

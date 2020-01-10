@@ -2,7 +2,7 @@
 
 # onAuthenticated
 
-`open fun onAuthenticated(account: `[`OAuthAccount`](../-o-auth-account/index.md)`, authType: `[`AuthType`](../-auth-type/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L254)
+`open fun onAuthenticated(account: `[`OAuthAccount`](../-o-auth-account/index.md)`, authType: `[`AuthType`](../-auth-type/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L266)
 
 Account was successfully authenticated.
 

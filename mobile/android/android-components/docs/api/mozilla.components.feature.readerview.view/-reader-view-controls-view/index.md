@@ -28,6 +28,7 @@ An interface for views that can display ReaderView appearance controls (e.g. fon
 | [setFont](set-font.md) | `abstract fun setFont(font: `[`FontType`](../../mozilla.components.feature.readerview/-reader-view-feature/-font-type/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the selected font option. |
 | [setFontSize](set-font-size.md) | `abstract fun setFontSize(size: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the selected font size. |
 | [showControls](show-controls.md) | `abstract fun showControls(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Makes the UI controls visible and requests focus. |
+| [tryInflate](try-inflate.md) | `abstract fun tryInflate(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Tries to inflate the view if needed. |
 
 ### Extension Functions
 

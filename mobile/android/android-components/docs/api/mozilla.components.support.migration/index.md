@@ -7,6 +7,7 @@
 | Name | Summary |
 |---|---|
 | [AbstractMigrationService](-abstract-migration-service/index.md) | `abstract class AbstractMigrationService`<br>Abstract implementation of a background service running a configured [FennecMigrator](-fennec-migrator/index.md). |
+| [AddonMigrationResult](-addon-migration-result/index.md) | `sealed class AddonMigrationResult`<br>Result of an add-on migration. |
 | [FennecMigrator](-fennec-migrator/index.md) | `class FennecMigrator`<br>Entrypoint for Fennec data migration. See [Builder](-fennec-migrator/-builder/index.md) for public API. |
 | [FennecProfile](-fennec-profile/index.md) | `data class FennecProfile`<br>A profile of "Fennec" (Firefox for Android). |
 | [FxaMigrationResult](-fxa-migration-result/index.md) | `sealed class FxaMigrationResult`<br>Result of an FxA migration. |
@@ -20,6 +21,7 @@
 
 | Name | Summary |
 |---|---|
+| [AddonMigrationException](-addon-migration-exception/index.md) | `class AddonMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Wraps [AddonMigrationResult](-addon-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](-result/-failure/index.md). |
 | [FennecMigratorException](-fennec-migrator-exception/index.md) | `sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)<br>Exceptions related to Fennec migrations. |
 | [FennecProfileException](-fennec-profile-exception/index.md) | `sealed class FennecProfileException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Exceptions related to Fennec profile migrations. |
 | [FxaMigrationException](-fxa-migration-exception/index.md) | `class FxaMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Wraps [FxaMigrationResult](-fxa-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](-result/-failure/index.md). |
@@ -30,3 +32,9 @@
 | Name | Summary |
 |---|---|
 | [MigrationResults](-migration-results.md) | `typealias MigrationResults = `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`Migration`](-migration/index.md)`, `[`MigrationRun`](-migration-run/index.md)`>`<br>Results of running a set of migrations. |
+
+### Extensions for External Classes
+
+| Name | Summary |
+|---|---|
+| [java.lang.Exception](java.lang.-exception/index.md) |  |

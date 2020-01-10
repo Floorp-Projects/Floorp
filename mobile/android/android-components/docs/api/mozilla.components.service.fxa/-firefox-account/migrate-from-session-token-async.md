@@ -6,7 +6,8 @@
 
 Overrides [OAuthAccount.migrateFromSessionTokenAsync](../../mozilla.components.concept.sync/-o-auth-account/migrate-from-session-token-async.md)
 
-Attempts to migrate from an existing session token without user input
+Attempts to migrate from an existing session token without user input.
+Passed-in session token will be reused.
 
 ### Parameters
 

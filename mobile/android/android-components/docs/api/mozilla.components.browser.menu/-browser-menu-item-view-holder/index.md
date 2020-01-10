@@ -2,7 +2,7 @@
 
 # BrowserMenuItemViewHolder
 
-`class BrowserMenuItemViewHolder : ViewHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuAdapter.kt#L46)
+`class BrowserMenuItemViewHolder : ViewHolder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuAdapter.kt#L47)
 
 ### Constructors
 

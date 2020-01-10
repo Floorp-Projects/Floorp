@@ -2,7 +2,7 @@
 
 # BrowsingData
 
-`class BrowsingData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L30)
+`class BrowsingData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Engine.kt#L31)
 
 Describes a combination of browsing data types stored by the engine.
 
