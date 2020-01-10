@@ -5,7 +5,15 @@
 package org.mozilla.fenix
 
 enum class ReleaseChannel {
-    FenixDebug, FenixNightly, FenixBeta, FenixProduction, FennecProduction, FennecBeta, FennecNightly;
+    FenixDebug,
+
+    FenixNightly,
+    FenixBeta,
+    FenixProduction,
+
+    FennecProduction,
+    FennecBeta,
+    FennecNightly;
 
     val isReleased: Boolean
         get() = when (this) {
@@ -39,6 +47,9 @@ enum class ReleaseChannel {
             FenixDebug -> true
             else -> false
         }
+
+    val isFennec: Boolean
+        get() = this in fennecChannels
 }
 
 object Config {
@@ -62,3 +73,9 @@ object Config {
         }
     }
 }
+
+private val fennecChannels: List<ReleaseChannel> = listOf(
+    ReleaseChannel.FennecNightly,
+    ReleaseChannel.FennecBeta,
+    ReleaseChannel.FennecProduction
+)

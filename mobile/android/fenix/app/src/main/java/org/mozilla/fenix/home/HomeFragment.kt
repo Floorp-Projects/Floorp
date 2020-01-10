@@ -536,10 +536,7 @@ class HomeFragment : Fragment() {
                     WhatsNew.userViewedWhatsNew(context)
                     context.metrics.track(Event.WhatsNewTapped(Event.WhatsNewTapped.Source.HOME))
                     (activity as HomeActivity).openToBrowserAndLoad(
-                        searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                            context,
-                            SupportUtils.SumoTopic.WHATS_NEW
-                        ),
+                        searchTermOrURL = SupportUtils.getWhatsNewUrl(context),
                         newTab = true,
                         from = BrowserDirection.FromHome
                     )
