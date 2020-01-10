@@ -4912,12 +4912,10 @@ static void SweepUniqueIds(GCParallelTask* task) {
   }
 }
 
-void GCRuntime::sweepFinalizationGroupsOnMainThread() {
-  // This calls back into the browser which expects to be called from the main
-  // thread.
-  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_FINALIZATION_GROUPS);
-  for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-    sweepFinalizationGroups(zone);
+void js::gc::SweepFinalizationGroups(GCParallelTask* task) {
+  for (SweepGroupZonesIter zone(task->gc); !zone.done(); zone.next()) {
+    AutoSetThreadIsSweeping threadIsSweeping(zone);
+    task->gc->sweepFinalizationGroups(zone);
   }
 }
 
@@ -5196,6 +5194,9 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
                                       PhaseKind::SWEEP_WEAKMAPS, lock);
     AutoRunParallelTask sweepUniqueIds(this, SweepUniqueIds,
                                        PhaseKind::SWEEP_UNIQUEIDS, lock);
+    AutoRunParallelTask sweepFinalizationGroups(
+        this, SweepFinalizationGroups, PhaseKind::SWEEP_FINALIZATION_GROUPS,
+        lock);
     AutoRunParallelTask sweepWeakRefs(this, SweepWeakRefs,
                                       PhaseKind::SWEEP_WEAKREFS, lock);
 
@@ -5211,7 +5212,6 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
     {
       AutoUnlockHelperThreadState unlock(lock);
       sweepJitDataOnMainThread(fop);
-      sweepFinalizationGroupsOnMainThread();
     }
 
     for (auto& task : sweepCacheTasks) {
