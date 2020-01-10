@@ -368,6 +368,10 @@ linux1804-tests:
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgpu
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
     - reftest
     - reftest-no-accel
     - telemetry-tests-client
@@ -413,8 +417,6 @@ windows-qr-tests:
     - mochitest-webgl1-core
     - mochitest-webgl2-core
     - mochitest-webgpu
-    - mochitest-webgl1-core
-    - mochitest-webgl2-core
     - reftest
 
 ccov-code-coverage-tests:
