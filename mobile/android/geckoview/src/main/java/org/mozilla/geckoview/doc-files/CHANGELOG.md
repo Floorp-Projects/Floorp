@@ -17,9 +17,13 @@ exclude: true
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
   enable and disable extensions.
   ([bug 1599585]({{bugzilla}}1599585))
+- ⚠️ Added ['GeckoSession.ProgressDelegate.SecurityInformation#certificate'][74.3], which is the
+  full server certificate in use, if any. The other certificate-related fields were removed.
+  ([bug 1508730]({{bugzilla}}1508730))
 
 [74.1]: {{javadoc_uri}}/WebExtensionController.html#enable-org.mozilla.geckoview.WebExtension-int-
 [74.2]: {{javadoc_uri}}/WebExtensionController.html#disable-org.mozilla.geckoview.WebExtension-int-
+[74.3]: {{javadoc_uri}}/GeckoSession.ProgressDelegate.SecurityInformation.html#certificate
 
 ## v73
 - Added [`WebExtensionController.install`][73.1] and [`uninstall`][73.2] to
@@ -530,4 +534,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 45f21fe6c3c30f903b65a573540901e8f45affca
+[api-version]: fd18bfe91225a81545309da7f798c9a8a6031889

@@ -110,12 +110,12 @@ class GeckoViewProgressChild extends GeckoViewChildModule {
 }
 
 const ProgressTracker = {
-  onInit: function(aModule) {
+  onInit(aModule) {
     this._module = aModule;
     this.clear();
   },
 
-  start: function(aUri) {
+  start(aUri) {
     debug`ProgressTracker start ${aUri}`;
 
     if (this._tracking) {
@@ -152,7 +152,7 @@ const ProgressTracker = {
     this.updateProgress();
   },
 
-  changeLocation: function(aUri) {
+  changeLocation(aUri) {
     debug`ProgressTracker changeLocation ${aUri}`;
 
     let data = this._data;
@@ -160,7 +160,7 @@ const ProgressTracker = {
     data.uri = aUri;
   },
 
-  stop: function() {
+  stop() {
     debug`ProgressTracker stop`;
 
     let data = this._data;
@@ -196,7 +196,7 @@ const ProgressTracker = {
     return this._module.eventDispatcher;
   },
 
-  handleEvent: function(aEvent) {
+  handleEvent(aEvent) {
     let data = this._data;
 
     const target = aEvent.originalTarget;
@@ -242,7 +242,7 @@ const ProgressTracker = {
     }
   },
 
-  clear: function() {
+  clear() {
     this._data = {
       prev: 0,
       uri: null,
@@ -255,7 +255,7 @@ const ProgressTracker = {
     };
   },
 
-  _debugData: function() {
+  _debugData() {
     return {
       prev: this._data.prev,
       uri: this._data.uri,
@@ -268,7 +268,7 @@ const ProgressTracker = {
     };
   },
 
-  updateProgress: function() {
+  updateProgress() {
     debug`ProgressTracker updateProgress`;
 
     let data = this._data;
