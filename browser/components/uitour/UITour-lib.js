@@ -401,6 +401,7 @@ if (typeof Mozilla == "undefined") {
    * - :js:func:`sync <Mozilla.UITour.Configuration.Sync>`
    *   DEPRECATED, use 'fxa'
    * - :js:func:`fxa <Mozilla.UITour.Configuration.FxA>`
+   * - :js:func:`fxaConnections <Mozilla.UITour.Configuration.FxAConnections>`
    *
    */
 
@@ -465,8 +466,8 @@ if (typeof Mozilla == "undefined") {
    */
 
   /**
-   * FxA status, including whether FxA is connected, device counts, services
-   * connected to this browser and services externally connected to the account.
+   * FxA local status, including whether FxA is connected and the general
+   * account state.
    * @typedef {Object} Mozilla.UITour.Configuration.FxA
    * @property {Boolean} setup - Whether FxA is setup on this device. If false,
    *    no other properties will exist.
@@ -474,6 +475,23 @@ if (typeof Mozilla == "undefined") {
    *    If false, it probably means the account is unverified or the user has
    *    changed their password on another device and needs to update it here.
    *    In that case many other properties will not exist.
+   * @property {Mozilla.UITour.Configuration.BrowserServices} [browserServices] -
+   *    Information about account services attached to this browser, and with
+   *    special support implemented by this browser. You should not expect
+   *    every accountService connected in this browser to get a special entry
+   *    here. Indeed, what services, and in what circumstances they may appear
+   *    here in the future is largely TBD.
+   * @since 71
+   */
+
+  /**
+   * FxA connections status - information about the account which typically
+   * isn't stored locally, so needs to be obtained from the FxA servers. As such,
+   * requesting this information is likely to be high-latency and may return
+   * incomplete data if there is a network or server error.
+   * @typedef {Object} Mozilla.UITour.Configuration.FxAConnections
+   * @property {Boolean} setup - Whether FxA is setup on this device. If false,
+   *    no other properties will exist.
    * @property {Number} [numOtherDevices] - Number of devices connected to this
    *    account, not counting this device.
    * @property {Object.<String, Number>} [numDevicesByType] - A count of devices
@@ -486,13 +504,7 @@ if (typeof Mozilla == "undefined") {
    *    browser and should not be confused with devices. For example, if the user
    *    has enabled Monitor or Lockwise on one or more devices - including on
    *    this device - that service will have a single entry here.
-   * @property {Mozilla.UITour.Configuration.BrowserServices} [browserServices] -
-   *    Information about account services attached to this browser, and with
-   *    special support implemented by this browser. You should not expect
-   *    every accountService connected in this browser to get a special entry
-   *    here. Indeed, what services, and in what circumstances they may appear
-   *    here in the future is largely TBD.
-   * @since 71
+   * @since 73
    */
 
   /**
