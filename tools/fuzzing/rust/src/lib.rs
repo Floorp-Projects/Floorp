@@ -1,6 +1,9 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#[macro_use]
+extern crate lazy_static;
 extern crate libc;
 extern crate rkv;
 extern crate tempfile;
@@ -8,6 +11,7 @@ extern crate tempfile;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::iter;
 use std::path::Path;
 use tempfile::Builder;
 
@@ -101,6 +105,134 @@ pub extern "C" fn fuzz_rkv_val_write(raw_data: *const u8, size: libc::size_t) ->
     let string = String::from_utf8_lossy(data);
     let value = rkv::Value::Str(&string);
     store.put(&mut writer, "key", &value).unwrap();
+
+    0
+}
+
+lazy_static! {
+    static ref KEYS_VALUES: (Vec<String>, Vec<String>) = {
+        let sizes = vec![4, 16, 128, 512, 1024];
+        let mut keys = Vec::new();
+        let mut values = Vec::new();
+
+        for (i, s) in sizes.into_iter().enumerate() {
+            let bytes1 = iter::repeat('a' as u8 + i as u8).take(s).collect();
+            let bytes2 = iter::repeat('A' as u8 + i as u8).take(s).collect();
+            keys.push(String::from_utf8(bytes1).unwrap());
+            values.push(String::from_utf8(bytes2).unwrap());
+        }
+
+        (keys, values)
+    };
+}
+
+#[no_mangle]
+pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> libc::c_int {
+    let mut fuzz = unsafe { std::slice::from_raw_parts(raw_data as *const u8, size as usize).to_vec() };
+
+    fn maybe_do(fuzz: &mut Vec<u8>, f: impl FnOnce(&mut Vec<u8>) -> ()) -> Option<()> {
+        match fuzz.pop().map(|byte| byte % 2) {
+            Some(0) => Some(f(fuzz)),
+            _ => None
+        }
+    }
+
+    fn maybe_abort(fuzz: &mut Vec<u8>, read: rkv::Reader) -> Result<(), rkv::StoreError>  {
+        match fuzz.pop().map(|byte| byte % 2) {
+            Some(0) => Ok(read.abort()),
+            _ => Ok(())
+        }
+    };
+
+    fn maybe_commit(fuzz: &mut Vec<u8>, write: rkv::Writer) -> Result<(), rkv::StoreError>  {
+        match fuzz.pop().map(|byte| byte % 3) {
+            Some(0) => write.commit(),
+            Some(1) => Ok(write.abort()),
+            _ => Ok(())
+        }
+    };
+
+    fn get_key<'a>(fuzz: &mut Vec<u8>) -> Option<&'a String> {
+        fuzz.pop().map(|byte| {
+            let (keys, _) = &*KEYS_VALUES;
+            keys.get(byte as usize % keys.len()).unwrap()
+        })
+    };
+
+    fn get_value<'a>(fuzz: &mut Vec<u8>) -> Option<&'a String> {
+        fuzz.pop().map(|byte| {
+            let (_, values) = &*KEYS_VALUES;
+            values.get(byte as usize % values.len()).unwrap()
+        })
+    };
+
+    let root = Builder::new().prefix("fuzz_rkv_calls").tempdir().unwrap();
+    fs::create_dir_all(root.path()).unwrap();
+
+    let mut builder = rkv::Rkv::environment_builder();
+    builder.set_max_dbs(1); // need at least one db
+
+    maybe_do(&mut fuzz, |fuzz| {
+        let n = fuzz.pop().unwrap_or(126) as u32; // default
+        builder.set_max_readers(1 + n);
+    });
+    maybe_do(&mut fuzz, |fuzz| {
+        let n = fuzz.pop().unwrap_or(1) as u32;
+        builder.set_max_dbs(1 + n);
+    });
+    maybe_do(&mut fuzz, |fuzz| {
+        let n = fuzz.pop().unwrap_or(1) as usize;
+        builder.set_map_size(1_048_576 * (n % 100)); // 1,048,576 bytes, i.e. 1MiB.
+    });
+
+    let env = rkv::Rkv::from_env(root.path(), builder).unwrap();
+    let store = env.open_single("test", rkv::StoreOptions::create()).unwrap();
+
+    loop {
+        match fuzz.pop().map(|byte| byte % 4) {
+            Some(0) => {
+                let key = match get_key(&mut fuzz) {
+                    Some(value) => value,
+                    None => break
+                };
+                let value = match get_value(&mut fuzz) {
+                    Some(value) => value,
+                    None => break
+                };
+                let mut writer = env.write().unwrap();
+                eat_lmdb_err(store.put(&mut writer, key, &rkv::Value::Str(value))).unwrap();
+                maybe_commit(&mut fuzz, writer).unwrap();
+            }
+            Some(1) => {
+                let key = match get_key(&mut fuzz) {
+                    Some(value) => value,
+                    None => break
+                };
+                let mut reader = env.read().unwrap();
+                eat_lmdb_err(store.get(&mut reader, key)).unwrap();
+                maybe_abort(&mut fuzz, reader).unwrap();
+            }
+            Some(2) => {
+                let key = match get_key(&mut fuzz) {
+                    Some(value) => value,
+                    None => break
+                };
+                let mut writer = env.write().unwrap();
+                eat_lmdb_err(store.delete(&mut writer, key)).unwrap();
+                maybe_commit(&mut fuzz, writer).unwrap();
+            }
+            Some(3) => {
+                // Any attempt to set a size smaller than the space already
+                // consumed by the environment will be silently changed to the
+                // current size of the used space.
+                let n = fuzz.pop().unwrap_or(1) as usize;
+                builder.set_map_size(1_048_576 * (n % 100)); // 1,048,576 bytes, i.e. 1MiB.
+            }
+            _ => {
+                break
+            }
+        }
+    }
 
     0
 }

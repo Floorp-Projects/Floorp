@@ -16,6 +16,7 @@ int fuzz_rkv_db_file(const uint8_t* raw_data, size_t size);
 int fuzz_rkv_db_name(const uint8_t* raw_data, size_t size);
 int fuzz_rkv_key_write(const uint8_t* raw_data, size_t size);
 int fuzz_rkv_val_write(const uint8_t* raw_data, size_t size);
+int fuzz_rkv_calls(const uint8_t* raw_data, size_t size);
 
 }  // extern "C"
 
