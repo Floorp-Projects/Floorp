@@ -8,9 +8,19 @@
   justify-content: center;
 }
 
+/*
+ * Since we size the window to content, and the icon load is asynchronous, we
+ * make sure that we take the whole space we could possibly take, regardless of
+ * whether the icon is loaded.
+ */
+#iconContainer {
+  height: 55px; /* maximum icon height + some margin */
+  width: 58px; /* maximum icon width + some margin */
+}
+
 #infoIcon {
-  justify-self: center;
+  display: block;
   max-width: 48px;
   max-height: 48px;
-  margin: 3px 5px 4px;
+  margin: 3px auto 0;
 }
