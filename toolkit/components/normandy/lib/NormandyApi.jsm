@@ -8,9 +8,6 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { LogManager } = ChromeUtils.import(
-  "resource://normandy/lib/LogManager.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -25,7 +22,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, [
 
 var EXPORTED_SYMBOLS = ["NormandyApi"];
 
-const log = LogManager.getLogger("normandy-api");
 const prefs = Services.prefs.getBranch("app.normandy.");
 
 let indexPromise = null;
@@ -37,31 +33,18 @@ var NormandyApi = {
     indexPromise = null;
   },
 
-  apiCall(method, endpoint, data = {}) {
+  get(endpoint, data) {
     const url = new URL(endpoint);
-    method = method.toLowerCase();
-
-    let body = undefined;
     if (data) {
-      if (method === "get") {
-        for (const key of Object.keys(data)) {
-          url.searchParams.set(key, data[key]);
-        }
-      } else if (method === "post") {
-        body = JSON.stringify(data);
+      for (const key of Object.keys(data)) {
+        url.searchParams.set(key, data[key]);
       }
     }
-
-    const headers = { Accept: "application/json" };
-    return fetch(url.href, { method, body, headers, credentials: "omit" });
-  },
-
-  get(endpoint, data) {
-    return this.apiCall("get", endpoint, data);
-  },
-
-  post(endpoint, data) {
-    return this.apiCall("post", endpoint, data);
+    return fetch(url.href, {
+      method: "get",
+      headers: { Accept: "application/json" },
+      credentials: "omit",
+    });
   },
 
   absolutify(url) {
@@ -90,33 +73,6 @@ var NormandyApi = {
     }
     const url = index[name];
     return this.absolutify(url);
-  },
-
-  async fetchSignedObjects(type, filters) {
-    const signedObjectsUrl = await this.getApiUrl(`${type}-signed`);
-    const objectsResponse = await this.get(signedObjectsUrl, filters);
-    const rawText = await objectsResponse.text();
-    const objectsWithSigs = JSON.parse(rawText);
-
-    return Promise.all(
-      objectsWithSigs.map(async item => {
-        // Check that the rawtext (the object and the signature)
-        // includes the CanonicalJSON version of the object. This isn't
-        // strictly needed, but it is a great benefit for debugging
-        // signature problems.
-        const object = item[type];
-        const serialized = CanonicalJSON.stringify(object);
-        if (!rawText.includes(serialized)) {
-          log.debug(rawText, serialized);
-          throw new NormandyApi.InvalidSignatureError(
-            `Canonical ${type} serialization does not match!`
-          );
-        }
-        // Verify content signature using cryptography (will throw if fails).
-        await this.verifyObjectSignature(serialized, item.signature, type);
-        return object;
-      })
-    );
   },
 
   /**
@@ -176,15 +132,6 @@ var NormandyApi = {
     const clientData = await response.json();
     clientData.request_time = new Date(clientData.request_time);
     return clientData;
-  },
-
-  /**
-   * Fetch an array of available actions from the server.
-   * @resolves {Array}
-   */
-  async fetchRecipes() {
-    const filters = { enabled: true, only_baseline_capabilities: false };
-    return this.fetchSignedObjects("recipe", filters);
   },
 
   /**
