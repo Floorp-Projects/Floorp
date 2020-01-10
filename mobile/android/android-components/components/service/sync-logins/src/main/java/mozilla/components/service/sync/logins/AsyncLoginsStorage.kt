@@ -17,6 +17,7 @@ import mozilla.components.concept.sync.SyncStatus
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.components.concept.sync.LockableStore
 import mozilla.components.support.sync.telemetry.SyncTelemetry
+import org.json.JSONObject
 
 /**
  * This type contains the set of information required to successfully
@@ -285,7 +286,7 @@ interface AsyncLoginsStorage : AutoCloseable {
      * @rejectsWith [LoginsStorageException] If DB isn't empty during an import; also, on unexpected errors
      * (IO failure, rust panics, etc).
      */
-    fun importLoginsAsync(logins: List<ServerPassword>): Deferred<Long>
+    fun importLoginsAsync(logins: List<ServerPassword>): Deferred<JSONObject>
 }
 
 /**
@@ -368,7 +369,7 @@ open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) 
         return wrapped.getHandle()
     }
 
-    override fun importLoginsAsync(logins: List<ServerPassword>): Deferred<Long> {
+    override fun importLoginsAsync(logins: List<ServerPassword>): Deferred<JSONObject> {
         return scope.async { wrapped.importLogins(logins.toTypedArray()) }
     }
 

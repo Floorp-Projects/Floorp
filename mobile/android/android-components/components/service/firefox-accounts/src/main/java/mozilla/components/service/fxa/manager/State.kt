@@ -47,12 +47,12 @@ internal sealed class Event {
             return this.javaClass.simpleName
         }
     }
-    data class SignInShareableAccount(val account: ShareableAccount) : Event() {
+    data class SignInShareableAccount(val account: ShareableAccount, val reuseAccount: Boolean) : Event() {
         override fun toString(): String {
             return this.javaClass.simpleName
         }
     }
-    object SignedInShareableAccount : Event()
+    data class SignedInShareableAccount(val reuseAccount: Boolean) : Event()
     object RecoveredFromAuthenticationProblem : Event()
     object FetchProfile : Event()
     object FetchedProfile : Event()

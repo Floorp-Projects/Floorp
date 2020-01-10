@@ -21,6 +21,7 @@ import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
+import org.json.JSONObject
 
 /**
  * Implementation of the [BookmarksStorage] which is backed by a Rust Places lib via [PlacesApi].
@@ -191,10 +192,11 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * Before running this, first run [PlacesHistoryStorage.importFromFennec] to import history and visits data.
      *
      * @param dbPath Absolute path to Fennec's browser.db file.
+     * @return Migration metrics wrapped in a JSON object. See libplaces for schema details.
      */
     @Throws(PlacesException::class)
-    fun importFromFennec(dbPath: String) {
-        places.importBookmarksFromFennec(dbPath)
+    fun importFromFennec(dbPath: String): JSONObject {
+        return places.importBookmarksFromFennec(dbPath)
     }
 
     /**

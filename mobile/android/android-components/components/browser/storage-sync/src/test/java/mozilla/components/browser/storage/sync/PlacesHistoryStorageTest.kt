@@ -18,6 +18,7 @@ import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -509,12 +510,14 @@ class PlacesHistoryStorageTest {
                 return 0L
             }
 
-            override fun importVisitsFromFennec(dbPath: String) {
+            override fun importVisitsFromFennec(dbPath: String): JSONObject {
                 fail()
+                return JSONObject()
             }
 
-            override fun importBookmarksFromFennec(dbPath: String) {
+            override fun importBookmarksFromFennec(dbPath: String): JSONObject {
                 fail()
+                return JSONObject()
             }
 
             override fun close() {
@@ -554,12 +557,14 @@ class PlacesHistoryStorageTest {
                 return 0L
             }
 
-            override fun importVisitsFromFennec(dbPath: String) {
+            override fun importVisitsFromFennec(dbPath: String): JSONObject {
                 fail()
+                return JSONObject()
             }
 
-            override fun importBookmarksFromFennec(dbPath: String) {
+            override fun importBookmarksFromFennec(dbPath: String): JSONObject {
                 fail()
+                return JSONObject()
             }
 
             override fun close() {
@@ -599,12 +604,14 @@ class PlacesHistoryStorageTest {
                 return 0L
             }
 
-            override fun importVisitsFromFennec(dbPath: String) {
+            override fun importVisitsFromFennec(dbPath: String): JSONObject {
                 fail()
+                return JSONObject()
             }
 
-            override fun importBookmarksFromFennec(dbPath: String) {
+            override fun importBookmarksFromFennec(dbPath: String): JSONObject {
                 fail()
+                return JSONObject()
             }
 
             override fun close() {
@@ -648,12 +655,14 @@ class PlacesHistoryStorageTest {
                 return 0L
             }
 
-            override fun importVisitsFromFennec(dbPath: String) {
+            override fun importVisitsFromFennec(dbPath: String): JSONObject {
                 fail()
+                return JSONObject()
             }
 
-            override fun importBookmarksFromFennec(dbPath: String) {
+            override fun importBookmarksFromFennec(dbPath: String): JSONObject {
                 fail()
+                return JSONObject()
             }
 
             override fun close() {

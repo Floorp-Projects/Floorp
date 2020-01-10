@@ -119,8 +119,8 @@ class FxaAccountManagerTest {
         assertNull(FxaAccountManager.nextState(state, Event.FailedToAuthenticate))
         assertNull(FxaAccountManager.nextState(state, Event.Logout))
         assertNull(FxaAccountManager.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
-        assertNull(FxaAccountManager.nextState(state, Event.SignInShareableAccount(mock())))
-        assertNull(FxaAccountManager.nextState(state, Event.SignedInShareableAccount))
+        assertNull(FxaAccountManager.nextState(state, Event.SignInShareableAccount(mock(), false)))
+        assertNull(FxaAccountManager.nextState(state, Event.SignedInShareableAccount(false)))
 
         // State 'NotAuthenticated'.
         state = AccountState.NotAuthenticated
@@ -136,8 +136,8 @@ class FxaAccountManagerTest {
         assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.FailedToAuthenticate))
         assertNull(FxaAccountManager.nextState(state, Event.Logout))
         assertNull(FxaAccountManager.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
-        assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.SignInShareableAccount(mock())))
-        assertEquals(AccountState.AuthenticatedNoProfile, FxaAccountManager.nextState(state, Event.SignedInShareableAccount))
+        assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.SignInShareableAccount(mock(), false)))
+        assertEquals(AccountState.AuthenticatedNoProfile, FxaAccountManager.nextState(state, Event.SignedInShareableAccount(false)))
 
         // State 'AuthenticatedNoProfile'.
         state = AccountState.AuthenticatedNoProfile
@@ -152,8 +152,8 @@ class FxaAccountManagerTest {
         assertNull(FxaAccountManager.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.Logout))
         assertEquals(AccountState.AuthenticationProblem, FxaAccountManager.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
-        assertNull(FxaAccountManager.nextState(state, Event.SignInShareableAccount(mock())))
-        assertNull(FxaAccountManager.nextState(state, Event.SignedInShareableAccount))
+        assertNull(FxaAccountManager.nextState(state, Event.SignInShareableAccount(mock(), false)))
+        assertNull(FxaAccountManager.nextState(state, Event.SignedInShareableAccount(false)))
 
         // State 'AuthenticatedWithProfile'.
         state = AccountState.AuthenticatedWithProfile
@@ -168,8 +168,8 @@ class FxaAccountManagerTest {
         assertNull(FxaAccountManager.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.Logout))
         assertEquals(AccountState.AuthenticationProblem, FxaAccountManager.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
-        assertNull(FxaAccountManager.nextState(state, Event.SignInShareableAccount(mock())))
-        assertNull(FxaAccountManager.nextState(state, Event.SignedInShareableAccount))
+        assertNull(FxaAccountManager.nextState(state, Event.SignInShareableAccount(mock(), false)))
+        assertNull(FxaAccountManager.nextState(state, Event.SignedInShareableAccount(false)))
 
         // State 'AuthenticationProblem'.
         state = AccountState.AuthenticationProblem
@@ -184,8 +184,8 @@ class FxaAccountManagerTest {
         assertEquals(AccountState.AuthenticationProblem, FxaAccountManager.nextState(state, Event.FailedToAuthenticate))
         assertEquals(AccountState.NotAuthenticated, FxaAccountManager.nextState(state, Event.Logout))
         assertNull(FxaAccountManager.nextState(state, Event.AuthenticationError(AuthException(AuthExceptionType.UNAUTHORIZED))))
-        assertNull(FxaAccountManager.nextState(state, Event.SignInShareableAccount(mock())))
-        assertNull(FxaAccountManager.nextState(state, Event.SignedInShareableAccount))
+        assertNull(FxaAccountManager.nextState(state, Event.SignInShareableAccount(mock(), false)))
+        assertNull(FxaAccountManager.nextState(state, Event.SignedInShareableAccount(false)))
     }
 
     internal class TestSyncDispatcher(registry: ObserverRegistry<SyncStatusObserver>) : SyncDispatcher, Observable<SyncStatusObserver> by registry {
@@ -459,7 +459,7 @@ class FxaAccountManagerTest {
     }
 
     @Test
-    fun `migrating an account via migrateAccountAsync`() = runBlocking {
+    fun `migrating an account via copyAccountAsync - creating a new session token`() = runBlocking {
         // We'll test three scenarios:
         // - hitting a network issue during migration
         // - hitting an auth issue during migration (bad credentials)
@@ -520,6 +520,75 @@ class FxaAccountManagerTest {
         assertNotNull(manager.authenticatedAccount())
         assertEquals(profile, manager.accountProfile())
 
+        verify(constellation, times(1)).initDeviceAsync(any(), any(), any())
+        verify(constellation, never()).ensureCapabilitiesAsync(any())
+        verify(accountObserver, times(1)).onAuthenticated(account, AuthType.Shared)
+    }
+
+    @Test
+    fun `migrating an account via migrateAccountAsync - reusing existing session token`() = runBlocking {
+        // We'll test three scenarios:
+        // - hitting a network issue during migration
+        // - hitting an auth issue during migration (bad credentials)
+        // - all good, migrated successfully
+        val accountStorage: AccountStorage = mock()
+        val profile = Profile("testUid", "test@example.com", null, "Test Profile")
+        val constellation: DeviceConstellation = mockDeviceConstellation()
+        val account = StatePersistenceTestableAccount(profile, constellation)
+        val accountObserver: AccountObserver = mock()
+
+        val manager = TestableFxaAccountManager(
+            testContext, ServerConfig.release("dummyId", "http://auth-url/redirect"), accountStorage,
+            setOf(DeviceCapability.SEND_TAB), null, this.coroutineContext
+        ) {
+            account
+        }
+        manager.register(accountObserver)
+
+        // We don't have an account at the start.
+        `when`(accountStorage.read()).thenReturn(null)
+        manager.initAsync().await()
+
+        // Bad package name.
+        var migratableAccount = ShareableAccount(
+            email = "test@example.com",
+            sourcePackage = "org.mozilla.firefox",
+            authInfo = ShareableAuthInfo("session", "kSync", "kXCS")
+        )
+
+        // TODO Need to mock inputs into - mock a PackageManager, and have it return PackageInfo with the right signature.
+//        AccountSharing.isTrustedPackage
+
+        // We failed to migrate for some reason.
+        account.ableToMigrate = false
+        assertFalse(manager.signInWithShareableAccountAsync(migratableAccount, reuseAccount = true).await())
+
+        assertEquals("session", account.latestMigrateAuthInfo?.sessionToken)
+        assertEquals("kSync", account.latestMigrateAuthInfo?.kSync)
+        assertEquals("kXCS", account.latestMigrateAuthInfo?.kXCS)
+
+        assertNull(manager.authenticatedAccount())
+
+        // Prepare for a successful migration.
+        `when`(constellation.ensureCapabilitiesAsync(any())).thenReturn(CompletableDeferred(true))
+
+        // Success.
+        account.ableToMigrate = true
+        migratableAccount = migratableAccount.copy(
+            authInfo = ShareableAuthInfo("session2", "kSync2", "kXCS2")
+        )
+
+        assertTrue(manager.signInWithShareableAccountAsync(migratableAccount, reuseAccount = true).await())
+
+        assertEquals("session2", account.latestMigrateAuthInfo?.sessionToken)
+        assertEquals("kSync2", account.latestMigrateAuthInfo?.kSync)
+        assertEquals("kXCS2", account.latestMigrateAuthInfo?.kXCS)
+
+        assertNotNull(manager.authenticatedAccount())
+        assertEquals(profile, manager.accountProfile())
+
+        verify(constellation, times(1)).ensureCapabilitiesAsync(any())
+        verify(constellation, never()).initDeviceAsync(any(), any(), any())
         verify(accountObserver, times(1)).onAuthenticated(account, AuthType.Shared)
     }
 
@@ -797,6 +866,11 @@ class FxaAccountManagerTest {
         }
 
         override fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean> {
+            latestMigrateAuthInfo = ShareableAuthInfo(sessionToken, kSync, kXCS)
+            return CompletableDeferred(ableToMigrate)
+        }
+
+        override fun copyFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean> {
             latestMigrateAuthInfo = ShareableAuthInfo(sessionToken, kSync, kXCS)
             return CompletableDeferred(ableToMigrate)
         }

@@ -160,6 +160,12 @@ class FirefoxAccount internal constructor(
         }
     }
 
+    override fun copyFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String) = scope.async {
+        handleFxaExceptions(logger, "copyFromSessionToken") {
+            inner.copyFromSessionToken(sessionToken, kSync, kXCS)
+        }
+    }
+
     override fun getTokenServerEndpointURL(): String {
         return inner.getTokenServerEndpointURL()
     }
