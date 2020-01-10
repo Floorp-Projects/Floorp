@@ -1782,7 +1782,7 @@ def requires_wasm_sandboxing(libraries):
 set_config('MOZ_USING_WASM_SANDBOXING', requires_wasm_sandboxing)
 set_define('MOZ_USING_WASM_SANDBOXING', requires_wasm_sandboxing)
 
-with only_when(requires_wasm_sandboxing):
+with only_when(requires_wasm_sandboxing & compile_environment):
     lucetc = check_prog('LUCETC', ['lucetc'],
                         paths=toolchain_search_path)
 
