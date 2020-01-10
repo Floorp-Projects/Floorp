@@ -238,7 +238,6 @@ class JSTerm extends Component {
       this.editor = new Editor({
         autofocus: true,
         enableCodeFolding: false,
-        autoCloseBrackets: false,
         lineNumbers: this.props.editorMode,
         lineWrapping: true,
         mode: {
