@@ -267,3 +267,5 @@ Queries can be appended to presets
     - none
     tests:
     - mochitests
+
+  $ rm $MOZBUILD_STATE_PATH/try_presets.yml
