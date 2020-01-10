@@ -3930,7 +3930,7 @@ impl Renderer {
                 .iter()
                 .rev()
                 {
-                    if should_skip_batch(&batch.key.kind, &self.debug_flags) {
+                    if should_skip_batch(&batch.key.kind, self.debug_flags) {
                         continue;
                     }
 
@@ -3981,7 +3981,7 @@ impl Renderer {
             }
 
             for batch in &alpha_batch_container.alpha_batches {
-                if should_skip_batch(&batch.key.kind, &self.debug_flags) {
+                if should_skip_batch(&batch.key.kind, self.debug_flags) {
                     continue;
                 }
 
@@ -6784,7 +6784,7 @@ enum FramebufferKind {
     Other,
 }
 
-fn should_skip_batch(kind: &BatchKind, flags: &DebugFlags) -> bool {
+fn should_skip_batch(kind: &BatchKind, flags: DebugFlags) -> bool {
     match kind {
         BatchKind::TextRun(_) => {
             flags.contains(DebugFlags::DISABLE_TEXT_PRIMS)
