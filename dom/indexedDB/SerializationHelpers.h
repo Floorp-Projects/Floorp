@@ -73,7 +73,7 @@ struct ParamTraits<mozilla::dom::IDBCursor::Direction>
     : public ContiguousEnumSerializer<
           mozilla::dom::IDBCursor::Direction,
           mozilla::dom::IDBCursor::Direction::Next,
-          mozilla::dom::IDBCursor::Direction::Invalid> {};
+          mozilla::dom::IDBCursor::Direction::EndGuard_> {};
 
 template <>
 struct ParamTraits<mozilla::dom::IDBTransaction::Mode>
