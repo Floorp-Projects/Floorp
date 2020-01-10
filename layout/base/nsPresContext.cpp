@@ -30,7 +30,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
-#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsIPrintSettings.h"
@@ -637,14 +636,18 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
         "How did we end up with a presshell if our parent doesn't "
         "have one?");
     if (parent && parent->GetPresContext()) {
-      dom::BrowsingContext* ourItem = mDocument->GetBrowsingContext();
-      if (ourItem && !ourItem->IsTop()) {
-        Element* containingElement =
-            parent->FindContentForSubDocument(mDocument);
-        if (!containingElement->IsXULElement() ||
-            !containingElement->HasAttr(kNameSpaceID_None,
-                                        nsGkAtoms::forceOwnRefreshDriver)) {
-          mRefreshDriver = parent->GetPresContext()->RefreshDriver();
+      nsCOMPtr<nsIDocShellTreeItem> ourItem = mDocument->GetDocShell();
+      if (ourItem) {
+        nsCOMPtr<nsIDocShellTreeItem> parentItem;
+        ourItem->GetInProcessSameTypeParent(getter_AddRefs(parentItem));
+        if (parentItem) {
+          Element* containingElement =
+              parent->FindContentForSubDocument(mDocument);
+          if (!containingElement->IsXULElement() ||
+              !containingElement->HasAttr(kNameSpaceID_None,
+                                          nsGkAtoms::forceOwnRefreshDriver)) {
+            mRefreshDriver = parent->GetPresContext()->RefreshDriver();
+          }
         }
       }
     }
