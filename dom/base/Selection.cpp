@@ -2337,30 +2337,6 @@ void Selection::AdjustAnchorFocusForMultiRange(nsDirection aDirection) {
 }
 
 /*
-Notes which might come in handy for extend:
-
-We can tell the direction of the selection by asking for the anchors selection
-if the begin is less than the end then we know the selection is to the "right".
-else it is a backwards selection.
-a = anchor
-1 = old cursor
-2 = new cursor
-
-  if (a <= 1 && 1 <=2)    a,1,2  or (a1,2)
-  if (a < 2 && 1 > 2)     a,2,1
-  if (1 < a && a <2)      1,a,2
-  if (a > 2 && 2 >1)      1,2,a
-  if (2 < a && a <1)      2,a,1
-  if (a > 1 && 1 >2)      2,1,a
-then execute
-a  1  2 select from 1 to 2
-a  2  1 deselect from 2 to 1
-1  a  2 deselect from 1 to a select from a to 2
-1  2  a deselect from 1 to 2
-2  1  a = continue selection from 2 to 1
-*/
-
-/*
  * Extend extends the selection away from the anchor.
  * We don't need to know the direction, because we always change the focus.
  */
@@ -2383,6 +2359,28 @@ nsresult Selection::Extend(nsINode* aContainer, int32_t aOffset) {
 
 void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
                        ErrorResult& aRv) {
+  /*
+    Notes which might come in handy for extend:
+
+    We can tell the direction of the selection by asking for the anchors
+    selection if the begin is less than the end then we know the selection is to
+    the "right", else it is a backwards selection. Notation: a = anchor, 1 = old
+    cursor, 2 = new cursor.
+
+      if (a <= 1 && 1 <=2)    a,1,2  or (a1,2)
+      if (a < 2 && 1 > 2)     a,2,1
+      if (1 < a && a <2)      1,a,2
+      if (a > 2 && 2 >1)      1,2,a
+      if (2 < a && a <1)      2,a,1
+      if (a > 1 && 1 >2)      2,1,a
+    then execute
+    a  1  2 select from 1 to 2
+    a  2  1 deselect from 2 to 1
+    1  a  2 deselect from 1 to a select from a to 2
+    1  2  a deselect from 1 to 2
+    2  1  a = continue selection from 2 to 1
+  */
+
   // First, find the range containing the old focus point:
   if (!mAnchorFocusRange) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
