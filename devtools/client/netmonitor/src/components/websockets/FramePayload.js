@@ -11,10 +11,16 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { div } = dom;
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
+
 const Services = require("Services");
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
 const {
   getFramePayload,
+  getResponseHeader,
   isJSON,
 } = require("devtools/client/netmonitor/src/utils/request-utils.js");
 const {
@@ -32,6 +38,12 @@ const {
 const {
   parseSockJS,
 } = require("devtools/client/netmonitor/src/components/websockets/parsers/sockjs/index.js");
+const {
+  wampSerializers,
+} = require("devtools/client/netmonitor/src/components/websockets/parsers/wamp/serializers.js");
+const {
+  getRequestByChannelId,
+} = require("devtools/client/netmonitor/src/selectors/index");
 
 // Components
 const Accordion = createFactory(
@@ -55,6 +67,7 @@ class FramePayload extends Component {
     return {
       connector: PropTypes.object.isRequired,
       selectedFrame: PropTypes.object,
+      request: PropTypes.object.isRequired,
     };
   }
 
@@ -82,8 +95,8 @@ class FramePayload extends Component {
   updateFramePayload() {
     const { selectedFrame, connector } = this.props;
     getFramePayload(selectedFrame.payload, connector.getLongString).then(
-      payload => {
-        const { formattedData, formattedDataTitle } = this.parsePayload(
+      async payload => {
+        const { formattedData, formattedDataTitle } = await this.parsePayload(
           payload
         );
         this.setState({
@@ -96,9 +109,34 @@ class FramePayload extends Component {
     );
   }
 
-  parsePayload(payload) {
+  async parsePayload(payload) {
+    const { connector, request } = this.props;
+
+    // Make sure that request headers are fetched from the backend before
+    // looking for `Sec-WebSocket-Protocol` header.
+    const responseHeaders = await connector.requestData(
+      request.id,
+      "responseHeaders"
+    );
+
+    const wsProtocol = getResponseHeader(
+      { responseHeaders },
+      "Sec-WebSocket-Protocol"
+    );
+
+    const wampSerializer = wampSerializers[wsProtocol];
+    if (wampSerializer) {
+      const wampPayload = wampSerializer.deserializeMessage(payload);
+
+      return {
+        formattedData: wampPayload,
+        formattedDataTitle: wampSerializer.description,
+      };
+    }
+
     // socket.io payload
     const socketIOPayload = this.parseSocketIOPayload(payload);
+
     if (socketIOPayload) {
       return {
         formattedData: socketIOPayload,
@@ -262,4 +300,6 @@ class FramePayload extends Component {
   }
 }
 
-module.exports = FramePayload;
+module.exports = connect(state => ({
+  request: getRequestByChannelId(state, state.webSockets.currentChannelId),
+}))(FramePayload);
