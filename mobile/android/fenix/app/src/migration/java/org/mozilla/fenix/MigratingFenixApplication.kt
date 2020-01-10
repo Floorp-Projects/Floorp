@@ -23,6 +23,7 @@ class MigratingFenixApplication : FenixApplication() {
                 this.components.core.passwordsEncryptionKey
             )
             .migrateFxa(this.components.backgroundServices.accountManager)
+            .migrateAddons(this.components.core.engine)
             .build()
     }
 
