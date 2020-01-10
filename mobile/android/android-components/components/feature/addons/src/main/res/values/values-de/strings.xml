@@ -70,6 +70,8 @@
     <string name="mozac_feature_addons_installed_section">Installiert</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">Empfohlen</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">Noch nicht unterstützt</string>
     <!-- Displays a page with all the details of an addon. -->
     <string name="mozac_feature_addons_details">Details</string>
     <!-- Displays a page with all the permissions of an addon. -->
