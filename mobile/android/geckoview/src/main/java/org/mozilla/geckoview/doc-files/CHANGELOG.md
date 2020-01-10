@@ -26,12 +26,16 @@ exclude: true
 - Added ['WebResponse#certificate'][74.5], which is the server certificate used for the
   response, if any.
   ([bug 1508730]({{bugzilla}}1508730))
+- Added ['WebRequestError#certificate'][74.6], which is the server certificate used in the
+  failed request, if any.
+  ([bug 1508730]({{bugzilla}}1508730))
 
 [74.1]: {{javadoc_uri}}/WebExtensionController.html#enable-org.mozilla.geckoview.WebExtension-int-
 [74.2]: {{javadoc_uri}}/WebExtensionController.html#disable-org.mozilla.geckoview.WebExtension-int-
 [74.3]: {{javadoc_uri}}/GeckoSession.ProgressDelegate.SecurityInformation.html#certificate
 [74.4]: {{javadoc_uri}}/WebResponse.html#isSecure
 [74.5]: {{javadoc_uri}}/WebResponse.html#certificate
+[74.6]: {{javadoc_uri}}/WebRequestError.html#certificate
 
 ## v73
 - Added [`WebExtensionController.install`][73.1] and [`uninstall`][73.2] to
@@ -542,4 +546,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 749a613b61fc15e6c71787534e249ae3ca98ace3
+[api-version]: 2434a7ef025c83277375987321b4182ed75ab948

@@ -555,7 +555,8 @@ public class GeckoSession implements Parcelable {
 
                         delegate.onLoadError(GeckoSession.this, request.uri,
                                              new WebRequestError(WebRequestError.ERROR_MALFORMED_URI,
-                                                                 WebRequestError.ERROR_CATEGORY_URI));
+                                                                 WebRequestError.ERROR_CATEGORY_URI,
+                                                                 null));
 
                         return;
                     }
@@ -584,7 +585,7 @@ public class GeckoSession implements Parcelable {
                     final int errorModule = message.getInt("errorModule");
                     final int errorClass = message.getInt("errorClass");
 
-                    final WebRequestError err = WebRequestError.fromGeckoError(errorCode, errorModule, errorClass);
+                    final WebRequestError err = WebRequestError.fromGeckoError(errorCode, errorModule, errorClass, null);
 
                     final GeckoResult<String> result = delegate.onLoadError(GeckoSession.this, uri, err);
                     if (result == null) {
