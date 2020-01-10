@@ -2470,7 +2470,7 @@ static bool GetNonexistentProperty(JSContext* cx, HandleId id,
   }
 
   // Do not warn about tests like (obj[prop] == undefined).
-  pc += CodeSpec[*pc].length;
+  pc += GetBytecodeLength(pc);
   if (Detecting(cx, script, pc)) {
     return true;
   }

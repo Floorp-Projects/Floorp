@@ -1171,7 +1171,7 @@ class FlowGraphSummary {
         column = r.frontColumnNumber();
       }
 
-      if (CodeSpec[op].type() == JOF_JUMP) {
+      if (IsJumpOpcode(op)) {
         addEdge(lineno, column, r.frontOffset() + GET_JUMP_OFFSET(r.frontPC()));
       } else if (op == JSOP_TABLESWITCH) {
         jsbytecode* const switchPC = r.frontPC();

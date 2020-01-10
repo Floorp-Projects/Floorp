@@ -469,11 +469,15 @@ UniqueChars DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
  */
 JSString* DecompileArgument(JSContext* cx, int formalIndex, HandleValue v);
 
-static inline unsigned GetBytecodeLength(jsbytecode* pc) {
-  JSOp op = (JSOp)*pc;
+static inline unsigned GetOpLength(JSOp op) {
   MOZ_ASSERT(op < JSOP_LIMIT);
   MOZ_ASSERT(CodeSpec[op].length > 0);
   return CodeSpec[op].length;
+}
+
+static inline unsigned GetBytecodeLength(jsbytecode* pc) {
+  JSOp op = (JSOp)*pc;
+  return GetOpLength(op);
 }
 
 static inline bool BytecodeIsPopped(jsbytecode* pc) {
