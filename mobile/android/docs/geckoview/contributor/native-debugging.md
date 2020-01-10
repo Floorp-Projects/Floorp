@@ -118,3 +118,22 @@ If you attach `Dual` debuggers to both the main process and a content child proc
 Android Studio also doesn't appear to support targeting breakpoints from the UI (say, from clicking in a gutter) to specific debug tabs, so you may also need to set breakpoints in the appropriate `lldb` console by hand.
 
 Managing more debug tabs may require different approaches.
+
+### Using Android Studio on Windows
+
+You can now use [artifact builds](https://developer.mozilla.org/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds) mode on [MozillaBuild environment](https://wiki.mozilla.org/MozillaBuild) even if you are not using WSL. If you want to debug GeckoView using Android Studio on Windows, you have to set an additional environment variable via the Control Panel to run the gradle script. The `mach` command sets these variables automatically, but Android Studio cannot.
+
+If you install MozillaBuild tools to `C:\mozilla-build` (default installation path), you have to set the `MOZILLABUILD` environment variable to recognize MozillaBuild installation path.
+
+To set environment variable on Windows 10, open the `Control Panel` from `Windows System`, then select `System and Security` - `System` - `Advanced system settings` - `Environment Variables ...`.
+
+To set the `MOZILLABUILD` variable, click `New...` in `User variables for`, then `Variable name:` is `MOZILLABUILD` and `Variable value:` is `C:\mozilla-build`.
+
+You also have to append some tool paths to the `Path` environment variable.
+
+To append the variables to PATH, double click `Path` in `User Variables for`, then click `New`. And append the following variables to `Path`.
+
+* `%MOZILLABUILD%\msys\bin`
+* `%MOZILLABUILD%\bin`
+
+
