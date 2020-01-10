@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
-from taskgraph.util.partials import get_balrog_platform_name, get_builds
+from taskgraph.util.partials import get_builds
 from taskgraph.util.platforms import architecture
 from taskgraph.util.taskcluster import get_artifact_prefix
 
@@ -90,7 +90,6 @@ def make_task_description(config, jobs):
                 'locale': build_locale,
                 'from_mar': builds[build]['mar_url'],
                 'to_mar': {'artifact-reference': artifact_path},
-                'platform': get_balrog_platform_name(dep_th_platform),
                 'branch': config.params['project'],
                 'update_number': update_number,
                 'dest_mar': build,
