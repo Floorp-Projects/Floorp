@@ -3828,7 +3828,7 @@ Element* nsGlobalWindowInner::GetFrameElement(nsIPrincipal& aSubjectPrincipal,
 }
 
 Element* nsGlobalWindowInner::GetRealFrameElement(ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(GetRealFrameElementOuter, (), aError, nullptr);
+  FORWARD_TO_OUTER_OR_THROW(GetFrameElement, (), aError, nullptr);
 }
 
 void nsGlobalWindowInner::UpdateCommands(const nsAString& anAction,
