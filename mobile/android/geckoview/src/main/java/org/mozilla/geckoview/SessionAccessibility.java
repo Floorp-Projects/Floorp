@@ -751,13 +751,6 @@ public class SessionAccessibility {
             return;
         }
 
-        if (!Settings.isPlatformEnabled() && !isInTest()) {
-            // Accessibility could be activated in Gecko via xpcom, for example when using a11y
-            // devtools. Here we assure that either Android a11y is *really* enabled, or no
-            // display is attached and we must be in a junit test.
-            return;
-        }
-
         GeckoBundle cachedBundle = getMostRecentBundle(sourceId);
         if (cachedBundle == null && sourceId != View.NO_ID) {
             // Suppress events from non cached nodes.
@@ -857,7 +850,12 @@ public class SessionAccessibility {
                 break;
         }
 
-        ((ViewParent) mView).requestSendAccessibilityEvent(mView, event);
+        try {
+            ((ViewParent) mView).requestSendAccessibilityEvent(mView, event);
+        } catch (IllegalStateException ex) {
+            // Accessibility could be activated in Gecko via xpcom, for example when using a11y
+            // devtools. Events that are forwarded to the platform will throw an exception.
+        }
     }
 
     private synchronized GeckoBundle getMostRecentBundle(final int virtualViewId) {
