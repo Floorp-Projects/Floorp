@@ -23,10 +23,7 @@ using mozilla::IsDefaultConstructible;
 using mozilla::IsDestructible;
 using mozilla::IsEmpty;
 using mozilla::IsFunction;
-using mozilla::IsLvalueReference;
 using mozilla::IsPointer;
-using mozilla::IsReference;
-using mozilla::IsRvalueReference;
 using mozilla::IsSame;
 using mozilla::IsSigned;
 using mozilla::IsUnsigned;
@@ -62,53 +59,6 @@ static_assert(!IsPointer<bool (IsPointerTest::*)()>::value,
               "bool(IsPointerTest::*)() not a pointer");
 static_assert(!IsPointer<void (IsPointerTest::*)(void)>::value,
               "void(IsPointerTest::*)(void) not a pointer");
-
-static_assert(!IsLvalueReference<bool>::value, "bool not an lvalue reference");
-static_assert(!IsLvalueReference<bool*>::value,
-              "bool* not an lvalue reference");
-static_assert(IsLvalueReference<bool&>::value, "bool& is an lvalue reference");
-static_assert(!IsLvalueReference<bool&&>::value,
-              "bool&& not an lvalue reference");
-
-static_assert(!IsLvalueReference<void>::value, "void not an lvalue reference");
-static_assert(!IsLvalueReference<void*>::value,
-              "void* not an lvalue reference");
-
-static_assert(!IsLvalueReference<int>::value, "int not an lvalue reference");
-static_assert(!IsLvalueReference<int*>::value, "int* not an lvalue reference");
-static_assert(IsLvalueReference<int&>::value, "int& is an lvalue reference");
-static_assert(!IsLvalueReference<int&&>::value,
-              "int&& not an lvalue reference");
-
-static_assert(!IsRvalueReference<bool>::value, "bool not an rvalue reference");
-static_assert(!IsRvalueReference<bool*>::value,
-              "bool* not an rvalue reference");
-static_assert(!IsRvalueReference<bool&>::value,
-              "bool& not an rvalue reference");
-static_assert(IsRvalueReference<bool&&>::value,
-              "bool&& is an rvalue reference");
-
-static_assert(!IsRvalueReference<void>::value, "void not an rvalue reference");
-static_assert(!IsRvalueReference<void*>::value,
-              "void* not an rvalue reference");
-
-static_assert(!IsRvalueReference<int>::value, "int not an rvalue reference");
-static_assert(!IsRvalueReference<int*>::value, "int* not an rvalue reference");
-static_assert(!IsRvalueReference<int&>::value, "int& not an rvalue reference");
-static_assert(IsRvalueReference<int&&>::value, "int&& is an rvalue reference");
-
-static_assert(!IsReference<bool>::value, "bool not a reference");
-static_assert(!IsReference<bool*>::value, "bool* not a reference");
-static_assert(IsReference<bool&>::value, "bool& is a reference");
-static_assert(IsReference<bool&&>::value, "bool&& is a reference");
-
-static_assert(!IsReference<void>::value, "void not a reference");
-static_assert(!IsReference<void*>::value, "void* not a reference");
-
-static_assert(!IsReference<int>::value, "int not a reference");
-static_assert(!IsReference<int*>::value, "int* not a reference");
-static_assert(IsReference<int&>::value, "int& is a reference");
-static_assert(IsReference<int&&>::value, "int&& is a reference");
 
 namespace CPlusPlus11IsMemberPointer {
 
