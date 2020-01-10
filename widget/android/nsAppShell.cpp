@@ -363,26 +363,24 @@ class XPCOMEventTargetWrapper final
 
   bool IsOnCurrentThread() { return mTarget->IsOnCurrentThread(); }
 
-  static void Init() {
-    java::XPCOMEventTarget::Natives<XPCOMEventTargetWrapper>::Init();
-    CreateWrapper(NS_LITERAL_STRING("main"), do_GetMainThread());
-    if (XRE_IsParentProcess()) {
-        CreateWrapper(NS_LITERAL_STRING("launcher"), ipc::GetIPCLauncher());
+  // Instantiates a wrapper. The Java code calls this only once per wrapped
+  // thread, and caches the result.
+  static java::XPCOMEventTarget::LocalRef CreateWrapper(
+      mozilla::jni::String::Param aName) {
+    nsString name(aName->ToString());
+    nsCOMPtr<nsIEventTarget> target;
+    if (name.EqualsLiteral("main")) {
+      target = do_GetMainThread();
+    } else if (name.EqualsLiteral("launcher")) {
+      target = ipc::GetIPCLauncher();
+    } else {
+      MOZ_CRASH("Trying to create JNI wrapper for unknown XPCOM thread");
     }
-  }
 
-  static void CreateWrapper(mozilla::jni::String::Param aName,
-                            nsCOMPtr<nsIEventTarget> aTarget) {
     auto java = java::XPCOMEventTarget::New();
-    auto native = MakeUnique<XPCOMEventTargetWrapper>(aTarget.forget());
+    auto native = MakeUnique<XPCOMEventTargetWrapper>(target.forget());
     AttachNative(java, std::move(native));
-
-    java::XPCOMEventTarget::SetTarget(aName, java);
-  }
-
-  static void ResolveAndDispatchNative(mozilla::jni::String::Param aName,
-                                       mozilla::jni::Object::Param aRunnable) {
-    java::XPCOMEventTarget::ResolveAndDispatch(aName, aRunnable);
+    return java;
   }
 
   explicit XPCOMEventTargetWrapper(already_AddRefed<nsIEventTarget> aTarget)
