@@ -5,13 +5,15 @@
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="?android:attr/listPreferredItemHeightSmall"
+        android:layout_height="wrap_content"
+        android:minHeight="?android:attr/listPreferredItemHeightSmall"
         android:background="?android:attr/selectableItemBackground">
 
     <CheckedTextView
             android:id="@+id/labelView"
             android:layout_width="match_parent"
-            android:layout_height="?android:attr/listPreferredItemHeightSmall"
+            android:layout_height="wrap_content"
+            android:minHeight="?android:attr/listPreferredItemHeightSmall"
             android:checkMark="?android:attr/listChoiceIndicatorSingle"
             android:gravity="center_vertical"
             android:paddingStart="?android:attr/listPreferredItemPaddingStart"
