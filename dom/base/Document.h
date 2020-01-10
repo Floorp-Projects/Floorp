@@ -16,7 +16,8 @@
 #include "nsCompatibility.h"      // for member
 #include "nsCOMPtr.h"             // for member
 #include "nsICookieSettings.h"
-#include "nsGkAtoms.h"  // for static class members
+#include "nsGkAtoms.h"           // for static class members
+#include "nsNameSpaceManager.h"  // for static class members
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIContentViewer.h"
