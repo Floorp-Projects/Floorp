@@ -195,6 +195,7 @@ class AutoScrollChild extends JSWindowActorChild {
         screenY: event.screenY,
         scrollId: this._scrollId,
         presShellId,
+        browsingContext: this.browsingContext,
       }
     );
     if (!autoscrollEnabled) {
