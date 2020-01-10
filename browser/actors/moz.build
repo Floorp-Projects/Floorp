@@ -57,4 +57,5 @@ FINAL_TARGET_FILES.actors += [
     'SwitchDocumentDirectionChild.jsm',
     'URIFixupChild.jsm',
     'WebRTCChild.jsm',
+    'WebRTCParent.jsm',
 ]

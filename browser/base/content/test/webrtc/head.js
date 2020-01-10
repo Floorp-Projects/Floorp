@@ -1,4 +1,4 @@
-browser/base/content/test/webrtc/head.jsconst { AppConstants } = ChromeUtils.import(
+const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
@@ -367,45 +367,97 @@ function activateSecondaryAction(aAction) {
   }
 }
 
-function getMediaCaptureState() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
-    let mediaManagerService = Cc[
-      "@mozilla.org/mediaManagerService;1"
-    ].getService(Ci.nsIMediaManagerService);
+async function getMediaCaptureState() {
+  function gatherBrowsingContexts(aBrowsingContext) {
+    let list = [aBrowsingContext];
 
-    let hasCamera = {};
-    let hasMicrophone = {};
-    let hasScreenShare = {};
-    let hasWindowShare = {};
-    let hasBrowserShare = {};
-    mediaManagerService.mediaCaptureWindowState(
-      content,
-      hasCamera,
-      hasMicrophone,
-      hasScreenShare,
-      hasWindowShare,
-      hasBrowserShare,
-      true
-    );
-    let result = {};
-
-    if (hasCamera.value != mediaManagerService.STATE_NOCAPTURE) {
-      result.video = true;
-    }
-    if (hasMicrophone.value != mediaManagerService.STATE_NOCAPTURE) {
-      result.audio = true;
+    let children = aBrowsingContext.getChildren();
+    for (let child of children) {
+      list.push(...gatherBrowsingContexts(child));
     }
 
-    if (hasScreenShare.value != mediaManagerService.STATE_NOCAPTURE) {
-      result.screen = "Screen";
-    } else if (hasWindowShare.value != mediaManagerService.STATE_NOCAPTURE) {
-      result.screen = "Window";
-    } else if (hasBrowserShare.value != mediaManagerService.STATE_NOCAPTURE) {
-      result.screen = "Browser";
-    }
+    return list;
+  }
 
-    return result;
-  });
+  function combine(x, y) {
+    if (
+      x == Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED ||
+      y == Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED
+    ) {
+      return Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED;
+    }
+    if (
+      x == Ci.nsIMediaManagerService.STATE_CAPTURE_DISABLED ||
+      y == Ci.nsIMediaManagerService.STATE_CAPTURE_DISABLED
+    ) {
+      return Ci.nsIMediaManagerService.STATE_CAPTURE_DISABLED;
+    }
+    return Ci.nsIMediaManagerService.STATE_NOCAPTURE;
+  }
+
+  let video = Ci.nsIMediaManagerService.STATE_NOCAPTURE;
+  let audio = Ci.nsIMediaManagerService.STATE_NOCAPTURE;
+  let screen = Ci.nsIMediaManagerService.STATE_NOCAPTURE;
+  let window = Ci.nsIMediaManagerService.STATE_NOCAPTURE;
+  let browser = Ci.nsIMediaManagerService.STATE_NOCAPTURE;
+
+  for (let bc of gatherBrowsingContexts(
+    gBrowser.selectedBrowser.browsingContext
+  )) {
+    let state = await SpecialPowers.spawn(bc, [], async function() {
+      let mediaManagerService = Cc[
+        "@mozilla.org/mediaManagerService;1"
+      ].getService(Ci.nsIMediaManagerService);
+
+      let hasCamera = {};
+      let hasMicrophone = {};
+      let hasScreenShare = {};
+      let hasWindowShare = {};
+      let hasBrowserShare = {};
+      mediaManagerService.mediaCaptureWindowState(
+        content,
+        hasCamera,
+        hasMicrophone,
+        hasScreenShare,
+        hasWindowShare,
+        hasBrowserShare,
+        false
+      );
+
+      return {
+        video: hasCamera.value,
+        audio: hasMicrophone.value,
+        screen: hasScreenShare.value,
+        window: hasWindowShare.value,
+        browser: hasBrowserShare.value,
+      };
+    });
+
+    video = combine(state.video, video);
+    audio = combine(state.audio, audio);
+    screen = combine(state.screen, screen);
+    window = combine(state.window, window);
+    browser = combine(state.browser, browser);
+  }
+
+  let result = {};
+
+  if (video != Ci.nsIMediaManagerService.STATE_NOCAPTURE) {
+    result.video = true;
+  }
+  if (audio != Ci.nsIMediaManagerService.STATE_NOCAPTURE) {
+    result.audio = true;
+  }
+
+  if (screen != Ci.nsIMediaManagerService.STATE_NOCAPTURE) {
+    result.screen = "Screen";
+  } else if (window != Ci.nsIMediaManagerService.STATE_NOCAPTURE) {
+    result.screen = "Window";
+  } else if (browser != Ci.nsIMediaManagerService.STATE_NOCAPTURE) {
+    result.screen = "Browser";
+  }
+
+  return result;
 }
 
 async function stopSharing(aType = "camera", aShouldKeepSharing = false) {

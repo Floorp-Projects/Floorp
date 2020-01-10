@@ -45,7 +45,8 @@ function getMessageManagerForWindow(aContentWindow) {
 Services.obs.addObserver(gEMEUIObserver, "mediakeys-request");
 Services.obs.addObserver(gDecoderDoctorObserver, "decoder-doctor-notification");
 
-// WebRTCChild observer registration.
+// WebRTCChild observer registration. Actor observers require the subject
+// to be a window, so they are registered here instead.
 const kWebRTCObserverTopics = [
   "getUserMedia:request",
   "recording-device-stopped",

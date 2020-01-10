@@ -87,18 +87,28 @@ class FxrWebRTCPrompt extends FxrPermissionPromptPrototype {
       allowedDevices.push(videoDevices[0].deviceIndex);
     }
 
-    this.targetBrowser.messageManager.sendAsyncMessage("webrtc:Allow", {
-      callID: this.request.callID,
-      windowID: this.request.windowID,
-      devices: allowedDevices,
-    });
+    // WebRTCChild doesn't currently care which actor
+    // this is sent to and just uses the windowID.
+    this.targetBrowser.sendMessageToActor(
+      "webrtc:Allow",
+      {
+        callID: this.request.callID,
+        windowID: this.request.windowID,
+        devices: allowedDevices,
+      },
+      "WebRTC"
+    );
   }
 
   deny() {
-    this.targetBrowser.messageManager.sendAsyncMessage("webrtc:Deny", {
-      callID: this.request.callID,
-      windowID: this.request.windowID,
-    });
+    this.targetBrowser.sendMessageToActor(
+      "webrtc:Deny",
+      {
+        callID: this.request.callID,
+        windowID: this.request.windowID,
+      },
+      "WebRTC"
+    );
   }
 }
 

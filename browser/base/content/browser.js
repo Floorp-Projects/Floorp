@@ -6121,7 +6121,6 @@ var TabsProgressListener = {
     if (tab && tab._sharingState) {
       gBrowser.resetBrowserSharing(aBrowser);
     }
-    webrtcUI.forgetStreamsFromBrowser(aBrowser);
 
     gBrowser.getNotificationBox(aBrowser).removeTransientNotifications();
 

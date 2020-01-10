@@ -760,6 +760,7 @@ var gTests = [
 
       // Request devices and expect a prompt despite the saved 'Allow' permission.
       observerPromise = expectObserverCalled("getUserMedia:request");
+      promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true, null, "screen");
       await promise;
       await observerPromise;
