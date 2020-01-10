@@ -637,6 +637,172 @@ const tests = [
     };
   },
 
+  async function() {
+    info("Retained result: type, blur, focus, confirm.");
+
+    await promiseAutocompleteResultPopup("search", window, true);
+    await UrlbarTestUtils.promisePopupClose(window, () => {
+      gURLBar.blur();
+    });
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      document.getElementById("Browser:OpenLocation").doCommand();
+    });
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return [
+      {
+        category: "urlbar",
+        method: "abandonment",
+        object: "blur",
+        value: "typed",
+        extra: {
+          elapsed: val => parseInt(val) > 0,
+          numChars: "6",
+        },
+      },
+      {
+        category: "urlbar",
+        method: "engagement",
+        object: "enter",
+        value: "returned",
+        extra: {
+          elapsed: val => parseInt(val) > 0,
+          numChars: "6",
+          selType: "search",
+          selIndex: "0",
+        },
+      },
+    ];
+  },
+
+  async function() {
+    info("Sanity check we are not stuck on 'returned'");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("x", window, true);
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "1",
+        selIndex: "0",
+        selType: "search",
+      },
+    };
+  },
+
+  async function() {
+    info("Retained result: type, blur, focus, backspace, type, confirm.");
+
+    await promiseAutocompleteResultPopup("search", window, true);
+    await UrlbarTestUtils.promisePopupClose(window, () => {
+      gURLBar.blur();
+    });
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      document.getElementById("Browser:OpenLocation").doCommand();
+    });
+    EventUtils.synthesizeKey("VK_RIGHT");
+    EventUtils.synthesizeKey("VK_BACK_SPACE");
+    EventUtils.synthesizeKey("x");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return [
+      {
+        category: "urlbar",
+        method: "abandonment",
+        object: "blur",
+        value: "typed",
+        extra: {
+          elapsed: val => parseInt(val) > 0,
+          numChars: "6",
+        },
+      },
+      {
+        category: "urlbar",
+        method: "engagement",
+        object: "enter",
+        value: "returned",
+        extra: {
+          elapsed: val => parseInt(val) > 0,
+          numChars: "6",
+          selType: "search",
+          selIndex: "0",
+        },
+      },
+    ];
+  },
+
+  async function() {
+    info("Retained result: type, blur, focus, type (overwrite), confirm.");
+
+    await promiseAutocompleteResultPopup("search", window, true);
+    await UrlbarTestUtils.promisePopupClose(window, () => {
+      gURLBar.blur();
+    });
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      document.getElementById("Browser:OpenLocation").doCommand();
+    });
+    EventUtils.synthesizeKey("x");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return [
+      {
+        category: "urlbar",
+        method: "abandonment",
+        object: "blur",
+        value: "typed",
+        extra: {
+          elapsed: val => parseInt(val) > 0,
+          numChars: "6",
+        },
+      },
+      {
+        category: "urlbar",
+        method: "engagement",
+        object: "enter",
+        value: "restarted",
+        extra: {
+          elapsed: val => parseInt(val) > 0,
+          numChars: "1",
+          selType: "search",
+          selIndex: "0",
+        },
+      },
+    ];
+  },
+
+  async function() {
+    info("Sanity check we are not stuck on 'restarted'");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("x", window, true);
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "1",
+        selIndex: "0",
+        selType: "search",
+      },
+    };
+  },
+
   /*
    * Abandonment tests.
    */
@@ -845,10 +1011,13 @@ add_task(async function test() {
   for (let i = 0; i < tests.length; i++) {
     info(`Running test at index ${i}`);
     let testFn = tests[i];
-    let expectedEvents = [await testFn()].filter(e => !!e);
+    let events = await testFn();
+    if (!Array.isArray(events)) {
+      events = [events].filter(e => !!e);
+    }
     // Always blur to ensure it's not accounted as an additional abandonment.
     gURLBar.blur();
-    TelemetryTestUtils.assertEvents(expectedEvents, { category: "urlbar" });
+    TelemetryTestUtils.assertEvents(events, { category: "urlbar" });
   }
 });
 
