@@ -742,7 +742,7 @@ impl Tile {
         self.clipped_rect = self.rect
             .intersection(&ctx.local_rect)
             .and_then(|r| r.intersection(&ctx.local_clip_rect))
-            .unwrap_or(PictureRect::zero());
+            .unwrap_or_else(PictureRect::zero);
 
         self.world_rect = ctx.pic_to_world_mapper
             .map(&self.rect)
@@ -938,7 +938,7 @@ impl Tile {
         // Ensure that the dirty rect doesn't extend outside the local tile rect.
         self.dirty_rect = self.dirty_rect
             .intersection(&self.rect)
-            .unwrap_or(PictureRect::zero());
+            .unwrap_or_else(PictureRect::zero);
 
         // See if this tile is a simple color, in which case we can just draw
         // it as a rect, and avoid allocating a texture surface and drawing it.
@@ -1828,7 +1828,7 @@ impl TileCacheInstance {
 
         let needed_rect_in_pic_space = desired_rect_in_pic_space
             .intersection(&pic_rect)
-            .unwrap_or(PictureRect::zero());
+            .unwrap_or_else(PictureRect::zero);
 
         let p0 = needed_rect_in_pic_space.origin;
         let p1 = needed_rect_in_pic_space.bottom_right();
@@ -3611,7 +3611,7 @@ impl PicturePrimitive {
                         // the tile rects below for occlusion testing to the relevant area.
                         let local_clip_rect = tile_cache.local_rect
                             .intersection(&tile_cache.local_clip_rect)
-                            .unwrap_or(PictureRect::zero());
+                            .unwrap_or_else(PictureRect::zero);
 
                         let world_clip_rect = map_pic_to_world
                             .map(&local_clip_rect)
