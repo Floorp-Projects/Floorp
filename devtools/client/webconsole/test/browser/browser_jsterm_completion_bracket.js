@@ -20,6 +20,7 @@ const TEST_URI = `data:text/html;charset=utf8,<p>test [ completion.
   </script>`;
 
 add_task(async function() {
+  await pushPref("devtools.editor.autoclosebrackets", false);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   await testInputs(hud);
