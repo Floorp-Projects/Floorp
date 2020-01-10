@@ -88,10 +88,17 @@ const GeckoViewRecordingMedia = {
         const win = windows.queryElementAt(i, Ci.nsIDOMWindow);
         const hasCamera = {};
         const hasMicrophone = {};
+        const screen = {};
+        const window = {};
+        const browser = {};
         MediaManagerService.mediaCaptureWindowState(
           win,
           hasCamera,
-          hasMicrophone
+          hasMicrophone,
+          screen,
+          window,
+          browser,
+          true
         );
         var cameraStatus = getStatusString(hasCamera.value);
         var microphoneStatus = getStatusString(hasMicrophone.value);
