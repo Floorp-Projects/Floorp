@@ -4230,10 +4230,10 @@ static bool PromiseThenNewPromiseCapability(
 }
 
 // ES2016, 25.4.5.3., steps 3-5.
-MOZ_MUST_USE JSObject* js::OriginalPromiseThen(JSContext* cx,
-                                               HandleObject promiseObj,
-                                               HandleObject onFulfilled,
-                                               HandleObject onRejected) {
+MOZ_MUST_USE PromiseObject* js::OriginalPromiseThen(JSContext* cx,
+                                                    HandleObject promiseObj,
+                                                    HandleObject onFulfilled,
+                                                    HandleObject onRejected) {
   cx->check(promiseObj);
   cx->check(onFulfilled);
   cx->check(onRejected);
@@ -4251,11 +4251,15 @@ MOZ_MUST_USE JSObject* js::OriginalPromiseThen(JSContext* cx,
   }
 
   // Steps 3-4.
-  Rooted<PromiseCapability> resultCapability(cx);
-  if (!PromiseThenNewPromiseCapability(
-          cx, promiseObj, CreateDependentPromise::Always, &resultCapability)) {
+  Rooted<PromiseObject*> newPromise(
+      cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+  if (!newPromise) {
     return nullptr;
   }
+  newPromise->copyUserInteractionFlagsFrom(*unwrappedPromise);
+
+  Rooted<PromiseCapability> resultCapability(cx);
+  resultCapability.promise().set(newPromise);
 
   // Step 5.
   {
@@ -4267,7 +4271,7 @@ MOZ_MUST_USE JSObject* js::OriginalPromiseThen(JSContext* cx,
     }
   }
 
-  return resultCapability.promise();
+  return newPromise;
 }
 
 static MOZ_MUST_USE bool OriginalPromiseThenWithoutSettleHandlers(
