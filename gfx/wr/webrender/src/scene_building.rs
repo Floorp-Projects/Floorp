@@ -664,7 +664,7 @@ impl<'a> SceneBuilder<'a> {
                 scroll_root,
                 slice.prim_list,
                 background_color,
-                slice.shared_clips.unwrap_or(Vec::new()),
+                slice.shared_clips.unwrap_or_else(Vec::new),
                 &mut self.interners,
                 &mut self.prim_store,
                 &mut self.clip_store,
