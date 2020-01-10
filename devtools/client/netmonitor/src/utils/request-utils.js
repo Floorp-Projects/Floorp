@@ -506,24 +506,6 @@ function getResponseHeader(item, header) {
 }
 
 /**
- * Get the value of a particular request header, or null if not
- * present.
- */
-function getRequestHeader(item, header) {
-  const { requestHeaders } = item;
-  if (!requestHeaders || !requestHeaders.headers.length) {
-    return null;
-  }
-  header = header.toLowerCase();
-  for (const requestHeader of requestHeaders.headers) {
-    if (requestHeader.name.toLowerCase() == header) {
-      return requestHeader.value;
-    }
-  }
-  return null;
-}
-
-/**
  * Extracts any urlencoded form data sections from a POST request.
  */
 async function updateFormDataSections(props) {
@@ -665,7 +647,6 @@ module.exports = {
   getEndTime,
   getFormattedProtocol,
   getFramePayload,
-  getRequestHeader,
   getResponseHeader,
   getResponseTime,
   getStartTime,

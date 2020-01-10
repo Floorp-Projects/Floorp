@@ -7,7 +7,6 @@ DIRS += [
 ]
 
 DevToolsModules(
-    'cbor.js',
     'FrameFilterMenu.js',
     'FrameListColumnData.js',
     'FrameListColumnFinBit.js',
@@ -21,7 +20,6 @@ DevToolsModules(
     'FrameListHeaderContextMenu.js',
     'FrameListItem.js',
     'FramePayload.js',
-    'msgpack.js',
     'RawData.js',
     'StatusBar.js',
     'Toolbar.js',
