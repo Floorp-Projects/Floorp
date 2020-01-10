@@ -131,6 +131,7 @@ class WebExecutorTest {
         assertThat("Status could should match", response.statusCode, equalTo(200))
         assertThat("Content type should match", response.headers["Content-Type"], equalTo("application/json; charset=utf-8"))
         assertThat("Redirected should match", response.redirected, equalTo(false))
+        assertThat("isSecure should match", response.isSecure, equalTo(false))
 
         val body = response.getJSONBody()
         assertThat("Method should match", body.getString("method"), equalTo("POST"))
@@ -196,6 +197,13 @@ class WebExecutorTest {
 
         thrown.expect(equalTo(WebRequestError(WebRequestError.ERROR_SECURITY_BAD_CERT, WebRequestError.ERROR_CATEGORY_SECURITY)))
         fetch(WebRequest(uri))
+    }
+
+    @Test
+    fun testSecure() {
+        val response = fetch(WebRequest("https://example.com"))
+        assertThat("Status should match", response.statusCode, equalTo(200))
+        assertThat("isSecure should match", response.isSecure, equalTo(true))
     }
 
     @Test

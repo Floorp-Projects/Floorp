@@ -1718,6 +1718,7 @@ package org.mozilla.geckoview {
     method public void setReadTimeoutMillis(long);
     field public static final long DEFAULT_READ_TIMEOUT_MS = 30000L;
     field @Nullable public final InputStream body;
+    field public final boolean isSecure;
     field public final boolean redirected;
     field public final int statusCode;
   }
@@ -1726,6 +1727,7 @@ package org.mozilla.geckoview {
     ctor public Builder(@NonNull String);
     method @NonNull public WebResponse.Builder body(@NonNull InputStream);
     method @NonNull public WebResponse build();
+    method @NonNull public WebResponse.Builder isSecure(boolean);
     method @NonNull public WebResponse.Builder redirected(boolean);
     method @NonNull public WebResponse.Builder statusCode(int);
   }

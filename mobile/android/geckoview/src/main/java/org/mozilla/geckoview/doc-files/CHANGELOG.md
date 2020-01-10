@@ -20,10 +20,14 @@ exclude: true
 - ⚠️ Added ['GeckoSession.ProgressDelegate.SecurityInformation#certificate'][74.3], which is the
   full server certificate in use, if any. The other certificate-related fields were removed.
   ([bug 1508730]({{bugzilla}}1508730))
+- Added ['WebResponse#isSecure'][74.4], which indicates whether or not the response was
+  delivered over a secure connection.
+  ([bug 1508730]({{bugzilla}}1508730))
 
 [74.1]: {{javadoc_uri}}/WebExtensionController.html#enable-org.mozilla.geckoview.WebExtension-int-
 [74.2]: {{javadoc_uri}}/WebExtensionController.html#disable-org.mozilla.geckoview.WebExtension-int-
 [74.3]: {{javadoc_uri}}/GeckoSession.ProgressDelegate.SecurityInformation.html#certificate
+[74.4]: {{javadoc_uri}}/WebResponse.html#isSecure
 
 ## v73
 - Added [`WebExtensionController.install`][73.1] and [`uninstall`][73.2] to
@@ -534,4 +538,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: fd18bfe91225a81545309da7f798c9a8a6031889
+[api-version]: 2fec52a2adbf657d6fddeaa16a6de69230eff42e
