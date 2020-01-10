@@ -21,7 +21,7 @@ add_task(async function() {
     !navbar.hasAttribute("overflowing"),
     "Should start with a non-overflowing toolbar."
   );
-  window.resizeTo(400, window.outerHeight);
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
 
   await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
