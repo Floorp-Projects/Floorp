@@ -99,9 +99,6 @@
 @BINPATH@/components/components.manifest
 
 ; JavaScript components
-#ifdef MOZ_ANDROID_GCM
-@BINPATH@/components/Push.manifest
-#endif
 @BINPATH@/components/toolkitsearch.manifest
 
 @BINPATH@/components/extensions.manifest

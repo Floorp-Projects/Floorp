@@ -5,6 +5,3 @@
 ANDROID_PACKAGE_NAME=org.mozilla.fennec_`echo ${USER:-unknown} | sed 's/-/_/g'`
 MOZ_APP_DISPLAYNAME="Fennec `echo ${USER:-unknown} | sed 's/-/_/g'`"
 MOZ_UPDATER=
-MOZ_ANDROID_ANR_REPORTER=
-MOZ_ANDROID_GCM_SENDERID=965234145045
-MOZ_MMA_GCM_SENDERID=242693410970
