@@ -545,8 +545,44 @@
   WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "http"   "FirefoxURL$2"
   WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "https"  "FirefoxURL$2"
 
-  ; Registered Application
   WriteRegStr ${RegKey} "Software\RegisteredApplications" "$1" "$0\Capabilities"
+
+  ; This key would be created by the Open With dialog when a user creates an
+  ; association for us with a file type that we haven't registered as a handler
+  ; for. We need to preemptively create it ourselves so that we can control the
+  ; command line that's used to launch us in that situation. If it's too late
+  ; and one already exists, then we need to edit its command line to make sure
+  ; it contains the -osint flag.
+  ReadRegStr $6 ${RegKey} "Software\Classes\Applications\${FileMainEXE}\shell\open\command" ""
+  ${If} $6 != ""
+    ${GetPathFromString} "$6" $6
+    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\shell\open\command" \
+                "" "$\"$6$\" -osint -url $\"%1$\""
+  ${Else}
+    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\shell\open\command" \
+                "" "$\"$8$\" -osint -url $\"%1$\""
+    ; Make sure files associated this way use the document icon instead of the
+    ; application icon.
+    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\DefaultIcon" \
+                "" "$8,1"
+    ; If we're going to create this key at all, we also need to list our supported
+    ; file types in it, because otherwise we'll be shown as a suggestion for every
+    ; single file type, whether we support it in any way or not.
+    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
+                ".htm" ""
+    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
+                ".html" ""
+    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
+                ".shtml" ""
+    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
+                ".xht" ""
+    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
+                ".xhtml" ""
+    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
+                ".svg" ""
+    WriteRegStr ${RegKey} "Software\Classes\Applications\${FileMainEXE}\SupportedTypes" \
+                ".webp" ""
+  ${EndIf}
 !macroend
 !define SetStartMenuInternet "!insertmacro SetStartMenuInternet"
 
