@@ -85,10 +85,6 @@ class InitializedOnce final {
 
   void reset() {
     MOZ_ASSERT(mMaybe.isSome());
-    maybeReset();
-  }
-
-  void maybeReset() {
     mMaybe.reset();
 #ifdef DEBUG
     mWasReset = true;

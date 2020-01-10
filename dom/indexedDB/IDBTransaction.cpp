@@ -299,9 +299,8 @@ BackgroundRequestChild* IDBTransaction::StartRequest(
   return actor;
 }
 
-void IDBTransaction::OpenCursor(
-    PBackgroundIDBCursorChild* const aBackgroundActor,
-    const OpenCursorParams& aParams) {
+void IDBTransaction::OpenCursor(BackgroundCursorChild* const aBackgroundActor,
+                                const OpenCursorParams& aParams) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);

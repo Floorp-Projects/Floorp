@@ -12,7 +12,7 @@
 
 #include "BackgroundChildImpl.h"
 #include "GeckoProfiler.h"
-#include "IDBCursorType.h"
+#include "IDBCursor.h"
 #include "IDBDatabase.h"
 #include "IDBIndex.h"
 #include "IDBKeyRange.h"
@@ -189,18 +189,18 @@ class MOZ_STACK_CLASS LoggingString final : public nsAutoCString {
     }
   }
 
-  explicit LoggingString(const IDBCursorDirection aDirection) {
+  explicit LoggingString(const IDBCursor::Direction aDirection) {
     switch (aDirection) {
-      case IDBCursorDirection::Next:
+      case IDBCursor::Direction::Next:
         AssignLiteral("\"next\"");
         break;
-      case IDBCursorDirection::Nextunique:
+      case IDBCursor::Direction::NextUnique:
         AssignLiteral("\"nextunique\"");
         break;
-      case IDBCursorDirection::Prev:
+      case IDBCursor::Direction::Prev:
         AssignLiteral("\"prev\"");
         break;
-      case IDBCursorDirection::Prevunique:
+      case IDBCursor::Direction::PrevUnique:
         AssignLiteral("\"prevunique\"");
         break;
       default:
