@@ -347,8 +347,6 @@ awsy-stylo-sequential:
 # Limited test sets for specific platforms
 
 linux-common-tests:
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
     - jittest
     - marionette
     - mochitest
@@ -363,6 +361,8 @@ linux-common-tests:
 linux1804-tests:
     - cppunit
     - crashtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - gtest
     - jsreftest
     - mochitest-a11y
