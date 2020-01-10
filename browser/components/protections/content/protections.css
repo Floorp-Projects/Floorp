@@ -259,9 +259,23 @@ a.hidden,
   margin-block-end: 10px;
 }
 
+#private-window-message {
+  border: 1px solid #D7D7DB;
+  grid-area: 1 / 2 / 1 / 7;
+  background-color: #F9F9FA;
+  padding: 13px 45px;
+  font-size: 13px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+#graph:not(.private-window) #private-window-message {
+  display: none;
+}
+
 /* Graph Bars */
 .graph-bar {
-  grid-row: 1 / -2;
+  grid-row: 2 / -2;
   align-self: flex-end;
   width: var(--column-width);
   position: relative;
@@ -332,6 +346,7 @@ a.hidden,
   margin-block-start: 5px;
   font-size: 0.9em;
   width: var(--column-width);
+  grid-row: -1;
 }
 
 .bar-count {
