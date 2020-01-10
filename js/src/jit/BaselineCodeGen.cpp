@@ -4569,7 +4569,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_UNINITIALIZED() {
 
 template <>
 bool BaselineCompilerCodeGen::emitCall(JSOp op) {
-  MOZ_ASSERT(IsCallOp(op));
+  MOZ_ASSERT(IsInvokeOp(op));
 
   frame.syncStack(0);
 
@@ -4590,7 +4590,7 @@ bool BaselineCompilerCodeGen::emitCall(JSOp op) {
 
 template <>
 bool BaselineInterpreterCodeGen::emitCall(JSOp op) {
-  MOZ_ASSERT(IsCallOp(op));
+  MOZ_ASSERT(IsInvokeOp(op));
 
   // The IC expects argc in R0.
   LoadUint16Operand(masm, R0.scratchReg());
@@ -4612,7 +4612,7 @@ bool BaselineInterpreterCodeGen::emitCall(JSOp op) {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitSpreadCall(JSOp op) {
-  MOZ_ASSERT(IsCallOp(op));
+  MOZ_ASSERT(IsInvokeOp(op));
 
   frame.syncStack(0);
   masm.move32(Imm32(1), R0.scratchReg());
