@@ -55,6 +55,7 @@ web-platform-tests:
             macosx*/opt: 8
             macosx.*/debug: 16
             windows.*/debug: 18
+            windows10-64-ccov/opt: 18
             windows10-aarch64/opt: 16
             default: 12
     max-run-time:
