@@ -43,7 +43,7 @@ bool testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts) {
 
   // The Ion JIT may be unavailable due to --disable-ion or lack of support
   // for this platform.
-  if (!js::jit::IsIonEnabled()) {
+  if (!js::jit::IsIonEnabled(cx)) {
     knownFail = true;
   }
 

@@ -274,6 +274,11 @@ size_t SizeOfIonData(JSScript* script, mozilla::MallocSizeOf mallocSizeOf);
 bool JitSupportsSimd();
 bool JitSupportsAtomics();
 
+inline bool IsIonEnabled(JSContext* cx) {
+  return IsBaselineJitEnabled() && JitOptions.ion &&
+         !cx->options().disableIon();
+}
+
 }  // namespace jit
 }  // namespace js
 
