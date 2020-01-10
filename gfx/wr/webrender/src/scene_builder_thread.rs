@@ -673,10 +673,8 @@ impl SceneBuilderThread {
             if let &Some(ref hooks) = &self.hooks {
                 hooks.post_resource_update(&have_resources_updates);
             }
-        } else {
-            if let &Some(ref hooks) = &self.hooks {
-                hooks.post_empty_scene_build();
-            }
+        } else if let Some(ref hooks) = self.hooks {
+            hooks.post_empty_scene_build();
         }
     }
 
