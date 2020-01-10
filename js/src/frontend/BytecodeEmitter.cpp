@@ -353,9 +353,13 @@ bool BytecodeEmitter::emitN(JSOp op, size_t extra, BytecodeOffset* offset) {
 bool BytecodeEmitter::emitJumpTargetOp(JSOp op, BytecodeOffset* off) {
   MOZ_ASSERT(BytecodeIsJumpTarget(op));
 
+  // Record the current IC-entry index at start of this op.
   uint32_t numEntries = bytecodeSection().numICEntries();
 
-  if (!emitN(op, CodeSpec[op].length - 1, off)) {
+  size_t n = GetOpLength(op) - 1;
+  MOZ_ASSERT(GetOpLength(op) >= 1 + UINT32_INDEX_LEN);
+
+  if (!emitN(op, n, off)) {
     return false;
   }
 
@@ -859,11 +863,11 @@ AbstractScope BytecodeEmitter::innermostScope() const {
 bool BytecodeEmitter::emitIndexOp(JSOp op, uint32_t index) {
   MOZ_ASSERT(checkStrictOrSloppy(op));
 
-  const size_t len = CodeSpec[op].length;
-  MOZ_ASSERT(len >= 1 + UINT32_INDEX_LEN);
+  constexpr size_t OpLength = 1 + UINT32_INDEX_LEN;
+  MOZ_ASSERT(GetOpLength(op) == OpLength);
 
   BytecodeOffset offset;
-  if (!emitCheck(op, len, &offset)) {
+  if (!emitCheck(op, OpLength, &offset)) {
     return false;
   }
 
@@ -973,11 +977,11 @@ bool BytecodeEmitter::emitArgOp(JSOp op, uint16_t slot) {
 bool BytecodeEmitter::emitEnvCoordOp(JSOp op, EnvironmentCoordinate ec) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_ENVCOORD);
 
-  unsigned n = ENVCOORD_HOPS_LEN + ENVCOORD_SLOT_LEN;
-  MOZ_ASSERT(int(n) + 1 /* op */ == CodeSpec[op].length);
+  constexpr size_t N = ENVCOORD_HOPS_LEN + ENVCOORD_SLOT_LEN;
+  MOZ_ASSERT(GetOpLength(op) == 1 + N);
 
   BytecodeOffset off;
-  if (!emitN(op, n, &off)) {
+  if (!emitN(op, N, &off)) {
     return false;
   }
 

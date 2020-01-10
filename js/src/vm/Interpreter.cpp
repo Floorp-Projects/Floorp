@@ -1901,7 +1901,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_NOP)
     CASE(JSOP_NOP_DESTRUCTURING)
     CASE(JSOP_TRY_DESTRUCTURING) {
-      MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);
+      MOZ_ASSERT(GetBytecodeLength(REGS.pc) == 1);
       ADVANCE_AND_DISPATCH(1);
     }
 
@@ -1909,7 +1909,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_TRY)
 
     CASE(JSOP_JUMPTARGET)
-      COUNT_COVERAGE();
+    COUNT_COVERAGE();
     END_CASE(JSOP_JUMPTARGET)
 
     CASE(JSOP_LOOPHEAD) {
@@ -2059,7 +2059,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
       jit_return:
 
-        MOZ_ASSERT(CodeSpec[*REGS.pc].format & JOF_INVOKE);
+        MOZ_ASSERT(IsCallPC(REGS.pc));
         MOZ_ASSERT(cx->realm() == script->realm());
 
         /* Resume execution in the calling frame. */
@@ -2069,7 +2069,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           }
 
           JitScript::MonitorBytecodeType(cx, script, REGS.pc, REGS.sp[-1]);
-          MOZ_ASSERT(CodeSpec[*REGS.pc].length == JSOP_CALL_LENGTH);
+          MOZ_ASSERT(GetBytecodeLength(REGS.pc) == JSOP_CALL_LENGTH);
           ADVANCE_AND_DISPATCH(JSOP_CALL_LENGTH);
         }
 
@@ -2140,7 +2140,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
 #define TRY_BRANCH_AFTER_COND(cond, spdec)                               \
   JS_BEGIN_MACRO                                                         \
-    MOZ_ASSERT(CodeSpec[*REGS.pc].length == 1);                          \
+    MOZ_ASSERT(GetBytecodeLength(REGS.pc) == 1);                         \
     unsigned diff_ = (unsigned)GET_UINT8(REGS.pc) - (unsigned)JSOP_IFEQ; \
     if (diff_ <= 1) {                                                    \
       REGS.sp -= (spdec);                                                \
