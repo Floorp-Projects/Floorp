@@ -456,11 +456,10 @@ impl Document {
                     }
                 };
 
-                if self.hit_tester.is_some() {
-                    if self.scroll_nearest_scrolling_ancestor(delta, node_index) {
-                        self.hit_tester_is_valid = false;
-                        self.frame_is_valid = false;
-                    }
+                if self.hit_tester.is_some()
+                    && self.scroll_nearest_scrolling_ancestor(delta, node_index) {
+                    self.hit_tester_is_valid = false;
+                    self.frame_is_valid = false;
                 }
 
                 return DocumentOps {
