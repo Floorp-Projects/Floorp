@@ -4,6 +4,7 @@
 
 use glean_preview::Configuration;
 use glean_preview::metrics::PingType;
+use log::error;
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_OK};
 use nsstring::nsAString;
 use std::{thread, time};
@@ -54,8 +55,8 @@ fn prototype_ping_init(ping_dir: PathBuf, pingsender_path: PathBuf) -> Result<Jo
       let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
       glean_preview::set_upload_enabled(upload_enabled);
       prototype_ping.send();
-      if let Err(_e) = send_all_pings(&ping_dir, &pingsender_path) {
-        // TODO: Do something with _e.
+      if let Err(e) = send_all_pings(&ping_dir, &pingsender_path) {
+        error!("Failed to send all pings due to {:?}", e);
       }
     }
   })
