@@ -229,7 +229,7 @@ class PuppeteerRunner(MozbuildObject):
             prefs[k] = mozprofile.Preferences.cast(v)
 
         if prefs:
-            extra_options["extraPrefs"] = prefs
+            extra_options["extraPrefsFirefox"] = prefs
 
         if extra_options:
             env["EXTRA_LAUNCH_OPTIONS"] = json.dumps(extra_options)
