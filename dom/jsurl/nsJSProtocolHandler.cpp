@@ -155,12 +155,28 @@ nsresult nsJSThunk::EvaluateScript(
   }
 
   NS_ENSURE_ARG_POINTER(aChannel);
+  MOZ_ASSERT(aOriginalInnerWindow,
+             "We should not have gotten here if this was null!");
+
+  // Set the channel's resultPrincipalURI to the active document's URI.  This
+  // corresponds to treating that URI as the URI of our channel's response.  In
+  // the spec we're supposed to use the URL of the active document, but since
+  // we bail out of here if the inner window has changed, and GetDocumentURI()
+  // on the inner window returns the URL of the active document if the inner
+  // window is current, this is equivalent to the spec behavior.
+  nsCOMPtr<nsIURI> docURI = aOriginalInnerWindow->GetDocumentURI();
+  if (!docURI) {
+    // We're not going to be able to have a sane URL, so just don't run the
+    // script at all.
+    return NS_ERROR_DOM_RETVAL_UNDEFINED;
+  }
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  loadInfo->SetResultPrincipalURI(docURI);
 
   // Get principal of code for execution
   nsCOMPtr<nsISupports> owner;
   aChannel->GetOwner(getter_AddRefs(owner));
   nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   if (!principal) {
     if (loadInfo->GetForceInheritPrincipal()) {
       principal = loadInfo->FindPrincipalToInherit(aChannel);
