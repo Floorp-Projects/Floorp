@@ -4,7 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += [
-  'browser/browser.ini',
+  'browser/_browser_console.ini',
+  'browser/_jsterm.ini',
+  'browser/_webconsole.ini',
 ]
 
 DIRS += [
