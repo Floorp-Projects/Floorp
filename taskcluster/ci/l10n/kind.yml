@@ -57,7 +57,10 @@ job-template:
                 macosx64.*: macosx64-opt
                 win32.*: win32-opt
                 win64.*: win64-opt
-    run-on-projects: ['all']
+    run-on-projects:
+        by-build-platform:
+            linux-shippable.*: ['try', 'release']  # Do not run on autoland - Bug 1599197
+            default: ['all']
     worker-type:
         by-build-platform:
             default: b-linux
