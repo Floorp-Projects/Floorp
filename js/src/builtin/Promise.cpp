@@ -4188,14 +4188,15 @@ static bool IsPromiseSpecies(JSContext* cx, JSFunction* species) {
   return species->maybeNative() == Promise_static_species;
 }
 
+// Whether to create a promise as the return value of Promise#{then,catch}.
+// If the return value is known to be unused, and if the operation is known
+// to be unobservable, we can skip creating the promise.
+enum class CreateDependentPromise { Always, SkipIfCtorUnobservable };
+
 static bool PromiseThenNewPromiseCapability(
     JSContext* cx, HandleObject promiseObj,
     CreateDependentPromise createDependent,
     MutableHandle<PromiseCapability> resultCapability) {
-  if (createDependent == CreateDependentPromise::Never) {
-    return true;
-  }
-
   // Step 3.
   RootedObject C(cx, SpeciesConstructor(cx, promiseObj, JSProto_Promise,
                                         IsPromiseSpecies));
