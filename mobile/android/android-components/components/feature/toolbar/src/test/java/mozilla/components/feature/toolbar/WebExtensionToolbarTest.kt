@@ -75,6 +75,33 @@ class WebExtensionToolbarTest {
     }
 
     @Test
+    fun fallbackToDefaultIcon() {
+        val imageView: ImageView = mock()
+        val textView: TextView = mock()
+        val view: View = mock()
+
+        whenever(view.findViewById<ImageView>(R.id.action_image)).thenReturn(imageView)
+        whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(textView)
+        whenever(view.context).thenReturn(mock())
+
+        val browserAction = BrowserAction(
+            title = "title",
+            loadIcon = { throw IllegalArgumentException() },
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
+        ) {}
+
+        val action = WebExtensionToolbarAction(browserAction, iconJobDispatcher = testDispatcher) {}
+        action.bind(view)
+        action.iconJob?.joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        verify(imageView).setImageResource(R.drawable.mozac_ic_web_extension_default_icon)
+    }
+
+    @Test
     fun createView() {
         var listenerWasClicked = false
 
