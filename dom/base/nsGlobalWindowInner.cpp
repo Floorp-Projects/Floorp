@@ -3831,14 +3831,6 @@ Element* nsGlobalWindowInner::GetRealFrameElement(ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(GetRealFrameElementOuter, (), aError, nullptr);
 }
 
-/**
- * nsIGlobalWindow::GetFrameElement (when called from C++) is just a wrapper
- * around GetRealFrameElement.
- */
-Element* nsGlobalWindowInner::GetFrameElement() {
-  return GetRealFrameElement(IgnoreErrors());
-}
-
 void nsGlobalWindowInner::UpdateCommands(const nsAString& anAction,
                                          Selection* aSel, int16_t aReason) {
   if (GetOuterWindowInternal()) {
