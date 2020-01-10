@@ -1,5 +1,4 @@
 // Define several classes.
-// Only the last ones are valid.
 class EmptyWorkletProcessor extends AudioWorkletProcessor {}
 
 class NoProcessWorkletProcessor extends AudioWorkletProcessor {
@@ -249,20 +248,10 @@ try {
 }
 
 // Test Empty class definition
-// "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor constructor.process is not callable."
-try {
-  registerProcessor("empty-worklet-processor", EmptyWorkletProcessor);
-} catch (e) {
-  console.log(e);
-}
+registerProcessor("empty-worklet-processor", EmptyWorkletProcessor);
 
 // Test class with constructor but not process function
-// "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor constructor.process is not callable."
-try {
-  registerProcessor("no-worklet-processor", NoProcessWorkletProcessor);
-} catch (e) {
-  console.log(e);
-}
+registerProcessor("no-worklet-processor", NoProcessWorkletProcessor);
 
 // Test class with parameterDescriptors not being array nor undefined
 // "TypeError: Argument 2 of AudioWorkletGlobalScope.registerProcessor constructor.parameterDescriptors is neither an array nor undefined."
