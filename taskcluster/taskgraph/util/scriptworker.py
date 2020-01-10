@@ -57,10 +57,9 @@ SIGNING_SCOPE_ALIAS_TO_PROJECT = [[
     'all-release-branches', set([
         'mozilla-beta',
         'mozilla-release',
-        'mozilla-esr60',
         'mozilla-esr68',
         'comm-beta',
-        'comm-esr60',
+        'comm-esr68',
     ])
 ]]
 
@@ -95,10 +94,8 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [[
     'all-release-branches', set([
         'mozilla-beta',
         'mozilla-release',
-        'mozilla-esr60',
         'mozilla-esr68',
         'comm-beta',
-        'comm-esr60',
         'comm-esr68',
     ])
 ]]
@@ -141,12 +138,7 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [[
 ], [
     'release', set([
         'mozilla-release',
-        'comm-esr60',
         'comm-esr68',
-    ])
-], [
-    'esr60', set([
-        'mozilla-esr60',
     ])
 ], [
     'esr68', set([
@@ -161,7 +153,6 @@ BALROG_SERVER_SCOPES = {
     'aurora': 'balrog:server:aurora',
     'beta': 'balrog:server:beta',
     'release': 'balrog:server:release',
-    'esr60': 'balrog:server:esr',
     'esr68': 'balrog:server:esr',
     'default': 'balrog:server:dep',
 }

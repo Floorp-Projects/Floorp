@@ -232,31 +232,6 @@ def target_tasks_mozilla_release(full_task_graph, parameters, graph_config):
             and standard_filter(t, parameters)]
 
 
-@_target_task('mozilla_esr60_tasks')
-def target_tasks_mozilla_esr60(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required for a promotable beta or release build
-    of desktop. The candidates build process involves a pipeline of builds and
-    signing, but does not include beetmover or balrog jobs."""
-
-    def filter(task):
-        if not filter_release_tasks(task, parameters):
-            return False
-
-        if not standard_filter(task, parameters):
-            return False
-
-        platform = task.attributes.get('build_platform')
-
-        # Android is not built on esr60.
-        if platform and 'android' in platform:
-            return False
-
-        # All else was already filtered
-        return True
-
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
-
-
 @_target_task('mozilla_esr68_tasks')
 def target_tasks_mozilla_esr68(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a promotable beta or release build
@@ -725,7 +700,7 @@ def target_tasks_release_simulation(full_task_graph, parameters, graph_config):
         'nightly': 'mozilla-central',
         'beta': 'mozilla-beta',
         'release': 'mozilla-release',
-        'esr60': 'mozilla-esr60',
+        'esr68': 'mozilla-esr68',
     }
     target_project = project_by_release.get(parameters['release_type'])
     if target_project is None:

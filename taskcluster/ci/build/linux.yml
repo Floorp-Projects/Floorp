@@ -1269,7 +1269,7 @@ linux64-add-on-devel/opt:
         mozconfig-variant: add-on-devel
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: ['mozilla-beta', 'mozilla-release', 'mozilla-esr45']
+    run-on-projects: ['mozilla-beta', 'mozilla-release']
     fetches:
         toolchain:
             - linux64-binutils
