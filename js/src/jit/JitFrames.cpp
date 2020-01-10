@@ -2193,7 +2193,7 @@ bool InlineFrameIterator::isConstructing() const {
     }
 
     // In the case of a JS frame, look up the pc from the snapshot.
-    MOZ_ASSERT(IsCallOp(parentOp) && !IsSpreadCallOp(parentOp));
+    MOZ_ASSERT(IsInvokeOp(parentOp) && !IsSpreadCallOp(parentOp));
 
     return IsConstructorCallOp(parentOp);
   }
