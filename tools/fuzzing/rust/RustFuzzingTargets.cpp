@@ -9,5 +9,6 @@
 int FuzzingInitDummy(int* argc, char*** argv) { return 0; }
 
 MOZ_FUZZING_INTERFACE_RAW(FuzzingInitDummy, fuzz_rkv_db_file, RkvDbFile);
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitDummy, fuzz_rkv_db_name, RkvDbName);
 MOZ_FUZZING_INTERFACE_RAW(FuzzingInitDummy, fuzz_rkv_key_write, RkvKeyWrite);
 MOZ_FUZZING_INTERFACE_RAW(FuzzingInitDummy, fuzz_rkv_val_write, RkvValWrite);
