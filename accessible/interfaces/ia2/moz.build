@@ -84,9 +84,15 @@ GENERATED_FILES += [
     'IA2Typelib.tlb',
 ]
 
-SOURCES += [
-    '!%s' % p for p in GENERATED_FILES if p.endswith('.c')
-]
+for p in GENERATED_FILES:
+    if p.endswith('.c'):
+        SOURCES += ['!%s' % p]
+
+        # Give some symbols a unique name in each translation unit, to avoid
+        # collisions caused by https://llvm.org/pr41817.
+        if CONFIG['CC_TYPE'] == 'clang-cl':
+            SOURCES['!%s' % p].flags += ['-DObject_StubDesc=Object_StubDesc__%s' % p[:-2]]
+            SOURCES['!%s' % p].flags += ['-DUserMarshalRoutines=UserMarshalRoutines__%s' % p[:-2]]
 
 RCINCLUDE = 'IA2Marshal.rc'
 
