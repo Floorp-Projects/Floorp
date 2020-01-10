@@ -101,12 +101,15 @@ nsParserUtils::ParseFragment(const nsAString& aFragment, uint32_t aFlags,
     // XHTML
     tagStack.AppendElement(NS_LITERAL_STRING(XHTML_DIV_TAG));
     rv = nsContentUtils::ParseFragmentXML(aFragment, document, tagStack, true,
-                                          aFlags, getter_AddRefs(fragment));
+                                          getter_AddRefs(fragment));
   } else {
     fragment = new DocumentFragment(document->NodeInfoManager());
     rv = nsContentUtils::ParseFragmentHTML(aFragment, fragment, nsGkAtoms::body,
-                                           kNameSpaceID_XHTML, false, true,
-                                           aFlags);
+                                           kNameSpaceID_XHTML, false, true);
+  }
+  if (fragment) {
+    nsTreeSanitizer sanitizer(aFlags);
+    sanitizer.Sanitize(fragment);
   }
 
   if (scripts_enabled) {
