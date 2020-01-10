@@ -82,6 +82,16 @@ open class FenixApplication : LocaleAwareApplication() {
             setDayNightTheme()
             enableStrictMode()
 
+            // Enable the service-experiments component
+            if (settings().isExperimentationEnabled && Config.channel.isReleaseOrBeta) {
+                Experiments.initialize(
+                    applicationContext,
+                    mozilla.components.service.experiments.Configuration(
+                        httpClient = lazy(LazyThreadSafetyMode.NONE) { components.core.client }
+                    )
+                )
+            }
+
             // Make sure the engine is initialized and ready to use.
             components.core.engine.warmUp()
 
@@ -96,16 +106,6 @@ open class FenixApplication : LocaleAwareApplication() {
         // We want to call this function as early as possible, but only once and
         // on the main process, as it uses Gecko to fetch experiments from the server.
         experimentLoader = loadExperiments()
-
-        // Enable the service-experiments component
-        if (settings().isExperimentationEnabled && Config.channel.isReleaseOrBeta) {
-            Experiments.initialize(
-                applicationContext,
-                mozilla.components.service.experiments.Configuration(
-                    httpClient = lazy(LazyThreadSafetyMode.NONE) { components.core.client }
-                )
-            )
-        }
 
         // When the `fenix-test-2019-08-05` experiment is active, record its branch in Glean
         // telemetry. This will be used to validate that the experiment system correctly enrolls
