@@ -119,13 +119,11 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
     'Ubuntu': [
         'linux32',
         'linux64',
-        'linux64-asan',
-        'linux64-stylo-sequential'
+        'linux64-asan'
     ],
     'x64': [
         'linux64',
-        'linux64-asan',
-        'linux64-stylo-sequential'
+        'linux64-asan'
     ],
     'Android 7.0 Moto G5 32bit': ['android-hw-g5-7.0-arm7-api-16'],
     'Android 8.0 Google Pixel 2 32bit': ['android-hw-p2-8.0-arm7-api-16'],
