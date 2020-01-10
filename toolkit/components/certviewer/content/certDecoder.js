@@ -219,12 +219,13 @@ const getSubjectKeyID = (x509, criticalExtensions) => {
 
 const getAuthorityKeyID = (x509, criticalExtensions) => {
   let aKID = getX509Ext(x509.extensions, "2.5.29.35").parsedValue;
-  if (aKID) {
-    aKID = {
-      critical: criticalExtensions.includes("2.5.29.35"),
-      id: hashify(aKID.keyIdentifier.valueBlock.valueHex),
-    };
+  if (!aKID || !aKID.keyIdentifier) {
+    return null;
   }
+  aKID = {
+    critical: criticalExtensions.includes("2.5.29.35"),
+    id: hashify(aKID.keyIdentifier.valueBlock.valueHex),
+  };
   return aKID;
 };
 
@@ -482,12 +483,13 @@ export const parse = async certificate => {
 
   // get which extensions are critical
   const criticalExtensions = [];
-  x509.extensions.forEach(ext => {
-    if (ext.hasOwnProperty("critical") && ext.critical === true) {
-      criticalExtensions.push(ext.extnID);
-    }
-  });
-
+  if (x509.extensions) {
+    x509.extensions.forEach(ext => {
+      if (ext.hasOwnProperty("critical") && ext.critical === true) {
+        criticalExtensions.push(ext.extnID);
+      }
+    });
+  }
   const spki = getPublicKeyInfo(x509);
   const keyUsages = getKeyUsages(x509, criticalExtensions);
   const san = getSubjectAltNames(x509, criticalExtensions);
@@ -507,11 +509,13 @@ export const parse = async certificate => {
 
   // determine which extensions weren't supported
   let unsupportedExtensions = [];
-  x509.extensions.forEach(ext => {
-    if (!supportedExtensions.includes(ext.extnID)) {
-      unsupportedExtensions.push(ext.extnID);
-    }
-  });
+  if (x509.extensions) {
+    x509.extensions.forEach(ext => {
+      if (!supportedExtensions.includes(ext.extnID)) {
+        unsupportedExtensions.push(ext.extnID);
+      }
+    });
+  }
 
   // the output shell
   return {
