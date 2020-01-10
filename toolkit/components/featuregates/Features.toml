@@ -1,10 +1,10 @@
-[normandy-remote-settings]
-title = "Normandy: Remote Settings transport"
-description = """
-When enabled, the Normandy client will fetch recipes from Remote Settings \
-instead of directly from the Normandy API."""
+# there are currently no feature gates
+[demo-feature]
+title = "Demo Feature"
+description = "A no-op feature to demo the feature gate system."
 restart-required = false
+preference = "foo.bar.baz"
 type = "boolean"
-bug-numbers = [1519276]
+bug-numbers = [1479127]
 is-public = true
-default-value = true
+default-value = false
