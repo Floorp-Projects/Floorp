@@ -6,7 +6,6 @@ package org.mozilla.samples.browser.addons
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,11 +25,11 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
+import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.addons.AddonsFragment.CustomViewHolder.AddonViewHolder
 import org.mozilla.samples.browser.addons.AddonsFragment.CustomViewHolder.SectionViewHolder
 import org.mozilla.samples.browser.addons.AddonsFragment.CustomViewHolder.UnsupportedSectionViewHolder
-import org.mozilla.samples.browser.addons.PermissionsDialogFragment.PromptsStyling
 import org.mozilla.samples.browser.ext.components
 
 /**
@@ -334,12 +333,6 @@ class AddonsFragment : Fragment(), View.OnClickListener {
     private fun showPermissionDialog(addon: Addon) {
         val dialog = PermissionsDialogFragment.newInstance(
             addon = addon,
-            title = addon.translatableName.translate(),
-            permissions = addon.translatePermissions(),
-            promptsStyling = PromptsStyling(
-                gravity = Gravity.BOTTOM,
-                shouldWidthMatchParent = true
-            ),
             onPositiveButtonClicked = onPositiveButtonClicked
         )
 
