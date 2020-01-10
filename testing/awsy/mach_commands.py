@@ -229,9 +229,6 @@ class MachCommands(MachCommandBase):
                      dest='settleWaitTime',
                      help='Seconds to wait for things to settled down. '
                      'Defaults to %s.' % SETTLE_WAIT_TIME)
-    @CommandArgument('--single-stylo-traversal', group='AWSY', action='store_true',
-                     dest='single_stylo_traversal', default=False,
-                     help='Set STYLO_THREADS=1.')
     @CommandArgument('--dmd', group='AWSY', action='store_true',
                      dest='dmd', default=False,
                      help='Enable DMD during testing. Requires a DMD-enabled build.')
