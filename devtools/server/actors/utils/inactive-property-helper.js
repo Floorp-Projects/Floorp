@@ -818,7 +818,7 @@ class InactivePropertyHelper {
         // Doesn't generate a box, not a grid item.
         return null;
       }
-      if (this.isAbsolutelyPositioned || this.isFloated) {
+      if (this.isAbsolutelyPositioned) {
         // Out of flow, not a grid item.
         return null;
       }
