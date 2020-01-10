@@ -25,6 +25,7 @@ win32-mingwclang/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt 32 clang"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         config:
             - builds/releng_base_firefox.py
@@ -56,6 +57,7 @@ win32-mingwclang/debug:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug 32 clang"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         config:
             - builds/releng_base_firefox.py
@@ -87,6 +89,7 @@ win64-mingwclang/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt 64 clang"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         config:
             - builds/releng_base_firefox.py
@@ -118,6 +121,7 @@ win64-mingwclang/debug:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug 64 clang"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         config:
             - builds/releng_base_firefox.py
