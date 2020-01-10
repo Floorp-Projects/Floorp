@@ -221,21 +221,6 @@ class PromiseObject : public NativeObject {
 MOZ_MUST_USE JSObject* GetWaitForAllPromise(JSContext* cx,
                                             JS::HandleObjectVector promises);
 
-// Whether to create a promise as the return value of Promise#{then,catch}.
-// If the return value is known to be unused, and if the operation is known
-// to be unobservable, we can skip creating the promise.
-enum class CreateDependentPromise {
-  // The return value is not known to be unused.
-  Always,
-
-  // The return value is known to be unused.
-  SkipIfCtorUnobservable,
-
-  // The return value is known to be unused, and the operation is known
-  // to be unobservable.
-  Never
-};
-
 /**
  * Enqueues resolve/reject reactions in the given Promise's reactions lists
  * as though by calling the original value of Promise.prototype.then, and
