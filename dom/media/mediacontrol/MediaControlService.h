@@ -83,7 +83,7 @@ class MediaControlService final : public nsIObserver {
    */
   class ControllerManager final {
    public:
-    ControllerManager() = default;
+    explicit ControllerManager(MediaControlService* aService);
     ~ControllerManager() = default;
 
     void AddController(MediaController* aController);
@@ -95,6 +95,9 @@ class MediaControlService final : public nsIObserver {
     MediaController* GetControllerById(uint64_t aId) const;
     uint64_t GetControllersNum() const;
 
+    // Callback function for monitoring controller play state changes.
+    void ControllerPlaybackStateChanged(PlaybackState aState);
+
    private:
     void UpdateMainController(MediaController* aController);
 
@@ -102,6 +105,11 @@ class MediaControlService final : public nsIObserver {
     nsDataHashtable<nsUint64HashKey, RefPtr<MediaController>> mControllers;
     nsTArray<uint64_t> mControllerHistory;
     RefPtr<MediaController> mMainController;
+
+    // These member are use to listen main controller's play state changes and
+    // update the playback state to the event source.
+    RefPtr<MediaControlKeysEventSource> mSource;
+    MediaEventListener mPlayStateChangedListener;
   };
 
   void Init();
