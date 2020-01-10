@@ -1733,19 +1733,12 @@ class nsContentUtils {
    * @return NS_ERROR_DOM_INVALID_STATE_ERR if a re-entrant attempt to parse
    *         fragments is made, NS_ERROR_OUT_OF_MEMORY if aSourceBuffer is too
    *         long and NS_OK otherwise.
-   * @param aFlags defaults to -1 indicating that ParseFragmentHTML will do
-   *        default sanitization for system privileged calls to it. Only
-   *        ParserUtils::ParseFragment() should ever pass explicit aFlags
-   *        which will then used for sanitization of the fragment.
-   *        To pass explicit aFlags use any of the sanitization flags
-   *        listed in nsIParserUtils.idl.
    */
   static nsresult ParseFragmentHTML(const nsAString& aSourceBuffer,
                                     nsIContent* aTargetNode,
                                     nsAtom* aContextLocalName,
                                     int32_t aContextNamespace, bool aQuirks,
-                                    bool aPreventScriptExecution,
-                                    int32_t aFlags = -1);
+                                    bool aPreventScriptExecution);
 
   /**
    * Invoke the fragment parsing algorithm (innerHTML) using the XML parser.
@@ -1758,12 +1751,6 @@ class nsContentUtils {
    * @param aDocument the target document
    * @param aTagStack the namespace mapping context
    * @param aPreventExecution whether to mark scripts as already started
-   * @param aFlags, pass -1 and ParseFragmentXML will do default
-   *        sanitization for system privileged calls to it. Only
-   *        ParserUtils::ParseFragment() should ever pass explicit aFlags
-   *        which will then used for sanitization of the fragment.
-   *        To pass explicit aFlags use any of the sanitization flags
-   *        listed in nsIParserUtils.idl.
    * @param aReturn the result fragment
    * @return NS_ERROR_DOM_INVALID_STATE_ERR if a re-entrant attempt to parse
    *         fragments is made, a return code from the XML parser.
@@ -1771,7 +1758,7 @@ class nsContentUtils {
   static nsresult ParseFragmentXML(const nsAString& aSourceBuffer,
                                    Document* aDocument,
                                    nsTArray<nsString>& aTagStack,
-                                   bool aPreventScriptExecution, int32_t aFlags,
+                                   bool aPreventScriptExecution,
                                    mozilla::dom::DocumentFragment** aReturn);
 
   /**

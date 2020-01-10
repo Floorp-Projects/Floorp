@@ -14,7 +14,6 @@ DIRS += [ 'featurepolicy' ]
 EXPORTS.mozilla.dom += [
     'CSPEvalChecker.h',
     'DOMSecurityManager.h',
-    'DOMSecurityMonitor.h',
     'FramingChecker.h',
     'nsContentSecurityManager.h',
     'nsContentSecurityUtils.h',
@@ -39,7 +38,6 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'CSPEvalChecker.cpp',
     'DOMSecurityManager.cpp',
-    'DOMSecurityMonitor.cpp',
     'FramingChecker.cpp',
     'nsContentSecurityManager.cpp',
     'nsContentSecurityUtils.cpp',
