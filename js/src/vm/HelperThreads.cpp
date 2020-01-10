@@ -2151,6 +2151,9 @@ void HelperThread::ensureRegisteredWithProfiler() {
     return;
   }
 
+  // Note: To avoid dead locks, we should not hold on the helper thread lock
+  // while calling this function. This is safe because the registerThread field
+  // is a WriteOnceData<> type stored on the global helper tread state.
   JS::RegisterThreadCallback callback = HelperThreadState().registerThread;
   if (callback) {
     profilingStack =
@@ -2163,6 +2166,9 @@ void HelperThread::unregisterWithProfilerIfNeeded() {
     return;
   }
 
+  // Note: To avoid dead locks, we should not hold on the helper thread lock
+  // while calling this function. This is safe because the unregisterThread
+  // field is a WriteOnceData<> type stored on the global helper tread state.
   JS::UnregisterThreadCallback callback = HelperThreadState().unregisterThread;
   if (callback) {
     callback();
@@ -2178,8 +2184,11 @@ void HelperThread::ThreadMain(void* arg) {
   // replay, as compiled scripts and GCs are allowed to vary. Because of
   // this, no recorded events at all should occur while on helper threads.
   mozilla::recordreplay::AutoDisallowThreadEvents d;
+  auto helper = static_cast<HelperThread*>(arg);
 
-  static_cast<HelperThread*>(arg)->threadLoop();
+  helper->ensureRegisteredWithProfiler();
+  helper->threadLoop();
+  helper->unregisterWithProfilerIfNeeded();
 }
 
 void HelperThread::handleWasmTier1Workload(AutoLockHelperThreadState& locked) {
@@ -2639,8 +2648,6 @@ void HelperThread::threadLoop() {
   JS::AutoSuppressGCAnalysis nogc;
   AutoLockHelperThreadState lock;
 
-  ensureRegisteredWithProfiler();
-
   while (!terminate) {
     MOZ_ASSERT(idle());
 
@@ -2661,8 +2668,6 @@ void HelperThread::threadLoop() {
     (this->*(task->handleWorkload))(lock);
     js::oom::SetThreadType(js::THREAD_TYPE_NONE);
   }
-
-  unregisterWithProfilerIfNeeded();
 }
 
 const HelperThread::TaskSpec* HelperThread::findHighestPriorityTask(

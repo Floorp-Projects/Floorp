@@ -370,6 +370,8 @@ typedef ProfilingStack* (*RegisterThreadCallback)(const char* threadName,
 
 typedef void (*UnregisterThreadCallback)();
 
+// regiserThread and unregisterThread callbacks are functions which are called
+// by other threads without any locking mechanism.
 JS_FRIEND_API void SetProfilingThreadCallbacks(
     RegisterThreadCallback registerThread,
     UnregisterThreadCallback unregisterThread);
