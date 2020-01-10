@@ -772,14 +772,7 @@ var MigrationUtils = Object.freeze({
    * for this source, or null otherwise.
    *
    * @param aKey internal name of the migration source.
-   *             Supported values: ie (windows),
-   *                               edge (windows),
-   *                               safari (mac),
-   *                               canary (mac/windows),
-   *                               chrome (mac/windows/linux),
-   *                               chromium (mac/windows/linux),
-   *                               360se (windows),
-   *                               firefox.
+   *             See `gAvailableMigratorKeys` for supported values by OS.
    *
    * If null is returned,  either no data can be imported
    * for the given migrator, or aMigratorKey is invalid  (e.g. ie on mac,
@@ -1297,6 +1290,8 @@ var MigrationUtils = Object.freeze({
     edge: 3,
     ie: 4,
     chrome: 5,
+    "chrome-beta": 5,
+    "chrome-dev": 5,
     chromium: 6,
     canary: 7,
     safari: 8,

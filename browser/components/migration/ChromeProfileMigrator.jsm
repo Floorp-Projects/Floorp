@@ -618,29 +618,28 @@ if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
 /**
  * Chrome Dev / Unstable and Beta. Only separate from `regular` chrome on Linux
  */
+function ChromeDevMigrator() {
+  this._chromeUserDataPathSuffix = "Chrome Dev";
+}
+ChromeDevMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
+ChromeDevMigrator.prototype.classDescription = "Chrome Dev Profile Migrator";
+ChromeDevMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=chrome-dev";
+ChromeDevMigrator.prototype.classID = Components.ID(
+  "{7370a02a-4886-42c3-a4ec-d48c726ec30a}"
+);
+
+function ChromeBetaMigrator() {
+  this._chromeUserDataPathSuffix = "Chrome Beta";
+}
+ChromeBetaMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
+ChromeBetaMigrator.prototype.classDescription = "Chrome Beta Profile Migrator";
+ChromeBetaMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=chrome-beta";
+ChromeBetaMigrator.prototype.classID = Components.ID(
+  "{47f75963-840b-4950-a1f0-d9c1864f8b8e}"
+);
+
 if (AppConstants.platform != "win" && AppConstants.platform != "macosx") {
-  function ChromeDevMigrator() {
-    this._chromeUserDataPathSuffix = "Chrome Dev";
-  }
-  ChromeDevMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
-  ChromeDevMigrator.prototype.classDescription = "Chrome Dev Profile Migrator";
-  ChromeDevMigrator.prototype.contractID =
-    "@mozilla.org/profile/migrator;1?app=browser&type=chrome-dev";
-  ChromeDevMigrator.prototype.classID = Components.ID(
-    "{7370a02a-4886-42c3-a4ec-d48c726ec30a}"
-  );
-
-  function ChromeBetaMigrator() {
-    this._chromeUserDataPathSuffix = "Chrome Beta";
-  }
-  ChromeBetaMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
-  ChromeBetaMigrator.prototype.classDescription =
-    "Chrome Beta Profile Migrator";
-  ChromeBetaMigrator.prototype.contractID =
-    "@mozilla.org/profile/migrator;1?app=browser&type=chrome-beta";
-  ChromeBetaMigrator.prototype.classID = Components.ID(
-    "{47f75963-840b-4950-a1f0-d9c1864f8b8e}"
-  );
-
   EXPORTED_SYMBOLS.push("ChromeDevMigrator", "ChromeBetaMigrator");
 }

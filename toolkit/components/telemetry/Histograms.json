@@ -7053,9 +7053,9 @@
   "FX_MIGRATION_SOURCE_BROWSER": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "bug_numbers": [731025],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
+    "bug_numbers": [731025, 1523179],
+    "alert_emails": ["gijs@mozilla.com", "MattN+telemetry@mozilla.com"],
+    "expires_in_version": "80",
     "kind": "enumerated",
     "n_values": 15,
     "releaseChannelCollection": "opt-out",
