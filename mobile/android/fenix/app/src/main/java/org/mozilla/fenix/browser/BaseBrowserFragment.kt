@@ -168,7 +168,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 activity = requireActivity(),
                 snackbar = snackbar,
                 navController = findNavController(),
-                readerModeController = DefaultReaderModeController(readerViewFeature),
+                readerModeController = DefaultReaderModeController(
+                    readerViewFeature,
+                    (activity as HomeActivity).browsingModeManager.mode.isPrivate,
+                    view.readerViewControlsBar
+                ),
                 browsingModeManager = (activity as HomeActivity).browsingModeManager,
                 sessionManager = requireComponents.core.sessionManager,
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
@@ -517,9 +521,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
     @CallSuper
     override fun onBackPressed(): Boolean {
         return findInPageIntegration.onBackPressed() ||
-            fullScreenFeature.onBackPressed() ||
-            sessionFeature.onBackPressed() ||
-            removeSessionIfNeeded()
+                fullScreenFeature.onBackPressed() ||
+                sessionFeature.onBackPressed() ||
+                removeSessionIfNeeded()
     }
 
     /**
@@ -709,7 +713,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                                 R.id.browserFragment,
                                 BrowserFragmentDirections.actionBrowserFragmentToBookmarkEditFragment(
                                     guid
-                                ))
+                                )
+                            )
                         }
                         .show()
                 }
