@@ -2652,6 +2652,9 @@ bool WebRenderBridgeParent::Resume() {
     return false;
   }
 
+  // Ensure we generate and render a frame immediately.
+  ScheduleForcedGenerateFrame();
+
   mPaused = false;
   return true;
 }
