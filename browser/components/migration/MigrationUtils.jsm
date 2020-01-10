@@ -74,7 +74,16 @@ let gUndoData = null;
 
 XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
   if (AppConstants.platform == "win") {
-    return ["firefox", "edge", "ie", "chrome", "chromium", "360se", "canary"];
+    return [
+      "firefox",
+      "edge",
+      "ie",
+      "chrome",
+      "chrome-beta",
+      "chromium",
+      "360se",
+      "canary",
+    ];
   }
   if (AppConstants.platform == "macosx") {
     return ["firefox", "safari", "chrome", "chromium", "canary"];
