@@ -786,17 +786,15 @@ impl ResourceCache {
                     _ => {}
                 }
 
-            } else {
-                if let RasterizedBlob::NonTiled(ref mut queue) = *image {
-                    // If our new rasterized rect overwrites items in the queue, discard them.
-                    queue.retain(|img| {
-                        !data.rasterized_rect.contains_rect(&img.rasterized_rect)
-                    });
+            } else if let RasterizedBlob::NonTiled(ref mut queue) = *image {
+                // If our new rasterized rect overwrites items in the queue, discard them.
+                queue.retain(|img| {
+                    !data.rasterized_rect.contains_rect(&img.rasterized_rect)
+                });
 
-                    queue.push(data);
-                } else {
-                    *image = RasterizedBlob::NonTiled(vec![data]);
-                }
+                queue.push(data);
+            } else {
+                *image = RasterizedBlob::NonTiled(vec![data]);
             }
         }
     }
