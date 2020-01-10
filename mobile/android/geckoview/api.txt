@@ -52,6 +52,7 @@ import java.lang.Throwable;
 import java.lang.Void;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.security.cert.X509Certificate;
 import java.util.AbstractSequentialList;
 import java.util.Collection;
 import java.util.List;
@@ -830,17 +831,14 @@ package org.mozilla.geckoview {
     field public static final int SECURITY_MODE_IDENTIFIED = 1;
     field public static final int SECURITY_MODE_UNKNOWN = 0;
     field public static final int SECURITY_MODE_VERIFIED = 2;
+    field @Nullable public final X509Certificate certificate;
     field @NonNull public final String host;
     field public final boolean isException;
     field public final boolean isSecure;
-    field @NonNull public final String issuerCommonName;
-    field @NonNull public final String issuerOrganization;
     field public final int mixedModeActive;
     field public final int mixedModePassive;
-    field @NonNull public final String organization;
     field @Nullable public final String origin;
     field public final int securityMode;
-    field @NonNull public final String subjectName;
   }
 
   public static interface GeckoSession.PromptDelegate {

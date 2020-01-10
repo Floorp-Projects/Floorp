@@ -146,10 +146,7 @@ var IdentityHandler = {
 
     const cert = aBrowser.securityUI.secInfo.serverCert;
 
-    result.organization = cert.organization;
-    result.subjectName = cert.subjectName;
-    result.issuerOrganization = cert.issuerOrganization;
-    result.issuerCommonName = cert.issuerCommonName;
+    result.certificate = aBrowser.securityUI.secInfo.serverCert.getBase64DERString();
 
     try {
       result.securityException = OverrideService.hasMatchingOverride(
@@ -325,7 +322,7 @@ class GeckoViewProgress extends GeckoViewModule {
 
     const message = {
       type: "GeckoView:SecurityChanged",
-      identity: identity,
+      identity,
     };
 
     this.eventDispatcher.sendRequest(message);
