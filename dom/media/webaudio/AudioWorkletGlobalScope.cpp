@@ -119,27 +119,8 @@ void AudioWorkletGlobalScope::RegisterProcessor(
         "processorCtor.prototype"));
     return;
   }
-
   /**
-   * 6. If the result of IsCallable(argument=Get(O=prototype, P="process"))
-   *    is false, throw a TypeError and abort these steps.
-   */
-  JS::Rooted<JS::Value> process(aCx);
-  JS::Rooted<JSObject*> prototypeObject(aCx, &prototype.toObject());
-  if (!JS_GetProperty(aCx, prototypeObject, "process", &process)) {
-    aRv.NoteJSContextException(aCx);
-    return;
-  }
-
-  if (!process.isObjectOrNull() || !JS::IsCallable(process.toObjectOrNull())) {
-    aRv.ThrowTypeError<MSG_NOT_CALLABLE>(NS_LITERAL_STRING(
-        "Argument 2 of AudioWorkletGlobalScope.registerProcessor "
-        "constructor.process"));
-    return;
-  }
-
-  /**
-   * 7. Let descriptors be the result of Get(O=processorCtor,
+   * 6. Let parameterDescriptorsValue be the result of Get(O=processorCtor,
    *    P="parameterDescriptors").
    */
   JS::Rooted<JS::Value> descriptors(aCx);
@@ -148,8 +129,12 @@ void AudioWorkletGlobalScope::RegisterProcessor(
     aRv.NoteJSContextException(aCx);
     return;
   }
-
-  /**
+  /** TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1565464
+   * 7. Let parameterDescriptorSequence be the result of the conversion
+   *    from parameterDescriptorsValue to an IDL value of type
+   *    sequence<AudioParamDescriptor>.
+   *
+   * This is now obsolete:
    * 8. If descriptors is neither an array nor undefined, throw a
    *    TypeError and abort these steps.
    */
