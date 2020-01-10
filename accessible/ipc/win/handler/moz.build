@@ -37,6 +37,15 @@ GENERATED_FILES += [
     'HandlerData_p.c',
 ]
 
+# Give some symbols a unique name in each translation unit, to avoid
+# collisions caused by https://llvm.org/pr41817.
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    SOURCES['!HandlerData_p.c'].flags += ['-DHandlerData__MIDL_ProcFormatString=HandlerData__MIDL_ProcFormatString__HandlerData_p']
+    SOURCES['!HandlerData_p.c'].flags += ['-DHandlerData__MIDL_TypeFormatString=HandlerData__MIDL_TypeFormatString__HandlerData_p']
+    for p in GENERATED_FILES:
+        if p.endswith('.c'):
+            SOURCES['!%s' % p].flags += ['-DUserMarshalRoutines=UserMarshalRoutines__%s' % p[:-2]]
+
 DEFFILE = 'AccessibleHandler.def'
 
 USE_LIBS += [

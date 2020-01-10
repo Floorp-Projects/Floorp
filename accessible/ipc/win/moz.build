@@ -39,6 +39,11 @@ if CONFIG['ACCESSIBILITY']:
         'ProxyAccessible.cpp',
     ]
 
+    # Give some symbols a unique name in each translation unit, to avoid
+    # collisions caused by https://llvm.org/pr41817.
+    if CONFIG['CC_TYPE'] == 'clang-cl':
+        SOURCES['!./handler/HandlerData_c.c'].flags += ['-DUserMarshalRoutines=UserMarshalRoutines__HandlerData_c']
+
     LOCAL_INCLUDES += [
         '/accessible/base',
         '/accessible/generic',
