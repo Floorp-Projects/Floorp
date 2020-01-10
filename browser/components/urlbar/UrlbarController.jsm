@@ -636,8 +636,24 @@ class TelemetryEvent {
    *        you have one.  The event by itself sometimes isn't enough to
    *        determine the telemetry details we should record.
    * @note This should never throw, or it may break the urlbar.
+   * @see the in-tree urlbar telemetry documentation.
    */
   start(event, searchString = null) {
+    // In case of a "returned" interaction ongoing, the user may either
+    // continue the search, or restart with a new search string. In that case
+    // we want to change the interaction type to "restarted".
+    // Detecting all the possible ways of clearing the input would be tricky,
+    // thus this makes a guess by just checking the first char matches; even if
+    // the user backspaces a part of the string, we still count that as a
+    // "returned" interaction.
+    if (
+      this._startEventInfo &&
+      this._startEventInfo.interactionType == "returned" &&
+      (!searchString || this._startEventInfo.searchString[0] != searchString[0])
+    ) {
+      this._startEventInfo.interactionType = "restarted";
+    }
+
     // start is invoked on a user-generated event, but we only count the first
     // one.  Once an engagement or abandoment happens, we clear _startEventInfo.
     if (!this._category || this._startEventInfo) {
@@ -647,33 +663,26 @@ class TelemetryEvent {
       Cu.reportError("Must always provide an event");
       return;
     }
-    const validEvents = ["command", "drop", "input", "keydown", "mousedown"];
+    const validEvents = [
+      "command",
+      "drop",
+      "input",
+      "keydown",
+      "mousedown",
+      "urlbar-reopen",
+    ];
     if (!validEvents.includes(event.type)) {
       Cu.reportError("Can't start recording from event type: " + event.type);
       return;
     }
-
-    // Possible interaction types:
-    //
-    // typed:
-    //   The user typed something and the view opened.  We also use this when
-    //   the user has opened the view without typing anything (by clicking the
-    //   dropdown arrow, for example) after having left the pageproxystate
-    //   invalid.  In both cases, the view reflects what the user typed.
-    // pasted:
-    //   The user pasted text.
-    // dropped:
-    //   The user dropped text.
-    // topsites:
-    //   The user opened the view with an empty search string (for example,
-    //   after deleting all text, or by clicking the dropdown arrow when the
-    //   pageproxystate is valid).  The view shows the user's top sites.
 
     let interactionType = "topsites";
     if (event.type == "input") {
       interactionType = UrlbarUtils.isPasteEvent(event) ? "pasted" : "typed";
     } else if (event.type == "drop") {
       interactionType = "dropped";
+    } else if (event.type == "urlbar-reopen" && searchString) {
+      interactionType = "returned";
     } else if (searchString) {
       interactionType = "typed";
     }
@@ -681,6 +690,7 @@ class TelemetryEvent {
     this._startEventInfo = {
       timeStamp: event.timeStamp || Cu.now(),
       interactionType,
+      searchString,
     };
 
     this._controller.manager.notifyEngagementChange(this._isPrivate, "start");
