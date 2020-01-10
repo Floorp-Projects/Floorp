@@ -204,6 +204,23 @@ class WebExecutorTest {
         val response = fetch(WebRequest("https://example.com"))
         assertThat("Status should match", response.statusCode, equalTo(200))
         assertThat("isSecure should match", response.isSecure, equalTo(true))
+
+        val expectedSubject = if (env.isAutomation)
+            "CN=example.com"
+        else
+            "CN=www.example.org,OU=Technology,O=Internet Corporation for Assigned Names and Numbers,L=Los Angeles,ST=California,C=US"
+
+        val expectedIssuer = if (env.isAutomation)
+            "OU=Profile Guided Optimization,O=Mozilla Testing,CN=Temporary Certificate Authority"
+        else
+            "CN=DigiCert SHA2 Secure Server CA,O=DigiCert Inc,C=US"
+
+        assertThat("Subject should match",
+                response.certificate?.subjectX500Principal?.name,
+                equalTo(expectedSubject))
+        assertThat("Issuer should match",
+                response.certificate?.issuerX500Principal?.name,
+                equalTo(expectedIssuer))
     }
 
     @Test

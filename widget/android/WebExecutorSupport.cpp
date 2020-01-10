@@ -17,6 +17,7 @@
 #include "nsITransportSecurityInfo.h"
 #include "nsIUploadChannel2.h"
 #include "nsIWebProgressListener.h"
+#include "nsIX509Cert.h"
 
 #include "nsIDNSService.h"
 #include "nsIDNSListener.h"
@@ -334,6 +335,19 @@ class LoaderListener final : public nsIStreamListener,
       uint32_t securityState = 0;
       tsi->GetSecurityState(&securityState);
       builder->IsSecure(securityState == nsIWebProgressListener::STATE_IS_SECURE);
+
+      nsCOMPtr<nsIX509Cert> cert;
+      tsi->GetServerCert(getter_AddRefs(cert));
+      if (cert) {
+        nsTArray<uint8_t> derBytes;
+        rv = cert->GetRawDER(derBytes);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        auto bytes = jni::ByteArray::New(
+            reinterpret_cast<const int8_t*>(derBytes.Elements()), derBytes.Length());
+        rv = builder->CertificateBytes(bytes);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
 
     mResult->Complete(builder->Build());
