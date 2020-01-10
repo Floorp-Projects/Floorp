@@ -10,6 +10,7 @@
 #include "FlippedOnce.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
+#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIRunnable.h"
@@ -43,7 +44,10 @@ class OpenCursorParams;
 class RequestParams;
 }  // namespace indexedDB
 
-class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
+class IDBTransaction final
+    : public DOMEventTargetHelper,
+      public nsIRunnable,
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
   friend class indexedDB::BackgroundCursorChild;
   friend class indexedDB::BackgroundRequestChild;
 

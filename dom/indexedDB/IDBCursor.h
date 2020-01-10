@@ -11,7 +11,9 @@
 #include "js/RootingAPI.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBCursorBinding.h"
+#include "mozilla/dom/IDBTransaction.h"
 #include "mozilla/dom/indexedDB/Key.h"
+#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
@@ -26,7 +28,6 @@ namespace dom {
 class IDBIndex;
 class IDBObjectStore;
 class IDBRequest;
-class IDBTransaction;
 class OwningIDBObjectStoreOrIDBIndex;
 
 namespace indexedDB {
@@ -69,7 +70,7 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
   RefPtr<IDBIndex> mSourceIndex;
 
   // mSourceObjectStore or mSourceIndex will hold this alive.
-  IDBTransaction* const mTransaction;
+  const CheckedUnsafePtr<IDBTransaction> mTransaction;
 
   // These are cycle-collected!
   JS::Heap<JS::Value> mCachedKey;
