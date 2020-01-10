@@ -29,30 +29,30 @@
 
           <vbox class="identity-popup-security-connection">
             <description class="identity-popup-connection-not-secure"
-                         when-connection="not-secure secure-cert-user-overridden secure-custom-root cert-error-page">&identity.connectionNotSecure2;</description>
+                         when-connection="not-secure secure-cert-user-overridden secure-custom-root cert-error-page" data-l10n-id="identity-connection-not-secure"></description>
             <description class="identity-popup-connection-secure"
-                         when-connection="secure secure-ev">&identity.connectionSecure3;</description>
-            <description when-connection="chrome">&identity.connectionInternal;</description>
-            <description when-connection="file">&identity.connectionFile;</description>
-            <description when-connection="extension">&identity.extensionPage;</description>
+                         when-connection="secure secure-ev" data-l10n-id="identity-connection-secure"></description>
+            <description when-connection="chrome" data-l10n-id="identity-connection-internal"></description>
+            <description when-connection="file" data-l10n-id="identity-connection-file"></description>
+            <description when-connection="extension" data-l10n-id="identity-extension-page"></description>
           </vbox>
 
           <vbox id="identity-popup-security-description">
             <description id="identity-popup-security-ev-content-owner"
                          when-connection="secure-ev"/>
             <description class="identity-popup-warning-box identity-popup-warning-gray"
-                         when-mixedcontent="active-blocked">&identity.activeBlocked;</description>
+                         when-mixedcontent="active-blocked" data-l10n-id="identity-active-blocked"></description>
             <description id="identity-popup-security-decription-custom-root"
                          class="identity-popup-warning-box identity-popup-warning-gray"
-                         when-customroot="true">&identity.customRoot;</description>
+                         when-customroot="true" data-l10n-id="identity-custom-root"></description>
             <description class="identity-popup-warning-box identity-popup-warning-yellow"
-                         when-mixedcontent="passive-loaded">&identity.passiveLoaded;</description>
+                         when-mixedcontent="passive-loaded" data-l10n-id="identity-passive-loaded"></description>
             <description class="identity-popup-warning-box identity-popup-warning-yellow"
-                         when-mixedcontent="active-loaded">&identity.activeLoaded;</description>
+                         when-mixedcontent="active-loaded" data-l10n-id="identity-active-loaded"></description>
             <description class="identity-popup-warning-box identity-popup-warning-yellow"
-                         when-ciphers="weak">&identity.weakEncryption;</description>
+                         when-ciphers="weak" data-l10n-id="identity-weak-encryption"></description>
             <description class="identity-popup-warning-box identity-popup-warning-yellow"
-                         when-loginforms="insecure">&identity.insecureLoginForms2;</description>
+                         when-loginforms="insecure" data-l10n-id="identity-insecure-login-forms"></description>
           </vbox>
         </vbox>
         <button id="identity-popup-security-expander"
@@ -69,11 +69,11 @@
           <hbox id="identity-popup-permissions-header" align="center">
             <label id="identity-popup-permissions-headline"
                    role="heading" aria-level="2"
-                   value="&identity.permissions3;"/>
+                   data-l10n-id="identity-permissions"/>
           </hbox>
           <vbox id="identity-popup-permission-list"/>
-          <description id="identity-popup-permission-reload-hint">&identity.permissionsReloadHint;</description>
-          <description id="identity-popup-permission-empty-hint">&identity.permissionsEmpty;</description>
+          <description id="identity-popup-permission-reload-hint" data-l10n-id="identity-permissions-reload-hint"></description>
+          <description id="identity-popup-permission-empty-hint" data-l10n-id="identity-permissions-empty"></description>
         </vbox>
       </hbox>
 
@@ -82,7 +82,7 @@
             id="identity-popup-clear-sitedata-footer"
             class="panel-footer">
         <button id="identity-popup-clear-sitedata-button"
-                label="&identity.clearSiteData;"
+                data-l10n-id="identity-clear-site-data"
                 oncommand="gIdentityHandler.clearSiteData(event);"/>
       </vbox>
     </panelview>
@@ -94,16 +94,16 @@
       <vbox class="identity-popup-security-content">
         <vbox class="identity-popup-security-connection">
           <description class="identity-popup-connection-not-secure"
-                       when-connection="not-secure secure-cert-user-overridden cert-error-page">&identity.connectionNotSecureSecurityView;</description>
+                       when-connection="not-secure secure-cert-user-overridden cert-error-page" data-l10n-id="identity-connection-not-secure-security-view"></description>
           <description class="identity-popup-connection-secure"
-                       when-connection="secure secure-ev">&identity.connectionVerified3;</description>
+                       when-connection="secure secure-ev" data-l10n-id="identity-connection-verified"></description>
         </vbox>
       </vbox>
 
       <vbox id="identity-popup-securityView-body" class="panel-view-body-unscrollable">
         <!-- (EV) Certificate Information -->
         <description id="identity-popup-content-owner-label"
-                     when-connection="secure-ev">&identity.evOwnerLabel2;</description>
+                     when-connection="secure-ev" data-l10n-id="identity-ev-owner-label"></description>
         <description id="identity-popup-content-owner"
                      when-connection="secure-ev"
                      class="header"/>
@@ -113,65 +113,66 @@
                      when-connection="secure secure-ev secure-cert-user-overridden"/>
         <description id="identity-popup-content-verifier-unknown"
                      class="identity-popup-warning-box identity-popup-warning-gray"
-                     when-customroot="true">&identity.description.customRoot; <label id="identity-popup-custom-root-learn-more" is="text-link" class="plain" value="&identity.learnMore;"/></description>
+                     when-customroot="true"
+                     data-l10n-id="identity-description-custom-root"><label data-l10n-name="link" id="identity-popup-custom-root-learn-more" is="text-link" class="plain"/></description>
 
         <!-- Remove Certificate Exception -->
         <button when-connection="secure-cert-user-overridden"
-                label="&identity.removeCertException.label;"
-                accesskey="&identity.removeCertException.accesskey;"
+                data-l10n-id="identity-remove-cert-exception"
                 class="panel-button"
                 oncommand="gIdentityHandler.removeCertException()"/>
 
         <!-- Connection is Not Secure -->
         <description when-connection="not-secure cert-error-page"
-                     and-when-loginforms="secure">&identity.description.insecure;</description>
+                     and-when-loginforms="secure" data-l10n-id="identity-description-insecure"></description>
 
         <!-- Insecure login forms -->
-        <description when-loginforms="insecure">&identity.description.insecureLoginForms;</description>
-        <label when-loginforms="insecure" id="identity-popup-insecure-login-forms-learn-more" is="text-link" value="&identity.learnMore;"/>
+        <description when-loginforms="insecure" data-l10n-id="identity-description-insecure-login-forms"></description>
+        <label when-loginforms="insecure" id="identity-popup-insecure-login-forms-learn-more" is="text-link" data-l10n-id="identity-learn-more"/>
 
         <!-- Weak Cipher -->
-        <description when-ciphers="weak">&identity.description.weakCipher;</description>
+        <description when-ciphers="weak" data-l10n-id="identity-description-weak-cipher-intro"></description>
         <description class="identity-popup-warning-box identity-popup-warning-yellow"
-                     when-ciphers="weak">&identity.description.weakCipher2;</description>
+                     when-ciphers="weak" data-l10n-id="identity-description-weak-cipher-risk"></description>
 
         <!-- Active Mixed Content Blocked -->
         <description class="identity-popup-warning-box identity-popup-warning-gray"
-                     when-mixedcontent="active-blocked">&identity.description.activeBlocked; <label is="text-link" class="identity-popup-mcb-learn-more plain" value="&identity.learnMore;"/></description>
+                     when-mixedcontent="active-blocked"
+                     data-l10n-id="identity-description-active-blocked"><label data-l10n-name="link" is="text-link" class="identity-popup-mcb-learn-more plain"/></description>
 
         <!-- Passive Mixed Content Loaded -->
-        <description when-mixedcontent="passive-loaded">&identity.description.passiveLoaded;</description>
+        <description when-mixedcontent="passive-loaded" data-l10n-id="identity-description-passive-loaded"></description>
         <description class="identity-popup-warning-box identity-popup-warning-yellow"
-                     when-mixedcontent="passive-loaded">&identity.description.passiveLoaded2; <label is="text-link" class="identity-popup-mcb-learn-more plain" value="&identity.learnMore;"/></description>
+                     when-mixedcontent="passive-loaded"
+                     data-l10n-id="identity-description-passive-loaded-insecure"><label data-l10n-name="link" is="text-link" class="identity-popup-mcb-learn-more plain"/></description>
 
         <!-- Passive Mixed Content Loaded, Active Mixed Content Blocked -->
-        <description when-mixedcontent="passive-loaded active-blocked">&identity.description.passiveLoaded;</description>
+        <description when-mixedcontent="passive-loaded active-blocked" data-l10n-id="identity-description-passive-loaded"></description>
         <description when-mixedcontent="passive-loaded active-blocked"
-                     class="identity-popup-warning-box identity-popup-warning-yellow">&identity.description.passiveLoaded3; <label is="text-link" class="identity-popup-mcb-learn-more plain" value="&identity.learnMore;"/></description>
+                     class="identity-popup-warning-box identity-popup-warning-yellow"
+                     data-l10n-id="identity-description-passive-loaded-mixed"><label data-l10n-name="link" is="text-link" class="identity-popup-mcb-learn-more plain"/></description>
 
         <!-- Active Mixed Content Blocking Disabled -->
         <description when-mixedcontent="active-loaded"
-                     and-when-loginforms="secure">&identity.description.activeLoaded;</description>
+                     and-when-loginforms="secure" data-l10n-id="identity-description-active-loaded"></description>
         <description when-mixedcontent="active-loaded"
-                     and-when-loginforms="secure">&identity.description.activeLoaded2;</description>
+                     and-when-loginforms="secure" data-l10n-id="identity-description-active-loaded-insecure"></description>
         <label when-mixedcontent="active-loaded"
-                     and-when-loginforms="secure" is="text-link" class="identity-popup-mcb-learn-more" value="&identity.learnMore;"/>
+                     and-when-loginforms="secure" is="text-link" class="identity-popup-mcb-learn-more" data-l10n-id="identity-learn-more"/>
         <!-- Show only the first message when there are insecure login forms,
              and make sure the Learn More link is included. -->
         <description when-mixedcontent="active-loaded"
-                     and-when-loginforms="insecure">&identity.description.activeLoaded;</description>
+                     and-when-loginforms="insecure" data-l10n-id="identity-description-active-loaded"></description>
         <label when-mixedcontent="active-loaded"
-                     and-when-loginforms="insecure" is="text-link" class="identity-popup-mcb-learn-more" value="&identity.learnMore;"/>
+                     and-when-loginforms="insecure" is="text-link" class="identity-popup-mcb-learn-more" data-l10n-id="identity-learn-more"/>
 
         <!-- Buttons to enable/disable mixed content blocking. -->
         <button when-mixedcontent="active-blocked"
-                label="&identity.disableMixedContentBlocking.label;"
-                accesskey="&identity.disableMixedContentBlocking.accesskey;"
+                data-l10n-id="identity-disable-mixed-content-blocking"
                 class="panel-button"
                 oncommand="gIdentityHandler.disableMixedContentProtection()"/>
         <button when-mixedcontent="active-loaded"
-                label="&identity.enableMixedContentBlocking.label;"
-                accesskey="&identity.enableMixedContentBlocking.accesskey;"
+                data-l10n-id="identity-enable-mixed-content-blocking"
                 class="panel-button"
                 oncommand="gIdentityHandler.enableMixedContentProtection()"/>
       </vbox>
@@ -179,7 +180,7 @@
       <vbox id="identity-popup-more-info-footer" class="panel-footer">
         <!-- More Security Information -->
         <button id="identity-popup-more-info"
-                label="&identity.moreInfoLinkText2;"
+                data-l10n-id="identity-more-info-link-text"
                 oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
       </vbox>
 
