@@ -77,4 +77,139 @@
       <p>Сайт надав неочікувану відповідь на мережевий запит і браузер не може його обробити.</p>
     ]]></string>
 
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Неналежне перенаправлення на сторінці</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Браузер припинив спроби завантажити запитаний елемент. Сайт перенаправляє запит таким чином, що він ніколи не завершиться.</p>
+      <ul>
+        <li>Можливо, ви вимкнули чи заблокували куки для цього сайту.</li>
+        <li>Якщо дозвіл на прийняття куків сайту не вирішує проблему, в такому разі, ймовірно, це проблема конфігурації сервера, а не вашого комп’ютера.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Автономний режим</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Браузер працює в автономному режимі і не може зв’язатись із запитаним ресурсом.</p>
+      <ul>
+        <li>Перевірте, чи ваш комп’ютер підключений до активної мережі.</li>
+        <li>Натисніть “Спробувати знову”, щоб перемкнутись в онлайновий режим і перезавантажити сторінку.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Порт заборонений з міркувань безпеки</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Для запитаної адреси вказано порт (наприклад, <q>mozilla.org:80</q> означає порт 80 на mozilla.org), який зазвичай <em>не використовується</em> для роботи з веб-сайтами. Браузер скасував запит для вашої безпеки.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">З’єднання скинуто</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Зв’язок з сайтом був перерваний при встановленні з’єднання. Будь ласка, спробуйте знову.</p>
+      <ul>
+        <li>Сайт може бути тимчасово недоступним, або перевантаженим запитами. Спробуйте знову через кілька хвилин.</li>
+        <li>Якщо вам не вдається завантажити жодну сторінку, перевірте з’єднання з Інтернетом свого пристрою.</li>
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Небезпечний тип файлу</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Будь ласка, зв’яжіться з власниками веб-сайту і повідомте їх про цю проблему.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Помилка пошкодженого вмісту</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Не вдається відобразити сторінку, яку ви намагаєтесь переглянути, тому що було виявлено помилку в передачі даних.</p>
+      <ul>
+        <li>Будь ласка, зв’яжіться з власниками веб-сайту та повідомте їх про цю проблему.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Вміст пошкоджено</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Не вдається відобразити сторінку, яку ви намагаєтесь переглянути, тому що було виявлено помилку в передачі даних.</p>
+      <ul>
+        <li>Будь ласка, зв’яжіться з власниками веб-сайту та повідомте їх про цю проблему.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Помилка кодування вмісту</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Не вдається відобразити сторінку, яку ви намагаєтесь переглянути, тому що вона використовує неправильну чи непідтримувану форму стискання даних.</p>
+      <ul>
+        <li>Будь ласка, зв’яжіться з власниками веб-сайту та повідомте їх про цю проблему.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Адресу не знайдено</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Браузер не зміг знайти сервер за вказаною адресою.</p>
+      <ul>
+        <li>Перевірте правильність введення адреси, наприклад,
+          <strong>ww</strong>.example.com замість
+          <strong>www</strong>.example.com.</li>
+        <li>Якщо вам не вдається завантажити жодну сторінку, перевірте з’єднання вашого пристрою з Інтернетом.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Немає з’єднання з Інтернетом</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Перевірте з’єднання з Інтернетом або спробуйте перезавантажити сторінку через кілька хвилин.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Перезавантажити</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Недійсна адреса</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Неможливо розпізнати формат вказаної адреси. Перевірте правильність введення адреси в панелі та спробуйте знову.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Недійсна адреса</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Зазвичай, веб-адреса має такий вигляд <strong>http://www.example.com/</strong></li>
+        <li>Переконайтеся, що ви використовуєте дробову риску (тобто <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Невідомий протокол</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Адреса містить невідомий браузеру протокол, (наприклад, <q>wxyz://</q>), тому браузер не може встановити з’єднання з сайтом.</p>
+      <ul>
+        <li>Можливо, ви намагаєтесь отримати доступ до мультимедіа чи інших сервісів? Перевірте сайт на наявність особливих вимог.</li>
+        <li>Деякі протоколи можуть потребувати додаткових сторонніх програм або плагінів, перш ніж браузер зможе з ними працювати.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Файл не знайдено</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Перевірте, чи файл не був перейменований, видалений чи переміщений.</li>
+        <li>Переконайтеся, що адреса не містить помилок введення.</li>
+        <li>Переконайтеся, що у вас є дозвіл на доступ до запитаного елемента.</li>
+      </ul>
+    ]]></string>
+
     </resources>

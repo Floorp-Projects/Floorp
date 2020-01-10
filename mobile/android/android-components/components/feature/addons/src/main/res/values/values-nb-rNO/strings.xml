@@ -70,6 +70,8 @@
     <string name="mozac_feature_addons_installed_section">Installert</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">Anbefalt</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">Ikke støttet ennå</string>
     <!-- Displays a page with all the details of an addon. -->
     <string name="mozac_feature_addons_details">Detaljer</string>
     <!-- Displays a page with all the permissions of an addon. -->
@@ -102,6 +104,8 @@
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d nye tillatelser er påkrevd</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an addon. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Tilleggsoppdateringer</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">Firefox-tilleggsteknologi moderniseres. Disse tilleggene bruker rammeverk som ikke er kompatible med Firefox 75 og nyere.</string>
     <!-- This is the caption for the addon installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Laster ned og verifiserer utvidelse…</string>
 

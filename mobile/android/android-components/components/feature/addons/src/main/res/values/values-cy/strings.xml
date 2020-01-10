@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Darllen a newid y gosodiadau preifatrwydd</string>
     <!-- Description for all_urls add-on permission. -->
@@ -92,6 +92,17 @@
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Ychwanegion</string>
+    <!-- The label of the allow button, this will be shown to the user when an addons needs new permissions, with the button the user will indicate that wants to accept the new permissions and update the addon-->
+    <string name="mozac_feature_addons_updater_notification_allow_button">Caniatáu</string>
+    <!-- The label of the deny button on a notification, this will be shown to the user when an addons needs new permissions. Indicates the user denies the new permissions and prevent the addon from be updated-->
+    <string name="mozac_feature_addons_updater_notification_deny_button">Gwrthod</string>
+    <!-- The tile of the notification, this will be shown to the user when an addons needs new permissions, to be updated. %1$s is the name of the addons-->
+    <string name="mozac_feature_addons_updater_notification_title">Mae gan %1$s ddiweddariad newydd</string>
+    <!-- The content of the notification, this will be shown when an addons needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">Mae angen %1$d caniatâd newydd</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an addon. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel">Diweddariadau Ychwanegion</string>
     <!-- This is the caption for the addon installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Llwytho a gwirio ychwanegyn…</string>
+
 </resources>
