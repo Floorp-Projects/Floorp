@@ -73,7 +73,7 @@ var gTests = [
       );
       await Promise.all(observerPromises);
 
-      await disableObserverVerification(win.gBrowser.selectedBrowser);
+      await disableObserverVerification();
 
       observerPromises = [
         expectObserverCalledOnClose(

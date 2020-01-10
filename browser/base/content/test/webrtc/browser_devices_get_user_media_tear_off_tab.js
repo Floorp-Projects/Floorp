@@ -64,7 +64,7 @@ var gTests = [
       );
       win.gIdentityHandler._identityPopup.hidden = true;
 
-      await disableObserverVerification(win.gBrowser.selectedBrowser);
+      await disableObserverVerification();
 
       // Closing the new window should remove all sharing indicators.
       let promises = [
