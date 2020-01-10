@@ -238,21 +238,13 @@ enum class CreateDependentPromise {
 
 /**
  * Enqueues resolve/reject reactions in the given Promise's reactions lists
- * as though calling the original value of Promise.prototype.then.
- *
- * If the `createDependent` flag is not set, no dependent Promise will be
- * created. This is used internally to implement DOM functionality.
- * Note: In this case, the reactions pushed using this function contain a
- * `promise` field that can contain null. That field is only ever used by
- * devtools, which have to treat these reactions specially.
- *
- * Asserts that `promiseObj` is a, maybe wrapped, instance of Promise.
+ * as though by calling the original value of Promise.prototype.then, and
+ * without regard to any Promise subclassing used in `promiseObj` itself.
  */
-MOZ_MUST_USE bool OriginalPromiseThen(JSContext* cx, HandleObject promiseObj,
-                                      HandleValue onFulfilled,
-                                      HandleValue onRejected,
-                                      MutableHandleObject dependent,
-                                      CreateDependentPromise createDependent);
+MOZ_MUST_USE JSObject* OriginalPromiseThen(JSContext* cx,
+                                           HandleObject promiseObj,
+                                           HandleObject onFulfilled,
+                                           HandleObject onRejected);
 
 enum class UnhandledRejectionBehavior { Ignore, Report };
 
