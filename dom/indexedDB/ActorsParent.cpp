@@ -390,20 +390,29 @@ struct FullObjectStoreMetadata {
 typedef nsRefPtrHashtable<nsUint64HashKey, FullObjectStoreMetadata>
     ObjectStoreTable;
 
+using IndexOrObjectStoreId = int64_t;
+static_assert(
+    std::is_same_v<
+        IndexOrObjectStoreId,
+        std::remove_cv_t<std::remove_reference_t<decltype(
+            std::declval<const ObjectStoreGetParams&>().objectStoreId())>>>);
+static_assert(std::is_same_v<
+              IndexOrObjectStoreId,
+              std::remove_cv_t<std::remove_reference_t<decltype(
+                  std::declval<const IndexGetParams&>().objectStoreId())>>>);
+
 struct FullDatabaseMetadata {
   DatabaseMetadata mCommonMetadata;
   nsCString mDatabaseId;
   nsString mFilePath;
   ObjectStoreTable mObjectStores;
 
-  int64_t mNextObjectStoreId;
-  int64_t mNextIndexId;
+  IndexOrObjectStoreId mNextObjectStoreId = 0;
+  IndexOrObjectStoreId mNextIndexId = 0;
 
  public:
   explicit FullDatabaseMetadata(const DatabaseMetadata& aCommonMetadata)
-      : mCommonMetadata(aCommonMetadata),
-        mNextObjectStoreId(0),
-        mNextIndexId(0) {
+      : mCommonMetadata(aCommonMetadata) {
     AssertIsOnBackgroundThread();
   }
 
@@ -486,7 +495,7 @@ class MOZ_STACK_CLASS MetadataNameOrIdMatcher final {
 };
 
 struct IndexDataValue final {
-  int64_t mIndexId;
+  IndexOrObjectStoreId mIndexId;
   Key mPosition;
   Key mLocaleAwarePosition;
   bool mUnique;
@@ -505,15 +514,16 @@ struct IndexDataValue final {
     MOZ_COUNT_CTOR(IndexDataValue);
   }
 
-  IndexDataValue(int64_t aIndexId, bool aUnique, const Key& aPosition)
+  IndexDataValue(IndexOrObjectStoreId aIndexId, bool aUnique,
+                 const Key& aPosition)
       : mIndexId(aIndexId), mPosition(aPosition), mUnique(aUnique) {
     MOZ_ASSERT(!aPosition.IsUnset());
 
     MOZ_COUNT_CTOR(IndexDataValue);
   }
 
-  IndexDataValue(int64_t aIndexId, bool aUnique, const Key& aPosition,
-                 const Key& aLocaleAwarePosition)
+  IndexDataValue(IndexOrObjectStoreId aIndexId, bool aUnique,
+                 const Key& aPosition, const Key& aLocaleAwarePosition)
       : mIndexId(aIndexId),
         mPosition(aPosition),
         mLocaleAwarePosition(aLocaleAwarePosition),
@@ -642,7 +652,7 @@ uint32_t CompressedByteCountForNumber(uint64_t aNumber) {
   return count;
 }
 
-uint32_t CompressedByteCountForIndexId(int64_t aIndexId) {
+uint32_t CompressedByteCountForIndexId(IndexOrObjectStoreId aIndexId) {
   MOZ_ASSERT(aIndexId);
   MOZ_ASSERT(UINT64_MAX - uint64_t(aIndexId) >= uint64_t(aIndexId),
              "Overflow!");
@@ -707,7 +717,7 @@ uint64_t ReadCompressedNumber(const uint8_t** aIterator, const uint8_t* aEnd) {
   return result;
 }
 
-void WriteCompressedIndexId(int64_t aIndexId, bool aUnique,
+void WriteCompressedIndexId(IndexOrObjectStoreId aIndexId, bool aUnique,
                             uint8_t** aIterator) {
   MOZ_ASSERT(aIndexId);
   MOZ_ASSERT(UINT64_MAX - uint64_t(aIndexId) >= uint64_t(aIndexId),
@@ -720,7 +730,7 @@ void WriteCompressedIndexId(int64_t aIndexId, bool aUnique,
 }
 
 void ReadCompressedIndexId(const uint8_t** aIterator, const uint8_t* aEnd,
-                           int64_t* aIndexId, bool* aUnique) {
+                           IndexOrObjectStoreId* aIndexId, bool* aUnique) {
   MOZ_ASSERT(aIterator);
   MOZ_ASSERT(*aIterator);
   MOZ_ASSERT(aIndexId);
@@ -737,7 +747,7 @@ void ReadCompressedIndexId(const uint8_t** aIterator, const uint8_t* aEnd,
 
   MOZ_ASSERT(UINT64_MAX / 2 >= uint64_t(indexId), "Bad index id!");
 
-  *aIndexId = int64_t(indexId / 2);
+  *aIndexId = IndexOrObjectStoreId(indexId / 2);
 }
 
 // static
@@ -844,7 +854,7 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
   const uint8_t* const blobDataEnd = aBlobData + aBlobDataLength;
 
   while (blobDataIter < blobDataEnd) {
-    int64_t indexId;
+    IndexOrObjectStoreId indexId;
     bool unique;
     ReadCompressedIndexId(&blobDataIter, blobDataEnd, &indexId, &unique);
 
@@ -2575,7 +2585,7 @@ UpgradeSchemaFrom17_0To18_0Helper::InsertIndexDataValuesFunction::
     return rv;
   }
 
-  int64_t indexId;
+  IndexOrObjectStoreId indexId;
   rv = aValues->GetInt64(1, &indexId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -3562,7 +3572,7 @@ nsresult UpgradeIndexDataValuesFunction::ReadOldCompressedIDVFromBlob(
   const uint8_t* blobDataIter = aBlobData;
   const uint8_t* const blobDataEnd = aBlobData + aBlobDataLength;
 
-  int64_t indexId;
+  IndexOrObjectStoreId indexId;
   bool unique;
   bool nextIndexIdAlreadyRead = false;
 
@@ -5554,7 +5564,7 @@ class DatabaseOperationBase : public Runnable,
                                           const nsCString& aLocale);
 
   static nsresult GetUniqueIndexTableForObjectStore(
-      TransactionBase* aTransaction, int64_t aObjectStoreId,
+      TransactionBase* aTransaction, IndexOrObjectStoreId aObjectStoreId,
       Maybe<UniqueIndexTable>& aMaybeUniqueIndexTable);
 
   static nsresult IndexDataValuesFromUpdateInfos(
@@ -5563,7 +5573,7 @@ class DatabaseOperationBase : public Runnable,
       nsTArray<IndexDataValue>& aIndexValues);
 
   static nsresult InsertIndexTableRows(
-      DatabaseConnection* aConnection, const int64_t aObjectStoreId,
+      DatabaseConnection* aConnection, IndexOrObjectStoreId aObjectStoreId,
       const Key& aObjectStoreKey,
       const FallibleTArray<IndexDataValue>& aIndexValues);
 
@@ -5572,16 +5582,17 @@ class DatabaseOperationBase : public Runnable,
       const FallibleTArray<IndexDataValue>& aIndexValues);
 
   static nsresult DeleteObjectStoreDataTableRowsWithIndexes(
-      DatabaseConnection* aConnection, const int64_t aObjectStoreId,
+      DatabaseConnection* aConnection, IndexOrObjectStoreId aObjectStoreId,
       const Maybe<SerializedKeyRange>& aKeyRange);
 
   static nsresult UpdateIndexValues(
-      DatabaseConnection* aConnection, const int64_t aObjectStoreId,
+      DatabaseConnection* aConnection, IndexOrObjectStoreId aObjectStoreId,
       const Key& aObjectStoreKey,
       const FallibleTArray<IndexDataValue>& aIndexValues);
 
   static nsresult ObjectStoreHasIndexes(DatabaseConnection* aConnection,
-                                        const int64_t aObjectStoreId,
+
+                                        IndexOrObjectStoreId aObjectStoreId,
                                         bool* aHasIndexes);
 
  private:
@@ -6071,7 +6082,8 @@ class Database final
   PBackgroundIDBVersionChangeTransactionParent*
   AllocPBackgroundIDBVersionChangeTransactionParent(
       const uint64_t& aCurrentVersion, const uint64_t& aRequestedVersion,
-      const int64_t& aNextObjectStoreId, const int64_t& aNextIndexId) override;
+      const IndexOrObjectStoreId& aNextObjectStoreId,
+      const IndexOrObjectStoreId& aNextIndexId) override;
 
   bool DeallocPBackgroundIDBVersionChangeTransactionParent(
       PBackgroundIDBVersionChangeTransactionParent* aActor) override;
@@ -6346,11 +6358,11 @@ class TransactionBase {
   }
 
   MOZ_MUST_USE RefPtr<FullObjectStoreMetadata> GetMetadataForObjectStoreId(
-      int64_t aObjectStoreId) const;
+      IndexOrObjectStoreId aObjectStoreId) const;
 
   MOZ_MUST_USE RefPtr<FullIndexMetadata> GetMetadataForIndexId(
       FullObjectStoreMetadata* const aObjectStoreMetadata,
-      int64_t aIndexId) const;
+      IndexOrObjectStoreId aIndexId) const;
 
   PBackgroundParent* GetBackgroundParent() const {
     AssertIsOnBackgroundThread();
@@ -6575,20 +6587,23 @@ class VersionChangeTransaction final
       const ObjectStoreMetadata& aMetadata) override;
 
   mozilla::ipc::IPCResult RecvDeleteObjectStore(
-      const int64_t& aObjectStoreId) override;
+      const IndexOrObjectStoreId& aObjectStoreId) override;
 
-  mozilla::ipc::IPCResult RecvRenameObjectStore(const int64_t& aObjectStoreId,
-                                                const nsString& aName) override;
+  mozilla::ipc::IPCResult RecvRenameObjectStore(
+      const IndexOrObjectStoreId& aObjectStoreId,
+      const nsString& aName) override;
 
   mozilla::ipc::IPCResult RecvCreateIndex(
-      const int64_t& aObjectStoreId, const IndexMetadata& aMetadata) override;
+      const IndexOrObjectStoreId& aObjectStoreId,
+      const IndexMetadata& aMetadata) override;
 
-  mozilla::ipc::IPCResult RecvDeleteIndex(const int64_t& aObjectStoreId,
-                                          const int64_t& aIndexId) override;
+  mozilla::ipc::IPCResult RecvDeleteIndex(
+      const IndexOrObjectStoreId& aObjectStoreId,
+      const IndexOrObjectStoreId& aIndexId) override;
 
-  mozilla::ipc::IPCResult RecvRenameIndex(const int64_t& aObjectStoreId,
-                                          const int64_t& aIndexId,
-                                          const nsString& aName) override;
+  mozilla::ipc::IPCResult RecvRenameIndex(
+      const IndexOrObjectStoreId& aObjectStoreId,
+      const IndexOrObjectStoreId& aIndexId, const nsString& aName) override;
 
   PBackgroundIDBRequestParent* AllocPBackgroundIDBRequestParent(
       const RequestParams& aParams) override;
@@ -7224,12 +7239,13 @@ class CreateIndexOp final : public VersionChangeTransactionOp {
   Maybe<UniqueIndexTable> mMaybeUniqueIndexTable;
   const RefPtr<FileManager> mFileManager;
   const nsCString mDatabaseId;
-  const uint64_t mObjectStoreId;
+  const IndexOrObjectStoreId mObjectStoreId;
 
  private:
   // Only created by VersionChangeTransaction.
   CreateIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
-                const int64_t aObjectStoreId, const IndexMetadata& aMetadata);
+                IndexOrObjectStoreId aObjectStoreId,
+                const IndexMetadata& aMetadata);
 
   ~CreateIndexOp() override = default;
 
@@ -7267,16 +7283,17 @@ class CreateIndexOp::UpdateIndexDataValuesFunction final
 class DeleteIndexOp final : public VersionChangeTransactionOp {
   friend class VersionChangeTransaction;
 
-  const int64_t mObjectStoreId;
-  const int64_t mIndexId;
+  const IndexOrObjectStoreId mObjectStoreId;
+  const IndexOrObjectStoreId mIndexId;
   const bool mUnique;
   const bool mIsLastIndex;
 
  private:
   // Only created by VersionChangeTransaction.
   DeleteIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
-                const int64_t aObjectStoreId, const int64_t aIndexId,
-                const bool aUnique, const bool aIsLastIndex);
+                IndexOrObjectStoreId aObjectStoreId,
+                IndexOrObjectStoreId aIndexId, const bool aUnique,
+                const bool aIsLastIndex);
 
   ~DeleteIndexOp() override = default;
 
@@ -7290,14 +7307,15 @@ class DeleteIndexOp final : public VersionChangeTransactionOp {
 class RenameIndexOp final : public VersionChangeTransactionOp {
   friend class VersionChangeTransaction;
 
-  const int64_t mObjectStoreId;
-  const int64_t mIndexId;
+  const IndexOrObjectStoreId mObjectStoreId;
+  const IndexOrObjectStoreId mIndexId;
   const nsString mNewName;
 
  private:
   // Only created by VersionChangeTransaction.
   RenameIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
-                FullIndexMetadata* const aMetadata, int64_t aObjectStoreId)
+                FullIndexMetadata* const aMetadata,
+                IndexOrObjectStoreId aObjectStoreId)
       : VersionChangeTransactionOp(std::move(aTransaction)),
         mObjectStoreId(aObjectStoreId),
         mIndexId(aMetadata->mCommonMetadata.id()),
@@ -7335,7 +7353,7 @@ class NormalTransactionOp : public TransactionDatabaseOperationBase,
   // work on non-versionchange transactions.
   static nsresult ObjectStoreHasIndexes(NormalTransactionOp* aOp,
                                         DatabaseConnection* aConnection,
-                                        const int64_t aObjectStoreId,
+                                        IndexOrObjectStoreId aObjectStoreId,
                                         const bool aMayHaveIndexes,
                                         bool* aHasIndexes);
 
@@ -7476,7 +7494,7 @@ class ObjectStoreAddOrPutRequestOp::SCInputStream final
 class ObjectStoreGetRequestOp final : public NormalTransactionOp {
   friend class TransactionBase;
 
-  const uint32_t mObjectStoreId;
+  const IndexOrObjectStoreId mObjectStoreId;
   RefPtr<Database> mDatabase;
   const Maybe<SerializedKeyRange> mOptionalKeyRange;
   AutoTArray<StructuredCloneReadInfo, 1> mResponse;
@@ -7507,7 +7525,7 @@ class ObjectStoreGetRequestOp final : public NormalTransactionOp {
 class ObjectStoreGetKeyRequestOp final : public NormalTransactionOp {
   friend class TransactionBase;
 
-  const uint32_t mObjectStoreId;
+  const IndexOrObjectStoreId mObjectStoreId;
   const Maybe<SerializedKeyRange> mOptionalKeyRange;
   const uint32_t mLimit;
   const bool mGetAll;
@@ -7723,7 +7741,7 @@ class CursorBase : public PBackgroundIDBCursorParent {
   InitializedOnceMustBeTrue<const RefPtr<FullObjectStoreMetadata>>
       mObjectStoreMetadata;
 
-  const int64_t mObjectStoreId;
+  const IndexOrObjectStoreId mObjectStoreId;
 
   InitializedOnce<const Key, LazyInit::Allow>
       mLocaleAwareRangeBound;  ///< If the cursor is based on a key range, the
@@ -7774,13 +7792,13 @@ class IndexCursorBase : public CursorBase {
         mLocale((*mIndexMetadata)->mCommonMetadata.locale()) {}
 
  protected:
-  int64_t Id() const { return mIndexId; }
+  IndexOrObjectStoreId Id() const { return mIndexId; }
 
   // This should only be touched on the PBackground thread to check whether
   // the index has been deleted. Holding these saves a hash lookup for every
   // call to continue()/advance().
   InitializedOnceMustBeTrue<const RefPtr<FullIndexMetadata>> mIndexMetadata;
-  const int64_t mIndexId;
+  const IndexOrObjectStoreId mIndexId;
   const bool mUniqueIndex;
   const nsCString
       mLocale;  ///< The locale if the cursor is locale-aware, otherwise empty.
@@ -7806,7 +7824,7 @@ class ObjectStoreCursorBase : public CursorBase {
   static constexpr bool IsLocaleAware() { return false; }
 
  protected:
-  int64_t Id() const { return mObjectStoreId; }
+  IndexOrObjectStoreId Id() const { return mObjectStoreId; }
 
   struct ContinueQueries {
     nsCString mContinueQuery;
@@ -13879,7 +13897,8 @@ bool Database::DeallocPBackgroundIDBTransactionParent(
 PBackgroundIDBVersionChangeTransactionParent*
 Database::AllocPBackgroundIDBVersionChangeTransactionParent(
     const uint64_t& aCurrentVersion, const uint64_t& aRequestedVersion,
-    const int64_t& aNextObjectStoreId, const int64_t& aNextIndexId) {
+    const IndexOrObjectStoreId& aNextObjectStoreId,
+    const IndexOrObjectStoreId& aNextIndexId) {
   MOZ_CRASH(
       "PBackgroundIDBVersionChangeTransactionParent actors should be "
       "constructed manually!");
@@ -14105,7 +14124,7 @@ void TransactionBase::CommitOrAbort() {
 }
 
 RefPtr<FullObjectStoreMetadata> TransactionBase::GetMetadataForObjectStoreId(
-    int64_t aObjectStoreId) const {
+    IndexOrObjectStoreId aObjectStoreId) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aObjectStoreId);
 
@@ -14127,7 +14146,7 @@ RefPtr<FullObjectStoreMetadata> TransactionBase::GetMetadataForObjectStoreId(
 
 RefPtr<FullIndexMetadata> TransactionBase::GetMetadataForIndexId(
     FullObjectStoreMetadata* const aObjectStoreMetadata,
-    int64_t aIndexId) const {
+    IndexOrObjectStoreId aIndexId) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aIndexId);
 
@@ -15239,7 +15258,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
 }
 
 mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
-    const int64_t& aObjectStoreId) {
+    const IndexOrObjectStoreId& aObjectStoreId) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
@@ -15298,7 +15317,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
 }
 
 mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
-    const int64_t& aObjectStoreId, const nsString& aName) {
+    const IndexOrObjectStoreId& aObjectStoreId, const nsString& aName) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
@@ -15344,7 +15363,8 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
 }
 
 mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateIndex(
-    const int64_t& aObjectStoreId, const IndexMetadata& aMetadata) {
+    const IndexOrObjectStoreId& aObjectStoreId,
+    const IndexMetadata& aMetadata) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
@@ -15410,7 +15430,8 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateIndex(
 }
 
 mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
-    const int64_t& aObjectStoreId, const int64_t& aIndexId) {
+    const IndexOrObjectStoreId& aObjectStoreId,
+    const IndexOrObjectStoreId& aIndexId) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
@@ -15490,8 +15511,8 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
 }
 
 mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
-    const int64_t& aObjectStoreId, const int64_t& aIndexId,
-    const nsString& aName) {
+    const IndexOrObjectStoreId& aObjectStoreId,
+    const IndexOrObjectStoreId& aIndexId, const nsString& aName) {
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(!aObjectStoreId)) {
@@ -19204,7 +19225,7 @@ void CommonOpenOpHelperBase::AppendConditionClause(
 
 // static
 nsresult DatabaseOperationBase::GetUniqueIndexTableForObjectStore(
-    TransactionBase* aTransaction, int64_t aObjectStoreId,
+    TransactionBase* aTransaction, const IndexOrObjectStoreId aObjectStoreId,
     Maybe<UniqueIndexTable>& aMaybeUniqueIndexTable) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aTransaction);
@@ -19271,7 +19292,7 @@ nsresult DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
   }
 
   for (const IndexUpdateInfo& updateInfo : aUpdateInfos) {
-    const int64_t& indexId = updateInfo.indexId();
+    const IndexOrObjectStoreId& indexId = updateInfo.indexId();
     const Key& key = updateInfo.value();
     const Key& sortKey = updateInfo.localizedValue();
 
@@ -19288,7 +19309,7 @@ nsresult DatabaseOperationBase::IndexDataValuesFromUpdateInfos(
 
 // static
 nsresult DatabaseOperationBase::InsertIndexTableRows(
-    DatabaseConnection* aConnection, const int64_t aObjectStoreId,
+    DatabaseConnection* aConnection, const IndexOrObjectStoreId aObjectStoreId,
     const Key& aObjectStoreKey,
     const FallibleTArray<IndexDataValue>& aIndexValues) {
   MOZ_ASSERT(aConnection);
@@ -19478,7 +19499,7 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
 
 // static
 nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
-    DatabaseConnection* aConnection, const int64_t aObjectStoreId,
+    DatabaseConnection* aConnection, const IndexOrObjectStoreId aObjectStoreId,
     const Maybe<SerializedKeyRange>& aKeyRange) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
@@ -19619,7 +19640,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
 
 // static
 nsresult DatabaseOperationBase::UpdateIndexValues(
-    DatabaseConnection* aConnection, const int64_t aObjectStoreId,
+    DatabaseConnection* aConnection, const IndexOrObjectStoreId aObjectStoreId,
     const Key& aObjectStoreKey,
     const FallibleTArray<IndexDataValue>& aIndexValues) {
   MOZ_ASSERT(aConnection);
@@ -19680,7 +19701,7 @@ nsresult DatabaseOperationBase::UpdateIndexValues(
 
 // static
 nsresult DatabaseOperationBase::ObjectStoreHasIndexes(
-    DatabaseConnection* aConnection, const int64_t aObjectStoreId,
+    DatabaseConnection* aConnection, const IndexOrObjectStoreId aObjectStoreId,
     bool* aHasIndexes) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
@@ -21040,10 +21061,10 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
   Maybe<nsTHashtable<nsUint64HashKey>> usedIds;
   Maybe<nsTHashtable<nsStringHashKey>> usedNames;
 
-  int64_t lastObjectStoreId = 0;
+  IndexOrObjectStoreId lastObjectStoreId = 0;
 
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    int64_t objectStoreId;
+    IndexOrObjectStoreId objectStoreId;
     rv = stmt->GetInt64(0, &objectStoreId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -21144,10 +21165,10 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
     return rv;
   }
 
-  int64_t lastIndexId = 0;
+  IndexOrObjectStoreId lastIndexId = 0;
 
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
-    int64_t objectStoreId;
+    IndexOrObjectStoreId objectStoreId;
     rv = stmt->GetInt64(1, &objectStoreId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -21161,7 +21182,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
     MOZ_ASSERT(objectStoreMetadata->mCommonMetadata.id() == objectStoreId);
 
-    int64_t indexId;
+    IndexOrObjectStoreId indexId;
     rv = stmt->GetInt64(0, &indexId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -23589,7 +23610,7 @@ nsresult RenameObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 }
 
 CreateIndexOp::CreateIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
-                             const int64_t aObjectStoreId,
+                             const IndexOrObjectStoreId aObjectStoreId,
                              const IndexMetadata& aMetadata)
     : VersionChangeTransactionOp(std::move(aTransaction)),
       mMetadata(aMetadata),
@@ -23853,7 +23874,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   }
 
   const IndexMetadata& metadata = mOp->mMetadata;
-  const int64_t& objectStoreId = mOp->mObjectStoreId;
+  const IndexOrObjectStoreId& objectStoreId = mOp->mObjectStoreId;
 
   AutoTArray<IndexUpdateInfo, 32> updateInfos;
   ErrorResult errorResult;
@@ -23989,9 +24010,9 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
 }
 
 DeleteIndexOp::DeleteIndexOp(RefPtr<VersionChangeTransaction> aTransaction,
-                             const int64_t aObjectStoreId,
-                             const int64_t aIndexId, const bool aUnique,
-                             const bool aIsLastIndex)
+                             const IndexOrObjectStoreId aObjectStoreId,
+                             const IndexOrObjectStoreId aIndexId,
+                             const bool aUnique, const bool aIsLastIndex)
     : VersionChangeTransactionOp(std::move(aTransaction)),
       mObjectStoreId(aObjectStoreId),
       mIndexId(aIndexId),
@@ -24493,7 +24514,7 @@ nsresult RenameIndexOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 // static
 nsresult NormalTransactionOp::ObjectStoreHasIndexes(
     NormalTransactionOp* aOp, DatabaseConnection* aConnection,
-    const int64_t aObjectStoreId, const bool aMayHaveIndexes,
+    const IndexOrObjectStoreId aObjectStoreId, const bool aMayHaveIndexes,
     bool* aHasIndexes) {
   MOZ_ASSERT(aOp);
   MOZ_ASSERT(aConnection);
@@ -24769,7 +24790,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
 
       MOZ_ASSERT(!indexMetadata->mDeleted);
 
-      const int64_t& indexId = indexMetadata->mCommonMetadata.id();
+      const IndexOrObjectStoreId& indexId = indexMetadata->mCommonMetadata.id();
       const bool& unique = indexMetadata->mCommonMetadata.unique();
 
       MOZ_ASSERT(indexId == updateInfo.indexId());
@@ -24894,7 +24915,7 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
   key = mParams.key();
 
   const bool keyUnset = key.IsUnset();
-  const int64_t osid = mParams.objectStoreId();
+  const IndexOrObjectStoreId osid = mParams.objectStoreId();
 
   // First delete old index_data_values if we're overwriting something and we
   // have indexes.
@@ -25818,8 +25839,8 @@ RefPtr<FullIndexMetadata> IndexRequestOpBase::IndexMetadataForParams(
              aParams.type() == RequestParams::TIndexGetAllKeysParams ||
              aParams.type() == RequestParams::TIndexCountParams);
 
-  uint64_t objectStoreId;
-  uint64_t indexId;
+  IndexOrObjectStoreId objectStoreId;
+  IndexOrObjectStoreId indexId;
 
   switch (aParams.type()) {
     case RequestParams::TIndexGetParams: {
