@@ -234,11 +234,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
     // If set, the family name was quoted and so must not be treated as a CSS
     // generic.
-    eQuotedFamilyName = 1 << 3,
-
-    // If set, "hidden" font families (like ".SF NS Text" on macOS) are
-    // searched in addition to standard user-visible families.
-    eSearchHiddenFamilies = 1 << 4,
+    eQuotedFamilyName = 1 << 3
   };
 
   // Find family(ies) matching aFamily and append to the aOutput array
