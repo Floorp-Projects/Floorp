@@ -28,6 +28,7 @@ class JS_PUBLIC_API ContextOptions {
         wasmGc_(false),
         testWasmAwaitTier2_(false),
         throwOnAsmJSValidationFailure_(false),
+        disableIon_(false),
         asyncStack_(true),
         throwOnDebuggeeWouldRun_(true),
         dumpStackOnDebuggeeWouldRun_(false),
@@ -106,6 +107,15 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
+  // Override to allow disabling Ion for this context irrespective of the
+  // process-wide Ion-enabled setting. This must be set right after creating
+  // the context.
+  bool disableIon() const { return disableIon_; }
+  ContextOptions& setDisableIon() {
+    disableIon_ = true;
+    return *this;
+  }
+
   bool asyncStack() const { return asyncStack_; }
   ContextOptions& setAsyncStack(bool flag) {
     asyncStack_ = flag;
@@ -179,6 +189,7 @@ class JS_PUBLIC_API ContextOptions {
   bool wasmGc_ : 1;
   bool testWasmAwaitTier2_ : 1;
   bool throwOnAsmJSValidationFailure_ : 1;
+  bool disableIon_ : 1;
   bool asyncStack_ : 1;
   bool throwOnDebuggeeWouldRun_ : 1;
   bool dumpStackOnDebuggeeWouldRun_ : 1;
