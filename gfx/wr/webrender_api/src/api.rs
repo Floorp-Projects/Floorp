@@ -1009,7 +1009,7 @@ pub enum ApiMsg {
     /// Flush from the caches anything that isn't necessary, to free some memory.
     MemoryPressure,
     /// Collects a memory report.
-    ReportMemory(MsgSender<MemoryReport>),
+    ReportMemory(MsgSender<Box<MemoryReport>>),
     /// Change debugging options.
     DebugCommand(DebugCommand),
     /// Wakes the render backend's event loop up. Needed when an event is communicated
@@ -1538,7 +1538,7 @@ impl RenderApi {
     pub fn report_memory(&self) -> MemoryReport {
         let (tx, rx) = channel::msg_channel().unwrap();
         self.api_sender.send(ApiMsg::ReportMemory(tx)).unwrap();
-        rx.recv().unwrap()
+        *rx.recv().unwrap()
     }
 
     /// Update debugging flags.

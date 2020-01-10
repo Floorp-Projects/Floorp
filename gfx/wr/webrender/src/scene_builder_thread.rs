@@ -144,7 +144,7 @@ pub enum SceneBuilderRequest {
     SimulateLongSceneBuild(u32),
     SimulateLongLowPrioritySceneBuild(u32),
     Stop,
-    ReportMemory(MemoryReport, MsgSender<MemoryReport>),
+    ReportMemory(Box<MemoryReport>, MsgSender<Box<MemoryReport>>),
     #[cfg(feature = "capture")]
     SaveScene(CaptureConfig),
     #[cfg(feature = "replay")]
@@ -362,7 +362,7 @@ impl SceneBuilderThread {
                     break;
                 }
                 Ok(SceneBuilderRequest::ReportMemory(mut report, tx)) => {
-                    report += self.report_memory();
+                    (*report) += self.report_memory();
                     tx.send(report).unwrap();
                 }
                 Ok(SceneBuilderRequest::SimulateLongSceneBuild(time_ms)) => {
