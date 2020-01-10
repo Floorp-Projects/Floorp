@@ -24,6 +24,7 @@ const {
   getDisplayedRequests,
   getRecordingState,
   getTypeFilteredRequests,
+  getSelectedRequest,
 } = require("devtools/client/netmonitor/src/selectors/index");
 const {
   autocompleteProvider,
@@ -63,6 +64,7 @@ const SEARCH_KEY_SHORTCUT = L10N.getStr("netmonitor.toolbar.search.key");
 const SEARCH_PLACE_HOLDER = L10N.getStr(
   "netmonitor.toolbar.filterFreetext.label"
 );
+const COPY_KEY_SHORTCUT = L10N.getStr("netmonitor.toolbar.copy.key");
 const TOOLBAR_CLEAR = L10N.getStr("netmonitor.toolbar.clear");
 const TOOLBAR_TOGGLE_RECORDING = L10N.getStr(
   "netmonitor.toolbar.toggleRecording"
@@ -108,6 +110,12 @@ loader.lazyRequireGetter(
   this,
   "HarMenuUtils",
   "devtools/client/netmonitor/src/har/har-menu-utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "copyString",
+  "devtools/shared/platform/clipboard",
   true
 );
 
@@ -156,6 +164,7 @@ class Toolbar extends Component {
       toggleRequestBlockingPanel: PropTypes.func.isRequired,
       networkActionBarSelectedPanel: PropTypes.string.isRequired,
       hasBlockedRequests: PropTypes.bool.isRequired,
+      selectedRequest: PropTypes.object,
     };
   }
 
@@ -191,6 +200,12 @@ class Toolbar extends Component {
       event.preventDefault();
       this.props.toggleSearchPanel();
     });
+
+    this.shortcuts.on(COPY_KEY_SHORTCUT, () => {
+      if (this.props.selectedRequest && this.props.selectedRequest.url) {
+        copyString(this.props.selectedRequest.url);
+      }
+    });
   }
 
   shouldComponentUpdate(nextProps) {
@@ -219,6 +234,10 @@ class Toolbar extends Component {
       DEVTOOLS_DISABLE_CACHE_PREF,
       this.updateBrowserCacheDisabled
     );
+
+    if (this.shortcuts) {
+      this.shortcuts.destroy();
+    }
   }
 
   toggleRequestFilterType(evt) {
@@ -602,6 +621,7 @@ module.exports = connect(
     networkThrottling: state.networkThrottling,
     networkActionBarOpen: state.search.panelOpen,
     networkActionBarSelectedPanel: state.ui.selectedActionBarTabId || "",
+    selectedRequest: getSelectedRequest(state),
   }),
   dispatch => ({
     clearRequests: () => dispatch(Actions.clearRequests()),
