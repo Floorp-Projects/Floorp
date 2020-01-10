@@ -86,7 +86,14 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
     ];
   }
   if (AppConstants.platform == "macosx") {
-    return ["firefox", "safari", "chrome", "chromium", "canary"];
+    return [
+      "firefox",
+      "safari",
+      "chrome",
+      "chromium-edge-beta",
+      "chromium",
+      "canary",
+    ];
   }
   if (AppConstants.XP_UNIX) {
     return ["firefox", "chrome", "chrome-beta", "chrome-dev", "chromium"];
@@ -603,6 +610,7 @@ var MigrationUtils = Object.freeze({
       /_(canary|chromium|chrome-beta|chrome-dev)$/,
       "_chrome"
     );
+    aKey = aKey.replace(/_(chromium-edge-beta)$/, "_edge");
 
     const OVERRIDES = {
       "4_firefox": "4_firefox_history_and_bookmarks",
@@ -634,6 +642,8 @@ var MigrationUtils = Object.freeze({
         return "sourceNameChromeDev";
       case "chromium":
         return "sourceNameChromium";
+      case "chromium-edge-beta":
+        return "sourceNameEdgeBeta";
       case "firefox":
         return "sourceNameFirefox";
       case "360se":
@@ -823,6 +833,7 @@ var MigrationUtils = Object.freeze({
    */
   getMigratorKeyForDefaultBrowser() {
     // Canary uses the same description as Chrome so we can't distinguish them.
+    // Edge Beta on macOS uses "Microsoft Edge" with no "beta" indication.
     const APP_DESC_TO_KEY = {
       "Internet Explorer": "ie",
       "Microsoft Edge": "edge",
@@ -1305,6 +1316,7 @@ var MigrationUtils = Object.freeze({
     canary: 7,
     safari: 8,
     "360se": 9,
+    "chromium-edge-beta": 10,
   },
   getSourceIdForTelemetry(sourceName) {
     return this._sourceNameToIdMapping[sourceName] || 0;

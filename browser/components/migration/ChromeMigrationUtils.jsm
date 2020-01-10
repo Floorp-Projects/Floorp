@@ -255,6 +255,7 @@ var ChromeMigrationUtils = {
         Chrome: ["Google", "Chrome"],
         Chromium: ["Chromium"],
         Canary: ["Google", "Chrome Canary"],
+        "Edge Beta": ["Microsoft Edge Beta"],
       },
       linux: {
         Chrome: ["google-chrome"],

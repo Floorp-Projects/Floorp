@@ -46,8 +46,13 @@ function convertBookmarks(items, errorAccumulator) {
     try {
       if (item.type == "url") {
         if (item.url.trim().startsWith("chrome:")) {
-          // Skip invalid chrome URIs. Creating an actual URI always reports
-          // messages to the console, so we avoid doing that.
+          // Skip invalid internal URIs. Creating an actual URI always reports
+          // messages to the console because Gecko has its own concept of how
+          // chrome:// URIs should be formed, so we avoid doing that.
+          continue;
+        }
+        if (item.url.trim().startsWith("edge:")) {
+          // Don't import internal Microsoft Edge URIs as they won't resolve within Firefox.
           continue;
         }
         itemsToInsert.push({ url: item.url, title: item.name });
@@ -227,7 +232,7 @@ async function GetBookmarksResource(aProfileFolder) {
           );
           if (!MigrationUtils.isStartupMigration) {
             parentGuid = await MigrationUtils.createImportedBookmarksFolder(
-              "Chrome",
+              "Chrome", // TODO: Bug 1216186
               parentGuid
             );
           }
@@ -244,7 +249,7 @@ async function GetBookmarksResource(aProfileFolder) {
           let bookmarks = convertBookmarks(roots.other.children, errorGatherer);
           if (!MigrationUtils.isStartupMigration) {
             parentGuid = await MigrationUtils.createImportedBookmarksFolder(
-              "Chrome",
+              "Chrome", // TODO: Bug 1216186
               parentGuid
             );
           }
@@ -646,4 +651,24 @@ ChromeBetaMigrator.prototype.classID = Components.ID(
 
 if (AppConstants.platform != "macosx") {
   EXPORTED_SYMBOLS.push("ChromeBetaMigrator");
+}
+
+function ChromiumEdgeBetaMigrator() {
+  this._chromeUserDataPathSuffix = "Edge Beta";
+  this._keychainServiceName = "Microsoft Edge Safe Storage";
+  this._keychainAccountName = "Microsoft Edge";
+}
+ChromiumEdgeBetaMigrator.prototype = Object.create(
+  ChromeProfileMigrator.prototype
+);
+ChromiumEdgeBetaMigrator.prototype.classDescription =
+  "Chromium Edge Beta Profile Migrator";
+ChromiumEdgeBetaMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=chromium-edge-beta";
+ChromiumEdgeBetaMigrator.prototype.classID = Components.ID(
+  "{0fc3d48a-c1c3-4871-b58f-a8b47d1555fb}"
+);
+
+if (AppConstants.platform == "macosx") {
+  EXPORTED_SYMBOLS.push("ChromiumEdgeBetaMigrator");
 }
