@@ -9,7 +9,6 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
