@@ -76,7 +76,7 @@ window.Application = {
     await this.updateCanDebugWorkers();
     await this.updateWorkers();
 
-    await l10n.init(["devtools/application.ftl"]);
+    await l10n.init(["devtools/client/application.ftl"]);
 
     // Render the root Application component.
     const app = App({

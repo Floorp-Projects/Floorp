@@ -114,7 +114,7 @@ AccessibilityPanel.prototype = {
   async createFluentBundles() {
     const locales = Services.locale.appLocalesAsBCP47;
     const generator = L10nRegistry.generateBundles(locales, [
-      "devtools/accessibility.ftl",
+      "devtools/client/accessibility.ftl",
     ]);
 
     // Return value of generateBundles is a generator and should be converted to
