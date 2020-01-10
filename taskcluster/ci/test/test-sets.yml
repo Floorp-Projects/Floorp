@@ -347,7 +347,6 @@ awsy-stylo-sequential:
 # Limited test sets for specific platforms
 
 linux-common-tests:
-    - jittest
     - marionette
     - mochitest
     - mochitest-browser-chrome
@@ -364,6 +363,7 @@ linux1804-tests:
     - firefox-ui-functional-remote
     - gtest
     - jsreftest
+    - jittest
     - mochitest-a11y
     - mochitest-gpu
     - mochitest-media
@@ -380,6 +380,7 @@ linux1804-qr-tests:
     - cppunit
     - crashtest
     - gtest
+    - jittest
     - jsreftest
     - mochitest-a11y
     - mochitest-gpu
@@ -393,7 +394,6 @@ linux1804-qr-tests:
     - xpcshell
 
 linux-qr-tests:
-    - jittest
     - mochitest
     - mochitest-chrome
 
