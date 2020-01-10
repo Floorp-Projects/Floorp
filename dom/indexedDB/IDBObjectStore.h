@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_idbobjectstore_h__
 #define mozilla_dom_idbobjectstore_h__
 
-#include "IDBCursor.h"
 #include "js/RootingAPI.h"
 #include "mozilla/dom/IDBCursorBinding.h"
 #include "mozilla/dom/IDBIndexBinding.h"
@@ -28,6 +27,7 @@ class ErrorResult;
 namespace dom {
 
 class DOMStringList;
+class IDBCursor;
 class IDBRequest;
 class IDBTransaction;
 class StringOrStringSequence;
@@ -50,9 +50,7 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
   typedef indexedDB::StructuredCloneReadInfo StructuredCloneReadInfo;
 
   // For AddOrPut() and DeleteInternal().
-  // TODO Consider removing this, and making the functions public?
-  template <IDBCursor::Type>
-  friend class IDBTypedCursor;
+  friend class IDBCursor;
 
   static const JSClass sDummyPropJSClass;
 
