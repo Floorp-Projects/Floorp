@@ -61,7 +61,17 @@ class ErrorPagesTest {
         assertFalse(errorPage.contains("%messageLong%"))
         assertFalse(errorPage.contains("%css%"))
 
-        verify(context, times(4)).getString(anyInt())
-        verify(context, times(1)).getString(anyInt(), nullable(String::class.java))
+        if (errorType == ErrorType.ERROR_SECURITY_SSL || errorType == ErrorType.ERROR_SECURITY_BAD_CERT) {
+            assertFalse(errorPage.contains("%showSSL%"))
+            assertFalse(errorPage.contains("%badCertAdvanced%"))
+            assertFalse(errorPage.contains("%badCertTechInfo%"))
+            assertFalse(errorPage.contains("%badCertGoBack%"))
+            assertFalse(errorPage.contains("%badCertAcceptTemporary%"))
+            verify(context, times(7)).getString(anyInt())
+            verify(context, times(2)).getString(anyInt(), nullable(String::class.java))
+        } else {
+            verify(context, times(4)).getString(anyInt())
+            verify(context, times(1)).getString(anyInt(), nullable(String::class.java))
+        }
     }
 }

@@ -81,6 +81,9 @@ permalink: /changelog/
   val id = NotificationIds.getNextIdForTag(context, "mozac.my.feature")
   ```
 
+* **browser-errorpages**
+  * Added support for bypassing invalid SSL certification.
+
 # 26.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v25.0.0...v26.0.0)

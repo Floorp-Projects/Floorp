@@ -28,7 +28,12 @@ object ErrorPages {
             it.readText()
         }
 
-        return context.resources.openRawResource(htmlResource)
+        val showSSLAdvanced: Boolean = when (errorType) {
+            ErrorType.ERROR_SECURITY_SSL, ErrorType.ERROR_SECURITY_BAD_CERT -> true
+            else -> false
+        }
+
+        var htmlPage = context.resources.openRawResource(htmlResource)
             .bufferedReader()
             .use { it.readText() }
             .replace("%pageTitle%", context.getString(R.string.mozac_browser_errorpages_page_title))
@@ -38,6 +43,23 @@ object ErrorPages {
             .replace("%messageLong%", context.getString(errorType.messageRes, uri))
             .replace("<ul>", "<ul role=\"presentation\">")
             .replace("%css%", css)
+
+        htmlPage.apply {
+            if (showSSLAdvanced) {
+                htmlPage = replace("%showSSL%", "true")
+                    .replace("%badCertAdvanced%",
+                            context.getString(R.string.mozac_browser_errorpages_security_bad_cert_advanced))
+                    .replace("%badCertTechInfo%",
+                            context.getString(R.string.mozac_browser_errorpages_security_bad_cert_techInfo,
+                                    uri.toString()))
+                    .replace("%badCertGoBack%",
+                            context.getString(R.string.mozac_browser_errorpages_security_bad_cert_back))
+                    .replace("%badCertAcceptTemporary%",
+                            context.getString(R.string.mozac_browser_errorpages_security_bad_cert_accept_temporary))
+            }
+        }
+
+        return htmlPage
     }
 }
 

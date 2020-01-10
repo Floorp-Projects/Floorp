@@ -10,6 +10,41 @@
         <meta name="viewport" content="width=device-width; user-scalable=false;" />
         <title>%pageTitle%</title>
         <style>%css%</style>
+        <script type="text/javascript">
+            var showSSL = %showSSL%
+            var advancedVisible = false;
+            function toggleAdvanced() {
+                if (advancedVisible) {
+                    document.getElementById('badCertAdvancedPanel').style.display='none';
+
+                } else {
+                    document.getElementById('badCertAdvancedPanel').style.display='block';
+                }
+
+                advancedVisible = !advancedVisible;
+            }
+            function acceptAndContinue(temporary) {
+                document.addCertException(temporary).then(() => {
+                        location.reload();
+                    },
+                    err => {
+                        console.error("Unexpected error: " + err)
+                    }
+                );
+            }
+            document.addEventListener("DOMContentLoaded", function() {
+                if (typeof document.addCertException === "undefined") {
+                    document.getElementById('advancedButton').style.display='none';
+
+                } else {
+                    if (showSSL) {
+                        document.getElementById('advancedButton').style.display='block';
+                    } else {
+                        document.getElementById('advancedButton').style.display='none';
+                    }
+                }
+            }, false);
+        </script>
     </head>
 
     <body id="errorPage" dir="auto">
@@ -26,7 +61,7 @@
 
                 <!-- Short Description -->
                 <div id="errorShortDesc">
-                   %messageLong%
+                    %messageLong%
                 </div>
 
             </div>
@@ -34,6 +69,22 @@
             <!-- Retry Button -->
             <button id="errorTryAgain" onclick="window.location.reload()">%button%</button>
 
+            <!-- Advanced Button -->
+            <button id="advancedButton" class="buttonSecondary" onclick="toggleAdvanced()" style="display: none;">%badCertAdvanced%</button>
+
+            <div id="advancedPanelContainer">
+                <div id="badCertAdvancedPanel" class="advanced-panel" style="display: none;">
+                    <p id="badCertTechnicalInfo">
+                        %badCertTechInfo%
+                    </p>
+                    <div id="advancedPanelButtonContainer" class="button-container">
+                        <button id="advancedPanelReturnButton" onClick="window.history.back()" class="button">%badCertGoBack%</button>
+                    </div>
+                    <div id="advancedPanelButtonContainer" class="button-container">
+                        <button id="button" class="buttonSecondary" onClick="acceptAndContinue(true)">%badCertAcceptTemporary%</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </body>
 </html>
