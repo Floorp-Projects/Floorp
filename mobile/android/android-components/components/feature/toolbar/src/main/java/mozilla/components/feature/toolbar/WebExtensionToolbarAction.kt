@@ -17,6 +17,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
+import mozilla.components.support.base.log.Log
 import mozilla.components.support.ktx.android.view.setPadding
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 
@@ -57,16 +58,29 @@ open class WebExtensionToolbarAction(
         return rootView
     }
 
+    @Suppress("TooGenericExceptionCaught")
     override fun bind(view: View) {
         val imageView = view.findViewById<ImageView>(R.id.action_image)
         val textView = view.findViewById<TextView>(R.id.badge_text)
 
         iconJob = CoroutineScope(iconJobDispatcher).launch {
-            val icon = browserAction.loadIcon?.invoke(imageView.measuredHeight)
-            icon?.let {
-                MainScope().launch {
-                    imageView.setImageDrawable(BitmapDrawable(view.context.resources, it))
+            try {
+                val icon = browserAction.loadIcon?.invoke(imageView.measuredHeight)
+                icon?.let {
+                    MainScope().launch {
+                        imageView.setImageDrawable(BitmapDrawable(view.context.resources, it))
+                    }
                 }
+            } catch (throwable: Throwable) {
+                MainScope().launch {
+                    imageView.setImageResource(R.drawable.mozac_ic_web_extension_default_icon)
+                }
+                Log.log(
+                    Log.Priority.ERROR,
+                    "mozac-webextensions",
+                    throwable,
+                    "Failed to load browser action icon, falling back to default."
+                )
             }
         }
 
