@@ -162,12 +162,10 @@ normalize_path = normalize_path()
 # exists.
 # The `paths` parameter may be passed to search the given paths instead of
 # $PATH.
-@imports(_from='which', _import='which')
-@imports(_from='which', _import='WhichError')
-@imports('itertools')
 @imports('sys')
 @imports(_from='os', _import='pathsep')
 @imports(_from='os', _import='environ')
+@imports(_from='mozfile', _import='which')
 def find_program(file, paths=None):
     # The following snippet comes from `which` itself, with a slight
     # modification to use lowercase extensions, because it's confusing rustup
@@ -184,21 +182,18 @@ def find_program(file, paths=None):
     else:
         exts = None
 
-    try:
-        if is_absolute_or_relative(file):
-            return normalize_path(which(os.path.basename(file),
-                                        [os.path.dirname(file)], exts=exts))
-        if paths:
-            if not isinstance(paths, (list, tuple)):
-                die("Paths provided to find_program must be a list of strings, "
-                    "not %r", paths)
-            paths = list(itertools.chain(
-                *(p.split(pathsep) for p in paths if p)))
-        else:
-            paths = environ['PATH'].split(pathsep)
-        return normalize_path(which(file, path=paths, exts=exts))
-    except WhichError:
-        return None
+    if is_absolute_or_relative(file):
+        path = which(os.path.basename(file), path=os.path.dirname(file), exts=exts)
+        return normalize_path(path) if path else None
+
+    if paths:
+        if not isinstance(paths, (list, tuple)):
+            die("Paths provided to find_program must be a list of strings, "
+                "not %r", paths)
+        paths = pathsep.join(paths)
+
+    path = which(file, path=paths, exts=exts)
+    return normalize_path(path) if path else None
 
 
 @imports('os')
