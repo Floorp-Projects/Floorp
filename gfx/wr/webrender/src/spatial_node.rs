@@ -300,7 +300,6 @@ impl SpatialNode {
         match self.node_type {
             SpatialNodeType::ReferenceFrame(info) if !info.invertible => {
                 self.mark_uninvertible(state);
-                return;
             }
             _ => self.invertible = true,
         }
