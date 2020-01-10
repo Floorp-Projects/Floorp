@@ -21,6 +21,7 @@
 #include "nsFocusManager.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
@@ -644,12 +645,14 @@ bool TextEditor::IsSafeToInsertData(Document* aSourceDoc) {
 
   RefPtr<Document> destdoc = GetDocument();
   NS_ASSERTION(destdoc, "Where is our destination doc?");
-  nsCOMPtr<nsIDocShellTreeItem> dsti = destdoc->GetDocShell();
-  nsCOMPtr<nsIDocShellTreeItem> root;
-  if (dsti) {
-    dsti->GetInProcessRootTreeItem(getter_AddRefs(root));
+
+  nsCOMPtr<nsIDocShell> docShell;
+  if (RefPtr<BrowsingContext> bc = destdoc->GetBrowsingContext()) {
+    RefPtr<BrowsingContext> root = bc->Top();
+    MOZ_ASSERT(root, "root should not be null");
+
+    docShell = root->GetDocShell();
   }
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(root);
 
   isSafe = docShell && docShell->GetAppType() == nsIDocShell::APP_TYPE_EDITOR;
 
