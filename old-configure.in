@@ -2875,15 +2875,6 @@ AC_SUBST(MOZ_CHILD_PROCESS_BUNDLENAME)
 # "Profile" field, which controls profile location.
 # - MOZ_APP_ID: When set, used for application.ini's "ID" field, and
 # crash reporter server url.
-# - MOZ_APP_ANDROID_VERSION_CODE: On Android, "android:versionCode" for
-# the main application is set to the value of this variable.  If not
-# set, it falls back to a Mozilla-specific value derived from the
-# build ID.
-# - MOZ_ANDROID_SHARED_ID: On Android, "android:sharedUserId" for all Android
-# packages produced.
-# - MOZ_ANDROID_GCM_SENDERID: On Android, the Android GCM Sender ID used.  GCM
-# sender IDs are not sensitive: see, http://stackoverflow.com/a/18216063.
-# - MOZ_MMA_GCM_SENDERID: This GCM Sender ID is used for MMA integration.
 # - MOZ_PROFILE_MIGRATOR: When set, enables profile migrator.
 
 # The following environment variables used to have an effect, but don't anymore:
@@ -2920,14 +2911,6 @@ if test -z "$ANDROID_PACKAGE_NAME" ; then
    fi
 fi
 
-# Mozilla released Firefox for Android {Release,Beta} and {Aurora,Nightly} to
-# the public with specific common shared IDs and we need to keep them
-# consistent forever.  The specific common values are set by per-channel
-# branding; all other channels use a generic sharedID, set below.
-if test -z "$MOZ_ANDROID_SHARED_ID" ; then
-   MOZ_ANDROID_SHARED_ID="${ANDROID_PACKAGE_NAME}.sharedID"
-fi
-
 # For extensions and langpacks, we require a max version that is compatible
 # across security releases. MOZ_APP_MAXVERSION is our method for doing that.
 # 24.0a1 and 24.0a2 aren't affected
@@ -2953,10 +2936,6 @@ AC_SUBST(MOZ_APP_BASENAME)
 AC_SUBST(MOZ_APP_VENDOR)
 AC_SUBST(MOZ_APP_PROFILE)
 AC_SUBST(MOZ_APP_ID)
-AC_SUBST(MOZ_APP_ANDROID_VERSION_CODE)
-AC_SUBST(MOZ_ANDROID_SHARED_ID)
-AC_SUBST(MOZ_ANDROID_GCM_SENDERID)
-AC_SUBST(MOZ_MMA_GCM_SENDERID)
 AC_SUBST(MAR_CHANNEL_ID)
 AC_SUBST(ACCEPTED_MAR_CHANNEL_IDS)
 AC_SUBST(MOZ_PROFILE_MIGRATOR)
