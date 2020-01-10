@@ -11,6 +11,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import mozilla.appservices.logins.DatabaseLoginsStorage
+import mozilla.appservices.logins.InvalidRecordException
 import mozilla.appservices.logins.LoginsStorage
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
@@ -287,6 +288,41 @@ interface AsyncLoginsStorage : AutoCloseable {
      * (IO failure, rust panics, etc).
      */
     fun importLoginsAsync(logins: List<ServerPassword>): Deferred<JSONObject>
+
+    /**
+     * Checks if login already exists and is valid.
+     *
+     * @rejectsWith [InvalidRecordException] On both expected errors (malformed [login], [login]
+     * already exists in store, etc. See [InvalidRecordException.reason] for details) and
+     * unexpected errors (IO failure, rust panics, etc)
+     */
+    fun ensureValid(login: ServerPassword): Deferred<Unit>
+
+    /**
+     * Fetch the list of passwords for some hostname from the underlying storage layer.
+     *
+     * @rejectsWith [LoginsStorageException] On unexpected errors (IO failure, rust panics, etc)
+     */
+    fun getByBaseDomain(hostname: String): Deferred<List<ServerPassword>>
+
+    /**
+     * Run some [block] which operates over an unlocked instance of [AsyncLoginsStorage].
+     * Database is locked once [block] is done.
+     *
+     * @throws [InvalidKeyException] if the provided [key] isn't valid.
+     */
+    suspend fun <T> withUnlocked(
+        key: () -> Deferred<String>,
+        block: suspend (AsyncLoginsStorage) -> T
+    ): T {
+        ensureUnlocked(key().await()).await()
+
+        try {
+            return block(this)
+        } finally {
+            ensureLocked().await()
+        }
+    }
 }
 
 /**
@@ -378,6 +414,14 @@ open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) 
         wrapped.close()
     }
 
+    override fun ensureValid(login: ServerPassword): Deferred<Unit> {
+        return scope.async { wrapped.ensureValid(login) }
+    }
+
+    override fun getByBaseDomain(hostname: String): Deferred<List<ServerPassword>> {
+        return scope.async { wrapped.getByBaseDomain(hostname) }
+    }
+
     companion object {
         /**
          * Creates an [AsyncLoginsStorage] that is backed by a [DatabaseLoginsStorage].
@@ -436,13 +480,6 @@ data class SyncableLoginsStore(
      * @throws [InvalidKeyException] if the provided [key] isn't valid.
      */
     suspend fun <T> withUnlocked(block: suspend (AsyncLoginsStorage) -> T): T {
-
-        store.ensureUnlocked(key().await()).await()
-
-        try {
-            return block(store)
-        } finally {
-            store.ensureLocked().await()
-        }
+        return store.withUnlocked(key, block)
     }
 }

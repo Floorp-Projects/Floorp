@@ -38,6 +38,7 @@ dependencies {
 
     // Types defined in concept-sync are part of this module's public API.
     api project(':concept-sync')
+    api project(':lib-dataprotect')
 
     implementation project(':concept-storage')
     implementation project(':support-sync-telemetry')
@@ -51,6 +52,8 @@ dependencies {
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.testing_coroutines
+    testImplementation project(':support-test')
 }
 
 apply from: '../../../publish.gradle'
