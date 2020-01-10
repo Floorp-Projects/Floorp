@@ -4536,7 +4536,7 @@ bool jit::AnalyzeNewScriptDefiniteProperties(
     return false;
   }
 
-  if (!jit::IsIonEnabled() || !jit::IsBaselineJitEnabled() ||
+  if (!jit::IsIonEnabled(cx) || !jit::IsBaselineJitEnabled() ||
       !CanBaselineInterpretScript(script)) {
     return true;
   }
@@ -4796,7 +4796,7 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
     return true;
   }
 
-  if (!jit::IsIonEnabled()) {
+  if (!jit::IsIonEnabled(cx)) {
     return true;
   }
 
