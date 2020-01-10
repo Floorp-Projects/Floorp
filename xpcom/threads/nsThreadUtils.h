@@ -1083,14 +1083,14 @@ struct SmartPointerStorageClass
 template <typename T>
 struct NonLValueReferenceStorageClass
     : mozilla::Conditional<
-          mozilla::IsRvalueReference<T>::value,
+          std::is_rvalue_reference_v<T>,
           StoreCopyPassByRRef<typename mozilla::RemoveReference<T>::Type>,
           typename SmartPointerStorageClass<T>::Type> {};
 
 template <typename T>
 struct NonPointerStorageClass
     : mozilla::Conditional<
-          mozilla::IsLvalueReference<T>::value,
+          std::is_lvalue_reference_v<T>,
           typename LValueReferenceStorageClass<
               typename mozilla::RemoveReference<T>::Type>::Type,
           typename NonLValueReferenceStorageClass<T>::Type> {};

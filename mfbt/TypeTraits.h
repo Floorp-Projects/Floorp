@@ -235,40 +235,6 @@ struct IsPointerHelper<T*> : TrueType {};
 template <typename T>
 struct IsPointer : detail::IsPointerHelper<typename RemoveCV<T>::Type> {};
 
-/**
- * IsLvalueReference determines whether a type is an lvalue reference.
- *
- * mozilla::IsLvalueReference<struct S*>::value is false;
- * mozilla::IsLvalueReference<int**>::value is false;
- * mozilla::IsLvalueReference<void (*)(void)>::value is false;
- * mozilla::IsLvalueReference<int>::value is false;
- * mozilla::IsLvalueReference<struct S>::value is false;
- * mozilla::IsLvalueReference<struct S*&>::value is true;
- * mozilla::IsLvalueReference<struct S&&>::value is false.
- */
-template <typename T>
-struct IsLvalueReference : FalseType {};
-
-template <typename T>
-struct IsLvalueReference<T&> : TrueType {};
-
-/**
- * IsRvalueReference determines whether a type is an rvalue reference.
- *
- * mozilla::IsRvalueReference<struct S*>::value is false;
- * mozilla::IsRvalueReference<int**>::value is false;
- * mozilla::IsRvalueReference<void (*)(void)>::value is false;
- * mozilla::IsRvalueReference<int>::value is false;
- * mozilla::IsRvalueReference<struct S>::value is false;
- * mozilla::IsRvalueReference<struct S*&>::value is false;
- * mozilla::IsRvalueReference<struct S&&>::value is true.
- */
-template <typename T>
-struct IsRvalueReference : FalseType {};
-
-template <typename T>
-struct IsRvalueReference<T&&> : TrueType {};
-
 namespace detail {
 
 // __is_enum is a supported extension across all of our supported compilers.
@@ -311,24 +277,6 @@ template <typename T>
 struct IsClass : detail::IsClassHelper<typename RemoveCV<T>::Type> {};
 
 /* 20.9.4.2 Composite type traits [meta.unary.comp] */
-
-/**
- * IsReference determines whether a type is an lvalue or rvalue reference.
- *
- * mozilla::IsReference<struct S*>::value is false;
- * mozilla::IsReference<int**>::value is false;
- * mozilla::IsReference<int&>::value is true;
- * mozilla::IsReference<void (*)(void)>::value is false;
- * mozilla::IsReference<const int&>::value is true;
- * mozilla::IsReference<int>::value is false;
- * mozilla::IsReference<struct S>::value is false;
- * mozilla::IsReference<struct S&>::value is true;
- * mozilla::IsReference<struct S*&>::value is true;
- * mozilla::IsReference<struct S&&>::value is true.
- */
-template <typename T>
-struct IsReference : IntegralConstant<bool, IsLvalueReference<T>::value ||
-                                                IsRvalueReference<T>::value> {};
 
 /**
  * IsArithmetic determines whether a type is arithmetic.  A type is arithmetic

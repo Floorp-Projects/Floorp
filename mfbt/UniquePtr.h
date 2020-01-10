@@ -207,7 +207,7 @@ class UniquePtr {
    */
   constexpr UniquePtr() : mTuple(static_cast<Pointer>(nullptr), DeleterType()) {
     static_assert(!IsPointer<D>::value, "must provide a deleter instance");
-    static_assert(!IsReference<D>::value, "must provide a deleter instance");
+    static_assert(!std::is_reference_v<D>, "must provide a deleter instance");
   }
 
   /**
@@ -215,11 +215,11 @@ class UniquePtr {
    */
   explicit UniquePtr(Pointer aPtr) : mTuple(aPtr, DeleterType()) {
     static_assert(!IsPointer<D>::value, "must provide a deleter instance");
-    static_assert(!IsReference<D>::value, "must provide a deleter instance");
+    static_assert(!std::is_reference_v<D>, "must provide a deleter instance");
   }
 
   UniquePtr(Pointer aPtr,
-            typename Conditional<IsReference<D>::value, D, const D&>::Type aD1)
+            typename Conditional<std::is_reference_v<D>, D, const D&>::Type aD1)
       : mTuple(aPtr, aD1) {}
 
   // If you encounter an error with MSVC10 about RemoveReference below, along
@@ -246,7 +246,7 @@ class UniquePtr {
   // behavior really isn't something you should use.
   UniquePtr(Pointer aPtr, typename RemoveReference<D>::Type&& aD2)
       : mTuple(aPtr, std::move(aD2)) {
-    static_assert(!IsReference<D>::value,
+    static_assert(!std::is_reference_v<D>,
                   "rvalue deleter can't be stored by reference");
   }
 
@@ -257,7 +257,7 @@ class UniquePtr {
   MOZ_IMPLICIT
   UniquePtr(decltype(nullptr)) : mTuple(nullptr, DeleterType()) {
     static_assert(!IsPointer<D>::value, "must provide a deleter instance");
-    static_assert(!IsReference<D>::value, "must provide a deleter instance");
+    static_assert(!std::is_reference_v<D>, "must provide a deleter instance");
   }
 
   template <typename U, class E>
@@ -266,8 +266,8 @@ class UniquePtr {
       typename EnableIf<
           IsConvertible<typename UniquePtr<U, E>::Pointer, Pointer>::value &&
               !IsArray<U>::value &&
-              (IsReference<D>::value ? IsSame<D, E>::value
-                                     : IsConvertible<E, D>::value),
+              (std::is_reference_v<D> ? IsSame<D, E>::value
+                                      : IsConvertible<E, D>::value),
           int>::Type aDummy = 0)
       : mTuple(aOther.release(), std::forward<E>(aOther.get_deleter())) {}
 
@@ -351,7 +351,7 @@ class UniquePtr<T[], D> {
    */
   constexpr UniquePtr() : mTuple(static_cast<Pointer>(nullptr), DeleterType()) {
     static_assert(!IsPointer<D>::value, "must provide a deleter instance");
-    static_assert(!IsReference<D>::value, "must provide a deleter instance");
+    static_assert(!std::is_reference_v<D>, "must provide a deleter instance");
   }
 
   /**
@@ -359,7 +359,7 @@ class UniquePtr<T[], D> {
    */
   explicit UniquePtr(Pointer aPtr) : mTuple(aPtr, DeleterType()) {
     static_assert(!IsPointer<D>::value, "must provide a deleter instance");
-    static_assert(!IsReference<D>::value, "must provide a deleter instance");
+    static_assert(!std::is_reference_v<D>, "must provide a deleter instance");
   }
 
   // delete[] knows how to handle *only* an array of a single class type.  For
@@ -374,7 +374,7 @@ class UniquePtr<T[], D> {
                         int>::Type aDummy = 0) = delete;
 
   UniquePtr(Pointer aPtr,
-            typename Conditional<IsReference<D>::value, D, const D&>::Type aD1)
+            typename Conditional<std::is_reference_v<D>, D, const D&>::Type aD1)
       : mTuple(aPtr, aD1) {}
 
   // If you encounter an error with MSVC10 about RemoveReference below, along
@@ -383,7 +383,7 @@ class UniquePtr<T[], D> {
   // comment by this constructor in the non-T[] specialization above.
   UniquePtr(Pointer aPtr, typename RemoveReference<D>::Type&& aD2)
       : mTuple(aPtr, std::move(aD2)) {
-    static_assert(!IsReference<D>::value,
+    static_assert(!std::is_reference_v<D>,
                   "rvalue deleter can't be stored by reference");
   }
 
@@ -401,7 +401,7 @@ class UniquePtr<T[], D> {
   MOZ_IMPLICIT
   UniquePtr(decltype(nullptr)) : mTuple(nullptr, DeleterType()) {
     static_assert(!IsPointer<D>::value, "must provide a deleter instance");
-    static_assert(!IsReference<D>::value, "must provide a deleter instance");
+    static_assert(!std::is_reference_v<D>, "must provide a deleter instance");
   }
 
   ~UniquePtr() { reset(nullptr); }
