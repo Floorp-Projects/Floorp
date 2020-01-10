@@ -7,7 +7,7 @@
 #include "IDBObjectStore.h"
 
 #include "FileInfo.h"
-#include "IDBCursor.h"
+#include "IDBCursorType.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
@@ -2376,11 +2376,8 @@ RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
     optionalKeyRange.emplace(std::move(serializedKeyRange));
   }
 
-  const IDBCursor::Direction direction =
-      IDBCursor::ConvertDirection(aDirection);
-
   const CommonOpenCursorParams commonParams = {
-      objectStoreId, std::move(optionalKeyRange), direction};
+      objectStoreId, std::move(optionalKeyRange), aDirection};
 
   // TODO: It would be great if the IPDL generator created a constructor
   // accepting a CommonOpenCursorParams by value or rvalue reference.
@@ -2399,7 +2396,7 @@ RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
         request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(mTransaction), IDB_LOG_STRINGIFY(this),
-        IDB_LOG_STRINGIFY(keyRange), IDB_LOG_STRINGIFY(direction));
+        IDB_LOG_STRINGIFY(keyRange), IDB_LOG_STRINGIFY(aDirection));
   } else {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s)."
@@ -2408,11 +2405,15 @@ RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
         request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(mTransaction), IDB_LOG_STRINGIFY(this),
-        IDB_LOG_STRINGIFY(keyRange), IDB_LOG_STRINGIFY(direction));
+        IDB_LOG_STRINGIFY(keyRange), IDB_LOG_STRINGIFY(aDirection));
   }
 
-  BackgroundCursorChild* const actor =
-      new BackgroundCursorChild(request, this, direction);
+  BackgroundCursorChildBase* const actor =
+      aKeysOnly ? static_cast<BackgroundCursorChildBase*>(
+                      new BackgroundCursorChild<IDBCursorType::ObjectStoreKey>(
+                          request, this, aDirection))
+                : new BackgroundCursorChild<IDBCursorType::ObjectStore>(
+                      request, this, aDirection);
 
   // TODO: This is necessary to preserve request ordering only. Proper
   // sequencing of requests should be done in a more sophisticated manner that

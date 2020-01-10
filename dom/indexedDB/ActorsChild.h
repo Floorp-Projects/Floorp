@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_indexeddb_actorschild_h__
 #define mozilla_dom_indexeddb_actorschild_h__
 
+#include "IDBCursorType.h"
 #include "IDBTransaction.h"
 #include "js/RootingAPI.h"
 #include "mozilla/Attributes.h"
@@ -634,90 +635,32 @@ struct CloneInfo {
   UniquePtr<JSStructuredCloneData> mCloneData;
 };
 
-// TODO: Consider defining different subclasses for the different cursor types,
-// possibly using the CRTP, which would remove the need for various case
-// distinctions.
-class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
-  friend class BackgroundTransactionChild;
-  friend class BackgroundVersionChangeTransactionChild;
-
-  class DelayedActionRunnable;
-
-  struct CachedResponse {
-    CachedResponse() = delete;
-
-    CachedResponse(Key aKey, StructuredCloneReadInfo&& aCloneInfo);
-    CachedResponse(Key aKey, Key aLocaleAwareKey, Key aObjectStoreKey,
-                   StructuredCloneReadInfo&& aCloneInfo);
-    explicit CachedResponse(Key aKey);
-    CachedResponse(Key aKey, Key aLocaleAwareKey, Key aObjectStoreKey);
-
-    CachedResponse(CachedResponse&& aOther) = default;
-    CachedResponse& operator=(CachedResponse&& aOther) = default;
-    CachedResponse(const CachedResponse& aOther) = delete;
-    CachedResponse& operator=(const CachedResponse& aOther) = delete;
-
-    Key mKey;
-    Key mLocaleAwareKey;
-    Key mObjectStoreKey;
-    StructuredCloneReadInfo mCloneInfo;
-  };
-
-  IDBRequest* mRequest;
+class BackgroundCursorChildBase : public PBackgroundIDBCursorChild {
+ private:
+  NS_DECL_OWNINGTHREAD
+ protected:
+  InitializedOnceMustBeTrue<IDBRequest* const> mRequest;
   IDBTransaction* mTransaction;
-  IDBObjectStore* mObjectStore;
-  IDBIndex* mIndex;
-  IDBCursor* mCursor;
 
   // These are only set while a request is in progress.
   RefPtr<IDBRequest> mStrongRequest;
   RefPtr<IDBCursor> mStrongCursor;
 
-  Direction mDirection;
+  const Direction mDirection;
 
-  NS_DECL_OWNINGTHREAD
+  BackgroundCursorChildBase(IDBRequest* aRequest, Direction aDirection);
 
-  std::deque<CachedResponse> mCachedResponses, mDelayedResponses;
-  bool mInFlightResponseInvalidationNeeded;
+  void HandleResponse(nsresult aResponse);
 
  public:
-  BackgroundCursorChild(IDBRequest* aRequest, IDBObjectStore* aObjectStore,
-                        Direction aDirection);
-
-  BackgroundCursorChild(IDBRequest* aRequest, IDBIndex* aIndex,
-                        Direction aDirection);
-
   void AssertIsOnOwningThread() const {
-    NS_ASSERT_OWNINGTHREAD(BackgroundCursorChild);
+    NS_ASSERT_OWNINGTHREAD(BackgroundCursorChildBase);
   }
-
-  void SendContinueInternal(const CursorRequestParams& aParams,
-                            const Key& aCurrentKey,
-                            const Key& aCurrentObjectStoreKey);
-
-  void SendDeleteMeInternal();
-
-  void InvalidateCachedResponses();
-
-  template <typename Condition>
-  void DiscardCachedResponses(const Condition& aConditionFunc);
 
   IDBRequest* GetRequest() const {
     AssertIsOnOwningThread();
 
-    return mRequest;
-  }
-
-  IDBObjectStore* GetObjectStore() const {
-    AssertIsOnOwningThread();
-
-    return mObjectStore;
-  }
-
-  IDBIndex* GetIndex() const {
-    AssertIsOnOwningThread();
-
-    return mIndex;
+    return *mRequest;
   }
 
   Direction GetDirection() const {
@@ -726,6 +669,44 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
     return mDirection;
   }
 
+  virtual void SendDeleteMeInternal() = 0;
+};
+
+template <IDBCursorType CursorType>
+class BackgroundCursorChild final : public BackgroundCursorChildBase {
+ public:
+  using SourceType = CursorSourceType<CursorType>;
+
+ private:
+  friend class BackgroundTransactionChild;
+  friend class BackgroundVersionChangeTransactionChild;
+
+  InitializedOnceMustBeTrue<SourceType* const> mSource;
+  IDBCursorImpl<CursorType>* mCursor;
+
+  std::deque<CursorData<CursorType>> mCachedResponses, mDelayedResponses;
+  bool mInFlightResponseInvalidationNeeded;
+
+ public:
+  BackgroundCursorChild(IDBRequest* aRequest, SourceType* aSource,
+                        Direction aDirection);
+
+  void SendContinueInternal(const CursorRequestParams& aParams,
+                            const CursorData<CursorType>& aCurrentData);
+
+  void InvalidateCachedResponses();
+
+  template <typename Condition>
+  void DiscardCachedResponses(const Condition& aConditionFunc);
+
+  SourceType* GetSource() const {
+    AssertIsOnOwningThread();
+
+    return *mSource;
+  }
+
+  void SendDeleteMeInternal() final;
+
  private:
   // Only destroyed by BackgroundTransactionChild or
   // BackgroundVersionChangeTransactionChild.
@@ -733,7 +714,7 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
 
   void CompleteContinueRequestFromCache();
 
-  void HandleResponse(nsresult aResponse);
+  using BackgroundCursorChildBase::HandleResponse;
 
   void HandleResponse(const void_t& aResponse);
 
