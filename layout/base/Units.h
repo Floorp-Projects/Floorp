@@ -7,6 +7,8 @@
 #ifndef MOZ_UNITS_H_
 #define MOZ_UNITS_H_
 
+#include <type_traits>
+
 #include "mozilla/gfx/Coord.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Rect.h"
@@ -17,12 +19,11 @@
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "mozilla/AppUnits.h"
-#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 
 template <typename T>
-struct IsPixel : FalseType {};
+struct IsPixel : std::false_type {};
 
 // See struct declaration for a description of each unit type.
 struct CSSPixel;
@@ -36,23 +37,23 @@ struct DesktopPixel;
 struct ImagePixel;
 
 template <>
-struct IsPixel<CSSPixel> : TrueType {};
+struct IsPixel<CSSPixel> : std::true_type {};
 template <>
-struct IsPixel<LayoutDevicePixel> : TrueType {};
+struct IsPixel<LayoutDevicePixel> : std::true_type {};
 template <>
-struct IsPixel<LayerPixel> : TrueType {};
+struct IsPixel<LayerPixel> : std::true_type {};
 template <>
-struct IsPixel<CSSTransformedLayerPixel> : TrueType {};
+struct IsPixel<CSSTransformedLayerPixel> : std::true_type {};
 template <>
-struct IsPixel<RenderTargetPixel> : TrueType {};
+struct IsPixel<RenderTargetPixel> : std::true_type {};
 template <>
-struct IsPixel<ImagePixel> : TrueType {};
+struct IsPixel<ImagePixel> : std::true_type {};
 template <>
-struct IsPixel<ScreenPixel> : TrueType {};
+struct IsPixel<ScreenPixel> : std::true_type {};
 template <>
-struct IsPixel<ParentLayerPixel> : TrueType {};
+struct IsPixel<ParentLayerPixel> : std::true_type {};
 template <>
-struct IsPixel<DesktopPixel> : TrueType {};
+struct IsPixel<DesktopPixel> : std::true_type {};
 
 typedef gfx::CoordTyped<CSSPixel> CSSCoord;
 typedef gfx::IntCoordTyped<CSSPixel> CSSIntCoord;
