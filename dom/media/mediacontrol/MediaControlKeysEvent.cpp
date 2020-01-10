@@ -31,7 +31,7 @@ void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
 
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(service);
-  RefPtr<MediaController> controller = service->GetLastAddedController();
+  RefPtr<MediaController> controller = service->GetMainController();
   if (!controller) {
     return;
   }
