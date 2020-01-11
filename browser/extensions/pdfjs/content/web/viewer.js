@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * Javascript code in this page
  *
- * Copyright 2019 Mozilla Foundation
+ * Copyright 2020 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1264,17 +1264,23 @@ const PDFViewerApplication = {
       const KNOWN_GENERATORS = ["acrobat distiller", "acrobat pdfwriter", "adobe livecycle", "adobe pdf library", "adobe photoshop", "ghostscript", "tcpdf", "cairo", "dvipdfm", "dvips", "pdftex", "pdfkit", "itext", "prince", "quarkxpress", "mac os x", "microsoft", "openoffice", "oracle", "luradocument", "pdf-xchange", "antenna house", "aspose.cells", "fpdf"];
 
       if (info.Producer) {
-        KNOWN_GENERATORS.some(function (generator, s, i) {
-          if (!generator.includes(s)) {
+        const producer = info.Producer.toLowerCase();
+        KNOWN_GENERATORS.some(function (generator) {
+          if (!producer.includes(generator)) {
             return false;
           }
 
-          generatorId = s.replace(/[ .\-]/g, "_");
+          generatorId = generator.replace(/[ .\-]/g, "_");
           return true;
-        }.bind(null, info.Producer.toLowerCase()));
+        });
       }
 
-      const formType = !info.IsAcroFormPresent ? null : info.IsXFAPresent ? "xfa" : "acroform";
+      let formType = null;
+
+      if (info.IsAcroFormPresent) {
+        formType = info.IsXFAPresent ? "xfa" : "acroform";
+      }
+
       this.externalServices.reportTelemetry({
         type: "documentInfo",
         version: versionId,
@@ -1762,12 +1768,19 @@ function webViewerNamedAction(evt) {
   }
 }
 
-function webViewerPresentationModeChanged(evt) {
-  const {
-    active,
-    switchInProgress
-  } = evt;
-  PDFViewerApplication.pdfViewer.presentationModeState = switchInProgress ? _ui_utils.PresentationModeState.CHANGING : active ? _ui_utils.PresentationModeState.FULLSCREEN : _ui_utils.PresentationModeState.NORMAL;
+function webViewerPresentationModeChanged({
+  active,
+  switchInProgress
+}) {
+  let state = _ui_utils.PresentationModeState.NORMAL;
+
+  if (switchInProgress) {
+    state = _ui_utils.PresentationModeState.CHANGING;
+  } else if (active) {
+    state = _ui_utils.PresentationModeState.FULLSCREEN;
+  }
+
+  PDFViewerApplication.pdfViewer.presentationModeState = state;
 }
 
 function webViewerSidebarViewChanged(evt) {

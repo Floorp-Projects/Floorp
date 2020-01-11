@@ -13,9 +13,9 @@ from taskgraph.util.attributes import copy_attributes_from_dependent_job, sorted
 from taskgraph.util.scriptworker import (
     get_signing_cert_scope_per_platform,
 )
-from taskgraph.util.partials import get_balrog_platform_name, get_partials_artifacts_from_params
+from taskgraph.util.partials import get_partials_artifacts_from_params
 from taskgraph.util.taskcluster import get_artifact_prefix
-from taskgraph.util.treeherder import join_symbol
+from taskgraph.util.treeherder import join_symbol, inherit_treeherder_from_dep
 
 import logging
 logger = logging.getLogger(__name__)
@@ -96,18 +96,12 @@ def make_task_description(config, jobs):
         dep_job = job['primary-dependency']
         locale = dep_job.attributes.get('locale')
 
-        treeherder = job.get('treeherder', {})
+        treeherder = inherit_treeherder_from_dep(job, dep_job)
         treeherder.setdefault(
             'symbol', join_symbol(job.get('treeherder-group', 'ms'), locale or 'N')
         )
 
         label = job.get('label', "{}-{}".format(config.kind, dep_job.label))
-        dep_th_platform = dep_job.task.get('extra', {}).get(
-            'treeherder', {}).get('machine', {}).get('platform', '')
-        treeherder.setdefault('platform',
-                              "{}/opt".format(dep_th_platform))
-        treeherder.setdefault('kind', 'build')
-        treeherder.setdefault('tier', 1)
 
         dependencies = {dep_job.kind: dep_job.label}
         signing_dependencies = dep_job.dependencies
@@ -124,14 +118,13 @@ def make_task_description(config, jobs):
         if locale:
             attributes['locale'] = locale
 
-        balrog_platform = get_balrog_platform_name(dep_th_platform)
+        build_platform = attributes.get('build_platform')
         if config.kind == 'partials-signing':
             upstream_artifacts = generate_partials_artifacts(
-                dep_job, config.params['release_history'], balrog_platform, locale)
+                dep_job, config.params['release_history'], build_platform, locale)
         else:
             upstream_artifacts = generate_complete_artifacts(dep_job, config.kind)
 
-        build_platform = dep_job.attributes.get('build_platform')
         is_nightly = job.get(
             'nightly',  # First check current job
             dep_job.attributes.get(

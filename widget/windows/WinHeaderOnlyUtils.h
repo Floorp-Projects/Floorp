@@ -318,6 +318,9 @@ inline bool WaitForInputIdle(HANDLE aProcess,
       return false;
     }
 
+    // ::WaitForInputIdle() doesn't always set the last-error code on failure
+    ::SetLastError(ERROR_SUCCESS);
+
     DWORD waitResult = ::WaitForInputIdle(aProcess, aTimeoutMs - elapsed);
     if (!waitResult) {
       return true;

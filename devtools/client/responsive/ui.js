@@ -10,6 +10,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {
   getOrientation,
 } = require("devtools/client/responsive/utils/orientation");
+const Constants = require("devtools/client/responsive/constants");
 
 loader.lazyRequireGetter(
   this,
@@ -101,6 +102,11 @@ class ResponsiveUI {
     this.toolWindow = null;
     // The iframe containing the RDM UI.
     this.rdmFrame = null;
+
+    // Bind callbacks for resizers.
+    this.onResizeDrag = this.onResizeDrag.bind(this);
+    this.onResizeStart = this.onResizeStart.bind(this);
+    this.onResizeStop = this.onResizeStop.bind(this);
 
     // Promise resovled when the UI init has completed.
     this.inited = this.init();
@@ -250,6 +256,14 @@ class ResponsiveUI {
     rdmFrame.src = "chrome://devtools/content/responsive/toolbar.xhtml";
     rdmFrame.classList.add("rdm-toolbar");
 
+    // Create resizer handlers
+    const resizeHandle = doc.createElement("div");
+    resizeHandle.classList.add("viewport-resize-handle");
+    const resizeHandleX = doc.createElement("div");
+    resizeHandleX.classList.add("viewport-horizontal-resize-handle");
+    const resizeHandleY = doc.createElement("div");
+    resizeHandleY.classList.add("viewport-vertical-resize-handle");
+
     this.browserContainerEl = gBrowser.getBrowserContainer(
       gBrowser.getBrowserForTab(this.tab)
     );
@@ -261,6 +275,9 @@ class ResponsiveUI {
 
     // Prepend the RDM iframe inside of the current tab's browser stack.
     this.browserStackEl.prepend(rdmFrame);
+    this.browserStackEl.append(resizeHandle);
+    this.browserStackEl.append(resizeHandleX);
+    this.browserStackEl.append(resizeHandleY);
 
     // Wait for the frame script to be loaded.
     message.wait(rdmFrame.contentWindow, "script-init").then(async () => {
@@ -278,6 +295,15 @@ class ResponsiveUI {
     });
 
     this.rdmFrame = rdmFrame;
+
+    this.resizeHandle = resizeHandle;
+    this.resizeHandle.addEventListener("mousedown", this.onResizeStart);
+
+    this.resizeHandleX = resizeHandleX;
+    this.resizeHandleX.addEventListener("mousedown", this.onResizeStart);
+
+    this.resizeHandleY = resizeHandleY;
+    this.resizeHandleY.addEventListener("mousedown", this.onResizeStart);
   }
 
   /**
@@ -331,6 +357,11 @@ class ResponsiveUI {
       this.rdmFrame.contentWindow.removeEventListener("message", this);
       this.rdmFrame.remove();
 
+      // Clean up resize handlers
+      this.resizeHandle.remove();
+      this.resizeHandleX.remove();
+      this.resizeHandleY.remove();
+
       this.browserContainerEl.classList.remove("responsive-mode");
       this.browserStackEl.style.removeProperty("--rdm-width");
       this.browserStackEl.style.removeProperty("--rdm-height");
@@ -365,6 +396,9 @@ class ResponsiveUI {
     this.tab = null;
     this.inited = null;
     this.rdmFrame = null;
+    this.resizeHandle = null;
+    this.resizeHandleX = null;
+    this.resizeHandleY = null;
     this.toolWindow = null;
     this.swap = null;
 
@@ -578,6 +612,96 @@ class ResponsiveUI {
     }
     // Used by tests
     this.emit("device-association-removed");
+  }
+
+  /**
+   * Resizing the browser on mousemove
+   */
+  onResizeDrag({ screenX, screenY }) {
+    if (!this.isResizing || !this.rdmFrame.contentWindow) {
+      return;
+    }
+
+    const zoom = this.tab.linkedBrowser.fullZoom;
+
+    let deltaX = (screenX - this.lastScreenX) / zoom;
+    let deltaY = (screenY - this.lastScreenY) / zoom;
+
+    const leftAlignmentEnabled = Services.prefs.getBoolPref(
+      "devtools.responsive.leftAlignViewport.enabled",
+      false
+    );
+
+    if (!leftAlignmentEnabled) {
+      // The viewport is centered horizontally, so horizontal resize resizes
+      // by twice the distance the mouse was dragged - on left and right side.
+      deltaX = deltaX * 2;
+    }
+
+    if (this.ignoreX) {
+      deltaX = 0;
+    }
+    if (this.ignoreY) {
+      deltaY = 0;
+    }
+
+    const viewportSize = this.rdmFrame.contentWindow.getViewportSize();
+
+    let width = Math.round(viewportSize.width + deltaX);
+    let height = Math.round(viewportSize.height + deltaY);
+
+    if (width < Constants.MIN_VIEWPORT_DIMENSION) {
+      width = Constants.MIN_VIEWPORT_DIMENSION;
+    } else if (width != viewportSize.width) {
+      this.lastScreenX = screenX;
+    }
+
+    if (height < Constants.MIN_VIEWPORT_DIMENSION) {
+      height = Constants.MIN_VIEWPORT_DIMENSION;
+    } else if (height != viewportSize.height) {
+      this.lastScreenY = screenY;
+    }
+
+    // Update the RDM store and viewport size with the new width and height.
+    this.rdmFrame.contentWindow.setViewportSize({ width, height });
+    this.updateViewportSize(width, height);
+
+    // Change the device selector back to an unselected device
+    if (this.rdmFrame.contentWindow.getAssociatedDevice()) {
+      this.rdmFrame.contentWindow.clearDeviceAssociation();
+    }
+  }
+
+  /**
+   * Start the process of resizing the browser.
+   */
+  onResizeStart({ target, screenX, screenY }) {
+    this.browserWindow.addEventListener("mousemove", this.onResizeDrag, true);
+    this.browserWindow.addEventListener("mouseup", this.onResizeStop, true);
+
+    this.isResizing = true;
+    this.lastScreenX = screenX;
+    this.lastScreenY = screenY;
+    this.ignoreX = target === this.resizeHandleY;
+    this.ignoreY = target === this.resizeHandleX;
+  }
+
+  /**
+   * Stop the process of resizing the browser.
+   */
+  onResizeStop() {
+    this.browserWindow.removeEventListener(
+      "mousemove",
+      this.onResizeDrag,
+      true
+    );
+    this.browserWindow.removeEventListener("mouseup", this.onResizeStop, true);
+
+    this.isResizing = false;
+    this.lastScreenX = 0;
+    this.lastScreenY = 0;
+    this.ignoreX = false;
+    this.ignoreY = false;
   }
 
   onResizeViewport(event) {
@@ -895,6 +1019,17 @@ class ResponsiveUI {
    */
   getInitialViewportOrientation(viewport) {
     return getOrientation(viewport, viewport);
+  }
+
+  /**
+   * Helper for tests to get the browser's window.
+   */
+  getBrowserWindow() {
+    if (!this.isBrowserUIEnabled) {
+      return this.toolWindow;
+    }
+
+    return this.browserWindow;
   }
 }
 

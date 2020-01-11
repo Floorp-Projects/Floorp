@@ -972,7 +972,7 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#resetCache", () => {
-    it("should set .layout, .feeds .spocs and .affinities to {", async () => {
+    it("should set .layout, .feeds .spocs and .affinities to {}", async () => {
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
 
       await feed.resetCache();
@@ -2029,6 +2029,55 @@ describe("DiscoveryStreamFeed", () => {
       const [dispatchFn] = feed.loadSpocs.firstCall.args;
       dispatchFn({});
       assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({}));
+    });
+  });
+
+  describe("#onAction: DISCOVERY_STREAM_DEV_IDLE_DAILY", () => {
+    it("should trigger idle-daily observer", async () => {
+      sandbox.stub(global.Services.obs, "notifyObservers").returns();
+      await feed.onAction({
+        type: at.DISCOVERY_STREAM_DEV_IDLE_DAILY,
+      });
+      assert.calledWith(
+        global.Services.obs.notifyObservers,
+        null,
+        "idle-daily"
+      );
+    });
+  });
+
+  describe("#onAction: DISCOVERY_STREAM_DEV_SYNC_RS", () => {
+    it("should fire remote settings pollChanges", async () => {
+      sandbox.stub(global.RemoteSettings, "pollChanges").returns();
+      await feed.onAction({
+        type: at.DISCOVERY_STREAM_DEV_SYNC_RS,
+      });
+      assert.calledOnce(global.RemoteSettings.pollChanges);
+    });
+  });
+
+  describe("#onAction: DISCOVERY_STREAM_DEV_SYSTEM_TICK", () => {
+    it("should refresh if DiscoveryStream has been loaded at least once and a cache has expired", async () => {
+      sandbox.stub(feed.cache, "set").resolves();
+      setPref(CONFIG_PREF_NAME, { enabled: true });
+
+      await feed.onAction({ type: at.INIT });
+
+      sandbox.stub(feed, "checkIfAnyCacheExpired").resolves(true);
+      sandbox.stub(feed, "refreshAll").resolves();
+
+      await feed.onAction({ type: at.DISCOVERY_STREAM_DEV_SYSTEM_TICK });
+      assert.calledOnce(feed.refreshAll);
+    });
+  });
+
+  describe("#onAction: DISCOVERY_STREAM_DEV_EXPIRE_CACHE", () => {
+    it("should fire resetCache", async () => {
+      sandbox.stub(feed, "resetCache").returns();
+      await feed.onAction({
+        type: at.DISCOVERY_STREAM_DEV_EXPIRE_CACHE,
+      });
+      assert.calledOnce(feed.resetCache);
     });
   });
 

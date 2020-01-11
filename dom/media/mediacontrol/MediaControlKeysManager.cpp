@@ -20,8 +20,6 @@
 namespace mozilla {
 namespace dom {
 
-using PlaybackState = MediaControlKeysEventSource::PlaybackState;
-
 bool MediaControlKeysManager::IsOpened() const {
   // As MediaControlKeysManager represents a platform-indenpendent event source,
   // which we can use to add other listeners to moniter media key events, we

@@ -16,7 +16,8 @@
 #include "nsCompatibility.h"      // for member
 #include "nsCOMPtr.h"             // for member
 #include "nsICookieSettings.h"
-#include "nsGkAtoms.h"  // for static class members
+#include "nsGkAtoms.h"           // for static class members
+#include "nsNameSpaceManager.h"  // for static class members
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIContentViewer.h"
@@ -4440,9 +4441,6 @@ class Document : public nsINode,
 
   // Helper for GetScrollingElement/IsScrollingElement.
   bool IsPotentiallyScrollable(HTMLBodyElement* aBody);
-
-  // Return the same type parent docuement if exists, or return null.
-  Document* GetSameTypeParentDocument();
 
   void MaybeAllowStorageForOpenerAfterUserInteraction();
 

@@ -21,14 +21,18 @@ CompositorWidgetChild::CompositorWidgetChild(
     : mVsyncDispatcher(aVsyncDispatcher),
       mVsyncObserver(aVsyncObserver),
       mCompositorWnd(nullptr),
-      mParentWnd(reinterpret_cast<HWND>(
-          aInitData.get_WinCompositorWidgetInitData().hWnd())) {
+      mWnd(reinterpret_cast<HWND>(
+          aInitData.get_WinCompositorWidgetInitData().hWnd())),
+      mTransparencyMode(
+          aInitData.get_WinCompositorWidgetInitData().transparencyMode()) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(!gfxPlatform::IsHeadless());
-  MOZ_ASSERT(mParentWnd && ::IsWindow(mParentWnd));
+  MOZ_ASSERT(mWnd && ::IsWindow(mWnd));
 }
 
 CompositorWidgetChild::~CompositorWidgetChild() {}
+
+bool CompositorWidgetChild::Initialize() { return true; }
 
 void CompositorWidgetChild::EnterPresentLock() {
   Unused << SendEnterPresentLock();
@@ -39,6 +43,12 @@ void CompositorWidgetChild::LeavePresentLock() {
 }
 
 void CompositorWidgetChild::OnDestroyWindow() {}
+
+bool CompositorWidgetChild::OnWindowResize(const LayoutDeviceIntSize& aSize) {
+  return true;
+}
+
+void CompositorWidgetChild::OnWindowModeChange(nsSizeMode aSizeMode) {}
 
 void CompositorWidgetChild::UpdateTransparency(nsTransparencyMode aMode) {
   Unused << SendUpdateTransparency(aMode);
@@ -61,12 +71,10 @@ mozilla::ipc::IPCResult CompositorWidgetChild::RecvUnobserveVsync() {
 mozilla::ipc::IPCResult CompositorWidgetChild::RecvUpdateCompositorWnd(
     const WindowsHandle& aCompositorWnd, const WindowsHandle& aParentWnd,
     UpdateCompositorWndResolver&& aResolve) {
-  MOZ_ASSERT(mParentWnd);
-
   HWND parentWnd = reinterpret_cast<HWND>(aParentWnd);
-  if (mParentWnd == parentWnd) {
+  if (mWnd == parentWnd) {
     mCompositorWnd = reinterpret_cast<HWND>(aCompositorWnd);
-    ::SetParent(mCompositorWnd, mParentWnd);
+    ::SetParent(mCompositorWnd, mWnd);
     aResolve(true);
   } else {
     aResolve(false);

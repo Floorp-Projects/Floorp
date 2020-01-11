@@ -3911,50 +3911,24 @@ JS_PUBLIC_API bool JS::RejectPromise(JSContext* cx, JS::HandleObject promiseObj,
   return ResolveOrRejectPromise(cx, promiseObj, rejectionValue, true);
 }
 
-static MOZ_MUST_USE bool CallOriginalPromiseThenImpl(
-    JSContext* cx, JS::HandleObject promiseObj, JS::HandleObject onFulfilledObj,
-    JS::HandleObject onRejectedObj, JS::MutableHandleObject resultObj,
-    CreateDependentPromise createDependent) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(promiseObj, onFulfilledObj, onRejectedObj);
-
-  MOZ_ASSERT_IF(onFulfilledObj, IsCallable(onFulfilledObj));
-  MOZ_ASSERT_IF(onRejectedObj, IsCallable(onRejectedObj));
-
-  RootedValue onFulfilled(cx, ObjectOrNullValue(onFulfilledObj));
-  RootedValue onRejected(cx, ObjectOrNullValue(onRejectedObj));
-  return OriginalPromiseThen(cx, promiseObj, onFulfilled, onRejected, resultObj,
-                             createDependent);
-}
-
 JS_PUBLIC_API JSObject* JS::CallOriginalPromiseThen(
-    JSContext* cx, JS::HandleObject promiseObj, JS::HandleObject onResolvedObj,
-    JS::HandleObject onRejectedObj) {
-  RootedObject resultPromise(cx);
-  if (!CallOriginalPromiseThenImpl(cx, promiseObj, onResolvedObj, onRejectedObj,
-                                   &resultPromise,
-                                   CreateDependentPromise::Always)) {
-    return nullptr;
-  }
-  return resultPromise;
-}
-
-JS_PUBLIC_API bool JS::AddPromiseReactions(JSContext* cx,
-                                           JS::HandleObject promiseObj,
-                                           JS::HandleObject onFulfilled,
-                                           JS::HandleObject onRejected) {
-  RootedObject resultPromise(cx);
-  bool result = CallOriginalPromiseThenImpl(cx, promiseObj, onFulfilled,
-                                            onRejected, &resultPromise,
-                                            CreateDependentPromise::Never);
-  MOZ_ASSERT(!resultPromise);
-  return result;
-}
-
-JS_PUBLIC_API bool JS::AddPromiseReactionsIgnoringUnhandledRejection(
     JSContext* cx, JS::HandleObject promiseObj, JS::HandleObject onFulfilled,
     JS::HandleObject onRejected) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(promiseObj, onFulfilled, onRejected);
+
+  MOZ_ASSERT_IF(onFulfilled, IsCallable(onFulfilled));
+  MOZ_ASSERT_IF(onRejected, IsCallable(onRejected));
+
+  return OriginalPromiseThen(cx, promiseObj, onFulfilled, onRejected);
+}
+
+static MOZ_MUST_USE bool ReactToPromise(JSContext* cx,
+                                        JS::Handle<JSObject*> promiseObj,
+                                        JS::Handle<JSObject*> onFulfilled,
+                                        JS::Handle<JSObject*> onRejected,
+                                        UnhandledRejectionBehavior behavior) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(promiseObj, onFulfilled, onRejected);
@@ -3976,8 +3950,23 @@ JS_PUBLIC_API bool JS::AddPromiseReactionsIgnoringUnhandledRejection(
     }
   }
 
-  return ReactIgnoringUnhandledRejection(cx, unwrappedPromise, onFulfilled,
-                                         onRejected);
+  return ReactToUnwrappedPromise(cx, unwrappedPromise, onFulfilled, onRejected,
+                                 behavior);
+}
+
+JS_PUBLIC_API bool JS::AddPromiseReactions(JSContext* cx,
+                                           JS::HandleObject promiseObj,
+                                           JS::HandleObject onFulfilled,
+                                           JS::HandleObject onRejected) {
+  return ReactToPromise(cx, promiseObj, onFulfilled, onRejected,
+                        UnhandledRejectionBehavior::Report);
+}
+
+JS_PUBLIC_API bool JS::AddPromiseReactionsIgnoringUnhandledRejection(
+    JSContext* cx, JS::HandleObject promiseObj, JS::HandleObject onFulfilled,
+    JS::HandleObject onRejected) {
+  return ReactToPromise(cx, promiseObj, onFulfilled, onRejected,
+                        UnhandledRejectionBehavior::Ignore);
 }
 
 JS_PUBLIC_API JS::PromiseUserInputEventHandlingState

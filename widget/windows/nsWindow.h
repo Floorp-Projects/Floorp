@@ -438,6 +438,7 @@ class nsWindow final : public nsWindowBase {
    */
   virtual void OnDestroy() override;
   bool OnResize(const LayoutDeviceIntSize& aSize);
+  void OnSizeModeChange(nsSizeMode aSizeMode);
   bool OnGesture(WPARAM wParam, LPARAM lParam);
   bool OnTouch(WPARAM wParam, LPARAM lParam);
   bool OnHotKey(WPARAM wParam, LPARAM lParam);

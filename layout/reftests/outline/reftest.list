@@ -15,3 +15,4 @@ pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outli
 == outline-on-table.html outline-on-table-ref.html
 == outline-table-caption.html outline-table-caption-ref.html
 == outline-table-caption-invisible.html about:blank
+== outline-wrapped-span-1.html outline-wrapped-span-1-ref.html

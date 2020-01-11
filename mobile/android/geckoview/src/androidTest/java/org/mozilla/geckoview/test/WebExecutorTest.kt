@@ -28,6 +28,7 @@ import org.mozilla.geckoview.WebResponse
 import org.mozilla.geckoview.test.util.RuntimeCreator
 import org.mozilla.geckoview.test.util.TestServer
 import java.io.IOException
+import java.lang.IllegalStateException
 import java.math.BigInteger
 import java.net.UnknownHostException
 import java.nio.ByteBuffer
@@ -197,6 +198,7 @@ class WebExecutorTest {
 
         try {
             fetch(WebRequest(uri))
+            throw IllegalStateException("fetch() should have thrown")
         } catch (e: WebRequestError) {
             assertThat("Category should match", e.category, equalTo(WebRequestError.ERROR_CATEGORY_SECURITY))
             assertThat("Code should match", e.code, equalTo(WebRequestError.ERROR_SECURITY_BAD_CERT))

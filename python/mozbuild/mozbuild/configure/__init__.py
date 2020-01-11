@@ -373,13 +373,11 @@ class ConfigureSandbox(dict):
 
         def wrapped_log_method(logger, key):
             method = getattr(logger, key)
-            if not encoding:
-                return method
 
             def wrapped(*args, **kwargs):
                 out_args = [
-                    arg.decode(encoding) if isinstance(arg, six.binary_type) else arg
-                    for arg in args
+                    six.ensure_text(arg, encoding=encoding or 'utf-8')
+                    if isinstance(arg, six.binary_type) else arg for arg in args
                 ]
                 return method(*out_args, **kwargs)
             return wrapped
@@ -916,7 +914,10 @@ class ConfigureSandbox(dict):
         # fails with "IOError: file() constructor not accessible in
         # restricted mode". We also make open() look more like python 3's,
         # decoding to unicode strings unless the mode says otherwise.
-        if what == '__builtin__.open':
+        if what == '__builtin__.open' or what == 'builtins.open':
+            if six.PY3:
+                return open
+
             def wrapped_open(name, mode=None, buffering=None):
                 args = (name,)
                 kwargs = {}
@@ -949,6 +950,8 @@ class ConfigureSandbox(dict):
             if _from == '__builtin__' or _from.startswith('__builtin__.'):
                 _from = _from.replace('__builtin__', 'six.moves.builtins')
             import_line += 'from %s ' % _from
+        if what == '__builtin__':
+            what = 'six.moves.builtins'
         import_line += 'import %s as imported' % what
         glob = {}
         exec_(import_line, {}, glob)

@@ -357,7 +357,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.dbg.onNewDebuggee = this._onNewDebuggee;
     if (this.dbg.replaying) {
       this.dbg.replayingOnForcedPause = this.replayingOnForcedPause.bind(this);
-      this.dbg.replayingOnPositionChange = this._makeReplayingOnPositionChange();
+      this.dbg.replayingOnStatusUpdate = this._makeReplayingOnStatusUpdate();
     }
 
     this._debuggerSourcesSeen = new WeakSet();
@@ -1944,23 +1944,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   /*
-   * A function that the engine calls when a recording/replaying process has
-   * changed its position: a checkpoint was reached or a switch between a
-   * recording and replaying child process occurred.
+   * A function that the engine calls when replaying and the status has changed
+   * in a way that affects the UI, such as switching between a recording and
+   * replaying process or a change to the current execution point.
    */
-  _makeReplayingOnPositionChange() {
-    return throttle(() => {
+  _makeReplayingOnStatusUpdate() {
+    return throttle(status => {
       if (this.attached) {
-        const recording = this.dbg.replayIsRecording();
-        const executionPoint = this.dbg.replayCurrentExecutionPoint();
-        const unscannedRegions = this.dbg.replayUnscannedRegions();
-        const cachedPoints = this.dbg.replayCachedPoints();
-        this.emit("progress", {
-          recording,
-          executionPoint,
-          unscannedRegions,
-          cachedPoints,
-        });
+        this.emit("replayStatusUpdate", { status });
       }
     }, 100);
   },

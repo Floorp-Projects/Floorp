@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
+#include "MediaController.h"
 #include "MediaControlKeysEvent.h"
 
 using namespace mozilla::dom;
-using PlaybackState = MediaControlKeysEventSource::PlaybackState;
 
 class MediaControlKeysEventSourceTestImpl : public MediaControlKeysEventSource {
  public:
@@ -38,11 +38,14 @@ TEST(MediaControlKeysEvent, SetSourcePlaybackState)
 {
   RefPtr<MediaControlKeysEventSource> source =
       new MediaControlKeysEventSourceTestImpl();
-  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::ePaused);
+  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::eStopped);
 
-  source->SetPlaybackState(PlaybackState::ePlayed);
-  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::ePlayed);
+  source->SetPlaybackState(PlaybackState::ePlaying);
+  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::ePlaying);
 
   source->SetPlaybackState(PlaybackState::ePaused);
   ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::ePaused);
+
+  source->SetPlaybackState(PlaybackState::eStopped);
+  ASSERT_TRUE(source->GetPlaybackState() == PlaybackState::eStopped);
 }

@@ -550,9 +550,9 @@ void ServiceWorkerManager::MaybeFinishShutdown() {
 
 class ServiceWorkerResolveWindowPromiseOnRegisterCallback final
     : public ServiceWorkerJob::Callback {
-  RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
-
-  ~ServiceWorkerResolveWindowPromiseOnRegisterCallback() {}
+ public:
+  NS_INLINE_DECL_REFCOUNTING(
+      ServiceWorkerResolveWindowPromiseOnRegisterCallback, override)
 
   virtual void JobFinished(ServiceWorkerJob* aJob,
                            ErrorResult& aStatus) override {
@@ -560,7 +560,7 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final
     MOZ_ASSERT(aJob);
 
     if (aStatus.Failed()) {
-      mPromise->Reject(std::move(aStatus), __func__);
+      mPromiseHolder.Reject(CopyableErrorResult(aStatus), __func__);
       return;
     }
 
@@ -569,17 +569,24 @@ class ServiceWorkerResolveWindowPromiseOnRegisterCallback final
         static_cast<ServiceWorkerRegisterJob*>(aJob);
     RefPtr<ServiceWorkerRegistrationInfo> reg = registerJob->GetRegistration();
 
-    mPromise->Resolve(reg->Descriptor(), __func__);
+    mPromiseHolder.Resolve(reg->Descriptor(), __func__);
   }
 
- public:
-  ServiceWorkerResolveWindowPromiseOnRegisterCallback()
-      : mPromise(new ServiceWorkerRegistrationPromise::Private(__func__)) {}
+  virtual void JobDiscarded(ErrorResult& aStatus) override {
+    MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<ServiceWorkerRegistrationPromise> Promise() const { return mPromise; }
+    mPromiseHolder.Reject(CopyableErrorResult(aStatus), __func__);
+  }
 
-  NS_INLINE_DECL_REFCOUNTING(
-      ServiceWorkerResolveWindowPromiseOnRegisterCallback, override)
+  RefPtr<ServiceWorkerRegistrationPromise> Promise() {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mPromiseHolder.Ensure(__func__);
+  }
+
+ private:
+  ~ServiceWorkerResolveWindowPromiseOnRegisterCallback() = default;
+
+  MozPromiseHolder<ServiceWorkerRegistrationPromise> mPromiseHolder;
 };
 
 namespace {
@@ -1246,7 +1253,7 @@ namespace {
 class UnregisterJobCallback final : public ServiceWorkerJob::Callback {
   nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
 
-  ~UnregisterJobCallback() {}
+  ~UnregisterJobCallback() { MOZ_ASSERT(!mCallback); }
 
  public:
   explicit UnregisterJobCallback(nsIServiceWorkerUnregisterCallback* aCallback)
@@ -1258,6 +1265,9 @@ class UnregisterJobCallback final : public ServiceWorkerJob::Callback {
   void JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus) override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aJob);
+    MOZ_ASSERT(mCallback);
+
+    auto scopeExit = MakeScopeExit([&]() { mCallback = nullptr; });
 
     if (aStatus.Failed()) {
       mCallback->UnregisterFailed();
@@ -1268,6 +1278,14 @@ class UnregisterJobCallback final : public ServiceWorkerJob::Callback {
     RefPtr<ServiceWorkerUnregisterJob> unregisterJob =
         static_cast<ServiceWorkerUnregisterJob*>(aJob);
     mCallback->UnregisterSucceeded(unregisterJob->GetResult());
+  }
+
+  void JobDiscarded(ErrorResult&) override {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mCallback);
+
+    mCallback->UnregisterFailed();
+    mCallback = nullptr;
   }
 
   NS_INLINE_DECL_REFCOUNTING(UnregisterJobCallback, override)
@@ -2274,7 +2292,7 @@ namespace {
 class UpdateJobCallback final : public ServiceWorkerJob::Callback {
   RefPtr<ServiceWorkerUpdateFinishCallback> mCallback;
 
-  ~UpdateJobCallback() = default;
+  ~UpdateJobCallback() { MOZ_ASSERT(!mCallback); }
 
  public:
   explicit UpdateJobCallback(ServiceWorkerUpdateFinishCallback* aCallback)
@@ -2286,6 +2304,9 @@ class UpdateJobCallback final : public ServiceWorkerJob::Callback {
   void JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus) override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aJob);
+    MOZ_ASSERT(mCallback);
+
+    auto scopeExit = MakeScopeExit([&]() { mCallback = nullptr; });
 
     if (aStatus.Failed()) {
       mCallback->UpdateFailed(aStatus);
@@ -2297,6 +2318,14 @@ class UpdateJobCallback final : public ServiceWorkerJob::Callback {
         static_cast<ServiceWorkerUpdateJob*>(aJob);
     RefPtr<ServiceWorkerRegistrationInfo> reg = updateJob->GetRegistration();
     mCallback->UpdateSucceeded(reg);
+  }
+
+  void JobDiscarded(ErrorResult& aStatus) override {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mCallback);
+
+    mCallback->UpdateFailed(aStatus);
+    mCallback = nullptr;
   }
 
   NS_INLINE_DECL_REFCOUNTING(UpdateJobCallback, override)

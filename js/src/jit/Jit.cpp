@@ -157,7 +157,7 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
     script->incWarmUpCounter();
 
     // Try to Ion-compile.
-    if (jit::IsIonEnabled()) {
+    if (jit::IsIonEnabled(cx)) {
       jit::MethodStatus status = jit::CanEnterIon(cx, state);
       if (status == jit::Method_Error) {
         return EnterJitStatus::Error;
