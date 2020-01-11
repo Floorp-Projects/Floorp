@@ -28,7 +28,6 @@ win32/debug:
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -66,7 +65,6 @@ win32/opt:
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -105,7 +103,6 @@ win64/debug:
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -217,7 +214,6 @@ win64/opt:
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -307,7 +303,6 @@ win32-shippable/opt:
         max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -349,7 +344,6 @@ win64-shippable/opt:
         max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -683,7 +677,6 @@ win64-ccov/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
             RUSTC_BOOTSTRAP: '1'
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -756,7 +749,6 @@ win64-asan/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
@@ -892,7 +884,6 @@ win32-devedition-nightly/opt:
         max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         script: mozharness/scripts/fx_desktop_build.py
         secrets: true
@@ -936,7 +927,6 @@ win64-devedition-nightly/opt:
         max-run-time: 10800
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         options: [append-env-variables-from-configs]
         script: mozharness/scripts/fx_desktop_build.py
