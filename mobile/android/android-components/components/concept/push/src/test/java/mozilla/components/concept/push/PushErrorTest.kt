@@ -6,6 +6,7 @@ package mozilla.components.concept.push
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.lang.IllegalStateException
 
 class PushErrorTest {
     @Test
@@ -21,8 +22,8 @@ class PushErrorTest {
         error = PushError.Registration("reg")
         assertEquals("reg", error.desc)
 
-        error = PushError.Rust("rust")
-        assertEquals("rust", error.desc)
+        error = PushError.Rust(IllegalStateException("boo"))
+        assertEquals("java.lang.IllegalStateException: boo", error.desc)
 
         error = PushError.ServiceUnavailable("service")
         assertEquals("service", error.desc)

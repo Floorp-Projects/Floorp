@@ -23,6 +23,7 @@ import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.push.PushService
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -76,7 +77,8 @@ class AutoPushFeature(
         socketProtocol = config.protocol,
         serviceType = config.serviceType,
         databasePath = File(context.filesDir, DB_NAME).canonicalPath
-    )
+    ),
+    private val crashReporter: CrashReporter? = null
 ) : PushProcessor {
 
     private val logger = Logger("AutoPushFeature")
@@ -179,8 +181,17 @@ class AutoPushFeature(
     }
 
     override fun onError(error: PushError) {
-        // Only log errors for now.
         logger.error("${error.javaClass.simpleName} error: ${error.desc}")
+
+        // Submit via our configured CrashReporter, as well.
+        when (error) {
+            is PushError.Rust -> {
+                crashReporter?.submitCaughtException(error.cause)
+            }
+            else -> {
+                crashReporter?.submitCaughtException(GenericPushError(error.desc))
+            }
+        }
     }
 
     /**
@@ -307,7 +318,7 @@ class AutoPushFeature(
 
     private fun CoroutineScope.launchAndTry(block: suspend CoroutineScope.() -> Unit): Job {
         return launchAndTry(block, { e ->
-            onError(PushError.Rust(e.toString()))
+            onError(PushError.Rust(e))
         })
     }
 
@@ -355,6 +366,8 @@ internal fun CoroutineScope.launchAndTry(
         }
     }
 }
+
+private class GenericPushError(desc: String) : Exception(desc)
 
 /**
  * The different kind of message types that a [EncryptedPushMessage] can be:
