@@ -1466,6 +1466,21 @@ def set_test_type(config, tests):
 
 
 @transforms.add
+def single_stylo_traversal_tests(config, tests):
+    """Enable single traversal for all tests on the sequential Stylo platform."""
+
+    for test in tests:
+        if not test['test-platform'].startswith('linux64-stylo-sequential/'):
+            yield test
+            continue
+
+        # Bug 1356122 - Run Stylo tests in sequential mode
+        test['mozharness'].setdefault('extra-options', [])\
+                          .append('--single-stylo-traversal')
+        yield test
+
+
+@transforms.add
 def set_worker_type(config, tests):
     """Set the worker type based on the test platform."""
     for test in tests:
