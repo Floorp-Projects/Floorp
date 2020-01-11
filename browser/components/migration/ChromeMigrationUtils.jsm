@@ -250,6 +250,7 @@ var ChromeMigrationUtils = {
         "Chrome Beta": ["Google", "Chrome Beta"],
         Chromium: ["Chromium"],
         Canary: ["Google", "Chrome SxS"],
+        "Edge Beta": ["Microsoft", "Edge Beta"],
       },
       macosx: {
         Chrome: ["Google", "Chrome"],

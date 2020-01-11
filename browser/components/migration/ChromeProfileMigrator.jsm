@@ -669,6 +669,6 @@ ChromiumEdgeBetaMigrator.prototype.classID = Components.ID(
   "{0fc3d48a-c1c3-4871-b58f-a8b47d1555fb}"
 );
 
-if (AppConstants.platform == "macosx") {
+if (AppConstants.platform == "macosx" || AppConstants.platform == "win") {
   EXPORTED_SYMBOLS.push("ChromiumEdgeBetaMigrator");
 }
