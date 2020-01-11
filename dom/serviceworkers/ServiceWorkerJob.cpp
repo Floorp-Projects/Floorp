@@ -92,6 +92,16 @@ void ServiceWorkerJob::Cancel() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mCanceled);
   mCanceled = true;
+
+  if (GetState() != State::Started) {
+    MOZ_ASSERT(GetState() == State::Initial);
+
+    ErrorResult error(NS_ERROR_DOM_ABORT_ERR);
+    InvokeResultCallbacks(error);
+
+    // The callbacks might not consume the error, which is fine.
+    error.SuppressException();
+  }
 }
 
 ServiceWorkerJob::ServiceWorkerJob(Type aType, nsIPrincipal* aPrincipal,
@@ -122,7 +132,8 @@ ServiceWorkerJob::~ServiceWorkerJob() {
 
 void ServiceWorkerJob::InvokeResultCallbacks(ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(mState == State::Started);
+  MOZ_DIAGNOSTIC_ASSERT(mState != State::Finished);
+  MOZ_DIAGNOSTIC_ASSERT_IF(mState == State::Initial, Canceled());
 
   MOZ_DIAGNOSTIC_ASSERT(!mResultCallbacksInvoked);
   mResultCallbacksInvoked = true;
@@ -136,7 +147,11 @@ void ServiceWorkerJob::InvokeResultCallbacks(ErrorResult& aRv) {
     ErrorResult rv;
     aRv.CloneTo(rv);
 
-    callback->JobFinished(this, rv);
+    if (GetState() == State::Started) {
+      callback->JobFinished(this, rv);
+    } else {
+      callback->JobDiscarded(rv);
+    }
 
     // The callback might not consume the error.
     rv.SuppressException();

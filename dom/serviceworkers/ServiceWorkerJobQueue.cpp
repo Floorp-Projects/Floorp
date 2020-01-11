@@ -31,6 +31,10 @@ class ServiceWorkerJobQueue::Callback final
     mQueue->JobFinished(aJob);
   }
 
+  virtual void JobDiscarded(ErrorResult&) override {
+    // no-op; nothing to do.
+  }
+
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJobQueue::Callback, override)
 };
 
