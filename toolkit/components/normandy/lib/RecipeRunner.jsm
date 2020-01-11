@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
+  FeatureGate: "resource://featuregates/FeatureGate.jsm",
   Storage: "resource://normandy/lib/Storage.jsm",
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
@@ -64,6 +65,10 @@ XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsClient", () => {
   });
 });
 
+XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsGate", () => {
+  return FeatureGate.fromId("normandy-remote-settings");
+});
+
 /**
  * cacheProxy returns an object Proxy that will memoize properties of the target.
  */
@@ -95,7 +100,7 @@ var RecipeRunner = {
 
     this.checkPrefs(); // sets this.enabled
     this.watchPrefs();
-    this.setUpRemoteSettings();
+    await this.setUpRemoteSettings();
 
     // Here "first run" means the first run this profile has ever done. This
     // preference is set to true at the end of this function, and never reset to
@@ -126,7 +131,10 @@ var RecipeRunner = {
       // This is not needed for the first run case, because remote settings
       // already handles empty collections well.
       if (devMode) {
-        await gRemoteSettingsClient.sync();
+        let remoteSettingsGate = await gRemoteSettingsGate;
+        if (await remoteSettingsGate.isEnabled()) {
+          await gRemoteSettingsClient.sync();
+        }
       }
       let trigger;
       if (devMode) {
@@ -244,52 +252,70 @@ var RecipeRunner = {
     timerManager.unregisterTimer(TIMER_NAME);
   },
 
-  setUpRemoteSettings() {
-    if (this._alreadySetUpRemoteSettings) {
-      return;
+  async setUpRemoteSettings() {
+    const remoteSettingsGate = await gRemoteSettingsGate;
+    if (await remoteSettingsGate.isEnabled()) {
+      this.attachRemoteSettings();
     }
-    this._alreadySetUpRemoteSettings = true;
-
-    if (!this._onSync) {
-      this._onSync = this.onSync.bind(this);
-    }
-    gRemoteSettingsClient.on("sync", this._onSync);
-
-    CleanupManager.addCleanupHandler(() => {
-      gRemoteSettingsClient.off("sync", this._onSync);
-      this._alreadySetUpRemoteSettings = false;
-    });
+    const observer = {
+      onEnable: this.attachRemoteSettings.bind(this),
+      onDisable: this.detachRemoteSettings.bind(this),
+    };
+    remoteSettingsGate.addObserver(observer);
+    CleanupManager.addCleanupHandler(() =>
+      remoteSettingsGate.removeObserver(observer)
+    );
   },
 
-  /** Called when our Remote Settings collection is updated */
-  async onSync() {
-    if (!this.enabled) {
-      return;
+  attachRemoteSettings() {
+    this.loadFromRemoteSettings = true;
+    if (!this._onSync) {
+      this._onSync = async () => {
+        if (!this.enabled) {
+          return;
+        }
+
+        // Delay the Normandy run by a random amount, determined by preference.
+        // This helps alleviate server load, since we don't have a thundering
+        // herd of users trying to update all at once.
+        if (this._syncSkewTimeout) {
+          clearTimeout(this._syncSkewTimeout);
+        }
+        let minSkewSec = 1; // this is primarily is to avoid race conditions in tests
+        let maxSkewSec = Services.prefs.getIntPref(ONSYNC_SKEW_SEC_PREF, 0);
+        if (maxSkewSec >= minSkewSec) {
+          let skewMillis =
+            (minSkewSec + Math.random() * (maxSkewSec - minSkewSec)) * 1000;
+          log.debug(
+            `Delaying on-sync Normandy run for ${Math.floor(
+              skewMillis / 1000
+            )} seconds`
+          );
+          this._syncSkewTimeout = setTimeout(
+            () => this.run({ trigger: "sync" }),
+            skewMillis
+          );
+        } else {
+          log.debug(`Not skewing on-sync Normandy run`);
+          await this.run({ trigger: "sync" });
+        }
+      };
+
+      gRemoteSettingsClient.on("sync", this._onSync);
+    }
+  },
+
+  detachRemoteSettings() {
+    this.loadFromRemoteSettings = false;
+    if (this._onSync) {
+      // Ignore if no event listener was setup or was already removed (ie. pref changed while enabled).
+      gRemoteSettingsClient.off("sync", this._onSync);
+      this._onSync = null;
     }
 
-    // Delay the Normandy run by a random amount, determined by preference.
-    // This helps alleviate server load, since we don't have a thundering
-    // herd of users trying to update all at once.
     if (this._syncSkewTimeout) {
       clearTimeout(this._syncSkewTimeout);
-    }
-    let minSkewSec = 1; // this is primarily is to avoid race conditions in tests
-    let maxSkewSec = Services.prefs.getIntPref(ONSYNC_SKEW_SEC_PREF, 0);
-    if (maxSkewSec >= minSkewSec) {
-      let skewMillis =
-        (minSkewSec + Math.random() * (maxSkewSec - minSkewSec)) * 1000;
-      log.debug(
-        `Delaying on-sync Normandy run for ${Math.floor(
-          skewMillis / 1000
-        )} seconds`
-      );
-      this._syncSkewTimeout = setTimeout(
-        () => this.run({ trigger: "sync" }),
-        skewMillis
-      );
-    } else {
-      log.debug(`Not skewing on-sync Normandy run`);
-      await this.run({ trigger: "sync" });
+      this._syncSkewTimeout = null;
     }
   },
 
@@ -331,6 +357,8 @@ var RecipeRunner = {
       try {
         recipesToRun = await this.loadRecipes();
       } catch (e) {
+        // Either we failed at fetching the recipes from server (legacy),
+        // or the recipes signature verification failed.
         let status = Uptake.RUNNER_SERVER_ERROR;
         if (/NetworkError/.test(e)) {
           status = Uptake.RUNNER_NETWORK_ERROR;
@@ -371,17 +399,44 @@ var RecipeRunner = {
    * Return the list of recipes to run, filtered for the current environment.
    */
   async loadRecipes() {
-    // Fetch recipes that should run on this client. Then, verify the signature
-    // of each recipe. The recipe filtering is done implicitly by the callback
-    // provided to `gRemoteSettingsClient`.
-    const entries = await gRemoteSettingsClient.get();
-    return Promise.all(
-      entries.map(async ({ recipe, signature }) => {
-        // this will throw if the signature is invalid
-        await NormandyApi.verifyObjectSignature(recipe, signature, "recipe");
-        return recipe;
-      })
-    );
+    // If RemoteSettings is enabled, we read the list of recipes from there.
+    // The recipe filtering is done via the provided callback (see `gRemoteSettingsClient`).
+    if (this.loadFromRemoteSettings) {
+      // First, fetch recipes that should run on this client.
+      const entries = await gRemoteSettingsClient.get();
+      // Then, verify the signature of each recipe. It will throw if invalid.
+      return Promise.all(
+        entries.map(async ({ recipe, signature }) => {
+          await NormandyApi.verifyObjectSignature(recipe, signature, "recipe");
+          return recipe;
+        })
+      );
+    }
+
+    // Obtain the recipes from the Normandy server (legacy).
+    let recipes;
+    try {
+      recipes = await NormandyApi.fetchRecipes();
+      log.debug(
+        `Fetched ${recipes.length} recipes from the server: ` +
+          recipes.map(r => r.name).join(", ")
+      );
+    } catch (e) {
+      const apiUrl = Services.prefs.getCharPref(API_URL_PREF);
+      log.error(`Could not fetch recipes from ${apiUrl}: "${e}"`);
+      throw e;
+    }
+
+    // Check if each recipe should be run, according to `shouldRunRecipe`. This
+    // can't be a simple call to `Array.filter` because checking if a recipe
+    // should run is an async operation.
+    const recipesToRun = [];
+    for (const recipe of recipes) {
+      if (await this.shouldRunRecipe(recipe)) {
+        recipesToRun.push(recipe);
+      }
+    }
+    return recipesToRun;
   },
 
   getFilterContext(recipe) {

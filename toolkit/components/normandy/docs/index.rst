@@ -13,10 +13,12 @@ and then executes them.
 
 .. note::
 
-   Previously, the recipes were fetched from the `recipe server`_, but in `Bug 1513854`_
+   Originally, the recipes were fetched from the `recipe server`_, but in `Bug 1513854`_
    the source was changed to *Remote Settings*. The cryptographic signatures are verified
    at the *Remote Settings* level (integrity) and at the *Normandy* level
    (authenticity of publisher).
+
+   The source can still be controlled by :ref:`Feature Gates <components/featuregates>`.
 
 .. _recipe server: https://github.com/mozilla/normandy/
 .. _Bug 1513854: https://bugzilla.mozilla.org/show_bug.cgi?id=1513854
