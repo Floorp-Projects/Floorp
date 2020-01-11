@@ -95,6 +95,11 @@ class WindowsDllPatcherBase {
     return ReadOnlyTargetFunction<MMPolicyT>(mVMPolicy, aRedirAddress);
   }
 
+ public:
+  FARPROC GetProcAddress(HMODULE aModule, const char* aName) const {
+    return mVMPolicy.GetProcAddress(aModule, aName);
+  }
+
  protected:
   VMPolicy mVMPolicy;
 };
