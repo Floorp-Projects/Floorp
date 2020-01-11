@@ -500,6 +500,7 @@ bool shell::enableFields = false;
 bool shell::enableAwaitFix = false;
 bool shell::enableWeakRefs = false;
 bool shell::enableToSource = false;
+bool shell::enablePropertyErrorMessageFix = false;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
 uint32_t shell::gZealFrequency = 0;
@@ -3715,7 +3716,8 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setFieldsEnabled(enableFields)
       .setAwaitFixEnabled(enableAwaitFix)
       .setWeakRefsEnabled(enableWeakRefs)
-      .setToSourceEnabled(enableToSource);
+      .setToSourceEnabled(enableToSource)
+      .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix);
   options.behaviors().setDeferredParserAlloc(enableDeferredMode);
 }
 
@@ -10388,6 +10390,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableAwaitFix = op.getBoolOption("enable-experimental-await-fix");
   enableWeakRefs = op.getBoolOption("enable-weak-refs");
   enableToSource = !op.getBoolOption("disable-tosource");
+  enablePropertyErrorMessageFix =
+      !op.getBoolOption("disable-property-error-message-fix");
 
   JS::ContextOptionsRef(cx)
       .setAsmJS(enableAsmJS)
@@ -11187,6 +11191,9 @@ int main(int argc, char** argv, char** envp) {
                         "Enable new, faster await semantics") ||
       !op.addBoolOption('\0', "enable-weak-refs", "Enable weak references") ||
       !op.addBoolOption('\0', "disable-tosource", "Disable toSource/uneval") ||
+      !op.addBoolOption('\0', "disable-property-error-message-fix",
+                        "Disable fix for the error message when accessing "
+                        "property of null or undefined") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT
