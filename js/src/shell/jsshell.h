@@ -125,6 +125,7 @@ extern bool enableFields;
 extern bool enableAwaitFix;
 extern bool enableWeakRefs;
 extern bool enableToSource;
+extern bool enablePropertyErrorMessageFix;
 #ifdef JS_GC_ZEAL
 extern uint32_t gZealBits;
 extern uint32_t gZealFrequency;
