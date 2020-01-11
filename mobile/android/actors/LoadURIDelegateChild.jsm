@@ -13,6 +13,15 @@ var EXPORTED_SYMBOLS = ["LoadURIDelegateChild"];
 
 // Implements nsILoadURIDelegate.
 class LoadURIDelegateChild extends GeckoViewActorChild {
+  /** Returns true if this docShell is of type Content, false otherwise. */
+  get isContentWindow() {
+    if (!this.docShell) {
+      return false;
+    }
+
+    return this.docShell.itemType == this.docShell.typeContent;
+  }
+
   // nsILoadURIDelegate.
   loadURI(aUri, aWhere, aFlags, aTriggeringPrincipal) {
     debug`loadURI: uri=${aUri && aUri.spec}
@@ -20,6 +29,11 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
                     tp=${aTriggeringPrincipal &&
                       aTriggeringPrincipal.URI &&
                       aTriggeringPrincipal.URI.spec}`;
+    if (!this.isContentWindow) {
+      debug`loadURI: not a content window`;
+      // This is an internal Gecko window, nothing to do
+      return;
+    }
 
     return LoadURIDelegate.load(
       this.contentWindow,
@@ -36,6 +50,12 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
     debug`handleLoadError: uri=${aUri && aUri.spec}
                              displaySpec=${aUri && aUri.displaySpec}
                              error=${aError}`;
+    if (!this.isContentWindow) {
+      // This is an internal Gecko window, nothing to do
+      debug`handleLoadError: not a content window`;
+      return;
+    }
+
     if (aUri && LoadURIDelegate.isSafeBrowsingError(aError)) {
       const message = {
         type: "GeckoView:ContentBlocked",
