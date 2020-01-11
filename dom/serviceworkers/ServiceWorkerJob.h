@@ -21,7 +21,8 @@ namespace dom {
 
 class ServiceWorkerJob {
  public:
-  // Implement this interface to receive notification when a job completes.
+  // Implement this interface to receive notification when a job completes or
+  // is discarded.
   class Callback {
    public:
     // Called once when the job completes.  If the job is started, then this
@@ -29,6 +30,10 @@ class ServiceWorkerJob {
     // then this method will never be called.  This method is always called
     // on the main thread asynchronously after Start() completes.
     virtual void JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus) = 0;
+
+    // If the job has not started and will never start, then this will be
+    // called; either JobFinished or JobDiscarded will be called, but not both.
+    virtual void JobDiscarded(ErrorResult& aStatus) = 0;
 
     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   };
@@ -80,8 +85,8 @@ class ServiceWorkerJob {
   virtual ~ServiceWorkerJob();
 
   // Invoke the result callbacks immediately.  The job must be in the
-  // Started state.  The callbacks are cleared after being invoked,
-  // so subsequent method calls have no effect.
+  // Started state or be canceled and in the Initial state.  The callbacks are
+  // cleared after being invoked, so subsequent method calls have no effect.
   void InvokeResultCallbacks(ErrorResult& aRv);
 
   // Convenience method that converts to ErrorResult and calls real method.
