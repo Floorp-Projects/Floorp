@@ -131,6 +131,9 @@ this.withMockNormandyApi = function(testFunction) {
     };
 
     // Use callsFake instead of resolves so that the current values in mockApi are used.
+    mockApi.fetchRecipes = sinon
+      .stub(NormandyApi, "fetchRecipes")
+      .callsFake(async () => mockApi.recipes);
     mockApi.fetchExtensionDetails = sinon
       .stub(NormandyApi, "fetchExtensionDetails")
       .callsFake(async extensionId => {
@@ -144,6 +147,7 @@ this.withMockNormandyApi = function(testFunction) {
     try {
       await testFunction(...args, mockApi);
     } finally {
+      mockApi.fetchRecipes.restore();
       mockApi.fetchExtensionDetails.restore();
     }
   };
