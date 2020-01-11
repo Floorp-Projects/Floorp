@@ -18,7 +18,6 @@ macosx64/debug:
         max-run-time: 5400
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -190,7 +189,6 @@ macosx64-devedition-nightly/opt:
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -323,7 +321,6 @@ macosx64-shippable/opt:
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -363,7 +360,6 @@ macosx64-ccov/debug:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
             RUSTC_BOOTSTRAP: '1'
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         using: mozharness
         actions: [get-secrets, build]
