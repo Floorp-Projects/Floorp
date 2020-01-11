@@ -10,6 +10,17 @@
         android:layout_margin="16dp"
         android:orientation="vertical">
 
+    <ProgressBar
+        android:id="@+id/progress_bar_bookmark"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:indeterminate="true"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:translationY="-3dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <TextView
         android:id="@+id/bookmark_name_label"
         android:layout_width="match_parent"

@@ -498,6 +498,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">Open in private tab</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Delete</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Save</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
     <string name="bookmarks_multi_select_title">%1$d selected</string>
