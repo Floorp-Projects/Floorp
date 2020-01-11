@@ -7,7 +7,7 @@
 var BUGNUMBER = 328664;
 var summary = 'Correct error message for funccall(undefined, undefined.prop)';
 var actual = '';
-var expect = /TypeError: value.parameters (has no properties|is undefined)/;
+var expect = /TypeError: .*value.parameters (has no properties|is undefined)/;
 
 printBugNumber(BUGNUMBER);
 printStatus (summary);

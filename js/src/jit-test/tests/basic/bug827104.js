@@ -10,4 +10,5 @@ var e;
 try {
     f();
 } catch (error) {e = error;}
-assertEq(e.toString(), 'TypeError: a[i] is undefined');
+assertEq(e.constructor.name, "TypeError");
+assertEq(e.message.includes("a[i] is undefined"), true);

@@ -40,7 +40,6 @@ BEGIN_TEST(testErrorInterceptor) {
       "throw new ReferenceError('I am a ReferenceError')\0",
       "throw new SyntaxError('I am a SyntaxError')\0",
       "throw 5\0",
-      "undefined[0]\0",
       "foo[0]\0",
       "b[\0",
   };
@@ -51,7 +50,6 @@ BEGIN_TEST(testErrorInterceptor) {
       "ReferenceError: I am a ReferenceError\0",
       "SyntaxError: I am a SyntaxError\0",
       "5\0",
-      "TypeError: undefined has no properties\0",
       "ReferenceError: foo is not defined\0",
       "SyntaxError: expected expression, got end of script\0",
   };

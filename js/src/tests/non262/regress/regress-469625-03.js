@@ -11,7 +11,6 @@ var summary = 'Do not assert: script->objectsOffset != 0';
 var actual = '';
 var expect = '';
 
-
 //-----------------------------------------------------------------------------
 test();
 //-----------------------------------------------------------------------------
@@ -25,7 +24,7 @@ function test()
     var [a, b, [c0, c1]] = [x, x, x];
   }
 
-  expect = `TypeError: [...][Symbol.iterator](...).next(...).value is null`;
+  expect = /TypeError: .*\[\.\.\.\]\[Symbol.iterator\]\(\.\.\.\)\.next\(\.\.\.\)\.value is null/;
   actual = 'No Error';
   try
   {
@@ -35,5 +34,5 @@ function test()
   {
     actual = ex + '';
   }
-  reportCompare(expect, actual, summary);
+  reportMatch(expect, actual, summary);
 }
