@@ -19,8 +19,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  // 1.8 branch reports no properties, trunk reports undefined
-  expect = /TypeError: this.u is undefined|TypeError: this.u has no properties/;
+  expect = /TypeError: (this.u is undefined|can't access property "v", this.u is undefined)/;
 
   try
   {

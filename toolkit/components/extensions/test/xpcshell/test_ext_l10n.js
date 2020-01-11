@@ -100,8 +100,8 @@ add_task(async function test_l10n_dom() {
   results = await runTest(false);
   equal(results.success, false, "Translation failed in unprivileged extension");
   equal(
-    results.msg,
-    "document.l10n is undefined",
+    results.msg.endsWith("document.l10n is undefined"),
+    true,
     "Translation failed due to missing document.l10n"
   );
 });

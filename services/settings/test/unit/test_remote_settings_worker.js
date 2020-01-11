@@ -67,7 +67,7 @@ add_task(async function test_throws_error_if_worker_fails() {
   } catch (e) {
     error = e;
   }
-  Assert.equal(error.message, "TypeError: localRecords is null");
+  Assert.equal(error.message.endsWith("localRecords is null"), true);
 });
 
 add_task(async function test_stops_worker_after_timeout() {

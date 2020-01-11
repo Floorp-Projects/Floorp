@@ -9,6 +9,6 @@ try {
     err = e;
 }
 assertEq(err instanceof TypeError, true);
-assertEq(err.message, "[][j] is undefined");
+assertEq(err.message.endsWith("[][j] is undefined"), true);
 
 reportCompare(0, 0, 'ok');

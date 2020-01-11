@@ -2040,7 +2040,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
              op == JSOP_INITELEM || op == JSOP_INITHIDDENELEM ||
              op == JSOP_INITELEM_ARRAY || op == JSOP_INITELEM_INC);
 
-  RootedObject obj(cx, ToObjectFromStack(cx, objv));
+  RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, objv, index));
   if (!obj) {
     return false;
   }
@@ -2628,7 +2628,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   RootedPropertyName name(cx, script->getName(pc));
   RootedId id(cx, NameToId(name));
 
-  RootedObject obj(cx, ToObjectFromStack(cx, lhs));
+  RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, lhs, id));
   if (!obj) {
     return false;
   }

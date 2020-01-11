@@ -154,8 +154,13 @@ add_task(async function test_contentscript_create_iframe() {
     Assert.ok(!manifest, "manifest should be undefined");
 
     Assert.equal(
-      String(manifestException),
-      "TypeError: win.browser.runtime is undefined",
+      manifestException.constructor.name,
+      "TypeError",
+      "expected exception received"
+    );
+
+    Assert.ok(
+      manifestException.message.endsWith("win.browser.runtime is undefined"),
       "expected exception received"
     );
 
