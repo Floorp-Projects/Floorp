@@ -31,11 +31,6 @@ class gfxWindowsNativeDrawing {
        using SetWorldTransform */
     CAN_COMPLEX_TRANSFORM = 1 << 2,
     CANNOT_COMPLEX_TRANSFORM = 0 << 2,
-
-    /* If we have to do transforms with cairo, should we use nearest-neighbour
-       filtering? */
-    DO_NEAREST_NEIGHBOR_FILTERING = 1 << 3,
-    DO_BILINEAR_FILTERING = 0 << 3
   };
 
   /* Create native win32 drawing for a rectangle bounded by
@@ -62,7 +57,7 @@ class gfxWindowsNativeDrawing {
                           uint32_t nativeDrawFlags =
                               CANNOT_DRAW_TO_COLOR_ALPHA |
                               CANNOT_AXIS_ALIGNED_SCALE |
-                              CANNOT_COMPLEX_TRANSFORM | DO_BILINEAR_FILTERING);
+                              CANNOT_COMPLEX_TRANSFORM);
 
   /* Returns a HDC which may be used for native drawing.  This HDC is valid
    * until EndNativeDrawing is called; if it is used for drawing after that

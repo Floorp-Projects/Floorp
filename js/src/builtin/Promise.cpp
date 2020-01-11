@@ -32,6 +32,7 @@
 #include "debugger/DebugAPI-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/ErrorObject-inl.h"
+#include "vm/JSContext-inl.h"  // JSContext::check
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
@@ -580,8 +581,6 @@ static bool MaybeGetAndClearException(JSContext* cx, MutableHandleValue rval) {
 
   return GetAndClearException(cx, rval);
 }
-
-enum class UnhandledRejectionBehavior { Ignore, Report };
 
 static MOZ_MUST_USE bool RunRejectFunction(JSContext* cx,
                                            HandleObject onRejectedFunc,
@@ -4189,14 +4188,15 @@ static bool IsPromiseSpecies(JSContext* cx, JSFunction* species) {
   return species->maybeNative() == Promise_static_species;
 }
 
+// Whether to create a promise as the return value of Promise#{then,catch}.
+// If the return value is known to be unused, and if the operation is known
+// to be unobservable, we can skip creating the promise.
+enum class CreateDependentPromise { Always, SkipIfCtorUnobservable };
+
 static bool PromiseThenNewPromiseCapability(
     JSContext* cx, HandleObject promiseObj,
     CreateDependentPromise createDependent,
     MutableHandle<PromiseCapability> resultCapability) {
-  if (createDependent == CreateDependentPromise::Never) {
-    return true;
-  }
-
   // Step 3.
   RootedObject C(cx, SpeciesConstructor(cx, promiseObj, JSProto_Promise,
                                         IsPromiseSpecies));
@@ -4230,37 +4230,48 @@ static bool PromiseThenNewPromiseCapability(
 }
 
 // ES2016, 25.4.5.3., steps 3-5.
-MOZ_MUST_USE bool js::OriginalPromiseThen(
-    JSContext* cx, HandleObject promiseObj, HandleValue onFulfilled,
-    HandleValue onRejected, MutableHandleObject dependent,
-    CreateDependentPromise createDependent) {
+MOZ_MUST_USE PromiseObject* js::OriginalPromiseThen(JSContext* cx,
+                                                    HandleObject promiseObj,
+                                                    HandleObject onFulfilled,
+                                                    HandleObject onRejected) {
+  cx->check(promiseObj);
+  cx->check(onFulfilled);
+  cx->check(onRejected);
+
   RootedValue promiseVal(cx, ObjectValue(*promiseObj));
-  Rooted<PromiseObject*> promise(
+  Rooted<PromiseObject*> unwrappedPromise(
       cx,
       UnwrapAndTypeCheckValue<PromiseObject>(cx, promiseVal, [cx, promiseObj] {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
                                    JSMSG_INCOMPATIBLE_PROTO, "Promise", "then",
                                    promiseObj->getClass()->name);
       }));
-  if (!promise) {
-    return false;
+  if (!unwrappedPromise) {
+    return nullptr;
   }
 
   // Steps 3-4.
-  Rooted<PromiseCapability> resultCapability(cx);
-  if (!PromiseThenNewPromiseCapability(cx, promiseObj, createDependent,
-                                       &resultCapability)) {
-    return false;
+  Rooted<PromiseObject*> newPromise(
+      cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+  if (!newPromise) {
+    return nullptr;
   }
+  newPromise->copyUserInteractionFlagsFrom(*unwrappedPromise);
+
+  Rooted<PromiseCapability> resultCapability(cx);
+  resultCapability.promise().set(newPromise);
 
   // Step 5.
-  if (!PerformPromiseThen(cx, promise, onFulfilled, onRejected,
-                          resultCapability)) {
-    return false;
+  {
+    RootedValue onFulfilledVal(cx, ObjectOrNullValue(onFulfilled));
+    RootedValue onRejectedVal(cx, ObjectOrNullValue(onRejected));
+    if (!PerformPromiseThen(cx, unwrappedPromise, onFulfilledVal, onRejectedVal,
+                            resultCapability)) {
+      return nullptr;
+    }
   }
 
-  dependent.set(resultCapability.promise());
-  return true;
+  return newPromise;
 }
 
 static MOZ_MUST_USE bool OriginalPromiseThenWithoutSettleHandlers(
@@ -4285,9 +4296,13 @@ static MOZ_MUST_USE bool PerformPromiseThenWithReaction(
     JSContext* cx, Handle<PromiseObject*> promise,
     Handle<PromiseReactionRecord*> reaction);
 
-MOZ_MUST_USE bool js::ReactIgnoringUnhandledRejection(
+MOZ_MUST_USE bool js::ReactToUnwrappedPromise(
     JSContext* cx, Handle<PromiseObject*> unwrappedPromise,
-    HandleObject onFulfilled_, HandleObject onRejected_) {
+    HandleObject onFulfilled_, HandleObject onRejected_,
+    UnhandledRejectionBehavior behavior) {
+  cx->check(onFulfilled_);
+  cx->check(onRejected_);
+
   MOZ_ASSERT_IF(onFulfilled_, IsCallable(onFulfilled_));
   MOZ_ASSERT_IF(onRejected_, IsCallable(onRejected_));
 
@@ -4308,7 +4323,9 @@ MOZ_MUST_USE bool js::ReactIgnoringUnhandledRejection(
     return false;
   }
 
-  reaction->setShouldIgnoreUnhandledRejection();
+  if (behavior == UnhandledRejectionBehavior::Ignore) {
+    reaction->setShouldIgnoreUnhandledRejection();
+  }
 
   return PerformPromiseThenWithReaction(cx, unwrappedPromise, reaction);
 }
@@ -4361,6 +4378,8 @@ static bool OriginalPromiseThenBuiltin(JSContext* cx, HandleValue promiseVal,
 
 MOZ_MUST_USE bool js::RejectPromiseWithPendingError(
     JSContext* cx, Handle<PromiseObject*> promise) {
+  cx->check(promise);
+
   if (!cx->isExceptionPending()) {
     // Reject the promise, but also propagate this uncatchable error.
     mozilla::Unused << PromiseObject::reject(cx, promise, UndefinedHandleValue);
@@ -5150,33 +5169,35 @@ static bool Promise_then_impl(JSContext* cx, HandleValue promiseVal,
   }
 
   RootedObject promiseObj(cx, &promiseVal.toObject());
-
-  if (!promiseObj->is<PromiseObject>()) {
-    JSObject* unwrappedPromiseObj = CheckedUnwrapStatic(promiseObj);
-    if (!unwrappedPromiseObj) {
-      ReportAccessDenied(cx);
-      return false;
-    }
-    if (!unwrappedPromiseObj->is<PromiseObject>()) {
-      JS_ReportErrorNumberLatin1(
-          cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, "Promise",
-          "then", InformalValueTypeName(ObjectValue(*promiseObj)));
-      return false;
-    }
+  Rooted<PromiseObject*> unwrappedPromise(
+      cx,
+      UnwrapAndTypeCheckValue<PromiseObject>(cx, promiseVal, [cx, &promiseVal] {
+        JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr,
+                                   JSMSG_INCOMPATIBLE_PROTO, "Promise", "then",
+                                   InformalValueTypeName(promiseVal));
+      }));
+  if (!unwrappedPromise) {
+    return false;
   }
 
-  // Steps 3-5.
+  // Steps 3-4.
   CreateDependentPromise createDependent =
       rvalUsed ? CreateDependentPromise::Always
                : CreateDependentPromise::SkipIfCtorUnobservable;
-  RootedObject resultPromise(cx);
-  if (!OriginalPromiseThen(cx, promiseObj, onFulfilled, onRejected,
-                           &resultPromise, createDependent)) {
+  Rooted<PromiseCapability> resultCapability(cx);
+  if (!PromiseThenNewPromiseCapability(cx, promiseObj, createDependent,
+                                       &resultCapability)) {
+    return false;
+  }
+
+  // Step 5.
+  if (!PerformPromiseThen(cx, unwrappedPromise, onFulfilled, onRejected,
+                          resultCapability)) {
     return false;
   }
 
   if (rvalUsed) {
-    rval.setObject(*resultPromise);
+    rval.setObject(*resultCapability.promise());
   } else {
     rval.setUndefined();
   }

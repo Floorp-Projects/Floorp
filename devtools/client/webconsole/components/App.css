@@ -120,12 +120,16 @@ body {
   padding-block-start: 2px;
   overflow-y: auto;
   overflow-x: hidden;
-  flex-grow: 1;
   /* We display the open editor button at the end of the input */
   display: grid;
   grid-template-columns: 1fr auto;
   /* This allows us to not define a column for the CodeMirror container */
   grid-auto-flow: column;
+}
+
+/* The input should be full-height when eager evaluation is disabled. */
+.webconsole-app:not(.eager-evaluation) .jsterm-input-container {
+  flex-grow: 1;
 }
 
 .webconsole-app:not(.jsterm-editor) .jsterm-input-container {

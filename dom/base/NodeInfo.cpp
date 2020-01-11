@@ -111,21 +111,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(NodeInfo)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(NodeInfo)
 
-static const char* kNodeInfoNSURIs[] = {
-    " ([none])", " (xmlns)",  " (xml)", " (xhtml)", " (XLink)",
-    " (XSLT)",   " (MathML)", " (RDF)", " (XUL)"};
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(NodeInfo)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[72];
     uint32_t nsid = tmp->NamespaceID();
     nsAtomCString localName(tmp->NameAtom());
-    if (nsid < ArrayLength(kNodeInfoNSURIs)) {
-      SprintfLiteral(name, "NodeInfo%s %s", kNodeInfoNSURIs[nsid],
-                     localName.get());
-    } else {
-      SprintfLiteral(name, "NodeInfo %s", localName.get());
-    }
+    const char* nsuri = nsNameSpaceManager::GetNameSpaceDisplayName(nsid);
+    SprintfLiteral(name, "NodeInfo %s %s", nsuri, localName.get());
 
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   } else {

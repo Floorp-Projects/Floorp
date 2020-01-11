@@ -86,6 +86,10 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
     this.restorePrefDefaults = this.restorePrefDefaults.bind(this);
     this.setConfigValue = this.setConfigValue.bind(this);
     this.expireCache = this.expireCache.bind(this);
+    this.refreshCache = this.refreshCache.bind(this);
+    this.idleDaily = this.idleDaily.bind(this);
+    this.systemTick = this.systemTick.bind(this);
+    this.syncRemoteSettings = this.syncRemoteSettings.bind(this);
     this.changeEndpointVariant = this.changeEndpointVariant.bind(this);
     this.onStoryToggle = this.onStoryToggle.bind(this);
     this.state = {
@@ -110,7 +114,7 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
     );
   }
 
-  expireCache() {
+  refreshCache() {
     const { config } = this.props.state;
     this.props.dispatch(
       ac.OnlyToMain({
@@ -118,6 +122,30 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
         data: config,
       })
     );
+  }
+
+  dispatchSimpleAction(type) {
+    this.props.dispatch(
+      ac.OnlyToMain({
+        type,
+      })
+    );
+  }
+
+  systemTick() {
+    this.dispatchSimpleAction(at.DISCOVERY_STREAM_DEV_SYSTEM_TICK);
+  }
+
+  expireCache() {
+    this.dispatchSimpleAction(at.DISCOVERY_STREAM_DEV_EXPIRE_CACHE);
+  }
+
+  idleDaily() {
+    this.dispatchSimpleAction(at.DISCOVERY_STREAM_DEV_IDLE_DAILY);
+  }
+
+  syncRemoteSettings() {
+    this.dispatchSimpleAction(at.DISCOVERY_STREAM_DEV_SYNC_RS);
   }
 
   changeEndpointVariant(event) {
@@ -279,8 +307,22 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
         <button className="button" onClick={this.restorePrefDefaults}>
           Restore Pref Defaults
         </button>{" "}
+        <button className="button" onClick={this.refreshCache}>
+          Refresh Cache
+        </button>
+        <br />
         <button className="button" onClick={this.expireCache}>
           Expire Cache
+        </button>{" "}
+        <button className="button" onClick={this.systemTick}>
+          Trigger System Tick
+        </button>{" "}
+        <button className="button" onClick={this.idleDaily}>
+          Trigger Idle Daily
+        </button>
+        <br />
+        <button className="button" onClick={this.syncRemoteSettings}>
+          Sync Remote Settings
         </button>
         <table>
           <tbody>

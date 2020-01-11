@@ -68,67 +68,67 @@ class TestOption(unittest.TestCase):
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs=0, default=('a',))
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs=1, default=())
         self.assertEquals(
-            e.exception.message,
+            str(e.exception),
             'default must be a bool, a string or a tuple of strings')
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs=1, default=True)
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs=1, default=('a', 'b'))
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs=2, default=())
         self.assertEquals(
-            e.exception.message,
+            str(e.exception),
             'default must be a bool, a string or a tuple of strings')
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs=2, default=True)
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs=2, default=('a',))
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs='?', default=('a', 'b'))
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs='+', default=())
         self.assertEquals(
-            e.exception.message,
+            str(e.exception),
             'default must be a bool, a string or a tuple of strings')
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs='+', default=True)
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
         # --disable options with a nargs value that requires at least one
         # argument need to be given a default.
         with self.assertRaises(InvalidOptionError) as e:
             Option('--disable-option', nargs=1)
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--disable-option', nargs='+')
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
         # Test nargs inference from default value
@@ -188,38 +188,38 @@ class TestOption(unittest.TestCase):
     def test_option_choices(self):
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs=3, choices=('a', 'b'))
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           'Not enough `choices` for `nargs`')
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--without-option', nargs=1, choices=('a', 'b'))
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           'A `default` must be given along with `choices`')
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--without-option', nargs='+', choices=('a', 'b'))
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           'A `default` must be given along with `choices`')
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--without-option', default='c', choices=('a', 'b'))
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The `default` value must be one of 'a', 'b'")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--without-option', default=('a', 'c',), choices=('a', 'b'))
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The `default` value must be one of 'a', 'b'")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--without-option', default=('c',), choices=('a', 'b'))
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The `default` value must be one of 'a', 'b'")
 
         option = Option('--with-option', nargs='+', choices=('a', 'b'))
         with self.assertRaises(InvalidOptionError) as e:
             option.get_value('--with-option=c')
-        self.assertEquals(e.exception.message, "'c' is not one of 'a', 'b'")
+        self.assertEquals(str(e.exception), "'c' is not one of 'a', 'b'")
 
         value = option.get_value('--with-option=b,a')
         self.assertTrue(value)
@@ -229,7 +229,7 @@ class TestOption(unittest.TestCase):
                         choices=('a', 'b'))
         with self.assertRaises(InvalidOptionError) as e:
             option.get_value('--with-option=c')
-        self.assertEquals(e.exception.message, "'c' is not one of 'a', 'b'")
+        self.assertEquals(str(e.exception), "'c' is not one of 'a', 'b'")
 
         value = option.get_value('--with-option=b,a')
         self.assertTrue(value)
@@ -263,18 +263,18 @@ class TestOption(unittest.TestCase):
 
         with self.assertRaises(InvalidOptionError) as e:
             option.get_value('--with-option=-e')
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "'e' is not one of 'a', 'b', 'c', 'd'")
 
         # Other "not a choice" errors.
         with self.assertRaises(InvalidOptionError) as e:
             option.get_value('--with-option=+e')
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "'e' is not one of 'a', 'b', 'c', 'd'")
 
         with self.assertRaises(InvalidOptionError) as e:
             option.get_value('--with-option=e')
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "'e' is not one of 'a', 'b', 'c', 'd'")
 
     def test_option_value_compare(self):
@@ -365,13 +365,13 @@ class TestOption(unittest.TestCase):
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value('--%s' % name)
             if nargs == 1:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s takes 1 value' % name)
             elif nargs == '+':
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s takes 1 or more values' % name)
             else:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s takes 2 values' % name)
 
         value = option.get_value('')
@@ -399,10 +399,10 @@ class TestOption(unittest.TestCase):
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value('--%s=' % name)
             if disabled:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   'Cannot pass a value to --%s' % name)
             else:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s takes %d values' % (name, nargs))
 
         if nargs in (1, '?', '*', '+') and not disabled:
@@ -413,10 +413,10 @@ class TestOption(unittest.TestCase):
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value('--%s=foo' % name)
             if disabled:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   'Cannot pass a value to --%s' % name)
             else:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s takes %d values' % (name, nargs))
 
         if nargs in (2, '*', '+') and not disabled:
@@ -427,13 +427,13 @@ class TestOption(unittest.TestCase):
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value('--%s=foo,bar' % name, 'option')
             if disabled:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   'Cannot pass a value to --%s' % name)
             elif nargs == '?':
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s takes 0 or 1 values' % name)
             else:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s takes %d value%s'
                                   % (name, nargs, 's' if nargs != 1 else ''))
 
@@ -447,13 +447,13 @@ class TestOption(unittest.TestCase):
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value('--%s' % name)
             if disabled:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   'Cannot pass a value to --%s' % name)
             elif nargs == '+':
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s takes 1 or more values' % name)
             else:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s takes %d value%s'
                                   % (name, nargs, 's' if nargs != 1 else ''))
 
@@ -480,7 +480,7 @@ class TestOption(unittest.TestCase):
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value('MOZ_OPTION=1', 'environment')
-            self.assertEquals(e.exception.message, 'MOZ_OPTION takes 2 values')
+            self.assertEquals(str(e.exception), 'MOZ_OPTION takes 2 values')
 
         if nargs in (1, '?', '*', '+') and not disabled:
             value = option.get_value('--%s=' % name, 'option')
@@ -490,10 +490,10 @@ class TestOption(unittest.TestCase):
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value('--%s=' % name, 'option')
             if disabled:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   'Cannot pass a value to --%s' % name)
             else:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s takes %d values' % (name, nargs))
 
         with self.assertRaises(AssertionError):
@@ -506,7 +506,7 @@ class TestOption(unittest.TestCase):
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value('MOZ_OPTION=foo', 'environment')
-            self.assertEquals(e.exception.message,
+            self.assertEquals(str(e.exception),
                               'MOZ_OPTION takes %d values' % nargs)
 
         if nargs in (2, '*', '+'):
@@ -517,10 +517,10 @@ class TestOption(unittest.TestCase):
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value('MOZ_OPTION=foo,bar', 'environment')
             if nargs == '?':
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   'MOZ_OPTION takes 0 or 1 values')
             else:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   'MOZ_OPTION takes %d value%s'
                                   % (nargs, 's' if nargs != 1 else ''))
 
@@ -551,7 +551,7 @@ class TestOption(unittest.TestCase):
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 env_option.get_value('MOZ_OPTION=1', 'environment')
-            self.assertEquals(e.exception.message, 'MOZ_OPTION takes 2 values')
+            self.assertEquals(str(e.exception), 'MOZ_OPTION takes 2 values')
 
         with self.assertRaises(AssertionError) as e:
             env_option.get_value('--%s' % name)
@@ -566,7 +566,7 @@ class TestOption(unittest.TestCase):
         else:
             with self.assertRaises(InvalidOptionError) as e:
                 env_option.get_value('MOZ_OPTION=foo', 'environment')
-            self.assertEquals(e.exception.message,
+            self.assertEquals(str(e.exception),
                               'MOZ_OPTION takes %d values' % nargs)
 
         if nargs in (2, '*', '+'):
@@ -577,10 +577,10 @@ class TestOption(unittest.TestCase):
             with self.assertRaises(InvalidOptionError) as e:
                 env_option.get_value('MOZ_OPTION=foo,bar', 'environment')
             if nargs == '?':
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   'MOZ_OPTION takes 0 or 1 values')
             else:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   'MOZ_OPTION takes %d value%s'
                                   % (nargs, 's' if nargs != 1 else ''))
 
@@ -606,14 +606,14 @@ class TestOption(unittest.TestCase):
             with self.assertRaises(InvalidOptionError) as e:
                 option.get_value('--%s-option' % enable, 'option')
             if nargs == 1:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s-option takes 1 value' % enable)
             elif nargs == '+':
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s-option takes 1 or more values'
                                   % enable)
             else:
-                self.assertEquals(e.exception.message,
+                self.assertEquals(str(e.exception),
                                   '--%s-option takes 2 values' % enable)
 
     def test_option_value_with(self):
@@ -622,12 +622,12 @@ class TestOption(unittest.TestCase):
     def test_option_value_invalid_nargs(self):
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs='foo')
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "nargs must be a positive integer, '?', '*' or '+'")
 
         with self.assertRaises(InvalidOptionError) as e:
             Option('--option', nargs=-2)
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "nargs must be a positive integer, '?', '*' or '+'")
 
     def test_option_value_nargs_1(self):
@@ -638,7 +638,7 @@ class TestOption(unittest.TestCase):
         # A default is required
         with self.assertRaises(InvalidOptionError) as e:
             Option('--disable-option', nargs=1)
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
     def test_option_value_nargs_2(self):
@@ -649,7 +649,7 @@ class TestOption(unittest.TestCase):
         # A default is required
         with self.assertRaises(InvalidOptionError) as e:
             Option('--disable-option', nargs=2)
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
     def test_option_value_nargs_0_or_1(self):
@@ -676,7 +676,7 @@ class TestOption(unittest.TestCase):
         # A default is required
         with self.assertRaises(InvalidOptionError) as e:
             Option('--disable-option', nargs='+')
-        self.assertEquals(e.exception.message,
+        self.assertEquals(str(e.exception),
                           "The given `default` doesn't satisfy `nargs`")
 
 

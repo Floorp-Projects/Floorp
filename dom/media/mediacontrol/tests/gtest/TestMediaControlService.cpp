@@ -34,7 +34,7 @@ TEST(MediaControlService, TestAddOrRemoveControllers)
   ASSERT_TRUE(service->GetControllersNum() == 0);
 }
 
-TEST(MediaControlService, TestLastAddedController)
+TEST(MediaControlService, TestMainController)
 {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   ASSERT_TRUE(service->GetControllersNum() == 0);
@@ -43,22 +43,22 @@ TEST(MediaControlService, TestLastAddedController)
       new MediaController(FIRST_CONTROLLER_ID);
   service->AddMediaController(controller1);
 
-  RefPtr<MediaController> lastController = service->GetLastAddedController();
-  ASSERT_TRUE(lastController->Id() == FIRST_CONTROLLER_ID);
+  RefPtr<MediaController> mainController = service->GetMainController();
+  ASSERT_TRUE(mainController->Id() == FIRST_CONTROLLER_ID);
 
   RefPtr<MediaController> controller2 =
       new MediaController(SECOND_CONTROLLER_ID);
   service->AddMediaController(controller2);
 
-  lastController = service->GetLastAddedController();
-  ASSERT_TRUE(lastController->Id() == SECOND_CONTROLLER_ID);
+  mainController = service->GetMainController();
+  ASSERT_TRUE(mainController->Id() == SECOND_CONTROLLER_ID);
 
   service->RemoveMediaController(controller2);
-  lastController = service->GetLastAddedController();
-  ASSERT_TRUE(lastController->Id() == FIRST_CONTROLLER_ID);
+  mainController = service->GetMainController();
+  ASSERT_TRUE(mainController->Id() == FIRST_CONTROLLER_ID);
 
   service->RemoveMediaController(controller1);
-  lastController = service->GetLastAddedController();
+  mainController = service->GetMainController();
   ASSERT_TRUE(service->GetControllersNum() == 0);
-  ASSERT_TRUE(!lastController);
+  ASSERT_TRUE(!mainController);
 }

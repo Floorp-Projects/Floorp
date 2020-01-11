@@ -139,7 +139,6 @@ a {
   border-bottom-width: 0;
 }
 
-
 /*
  * By default, prevent any element in message to overflow.
  * We exclude network messages as it may cause issues in the network detail panel.
@@ -241,7 +240,8 @@ a {
   margin-inline-end: calc(11px - var(--console-icon-horizontal-offset));
 }
 
-.message > .icon {
+.message > .icon,
+.eager-evaluation-result > .icon {
   flex: none;
   align-self: flex-start;
   /* Width and height must be a multiples of 2px to avoid blurry images.
@@ -257,6 +257,10 @@ a {
   fill: currentColor;
 }
 
+.eager-evaluation-result > .icon {
+  margin: 3px 8px 0 10px;
+}
+
 /* Icon on unindented row should be centered within the left gutter */
 .message > .indent[data-indent="0"] + .icon {
   width: 24px;
@@ -269,7 +273,8 @@ a {
   background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
 }
 
-.message.result > .icon {
+.message.result > .icon,
+.eager-evaluation-result > .icon {
   color: var(--theme-icon-dimmed-color);
   background-image: url(chrome://devtools/skin/images/webconsole/return.svg);
 }
@@ -499,8 +504,22 @@ html #webconsole-notificationbox {
   fill: var(--theme-icon-checked-color);
 }
 
-.eager-evaluation-result * {
-  color: var(--theme-comment) !important;
+.eager-evaluation-result {
+  display: flex;
+  background-color: var(--console-input-background);
+  line-height: 20px;
+  overflow-y: hidden;
+  flex-grow: 1;
+  flex-shrink: 0;
+  padding-bottom: 5px;
+  min-height: 25px;
+}
+
+.eager-evaluation-result .objectBox {
+  height: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .webconsole-app .cm-auto-complete-shadow-text::after {

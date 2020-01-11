@@ -1697,12 +1697,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
       orphan.AppendLiteral(" (orphan)");
     }
 
-    static const char* kNSURIs[] = {" ([none])", " (xmlns)",  " (xml)",
-                                    " (xhtml)",  " (XLink)",  " (XSLT)",
-                                    " (MathML)", " (RDF)", " (XUL)",
-                                    " (SVG)",    " (XML Events)"};
-    const char* nsuri = nsid < ArrayLength(kNSURIs) ? kNSURIs[nsid] : "";
-    SprintfLiteral(name, "FragmentOrElement%s %s%s%s%s %s", nsuri,
+    const char* nsuri = nsNameSpaceManager::GetNameSpaceDisplayName(nsid);
+    SprintfLiteral(name, "FragmentOrElement %s %s%s%s%s %s", nsuri,
                    localName.get(), NS_ConvertUTF16toUTF8(id).get(),
                    NS_ConvertUTF16toUTF8(classes).get(), orphan.get(),
                    uri.get());

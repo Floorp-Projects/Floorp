@@ -229,8 +229,8 @@ function ReplayDebugger() {
   // a time warp target has been reached.
   this.replayingOnForcedPause = null;
 
-  // Handler called when the child pauses for any reason.
-  this.replayingOnPositionChange = null;
+  // Handler called when the status changes and the UI needs to be updated.
+  this.replayingOnStatusUpdate = null;
 }
 
 // Frame index used to refer to the newest frame in the child process.
@@ -265,18 +265,6 @@ ReplayDebugger.prototype = {
     return this._control.recordingEndpoint();
   },
 
-  replayIsRecording() {
-    return this._control.childIsRecording();
-  },
-
-  replayUnscannedRegions() {
-    return this._control.unscannedRegions();
-  },
-
-  replayCachedPoints() {
-    return this._control.cachedPoints();
-  },
-
   replayDebuggerRequests() {
     return this._control.debuggerRequests();
   },
@@ -290,7 +278,7 @@ ReplayDebugger.prototype = {
 
   _processResponse(request, response, divergeResponse) {
     dumpv(`SendRequest: ${stringify(request)} -> ${stringify(response)}`);
-    if (response.unhandledDivergence) {
+    if (!response) {
       if (divergeResponse) {
         return divergeResponse;
       }
@@ -416,11 +404,6 @@ ReplayDebugger.prototype = {
   // within a control method (resume, timeWarp, waitUntilPaused) or be
   // delivered via the event loop.
   _onPause() {
-    // The position change handler is always called on pause notifications.
-    if (this.replayingOnPositionChange) {
-      this.replayingOnPositionChange();
-    }
-
     // Call _performPause() soon via the event loop to check for breakpoint
     // handlers at this point.
     this._cancelPerformPause = false;
@@ -477,15 +460,6 @@ ReplayDebugger.prototype = {
     }
   },
 
-  // This hook is called whenever control state changes which affects something
-  // the position change handler listens to (more than just position changes,
-  // alas).
-  _callOnPositionChange() {
-    if (this.replayingOnPositionChange) {
-      this.replayingOnPositionChange();
-    }
-  },
-
   replayPushThreadPause() {
     // The thread has paused so that the user can interact with it. The child
     // will stay paused until this thread-wide pause has been popped.
@@ -539,7 +513,7 @@ ReplayDebugger.prototype = {
   },
 
   replayPaintCurrentPoint() {
-    if (this.replayIsRecording()) {
+    if (this._control.childIsRecording()) {
       return RecordReplayControl.restoreMainGraphics();
     }
 
@@ -561,7 +535,7 @@ ReplayDebugger.prototype = {
     }
 
     const pauseData = this._control.getPauseDataAndRepaint();
-    if (!pauseData.frames) {
+    if (!pauseData || !pauseData.frames) {
       return;
     }
 

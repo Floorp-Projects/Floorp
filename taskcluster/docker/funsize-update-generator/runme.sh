@@ -53,10 +53,6 @@ else
   export MBSDIFF_HOOK=
 fi
 
-if [ -n "$FILENAME_TEMPLATE" ]; then
-    EXTRA_PARAMS="--filename-template $FILENAME_TEMPLATE $EXTRA_PARAMS"
-fi
-
 # EXTRA_PARAMS is optional
 # shellcheck disable=SC2086
 pipenv run /home/worker/bin/funsize.py \

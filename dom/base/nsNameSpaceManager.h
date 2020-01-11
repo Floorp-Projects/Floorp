@@ -56,6 +56,8 @@ class nsNameSpaceManager final {
   int32_t GetNameSpaceID(const nsAString& aURI, bool aInChromeDoc);
   int32_t GetNameSpaceID(nsAtom* aURI, bool aInChromeDoc);
 
+  static const char* GetNameSpaceDisplayName(uint32_t aNameSpaceID);
+
   bool HasElementCreator(int32_t aNameSpaceID);
 
   static nsNameSpaceManager* GetInstance();

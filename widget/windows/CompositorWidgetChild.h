@@ -23,9 +23,13 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
                         const CompositorWidgetInitData& aInitData);
   ~CompositorWidgetChild() override;
 
+  bool Initialize();
+
   void EnterPresentLock() override;
   void LeavePresentLock() override;
   void OnDestroyWindow() override;
+  bool OnWindowResize(const LayoutDeviceIntSize& aSize) override;
+  void OnWindowModeChange(nsSizeMode aSizeMode) override;
   void UpdateTransparency(nsTransparencyMode aMode) override;
   void ClearTransparentWindow() override;
 
@@ -39,7 +43,9 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
   RefPtr<CompositorVsyncDispatcher> mVsyncDispatcher;
   RefPtr<CompositorWidgetVsyncObserver> mVsyncObserver;
   HWND mCompositorWnd;
-  HWND mParentWnd;
+
+  HWND mWnd;
+  nsTransparencyMode mTransparencyMode;
 };
 
 }  // namespace widget

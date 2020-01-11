@@ -28,6 +28,8 @@ class PlatformCompositorWidgetDelegate : public CompositorWidgetDelegate {
   virtual void EnterPresentLock() = 0;
   virtual void LeavePresentLock() = 0;
   virtual void OnDestroyWindow() = 0;
+  virtual bool OnWindowResize(const LayoutDeviceIntSize& aSize) = 0;
+  virtual void OnWindowModeChange(nsSizeMode aSizeMode) = 0;
 
   // Transparency handling.
   virtual void UpdateTransparency(nsTransparencyMode aMode) = 0;

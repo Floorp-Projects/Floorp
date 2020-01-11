@@ -24,25 +24,30 @@ const COARSE_POINTER        = 0x01;
 const FINE_POINTER          = 0x02;
 const HOVER_CAPABLE_POINTER = 0x04;
 
+var isAndroid = navigator.appVersion.includes("Android");
+
 add_task(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [ ['privacy.resistFingerprinting', true] ]
   });
 
   // When resistFingerprinting is enabled, we pretend that the system has a
-  // mouse pointer.
+  // mouse pointer (or finger on mobile).
+  let invertIfAndroid = function(b) { return isAndroid ? !b : b; };
+
   ok(!matchMedia("(any-pointer: none)").matches,
                  "Doesn't match (any-pointer: none)");
-  ok(!matchMedia("(any-pointer: coarse)").matches,
-                 "Doesn't match (any-pointer: coarse)");
-  ok(matchMedia("(any-pointer: fine)").matches, "Matches (any-pointer: fine)");
   ok(matchMedia("(any-pointer)").matches, "Matches (any-pointer)");
+  
+  ok(invertIfAndroid(!matchMedia("(any-pointer: coarse)").matches),
+                 "Doesn't match (any-pointer: coarse)");
+  ok(invertIfAndroid(matchMedia("(any-pointer: fine)").matches), "Matches (any-pointer: fine)");
 
-  ok(!matchMedia("(any-hover: none)").matches,
+  ok(invertIfAndroid(!matchMedia("(any-hover: none)").matches),
                  "Doesn't match (any-hover: none)");
-  ok(matchMedia("(any-hover: hover)").matches,
+  ok(invertIfAndroid(matchMedia("(any-hover: hover)").matches),
                 "Matches (any-hover: hover)");
-  ok(matchMedia("(any-hover)").matches, "Matches (any-hover)");
+  ok(invertIfAndroid(matchMedia("(any-hover)").matches), "Matches (any-hover)");
 
   await SpecialPowers.flushPrefEnv();
 });

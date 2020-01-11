@@ -221,46 +221,32 @@ class PromiseObject : public NativeObject {
 MOZ_MUST_USE JSObject* GetWaitForAllPromise(JSContext* cx,
                                             JS::HandleObjectVector promises);
 
-// Whether to create a promise as the return value of Promise#{then,catch}.
-// If the return value is known to be unused, and if the operation is known
-// to be unobservable, we can skip creating the promise.
-enum class CreateDependentPromise {
-  // The return value is not known to be unused.
-  Always,
-
-  // The return value is known to be unused.
-  SkipIfCtorUnobservable,
-
-  // The return value is known to be unused, and the operation is known
-  // to be unobservable.
-  Never
-};
-
 /**
  * Enqueues resolve/reject reactions in the given Promise's reactions lists
- * as though calling the original value of Promise.prototype.then.
- *
- * If the `createDependent` flag is not set, no dependent Promise will be
- * created. This is used internally to implement DOM functionality.
- * Note: In this case, the reactions pushed using this function contain a
- * `promise` field that can contain null. That field is only ever used by
- * devtools, which have to treat these reactions specially.
- *
- * Asserts that `promiseObj` is a, maybe wrapped, instance of Promise.
+ * as though by calling the original value of Promise.prototype.then, and
+ * without regard to any Promise subclassing used in `promiseObj` itself.
  */
-MOZ_MUST_USE bool OriginalPromiseThen(JSContext* cx, HandleObject promiseObj,
-                                      HandleValue onFulfilled,
-                                      HandleValue onRejected,
-                                      MutableHandleObject dependent,
-                                      CreateDependentPromise createDependent);
+MOZ_MUST_USE PromiseObject* OriginalPromiseThen(JSContext* cx,
+                                                HandleObject promiseObj,
+                                                HandleObject onFulfilled,
+                                                HandleObject onRejected);
+
+enum class UnhandledRejectionBehavior { Ignore, Report };
 
 /**
- * React to[0] `unwrappedPromise` (which may not be from the current realm)
- * using the provided fulfill/reject functions, as though by calling the
- * original value of `Promise.prototype.then`.
+ * React to[0] `unwrappedPromise` (which may not be from the current realm) as
+ * if by using a fresh promise created for the provided nullable fulfill/reject
+ * IsCallable objects.
  *
- * However, no dependent Promise will be created, and mucking with `Promise` and
- * `Promise[Symbol.species]` will not alter this function's behavior.
+ * However, no dependent Promise will be created, and mucking with `Promise`,
+ * `Promise.prototype.then`, and `Promise[Symbol.species]` will not alter this
+ * function's behavior.
+ *
+ * If `unwrappedPromise` rejects and `onRejected_` is null, handling is
+ * determined by `behavior`.  If `behavior == Report`, a fresh Promise will be
+ * constructed and rejected on the fly (and thus will be reported as unhandled).
+ * But if `behavior == Ignore`, the rejection is ignored and is not reported as
+ * unhandled.
  *
  * Note: Reactions pushed using this function contain a null `promise` field.
  * That field is only ever used by devtools, which have to treat these reactions
@@ -269,9 +255,10 @@ MOZ_MUST_USE bool OriginalPromiseThen(JSContext* cx, HandleObject promiseObj,
  * 0. The sense of "react" here is the sense of the term as defined by Web IDL:
  *    https://heycam.github.io/webidl/#dfn-perform-steps-once-promise-is-settled
  */
-extern MOZ_MUST_USE bool ReactIgnoringUnhandledRejection(
+extern MOZ_MUST_USE bool ReactToUnwrappedPromise(
     JSContext* cx, Handle<PromiseObject*> unwrappedPromise,
-    HandleObject onFulfilled_, HandleObject onRejected_);
+    HandleObject onFulfilled_, HandleObject onRejected_,
+    UnhandledRejectionBehavior behavior);
 
 /**
  * PromiseResolve ( C, x )
@@ -282,6 +269,12 @@ extern MOZ_MUST_USE bool ReactIgnoringUnhandledRejection(
 MOZ_MUST_USE JSObject* PromiseResolve(JSContext* cx, HandleObject constructor,
                                       HandleValue value);
 
+/**
+ * Reject |promise| with the value of the current pending exception.
+ *
+ * |promise| must be from the current realm.  Callers must enter the realm of
+ * |promise| if they are not already in it.
+ */
 MOZ_MUST_USE bool RejectPromiseWithPendingError(JSContext* cx,
                                                 Handle<PromiseObject*> promise);
 

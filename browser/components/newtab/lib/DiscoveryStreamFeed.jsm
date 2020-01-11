@@ -11,6 +11,11 @@ ChromeUtils.defineModuleGetter(
   "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
 const { setTimeout, clearTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
@@ -1302,6 +1307,43 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
+  async onPrefChangedAction(action) {
+    switch (action.data.name) {
+      case PREF_CONFIG:
+      case PREF_ENABLED:
+      case PREF_HARDCODED_BASIC_LAYOUT:
+      case PREF_SPOCS_ENDPOINT:
+      case PREF_LANG_LAYOUT_CONFIG:
+        // Clear the cached config and broadcast the newly computed value
+        this._prefCache.config = null;
+        this.store.dispatch(
+          ac.BroadcastToContent({
+            type: at.DISCOVERY_STREAM_CONFIG_CHANGE,
+            data: this.config,
+          })
+        );
+        break;
+      case PREF_TOPSTORIES:
+        if (!action.data.value) {
+          // Ensure we delete any remote data potentially related to spocs.
+          this.clearSpocs();
+        } else {
+          this.enableStories();
+        }
+        break;
+      // Check if spocs was disabled. Remove them if they were.
+      case PREF_SHOW_SPONSORED:
+        if (!action.data.value) {
+          // Ensure we delete any remote data potentially related to spocs.
+          this.clearSpocs();
+        }
+        await this.loadSpocs(update =>
+          this.store.dispatch(ac.BroadcastToContent(update))
+        );
+        break;
+    }
+  }
+
   async onAction(action) {
     switch (action.type) {
       case at.INIT:
@@ -1313,6 +1355,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           await this.enable();
         }
         break;
+      case at.DISCOVERY_STREAM_DEV_SYSTEM_TICK:
       case at.SYSTEM_TICK:
         // Only refresh if we loaded once in .enable()
         if (
@@ -1322,6 +1365,15 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         ) {
           await this.refreshAll({ updateOpenTabs: false });
         }
+        break;
+      case at.DISCOVERY_STREAM_DEV_IDLE_DAILY:
+        Services.obs.notifyObservers(null, "idle-daily");
+        break;
+      case at.DISCOVERY_STREAM_DEV_SYNC_RS:
+        RemoteSettings.pollChanges();
+        break;
+      case at.DISCOVERY_STREAM_DEV_EXPIRE_CACHE:
+        await this.resetCache();
         break;
       case at.DISCOVERY_STREAM_CONFIG_SET_VALUE:
         // Use the original string pref to then set a value instead of
@@ -1451,40 +1503,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         break;
       }
       case at.PREF_CHANGED:
-        switch (action.data.name) {
-          case PREF_CONFIG:
-          case PREF_ENABLED:
-          case PREF_HARDCODED_BASIC_LAYOUT:
-          case PREF_SPOCS_ENDPOINT:
-          case PREF_LANG_LAYOUT_CONFIG:
-            // Clear the cached config and broadcast the newly computed value
-            this._prefCache.config = null;
-            this.store.dispatch(
-              ac.BroadcastToContent({
-                type: at.DISCOVERY_STREAM_CONFIG_CHANGE,
-                data: this.config,
-              })
-            );
-            break;
-          case PREF_TOPSTORIES:
-            if (!action.data.value) {
-              // Ensure we delete any remote data potentially related to spocs.
-              this.clearSpocs();
-            } else {
-              this.enableStories();
-            }
-            break;
-          // Check if spocs was disabled. Remove them if they were.
-          case PREF_SHOW_SPONSORED:
-            if (!action.data.value) {
-              // Ensure we delete any remote data potentially related to spocs.
-              this.clearSpocs();
-            }
-            await this.loadSpocs(update =>
-              this.store.dispatch(ac.BroadcastToContent(update))
-            );
-            break;
-        }
+        await this.onPrefChangedAction(action);
         break;
     }
   }

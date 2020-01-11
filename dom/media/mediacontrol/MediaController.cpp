@@ -35,21 +35,21 @@ MediaController::~MediaController() {
 
 void MediaController::Play() {
   LOG("Play");
-  mIsPlaying = true;
+  SetPlayState(PlaybackState::ePlaying);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::ePlay);
 }
 
 void MediaController::Pause() {
   LOG("Pause");
-  mIsPlaying = false;
+  SetPlayState(PlaybackState::ePaused);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::ePause);
 }
 
 void MediaController::Stop() {
   LOG("Stop");
-  mIsPlaying = false;
+  SetPlayState(PlaybackState::eStopped);
   UpdateMediaControlKeysEventToContentMediaIfNeeded(
       MediaControlKeysEvent::eStop);
 }
@@ -68,7 +68,7 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
 }
 
 void MediaController::Shutdown() {
-  mIsPlaying = false;
+  SetPlayState(PlaybackState::eStopped);
   mControlledMediaNum = 0;
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(service);
@@ -123,7 +123,7 @@ void MediaController::IncreasePlayingControlledMediaNum() {
              "The number of playing media should not exceed the number of "
              "controlled media!");
   if (mPlayingControlledMediaNum == 1) {
-    mIsPlaying = true;
+    SetPlayState(PlaybackState::ePlaying);
   }
 }
 
@@ -133,7 +133,7 @@ void MediaController::DecreasePlayingControlledMediaNum() {
       mPlayingControlledMediaNum);
   MOZ_ASSERT(mPlayingControlledMediaNum >= 0);
   if (mPlayingControlledMediaNum == 0) {
-    mIsPlaying = false;
+    SetPlayState(PlaybackState::ePaused);
   }
 }
 
@@ -151,11 +151,22 @@ void MediaController::Deactivate() {
   service->GetAudioFocusManager().RevokeAudioFocus(Id());
 }
 
+void MediaController::SetPlayState(PlaybackState aState) {
+  if (mState == aState) {
+    return;
+  }
+  LOG("SetPlayState : '%s'", ToPlaybackStateEventStr(aState));
+  mState = aState;
+  mPlaybackStateChangedEvent.Notify(mState);
+}
+
+PlaybackState MediaController::GetState() const { return mState; }
+
 uint64_t MediaController::Id() const { return mBrowsingContextId; }
 
-bool MediaController::IsPlaying() const { return mIsPlaying; }
-
-bool MediaController::IsAudible() const { return IsPlaying() && mAudible; }
+bool MediaController::IsAudible() const {
+  return mState == PlaybackState::ePlaying && mAudible;
+}
 
 uint64_t MediaController::ControlledMediaNum() const {
   return mControlledMediaNum;
