@@ -408,14 +408,20 @@ extern JS_PUBLIC_API bool RejectPromise(JSContext* cx,
                                         JS::HandleValue rejectionValue);
 
 /**
- * Calls the current compartment's original Promise.prototype.then on the
- * given `promise`, with `onResolve` and `onReject` passed as arguments.
+ * Create a Promise with the given fulfill/reject handlers, that will be
+ * fulfilled/rejected with the value/reason that the promise `promise` is
+ * fulfilled/rejected with.
  *
- * Throws a TypeError if `promise` isn't a Promise (or possibly a different
- * error if it's a security wrapper or dead object proxy).
+ * This function basically acts like `promise.then(onFulfilled, onRejected)`,
+ * except that its behavior is unaffected by changes to `Promise`,
+ * `Promise[Symbol.species]`, `Promise.prototype.then`, `promise.constructor`,
+ * `promise.then`, and so on.
  *
- * Asserts that `onFulfilled` and `onRejected` are each either callable or
- * null.
+ * This function throws if `promise` is not a Promise from this or another
+ * realm.
+ *
+ * This function will assert if `onFulfilled` or `onRejected` is non-null and
+ * also not IsCallable.
  */
 extern JS_PUBLIC_API JSObject* CallOriginalPromiseThen(
     JSContext* cx, JS::HandleObject promise, JS::HandleObject onFulfilled,

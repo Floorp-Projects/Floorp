@@ -3328,6 +3328,16 @@
     },
 
     removeTabs(tabs) {
+      // When 'closeWindowWithLastTab' pref is enabled, closing all tabs
+      // can be considered equivalent to closing the window.
+      if (
+        this.tabs.length == tabs.length &&
+        Services.prefs.getBoolPref("browser.tabs.closeWindowWithLastTab")
+      ) {
+        window.closeWindow(true, window.warnAboutClosingWindow);
+        return;
+      }
+
       this._clearMultiSelectionLocked = true;
 
       // Guarantee that _clearMultiSelectionLocked lock gets released.

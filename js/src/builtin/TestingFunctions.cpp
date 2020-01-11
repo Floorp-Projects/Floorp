@@ -3024,7 +3024,7 @@ static bool testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp) {
 static bool testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (!jit::IsIonEnabled()) {
+  if (!jit::IsIonEnabled(cx)) {
     return ReturnStringCopy(cx, args, "Ion is disabled.");
   }
 

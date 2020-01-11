@@ -111,6 +111,7 @@ class App extends Component {
       hidePersistLogsCheckbox: PropTypes.bool,
       hideShowContentMessagesCheckbox: PropTypes.bool,
       sidebarVisible: PropTypes.bool.isRequired,
+      eagerEvaluationEnabled: PropTypes.bool.isRequired,
       filterBarDisplayMode: PropTypes.oneOf([
         ...Object.values(FILTERBAR_DISPLAY_MODES),
       ]).isRequired,
@@ -336,6 +337,10 @@ class App extends Component {
   }
 
   renderEagerEvaluation() {
+    if (!this.props.eagerEvaluationEnabled || this.props.editorMode) {
+      return null;
+    }
+
     return EagerEvaluation();
   }
 
@@ -395,6 +400,10 @@ class App extends Component {
     }
     if (serviceContainer.canRewind()) {
       classNames.push("can-rewind");
+    }
+
+    if (this.props.eagerEvaluationEnabled) {
+      classNames.push("eager-evaluation");
     }
 
     return div(
@@ -458,6 +467,7 @@ const mapStateToProps = state => ({
   editorWidth: state.ui.editorWidth,
   sidebarVisible: state.ui.sidebarVisible,
   filterBarDisplayMode: state.ui.filterBarDisplayMode,
+  eagerEvaluationEnabled: state.prefs.eagerEvaluation,
 });
 
 const mapDispatchToProps = dispatch => ({

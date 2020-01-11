@@ -347,29 +347,33 @@ awsy-stylo-sequential:
 # Limited test sets for specific platforms
 
 linux-common-tests:
-    - firefox-ui-functional-local
-    - firefox-ui-functional-remote
-    - jittest
     - marionette
     - mochitest
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-devtools-chrome
     - mochitest-remote
-    - reftest-no-accel
 
 # List of tests that are green on ubuntu1804 docker image.
 # See Bug 1602863 for information.
 linux1804-tests:
     - cppunit
     - crashtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
     - gtest
     - jsreftest
+    - jittest
     - mochitest-a11y
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgpu
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
     - reftest
+    - reftest-no-accel
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
@@ -380,6 +384,7 @@ linux1804-qr-tests:
     - cppunit
     - crashtest
     - gtest
+    - jittest
     - jsreftest
     - mochitest-a11y
     - mochitest-gpu
@@ -393,7 +398,6 @@ linux1804-qr-tests:
     - xpcshell
 
 linux-qr-tests:
-    - jittest
     - mochitest
     - mochitest-chrome
 
@@ -413,8 +417,6 @@ windows-qr-tests:
     - mochitest-webgl1-core
     - mochitest-webgl2-core
     - mochitest-webgpu
-    - mochitest-webgl1-core
-    - mochitest-webgl2-core
     - reftest
 
 ccov-code-coverage-tests:

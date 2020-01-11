@@ -36,6 +36,17 @@ chai.use(chaiAssertions);
 chai.use(chaiJsonSchema);
 
 const overrider = new GlobalOverrider();
+const RemoteSettings = name => ({
+  get: () => {
+    if (name === "attachment") {
+      return Promise.resolve([{ attachment: {} }]);
+    }
+    return Promise.resolve([]);
+  },
+  on: () => {},
+  off: () => {},
+});
+RemoteSettings.pollChanges = () => {};
 const TEST_GLOBAL = {
   AddonManager: {
     getActiveAddons() {
@@ -230,6 +241,7 @@ const TEST_GLOBAL = {
     obs: {
       addObserver() {},
       removeObserver() {},
+      notifyObservers() {},
     },
     telemetry: {
       setEventRecordingEnabled: () => {},
@@ -354,17 +366,7 @@ const TEST_GLOBAL = {
       return Promise.resolve(false);
     },
   },
-  RemoteSettings(name) {
-    return {
-      get() {
-        if (name === "attachment") {
-          return Promise.resolve([{ attachment: {} }]);
-        }
-        return Promise.resolve([]);
-      },
-      on() {},
-    };
-  },
+  RemoteSettings,
   Localization: class {
     async formatMessages(stringsIds) {
       return Promise.resolve(

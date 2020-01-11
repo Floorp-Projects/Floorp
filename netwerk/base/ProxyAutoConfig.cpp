@@ -16,6 +16,7 @@
 #include "nsJSUtils.h"
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"  // JS::Compile{,DontInflate}
+#include "js/ContextOptions.h"
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "js/Utility.h"
@@ -578,6 +579,8 @@ class JSContextWrapper {
   static JSContextWrapper* Create(uint32_t aExtraHeapSize) {
     JSContext* cx = JS_NewContext(JS::DefaultHeapMaxBytes + aExtraHeapSize);
     if (NS_WARN_IF(!cx)) return nullptr;
+
+    JS::ContextOptionsRef(cx).setDisableIon();
 
     JSContextWrapper* entry = new JSContextWrapper(cx);
     if (NS_FAILED(entry->Init())) {

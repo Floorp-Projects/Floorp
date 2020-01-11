@@ -1782,113 +1782,105 @@ def requires_wasm_sandboxing(libraries):
 set_config('MOZ_USING_WASM_SANDBOXING', requires_wasm_sandboxing)
 set_define('MOZ_USING_WASM_SANDBOXING', requires_wasm_sandboxing)
 
-lucetc = check_prog('LUCETC', ['lucetc'],
-                    paths=toolchain_search_path, when=requires_wasm_sandboxing)
+with only_when(requires_wasm_sandboxing & compile_environment):
+    lucetc = check_prog('LUCETC', ['lucetc'],
+                        paths=toolchain_search_path)
 
-option('--with-wasi-sysroot',
-       env='WASI_SYSROOT',
-       nargs=1,
-       help='Path to wasi sysroot for wasm sandboxing',
-       when=requires_wasm_sandboxing)
+    option('--with-wasi-sysroot',
+           env='WASI_SYSROOT',
+           nargs=1,
+           help='Path to wasi sysroot for wasm sandboxing')
 
-@depends('--with-wasi-sysroot', mozbuild_state_path,
-         when=requires_wasm_sandboxing)
-@imports('os')
-def wasi_sysroot(wasi_sysroot, mozbuild_state_path):
-    if not wasi_sysroot:
-        sysroot = os.path.join(mozbuild_state_path, 'wasi-sysroot', 'share',
-                               'wasi-sysroot')
-        if os.path.isdir(sysroot):
-            return sysroot
-        die('Cannot find a wasi sysroot. Install the sysroot at %s or set '
-            '--with-wasi-sysroot.' % sysroot)
+    @depends('--with-wasi-sysroot', mozbuild_state_path)
+    @imports('os')
+    def wasi_sysroot(wasi_sysroot, mozbuild_state_path):
+        if not wasi_sysroot:
+            sysroot = os.path.join(mozbuild_state_path, 'wasi-sysroot', 'share',
+                                   'wasi-sysroot')
+            if os.path.isdir(sysroot):
+                return sysroot
+            die('Cannot find a wasi sysroot. Install the sysroot at %s or set '
+                '--with-wasi-sysroot.' % sysroot)
 
-    wasi_sysroot = wasi_sysroot[0]
-    if not os.path.isdir(wasi_sysroot):
-        die('Argument to --with-wasi-sysroot must be a directory')
-    if not os.path.isabs(wasi_sysroot):
-        die('Argument to --with-wasi-sysroot must be an absolute path')
+        wasi_sysroot = wasi_sysroot[0]
+        if not os.path.isdir(wasi_sysroot):
+            die('Argument to --with-wasi-sysroot must be a directory')
+        if not os.path.isabs(wasi_sysroot):
+            die('Argument to --with-wasi-sysroot must be an absolute path')
 
-    return wasi_sysroot
+        return wasi_sysroot
 
-set_config('WASI_SYSROOT', wasi_sysroot)
-
-
-def wasm_compiler_with_flags(wasm_compiler, provided_wasm_compiler, sysroot,
-                             compiler_wrapper):
-    if not sysroot:
-        return
-    if provided_wasm_compiler:
-        return ' '.join(
-            list(compiler_wrapper or []) +
-            provided_wasm_compiler.wrapper + [provided_wasm_compiler.program]
-            + provided_wasm_compiler.flags + ['--sysroot=%s' % sysroot])
-    elif wasm_compiler:
-        return ' '.join(
-            list(compiler_wrapper or []) +
-            [wasm_compiler] +
-            ['--target=wasm32-wasi', '--sysroot=%s' % sysroot])
-
-option(env='WASM_CC', nargs=1, help='Path to the C->WASM compiler',
-       when=requires_wasm_sandboxing)
-provided_wasm_cc = provided_program('WASM_CC', when=requires_wasm_sandboxing)
-wasm_cc = check_prog('_WASM_CC', ['clang'], input=provided_wasm_cc.program,
-                     paths=toolchain_search_path, allow_missing=True,
-                     what='the C->WASM compiler', when=requires_wasm_sandboxing)
-@depends(wasm_cc, provided_wasm_cc, wasi_sysroot, compiler_wrapper,
-         when=requires_wasm_sandboxing)
-def wasm_cc_with_flags(wasm_cc, provided_wasm_cc, wasi_sysroot,
-                       compiler_wrapper):
-    return wasm_compiler_with_flags(wasm_cc, provided_wasm_cc, wasi_sysroot,
-                                    compiler_wrapper)
-set_config('WASM_CC', wasm_cc_with_flags, when=requires_wasm_sandboxing)
-
-option(env='WASM_CXX', nargs=1, help='Path to the C++->WASM compiler',
-       when=requires_wasm_sandboxing)
-provided_wasm_cxx = provided_program('WASM_CXX', when=requires_wasm_sandboxing)
-wasm_cxx = check_prog(
-    '_WASM_CXX', ['clang++'], input=provided_wasm_cxx.program,
-    paths=toolchain_search_path, allow_missing=True,
-    what='the C++->WASM compiler', when=requires_wasm_sandboxing)
-@depends(wasm_cxx, provided_wasm_cxx, wasi_sysroot, compiler_wrapper,
-         when=requires_wasm_sandboxing)
-def wasm_cxx_with_flags(wasm_cxx, provided_wasm_cxx, wasi_sysroot,
-                        compiler_wrapper):
-    return wasm_compiler_with_flags(wasm_cxx, provided_wasm_cxx, wasi_sysroot,
-                                    compiler_wrapper)
-
-set_config('WASM_CXX', wasm_cxx_with_flags, when=requires_wasm_sandboxing)
+    set_config('WASI_SYSROOT', wasi_sysroot)
 
 
-wasm_compile_flags = dependable(['-fno-exceptions', '-fno-strict-aliasing', '-Qunused-arguments'])
-option(env='WASM_CFLAGS', nargs=1, help='Options to pass to WASM_CC',
-       when=requires_wasm_sandboxing)
-@depends('WASM_CFLAGS', wasm_compile_flags, when=requires_wasm_sandboxing)
-def wasm_cflags(value, wasm_compile_flags):
-    if value:
-        return wasm_compile_flags + value
-    else:
-        return wasm_compile_flags
-set_config('WASM_CFLAGS', wasm_cflags, when=requires_wasm_sandboxing)
+    def wasm_compiler_with_flags(wasm_compiler, provided_wasm_compiler, sysroot,
+                                 compiler_wrapper):
+        if not sysroot:
+            return
+        if provided_wasm_compiler:
+            return ' '.join(
+                list(compiler_wrapper or []) +
+                provided_wasm_compiler.wrapper + [provided_wasm_compiler.program]
+                + provided_wasm_compiler.flags + ['--sysroot=%s' % sysroot])
+        elif wasm_compiler:
+            return ' '.join(
+                list(compiler_wrapper or []) +
+                [wasm_compiler] +
+                ['--target=wasm32-wasi', '--sysroot=%s' % sysroot])
 
-option(env='WASM_CXXFLAGS', nargs=1, help='Options to pass to WASM_CXX',
-       when=requires_wasm_sandboxing)
-@depends('WASM_CXXFLAGS', wasm_compile_flags, when=requires_wasm_sandboxing)
-def wasm_cxxflags(value, wasm_compile_flags):
-    if value:
-        return wasm_compile_flags + value
-    else:
-        return wasm_compile_flags
-set_config('WASM_CXXFLAGS', wasm_cxxflags, when=requires_wasm_sandboxing)
+    option(env='WASM_CC', nargs=1, help='Path to the C->WASM compiler')
+    provided_wasm_cc = provided_program('WASM_CC')
+    wasm_cc = check_prog('_WASM_CC', ['clang'], input=provided_wasm_cc.program,
+                         paths=toolchain_search_path, allow_missing=True,
+                         what='the C->WASM compiler')
+    @depends(wasm_cc, provided_wasm_cc, wasi_sysroot, compiler_wrapper)
+    def wasm_cc_with_flags(wasm_cc, provided_wasm_cc, wasi_sysroot,
+                           compiler_wrapper):
+        return wasm_compiler_with_flags(wasm_cc, provided_wasm_cc, wasi_sysroot,
+                                        compiler_wrapper)
+    set_config('WASM_CC', wasm_cc_with_flags)
 
-option(env='WASM_LDFLAGS', nargs=1,
-       help='Options to pass when linking wasm modules',
-       when=requires_wasm_sandboxing)
-@depends('WASM_LDFLAGS', when=requires_wasm_sandboxing)
-def wasm_ldflags(value):
-    if value:
-        return value
-set_config('WASM_LDFLAGS', wasm_ldflags, when=requires_wasm_sandboxing)
+    option(env='WASM_CXX', nargs=1, help='Path to the C++->WASM compiler')
+    provided_wasm_cxx = provided_program('WASM_CXX')
+    wasm_cxx = check_prog(
+        '_WASM_CXX', ['clang++'], input=provided_wasm_cxx.program,
+        paths=toolchain_search_path, allow_missing=True,
+        what='the C++->WASM compiler')
+    @depends(wasm_cxx, provided_wasm_cxx, wasi_sysroot, compiler_wrapper)
+    def wasm_cxx_with_flags(wasm_cxx, provided_wasm_cxx, wasi_sysroot,
+                            compiler_wrapper):
+        return wasm_compiler_with_flags(wasm_cxx, provided_wasm_cxx, wasi_sysroot,
+                                        compiler_wrapper)
+
+    set_config('WASM_CXX', wasm_cxx_with_flags)
+
+
+    wasm_compile_flags = dependable(['-fno-exceptions', '-fno-strict-aliasing', '-Qunused-arguments'])
+    option(env='WASM_CFLAGS', nargs=1, help='Options to pass to WASM_CC')
+    @depends('WASM_CFLAGS', wasm_compile_flags)
+    def wasm_cflags(value, wasm_compile_flags):
+        if value:
+            return wasm_compile_flags + value
+        else:
+            return wasm_compile_flags
+    set_config('WASM_CFLAGS', wasm_cflags)
+
+    option(env='WASM_CXXFLAGS', nargs=1, help='Options to pass to WASM_CXX')
+    @depends('WASM_CXXFLAGS', wasm_compile_flags)
+    def wasm_cxxflags(value, wasm_compile_flags):
+        if value:
+            return wasm_compile_flags + value
+        else:
+            return wasm_compile_flags
+    set_config('WASM_CXXFLAGS', wasm_cxxflags)
+
+    option(env='WASM_LDFLAGS', nargs=1,
+           help='Options to pass when linking wasm modules')
+    @depends('WASM_LDFLAGS')
+    def wasm_ldflags(value):
+        if value:
+            return value
+    set_config('WASM_LDFLAGS', wasm_ldflags)
 
 
 @depends('--with-wasm-sandboxed-libraries', target)

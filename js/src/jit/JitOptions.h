@@ -143,8 +143,6 @@ inline bool IsBaselineJitEnabled() {
   return IsBaselineInterpreterEnabled() && JitOptions.baselineJit;
 }
 
-inline bool IsIonEnabled() { return IsBaselineJitEnabled() && JitOptions.ion; }
-
 }  // namespace jit
 }  // namespace js
 
