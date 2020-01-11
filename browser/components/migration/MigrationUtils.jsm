@@ -79,6 +79,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
       "edge",
       "ie",
       "chrome",
+      "chromium-edge-beta",
       "chrome-beta",
       "chromium",
       "360se",
