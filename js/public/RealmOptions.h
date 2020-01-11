@@ -191,6 +191,14 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  bool getPropertyErrorMessageFixEnabled() const {
+    return propertyErrorMessageFix_;
+  }
+  RealmCreationOptions& setPropertyErrorMessageFixEnabled(bool flag) {
+    propertyErrorMessageFix_ = flag;
+    return *this;
+  }
+
   // This flag doesn't affect JS engine behavior.  It is used by Gecko to
   // mark whether content windows and workers are "Secure Context"s. See
   // https://w3c.github.io/webappsec-secure-contexts/
@@ -230,6 +238,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool awaitFix_ = false;
   bool weakRefs_ = false;
   bool toSource_ = false;
+  bool propertyErrorMessageFix_ = false;
   bool secureContext_ = false;
 };
 
