@@ -6776,8 +6776,6 @@ class MModuleMetadata : public MNullaryInstruction {
 
   JSObject* module() const { return module_; }
 
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
   bool appendRoots(MRootList& roots) const override {
     return roots.append(module_);
   }
