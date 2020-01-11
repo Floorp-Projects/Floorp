@@ -7,10 +7,10 @@ function check_one(expected, f, err) {
         f();
         failed = false;
     } catch (ex) {
-        var s = ex.toString();
-        assertEq(s.slice(0, 11), "TypeError: ");
-        assertEq(s.slice(-err.length), err, "" + f);
-        assertEq(s.slice(11, -err.length), expected);
+        assertEq(ex.constructor.name, "TypeError");
+        var s = ex.message;
+        assertEq(s.slice(-err.length), err);
+        assertEq(s.slice(-(err.length + expected.length), -err.length), expected);
     }
     if (!failed)
         throw new Error("didn't fail");

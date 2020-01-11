@@ -61,6 +61,7 @@
 #include "vm/JSScript.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
+#include "vm/StringType.h"  // StringToNewUTF8CharsZ
 
 #include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
@@ -880,10 +881,24 @@ void js::ReportIsNotDefined(JSContext* cx, HandlePropertyName name) {
   ReportIsNotDefined(cx, id);
 }
 
-void js::ReportIsNullOrUndefined(JSContext* cx, int spindex, HandleValue v) {
+const char* NullOrUndefinedToCharZ(HandleValue v) {
+  MOZ_ASSERT(v.isNullOrUndefined());
+  return v.isNull() ? js_null_str : js_undefined_str;
+}
+
+void js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v,
+                                                  bool reportScanStack) {
   MOZ_ASSERT(v.isNullOrUndefined());
 
-  UniqueChars bytes = DecompileValueGenerator(cx, spindex, v, nullptr);
+  if (!reportScanStack) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_CANT_CONVERT_TO,
+                              NullOrUndefinedToCharZ(v), "object");
+    return;
+  }
+
+  UniqueChars bytes =
+      DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
   if (!bytes) {
     return;
   }
@@ -892,15 +907,54 @@ void js::ReportIsNullOrUndefined(JSContext* cx, int spindex, HandleValue v) {
       strcmp(bytes.get(), js_null_str) == 0) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_NO_PROPERTIES,
                              bytes.get());
-  } else if (v.isUndefined()) {
+  } else {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_UNEXPECTED_TYPE, bytes.get(),
-                             js_undefined_str);
-  } else {
-    MOZ_ASSERT(v.isNull());
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_UNEXPECTED_TYPE, bytes.get(), js_null_str);
+                             NullOrUndefinedToCharZ(v));
   }
+}
+
+void js::ReportIsNullOrUndefinedForPropertyAccess(JSContext* cx, HandleValue v,
+                                                  HandleId key,
+                                                  bool reportScanStack) {
+  MOZ_ASSERT(v.isNullOrUndefined());
+
+  if (!cx->realm()->creationOptions().getPropertyErrorMessageFixEnabled()) {
+    ReportIsNullOrUndefinedForPropertyAccess(cx, v, reportScanStack);
+    return;
+  }
+
+  RootedValue idVal(cx, IdToValue(key));
+  RootedString idStr(cx, ValueToSource(cx, idVal));
+  if (!idStr) {
+    return;
+  }
+
+  UniqueChars keyStr = StringToNewUTF8CharsZ(cx, *idStr);
+
+  if (!reportScanStack) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL,
+                             keyStr.get(),
+                             NullOrUndefinedToCharZ(v));
+    return;
+  }
+
+  UniqueChars bytes =
+      DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
+  if (!bytes) {
+    return;
+  }
+
+  if (strcmp(bytes.get(), js_undefined_str) == 0 ||
+      strcmp(bytes.get(), js_null_str) == 0) {
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_PROPERTY_FAIL,
+                             keyStr.get(), bytes.get());
+    return;
+  }
+
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_PROPERTY_FAIL_EXPR, keyStr.get(),
+                           bytes.get(), NullOrUndefinedToCharZ(v));
 }
 
 bool js::ReportValueErrorFlags(JSContext* cx, unsigned flags,
