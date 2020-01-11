@@ -474,7 +474,7 @@ class CustomTabsToolbarFeatureTest {
         val menuBuilder = toolbar.display.menuBuilder!!
 
         assertEquals(3, menuBuilder.items.size)
-        assertTrue(menuBuilder.items[2] is SimpleBrowserMenuItem)
+        assertTrue(menuBuilder.items[0] is SimpleBrowserMenuItem)
     }
 
     @Test
