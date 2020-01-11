@@ -351,6 +351,7 @@ linux-common-tests:
     - mochitest
     - mochitest-browser-chrome
     - mochitest-chrome
+    - mochitest-devtools-chrome
     - mochitest-remote
 
 # List of tests that are green on ubuntu1804 docker image.
@@ -386,7 +387,6 @@ linux1804-qr-tests:
     - jittest
     - jsreftest
     - mochitest-a11y
-    - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgpu
