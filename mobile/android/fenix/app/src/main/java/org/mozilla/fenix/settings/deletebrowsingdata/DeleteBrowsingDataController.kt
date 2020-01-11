@@ -6,10 +6,8 @@ package org.mozilla.fenix.settings.deletebrowsingdata
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.Engine
-import mozilla.components.feature.tab.collections.TabCollection
 import org.mozilla.fenix.ext.components
 import kotlin.coroutines.CoroutineContext
 
@@ -17,7 +15,6 @@ interface DeleteBrowsingDataController {
     suspend fun deleteTabs()
     suspend fun deleteBrowsingData()
     suspend fun deleteHistoryAndDOMStorages()
-    suspend fun deleteCollections(collections: List<TabCollection>)
     suspend fun deleteCookies()
     suspend fun deleteCachedFiles()
     suspend fun deleteSitePermissions()
@@ -43,14 +40,6 @@ class DefaultDeleteBrowsingDataController(
             context.components.core.engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
         }
         context.components.core.historyStorage.deleteEverything()
-    }
-
-    override suspend fun deleteCollections(collections: List<TabCollection>) {
-        while (context.components.core.tabCollectionStorage.getTabCollectionsCount() != collections.size) {
-            delay(DELAY_IN_MILLIS)
-        }
-
-        collections.forEach { context.components.core.tabCollectionStorage.removeCollection(it) }
     }
 
     override suspend fun deleteCookies() {
@@ -79,9 +68,5 @@ class DefaultDeleteBrowsingDataController(
             )
         }
         context.components.core.permissionStorage.deleteAllSitePermissions()
-    }
-
-    companion object {
-        private const val DELAY_IN_MILLIS = 500L
     }
 }

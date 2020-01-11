@@ -19,7 +19,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import mozilla.components.concept.engine.Engine
-import mozilla.components.feature.tab.collections.TabCollection
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -74,20 +73,6 @@ class DefaultDeleteBrowsingDataControllerTest {
         verify {
             context.components.core.engine.clearData(any())
             context.components.core.historyStorage
-        }
-    }
-
-    @Test
-    fun deleteCollections() = runBlockingTest {
-        controller = DefaultDeleteBrowsingDataController(context, coroutineContext)
-
-        val collections: List<TabCollection> = listOf(mockk(relaxed = true))
-        every { context.components.core.tabCollectionStorage.getTabCollectionsCount() } returns 1
-
-        controller.deleteCollections(collections)
-
-        verify {
-            context.components.core.tabCollectionStorage.removeCollection(collections[0])
         }
     }
 
