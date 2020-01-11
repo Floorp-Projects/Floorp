@@ -11,6 +11,7 @@
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/NativeNt.h"
 #include "mozilla/Span.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/Types.h"
@@ -429,6 +430,10 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyInProcess : public MMPolicyBase {
            mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
   }
 
+  FARPROC GetProcAddress(HMODULE aModule, const char* aName) const {
+    return ::GetProcAddress(aModule, aName);
+  }
+
   bool FlushInstructionCache() const {
     return !!::FlushInstructionCache(::GetCurrentProcess(), nullptr, 0);
   }
@@ -663,6 +668,37 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
 
     return result && mbi.AllocationProtect && (mbi.Type & MEM_IMAGE) &&
            mbi.State == MEM_COMMIT && mbi.Protect != PAGE_NOACCESS;
+  }
+
+  /**
+   * This searches the target process's export address table for a given name
+   * instead of simply calling ::GetProcAddress because the local export table
+   * might be modified and the value of a table entry might be different from
+   * the target process.  If we fail to get an entry for some reason, we fall
+   * back to using ::GetProcAddress.
+   */
+  FARPROC GetProcAddress(HMODULE aModule, const char* aName) const {
+    nt::PEHeaders moduleHeaders(aModule);
+    const DWORD* funcEntry = moduleHeaders.FindExportAddressTableEntry(aName);
+    if (!funcEntry) {
+      // FindExportAddressTableEntry returns nullptr if a matched entry is
+      // forwarded to another module.  Because a forwarder entry needs to point
+      // a null-terminated string within the export section, it's less likely to
+      // be modified by a third-party code.  We safely use the local table.
+      return ::GetProcAddress(aModule, aName);
+    }
+
+    SIZE_T numBytes = 0;
+    DWORD rvaTargetFunction = 0;
+    BOOL ok = ::ReadProcessMemory(mProcess, funcEntry, &rvaTargetFunction,
+                                  sizeof(rvaTargetFunction), &numBytes);
+    if (!ok || numBytes != sizeof(rvaTargetFunction)) {
+      // If we fail to read the table entry in the target process for unexpected
+      // reason, we fall back to ::GetProcAddress.
+      return ::GetProcAddress(aModule, aName);
+    }
+
+    return moduleHeaders.RVAToPtr<FARPROC>(rvaTargetFunction);
   }
 
   bool FlushInstructionCache() const {
