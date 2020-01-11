@@ -7,12 +7,12 @@ package org.mozilla.fenix.customtabs
 import android.content.Context
 import android.graphics.Typeface
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.item.BrowserMenuCategory
 import mozilla.components.browser.menu.item.BrowserMenuDivider
+import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
-import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
-import mozilla.components.browser.menu.item.BrowserMenuCategory
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import org.mozilla.fenix.R
@@ -90,7 +90,6 @@ class CustomTabToolbarMenu(
         val menuItems = listOf(
             poweredBy,
             BrowserMenuDivider(),
-            share,
             desktopMode,
             findInPage,
             openInFenix,
@@ -98,15 +97,6 @@ class CustomTabToolbarMenu(
             menuToolbar
         )
         if (shouldReverseItems) { menuItems.reversed() } else { menuItems }
-    }
-
-    private val share = BrowserMenuImageText(
-        label = context.getString(R.string.browser_menu_share),
-        imageResource = R.drawable.mozac_ic_share,
-        textColorResource = primaryTextColor(),
-        iconTintColorResource = primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.Share)
     }
 
     private val desktopMode = BrowserMenuImageSwitch(
