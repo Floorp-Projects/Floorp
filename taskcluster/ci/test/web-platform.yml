@@ -12,12 +12,12 @@ job-defaults:
             default: 5400
     variants:
         by-test-platform:
-            linux64/debug: ['fission', 'serviceworker']
+            linux1804-64/debug: ['fission', 'serviceworker']
             default: ['fission']
     fission-run-on-projects:
         by-test-platform:
-            linux64-qr/debug: ['trunk']
-            linux64-qr/opt: ['mozilla-central']
+            linux1804-64-qr/debug: ['trunk']
+            linux1804-64-qr/opt: ['mozilla-central']
             windows10-64-qr/opt: ['mozilla-central']
             default: []
     fission-tier: 2
@@ -48,7 +48,7 @@ web-platform-tests:
     chunks:
         by-test-platform:
             android.*: 18
-            linux64-asan/opt: 24
+            linux1804-64-asan/opt: 24
             linux64-ccov/debug: 24
             linux64-ccov/opt: 24
             linux.*/debug: 18
@@ -61,7 +61,7 @@ web-platform-tests:
     max-run-time:
         by-test-platform:
             .*-ccov/.*: 10800
-            linux64-qr/debug: 9000
+            linux1804-64-qr/debug: 9000
             default: 7200
     e10s: true
     run-on-projects:
@@ -72,7 +72,7 @@ web-platform-tests:
             default: built-projects
     tier:
         by-test-platform:
-            linux64-asan/opt: 2
+            linux1804-64-asan/opt: 2
             windows10-aarch64.*: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             linux64-ccov/opt: 3
@@ -198,7 +198,7 @@ test-verify-wpt:
             # do not run on ccov
             .*-ccov/.*: []
             .*-asan/.*: []
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            (?:windows10-64|windows7-32|linux1804-64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']

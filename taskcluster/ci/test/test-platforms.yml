@@ -31,13 +31,13 @@ linux1804-64/opt:
         - desktop-screenshot-capture
         - linux1804-tests
         - mochitest-headless
-        - web-platform-tests-1804
+        - web-platform-tests
 
 linux1804-64/debug:
     build-platform: linux64/debug
     test-sets:
         - linux1804-tests
-        - web-platform-tests-1804
+        - web-platform-tests
 
 linux1804-64-shippable/opt:
     build-platform: linux64-shippable/opt
@@ -47,7 +47,7 @@ linux1804-64-shippable/opt:
         - linux1804-tests
         - marionette-headless
         - mochitest-headless
-        - web-platform-tests-1804
+        - web-platform-tests
         - web-platform-tests-wdspec-headless
 
 linux1804-64-devedition/opt:
@@ -55,13 +55,13 @@ linux1804-64-devedition/opt:
     test-sets:
         - desktop-screenshot-capture
         - linux1804-tests
-        - web-platform-tests-1804
+        - web-platform-tests
 
 linux1804-64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - linux1804-tests
-        - web-platform-tests-1804
+        - web-platform-tests
 
 # Stylo sequential runs check memory and
 # performance when using a single thread.
@@ -75,20 +75,20 @@ linux1804-64-qr/opt:
     test-sets:
         - awsy
         - linux1804-qr-tests
-        - web-platform-tests-1804
+        - web-platform-tests
 
 linux1804-64-shippable-qr/opt:
     build-platform: linux64-shippable/opt
     test-sets:
         - awsy
         - linux1804-qr-tests
-        - web-platform-tests-1804
+        - web-platform-tests
 
 linux1804-64-qr/debug:
     build-platform: linux64/debug
     test-sets:
         - linux1804-qr-tests
-        - web-platform-tests-1804
+        - web-platform-tests
 
 # Disabled temporarily due to Bug 1602863
 # linux1804-64-asan-qr/opt:
@@ -107,13 +107,13 @@ linux64/debug:
     build-platform: linux64/debug
     test-sets:
         - linux-common-tests
-        - web-platform-tests
+        - web-platform-tests-wdspec
 
 linux64/opt:
     build-platform: linux64/opt
     test-sets:
         - linux-common-tests
-        - web-platform-tests
+        - web-platform-tests-wdspec
         - opt-only-tests
         - talos
         - linux-talos-flex
@@ -125,7 +125,7 @@ linux64-shippable/opt:
     build-platform: linux64-shippable/opt
     test-sets:
         - linux-common-tests
-        - web-platform-tests
+        - web-platform-tests-wdspec
         - opt-only-tests
         - talos
         - linux-talos-flex
@@ -143,7 +143,7 @@ linux64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
     test-sets:
         - linux-common-tests
-        - web-platform-tests
+        - web-platform-tests-wdspec
         - opt-only-tests
 
 # TODO: use 'asan' label here, instead of -asan/opt
@@ -151,7 +151,7 @@ linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - linux-common-tests
-        - web-platform-tests
+        - web-platform-tests-wdspec
 
 # QR builds just run a subset right now.
 linux64-qr/opt:
@@ -159,7 +159,7 @@ linux64-qr/opt:
     test-sets:
         - linux-qr-tests
         - talos
-        - web-platform-tests
+        - web-platform-tests-wdspec
         - raptor-firefox
         - browsertime
         - raptor-fetch-firefox
@@ -169,7 +169,7 @@ linux64-shippable-qr/opt:
     test-sets:
         - linux-qr-tests
         - talos
-        - web-platform-tests
+        - web-platform-tests-wdspec
         - raptor-firefox
         - browsertime
         - raptor-fetch-firefox
@@ -178,7 +178,7 @@ linux64-qr/debug:
     build-platform: linux64/debug
     test-sets:
         - linux-qr-tests
-        - web-platform-tests
+        - web-platform-tests-wdspec
 
 linux64-asan-qr/opt:
     build-platform: linux64-asan/opt
