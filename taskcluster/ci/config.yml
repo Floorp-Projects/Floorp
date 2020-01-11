@@ -84,6 +84,7 @@ treeherder:
         'SY': 'Are we slim yet tests by TaskCluster'
         'SY-fis': 'Are we slim yet tests by TaskCluster, fission enabled'
         'SYsd': 'Are we slim yet tests by TaskCluster, Stylo disabled'
+        'SYss': 'Are we slim yet tests by TaskCluster, Stylo sequential'
         'VP': 'VideoPuppeteer tests'
         'W': 'Web platform tests'
         'W-1proc': 'Web platform tests without e10s'
