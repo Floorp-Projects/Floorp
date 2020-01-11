@@ -3434,9 +3434,13 @@ class GLContext : public GenericAtomicRefCounted,
   virtual GLenum GetPreferredARGB32Format() const { return LOCAL_GL_RGBA; }
 
   virtual GLenum GetPreferredEGLImageTextureTarget() const {
+#ifdef MOZ_WAYLAND
+    return LOCAL_GL_TEXTURE_2D;
+#else
     return IsExtensionSupported(OES_EGL_image_external)
                ? LOCAL_GL_TEXTURE_EXTERNAL
                : LOCAL_GL_TEXTURE_2D;
+#endif
   }
 
   virtual bool RenewSurface(widget::CompositorWidget* aWidget) { return false; }
