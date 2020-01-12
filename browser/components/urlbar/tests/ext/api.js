@@ -71,6 +71,12 @@ this.experiments_urlbar = class extends ExtensionAPI {
             appUpdater.check();
           },
 
+          clearInput() {
+            let window = BrowserWindowTracker.getTopWindow();
+            window.gURLBar.value = "";
+            window.SetPageProxyState("invalid");
+          },
+
           engagementTelemetry: this._getDefaultSettingsAPI(
             "browser.urlbar.eventTelemetry.enabled"
           ),
