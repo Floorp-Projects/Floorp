@@ -515,7 +515,7 @@ class BrowserParent final : public PBrowserParent,
   bool AttachLayerManager();
   void MaybeShowFrame();
 
-  bool Show(const ScreenIntSize& aSize, bool aParentIsActive);
+  bool Show(const OwnerShowInfo&);
 
   void UpdateDimensions(const nsIntRect& aRect, const ScreenIntSize& aSize);
 
