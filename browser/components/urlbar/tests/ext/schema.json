@@ -29,6 +29,13 @@
         "parameters": []
       },
       {
+        "name": "clearInput",
+        "type": "function",
+        "async": true,
+        "description": "Sets urlbar.value to the empty string and the pageproxystate to invalid.",
+        "parameters": []
+      },
+      {
         "name": "getBrowserUpdateStatus",
         "type": "function",
         "async": true,
