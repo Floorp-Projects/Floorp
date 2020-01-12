@@ -25,6 +25,8 @@ $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclien
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.TabHistoryEntry)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-tab-history-entry/into.md
 $dokka.location:mozilla.components.service.fxa$toAuthType(kotlin.String)mozilla.components.service.fxa/kotlin.-string/to-auth-type.md
 $dokka.location:mozilla.components.service.fxa.sync$toSyncEngines(kotlin.collections.List((kotlin.String)))mozilla.components.service.fxa.sync/kotlin.collections.-list/to-sync-engines.md
+$dokka.location:mozilla.components.service.sync.logins$mergeWithLogin(mozilla.appservices.logins.ServerPassword, mozilla.components.concept.storage.Login)mozilla.components.service.sync.logins/mozilla.appservices.logins.-server-password/merge-with-login.md
+$dokka.location:mozilla.components.service.sync.logins$toLogin(mozilla.appservices.logins.ServerPassword)mozilla.components.service.sync.logins/mozilla.appservices.logins.-server-password/to-login.md
 $dokka.location:mozilla.components.support.android.test$awaitValue(androidx.lifecycle.LiveData((mozilla.components.support.android.test.awaitValue.T)), kotlin.Long, java.util.concurrent.TimeUnit)mozilla.components.support.android.test/androidx.lifecycle.-live-data/await-value.md
 $dokka.location:mozilla.components.support.android.test.espresso$assertHasFocus(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-has-focus.md
 $dokka.location:mozilla.components.support.android.test.espresso$assertIsChecked(androidx.test.espresso.ViewInteraction, kotlin.Boolean)mozilla.components.support.android.test.espresso/androidx.test.espresso.-view-interaction/assert-is-checked.md
@@ -76,6 +78,7 @@ mozilla.components.browser.awesomebar.transform
 mozilla.components.browser.domains
 mozilla.components.browser.domains.autocomplete
 mozilla.components.browser.engine.gecko
+mozilla.components.browser.engine.gecko.autofill
 mozilla.components.browser.engine.gecko.fetch
 mozilla.components.browser.engine.gecko.glean
 mozilla.components.browser.engine.gecko.integration

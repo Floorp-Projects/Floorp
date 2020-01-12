@@ -2,7 +2,7 @@
 
 # MultipleChoice
 
-`data class MultipleChoice : `[`PromptRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L30)
+`data class MultipleChoice : `[`PromptRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L31)
 
 Value type that represents a request for a multiple choice prompt.
 

@@ -11,6 +11,7 @@
 | [mozilla.components.browser.domains](mozilla.components.browser.domains/index.md) |  |
 | [mozilla.components.browser.domains.autocomplete](mozilla.components.browser.domains.autocomplete/index.md) |  |
 | [mozilla.components.browser.engine.gecko](mozilla.components.browser.engine.gecko/index.md) |  |
+| [mozilla.components.browser.engine.gecko.autofill](mozilla.components.browser.engine.gecko.autofill/index.md) |  |
 | [mozilla.components.browser.engine.gecko.fetch](mozilla.components.browser.engine.gecko.fetch/index.md) |  |
 | [mozilla.components.browser.engine.gecko.glean](mozilla.components.browser.engine.gecko.glean/index.md) |  |
 | [mozilla.components.browser.engine.gecko.integration](mozilla.components.browser.engine.gecko.integration/index.md) |  |

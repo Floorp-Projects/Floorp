@@ -2,7 +2,7 @@
 
 # onConfirm
 
-`val onConfirm: (`[`Date`](https://developer.android.com/reference/java/util/Date.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L89)
+`val onConfirm: (`[`Date`](https://developer.android.com/reference/java/util/Date.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L104)
 
 callback that is called when the date is selected.
 

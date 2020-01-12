@@ -158,6 +158,7 @@
 | [mozilla.components.service.glean.private.DatetimeMetricType](../mozilla.components.service.glean.private/-datetime-metric-type.md) |  |
 | [mozilla.components.feature.addons.update.DefaultAddonUpdater](../mozilla.components.feature.addons.update/-default-addon-updater/index.md) | An implementation of [AddonUpdater](../mozilla.components.feature.addons.update/-addon-updater/index.md) that uses the work manager api for scheduling new updates. |
 | [mozilla.components.browser.icons.generator.DefaultIconGenerator](../mozilla.components.browser.icons.generator/-default-icon-generator/index.md) | [IconGenerator](../mozilla.components.browser.icons.generator/-icon-generator/index.md) implementation that will generate an icon with a background color, rounded corners and a letter representing the URL. |
+| [mozilla.components.service.sync.logins.DefaultLoginValidationDelegate](../mozilla.components.service.sync.logins/-default-login-validation-delegate/index.md) | A delegate that will check against [storage](#) to see if a given Login can be persisted, and return information about why it can or cannot. |
 | [org.mozilla.telemetry.measurement.DefaultSearchMeasurement](../org.mozilla.telemetry.measurement/-default-search-measurement/index.md) |  |
 | [mozilla.components.concept.engine.DefaultSettings](../mozilla.components.concept.engine/-default-settings/index.md) | [Settings](../mozilla.components.concept.engine/-settings/index.md) implementation used to set defaults for [Engine](../mozilla.components.concept.engine/-engine/index.md) and [EngineSession](../mozilla.components.concept.engine/-engine-session/index.md). |
 | [mozilla.components.feature.prompts.share.DefaultShareDelegate](../mozilla.components.feature.prompts.share/-default-share-delegate/index.md) | Default [ShareDelegate](../mozilla.components.feature.prompts.share/-share-delegate/index.md) implementation that displays the native share sheet. |
@@ -281,6 +282,8 @@
 | [mozilla.components.browser.engine.gecko.GeckoEngineSession](../mozilla.components.browser.engine.gecko/-gecko-engine-session/index.md) | Gecko-based EngineSession implementation. |
 | [mozilla.components.browser.engine.gecko.GeckoEngineSessionState](../mozilla.components.browser.engine.gecko/-gecko-engine-session-state/index.md) |  |
 | [mozilla.components.browser.engine.gecko.GeckoEngineView](../mozilla.components.browser.engine.gecko/-gecko-engine-view/index.md) | Gecko-based EngineView implementation. |
+| [mozilla.components.browser.engine.gecko.autofill.GeckoLoginDelegateWrapper](../mozilla.components.browser.engine.gecko.autofill/-gecko-login-delegate-wrapper/index.md) | This class exists only to convert incoming [LoginEntry](#) arguments into [Login](../mozilla.components.concept.storage/-login/index.md)s, then forward them to [storageDelegate](#). This allows us to avoid duplicating [LoginStorageDelegate](../mozilla.components.concept.storage/-login-storage-delegate/index.md) code between different versions of GeckoView, by duplicating this wrapper instead. |
+| [mozilla.components.service.sync.logins.GeckoLoginStorageDelegate](../mozilla.components.service.sync.logins/-gecko-login-storage-delegate/index.md) | [LoginStorageDelegate](../mozilla.components.concept.storage/-login-storage-delegate/index.md) implementation. |
 | [mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest](../mozilla.components.browser.engine.gecko.permission/-gecko-permission-request/index.md) | Gecko-based implementation of [PermissionRequest](../mozilla.components.concept.engine.permission/-permission-request/index.md). |
 | [mozilla.components.browser.engine.gecko.webextension.GeckoPort](../mozilla.components.browser.engine.gecko.webextension/-gecko-port/index.md) | Gecko-based implementation of [Port](../mozilla.components.concept.engine.webextension/-port/index.md), wrapping the native port provided by GeckoView. |
 | [org.mozilla.geckoview.GeckoResult](../mozilla.components.browser.engine.gecko/org.mozilla.geckoview.-gecko-result/index.md) (extensions in package mozilla.components.browser.engine.gecko) |  |
@@ -378,6 +381,9 @@
 | [mozilla.components.support.base.facts.processor.LogFactProcessor](../mozilla.components.support.base.facts.processor/-log-fact-processor/index.md) | A [FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) implementation that prints collected [Fact](../mozilla.components.support.base.facts/-fact/index.md) instances to the log. |
 | [mozilla.components.support.base.log.sink.LogSink](../mozilla.components.support.base.log.sink/-log-sink/index.md) |  |
 | [mozilla.components.support.base.log.logger.Logger](../mozilla.components.support.base.log.logger/-logger/index.md) | A wrapper for the Log object providing a more convenient API for logging. |
+| [mozilla.components.concept.storage.Login](../mozilla.components.concept.storage/-login/index.md) | Represents a login that can be used by autofill APIs. |
+| [mozilla.components.concept.storage.LoginStorageDelegate](../mozilla.components.concept.storage/-login-storage-delegate/index.md) | Used to handle [Login](../mozilla.components.concept.storage/-login/index.md) storage so that the underlying engine doesn't have to. An instance of this should be attached to the Gecko runtime in order to be used. |
+| [mozilla.components.concept.storage.LoginValidationDelegate](../mozilla.components.concept.storage/-login-validation-delegate/index.md) | Provides a method for checking whether or not a given login can be stored. |
 | [mozilla.components.service.sync.logins.LoginsStorageException](../mozilla.components.service.sync.logins/-logins-storage-exception.md) | The base class of all errors emitted by logins storage. |
 | [kotlin.Long](../mozilla.components.feature.downloads/kotlin.-long/index.md) (extensions in package mozilla.components.feature.downloads) |  |
 | [mozilla.components.support.test.rule.MainCoroutineRule](../mozilla.components.support.test.rule/-main-coroutine-rule/index.md) | JUnit rule to change Dispatchers.Main in coroutines. |
@@ -416,6 +422,7 @@
 | [mozilla.components.browser.engine.system.NestedWebView](../mozilla.components.browser.engine.system/-nested-web-view/index.md) | WebView that supports nested scrolls (for using in a CoordinatorLayout). |
 | [mozilla.components.service.glean.private.NoExtraKeys](../mozilla.components.service.glean.private/-no-extra-keys.md) |  |
 | [mozilla.components.service.sync.logins.NoSuchRecordException](../mozilla.components.service.sync.logins/-no-such-record-exception.md) | This is thrown if `update()` is performed with a record whose ID does not exist. |
+| [mozilla.components.concept.storage.NoopLoginValidationDelegate](../mozilla.components.concept.storage/-noop-login-validation-delegate/index.md) | Default [LoginValidationDelegate](../mozilla.components.concept.storage/-login-validation-delegate/index.md) implementation that always returns false. |
 | [androidx.core.app.NotificationManagerCompat](../mozilla.components.support.base.ids/androidx.core.app.-notification-manager-compat/index.md) (extensions in package mozilla.components.support.base.ids) |  |
 | [mozilla.components.concept.sync.OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md) | Facilitates testing consumers of FirefoxAccount. |
 | [mozilla.components.concept.sync.OAuthScopedKey](../mozilla.components.concept.sync/-o-auth-scoped-key/index.md) | Scoped key data. |
@@ -436,6 +443,7 @@
 | [mozilla.components.ui.autocomplete.OnWindowsFocusChangeListener](../mozilla.components.ui.autocomplete/-on-windows-focus-change-listener.md) |  |
 | [org.mozilla.telemetry.measurement.OperatingSystemMeasurement](../org.mozilla.telemetry.measurement/-operating-system-measurement/index.md) |  |
 | [org.mozilla.telemetry.measurement.OperatingSystemVersionMeasurement](../org.mozilla.telemetry.measurement/-operating-system-version-measurement/index.md) |  |
+| [mozilla.components.service.sync.logins.Operation](../mozilla.components.service.sync.logins/-operation/index.md) | A type of persistence operation, either 'create' or 'update'. |
 | [mozilla.components.feature.customtabs.store.OriginRelationPair](../mozilla.components.feature.customtabs.store/-origin-relation-pair/index.md) | Pair of origin and relation type used as key in [CustomTabState.relationships](../mozilla.components.feature.customtabs.store/-custom-tab-state/relationships.md). |
 | [mozilla.components.feature.customtabs.verify.OriginVerifier](../mozilla.components.feature.customtabs.verify/-origin-verifier/index.md) | Used to verify postMessage origin for a designated package name. |
 | [mozilla.components.feature.customtabs.feature.OriginVerifierFeature](../mozilla.components.feature.customtabs.feature/-origin-verifier-feature/index.md) |  |
@@ -537,6 +545,7 @@
 | [org.mozilla.telemetry.measurement.SequenceMeasurement](../org.mozilla.telemetry.measurement/-sequence-measurement/index.md) |  |
 | [mozilla.components.service.fxa.ServerConfig](../mozilla.components.service.fxa/-server-config.md) |  |
 | [mozilla.components.service.sync.logins.ServerPassword](../mozilla.components.service.sync.logins/-server-password.md) | Raw password data that is stored by the storage implementation. |
+| [mozilla.appservices.logins.ServerPassword](../mozilla.components.service.sync.logins/mozilla.appservices.logins.-server-password/index.md) (extensions in package mozilla.components.service.sync.logins) |  |
 | [mozilla.components.feature.push.ServiceType](../mozilla.components.feature.push/-service-type/index.md) | Supported push services. These are currently limited to Firebase Cloud Messaging and Amazon Device Messaging. |
 | [mozilla.components.browser.session.Session](../mozilla.components.browser.session/-session/index.md) | Value type that represents the state of a browser session. Changes can be observed. |
 | [org.mozilla.telemetry.measurement.SessionCountMeasurement](../org.mozilla.telemetry.measurement/-session-count-measurement/index.md) |  |

@@ -2,7 +2,7 @@
 
 # PromptRequest
 
-`sealed class PromptRequest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L17)
+`sealed class PromptRequest` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L18)
 
 Value type that represents a request for showing a native dialog for prompt web content.
 
@@ -16,6 +16,7 @@ Value type that represents a request for showing a native dialog for prompt web 
 | [Confirm](-confirm/index.md) | `data class Confirm : `[`PromptRequest`](./index.md)`, `[`Dismissible`](-dismissible/index.md)<br>Value type that represents a request for showing a &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm&gt;confirm prompt. |
 | [Dismissible](-dismissible/index.md) | `interface Dismissible` |
 | [File](-file/index.md) | `data class File : `[`PromptRequest`](./index.md)<br>Value type that represents a request for a selecting one or multiple files. |
+| [LoginPrompt](-login-prompt/index.md) | `data class LoginPrompt : `[`PromptRequest`](./index.md)`, `[`Dismissible`](-dismissible/index.md)<br>Value type that represents a request for an login prompt. |
 | [MenuChoice](-menu-choice/index.md) | `data class MenuChoice : `[`PromptRequest`](./index.md)<br>Value type that represents a request for a menu choice prompt. |
 | [MultipleChoice](-multiple-choice/index.md) | `data class MultipleChoice : `[`PromptRequest`](./index.md)<br>Value type that represents a request for a multiple choice prompt. |
 | [Popup](-popup/index.md) | `data class Popup : `[`PromptRequest`](./index.md)<br>Value type that represents a request for showing a pop-pup prompt. This occurs when content attempts to open a new window, in a way that doesn't appear to be the result of user input. |
@@ -39,6 +40,7 @@ Value type that represents a request for showing a native dialog for prompt web 
 | [Color](-color/index.md) | `data class Color : `[`PromptRequest`](./index.md)`, `[`Dismissible`](-dismissible/index.md)<br>Value type that represents a request for a selecting one or multiple files. |
 | [Confirm](-confirm/index.md) | `data class Confirm : `[`PromptRequest`](./index.md)`, `[`Dismissible`](-dismissible/index.md)<br>Value type that represents a request for showing a &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm&gt;confirm prompt. |
 | [File](-file/index.md) | `data class File : `[`PromptRequest`](./index.md)<br>Value type that represents a request for a selecting one or multiple files. |
+| [LoginPrompt](-login-prompt/index.md) | `data class LoginPrompt : `[`PromptRequest`](./index.md)`, `[`Dismissible`](-dismissible/index.md)<br>Value type that represents a request for an login prompt. |
 | [MenuChoice](-menu-choice/index.md) | `data class MenuChoice : `[`PromptRequest`](./index.md)<br>Value type that represents a request for a menu choice prompt. |
 | [MultipleChoice](-multiple-choice/index.md) | `data class MultipleChoice : `[`PromptRequest`](./index.md)<br>Value type that represents a request for a multiple choice prompt. |
 | [Popup](-popup/index.md) | `data class Popup : `[`PromptRequest`](./index.md)<br>Value type that represents a request for showing a pop-pup prompt. This occurs when content attempts to open a new window, in a way that doesn't appear to be the result of user input. |
