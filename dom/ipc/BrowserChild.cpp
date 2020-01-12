@@ -1111,7 +1111,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvResumeLoad(
 }
 
 void BrowserChild::DoFakeShow(const ParentShowInfo& aParentShowInfo) {
-  OwnerShowInfo ownerInfo{ScreenIntSize(), mParentIsActive, nsSizeMode_Normal};
+  OwnerShowInfo ownerInfo{ScreenIntSize(), ScrollbarPreference::Auto,
+                          mParentIsActive, nsSizeMode_Normal};
   RecvShow(aParentShowInfo, ownerInfo);
   mDidFakeShow = true;
 }
@@ -1187,6 +1188,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvShow(
 
   ApplyParentShowInfo(aParentInfo);
   RecvParentActivated(aOwnerInfo.parentWindowIsActive());
+  RecvScrollbarPreferenceChanged(aOwnerInfo.scrollbarPreference());
 
   if (!res) {
     return IPC_FAIL_NO_REASON(this);
@@ -1210,6 +1212,13 @@ mozilla::ipc::IPCResult BrowserChild::RecvInitRendering(
     const CompositorOptions& aCompositorOptions, const bool& aLayersConnected) {
   mLayersConnected = Some(aLayersConnected);
   InitRenderingState(aTextureFactoryIdentifier, aLayersId, aCompositorOptions);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvScrollbarPreferenceChanged(
+    ScrollbarPreference aPreference) {
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  nsDocShell::Cast(docShell)->SetScrollbarPreference(aPreference);
   return IPC_OK();
 }
 

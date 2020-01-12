@@ -29,6 +29,7 @@ using CSSSize from "Units.h";
 using ScreenIntSize from "Units.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using nsSizeMode from "nsIWidgetListener.h";
+using ScrollbarPreference from "mozilla/ScrollbarPreferences.h";
 using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
@@ -354,7 +355,8 @@ struct OwnerShowInfo {
   // render to a virtual <0, 0> top-left point.
   ScreenIntSize size;
 
-  // TODO(emilio): Scrollbar and margin preferences go here.
+  // TODO(emilio): Margin preferences go here.
+  ScrollbarPreference scrollbarPreference;
 
   // TODO(emilio): I think we should really be able to figure out these from the
   // parent process too instead.
