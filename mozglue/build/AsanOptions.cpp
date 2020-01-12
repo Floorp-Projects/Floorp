@@ -163,6 +163,7 @@ extern "C" const char* __lsan_default_suppressions() {
          "leak:libresolv.so\n"
          "leak:libstdc++.so\n"
          "leak:libXrandr.so\n"
+         "leak:libX11.so\n"
          "leak:pthread_setspecific_internal\n"
          "leak:swrast_dri.so\n"
 
