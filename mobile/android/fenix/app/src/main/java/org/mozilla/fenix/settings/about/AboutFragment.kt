@@ -74,14 +74,18 @@ class AboutFragment : Fragment(), AboutPageListener {
             val componentsVersion = mozilla.components.Build.version + ", " + mozilla.components.Build.gitHash
             val maybeGecko = getString(R.string.gecko_view_abbreviation)
             val geckoVersion = GeckoViewBuildConfig.MOZ_APP_VERSION + "-" + GeckoViewBuildConfig.MOZ_APP_BUILDID
+            val appServicesAbbreviation = getString(R.string.app_services_abbreviation)
+            val appServicesVersion = mozilla.components.Build.applicationServicesVersion
 
             String.format(
-                "%s (Build #%s)\n%s\n%s: %s",
+                "%s (Build #%s)\n%s\n%s: %s\n%s: %s",
                 packageInfo.versionName,
                 versionCode,
                 componentsVersion,
                 maybeGecko,
-                geckoVersion
+                geckoVersion,
+                appServicesAbbreviation,
+                appServicesVersion
             )
         } catch (e: PackageManager.NameNotFoundException) {
             ""
