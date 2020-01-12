@@ -27,6 +27,7 @@
 
 #include "jsfriendapi.h"
 
+#include "builtin/Array.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
@@ -2320,6 +2321,10 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
   if (obj->is<JSFunction>()) {
     RootedFunction fun(cx, &obj->as<JSFunction>());
     return FunctionToString(cx, fun, true);
+  }
+
+  if (obj->is<ArrayObject>()) {
+    return ArrayToSource(cx, obj);
   }
 
   return ObjectToSource(cx, obj);
