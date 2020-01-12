@@ -181,6 +181,8 @@ extern bool ArrayConstructor(JSContext* cx, unsigned argc, Value* vp);
 // Like Array constructor, but doesn't perform GetPrototypeFromConstructor.
 extern bool array_construct(JSContext* cx, unsigned argc, Value* vp);
 
+extern JSString* ArrayToSource(JSContext* cx, HandleObject obj);
+
 extern bool IsCrossRealmArrayConstructor(JSContext* cx, const Value& v,
                                          bool* result);
 

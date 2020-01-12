@@ -9,8 +9,10 @@ const TEST_CASES = [
     [-0, "-0"],
     ["abc", `"abc"`],
     [function a() { return 1; }, `(function a() { return 1; })`],
-    [[1, 2, 3], `({0:1, 1:2, 2:3})`], // This will be improved
-    [new Error("Test"), `({})`],
+    [[1, 2, 3], `[1, 2, 3]`],
+    [[1, {a: 0, b: 0}, 2], `[1, {a:0, b:0}, 2]`],
+    [{a: [1, 2, 3]}, `({a:[1, 2, 3]})`],
+    [new Error("Test"), `({})`], // This will be improved
 ]
 
 for (let [actual, expected] of TEST_CASES) {

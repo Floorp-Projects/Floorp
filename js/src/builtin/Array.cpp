@@ -1169,6 +1169,72 @@ static bool ArraySpeciesCreate(JSContext* cx, HandleObject origArray,
   return true;
 }
 
+JSString* js::ArrayToSource(JSContext* cx, HandleObject obj) {
+  AutoCycleDetector detector(cx, obj);
+  if (!detector.init()) {
+    return nullptr;
+  }
+
+  JSStringBuilder sb(cx);
+
+  if (detector.foundCycle()) {
+    if (!sb.append("[]")) {
+      return nullptr;
+    }
+    return sb.finishString();
+  }
+
+  if (!sb.append('[')) {
+    return nullptr;
+  }
+
+  uint64_t length;
+  if (!GetLengthProperty(cx, obj, &length)) {
+    return nullptr;
+  }
+
+  RootedValue elt(cx);
+  for (uint64_t index = 0; index < length; index++) {
+    bool hole;
+    if (!CheckForInterrupt(cx) ||
+        !HasAndGetElement(cx, obj, index, &hole, &elt)) {
+      return nullptr;
+    }
+
+    /* Get element's character string. */
+    JSString* str;
+    if (hole) {
+      str = cx->runtime()->emptyString;
+    } else {
+      str = ValueToSource(cx, elt);
+      if (!str) {
+        return nullptr;
+      }
+    }
+
+    /* Append element to buffer. */
+    if (!sb.append(str)) {
+      return nullptr;
+    }
+    if (index + 1 != length) {
+      if (!sb.append(", ")) {
+        return nullptr;
+      }
+    } else if (hole) {
+      if (!sb.append(',')) {
+        return nullptr;
+      }
+    }
+  }
+
+  /* Finalize the buffer. */
+  if (!sb.append(']')) {
+    return nullptr;
+  }
+
+  return sb.finishString();
+}
+
 static bool array_toSource(JSContext* cx, unsigned argc, Value* vp) {
   if (!CheckRecursionLimit(cx)) {
     return false;
@@ -1182,71 +1248,8 @@ static bool array_toSource(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   Rooted<JSObject*> obj(cx, &args.thisv().toObject());
-  RootedValue elt(cx);
 
-  AutoCycleDetector detector(cx, obj);
-  if (!detector.init()) {
-    return false;
-  }
-
-  JSStringBuilder sb(cx);
-
-  if (detector.foundCycle()) {
-    if (!sb.append("[]")) {
-      return false;
-    }
-    goto make_string;
-  }
-
-  if (!sb.append('[')) {
-    return false;
-  }
-
-  uint64_t length;
-  if (!GetLengthProperty(cx, obj, &length)) {
-    return false;
-  }
-
-  for (uint64_t index = 0; index < length; index++) {
-    bool hole;
-    if (!CheckForInterrupt(cx) ||
-        !HasAndGetElement(cx, obj, index, &hole, &elt)) {
-      return false;
-    }
-
-    /* Get element's character string. */
-    JSString* str;
-    if (hole) {
-      str = cx->runtime()->emptyString;
-    } else {
-      str = ValueToSource(cx, elt);
-      if (!str) {
-        return false;
-      }
-    }
-
-    /* Append element to buffer. */
-    if (!sb.append(str)) {
-      return false;
-    }
-    if (index + 1 != length) {
-      if (!sb.append(", ")) {
-        return false;
-      }
-    } else if (hole) {
-      if (!sb.append(',')) {
-        return false;
-      }
-    }
-  }
-
-  /* Finalize the buffer. */
-  if (!sb.append(']')) {
-    return false;
-  }
-
-make_string:
-  JSString* str = sb.finishString();
+  JSString* str = ArrayToSource(cx, obj);
   if (!str) {
     return false;
   }
