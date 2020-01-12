@@ -74,7 +74,7 @@
         android:layout_height="match_parent"
         android:layout_marginTop="33dp"
         android:padding="16dp"
-        android:text="@string/accessibility_text_size_sample_text"
+        android:text="@string/accessibility_text_size_sample_text_1"
         android:textColor="@color/text_scale_example_text_color"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
