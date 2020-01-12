@@ -6161,6 +6161,18 @@ static bool DecompileThisScript(JSContext* cx, unsigned argc, Value* vp) {
   return JS_WrapValue(cx, args.rval());
 }
 
+static bool ValueToSource(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  JSString* str = ValueToSource(cx, args.get(0));
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
 static bool ThisFilename(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -8928,6 +8940,10 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
     JS_FN_HELP("decompileThis", DecompileThisScript, 0, 0,
 "decompileThis()",
 "  Decompile the currently executing script."),
+
+    JS_FN_HELP("valueToSource", ValueToSource, 1, 0,
+"valueToSource(value)",
+"  Format a value for inspection."),
 
     JS_FN_HELP("thisFilename", ThisFilename, 0, 0,
 "thisFilename()",
