@@ -8,6 +8,7 @@ add_task(async function() {
       PlacesUtils.bookmarks.addObserver({
         onBeginUpdateBatch() {},
         onEndUpdateBatch() {},
+        onItemRemoved() {},
         onItemVisited() {},
         onItemMoved() {},
         onItemChanged(id, property, isAnno, value) {

@@ -401,9 +401,9 @@ gTests.push({
 
         self._cleanShutdown = true;
         self._removeObserver = PlacesTestUtils.waitForNotification(
-          "bookmark-removed",
-          events => events.some(eve => eve.guid == self._bookmarkGuid),
-          "places"
+          "onItemRemoved",
+          (itemId, parentId, index, type, uri, guid) =>
+            guid == self._bookmarkGuid
         );
 
         self.window.document

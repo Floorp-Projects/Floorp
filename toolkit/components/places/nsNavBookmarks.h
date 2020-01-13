@@ -302,7 +302,6 @@ class nsNavBookmarks final
                                int64_t aSyncChangeDelta, int64_t aItemId,
                                PRTime aValue);
 
-  MOZ_CAN_RUN_SCRIPT
   nsresult RemoveFolderChildren(int64_t aFolderId, uint16_t aSource);
 
   // Recursive method to build an array of folder's children

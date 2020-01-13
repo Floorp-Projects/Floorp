@@ -296,59 +296,44 @@ function BookmarkObserver({ ignoreDates = true, skipTags = false } = {}) {
 BookmarkObserver.prototype = {
   handlePlacesEvents(events) {
     for (let event of events) {
-      switch (event.type) {
-        case "bookmark-added": {
-          if (this.skipTags && event.isTagging) {
-            continue;
-          }
-          let params = {
-            itemId: event.id,
-            parentId: event.parentId,
-            index: event.index,
-            type: event.itemType,
-            urlHref: event.url,
-            title: event.title,
-            guid: event.guid,
-            parentGuid: event.parentGuid,
-            source: event.source,
-          };
-          if (!this.ignoreDates) {
-            params.dateAdded = event.dateAdded * 1000;
-          }
-          this.notifications.push({ name: "bookmark-added", params });
-          break;
-        }
-        case "bookmark-removed": {
-          if (this.skipTags && event.isTagging) {
-            continue;
-          }
-          // Since we are now skipping tags on the listener side we don't
-          // prevent unTagging notifications from going out. These events cause empty
-          // tags folders to be removed which creates another bookmark-removed notification
-          if (
-            this.skipTags &&
-            event.parentGuid == PlacesUtils.bookmarks.tagsGuid
-          ) {
-            continue;
-          }
-          let params = {
-            itemId: event.id,
-            parentId: event.parentId,
-            index: event.index,
-            type: event.itemType,
-            urlHref: event.url || null,
-            guid: event.guid,
-            parentGuid: event.parentGuid,
-            source: event.source,
-          };
-          this.notifications.push({ name: "bookmark-removed", params });
-          break;
-        }
+      if (this.skipTags && event.isTagging) {
+        continue;
       }
+      let params = {
+        itemId: event.id,
+        parentId: event.parentId,
+        index: event.index,
+        type: event.itemType,
+        urlHref: event.url,
+        title: event.title,
+        guid: event.guid,
+        parentGuid: event.parentGuid,
+        source: event.source,
+      };
+      if (!this.ignoreDates) {
+        params.dateAdded = event.dateAdded * 1000;
+      }
+      this.notifications.push({ name: "bookmark-added", params });
     }
   },
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
+  onItemRemoved(itemId, parentId, index, type, uri, guid, parentGuid, source) {
+    let urlHref = uri ? uri.spec : null;
+    this.notifications.push({
+      name: "onItemRemoved",
+      params: {
+        itemId,
+        parentId,
+        index,
+        type,
+        urlHref,
+        guid,
+        parentGuid,
+        source,
+      },
+    });
+  },
   onItemChanged(
     itemId,
     property,
@@ -416,7 +401,7 @@ BookmarkObserver.prototype = {
   check(expectedNotifications) {
     PlacesUtils.bookmarks.removeObserver(this);
     PlacesUtils.observers.removeListener(
-      ["bookmark-added", "bookmark-removed"],
+      ["bookmark-added"],
       this.handlePlacesEvents
     );
     if (!ObjectUtils.deepEqual(this.notifications, expectedNotifications)) {
@@ -434,7 +419,7 @@ function expectBookmarkChangeNotifications(options) {
   let observer = new BookmarkObserver(options);
   PlacesUtils.bookmarks.addObserver(observer);
   PlacesUtils.observers.addListener(
-    ["bookmark-added", "bookmark-removed"],
+    ["bookmark-added"],
     observer.handlePlacesEvents
   );
   return observer;

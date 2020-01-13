@@ -116,7 +116,7 @@ add_task(async function test() {
     );
     PlacesUtils.bookmarks.addObserver(bookmarksObserver);
     PlacesUtils.observers.addListener(
-      ["bookmark-added", "bookmark-removed"],
+      ["bookmark-added"],
       bookmarksObserver.handlePlacesEvents
     );
     var addedBookmarks = [];
@@ -152,7 +152,7 @@ add_task(async function test() {
     // Remove observers.
     PlacesUtils.bookmarks.removeObserver(bookmarksObserver);
     PlacesUtils.observers.removeListener(
-      ["bookmark-added", "bookmark-removed"],
+      ["bookmark-added"],
       bookmarksObserver.handlePlacesEvents
     );
   });
@@ -173,21 +173,13 @@ var bookmarksObserver = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]),
 
   handlePlacesEvents(events) {
-    for (let { type, parentGuid, guid, index } of events) {
-      switch (type) {
-        case "bookmark-added":
-          this._notifications.push([
-            "assertItemAdded",
-            parentGuid,
-            guid,
-            index,
-          ]);
-          break;
-        case "bookmark-removed":
-          this._notifications.push(["assertItemRemoved", parentGuid, guid]);
-          break;
-      }
+    for (let { parentGuid, guid, index } of events) {
+      this._notifications.push(["assertItemAdded", parentGuid, guid, index]);
     }
+  },
+
+  onItemRemoved(itemId, folderId, index, itemType, uri, guid, parentGuid) {
+    this._notifications.push(["assertItemRemoved", parentGuid, guid]);
   },
 
   onItemMoved(

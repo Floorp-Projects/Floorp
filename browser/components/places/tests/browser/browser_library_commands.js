@@ -177,9 +177,8 @@ add_task(async function test_query_on_toolbar() {
 
   // Execute the delete command and check bookmark has been removed.
   let promiseItemRemoved = PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    events => events.some(event => query.guid == event.guid),
-    "places"
+    "onItemRemoved",
+    (...args) => query.guid == args[5]
   );
   PO._places.controller.doCommand("cmd_delete");
   await promiseItemRemoved;

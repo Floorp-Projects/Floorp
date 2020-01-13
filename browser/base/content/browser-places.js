@@ -1602,7 +1602,7 @@ var BookmarkingUI = {
     if (this._hasBookmarksObserver) {
       PlacesUtils.bookmarks.removeObserver(this);
       PlacesUtils.observers.removeListener(
-        ["bookmark-added", "bookmark-removed"],
+        ["bookmark-added"],
         this.handlePlacesEvents
       );
     }
@@ -1653,7 +1653,7 @@ var BookmarkingUI = {
             PlacesUtils.bookmarks.addObserver(this);
             this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
             PlacesUtils.observers.addListener(
-              ["bookmark-added", "bookmark-removed"],
+              ["bookmark-added"],
               this.handlePlacesEvents
             );
             this._hasBookmarksObserver = true;
@@ -1946,30 +1946,28 @@ var BookmarkingUI = {
   },
 
   handlePlacesEvents(aEvents) {
-    for (let ev of aEvents) {
-      switch (ev.type) {
-        case "bookmark-added":
-          // Only need to update the UI if it wasn't marked as starred before:
-          if (this._itemGuids.size == 0) {
-            if (ev.url && ev.url == this._uri.spec) {
-              // If a new bookmark has been added to the tracked uri, register it.
-              if (!this._itemGuids.has(ev.guid)) {
-                this._itemGuids.add(ev.guid);
-                this._updateStar();
-              }
-            }
+    // Only need to update the UI if it wasn't marked as starred before:
+    if (this._itemGuids.size == 0) {
+      for (let { url, guid } of aEvents) {
+        if (url && url == this._uri.spec) {
+          // If a new bookmark has been added to the tracked uri, register it.
+          if (!this._itemGuids.has(guid)) {
+            this._itemGuids.add(guid);
+            this._updateStar();
           }
-          break;
-        case "bookmark-removed":
-          // If one of the tracked bookmarks has been removed, unregister it.
-          if (this._itemGuids.has(ev.guid)) {
-            this._itemGuids.delete(ev.guid);
-            // Only need to update the UI if the page is no longer starred
-            if (this._itemGuids.size == 0) {
-              this._updateStar();
-            }
-          }
-          break;
+        }
+      }
+    }
+  },
+
+  // nsINavBookmarkObserver
+  onItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGuid) {
+    // If one of the tracked bookmarks has been removed, unregister it.
+    if (this._itemGuids.has(aGuid)) {
+      this._itemGuids.delete(aGuid);
+      // Only need to update the UI if the page is no longer starred
+      if (this._itemGuids.size == 0) {
+        this._updateStar();
       }
     }
   },

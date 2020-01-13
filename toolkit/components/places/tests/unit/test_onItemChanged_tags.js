@@ -36,19 +36,12 @@ add_task(async function run_test() {
         this._changedCount++;
       }
     },
-    handlePlacesEvents(events) {
-      for (let event of events) {
-        switch (event.type) {
-          case "bookmark-removed":
-            if (event.guid == bookmark.guid) {
-              PlacesUtils.observers.removeListener(
-                ["bookmark-removed"],
-                this.handlePlacesEvents
-              );
-              Assert.equal(this._changedCount, 2);
-              promise.resolve();
-            }
-        }
+
+    onItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGuid) {
+      if (aGuid == bookmark.guid) {
+        PlacesUtils.bookmarks.removeObserver(this);
+        Assert.equal(this._changedCount, 2);
+        promise.resolve();
       }
     },
 
@@ -58,13 +51,6 @@ add_task(async function run_test() {
     onItemMoved() {},
   };
   PlacesUtils.bookmarks.addObserver(bookmarksObserver);
-  bookmarksObserver.handlePlacesEvents = bookmarksObserver.handlePlacesEvents.bind(
-    bookmarksObserver
-  );
-  PlacesUtils.observers.addListener(
-    ["bookmark-removed"],
-    bookmarksObserver.handlePlacesEvents
-  );
 
   PlacesUtils.tagging.tagURI(uri, ["d"]);
   PlacesUtils.tagging.tagURI(uri, ["e"]);
