@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_WindowGlobalParent_h
 #define mozilla_dom_WindowGlobalParent_h
 
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
@@ -16,6 +17,7 @@
 #include "nsISupports.h"
 #include "mozilla/dom/WindowGlobalActor.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/ContentBlockingLog.h"
 
 class nsIPrincipal;
 class nsIURI;
@@ -130,6 +132,14 @@ class WindowGlobalParent final : public WindowGlobalActor,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  void NotifyContentBlockingEvent(
+      uint32_t aEvent, nsIRequest* aRequest, bool aBlocked, nsIURI* aURIHint,
+      const nsTArray<nsCString>& aTrackingFullHashes,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
+          Nothing());
+
+  ContentBlockingLog* GetContentBlockingLog() { return &mContentBlockingLog; }
+
  protected:
   const nsAString& GetRemoteType() override;
   JSWindowActor::Type GetSide() override { return JSWindowActor::Type::Parent; }
@@ -178,6 +188,11 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   // True if this window has a "beforeunload" event listener.
   bool mHasBeforeUnload;
+
+  // The log of all content blocking actions taken on the document related to
+  // this WindowGlobalParent. This is only stored on top-level documents and
+  // includes the activity log for all of the nested subdocuments as well.
+  ContentBlockingLog mContentBlockingLog;
 };
 
 }  // namespace dom
