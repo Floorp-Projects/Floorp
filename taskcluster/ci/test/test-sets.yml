@@ -13,12 +13,6 @@
 #
 # Test names given here reference tests.yml.
 
-##
-# Universal tests
-#
-# Tests that run just about everywhere; common-tests is the shared core, with
-# a few add-on test sets that are included or omitted on some platforms.
-
 common-tests:
     - cppunit
     - crashtest
@@ -36,10 +30,6 @@ common-tests:
     - mochitest-gpu
     - mochitest-media
     - mochitest-remote
-    - mochitest-webgl1-core
-    - mochitest-webgl1-ext
-    - mochitest-webgl2-core
-    - mochitest-webgl2-ext
     - mochitest-webgpu
     - reftest
     - reftest-no-accel
@@ -396,6 +386,12 @@ linux1804-qr-tests:
     - mochitest-webgl2-ext
     - reftest
     - xpcshell
+
+linux1804-ccov-tests:
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
 
 linux-qr-tests:
     - mochitest
