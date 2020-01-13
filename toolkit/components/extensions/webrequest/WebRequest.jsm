@@ -972,7 +972,17 @@ HttpObserverManager = {
 
         if (result.cancel) {
           channel.suspended = false;
-          channel.cancel(Cr.NS_ERROR_ABORT);
+          channel.cancel(
+            Cr.NS_ERROR_ABORT,
+            Ci.nsILoadInfo.BLOCKING_REASON_EXTENSION_WEBREQUEST
+          );
+          let { policy } = opts;
+          if (policy) {
+            let properties = channel.channel.QueryInterface(
+              Ci.nsIWritablePropertyBag
+            );
+            properties.setProperty("cancelledByExtension", policy.id);
+          }
           return;
         }
 

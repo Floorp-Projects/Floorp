@@ -95,9 +95,12 @@ interface ChannelWrapper : EventTarget {
 
   /**
    * Cancels the request with the given nsresult status code.
+   *
+   * The optional reason parameter should be one of the BLOCKING_REASON
+   * constants from nsILoadInfo.idl
    */
   [Throws]
-  void cancel(unsigned long result);
+  void cancel(unsigned long result, optional unsigned long reason = 0);
 
   /**
    * Redirects the wrapped HTTP channel to the given URI. For other channel
