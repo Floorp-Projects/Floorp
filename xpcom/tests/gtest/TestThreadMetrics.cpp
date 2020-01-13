@@ -13,6 +13,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/PerformanceCounter.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -50,21 +51,31 @@ class TimedRunnable final : public Runnable {
         mExecutionTime2(aExecutionTime2) {}
 
   NS_IMETHODIMP Run() {
-    PR_Sleep(PR_MillisecondsToInterval(mExecutionTime1 + 5));
+    Sleep(mExecutionTime1);
     for (uint32_t index = 0; index < mNestedRunnables.Length(); ++index) {
       if (index != 0) {
-        PR_Sleep(PR_MillisecondsToInterval(mExecutionTime1 + 5));
+        Sleep(mExecutionTime1);
       }
       (void)DispatchNestedRunnable(mNestedRunnables[index].mRunnable,
                                    mNestedRunnables[index].mDocGroup);
     }
-    PR_Sleep(PR_MillisecondsToInterval(mExecutionTime2 + 5));
+    Sleep(mExecutionTime2);
     return NS_OK;
   }
 
   void AddNestedRunnable(RunnableDescriptor aDescriptor) {
     mNestedRunnables.AppendElement(std::move(aDescriptor));
   }
+
+  void Sleep(uint32_t aMilliseconds) {
+    TimeStamp start = TimeStamp::Now();
+    PR_Sleep(PR_MillisecondsToInterval(aMilliseconds + 5));
+    TimeStamp stop = TimeStamp::Now();
+    mTotalSlept += (stop - start).ToMicroseconds();
+  }
+
+  // Total sleep time, in microseconds.
+  uint64_t TotalSlept() const { return mTotalSlept; }
 
   static void DispatchNestedRunnable(nsIRunnable* aRunnable,
                                      DocGroup* aDocGroup) {
@@ -89,6 +100,9 @@ class TimedRunnable final : public Runnable {
  private:
   uint32_t mExecutionTime1;
   uint32_t mExecutionTime2;
+  // When we sleep, the actual time we sleep might not match how long
+  // we asked to sleep for.  Record how much we actually slept.
+  uint64_t mTotalSlept = 0;
   nsTArray<RunnableDescriptor> mNestedRunnables;
 };
 
@@ -199,10 +213,10 @@ TEST_F(ThreadMetrics, CollectRecursiveMetrics) {
 
   // did we get incremented in the docgroup ?
   uint64_t duration = mCounter->GetExecutionDuration();
-  ASSERT_GE(duration, 50000u);
+  ASSERT_GE(duration, runnable->TotalSlept());
 
   // let's make sure we don't count the time spent in recursive calls
-  ASSERT_LT(duration, 300000u);
+  ASSERT_LT(duration, runnable->TotalSlept() + 200000u);
 }
 
 TEST_F(ThreadMetrics, CollectMultipleRecursiveMetrics) {
@@ -237,10 +251,10 @@ TEST_F(ThreadMetrics, CollectMultipleRecursiveMetrics) {
 
   // did we get incremented in the docgroup ?
   uint64_t duration = mCounter->GetExecutionDuration();
-  ASSERT_GE(duration, 75000u);
+  ASSERT_GE(duration, runnable->TotalSlept());
 
   // let's make sure we don't count the time spent in recursive calls
-  ASSERT_LT(duration, 300000u);
+  ASSERT_LT(duration, runnable->TotalSlept() + 200000u);
 }
 
 TEST_F(ThreadMetrics, CollectMultipleRecursiveMetricsWithTwoDocgroups) {
@@ -254,10 +268,10 @@ TEST_F(ThreadMetrics, CollectMultipleRecursiveMetricsWithTwoDocgroups) {
   // not, to test that the time for first nested event is accounted
   // correctly.
   RefPtr<TimedRunnable> runnable = new TimedRunnable(25, 25);
-  nsCOMPtr<nsIRunnable> nested = new TimedRunnable(400, 0);
-  runnable->AddNestedRunnable({nested, mDocGroup2});
-  nested = new TimedRunnable(400, 0);
-  runnable->AddNestedRunnable({nested});
+  RefPtr<TimedRunnable> nested1 = new TimedRunnable(400, 0);
+  runnable->AddNestedRunnable({nested1, mDocGroup2});
+  nsCOMPtr<nsIRunnable> nested2 = new TimedRunnable(400, 0);
+  runnable->AddNestedRunnable({nested2});
 
   rv = Dispatch(runnable);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -278,13 +292,13 @@ TEST_F(ThreadMetrics, CollectMultipleRecursiveMetricsWithTwoDocgroups) {
   uint64_t duration = mCounter2->GetExecutionDuration();
   // Make sure this we incremented the timings for the first nested
   // runnable correctly.
-  ASSERT_GE(duration, 400000u);
-  ASSERT_LT(duration, 420000u);
+  ASSERT_GE(duration, nested1->TotalSlept());
+  ASSERT_LT(duration, nested1->TotalSlept() + 20000u);
 
   // And now for the outer runnable.
   duration = mCounter->GetExecutionDuration();
-  ASSERT_GE(duration, 75000u);
+  ASSERT_GE(duration, runnable->TotalSlept());
 
   // let's make sure we don't count the time spent in recursive calls
-  ASSERT_LT(duration, 300000u);
+  ASSERT_LT(duration, runnable->TotalSlept() + 200000u);
 }
