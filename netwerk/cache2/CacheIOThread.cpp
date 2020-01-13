@@ -85,8 +85,6 @@ namespace detail {
  */
 class BlockingIOWatcher {
 #ifdef XP_WIN
-  typedef BOOL(WINAPI* TCancelSynchronousIo)(HANDLE hThread);
-  TCancelSynchronousIo mCancelSynchronousIo;
   // The native handle to the thread
   HANDLE mThread;
   // Event signaling back to the main thread, see NotifyOperationDone.
@@ -115,19 +113,11 @@ class BlockingIOWatcher {
 
 #ifdef XP_WIN
 
-BlockingIOWatcher::BlockingIOWatcher()
-    : mCancelSynchronousIo(NULL), mThread(NULL), mEvent(NULL) {
+BlockingIOWatcher::BlockingIOWatcher() : mThread(NULL), mEvent(NULL) {
   HMODULE kernel32_dll = GetModuleHandle("kernel32.dll");
   if (!kernel32_dll) {
     return;
   }
-
-  FARPROC ptr = GetProcAddress(kernel32_dll, "CancelSynchronousIo");
-  if (!ptr) {
-    return;
-  }
-
-  mCancelSynchronousIo = reinterpret_cast<TCancelSynchronousIo>(ptr);
 
   mEvent = ::CreateEventW(NULL, TRUE, FALSE, NULL);
 }
@@ -179,7 +169,7 @@ void BlockingIOWatcher::WatchAndCancel(Monitor& aMonitor) {
   DWORD result = ::WaitForSingleObject(mEvent, maxLag);
   if (result == WAIT_TIMEOUT) {
     LOG(("CacheIOThread: Attempting to cancel a long blocking IO operation"));
-    BOOL result = mCancelSynchronousIo(thread);
+    BOOL result = ::CancelSynchronousIo(thread);
     if (result) {
       LOG(("  cancelation signal succeeded"));
     } else {
