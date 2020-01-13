@@ -41,16 +41,16 @@ common-tests:
 
 web-platform-tests:
     - web-platform-tests
+    - web-platform-tests-crashtests
+    - web-platform-tests-reftests
     - web-platform-tests-wdspec
 
 web-platform-tests-1804:
     - web-platform-tests-crashtests
     - web-platform-tests-reftests
 
-web-platform-tests-linux-ccov:
+web-platform-tests-1604:
     - web-platform-tests
-    - web-platform-tests-crashtests
-    - web-platform-tests-reftests
     - web-platform-tests-wdspec
 
 web-platform-tests-wdspec-headless:
