@@ -7,7 +7,6 @@
 EXPORTS.mozilla.net += [
     'ADocumentChannelBridge.h',
     'ChannelEventQueue.h',
-    'DocumentChannel.h',
     'DocumentChannelChild.h',
     'DocumentChannelParent.h',
     'DocumentLoadListener.h',
@@ -26,7 +25,6 @@ EXPORTS.mozilla.net += [
 
 UNIFIED_SOURCES += [
     'ChannelEventQueue.cpp',
-    'DocumentChannel.cpp',
     'DocumentChannelChild.cpp',
     'DocumentChannelParent.cpp',
     'DocumentLoadListener.cpp',
