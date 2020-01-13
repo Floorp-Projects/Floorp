@@ -1849,7 +1849,7 @@ toolbar#nav-bar {
             'ws': options.sslPort,
         }
 
-    def merge_base_profiles(self, options):
+    def merge_base_profiles(self, options, category):
         """Merge extra profile data from testing/profiles."""
         profile_data_dir = os.path.join(SCRIPT_DIR, 'profile_data')
 
@@ -1862,7 +1862,7 @@ toolbar#nav-bar {
                 profile_data_dir = path
 
         with open(os.path.join(profile_data_dir, 'profiles.json'), 'r') as fh:
-            base_profiles = json.load(fh)['mochitest']
+            base_profiles = json.load(fh)[category]
 
         # values to use when interpolating preferences
         interpolation = {
@@ -1915,7 +1915,7 @@ toolbar#nav-bar {
         # 3) Prefs from --setpref
 
         # Prefs from base profiles
-        self.merge_base_profiles(options)
+        self.merge_base_profiles(options, 'mochitest')
 
         # Hardcoded prefs (TODO move these into a base profile)
         prefs = {
