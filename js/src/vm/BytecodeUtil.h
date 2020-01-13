@@ -32,8 +32,6 @@ enum JSOp : uint8_t {
 #define ENUMERATE_OPCODE(op, ...) op,
   FOR_EACH_OPCODE(ENUMERATE_OPCODE)
 #undef ENUMERATE_OPCODE
-
-      JSOP_LIMIT
 };
 
 /*
@@ -481,7 +479,7 @@ UniqueChars DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
 JSString* DecompileArgument(JSContext* cx, int formalIndex, HandleValue v);
 
 static inline unsigned GetOpLength(JSOp op) {
-  MOZ_ASSERT(op < JSOP_LIMIT);
+  MOZ_ASSERT(uint8_t(op) < JSOP_LIMIT);
   MOZ_ASSERT(CodeSpec(op).length > 0);
   return CodeSpec(op).length;
 }

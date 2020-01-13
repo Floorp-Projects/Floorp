@@ -2571,9 +2571,6 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOP_FORCEINTERPRETER:
       // Intentionally not implemented.
       break;
-
-    case JSOP_LIMIT:
-      break;
   }
 
   // Track a simpler message, since the actionable abort message is a
