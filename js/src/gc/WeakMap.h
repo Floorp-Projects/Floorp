@@ -130,6 +130,8 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // Whether this object has been marked during garbage collection and which
   // color it was marked.
   gc::CellColor mapColor;
+
+  friend class JS::Zone;
 };
 
 namespace detail {
