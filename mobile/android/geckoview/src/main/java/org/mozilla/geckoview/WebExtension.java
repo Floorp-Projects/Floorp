@@ -1220,19 +1220,22 @@ public class WebExtension {
 
     public static class DisabledFlags {
         /** The extension has been disabled by the user */
-        public final static int USER_DISABLED = 1 << 1;
+        public final static int USER = 1 << 1;
 
         /** The extension has been disabled by the blocklist. The details of why this extension
          * was blocked can be found in {@link MetaData#blocklistState}. */
-        public final static int BLOCKLIST_DISABLED = 1 << 2;
+        public final static int BLOCKLIST = 1 << 2;
 
-        // TODO: Bug 1604222
-        final static int APP_DISABLED = 1 << 3;
+        /** The extension has been disabled by the application. To enable the extension you can use
+         * {@link WebExtensionController#enable} passing in
+         * {@link WebExtensionController.EnableSource#APP} as <code>source</code>. */
+        public final static int APP = 1 << 3;
     }
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(flag = true,
-            value = { DisabledFlags.USER_DISABLED, DisabledFlags.BLOCKLIST_DISABLED })
+            value = { DisabledFlags.USER, DisabledFlags.BLOCKLIST,
+                      DisabledFlags.APP })
     @interface EnabledFlags {}
 
     /** Provides information about a {@link WebExtension}. */
@@ -1343,11 +1346,11 @@ public class WebExtension {
          * is enabled or will contain one or more flags from {@link DisabledFlags}.
          *
          * e.g. if the extension has been disabled by the user, the value in
-         * {@link DisabledFlags#USER_DISABLED} will be equal to <code>1</code>:
+         * {@link DisabledFlags#USER} will be equal to <code>1</code>:
          *
          * <pre><code>
          *     boolean isUserDisabled = metaData.disabledFlags
-         *          &amp; DisabledFlags.USER_DISABLED &gt; 0;
+         *          &amp; DisabledFlags.USER &gt; 0;
          * </code></pre>
          */
         public final @EnabledFlags int disabledFlags;
@@ -1390,6 +1393,7 @@ public class WebExtension {
             openOptionsPageInTab = bundle.getBoolean("openOptionsPageInTab");
             isRecommended = bundle.getBoolean("isRecommended");
             blocklistState = bundle.getInt("blocklistState", BlocklistStateFlags.NOT_BLOCKED);
+            enabled = bundle.getBoolean("enabled", false);
 
             int signedState = bundle.getInt("signedState", SignedStateFlags.UNKNOWN);
             if (signedState <= SignedStateFlags.LAST) {
@@ -1401,13 +1405,14 @@ public class WebExtension {
 
             int disabledFlags = 0;
             final String[] disabledFlagsString = bundle.getStringArray("disabledFlags");
-            this.enabled = disabledFlagsString.length == 0;
 
             for (final String flag : disabledFlagsString) {
                 if (flag.equals("userDisabled")) {
-                    disabledFlags |= DisabledFlags.USER_DISABLED;
+                    disabledFlags |= DisabledFlags.USER;
                 } else if (flag.equals("blocklistDisabled")) {
-                    disabledFlags |= DisabledFlags.BLOCKLIST_DISABLED;
+                    disabledFlags |= DisabledFlags.BLOCKLIST;
+                } else if (flag.equals("appDisabled")) {
+                    disabledFlags |= DisabledFlags.APP;
                 } else {
                     Log.e(LOGTAG, "Unrecognized disabledFlag state: " + flag);
                 }

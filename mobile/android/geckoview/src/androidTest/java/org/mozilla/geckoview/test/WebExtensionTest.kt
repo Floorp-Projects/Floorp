@@ -92,6 +92,35 @@ class WebExtensionTest : BaseSessionTest() {
                 color as String, equalTo(expected))
     }
 
+    private fun checkDisabledState(extension: WebExtension,
+                                   userDisabled: Boolean = false, appDisabled: Boolean = false,
+                                   blocklistDisabled: Boolean = false) {
+
+        val enabled = !userDisabled && !appDisabled && !blocklistDisabled
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        if (!enabled) {
+            // Border should be empty because the extension is disabled
+            assertBodyBorderEqualTo("")
+        } else {
+            assertBodyBorderEqualTo("red")
+        }
+
+        assertThat("enabled should match",
+                extension.metaData!!.enabled, equalTo(enabled))
+        assertThat("userDisabled should match",
+                extension.metaData!!.disabledFlags and DisabledFlags.USER > 0,
+                equalTo(userDisabled))
+        assertThat("appDisabled should match",
+                extension.metaData!!.disabledFlags and DisabledFlags.APP > 0,
+                equalTo(appDisabled))
+        assertThat("blocklistDisabled should match",
+                extension.metaData!!.disabledFlags and DisabledFlags.BLOCKLIST > 0,
+                equalTo(blocklistDisabled))
+    }
+
     @Test
     fun enableDisable() {
         mainSession.loadUri("example.com")
@@ -110,40 +139,25 @@ class WebExtensionTest : BaseSessionTest() {
 
         var borderify = sessionRule.waitForResult(
                 controller.install("resource://android/assets/web_extensions/borderify.xpi"))
-        mainSession.reload()
-        sessionRule.waitForPageStop()
-
-        assertThat("Extension should be enabled after installing", borderify.metaData!!.enabled,
-                equalTo(true))
-        assertThat("Extension should be user disabled after calling disable",
-                borderify.metaData!!.disabledFlags, equalTo(0))
-        // Border should be ready because the extension is enabled
-        assertBodyBorderEqualTo("red")
+        checkDisabledState(borderify, userDisabled=false, appDisabled=false)
 
         borderify = sessionRule.waitForResult(controller.disable(borderify, EnableSource.USER))
-        mainSession.reload()
-        sessionRule.waitForPageStop()
+        checkDisabledState(borderify, userDisabled=true, appDisabled=false)
 
-        assertThat("Extension should be user disabled after calling disable",
-                borderify.metaData!!.enabled, equalTo(false))
-        assertThat("Extension should be user disabled after calling disable",
-                borderify.metaData!!.disabledFlags and DisabledFlags.USER_DISABLED > 0,
-                equalTo(true))
-        assertThat("Extension should not be blocklist disabled after calling disable",
-                borderify.metaData!!.disabledFlags and DisabledFlags.BLOCKLIST_DISABLED > 0,
-                equalTo(false))
-        // Border should be empty because the extension is disabled
-        assertBodyBorderEqualTo("")
+        borderify = sessionRule.waitForResult(controller.disable(borderify, EnableSource.APP))
+        checkDisabledState(borderify, userDisabled=true, appDisabled=true)
+
+        borderify = sessionRule.waitForResult(controller.enable(borderify, EnableSource.APP))
+        checkDisabledState(borderify, userDisabled=true, appDisabled=false)
 
         borderify = sessionRule.waitForResult(controller.enable(borderify, EnableSource.USER))
-        mainSession.reload()
-        sessionRule.waitForPageStop()
+        checkDisabledState(borderify, userDisabled=false, appDisabled=false)
 
-        assertThat("Extension should be user disabled after calling disable",
-                borderify.metaData!!.enabled, equalTo(true))
-        assertThat("Extension should be user disabled after calling disable",
-                borderify.metaData!!.disabledFlags, equalTo(0))
-        assertBodyBorderEqualTo("red")
+        borderify = sessionRule.waitForResult(controller.disable(borderify, EnableSource.APP))
+        checkDisabledState(borderify, userDisabled=false, appDisabled=true)
+
+        borderify = sessionRule.waitForResult(controller.enable(borderify, EnableSource.APP))
+        checkDisabledState(borderify, userDisabled=false, appDisabled=false)
 
         sessionRule.waitForResult(controller.uninstall(borderify))
         mainSession.reload()
@@ -171,7 +185,7 @@ class WebExtensionTest : BaseSessionTest() {
                 assertEquals(extension.metaData!!.version, "1.0")
                 // TODO: Bug 1601067
                 // assertEquals(extension.isBuiltIn, false)
-                assertEquals(extension.metaData!!.enabled, true)
+                assertEquals(extension.metaData!!.enabled, false)
                 assertEquals(extension.metaData!!.signedState,
                         WebExtension.SignedStateFlags.SIGNED)
                 assertEquals(extension.metaData!!.blocklistState,
