@@ -45,10 +45,7 @@ async function checkOpensOnFocus(win, state) {
 }
 
 async function checkDoesNotOpenOnFocus(win) {
-  Assert.ok(
-    !win.gURLBar.openViewOnFocusForCurrentTab,
-    "openViewOnFocusForCurrentTab should be false"
-  );
+  Assert.ok(!win.gURLBar.openViewOnFocus, "openViewOnFocus should be false");
   Assert.ok(!win.gURLBar.view.isOpen, "check urlbar panel is not open");
   win.gURLBar.blur();
 
