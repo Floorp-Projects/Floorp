@@ -1765,8 +1765,8 @@ static nscoord LetterSpacing(nsIFrame* aFrame,
     // large font-sizes don't suffer from poor glyph placement due to app unit
     // rounding. The used letter-spacing value must be scaled by the same
     // factor.
-    StyleCSSPixelLength spacing = aStyleText->mLetterSpacing;
-    spacing._0 *= GetSVGFontSizeScaleFactor(aFrame);
+    Length spacing = aStyleText->mLetterSpacing;
+    spacing.ScaleBy(GetSVGFontSizeScaleFactor(aFrame));
     return spacing.ToAppUnits();
   }
 
@@ -1791,7 +1791,7 @@ static nscoord WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
       return 0;
     }
     auto spacing = aStyleText->mWordSpacing;
-    spacing.length._0 *= GetSVGFontSizeScaleFactor(aFrame);
+    spacing.ScaleLengthsBy(GetSVGFontSizeScaleFactor(aFrame));
     return spacing.Resolve([&] { return GetSpaceWidthAppUnits(aTextRun); });
   }
 

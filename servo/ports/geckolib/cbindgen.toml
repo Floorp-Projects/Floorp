@@ -247,13 +247,16 @@ renaming_overrides_prefixing = true
   inline nscoord ToAppUnits() const;
   inline bool IsZero() const;
   float ToCSSPixels() const { return _0; }
+  inline void ScaleBy(float);
 """
 
 "LengthPercentage" = """
-  static constexpr inline StyleLengthPercentage Zero();
+  inline StyleLengthPercentage();
+  static inline StyleLengthPercentage Zero();
   static inline StyleLengthPercentage FromAppUnits(nscoord);
   static inline StyleLengthPercentage FromPixels(CSSCoord);
   static inline StyleLengthPercentage FromPercentage(float);
+  inline void ScaleLengthsBy(float);
   inline CSSCoord LengthInCSSPixels() const;
   inline float Percentage() const;
   inline bool HasPercent() const;
