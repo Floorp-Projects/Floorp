@@ -718,6 +718,8 @@ child:
      */
     async Show(ParentShowInfo parentInfo, OwnerShowInfo childInfo);
 
+    async ScrollbarPreferenceChanged(ScrollbarPreference pref);
+
     async InitRendering(TextureFactoryIdentifier textureFactoryIdentifier,
                         LayersId layersId,
                         CompositorOptions compositorOptions,

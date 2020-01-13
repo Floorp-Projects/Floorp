@@ -496,6 +496,9 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   JSRuntime* runtime = gc->rt;
   GCMarker* gcmarker = &gc->marker;
 
+  MOZ_ASSERT(gc->nursery().isEmpty());
+  MOZ_ASSERT(!gcmarker->isWeakMarking());
+
   gc->waitBackgroundSweepEnd();
 
   /* Wait for off-thread parsing which can allocate. */
@@ -545,6 +548,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
     for (gc::WeakKeyTable::Range r = zone->gcWeakKeys().all(); !r.empty();
          r.popFront()) {
+      MOZ_ASSERT(r.front().key->asTenured().zone() == zone);
       if (!savedWeakKeys.put(r.front().key, std::move(r.front().value))) {
         oomUnsafe.crash("saving weak keys table for validator");
       }
@@ -670,6 +674,9 @@ void js::gc::MarkingValidator::validate() {
   if (!initialized) {
     return;
   }
+
+  MOZ_ASSERT(gc->nursery().isEmpty());
+  MOZ_ASSERT(!gc->marker.isWeakMarking());
 
   gc->waitBackgroundSweepEnd();
 

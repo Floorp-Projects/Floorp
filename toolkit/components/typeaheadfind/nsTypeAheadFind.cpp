@@ -1419,7 +1419,8 @@ nsTypeAheadFind::IsRangeRendered(nsRange* aRange, bool* aResult) {
 
 bool nsTypeAheadFind::IsRangeRendered(nsRange* aRange) {
   using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aRange->GetCommonAncestor());
+  nsCOMPtr<nsIContent> content =
+      do_QueryInterface(aRange->GetClosestCommonInclusiveAncestor());
   if (!content) {
     return false;
   }

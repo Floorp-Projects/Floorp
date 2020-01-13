@@ -458,6 +458,11 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::gc::WeakKeyTable& gcWeakKeys() { return gcWeakKeys_.ref(); }
   js::gc::WeakKeyTable& gcNurseryWeakKeys() { return gcNurseryWeakKeys_.ref(); }
 
+  // Perform all pending weakmap entry marking for this zone after
+  // transitioning to weak marking mode.
+  void enterWeakMarkingMode(js::GCMarker* marker);
+  void checkWeakMarkingMode();
+
  private:
   void sweepWeakKeysAfterMinorGC();
 

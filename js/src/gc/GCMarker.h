@@ -304,7 +304,7 @@ class GCMarker : public JSTracer {
   // must be empty when this is called.
   void setMainStackColor(gc::MarkColor newColor);
 
-  void enterWeakMarkingMode();
+  bool enterWeakMarkingMode();
   void leaveWeakMarkingMode();
 
   // Do not use linear-time weak marking for the rest of this collection.
