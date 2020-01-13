@@ -800,7 +800,7 @@
 #   (2) browser.display.document_color_use set to 2 (always)
 - name: browser.display.permit_backplate
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
   rust: true
 
