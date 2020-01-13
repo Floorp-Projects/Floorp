@@ -91,3 +91,5 @@ echo "Applying disable-assert.patch on top of $rev"
 patch -p3 < disable-assert.patch
 echo "Applying disable-iaudioclient3.patch on top of $rev"
 patch -p3 < disable-iaudioclient3.patch
+echo "Applying revert-optimization.patch on top of $rev"
+patch -p1 < revert-optimization.patch
