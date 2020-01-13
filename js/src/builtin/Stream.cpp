@@ -10,7 +10,6 @@
 
 #include <stdint.h>  // int32_t
 
-#include "builtin/Promise.h"                          // js::PromiseObject
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::CreateAlgorithmFromUnderlyingMethod, js::InvokeOrNoop, js::IsMaybeWrapped, js::PromiseCall, js::PromiseRejectedWithPendingError
 #include "builtin/streams/PullIntoDescriptor.h"       // js::PullIntoDescriptor
@@ -24,6 +23,7 @@
 #include "js/PropertySpec.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
+#include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/SelfHosting.h"
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler

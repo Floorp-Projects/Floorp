@@ -26,7 +26,6 @@
 #include "jsnum.h"        // for Int32ToString
 
 #include "builtin/Array.h"      // for NewDenseCopiedArray
-#include "builtin/Promise.h"    // for PromiseObject
 #include "debugger/Debugger.h"  // for Completion, Debugger
 #include "debugger/DebugScript.h"
 #include "debugger/Environment.h"          // for DebuggerEnvironment

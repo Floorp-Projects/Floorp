@@ -32,6 +32,8 @@
 #include "threading/ConditionVariable.h"
 #include "vm/JSContext.h"
 #include "vm/MutexIDs.h"
+#include "vm/OffThreadPromiseRuntimeState.h"  // js::OffThreadPromiseTask
+#include "vm/PromiseObject.h"                 // js::PromiseObject
 
 namespace JS {
 class OffThreadToken {};

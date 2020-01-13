@@ -7,11 +7,11 @@
 #ifndef vm_AsyncFunction_h
 #define vm_AsyncFunction_h
 
-#include "builtin/Promise.h"
 #include "js/Class.h"
 #include "vm/GeneratorObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/PromiseObject.h"
 
 namespace js {
 

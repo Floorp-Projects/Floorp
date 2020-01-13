@@ -15,12 +15,12 @@
 #include "jsapi.h"        // JS_ReportErrorNumberASCII
 #include "jsfriendapi.h"  // js::GetErrorMessage
 
-#include "builtin/Promise.h"      // js::PromiseObject
 #include "js/Conversions.h"       // JS::ToNumber
 #include "js/RootingAPI.h"        // JS::{,Mutable}Handle, JS::Rooted
 #include "vm/Interpreter.h"       // js::{Call,GetAndClearException}
 #include "vm/JSContext.h"         // JSContext
 #include "vm/ObjectOperations.h"  // js::GetProperty
+#include "vm/PromiseObject.h"     // js::PromiseObject
 #include "vm/StringType.h"        // js::PropertyName
 
 #include "vm/JSContext-inl.h"  // JSContext::check

@@ -14,7 +14,7 @@
 #include "jsapi.h"  // JS_SetPrivate
 
 #include "builtin/Array.h"  // js::NewDenseFullyAllocatedArray
-#include "builtin/Promise.h"  // js::PromiseObject, js::RejectPromiseWithPendingError
+#include "builtin/Promise.h"  // js::RejectPromiseWithPendingError
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStream{,Default}Controller
 #include "builtin/streams/ReadableStreamDefaultControllerOperations.h"  // js::ReadableStreamDefaultController{Close,Enqueue}, js::ReadableStreamControllerError, js::SourceAlgorithms
@@ -28,6 +28,7 @@
 #include "vm/JSContext.h"         // JSContext
 #include "vm/NativeObject.h"      // js::NativeObject
 #include "vm/ObjectOperations.h"  // js::GetProperty
+#include "vm/PromiseObject.h"     // js::PromiseObject
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithValue

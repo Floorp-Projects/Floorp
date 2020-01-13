@@ -24,6 +24,7 @@
 #include "js/UniquePtr.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/Compartment.h"
+#include "vm/PromiseLookup.h"  // js::PromiseLookup
 #include "vm/ReceiverGuard.h"
 #include "vm/RegExpShared.h"
 #include "vm/SavedStacks.h"
