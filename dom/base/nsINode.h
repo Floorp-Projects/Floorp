@@ -1188,11 +1188,14 @@ class nsINode : public mozilla::dom::EventTarget {
 
     /**
      * A set of ranges which are in the selection and which have this node as
-     * their endpoints' common ancestor.  This is a UniquePtr instead of just a
-     * LinkedList, because that prevents us from pushing DOMSlots up to the next
-     * allocation bucket size, at the cost of some complexity.
+     * their endpoints' closest common inclusive ancestor
+     * (https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor).  This is
+     * a UniquePtr instead of just a LinkedList, because that prevents us from
+     * pushing DOMSlots up to the next allocation bucket size, at the cost of
+     * some complexity.
      */
-    mozilla::UniquePtr<mozilla::LinkedList<nsRange>> mCommonAncestorRanges;
+    mozilla::UniquePtr<mozilla::LinkedList<nsRange>>
+        mClosestCommonInclusiveAncestorRanges;
   };
 
   /**
@@ -1990,23 +1993,34 @@ class nsINode : public mozilla::dom::EventTarget {
       const ConvertCoordinateOptions& aOptions, CallerType aCallerType,
       ErrorResult& aRv);
 
-  const mozilla::LinkedList<nsRange>* GetExistingCommonAncestorRanges() const {
+  /**
+   * See nsSlots::mClosestCommonInclusiveAncestorRanges.
+   */
+  const mozilla::LinkedList<nsRange>*
+  GetExistingClosestCommonInclusiveAncestorRanges() const {
     if (!HasSlots()) {
       return nullptr;
     }
-    return GetExistingSlots()->mCommonAncestorRanges.get();
+    return GetExistingSlots()->mClosestCommonInclusiveAncestorRanges.get();
   }
 
-  mozilla::LinkedList<nsRange>* GetExistingCommonAncestorRanges() {
+  /**
+   * See nsSlots::mClosestCommonInclusiveAncestorRanges.
+   */
+  mozilla::LinkedList<nsRange>*
+  GetExistingClosestCommonInclusiveAncestorRanges() {
     if (!HasSlots()) {
       return nullptr;
     }
-    return GetExistingSlots()->mCommonAncestorRanges.get();
+    return GetExistingSlots()->mClosestCommonInclusiveAncestorRanges.get();
   }
 
+  /**
+   * See nsSlots::mClosestCommonInclusiveAncestorRanges.
+   */
   mozilla::UniquePtr<mozilla::LinkedList<nsRange>>&
-  GetCommonAncestorRangesPtr() {
-    return Slots()->mCommonAncestorRanges;
+  GetClosestCommonInclusiveAncestorRangesPtr() {
+    return Slots()->mClosestCommonInclusiveAncestorRanges;
   }
 
   nsIWeakReference* GetExistingWeakReference() {

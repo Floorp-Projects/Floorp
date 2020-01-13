@@ -185,7 +185,8 @@ bool nsRange::IsNodeSelected(nsINode* aNode, const uint32_t aStartOffset,
   Selection* prevSelection = nullptr;
   uint32_t maxRangeCount = 0;
   for (; n; n = GetNextRangeCommonAncestor(n->GetParentNode())) {
-    LinkedList<nsRange>* ranges = n->GetExistingCommonAncestorRanges();
+    LinkedList<nsRange>* ranges =
+        n->GetExistingClosestCommonInclusiveAncestorRanges();
     if (!ranges) {
       continue;
     }
@@ -382,7 +383,8 @@ void nsRange::RegisterClosestCommonInclusiveAncestor(nsINode* aNode) {
 
   MarkDescendants(aNode);
 
-  UniquePtr<LinkedList<nsRange>>& ranges = aNode->GetCommonAncestorRangesPtr();
+  UniquePtr<LinkedList<nsRange>>& ranges =
+      aNode->GetClosestCommonInclusiveAncestorRangesPtr();
   if (!ranges) {
     ranges = MakeUnique<LinkedList<nsRange>>();
   }
@@ -399,7 +401,8 @@ void nsRange::UnregisterClosestCommonInclusiveAncestor(nsINode* aNode,
                "wrong node");
   MOZ_DIAGNOSTIC_ASSERT(aNode == mRegisteredClosestCommonInclusiveAncestor,
                         "wrong node");
-  LinkedList<nsRange>* ranges = aNode->GetExistingCommonAncestorRanges();
+  LinkedList<nsRange>* ranges =
+      aNode->GetExistingClosestCommonInclusiveAncestorRanges();
   MOZ_ASSERT(ranges);
 
   mRegisteredClosestCommonInclusiveAncestor = nullptr;
