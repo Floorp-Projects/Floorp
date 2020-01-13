@@ -217,9 +217,6 @@ internal class LoginDialogFragment : PromptDialogFragment() {
                         passwordErrorText =
                         context?.getString(R.string.mozac_feature_prompt_error_empty_password)
                     )
-                is LoginValidationDelegate.Result.Error.NotImplemented ->
-                    throw NotImplementedError("Unable to validate saved logins. Are you using " +
-                        "the correct ${LoginValidationDelegate::class}?")
                 is LoginValidationDelegate.Result.Error.GeckoError -> {
                     // TODO handle these errors more robustly. See:
                     // https://github.com/mozilla-mobile/fenix/issues/7545
