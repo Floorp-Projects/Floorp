@@ -1763,7 +1763,7 @@ security:
     release_channel_collection: opt-out
     products:
       - firefox
-    expiry_version: "75"
+    expiry_version: "77"
     record_in_processes:
       - all
     extra_keys:
