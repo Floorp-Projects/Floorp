@@ -17,22 +17,25 @@ namespace widget {
 #define GBMLIB_NAME "libgbm.so.1"
 #define DRMLIB_NAME "libdrm.so.2"
 
-// A general on/off for Firefox dmabuf support. When it set dmabuf is
-// configured.
-#define DMABUF_PREF "widget.wayland_dmabuf_backend.enabled"
+// Use dmabuf textures for GL/WebRender. Use for testing purposes only,
+// it's slow due to missing modifiers.
+#define DMABUF_TEXTURE_PREF "widget.wayland_dmabuf_textures.enabled"
 // Enables dmabuf backend for basic software compositor, i.e. we can
 // write our gfx data directly to GPU. Used for testing purposes only
 // as it's slower than shm backend due to missing dmabuf modifiers.
 #define DMABUF_BASIC_PREF "widget.wayland_dmabuf_basic_compositor.enabled"
+// Enable dmabuf for WebGL backend
+#define DMABUF_WEBGL_PREF "widget.wayland_dmabuf_webgl.enabled"
 // See WindowSurfaceWayland::RenderingCacheMode for details.
 #define CACHE_MODE_PREF "widget.wayland_cache_mode"
 
-bool nsWaylandDisplay::mIsDMABufEnabled = false;
-// -1 mean the pref was not loaded yet
-int nsWaylandDisplay::mIsDMABufPrefState = -1;
-int nsWaylandDisplay::mIsDMABufPrefBasicCompositorState = -1;
-bool nsWaylandDisplay::mIsDMABufConfigured = false;
-int nsWaylandDisplay::mRenderingCacheModePref = -1;
+bool nsWaylandDisplay::sIsDMABufEnabled = false;
+int nsWaylandDisplay::sIsDMABufPrefTextState = false;
+int nsWaylandDisplay::sIsDMABufPrefBasicCompositorState = false;
+int nsWaylandDisplay::sIsDMABufPrefWebGLState = false;
+bool nsWaylandDisplay::sIsDMABufConfigured = false;
+int nsWaylandDisplay::sRenderingCacheModePref = -1;
+bool nsWaylandDisplay::sIsPrefLoaded = false;
 
 wl_display* WaylandDisplayGetWLDisplay(GdkDisplay* aGdkDisplay) {
   if (!aGdkDisplay) {
@@ -415,13 +418,13 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
   if (NS_IsMainThread()) {
     // We can't load the preference from compositor/render thread
     // so load all Wayland prefs here.
-    if (mIsDMABufPrefState == -1) {
-      mIsDMABufPrefState = Preferences::GetBool(DMABUF_PREF, false);
-      mIsDMABufPrefBasicCompositorState =
+    if (!sIsPrefLoaded) {
+      sIsDMABufPrefTextState = Preferences::GetBool(DMABUF_TEXTURE_PREF, false);
+      sIsDMABufPrefBasicCompositorState =
           Preferences::GetBool(DMABUF_BASIC_PREF, false);
-    }
-    if (mRenderingCacheModePref == -1) {
-      mRenderingCacheModePref = Preferences::GetInt(CACHE_MODE_PREF, 0);
+      sIsDMABufPrefWebGLState = Preferences::GetBool(DMABUF_WEBGL_PREF, false);
+      sRenderingCacheModePref = Preferences::GetInt(CACHE_MODE_PREF, 0);
+      sIsPrefLoaded = true;
     }
 
     // Use default event queue in main thread operated by Gtk+.
@@ -453,24 +456,26 @@ nsWaylandDisplay::~nsWaylandDisplay() {
 }
 
 bool nsWaylandDisplay::IsDMABufEnabled() {
-  if (mIsDMABufConfigured) {
-    return mIsDMABufEnabled;
+  if (sIsDMABufConfigured) {
+    return sIsDMABufEnabled;
   }
 
-  // WaylandDisplayGet() sets mIsDMABufPrefState
+  // WaylandDisplayGet() loads dmabuf config prefs
   nsWaylandDisplay* display = WaylandDisplayGet();
   if (!display) {
     return false;
   }
 
-  if (nsWaylandDisplay::mIsDMABufPrefState == -1) {
+  if (!sIsPrefLoaded) {
     MOZ_ASSERT(false,
                "We're missing nsWaylandDisplay preference configuration!");
     return false;
   }
 
-  mIsDMABufConfigured = true;
-  if (!nsWaylandDisplay::mIsDMABufPrefState) {
+  sIsDMABufConfigured = true;
+  if (!nsWaylandDisplay::sIsDMABufPrefTextState &&
+      !nsWaylandDisplay::sIsDMABufPrefBasicCompositorState &&
+      !nsWaylandDisplay::sIsDMABufPrefWebGLState) {
     // Disabled by user, just quit.
     return false;
   }
@@ -487,12 +492,18 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
     return false;
   }
 
-  mIsDMABufEnabled = true;
+  sIsDMABufEnabled = true;
   return true;
 }
 
 bool nsWaylandDisplay::IsDMABufBasicEnabled() {
-  return IsDMABufEnabled() && mIsDMABufPrefBasicCompositorState;
+  return IsDMABufEnabled() && sIsDMABufPrefBasicCompositorState;
+}
+bool nsWaylandDisplay::IsDMABufTexturesEnabled() {
+  return IsDMABufEnabled() && sIsDMABufPrefTextState;
+}
+bool nsWaylandDisplay::IsDMABufWebGLEnabled() {
+  return IsDMABufEnabled() && sIsDMABufPrefWebGLState;
 }
 
 void* nsGbmLib::sGbmLibHandle = nullptr;
