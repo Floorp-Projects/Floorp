@@ -72,7 +72,6 @@
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/JSWindowActorChild.h"
 
-#include "mozilla/net/DocumentChannel.h"
 #include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "ReferrerInfo.h"
@@ -5829,7 +5828,7 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
       // If we are starting a DocumentChannel, we need to pass the timing
       // statistics so that should a process switch occur, the starting type can
       // be passed to the new DocShell running in the other content process.
-      if (RefPtr<DocumentChannel> docChannel = do_QueryObject(aRequest)) {
+      if (RefPtr<DocumentChannelChild> docChannel = do_QueryObject(aRequest)) {
         docChannel->SetNavigationTiming(mTiming);
       }
     }
@@ -5923,7 +5922,7 @@ void nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
   // of redirects handled in the parent process.
   // Query the full redirect chain directly, so that we can add history
   // entries for them.
-  if (RefPtr<DocumentChannel> docChannel = do_QueryObject(aOldChannel)) {
+  if (RefPtr<DocumentChannelChild> docChannel = do_QueryObject(aOldChannel)) {
     nsCOMPtr<nsIURI> previousURI;
     uint32_t previousFlags = 0;
     docChannel->GetLastVisit(getter_AddRefs(previousURI), &previousFlags);
@@ -10230,8 +10229,8 @@ nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
 
   // Let the client channel helper know if we are using DocumentChannel,
   // since redirects get handled in the parent process in that case.
-  RefPtr<net::DocumentChannel> docChannel = do_QueryObject(aChannel);
-  if (docChannel && XRE_IsContentProcess()) {
+  RefPtr<net::DocumentChannelChild> docChannel = do_QueryObject(aChannel);
+  if (docChannel) {
     bool pluginsAllowed = true;
     GetAllowPlugins(&pluginsAllowed);
     docChannel->SetDocumentOpenFlags(aOpenFlags, pluginsAllowed);
