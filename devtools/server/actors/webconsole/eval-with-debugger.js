@@ -149,6 +149,13 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     allowSideEffects(dbg, sideEffectData);
   }
 
+  // Attempt to initialize any declarations found in the evaluated string
+  // since they may now be stuck in an "initializing" state due to the
+  // error. Already-initialized bindings will be ignored.
+  if (!frame && result && "throw" in result) {
+    parseErrorOutput(dbgWindow, string);
+  }
+
   const { helperResult } = helpers;
 
   // Clean up helpers helpers and bindings
@@ -170,18 +177,11 @@ function getEvalResult(string, evalOptions, bindings, frame, dbgWindow) {
   if (frame) {
     return frame.evalWithBindings(string, bindings, evalOptions);
   }
-  const result = dbgWindow.executeInGlobalWithBindings(
+  return dbgWindow.executeInGlobalWithBindings(
     string,
     bindings,
     evalOptions
   );
-  // Attempt to initialize any declarations found in the evaluated string
-  // since they may now be stuck in an "initializing" state due to the
-  // error. Already-initialized bindings will be ignored.
-  if (result && "throw" in result) {
-    parseErrorOutput(dbgWindow, string);
-  }
-  return result;
 }
 
 function parseErrorOutput(dbgWindow, string) {
