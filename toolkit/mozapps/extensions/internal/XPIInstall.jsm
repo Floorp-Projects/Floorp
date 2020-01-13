@@ -1725,7 +1725,9 @@ class AddonInstall {
       this.existingAddon.userDisabled &&
       !this.existingAddon.pendingUninstall
     ) {
-      await XPIDatabase.updateAddonDisabledState(this.existingAddon, false);
+      await XPIDatabase.updateAddonDisabledState(this.existingAddon, {
+        userDisabled: false,
+      });
       this.state = AddonManager.STATE_INSTALLED;
       this._callInstallListeners("onInstallEnded", this.existingAddon.wrapper);
       return;
