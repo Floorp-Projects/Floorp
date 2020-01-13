@@ -32,6 +32,20 @@ object MockWebServerHelper {
         }
         return uris
     }
+
+    /**
+     * Create a mock webserver that accepts all requests and replies with "OK".
+     * @return a [MockWebServer] instance
+     */
+    fun createAlwaysOkMockWebServer(): MockWebServer {
+        return MockWebServer().apply {
+            setDispatcher(object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    return MockResponse().setBody("OK")
+                }
+            })
+        }
+    }
 }
 
 /**
