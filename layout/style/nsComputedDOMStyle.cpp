@@ -1561,8 +1561,19 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     return valueList.forget();
   }
 
-  uint32_t numSizes = aTrackInfo.mSizes.Length();
-  if (!numSizes && !aTrackList.HasRepeatAuto()) {
+  const bool serializeImplicit =
+    StaticPrefs::layout_css_serialize_grid_implicit_tracks();
+
+  const nsTArray<nscoord>& trackSizes = aTrackInfo.mSizes;
+  const uint32_t numExplicitTracks = aTrackInfo.mNumExplicitTracks;
+  const uint32_t numLeadingImplicitTracks =
+      aTrackInfo.mNumLeadingImplicitTracks;
+  uint32_t numSizes = trackSizes.Length();
+  MOZ_ASSERT(numSizes >= numLeadingImplicitTracks + numExplicitTracks);
+
+  const bool hasTracksToSerialize = serializeImplicit ? !!numSizes : !!numExplicitTracks;
+  const bool hasRepeatAuto = aTrackList.HasRepeatAuto();
+  if (!hasTracksToSerialize && !hasRepeatAuto) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     val->SetIdent(eCSSKeyword_none);
     return val.forget();
@@ -1574,24 +1585,21 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
   // size, but that doesn't seem worth doing since even for repeat(auto-*)
   // the resolved size might differ for the repeated tracks.
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  const nsTArray<nscoord>& trackSizes = aTrackInfo.mSizes;
-  const uint32_t numExplicitTracks = aTrackInfo.mNumExplicitTracks;
-  const uint32_t numLeadingImplicitTracks =
-      aTrackInfo.mNumLeadingImplicitTracks;
-  MOZ_ASSERT(numSizes >= numLeadingImplicitTracks + numExplicitTracks);
 
   // Add any leading implicit tracks.
-  for (uint32_t i = 0; i < numLeadingImplicitTracks; ++i) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetAppUnits(trackSizes[i]);
-    valueList->AppendCSSValue(val.forget());
+  if (serializeImplicit) {
+    for (uint32_t i = 0; i < numLeadingImplicitTracks; ++i) {
+      RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+      val->SetAppUnits(trackSizes[i]);
+      valueList->AppendCSSValue(val.forget());
+    }
   }
 
   // Then add any explicit tracks and removed auto-fit tracks.
-  if (numExplicitTracks || aTrackList.HasRepeatAuto()) {
+  if (numExplicitTracks || hasRepeatAuto) {
     uint32_t endOfRepeat = 0;  // first index after any repeat() tracks
     int32_t offsetToLastRepeat = 0;
-    if (aTrackList.HasRepeatAuto()) {
+    if (hasRepeatAuto) {
       // offsetToLastRepeat is -1 if all repeat(auto-fit) tracks are empty
       offsetToLastRepeat =
           numExplicitTracks + 1 - aTrackInfo.mResolvedLineNames.Length();
@@ -1637,7 +1645,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
         };
 
     for (uint32_t i = 0;; i++) {
-      if (aTrackList.HasRepeatAuto()) {
+      if (hasRepeatAuto) {
         if (i == aTrackInfo.mRepeatFirstTrack) {
           const nsTArray<StyleCustomIdent>& lineNames =
               aTrackInfo.mResolvedLineNames[i];
@@ -1684,11 +1692,13 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
   }
 
   // Add any trailing implicit tracks.
-  for (uint32_t i = numLeadingImplicitTracks + numExplicitTracks; i < numSizes;
-       ++i) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetAppUnits(trackSizes[i]);
-    valueList->AppendCSSValue(val.forget());
+  if (serializeImplicit) {
+    for (uint32_t i = numLeadingImplicitTracks + numExplicitTracks; i < numSizes;
+         ++i) {
+      RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+      val->SetAppUnits(trackSizes[i]);
+      valueList->AppendCSSValue(val.forget());
+    }
   }
 
   return valueList.forget();
