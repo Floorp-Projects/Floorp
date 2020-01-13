@@ -179,7 +179,12 @@ impl AndroidHandler {
         Ok(())
     }
 
-    pub fn generate_config_file(&self) -> Result<String> {
+    pub fn generate_config_file<I, K, V>(&self, envs: I) -> Result<String>
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: ToString,
+        V: ToString
+    {
         // To configure GeckoView, we use the automation techniques documented at
         // https://mozilla.github.io/geckoview/consumer/docs/automation.
         #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -197,6 +202,13 @@ impl AndroidHandler {
             ]),
             env: Mapping::new(),
         };
+
+        for (key, value) in envs {
+            config.env.insert(
+                Value::String(key.to_string()),
+                Value::String(value.to_string()),
+            );
+        }
 
         config.env.insert(
             Value::String("MOZ_CRASHREPORTER".to_owned()),
@@ -217,7 +229,12 @@ impl AndroidHandler {
         Ok(contents.concat())
     }
 
-    pub fn prepare(&self, profile: &Profile) -> Result<()> {
+    pub fn prepare<I, K, V>(&self, profile: &Profile, env: I) -> Result<()>
+    where
+        I: IntoIterator<Item = (K, V)>,
+        K: ToString,
+        V: ToString
+    {
         match self.process {
             Some(ref process) => {
                 process.device.clear_app_data(&process.package)?;
@@ -239,7 +256,7 @@ impl AndroidHandler {
                 let mut target_path = PathBuf::from("/data/local/tmp");
                 target_path.push(&format!("{}-geckoview-config.yaml", process.package));
 
-                let contents = self.generate_config_file()?;
+                let contents = self.generate_config_file(env)?;
                 debug!("Content of generated GeckoView config file:\n{}", contents);
                 let reader = &mut io::BufReader::new(contents.as_bytes());
 
