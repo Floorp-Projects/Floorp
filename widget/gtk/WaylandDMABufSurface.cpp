@@ -481,7 +481,9 @@ already_AddRefed<WaylandDMABufSurface>
 WaylandDMABufSurface::CreateDMABufSurface(int aWidth, int aHeight,
                                           int aWaylandDMABufSurfaceFlags) {
   RefPtr<WaylandDMABufSurface> surf = new WaylandDMABufSurface();
-  surf->Create(aWidth, aHeight, aWaylandDMABufSurfaceFlags);
+  if (!surf->Create(aWidth, aHeight, aWaylandDMABufSurfaceFlags)) {
+    return nullptr;
+  }
   return surf.forget();
 }
 
@@ -489,6 +491,8 @@ already_AddRefed<WaylandDMABufSurface>
 WaylandDMABufSurface::CreateDMABufSurface(
     const mozilla::layers::SurfaceDescriptor& aDesc) {
   RefPtr<WaylandDMABufSurface> surf = new WaylandDMABufSurface();
-  surf->Create(aDesc);
+  if (!surf->Create(aDesc)) {
+    return nullptr;
+  }
   return surf.forget();
 }
