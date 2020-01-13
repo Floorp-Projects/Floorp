@@ -723,7 +723,7 @@ WebGLProgram::~WebGLProgram() {
 // GL funcs
 
 void WebGLProgram::AttachShader(WebGLShader& shader) {
-  RefPtr<WebGLShader>* shaderSlot;
+  RefPtr<WebGLShader>* shaderSlot = nullptr;
   switch (shader.mType) {
     case LOCAL_GL_VERTEX_SHADER:
       shaderSlot = &mVertShader;
@@ -770,7 +770,7 @@ void WebGLProgram::BindAttribLocation(GLuint loc, const std::string& name) {
 }
 
 void WebGLProgram::DetachShader(const WebGLShader& shader) {
-  RefPtr<WebGLShader>* shaderSlot;
+  RefPtr<WebGLShader>* shaderSlot = nullptr;
   switch (shader.mType) {
     case LOCAL_GL_VERTEX_SHADER:
       shaderSlot = &mVertShader;
