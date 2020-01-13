@@ -121,9 +121,9 @@ class PendingEdge {
  private:
   MBasicBlock* block_;
   Kind kind_;
-  JSOp testOp_ = JSOP_LIMIT;
+  JSOp testOp_ = JSOP_UNDEFINED;
 
-  PendingEdge(MBasicBlock* block, Kind kind, JSOp testOp = JSOP_LIMIT)
+  PendingEdge(MBasicBlock* block, Kind kind, JSOp testOp = JSOP_UNDEFINED)
       : block_(block), kind_(kind), testOp_(testOp) {}
 
  public:
