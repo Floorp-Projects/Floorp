@@ -424,14 +424,15 @@ public class WebExtensionController {
         /** Action has been requested by the user. */
         public final static int USER = 1;
 
-        // TODO: Bug 1604222
         /** Action requested by the app itself, e.g. to disable an extension that is
          * not supported in this version of the app. */
-        final static int APP = 2;
+        public final static int APP = 2;
 
         static String toString(final @EnableSources int flag) {
             if (flag == USER) {
                 return  "user";
+            } else if (flag == APP) {
+                return "app";
             } else {
                 throw new IllegalArgumentException("Value provided in flags is not valid.");
             }
