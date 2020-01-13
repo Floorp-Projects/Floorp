@@ -4,6 +4,14 @@ Change log
 All notable changes to this program is documented in this file.
 
 
+0.27.0
+------
+
+### Added
+
+- To set environment variables for the launched Firefox, it is now
+  possible to add an `env` object on `moz:firefoxOptions`
+
 0.26.0
 ------
 
