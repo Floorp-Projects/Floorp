@@ -24,6 +24,7 @@ const {
   EDITOR_TOGGLE,
   EDITOR_SET_WIDTH,
   EDITOR_ONBOARDING_DISMISS,
+  EAGER_EVALUATION_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
 function openLink(url, e) {
@@ -77,6 +78,19 @@ function warningGroupsToggle() {
     prefsService.setBoolPref(
       PREFS.FEATURES.GROUP_WARNINGS,
       prefsState.groupWarnings
+    );
+  };
+}
+
+function eagerEvaluationToggle() {
+  return ({ dispatch, getState, prefsService }) => {
+    dispatch({
+      type: EAGER_EVALUATION_TOGGLE,
+    });
+    const prefsState = getAllPrefs(getState());
+    prefsService.setBoolPref(
+      PREFS.FEATURES.EAGER_EVALUATION,
+      prefsState.eagerEvaluation
     );
   };
 }
@@ -192,6 +206,7 @@ function timeWarp(executionPoint) {
 
 module.exports = {
   contentMessagesToggle,
+  eagerEvaluationToggle,
   editorOnboardingDismiss,
   editorToggle,
   filterBarDisplayModeSet,
