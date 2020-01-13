@@ -209,6 +209,19 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                                 ));
                             }
                         }
+                        "env" => {
+                            let env_data = try_opt!(
+                                value.as_object(),
+                                ErrorStatus::InvalidArgument,
+                                "env value is not an object"
+                            );
+                            if !env_data.values().all(Value::is_string) {
+                                return Err(WebDriverError::new(
+                                    ErrorStatus::InvalidArgument,
+                                    "Environment values were not all strings",
+                                ));
+                            }
+                        }
                         "log" => {
                             let log_data = try_opt!(
                                 value.as_object(),
@@ -326,6 +339,7 @@ pub struct FirefoxOptions {
     pub binary: Option<PathBuf>,
     pub profile: Option<Profile>,
     pub args: Option<Vec<String>>,
+    pub env: Option<Vec<(String, String)>>,
     pub log: LogOptions,
     pub prefs: Vec<(String, Pref)>,
     pub android: Option<AndroidOptions>,
@@ -352,6 +366,7 @@ impl FirefoxOptions {
 
             rv.android = FirefoxOptions::load_android(&options)?;
             rv.args = FirefoxOptions::load_args(&options)?;
+            rv.env = FirefoxOptions::load_env(&options)?;
             rv.log = FirefoxOptions::load_log(&options)?;
             rv.prefs = FirefoxOptions::load_prefs(&options)?;
             rv.profile = FirefoxOptions::load_profile(&options)?;
@@ -401,6 +416,26 @@ impl FirefoxOptions {
                     "Arguments entries were not all strings",
                 ))?;
             Ok(Some(args))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn load_env(options: &Capabilities) -> WebDriverResult<Option<Vec<(String, String)>>> {
+        if let Some(env_data) = options.get("env") {
+            let env = env_data.as_object().ok_or_else(|| WebDriverError::new(
+                ErrorStatus::InvalidArgument,
+                "Env was not an object",
+            ))?;
+            let mut rv = Vec::with_capacity(env.len());
+            for (key, value) in env.iter() {
+                rv.push((key.clone(),
+                         value.as_str().ok_or_else(|| WebDriverError::new(
+                             ErrorStatus::InvalidArgument,
+                             "Env value is not a string",
+                         ))?.to_string()));
+            }
+            Ok(Some(rv))
         } else {
             Ok(None)
         }
@@ -749,6 +784,53 @@ mod tests {
         let mut firefox_opts = Capabilities::new();
         firefox_opts.insert("androidPackage".into(), json!("foo"));
         firefox_opts.insert("androidIntentArguments".into(), json!(["lorem", 42]));
+
+        make_options(firefox_opts).expect_err("invalid firefox options");
+    }
+
+    #[test]
+    fn fx_options_env() {
+        let mut env: Map<String, Value> = Map::new();
+        env.insert(
+            "TEST_KEY_A".into(),
+            Value::String("test_value_a".into()),
+        );
+        env.insert(
+            "TEST_KEY_B".into(),
+            Value::String("test_value_b".into()),
+        );
+
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("env".into(), env.into());
+
+        let mut opts = make_options(firefox_opts).expect("valid firefox options");
+        for sorted in opts.env.iter_mut() { sorted.sort() };
+        assert_eq!(opts.env, Some(vec![
+            ("TEST_KEY_A".into(), "test_value_a".into()),
+            ("TEST_KEY_B".into(), "test_value_b".into()),
+        ]));
+    }
+
+    #[test]
+    fn fx_options_env_invalid_container() {
+        let env = Value::Number(1.into());
+
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("env".into(), env.into());
+
+        make_options(firefox_opts).expect_err("invalid firefox options");
+    }
+
+    #[test]
+    fn fx_options_env_invalid_value() {
+        let mut env: Map<String, Value> = Map::new();
+        env.insert(
+            "TEST_KEY".into(),
+            Value::Number(1.into()),
+        );
+
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("env".into(), env.into());
 
         make_options(firefox_opts).expect_err("invalid firefox options");
     }
