@@ -113,7 +113,7 @@ class RequestBlockingPanel extends Component {
         }),
         span(
           {
-            className: "request-blocking-label",
+            className: "request-blocking-label request-blocking-editable-label",
             title: url,
           },
           url
