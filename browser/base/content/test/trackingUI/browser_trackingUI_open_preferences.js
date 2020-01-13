@@ -71,6 +71,12 @@ add_task(async function testOpenPreferencesFromTrackersSubview() {
   let categoryItem = document.getElementById(
     "protections-popup-category-tracking-protection"
   );
+
+  // Explicitly waiting for the category item becoming visible.
+  await TestUtils.waitForCondition(() => {
+    return BrowserTestUtils.is_visible(categoryItem);
+  });
+
   ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
   let trackersView = document.getElementById("protections-popup-trackersView");
   let viewShown = BrowserTestUtils.waitForEvent(trackersView, "ViewShown");
@@ -117,6 +123,12 @@ add_task(async function testOpenPreferencesFromCookiesSubview() {
   let categoryItem = document.getElementById(
     "protections-popup-category-cookies"
   );
+
+  // Explicitly waiting for the category item becoming visible.
+  await TestUtils.waitForCondition(() => {
+    return BrowserTestUtils.is_visible(categoryItem);
+  });
+
   ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
   let cookiesView = document.getElementById("protections-popup-cookiesView");
   let viewShown = BrowserTestUtils.waitForEvent(cookiesView, "ViewShown");
