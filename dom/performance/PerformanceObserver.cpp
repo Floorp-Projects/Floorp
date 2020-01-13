@@ -153,7 +153,6 @@ void PerformanceObserver::ReportUnsupportedTypesErrorToConsole(
         nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"), document,
         nsContentUtils::eDOM_PROPERTIES, msgId, params);
   }
-  return;
 }
 
 void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
