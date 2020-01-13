@@ -141,6 +141,10 @@ const GPU_CACHE_RESIZE_TEST: bool = false;
 /// Number of GPU blocks per UV rectangle provided for an image.
 pub const BLOCKS_PER_UV_RECT: usize = 2;
 
+const GPU_TAG_BRUSH_OPACITY: GpuProfileTag = GpuProfileTag {
+    label: "B_Opacity",
+    color: debug_colors::DARKMAGENTA,
+};
 const GPU_TAG_BRUSH_LINEAR_GRADIENT: GpuProfileTag = GpuProfileTag {
     label: "B_LinearGradient",
     color: debug_colors::POWDERBLUE,
@@ -253,6 +257,7 @@ impl BatchKind {
                     BrushBatchKind::YuvImage(..) => "Brush (YuvImage)",
                     BrushBatchKind::RadialGradient => "Brush (RadialGradient)",
                     BrushBatchKind::LinearGradient => "Brush (LinearGradient)",
+                    BrushBatchKind::Opacity => "Brush (Opacity)",
                 }
             }
             BatchKind::TextRun(_) => "TextRun",
@@ -271,6 +276,7 @@ impl BatchKind {
                     BrushBatchKind::YuvImage(..) => GPU_TAG_BRUSH_YUV_IMAGE,
                     BrushBatchKind::RadialGradient => GPU_TAG_BRUSH_RADIAL_GRADIENT,
                     BrushBatchKind::LinearGradient => GPU_TAG_BRUSH_LINEAR_GRADIENT,
+                    BrushBatchKind::Opacity => GPU_TAG_BRUSH_OPACITY,
                 }
             }
             BatchKind::TextRun(_) => GPU_TAG_PRIM_TEXT_RUN,
