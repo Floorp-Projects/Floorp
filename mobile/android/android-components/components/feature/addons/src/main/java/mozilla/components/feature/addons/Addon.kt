@@ -96,7 +96,8 @@ data class Addon(
         val version: String,
         val optionsPageUrl: String,
         val enabled: Boolean = false,
-        val supported: Boolean = true
+        val supported: Boolean = true,
+        val disabledAsUnsupported: Boolean = false
     ) : Parcelable
 
     /**
@@ -120,6 +121,14 @@ data class Addon(
      * Returns whether or not this [Addon] is currently supported by the browser.
      */
     fun isSupported() = installedState?.supported == true
+
+    /**
+     * Returns whether or not this [Addon] is currently disabled because it is not
+     * supported. This is based on the installed extension state in the engine. An
+     * addon can be disabled as unsupported and later become supported, so
+     * both [isSupported] and [isDisabledAsUnsupported] can be true.
+     */
+    fun isDisabledAsUnsupported() = installedState?.disabledAsUnsupported == true
 
     companion object {
         /**

@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.BrowserAction
+import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Port
 import mozilla.components.support.test.argumentCaptor
@@ -321,7 +322,7 @@ class GeckoWebExtensionTest {
         metaDataBundle.putString("name", "myextension")
         metaDataBundle.putString("optionsPageUrl", "")
         metaDataBundle.putBoolean("openOptionsPageInTab", false)
-        metaDataBundle.putStringArray("disabledFlags", emptyArray())
+        metaDataBundle.putStringArray("disabledFlags", arrayOf("userDisabled"))
         val bundle = GeckoBundle()
         bundle.putString("webExtensionId", "id")
         bundle.putString("locationURI", "uri")
@@ -339,6 +340,9 @@ class GeckoWebExtensionTest {
         assertEquals("https://developer1.dev", metadata.developerUrl)
         assertEquals("https://mozilla.org", metadata.homePageUrl)
         assertEquals("myextension", metadata.name)
+        assertTrue(metadata.disabledFlags.contains(DisabledFlags.USER))
+        assertFalse(metadata.disabledFlags.contains(DisabledFlags.BLOCKLIST))
+        assertFalse(metadata.disabledFlags.contains(DisabledFlags.APP_SUPPORT))
         assertNull(metadata.optionsPageUrl)
         assertNull(metadata.openOptionsPageInTab)
     }

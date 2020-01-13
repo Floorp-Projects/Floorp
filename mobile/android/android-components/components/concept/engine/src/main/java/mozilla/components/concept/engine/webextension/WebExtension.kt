@@ -301,11 +301,16 @@ data class Metadata(
      * Whether or not the options page should be opened in a new tab:
      * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/options_ui#syntax
      */
-    val openOptionsPageInTab: Boolean?
+    val openOptionsPageInTab: Boolean?,
+
+    /**
+     * Describes the reason (or reasons) why an extension is disabled.
+     */
+    val disabledFlags: DisabledFlags
 )
 
 /**
- * Provides additional information about why an extension was enabled or disabled.
+ * Provides additional information about why an extension is being enabled or disabled.
  */
 @Suppress("MagicNumber")
 enum class EnableSource(val id: Int) {
@@ -319,4 +324,29 @@ enum class EnableSource(val id: Int) {
      * on available support.
      */
     APP_SUPPORT(1 shl 1),
+}
+
+/**
+ * Flags to check for different reasons why an extension is disabled.
+ */
+class DisabledFlags internal constructor(val value: Int) {
+    companion object {
+        const val USER: Int = 1 shl 1
+        const val BLOCKLIST: Int = 1 shl 2
+        const val APP_SUPPORT: Int = 1 shl 3
+
+        /**
+         * Selects a combination of flags.
+         *
+         * @param flags the flags to select.
+         */
+        fun select(vararg flags: Int) = DisabledFlags(flags.sum())
+    }
+
+    /**
+     * Checks if the provided flag is set.
+     *
+     * @param flag the flag to check.
+     */
+    fun contains(flag: Int) = (value and flag) != 0
 }

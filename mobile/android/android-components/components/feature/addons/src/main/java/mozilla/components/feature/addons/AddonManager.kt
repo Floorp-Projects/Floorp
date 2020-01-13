@@ -6,6 +6,7 @@ package mozilla.components.feature.addons
 
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status
@@ -43,6 +44,7 @@ class AddonManager(
             // Make sure extension support is initialized, i.e. the state of all installed extensions is known.
             WebExtensionSupport.awaitInitialization()
 
+            // Get all available/supported addons from provider and add state if installed.
             val supportedAddons = addonsProvider.getAvailableAddons().map { addon ->
                 installedExtensions[addon.id]?.let {
                     addon.copy(installedState = it.toInstalledState())
@@ -218,4 +220,10 @@ private fun WebExtension.toInstalledState() =
     // TODO Add optionsUrl
     // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
     // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1597793
-    Addon.InstalledState(id, getMetadata()?.version ?: "", "https://mozilla.org", isEnabled())
+    Addon.InstalledState(
+        id = id,
+        version = getMetadata()?.version ?: "",
+        optionsPageUrl = "https://mozilla.org",
+        enabled = isEnabled(),
+        disabledAsUnsupported = getMetadata()?.disabledFlags?.contains(DisabledFlags.APP_SUPPORT) == true
+    )

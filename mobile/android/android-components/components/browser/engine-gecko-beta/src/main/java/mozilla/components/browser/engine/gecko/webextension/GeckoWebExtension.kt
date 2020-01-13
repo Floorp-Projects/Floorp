@@ -10,6 +10,7 @@ import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.BrowserAction
+import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.Port
@@ -240,6 +241,7 @@ class GeckoWebExtension(
                 version = it.version,
                 permissions = it.permissions.toList(),
                 hostPermissions = it.origins.toList(),
+                disabledFlags = DisabledFlags.select(0),
                 optionsPageUrl = null, // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
                 openOptionsPageInTab = null // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1598792
             )
