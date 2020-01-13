@@ -586,6 +586,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             val sessionManager = requireComponents.core.sessionManager
             if (session.source == Session.Source.ACTION_VIEW) {
                 sessionManager.remove(session)
+                activity?.onBackPressed()
             } else {
                 val isLastSession =
                     sessionManager.sessionsOfType(private = session.private).count() == 1
