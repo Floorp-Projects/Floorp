@@ -386,7 +386,7 @@ class JunitArgumentParser(argparse.ArgumentParser):
                           action="store",
                           type=str,
                           dest="runner",
-                          default="android.support.test.runner.AndroidJUnitRunner",
+                          default="androidx.test.runner.AndroidJUnitRunner",
                           help="Test runner name.")
         self.add_argument("--symbols-path",
                           action="store",

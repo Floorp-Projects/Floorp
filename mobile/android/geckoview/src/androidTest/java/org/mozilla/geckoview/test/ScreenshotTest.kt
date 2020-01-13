@@ -6,8 +6,8 @@ package org.mozilla.geckoview.test
 
 
 import android.graphics.*
-import android.support.test.filters.MediumTest
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.view.Surface
 import org.hamcrest.Matchers.*
 import org.junit.Rule
@@ -22,7 +22,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.max
 import android.graphics.BitmapFactory
 import android.graphics.Bitmap
-import android.support.test.InstrumentationRegistry
+import androidx.test.platform.app.InstrumentationRegistry
 import org.mozilla.geckoview.GeckoSession
 
 
@@ -265,7 +265,7 @@ class ScreenshotTest : BaseSessionTest() {
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
     fun screenshotQuarters() {
-        val res = InstrumentationRegistry.getTargetContext().resources
+        val res = InstrumentationRegistry.getInstrumentation().targetContext.resources
         sessionRule.session.loadTestPath(COLORS_HTML_PATH)
         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)
@@ -288,7 +288,7 @@ class ScreenshotTest : BaseSessionTest() {
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
     fun screenshotQuartersScaled() {
-        val res = InstrumentationRegistry.getTargetContext().resources
+        val res = InstrumentationRegistry.getInstrumentation().targetContext.resources
         sessionRule.session.loadTestPath(COLORS_HTML_PATH)
         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
             @AssertCalled(count = 1)

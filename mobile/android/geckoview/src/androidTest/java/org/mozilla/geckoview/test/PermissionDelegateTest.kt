@@ -12,9 +12,9 @@ import org.mozilla.geckoview.test.util.Callbacks
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
-import android.support.test.InstrumentationRegistry
-import android.support.test.filters.MediumTest
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.filters.MediumTest
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 import org.hamcrest.Matchers.*
 import org.json.JSONArray
@@ -33,7 +33,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             return true
         }
         return PackageManager.PERMISSION_GRANTED ==
-                InstrumentationRegistry.getTargetContext().checkSelfPermission(permission)
+                InstrumentationRegistry.getInstrumentation().targetContext.checkSelfPermission(permission)
     }
 
     private fun isEmulator(): Boolean {

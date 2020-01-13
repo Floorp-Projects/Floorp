@@ -2,8 +2,8 @@ package org.mozilla.geckoview.test
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.support.test.InstrumentationRegistry
-import android.support.test.filters.MediumTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers.equalTo
 import org.json.JSONObject
 import org.junit.After
@@ -354,7 +354,7 @@ class ExtensionActionTest : BaseSessionTest() {
     }
 
     private fun compareBitmap(expectedLocation: String, actual: Bitmap) {
-        val stream = InstrumentationRegistry.getTargetContext().assets
+        val stream = InstrumentationRegistry.getInstrumentation().targetContext.assets
                 .open(expectedLocation)
 
         val expected = BitmapFactory.decodeStream(stream)

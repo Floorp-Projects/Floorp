@@ -13,9 +13,10 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 
-import android.support.test.filters.MediumTest
-import android.support.test.InstrumentationRegistry
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
+
 import android.text.InputType
 import android.util.SparseLongArray
 
@@ -111,9 +112,10 @@ class ZZAccessibilityTest : BaseSessionTest() {
     @Before fun setup() {
         // We initialize a view with a parent and grandparent so that the
         // accessibility events propagate up at least to the parent.
-        view = FrameLayout(InstrumentationRegistry.getTargetContext())
-        FrameLayout(InstrumentationRegistry.getTargetContext()).addView(view)
-        FrameLayout(InstrumentationRegistry.getTargetContext()).addView(view.parent as View)
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        view = FrameLayout(context)
+        FrameLayout(context).addView(view)
+        FrameLayout(context).addView(view.parent as View)
 
         // Force on accessibility and assign the session's accessibility
         // object a view.

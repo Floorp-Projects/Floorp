@@ -5,13 +5,13 @@
 package org.mozilla.geckoview.test
 
 import android.os.SystemClock
-import android.support.test.InstrumentationRegistry
+import androidx.test.platform.app.InstrumentationRegistry
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
-import android.support.test.filters.MediumTest
+import androidx.test.filters.MediumTest
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -315,7 +315,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         // too flaky on x86
         assumeThat(sessionRule.env.isX86, equalTo(false))
 
-        mainSession.textInput.view = View(InstrumentationRegistry.getTargetContext())
+        mainSession.textInput.view = View(InstrumentationRegistry.getInstrumentation().targetContext)
 
         mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()

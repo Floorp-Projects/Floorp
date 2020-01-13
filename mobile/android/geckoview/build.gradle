@@ -75,7 +75,7 @@ android {
         versionName "${mozconfig.substs.MOZ_APP_VERSION}-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
         consumerProguardFiles 'proguard-rules.txt'
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField 'String', "GRE_MILESTONE", "\"${mozconfig.substs.GRE_MILESTONE}\""
         buildConfigField 'String', "MOZ_APP_BASENAME", "\"${mozconfig.substs.MOZ_APP_BASENAME}\"";
@@ -224,9 +224,11 @@ dependencies {
 
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.2"
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test:rules:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestImplementation 'androidx.test:runner:1.1.0'
+    androidTestImplementation 'androidx.test:rules:1.1.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+
     androidTestImplementation "com.android.support:support-annotations:$support_library_version"
 
     androidTestImplementation 'com.koushikdutta.async:androidasync:2.+'

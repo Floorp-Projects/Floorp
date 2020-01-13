@@ -10,7 +10,7 @@ import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
-import android.support.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 import android.util.Log;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -139,7 +139,7 @@ public class RuntimeCreator {
                 .build();
 
         sRuntime = GeckoRuntime.create(
-                InstrumentationRegistry.getTargetContext(),
+                InstrumentationRegistry.getInstrumentation().getTargetContext(),
                 runtimeSettings);
 
         registerTestSupport();

@@ -13,8 +13,8 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
 import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.UiThreadUtils
 
-import android.support.test.filters.MediumTest
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 import org.hamcrest.Matchers.*
 import org.json.JSONArray

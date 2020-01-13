@@ -20,9 +20,9 @@ import android.os.Bundle
 import android.os.Debug
 import android.os.Parcelable
 import android.os.SystemClock
-import android.support.test.InstrumentationRegistry
-import android.support.test.filters.MediumTest
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.filters.MediumTest
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.util.Log
 import android.util.SparseArray
 
@@ -285,7 +285,7 @@ class SessionLifecycleTest : BaseSessionTest() {
 
     private fun testRestoreInstanceState(fromSession: GeckoSession?,
                                          ontoSession: GeckoSession?) =
-            GeckoView(InstrumentationRegistry.getTargetContext()).apply {
+            GeckoView(InstrumentationRegistry.getInstrumentation().targetContext).apply {
                 id = 0
                 autofillEnabled = false
 
@@ -489,7 +489,7 @@ class SessionLifecycleTest : BaseSessionTest() {
 
     private fun dumpHprof() {
         try {
-            val dest = File(InstrumentationRegistry.getTargetContext()
+            val dest = File(InstrumentationRegistry.getInstrumentation().targetContext
                     .filesDir.parent, "dump.hprof").absolutePath
             Debug.dumpHprofData(dest)
             Log.d(LOGTAG, "Dumped hprof to $dest")
