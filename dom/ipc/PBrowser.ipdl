@@ -30,6 +30,7 @@ include PPrintingTypes;
 include PTabContext;
 include PBackgroundSharedTypes;
 
+include "mozilla/AntiTrackingIPCUtils.h";
 include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 include "mozilla/ipc/TransportSecurityInfoUtils.h";
@@ -95,6 +96,7 @@ using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
 using struct InputFormData from "mozilla/dom/SessionStoreMessageUtils.h";
 using struct CollectedInputDataValue from "mozilla/dom/SessionStoreMessageUtils.h";
 using refcounted class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
+using mozilla::AntiTrackingCommon::StorageAccessGrantedReason from "mozilla/AntiTrackingCommon.h";
 
 namespace mozilla {
 namespace dom {
@@ -609,6 +611,11 @@ parent:
 
     async OnContentBlockingEvent(WebProgressData? aWebProgressData,
                                  RequestData aRequestData, uint32_t aEvent);
+
+    async NotifyContentBlockingEvent(uint32_t aEvent, RequestData aRequestData,
+                                     bool aBlocked, nsIURI aHintURI,
+                                     nsCString[] aTrackingFullHashes,
+                                     StorageAccessGrantedReason? aReason);
 
     async NavigationFinished();
 
