@@ -76,9 +76,9 @@ AbstractRange::AbstractRange(nsINode* aNode)
   mOwner = aNode->OwnerDoc();
 }
 
-nsINode* AbstractRange::GetCommonAncestor() const {
-  return mIsPositioned ? nsContentUtils::GetCommonAncestor(mStart.Container(),
-                                                           mEnd.Container())
+nsINode* AbstractRange::GetClosestCommonInclusiveAncestor() const {
+  return mIsPositioned ? nsContentUtils::GetClosestCommonInclusiveAncestor(
+                             mStart.Container(), mEnd.Container())
                        : nullptr;
 }
 

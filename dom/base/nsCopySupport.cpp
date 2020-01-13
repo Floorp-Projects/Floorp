@@ -719,7 +719,7 @@ static bool IsSelectionInsideRuby(Selection* aSelection) {
   ;
   for (auto i : IntegerRange(rangeCount)) {
     nsRange* range = aSelection->GetRangeAt(i);
-    if (!IsInsideRuby(range->GetCommonAncestor())) {
+    if (!IsInsideRuby(range->GetClosestCommonInclusiveAncestor())) {
       return false;
     }
   }

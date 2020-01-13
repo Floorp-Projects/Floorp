@@ -1404,7 +1404,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
   const nsRange* range = sel->GetAnchorFocusRange();
   nsINode* commonAncestorNode = nullptr;
   if (range) {
-    commonAncestorNode = range->GetCommonAncestor();
+    commonAncestorNode = range->GetClosestCommonInclusiveAncestor();
   }
 
   if (!commonAncestorNode) {
