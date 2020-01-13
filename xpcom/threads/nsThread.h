@@ -15,6 +15,7 @@
 #include "nsTObserverArray.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SynchronizedEventQueue.h"
@@ -40,6 +41,107 @@ class nsThreadEnumerator;
 
 // See https://www.w3.org/TR/longtasks
 #define LONGTASK_BUSY_WINDOW_MS 50
+
+// A class for managing performance counter state.
+namespace mozilla {
+class PerformanceCounterState {
+ public:
+  explicit PerformanceCounterState(const uint32_t& aNestedEventLoopDepthRef,
+                                   bool aIsMainThread)
+      : mNestedEventLoopDepth(aNestedEventLoopDepthRef),
+        mIsMainThread(aIsMainThread),
+        // Does it really make sense to initialize these to "now" when we
+        // haven't run any tasks?
+        mLastLongTaskEnd(TimeStamp::Now()),
+        mLastLongNonIdleTaskEnd(mLastLongTaskEnd) {}
+
+  class Snapshot {
+   public:
+    Snapshot(uint32_t aOldEventLoopDepth, PerformanceCounter* aCounter,
+             bool aOldIsIdleRunnable)
+        : mOldEventLoopDepth(aOldEventLoopDepth),
+          mOldPerformanceCounter(aCounter),
+          mOldIsIdleRunnable(aOldIsIdleRunnable) {}
+
+    Snapshot(const Snapshot&) = default;
+    Snapshot(Snapshot&&) = default;
+
+   private:
+    friend class PerformanceCounterState;
+
+    const uint32_t mOldEventLoopDepth;
+    // Non-const so we can move out of it and avoid the extra refcounting.
+    RefPtr<PerformanceCounter> mOldPerformanceCounter;
+    const bool mOldIsIdleRunnable;
+  };
+
+  // Notification that a runnable is about to run.  This captures a snapshot of
+  // our current state before we reset to prepare for the new runnable.  This
+  // muast be called after mNestedEventLoopDepth has been incremented for the
+  // runnable execution.  The performance counter passed in should be the one
+  // for the relevant runnable and may be null.  aIsIdleRunnable should be true
+  // if and only if the runnable has idle priority.
+  Snapshot RunnableWillRun(PerformanceCounter* Counter, TimeStamp aNow,
+                           bool aIsIdleRunnable);
+
+  // Notification that a runnable finished executing.  This must be passed the
+  // snapshot that RunnableWillRun returned for the same runnable.  This must be
+  // called before mNestedEventLoopDepth is decremented after the runnable's
+  // execution.
+  void RunnableDidRun(Snapshot&& aSnapshot);
+
+  const TimeStamp& LastLongTaskEnd() const { return mLastLongTaskEnd; }
+  const TimeStamp& LastLongNonIdleTaskEnd() const {
+    return mLastLongNonIdleTaskEnd;
+  }
+
+ private:
+  // Called to report accumulated time, as needed, when we're about to run a
+  // runnable or just finished running one.
+  void MaybeReportAccumulatedTime(TimeStamp aNow);
+
+  // Whether the runnable we are about to run, or just ran, is a nested
+  // runnable, in the sense that there is some other runnable up the stack
+  // spinning the event loop.  This must be called before we change our
+  // mCurrentEventLoopDepth (when about to run a new event) or after we restore
+  // it (after we ran one).
+  bool IsNestedRunnable() const {
+    return mNestedEventLoopDepth > mCurrentEventLoopDepth;
+  }
+
+  // The event loop depth of the currently running runnable.  Set to the max
+  // value of a uint32_t when there is no runnable running, so when starting to
+  // run a toplevel (not nested) runnable IsNestedRunnable() will test false.
+  uint32_t mCurrentEventLoopDepth = std::numeric_limits<uint32_t>::max();
+
+  // A reference to the nsThread's mNestedEventLoopDepth, so we can
+  // see what it is right now.
+  const uint32_t& mNestedEventLoopDepth;
+
+  // A boolean that indicates whether the currently running runnable is an idle
+  // runnable.  Only has a useful value between RunnableWillRun() being called
+  // and RunnableDidRun() returning.
+  bool mCurrentRunnableIsIdleRunnable = false;
+
+  // Whether we're attached to the mainthread nsThread.
+  bool mIsMainThread;
+
+  // The timestamp from which time to be accounted for should be measured.  This
+  // can be the start of a runnable running or the end of a nested runnable
+  // running.
+  TimeStamp mCurrentTimeSliceStart;
+
+  // Information about when long tasks last ended.
+  TimeStamp mLastLongTaskEnd;
+  TimeStamp mLastLongNonIdleTaskEnd;
+
+  // The performance counter to use for accumulating the runtime of
+  // the currently running event.  May be null, in which case the
+  // event's running time should not be accounted to any performance
+  // counters.
+  RefPtr<PerformanceCounter> mCurrentPerformanceCounter;
+};
+}  // namespace mozilla
 
 // A native thread
 class nsThread : public nsIThreadInternal,
@@ -140,11 +242,6 @@ class nsThread : public nsIThreadInternal,
 
   static uint32_t MaxActiveThreads();
 
-  const mozilla::TimeStamp& LastLongTaskEnd() { return mLastLongTaskEnd; }
-  const mozilla::TimeStamp& LastLongNonIdleTaskEnd() {
-    return mLastLongNonIdleTaskEnd;
-  }
-
   // When entering local execution mode a new event queue is created and used as
   // an event source. This queue is only accessible through an
   // nsLocalExecutionGuard constructed from the nsLocalExecutionRecord returned
@@ -226,10 +323,6 @@ class nsThread : public nsIThreadInternal,
   uint32_t mThreadId;
 
   uint32_t mNestedEventLoopDepth;
-  uint32_t mCurrentEventLoopDepth;
-
-  mozilla::TimeStamp mLastLongTaskEnd;
-  mozilla::TimeStamp mLastLongNonIdleTaskEnd;
 
   mozilla::Atomic<bool> mShutdownRequired;
 
@@ -243,14 +336,6 @@ class nsThread : public nsIThreadInternal,
 
   bool mHasTLSEntry = false;
 
-  // Used to track which event is being executed by ProcessNextEvent
-  nsCOMPtr<nsIRunnable> mCurrentEvent;
-
-  // When the current event started.  Note: recursive events use the time
-  // the outmost event started, so the entire recursion chain is considered
-  // one event.
-  mozilla::TimeStamp mCurrentEventStart;
-
   // The time the currently running event spent in event queues, and
   // when it started running.  If no event is running, they are
   // TimeDuration() & TimeStamp().
@@ -263,7 +348,7 @@ class nsThread : public nsIThreadInternal,
   uint32_t mWakeupCount = 0;
 #endif
 
-  RefPtr<mozilla::PerformanceCounter> mCurrentPerformanceCounter;
+  mozilla::PerformanceCounterState mPerformanceCounterState;
 
   bool mIsInLocalExecutionMode = false;
 };
