@@ -19,6 +19,7 @@ class nsIPermission;
 class nsIPrincipal;
 class nsIURI;
 class nsPIDOMWindowInner;
+class nsPIDOMWindowOuter;
 
 namespace mozilla {
 
@@ -176,6 +177,12 @@ class AntiTrackingCommon final {
   // Get the current document URI from a document channel as it is being loaded.
   static already_AddRefed<nsIURI> MaybeGetDocumentURIBeingLoaded(
       nsIChannel* aChannel);
+
+  static void NotifyContentBlockingEvent(
+      nsPIDOMWindowOuter* aWindow, nsIChannel* aReportingChannel,
+      nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
+      nsIURI* aURI,
+      const Maybe<StorageAccessGrantedReason>& aReason = Nothing());
 };
 
 }  // namespace mozilla
