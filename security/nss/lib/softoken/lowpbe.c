@@ -557,6 +557,52 @@ loser:
     return A;
 }
 
+/* Bug 1606992 - Cache the hash result for the common case that we're
+ * asked to repeatedly compute the key for the same password item,
+ * hash, iterations and salt. */
+static PZLock *PBE_cache_lock = NULL;
+static SECItem *cached_PBKDF2_item = NULL;
+static HASH_HashType cached_hashType;
+static int cached_iterations;
+static int cached_keyLen;
+static SECItem *cached_salt = NULL;
+static SECItem *cached_pwitem = NULL;
+
+void
+sftk_PBELockInit(void)
+{
+    if (!PBE_cache_lock) {
+        PBE_cache_lock = PZ_NewLock(nssIPBECacheLock);
+    }
+}
+
+static void
+sftk_clearPBECacheItems(void)
+{
+    if (cached_PBKDF2_item) {
+        SECITEM_FreeItem(cached_PBKDF2_item, PR_TRUE);
+        cached_PBKDF2_item = NULL;
+    }
+    if (cached_salt) {
+        SECITEM_FreeItem(cached_salt, PR_TRUE);
+        cached_salt = NULL;
+    }
+    if (cached_pwitem) {
+        SECITEM_FreeItem(cached_pwitem, PR_TRUE);
+        cached_pwitem = NULL;
+    }
+}
+
+void
+sftk_PBELockShutdown(void)
+{
+    if (PBE_cache_lock) {
+        PZ_DestroyLock(PBE_cache_lock);
+        PBE_cache_lock = 0;
+    }
+    sftk_clearPBECacheItems();
+}
+
 /*
  * generate key as per PKCS 5
  */
@@ -600,7 +646,35 @@ nsspkcs5_ComputeKeyAndIV(NSSPKCS5PBEParameter *pbe_param, SECItem *pwitem,
 
             break;
         case NSSPKCS5_PBKDF2:
-            hash = nsspkcs5_PBKDF2(hashObj, pbe_param, pwitem);
+            PZ_Lock(PBE_cache_lock);
+            if (cached_PBKDF2_item) {
+                if (pbe_param->hashType == cached_hashType &&
+                    pbe_param->iter == cached_iterations &&
+                    pbe_param->keyLen == cached_keyLen &&
+                    cached_salt &&
+                    SECITEM_ItemsAreEqual(&pbe_param->salt, cached_salt) &&
+                    cached_pwitem &&
+                    SECITEM_ItemsAreEqual(pwitem, cached_pwitem)) {
+                    hash = SECITEM_DupItem(cached_PBKDF2_item);
+                } else {
+                    sftk_clearPBECacheItems();
+                }
+            }
+            PZ_Unlock(PBE_cache_lock);
+            if (!hash) {
+                hash = nsspkcs5_PBKDF2(hashObj, pbe_param, pwitem);
+                PZ_Lock(PBE_cache_lock);
+                /* ensure no other thread was quicker than us setting the cache */
+                if (!cached_PBKDF2_item) {
+                    cached_PBKDF2_item = SECITEM_DupItem(hash);
+                    cached_hashType = pbe_param->hashType;
+                    cached_iterations = pbe_param->iter;
+                    cached_keyLen = pbe_param->keyLen;
+                    cached_salt = SECITEM_DupItem(&pbe_param->salt);
+                    cached_pwitem = SECITEM_DupItem(pwitem);
+                }
+                PZ_Unlock(PBE_cache_lock);
+            }
             if (getIV) {
                 PORT_Memcpy(iv->data, pbe_param->ivData, iv->len);
             }
