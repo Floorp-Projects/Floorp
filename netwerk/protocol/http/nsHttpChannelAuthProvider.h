@@ -86,7 +86,6 @@ class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
                                           uint32_t authFlags,
                                           nsHttpAuthIdentity&);
 
-  void RecordConfirmAuthTelemetry(const char* aType);
   bool ConfirmAuth(const char* bundleKey, bool doYesNoPrompt);
   void SetAuthorizationHeader(nsHttpAuthCache*, nsHttpAtom header,
                               const char* scheme, const char* host,
