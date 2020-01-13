@@ -355,7 +355,7 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
 
   FunctionBox* funbox;
 
-  if (parseInfo_.isDeferred()) {
+  if (getParseInfo().isDeferred()) {
     funbox = alloc_.new_<FunctionBox>(
         cx_, traceListHead_, fcd, toStringStart, inheritedDirectives,
         options().extraWarningsOption, generatorKind, asyncKind);
@@ -1769,7 +1769,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   }
 
   // If we can defer the LazyScript creation, we are now done.
-  if (parseInfo_.isDeferred()) {
+  if (getParseInfo().isDeferred()) {
     // Move data into funbox
     MOZ_ASSERT(funbox->functionCreationData());
     funbox->functionCreationData()->lazyScriptData =
@@ -9628,7 +9628,7 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   mozilla::Range<const char16_t> range(chars.begin(), chars.length());
   RegExpFlags flags = anyChars.currentToken().regExpFlags();
 
-  if (this->parseInfo_.isDeferred()) {
+  if (this->getParseInfo().isDeferred()) {
     {
       LifoAllocScope allocScope(&cx_->tempLifoAlloc());
       // Verify that the Regexp will syntax parse when the time comes to
@@ -9639,12 +9639,12 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
       }
     }
 
-    RegExpIndex index(this->parseInfo_.regExpData.length());
-    if (!this->parseInfo_.regExpData.emplaceBack()) {
+    RegExpIndex index(this->getParseInfo().regExpData.length());
+    if (!this->getParseInfo().regExpData.emplaceBack()) {
       return nullptr;
     }
 
-    if (!this->parseInfo_.regExpData[index].init(cx_, range, flags)) {
+    if (!this->getParseInfo().regExpData[index].init(cx_, range, flags)) {
       return nullptr;
     }
 
@@ -9696,19 +9696,19 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   // productions start with 0[bBoOxX], indicating binary/octal/hex.
   const auto& chars = tokenStream.getCharBuffer();
 
-  if (this->parseInfo_.isDeferred()) {
-    BigIntIndex index(this->parseInfo_.bigIntData.length());
-    if (!this->parseInfo_.bigIntData.emplaceBack()) {
+  if (this->getParseInfo().isDeferred()) {
+    BigIntIndex index(this->getParseInfo().bigIntData.length());
+    if (!this->getParseInfo().bigIntData.emplaceBack()) {
       return null();
     }
 
-    if (!this->parseInfo_.bigIntData[index].init(this->cx_, chars)) {
+    if (!this->getParseInfo().bigIntData[index].init(this->cx_, chars)) {
       return null();
     }
 
     // Should the operations below fail, the buffer held by data will
     // be cleaned up by the ParseInfo destructor.
-    return handler_.newBigInt(index, this->parseInfo_, pos());
+    return handler_.newBigInt(index, this->getParseInfo(), pos());
   }
 
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
