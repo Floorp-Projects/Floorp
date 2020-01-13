@@ -16,6 +16,10 @@ job-defaults:
                 by-test-platform:
                     android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
                     default: []
+            fennec:
+                by-test-platform:
+                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central", "try"]
+                    default: []
             refbrow: []
     tier: 3
     target:
@@ -28,6 +32,14 @@ job-defaults:
                     default:
                         index: project.mobile.fenix.v2.performance-test.latest
                         name: build/armeabi-v7a/geckoNightly/target.apk
+            fennec:
+                by-test-platform:
+                    android-hw-p2-8-0-android-aarch64.*:
+                        index: gecko.v2.mozilla-esr68.latest.mobile.android-aarch64-opt
+                        name: build/target.apk
+                    default:
+                        index: gecko.v2.mozilla-esr68.latest.mobile.android-api-16-opt
+                        name: build/target.apk
             geckoview: geckoview_example.apk
             refbrow:
                 by-test-platform:
@@ -43,11 +55,13 @@ job-defaults:
         by-app:
             fenix: org.mozilla.fenix.IntentReceiverActivity
             geckoview: org.mozilla.geckoview_example.GeckoViewActivity
+            fennec: org.mozilla.gecko.BrowserApp
             refbrow: org.mozilla.reference.browser.BrowserTestActivity
     binary-path:
         by-app:
             fenix: org.mozilla.fenix.performancetest
             geckoview: org.mozilla.geckoview_example
+            fennec: org.mozilla.fennec_aurora
             refbrow: org.mozilla.reference.browser.raptor
     mozharness:
         script: raptor_script.py
@@ -60,7 +74,7 @@ browsertime-tp6m:
     description: "Raptor (browsertime) tp6 page-load tests on android"
     raptor-test: tp6m
     raptor-subtests: ['amazon', 'youtube']
-    apps: ["geckoview", "fenix"]
+    apps: ["geckoview", "fenix", "fennec"]
     pageload: cold
     run-visual-metrics: true
     treeherder-symbol: Btime(tp6m)
