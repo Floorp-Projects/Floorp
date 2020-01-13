@@ -410,12 +410,6 @@ class nsRange final : public mozilla::dom::AbstractRange,
    */
   nsINode* GetRegisteredClosestCommonInclusiveAncestor();
 
-  // Helper to IsNodeSelected.
-  static bool IsNodeInSortedRanges(nsINode* aNode, uint32_t aStartOffset,
-                                   uint32_t aEndOffset,
-                                   const nsTArray<const nsRange*>& aRanges,
-                                   size_t aRangeStart, size_t aRangeEnd);
-
   // Assume that this is guaranteed that this is held by the caller when
   // this is used.  (Note that we cannot use AutoRestore for mCalledByJS
   // due to a bit field.)
