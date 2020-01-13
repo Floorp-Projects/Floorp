@@ -9,6 +9,7 @@
 #include "ClassifierDummyChannel.h"
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/StaticPrefs_network.h"
@@ -58,9 +59,8 @@ void UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
   NS_QueryNotificationCallbacks(aChannel, parentChannel);
   if (parentChannel) {
     // This channel is a parent-process proxy for a child process request.
-    // Tell the child process channel to do this instead.
+    // Tell the child process channel to do this as well.
     parentChannel->NotifyChannelClassifierProtectionDisabled(aEvent);
-    return;
   }
 
   nsCOMPtr<nsIURI> uriBeingLoaded =
@@ -72,6 +72,42 @@ void UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
 void UrlClassifierCommon::NotifyChannelBlocked(nsIChannel* aChannel,
                                                nsIURI* aURIBeingLoaded,
                                                unsigned aBlockedReason) {
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
+
+  // We would notify the OnContentBlockingEvent via the top-level
+  // WindowGlobalParent if it is in the parent process.
+  if (XRE_IsParentProcess()) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    RefPtr<dom::BrowsingContext> bc;
+    loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+
+    if (!bc || bc->IsDiscarded()) {
+      return;
+    }
+
+    // Get the top-level browsing context.
+    bc = bc->Top();
+    RefPtr<dom::WindowGlobalParent> wgp =
+        bc->Canonical()->GetCurrentWindowGlobal();
+
+    NS_ENSURE_TRUE_VOID(wgp);
+    nsTArray<nsCString> trackingFullHashes;
+    nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+        do_QueryInterface(aChannel);
+
+    if (classifiedChannel) {
+      Unused << classifiedChannel->GetMatchedTrackingFullHashes(
+          trackingFullHashes);
+    }
+
+    wgp->NotifyContentBlockingEvent(aBlockedReason, aChannel, true, uri,
+                                    trackingFullHashes);
+    return;
+  }
+
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
   if (NS_WARN_IF(!thirdPartyUtil)) {
     return;
@@ -89,8 +125,6 @@ void UrlClassifierCommon::NotifyChannelBlocked(nsIChannel* aChannel,
   RefPtr<dom::Document> doc = docShell->GetDocument();
   NS_ENSURE_TRUE_VOID(doc);
 
-  nsCOMPtr<nsIURI> uri;
-  aChannel->GetURI(getter_AddRefs(uri));
   pwin->NotifyContentBlockingEvent(aBlockedReason, aChannel, true, uri,
                                    aChannel);
 }
@@ -228,10 +262,21 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
   // Can be called in EITHER the parent or child process.
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(channel, parentChannel);
+  nsCOMPtr<nsIURI> uriBeingLoaded =
+      AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(channel);
+
+  unsigned state =
+      UrlClassifierFeatureFactory::GetClassifierBlockingEventCode(aErrorCode);
+  if (!state) {
+    state = nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
+  }
+
   if (parentChannel) {
     // This channel is a parent-process proxy for a child process request.
     // Tell the child process channel to do this instead.
     parentChannel->SetClassifierMatchedInfo(aList, aProvider, aFullHash);
+
+    UrlClassifierCommon::NotifyChannelBlocked(channel, uriBeingLoaded, state);
     return NS_OK;
   }
 
@@ -249,8 +294,6 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> uriBeingLoaded =
-      AntiTrackingCommon::MaybeGetDocumentURIBeingLoaded(channel);
   nsCOMPtr<mozIDOMWindowProxy> win;
   rv = thirdPartyUtil->GetTopWindowForChannel(channel, uriBeingLoaded,
                                               getter_AddRefs(win));
@@ -262,12 +305,6 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
   }
   RefPtr<dom::Document> doc = docShell->GetDocument();
   NS_ENSURE_TRUE(doc, NS_OK);
-
-  unsigned state =
-      UrlClassifierFeatureFactory::GetClassifierBlockingEventCode(aErrorCode);
-  if (!state) {
-    state = nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
-  }
 
   UrlClassifierCommon::NotifyChannelBlocked(channel, uriBeingLoaded, state);
 
