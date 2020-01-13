@@ -9349,11 +9349,11 @@
   "MEDIA_MKV_CANPLAY_REQUESTED": {
     "record_in_processes": ["content"],
     "products": ["firefox", "geckoview"],
-    "alert_emails": ["bvandyk@mozilla.com"],
-    "expires_in_version": "74",
+    "alert_emails": ["bvandyk@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "88",
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for a matroska media type.",
-    "bug_numbers": [1429986, 1570634]
+    "bug_numbers": [1429986, 1570634, 1606206]
   },
   "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CODECS": {
     "record_in_processes": ["main", "content"],
@@ -12106,56 +12106,56 @@
     "record_in_processes": ["content"],
     "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "74",
+    "expires_in_version": "88",
     "description": "Percentage of total time spent *not* fully decoding video while element is hidden (simulated, even when feature is not enabled). Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "bug_numbers": [1293145, 1570634]
+    "bug_numbers": [1293145, 1570634, 1606206]
   },
   "VIDEO_INTER_KEYFRAME_AVERAGE_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "74",
+    "expires_in_version": "88",
     "description": "Average interval between video keyframes in played videos, in milliseconds. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
-    "bug_numbers": [1289668, 1570634]
+    "bug_numbers": [1289668, 1570634, 1606206]
   },
   "VIDEO_INTER_KEYFRAME_MAX_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "74",
+    "expires_in_version": "88",
     "description": "Maximum interval between video keyframes in played videos, in milliseconds; '0' means only 1 keyframe found. Keyed by audio presence and by height ranges (boundaries: 240. 480, 576, 720, 1080, 2160), e.g.: 'V,0<h<=240', 'AV,h>2160'; and 'All' will accumulate all percentages. This is reported whenever an HTML Media Element is suspended or resumed, such as when the page is unloaded.",
     "keyed": true,
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
-    "bug_numbers": [1289668, 1570634]
+    "bug_numbers": [1289668, 1570634, 1606206]
   },
   "VIDEO_SUSPEND_RECOVERY_TIME_MS" : {
     "record_in_processes": ["content"],
     "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "74",
+    "expires_in_version": "88",
     "description": "Time taken for a video to resume after decoding was suspended, in milliseconds. Keyed by audio presence, hw acceleration, and by height ranges (boundaries: 240. 480, 720, 1080, 2160), e.g.: 'V,0-240', 'AV(hw),2160+'; and 'All' will accumulate all percentages.",
     "keyed": true,
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 100,
-    "bug_numbers": [1294349, 1570634]
+    "bug_numbers": [1294349, 1570634, 1606206]
   },
   "VIDEO_VP9_BENCHMARK_FPS": {
     "record_in_processes": ["content"],
     "products": ["firefox", "geckoview"],
     "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
-    "expires_in_version": "74",
-    "bug_numbers": [1230265, 1570634],
+    "expires_in_version": "88",
+    "bug_numbers": [1230265, 1570634, 1606206],
     "kind": "linear",
     "high": 1000,
     "n_buckets": 100,
@@ -13281,10 +13281,10 @@
     "record_in_processes": ["content"],
     "products": ["firefox", "geckoview"],
     "alert_emails": ["alwu@mozilla.com"],
-    "expires_in_version": "74",
+    "expires_in_version": "88",
     "kind": "enumerated",
     "n_values": 10,
-    "bug_numbers": [1280644, 1570634],
+    "bug_numbers": [1280644, 1570634, 1606206],
     "description": "Number of the use of the subtitles kind track. 0=Subtitles, 1=Captions, 2=Descriptions, 3=Chapters, 4=Metadata, 5=Undefined Error",
     "releaseChannelCollection": "opt-out"
   },
@@ -14726,11 +14726,11 @@
       "nohlmeier@mozilla.com",
       "padenot@mozilla.com"
     ],
-    "expires_in_version": "74",
+    "expires_in_version": "88",
     "kind": "linear",
     "high": 60,
     "n_buckets": 10,
-    "bug_numbers": [1490074, 1570634],
+    "bug_numbers": [1490074, 1570634, 1606206],
     "description": "How long the AudioContext would become audible since it was created, time unit is seconds.",
     "releaseChannelCollection": "opt-out"
   },
@@ -14741,10 +14741,10 @@
       "alwu@mozilla.com",
       "nohlmeier@mozilla.com"
     ],
-    "expires_in_version": "74",
+    "expires_in_version": "88",
     "kind": "categorical",
     "labels": ["allow", "blockAudible", "blockAll"],
-    "bug_numbers": [1567302],
+    "bug_numbers": [1567302, 1606206],
     "description": "counts the number of times a user changed the default autoplay behavior to each setting during a subsession.",
     "releaseChannelCollection": "opt-out"
   },
