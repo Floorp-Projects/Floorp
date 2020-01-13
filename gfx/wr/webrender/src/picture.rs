@@ -338,12 +338,6 @@ pub struct SpatialNodeDependency {
 
 // Immutable context passed to picture cache tiles during pre_update
 struct TilePreUpdateContext {
-    /// The local rect of the overall picture cache
-    local_rect: PictureRect,
-
-    /// The local clip rect (in picture space) of the entire picture cache
-    local_clip_rect: PictureRect,
-
     /// Maps from picture cache coords -> world space coords.
     pic_to_world_mapper: SpaceMapper<PicturePixel, WorldPixel>,
 
@@ -356,10 +350,19 @@ struct TilePreUpdateContext {
 
     /// The visible part of the screen in world coords.
     global_screen_world_rect: WorldRect,
+
+    /// The current compositing mode.
+    compositor_kind: CompositorKind,
 }
 
 // Immutable context passed to picture cache tiles during post_update
 struct TilePostUpdateContext<'a> {
+    /// The local rect of the overall picture cache
+    local_rect: PictureRect,
+
+    /// The local clip rect (in picture space) of the entire picture cache
+    local_clip_rect: PictureRect,
+
     /// The calculated backdrop information for this cache instance.
     backdrop: BackdropInfo,
 
@@ -576,8 +579,10 @@ pub struct Tile {
     pub world_rect: WorldRect,
     /// The current local rect of this tile.
     pub rect: PictureRect,
-    /// The local rect of the tile clipped to the overall picture local rect.
-    clipped_rect: PictureRect,
+    /// The valid region of this tile (parts of the tile affected by primitives).
+    pub valid_rect: PictureRect,
+    /// The world-space valid region of this tile.
+    pub world_valid_rect: WorldRect,
     /// Uniquely describes the content of this tile, in a way that can be
     /// (reasonably) efficiently hashed and compared.
     pub current_descriptor: TileDescriptor,
@@ -623,7 +628,8 @@ impl Tile {
     ) -> Self {
         Tile {
             rect: PictureRect::zero(),
-            clipped_rect: PictureRect::zero(),
+            valid_rect: PictureRect::zero(),
+            world_valid_rect: WorldRect::zero(),
             world_rect: WorldRect::zero(),
             surface: None,
             current_descriptor: TileDescriptor::new(),
@@ -739,11 +745,6 @@ impl Tile {
         self.rect = rect;
         self.invalidation_reason  = None;
 
-        self.clipped_rect = self.rect
-            .intersection(&ctx.local_rect)
-            .and_then(|r| r.intersection(&ctx.local_clip_rect))
-            .unwrap_or_else(PictureRect::zero);
-
         self.world_rect = ctx.pic_to_world_mapper
             .map(&self.rect)
             .expect("bug: map local tile rect");
@@ -780,6 +781,20 @@ impl Tile {
         );
         self.current_descriptor.clear();
         self.root.clear(rect);
+
+        // Reset which part of the tile contains valid primitives. If the tile
+        // has a background color, the entire primitive must always be drawn
+        // composited. Otherwise, we will update the valid region of the tile
+        // during `add_prim_dependency`. For now, this optimization only applies
+        // to Draw compositor kinds - native compositors will be implemented
+        // as a follow up.
+        let has_background_color = self.background_color.is_some();
+        let is_native_compositor = ctx.compositor_kind.is_native();
+        self.valid_rect = if has_background_color || is_native_compositor {
+            self.rect
+        } else {
+            PictureRect::zero()
+        };
     }
 
     /// Add dependencies for a given primitive to this tile.
@@ -792,6 +807,9 @@ impl Tile {
         if !self.is_visible {
             return;
         }
+
+        // Update the picture space valid region of this tile.
+        self.valid_rect = self.valid_rect.union(&info.prim_clip_rect);
 
         // Include any image keys this tile depends on.
         self.current_descriptor.images.extend_from_slice(&info.images);
@@ -898,7 +916,12 @@ impl Tile {
         // Check if this tile can be considered opaque. Opacity state must be updated only
         // after all early out checks have been performed. Otherwise, we might miss updating
         // the native surface next time this tile becomes visible.
-        self.is_opaque = ctx.backdrop.rect.contains_rect(&self.clipped_rect);
+        let clipped_rect = self.rect
+            .intersection(&ctx.local_rect)
+            .and_then(|r| r.intersection(&ctx.local_clip_rect))
+            .and_then(|r| r.intersection(&self.valid_rect))
+            .unwrap_or_else(PictureRect::zero);
+        self.is_opaque = ctx.backdrop.rect.contains_rect(&clipped_rect);
 
         // Check if the selected composite mode supports dirty rect updates. For Draw composite
         // mode, we can always update the content with smaller dirty rects. For native composite
@@ -1855,12 +1878,11 @@ impl TileCacheInstance {
         mem::swap(&mut self.tiles, &mut self.old_tiles);
 
         let ctx = TilePreUpdateContext {
-            local_rect: self.local_rect,
-            local_clip_rect: self.local_clip_rect,
             pic_to_world_mapper,
             fract_offset: self.fract_offset,
             background_color: self.background_color,
             global_screen_world_rect: frame_context.global_screen_world_rect,
+            compositor_kind: frame_state.composite_state.compositor_kind,
         };
 
         self.tiles.clear();
@@ -2324,6 +2346,8 @@ impl TileCacheInstance {
         }
 
         let ctx = TilePostUpdateContext {
+            local_rect: self.local_rect,
+            local_clip_rect: self.local_clip_rect,
             backdrop: self.backdrop,
             spatial_nodes: &self.spatial_nodes,
             opacity_bindings: &self.opacity_bindings,
@@ -3653,6 +3677,7 @@ impl PicturePrimitive {
                                 tile.root.draw_debug_rects(
                                     &map_pic_to_world,
                                     tile.is_opaque,
+                                    &tile.valid_rect,
                                     scratch,
                                     frame_context.global_device_pixel_scale,
                                 );
@@ -3704,8 +3729,9 @@ impl PicturePrimitive {
                                 }
                             }
 
-                            // Update the world dirty rect
+                            // Update the world space dirty and valid rects
                             tile.world_dirty_rect = map_pic_to_world.map(&tile.dirty_rect).expect("bug");
+                            tile.world_valid_rect = map_pic_to_world.map(&tile.valid_rect).expect("bug");
 
                             if tile.is_valid {
                                 continue;
@@ -3784,15 +3810,28 @@ impl PicturePrimitive {
 
                                 // Get a task-local scissor rect for the dirty region of this
                                 // picture cache task.
-                                let scissor_rect = tile.world_dirty_rect.translate(
-                                    -tile.world_rect.origin.to_vector()
-                                );
+                                let dirty_rect = tile.world_dirty_rect
+                                    .translate(-tile.world_rect.origin.to_vector());
+                                let dirty_rect = (dirty_rect * device_pixel_scale).round();
+
+                                // The valid rect isn't guaranteed to be aligned to the device pixel
+                                // grid. To ensure we don't skip any valid pixels, round this out, and
+                                // then intersect it with the dirty rect (which _is_ device pixel
+                                // aligned) below when creating the true scissor rect.
+                                let valid_rect = tile.world_valid_rect
+                                    .translate(-tile.world_rect.origin.to_vector());
+                                let valid_rect = (valid_rect * device_pixel_scale).round_out();
+
                                 // The world rect is guaranteed to be device pixel aligned, by the tile
                                 // sizing code in tile::pre_update. However, there might be some
                                 // small floating point accuracy issues (these were observed on ARM
                                 // CPUs). Round the rect here before casting to integer device pixels
                                 // to ensure the scissor rect is correct.
-                                let scissor_rect = (scissor_rect * device_pixel_scale).round();
+                                let scissor_rect = dirty_rect
+                                    .intersection(&valid_rect)
+                                    .unwrap_or(DeviceRect::zero())
+                                    .round();
+
                                 let surface = descriptor.resolve(
                                     frame_state.resource_cache,
                                     tile_cache.current_tile_size,
@@ -4881,6 +4920,7 @@ impl TileNode {
         &self,
         pic_to_world_mapper: &SpaceMapper<PicturePixel, WorldPixel>,
         is_opaque: bool,
+        valid_rect: &PictureRect,
         scratch: &mut PrimitiveScratchBuffer,
         global_device_pixel_scale: DevicePixelScale,
     ) {
@@ -4894,22 +4934,26 @@ impl TileNode {
                     debug_colors::YELLOW
                 };
 
-                let world_rect = pic_to_world_mapper.map(&self.rect).unwrap();
-                let device_rect = world_rect * global_device_pixel_scale;
+                let local_rect = self.rect.intersection(valid_rect);
+                if let Some(local_rect) = local_rect {
+                    let world_rect = pic_to_world_mapper.map(&local_rect).unwrap();
+                    let device_rect = world_rect * global_device_pixel_scale;
 
-                let outer_color = color.scale_alpha(0.3);
-                let inner_color = outer_color.scale_alpha(0.5);
-                scratch.push_debug_rect(
-                    device_rect.inflate(-3.0, -3.0),
-                    outer_color,
-                    inner_color
-                );
+                    let outer_color = color.scale_alpha(0.3);
+                    let inner_color = outer_color.scale_alpha(0.5);
+                    scratch.push_debug_rect(
+                        device_rect.inflate(-3.0, -3.0),
+                        outer_color,
+                        inner_color
+                    );
+                }
             }
             TileNodeKind::Node { ref children, .. } => {
                 for child in children.iter() {
                     child.draw_debug_rects(
                         pic_to_world_mapper,
                         is_opaque,
+                        valid_rect,
                         scratch,
                         global_device_pixel_scale,
                     );
