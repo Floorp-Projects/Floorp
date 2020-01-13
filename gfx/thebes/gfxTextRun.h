@@ -1383,8 +1383,9 @@ class gfxFontGroup final : public gfxTextRunFactory {
       const Parameters* aParams, mozilla::gfx::ShapedTextFlags aFlags,
       nsTextFrameUtils::Flags aFlags2);
 
+  template <typename T>
   already_AddRefed<gfxTextRun> MakeBlankTextRun(
-      uint32_t aLength, const Parameters* aParams,
+      const T* aString, uint32_t aLength, const Parameters* aParams,
       mozilla::gfx::ShapedTextFlags aFlags, nsTextFrameUtils::Flags aFlags2);
 
   // Initialize the list of fonts
