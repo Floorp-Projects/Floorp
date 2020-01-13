@@ -12,6 +12,10 @@
   vertical-align: middle;
 }
 
+.permission-icon {
+  margin-inline-end: 0.2em;
+}
+
 .content-blocking-checkbox .checkbox-icon {
   margin-inline: 4px 8px;
   width: 16px;
