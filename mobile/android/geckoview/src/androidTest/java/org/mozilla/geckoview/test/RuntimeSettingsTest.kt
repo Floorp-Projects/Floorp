@@ -5,9 +5,9 @@
 package org.mozilla.geckoview.test
 
 import android.provider.Settings
-import android.support.test.InstrumentationRegistry
-import android.support.test.filters.MediumTest
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.filters.MediumTest
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.util.Log
 import org.hamcrest.Matchers.*
 import org.junit.Ignore
@@ -39,7 +39,7 @@ class RuntimeSettingsTest : BaseSessionTest() {
 
 
         settings.automaticFontSizeAdjustment = true
-        val contentResolver = InstrumentationRegistry.getTargetContext().contentResolver
+        val contentResolver = InstrumentationRegistry.getInstrumentation().targetContext.contentResolver
         val expectedFontSizeFactor = Settings.System.getFloat(contentResolver,
                 Settings.System.FONT_SCALE, 1.0f)
         assertThat("Gecko font scale should match system font scale",

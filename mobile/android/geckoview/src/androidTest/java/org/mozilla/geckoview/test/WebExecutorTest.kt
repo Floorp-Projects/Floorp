@@ -6,10 +6,10 @@ package org.mozilla.geckoview.test
 
 import android.os.Build
 import android.os.SystemClock
-import android.support.test.InstrumentationRegistry
-import android.support.test.filters.MediumTest
-import android.support.test.filters.SdkSuppress
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.filters.MediumTest
+import androidx.test.filters.SdkSuppress
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
@@ -60,7 +60,7 @@ class WebExecutorTest {
             executor = GeckoWebExecutor(RuntimeCreator.getRuntime())
         }
 
-        server = TestServer(InstrumentationRegistry.getTargetContext())
+        server = TestServer(InstrumentationRegistry.getInstrumentation().targetContext)
         server.start(TEST_PORT)
     }
 

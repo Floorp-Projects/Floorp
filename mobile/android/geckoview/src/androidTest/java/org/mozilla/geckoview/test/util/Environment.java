@@ -5,7 +5,7 @@ import org.mozilla.geckoview.BuildConfig;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
-import android.support.test.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 public class Environment {
     public static final long DEFAULT_TIMEOUT_MILLIS = 30000;

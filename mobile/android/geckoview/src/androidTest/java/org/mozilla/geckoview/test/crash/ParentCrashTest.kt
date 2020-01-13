@@ -3,11 +3,11 @@ package org.mozilla.geckoview.test.crash
 import android.content.Intent
 import android.os.Message
 import android.os.Messenger
-import android.support.test.annotation.UiThreadTest
-import android.support.test.InstrumentationRegistry
-import android.support.test.filters.MediumTest
-import android.support.test.rule.ServiceTestRule
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.annotation.UiThreadTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.filters.MediumTest
+import androidx.test.rule.ServiceTestRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.notNullValue
 import org.junit.After
@@ -35,7 +35,7 @@ class ParentCrashTest {
 
     @Before
     fun setup() {
-        val context = InstrumentationRegistry.getTargetContext()
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
         val binder = rule.bindService(Intent(context, RemoteGeckoService::class.java))
         messenger = Messenger(binder)
         assertThat("messenger should not be null", binder, notNullValue())
@@ -44,7 +44,7 @@ class ParentCrashTest {
     @Test
     @UiThreadTest
     fun crashParent() {
-        val client = TestCrashHandler.Client(InstrumentationRegistry.getTargetContext())
+        val client = TestCrashHandler.Client(InstrumentationRegistry.getInstrumentation().targetContext)
 
         assertTrue(client.connect(env.defaultTimeoutMillis))
         client.setEvalNextCrashDump(/* expectFatal */ true)
