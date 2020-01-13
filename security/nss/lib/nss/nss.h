@@ -25,7 +25,7 @@
 #define NSS_VERSION "3.48" _NSS_CUSTOMIZED
 #define NSS_VMAJOR 3
 #define NSS_VMINOR 48
-#define NSS_VPATCH 0
+#define NSS_VPATCH 1
 #define NSS_VBUILD 0
 #define NSS_BETA PR_FALSE
 
