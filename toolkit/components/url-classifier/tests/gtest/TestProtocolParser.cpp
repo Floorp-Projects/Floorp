@@ -132,7 +132,7 @@ TEST(UrlClassifierProtocolParser, SingleValueEncoding)
 
     // The fixed-length prefix string from ProtocolParser should
     // exactly match the expected prefix string.
-    nsCString* prefix = iter.Data();
+    nsCString* prefix = iter.UserData();
     ASSERT_TRUE(prefix->Equals(nsCString(expectedPrefix, 4)));
   }
 

@@ -186,7 +186,7 @@ void CheckContent(LookupCacheV4* aCache, const _PrefixArray& aPrefixArray) {
 
   for (auto iter = vlPSetMap.Iter(); !iter.Done(); iter.Next()) {
     nsCString* expectedPrefix = expected.Get(iter.Key());
-    nsCString* resultPrefix = iter.Data();
+    nsCString* resultPrefix = iter.UserData();
 
     ASSERT_TRUE(resultPrefix->Equals(*expectedPrefix));
   }

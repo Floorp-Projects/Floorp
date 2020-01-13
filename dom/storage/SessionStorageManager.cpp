@@ -265,7 +265,7 @@ void SessionStorageManager::ClearStorages(
       continue;
     }
 
-    OriginKeyHashTable* table = iter1.Data();
+    OriginKeyHashTable* table = iter1.UserData();
     for (auto iter2 = table->Iter(); !iter2.Done(); iter2.Next()) {
       if (aOriginScope.IsEmpty() ||
           StringBeginsWith(iter2.Key(), aOriginScope)) {

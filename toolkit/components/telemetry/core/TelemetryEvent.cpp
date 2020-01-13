@@ -1258,8 +1258,7 @@ nsresult TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear,
                         optional_argc,
                         aEventLimit](EventRecordsMapType& aProcessStorage) {
       for (auto iter = aProcessStorage.Iter(); !iter.Done(); iter.Next()) {
-        const EventRecordArray* eventStorage =
-            static_cast<EventRecordArray*>(iter.Data());
+        const EventRecordArray* eventStorage = iter.UserData();
         EventRecordArray events;
         EventRecordArray leftoverEvents;
 
@@ -1367,8 +1366,7 @@ size_t TelemetryEvent::SizeOfIncludingThis(
   auto getSizeOfRecords = [aMallocSizeOf](auto& storageMap) {
     size_t partial = storageMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
     for (auto iter = storageMap.Iter(); !iter.Done(); iter.Next()) {
-      EventRecordArray* eventRecords =
-          static_cast<EventRecordArray*>(iter.Data());
+      EventRecordArray* eventRecords = iter.UserData();
       partial += eventRecords->ShallowSizeOfIncludingThis(aMallocSizeOf);
 
       const uint32_t len = eventRecords->Length();

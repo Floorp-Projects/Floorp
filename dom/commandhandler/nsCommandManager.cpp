@@ -79,7 +79,7 @@ nsCommandManager::AddCommandObserver(nsIObserver* aCommandObserver,
   // XXX todo: handle special cases of aCommandToObserve being null, or empty
 
   // for each command in the table, we make a list of observers for that command
-  ObserverList* commandObservers =
+  const auto& commandObservers =
       mObserversTable.LookupForAdd(aCommandToObserve).OrInsert([]() {
         return new ObserverList;
       });

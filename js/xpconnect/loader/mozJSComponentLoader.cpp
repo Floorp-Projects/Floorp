@@ -541,9 +541,9 @@ void mozJSComponentLoader::Shutdown() {
 }
 
 // This requires that the keys be strings and the values be pointers.
-template <class Key, class Data, class UserData>
+template <class Key, class Data, class UserData, class Converter>
 static size_t SizeOfTableExcludingThis(
-    const nsBaseHashtable<Key, Data, UserData>& aTable,
+    const nsBaseHashtable<Key, Data, UserData, Converter>& aTable,
     MallocSizeOf aMallocSizeOf) {
   size_t n = aTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {

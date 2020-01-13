@@ -127,7 +127,7 @@ KeyedStackCapturer::ReflectCapturedStacks(JSContext* cx,
   size_t keyIndex = 0;
   for (auto iter = mStackInfos.ConstIter(); !iter.Done();
        iter.Next(), ++keyIndex) {
-    const StackFrequencyInfo* info = iter.Data();
+    const StackFrequencyInfo* info = iter.UserData();
 
     JS::RootedObject infoArray(cx, JS::NewArrayObject(cx, 0));
     if (!keysArray) {

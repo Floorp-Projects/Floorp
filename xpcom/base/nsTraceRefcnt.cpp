@@ -320,7 +320,7 @@ static BloatEntry* GetBloatEntry(const char* aTypeName,
 
 static void DumpSerialNumbers(const SerialHash::Iterator& aHashEntry, FILE* aFd,
                               bool aDumpAsStringBuffer) {
-  SerialNumberRecord* record = aHashEntry.Data();
+  SerialNumberRecord* record = aHashEntry.UserData();
   auto* outputFile = aFd;
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
   fprintf(outputFile, "%" PRIdPTR " @%p (%d references; %d from COMPtrs)\n",
@@ -393,7 +393,7 @@ nsresult nsTraceRefcnt::DumpStatistics() {
 
   BloatEntry total("TOTAL", 0);
   for (auto iter = gBloatView->Iter(); !iter.Done(); iter.Next()) {
-    BloatEntry* entry = iter.Data();
+    BloatEntry* entry = iter.UserData();
     if (nsCRT::strcmp(entry->GetClassName(), "TOTAL") != 0) {
       entry->Total(&total);
     }
@@ -409,7 +409,7 @@ nsresult nsTraceRefcnt::DumpStatistics() {
 
   nsTArray<BloatEntry*> entries;
   for (auto iter = gBloatView->Iter(); !iter.Done(); iter.Next()) {
-    entries.AppendElement(iter.Data());
+    entries.AppendElement(iter.UserData());
   }
 
   const uint32_t count = entries.Length();

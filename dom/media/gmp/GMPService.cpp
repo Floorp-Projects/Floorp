@@ -152,7 +152,7 @@ GeckoMediaPluginService::RunPluginCrashCallbacks(
   MOZ_ASSERT(NS_IsMainThread());
   GMP_LOG_DEBUG("%s::%s(%i)", __CLASS__, __FUNCTION__, aPluginId);
 
-  nsAutoPtr<nsTArray<RefPtr<GMPCrashHelper>>> helpers;
+  mozilla::UniquePtr<nsTArray<RefPtr<GMPCrashHelper>>> helpers;
   {
     MutexAutoLock lock(mMutex);
     mPluginCrashHelpers.Remove(aPluginId, &helpers);
@@ -431,7 +431,7 @@ void GeckoMediaPluginService::DisconnectCrashHelper(GMPCrashHelper* aHelper) {
   }
   MutexAutoLock lock(mMutex);
   for (auto iter = mPluginCrashHelpers.Iter(); !iter.Done(); iter.Next()) {
-    nsTArray<RefPtr<GMPCrashHelper>>* helpers = iter.Data();
+    nsTArray<RefPtr<GMPCrashHelper>>* helpers = iter.UserData();
     if (!helpers->Contains(aHelper)) {
       continue;
     }

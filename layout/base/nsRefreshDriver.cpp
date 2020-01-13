@@ -1333,7 +1333,7 @@ bool nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {
   if (delay == 0) {
     mRequests.PutEntry(aRequest);
   } else {
-    ImageStartData* start = mStartTable.LookupForAdd(delay).OrInsert(
+    const auto& start = mStartTable.LookupForAdd(delay).OrInsert(
         []() { return new ImageStartData(); });
     start->mEntries.PutEntry(aRequest);
   }

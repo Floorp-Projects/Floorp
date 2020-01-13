@@ -288,7 +288,7 @@ void nsMutationReceiver::ContentRemoved(nsIContent* aChild,
     if (Observer()->GetReceiverFor(aChild, false, false) != orig) {
       bool transientExists = false;
       bool isNewEntry = false;
-      nsCOMArray<nsMutationReceiver>* transientReceivers =
+      const auto& transientReceivers =
           Observer()->mTransientReceivers.LookupForAdd(aChild).OrInsert(
               [&isNewEntry]() {
                 isNewEntry = true;
@@ -995,7 +995,7 @@ void nsAutoMutationBatch::Done() {
       }
 
       if (allObservers.Length()) {
-        nsCOMArray<nsMutationReceiver>* transientReceivers =
+        const auto& transientReceivers =
             ob->mTransientReceivers.LookupForAdd(removed).OrInsert(
                 []() { return new nsCOMArray<nsMutationReceiver>(); });
         for (uint32_t k = 0; k < allObservers.Length(); ++k) {

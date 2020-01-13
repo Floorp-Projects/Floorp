@@ -8,7 +8,6 @@
 #include "mozilla/HalWakeLock.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
-#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
@@ -109,7 +108,7 @@ CleanupOnContentShutdown::Observe(nsISupports* aSubject, const char* aTopic,
       props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
   if (NS_SUCCEEDED(rv)) {
     for (auto iter = sLockTable->Iter(); !iter.Done(); iter.Next()) {
-      nsAutoPtr<ProcessLockTable>& table = iter.Data();
+      auto table = iter.UserData();
 
       if (table->Get(childID, nullptr)) {
         table->Remove(childID);
