@@ -17,7 +17,7 @@ class IPDLCompile:
         self.returncode = None
 
     def run(self):
-        '''Run |self.specstring| through the IPDL compiler.'''
+        '''Run |self.specfilename| through the IPDL compiler.'''
         assert self.returncode is None
 
         tmpoutdir = tempfile.mkdtemp(prefix='ipdl_unit_test')
