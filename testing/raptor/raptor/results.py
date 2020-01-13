@@ -431,6 +431,9 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     # chrome we just measure fcp and loadtime; skip fnbpaint and dcf
                     if self.app and 'chrome' in self.app.lower() and bt in ('fnbpaint', 'dcf'):
                         continue
+                    # fennec doesn't support 'fcp'
+                    if self.app and 'fennec' in self.app.lower() and bt == 'fcp':
+                        continue
 
                     # chrome currently uses different names (and locations) for some metrics
                     if raptor in chrome_raptor_conversion and \
