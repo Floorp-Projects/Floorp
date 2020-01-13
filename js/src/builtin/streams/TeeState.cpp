@@ -8,11 +8,11 @@
 
 #include "builtin/streams/TeeState.h"
 
-#include "builtin/Promise.h"                 // js::PromiseObject
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "js/Class.h"       // JSClass, JSCLASS_HAS_RESERVED_SLOTS
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
 #include "vm/JSContext.h"   // JSContext
+#include "vm/PromiseObject.h"  // js::PromiseObject
 
 #include "vm/JSObject-inl.h"  // js::NewBuiltinClassInstance
 

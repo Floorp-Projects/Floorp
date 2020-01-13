@@ -15,7 +15,6 @@
 
 #include "builtin/BigInt.h"
 #include "builtin/MapObject.h"
-#include "builtin/Promise.h"
 #include "builtin/TestingFunctions.h"
 #include "gc/GC.h"
 #include "gc/PublicIterators.h"
@@ -33,6 +32,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/Printer.h"
+#include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Realm.h"
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"

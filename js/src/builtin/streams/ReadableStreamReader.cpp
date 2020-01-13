@@ -13,7 +13,6 @@
 
 #include "jsfriendapi.h"  // JS_ReportErrorNumberASCII, js::GetErrorMessage
 
-#include "builtin/Promise.h"  // js::PromiseObject
 #include "builtin/Stream.h"  // js::ReadableStreamController, js::ReadableStreamControllerPullSteps
 #include "builtin/streams/ReadableStream.h"            // js::ReadableStream
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamController
@@ -22,6 +21,7 @@
 #include "js/Value.h"        // JS::Value, JS::UndefinedHandleValue
 #include "vm/Interpreter.h"  // js::GetAndClearException
 #include "vm/JSContext.h"    // JSContext
+#include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Runtime.h"      // JSRuntime
 
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::SetSettledPromiseIsHandled

@@ -14,7 +14,6 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include "builtin/Promise.h"                 // js::PromiseObject
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "js/RootingAPI.h"                   // JS::Handle
 #include "js/Value.h"                        // JS::ObjectValue

@@ -13,10 +13,10 @@
 
 #include "NamespaceImports.h"  // for Value
 
-#include "builtin/Promise.h"    // for PromiseObject
 #include "debugger/Debugger.h"  // for Debugger
 #include "js/Wrapper.h"         // for CheckedUnwrapStatic
 #include "vm/JSObject.h"        // for JSObject
+#include "vm/PromiseObject.h"   // for js::PromiseObject
 
 #include "debugger/Debugger-inl.h"  // for Debugger::fromJSObject
 

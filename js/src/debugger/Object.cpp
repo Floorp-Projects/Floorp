@@ -20,6 +20,7 @@
 #include "jsfriendapi.h"  // for GetErrorMessage
 
 #include "builtin/Array.h"       // for NewDenseCopiedArray
+#include "builtin/Promise.h"     // for PromiseReactionRecordBuilder
 #include "debugger/Debugger.h"   // for Completion, Debugger
 #include "debugger/Frame.h"      // for DebuggerFrame
 #include "debugger/NoExecute.h"  // for LeaveDebuggeeNoExecute
@@ -31,7 +32,7 @@
 #include "js/CompilationAndEvaluation.h"  //  for Compile
 #include "js/Conversions.h"               // for ToObject
 #include "js/HeapAPI.h"                   // for IsInsideNursery
-#include "js/Promise.h"  // for PromiseState, PromiseReactionRecordBuilder
+#include "js/Promise.h"                   // for PromiseState
 #include "js/Proxy.h"    // for PropertyDescriptor
 #include "js/StableStringChars.h"        // for AutoStableStringChars
 #include "proxy/ScriptedProxyHandler.h"  // for ScriptedProxyHandler
@@ -54,6 +55,7 @@
 #include "vm/NativeObject.h"             // for NativeObject, JSObject::is
 #include "vm/ObjectGroup.h"              // for GenericObject, NewObjectKind
 #include "vm/ObjectOperations.h"         // for DefineProperty
+#include "vm/PromiseObject.h"            // for js::PromiseObject
 #include "vm/Realm.h"                    // for AutoRealm, ErrorCopier, Realm
 #include "vm/Runtime.h"                  // for JSAtomState
 #include "vm/SavedFrame.h"               // for SavedFrame

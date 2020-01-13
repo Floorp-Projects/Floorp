@@ -7,12 +7,12 @@
 #ifndef vm_AsyncIteration_h
 #define vm_AsyncIteration_h
 
-#include "builtin/Promise.h"
 #include "js/Class.h"
 #include "vm/GeneratorObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/List.h"
+#include "vm/PromiseObject.h"
 
 namespace js {
 

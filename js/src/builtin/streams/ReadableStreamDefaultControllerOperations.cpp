@@ -13,7 +13,6 @@
 
 #include "jsfriendapi.h"  // js::AssertSameCompartment
 
-#include "builtin/Promise.h"  // js::PromiseObject
 #include "builtin/Stream.h"  // js::ReadableByteStreamControllerClearPendingPullIntos
 #include "builtin/streams/MiscellaneousOperations.h"  // js::CreateAlgorithmFromUnderlyingMethod, js::InvokeOrNoop, js::IsMaybeWrapped
 #include "builtin/streams/QueueWithSizes.h"  // js::EnqueueValueWithSize, js::ResetQueue
@@ -31,6 +30,7 @@
 #include "vm/JSContext.h"    // JSContext
 #include "vm/JSObject.h"     // JSObject
 #include "vm/List.h"         // js::ListObject
+#include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Runtime.h"      // JSAtomState
 #include "vm/SavedFrame.h"   // js::SavedFrame
 

@@ -13,7 +13,6 @@
 
 #include <algorithm>
 
-#include "builtin/Promise.h"
 #include "frontend/BytecodeCompilation.h"
 #include "jit/IonBuilder.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions

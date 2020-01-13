@@ -25,7 +25,6 @@
 #include "jsfriendapi.h"
 #include "jsmath.h"
 
-#include "builtin/Promise.h"
 #include "gc/FreeOp.h"
 #include "gc/PublicIterators.h"
 #include "jit/arm/Simulator-arm.h"
@@ -47,6 +46,7 @@
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
+#include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/TraceLogging.h"
 #include "vm/TraceLoggingGraph.h"
 #include "wasm/WasmSignalHandlers.h"
