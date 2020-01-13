@@ -4,9 +4,7 @@
 
 package mozilla.components.concept.storage
 
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
-import mozilla.components.concept.storage.LoginValidationDelegate.Result
 
 /**
  * Represents a login that can be used by autofill APIs.
@@ -75,11 +73,6 @@ interface LoginValidationDelegate {
              */
             object EmptyPassword : Error()
             /**
-             * The [LoginValidationDelegate] has not implemented login functionality, and will
-             * always return this error.
-             */
-            object NotImplemented : Error()
-            /**
              * Something went wrong in GeckoView. We have no way to handle this type of error. See
              * [exception] for details.
              */
@@ -94,17 +87,6 @@ interface LoginValidationDelegate {
      * value, used to update an existing one, or an error occured.
      */
     fun validateCanPersist(login: Login): Deferred<Result>
-}
-
-/**
- * Default [LoginValidationDelegate] implementation that always returns false.
- *
- * This can be used by any consumer that does not want to make use of autofill APIs.
- */
-class NoopLoginValidationDelegate : LoginValidationDelegate {
-    override fun validateCanPersist(login: Login): Deferred<Result> {
-        return CompletableDeferred(Result.Error.NotImplemented)
-    }
 }
 
 /**

@@ -50,7 +50,6 @@ import mozilla.components.feature.prompts.dialog.Prompter
 import mozilla.components.feature.prompts.dialog.TextPromptDialogFragment
 import mozilla.components.feature.prompts.dialog.TimePickerDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker
-import mozilla.components.concept.storage.NoopLoginValidationDelegate
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.share.DefaultShareDelegate
 import mozilla.components.feature.prompts.share.ShareDelegate
@@ -58,6 +57,7 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import java.security.InvalidParameterException
 import java.util.Date
@@ -88,7 +88,8 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * @property fragmentManager The [FragmentManager] to be used when displaying
  * a dialog (fragment).
  * @property shareDelegate Delegate used to display share sheet.
- * @property loginStorageDelegate Delegate used to access login storage.
+ * @property loginStorageDelegate Delegate used to access login storage. If null,
+ * 'save login'prompts will not be shown.
  * @property onNeedToRequestPermissions A callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
@@ -100,13 +101,14 @@ class PromptFeature private constructor(
     private var customTabId: String?,
     private val fragmentManager: FragmentManager,
     private val shareDelegate: ShareDelegate,
-    override val loginValidationDelegate: LoginValidationDelegate,
+    override val loginValidationDelegate: LoginValidationDelegate? = null,
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature, Prompter {
     private var scope: CoroutineScope? = null
     private var activePromptRequest: PromptRequest? = null
 
     internal val promptAbuserDetector = PromptAbuserDetector()
+    private val logger = Logger("PromptFeature")
 
     constructor(
         activity: Activity,
@@ -114,7 +116,7 @@ class PromptFeature private constructor(
         customTabId: String? = null,
         fragmentManager: FragmentManager,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
-        loginValidationDelegate: LoginValidationDelegate = NoopLoginValidationDelegate(),
+        loginValidationDelegate: LoginValidationDelegate? = null,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Activity(activity),
@@ -132,7 +134,7 @@ class PromptFeature private constructor(
         customTabId: String? = null,
         fragmentManager: FragmentManager,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
-        loginValidationDelegate: LoginValidationDelegate = NoopLoginValidationDelegate(),
+        loginValidationDelegate: LoginValidationDelegate? = null,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Fragment(fragment),
@@ -163,7 +165,7 @@ class PromptFeature private constructor(
         customTabId = customTabId,
         fragmentManager = fragmentManager,
         shareDelegate = DefaultShareDelegate(),
-        loginValidationDelegate = NoopLoginValidationDelegate(),
+        loginValidationDelegate = null,
         onNeedToRequestPermissions = onNeedToRequestPermissions
     )
 
@@ -370,6 +372,13 @@ class PromptFeature private constructor(
         val dialog = when (promptRequest) {
 
             is LoginPrompt -> {
+                if (loginValidationDelegate == null) {
+                    logger.debug("Ignoring received LoginPrompt because PromptFeature." +
+                        "loginValidationDelegate is null. If you are trying to autofill logins, " +
+                        "try attaching a LoginValidationDelegate to PromptFeature")
+                    return
+                }
+
                 LoginDialogFragment.newInstance(
                     sessionId = session.id,
                     hint = promptRequest.hint,
