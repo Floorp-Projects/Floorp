@@ -135,7 +135,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
 
   void SetChannel(nsIChannel* aChannel);
 
-  void Cancel(uint32_t result, ErrorResult& aRv);
+  void Cancel(uint32_t result, uint32_t reason, ErrorResult& aRv);
 
   void RedirectTo(nsIURI* uri, ErrorResult& aRv);
   void UpgradeToSecure(ErrorResult& aRv);
