@@ -89,6 +89,7 @@ abstract class AbstractMigrationService : Service() {
             .setContentTitle(TEMPORARY_NOTIFICATION_TITLE)
             .setContentText(TEMPORARY_NOTIFICATION_TEXT)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
         val id = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
