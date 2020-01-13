@@ -55,4 +55,11 @@ object TestHelper {
             false -> "com.android.packageinstaller"
         }
     }
+
+    fun waitUntilObjectIsFound(resourceName: String) {
+        mDevice.waitNotNull(
+            Until.findObjects(By.res(resourceName)),
+            TestAssetHelper.waitingTime
+        )
+    }
 }

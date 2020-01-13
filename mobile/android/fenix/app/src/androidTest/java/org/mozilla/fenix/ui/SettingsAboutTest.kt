@@ -8,7 +8,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Rule
-import org.junit.Ignore
 import org.junit.Before
 import org.junit.After
 import org.junit.Test
@@ -71,7 +70,6 @@ class SettingsAboutTest {
     }
 
     @Test
-    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/7388")
     fun verifyAboutFirefoxPreview() {
         homeScreen {
         }.openThreeDotMenu {
