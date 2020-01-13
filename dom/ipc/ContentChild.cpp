@@ -3552,7 +3552,7 @@ mozilla::ipc::IPCResult ContentChild::RecvDeactivate(PBrowserChild* aTab) {
 
 mozilla::ipc::IPCResult ContentChild::RecvProvideAnonymousTemporaryFile(
     const uint64_t& aID, const FileDescOrError& aFDOrError) {
-  nsAutoPtr<AnonymousTemporaryFileCallback> callback;
+  mozilla::UniquePtr<AnonymousTemporaryFileCallback> callback;
   mPendingAnonymousTemporaryFiles.Remove(aID, &callback);
   MOZ_ASSERT(callback);
 

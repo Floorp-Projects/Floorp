@@ -281,7 +281,7 @@ nsCounterList* nsCounterManager::CounterListFor(nsAtom* aCounterName) {
   MOZ_ASSERT(aCounterName);
   return mNames.LookupForAdd(aCounterName).OrInsert([]() {
     return new nsCounterList();
-  });
+  }).get();
 }
 
 void nsCounterManager::RecalcAll() {

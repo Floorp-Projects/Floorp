@@ -10076,7 +10076,7 @@ void ReflowCountMgr::Add(const char* aName, nsIFrame* aFrame) {
   NS_ASSERTION(aName != nullptr, "Name shouldn't be null!");
 
   if (mDumpFrameCounts) {
-    ReflowCounter* counter = mCounts.LookupForAdd(aName).OrInsert(
+    const auto& counter = mCounts.LookupForAdd(aName).OrInsert(
         [this]() { return new ReflowCounter(this); });
     counter->Add();
   }
@@ -10085,7 +10085,7 @@ void ReflowCountMgr::Add(const char* aName, nsIFrame* aFrame) {
       aFrame != nullptr) {
     char key[KEY_BUF_SIZE_FOR_PTR];
     SprintfLiteral(key, "%p", (void*)aFrame);
-    IndiReflowCounter* counter =
+    const auto& counter =
         mIndiFrameCounts.LookupForAdd(key).OrInsert([&aName, &aFrame, this]() {
           auto counter = new IndiReflowCounter(this);
           counter->mFrame = aFrame;
@@ -10093,7 +10093,7 @@ void ReflowCountMgr::Add(const char* aName, nsIFrame* aFrame) {
           return counter;
         });
     // this eliminates extra counts from super classes
-    if (counter != nullptr && counter->mName.EqualsASCII(aName)) {
+    if (counter && counter->mName.EqualsASCII(aName)) {
       counter->mCount++;
       counter->mCounter.Add(1);
     }
@@ -10231,7 +10231,7 @@ void ReflowCountMgr::DoIndiTotalsTree() {
     printf("-- Individual Counts of Frames not in Root Tree\n");
     printf("------------------------------------------------\n");
     for (auto iter = mIndiFrameCounts.Iter(); !iter.Done(); iter.Next()) {
-      IndiReflowCounter* counter = iter.Data();
+      IndiReflowCounter* counter = iter.UserData();
       if (!counter->mHasBeenOutput) {
         char* name = ToNewCString(counter->mName);
         printf("%s - %p   [%d][", name, (void*)counter->mFrame,

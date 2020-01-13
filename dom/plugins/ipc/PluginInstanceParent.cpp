@@ -17,7 +17,6 @@
 #include "PluginModuleParent.h"
 #include "StreamNotifyParent.h"
 #include "npfunctions.h"
-#include "nsAutoPtr.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
@@ -2105,10 +2104,10 @@ void PluginInstanceParent::UnsubclassPluginWindow() {
   if (XRE_IsContentProcess()) {
     if (mPluginHWND) {
       // Remove 'this' from the plugin list safely
-      nsAutoPtr<PluginInstanceParent> tmp;
+      mozilla::UniquePtr<PluginInstanceParent> tmp;
       MOZ_ASSERT(sPluginInstanceList);
       sPluginInstanceList->Remove((void*)mPluginHWND, &tmp);
-      tmp.forget();
+      mozilla::Unused << tmp.release();
       if (!sPluginInstanceList->Count()) {
         delete sPluginInstanceList;
         sPluginInstanceList = nullptr;

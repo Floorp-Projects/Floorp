@@ -1630,7 +1630,7 @@ void ContentParent::RemoveFromList() {
     }
   } else if (sBrowserContentParents) {
     if (auto entry = sBrowserContentParents->Lookup(mRemoteType)) {
-      nsTArray<ContentParent*>* contentParents = entry.Data();
+      const auto& contentParents = entry.Data();
       contentParents->RemoveElement(this);
       if (contentParents->IsEmpty()) {
         entry.Remove();

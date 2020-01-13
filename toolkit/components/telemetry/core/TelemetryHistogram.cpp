@@ -1398,7 +1398,7 @@ nsresult KeyedHistogram::GetSnapshot(const StaticMutexAutoLock& aLock,
 
   // Snapshot every key.
   for (auto iter = histogramMap->ConstIter(); !iter.Done(); iter.Next()) {
-    base::Histogram* keyData = iter.Data();
+    base::Histogram* keyData = iter.UserData();
     if (!keyData) {
       return NS_ERROR_FAILURE;
     }

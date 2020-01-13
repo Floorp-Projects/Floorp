@@ -866,7 +866,7 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
 
     // Remove all neighbors associated with this address
     for (auto iter = linkInfo->mNeighbors.Iter(); !iter.Done(); iter.Next()) {
-      NetlinkNeighbor* neigh = iter.Data();
+      NetlinkNeighbor* neigh = iter.UserData();
       if (neigh->Family() == address->Family() &&
           address->ContainsAddr(neigh->GetAddrPtr())) {
         if (LOG_ENABLED()) {
@@ -1362,7 +1362,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
 
   // Check only routes on links that are up
   for (auto iter = mLinks.ConstIter(); !iter.Done(); iter.Next()) {
-    LinkInfo* linkInfo = iter.Data();
+    LinkInfo* linkInfo = iter.UserData();
     nsAutoCString linkName;
     linkInfo->mLink->GetName(linkName);
 
@@ -1447,7 +1447,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
 
     // TODO: maybe we could get operator name via AndroidBridge
     for (auto iter = mLinks.ConstIter(); !iter.Done(); iter.Next()) {
-      LinkInfo* linkInfo = iter.Data();
+      LinkInfo* linkInfo = iter.UserData();
       if (linkInfo->mIsUp) {
         nsAutoCString linkName;
         linkInfo->mLink->GetName(linkName);

@@ -98,7 +98,7 @@ class HashElemIter {
       if (done_) {
         return nullptr;
       }
-      return iter().Data();
+      return iter().UserData();
     }
 
     const ElemType get() const { return const_cast<Elem*>(this)->get(); }

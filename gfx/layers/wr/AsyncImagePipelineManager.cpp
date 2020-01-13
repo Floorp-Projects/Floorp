@@ -166,7 +166,7 @@ void AsyncImagePipelineManager::RemoveAsyncImagePipeline(
 
   uint64_t id = wr::AsUint64(aPipelineId);
   if (auto entry = mAsyncImagePipelines.Lookup(id)) {
-    AsyncImagePipeline* holder = entry.Data();
+    const auto& holder = entry.Data();
     wr::Epoch epoch = GetNextImageEpoch();
     aTxn.ClearDisplayList(epoch, aPipelineId);
     for (wr::ImageKey key : holder->mKeys) {
@@ -320,7 +320,7 @@ void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
   // Update each of them if needed.
   for (auto iter = mAsyncImagePipelines.Iter(); !iter.Done(); iter.Next()) {
     wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
-    AsyncImagePipeline* pipeline = iter.Data();
+    AsyncImagePipeline* pipeline = iter.UserData();
     // If aync image pipeline does not use ImageBridge, do not need to apply.
     if (!pipeline->mImageHost->GetAsyncRef()) {
       continue;
@@ -591,7 +591,7 @@ void AsyncImagePipelineManager::ProcessPipelineRendered(
     const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch,
     wr::RenderedFrameId aRenderedFrameId) {
   if (auto entry = mPipelineTexturesHolders.Lookup(wr::AsUint64(aPipelineId))) {
-    PipelineTexturesHolder* holder = entry.Data();
+    const auto& holder = entry.Data();
     // For TextureHosts that can be released on render submission, using aEpoch
     // find the first that we can't release and then release all prior to that.
     auto firstSubmittedHostToKeep = std::find_if(
@@ -641,7 +641,7 @@ void AsyncImagePipelineManager::ProcessPipelineRemoved(
   }
   if (auto entry = mPipelineTexturesHolders.Lookup(
           wr::AsUint64(aRemovedPipeline.pipeline_id))) {
-    PipelineTexturesHolder* holder = entry.Data();
+    const auto& holder = entry.Data();
     if (holder->mDestroyedEpoch.isSome()) {
       if (!holder->mTextureHostsUntilRenderCompleted.empty()) {
         // Move all TextureHosts that must be held until render completed to

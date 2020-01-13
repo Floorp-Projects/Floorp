@@ -314,7 +314,7 @@ CustomElementRegistry::RunCustomElementCreationCallback::Run() {
   MOZ_ASSERT(!mRegistry->mElementCreationCallbacks.GetWeak(mAtom),
              "Callback should be removed.");
 
-  nsAutoPtr<nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>> elements;
+  mozilla::UniquePtr<nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>> elements;
   mRegistry->mElementCreationCallbacksUpgradeCandidatesMap.Remove(mAtom,
                                                                   &elements);
   MOZ_ASSERT(elements, "There should be a list");
@@ -601,7 +601,7 @@ void CustomElementRegistry::UpgradeCandidates(
     return;
   }
 
-  nsAutoPtr<nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>> candidates;
+  mozilla::UniquePtr<nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>> candidates;
   if (mCandidatesMap.Remove(aKey, &candidates)) {
     MOZ_ASSERT(candidates);
     CustomElementReactionsStack* reactionsStack =

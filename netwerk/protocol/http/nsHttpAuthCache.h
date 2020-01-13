@@ -148,7 +148,7 @@ class nsHttpAuthNode {
   nsTArray<nsAutoPtr<nsHttpAuthEntry> > mList;
 
   friend class nsHttpAuthCache;
-  friend class nsAutoPtr<nsHttpAuthNode>;  // needs to call the destructor
+  friend class mozilla::DefaultDelete<nsHttpAuthNode>; // needs to call the destructor
 };
 
 //-----------------------------------------------------------------------------

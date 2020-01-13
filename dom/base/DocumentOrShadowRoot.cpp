@@ -616,7 +616,7 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetRadioGroup(
 nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
     const nsAString& aName) {
   return mRadioGroups.LookupForAdd(aName).OrInsert(
-      []() { return new nsRadioGroupStruct(); });
+      []() { return new nsRadioGroupStruct(); }).get();
 }
 
 void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,

@@ -4192,7 +4192,7 @@ void QuotaManager::RemoveQuota() {
   MutexAutoLock lock(mQuotaMutex);
 
   for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
-    nsAutoPtr<GroupInfoPair>& pair = iter.Data();
+    auto pair = iter.UserData();
 
     MOZ_ASSERT(!iter.Key().IsEmpty(), "Empty key!");
     MOZ_ASSERT(pair, "Null pointer!");

@@ -12,7 +12,6 @@
 #include "MediaUtils.h"
 #include "MediaEngine.h"
 #include "VideoUtils.h"
-#include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -86,7 +85,7 @@ class OriginKeyStore : public nsISupports {
       // Avoid int64_t* <-> void* casting offset
       OriginKey since(nsCString(), aSinceWhen / PR_USEC_PER_SEC);
       for (auto iter = mKeys.Iter(); !iter.Done(); iter.Next()) {
-        nsAutoPtr<OriginKey>& originKey = iter.Data();
+        auto originKey = iter.UserData();
         LOG((((originKey->mSecondsStamp >= since.mSecondsStamp)
                   ? "%s: REMOVE %" PRId64 " >= %" PRId64
                   : "%s: KEEP   %" PRId64 " < %" PRId64),

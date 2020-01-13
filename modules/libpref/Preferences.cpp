@@ -2730,10 +2730,10 @@ nsPrefBranch::RemoveObserverImpl(const nsACString& aDomain,
   nsCString prefName;
   GetPrefName(aDomain).get(prefName);
   PrefCallback key(prefName, aObserver, this);
-  nsAutoPtr<PrefCallback> pCallback;
+  mozilla::UniquePtr<PrefCallback> pCallback;
   mObservers.Remove(&key, &pCallback);
   if (pCallback) {
-    rv = Preferences::UnregisterCallback(NotifyObserver, prefName, pCallback,
+    rv = Preferences::UnregisterCallback(NotifyObserver, prefName, pCallback.get(),
                                          Preferences::PrefixMatch);
   }
 
@@ -2793,7 +2793,7 @@ void nsPrefBranch::FreeObserverList() {
   // mFreeingObserverList to keep those calls from touching mObservers.
   mFreeingObserverList = true;
   for (auto iter = mObservers.Iter(); !iter.Done(); iter.Next()) {
-    nsAutoPtr<PrefCallback>& callback = iter.Data();
+    auto callback = iter.UserData();
     Preferences::UnregisterCallback(nsPrefBranch::NotifyObserver,
                                     callback->GetDomain(), callback,
                                     Preferences::PrefixMatch);
@@ -3212,7 +3212,7 @@ PreferenceServiceReporter::CollectReports(
   nsDataHashtable<nsCStringHashKey, uint32_t> prefCounter;
 
   for (auto iter = rootBranch->mObservers.Iter(); !iter.Done(); iter.Next()) {
-    nsAutoPtr<PrefCallback>& callback = iter.Data();
+    auto callback = iter.UserData();
 
     if (callback->IsWeak()) {
       nsCOMPtr<nsIObserver> callbackRef = do_QueryReferent(callback->mWeakRef);

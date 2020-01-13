@@ -11,6 +11,7 @@
 
 #include "mozilla/Services.h"
 #include "mozilla/UniquePtr.h"
+#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDataHashtable.h"

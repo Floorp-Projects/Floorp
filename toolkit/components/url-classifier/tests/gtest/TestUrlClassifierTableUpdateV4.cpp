@@ -115,7 +115,7 @@ static void GenerateUpdateData(bool fullUpdate, PrefixStringMap& add,
   tableUpdate->SetFullUpdate(fullUpdate);
 
   for (auto iter = add.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCString* pstring = iter.Data();
+    nsCString* pstring = iter.UserData();
     tableUpdate->NewPrefixes(iter.Key(), *pstring);
   }
 
@@ -151,7 +151,7 @@ static void VerifyPrefixSet(PrefixStringMap& expected) {
   lookup->GetPrefixes(prefixesInFile);
 
   for (auto iter = expected.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCString* expectedPrefix = iter.Data();
+    nsCString* expectedPrefix = iter.UserData();
     nsCString* resultPrefix = prefixesInFile.Get(iter.Key());
 
     ASSERT_TRUE(*resultPrefix == *expectedPrefix);

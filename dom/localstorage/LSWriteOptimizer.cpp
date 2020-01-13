@@ -59,7 +59,7 @@ void LSWriteOptimizerBase::GetSortedWriteInfos(
   }
 
   for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
-    WriteInfo* writeInfo = iter.Data();
+    WriteInfo* writeInfo = iter.UserData();
 
     aWriteInfos.InsertElementSorted(writeInfo, WriteInfoComparator());
   }

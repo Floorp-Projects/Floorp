@@ -5181,7 +5181,7 @@ class ConnectionPool::ThreadInfo {
 };
 
 struct ConnectionPool::DatabaseInfo final {
-  friend class nsAutoPtr<DatabaseInfo>;
+  friend class mozilla::DefaultDelete<DatabaseInfo>;
 
   RefPtr<ConnectionPool> mConnectionPool;
   const nsCString mDatabaseId;
@@ -5372,7 +5372,7 @@ class ConnectionPool::ThreadRunnable final : public Runnable {
 };
 
 class ConnectionPool::TransactionInfo final {
-  friend class nsAutoPtr<TransactionInfo>;
+  friend class mozilla::DefaultDelete<TransactionInfo>;
 
   nsTHashtable<nsPtrHashKey<TransactionInfo>> mBlocking;
   nsTArray<TransactionInfo*> mBlockingOrdered;
@@ -5412,7 +5412,7 @@ class ConnectionPool::TransactionInfo final {
 };
 
 struct ConnectionPool::TransactionInfoPair final {
-  friend class nsAutoPtr<TransactionInfoPair>;
+  friend class mozilla::DefaultDelete<TransactionInfoPair>;
 
   // Multiple reading transactions can block future writes.
   nsTArray<TransactionInfo*> mLastBlockingWrites;
@@ -8282,7 +8282,7 @@ class GetFileReferencesHelper final : public Runnable {
  ******************************************************************************/
 
 struct DatabaseActorInfo final {
-  friend class nsAutoPtr<DatabaseActorInfo>;
+  friend class mozilla::DefaultDelete<DatabaseActorInfo>;
 
   RefPtr<FullDatabaseMetadata> mMetadata;
   nsTArray<CheckedUnsafePtr<Database>> mLiveDatabases;
@@ -10986,7 +10986,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::WillCommit() {
 
   DatabaseUpdateFunction function(this);
   for (const auto& entry : mFileInfoEntries) {
-    FileInfoEntry* value = entry.GetData();
+    const auto& value = entry.GetData();
     MOZ_ASSERT(value);
 
     if (value->mDelta && !function.Update(entry.GetKey(), value->mDelta)) {
@@ -11015,7 +11015,7 @@ void DatabaseConnection::UpdateRefcountFunction::DidCommit() {
                       DOM);
 
   for (const auto& entry : mFileInfoEntries) {
-    FileInfoEntry* value = entry.GetData();
+    const auto& value = entry.GetData();
 
     MOZ_ASSERT(value);
 
@@ -11152,7 +11152,7 @@ void DatabaseConnection::UpdateRefcountFunction::Reset() {
   // done asynchronously and with a delay. We want to remove them (and decrease
   // quota usage) before we fire the commit event.
   for (const auto& entry : mFileInfoEntries) {
-    FileInfoEntry* const value = entry.GetData();
+    const auto& value = entry.GetData();
     MOZ_ASSERT(value);
 
     FileInfo* const fileInfo = value->mFileInfo.forget().take();
