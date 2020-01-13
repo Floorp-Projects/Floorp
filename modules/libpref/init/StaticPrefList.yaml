@@ -5209,12 +5209,6 @@
   value: true
   mirror: always
 
-# Is parallel CSS parsing enabled?
-- name: layout.css.parsing.parallel
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for -moz-prefixed animation properties enabled?
 - name: layout.css.prefixes.animations
   type: bool

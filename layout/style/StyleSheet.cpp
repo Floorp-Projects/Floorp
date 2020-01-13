@@ -989,11 +989,6 @@ already_AddRefed<StyleSheet> StyleSheet::CreateEmptyChildSheet(
 //     -moz-bool-pref, which needs to access the pref service, which is not
 //     threadsafe.
 static bool AllowParallelParse(css::Loader& aLoader, nsIURI* aSheetURI) {
-  // Check the pref.
-  if (!StaticPrefs::layout_css_parsing_parallel()) {
-    return false;
-  }
-
   // If the browser is recording CSS errors, we need to use the sequential path
   // because the parallel path doesn't support that.
   Document* doc = aLoader.GetDocument();
