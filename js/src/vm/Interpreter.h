@@ -462,6 +462,18 @@ class MOZ_STACK_CLASS TryNoteIter {
   const JSTryNote* operator*() const { return tn_; }
 };
 
+class NoOpTryNoteFilter {
+ public:
+  explicit NoOpTryNoteFilter() = default;
+  bool operator()(const JSTryNote*) { return true; }
+};
+
+class TryNoteIterAll : public TryNoteIter<NoOpTryNoteFilter> {
+ public:
+  TryNoteIterAll(JSContext* cx, JSScript* script, jsbytecode* pc)
+      : TryNoteIter(cx, script, pc, NoOpTryNoteFilter()) {}
+};
+
 bool HandleClosingGeneratorReturn(JSContext* cx, AbstractFramePtr frame,
                                   bool ok);
 
