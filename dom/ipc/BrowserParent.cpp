@@ -2711,6 +2711,42 @@ mozilla::ipc::IPCResult BrowserParent::RecvNavigationFinished() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
+    const uint32_t& aEvent, const RequestData& aRequestData,
+    const bool aBlocked, nsIURI* aHintURI,
+    nsTArray<nsCString>&& aTrackingFullHashes,
+    const Maybe<mozilla::AntiTrackingCommon::StorageAccessGrantedReason>&
+        aReason) {
+  MOZ_ASSERT(aRequestData.elapsedLoadTimeMS().isNothing());
+
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+
+  if (!bc || bc->IsDiscarded()) {
+    return IPC_OK();
+  }
+
+  // Get the top-level browsing context.
+  bc = bc->Top();
+  RefPtr<dom::WindowGlobalParent> wgp =
+      bc->Canonical()->GetCurrentWindowGlobal();
+
+  // The WindowGlobalParent would be null while running the test
+  // browser_339445.js. This is unexpected and we will address this in a
+  // following bug. For now, we first workaround this issue.
+  if (!wgp) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIRequest> request = MakeAndAddRef<RemoteWebProgressRequest>(
+      aRequestData.requestURI(), aRequestData.originalRequestURI(),
+      aRequestData.matchedList(), aRequestData.elapsedLoadTimeMS());
+
+  wgp->NotifyContentBlockingEvent(aEvent, request, aBlocked, aHintURI,
+                                  aTrackingFullHashes, aReason);
+
+  return IPC_OK();
+}
+
 bool BrowserParent::GetWebProgressListener(
     nsIBrowser** aOutBrowser, nsIWebProgress** aOutManager,
     nsIWebProgressListener** aOutListener) {
