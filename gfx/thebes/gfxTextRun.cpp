@@ -2184,9 +2184,10 @@ already_AddRefed<gfxTextRun> gfxFontGroup::MakeSpaceTextRun(
   return textRun.forget();
 }
 
+template <typename T>
 already_AddRefed<gfxTextRun> gfxFontGroup::MakeBlankTextRun(
-    uint32_t aLength, const Parameters* aParams, gfx::ShapedTextFlags aFlags,
-    nsTextFrameUtils::Flags aFlags2) {
+    const T* aString, uint32_t aLength, const Parameters* aParams,
+    gfx::ShapedTextFlags aFlags, nsTextFrameUtils::Flags aFlags2) {
   RefPtr<gfxTextRun> textRun =
       gfxTextRun::Create(aParams, aLength, this, aFlags, aFlags2);
   if (!textRun) {
@@ -2199,6 +2200,15 @@ already_AddRefed<gfxTextRun> gfxFontGroup::MakeBlankTextRun(
   }
   textRun->AddGlyphRun(GetFirstValidFont(), FontMatchType::Kind::kUnspecified,
                        0, false, orientation, false);
+
+  for (uint32_t i = 0; i < aLength; i++) {
+    if (aString[i] == '\n') {
+      textRun->SetIsNewline(i);
+    } else if (aString[i] == '\t') {
+      textRun->SetIsTab(i);
+    }
+  }
+
   return textRun.forget();
 }
 
@@ -2250,7 +2260,7 @@ already_AddRefed<gfxTextRun> gfxFontGroup::MakeTextRun(
     // Short-circuit for size-0 fonts, as Windows and ATSUI can't handle
     // them, and always create at least size 1 fonts, i.e. they still
     // render something for size 0 fonts.
-    return MakeBlankTextRun(aLength, aParams, aFlags, aFlags2);
+    return MakeBlankTextRun(aString, aLength, aParams, aFlags, aFlags2);
   }
 
   RefPtr<gfxTextRun> textRun =
@@ -2278,7 +2288,7 @@ already_AddRefed<gfxTextRun> gfxFontGroup::MakeTextRun(
   }
   if (MOZ_UNLIKELY(GetStyle()->size == 0) ||
       MOZ_UNLIKELY(GetStyle()->sizeAdjust == 0.0f)) {
-    return MakeBlankTextRun(aLength, aParams, aFlags, aFlags2);
+    return MakeBlankTextRun(aString, aLength, aParams, aFlags, aFlags2);
   }
 
   RefPtr<gfxTextRun> textRun =
