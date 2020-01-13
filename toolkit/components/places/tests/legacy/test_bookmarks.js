@@ -12,26 +12,34 @@ var bookmarksObserver = {
   handlePlacesEvents(events) {
     Assert.equal(events.length, 1);
     let event = events[0];
-    bookmarksObserver._itemAddedId = event.id;
-    bookmarksObserver._itemAddedParent = event.parentId;
-    bookmarksObserver._itemAddedIndex = event.index;
-    bookmarksObserver._itemAddedURI = event.url
-      ? Services.io.newURI(event.url)
-      : null;
-    bookmarksObserver._itemAddedTitle = event.title;
+    switch (event.type) {
+      case "bookmark-added":
+        bookmarksObserver._itemAddedId = event.id;
+        bookmarksObserver._itemAddedParent = event.parentId;
+        bookmarksObserver._itemAddedIndex = event.index;
+        bookmarksObserver._itemAddedURI = event.url
+          ? Services.io.newURI(event.url)
+          : null;
+        bookmarksObserver._itemAddedTitle = event.title;
 
-    // Ensure that we've created a guid for this item.
-    let stmt = DBConn().createStatement(
-      `SELECT guid
-       FROM moz_bookmarks
-       WHERE id = :item_id`
-    );
-    stmt.params.item_id = event.id;
-    Assert.ok(stmt.executeStep());
-    Assert.ok(!stmt.getIsNull(0));
-    do_check_valid_places_guid(stmt.row.guid);
-    Assert.equal(stmt.row.guid, event.guid);
-    stmt.finalize();
+        // Ensure that we've created a guid for this item.
+        let stmt = DBConn().createStatement(
+          `SELECT guid
+           FROM moz_bookmarks
+           WHERE id = :item_id`
+        );
+        stmt.params.item_id = event.id;
+        Assert.ok(stmt.executeStep());
+        Assert.ok(!stmt.getIsNull(0));
+        do_check_valid_places_guid(stmt.row.guid);
+        Assert.equal(stmt.row.guid, event.guid);
+        stmt.finalize();
+        break;
+      case "bookmark-removed":
+        bookmarksObserver._itemRemovedId = event.id;
+        bookmarksObserver._itemRemovedFolder = event.parentId;
+        bookmarksObserver._itemRemovedIndex = event.index;
+    }
   },
 
   onBeginUpdateBatch() {
@@ -40,11 +48,7 @@ var bookmarksObserver = {
   onEndUpdateBatch() {
     this._endUpdateBatch = true;
   },
-  onItemRemoved(id, folder, index, itemType) {
-    this._itemRemovedId = id;
-    this._itemRemovedFolder = folder;
-    this._itemRemovedIndex = index;
-  },
+
   onItemChanged(
     id,
     property,
@@ -84,7 +88,10 @@ var bmStartIndex = 0;
 
 add_task(async function test_bookmarks() {
   bs.addObserver(bookmarksObserver);
-  os.addListener(["bookmark-added"], bookmarksObserver.handlePlacesEvents);
+  os.addListener(
+    ["bookmark-added", "bookmark-removed"],
+    bookmarksObserver.handlePlacesEvents
+  );
 
   // test special folders
   Assert.ok(bs.placesRoot > 0);

@@ -1240,7 +1240,6 @@ var gEditItemOverlay = {
     });
   },
 
-  onItemRemoved() {},
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
   onItemVisited() {},

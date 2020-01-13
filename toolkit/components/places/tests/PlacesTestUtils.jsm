@@ -417,7 +417,7 @@ var PlacesTestUtils = Object.freeze({
                 }
               };
             }
-            if (name == "skipTags" || name == "skipDescendantsOnItemRemoval") {
+            if (name == "skipTags") {
               return false;
             }
             return () => false;

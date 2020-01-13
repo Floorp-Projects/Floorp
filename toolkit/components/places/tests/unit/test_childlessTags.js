@@ -31,9 +31,21 @@ add_task(async function test_removing_tagged_bookmark_removes_tag() {
   let tags = ["foo", "bar"];
   tagssvc.tagURI(BOOKMARK_URI, tags);
   ensureTagsExist(tags);
+  let root = getTagRoot();
+  root.containerOpen = true;
+  let oldCount = root.childCount;
+  root.containerOpen = false;
 
   print("  Remove the bookmark.  The tags should no longer exist.");
+  let wait = TestUtils.waitForCondition(() => {
+    root = getTagRoot();
+    root.containerOpen = true;
+    let val = root.childCount == oldCount - 2;
+    root.containerOpen = false;
+    return val;
+  });
   await PlacesUtils.bookmarks.remove(bookmark.guid);
+  await wait;
   ensureTagsExist([]);
 });
 
@@ -58,12 +70,40 @@ add_task(
     tagssvc.tagURI(BOOKMARK_URI, tags);
     ensureTagsExist(tags);
 
+    // The tag containers are removed in async and take some time
+    let oldCountFoo = await tagCount("foo");
+    let oldCountBar = await tagCount("bar");
+
     print("  Remove the folder.  The tags should no longer exist.");
+
+    let wait = TestUtils.waitForCondition(async () => {
+      let newCountFoo = await tagCount("foo");
+      let newCountBar = await tagCount("bar");
+      return newCountFoo == oldCountFoo - 1 && newCountBar == oldCountBar - 1;
+    });
     await PlacesUtils.bookmarks.remove(bookmark.guid);
+    await wait;
     ensureTagsExist([]);
   }
 );
 
+async function tagCount(aTag) {
+  let allTags = await PlacesUtils.bookmarks.fetchTags();
+  for (let i of allTags) {
+    if (i.name == aTag) {
+      return i.count;
+    }
+  }
+  return 0;
+}
+
+function getTagRoot() {
+  var query = histsvc.getNewQuery();
+  var opts = histsvc.getNewQueryOptions();
+  opts.resultType = opts.RESULTS_AS_TAGS_ROOT;
+  var resultRoot = histsvc.executeQuery(query, opts).root;
+  return resultRoot;
+}
 /**
  * Runs a tag query and ensures that the tags returned are those and only those
  * in aTags.  aTags may be empty, in which case this function ensures that no

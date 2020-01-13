@@ -184,23 +184,26 @@ add_task(async function test_notifications() {
     ],
   });
 
-  let skipDescendantsObserver = expectNotifications(true);
-  let receiveAllObserver = expectNotifications(false);
+  let skipDescendantsObserver = expectPlacesObserverNotifications(
+    ["bookmark-removed"],
+    false,
+    true
+  );
+  let receiveAllObserver = expectPlacesObserverNotifications(
+    ["bookmark-removed"],
+    false
+  );
 
   await PlacesUtils.bookmarks.eraseEverything();
 
   let expectedNotifications = [
     {
-      name: "onItemRemoved",
-      arguments: {
-        guid: bms[1].guid,
-      },
+      type: "bookmark-removed",
+      guid: bms[1].guid,
     },
     {
-      name: "onItemRemoved",
-      arguments: {
-        guid: bms[0].guid,
-      },
+      type: "bookmark-removed",
+      guid: bms[0].guid,
     },
   ];
 
@@ -209,10 +212,8 @@ add_task(async function test_notifications() {
 
   // Note: Items of folders get notified first.
   expectedNotifications.unshift({
-    name: "onItemRemoved",
-    arguments: {
-      guid: bms[2].guid,
-    },
+    type: "bookmark-removed",
+    guid: bms[2].guid,
   });
 
   receiveAllObserver.check(expectedNotifications);

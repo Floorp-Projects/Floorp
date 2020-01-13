@@ -210,8 +210,17 @@ add_task(async function test_changes_deleted_bookmark() {
   );
   await PlacesTestUtils.markBookmarksAsSynced();
 
+  let wait = PlacesTestUtils.waitForNotification(
+    "bookmark-removed",
+    events =>
+      events.some(event => event.parentGuid == PlacesUtils.bookmarks.tagsGuid),
+    "places"
+  );
   await PlacesUtils.bookmarks.remove("mozBmk______");
 
+  await wait;
+  // Wait for everything to be finished
+  await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
   let controller = new AbortController();
   const wasMerged = await buf.merge(controller.signal);
   Assert.ok(wasMerged);

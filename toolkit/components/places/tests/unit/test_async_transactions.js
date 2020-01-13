@@ -33,20 +33,34 @@ var observer = {
 
   handlePlacesEvents(events) {
     for (let event of events) {
-      // Ignore tag items.
-      if (event.isTagging) {
-        this.tagRelatedGuids.add(event.guid);
-        return;
-      }
+      switch (event.type) {
+        case "bookmark-added":
+          // Ignore tag items.
+          if (event.isTagging) {
+            this.tagRelatedGuids.add(event.guid);
+            return;
+          }
 
-      this.itemsAdded.set(event.guid, {
-        itemId: event.id,
-        parentGuid: event.parentGuid,
-        index: event.index,
-        itemType: event.itemType,
-        title: event.title,
-        url: event.url,
-      });
+          this.itemsAdded.set(event.guid, {
+            itemId: event.id,
+            parentGuid: event.parentGuid,
+            index: event.index,
+            itemType: event.itemType,
+            title: event.title,
+            url: event.url,
+          });
+          break;
+        case "bookmark-removed":
+          if (this.tagRelatedGuids.has(event.guid)) {
+            return;
+          }
+
+          this.itemsRemoved.set(event.guid, {
+            parentGuid: event.parentGuid,
+            index: event.index,
+            itemType: event.itemType,
+          });
+      }
     }
   },
 
@@ -56,26 +70,6 @@ var observer = {
 
   onEndUpdateBatch() {
     this.endUpdateBatch = true;
-  },
-
-  onItemRemoved(
-    aItemId,
-    aParentId,
-    aIndex,
-    aItemType,
-    aURI,
-    aGuid,
-    aParentGuid
-  ) {
-    if (this.tagRelatedGuids.has(aGuid)) {
-      return;
-    }
-
-    this.itemsRemoved.set(aGuid, {
-      parentGuid: aParentGuid,
-      index: aIndex,
-      itemType: aItemType,
-    });
   },
 
   onItemChanged(
@@ -137,10 +131,16 @@ var bmStartIndex = 0;
 function run_test() {
   bmsvc.addObserver(observer);
   observer.handlePlacesEvents = observer.handlePlacesEvents.bind(observer);
-  obsvc.addListener(["bookmark-added"], observer.handlePlacesEvents);
+  obsvc.addListener(
+    ["bookmark-added", "bookmark-removed"],
+    observer.handlePlacesEvents
+  );
   registerCleanupFunction(function() {
     bmsvc.removeObserver(observer);
-    obsvc.removeListener(["bookmark-added"], observer.handlePlacesEvents);
+    obsvc.removeListener(
+      ["bookmark-added", "bookmark-removed"],
+      observer.handlePlacesEvents
+    );
   });
 
   run_next_test();
@@ -1241,7 +1241,34 @@ add_task(async function test_add_and_remove_bookmarks_with_additional_info() {
 
   observer.reset();
   await PT.redo();
+  // The tag containers are removed in async and take some time
+  let oldCountTag1 = 0;
+  let oldCountTag2 = 0;
+  let allTags = await bmsvc.fetchTags();
+  for (let i of allTags) {
+    if (i.name == TAG_1) {
+      oldCountTag1 = i.count;
+    }
+    if (i.name == TAG_2) {
+      oldCountTag2 = i.count;
+    }
+  }
+  await TestUtils.waitForCondition(async () => {
+    allTags = await bmsvc.fetchTags();
+    let newCountTag1 = 0;
+    let newCountTag2 = 0;
+    for (let i of allTags) {
+      if (i.name == TAG_1) {
+        newCountTag1 = i.count;
+      }
+      if (i.name == TAG_2) {
+        newCountTag2 = i.count;
+      }
+    }
+    return newCountTag1 == oldCountTag1 - 1 && newCountTag2 == oldCountTag2 - 1;
+  });
   await ensureItemsRemoved(b2_info);
+
   ensureTags([]);
 
   observer.reset();
