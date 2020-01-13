@@ -1187,6 +1187,7 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
         MOZ_ASSERT(tn->stackDepth > 1);
         Value* sp = regs.spForStackDepth(tn->stackDepth);
         RootedValue doneValue(cx, sp[-1]);
+        MOZ_RELEASE_ASSERT(!doneValue.isMagic());
         bool done = ToBoolean(doneValue);
         if (!done) {
           RootedObject iterObject(cx, &sp[-2].toObject());
