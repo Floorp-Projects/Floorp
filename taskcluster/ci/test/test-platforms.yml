@@ -106,13 +106,13 @@ linux64/debug:
     build-platform: linux64/debug
     test-sets:
         - linux-common-tests
-        - web-platform-tests
+        - web-platform-tests-1604
 
 linux64/opt:
     build-platform: linux64/opt
     test-sets:
         - linux-common-tests
-        - web-platform-tests
+        - web-platform-tests-1604
         - opt-only-tests
         - talos
         - linux-talos-flex
@@ -124,7 +124,7 @@ linux64-shippable/opt:
     build-platform: linux64-shippable/opt
     test-sets:
         - linux-common-tests
-        - web-platform-tests
+        - web-platform-tests-1604
         - opt-only-tests
         - talos
         - linux-talos-flex
@@ -142,7 +142,7 @@ linux64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
     test-sets:
         - linux-common-tests
-        - web-platform-tests
+        - web-platform-tests-1604
         - opt-only-tests
 
 # TODO: use 'asan' label here, instead of -asan/opt
@@ -150,7 +150,7 @@ linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - linux-common-tests
-        - web-platform-tests
+        - web-platform-tests-1604
 
 # QR builds just run a subset right now.
 linux64-qr/opt:
@@ -158,7 +158,7 @@ linux64-qr/opt:
     test-sets:
         - linux-qr-tests
         - talos
-        - web-platform-tests
+        - web-platform-tests-1604
         - raptor-firefox
         - browsertime
         - raptor-fetch-firefox
@@ -168,7 +168,7 @@ linux64-shippable-qr/opt:
     test-sets:
         - linux-qr-tests
         - talos
-        - web-platform-tests
+        - web-platform-tests-1604
         - raptor-firefox
         - browsertime
         - raptor-fetch-firefox
@@ -177,7 +177,7 @@ linux64-qr/debug:
     build-platform: linux64/debug
     test-sets:
         - linux-qr-tests
-        - web-platform-tests
+        - web-platform-tests-1604
 
 linux64-asan-qr/opt:
     build-platform: linux64-asan/opt
