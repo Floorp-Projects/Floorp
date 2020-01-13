@@ -2252,7 +2252,7 @@ void InlineFrameIterator::dump() const {
           script()->lineno());
 
   fprintf(stderr, "  script = %p, pc = %p\n", (void*)script(), pc());
-  fprintf(stderr, "  current op: %s\n", CodeName[*pc()]);
+  fprintf(stderr, "  current op: %s\n", CodeName(JSOp(*pc())));
 
   if (!more()) {
     numActualArgs();

@@ -1806,7 +1806,7 @@ Completion Completion::fromJSFramePop(JSContext* cx, AbstractFramePtr frame,
   // possibility, so it's fine to call genObj->isClosed().
   Rooted<AbstractGeneratorObject*> generatorObj(
       cx, GetGeneratorObjectForFrame(cx, frame));
-  switch (*pc) {
+  switch (JSOp(*pc)) {
     case JSOP_INITIALYIELD:
       MOZ_ASSERT(!generatorObj->isClosed());
       return Completion(InitialYield(generatorObj));
@@ -2120,7 +2120,7 @@ ResumeMode Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp) {
 
 #if DEBUG
   // Assert that the hook won't be able to re-enter the generator.
-  if (iter.hasScript() && *iter.pc() == JSOP_AFTERYIELD) {
+  if (iter.hasScript() && JSOp(*iter.pc()) == JSOP_AFTERYIELD) {
     auto* genObj = GetGeneratorObjectForFrame(cx, iter.abstractFramePtr());
     MOZ_ASSERT(genObj->isRunning());
   }

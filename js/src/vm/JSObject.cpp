@@ -3842,7 +3842,7 @@ JS_FRIEND_API void js::DumpInterpreterFrame(JSContext* cx,
 
     if (jsbytecode* pc = i.pc()) {
       out.printf("  pc = %p\n", pc);
-      out.printf("  current op: %s\n", CodeName[*pc]);
+      out.printf("  current op: %s\n", CodeName(JSOp(*pc)));
       MaybeDumpScope(i.script()->lookupScope(pc), out);
     }
     if (i.isFunctionFrame()) {
