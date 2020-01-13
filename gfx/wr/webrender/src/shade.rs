@@ -538,6 +538,7 @@ pub struct Shaders {
     brush_yuv_image: Vec<Option<BrushShader>>,
     brush_radial_gradient: BrushShader,
     brush_linear_gradient: BrushShader,
+    brush_opacity: BrushShader,
 
     /// These are "cache clip shaders". These shaders are used to
     /// draw clip instances into the cached clip mask. The results
@@ -635,6 +636,16 @@ impl Shaders {
             } else {
                &[]
             },
+            options.precache_flags,
+            false /* advanced blend */,
+            false /* dual source */,
+            use_pixel_local_storage,
+        )?;
+
+        let brush_opacity = BrushShader::new(
+            "brush_opacity",
+            device,
+            &[],
             options.precache_flags,
             false /* advanced blend */,
             false /* dual source */,
@@ -895,6 +906,7 @@ impl Shaders {
             brush_yuv_image,
             brush_radial_gradient,
             brush_linear_gradient,
+            brush_opacity,
             cs_clip_rectangle_slow,
             cs_clip_rectangle_fast,
             cs_clip_box_shadow,
@@ -955,6 +967,9 @@ impl Shaders {
                             .as_mut()
                             .expect("Unsupported YUV shader kind")
                     }
+                    BrushBatchKind::Opacity => {
+                        &mut self.brush_opacity
+                    }
                 };
                 brush_shader.get(key.blend_mode, debug_flags)
             }
@@ -978,6 +993,7 @@ impl Shaders {
         self.brush_mix_blend.deinit(device);
         self.brush_radial_gradient.deinit(device);
         self.brush_linear_gradient.deinit(device);
+        self.brush_opacity.deinit(device);
         self.cs_clip_rectangle_slow.deinit(device);
         self.cs_clip_rectangle_fast.deinit(device);
         self.cs_clip_box_shadow.deinit(device);

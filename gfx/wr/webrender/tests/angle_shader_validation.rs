@@ -113,6 +113,10 @@ const SHADERS: &[Shader] = &[
         name: "brush_linear_gradient",
         features: GRADIENT_FEATURES,
     },
+    Shader {
+        name: "brush_opacity",
+        features: BRUSH_FEATURES,
+    },
 ];
 
 const VERSION_STRING: &str = "#version 300 es\n";

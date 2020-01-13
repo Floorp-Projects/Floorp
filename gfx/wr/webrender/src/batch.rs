@@ -58,6 +58,7 @@ pub enum BrushBatchKind {
     YuvImage(ImageBufferKind, YuvFormat, ColorDepth, YuvColorSpace, ColorRange),
     RadialGradient,
     LinearGradient,
+    Opacity,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -79,6 +80,7 @@ impl BatchKind {
             BatchKind::Brush(BrushBatchKind::Blend) => BrushShaderKind::Blend,
             BatchKind::Brush(BrushBatchKind::MixBlend { .. }) => BrushShaderKind::MixBlend,
             BatchKind::Brush(BrushBatchKind::YuvImage(..)) => BrushShaderKind::Yuv,
+            BatchKind::Brush(BrushBatchKind::Opacity) => BrushShaderKind::Opacity,
             BatchKind::TextRun(..) => BrushShaderKind::Text,
             _ => BrushShaderKind::None,
         }
@@ -1363,6 +1365,41 @@ impl BatchBuilder {
                                             brush_flags,
                                             content_prim_header_index,
                                             content_uv_rect_address,
+                                            prim_vis_mask,
+                                        );
+                                    }
+                                    Filter::Opacity(_, amount) => {
+                                        let amount = (amount * 65536.0) as i32;
+
+                                        let (uv_rect_address, textures) = render_tasks.resolve_surface(
+                                            surface_task.expect("bug: surface must be allocated by now"),
+                                            gpu_cache,
+                                        );
+
+                                        let key = BatchKey::new(
+                                            BatchKind::Brush(BrushBatchKind::Opacity),
+                                            BlendMode::PremultipliedAlpha,
+                                            textures,
+                                        );
+
+                                        let prim_header_index = prim_headers.push(&prim_header, z_id, [
+                                            uv_rect_address.as_int(),
+                                            amount,
+                                            0,
+                                            0,
+                                        ]);
+
+                                        self.add_brush_instance_to_batches(
+                                            key,
+                                            batch_features,
+                                            bounding_rect,
+                                            z_id,
+                                            INVALID_SEGMENT_INDEX,
+                                            EdgeAaSegmentMask::empty(),
+                                            clip_task_address.unwrap(),
+                                            brush_flags,
+                                            prim_header_index,
+                                            0,
                                             prim_vis_mask,
                                         );
                                     }

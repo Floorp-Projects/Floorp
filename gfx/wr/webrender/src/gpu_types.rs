@@ -81,6 +81,7 @@ pub enum BrushShaderKind {
     Blend           = 6,
     MixBlend        = 7,
     Yuv             = 8,
+    Opacity         = 9,
 }
 
 #[derive(Debug, Copy, Clone)]
