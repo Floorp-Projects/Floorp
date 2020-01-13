@@ -464,10 +464,17 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
     return Nothing();
   }
 
+  nsAutoString integrity;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::integrity, integrity);
+
   nsCOMPtr<nsIURI> uri = Link::GetURI();
   nsCOMPtr<nsIPrincipal> prin = mTriggeringPrincipal;
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
   referrerInfo->InitWithNode(this);
+
+  nsAutoString nonce;
+  GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
+
   return Some(SheetInfo{
       *OwnerDoc(),
       this,
@@ -477,6 +484,8 @@ Maybe<nsStyleLinkElement::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
       GetCORSMode(),
       title,
       media,
+      integrity,
+      nonce,
       alternate ? HasAlternateRel::Yes : HasAlternateRel::No,
       IsInline::No,
       mExplicitlyEnabled ? IsExplicitlyEnabled::Yes : IsExplicitlyEnabled::No,
