@@ -700,6 +700,71 @@ bool js::ErrorObject::setStack_impl(JSContext* cx, const CallArgs& args) {
   return DefineDataProperty(cx, thisObj, cx->names().stack, val);
 }
 
+JSString* js::ErrorToSource(JSContext* cx, HandleObject obj) {
+  RootedValue nameVal(cx);
+  RootedString name(cx);
+  if (!GetProperty(cx, obj, obj, cx->names().name, &nameVal) ||
+      !(name = ToString<CanGC>(cx, nameVal))) {
+    return nullptr;
+  }
+
+  RootedValue messageVal(cx);
+  RootedString message(cx);
+  if (!GetProperty(cx, obj, obj, cx->names().message, &messageVal) ||
+      !(message = ValueToSource(cx, messageVal))) {
+    return nullptr;
+  }
+
+  RootedValue filenameVal(cx);
+  RootedString filename(cx);
+  if (!GetProperty(cx, obj, obj, cx->names().fileName, &filenameVal) ||
+      !(filename = ValueToSource(cx, filenameVal))) {
+    return nullptr;
+  }
+
+  RootedValue linenoVal(cx);
+  uint32_t lineno;
+  if (!GetProperty(cx, obj, obj, cx->names().lineNumber, &linenoVal) ||
+      !ToUint32(cx, linenoVal, &lineno)) {
+    return nullptr;
+  }
+
+  JSStringBuilder sb(cx);
+  if (!sb.append("(new ") || !sb.append(name) || !sb.append("(")) {
+    return nullptr;
+  }
+
+  if (!sb.append(message)) {
+    return nullptr;
+  }
+
+  if (!filename->empty()) {
+    if (!sb.append(", ") || !sb.append(filename)) {
+      return nullptr;
+    }
+  }
+  if (lineno != 0) {
+    /* We have a line, but no filename, add empty string */
+    if (filename->empty() && !sb.append(", \"\"")) {
+      return nullptr;
+    }
+
+    JSString* linenumber = ToString<CanGC>(cx, linenoVal);
+    if (!linenumber) {
+      return nullptr;
+    }
+    if (!sb.append(", ") || !sb.append(linenumber)) {
+      return nullptr;
+    }
+  }
+
+  if (!sb.append("))")) {
+    return nullptr;
+  }
+
+  return sb.finishString();
+}
+
 /*
  * Return a string that may eval to something similar to the original object.
  */
@@ -714,71 +779,11 @@ static bool exn_toSource(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedValue nameVal(cx);
-  RootedString name(cx);
-  if (!GetProperty(cx, obj, obj, cx->names().name, &nameVal) ||
-      !(name = ToString<CanGC>(cx, nameVal))) {
-    return false;
-  }
-
-  RootedValue messageVal(cx);
-  RootedString message(cx);
-  if (!GetProperty(cx, obj, obj, cx->names().message, &messageVal) ||
-      !(message = ValueToSource(cx, messageVal))) {
-    return false;
-  }
-
-  RootedValue filenameVal(cx);
-  RootedString filename(cx);
-  if (!GetProperty(cx, obj, obj, cx->names().fileName, &filenameVal) ||
-      !(filename = ValueToSource(cx, filenameVal))) {
-    return false;
-  }
-
-  RootedValue linenoVal(cx);
-  uint32_t lineno;
-  if (!GetProperty(cx, obj, obj, cx->names().lineNumber, &linenoVal) ||
-      !ToUint32(cx, linenoVal, &lineno)) {
-    return false;
-  }
-
-  JSStringBuilder sb(cx);
-  if (!sb.append("(new ") || !sb.append(name) || !sb.append("(")) {
-    return false;
-  }
-
-  if (!sb.append(message)) {
-    return false;
-  }
-
-  if (!filename->empty()) {
-    if (!sb.append(", ") || !sb.append(filename)) {
-      return false;
-    }
-  }
-  if (lineno != 0) {
-    /* We have a line, but no filename, add empty string */
-    if (filename->empty() && !sb.append(", \"\"")) {
-      return false;
-    }
-
-    JSString* linenumber = ToString<CanGC>(cx, linenoVal);
-    if (!linenumber) {
-      return false;
-    }
-    if (!sb.append(", ") || !sb.append(linenumber)) {
-      return false;
-    }
-  }
-
-  if (!sb.append("))")) {
-    return false;
-  }
-
-  JSString* str = sb.finishString();
+  JSString* str = ErrorToSource(cx, obj);
   if (!str) {
     return false;
   }
+
   args.rval().setString(str);
   return true;
 }

@@ -135,6 +135,8 @@ class AggregateErrorObject : public ErrorObject {
   static bool getErrors_impl(JSContext* cx, const CallArgs& args);
 };
 
+JSString* ErrorToSource(JSContext* cx, HandleObject obj);
+
 }  // namespace js
 
 template <>
