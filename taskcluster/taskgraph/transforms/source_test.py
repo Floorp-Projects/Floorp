@@ -237,3 +237,19 @@ def add_decision_task_id_to_env(config, jobs):
         env = job['worker'].setdefault('env', {})
         env['DECISION_TASK_ID'] = os.environ.get('TASK_ID', '')
         yield job
+
+
+@transforms.add
+def set_code_review_env(config, jobs):
+    """
+    Add a CODE_REVIEW environment variable when running in code-review bot mode
+    """
+    is_code_review = config.params['target_tasks_method'] == 'codereview'
+
+    for job in jobs:
+        attrs = job.get('attributes', {})
+        if is_code_review and attrs.get('code-review') is True:
+            env = job['worker'].setdefault('env', {})
+            env['CODE_REVIEW'] = '1'
+
+        yield job
