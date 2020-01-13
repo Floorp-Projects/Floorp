@@ -130,7 +130,7 @@ struct TestCopyWithNoMove {
   explicit TestCopyWithNoMove(int* aCopyCounter) : mCopyCounter(aCopyCounter) {}
   TestCopyWithNoMove(const TestCopyWithNoMove& a)
       : mCopyCounter(a.mCopyCounter) {
-    ++mCopyCounter;
+    *mCopyCounter += 1;
   };
   // No 'move' declaration, allows passing object by rvalue copy.
   // Destructor nulls member variable...
@@ -144,7 +144,7 @@ struct TestCopyWithDeletedMove {
       : mCopyCounter(aCopyCounter) {}
   TestCopyWithDeletedMove(const TestCopyWithDeletedMove& a)
       : mCopyCounter(a.mCopyCounter) {
-    ++mCopyCounter;
+    *mCopyCounter += 1;
   };
   // Deleted move prevents passing by rvalue (even if copy would work)
   TestCopyWithDeletedMove(TestCopyWithDeletedMove&&) = delete;
@@ -157,7 +157,7 @@ struct TestMove {
   TestMove(const TestMove&) = delete;
   TestMove(TestMove&& a) : mMoveCounter(a.mMoveCounter) {
     a.mMoveCounter = nullptr;
-    ++mMoveCounter;
+    *mMoveCounter += 1;
   }
   ~TestMove() { mMoveCounter = nullptr; }
   void operator()() { MOZ_RELEASE_ASSERT(mMoveCounter); }
@@ -168,12 +168,12 @@ struct TestCopyMove {
       : mCopyCounter(aCopyCounter), mMoveCounter(aMoveCounter) {}
   TestCopyMove(const TestCopyMove& a)
       : mCopyCounter(a.mCopyCounter), mMoveCounter(a.mMoveCounter) {
-    ++mCopyCounter;
+    *mCopyCounter += 1;
   };
   TestCopyMove(TestCopyMove&& a)
       : mCopyCounter(a.mCopyCounter), mMoveCounter(a.mMoveCounter) {
     a.mMoveCounter = nullptr;
-    ++mMoveCounter;
+    *mMoveCounter += 1;
   }
   ~TestCopyMove() {
     mCopyCounter = nullptr;
