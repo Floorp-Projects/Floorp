@@ -946,17 +946,7 @@ class UrlbarInput {
   }
 
   get openViewOnFocus() {
-    return this._openViewOnFocus;
-  }
-
-  get openViewOnFocusForCurrentTab() {
-    return (
-      this._openViewOnFocus &&
-      !["about:newtab", "about:home"].includes(
-        this.window.gBrowser.currentURI.spec
-      ) &&
-      !this.isPrivate
-    );
+    return this._openViewOnFocus && !this.isPrivate;
   }
 
   async updateLayoutBreakout() {
@@ -1834,7 +1824,7 @@ class UrlbarInput {
         } else if (event.target.id == SEARCH_BUTTON_ID) {
           this._preventClickSelectsAll = true;
           this.search(UrlbarTokenizer.RESTRICT.SEARCH);
-        } else if (this.openViewOnFocusForCurrentTab && !this.view.isOpen) {
+        } else if (this.openViewOnFocus && !this.view.isOpen) {
           this.startQuery({
             allowAutofill: false,
             event,

@@ -2913,7 +2913,7 @@ function openLocation(event) {
     if (gURLBar.view.isOpen) {
       return;
     }
-    if (!gURLBar.view.maybeReopen() && gURLBar.openViewOnFocusForCurrentTab) {
+    if (!gURLBar.view.maybeReopen() && gURLBar.openViewOnFocus) {
       gURLBar.startQuery({ event });
     }
     return;
