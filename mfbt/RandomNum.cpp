@@ -150,4 +150,12 @@ MFBT_API Maybe<uint64_t> RandomUint64() {
 #endif
 }
 
+MFBT_API uint64_t RandomUint64OrDie() {
+  Maybe<uint64_t> maybeRandomNum = RandomUint64();
+
+  MOZ_RELEASE_ASSERT(maybeRandomNum.isSome());
+
+  return maybeRandomNum.value();
+}
+
 }  // namespace mozilla
