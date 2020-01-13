@@ -281,6 +281,32 @@
       ] });
     }
 
+    // Test that we get a text removed event when removing generated content from a button
+    async function testCSSGeneratedContentRemovedFromButton() {
+      let msg = "testCSSGeneratedContentRemovedFromButton";
+      info(msg);
+
+      testAccessibleTree("c13", { SECTION: [
+        { role: ROLE_PUSHBUTTON, name: "beforego",
+          children: [{ STATICTEXT: [] }, { TEXT_LEAF: [] }] }
+      ] });
+
+      let events = waitForOrderedEvents([
+          [EVENT_HIDE, evt => evt.accessible.name == "before"],
+          [EVENT_TEXT_REMOVED, evt => evt.accessible.role == ROLE_PUSHBUTTON],
+          [EVENT_SHOW, evt => evt.DOMNode.tagName == "HR"],
+          [EVENT_REORDER, "c13"],
+        ], msg);
+      getNode("b13").click();
+      await events;
+
+      testAccessibleTree("c13", { SECTION: [
+        { role: ROLE_PUSHBUTTON, name: "go",
+          children: [{ TEXT_LEAF: [] }] },
+        { SEPARATOR: [] }
+      ] });
+    }
+
     async function doTest() {
       await hideDivFromInsideSpan();
 
@@ -305,6 +331,8 @@
       await bodyReframe();
 
       await embedBecomesOuterDoc();
+
+      await testCSSGeneratedContentRemovedFromButton();
 
       SimpleTest.finish();
     }
@@ -369,6 +397,13 @@
 
   <div id="c10">
     <iframe id="iframe"></iframe>
+  </div>
+
+  <div id="c13">
+    <style>
+    .before::before { content: 'before' }
+    </style>
+    <button id="b13" class="before" onclick="this.className = ''; this.insertAdjacentElement('afterend', document.createElement('hr'))">go</button>
   </div>
 
   <div id="eventdump"></div>
