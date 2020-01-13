@@ -32,6 +32,7 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/RandomNum.h"
 
 namespace mozilla {
 namespace dom {
@@ -355,9 +356,9 @@ FSMultipartFormData::FSMultipartFormData(nsIURI* aActionURL,
   mTotalLength = 0;
 
   mBoundary.AssignLiteral("---------------------------");
-  mBoundary.AppendInt(rand());
-  mBoundary.AppendInt(rand());
-  mBoundary.AppendInt(rand());
+  mBoundary.AppendInt(static_cast<uint32_t>(mozilla::RandomUint64OrDie()));
+  mBoundary.AppendInt(static_cast<uint32_t>(mozilla::RandomUint64OrDie()));
+  mBoundary.AppendInt(static_cast<uint32_t>(mozilla::RandomUint64OrDie()));
 }
 
 FSMultipartFormData::~FSMultipartFormData() {

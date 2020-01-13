@@ -30,6 +30,12 @@ namespace mozilla {
  */
 MFBT_API Maybe<uint64_t> RandomUint64();
 
+/**
+ *  Like RandomUint64, but always returns a uint64_t or crashes with an assert
+ *  if the underlying RandomUint64 call failed.
+ */
+MFBT_API uint64_t RandomUint64OrDie();
+
 }  // namespace mozilla
 
 #endif  // mozilla_RandomNum_h_
