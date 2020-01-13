@@ -269,9 +269,16 @@ class PuppeteerTest(MachCommandBase):
                      type=int,
                      metavar="<N>",
                      help="Optionally run tests in parallel.")
+    @CommandArgument("-v",
+                     dest="verbosity",
+                     action="count",
+                     default=0,
+                     help="Increase remote agent logging verbosity to include "
+                          "debug level messages with -v, and trace messages with -vv.")
     @CommandArgument("tests", nargs="*")
-    def puppeteer_test(self, binary=None, enable_fission=False, headless=False, extra_prefs=None,
-                       extra_options=None, jobs=1, tests=None, product="firefox", **kwargs):
+    def puppeteer_test(self, binary=None, enable_fission=False, headless=False,
+                       extra_prefs=None, extra_options=None, jobs=1, verbosity=0,
+                       tests=None, product="firefox", **kwargs):
         # moztest calls this programmatically with test objects or manifests
         if "test_objects" in kwargs and tests is not None:
             raise ValueError("Expected either 'test_objects' or 'tests'")
@@ -302,6 +309,11 @@ class PuppeteerTest(MachCommandBase):
             prefs.update({"fission.autostart": True,
                           "dom.serviceWorkers.parent_intercept": True,
                           "browser.tabs.documentchannel": True})
+
+        if verbosity == 1:
+            prefs["remote.log.level"] = "Debug"
+        elif verbosity > 1:
+            prefs["remote.log.level"] = "Trace"
 
         self.install_puppeteer(product)
 
