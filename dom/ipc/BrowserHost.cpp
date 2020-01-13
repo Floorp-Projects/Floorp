@@ -125,8 +125,8 @@ void BrowserHost::DestroyComplete() {
   }
 }
 
-bool BrowserHost::Show(const OwnerShowInfo& aShowInfo) {
-  return mRoot->Show(aShowInfo);
+bool BrowserHost::Show(const ScreenIntSize& aSize, bool aParentIsActive) {
+  return mRoot->Show(aSize, aParentIsActive);
 }
 
 void BrowserHost::UpdateDimensions(const nsIntRect& aRect,
