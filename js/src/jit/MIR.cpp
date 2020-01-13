@@ -1264,7 +1264,7 @@ void MControlInstruction::printOpcode(GenericPrinter& out) const {
 
 void MCompare::printOpcode(GenericPrinter& out) const {
   MDefinition::printOpcode(out);
-  out.printf(" %s", CodeName[jsop()]);
+  out.printf(" %s", CodeName(jsop()));
 }
 
 void MConstantElements::printOpcode(GenericPrinter& out) const {
