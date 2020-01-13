@@ -4047,7 +4047,6 @@ pref("network.psl.onUpdate_notify", false);
   pref("widget.content.gtk-theme-override", "");
 #endif
 #ifdef MOZ_WAYLAND
-  pref("widget.wayland_dmabuf_backend.enabled", false);
   pref("widget.wayland_vsync.enabled", false);
 #endif
 
