@@ -3541,15 +3541,17 @@ namespace js {
 // clang-format off
 #define PLUS_ONE(...) \
     + 1
+constexpr int JSOP_LIMIT = 0 FOR_EACH_OPCODE(PLUS_ONE);
+#undef PLUS_ONE
+
 #define TRAILING_VALUE_AND_VALUE_PLUS_ONE(val) \
     val) && (val + 1 ==
-static_assert((0 FOR_EACH_OPCODE(PLUS_ONE) ==
+static_assert((JSOP_LIMIT ==
                FOR_EACH_TRAILING_UNUSED_OPCODE(TRAILING_VALUE_AND_VALUE_PLUS_ONE)
                256),
               "trailing unused opcode values monotonically increase "
               "from JSOP_LIMIT to 255");
 #undef TRAILING_VALUE_AND_VALUE_PLUS_ONE
-#undef PLUS_ONE
 // clang-format on
 
 // Define JSOP_*_LENGTH constants for all ops.
