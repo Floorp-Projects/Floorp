@@ -469,6 +469,9 @@ class TestFunctional(HelperMixin, unittest.TestCase):
             self.skip_test = True
         if buildconfig.substs.get('ENABLE_STRIP'):
             self.skip_test = True
+        # Bug 1608146.
+        if buildconfig.substs.get('MOZ_CODE_COVERAGE'):
+            self.skip_test = True
         self.topsrcdir = buildconfig.topsrcdir
         self.script_path = os.path.join(self.topsrcdir, 'toolkit',
                                         'crashreporter', 'tools',
