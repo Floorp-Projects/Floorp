@@ -809,10 +809,13 @@ float SVGContentUtils::CoordToFloat(SVGElement* aContent,
     SVGViewportElement* ctx = aContent->GetCtx();
     return CSSCoord(ctx ? ctx->GetLength(SVGContentUtils::XY) : 0.0f);
   });
-  if (aLength.clamping_mode == StyleAllowedNumericType::NonNegative) {
-    result = std::max(result, 0.0f);
-  } else {
-    MOZ_ASSERT(aLength.clamping_mode == StyleAllowedNumericType::All);
+  if (aLength.IsCalc()) {
+    auto& calc = *aLength.AsCalc();
+    if (calc.clamping_mode == StyleAllowedNumericType::NonNegative) {
+      result = std::max(result, 0.0f);
+    } else {
+      MOZ_ASSERT(calc.clamping_mode == StyleAllowedNumericType::All);
+    }
   }
   return result;
 }
