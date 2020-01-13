@@ -1484,8 +1484,9 @@ package org.mozilla.geckoview {
 
   public static class WebExtension.DisabledFlags {
     ctor public DisabledFlags();
-    field public static final int BLOCKLIST_DISABLED = 4;
-    field public static final int USER_DISABLED = 2;
+    field public static final int APP = 8;
+    field public static final int BLOCKLIST = 4;
+    field public static final int USER = 2;
   }
 
   public static class WebExtension.Flags {
@@ -1587,6 +1588,7 @@ package org.mozilla.geckoview {
 
   public static class WebExtensionController.EnableSource {
     ctor public EnableSource();
+    field public static final int APP = 2;
     field public static final int USER = 1;
   }
 
