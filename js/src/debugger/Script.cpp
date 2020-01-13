@@ -1710,6 +1710,7 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOP_RETSUB:
     case JSOP_THROWMSG:
     case JSOP_FORCEINTERPRETER:
+    case JSOP_LIMIT:
       return false;
   }
 

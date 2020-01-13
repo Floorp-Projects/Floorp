@@ -1510,7 +1510,7 @@ class LCompare : public LInstructionHelper<1, 2, 0> {
   const LAllocation* left() { return getOperand(0); }
   const LAllocation* right() { return getOperand(1); }
   MCompare* mir() { return mir_->toCompare(); }
-  const char* extraName() const { return CodeName(jsop_); }
+  const char* extraName() const { return CodeName[jsop_]; }
 };
 
 class LCompareI64 : public LInstructionHelper<1, 2 * INT64_PIECES, 0> {
@@ -1531,7 +1531,7 @@ class LCompareI64 : public LInstructionHelper<1, 2 * INT64_PIECES, 0> {
 
   JSOp jsop() const { return jsop_; }
   MCompare* mir() { return mir_->toCompare(); }
-  const char* extraName() const { return CodeName(jsop_); }
+  const char* extraName() const { return CodeName[jsop_]; }
 };
 
 class LCompareI64AndBranch
@@ -1561,7 +1561,7 @@ class LCompareI64AndBranch
   MBasicBlock* ifFalse() const { return getSuccessor(1); }
   MTest* mir() const { return mir_->toTest(); }
   MCompare* cmpMir() const { return cmpMir_; }
-  const char* extraName() const { return CodeName(jsop_); }
+  const char* extraName() const { return CodeName[jsop_]; }
 };
 
 // Compares two integral values of the same JS type, either integer or object.
@@ -1589,7 +1589,7 @@ class LCompareAndBranch : public LControlInstructionHelper<2, 2, 0> {
   const LAllocation* right() { return getOperand(1); }
   MTest* mir() const { return mir_->toTest(); }
   MCompare* cmpMir() const { return cmpMir_; }
-  const char* extraName() const { return CodeName(jsop_); }
+  const char* extraName() const { return CodeName[jsop_]; }
 };
 
 class LCompareD : public LInstructionHelper<1, 2, 0> {
@@ -2089,7 +2089,7 @@ class LBitOpI : public LInstructionHelper<1, 2, 0> {
     if (bitop() == JSOP_URSH && mir_->toUrsh()->bailoutsDisabled()) {
       return "ursh:BailoutsDisabled";
     }
-    return CodeName(op_);
+    return CodeName[op_];
   }
 
   JSOp bitop() const { return op_; }
@@ -2106,7 +2106,7 @@ class LBitOpI64 : public LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0> {
 
   explicit LBitOpI64(JSOp op) : LInstructionHelper(classOpcode), op_(op) {}
 
-  const char* extraName() const { return CodeName(op_); }
+  const char* extraName() const { return CodeName[op_]; }
 
   JSOp bitop() const { return op_; }
 };
@@ -2125,7 +2125,7 @@ class LShiftI : public LBinaryMath<0> {
 
   MInstruction* mir() { return mir_->toInstruction(); }
 
-  const char* extraName() const { return CodeName(op_); }
+  const char* extraName() const { return CodeName[op_]; }
 };
 
 class LShiftI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0> {
@@ -2143,7 +2143,7 @@ class LShiftI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0> {
 
   MInstruction* mir() { return mir_->toInstruction(); }
 
-  const char* extraName() const { return CodeName(op_); }
+  const char* extraName() const { return CodeName[op_]; }
 };
 
 // Sign extension
@@ -2674,7 +2674,7 @@ class LMathD : public LBinaryMath<0> {
 
   JSOp jsop() const { return jsop_; }
 
-  const char* extraName() const { return CodeName(jsop_); }
+  const char* extraName() const { return CodeName[jsop_]; }
 };
 
 // Performs an add, sub, mul, or div on two double values.
@@ -2688,7 +2688,7 @@ class LMathF : public LBinaryMath<0> {
 
   JSOp jsop() const { return jsop_; }
 
-  const char* extraName() const { return CodeName(jsop_); }
+  const char* extraName() const { return CodeName[jsop_]; }
 };
 
 class LModD : public LBinaryMath<1> {
@@ -2721,7 +2721,7 @@ class LBinaryV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0> {
 
   JSOp jsop() const { return jsop_; }
 
-  const char* extraName() const { return CodeName(jsop_); }
+  const char* extraName() const { return CodeName[jsop_]; }
 
   static const size_t LhsInput = 0;
   static const size_t RhsInput = BOX_PIECES;
