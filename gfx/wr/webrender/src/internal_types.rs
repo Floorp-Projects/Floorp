@@ -163,6 +163,29 @@ impl Filter {
             Filter::Flood(..) => false,
         }
     }
+
+
+    pub fn as_int(&self) -> i32 {
+        // Must be kept in sync with brush_blend.glsl
+        match *self {
+            Filter::Identity => 0, // matches `Contrast(1)`
+            Filter::Contrast(..) => 0,
+            Filter::Grayscale(..) => 1,
+            Filter::HueRotate(..) => 2,
+            Filter::Invert(..) => 3,
+            Filter::Saturate(..) => 4,
+            Filter::Sepia(..) => 5,
+            Filter::Brightness(..) => 6,
+            Filter::ColorMatrix(..) => 7,
+            Filter::SrgbToLinear => 8,
+            Filter::LinearToSrgb => 9,
+            Filter::Flood(..) => 10,
+            Filter::ComponentTransfer => 11,
+            Filter::Blur(..) => 12,
+            Filter::DropShadows(..) => 13,
+            Filter::Opacity(..) => 14,
+        }
+    }
 }
 
 impl From<FilterOp> for Filter {
