@@ -71,6 +71,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
+using namespace mozilla::widget;
 using mozilla::dom::SystemFontListEntry;
 
 static FT_Library gPlatformFTLibrary = nullptr;
@@ -719,10 +720,10 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
 #endif
 
 #ifdef MOZ_WAYLAND
-bool gfxPlatformGtk::UseWaylandDMABufSurfaces() {
-  if (!IsWaylandDisplay()) {
-    return false;
-  }
-  return widget::nsWaylandDisplay::IsDMABufEnabled();
+bool gfxPlatformGtk::UseWaylandDMABufTextures() {
+  return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufTexturesEnabled();
+}
+bool gfxPlatformGtk::UseWaylandDMABufWebGL() {
+  return IsWaylandDisplay() && nsWaylandDisplay::IsDMABufWebGLEnabled();
 }
 #endif
