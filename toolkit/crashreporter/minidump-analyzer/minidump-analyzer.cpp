@@ -406,13 +406,18 @@ static bool UpdateExtraDataFile(const string& aDumpPath,
 
   bool res = false;
   if (f.is_open()) {
-    extra["StackTraces"] = aStackTraces;
-    if (!!aCertSubjects) {
-      extra["ModuleSignatureInfo"] = aCertSubjects;
-    }
-
     Json::StreamWriterBuilder builder;
     builder["indentation"] = "";
+
+    // The StackTraces field is not stored as a string because it's not a
+    // crash annotation. It's only used by the crash reporter client which
+    // strips it before submitting the other annotations to Socorro.
+    extra["StackTraces"] = aStackTraces;
+
+    if (!!aCertSubjects) {
+      extra["ModuleSignatureInfo"] = Json::writeString(builder, aCertSubjects);
+    }
+
     std::unique_ptr<Json::StreamWriter> writer(builder.newStreamWriter());
     writer->write(extra, &f);
     f << "\n";
