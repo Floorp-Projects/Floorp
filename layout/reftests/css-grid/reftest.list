@@ -180,7 +180,8 @@ skip-if(!gtkWidget) == grid-container-baselines-003.html grid-container-baseline
 == grid-repeat-auto-fill-fit-005.html grid-repeat-auto-fill-fit-005-ref.html
 == grid-repeat-auto-fill-fit-006.html grid-repeat-auto-fill-fit-006-ref.html
 == grid-repeat-auto-fill-fit-007.html grid-repeat-auto-fill-fit-007-ref.html
-== grid-repeat-auto-fill-fit-008.html grid-repeat-auto-fill-fit-008-ref.html
+test-pref(layout.css.serialize-grid-implicit-tracks,true) == grid-repeat-auto-fill-fit-008.html grid-repeat-auto-fill-fit-008-ref.html
+test-pref(layout.css.serialize-grid-implicit-tracks,false) == grid-repeat-auto-fill-fit-008.html?no-implicit grid-repeat-auto-fill-fit-008-ref.html
 == grid-repeat-auto-fill-fit-009.html grid-repeat-auto-fill-fit-009-ref.html
 == grid-repeat-auto-fill-fit-010.html grid-repeat-auto-fill-fit-010-ref.html
 == grid-repeat-auto-fill-fit-011.html grid-repeat-auto-fill-fit-010-ref.html
