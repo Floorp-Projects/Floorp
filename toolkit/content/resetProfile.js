@@ -10,3 +10,9 @@ function onResetProfileAccepted() {
   let retVals = window.arguments[0];
   retVals.reset = true;
 }
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await document.l10n.ready;
+  let desc = document.querySelector("description");
+  desc.style.height = desc.getBoundingClientRect().height + "px";
+});
