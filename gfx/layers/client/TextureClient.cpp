@@ -285,7 +285,7 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
 #ifdef MOZ_WAYLAND
   if ((aLayersBackend == LayersBackend::LAYERS_OPENGL ||
        aLayersBackend == LayersBackend::LAYERS_WR) &&
-      gfxPlatformGtk::GetPlatform()->UseWaylandDMABufSurfaces() &&
+      gfxPlatformGtk::GetPlatform()->UseWaylandDMABufTextures() &&
       aFormat != SurfaceFormat::A8) {
     return TextureType::WaylandDMABUF;
   }
