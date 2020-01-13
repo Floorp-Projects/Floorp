@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <linux/netlink.h>
 
+#include "nsAutoPtr.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"

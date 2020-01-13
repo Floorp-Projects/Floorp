@@ -713,7 +713,7 @@ void IndexedDatabaseManager::InvalidateAllFileManagers() {
   AssertIsOnIOThread();
 
   for (auto iter = mFileManagerInfos.ConstIter(); !iter.Done(); iter.Next()) {
-    auto value = iter.Data();
+    auto value = iter.UserData();
     MOZ_ASSERT(value);
 
     value->InvalidateAllFileManagers();

@@ -350,7 +350,7 @@ void LocalStorageManager::ClearCaches(uint32_t aUnloadFlags,
       continue;
     }
 
-    CacheOriginHashtable* table = iter1.Data();
+    CacheOriginHashtable* table = iter1.UserData();
 
     for (auto iter2 = table->Iter(); !iter2.Done(); iter2.Next()) {
       LocalStorageCache* cache = iter2.Get()->cache();
