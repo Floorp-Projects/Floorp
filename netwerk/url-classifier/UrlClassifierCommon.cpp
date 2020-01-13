@@ -183,19 +183,6 @@ nsresult UrlClassifierCommon::SetTrackingInfo(
   NS_ENSURE_ARG(!aLists.IsEmpty());
 
   // Can be called in EITHER the parent or child process.
-  nsCOMPtr<nsIParentChannel> parentChannel;
-  NS_QueryNotificationCallbacks(aChannel, parentChannel);
-  if (parentChannel) {
-    // This channel is a parent-process proxy for a child process request.
-    // Tell the child process channel to do this instead.
-    nsAutoCString strLists, strHashes;
-    TablesToString(aLists, strLists);
-    TablesToString(aFullHashes, strHashes);
-
-    parentChannel->SetClassifierMatchedTrackingInfo(strLists, strHashes);
-    return NS_OK;
-  }
-
   nsresult rv;
   nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
       do_QueryInterface(aChannel, &rv);
@@ -203,6 +190,21 @@ nsresult UrlClassifierCommon::SetTrackingInfo(
 
   if (classifiedChannel) {
     classifiedChannel->SetMatchedTrackingInfo(aLists, aFullHashes);
+  }
+
+  nsCOMPtr<nsIParentChannel> parentChannel;
+  NS_QueryNotificationCallbacks(aChannel, parentChannel);
+  if (parentChannel) {
+    // This channel is a parent-process proxy for a child process request.
+    // Tell the child process channel to do this as well.
+    // TODO: We can remove the code sending the IPC to content to update
+    //       tracking info once we move the ContentBlockingLog into the parent.
+    //       This would be done in Bug 1599046.
+    nsAutoCString strLists, strHashes;
+    TablesToString(aLists, strLists);
+    TablesToString(aFullHashes, strHashes);
+
+    parentChannel->SetClassifierMatchedTrackingInfo(strLists, strHashes);
   }
 
   return NS_OK;
@@ -260,6 +262,15 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
   }
 
   // Can be called in EITHER the parent or child process.
+  nsresult rv;
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(channel, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (classifiedChannel) {
+    classifiedChannel->SetMatchedInfo(aList, aProvider, aFullHash);
+  }
+
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(channel, parentChannel);
   nsCOMPtr<nsIURI> uriBeingLoaded =
@@ -273,20 +284,14 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
 
   if (parentChannel) {
     // This channel is a parent-process proxy for a child process request.
-    // Tell the child process channel to do this instead.
+    // Tell the child process channel to do this as well.
+    // TODO: We can remove the code sending the IPC to content to update
+    //       matched info once we move the ContentBlockingLog into the parent.
+    //       This would be done in Bug 1601063.
     parentChannel->SetClassifierMatchedInfo(aList, aProvider, aFullHash);
 
     UrlClassifierCommon::NotifyChannelBlocked(channel, uriBeingLoaded, state);
     return NS_OK;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-      do_QueryInterface(channel, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (classifiedChannel) {
-    classifiedChannel->SetMatchedInfo(aList, aProvider, aFullHash);
   }
 
   nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
