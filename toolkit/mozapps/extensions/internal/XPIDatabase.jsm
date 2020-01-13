@@ -587,7 +587,10 @@ class AddonInternal {
     }
 
     if (this.inDatabase && updateDatabase) {
-      XPIDatabase.updateAddonDisabledState(this, userDisabled, softDisabled);
+      XPIDatabase.updateAddonDisabledState(this, {
+        userDisabled,
+        softDisabled,
+      });
       XPIDatabase.saveChanges();
     } else {
       this.appDisabled = !XPIDatabase.isUsableAddon(this);
@@ -611,7 +614,7 @@ class AddonInternal {
       if (this.location.isSystem && !allowSystemAddons) {
         throw new Error(`Cannot disable system add-on ${this.id}`);
       }
-      await XPIDatabase.updateAddonDisabledState(this, val);
+      await XPIDatabase.updateAddonDisabledState(this, { userDisabled: val });
     } else {
       this.userDisabled = val;
       // When enabling remove the softDisabled flag
@@ -1085,10 +1088,10 @@ AddonWrapper = class {
       // When softDisabling a theme just enable the active theme
       if (addon.type === "theme" && val && !addon.userDisabled) {
         if (addon.isWebExtension) {
-          XPIDatabase.updateAddonDisabledState(addon, undefined, val);
+          XPIDatabase.updateAddonDisabledState(addon, { softDisabled: val });
         }
       } else {
-        XPIDatabase.updateAddonDisabledState(addon, undefined, val);
+        XPIDatabase.updateAddonDisabledState(addon, { softDisabled: val });
       }
     } else if (!addon.userDisabled) {
       // Only set softDisabled if not already disabled
@@ -1173,8 +1176,10 @@ AddonWrapper = class {
     logger.debug(`reloading add-on ${addon.id}`);
 
     if (!this.temporarilyInstalled) {
-      await XPIDatabase.updateAddonDisabledState(addon, true);
-      await XPIDatabase.updateAddonDisabledState(addon, false);
+      await XPIDatabase.updateAddonDisabledState(addon, { userDisabled: true });
+      await XPIDatabase.updateAddonDisabledState(addon, {
+        userDisabled: false,
+      });
     } else {
       // This function supports re-installing an existing add-on.
       await AddonManager.installTemporaryAddon(addon._sourceBundle);
@@ -1856,13 +1861,19 @@ this.XPIDatabase = {
         if (!aId && theme.id == DEFAULT_THEME_ID) {
           enableTheme = theme;
         } else if (theme.id != aId && !theme.pendingUninstall) {
-          this.updateAddonDisabledState(theme, true, undefined, true);
+          this.updateAddonDisabledState(theme, {
+            userDisabled: true,
+            becauseSelecting: true,
+          });
         }
       }
     }
 
     if (enableTheme) {
-      await this.updateAddonDisabledState(enableTheme, false, undefined, true);
+      await this.updateAddonDisabledState(enableTheme, {
+        userDisabled: false,
+        becauseSelecting: true,
+      });
     }
   },
 
@@ -2388,13 +2399,14 @@ this.XPIDatabase = {
    *
    * @param {AddonInternal} aAddon
    *        The AddonInternal to update
-   * @param {boolean?} [aUserDisabled]
+   * @param {Object} properties - Properties to set on the addon
+   * @param {boolean?} [properties.userDisabled]
    *        Value for the userDisabled property. If undefined the value will
    *        not change
-   * @param {boolean?} [aSoftDisabled]
+   * @param {boolean?} [properties.softDisabled]
    *        Value for the softDisabled property. If undefined the value will
    *        not change. If true this will force userDisabled to be true
-   * @param {boolean?} [aBecauseSelecting]
+   * @param {boolean?} [properties.becauseSelecting]
    *        True if we're disabling this add-on because we're selecting
    *        another.
    * @returns {Promise<boolean?>}
@@ -2406,44 +2418,42 @@ this.XPIDatabase = {
    */
   async updateAddonDisabledState(
     aAddon,
-    aUserDisabled,
-    aSoftDisabled,
-    aBecauseSelecting
+    { userDisabled, softDisabled, becauseSelecting } = {}
   ) {
     if (!aAddon.inDatabase) {
       throw new Error("Can only update addon states for installed addons.");
     }
-    if (aUserDisabled !== undefined && aSoftDisabled !== undefined) {
+    if (userDisabled !== undefined && softDisabled !== undefined) {
       throw new Error(
         "Cannot change userDisabled and softDisabled at the same time"
       );
     }
 
-    if (aUserDisabled === undefined) {
-      aUserDisabled = aAddon.userDisabled;
-    } else if (!aUserDisabled) {
+    if (userDisabled === undefined) {
+      userDisabled = aAddon.userDisabled;
+    } else if (!userDisabled) {
       // If enabling the add-on then remove softDisabled
-      aSoftDisabled = false;
+      softDisabled = false;
     }
 
     // If not changing softDisabled or the add-on is already userDisabled then
     // use the existing value for softDisabled
-    if (aSoftDisabled === undefined || aUserDisabled) {
-      aSoftDisabled = aAddon.softDisabled;
+    if (softDisabled === undefined || userDisabled) {
+      softDisabled = aAddon.softDisabled;
     }
 
     let appDisabled = !this.isUsableAddon(aAddon);
     // No change means nothing to do here
     if (
-      aAddon.userDisabled == aUserDisabled &&
+      aAddon.userDisabled == userDisabled &&
       aAddon.appDisabled == appDisabled &&
-      aAddon.softDisabled == aSoftDisabled
+      aAddon.softDisabled == softDisabled
     ) {
       return undefined;
     }
 
     let wasDisabled = aAddon.disabled;
-    let isDisabled = aUserDisabled || aSoftDisabled || appDisabled;
+    let isDisabled = userDisabled || softDisabled || appDisabled;
 
     // If appDisabled changes but addon.disabled doesn't,
     // no onDisabling/onEnabling is sent - so send a onPropertyChanged.
@@ -2451,9 +2461,9 @@ this.XPIDatabase = {
 
     // Update the properties in the database.
     this.setAddonProperties(aAddon, {
-      userDisabled: aUserDisabled,
+      userDisabled,
       appDisabled,
-      softDisabled: aSoftDisabled,
+      softDisabled,
     });
 
     let wrapper = aAddon.wrapper;
@@ -2502,7 +2512,7 @@ this.XPIDatabase = {
       if (!isDisabled) {
         AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type);
         this.updateXPIStates(aAddon);
-      } else if (isDisabled && !aBecauseSelecting) {
+      } else if (isDisabled && !becauseSelecting) {
         AddonManagerPrivate.notifyAddonChanged(null, "theme");
       }
     }
