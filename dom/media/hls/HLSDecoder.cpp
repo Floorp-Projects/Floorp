@@ -20,16 +20,14 @@
 #include "nsThreadUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 
-using namespace mozilla::java;
-
 namespace mozilla {
 
 class HLSResourceCallbacksSupport
-    : public GeckoHLSResourceWrapper::Callbacks::Natives<
+    : public java::GeckoHLSResourceWrapper::Callbacks::Natives<
           HLSResourceCallbacksSupport> {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HLSResourceCallbacksSupport)
  public:
-  typedef GeckoHLSResourceWrapper::Callbacks::Natives<
+  typedef java::GeckoHLSResourceWrapper::Callbacks::Natives<
       HLSResourceCallbacksSupport>
       NativeCallbacks;
   using NativeCallbacks::AttachNative;
@@ -151,7 +149,7 @@ nsresult HLSDecoder::Load(nsIChannel* aChannel) {
   Unused << mURI->GetSpec(spec);
   ;
   HLSResourceCallbacksSupport::Init();
-  mJavaCallbacks = GeckoHLSResourceWrapper::Callbacks::New();
+  mJavaCallbacks = java::GeckoHLSResourceWrapper::Callbacks::New();
   mCallbackSupport = new HLSResourceCallbacksSupport(this);
   HLSResourceCallbacksSupport::AttachNative(mJavaCallbacks, mCallbackSupport);
   mHLSResourceWrapper = java::GeckoHLSResourceWrapper::Create(
