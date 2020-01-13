@@ -25,7 +25,6 @@
 
 #include <algorithm>
 
-#include "builtin/Promise.h"
 #include "builtin/TypedObject.h"
 #include "gc/FreeOp.h"
 #include "jit/AtomicOperations.h"
@@ -37,6 +36,7 @@
 #include "util/Text.h"
 #include "vm/ErrorObject.h"
 #include "vm/Interpreter.h"
+#include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/StringType.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmCompile.h"

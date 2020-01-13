@@ -12,7 +12,6 @@
 #include "jsapi.h"        // JS_ReportErrorNumberASCII
 #include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*, js::AssertSameCompartment
 
-#include "builtin/Promise.h"                          // js::PromiseObject
 #include "builtin/streams/ClassSpecMacro.h"           // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::IsMaybeWrapped
 #include "builtin/streams/PullIntoDescriptor.h"       // js::PullIntoDescriptor
@@ -30,6 +29,7 @@
 #include "js/PropertySpec.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
+#include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/SelfHosting.h"
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::TargetFromHandler

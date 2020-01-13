@@ -69,7 +69,6 @@
 #include "builtin/Array.h"
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
-#include "builtin/Promise.h"
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
 #include "debugger/DebugAPI.h"
@@ -133,6 +132,7 @@
 #include "vm/Monitor.h"
 #include "vm/MutexIDs.h"
 #include "vm/Printer.h"
+#include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Shape.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/Time.h"

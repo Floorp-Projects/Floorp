@@ -33,7 +33,6 @@
 #include "jstypes.h"      // for JS_PUBLIC_API
 
 #include "builtin/Array.h"               // for NewDenseFullyAllocatedArray
-#include "builtin/Promise.h"             // for PromiseObject
 #include "debugger/DebugAPI.h"           // for ResumeMode, DebugAPI
 #include "debugger/DebuggerMemory.h"     // for DebuggerMemory
 #include "debugger/DebugScript.h"        // for DebugScript
@@ -96,6 +95,7 @@
 #include "vm/JSObject.h"              // for JSObject, RequireObject
 #include "vm/ObjectGroup.h"           // for TenuredObject
 #include "vm/ObjectOperations.h"      // for DefineDataProperty
+#include "vm/PromiseObject.h"         // for js::PromiseObject
 #include "vm/ProxyObject.h"           // for ProxyObject, JSObject::is
 #include "vm/Realm.h"                 // for AutoRealm, Realm
 #include "vm/Runtime.h"               // for ReportOutOfMemory, JSRuntime

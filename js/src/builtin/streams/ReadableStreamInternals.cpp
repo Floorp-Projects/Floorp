@@ -15,7 +15,6 @@
 
 #include "jsfriendapi.h"  // js::AssertSameCompartment
 
-#include "builtin/Promise.h"                           // js::PromiseObject
 #include "builtin/streams/ReadableStreamController.h"  // js::ReadableStreamController{,CancelSteps}
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader, js::ForAuthorCodeBool
 #include "gc/AllocKind.h"   // js::gc::AllocKind
@@ -30,6 +29,7 @@
 #include "vm/JSFunction.h"    // JSFunction, js::NewNativeFunction
 #include "vm/NativeObject.h"  // js::NativeObject
 #include "vm/ObjectGroup.h"   // js::GenericObject
+#include "vm/PromiseObject.h"  // js::PromiseObject
 #include "vm/Realm.h"         // JS::Realm
 #include "vm/StringType.h"    // js::PropertyName
 

@@ -16,7 +16,6 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "builtin/Promise.h"                              // js::PromiseObject
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
 #include "js/RootingAPI.h"                                // JS::Handle
 #include "js/Value.h"                                     // JS::{,Object}Value

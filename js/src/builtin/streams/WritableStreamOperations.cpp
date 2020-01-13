@@ -16,7 +16,6 @@
 #include "jsapi.h"        // JS_ReportErrorASCII, JS_SetPrivate
 #include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 
-#include "builtin/Promise.h"                          // js::PromiseObject
 #include "builtin/streams/MiscellaneousOperations.h"  // js::PromiseRejectedWithPendingError
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController{,Close}, js::WritableStream::controller
@@ -29,6 +28,7 @@
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext
 #include "vm/List.h"         // js::ListObject
+#include "vm/PromiseObject.h"  // js::PromiseObject
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined, js::RejectUnwrappedPromiseWithError, js::SetSettledPromiseIsHandled

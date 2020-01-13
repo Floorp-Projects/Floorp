@@ -14,7 +14,6 @@
 #include "jsapi.h"        // JS_ReportErrorASCII, JS_ReportErrorNumberASCII
 #include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 
-#include "builtin/Promise.h"                 // js::PromiseObject
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::ReturnPromiseRejectedWithPendingError
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
@@ -27,6 +26,7 @@
 #include "js/Value.h"        // JS::Value
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext
+#include "vm/PromiseObject.h"  // js::PromiseObject
 
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::SetSettledPromiseIsHandled
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapAndTypeCheck{Argument,This}
