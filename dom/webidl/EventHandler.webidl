@@ -136,9 +136,13 @@ interface mixin GlobalEventHandlers {
 
            // CSS-Animation and CSS-Transition legacy handlers.
            // This handler isn't standard.
+           [BinaryName="onwebkitAnimationEnd"]
            attribute EventHandler onwebkitanimationend;
+           [BinaryName="onwebkitAnimationIteration"]
            attribute EventHandler onwebkitanimationiteration;
+           [BinaryName="onwebkitAnimationStart"]
            attribute EventHandler onwebkitanimationstart;
+           [BinaryName="onwebkitTransitionEnd"]
            attribute EventHandler onwebkittransitionend;
 };
 
