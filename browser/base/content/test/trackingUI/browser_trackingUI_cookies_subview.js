@@ -65,6 +65,12 @@ async function assertSitesListed(testCase) {
   let categoryItem = document.getElementById(
     "protections-popup-category-cookies"
   );
+
+  // Explicitly waiting for the category item becoming visible.
+  await TestUtils.waitForCondition(() => {
+    return BrowserTestUtils.is_visible(categoryItem);
+  });
+
   ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
   let cookiesView = document.getElementById("protections-popup-cookiesView");
   let viewShown = BrowserTestUtils.waitForEvent(cookiesView, "ViewShown");
@@ -295,6 +301,12 @@ add_task(async function testCookiesSubViewAllowed() {
   let categoryItem = document.getElementById(
     "protections-popup-category-cookies"
   );
+
+  // Explicitly waiting for the category item becoming visible.
+  await TestUtils.waitForCondition(() => {
+    return BrowserTestUtils.is_visible(categoryItem);
+  });
+
   ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
   let cookiesView = document.getElementById("protections-popup-cookiesView");
   let viewShown = BrowserTestUtils.waitForEvent(cookiesView, "ViewShown");
@@ -392,6 +404,12 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
   let categoryItem = document.getElementById(
     "protections-popup-category-cookies"
   );
+
+  // Explicitly waiting for the category item becoming visible.
+  await TestUtils.waitForCondition(() => {
+    return BrowserTestUtils.is_visible(categoryItem);
+  });
+
   ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
   let cookiesView = document.getElementById("protections-popup-cookiesView");
   let viewShown = BrowserTestUtils.waitForEvent(cookiesView, "ViewShown");
@@ -456,6 +474,12 @@ add_task(async function testCookiesSubViewBlockedDoublyNested() {
   let categoryItem = document.getElementById(
     "protections-popup-category-cookies"
   );
+
+  // Explicitly waiting for the category item becoming visible.
+  await TestUtils.waitForCondition(() => {
+    return BrowserTestUtils.is_visible(categoryItem);
+  });
+
   ok(BrowserTestUtils.is_visible(categoryItem), "TP category item is visible");
   let cookiesView = document.getElementById("protections-popup-cookiesView");
   let viewShown = BrowserTestUtils.waitForEvent(cookiesView, "ViewShown");
