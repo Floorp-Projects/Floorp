@@ -387,6 +387,11 @@ bool IDBFileHandle::CheckStateAndArgumentsForRead(uint64_t aSize,
     return false;
   }
 
+  if (aSize > UINT32_MAX) {
+    aRv.ThrowTypeError(u"Data size for read is too large.");
+    return false;
+  }
+
   return true;
 }
 
