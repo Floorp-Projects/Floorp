@@ -810,7 +810,6 @@ class EvalScope : public Scope {
     // on the BindingName.
     //
     //            vars - [0, length)
-    uint32_t varStart = 0;
     uint32_t length = 0;
 
     // Frame slots [0, nextFrameSlot) are live when this is the innermost
@@ -962,7 +961,6 @@ class WasmInstanceScope : public Scope {
 
  public:
   struct Data : public BaseScopeData {
-    uint32_t memoriesStart = 0;
     uint32_t globalsStart = 0;
     uint32_t length = 0;
     uint32_t nextFrameSlot = 0;
@@ -988,7 +986,7 @@ class WasmInstanceScope : public Scope {
  public:
   WasmInstanceObject* instance() const { return data().instance; }
 
-  uint32_t memoriesStart() const { return data().memoriesStart; }
+  uint32_t memoriesStart() const { return 0; }
 
   uint32_t globalsStart() const { return data().globalsStart; }
 
@@ -1011,7 +1009,6 @@ class WasmFunctionScope : public Scope {
   struct Data : public BaseScopeData {
     uint32_t length = 0;
     uint32_t nextFrameSlot = 0;
-    uint32_t funcIndex = 0;
 
     TrailingNamesArray trailingNames;
 
@@ -1030,8 +1027,6 @@ class WasmFunctionScope : public Scope {
   const Data& data() const { return *static_cast<Data*>(data_); }
 
  public:
-  uint32_t funcIndex() const { return data().funcIndex; }
-
   static Shape* getEmptyEnvironmentShape(JSContext* cx);
 };
 
