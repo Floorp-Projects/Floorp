@@ -118,7 +118,8 @@ static void InvalidateAllFrames(nsINode* aNode) {
   }
 }
 
-static nsINode* GetNextRangeCommonAncestor(nsINode* aNode) {
+static nsINode* GetClosestCommonInclusiveAncestorForRangeInSelection(
+    nsINode* aNode) {
   while (aNode &&
          !aNode->IsClosestCommonInclusiveAncestorForRangeInSelection()) {
     if (!aNode
@@ -176,7 +177,7 @@ bool nsRange::IsNodeSelected(nsINode* aNode, const uint32_t aStartOffset,
   MOZ_ASSERT(aNode, "bad arg");
   MOZ_ASSERT(aStartOffset <= aEndOffset);
 
-  nsINode* n = GetNextRangeCommonAncestor(aNode);
+  nsINode* n = GetClosestCommonInclusiveAncestorForRangeInSelection(aNode);
   NS_ASSERTION(n || !aNode->IsSelectionDescendant(),
                "orphan selection descendant");
 
@@ -184,7 +185,8 @@ bool nsRange::IsNodeSelected(nsINode* aNode, const uint32_t aStartOffset,
   nsTHashtable<nsPtrHashKey<Selection>> ancestorSelections;
   Selection* prevSelection = nullptr;
   uint32_t maxRangeCount = 0;
-  for (; n; n = GetNextRangeCommonAncestor(n->GetParentNode())) {
+  for (; n; n = GetClosestCommonInclusiveAncestorForRangeInSelection(
+                n->GetParentNode())) {
     LinkedList<nsRange>* ranges =
         n->GetExistingClosestCommonInclusiveAncestorRanges();
     if (!ranges) {
