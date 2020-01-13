@@ -681,6 +681,8 @@ nsresult nsContentSink::ProcessStyleLinkFromHeader(
       CORS_NONE,
       aTitle,
       aMedia,
+      /* integrity = */ EmptyString(),
+      /* nonce = */ EmptyString(),
       aAlternate ? Loader::HasAlternateRel::Yes : Loader::HasAlternateRel::No,
       Loader::IsInline::No,
       Loader::IsExplicitlyEnabled::No,

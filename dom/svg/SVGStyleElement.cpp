@@ -195,6 +195,10 @@ Maybe<nsStyleLinkElement::SheetInfo> SVGStyleElement::GetStyleSheetInfo() {
       AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin)),
       title,
       media,
+      /* integrity = */ EmptyString(),
+      /* nsStyleUtil::CSPAllowsInlineStyle takes care of nonce checking for
+         inline styles. Bug 1607011 */
+      /* nonce = */ EmptyString(),
       HasAlternateRel::No,
       IsInline::Yes,
       IsExplicitlyEnabled::No,

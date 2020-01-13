@@ -331,7 +331,7 @@ class Loader final {
   nsresult CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                               nsIPrincipal* aTriggeringPrincipal,
                               nsIURI* aTargetURI, nsINode* aRequestingNode,
-                              IsPreload);
+                              const nsAString& aNonce, IsPreload);
 
   enum class SheetState : uint8_t {
     Unknown = 0,
