@@ -11,6 +11,7 @@
 #include "mozilla/dom/BrowserBridgeChild.h"
 
 namespace mozilla {
+
 namespace dom {
 
 /**
@@ -47,7 +48,7 @@ class BrowserBridgeHost : public RemoteBrowser {
   void DestroyStart() override;
   void DestroyComplete() override;
 
-  bool Show(const ScreenIntSize& aSize, bool aParentIsActive) override;
+  bool Show(const OwnerShowInfo&) override;
   void UpdateDimensions(const nsIntRect& aRect,
                         const ScreenIntSize& aSize) override;
 

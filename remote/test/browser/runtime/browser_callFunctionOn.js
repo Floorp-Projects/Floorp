@@ -6,7 +6,7 @@
 // Test the Runtime.callFunctionOn
 // See also browser_runtime_evaluate, which covers basic usages of this method.
 
-add_task(async function(client) {
+add_task(async function({ client }) {
   const firstContext = await testRuntimeEnable(client);
   const contextId = firstContext.id;
   await testObjectReferences(client, contextId);

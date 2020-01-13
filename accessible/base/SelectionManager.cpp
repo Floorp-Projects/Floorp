@@ -169,7 +169,9 @@ void SelectionManager::ProcessSelectionChanged(SelData* aSelData) {
 
   const nsRange* range = selection->GetAnchorFocusRange();
   nsINode* cntrNode = nullptr;
-  if (range) cntrNode = range->GetCommonAncestor();
+  if (range) {
+    cntrNode = range->GetClosestCommonInclusiveAncestor();
+  }
 
   if (!cntrNode) {
     cntrNode = selection->GetFrameSelection()->GetAncestorLimiter();

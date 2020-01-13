@@ -6,7 +6,7 @@
 const PAGE_URL =
   "http://example.com/browser/remote/test/browser/input/doc_events.html";
 
-add_task(async function testShiftEvents(client) {
+add_task(async function testShiftEvents({ client }) {
   await setupForInput(PAGE_URL);
   const { Input } = client;
   await resetEvents();
@@ -36,7 +36,7 @@ add_task(async function testShiftEvents(client) {
   });
 });
 
-add_task(async function testAltEvents(client) {
+add_task(async function testAltEvents({ client }) {
   await setupForInput(PAGE_URL);
   const { Input } = client;
 
@@ -51,7 +51,7 @@ add_task(async function testAltEvents(client) {
   checkEvent(events[events.length - 1], "keyup", "Alt", "alt", false);
 });
 
-add_task(async function testControlEvents(client) {
+add_task(async function testControlEvents({ client }) {
   await setupForInput(PAGE_URL);
   const { Input } = client;
 
@@ -62,7 +62,7 @@ add_task(async function testControlEvents(client) {
   checkEvent(events[events.length - 1], "keyup", "Control", "ctrl", false);
 });
 
-add_task(async function testMetaEvents(client) {
+add_task(async function testMetaEvents({ client }) {
   if (!isMac) {
     return;
   }
@@ -76,7 +76,7 @@ add_task(async function testMetaEvents(client) {
   checkEvent(events[events.length - 1], "keyup", "Meta", "meta", false);
 });
 
-add_task(async function testShiftClick(client) {
+add_task(async function testShiftClick({ client }) {
   await loadURL(PAGE_URL);
   const { Input } = client;
   await resetEvents();

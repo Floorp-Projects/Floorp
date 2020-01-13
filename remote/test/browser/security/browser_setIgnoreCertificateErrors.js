@@ -87,7 +87,8 @@ add_task(async function testDefault({ Security }) {
   }
 });
 
-add_task(async function testIgnore({ Security }) {
+add_task(async function testIgnore({ client }) {
+  const { Security } = client;
   info("Enable security certificate override");
   await Security.setIgnoreCertificateErrors({ ignore: true });
 
@@ -105,7 +106,8 @@ add_task(async function testIgnore({ Security }) {
   }
 });
 
-add_task(async function testUnignore({ Security }) {
+add_task(async function testUnignore({ client }) {
+  const { Security } = client;
   info("Disable security certificate override");
   await Security.setIgnoreCertificateErrors({ ignore: false });
 
@@ -125,7 +127,8 @@ add_task(async function testUnignore({ Security }) {
 });
 
 // smoke test for unignored -> ignored -> unignored
-add_task(async function testToggle({ Security }) {
+add_task(async function testToggle({ client }) {
+  const { Security } = client;
   let loaded;
 
   info("Enable security certificate override");

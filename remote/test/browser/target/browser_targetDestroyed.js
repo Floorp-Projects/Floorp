@@ -3,7 +3,8 @@
 
 "use strict";
 
-add_task(async function eventFiredWhenTabIsClosed({ Target }, _, tab) {
+add_task(async function eventFiredWhenTabIsClosed({ client, tab }) {
+  const { Target } = client;
   const { newTab } = await openTab(Target);
 
   const tabClosed = BrowserTestUtils.waitForEvent(newTab, "TabClose");

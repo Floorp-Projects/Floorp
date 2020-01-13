@@ -704,7 +704,7 @@ EditActionResult HTMLEditor::CanHandleHTMLEditSubAction() const {
     return EditActionCanceled();
   }
 
-  nsINode* commonAncestor = range->GetCommonAncestor();
+  nsINode* commonAncestor = range->GetClosestCommonInclusiveAncestor();
   if (NS_WARN_IF(!commonAncestor)) {
     return EditActionResult(NS_ERROR_FAILURE);
   }
@@ -6957,7 +6957,7 @@ HTMLEditor::GetExtendedRangeToIncludeInvisibleNodes(
 
   // Find current selection common block parent
   Element* commonAncestorBlock =
-      HTMLEditor::GetBlock(*aAbstractRange.GetCommonAncestor());
+      HTMLEditor::GetBlock(*aAbstractRange.GetClosestCommonInclusiveAncestor());
   if (NS_WARN_IF(!commonAncestorBlock)) {
     return nullptr;
   }
@@ -7885,7 +7885,7 @@ Element* HTMLEditor::GetParentListElementAtSelection() const {
 
   for (uint32_t i = 0; i < SelectionRefPtr()->RangeCount(); ++i) {
     nsRange* range = SelectionRefPtr()->GetRangeAt(i);
-    for (nsINode* parent = range->GetCommonAncestor(); parent;
+    for (nsINode* parent = range->GetClosestCommonInclusiveAncestor(); parent;
          parent = parent->GetParentNode()) {
       if (HTMLEditUtils::IsList(parent)) {
         return parent->AsElement();

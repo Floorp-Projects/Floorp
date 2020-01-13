@@ -584,6 +584,24 @@ bool FinalizationGroupObject::cleanupSome(JSContext* cx, unsigned argc,
   return true;
 }
 
+/* static */
+bool FinalizationGroupObject::hasRegisteredRecordsToBeCleanedUp(
+    HandleFinalizationGroupObject group) {
+  FinalizationRecordVector* records = group->recordsToBeCleanedUp();
+  size_t initialLength = records->length();
+  if (initialLength == 0) {
+    return false;
+  }
+
+  for (FinalizationRecordObject* record : *records) {
+    if (!record->wasCleared()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // CleanupFinalizationGroup ( finalizationGroup [ , callback ] )
 // https://tc39.es/proposal-weakrefs/#sec-cleanup-finalization-group
 /* static */
@@ -593,9 +611,7 @@ bool FinalizationGroupObject::cleanupQueuedRecords(
   MOZ_ASSERT(cx->compartment() == group->compartment());
 
   // 2. If CheckForEmptyCells(finalizationGroup) is false, return.
-  FinalizationRecordVector* records = group->recordsToBeCleanedUp();
-  size_t initialLength = records->length();
-  if (initialLength == 0) {
+  if (!hasRegisteredRecordsToBeCleanedUp(group)) {
     return true;
   }
 
@@ -620,6 +636,11 @@ bool FinalizationGroupObject::cleanupQueuedRecords(
 
   // 5. Set finalizationGroup.[[IsFinalizationGroupCleanupJobActive]] to true.
   group->setCleanupJobActive(true);
+
+  FinalizationRecordVector* records = group->recordsToBeCleanedUp();
+#ifdef DEBUG
+  size_t initialLength = records->length();
+#endif
 
   // 6. Let result be Call(callback, undefined, iterator).
   RootedValue iteratorVal(cx, ObjectValue(*iterator));

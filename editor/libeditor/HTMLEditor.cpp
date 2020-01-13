@@ -4634,7 +4634,7 @@ Element* HTMLEditor::GetSelectionContainerElement() const {
         focusNode = startRef.GetChildAtOffset();
         MOZ_ASSERT(focusNode, "Start container must not be nullptr");
       } else {
-        focusNode = range->GetCommonAncestor();
+        focusNode = range->GetClosestCommonInclusiveAncestor();
         if (NS_WARN_IF(!focusNode)) {
           return nullptr;
         }

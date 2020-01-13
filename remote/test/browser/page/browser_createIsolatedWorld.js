@@ -13,7 +13,8 @@ const DESTROYED = "Runtime.executionContextDestroyed";
 const CREATED = "Runtime.executionContextCreated";
 const CLEARED = "Runtime.executionContextsCleared";
 
-add_task(async function createContextNoRuntimeDomain({ Page }) {
+add_task(async function createContextNoRuntimeDomain({ client }) {
+  const { Page } = client;
   const { frameId } = await Page.navigate({ url: DOC });
   const { executionContextId: isolatedId } = await Page.createIsolatedWorld({
     frameId,
@@ -23,7 +24,8 @@ add_task(async function createContextNoRuntimeDomain({ Page }) {
   ok(typeof isolatedId == "number", "Page.createIsolatedWorld returns an id");
 });
 
-add_task(async function createContextRuntimeDisabled({ Runtime, Page }) {
+add_task(async function createContextRuntimeDisabled({ client }) {
+  const { Runtime, Page } = client;
   const history = recordEvents(Runtime, 0);
   await Runtime.disable();
   info("Runtime notifications are disabled");
@@ -36,7 +38,8 @@ add_task(async function createContextRuntimeDisabled({ Runtime, Page }) {
   await assertEventOrder({ history, expectedEvents: [] });
 });
 
-add_task(async function contextCreatedAfterNavigation({ Page, Runtime }) {
+add_task(async function contextCreatedAfterNavigation({ client }) {
+  const { Runtime, Page } = client;
   const history = recordEvents(Runtime, 4);
   await Runtime.enable();
   info("Runtime notifications are enabled");
@@ -70,7 +73,8 @@ add_task(async function contextCreatedAfterNavigation({ Page, Runtime }) {
   compareContexts(isolatedContext, defaultContext);
 });
 
-add_task(async function contextDestroyedAfterNavigation({ Page, Runtime }) {
+add_task(async function contextDestroyedAfterNavigation({ client }) {
+  const { Runtime, Page } = client;
   const { isolatedId, defaultContext } = await setupContexts(Page, Runtime);
   is(defaultContext.auxData.isDefault, true, "Default context is default");
   const history = recordEvents(Runtime, 4, true);
@@ -103,7 +107,8 @@ add_task(async function contextDestroyedAfterNavigation({ Page, Runtime }) {
   );
 });
 
-add_task(async function evaluateInIsolatedAndDefault({ Page, Runtime }) {
+add_task(async function evaluateInIsolatedAndDefault({ client }) {
+  const { Runtime, Page } = client;
   const { isolatedContext, defaultContext } = await setupContexts(
     Page,
     Runtime
@@ -139,7 +144,8 @@ add_task(async function evaluateInIsolatedAndDefault({ Page, Runtime }) {
   );
 });
 
-add_task(async function contextEvaluationIsIsolated({ Page, Runtime }) {
+add_task(async function contextEvaluationIsIsolated({ client }) {
+  const { Runtime, Page } = client;
   // If a document makes changes to standard global object, an isolated
   // world should not be affected
   await loadURL(toDataURL("<script>window.Node = null</script>"));

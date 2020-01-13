@@ -5,7 +5,7 @@
 
 // Test that javascript dialog events are emitted by the page domain only if
 // the dialog is created for the window of the target.
-add_task(async function(client) {
+add_task(async function({ client }) {
   const { Page } = client;
 
   info("Enable the page domain");

@@ -248,7 +248,6 @@ class ZoneList {
   ZoneList& operator=(const ZoneList& other) = delete;
 };
 
-void SweepFinalizationGroups(GCParallelTask* task);
 void SweepWeakRefs(GCParallelTask* task);
 
 class GCRuntime {
@@ -701,8 +700,8 @@ class GCRuntime {
   void updateAtomsBitmap();
   void sweepDebuggerOnMainThread(JSFreeOp* fop);
   void sweepJitDataOnMainThread(JSFreeOp* fop);
+  void sweepFinalizationGroupsOnMainThread();
   void sweepFinalizationGroups(Zone* zone);
-  friend void SweepFinalizationGroups(GCParallelTask* task);
   void queueFinalizationGroupForCleanup(FinalizationGroupObject* group);
   void sweepWeakRefs(Zone* zone);
   friend void SweepWeakRefs(GCParallelTask* task);

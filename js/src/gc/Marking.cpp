@@ -2714,13 +2714,13 @@ void GCMarker::repush(JSObject* obj) {
   pushTaggedPtr(obj);
 }
 
-void GCMarker::enterWeakMarkingMode() {
+bool GCMarker::enterWeakMarkingMode() {
   MOZ_ASSERT(runtime()->gc.nursery().isEmpty());
 
   MOZ_ASSERT(weakMapAction() == ExpandWeakMaps);
   MOZ_ASSERT(state != MarkingState::WeakMarking);
   if (state == MarkingState::IterativeMarking) {
-    return;
+    return false;
   }
 
   // During weak marking mode, we maintain a table mapping weak keys to
@@ -2741,25 +2741,28 @@ void GCMarker::enterWeakMarkingMode() {
   while (processMarkQueue() == QueueYielded) {
   };
 
-  for (SweepGroupZonesIter zone(runtime()); !zone.done(); zone.next()) {
-    for (WeakMapBase* m : zone->gcWeakMapList()) {
-      if (m->mapColor) {
-        mozilla::Unused << m->markEntries(this);
-      }
+  return true;
+}
+
+void JS::Zone::enterWeakMarkingMode(GCMarker* marker) {
+  MOZ_ASSERT(marker->isWeakMarking());
+  for (WeakMapBase* m : gcWeakMapList()) {
+    if (m->mapColor) {
+      mozilla::Unused << m->markEntries(marker);
     }
   }
+}
 
 #ifdef DEBUG
-  for (SweepGroupZonesIter zone(runtime()); !zone.done(); zone.next()) {
-    for (auto r = zone->gcWeakKeys().all(); !r.empty(); r.popFront()) {
-      for (auto markable : r.front().value) {
-        MOZ_ASSERT(markable.weakmap->mapColor,
-                   "unmarked weakmaps in weak keys table");
-      }
+void JS::Zone::checkWeakMarkingMode() {
+  for (auto r = gcWeakKeys().all(); !r.empty(); r.popFront()) {
+    for (auto markable : r.front().value) {
+      MOZ_ASSERT(markable.weakmap->mapColor,
+                 "unmarked weakmaps in weak keys table");
     }
   }
-#endif
 }
+#endif
 
 void GCMarker::leaveWeakMarkingMode() {
   MOZ_ASSERT(state == MarkingState::WeakMarking ||

@@ -118,9 +118,12 @@ static void InvalidateAllFrames(nsINode* aNode) {
   }
 }
 
-static nsINode* GetNextRangeCommonAncestor(nsINode* aNode) {
-  while (aNode && !aNode->IsCommonAncestorForRangeInSelection()) {
-    if (!aNode->IsDescendantOfCommonAncestorForRangeInSelection()) {
+static nsINode* GetClosestCommonInclusiveAncestorForRangeInSelection(
+    nsINode* aNode) {
+  while (aNode &&
+         !aNode->IsClosestCommonInclusiveAncestorForRangeInSelection()) {
+    if (!aNode
+             ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
       return nullptr;
     }
     aNode = aNode->GetParentNode();
@@ -174,16 +177,17 @@ bool nsRange::IsNodeSelected(nsINode* aNode, const uint32_t aStartOffset,
   MOZ_ASSERT(aNode, "bad arg");
   MOZ_ASSERT(aStartOffset <= aEndOffset);
 
-  nsINode* n = GetNextRangeCommonAncestor(aNode);
+  nsINode* n = GetClosestCommonInclusiveAncestorForRangeInSelection(aNode);
   NS_ASSERTION(n || !aNode->IsSelectionDescendant(),
                "orphan selection descendant");
 
   // Collect the selection objects for potential ranges.
   nsTHashtable<nsPtrHashKey<Selection>> ancestorSelections;
   Selection* prevSelection = nullptr;
-  uint32_t maxRangeCount = 0;
-  for (; n; n = GetNextRangeCommonAncestor(n->GetParentNode())) {
-    LinkedList<nsRange>* ranges = n->GetExistingCommonAncestorRanges();
+  for (; n; n = GetClosestCommonInclusiveAncestorForRangeInSelection(
+                n->GetParentNode())) {
+    LinkedList<nsRange>* ranges =
+        n->GetExistingClosestCommonInclusiveAncestorRanges();
     if (!ranges) {
       continue;
     }
@@ -197,63 +201,60 @@ bool nsRange::IsNodeSelected(nsINode* aNode, const uint32_t aStartOffset,
           prevSelection = selection;
           ancestorSelections.PutEntry(selection);
         }
-        maxRangeCount = std::max(maxRangeCount, selection->RangeCount());
       }
     }
   }
 
   nsContentUtils::ComparePointsCache cache;
   IsItemInRangeComparator comparator{*aNode, aStartOffset, aEndOffset, &cache};
-  if (!ancestorSelections.IsEmpty()) {
-    for (auto iter = ancestorSelections.ConstIter(); !iter.Done();
-         iter.Next()) {
-      Selection* selection = iter.Get()->GetKey();
-      // Binary search the sorted ranges in this selection.
-      // (Selection::GetRangeAt returns its ranges ordered).
-      size_t low = 0;
-      size_t high = selection->RangeCount();
+  for (auto iter = ancestorSelections.ConstIter(); !iter.Done(); iter.Next()) {
+    Selection* selection = iter.Get()->GetKey();
+    // Binary search the sorted ranges in this selection.
+    // (Selection::GetRangeAt returns its ranges ordered).
+    size_t low = 0;
+    size_t high = selection->RangeCount();
 
-      while (high != low) {
-        size_t middle = low + (high - low) / 2;
+    while (high != low) {
+      size_t middle = low + (high - low) / 2;
 
-        const nsRange* const range = selection->GetRangeAt(middle);
-        int result = comparator(range);
-        if (result == 0) {
-          if (!range->Collapsed()) return true;
+      const nsRange* const range = selection->GetRangeAt(middle);
+      int result = comparator(range);
+      if (result == 0) {
+        if (!range->Collapsed()) return true;
 
-          const nsRange* middlePlus1;
-          const nsRange* middleMinus1;
-          // if node end > start of middle+1, result = 1
-          if (middle + 1 < high &&
-              (middlePlus1 = selection->GetRangeAt(middle + 1)) &&
-              nsContentUtils::ComparePoints_Deprecated(
-                  aNode, static_cast<int32_t>(aEndOffset),
-                  middlePlus1->GetStartContainer(),
-                  static_cast<int32_t>(middlePlus1->StartOffset()), nullptr,
-                  &cache) > 0) {
-            result = 1;
-            // if node start < end of middle - 1, result = -1
-          } else if (middle >= 1 &&
-                     (middleMinus1 = selection->GetRangeAt(middle - 1)) &&
-                     nsContentUtils::ComparePoints_Deprecated(
-                         aNode, static_cast<int32_t>(aStartOffset),
-                         middleMinus1->GetEndContainer(),
-                         static_cast<int32_t>(middleMinus1->EndOffset()),
-                         nullptr, &cache) < 0) {
-            result = -1;
-          } else {
-            break;
-          }
-        }
-
-        if (result < 0) {
-          high = middle;
+        const nsRange* middlePlus1;
+        const nsRange* middleMinus1;
+        // if node end > start of middle+1, result = 1
+        if (middle + 1 < high &&
+            (middlePlus1 = selection->GetRangeAt(middle + 1)) &&
+            nsContentUtils::ComparePoints_Deprecated(
+                aNode, static_cast<int32_t>(aEndOffset),
+                middlePlus1->GetStartContainer(),
+                static_cast<int32_t>(middlePlus1->StartOffset()), nullptr,
+                &cache) > 0) {
+          result = 1;
+          // if node start < end of middle - 1, result = -1
+        } else if (middle >= 1 &&
+                   (middleMinus1 = selection->GetRangeAt(middle - 1)) &&
+                   nsContentUtils::ComparePoints_Deprecated(
+                       aNode, static_cast<int32_t>(aStartOffset),
+                       middleMinus1->GetEndContainer(),
+                       static_cast<int32_t>(middleMinus1->EndOffset()), nullptr,
+                       &cache) < 0) {
+          result = -1;
         } else {
-          low = middle + 1;
+          break;
         }
+      }
+
+      if (result < 0) {
+        high = middle;
+      } else {
+        low = middle + 1;
       }
     }
   }
+
   return false;
 }
 
@@ -270,7 +271,7 @@ nsRange::~nsRange() {
 
 nsRange::nsRange(nsINode* aNode)
     : AbstractRange(aNode),
-      mRegisteredCommonAncestor(nullptr),
+      mRegisteredClosestCommonInclusiveAncestor(nullptr),
       mNextStartRef(nullptr),
       mNextEndRef(nullptr) {
   // printf("Size of nsRange: %zu\n", sizeof(nsRange));
@@ -309,11 +310,12 @@ NS_INTERFACE_MAP_END_INHERITING(AbstractRange)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsRange)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsRange, AbstractRange)
-  // We _could_ just rely on Reset() to UnregisterCommonAncestor(),
-  // but it wouldn't know we're calling it from Unlink and so would do
-  // more work than it really needs to.
-  if (tmp->mRegisteredCommonAncestor) {
-    tmp->UnregisterCommonAncestor(tmp->mRegisteredCommonAncestor, true);
+  // We _could_ just rely on Reset() to
+  // UnregisterClosestCommonInclusiveAncestor(), but it wouldn't know we're
+  // calling it from Unlink and so would do more work than it really needs to.
+  if (tmp->mRegisteredClosestCommonInclusiveAncestor) {
+    tmp->UnregisterClosestCommonInclusiveAncestor(
+        tmp->mRegisteredClosestCommonInclusiveAncestor, true);
   }
 
   tmp->Reset();
@@ -330,16 +332,16 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsRange, AbstractRange)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 static void MarkDescendants(nsINode* aNode) {
-  // Set NodeIsDescendantOfCommonAncestorForRangeInSelection on aNode's
-  // descendants unless aNode is already marked as a range common ancestor
-  // or a descendant of one, in which case all of our descendants have the
-  // bit set already.
+  // Set NodeIsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection on
+  // aNode's descendants unless aNode is already marked as a range common
+  // ancestor or a descendant of one, in which case all of our descendants have
+  // the bit set already.
   if (!aNode->IsSelectionDescendant()) {
     // don't set the Descendant bit on |aNode| itself
     nsINode* node = aNode->GetNextNode(aNode);
     while (node) {
-      node->SetDescendantOfCommonAncestorForRangeInSelection();
-      if (!node->IsCommonAncestorForRangeInSelection()) {
+      node->SetDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
+      if (!node->IsClosestCommonInclusiveAncestorForRangeInSelection()) {
         node = node->GetNextNode(aNode);
       } else {
         // optimize: skip this sub-tree since it's marked already.
@@ -350,16 +352,17 @@ static void MarkDescendants(nsINode* aNode) {
 }
 
 static void UnmarkDescendants(nsINode* aNode) {
-  // Unset NodeIsDescendantOfCommonAncestorForRangeInSelection on aNode's
-  // descendants unless aNode is a descendant of another range common ancestor.
-  // Also, exclude descendants of range common ancestors (but not the common
-  // ancestor itself).
-  if (!aNode->IsDescendantOfCommonAncestorForRangeInSelection()) {
+  // Unset NodeIsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection
+  // on aNode's descendants unless aNode is a descendant of another range common
+  // ancestor. Also, exclude descendants of range common ancestors (but not the
+  // common ancestor itself).
+  if (!aNode
+           ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
     // we know |aNode| doesn't have any bit set
     nsINode* node = aNode->GetNextNode(aNode);
     while (node) {
-      node->ClearDescendantOfCommonAncestorForRangeInSelection();
-      if (!node->IsCommonAncestorForRangeInSelection()) {
+      node->ClearDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
+      if (!node->IsClosestCommonInclusiveAncestorForRangeInSelection()) {
         node = node->GetNextNode(aNode);
       } else {
         // We found an ancestor of an overlapping range, skip its descendants.
@@ -369,33 +372,38 @@ static void UnmarkDescendants(nsINode* aNode) {
   }
 }
 
-void nsRange::RegisterCommonAncestor(nsINode* aNode) {
+void nsRange::RegisterClosestCommonInclusiveAncestor(nsINode* aNode) {
   MOZ_ASSERT(aNode, "bad arg");
 
   MOZ_DIAGNOSTIC_ASSERT(IsInSelection(), "registering range not in selection");
 
-  mRegisteredCommonAncestor = aNode;
+  mRegisteredClosestCommonInclusiveAncestor = aNode;
 
   MarkDescendants(aNode);
 
-  UniquePtr<LinkedList<nsRange>>& ranges = aNode->GetCommonAncestorRangesPtr();
+  UniquePtr<LinkedList<nsRange>>& ranges =
+      aNode->GetClosestCommonInclusiveAncestorRangesPtr();
   if (!ranges) {
     ranges = MakeUnique<LinkedList<nsRange>>();
   }
 
   MOZ_DIAGNOSTIC_ASSERT(!isInList());
   ranges->insertBack(this);
-  aNode->SetCommonAncestorForRangeInSelection();
+  aNode->SetClosestCommonInclusiveAncestorForRangeInSelection();
 }
 
-void nsRange::UnregisterCommonAncestor(nsINode* aNode, bool aIsUnlinking) {
+void nsRange::UnregisterClosestCommonInclusiveAncestor(nsINode* aNode,
+                                                       bool aIsUnlinking) {
   MOZ_ASSERT(aNode, "bad arg");
-  NS_ASSERTION(aNode->IsCommonAncestorForRangeInSelection(), "wrong node");
-  MOZ_DIAGNOSTIC_ASSERT(aNode == mRegisteredCommonAncestor, "wrong node");
-  LinkedList<nsRange>* ranges = aNode->GetExistingCommonAncestorRanges();
+  NS_ASSERTION(aNode->IsClosestCommonInclusiveAncestorForRangeInSelection(),
+               "wrong node");
+  MOZ_DIAGNOSTIC_ASSERT(aNode == mRegisteredClosestCommonInclusiveAncestor,
+                        "wrong node");
+  LinkedList<nsRange>* ranges =
+      aNode->GetExistingClosestCommonInclusiveAncestorRanges();
   MOZ_ASSERT(ranges);
 
-  mRegisteredCommonAncestor = nullptr;
+  mRegisteredClosestCommonInclusiveAncestor = nullptr;
 
 #ifdef DEBUG
   bool found = false;
@@ -414,7 +422,7 @@ void nsRange::UnregisterCommonAncestor(nsINode* aNode, bool aIsUnlinking) {
   // We don't want to waste time unmarking flags on nodes that are
   // being unlinked anyway.
   if (!aIsUnlinking && ranges->isEmpty()) {
-    aNode->ClearCommonAncestorForRangeInSelection();
+    aNode->ClearClosestCommonInclusiveAncestorForRangeInSelection();
     UnmarkDescendants(aNode);
   }
 }
@@ -554,13 +562,13 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
       bool isCommonAncestor =
           IsInSelection() && mStart.Container() == mEnd.Container();
       if (isCommonAncestor) {
-        UnregisterCommonAncestor(mStart.Container(), false);
-        RegisterCommonAncestor(newStart.Container());
+        UnregisterClosestCommonInclusiveAncestor(mStart.Container(), false);
+        RegisterClosestCommonInclusiveAncestor(newStart.Container());
       }
       if (mStart.Container()
-              ->IsDescendantOfCommonAncestorForRangeInSelection()) {
+              ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
         newStart.Container()
-            ->SetDescendantOfCommonAncestorForRangeInSelection();
+            ->SetDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
       }
     } else {
       // If boundary is inside changed text, position it before change
@@ -607,12 +615,16 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
           IsInSelection() && mStart.Container() == mEnd.Container();
       if (isCommonAncestor && !newStart.Container()) {
         // The split occurs inside the range.
-        UnregisterCommonAncestor(mStart.Container(), false);
-        RegisterCommonAncestor(mStart.Container()->GetParentNode());
-        newEnd.Container()->SetDescendantOfCommonAncestorForRangeInSelection();
-      } else if (mEnd.Container()
-                     ->IsDescendantOfCommonAncestorForRangeInSelection()) {
-        newEnd.Container()->SetDescendantOfCommonAncestorForRangeInSelection();
+        UnregisterClosestCommonInclusiveAncestor(mStart.Container(), false);
+        RegisterClosestCommonInclusiveAncestor(
+            mStart.Container()->GetParentNode());
+        newEnd.Container()
+            ->SetDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
+      } else if (
+          mEnd.Container()
+              ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
+        newEnd.Container()
+            ->SetDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
       }
     } else {
       CheckedUint32 newEndOffset{0};
@@ -671,9 +683,11 @@ void nsRange::ContentAppended(nsIContent* aFirstNewContent) {
   if (container->IsSelectionDescendant() && IsInSelection()) {
     nsINode* child = aFirstNewContent;
     while (child) {
-      if (!child->IsDescendantOfCommonAncestorForRangeInSelection()) {
+      if (!child
+               ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
         MarkDescendants(child);
-        child->SetDescendantOfCommonAncestorForRangeInSelection();
+        child
+            ->SetDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
       }
       child = child->GetNextSibling();
     }
@@ -724,9 +738,10 @@ void nsRange::ContentInserted(nsIContent* aChild) {
   }
 
   if (container->IsSelectionDescendant() &&
-      !aChild->IsDescendantOfCommonAncestorForRangeInSelection()) {
+      !aChild
+           ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
     MarkDescendants(aChild);
-    aChild->SetDescendantOfCommonAncestorForRangeInSelection();
+    aChild->SetDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
   }
 
   if (mNextStartRef || mNextEndRef) {
@@ -810,8 +825,10 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
   MOZ_ASSERT(mEnd.Ref() != aChild);
 
   if (container->IsSelectionDescendant() &&
-      aChild->IsDescendantOfCommonAncestorForRangeInSelection()) {
-    aChild->ClearDescendantOfCommonAncestorForRangeInSelection();
+      aChild
+          ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
+    aChild
+        ->ClearDescendantOfClosestCommonInclusiveAncestorForRangeInSelection();
     UnmarkDescendants(aChild);
   }
 }
@@ -1005,31 +1022,31 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
        mEnd.Container() != aEndBoundary.Container()) &&
       IsInSelection() && !aNotInsertedYet;
 
-  // GetCommonAncestor is unreliable while we're unlinking (could
-  // return null if our start/end have already been unlinked), so make
+  // GetClosestCommonInclusiveAncestor is unreliable while we're unlinking
+  // (could return null if our start/end have already been unlinked), so make
   // sure to not use it here to determine our "old" current ancestor.
   mStart = aStartBoundary;
   mEnd = aEndBoundary;
 
   if (checkCommonAncestor) {
-    nsINode* oldCommonAncestor = mRegisteredCommonAncestor;
-    nsINode* newCommonAncestor = GetCommonAncestor();
+    nsINode* oldCommonAncestor = mRegisteredClosestCommonInclusiveAncestor;
+    nsINode* newCommonAncestor = GetClosestCommonInclusiveAncestor();
     if (newCommonAncestor != oldCommonAncestor) {
       if (oldCommonAncestor) {
-        UnregisterCommonAncestor(oldCommonAncestor, false);
+        UnregisterClosestCommonInclusiveAncestor(oldCommonAncestor, false);
       }
       if (newCommonAncestor) {
-        RegisterCommonAncestor(newCommonAncestor);
+        RegisterClosestCommonInclusiveAncestor(newCommonAncestor);
       } else {
         NS_ASSERTION(!mIsPositioned, "unexpected disconnected nodes");
         mSelection = nullptr;
         MOZ_DIAGNOSTIC_ASSERT(
-            !mRegisteredCommonAncestor,
+            !mRegisteredClosestCommonInclusiveAncestor,
             "How can we have a registered common ancestor when we "
             "didn't register ourselves?");
         MOZ_DIAGNOSTIC_ASSERT(!isInList(),
                               "Shouldn't be registered if we have no "
-                              "mRegisteredCommonAncestor");
+                              "mRegisteredClosestCommonInclusiveAncestor");
       }
     }
   }
@@ -1075,18 +1092,20 @@ void nsRange::SetSelection(mozilla::dom::Selection* aSelection) {
 
   mSelection = aSelection;
   if (mSelection) {
-    nsINode* commonAncestor = GetCommonAncestor();
+    nsINode* commonAncestor = GetClosestCommonInclusiveAncestor();
     NS_ASSERTION(commonAncestor, "unexpected disconnected nodes");
-    RegisterCommonAncestor(commonAncestor);
-  } else if (mRegisteredCommonAncestor) {
-    UnregisterCommonAncestor(mRegisteredCommonAncestor, false);
+    RegisterClosestCommonInclusiveAncestor(commonAncestor);
+  } else if (mRegisteredClosestCommonInclusiveAncestor) {
+    UnregisterClosestCommonInclusiveAncestor(
+        mRegisteredClosestCommonInclusiveAncestor, false);
     MOZ_DIAGNOSTIC_ASSERT(
-        !mRegisteredCommonAncestor,
+        !mRegisteredClosestCommonInclusiveAncestor,
         "How can we have a registered common ancestor when we "
         "just unregistered?");
-    MOZ_DIAGNOSTIC_ASSERT(!isInList(),
-                          "Shouldn't be registered if we have no "
-                          "mRegisteredCommonAncestor after unregistering");
+    MOZ_DIAGNOSTIC_ASSERT(
+        !isInList(),
+        "Shouldn't be registered if we have no "
+        "mRegisteredClosestCommonInclusiveAncestor after unregistering");
   }
 }
 
@@ -1610,7 +1629,8 @@ static nsresult CollapseRangeAfterDelete(nsRange* aRange) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsCOMPtr<nsINode> commonAncestor = aRange->GetCommonAncestor();
+  nsCOMPtr<nsINode> commonAncestor =
+      aRange->GetClosestCommonInclusiveAncestor();
 
   nsCOMPtr<nsINode> startContainer = aRange->GetStartContainer();
   nsCOMPtr<nsINode> endContainer = aRange->GetEndContainer();
@@ -1940,7 +1960,8 @@ nsresult nsRange::CutContents(DocumentFragment** aFragment) {
 
         // Get node's and nextNode's common parent. Do this before moving
         // nodes from original DOM to result fragment.
-        commonAncestor = nsContentUtils::GetCommonAncestor(node, nextNode);
+        commonAncestor =
+            nsContentUtils::GetClosestCommonInclusiveAncestor(node, nextNode);
         NS_ENSURE_STATE(commonAncestor);
 
         nsCOMPtr<nsINode> parentCounterNode = node;
@@ -2286,7 +2307,8 @@ already_AddRefed<DocumentFragment> nsRange::CloneContents(ErrorResult& aRv) {
     }
 
     // Get node and nextNode's common parent.
-    commonAncestor = nsContentUtils::GetCommonAncestor(node, nextNode);
+    commonAncestor =
+        nsContentUtils::GetClosestCommonInclusiveAncestor(node, nextNode);
 
     if (!commonAncestor) {
       aRv.Throw(NS_ERROR_FAILURE);
@@ -2965,11 +2987,12 @@ nsresult nsRange::GetUsedFontFaces(nsLayoutUtils::UsedFontFaceList& aResult,
   return NS_OK;
 }
 
-nsINode* nsRange::GetRegisteredCommonAncestor() {
+nsINode* nsRange::GetRegisteredClosestCommonInclusiveAncestor() {
   MOZ_ASSERT(IsInSelection(),
-             "GetRegisteredCommonAncestor only valid for range in selection");
-  MOZ_ASSERT(mRegisteredCommonAncestor);
-  return mRegisteredCommonAncestor;
+             "GetRegisteredClosestCommonInclusiveAncestor only valid for range "
+             "in selection");
+  MOZ_ASSERT(mRegisteredClosestCommonInclusiveAncestor);
+  return mRegisteredClosestCommonInclusiveAncestor;
 }
 
 /* static */
@@ -2988,10 +3011,12 @@ nsRange::AutoInvalidateSelection::~AutoInvalidateSelection() {
   // we have a different common ancestor now, and if so invalidate its subtree
   // so it paints the selection it's in now.
   if (mRange->IsInSelection()) {
-    nsINode* commonAncestor = mRange->GetRegisteredCommonAncestor();
+    nsINode* commonAncestor =
+        mRange->GetRegisteredClosestCommonInclusiveAncestor();
     // XXXbz can commonAncestor really be null here?  I wouldn't think so!  If
-    // it _were_, then in a debug build GetRegisteredCommonAncestor() would have
-    // fatally asserted.
+    // it _were_, then in a debug build
+    // GetRegisteredClosestCommonInclusiveAncestor() would have fatally
+    // asserted.
     if (commonAncestor && commonAncestor != mCommonAncestor) {
       ::InvalidateAllFrames(commonAncestor);
     }

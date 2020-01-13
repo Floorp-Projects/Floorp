@@ -10949,8 +10949,8 @@ void Document::MutationEventDispatched(nsINode* aTarget) {
       nsINode* commonAncestor = nullptr;
       int32_t realTargetCount = realTargets.Count();
       for (int32_t j = 0; j < realTargetCount; ++j) {
-        commonAncestor =
-            nsContentUtils::GetCommonAncestor(possibleTarget, realTargets[j]);
+        commonAncestor = nsContentUtils::GetClosestCommonInclusiveAncestor(
+            possibleTarget, realTargets[j]);
         if (commonAncestor) {
           realTargets.ReplaceObjectAt(commonAncestor, j);
           break;

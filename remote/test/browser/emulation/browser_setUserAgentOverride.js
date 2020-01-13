@@ -5,7 +5,8 @@
 
 const DOC = toDataURL(`<script>document.write(navigator.userAgent);</script>`);
 
-add_task(async function setAndResetUserAgent({ Emulation }) {
+add_task(async function setAndResetUserAgent({ client }) {
+  const { Emulation } = client;
   const userAgent = "Mozilla/5.0 (rv: 23) Romanesco/42.0";
 
   await loadURL(DOC);
@@ -49,7 +50,8 @@ add_task(async function invalidUserAgent({ Emulation }) {
   ok(errorThrown, "Invalid user agent format raised error");
 });
 
-add_task(async function notSetForNewContext({ Emulation, Target }) {
+add_task(async function notSetForNewContext({ client }) {
+  const { Emulation, Target } = client;
   const userAgent = "Mozilla/5.0 (rv: 23) Romanesco/42.0";
 
   await Emulation.setUserAgentOverride({ userAgent });

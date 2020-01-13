@@ -90,23 +90,38 @@ impl Utf16Decoder {
         },
         {
             debug_assert!(!self.pending_bmp);
-            if self.lead_surrogate != 0 {
-                self.lead_surrogate = 0;
-                match self.lead_byte {
-                    None => {
-                        return (DecoderResult::Malformed(2, 0), src_consumed, dest.written());
+            if self.lead_surrogate != 0 || self.lead_byte.is_some() {
+                // We need to check space without intent to write in order to
+                // make sure that there is space for the replacement character.
+                match dest.check_space_bmp() {
+                    Space::Full(_) => {
+                        return (DecoderResult::OutputFull, 0, 0);
                     }
-                    Some(_) => {
+                    Space::Available(_) => {
+                        if self.lead_surrogate != 0 {
+                            self.lead_surrogate = 0;
+                            match self.lead_byte {
+                                None => {
+                                    return (
+                                        DecoderResult::Malformed(2, 0),
+                                        src_consumed,
+                                        dest.written(),
+                                    );
+                                }
+                                Some(_) => {
+                                    self.lead_byte = None;
+                                    return (
+                                        DecoderResult::Malformed(3, 0),
+                                        src_consumed,
+                                        dest.written(),
+                                    );
+                                }
+                            }
+                        }
+                        debug_assert!(self.lead_byte.is_some());
                         self.lead_byte = None;
-                        return (DecoderResult::Malformed(3, 0), src_consumed, dest.written());
+                        return (DecoderResult::Malformed(1, 0), src_consumed, dest.written());
                     }
-                }
-            }
-            match self.lead_byte {
-                None => {}
-                Some(_) => {
-                    self.lead_byte = None;
-                    return (DecoderResult::Malformed(1, 0), src_consumed, dest.written());
                 }
             }
         },

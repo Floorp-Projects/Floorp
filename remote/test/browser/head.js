@@ -64,7 +64,7 @@ this.add_task = function(taskFn, opts = {}) {
       // Bug 1605722 - Workaround to not hang when waiting for Target events
       await getDiscoveredTargets(client.Target);
 
-      await taskFn(client, CDP, tab);
+      await taskFn({ client, CDP, tab });
 
       if (createTab) {
         // taskFn may resolve within a tick after opening a new tab.

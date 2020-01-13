@@ -7836,6 +7836,26 @@ AbortReasonOr<MBasicBlock*> IonBuilder::newPendingLoopHeader(
     }
   }
 
+  // The bytecode emitted for destructuring assignments uses a "done" stack
+  // value that can be read from the exception handler. Mark the loop phi for
+  // this slot as having implicit uses so it won't be optimized away (replaced
+  // by the JS_OPTIMIZED_OUT magic value).
+  // See ProcessTryNotes in vm/Interpreter.cpp.
+  MOZ_ASSERT(block->stackDepth() >= info().firstStackSlot());
+  bool emptyStack = block->stackDepth() == info().firstStackSlot();
+  if (!emptyStack) {
+    JSContext* cx = TlsContext.get();
+    for (TryNoteIterAll tni(cx, script(), pc); !tni.done(); ++tni) {
+      const JSTryNote& tn = **tni;
+      if (tn.kind != JSTRY_DESTRUCTURING) {
+        continue;
+      }
+      MOZ_ASSERT(tn.stackDepth > 1);
+      uint32_t slot = info().stackSlot(tn.stackDepth - 1);
+      block->getSlot(slot)->setImplicitlyUsedUnchecked();
+    }
+  }
+
   return block;
 }
 

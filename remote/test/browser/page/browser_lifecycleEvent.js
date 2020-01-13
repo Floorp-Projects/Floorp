@@ -7,7 +7,8 @@
 
 const DOC = toDataURL("default-test-page");
 
-add_task(async function noInitialEvents({ Page }) {
+add_task(async function noInitialEvents({ client }) {
+  const { Page } = client;
   await Page.enable();
   info("Page domain has been enabled");
 
@@ -22,7 +23,8 @@ add_task(async function noInitialEvents({ Page }) {
   await assertNavigationLifecycleEvents({ promise, frameId, timeout: 1000 });
 });
 
-add_task(async function noEventsAfterDisable({ Page }) {
+add_task(async function noEventsAfterDisable({ client }) {
+  const { Page } = client;
   await Page.enable();
   info("Page domain has been enabled");
 
@@ -39,7 +41,8 @@ add_task(async function noEventsAfterDisable({ Page }) {
   await assertNavigationLifecycleEvents({ promise, frameId, timeout: 1000 });
 });
 
-add_task(async function navigateEvents({ Page }) {
+add_task(async function navigateEvents({ client }) {
+  const { Page } = client;
   await Page.enable();
   info("Page domain has been enabled");
 
@@ -55,7 +58,8 @@ add_task(async function navigateEvents({ Page }) {
   await assertNavigationLifecycleEvents({ promise, frameId });
 });
 
-add_task(async function navigateEventsOnReload({ Page }) {
+add_task(async function navigateEventsOnReload({ client }) {
+  const { Page } = client;
   await Page.enable();
   info("Page domain has been enabled");
 
@@ -76,7 +80,8 @@ add_task(async function navigateEventsOnReload({ Page }) {
   await assertNavigationLifecycleEvents({ promise, frameId });
 });
 
-add_task(async function navigateEventsOnNavigateToSameURL({ Page }) {
+add_task(async function navigateEventsOnNavigateToSameURL({ client }) {
+  const { Page } = client;
   await Page.enable();
   info("Page domain has been enabled");
 

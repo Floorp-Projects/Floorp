@@ -26,7 +26,7 @@ function setupServiceContainer({
       const { screenX, screenY } = event;
       const menu = createEditContextMenu(window, "webconsole-menu");
       // Emit the "menu-open" event for testing.
-      menu.once("open", () => webConsoleWrapper.emit("menu-open"));
+      menu.once("open", () => webConsoleWrapper.emitForTests("menu-open"));
       menu.popup(screenX, screenY, hud.chromeWindow.document);
     },
 
@@ -46,7 +46,7 @@ function setupServiceContainer({
       webConsoleUI.onMessageHover(type, message),
     getLongString: grip => webConsoleUI.getLongString(grip),
     getJsTermTooltipAnchor: () => webConsoleUI.getJsTermTooltipAnchor(),
-    emitEvent: (event, value) => webConsoleUI.emit(event, value),
+    emitForTests: (event, value) => webConsoleUI.emitForTests(event, value),
     attachRefToWebConsoleUI: (id, node) => webConsoleUI.attachRef(id, node),
     requestData: (id, type) => webConsoleWrapper.requestData(id, type),
     createElement: nodename => webConsoleWrapper.createElement(nodename),
