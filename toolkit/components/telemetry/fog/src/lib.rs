@@ -11,7 +11,10 @@ use std::io::Error;
 use std::thread::JoinHandle;
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_init(upload_enabled: bool, data_dir: &nsAString) -> nsresult {
+pub unsafe extern "C" fn fog_init(data_dir: &nsAString) -> nsresult {
+
+  let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
+
   let cfg = Configuration {
     data_path: data_dir.to_string(),
     application_id: "org.mozilla.fogotype".into(),
@@ -41,6 +44,8 @@ fn prototype_ping_init() -> Result<JoinHandle<()>, Error> {
     let an_hour = time::Duration::from_secs(60 * 60);
     loop {
       thread::sleep(an_hour);
+      let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
+      glean_preview::set_upload_enabled(upload_enabled);
       prototype_ping.send();
     }
   })
