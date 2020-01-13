@@ -118,7 +118,7 @@ class JUnitTestRunner(MochitestDesktop):
         self.options.profilePath = self.profile.profile
 
         # Set preferences
-        self.merge_base_profiles(self.options)
+        self.merge_base_profiles(self.options, 'geckoview-junit')
 
         if self.fillCertificateDB(self.options):
             self.log.error("Certificate integration failed")

@@ -1,4 +1,5 @@
 {
+    "geckoview-junit": ["base", "common", "unittest-required", "unittest-features"],
     "mochitest": ["base", "common", "unittest-required", "unittest-features"],
     "profileserver": ["base", "common", "unittest-required", "unittest-features", "profileserver"],
     "raptor": ["base", "common", "perf", "raptor"],
