@@ -1002,7 +1002,7 @@ void MathMLElement::RecompileScriptEventListeners() {
 
     nsAutoString value;
     GetAttr(kNameSpaceID_None, attr, value);
-    SetEventHandler(attr, value, true);
+    SetEventHandler(GetEventNameForAttr(attr), value, true);
   }
 }
 
@@ -1018,7 +1018,7 @@ nsresult MathMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
   if (aNamespaceID == kNameSpaceID_None) {
     if (!aValue && IsEventAttributeName(aName)) {
       if (EventListenerManager* manager = GetExistingListenerManager()) {
-        manager->RemoveEventHandler(aName);
+        manager->RemoveEventHandler(GetEventNameForAttr(aName));
       }
     }
   }
@@ -1051,7 +1051,7 @@ nsresult MathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     if (IsEventAttributeName(aName) && aValue) {
       MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
                  "Expected string value for script body");
-      SetEventHandler(aName, aValue->GetStringValue());
+      SetEventHandler(GetEventNameForAttr(aName), aValue->GetStringValue());
     }
   }
 
