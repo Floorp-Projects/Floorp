@@ -1350,14 +1350,15 @@ class nsINode : public mozilla::dom::EventTarget {
   inline bool IsRootOfChromeAccessOnlySubtree() const;
 
   /**
-   * Returns true if |this| node is the common ancestor of the start/end
-   * nodes of a Range in a Selection or a descendant of such a common ancestor.
-   * This node is definitely not selected when |false| is returned, but it may
-   * or may not be selected when |true| is returned.
+   * Returns true if |this| node is the closest common inclusive ancestor
+   * (https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor) of the
+   * start/end nodes of a Range in a Selection or a descendant of such a common
+   * ancestor. This node is definitely not selected when |false| is returned,
+   * but it may or may not be selected when |true| is returned.
    */
   bool IsSelectionDescendant() const {
-    return IsDescendantOfCommonAncestorForRangeInSelection() ||
-           IsCommonAncestorForRangeInSelection();
+    return IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection() ||
+           IsClosestCommonInclusiveAncestorForRangeInSelection();
   }
 
   /**
@@ -1595,11 +1596,11 @@ class nsINode : public mozilla::dom::EventTarget {
     ElementHasPart,
     // Set if the element might have a contenteditable attribute set.
     ElementMayHaveContentEditableAttr,
-    // Set if the node is the common ancestor of the start/end nodes of a Range
-    // that is in a Selection.
-    NodeIsCommonAncestorForRangeInSelection,
+    // Set if the node is the closest common inclusive ancestor of the start/end
+    // nodes of a Range that is in a Selection.
+    NodeIsClosestCommonInclusiveAncestorForRangeInSelection,
     // Set if the node is a descendant of a node with the above bit set.
-    NodeIsDescendantOfCommonAncestorForRangeInSelection,
+    NodeIsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection,
     // Set if CanSkipInCC check has been done for this subtree root.
     NodeIsCCMarkedRoot,
     // Maybe set if this node is in black subtree.
@@ -1693,23 +1694,44 @@ class nsINode : public mozilla::dom::EventTarget {
   bool MayHaveContentEditableAttr() const {
     return GetBoolFlag(ElementMayHaveContentEditableAttr);
   }
-  bool IsCommonAncestorForRangeInSelection() const {
-    return GetBoolFlag(NodeIsCommonAncestorForRangeInSelection);
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  bool IsClosestCommonInclusiveAncestorForRangeInSelection() const {
+    return GetBoolFlag(NodeIsClosestCommonInclusiveAncestorForRangeInSelection);
   }
-  void SetCommonAncestorForRangeInSelection() {
-    SetBoolFlag(NodeIsCommonAncestorForRangeInSelection);
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  void SetClosestCommonInclusiveAncestorForRangeInSelection() {
+    SetBoolFlag(NodeIsClosestCommonInclusiveAncestorForRangeInSelection);
   }
-  void ClearCommonAncestorForRangeInSelection() {
-    ClearBoolFlag(NodeIsCommonAncestorForRangeInSelection);
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  void ClearClosestCommonInclusiveAncestorForRangeInSelection() {
+    ClearBoolFlag(NodeIsClosestCommonInclusiveAncestorForRangeInSelection);
   }
-  bool IsDescendantOfCommonAncestorForRangeInSelection() const {
-    return GetBoolFlag(NodeIsDescendantOfCommonAncestorForRangeInSelection);
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  bool IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection() const {
+    return GetBoolFlag(
+        NodeIsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection);
   }
-  void SetDescendantOfCommonAncestorForRangeInSelection() {
-    SetBoolFlag(NodeIsDescendantOfCommonAncestorForRangeInSelection);
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  void SetDescendantOfClosestCommonInclusiveAncestorForRangeInSelection() {
+    SetBoolFlag(
+        NodeIsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection);
   }
-  void ClearDescendantOfCommonAncestorForRangeInSelection() {
-    ClearBoolFlag(NodeIsDescendantOfCommonAncestorForRangeInSelection);
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  void ClearDescendantOfClosestCommonInclusiveAncestorForRangeInSelection() {
+    ClearBoolFlag(
+        NodeIsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection);
   }
 
   void SetCCMarkedRoot(bool aValue) { SetBoolFlag(NodeIsCCMarkedRoot, aValue); }

@@ -2695,7 +2695,7 @@ void Element::List(FILE* out, int32_t aIndent, const nsCString& aPrefix) const {
   fprintf(out, " state=[%llx]",
           static_cast<unsigned long long>(State().GetInternalValue()));
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
-  if (IsCommonAncestorForRangeInSelection()) {
+  if (IsClosestCommonInclusiveAncestorForRangeInSelection()) {
     const LinkedList<nsRange>* ranges = GetExistingCommonAncestorRanges();
     int32_t count = 0;
     if (ranges) {
