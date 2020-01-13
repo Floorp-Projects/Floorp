@@ -4,7 +4,8 @@
 "use strict";
 
 add_task(
-  async function mainTarget({ Target }) {
+  async function mainTarget({ client }) {
+    const { Target } = client;
     const { targetInfo } = await new Promise(resolve => {
       const unsubscribe = Target.targetCreated(target => {
         if (target.targetInfo.type == "browser") {
@@ -25,7 +26,8 @@ add_task(
   { createTab: false }
 );
 
-add_task(async function pageTargets({ Target }, _, tab) {
+add_task(async function pageTargets({ client, tab }) {
+  const { Target } = client;
   const url = toDataURL("pageTargets");
   await loadURL(url);
 

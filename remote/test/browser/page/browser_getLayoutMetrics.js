@@ -3,7 +3,8 @@
 
 "use strict";
 
-add_task(async function documentSmallerThanViewport({ Page }) {
+add_task(async function documentSmallerThanViewport({ client }) {
+  const { Page } = client;
   await loadURL(toDataURL("<div>Hello world"));
 
   const { contentSize, layoutViewport } = await Page.getLayoutMetrics();
@@ -30,7 +31,8 @@ add_task(async function documentSmallerThanViewport({ Page }) {
   );
 });
 
-add_task(async function documentLargerThanViewport({ Page }) {
+add_task(async function documentLargerThanViewport({ client }) {
+  const { Page } = client;
   await loadURL(toDataURL("<div style='margin: 150vh 0 0 150vw'>Hello world"));
 
   const { contentSize, layoutViewport } = await Page.getLayoutMetrics();
@@ -57,7 +59,8 @@ add_task(async function documentLargerThanViewport({ Page }) {
   );
 });
 
-add_task(async function documentLargerThanViewportScrolledXY({ Page }) {
+add_task(async function documentLargerThanViewportScrolledXY({ client }) {
+  const { Page } = client;
   await loadURL(toDataURL("<div style='margin: 150vh 0 0 150vw'>Hello world"));
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {

@@ -3,7 +3,8 @@
 
 "use strict";
 
-add_task(async function raisesWithoutArguments({ Target }, _, tab) {
+add_task(async function raisesWithoutArguments({ client, tab }) {
+  const { Target } = client;
   let errorThrown = false;
   try {
     await Target.activateTarget();
@@ -13,7 +14,8 @@ add_task(async function raisesWithoutArguments({ Target }, _, tab) {
   ok(errorThrown, "activateTarget raised error without an argument");
 });
 
-add_task(async function raisesWithUnknownTargetId({ Target }, _, tab) {
+add_task(async function raisesWithUnknownTargetId({ client, tab }) {
+  const { Target } = client;
   let errorThrown = false;
   try {
     await Target.activateTarget({ targetId: "-1" });
@@ -23,7 +25,8 @@ add_task(async function raisesWithUnknownTargetId({ Target }, _, tab) {
   ok(errorThrown, "activateTarget raised error with unkown target id");
 });
 
-add_task(async function selectTabInOtherWindow({ Target }, _, tab) {
+add_task(async function selectTabInOtherWindow({ client, tab }) {
+  const { Target } = client;
   const targets = await getDiscoveredTargets(Target);
   const filtered_targets = targets.filter(target => {
     return target.targetInfo.targetId == tab.linkedBrowser.browsingContext.id;
