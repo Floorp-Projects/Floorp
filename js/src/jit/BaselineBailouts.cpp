@@ -488,18 +488,6 @@ static jsbytecode* GetResumePC(JSScript* script, jsbytecode* pc,
   return pc;
 }
 
-class NoOpTryNoteFilter {
- public:
-  explicit NoOpTryNoteFilter() = default;
-  bool operator()(const JSTryNote*) { return true; }
-};
-
-class TryNoteIterAll : public TryNoteIter<NoOpTryNoteFilter> {
- public:
-  TryNoteIterAll(JSContext* cx, JSScript* script, jsbytecode* pc)
-      : TryNoteIter(cx, script, pc, NoOpTryNoteFilter()) {}
-};
-
 static bool HasLiveStackValueAtDepth(JSContext* cx, HandleScript script,
                                      jsbytecode* pc, uint32_t stackSlotIndex,
                                      uint32_t stackDepth) {
