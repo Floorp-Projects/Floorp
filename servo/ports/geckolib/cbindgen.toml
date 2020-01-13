@@ -46,6 +46,8 @@ derive_neq = true
 # This will actually never be defined, but is handy to avoid cbindgen
 # generating Servo-only types.
 "feature = servo" = "CBINDGEN_IS_SERVO"
+"target_pointer_width = 32" = "SERVO_32_BITS"
+"target_pointer_width = 64" = "HAVE_64BIT_BUILD"
 
 [macro_expansion]
 bitflags = true
@@ -189,7 +191,7 @@ include = [
   "Content",
   "ContentItem",
 ]
-item_types = ["enums", "structs", "typedefs", "functions", "constants"]
+item_types = ["enums", "structs", "unions", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
 
 # Prevent some renaming for Gecko types that cbindgen doesn't otherwise understand.
@@ -250,12 +252,49 @@ renaming_overrides_prefixing = true
   inline void ScaleBy(float);
 """
 
-"LengthPercentage" = """
-  inline StyleLengthPercentage();
-  static inline StyleLengthPercentage Zero();
-  static inline StyleLengthPercentage FromAppUnits(nscoord);
-  static inline StyleLengthPercentage FromPixels(CSSCoord);
-  static inline StyleLengthPercentage FromPercentage(float);
+"LengthPercentageUnion" = """
+  using Self = StyleLengthPercentageUnion;
+
+  // TODO(emilio): cbindgen should be able to generate these in the body of the
+  // union, but it seems it's only implemented for structs, not unions.
+  static const uint32_t TAG_CALC = StyleLengthPercentageUnion_TAG_CALC;
+  static const uint32_t TAG_LENGTH = StyleLengthPercentageUnion_TAG_LENGTH;
+  static const uint32_t TAG_PERCENTAGE = StyleLengthPercentageUnion_TAG_PERCENTAGE;
+  static const uint32_t TAG_MASK = StyleLengthPercentageUnion_TAG_MASK;
+
+ private:
+  uint32_t Tag() const {
+    return tag.tag & TAG_MASK;
+  }
+
+ public:
+  // We need to do all this manually because cbingen can't reason about unions.
+  inline StyleLengthPercentageUnion();
+  inline StyleLengthPercentageUnion(const Self&);
+  inline ~StyleLengthPercentageUnion();
+  inline Self& operator=(const Self&);
+
+  inline bool operator==(const Self& aOther) const;
+  inline bool operator!=(const Self& aOther) const;
+
+  inline bool IsLength() const;
+  inline bool IsPercentage() const;
+  inline bool IsCalc() const;
+
+  inline const StyleLength& AsLength() const;
+  inline StyleLength& AsLength();
+
+  inline const StylePercentage& AsPercentage() const;
+  inline StylePercentage& AsPercentage();
+
+  inline const StyleCalcLengthPercentage& AsCalc() const;
+  inline StyleCalcLengthPercentage& AsCalc();
+
+  static inline Self Zero();
+  static inline Self FromAppUnits(nscoord);
+  static inline Self FromPixels(CSSCoord);
+  static inline Self FromPercentage(float);
+
   inline void ScaleLengthsBy(float);
   inline CSSCoord LengthInCSSPixels() const;
   inline float Percentage() const;

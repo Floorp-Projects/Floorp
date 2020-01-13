@@ -439,15 +439,101 @@ nscoord StyleCSSPixelLength::ToAppUnits() const {
   return NSToIntRound(length);
 }
 
-StyleLengthPercentage::StyleLengthPercentage() {
-  tag = Tag::Length;
-  length._0._0 = 0.0f;
+bool LengthPercentage::IsLength() const { return Tag() == TAG_LENGTH; }
+
+StyleLengthPercentageUnion::StyleLengthPercentageUnion() {
+  length = {TAG_LENGTH, {0.0f}};
+  MOZ_ASSERT(IsLength());
+}
+
+static_assert(sizeof(LengthPercentage) == sizeof(uint64_t), "");
+
+Length& LengthPercentage::AsLength() {
+  MOZ_ASSERT(IsLength());
+  return length.length;
+}
+
+const Length& LengthPercentage::AsLength() const {
+  return const_cast<LengthPercentage*>(this)->AsLength();
+}
+
+bool LengthPercentage::IsPercentage() const { return Tag() == TAG_PERCENTAGE; }
+
+StylePercentage& LengthPercentage::AsPercentage() {
+  MOZ_ASSERT(IsPercentage());
+  return percentage.percentage;
+}
+
+const StylePercentage& LengthPercentage::AsPercentage() const {
+  return const_cast<LengthPercentage*>(this)->AsPercentage();
+}
+
+bool LengthPercentage::IsCalc() const { return Tag() == TAG_CALC; }
+
+StyleCalcLengthPercentage& LengthPercentage::AsCalc() {
+  MOZ_ASSERT(IsCalc());
+  return *calc.ptr;
+}
+
+const StyleCalcLengthPercentage& LengthPercentage::AsCalc() const {
+  return const_cast<LengthPercentage*>(this)->AsCalc();
+}
+
+StyleLengthPercentageUnion::StyleLengthPercentageUnion(const Self& aOther) {
+  if (aOther.IsLength()) {
+    length = {TAG_LENGTH, aOther.AsLength()};
+  } else if (aOther.IsPercentage()) {
+    percentage = {TAG_PERCENTAGE, aOther.AsPercentage()};
+  } else {
+    MOZ_ASSERT(aOther.IsCalc());
+    calc = {
+#ifdef SERVO_32_BITS
+        TAG_CALC,
+#endif
+        new StyleCalcLengthPercentage(aOther.AsCalc()),
+    };
+  }
+  MOZ_ASSERT(Tag() == aOther.Tag());
+}
+
+StyleLengthPercentageUnion::~StyleLengthPercentageUnion() {
+  if (IsCalc()) {
+    delete calc.ptr;
+  }
+}
+
+LengthPercentage& LengthPercentage::operator=(const LengthPercentage& aOther) {
+  if (this != &aOther) {
+    this->~LengthPercentage();
+    new (this) LengthPercentage(aOther);
+  }
+  return *this;
+}
+
+bool LengthPercentage::operator==(const LengthPercentage& aOther) const {
+  if (Tag() != aOther.Tag()) {
+    return false;
+  }
+  if (IsLength()) {
+    return AsLength() == aOther.AsLength();
+  }
+  if (IsPercentage()) {
+    return AsPercentage() == aOther.AsPercentage();
+  }
+  return AsCalc() == aOther.AsCalc();
+}
+
+bool LengthPercentage::operator!=(const LengthPercentage& aOther) const {
+  return !(*this == aOther);
 }
 
 LengthPercentage LengthPercentage::Zero() { return {}; }
 
 LengthPercentage LengthPercentage::FromPixels(CSSCoord aCoord) {
-  return LengthPercentage::Length({aCoord});
+  LengthPercentage l;
+  MOZ_ASSERT(l.IsLength());
+  l.length.length = {aCoord};
+  return l;
 }
 
 LengthPercentage LengthPercentage::FromAppUnits(nscoord aCoord) {
@@ -455,7 +541,9 @@ LengthPercentage LengthPercentage::FromAppUnits(nscoord aCoord) {
 }
 
 LengthPercentage LengthPercentage::FromPercentage(float aPercentage) {
-  return LengthPercentage::Percentage({aPercentage});
+  LengthPercentage l;
+  l.percentage = {TAG_PERCENTAGE, {aPercentage}};
+  return l;
 }
 
 CSSCoord LengthPercentage::LengthInCSSPixels() const {
@@ -465,7 +553,7 @@ CSSCoord LengthPercentage::LengthInCSSPixels() const {
   if (IsPercentage()) {
     return 0;
   }
-  return AsCalc()->length.ToCSSPixels();
+  return AsCalc().length.ToCSSPixels();
 }
 
 float LengthPercentage::Percentage() const {
@@ -475,18 +563,18 @@ float LengthPercentage::Percentage() const {
   if (IsPercentage()) {
     return AsPercentage()._0;
   }
-  return AsCalc()->percentage._0;
+  return AsCalc().percentage._0;
 }
 
 bool LengthPercentage::HasPercent() const {
-  return IsPercentage() || (IsCalc() && AsCalc()->has_percentage);
+  return IsPercentage() || (IsCalc() && AsCalc().has_percentage);
 }
 
 bool LengthPercentage::ConvertsToLength() const { return !HasPercent(); }
 
 nscoord LengthPercentage::ToLength() const {
   MOZ_ASSERT(ConvertsToLength());
-  return IsLength() ? AsLength().ToAppUnits() : AsCalc()->length.ToAppUnits();
+  return IsLength() ? AsLength().ToAppUnits() : AsCalc().length.ToAppUnits();
 }
 
 bool LengthPercentage::ConvertsToPercentage() const {
@@ -494,7 +582,7 @@ bool LengthPercentage::ConvertsToPercentage() const {
     return true;
   }
   if (IsCalc()) {
-    auto& calc = *AsCalc();
+    auto& calc = AsCalc();
     return calc.has_percentage && calc.length.IsZero();
   }
   return false;
@@ -516,7 +604,7 @@ bool LengthPercentage::IsDefinitelyZero() const {
   if (IsPercentage()) {
     return AsPercentage()._0 == 0.0f;
   }
-  auto& calc = *AsCalc();
+  auto& calc = AsCalc();
   return calc.length.IsZero() && calc.percentage._0 == 0.0f;
 }
 
@@ -552,7 +640,7 @@ nscoord LengthPercentage::Resolve(T aPercentageGetter,
   if (IsPercentage()) {
     return aPercentageRounder(basis * AsPercentage()._0);
   }
-  auto& calc = *AsCalc();
+  auto& calc = AsCalc();
   return calc.length.ToAppUnits() +
          aPercentageRounder(basis * calc.percentage._0);
 }
@@ -579,7 +667,7 @@ void LengthPercentage::ScaleLengthsBy(float aScale) {
     AsLength().ScaleBy(aScale);
   }
   if (IsCalc()) {
-    AsCalc()->length.ScaleBy(aScale);
+    AsCalc().length.ScaleBy(aScale);
   }
 }
 

@@ -56,8 +56,8 @@ static constexpr size_t kStyleStructSizeLimit = 504;
 template <typename Struct, size_t Actual, size_t Limit>
 struct AssertSizeIsLessThan {
   static_assert(Actual == sizeof(Struct), "Bogus invocation");
-  // static_assert(Actual <= Limit,
-  //               "Style struct became larger than the size limit");
+  static_assert(Actual <= Limit,
+                "Style struct became larger than the size limit");
   static constexpr bool instantiate = true;
 };
 
