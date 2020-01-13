@@ -810,7 +810,7 @@ float SVGContentUtils::CoordToFloat(SVGElement* aContent,
     return CSSCoord(ctx ? ctx->GetLength(SVGContentUtils::XY) : 0.0f);
   });
   if (aLength.IsCalc()) {
-    auto& calc = *aLength.AsCalc();
+    auto& calc = aLength.AsCalc();
     if (calc.clamping_mode == StyleAllowedNumericType::NonNegative) {
       result = std::max(result, 0.0f);
     } else {

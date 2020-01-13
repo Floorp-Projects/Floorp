@@ -200,4 +200,9 @@ using StyleAtomicUsize = std::atomic<size_t>;
 
 }  // namespace mozilla
 
+#  ifndef HAVE_64BIT_BUILD
+static_assert(sizeof(void*) == 4, "");
+#    define SERVO_32_BITS 1
+#  endif
+
 #endif
