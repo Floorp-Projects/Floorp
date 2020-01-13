@@ -226,7 +226,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
       aRv.Throw(NS_ERROR_NOT_INITIALIZED);
       return nullptr;
     }
-    return GetCommonAncestor();
+    return GetClosestCommonInclusiveAncestor();
   }
   void InsertNode(nsINode& aNode, ErrorResult& aErr);
   bool IntersectsNode(nsINode& aNode, ErrorResult& aRv);
@@ -404,9 +404,9 @@ class nsRange final : public mozilla::dom::AbstractRange,
    * (https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor)
    * for the range, which we had to compute when the common ancestor changed or
    * IsInSelection became true, so we could register with it. That is, it's a
-   * faster version of GetCommonAncestor that only works for ranges in a
-   * Selection. The method will assert and the behavior is undefined if called
-   * on a range where IsInSelection() is false.
+   * faster version of GetClosestCommonInclusiveAncestor that only works for
+   * ranges in a Selection. The method will assert and the behavior is undefined
+   * if called on a range where IsInSelection() is false.
    */
   nsINode* GetRegisteredClosestCommonInclusiveAncestor();
 

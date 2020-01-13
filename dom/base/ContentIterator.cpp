@@ -184,8 +184,8 @@ nsresult ContentIteratorBase::Init(const RawRangeBoundary& aStart,
 nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
                                            const RawRangeBoundary& aEnd) {
   // get common content parent
-  mCommonParent =
-      nsContentUtils::GetCommonAncestor(aStart.Container(), aEnd.Container());
+  mCommonParent = nsContentUtils::GetClosestCommonInclusiveAncestor(
+      aStart.Container(), aEnd.Container());
   if (NS_WARN_IF(!mCommonParent)) {
     return NS_ERROR_FAILURE;
   }
@@ -710,7 +710,7 @@ nsresult ContentSubtreeIterator::InitWithRange() {
   MOZ_ASSERT(mRange->IsPositioned());
 
   // get the start node and offset, convert to nsINode
-  mCommonParent = mRange->GetCommonAncestor();
+  mCommonParent = mRange->GetClosestCommonInclusiveAncestor();
   nsINode* startContainer = mRange->GetStartContainer();
   int32_t startOffset = mRange->StartOffset();
   nsINode* endContainer = mRange->GetEndContainer();

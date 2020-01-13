@@ -395,11 +395,14 @@ class nsContentUtils {
                                          nsTArray<int32_t>* aAncestorOffsets);
 
   /**
-   * Returns the common ancestor, if any, for two nodes.
+   * Returns the closest common inclusive ancestor
+   * (https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor) , if any,
+   * for two nodes.
    *
    * Returns null if the nodes are disconnected.
    */
-  static nsINode* GetCommonAncestor(nsINode* aNode1, nsINode* aNode2) {
+  static nsINode* GetClosestCommonInclusiveAncestor(nsINode* aNode1,
+                                                    nsINode* aNode2) {
     if (aNode1 == aNode2) {
       return aNode1;
     }
