@@ -218,37 +218,3 @@ add_task(async function sameSite({ client }) {
     }
   }
 });
-
-function assertCookie(cookie, expected = {}) {
-  const {
-    name = "",
-    value = "",
-    domain = "example.org",
-    path = "/",
-    expires = -1,
-    size = name.length + value.length,
-    httpOnly = false,
-    secure = false,
-    session = true,
-    sameSite,
-  } = expected;
-
-  const expectedCookie = {
-    name,
-    value,
-    domain,
-    path,
-    // If expires is set, convert from milliseconds to seconds
-    expires: expires > 0 ? Math.floor(expires.getTime() / 1000) : -1,
-    size,
-    httpOnly,
-    secure,
-    session,
-  };
-
-  if (sameSite) {
-    expectedCookie.sameSite = sameSite;
-  }
-
-  Assert.deepEqual(cookie, expectedCookie);
-}
