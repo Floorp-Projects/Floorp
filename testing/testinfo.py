@@ -23,6 +23,7 @@ from mozbuild.base import MozbuildObject, MachCommandConditions as conditions
 ACTIVEDATA_RECORD_LIMIT = 10000
 MAX_ACTIVEDATA_CONCURRENCY = 5
 MAX_ACTIVEDATA_RETRIES = 5
+REFERER = 'https://wiki.developer.mozilla.org/en-US/docs/Mozilla/Test-Info'
 
 
 class TestInfo(object):
@@ -45,6 +46,7 @@ class TestInfo(object):
         self.log_verbose(json.dumps(query))
         response = requests.post("http://activedata.allizom.org/query",
                                  data=json.dumps(query),
+                                 headers={'referer': REFERER},
                                  stream=True)
         end_time = datetime.datetime.now()
         self.total_activedata_seconds += (end_time - start_time).total_seconds()
