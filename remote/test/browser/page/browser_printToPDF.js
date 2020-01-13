@@ -5,7 +5,8 @@
 
 const DOC = toDataURL("<div style='background-color: green'>Hello world</div>");
 
-add_task(async function transferModes({ IO, Page }) {
+add_task(async function transferModes({ client }) {
+  const { IO, Page } = client;
   await loadURL(DOC);
 
   // as base64 encoded data

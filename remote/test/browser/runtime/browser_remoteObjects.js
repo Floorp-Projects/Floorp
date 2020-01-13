@@ -5,7 +5,7 @@
 
 // Test the Runtime remote object
 
-add_task(async function(client) {
+add_task(async function({ client }) {
   const firstContext = await testRuntimeEnable(client);
   const contextId = firstContext.id;
 

@@ -1001,7 +1001,7 @@ nsresult nsDocumentEncoder::SerializeRangeContextEnd() {
 nsresult nsDocumentEncoder::SerializeRangeToString(nsRange* aRange) {
   if (!aRange || aRange->Collapsed()) return NS_OK;
 
-  mCommonAncestorOfRange = aRange->GetCommonAncestor();
+  mCommonAncestorOfRange = aRange->GetClosestCommonInclusiveAncestor();
 
   if (!mCommonAncestorOfRange) {
     return NS_OK;
@@ -1317,7 +1317,7 @@ nsHTMLCopyEncoder::SetSelection(Selection* aSelection) {
   // selection, then go through the flattened tree and serialize the selected
   // nodes", effectively serializing the composed tree.
   RefPtr<nsRange> range = aSelection->GetRangeAt(0);
-  nsINode* commonParent = range->GetCommonAncestor();
+  nsINode* commonParent = range->GetClosestCommonInclusiveAncestor();
 
   for (nsCOMPtr<nsIContent> selContent(do_QueryInterface(commonParent));
        selContent; selContent = selContent->GetParent()) {
@@ -1472,7 +1472,7 @@ nsresult nsHTMLCopyEncoder::PromoteRange(nsRange* inRange) {
   uint32_t startOffset = inRange->StartOffset();
   nsCOMPtr<nsINode> endNode = inRange->GetEndContainer();
   uint32_t endOffset = inRange->EndOffset();
-  nsCOMPtr<nsINode> common = inRange->GetCommonAncestor();
+  nsCOMPtr<nsINode> common = inRange->GetClosestCommonInclusiveAncestor();
 
   nsCOMPtr<nsINode> opStartNode;
   nsCOMPtr<nsINode> opEndNode;

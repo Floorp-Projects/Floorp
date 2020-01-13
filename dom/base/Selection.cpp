@@ -1426,7 +1426,7 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
   MOZ_ASSERT(aRange && aRange->IsPositioned());
 
   if (mFrameSelection->GetTableCellSelection()) {
-    nsINode* node = aRange->GetCommonAncestor();
+    nsINode* node = aRange->GetClosestCommonInclusiveAncestor();
     nsIFrame* frame = node->IsContent()
                           ? node->AsContent()->GetPrimaryFrame()
                           : aPresContext->PresShell()->GetRootFrame();
@@ -3030,7 +3030,7 @@ Element* Selection::GetCommonEditingHostForAllRanges() {
   for (RangeData& rangeData : mRanges) {
     nsRange* range = rangeData.mRange;
     MOZ_ASSERT(range);
-    nsINode* commonAncestorNode = range->GetCommonAncestor();
+    nsINode* commonAncestorNode = range->GetClosestCommonInclusiveAncestor();
     if (!commonAncestorNode || !commonAncestorNode->IsContent()) {
       return nullptr;
     }

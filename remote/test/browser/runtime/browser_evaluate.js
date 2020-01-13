@@ -7,7 +7,7 @@
 
 const TEST_DOC = toDataURL("default-test-page");
 
-add_task(async function(client) {
+add_task(async function({ client }) {
   await loadURL(TEST_DOC);
 
   const firstContext = await testRuntimeEnable(client);

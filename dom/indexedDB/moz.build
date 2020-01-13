@@ -26,6 +26,7 @@ TEST_DIRS += ['test/gtest']
 EXPORTS.mozilla.dom += [
     'FlippedOnce.h',
     'IDBCursor.h',
+    'IDBCursorType.h',
     'IDBDatabase.h',
     'IDBEvents.h',
     'IDBFactory.h',
@@ -39,6 +40,7 @@ EXPORTS.mozilla.dom += [
     'IDBTransaction.h',
     'IndexedDatabase.h',
     'IndexedDatabaseManager.h',
+    'InitializedOnce.h',
 ]
 
 EXPORTS.mozilla.dom.indexedDB += [
@@ -56,6 +58,7 @@ UNIFIED_SOURCES += [
     'FileInfo.cpp',
     'FileSnapshot.cpp',
     'IDBCursor.cpp',
+    'IDBCursorType.cpp',
     'IDBDatabase.cpp',
     'IDBEvents.cpp',
     'IDBFactory.cpp',
