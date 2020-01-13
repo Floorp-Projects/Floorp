@@ -28,11 +28,16 @@
 /*
  * JS operation bytecodes.
  */
-enum JSOp : uint8_t {
-#define ENUMERATE_OPCODE(op, ...) op,
+enum class JSOp : uint8_t {
+#define ENUMERATE_OPCODE(op, camel_case, ...) camel_case,
   FOR_EACH_OPCODE(ENUMERATE_OPCODE)
 #undef ENUMERATE_OPCODE
 };
+
+#define DEF_OPCODE_ALIAS(op, camel_case, ...) \
+  constexpr JSOp op = JSOp::camel_case;
+FOR_EACH_OPCODE(DEF_OPCODE_ALIAS)
+#undef DEF_OPCODE_ALIAS
 
 /*
  * [SMDOC] Bytecode Format flags (JOF_*)
