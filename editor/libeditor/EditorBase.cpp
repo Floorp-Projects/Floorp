@@ -619,8 +619,9 @@ bool EditorBase::IsSelectionEditable() {
     return false;
   }
 
-  nsINode* commonAncestor =
-      SelectionRefPtr()->GetAnchorFocusRange()->GetCommonAncestor();
+  nsINode* commonAncestor = SelectionRefPtr()
+                                ->GetAnchorFocusRange()
+                                ->GetClosestCommonInclusiveAncestor();
   while (commonAncestor && !commonAncestor->IsEditable()) {
     commonAncestor = commonAncestor->GetParentNode();
   }

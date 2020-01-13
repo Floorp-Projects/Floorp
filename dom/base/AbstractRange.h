@@ -36,7 +36,10 @@ class AbstractRange : public nsISupports, public nsWrapperCache {
   }
   nsIContent* GetChildAtEndOffset() const { return mEnd.GetChildAtOffset(); }
   bool IsPositioned() const { return mIsPositioned; }
-  nsINode* GetCommonAncestor() const;
+  /**
+   * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
+   */
+  nsINode* GetClosestCommonInclusiveAncestor() const;
 
   // WebIDL
 

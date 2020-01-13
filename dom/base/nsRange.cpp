@@ -1021,15 +1021,15 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
        mEnd.Container() != aEndBoundary.Container()) &&
       IsInSelection() && !aNotInsertedYet;
 
-  // GetCommonAncestor is unreliable while we're unlinking (could
-  // return null if our start/end have already been unlinked), so make
+  // GetClosestCommonInclusiveAncestor is unreliable while we're unlinking
+  // (could return null if our start/end have already been unlinked), so make
   // sure to not use it here to determine our "old" current ancestor.
   mStart = aStartBoundary;
   mEnd = aEndBoundary;
 
   if (checkCommonAncestor) {
     nsINode* oldCommonAncestor = mRegisteredClosestCommonInclusiveAncestor;
-    nsINode* newCommonAncestor = GetCommonAncestor();
+    nsINode* newCommonAncestor = GetClosestCommonInclusiveAncestor();
     if (newCommonAncestor != oldCommonAncestor) {
       if (oldCommonAncestor) {
         UnregisterClosestCommonInclusiveAncestor(oldCommonAncestor, false);
@@ -1091,7 +1091,7 @@ void nsRange::SetSelection(mozilla::dom::Selection* aSelection) {
 
   mSelection = aSelection;
   if (mSelection) {
-    nsINode* commonAncestor = GetCommonAncestor();
+    nsINode* commonAncestor = GetClosestCommonInclusiveAncestor();
     NS_ASSERTION(commonAncestor, "unexpected disconnected nodes");
     RegisterClosestCommonInclusiveAncestor(commonAncestor);
   } else if (mRegisteredClosestCommonInclusiveAncestor) {
@@ -1628,7 +1628,8 @@ static nsresult CollapseRangeAfterDelete(nsRange* aRange) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsCOMPtr<nsINode> commonAncestor = aRange->GetCommonAncestor();
+  nsCOMPtr<nsINode> commonAncestor =
+      aRange->GetClosestCommonInclusiveAncestor();
 
   nsCOMPtr<nsINode> startContainer = aRange->GetStartContainer();
   nsCOMPtr<nsINode> endContainer = aRange->GetEndContainer();
@@ -1958,7 +1959,8 @@ nsresult nsRange::CutContents(DocumentFragment** aFragment) {
 
         // Get node's and nextNode's common parent. Do this before moving
         // nodes from original DOM to result fragment.
-        commonAncestor = nsContentUtils::GetCommonAncestor(node, nextNode);
+        commonAncestor =
+            nsContentUtils::GetClosestCommonInclusiveAncestor(node, nextNode);
         NS_ENSURE_STATE(commonAncestor);
 
         nsCOMPtr<nsINode> parentCounterNode = node;
@@ -2304,7 +2306,8 @@ already_AddRefed<DocumentFragment> nsRange::CloneContents(ErrorResult& aRv) {
     }
 
     // Get node and nextNode's common parent.
-    commonAncestor = nsContentUtils::GetCommonAncestor(node, nextNode);
+    commonAncestor =
+        nsContentUtils::GetClosestCommonInclusiveAncestor(node, nextNode);
 
     if (!commonAncestor) {
       aRv.Throw(NS_ERROR_FAILURE);
