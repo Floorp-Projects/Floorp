@@ -32,13 +32,12 @@ import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.Experiments
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.test.Mockable
 
 /**
@@ -78,8 +77,9 @@ class BackgroundServices(
         secureStateAtRest = Config.channel.isNightlyOrDebug
     )
     // If sync has been turned off on the server then disable syncing.
+    @Suppress("ConstantConditionIf")
     @VisibleForTesting(otherwise = PRIVATE)
-    val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
+    val syncConfig = if (FeatureFlags.asFeatureSyncDisabled) {
         null
     } else {
         SyncConfig(

@@ -20,9 +20,6 @@ import kotlinx.coroutines.runBlocking
 import mozilla.appservices.Megazord
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.service.experiments.Experiments
-import mozilla.components.service.fretboard.Fretboard
-import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
-import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
@@ -36,13 +33,10 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.session.NotificationSessionObserver
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
-import java.io.File
 
 @SuppressLint("Registered")
 @Suppress("TooManyFunctions")
 open class FenixApplication : LocaleAwareApplication() {
-    lateinit var fretboard: Fretboard
-    lateinit var experimentLoader: Deferred<Boolean>
 
     open val components by lazy { Components(this) }
 
@@ -103,10 +97,6 @@ open class FenixApplication : LocaleAwareApplication() {
             }
         }
 
-        // We want to call this function as early as possible, but only once and
-        // on the main process, as it uses Gecko to fetch experiments from the server.
-        experimentLoader = loadExperiments()
-
         // When the `fenix-test-2019-08-05` experiment is active, record its branch in Glean
         // telemetry. This will be used to validate that the experiment system correctly enrolls
         // clients and segments them into branches. Note that this will not take effect the first
@@ -155,26 +145,6 @@ open class FenixApplication : LocaleAwareApplication() {
 
     open fun updateLeakCanaryState(isEnabled: Boolean) {
         // no-op, LeakCanary is disabled by default
-    }
-
-    private fun loadExperiments(): Deferred<Boolean> {
-        val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
-        val experimentSource = KintoExperimentSource(
-            EXPERIMENTS_BASE_URL,
-            EXPERIMENTS_BUCKET_NAME,
-            EXPERIMENTS_COLLECTION_NAME,
-            components.core.client
-        )
-        // TODO add ValueProvider to keep clientID in sync with Glean when ready
-        fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))
-
-        return GlobalScope.async(Dispatchers.IO) {
-            fretboard.loadExperiments()
-            Logger.debug("Bucket is ${fretboard.getUserBucket(this@FenixApplication)}")
-            Logger.debug("Experiments active: ${fretboard.getExperimentsMap(this@FenixApplication)}")
-            fretboard.updateExperiments()
-            return@async true
-        }
     }
 
     private fun setupPush() {
@@ -289,9 +259,5 @@ open class FenixApplication : LocaleAwareApplication() {
             if (SDK_INT >= Build.VERSION_CODES.P) builder = builder.detectNonSdkApiUsage()
             StrictMode.setVmPolicy(builder.build())
         }
-    }
-
-    companion object {
-        private const val ONE_DAY_MILLIS = 24 * 60 * 60 * 1000
     }
 }

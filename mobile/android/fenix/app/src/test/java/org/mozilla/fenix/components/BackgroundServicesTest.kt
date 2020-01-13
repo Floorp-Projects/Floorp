@@ -18,16 +18,11 @@ import mozilla.components.feature.push.PushConfig
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
-import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.base.observer.ObserverRegistry
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
-import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.isInExperiment
 
 class BackgroundServicesTest {
     class TestableBackgroundServices(
@@ -42,37 +37,6 @@ class BackgroundServicesTest {
 
         override fun makePushConfig() = mockk<PushConfig>(relaxed = true)
         override fun makePush(pushConfig: PushConfig) = mockk<AutoPushFeature>(relaxed = true)
-    }
-
-    @Test
-    fun `experiment flags`() {
-        val context = mockk<Context>(relaxed = true)
-
-        every { context.isInExperiment(eq(Experiments.asFeatureWebChannelsDisabled)) } returns false
-        assertEquals(
-            "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel",
-            FxaServer.redirectUrl(context)
-        )
-
-        every { context.isInExperiment(eq(Experiments.asFeatureWebChannelsDisabled)) } returns true
-        assertEquals(
-            "https://accounts.firefox.com/oauth/success/a2270f727f45f648",
-            FxaServer.redirectUrl(context)
-        )
-
-        every { context.isInExperiment(eq(Experiments.asFeatureSyncDisabled)) } returns false
-        var backgroundServices = TestableBackgroundServices(context)
-        assertEquals(
-            SyncConfig(
-                setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords),
-                syncPeriodInMinutes = 240L
-            ),
-            backgroundServices.syncConfig
-        )
-
-        every { context.isInExperiment(eq(Experiments.asFeatureSyncDisabled)) } returns true
-        backgroundServices = TestableBackgroundServices(context)
-        assertNull(backgroundServices.syncConfig)
     }
 
     @Test

@@ -56,7 +56,6 @@ import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
-import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
@@ -85,7 +84,6 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
 
@@ -436,7 +434,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                 view.swipeRefresh.setOnChildScrollUpCallback { _, _ -> true }
             }
 
-            if (!requireContext().isInExperiment(Experiments.asFeatureWebChannelsDisabled)) {
+            @Suppress("ConstantConditionIf")
+            if (FeatureFlags.asFeatureWebChannelsDisabled) {
                 webchannelIntegration.set(
                     feature = FxaWebChannelFeature(
                         requireContext(),

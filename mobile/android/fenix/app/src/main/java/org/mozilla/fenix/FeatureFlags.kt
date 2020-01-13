@@ -38,4 +38,19 @@ object FeatureFlags {
      * Gives option in Settings to see logins and sync logins
      */
     val logins = Config.channel.isNightlyOrDebug
+
+    /**
+     * Disables FxA Application Services Web Channels feature
+     */
+    const val asFeatureWebChannelsDisabled = false
+
+    /**
+     * Disables FxA Application Services Sync feature
+     */
+    const val asFeatureSyncDisabled = false
+
+    /**
+     * Disables FxA Application Services Pairing feature
+     */
+    const val asFeatureFxAPairingDisabled = false
 }

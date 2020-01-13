@@ -145,7 +145,6 @@ class SearchFragment : Fragment(), UserInteractionHandler {
         super.onViewCreated(view, savedInstanceState)
 
         search_scan_button.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
-        layoutComponents(view.search_layout)
 
         qrFeature.set(
             QrFeature(

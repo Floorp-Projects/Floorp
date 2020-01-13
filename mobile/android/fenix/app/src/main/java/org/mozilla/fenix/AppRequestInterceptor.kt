@@ -28,7 +28,8 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         var result: RequestInterceptor.InterceptionResponse? = null
 
         // WebChannel-driven authentication does not require a separate redirect interceptor.
-        if (context.isInExperiment(Experiments.asFeatureWebChannelsDisabled)) {
+        @Suppress("ConstantConditionIf")
+        if (FeatureFlags.asFeatureWebChannelsDisabled) {
             result = context.components.services.accountsAuthFeature.interceptor.onLoadRequest(
                     engineSession, uri, hasUserGesture, isSameDomain)
         }
