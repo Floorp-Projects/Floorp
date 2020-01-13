@@ -198,6 +198,12 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
 #ifdef SHOW_LAYOUT_HEURISTIC
   nsString mLayoutHeuristic;
 #endif
+
+ private:
+  /**
+   * Get table wrapper frame, or return null if there is no inner table.
+   */
+  nsTableWrapperFrame* GetTableWrapperFrame() const;
 };
 
 /**
