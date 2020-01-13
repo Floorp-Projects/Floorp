@@ -702,6 +702,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   mozilla::ipc::IPCResult RecvParentActivated(const bool& aActivated);
 
+  mozilla::ipc::IPCResult RecvScrollbarPreferenceChanged(ScrollbarPreference);
+
   mozilla::ipc::IPCResult RecvSetKeyboardIndicators(
       const UIStateChangeType& aShowFocusRings);
 

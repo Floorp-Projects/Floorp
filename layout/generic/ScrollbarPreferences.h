@@ -14,6 +14,7 @@ namespace mozilla {
 enum class ScrollbarPreference : uint8_t {
   Auto,
   Never,
+  LAST = Never,
 };
 
 }  // namespace mozilla
