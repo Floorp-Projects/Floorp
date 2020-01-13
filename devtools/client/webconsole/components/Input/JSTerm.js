@@ -1210,6 +1210,7 @@ class JSTerm extends Component {
 
   destroy() {
     this.autocompleteUpdate.cancel();
+    this.terminalInputChanged.cancel();
 
     if (this.autocompletePopup) {
       this.autocompletePopup.destroy();
