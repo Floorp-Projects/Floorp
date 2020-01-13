@@ -177,11 +177,7 @@ function getEvalResult(string, evalOptions, bindings, frame, dbgWindow) {
   if (frame) {
     return frame.evalWithBindings(string, bindings, evalOptions);
   }
-  return dbgWindow.executeInGlobalWithBindings(
-    string,
-    bindings,
-    evalOptions
-  );
+  return dbgWindow.executeInGlobalWithBindings(string, bindings, evalOptions);
 }
 
 function parseErrorOutput(dbgWindow, string) {
