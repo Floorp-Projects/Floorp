@@ -408,6 +408,7 @@ class nsWindow final : public nsWindowBase {
   /**
    * Event processing helpers
    */
+  HWND GetTopLevelForFocus(HWND aCurWnd);
   void DispatchFocusToTopLevelWindow(bool aIsActivate);
   bool DispatchStandardEvent(mozilla::EventMessage aMsg);
   void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
@@ -578,6 +579,7 @@ class nsWindow final : public nsWindowBase {
   uint32_t mPickerDisplayCount;
   HICON mIconSmall;
   HICON mIconBig;
+  HWND mLastKillFocusWindow;
   static bool sDropShadowEnabled;
   static uint32_t sInstanceCount;
   static TriStateBool sCanQuit;
