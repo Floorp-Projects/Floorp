@@ -2,7 +2,7 @@
 
 # ERROR_PROXY_CONNECTION_REFUSED
 
-`ERROR_PROXY_CONNECTION_REFUSED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L137)
+`ERROR_PROXY_CONNECTION_REFUSED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L159)
 
 ### Inherited Properties
 

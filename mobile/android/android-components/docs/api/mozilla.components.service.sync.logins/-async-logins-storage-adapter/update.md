@@ -2,7 +2,7 @@
 
 # update
 
-`open fun update(login: `[`ServerPassword`](../-server-password.md)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L364)
+`open fun update(login: `[`ServerPassword`](../-server-password.md)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L400)
 
 Overrides [AsyncLoginsStorage.update](../-async-logins-storage/update.md)
 
@@ -21,7 +21,7 @@ fields (`timesUsed`, `timeCreated`, `timeLastUsed`, and
 [NoSuchRecordException](../-no-such-record-exception.md) if the login does not exist.
 
 **RejectsWith**
-[InvalidRecordException](../-invalid-record-exception.md) if the update would create an invalid record.
+[InvalidRecordException](#) if the update would create an invalid record.
 
 **RejectsWith**
 [LoginsStorageException](../-logins-storage-exception.md) if the storage is locked, and on unexpected

@@ -2,7 +2,7 @@
 
 # SingleChoice
 
-`data class SingleChoice : `[`PromptRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L23)
+`data class SingleChoice : `[`PromptRequest`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L24)
 
 Value type that represents a request for a single choice prompt.
 

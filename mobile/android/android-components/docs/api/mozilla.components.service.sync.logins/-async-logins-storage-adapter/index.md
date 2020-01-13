@@ -2,7 +2,7 @@
 
 # AsyncLoginsStorageAdapter
 
-`open class AsyncLoginsStorageAdapter<T : LoginsStorage> : `[`AsyncLoginsStorage`](../-async-logins-storage/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L296)
+`open class AsyncLoginsStorageAdapter<T : LoginsStorage> : `[`AsyncLoginsStorage`](../-async-logins-storage/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L332)
 
 A helper class to wrap a synchronous [LoginsStorage](#) implementation and make it asynchronous.
 
@@ -21,7 +21,9 @@ A helper class to wrap a synchronous [LoginsStorage](#) implementation and make 
 | [delete](delete.md) | `open fun delete(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>`<br>Deletes the password with the given ID. |
 | [ensureLocked](ensure-locked.md) | `open fun ensureLocked(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Equivalent to `lock()`, but does not throw in the case that the database is already unlocked. Never rejects. |
 | [ensureUnlocked](ensure-unlocked.md) | `open fun ensureUnlocked(encryptionKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>`open fun ensureUnlocked(encryptionKey: `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Equivalent to `unlock(encryptionKey)`, but does not throw in the case that the database is already unlocked. |
+| [ensureValid](ensure-valid.md) | `open fun ensureValid(login: `[`ServerPassword`](../-server-password.md)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Checks if login already exists and is valid. |
 | [get](get.md) | `open fun get(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<`[`ServerPassword`](../-server-password.md)`?>`<br>Fetches a password from the underlying storage layer by ID. |
+| [getByBaseDomain](get-by-base-domain.md) | `open fun getByBaseDomain(hostname: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ServerPassword`](../-server-password.md)`>>`<br>Fetch the list of passwords for some hostname from the underlying storage layer. |
 | [getHandle](get-handle.md) | `open fun getHandle(): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>This should be removed. See: https://github.com/mozilla/application-services/issues/1877 |
 | [importLoginsAsync](import-logins-async.md) | `open fun importLoginsAsync(logins: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ServerPassword`](../-server-password.md)`>): Deferred<<ERROR CLASS>>`<br>Bulk-import of a list of [ServerPassword](../-server-password.md). Storage must be empty, otherwise underlying implementation this will throw. |
 | [isLocked](is-locked.md) | `open fun isLocked(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns `true` if the storage is locked, false otherwise. |
@@ -33,6 +35,12 @@ A helper class to wrap a synchronous [LoginsStorage](#) implementation and make 
 | [update](update.md) | `open fun update(login: `[`ServerPassword`](../-server-password.md)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Updates the fields in the provided record. |
 | [wipe](wipe.md) | `open fun wipe(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Delete all login records. These deletions will be synced to the server on the next call to sync. |
 | [wipeLocal](wipe-local.md) | `open fun wipeLocal(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Clear out all local state, bringing us back to the state before the first write (or sync). |
+
+### Inherited Functions
+
+| Name | Summary |
+|---|---|
+| [withUnlocked](../-async-logins-storage/with-unlocked.md) | `open suspend fun <T> withUnlocked(key: () -> Deferred<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>, block: suspend (`[`AsyncLoginsStorage`](../-async-logins-storage/index.md)`) -> `[`T`](../-async-logins-storage/with-unlocked.md#T)`): `[`T`](../-async-logins-storage/with-unlocked.md#T)<br>Run some [block](../-async-logins-storage/with-unlocked.md#mozilla.components.service.sync.logins.AsyncLoginsStorage$withUnlocked(kotlin.Function0((kotlinx.coroutines.Deferred((kotlin.String)))), kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.AsyncLoginsStorage.withUnlocked.T)))/block) which operates over an unlocked instance of [AsyncLoginsStorage](../-async-logins-storage/index.md). Database is locked once [block](../-async-logins-storage/with-unlocked.md#mozilla.components.service.sync.logins.AsyncLoginsStorage$withUnlocked(kotlin.Function0((kotlinx.coroutines.Deferred((kotlin.String)))), kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.AsyncLoginsStorage.withUnlocked.T)))/block) is done. |
 
 ### Companion Object Functions
 

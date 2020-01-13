@@ -2,7 +2,7 @@
 
 # ERROR_OFFLINE
 
-`ERROR_OFFLINE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L84)
+`ERROR_OFFLINE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L106)
 
 ### Inherited Properties
 

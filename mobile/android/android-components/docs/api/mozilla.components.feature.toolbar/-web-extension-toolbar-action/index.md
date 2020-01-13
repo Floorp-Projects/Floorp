@@ -2,7 +2,7 @@
 
 # WebExtensionToolbarAction
 
-`open class WebExtensionToolbarAction : `[`Action`](../../mozilla.components.concept.toolbar/-toolbar/-action/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/WebExtensionToolbarAction.kt#L29)
+`open class WebExtensionToolbarAction : `[`Action`](../../mozilla.components.concept.toolbar/-toolbar/-action/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/toolbar/src/main/java/mozilla/components/feature/toolbar/WebExtensionToolbarAction.kt#L30)
 
 An action button that represents an web extension item to be added to the toolbar.
 

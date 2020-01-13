@@ -2,7 +2,7 @@
 
 # ERROR_CONNECTION_REFUSED
 
-`ERROR_CONNECTION_REFUSED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L72)
+`ERROR_CONNECTION_REFUSED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/errorpages/src/main/java/mozilla/components/browser/errorpages/ErrorPages.kt#L94)
 
 ### Inherited Properties
 

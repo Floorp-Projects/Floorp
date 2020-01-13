@@ -8,6 +8,9 @@
 |---|---|
 | [AsyncLoginsStorage](-async-logins-storage/index.md) | `interface AsyncLoginsStorage : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>An interface equivalent to the LoginsStorage interface, but where operations are asynchronous. |
 | [AsyncLoginsStorageAdapter](-async-logins-storage-adapter/index.md) | `open class AsyncLoginsStorageAdapter<T : LoginsStorage> : `[`AsyncLoginsStorage`](-async-logins-storage/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>A helper class to wrap a synchronous [LoginsStorage](#) implementation and make it asynchronous. |
+| [DefaultLoginValidationDelegate](-default-login-validation-delegate/index.md) | `class DefaultLoginValidationDelegate : `[`LoginValidationDelegate`](../mozilla.components.concept.storage/-login-validation-delegate/index.md)<br>A delegate that will check against [storage](#) to see if a given Login can be persisted, and return information about why it can or cannot. |
+| [GeckoLoginStorageDelegate](-gecko-login-storage-delegate/index.md) | `class GeckoLoginStorageDelegate : `[`LoginStorageDelegate`](../mozilla.components.concept.storage/-login-storage-delegate/index.md)<br>[LoginStorageDelegate](../mozilla.components.concept.storage/-login-storage-delegate/index.md) implementation. |
+| [Operation](-operation/index.md) | `enum class Operation`<br>A type of persistence operation, either 'create' or 'update'. |
 | [SyncableLoginsStore](-syncable-logins-store/index.md) | `data class SyncableLoginsStore : `[`LockableStore`](../mozilla.components.concept.sync/-lockable-store/index.md)<br>Wraps [AsyncLoginsStorage](-async-logins-storage/index.md) instance along with a lazy encryption key. |
 
 ### Type Aliases
@@ -26,8 +29,15 @@
 | [SyncTelemetryPing](-sync-telemetry-ping.md) | `typealias SyncTelemetryPing = SyncTelemetryPing`<br>The telemetry ping from a successful sync |
 | [SyncUnlockInfo](-sync-unlock-info.md) | `typealias SyncUnlockInfo = SyncUnlockInfo`<br>This type contains the set of information required to successfully connect to the server and sync. |
 
+### Extensions for External Classes
+
+| Name | Summary |
+|---|---|
+| [mozilla.appservices.logins.ServerPassword](mozilla.appservices.logins.-server-password/index.md) |  |
+
 ### Functions
 
 | Name | Summary |
 |---|---|
 | [into](into.md) | `fun `[`SyncAuthInfo`](../mozilla.components.concept.sync/-sync-auth-info/index.md)`.into(): `[`SyncUnlockInfo`](-sync-unlock-info.md)<br>Conversion from a generic AuthInfo type into a type 'logins' lib uses at the interface boundary. |
+| [toServerPassword](to-server-password.md) | `fun `[`Login`](../mozilla.components.concept.storage/-login/index.md)`.toServerPassword(): `[`ServerPassword`](-server-password.md)<br>Converts an Android Components [Login](../mozilla.components.concept.storage/-login/index.md) to an Application Services [ServerPassword](-server-password.md) |

@@ -2,4 +2,4 @@
 
 # PASSWORD_ENCRYPTED
 
-`PASSWORD_ENCRYPTED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L171)
+`PASSWORD_ENCRYPTED` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/prompt/PromptRequest.kt#L186)
