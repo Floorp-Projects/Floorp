@@ -6,7 +6,7 @@
 const FIRST_DOC = toDataURL("first");
 const SECOND_DOC = toDataURL("second");
 
-add_task(async function testBringToFrontUpdatesSelectedTab(client) {
+add_task(async function testBringToFrontUpdatesSelectedTab({ client }) {
   const tab = gBrowser.selectedTab;
 
   await loadURL(FIRST_DOC);
@@ -32,7 +32,7 @@ add_task(async function testBringToFrontUpdatesSelectedTab(client) {
   }
 });
 
-add_task(async function testBringToFrontUpdatesFocusedWindow(client) {
+add_task(async function testBringToFrontUpdatesFocusedWindow({ client }) {
   const tab = gBrowser.selectedTab;
 
   await loadURL(FIRST_DOC);

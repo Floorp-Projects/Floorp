@@ -3,7 +3,8 @@
 
 "use strict";
 
-add_task(async function fileRemovedAfterClose({ IO }) {
+add_task(async function fileRemovedAfterClose({ client }) {
+  const { IO } = client;
   const contents = "Lorem ipsum";
   const { handle, path } = await registerFileStream(contents);
 
@@ -11,7 +12,8 @@ add_task(async function fileRemovedAfterClose({ IO }) {
   ok(!(await OS.File.exists(path)), "Discarded the temporary backing storage");
 });
 
-add_task(async function unknownHandle({ IO }) {
+add_task(async function unknownHandle({ client }) {
+  const { IO } = client;
   const handle = "1000000";
 
   try {
@@ -25,7 +27,8 @@ add_task(async function unknownHandle({ IO }) {
   }
 });
 
-add_task(async function invalidHandleTypes({ IO }) {
+add_task(async function invalidHandleTypes({ client }) {
+  const { IO } = client;
   for (const handle of [null, true, 1, [], {}]) {
     try {
       await IO.close({ handle });

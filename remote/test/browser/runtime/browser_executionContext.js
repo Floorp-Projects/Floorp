@@ -10,7 +10,7 @@ const DESTROYED = "Runtime.executionContextDestroyed";
 const CREATED = "Runtime.executionContextCreated";
 const CLEARED = "Runtime.executionContextsCleared";
 
-add_task(async function(client) {
+add_task(async function({ client }) {
   await loadURL(TEST_DOC);
 
   const context1 = await testRuntimeEnable(client);
@@ -21,7 +21,8 @@ add_task(async function(client) {
   await testReload(client, context4);
 });
 
-add_task(async function testRuntimeNotEnabled({ Runtime }) {
+add_task(async function testRuntimeNotEnabled({ client }) {
+  const { Runtime } = client;
   await Runtime.disable();
   const sentinel = "timeout resolved";
   const created = Runtime.executionContextCreated().then(() => {

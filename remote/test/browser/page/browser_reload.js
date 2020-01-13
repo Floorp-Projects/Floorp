@@ -3,7 +3,8 @@
 
 "use strict";
 
-add_task(async function testReload({ Page }) {
+add_task(async function testReload({ client }) {
+  const { Page } = client;
   await loadURL(toDataURL("halløj"));
 
   info("Reloading document");
@@ -17,7 +18,8 @@ add_task(async function testReload({ Page }) {
   });
 });
 
-add_task(async function testReloadIgnoreCache({ Page }) {
+add_task(async function testReloadIgnoreCache({ client }) {
+  const { Page } = client;
   await loadURL(toDataURL("halløj"));
 
   info("Force-reloading document");

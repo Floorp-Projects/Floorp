@@ -5,7 +5,7 @@
 
 // Test for window.prompt(). Check that the dialog is correctly detected and that it can
 // be rejected or accepted, with a custom prompt text.
-add_task(async function(client) {
+add_task(async function({ client }) {
   const { Page } = client;
 
   info("Enable the page domain");

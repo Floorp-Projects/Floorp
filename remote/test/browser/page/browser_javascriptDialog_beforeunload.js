@@ -4,7 +4,7 @@
 "use strict";
 
 // Test beforeunload dialog events.
-add_task(async function(client, _, tab) {
+add_task(async function({ client, tab }) {
   info("Allow to trigger onbeforeunload without user interaction");
   await new Promise(resolve => {
     const options = {

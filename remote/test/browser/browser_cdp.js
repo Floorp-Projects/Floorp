@@ -4,7 +4,7 @@
 "use strict";
 
 // Test very basic CDP features.
-add_task(async function testCDP(client) {
+add_task(async function testCDP({ client }) {
   const { Browser, Log, Page } = client;
 
   ok("Browser" in client, "Browser domain is available");

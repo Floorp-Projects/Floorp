@@ -9,7 +9,8 @@ const DOC = toDataURL(`<script>document.write(navigator.userAgent);</script>`);
 // Run at least one test for setting and resetting the user agent to make sure
 // that the redirect works.
 
-add_task(async function forwardToEmulation({ Network }) {
+add_task(async function forwardToEmulation({ client }) {
+  const { Network } = client;
   const userAgent = "Mozilla/5.0 (rv: 23) Romanesco/42.0";
 
   await loadURL(DOC);

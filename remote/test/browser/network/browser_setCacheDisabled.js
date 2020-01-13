@@ -8,7 +8,8 @@ const { INHIBIT_CACHING, LOAD_BYPASS_CACHE, LOAD_NORMAL } = Ci.nsIRequest;
 const TEST_PAGE =
   "http://example.com/browser/remote/test/browser/network/doc_empty.html";
 
-add_task(async function cacheEnabledAfterDisabled({ Network }) {
+add_task(async function cacheEnabledAfterDisabled({ client }) {
+  const { Network } = client;
   await Network.setCacheDisabled({ cacheDisabled: true });
   await Network.setCacheDisabled({ cacheDisabled: false });
 
@@ -23,7 +24,8 @@ add_task(async function cacheEnabledByDefault({ Network }) {
   await checkPromise;
 });
 
-add_task(async function cacheDisabled({ Network }) {
+add_task(async function cacheDisabled({ client }) {
+  const { Network } = client;
   await Network.setCacheDisabled({ cacheDisabled: true });
 
   const checkPromise = checkLoadFlags(

@@ -11,12 +11,14 @@ const SECURE_HOST = "https://example.com";
 
 const DEFAULT_URL = `${DEFAULT_HOST}${SJS_PATH}`;
 
-add_task(async function noCookiesWhenNoneAreSet({ Network }) {
+add_task(async function noCookiesWhenNoneAreSet({ client }) {
+  const { Network } = client;
   const { cookies } = await Network.getCookies({ urls: [DEFAULT_HOST] });
   is(cookies.length, 0, "No cookies have been found");
 });
 
-add_task(async function noCookiesForPristineContext({ Network }) {
+add_task(async function noCookiesForPristineContext({ client }) {
+  const { Network } = client;
   await loadURL(DEFAULT_URL);
 
   try {
@@ -27,7 +29,8 @@ add_task(async function noCookiesForPristineContext({ Network }) {
   }
 });
 
-add_task(async function allCookiesFromHostWithPort({ Network }) {
+add_task(async function allCookiesFromHostWithPort({ client }) {
+  const { Network } = client;
   const PORT_URL = `${DEFAULT_HOST}:8000${SJS_PATH}?name=id&value=1`;
   await loadURL(PORT_URL);
 
@@ -45,7 +48,8 @@ add_task(async function allCookiesFromHostWithPort({ Network }) {
   }
 });
 
-add_task(async function allCookiesFromCurrentURL({ Network }) {
+add_task(async function allCookiesFromCurrentURL({ client }) {
+  const { Network } = client;
   await loadURL(`${ALT_HOST}${SJS_PATH}?name=user&value=password`);
   await loadURL(`${DEFAULT_URL}?name=foo&value=bar`);
   await loadURL(`${DEFAULT_URL}?name=user&value=password`);
@@ -64,7 +68,8 @@ add_task(async function allCookiesFromCurrentURL({ Network }) {
   }
 });
 
-add_task(async function secure({ Network }) {
+add_task(async function secure({ client }) {
+  const { Network } = client;
   await loadURL(`${SECURE_HOST}${SJS_PATH}?name=foo&value=bar&secure`);
 
   const cookie = {
@@ -89,7 +94,8 @@ add_task(async function secure({ Network }) {
   }
 });
 
-add_task(async function expiry({ Network }) {
+add_task(async function expiry({ client }) {
+  const { Network } = client;
   const date = new Date();
   date.setDate(date.getDate() + 3);
 
@@ -112,7 +118,8 @@ add_task(async function expiry({ Network }) {
   }
 });
 
-add_task(async function session({ Network }) {
+add_task(async function session({ client }) {
+  const { Network } = client;
   await loadURL(`${DEFAULT_URL}?name=foo&value=bar`);
 
   const cookie = {
@@ -131,7 +138,8 @@ add_task(async function session({ Network }) {
   }
 });
 
-add_task(async function path({ Network }) {
+add_task(async function path({ client }) {
+  const { Network } = client;
   const PATH = "/browser/remote/test/browser/";
   const PARENT_PATH = "/browser/remote/test/";
 
@@ -170,7 +178,8 @@ add_task(async function path({ Network }) {
   }
 });
 
-add_task(async function httpOnly({ Network }) {
+add_task(async function httpOnly({ client }) {
+  const { Network } = client;
   await loadURL(`${DEFAULT_URL}?name=foo&value=bar&httpOnly`);
 
   const cookie = {
@@ -188,7 +197,8 @@ add_task(async function httpOnly({ Network }) {
   }
 });
 
-add_task(async function sameSite({ Network }) {
+add_task(async function sameSite({ client }) {
+  const { Network } = client;
   for (const value of ["Lax", "Strict"]) {
     console.log(`Test cookie with sameSite=${value}`);
     await loadURL(`${DEFAULT_URL}?name=foo&value=bar&sameSite=${value}`);
