@@ -249,9 +249,6 @@ var gImageHash = {};
 var gStrings = {};
 var gBundle;
 
-const PERMISSION_CONTRACTID = "@mozilla.org/permissionmanager;1";
-const PREFERENCES_CONTRACTID = "@mozilla.org/preferences-service;1";
-
 // a number of services I'll need later
 // the cache services
 const nsICacheStorageService = Ci.nsICacheStorageService;
@@ -267,7 +264,6 @@ var loadContextInfo = Services.loadContextInfo.fromLoadContext(
 var diskStorage = cacheService.diskCacheStorage(loadContextInfo, false);
 
 const nsICookiePermission = Ci.nsICookiePermission;
-const nsIPermissionManager = Ci.nsIPermissionManager;
 
 const nsICertificateDialogs = Ci.nsICertificateDialogs;
 const CERTIFICATEDIALOGS_CONTRACTID = "@mozilla.org/nsCertificateDialogs;1";
@@ -450,7 +446,6 @@ function resetPageInfo(args) {
   /* Reset Media tab */
   var mediaTab = document.getElementById("mediaTab");
   if (!mediaTab.hidden) {
-    Services.obs.removeObserver(imagePermissionObserver, "perm-changed");
     mediaTab.hidden = true;
   }
   gImageView.clear();
@@ -466,11 +461,6 @@ function resetPageInfo(args) {
 }
 
 function onUnloadPageInfo() {
-  // Remove the observer, only if there is at least 1 image.
-  if (!document.getElementById("mediaTab").hidden) {
-    Services.obs.removeObserver(imagePermissionObserver, "perm-changed");
-  }
-
   /* Call registered overlay unload functions */
   onUnloadRegistry.forEach(function(func) {
     func();
@@ -645,10 +635,8 @@ async function addImage(imageViewRow) {
       }
     });
 
-    // Add the observer, only once.
     if (gImageView.data.length == 1) {
       document.getElementById("mediaTab").hidden = false;
-      Services.obs.addObserver(imagePermissionObserver, "perm-changed");
     }
   } else {
     var i = gImageHash[url][type][alt];
@@ -858,28 +846,6 @@ function saveMedia() {
         }
       }
     });
-  }
-}
-
-function onBlockImage() {
-  var permissionManager = Cc[PERMISSION_CONTRACTID].getService(
-    nsIPermissionManager
-  );
-
-  var checkbox = document.getElementById("blockImage");
-  var uri = Services.io.newURI(document.getElementById("imageurltext").value);
-  let principal = Services.scriptSecurityManager.createContentPrincipal(
-    uri,
-    gDocInfo.principal.originAttributes
-  );
-  if (checkbox.checked) {
-    permissionManager.addFromPrincipal(
-      principal,
-      "image",
-      nsIPermissionManager.DENY_ACTION
-    );
-  } else {
-    permissionManager.removeFromPrincipal(principal, "image");
   }
 }
 
@@ -1100,67 +1066,10 @@ function makePreview(row) {
       }
     }
 
-    if (Services.prefs.getBoolPref("extensions.contentblocker.enabled")) {
-      makeBlockImage(url);
-    }
-
     imageContainer.removeChild(oldImage);
     imageContainer.appendChild(newImage);
   });
 }
-
-function makeBlockImage(url) {
-  var permissionManager = Cc[PERMISSION_CONTRACTID].getService(
-    nsIPermissionManager
-  );
-
-  var checkbox = document.getElementById("blockImage");
-  var imagePref = Services.prefs.getIntPref("permissions.default.image");
-  if (!/^https?:/.test(url) || imagePref == 2) {
-    // We can't block the images from this host because either is is not
-    // for http(s) or we don't load images at all
-    checkbox.hidden = true;
-  } else {
-    var uri = Services.io.newURI(url);
-    if (uri.host) {
-      checkbox.hidden = false;
-      document.l10n.setAttributes(checkbox, "media-block-image", {
-        website: uri.host,
-      });
-      let principal = Services.scriptSecurityManager.createContentPrincipal(
-        uri,
-        gDocInfo.principal.originAttributes
-      );
-      let perm = permissionManager.testPermissionFromPrincipal(
-        principal,
-        "image"
-      );
-      checkbox.checked = perm == nsIPermissionManager.DENY_ACTION;
-    } else {
-      checkbox.hidden = true;
-    }
-  }
-}
-
-var imagePermissionObserver = {
-  observe(aSubject, aTopic, aData) {
-    if (document.getElementById("mediaPreviewBox").collapsed) {
-      return;
-    }
-
-    if (aTopic == "perm-changed") {
-      var permission = aSubject.QueryInterface(Ci.nsIPermission);
-      if (permission.type == "image") {
-        var imageTree = document.getElementById("imagetree");
-        var row = getSelectedRow(imageTree);
-        var url = gImageView.data[row][COL_IMAGE_ADDRESS];
-        if (permission.matchesURI(Services.io.newURI(url), true)) {
-          makeBlockImage(url);
-        }
-      }
-    }
-  },
-};
 
 function getContentTypeFromHeaders(cacheEntryDescriptor) {
   if (!cacheEntryDescriptor) {
