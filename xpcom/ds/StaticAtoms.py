@@ -591,6 +591,7 @@ STATIC_ATOMS = [
     Atom("listing", "listing"),
     Atom("listitem", "listitem"),
     Atom("load", "load"),
+    Atom("loading", "loading"),
     Atom("triggeringprincipal", "triggeringprincipal"),
     Atom("localedir", "localedir"),
     Atom("localName", "local-name"),
