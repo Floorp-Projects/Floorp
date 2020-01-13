@@ -145,6 +145,9 @@ Preferences.addAll([
   // Fonts
   { id: "font.language.group", type: "wstring" },
 
+  // Zoom
+  { id: "browser.zoom.full", type: "bool", inverted: true },
+
   // Languages
   { id: "browser.translation.detectLanguage", type: "bool" },
 
