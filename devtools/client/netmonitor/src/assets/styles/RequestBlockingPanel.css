@@ -26,12 +26,16 @@
   margin: 0;
 }
 
-.request-blocking-panel .request-blocking-label {
+.request-blocking-label {
   flex: 1 1 auto;
   display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.request-blocking-editable-label {
+  cursor: text
 }
 
 /* The "Enable Blocking Requests" bar */
