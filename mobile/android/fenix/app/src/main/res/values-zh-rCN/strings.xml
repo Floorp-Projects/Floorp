@@ -28,7 +28,7 @@
     <string name="private_browsing_title">您已进入隐私浏览模式</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description">%1$s 在您退出应用或关闭所有隐私标签页后，将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站或电信运营商匿名，但还是可以更简单地让使用此设备的人无法得知您在网上的活动。</string>
+    <string name="private_browsing_placeholder_description">在您退出本应用或关闭所有隐私标签页后，%1$s 将清除您的搜索记录与浏览历史。虽然这样做不会使您对网站和网络提供方匿名，但还是可以帮助您避免使用此设备的其他人获知您在网上的活动。</string>
     <string name="private_browsing_common_myths">隐私浏览功能的常见误解</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">删除浏览会话</string>
@@ -38,6 +38,9 @@
     <string name="cfr_message">添加快捷方式，即可由主屏幕直接打开隐私标签页。</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">添加快捷方式</string>
+
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">不了，谢谢</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -107,6 +110,16 @@
     <string name="browser_menu_open_app_link">在应用中打开</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">外观</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">选择的语言</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">搜索</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">跟随设备语言</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">搜索语言</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
@@ -785,7 +798,7 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookie</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">您将退出登录大多数网站</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">您在绝大多数网站的登录状态将被清除</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">缓存的图像和文件</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
@@ -930,7 +943,7 @@
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">平衡保护和性能。</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_2">页面将正常加载，但拦截的跟踪器会减少。</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_2">页面将正常加载，但拦截的跟踪器少一些。</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">标准跟踪保护会拦截的内容</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -938,11 +951,11 @@
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">严格（默认）</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_default_description">更强大的跟踪保护与更快的性能，但可能导致某些网站异常。</string>
+    <string name="preference_enhanced_tracking_protection_strict_default_description">更强的跟踪保护与更快的性能，但可导致某些网站的运作不正常。</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">严格（推荐）</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description">更强大的保护，但可能导致某些网站异常。</string>
+    <string name="preference_enhanced_tracking_protection_strict_description">更强的保护，但可能导致某些网站或内容异常。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">严格跟踪保护会拦截的内容</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -960,7 +973,7 @@
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">加密货币挖矿程序</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cryptominers_description">防止恶意脚本访问您的设备用以挖掘数字货币。</string>
+    <string name="etp_cryptominers_description">防止恶意脚本利用您的设备来挖取数字货币。</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">数字指纹跟踪程序</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
@@ -1124,7 +1137,7 @@
     <string name="search_engine_delete">删除</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label">自定义</string>
+    <string name="search_add_custom_engine_label_other">其他</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">名称</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->

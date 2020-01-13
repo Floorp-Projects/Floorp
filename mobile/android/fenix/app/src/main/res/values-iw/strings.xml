@@ -26,7 +26,7 @@
 
     <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
     <!-- Text for the main message -->
-    <string name="cfr_message">הוספת קיצור דרך לפתיחת לשוניות פרטיות ממסך הבית.</string>
+    <string name="cfr_message">ניתן להוסיף קיצור דרך לפתיחת לשוניות פרטיות ממסך הבית.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">הוספת קיצור דרך</string>
     <!-- Text for the negative button -->
@@ -95,6 +95,13 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">תצוגה</string>
 
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">חיפוש</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">שימוש בשפת המכשיר</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">חיפוש שפה</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">סריקה</string>
@@ -124,6 +131,8 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">הגדרות</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">הגדרות בסיסיות</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">על אודות</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -175,6 +184,8 @@
     <string name="preferences_language">שפה</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">בחירות נתונים</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">איסוף נתונים</string>
     <!-- Preference linking to the privacy notice -->
     <string name="preferences_privacy_link">הצהרת פרטיות</string>
     <!-- Preference category for developer tools -->
@@ -208,6 +219,8 @@
     <string name="preferences_sync_bookmarks">סימניות</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins">כניסות</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">התנתקות</string>
     <!-- Preference displays and allows changing current FxA device name -->
     <string name="preferences_sync_device_name">שם המכשיר</string>
     <!-- Text shown when user enters empty device name -->
@@ -243,6 +256,8 @@
     <string name="preferences_tracking_protection_exceptions_description">הגנת מעקב כבויה עבור האתרים האלו</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">הפעלה עבור כל האתרים</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">חריגות מאפשרות לך להשבית הגנת מעקב עבור אתרים שנבחרו.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">מידע נוסף</string>
 
@@ -266,6 +281,9 @@
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">הסרת חשבון</string>
 
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[יש לבקר באתר <b>firefox.com/pair</b> ב־Firefox במחשב שלך כדי לקבל את קוד ה־QR שלך.]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">פתיחת מצלמה</string>
     <!-- Button to cancel pairing -->
@@ -470,8 +488,17 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">כבויה</string>
 
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">וידאו ושמע חסומים</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">וידאו ושמע מאופשרים</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">כבוי</string>
+
     <!-- Collections header on home fragment -->
     <string name="collections_header">אוספים</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">תפריט אוסף</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">אין אוספים</string>
     <!-- No Open Tabs Message Description -->
@@ -504,6 +531,9 @@
     <string name="create_collection_close">סגירה</string>
     <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
     <string name="create_collection_save">שמירה</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">אוסף %d</string>
 
     <!-- Share -->
     <!-- Share screen header -->
@@ -581,11 +611,16 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">הקישור הועתק</string>
 
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">הגדלה או הקטנה של טקסט באתרים</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">גודל הגופן</string>
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size">גודל גופן אוטומטי</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">גודל הגופן יותאם להגדרות ה־Android שלך. יש להשבית כדי לנהל את גודל הגופן כאן.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">מחיקת נתוני גלישה</string>
@@ -649,7 +684,7 @@
     <string name="onboarding_theme_picker_header">בחירת ערכת הנושא שלך</string>
     <!-- text for the tracking protection card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description">%s חוסם רכיבי מעקב של פרסומות שעוקבים אחריך ברשת.
+    <string name="onboarding_tracking_protection_description">‏%s חוסם רכיבי מעקב של פרסומות שעוקבים אחריך ברשת.
     </string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">גלישה בפרטיות</string>
@@ -675,8 +710,14 @@
     <string name="sync_sent_tab_error_snackbar">לא ניתן לשלוח</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">ניסיון חוזר</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">סריקת הקוד</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[במחשב שלך יש לפתוח את Firefox ולעבור לכתובת <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">מוכן לסריקה</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">התחברות באמצעות המצלמה שלך</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">שימוש בדוא״ל במקום</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
@@ -697,6 +738,8 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">מידע נוסף</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">מאוזן בין הגנה לביצועים.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">הגנת מעקב חזקה יותר וביצועים מהירים יותר, אך מספר אתרים עשויים שלא לעבוד כראוי.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">הגנה חזקה יותר, אך עשויה לשבש פעילות של אתרים או תוכן.</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
@@ -833,9 +876,13 @@
     <string name="search_engine_delete">מחיקה</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label">מותאם אישית</string>
+    <string name="search_add_custom_engine_label_other">אחר</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">שם</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">מחרוזת חיפוש לשימוש</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">יש להחליף את השאילתה עם ״%s״. לדוגמה:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">מידע נוסף</string>
 
