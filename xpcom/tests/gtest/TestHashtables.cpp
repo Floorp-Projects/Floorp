@@ -20,6 +20,8 @@
 
 #include <numeric>
 
+using mozilla::UniquePtr;
+
 namespace TestHashtables {
 
 class TestUniChar  // for nsClassHashtable
@@ -425,7 +427,7 @@ TEST(Hashtables, ClassHashtable_RangeBasedFor)
       ASSERT_EQ(1u,
                 entities.erase(EntityNode{str, entity.GetData()->GetChar()}));
 
-      entity.SetData(nsAutoPtr<TestUniChar>{});
+      entity.SetData(UniquePtr<TestUniChar>{});
       ASSERT_EQ(nullptr, entity.GetData());
     }
     ASSERT_TRUE(entities.empty());
@@ -594,7 +596,7 @@ TEST(Hashtables, ClassHashtable_LookupForAdd)
 
   for (auto& entity : gEntities) {
     auto entry = EntToUniClass.LookupForAdd(nsDependentCString(entity.mStr));
-    const TestUniChar* val = entry.OrInsert([]() { return nullptr; });
+    const TestUniChar* val = entry.OrInsert([]() { return nullptr; }).get();
     ASSERT_FALSE(entry);
     ASSERT_TRUE(val == nullptr);
     ASSERT_TRUE(entry.Data() == nullptr);
@@ -644,7 +646,7 @@ TEST(Hashtables, ClassHashtable_LookupForAdd)
   // Remove existing entries via OrRemove.
   for (auto& entity : gEntities) {
     auto entry = EntToUniClass.LookupForAdd(nsDependentCString(entity.mStr));
-    const TestUniChar* val = entry.OrInsert([]() { return nullptr; });
+    const TestUniChar* val = entry.OrInsert([]() { return nullptr; }).get();
     ASSERT_FALSE(entry);
     ASSERT_TRUE(val == nullptr);
     ASSERT_TRUE(entry.Data() == nullptr);
