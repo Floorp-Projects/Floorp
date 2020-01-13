@@ -682,6 +682,14 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   DoesWindowSupportProtectedMedia();
 #endif
 
+  // Notify the content blocking event in the parent process. This sends an IPC
+  // message to the BrowserParent in the parent. The BrowserParent will find the
+  // top-level WindowGlobalParent and notify the event from it.
+  void NotifyContentBlockingEvent(
+      uint32_t aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aHintURI,
+      const nsTArray<nsCString>& aTrackingFullHashes,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason);
+
  protected:
   virtual ~BrowserChild();
 

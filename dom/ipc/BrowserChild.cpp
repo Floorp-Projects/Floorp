@@ -4021,6 +4021,25 @@ BrowserChild::DoesWindowSupportProtectedMedia() {
 }
 #endif
 
+void BrowserChild::NotifyContentBlockingEvent(
+    uint32_t aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aHintURI,
+    const nsTArray<nsCString>& aTrackingFullHashes,
+    const Maybe<mozilla::AntiTrackingCommon::StorageAccessGrantedReason>&
+        aReason) {
+  if (!IPCOpen()) {
+    return;
+  }
+
+  Maybe<WebProgressData> webProgressData;
+  RequestData requestData;
+  nsresult rv = PrepareProgressListenerData(nullptr, aChannel, webProgressData,
+                                            requestData);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  Unused << SendNotifyContentBlockingEvent(
+      aEvent, requestData, aBlocked, aHintURI, aTrackingFullHashes, aReason);
+}
+
 BrowserChildMessageManager::BrowserChildMessageManager(
     BrowserChild* aBrowserChild)
     : ContentFrameMessageManager(new nsFrameMessageManager(aBrowserChild)),
