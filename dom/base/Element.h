@@ -1919,6 +1919,14 @@ class Element : public FragmentOrElement {
   nsresult CopyInnerTo(Element* aDest,
                        ReparseAttributes = ReparseAttributes::Yes);
 
+  /**
+   * Some event handler content attributes have a different name (e.g. different
+   * case) from the actual event name.  This function takes an event handler
+   * content attribute name and returns the corresponding event name, to be used
+   * for adding the actual event listener.
+   */
+  static nsAtom* GetEventNameForAttr(nsAtom* aAttr);
+
  private:
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   void AssertInvariantsOnNodeInfoChange();

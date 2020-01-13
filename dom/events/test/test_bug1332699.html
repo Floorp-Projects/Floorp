@@ -22,7 +22,7 @@ window.onload = function () {
   is(getComputedStyle($test).color, 'rgb(255, 0, 0)',
      'color should be red before transition');
   let numEvents = 0;
-  $test.addEventListener('webkittransitionend', function() {
+  $test.addEventListener('webkitTransitionEnd', function() {
     ++numEvents;
     if (numEvents == 1) {
       is(getComputedStyle($test).color, 'rgb(0, 128, 0)',
