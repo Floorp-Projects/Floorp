@@ -223,76 +223,6 @@ decorate_task(
 );
 
 decorate_task(
-  withPrefEnv({
-    set: [["features.normandy-remote-settings.enabled", false]],
-  }),
-  withStub(Uptake, "reportRunner"),
-  withStub(NormandyApi, "fetchRecipes"),
-  withStub(ActionsManager.prototype, "runRecipe"),
-  withStub(ActionsManager.prototype, "finalize"),
-  withStub(Uptake, "reportRecipe"),
-  async function testRun(
-    reportRunnerStub,
-    fetchRecipesStub,
-    runRecipeStub,
-    finalizeStub,
-    reportRecipeStub
-  ) {
-    const runRecipeReturn = Promise.resolve();
-    const runRecipeReturnThen = sinon.spy(runRecipeReturn, "then");
-    runRecipeStub.returns(runRecipeReturn);
-
-    const matchRecipe = {
-      id: "match",
-      action: "matchAction",
-      filter_expression: "true",
-    };
-    const noMatchRecipe = {
-      id: "noMatch",
-      action: "noMatchAction",
-      filter_expression: "false",
-    };
-    const missingRecipe = {
-      id: "missing",
-      action: "missingAction",
-      filter_expression: "true",
-    };
-    fetchRecipesStub.callsFake(async () => [
-      matchRecipe,
-      noMatchRecipe,
-      missingRecipe,
-    ]);
-
-    await RecipeRunner.run();
-
-    Assert.deepEqual(
-      runRecipeStub.args,
-      [[matchRecipe], [missingRecipe]],
-      "recipe with matching filters should be executed"
-    );
-    ok(
-      runRecipeReturnThen.called,
-      "the run method should be used asyncronously"
-    );
-
-    // Test uptake reporting
-    Assert.deepEqual(
-      reportRunnerStub.args,
-      [[Uptake.RUNNER_SUCCESS]],
-      "RecipeRunner should report uptake telemetry"
-    );
-    Assert.deepEqual(
-      reportRecipeStub.args,
-      [[noMatchRecipe, Uptake.RECIPE_DIDNT_MATCH_FILTER]],
-      "Filtered-out recipes should be reported"
-    );
-  }
-);
-
-decorate_task(
-  withPrefEnv({
-    set: [["features.normandy-remote-settings.enabled", true]],
-  }),
   withStub(RecipeRunner, "getCapabilities"),
   async function test_run_includesCapabilities(getCapabilitiesStub) {
     const rsCollection = await RecipeRunner._remoteSettingsClientForTesting.openCollection();
@@ -313,17 +243,12 @@ decorate_task(
 );
 
 decorate_task(
-  withPrefEnv({
-    set: [["features.normandy-remote-settings.enabled", true]],
-  }),
   withStub(NormandyApi, "verifyObjectSignature"),
-  withSpy(NormandyApi, "fetchRecipes"),
   withStub(ActionsManager.prototype, "runRecipe"),
   withStub(ActionsManager.prototype, "finalize"),
   withStub(Uptake, "reportRecipe"),
   async function testReadFromRemoteSettings(
     verifyObjectSignatureStub,
-    fetchRecipesSpy,
     runRecipeStub,
     finalizeStub,
     reportRecipeStub
@@ -379,15 +304,10 @@ decorate_task(
       [[noMatchRecipe, Uptake.RECIPE_DIDNT_MATCH_FILTER]],
       "Filtered-out recipes should be reported"
     );
-
-    ok(fetchRecipesSpy.notCalled, "fetchRecipes should not be called");
   }
 );
 
 decorate_task(
-  withPrefEnv({
-    set: [["features.normandy-remote-settings.enabled", true]],
-  }),
   withStub(NormandyApi, "verifyObjectSignature"),
   withStub(ActionsManager.prototype, "runRecipe"),
   withStub(RecipeRunner, "getCapabilities"),
@@ -433,9 +353,6 @@ decorate_task(
 );
 
 decorate_task(
-  withPrefEnv({
-    set: [["features.normandy-remote-settings.enabled", true]],
-  }),
   withStub(ActionsManager.prototype, "runRecipe"),
   withStub(NormandyApi, "get"),
   withStub(Uptake, "reportRunner"),
@@ -474,40 +391,6 @@ decorate_task(
       [[Uptake.RUNNER_INVALID_SIGNATURE]],
       "RecipeRunner should report uptake telemetry"
     );
-  }
-);
-
-decorate_task(
-  withPrefEnv({
-    set: [["features.normandy-remote-settings.enabled", false]],
-  }),
-  withMockNormandyApi,
-  async function testRunFetchFail(mockApi) {
-    const reportRunner = sinon.stub(Uptake, "reportRunner");
-    mockApi.fetchRecipes.rejects(new Error("Signature not valid"));
-
-    await RecipeRunner.run();
-
-    // If the recipe fetch failed, report a server error
-    sinon.assert.calledWith(reportRunner, Uptake.RUNNER_SERVER_ERROR);
-
-    // Test that network errors report a specific uptake error
-    reportRunner.reset();
-    mockApi.fetchRecipes.rejects(
-      new Error("NetworkError: The system was down")
-    );
-    await RecipeRunner.run();
-    sinon.assert.calledWith(reportRunner, Uptake.RUNNER_NETWORK_ERROR);
-
-    // Test that signature issues report a specific uptake error
-    reportRunner.reset();
-    mockApi.fetchRecipes.rejects(
-      new NormandyApi.InvalidSignatureError("Signature fail")
-    );
-    await RecipeRunner.run();
-    sinon.assert.calledWith(reportRunner, Uptake.RUNNER_INVALID_SIGNATURE);
-
-    reportRunner.restore();
   }
 );
 
@@ -715,72 +598,45 @@ decorate_task(
 
 decorate_task(
   withPrefEnv({
-    set: [
-      ["features.normandy-remote-settings.enabled", false],
-      ["app.normandy.onsync_skew_sec", 0],
-    ],
+    set: [["app.normandy.onsync_skew_sec", 0]],
   }),
   withStub(RecipeRunner, "run"),
   async function testRunOnSyncRemoteSettings(runStub) {
     const rsClient = RecipeRunner._remoteSettingsClientForTesting;
+    await RecipeRunner.init();
+    ok(
+      RecipeRunner._alreadySetUpRemoteSettings,
+      "remote settings should be set up in the runner"
+    );
 
-    // Runner disabled + pref off.
+    // Runner disabled
     RecipeRunner.disable();
     await rsClient.emit("sync", {});
     ok(!runStub.called, "run() should not be called if disabled");
     runStub.reset();
 
-    // Runner enabled + pref off.
+    // Runner enabled
     RecipeRunner.enable();
     await rsClient.emit("sync", {});
-    ok(!runStub.called, "run() should not be called if pref not set");
+    ok(runStub.called, "run() should be called if enabled");
     runStub.reset();
 
-    await SpecialPowers.pushPrefEnv({
-      set: [["features.normandy-remote-settings.enabled", true]],
-    });
-
-    // Runner enabled + pref on.
-    await rsClient.emit("sync", {});
-    ok(runStub.called, "run() should be called if pref is set");
-    runStub.reset();
-
-    // Runner disabled + pref on.
+    // Runner disabled
     RecipeRunner.disable();
     await rsClient.emit("sync", {});
-    ok(!runStub.called, "run() should not be called if disabled with pref set");
+    ok(!runStub.called, "run() should not be called if disabled");
     runStub.reset();
 
-    // Runner re-enabled + pref on.
+    // Runner re-enabled
     RecipeRunner.enable();
     await rsClient.emit("sync", {});
-    ok(
-      runStub.called,
-      "run() should be called at most once if runner is re-enabled"
-    );
-    runStub.reset();
-
-    await SpecialPowers.pushPrefEnv({
-      set: [["features.normandy-remote-settings.enabled", false]],
-    });
-
-    // Runner enabled + pref off.
-    await rsClient.emit("sync", {});
-    ok(!runStub.called, "run() should not be called if pref is unset");
-    runStub.reset();
-
-    // Runner disabled + pref off.
-    RecipeRunner.disable();
-    await rsClient.emit("sync", {});
-    ok(!runStub.called, "run() should still not be called if disabled");
-    RecipeRunner.enable();
+    ok(runStub.called, "run() should be called if runner is re-enabled");
   }
 );
 
 decorate_task(
   withPrefEnv({
     set: [
-      ["features.normandy-remote-settings.enabled", true],
       ["app.normandy.onsync_skew_sec", 600], // 10 minutes, much longer than the test will take to run
     ],
   }),
@@ -816,7 +672,6 @@ decorate_task(
 decorate_task(
   withPrefEnv({
     set: [
-      ["features.normandy-remote-settings.enabled", true],
       // Enable update timer logs.
       ["app.update.log", true],
       ["app.normandy.onsync_skew_sec", 0],
@@ -849,6 +704,8 @@ decorate_task(
     RecipeRunner.unregisterTimer();
     RecipeRunner.registerTimer();
 
+    is(loadRecipesStub.callCount, 0, "run() shouldn't have run yet");
+
     // Simulate timer notification.
     const service = Cc["@mozilla.org/updates/timer-manager;1"].getService(
       Ci.nsITimerCallback
@@ -865,9 +722,13 @@ decorate_task(
     await endPromise; // will timeout if run() not called.
     const timerLatency = Date.now() - startTime;
 
+    is(loadRecipesStub.callCount, 1, "run() should be called from timer");
+
     // Run once from sync event.
     const rsClient = RecipeRunner._remoteSettingsClientForTesting;
     await rsClient.emit("sync", {}); // waits for listeners to run.
+
+    is(loadRecipesStub.callCount, 2, "run() should be called from sync");
 
     // Run timer again.
     service.notify(newTimer());
@@ -875,11 +736,7 @@ decorate_task(
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     await new Promise(resolve => setTimeout(resolve, timerLatency * 10));
 
-    is(
-      loadRecipesStub.callCount,
-      2,
-      "run() does not run again from timer after sync"
-    );
+    is(loadRecipesStub.callCount, 2, "run() does not run again from timer");
   }
 );
 

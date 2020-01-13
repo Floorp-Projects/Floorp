@@ -208,6 +208,12 @@ var whitelist = [
     isFromDevTools: true,
   },
   { file: "chrome://devtools/skin/images/next.svg", isFromDevTools: true },
+  // Feature gates are available but not used yet - Bug 1479127
+  { file: "resource://featuregates/FeatureGate.jsm" },
+  {
+    file: "resource://featuregates/FeatureGateImplementation.jsm",
+  },
+  { file: "resource://featuregates/feature_definitions.json" },
   // Bug 1526672
   {
     file: "resource://app/localization/en-US/browser/touchbar/touchbar.ftl",
