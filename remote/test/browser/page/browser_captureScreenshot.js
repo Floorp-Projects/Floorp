@@ -3,7 +3,8 @@
 
 "use strict";
 
-add_task(async function documentSmallerThanViewport({ Page }) {
+add_task(async function documentSmallerThanViewport({ client }) {
+  const { Page } = client;
   await loadURL(toDataURL("<div>Hello world"));
 
   info("Check that captureScreenshot() captures the viewport by default");
@@ -23,7 +24,8 @@ add_task(async function documentSmallerThanViewport({ Page }) {
   );
 });
 
-add_task(async function documentLargerThanViewport({ Page }) {
+add_task(async function documentLargerThanViewport({ client }) {
+  const { Page } = client;
   await loadURL(toDataURL("<div style='margin: 100vh 100vw'>Hello world"));
 
   info("Check that captureScreenshot() captures the viewport by default");
@@ -48,7 +50,8 @@ add_task(async function documentLargerThanViewport({ Page }) {
   );
 });
 
-add_task(async function invalidFormat({ Page }) {
+add_task(async function invalidFormat({ client }) {
+  const { Page } = client;
   await loadURL(toDataURL("<div>Hello world"));
 
   let errorThrown = false;
@@ -60,7 +63,8 @@ add_task(async function invalidFormat({ Page }) {
   ok(errorThrown, "captureScreenshot raised error for invalid image format");
 });
 
-add_task(async function asJPEGFormat({ Page }) {
+add_task(async function asJPEGFormat({ client }) {
+  const { Page } = client;
   await loadURL(toDataURL("<div>Hello world"));
 
   info("Check that captureScreenshot() captures as JPEG format");
@@ -76,7 +80,8 @@ add_task(async function asJPEGFormat({ Page }) {
   is(height, (viewport.height - viewport.y) * scale);
 });
 
-add_task(async function asJPEGFormatAndQuality({ Page }) {
+add_task(async function asJPEGFormatAndQuality({ client }) {
+  const { Page } = client;
   await loadURL(toDataURL("<div>Hello world"));
 
   info("Check that captureScreenshot() captures as JPEG format");

@@ -3,7 +3,8 @@
 
 "use strict";
 
-add_task(async function seekByOffsets({ IO }) {
+add_task(async function seekByOffsets({ client }) {
+  const { IO } = client;
   const contents = "Lorem ipsum";
   const { handle } = await registerFileStream(contents);
 
@@ -19,7 +20,8 @@ add_task(async function seekByOffsets({ IO }) {
   }
 });
 
-add_task(async function remembersOffsetAfterRead({ IO }) {
+add_task(async function remembersOffsetAfterRead({ client }) {
+  const { IO } = client;
   const contents = "Lorem ipsum";
   const { handle } = await registerFileStream(contents);
 
@@ -47,7 +49,8 @@ add_task(async function remembersOffsetAfterRead({ IO }) {
   } while (expectedOffset < contents.length);
 });
 
-add_task(async function readBySize({ IO }) {
+add_task(async function readBySize({ client }) {
+  const { IO } = client;
   const contents = "Lorem ipsum";
   const { handle } = await registerFileStream(contents);
 
@@ -67,7 +70,8 @@ add_task(async function readBySize({ IO }) {
   }
 });
 
-add_task(async function readAfterClose({ IO }) {
+add_task(async function readAfterClose({ client }) {
+  const { IO } = client;
   const contents = "Lorem ipsum";
   const { handle } = await registerFileStream(contents);
 
@@ -84,7 +88,8 @@ add_task(async function readAfterClose({ IO }) {
   }
 });
 
-add_task(async function unknownHandle({ IO }) {
+add_task(async function unknownHandle({ client }) {
+  const { IO } = client;
   const handle = "1000000";
 
   try {
@@ -98,7 +103,8 @@ add_task(async function unknownHandle({ IO }) {
   }
 });
 
-add_task(async function invalidHandleTypes({ IO }) {
+add_task(async function invalidHandleTypes({ client }) {
+  const { IO } = client;
   for (const handle of [null, true, 1, [], {}]) {
     try {
       await IO.read({ handle });
@@ -112,7 +118,8 @@ add_task(async function invalidHandleTypes({ IO }) {
   }
 });
 
-add_task(async function invalidOffsetTypes({ IO }) {
+add_task(async function invalidOffsetTypes({ client }) {
+  const { IO } = client;
   const contents = "Lorem ipsum";
   const { handle } = await registerFileStream(contents);
 
@@ -129,7 +136,8 @@ add_task(async function invalidOffsetTypes({ IO }) {
   }
 });
 
-add_task(async function invalidSizeTypes({ IO }) {
+add_task(async function invalidSizeTypes({ client }) {
+  const { IO } = client;
   const contents = "Lorem ipsum";
   const { handle } = await registerFileStream(contents);
 

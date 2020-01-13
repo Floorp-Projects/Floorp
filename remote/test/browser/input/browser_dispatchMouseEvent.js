@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function testDispatchMouseEvent(client) {
+add_task(async function testDispatchMouseEvent({ client }) {
   await loadURL(toDataURL("<div>foo</div>"));
 
   const { Input } = client;

@@ -69,7 +69,7 @@ three arguments `client`, `CDP`, and `tab`:
 
 This is what it looks like all put together:
 
-	add_task(async function testName(client, CDP, tab) {
+	add_task(async function testName({client, CDP, tab}) {
 	  // test tab is implicitly created for us
 	  info("Current URL: " + tab.linkedBrowser.currentURI.spec);
 
@@ -90,7 +90,7 @@ This is what it looks like all put together:
 You can control the tab creation behaviour with the `createTab`
 option to `add_task(taskFunction, options)`:
 
-	add_task(async function testName(client) {
+	add_task(async function testName({client}) {
 	  // tab is not implicitly created
 	}, { createTab: false });
 

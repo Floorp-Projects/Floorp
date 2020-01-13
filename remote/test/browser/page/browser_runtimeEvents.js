@@ -10,7 +10,7 @@
 
 const TEST_DOC = toDataURL("default-test-page");
 
-add_task(async function testCDP(client) {
+add_task(async function testCDP({ client }) {
   await loadURL(TEST_DOC);
 
   const { Page, Runtime } = client;

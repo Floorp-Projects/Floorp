@@ -10,7 +10,7 @@ const PAGE_URL =
 const JS_URL =
   "http://example.com/browser/remote/test/browser/network/file_requestWillBeSent.js";
 
-add_task(async function(client) {
+add_task(async function({ client }) {
   const { Page, Network } = client;
 
   await Network.enable();

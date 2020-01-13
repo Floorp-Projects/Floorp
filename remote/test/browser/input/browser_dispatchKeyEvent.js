@@ -3,7 +3,7 @@
 
 "use strict";
 
-add_task(async function testTypingPrintableCharacters(client) {
+add_task(async function testTypingPrintableCharacters({ client }) {
   await setupForInput(toDataURL("<input>"));
   const { Input } = client;
 
@@ -24,7 +24,7 @@ add_task(async function testTypingPrintableCharacters(client) {
   await checkInputContent("hH’", 3);
 });
 
-add_task(async function testArrowKeys(client) {
+add_task(async function testArrowKeys({ client }) {
   await setupForInput(toDataURL("<input>"));
   const { Input } = client;
 
@@ -59,7 +59,7 @@ add_task(async function testArrowKeys(client) {
   await checkInputContent("haHa’", 5);
 });
 
-add_task(async function testBackspace(client) {
+add_task(async function testBackspace({ client }) {
   await setupForInput(toDataURL("<input>"));
   const { Input } = client;
 
@@ -73,7 +73,7 @@ add_task(async function testBackspace(client) {
   await checkBackspace(Input, "");
 });
 
-add_task(async function testShiftSelect(client) {
+add_task(async function testShiftSelect({ client }) {
   await setupForInput(toDataURL("<input>"));
   const { Input } = client;
   await resetInput("word 2 word3");
@@ -97,7 +97,7 @@ add_task(async function testShiftSelect(client) {
   await dispatchKeyEvent(Input, "Shift", "keyUp");
 });
 
-add_task(async function testSelectWord(client) {
+add_task(async function testSelectWord({ client }) {
   await setupForInput(toDataURL("<input>"));
   const { Input } = client;
   await resetInput("word 2 word3");
@@ -115,7 +115,7 @@ add_task(async function testSelectWord(client) {
   await checkBackspace(Input, "word ");
 });
 
-add_task(async function testSelectDelete(client) {
+add_task(async function testSelectDelete({ client }) {
   await setupForInput(toDataURL("<input>"));
   const { Input } = client;
   await resetInput("word 2 word3");
@@ -141,7 +141,7 @@ add_task(async function testSelectDelete(client) {
   }
 });
 
-add_task(async function testCtrlShiftArrows(client) {
+add_task(async function testCtrlShiftArrows({ client }) {
   await loadURL(
     toDataURL('<select multiple size="3"><option>a<option>b<option>c</select>')
   );

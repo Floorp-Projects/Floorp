@@ -9,7 +9,8 @@ const DOC = toDataURL("default-test-page");
 const WORLD = "testWorld";
 
 // TODO Bug 1601695 - Add support for `source` parameter
-add_task(async function addScript({ Page, Runtime }) {
+add_task(async function addScript({ client }) {
+  const { Page, Runtime } = client;
   await loadURL(DOC);
   const { identifier: id1 } = await Page.addScriptToEvaluateOnNewDocument({
     source: "1 + 1;",
@@ -27,7 +28,8 @@ add_task(async function addScript({ Page, Runtime }) {
   await checkIsolatedContextAfterLoad(Runtime, toDataURL("<p>Hello"), []);
 });
 
-add_task(async function addScriptAfterNavigation({ Page }) {
+add_task(async function addScriptAfterNavigation({ client }) {
+  const { Page } = client;
   await loadURL(DOC);
   const { identifier: id1 } = await Page.addScriptToEvaluateOnNewDocument({
     source: "1 + 1;",
@@ -42,7 +44,8 @@ add_task(async function addScriptAfterNavigation({ Page }) {
   isnot(id1, id2, "Two scripts should have different ids");
 });
 
-add_task(async function addWithIsolatedWorldAndNavigate({ Page, Runtime }) {
+add_task(async function addWithIsolatedWorldAndNavigate({ client }) {
+  const { Page, Runtime } = client;
   const contextsCreated = recordContextCreated(Runtime, 3);
   await Runtime.enable();
   info(`Navigating to ${DOC}`);
@@ -65,7 +68,8 @@ add_task(async function addWithIsolatedWorldAndNavigate({ Page, Runtime }) {
   isnot(contexts[1].id, isolatedId, "The context has a new id");
 });
 
-add_task(async function addWithIsolatedWorldNavigateTwice({ Page, Runtime }) {
+add_task(async function addWithIsolatedWorldNavigateTwice({ client }) {
+  const { Page, Runtime } = client;
   await Runtime.enable();
   await Page.addScriptToEvaluateOnNewDocument({
     source: "1 + 1;",
@@ -75,7 +79,8 @@ add_task(async function addWithIsolatedWorldNavigateTwice({ Page, Runtime }) {
   await checkIsolatedContextAfterLoad(Runtime, toDataURL("<p>Hello"));
 });
 
-add_task(async function addTwoScriptsWithIsolatedWorld({ Page, Runtime }) {
+add_task(async function addTwoScriptsWithIsolatedWorld({ client }) {
+  const { Page, Runtime } = client;
   await Runtime.enable();
   const names = [WORLD, "A_whole_new_world"];
   await Page.addScriptToEvaluateOnNewDocument({

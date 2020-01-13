@@ -12,7 +12,7 @@ const IFRAME_DOC = toDataURL(
 const promises = new Set();
 const resolutions = new Map();
 
-add_task(async function(client) {
+add_task(async function({ client }) {
   const { Page } = client;
 
   await Page.enable();
