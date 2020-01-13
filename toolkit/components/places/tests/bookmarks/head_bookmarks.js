@@ -15,10 +15,14 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Put any other stuff relative to this test folder below.
 
-function expectNotifications(checkAllArgs) {
+function expectNotifications(skipDescendants, checkAllArgs) {
   let notifications = [];
   let observer = new Proxy(NavBookmarkObserver, {
     get(target, name) {
+      if (name == "skipDescendantsOnItemRemoval") {
+        return skipDescendants;
+      }
+
       if (name == "check") {
         PlacesUtils.bookmarks.removeObserver(observer);
         return expectedNotifications =>
@@ -54,60 +58,24 @@ function expectNotifications(checkAllArgs) {
   return observer;
 }
 
-function expectPlacesObserverNotifications(
-  types,
-  checkAllArgs = true,
-  skipDescendants = false
-) {
+function expectPlacesObserverNotifications(types, checkAllArgs) {
   let notifications = [];
   let listener = events => {
     for (let event of events) {
-      switch (event.type) {
-        case "bookmark-added":
-          notifications.push({
-            type: event.type,
-            id: event.id,
-            itemType: event.itemType,
-            parentId: event.parentId,
-            index: event.index,
-            url: event.url || undefined,
-            title: event.title,
-            dateAdded: new Date(event.dateAdded),
-            guid: event.guid,
-            parentGuid: event.parentGuid,
-            source: event.source,
-            isTagging: event.isTagging,
-          });
-          break;
-        case "bookmark-removed":
-          if (
-            !(
-              skipDescendants &&
-              event.isDescendantRemoval &&
-              !PlacesUtils.bookmarks.userContentRoots.includes(event.parentGuid)
-            )
-          ) {
-            if (checkAllArgs) {
-              notifications.push({
-                type: event.type,
-                id: event.id,
-                itemType: event.itemType,
-                parentId: event.parentId,
-                index: event.index,
-                url: event.url || null,
-                guid: event.guid,
-                parentGuid: event.parentGuid,
-                source: event.source,
-                isTagging: event.isTagging,
-              });
-            } else {
-              notifications.push({
-                type: event.type,
-                guid: event.guid,
-              });
-            }
-          }
-      }
+      notifications.push({
+        type: event.type,
+        id: event.id,
+        itemType: event.itemType,
+        parentId: event.parentId,
+        index: event.index,
+        url: event.url || undefined,
+        title: event.title,
+        dateAdded: new Date(event.dateAdded),
+        guid: event.guid,
+        parentGuid: event.parentGuid,
+        source: event.source,
+        isTagging: event.isTagging,
+      });
     }
   };
   PlacesUtils.observers.addListener(types, listener);

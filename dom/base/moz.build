@@ -211,7 +211,6 @@ EXPORTS.mozilla.dom += [
     'ParentProcessMessageManager.h',
     'PlacesBookmark.h',
     'PlacesBookmarkAddition.h',
-    'PlacesBookmarkRemoved.h',
     'PlacesEvent.h',
     'PlacesObservers.h',
     'PlacesVisit.h',

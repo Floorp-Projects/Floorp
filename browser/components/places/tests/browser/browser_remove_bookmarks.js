@@ -54,9 +54,8 @@ add_task(async function test_remove_bookmark_from_toolbar() {
   let contextMenuDeleteItem = document.getElementById("placesContext_delete");
 
   let removePromise = PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    events => events.some(event => event.url == TEST_URL),
-    "places"
+    "onItemRemoved",
+    (itemId, parentId, index, type, uri, guid) => uri.spec == TEST_URL
   );
 
   EventUtils.synthesizeMouseAtCenter(contextMenuDeleteItem, {});
@@ -139,9 +138,8 @@ add_task(async function test_remove_bookmark_from_library() {
   );
 
   let removePromise = PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    events => events.some(event => event.url == uris[0]),
-    "places"
+    "onItemRemoved",
+    (itemId, parentId, index, type, uri, guid) => uri.spec == uris[0]
   );
   EventUtils.synthesizeMouseAtCenter(contextMenuDeleteItem, {}, library);
 

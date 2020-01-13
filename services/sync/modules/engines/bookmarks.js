@@ -1400,10 +1400,7 @@ BookmarksTracker.prototype = {
     this._placesListener = new PlacesWeakCallbackWrapper(
       this.handlePlacesEvents.bind(this)
     );
-    PlacesUtils.observers.addListener(
-      ["bookmark-added", "bookmark-removed"],
-      this._placesListener
-    );
+    PlacesUtils.observers.addListener(["bookmark-added"], this._placesListener);
     Svc.Obs.add("bookmarks-restore-begin", this);
     Svc.Obs.add("bookmarks-restore-success", this);
     Svc.Obs.add("bookmarks-restore-failed", this);
@@ -1412,7 +1409,7 @@ BookmarksTracker.prototype = {
   onStop() {
     PlacesUtils.bookmarks.removeObserver(this);
     PlacesUtils.observers.removeListener(
-      ["bookmark-added", "bookmark-removed"],
+      ["bookmark-added"],
       this._placesListener
     );
     Svc.Obs.remove("bookmarks-restore-begin", this);
@@ -1486,25 +1483,22 @@ BookmarksTracker.prototype = {
 
   handlePlacesEvents(events) {
     for (let event of events) {
-      switch (event.type) {
-        case "bookmark-added":
-          if (IGNORED_SOURCES.includes(event.source)) {
-            continue;
-          }
-
-          this._log.trace("'bookmark-added': " + event.id);
-          this._upScore();
-          break;
-        case "bookmark-removed":
-          if (IGNORED_SOURCES.includes(event.source)) {
-            continue;
-          }
-
-          this._log.trace("'bookmark-removed': " + event.id);
-          this._upScore();
-          break;
+      if (IGNORED_SOURCES.includes(event.source)) {
+        continue;
       }
+
+      this._log.trace("'bookmark-added': " + event.id);
+      this._upScore();
     }
+  },
+
+  onItemRemoved(itemId, parentId, index, type, uri, guid, parentGuid, source) {
+    if (IGNORED_SOURCES.includes(source)) {
+      return;
+    }
+
+    this._log.trace("onItemRemoved: " + itemId);
+    this._upScore();
   },
 
   // This method is oddly structured, but the idea is to return as quickly as
