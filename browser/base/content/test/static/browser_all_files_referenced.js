@@ -32,8 +32,6 @@ var gExceptionPaths = [
 
   // These resources are referenced using relative paths from html files.
   "resource://payments/",
-  "resource://normandy-content/shield-content-frame.js",
-  "resource://normandy-content/shield-content-process.js",
 
   // https://github.com/mozilla/activity-stream/issues/3053
   "resource://activity-stream/data/content/tippytop/images/",
