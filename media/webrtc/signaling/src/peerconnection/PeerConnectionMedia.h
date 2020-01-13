@@ -241,6 +241,11 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // Set to true when the object is going to be released.
   bool mDestroyed;
 
+  // Keep track of local hostnames to register. Registration is deferred
+  // until StartIceChecks has run. Accessed on main thread only.
+  std::map<std::string, std::string> mMDNSHostnamesToRegister;
+  bool mCanRegisterMDNSHostnamesDirectly = false;
+
   // Used to store the mDNS hostnames that we have registered
   std::set<std::string> mRegisteredMDNSHostnames;
 
