@@ -1171,7 +1171,7 @@ TelemetryImpl::GetIsOfficialTelemetry(bool* ret) {
 // C functions with the "fog_" prefix.
 // See toolkit/components/telemetry/fog/*.
 extern "C" {
-nsresult fog_init(bool useTelemetry, const nsAString* dataDir);
+nsresult fog_init(const nsAString* dataDir);
 }
 
 static void internal_initFogotype(bool aUseTelemetry) {
@@ -1187,7 +1187,7 @@ static void internal_initFogotype(bool aUseTelemetry) {
     NS_WARNING("Couldn't get data path. Bailing on FOGotype.");
     return;
   }
-  NS_WARN_IF(NS_FAILED(fog_init(aUseTelemetry, &path)));
+  NS_WARN_IF(NS_FAILED(fog_init(&path)));
 }
 #endif  // defined(MOZ_FOGOTYPE)
 
