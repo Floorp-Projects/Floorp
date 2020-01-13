@@ -71,7 +71,9 @@ struct CommonCursorDataBase {
 
   explicit CommonCursorDataBase(Key aKey);
 
-  Key mKey;
+  Key mKey;  ///< The current key, i.e. the key representing the cursor's
+             ///< position
+             ///< (https://w3c.github.io/IndexedDB/#cursor-position).
 };
 
 template <IDBCursorType CursorType>
@@ -99,8 +101,11 @@ struct IndexCursorDataBase : CommonCursorDataBase {
     return GetObjectStoreKey().GetBuffer().get();
   }
 
-  Key mLocaleAwareKey;
-  Key mObjectStoreKey;
+  Key mLocaleAwareKey;  ///< If the index's mLocale is set, this is mKey
+                        ///< converted to mLocale. Otherwise, it is unset.
+  Key mObjectStoreKey;  ///< The key representing the cursor's object store
+                        ///< position
+  ///< (https://w3c.github.io/IndexedDB/#cursor-object-store-position).
 };
 
 struct ValueCursorDataBase {
