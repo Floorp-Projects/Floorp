@@ -82,90 +82,19 @@ class ContentBlockingLog final {
   ContentBlockingLog() = default;
   ~ContentBlockingLog() = default;
 
+  // Record the log in the parent process. This should be called only in the
+  // parent process and will replace the RecordLog below after we remove the
+  // ContentBlockingLog from content processes.
+  Maybe<uint32_t> RecordLogParent(
+      const nsACString& aOrigin, uint32_t aType, bool aBlocked,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
+      const nsTArray<nsCString>& aTrackingFullHashes);
+
   void RecordLog(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
       const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
       const nsTArray<nsCString>& aTrackingFullHashes) {
-    DebugOnly<bool> isCookiesBlockedTracker =
-        aType == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
-        aType == nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
-    MOZ_ASSERT_IF(aBlocked, aReason.isNothing());
-    MOZ_ASSERT_IF(!isCookiesBlockedTracker, aReason.isNothing());
-    MOZ_ASSERT_IF(isCookiesBlockedTracker && !aBlocked, aReason.isSome());
-
-    if (aOrigin.IsVoid()) {
-      return;
-    }
-    auto index = mLog.IndexOf(aOrigin, 0, Comparator());
-    if (index != OriginDataTable::NoIndex) {
-      OriginEntry& entry = mLog[index];
-      if (!entry.mData) {
-        return;
-      }
-
-      if (RecordLogEntryInCustomField(aType, entry, aBlocked)) {
-        return;
-      }
-      if (!entry.mData->mLogs.IsEmpty()) {
-        auto& last = entry.mData->mLogs.LastElement();
-        if (last.mType == aType && last.mBlocked == aBlocked) {
-          ++last.mRepeatCount;
-          // Don't record recorded events.  This helps compress our log.
-          // We don't care about if the the reason is the same, just keep the
-          // first one.
-          // Note: {aReason, aTrackingFullHashes} are not compared here and we
-          // simply keep the first for the reason, and merge hashes to make sure
-          // they can be correctly recorded.
-          for (const auto& hash : aTrackingFullHashes) {
-            if (!last.mTrackingFullHashes.Contains(hash)) {
-              last.mTrackingFullHashes.AppendElement(hash);
-            }
-          }
-          return;
-        }
-      }
-      if (entry.mData->mLogs.Length() ==
-          std::max(1u,
-                   StaticPrefs::browser_contentblocking_originlog_length())) {
-        // Cap the size at the maximum length adjustable by the pref
-        entry.mData->mLogs.RemoveElementAt(0);
-      }
-      entry.mData->mLogs.AppendElement(
-          LogEntry{aType, 1u, aBlocked, aReason,
-                   nsTArray<nsCString>(aTrackingFullHashes)});
-      return;
-    }
-
-    // The entry has not been found.
-
-    OriginEntry* entry = mLog.AppendElement();
-    if (NS_WARN_IF(!entry || !entry->mData)) {
-      return;
-    }
-
-    entry->mOrigin = aOrigin;
-
-    if (aType ==
-        nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT) {
-      entry->mData->mHasLevel1TrackingContentLoaded = aBlocked;
-    } else if (aType ==
-               nsIWebProgressListener::STATE_LOADED_LEVEL_2_TRACKING_CONTENT) {
-      entry->mData->mHasLevel2TrackingContentLoaded = aBlocked;
-    } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
-      MOZ_ASSERT(entry->mData->mHasCookiesLoaded.isNothing());
-      entry->mData->mHasCookiesLoaded.emplace(aBlocked);
-    } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER) {
-      MOZ_ASSERT(entry->mData->mHasTrackerCookiesLoaded.isNothing());
-      entry->mData->mHasTrackerCookiesLoaded.emplace(aBlocked);
-    } else if (aType ==
-               nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER) {
-      MOZ_ASSERT(entry->mData->mHasSocialTrackerCookiesLoaded.isNothing());
-      entry->mData->mHasSocialTrackerCookiesLoaded.emplace(aBlocked);
-    } else {
-      entry->mData->mLogs.AppendElement(
-          LogEntry{aType, 1u, aBlocked, aReason,
-                   nsTArray<nsCString>(aTrackingFullHashes)});
-    }
+    RecordLogInternal(aOrigin, aType, aBlocked, aReason, aTrackingFullHashes);
   }
 
   void ReportOrigins();
@@ -267,7 +196,136 @@ class ContentBlockingLog final {
     }
   }
 
+  uint32_t GetContentBlockingEventsInLog() {
+    uint32_t events = 0;
+
+    // We iterate the whole log to produce the overview of blocked events.
+    for (const OriginEntry& entry : mLog) {
+      if (!entry.mData) {
+        continue;
+      }
+
+      if (entry.mData->mHasLevel1TrackingContentLoaded) {
+        events |= nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT;
+      }
+
+      if (entry.mData->mHasLevel2TrackingContentLoaded) {
+        events |= nsIWebProgressListener::STATE_LOADED_LEVEL_2_TRACKING_CONTENT;
+      }
+
+      if (entry.mData->mHasCookiesLoaded.isSome() &&
+          entry.mData->mHasCookiesLoaded.value()) {
+        events |= nsIWebProgressListener::STATE_COOKIES_LOADED;
+      }
+
+      if (entry.mData->mHasTrackerCookiesLoaded.isSome() &&
+          entry.mData->mHasTrackerCookiesLoaded.value()) {
+        events |= nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER;
+      }
+
+      if (entry.mData->mHasSocialTrackerCookiesLoaded.isSome() &&
+          entry.mData->mHasSocialTrackerCookiesLoaded.value()) {
+        events |= nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER;
+      }
+
+      for (const auto& item : entry.mData->mLogs) {
+        if (item.mBlocked) {
+          events |= item.mType;
+        }
+      }
+    }
+
+    return events;
+  }
+
  private:
+  void RecordLogInternal(
+      const nsACString& aOrigin, uint32_t aType, bool aBlocked,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
+          Nothing(),
+      const nsTArray<nsCString>& aTrackingFullHashes = nsTArray<nsCString>()) {
+    DebugOnly<bool> isCookiesBlockedTracker =
+        aType == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
+        aType == nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
+    MOZ_ASSERT_IF(aBlocked, aReason.isNothing());
+    MOZ_ASSERT_IF(!isCookiesBlockedTracker, aReason.isNothing());
+    MOZ_ASSERT_IF(isCookiesBlockedTracker && !aBlocked, aReason.isSome());
+
+    if (aOrigin.IsVoid()) {
+      return;
+    }
+    auto index = mLog.IndexOf(aOrigin, 0, Comparator());
+    if (index != OriginDataTable::NoIndex) {
+      OriginEntry& entry = mLog[index];
+      if (!entry.mData) {
+        return;
+      }
+
+      if (RecordLogEntryInCustomField(aType, entry, aBlocked)) {
+        return;
+      }
+      if (!entry.mData->mLogs.IsEmpty()) {
+        auto& last = entry.mData->mLogs.LastElement();
+        if (last.mType == aType && last.mBlocked == aBlocked) {
+          ++last.mRepeatCount;
+          // Don't record recorded events.  This helps compress our log.
+          // We don't care about if the the reason is the same, just keep the
+          // first one.
+          // Note: {aReason, aTrackingFullHashes} are not compared here and we
+          // simply keep the first for the reason, and merge hashes to make sure
+          // they can be correctly recorded.
+          for (const auto& hash : aTrackingFullHashes) {
+            if (!last.mTrackingFullHashes.Contains(hash)) {
+              last.mTrackingFullHashes.AppendElement(hash);
+            }
+          }
+          return;
+        }
+      }
+      if (entry.mData->mLogs.Length() ==
+          std::max(1u,
+                   StaticPrefs::browser_contentblocking_originlog_length())) {
+        // Cap the size at the maximum length adjustable by the pref
+        entry.mData->mLogs.RemoveElementAt(0);
+      }
+      entry.mData->mLogs.AppendElement(
+          LogEntry{aType, 1u, aBlocked, aReason,
+                   nsTArray<nsCString>(aTrackingFullHashes)});
+      return;
+    }
+
+    // The entry has not been found.
+
+    OriginEntry* entry = mLog.AppendElement();
+    if (NS_WARN_IF(!entry || !entry->mData)) {
+      return;
+    }
+
+    entry->mOrigin = aOrigin;
+
+    if (aType ==
+        nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT) {
+      entry->mData->mHasLevel1TrackingContentLoaded = aBlocked;
+    } else if (aType ==
+               nsIWebProgressListener::STATE_LOADED_LEVEL_2_TRACKING_CONTENT) {
+      entry->mData->mHasLevel2TrackingContentLoaded = aBlocked;
+    } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED) {
+      MOZ_ASSERT(entry->mData->mHasCookiesLoaded.isNothing());
+      entry->mData->mHasCookiesLoaded.emplace(aBlocked);
+    } else if (aType == nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER) {
+      MOZ_ASSERT(entry->mData->mHasTrackerCookiesLoaded.isNothing());
+      entry->mData->mHasTrackerCookiesLoaded.emplace(aBlocked);
+    } else if (aType ==
+               nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER) {
+      MOZ_ASSERT(entry->mData->mHasSocialTrackerCookiesLoaded.isNothing());
+      entry->mData->mHasSocialTrackerCookiesLoaded.emplace(aBlocked);
+    } else {
+      entry->mData->mLogs.AppendElement(
+          LogEntry{aType, 1u, aBlocked, aReason,
+                   nsTArray<nsCString>(aTrackingFullHashes)});
+    }
+  }
+
   bool RecordLogEntryInCustomField(uint32_t aType, OriginEntry& aEntry,
                                    bool aBlocked) {
     if (aType ==
