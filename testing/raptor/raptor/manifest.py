@@ -453,6 +453,13 @@ def get_raptor_test_list(args, oskey):
                 next_test['page_timeout']) * LIVE_SITE_TIMEOUT_MULTIPLIER
             LOG.info("using live sites so using page timeout of %dms" % next_test['page_timeout'])
 
+        # browsertime doesn't use the 'measure' test ini setting; however just for the sake
+        # of supporting both webext and browsertime, just provide a dummy 'measure' setting
+        # here to prevent having to check in multiple places; it has no effect on what
+        # browsertime actually measures; remove this when eventually we remove webext support
+        if args.browsertime is not None and next_test.get('measure') is None:
+            next_test['measure'] = "fnbpaint, fcp, dcf, loadtime"
+
         # convert 'measure =' test INI line to list
         if next_test.get('measure') is not None:
             _measures = []

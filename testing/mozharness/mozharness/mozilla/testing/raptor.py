@@ -491,6 +491,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         # Options overwritten from **kw
         if 'test' in self.config:
             kw_options['test'] = self.config['test']
+        if 'binary' in self.config:
+            kw_options['binary'] = self.config['binary']
         if self.symbols_path:
             kw_options['symbolsPath'] = self.symbols_path
         if self.config.get('obj_path', None) is not None:
@@ -499,6 +501,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             kw_options['test-url-params'] = self.test_url_params
         if self.config.get('device_name') is not None:
             kw_options['device-name'] = self.config['device_name']
+        if self.config.get('activity') is not None:
+            kw_options['activity'] = self.config['activity']
 
         kw_options.update(kw)
         if self.host:
