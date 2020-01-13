@@ -1066,6 +1066,7 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                                     nsIPrincipal* aTriggeringPrincipal,
                                     nsIURI* aTargetURI,
                                     nsINode* aRequestingNode,
+                                    const nsAString& aNonce,
                                     IsPreload aIsPreload) {
   // When performing a system load (e.g. aUseSystemPrincipal = true)
   // then aLoadingPrincipal == null; don't consult content policies.
@@ -1084,12 +1085,8 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
 
   // snapshot the nonce at load start time for performing CSP checks
   if (contentPolicyType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET) {
-    nsCOMPtr<Element> element = do_QueryInterface(aRequestingNode);
-    if (element && element->IsHTMLElement()) {
-      nsAutoString cspNonce;
-      element->GetAttr(nsGkAtoms::nonce, cspNonce);
-      secCheckLoadInfo->SetCspNonce(cspNonce);
-    }
+    secCheckLoadInfo->SetCspNonce(aNonce);
+    MOZ_ASSERT_IF(aIsPreload != IsPreload::No, aNonce.IsEmpty());
   }
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
@@ -1404,6 +1401,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
       nsCOMPtr<Element> element = do_QueryInterface(aLoadData.mRequestingNode);
       if (element && element->IsHTMLElement()) {
         nsAutoString cspNonce;
+        // TODO(bug 1607009) move to SheetLoadData
         element->GetAttr(nsGkAtoms::nonce, cspNonce);
         nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
         loadInfo->SetCspNonce(cspNonce);
@@ -1534,6 +1532,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     nsCOMPtr<Element> element = do_QueryInterface(aLoadData.mRequestingNode);
     if (element && element->IsHTMLElement()) {
       nsAutoString cspNonce;
+      // TODO(bug 1607009) move to SheetLoadData
       element->GetAttr(nsGkAtoms::nonce, cspNonce);
       nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
       loadInfo->SetCspNonce(cspNonce);
@@ -2018,7 +2017,7 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadStyleLink(
   MOZ_ASSERT_IF(syncLoad, !aObserver);
 
   nsresult rv = CheckContentPolicy(loadingPrincipal, principal, aInfo.mURI,
-                                   context, IsPreload::No);
+                                   context, aInfo.mNonce, IsPreload::No);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // Don't fire the error event if our document is loaded as data.  We're
     // supposed to not even try to do loads in that case... Unfortunately, we
@@ -2167,7 +2166,7 @@ nsresult Loader::LoadChildSheet(StyleSheet& aParentSheet,
 
   nsIPrincipal* principal = aParentSheet.Principal();
   nsresult rv = CheckContentPolicy(loadingPrincipal, principal, aURL, context,
-                                   IsPreload::No);
+                                   EmptyString(), IsPreload::No);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     if (aParentData) {
       MarkLoadTreeFailed(*aParentData);
@@ -2292,7 +2291,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
   nsCOMPtr<nsIPrincipal> loadingPrincipal =
       (aOriginPrincipal && mDocument ? mDocument->NodePrincipal() : nullptr);
   nsresult rv = CheckContentPolicy(loadingPrincipal, aOriginPrincipal, aURL,
-                                   mDocument, aIsPreload);
+                                   mDocument, EmptyString(), aIsPreload);
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
