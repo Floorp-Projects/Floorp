@@ -4854,7 +4854,7 @@ void js::DescribeScriptedCallerForDirectEval(JSContext* cx, HandleScript script,
       (JSOp(*pc) == JSOP_SPREADEVAL || JSOp(*pc) == JSOP_STRICTSPREADEVAL);
   jsbytecode* nextpc =
       pc + (isSpread ? JSOP_SPREADEVAL_LENGTH : JSOP_EVAL_LENGTH);
-  MOZ_ASSERT(JSOp(*nextpc) == JSOP_LINENO);
+  MOZ_ASSERT(*nextpc == JSOP_LINENO);
 
   *file = script->filename();
   *linenop = GET_UINT32(nextpc);
@@ -5446,11 +5446,11 @@ void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
      * is assigned to.
      */
     jsbytecode* pc = script->code();
-    while (JSOp(*pc) != JSOP_ARGUMENTS) {
+    while (*pc != JSOP_ARGUMENTS) {
       pc += GetBytecodeLength(pc);
     }
     pc += JSOP_ARGUMENTS_LENGTH;
-    MOZ_ASSERT(JSOp(*pc) == JSOP_SETALIASEDVAR);
+    MOZ_ASSERT(*pc == JSOP_SETALIASEDVAR);
 
     // Note that here and below, it is insufficient to only check for
     // JS_OPTIMIZED_ARGUMENTS, as Ion could have optimized out the

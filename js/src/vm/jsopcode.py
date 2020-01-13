@@ -96,16 +96,13 @@ class CommentInfo:
         self.stack_defs = ''
 
 # Holds the information stored in the macro with the following format:
-#   MACRO({name}, {op_camel}, {op_snake}, {display_name}, {image}, {length}, {nuses}, {ndefs},
-#         {flags})
+#   MACRO({name}, {display_name}, {image}, {length}, {nuses}, {ndefs}, {flags})
 # and the information from CommentInfo.
 
 
 class OpcodeInfo:
     def __init__(self, value, comment_info):
         self.name = ''
-        self.op_camel = ''
-        self.op_snake = ''
         self.value = value
         self.display_name = ''
         self.image = ''
@@ -172,20 +169,11 @@ def get_tag_value(line):
     return re.sub(tag_pat, '', line)
 
 
-# Identifiers to avoid because they're reserved words in either Rust or C++.
-RUST_OR_CPP_KEYWORDS = {
-    'and', 'case', 'default', 'double', 'false', 'goto', 'in', 'new', 'not', 'or', 'return',
-    'throw', 'true', 'try', 'typeof', 'void',
-}
-
-
 def get_opcodes(dir):
     iter_pat = re.compile(r"/\*(.*?)\*/"  # either a documentation comment...
                           r"|"
                           r"MACRO\("      # or a MACRO(...) call
                           r"(?P<name>[^,]+),\s*"
-                          r"(?P<op_camel>[^,]+),\s*"
-                          r"(?P<op_snake>[^,]+),\s*"
                           r"(?P<display_name>[^,]+,)\s*"
                           r"(?P<image>[^,]+),\s*"
                           r"(?P<length>[0-9\-]+),\s*"
@@ -272,22 +260,12 @@ def get_opcodes(dir):
             next_opcode_value += 1
 
             opcode.name = name
-            opcode.op_camel = m.group('op_camel')
-            opcode.op_snake = m.group('op_snake')
             opcode.display_name = parse_name(m.group('display_name'))
             opcode.image = parse_name(m.group('image'))
             opcode.length = m.group('length')
             opcode.nuses = m.group('nuses')
             opcode.ndefs = m.group('ndefs')
             opcode.flags = m.group('flags').split('|')
-
-            expected_snake = re.sub(r'(?<!^)(?=[A-Z])', '_', opcode.op_camel).lower()
-            if expected_snake in RUST_OR_CPP_KEYWORDS:
-                expected_snake += '_'
-            if opcode.op_snake != expected_snake:
-                raise ValueError(
-                    "Unexpected snake-case name for {}: expected {!r}, got {!r}"
-                    .format(opcode.op_camel, expected_snake, opcode.op_snake))
 
             if not group_head:
                 group_head = opcode

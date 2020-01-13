@@ -340,7 +340,7 @@ bool BytecodeEmitter::emitN(JSOp op, size_t extra, BytecodeOffset* offset) {
    * Don't updateDepth if op's use-count comes from the immediate
    * operand yet to be stored in the extra bytes after op.
    */
-  if (CodeSpec(op).nuses >= 0) {
+  if (CodeSpec[op].nuses >= 0) {
     bytecodeSection().updateDepth(off);
   }
 
@@ -1654,7 +1654,7 @@ bool BytecodeEmitter::emitNewInit() {
   }
 
   jsbytecode* code = bytecodeSection().code(offset);
-  code[0] = jsbytecode(JSOP_NEWINIT);
+  code[0] = JSOP_NEWINIT;
   code[1] = 0;
   code[2] = 0;
   code[3] = 0;
@@ -5878,7 +5878,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
       return false;
     }
   } else if (isDerivedClassConstructor) {
-    MOZ_ASSERT(JSOp(bytecodeSection().code()[top.value()]) == JSOP_SETRVAL);
+    MOZ_ASSERT(bytecodeSection().code()[top.value()] == JSOP_SETRVAL);
     if (!emitReturnRval()) {
       return false;
     }
@@ -5887,7 +5887,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
              // If we are instrumenting, make sure we use RETRVAL and add any
              // instrumentation for the frame exit.
              instrumentationKinds) {
-    bytecodeSection().code()[top.value()] = jsbytecode(JSOP_SETRVAL);
+    bytecodeSection().code()[top.value()] = JSOP_SETRVAL;
     if (!emitReturnRval()) {
       return false;
     }
@@ -8475,8 +8475,8 @@ bool BytecodeEmitter::replaceNewInitWithNewObject(JSObject* obj,
 
   jsbytecode* code = bytecodeSection().code(offset);
 
-  MOZ_ASSERT(JSOp(code[0]) == JSOP_NEWINIT);
-  code[0] = jsbytecode(JSOP_NEWOBJECT);
+  MOZ_ASSERT(code[0] == JSOP_NEWINIT);
+  code[0] = JSOP_NEWOBJECT;
   SET_UINT32(code, index);
 
   return true;
