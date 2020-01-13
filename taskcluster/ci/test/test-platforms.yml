@@ -189,7 +189,7 @@ linux64-ccov/opt:
     test-sets:
         # These test sets will be slowly reduced in size/scope as suites are migrated.
         - common-tests
-        - web-platform-tests-linux-ccov
+        - web-platform-tests
         - talos
         - ccov-code-coverage-tests
 
