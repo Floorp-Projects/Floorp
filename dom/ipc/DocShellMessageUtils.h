@@ -10,7 +10,6 @@
 #include "ipc/IPCMessageUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDocShellLoadState.h"
-#include "mozilla/ScrollbarPreferences.h"
 
 namespace mozilla {
 namespace ipc {
@@ -25,15 +24,5 @@ struct IPDLParamTraits<nsDocShellLoadState*> {
 
 }  // namespace ipc
 }  // namespace mozilla
-
-namespace IPC {
-
-template <>
-struct ParamTraits<mozilla::ScrollbarPreference>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::ScrollbarPreference, mozilla::ScrollbarPreference::Auto,
-          mozilla::ScrollbarPreference::LAST> {};
-
-}  // namespace IPC
 
 #endif  // mozilla_dom_docshell_message_utils_h__

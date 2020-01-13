@@ -143,12 +143,6 @@ IPCResult BrowserBridgeParent::RecvShow(const OwnerShowInfo& aOwnerInfo) {
   return IPC_OK();
 }
 
-IPCResult BrowserBridgeParent::RecvScrollbarPreferenceChanged(
-    ScrollbarPreference aPref) {
-  Unused << mBrowserParent->SendScrollbarPreferenceChanged(aPref);
-  return IPC_OK();
-}
-
 IPCResult BrowserBridgeParent::RecvLoadURL(const nsCString& aUrl) {
   Unused << mBrowserParent->SendLoadURL(aUrl, mBrowserParent->GetShowInfo());
   return IPC_OK();

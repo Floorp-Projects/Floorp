@@ -1018,25 +1018,31 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       return false;
     }
 
-    nsCOMPtr<nsISupports> container = mOwnerContent->OwnerDoc()->GetContainer();
-    nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
-    nsCOMPtr<nsIWidget> mainWidget;
-    baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
-    nsSizeMode sizeMode =
-        mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
-    OwnerShowInfo info(size, GetScrollbarPreference(mOwnerContent),
-                       ParentWindowIsActive(mOwnerContent->OwnerDoc()),
-                       sizeMode);
-    if (!mRemoteBrowser->Show(info)) {
+    if (RefPtr<BrowserBridgeChild> browserBridgeChild =
+            GetBrowserBridgeChild()) {
+      nsCOMPtr<nsISupports> container =
+          mOwnerContent->OwnerDoc()->GetContainer();
+      nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
+      nsCOMPtr<nsIWidget> mainWidget;
+      baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+      nsSizeMode sizeMode =
+          mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
+      OwnerShowInfo info(size, ParentWindowIsActive(mOwnerContent->OwnerDoc()),
+                         sizeMode);
+      Unused << browserBridgeChild->SendShow(info);
+      mRemoteBrowserShown = true;
+      return true;
+    }
+
+    if (!mRemoteBrowser->Show(
+            size, ParentWindowIsActive(mOwnerContent->OwnerDoc()))) {
       return false;
     }
     mRemoteBrowserShown = true;
 
-    // This notification doesn't apply to fission, apparently.
-    if (!GetBrowserBridgeChild()) {
-      if (nsCOMPtr<nsIObserverService> os = services::GetObserverService()) {
-        os->NotifyObservers(ToSupports(this), "remote-browser-shown", nullptr);
-      }
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(ToSupports(this), "remote-browser-shown", nullptr);
     }
   } else {
     nsIntRect dimensions;

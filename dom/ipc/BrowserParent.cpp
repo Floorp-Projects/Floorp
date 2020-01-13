@@ -941,8 +941,8 @@ void BrowserParent::MaybeShowFrame() {
   frameLoader->MaybeShowFrame();
 }
 
-bool BrowserParent::Show(const OwnerShowInfo& aOwnerInfo) {
-  mDimensions = aOwnerInfo.size();
+bool BrowserParent::Show(const ScreenIntSize& size, bool aParentIsActive) {
+  mDimensions = size;
   if (mIsDestroyed) {
     return false;
   }
@@ -952,8 +952,14 @@ bool BrowserParent::Show(const OwnerShowInfo& aOwnerInfo) {
     return false;
   }
 
-  mSizeMode = aOwnerInfo.sizeMode();
-  Unused << SendShow(GetShowInfo(), aOwnerInfo);
+  nsCOMPtr<nsISupports> container = mFrameElement->OwnerDoc()->GetContainer();
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
+  nsCOMPtr<nsIWidget> mainWidget;
+  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+  mSizeMode = mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
+
+  OwnerShowInfo ownerInfo(size, aParentIsActive, mSizeMode);
+  Unused << SendShow(GetShowInfo(), ownerInfo);
   return true;
 }
 
