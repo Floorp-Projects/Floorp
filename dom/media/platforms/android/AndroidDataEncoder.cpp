@@ -16,9 +16,6 @@
 
 #include "libyuv.h"
 
-using namespace mozilla::java;
-using namespace mozilla::java::sdk;
-
 namespace mozilla {
 using media::TimeUnit;
 
@@ -53,7 +50,7 @@ static const char* MimeTypeOf(MediaDataEncoder::CodecType aCodec) {
   }
 }
 
-using FormatResult = Result<MediaFormat::LocalRef, MediaResult>;
+using FormatResult = Result<java::sdk::MediaFormat::LocalRef, MediaResult>;
 
 FormatResult ToMediaFormat(const AndroidDataEncoder::Config& aConfig) {
   if (!aConfig.mCodecSpecific) {
@@ -63,29 +60,32 @@ FormatResult ToMediaFormat(const AndroidDataEncoder::Config& aConfig) {
   }
 
   nsresult rv = NS_OK;
-  MediaFormat::LocalRef format;
-  rv = MediaFormat::CreateVideoFormat(MimeTypeOf(aConfig.mCodecType),
-                                      aConfig.mSize.width, aConfig.mSize.height,
-                                      &format);
+  java::sdk::MediaFormat::LocalRef format;
+  rv = java::sdk::MediaFormat::CreateVideoFormat(MimeTypeOf(aConfig.mCodecType),
+                                                 aConfig.mSize.width,
+                                                 aConfig.mSize.height, &format);
   NS_ENSURE_SUCCESS(
       rv, FormatResult(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                    "fail to create Java MediaFormat object")));
 
-  rv = format->SetInteger(MediaFormat::KEY_BITRATE_MODE, 2 /* CBR */);
+  rv =
+      format->SetInteger(java::sdk::MediaFormat::KEY_BITRATE_MODE, 2 /* CBR */);
   NS_ENSURE_SUCCESS(rv, FormatResult(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                                  "fail to set bitrate mode")));
 
-  rv = format->SetInteger(MediaFormat::KEY_BIT_RATE, aConfig.mBitsPerSec);
+  rv = format->SetInteger(java::sdk::MediaFormat::KEY_BIT_RATE,
+                          aConfig.mBitsPerSec);
   NS_ENSURE_SUCCESS(rv, FormatResult(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                                  "fail to set bitrate")));
 
   // COLOR_FormatYUV420SemiPlanar(NV12) is the most widely supported
   // format.
-  rv = format->SetInteger(MediaFormat::KEY_COLOR_FORMAT, 0x15);
+  rv = format->SetInteger(java::sdk::MediaFormat::KEY_COLOR_FORMAT, 0x15);
   NS_ENSURE_SUCCESS(rv, FormatResult(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                                  "fail to set color format")));
 
-  rv = format->SetInteger(MediaFormat::KEY_FRAME_RATE, aConfig.mFramerate);
+  rv = format->SetInteger(java::sdk::MediaFormat::KEY_FRAME_RATE,
+                          aConfig.mFramerate);
   NS_ENSURE_SUCCESS(rv, FormatResult(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                                  "fail to set frame rate")));
 
@@ -94,7 +94,8 @@ FormatResult ToMediaFormat(const AndroidDataEncoder::Config& aConfig) {
   // containing all key frames is requested.
   int32_t intervalInSec = std::max<size_t>(
       1, aConfig.mCodecSpecific.value().mKeyframeInterval / aConfig.mFramerate);
-  rv = format->SetInteger(MediaFormat::KEY_I_FRAME_INTERVAL, intervalInSec);
+  rv = format->SetInteger(java::sdk::MediaFormat::KEY_I_FRAME_INTERVAL,
+                          intervalInSec);
   NS_ENSURE_SUCCESS(rv,
                     FormatResult(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                              "fail to set I-frame interval")));
@@ -106,8 +107,8 @@ RefPtr<MediaDataEncoder::InitPromise> AndroidDataEncoder::ProcessInit() {
   AssertOnTaskQueue();
   MOZ_ASSERT(!mJavaEncoder);
 
-  BufferInfo::LocalRef bufferInfo;
-  if (NS_FAILED(BufferInfo::New(&bufferInfo)) || !bufferInfo) {
+  java::sdk::BufferInfo::LocalRef bufferInfo;
+  if (NS_FAILED(java::sdk::BufferInfo::New(&bufferInfo)) || !bufferInfo) {
     return InitPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
   mInputBufferInfo = bufferInfo;
@@ -121,7 +122,7 @@ RefPtr<MediaDataEncoder::InitPromise> AndroidDataEncoder::ProcessInit() {
   // Register native methods.
   JavaCallbacksSupport::Init();
 
-  mJavaCallbacks = CodecProxy::NativeCallbacks::New();
+  mJavaCallbacks = java::CodecProxy::NativeCallbacks::New();
   if (!mJavaCallbacks) {
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -131,8 +132,8 @@ RefPtr<MediaDataEncoder::InitPromise> AndroidDataEncoder::ProcessInit() {
   JavaCallbacksSupport::AttachNative(
       mJavaCallbacks, mozilla::MakeUnique<CallbacksSupport>(this));
 
-  mJavaEncoder = CodecProxy::Create(true /* encoder */, mFormat, nullptr,
-                                    mJavaCallbacks, EmptyString());
+  mJavaEncoder = java::CodecProxy::Create(true /* encoder */, mFormat, nullptr,
+                                          mJavaCallbacks, EmptyString());
   if (!mJavaEncoder) {
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -200,7 +201,7 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessEncode(
   if (aSample->mKeyframe) {
     mInputBufferInfo->Set(0, mYUVBuffer->Length(),
                           aSample->mTime.ToMicroseconds(),
-                          MediaCodec::BUFFER_FLAG_SYNC_FRAME);
+                          java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME);
   } else {
     mInputBufferInfo->Set(0, mYUVBuffer->Length(),
                           aSample->mTime.ToMicroseconds(), 0);
@@ -219,20 +220,19 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessEncode(
 
 class AutoRelease final {
  public:
-  AutoRelease(CodecProxy::Param aEncoder, Sample::Param aSample)
+  AutoRelease(java::CodecProxy::Param aEncoder, java::Sample::Param aSample)
       : mEncoder(aEncoder), mSample(aSample) {}
 
   ~AutoRelease() { mEncoder->ReleaseOutput(mSample, false); }
 
  private:
-  CodecProxy::GlobalRef mEncoder;
-  Sample::GlobalRef mSample;
+  java::CodecProxy::GlobalRef mEncoder;
+  java::Sample::GlobalRef mSample;
 };
 
-static RefPtr<MediaByteBuffer> ExtractCodecConfig(SampleBuffer::Param aBuffer,
-                                                  const int32_t aOffset,
-                                                  const int32_t aSize,
-                                                  const bool aAsAnnexB) {
+static RefPtr<MediaByteBuffer> ExtractCodecConfig(
+    java::SampleBuffer::Param aBuffer, const int32_t aOffset,
+    const int32_t aSize, const bool aAsAnnexB) {
   auto annexB = MakeRefPtr<MediaByteBuffer>(aSize);
   annexB->SetLength(aSize);
   jni::ByteBuffer::LocalRef dest =
@@ -257,11 +257,13 @@ static RefPtr<MediaByteBuffer> ExtractCodecConfig(SampleBuffer::Param aBuffer,
   return avcc;
 }
 
-void AndroidDataEncoder::ProcessOutput(Sample::GlobalRef&& aSample,
-                                       SampleBuffer::GlobalRef&& aBuffer) {
+void AndroidDataEncoder::ProcessOutput(
+    java::Sample::GlobalRef&& aSample,
+    java::SampleBuffer::GlobalRef&& aBuffer) {
   if (!mTaskQueue->IsCurrentThreadIn()) {
-    nsresult rv = mTaskQueue->Dispatch(
-        NewRunnableMethod<Sample::GlobalRef&&, SampleBuffer::GlobalRef&&>(
+    nsresult rv =
+        mTaskQueue->Dispatch(NewRunnableMethod<java::Sample::GlobalRef&&,
+                                               java::SampleBuffer::GlobalRef&&>(
             "AndroidDataEncoder::ProcessOutput", this,
             &AndroidDataEncoder::ProcessOutput, std::move(aSample),
             std::move(aBuffer)));
@@ -277,12 +279,12 @@ void AndroidDataEncoder::ProcessOutput(Sample::GlobalRef&& aSample,
 
   AutoRelease releaseSample(mJavaEncoder, aSample);
 
-  BufferInfo::LocalRef info = aSample->Info();
+  java::sdk::BufferInfo::LocalRef info = aSample->Info();
   MOZ_ASSERT(info);
 
   int32_t flags;
   bool ok = NS_SUCCEEDED(info->Flags(&flags));
-  bool isEOS = !!(flags & MediaCodec::BUFFER_FLAG_END_OF_STREAM);
+  bool isEOS = !!(flags & java::sdk::MediaCodec::BUFFER_FLAG_END_OF_STREAM);
 
   int32_t offset;
   ok &= NS_SUCCEEDED(info->Offset(&offset));
@@ -298,13 +300,14 @@ void AndroidDataEncoder::ProcessOutput(Sample::GlobalRef&& aSample,
   }
 
   if (size > 0) {
-    if ((flags & MediaCodec::BUFFER_FLAG_CODEC_CONFIG) != 0) {
+    if ((flags & java::sdk::MediaCodec::BUFFER_FLAG_CODEC_CONFIG) != 0) {
       mConfigData = ExtractCodecConfig(aBuffer, offset, size,
                                        mConfig.mUsage == Usage::Realtime);
       return;
     }
-    RefPtr<MediaRawData> output = GetOutputData(
-        aBuffer, offset, size, !!(flags & MediaCodec::BUFFER_FLAG_KEY_FRAME));
+    RefPtr<MediaRawData> output =
+        GetOutputData(aBuffer, offset, size,
+                      !!(flags & java::sdk::MediaCodec::BUFFER_FLAG_KEY_FRAME));
     output->mEOS = isEOS;
     output->mTime = media::TimeUnit::FromMicroseconds(presentationTimeUs);
     mEncodedData.AppendElement(std::move(output));
@@ -321,8 +324,8 @@ void AndroidDataEncoder::ProcessOutput(Sample::GlobalRef&& aSample,
 }
 
 RefPtr<MediaRawData> AndroidDataEncoder::GetOutputData(
-    SampleBuffer::Param aBuffer, const int32_t aOffset, const int32_t aSize,
-    const bool aIsKeyFrame) {
+    java::SampleBuffer::Param aBuffer, const int32_t aOffset,
+    const int32_t aSize, const bool aIsKeyFrame) {
   auto output = MakeRefPtr<MediaRawData>();
 
   size_t prependSize = 0;
@@ -374,7 +377,8 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessDrain() {
 
   switch (mDrainState) {
     case DrainState::DRAINABLE:
-      mInputBufferInfo->Set(0, 0, -1, MediaCodec::BUFFER_FLAG_END_OF_STREAM);
+      mInputBufferInfo->Set(0, 0, -1,
+                            java::sdk::MediaCodec::BUFFER_FLAG_END_OF_STREAM);
       mJavaEncoder->Input(nullptr, mInputBufferInfo, nullptr);
       mDrainState = DrainState::DRAINING;
       [[fallthrough]];
@@ -445,12 +449,12 @@ void AndroidDataEncoder::CallbacksSupport::HandleInput(int64_t aTimestamp,
                                                        bool aProcessed) {}
 
 void AndroidDataEncoder::CallbacksSupport::HandleOutput(
-    Sample::Param aSample, SampleBuffer::Param aBuffer) {
+    java::Sample::Param aSample, java::SampleBuffer::Param aBuffer) {
   mEncoder->ProcessOutput(std::move(aSample), std::move(aBuffer));
 }
 
 void AndroidDataEncoder::CallbacksSupport::HandleOutputFormatChanged(
-    MediaFormat::Param aFormat) {}
+    java::sdk::MediaFormat::Param aFormat) {}
 
 void AndroidDataEncoder::CallbacksSupport::HandleError(
     const MediaResult& aError) {

@@ -9,8 +9,6 @@
 #include "GeneratedJNINatives.h"
 #include "MediaCodec.h"  // For MediaDrm::KeyStatus
 
-using namespace mozilla::java;
-
 namespace mozilla {
 
 LogModule* GetMDRMNLog() {
@@ -19,10 +17,10 @@ LogModule* GetMDRMNLog() {
 }
 
 class MediaDrmJavaCallbacksSupport
-    : public MediaDrmProxy::NativeMediaDrmProxyCallbacks::Natives<
+    : public java::MediaDrmProxy::NativeMediaDrmProxyCallbacks::Natives<
           MediaDrmJavaCallbacksSupport> {
  public:
-  typedef MediaDrmProxy::NativeMediaDrmProxyCallbacks::Natives<
+  typedef java::MediaDrmProxy::NativeMediaDrmProxyCallbacks::Natives<
       MediaDrmJavaCallbacksSupport>
       MediaDrmProxyNativeCallbacks;
   using MediaDrmProxyNativeCallbacks::AttachNative;
@@ -191,9 +189,9 @@ void MediaDrmJavaCallbacksSupport::OnRejectPromise(
 
 MediaDrmProxySupport::MediaDrmProxySupport(const nsAString& aKeySystem)
     : mKeySystem(aKeySystem), mDestroyed(false) {
-  mJavaCallbacks = MediaDrmProxy::NativeMediaDrmProxyCallbacks::New();
+  mJavaCallbacks = java::MediaDrmProxy::NativeMediaDrmProxyCallbacks::New();
 
-  mBridgeProxy = MediaDrmProxy::Create(mKeySystem, mJavaCallbacks);
+  mBridgeProxy = java::MediaDrmProxy::Create(mKeySystem, mJavaCallbacks);
 
   MOZ_ASSERT(mBridgeProxy, "mBridgeProxy should not be null");
   mMediaDrmStubId = mBridgeProxy->GetStubId()->ToString();

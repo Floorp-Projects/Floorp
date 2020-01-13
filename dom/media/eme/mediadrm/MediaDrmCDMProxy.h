@@ -20,8 +20,6 @@
 #include "MediaCodec.h"
 #include "nsString.h"
 
-using namespace mozilla::java;
-
 namespace mozilla {
 
 class MediaDrmCDMCallbackProxy;

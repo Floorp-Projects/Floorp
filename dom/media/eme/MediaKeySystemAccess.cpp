@@ -304,7 +304,6 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       widevine.mEncryptionSchemes.AppendElement(NS_LITERAL_STRING("cbcs"));
 
 #if defined(MOZ_WIDGET_ANDROID)
-      using namespace mozilla::java;
       // MediaDrm.isCryptoSchemeSupported only allows passing
       // "video/mp4" or "video/webm" for mimetype string.
       // See
@@ -318,29 +317,29 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       } DataForValidation;
 
       DataForValidation validationList[] = {
-          {nsCString(VIDEO_MP4), EME_CODEC_H264, MediaDrmProxy::AVC,
+          {nsCString(VIDEO_MP4), EME_CODEC_H264, java::MediaDrmProxy::AVC,
            &widevine.mMP4},
-          {nsCString(VIDEO_MP4), EME_CODEC_VP9, MediaDrmProxy::AVC,
+          {nsCString(VIDEO_MP4), EME_CODEC_VP9, java::MediaDrmProxy::AVC,
            &widevine.mMP4},
-          {nsCString(AUDIO_MP4), EME_CODEC_AAC, MediaDrmProxy::AAC,
+          {nsCString(AUDIO_MP4), EME_CODEC_AAC, java::MediaDrmProxy::AAC,
            &widevine.mMP4},
-          {nsCString(AUDIO_MP4), EME_CODEC_FLAC, MediaDrmProxy::FLAC,
+          {nsCString(AUDIO_MP4), EME_CODEC_FLAC, java::MediaDrmProxy::FLAC,
            &widevine.mMP4},
-          {nsCString(AUDIO_MP4), EME_CODEC_OPUS, MediaDrmProxy::OPUS,
+          {nsCString(AUDIO_MP4), EME_CODEC_OPUS, java::MediaDrmProxy::OPUS,
            &widevine.mMP4},
-          {nsCString(VIDEO_WEBM), EME_CODEC_VP8, MediaDrmProxy::VP8,
+          {nsCString(VIDEO_WEBM), EME_CODEC_VP8, java::MediaDrmProxy::VP8,
            &widevine.mWebM},
-          {nsCString(VIDEO_WEBM), EME_CODEC_VP9, MediaDrmProxy::VP9,
+          {nsCString(VIDEO_WEBM), EME_CODEC_VP9, java::MediaDrmProxy::VP9,
            &widevine.mWebM},
-          {nsCString(AUDIO_WEBM), EME_CODEC_VORBIS, MediaDrmProxy::VORBIS,
+          {nsCString(AUDIO_WEBM), EME_CODEC_VORBIS, java::MediaDrmProxy::VORBIS,
            &widevine.mWebM},
-          {nsCString(AUDIO_WEBM), EME_CODEC_OPUS, MediaDrmProxy::OPUS,
+          {nsCString(AUDIO_WEBM), EME_CODEC_OPUS, java::MediaDrmProxy::OPUS,
            &widevine.mWebM},
       };
 
       for (const auto& data : validationList) {
-        if (MediaDrmProxy::IsCryptoSchemeSupported(EME_KEY_SYSTEM_WIDEVINE,
-                                                   data.mMimeType)) {
+        if (java::MediaDrmProxy::IsCryptoSchemeSupported(
+                EME_KEY_SYSTEM_WIDEVINE, data.mMimeType)) {
           if (AndroidDecoderModule::SupportsMimeType(data.mMimeType)) {
             data.mSupportType->SetCanDecryptAndDecode(data.mEMECodecType);
           } else {
