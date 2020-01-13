@@ -253,6 +253,8 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
     isRecommended,
     blocklistState,
     userDisabled,
+    embedderDisabled,
+    isActive,
     isBuiltin,
     id,
   } = aAddon;
@@ -272,6 +274,9 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
   if (blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
     disabledFlags.push("blocklistDisabled");
   }
+  if (embedderDisabled) {
+    disabledFlags.push("appDisabled");
+  }
   return {
     webExtensionId: id,
     locationURI: aSourceURI != null ? aSourceURI.spec : "",
@@ -280,6 +285,7 @@ function exportExtension(aAddon, aPermissions, aSourceURI) {
       permissions: aPermissions ? aPermissions.permissions : [],
       origins: aPermissions ? aPermissions.origins : [],
       description,
+      enabled: isActive,
       disabledFlags,
       version,
       creatorName,
@@ -505,7 +511,9 @@ var GeckoViewWebExtension = {
   async enableWebExtension(aId, aSource) {
     const extension = await this.extensionById(aId);
     if (aSource === "user") {
-      extension.enable();
+      await extension.enable();
+    } else if (aSource === "app") {
+      await extension.setEmbedderDisabled(false);
     }
     return exportExtension(
       extension,
@@ -517,7 +525,9 @@ var GeckoViewWebExtension = {
   async disableWebExtension(aId, aSource) {
     const extension = await this.extensionById(aId);
     if (aSource === "user") {
-      extension.disable();
+      await extension.disable();
+    } else if (aSource === "app") {
+      await extension.setEmbedderDisabled(true);
     }
     return exportExtension(
       extension,
@@ -526,6 +536,7 @@ var GeckoViewWebExtension = {
     );
   },
 
+  /* eslint-disable complexity */
   async onEvent(aEvent, aData, aCallback) {
     debug`onEvent ${aEvent} ${aData}`;
 
@@ -662,7 +673,7 @@ var GeckoViewWebExtension = {
       case "GeckoView:WebExtension:Enable": {
         try {
           const { source, webExtensionId } = aData;
-          if (source !== "user") {
+          if (source !== "user" && source !== "app") {
             throw new Error("Illegal source parameter");
           }
           const extension = await this.enableWebExtension(
@@ -680,7 +691,7 @@ var GeckoViewWebExtension = {
       case "GeckoView:WebExtension:Disable": {
         try {
           const { source, webExtensionId } = aData;
-          if (source !== "user") {
+          if (source !== "user" && source !== "app") {
             throw new Error("Illegal source parameter");
           }
           const extension = await this.disableWebExtension(
