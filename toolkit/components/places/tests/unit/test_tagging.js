@@ -64,9 +64,16 @@ function run_test() {
   tagssvc.untagURI(uri1, ["tag 1"]);
   Assert.equal(tag1node.childCount, 1);
 
+  let wait = PlacesTestUtils.waitForNotification(
+    "bookmark-removed",
+    events => events.some(event => event.id == tagRoot.itemId),
+    "places"
+  );
   // removing the last uri from a tag should remove the tag-container
   tagssvc.untagURI(uri2, ["tag 1"]);
-  Assert.equal(tagRoot.childCount, 1);
+  wait.then(() => {
+    Assert.equal(tagRoot.childCount, 1);
+  });
 
   // cleanup
   tag1node.containerOpen = false;
@@ -116,8 +123,15 @@ function run_test() {
     do_throw("Passing a sparse array should not throw");
   }
   try {
+    wait = PlacesTestUtils.waitForNotification(
+      "bookmark-removed",
+      events => events.some(event => event.id == tagRoot.itemId),
+      "places"
+    );
     tagssvc.untagURI(uri1, [undefined, "tagSparse"]);
-    Assert.equal(tagRoot.childCount, curChildCount);
+    wait.then(() => {
+      Assert.equal(tagRoot.childCount, curChildCount);
+    });
   } catch (ex) {
     do_throw("Passing a sparse array should not throw");
   }

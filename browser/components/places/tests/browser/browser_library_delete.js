@@ -69,9 +69,9 @@ add_task(async function test_create_and_remove_bookmarks() {
     "Delete command is enabled"
   );
   let promiseItemRemovedNotification = PlacesTestUtils.waitForNotification(
-    "onItemRemoved",
-    (itemId, parentId, index, type, uri, guid) =>
-      guid == folderNode.bookmarkGuid
+    "bookmark-removed",
+    events => events.some(event => event.guid == folderNode.bookmarkGuid),
+    "places"
   );
 
   // Execute the delete command and check bookmark has been removed.

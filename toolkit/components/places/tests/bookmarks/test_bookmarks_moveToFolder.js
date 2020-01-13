@@ -198,7 +198,7 @@ async function testMoveToFolder(details) {
 
   let observer;
   if (details.notifications) {
-    observer = expectNotifications(false, true);
+    observer = expectNotifications(true);
   }
 
   let movedItems = await PlacesUtils.bookmarks.moveToFolder(
