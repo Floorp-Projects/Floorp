@@ -29,10 +29,18 @@ loader.lazyGetter(this, "MenuList", function() {
   );
 });
 
+loader.lazyRequireGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm",
+  true
+);
+
 class ConsoleSettings extends Component {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
+      eagerEvaluation: PropTypes.bool.isRequired,
       groupWarnings: PropTypes.bool.isRequired,
       hidePersistLogsCheckbox: PropTypes.bool.isRequired,
       hideShowContentMessagesCheckbox: PropTypes.bool.isRequired,
@@ -46,6 +54,7 @@ class ConsoleSettings extends Component {
   renderMenuItems() {
     const {
       dispatch,
+      eagerEvaluation,
       groupWarnings,
       hidePersistLogsCheckbox,
       hideShowContentMessagesCheckbox,
@@ -124,6 +133,25 @@ class ConsoleSettings extends Component {
         onClick: () => dispatch(actions.warningGroupsToggle()),
       })
     );
+
+    // Eager Evaluation
+    if (AppConstants.NIGHTLY_BUILD) {
+      items.push(
+        MenuItem({
+          key: "webconsole-console-settings-menu-item-eager-evaluation",
+          checked: eagerEvaluation,
+          className:
+            "menu-item webconsole-console-settings-menu-item-eager-evaluation",
+          label: l10n.getStr(
+            "webconsole.console.settings.menu.item.eagerEvaluation.label"
+          ),
+          tooltip: l10n.getStr(
+            "webconsole.console.settings.menu.item.eagerEvaluation.tooltip"
+          ),
+          onClick: () => dispatch(actions.eagerEvaluationToggle()),
+        })
+      );
+    }
 
     return MenuList({ id: "webconsole-console-settings-menu-list" }, items);
   }

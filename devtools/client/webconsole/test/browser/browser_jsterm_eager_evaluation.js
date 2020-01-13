@@ -16,11 +16,13 @@ function zzyzx2() {
 </script>
 `;
 
+const EAGER_EVALUATION_PREF = "devtools.webconsole.input.eagerEvaluation";
+
 // Basic testing of eager evaluation functionality. Expressions which can be
 // eagerly evaluated should show their results, and expressions with side
 // effects should not perform those side effects.
 add_task(async function() {
-  await pushPref("devtools.webconsole.input.eagerEvaluation", true);
+  await pushPref(EAGER_EVALUATION_PREF, true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
   setInputValue(hud, "x + y");
@@ -74,7 +76,7 @@ add_task(async function() {
 
 // Test that the currently selected autocomplete result is eagerly evaluated.
 add_task(async function() {
-  await pushPref("devtools.webconsole.input.eagerEvaluation", true);
+  await pushPref(EAGER_EVALUATION_PREF, true);
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
 
@@ -88,4 +90,65 @@ add_task(async function() {
   await waitForEagerEvaluationResult(hud, "function zzyzx()");
   EventUtils.synthesizeKey("KEY_ArrowDown");
   await waitForEagerEvaluationResult(hud, "function zzyzx2()");
+});
+
+// Test that the setting works as expected.
+add_task(async function() {
+  // Settings is only enabled on Nightly at the moment.
+  if (!AppConstants.NIGHTLY_BUILD) {
+    ok(true);
+    return;
+  }
+
+  // start with the pref off.
+  await pushPref(EAGER_EVALUATION_PREF, false);
+  const hud = await openNewTabAndConsole(TEST_URI);
+
+  info("Check that the setting is disabled");
+  checkConsoleSettingState(
+    hud,
+    ".webconsole-console-settings-menu-item-eager-evaluation",
+    false
+  );
+
+  is(
+    getEagerEvaluationElement(hud),
+    null,
+    "There's no eager evaluation element"
+  );
+
+  // Wait for the autocomplete popup to be displayed so we know the eager evaluation could
+  // have occured.
+  await setInputValueForAutocompletion(hud, "x + y");
+  ok(true, "Eager evaluation is disabled");
+
+  info("Turn on the eager evaluation");
+  toggleConsoleSetting(
+    hud,
+    ".webconsole-console-settings-menu-item-eager-evaluation"
+  );
+  await waitFor(() => getEagerEvaluationElement(hud));
+  ok(true, "The eager evaluation element is now displayed");
+  is(
+    Services.prefs.getBoolPref(EAGER_EVALUATION_PREF),
+    true,
+    "Pref was changed"
+  );
+
+  setInputValue(hud, "1 + 2");
+  await waitForEagerEvaluationResult(hud, "3");
+  ok(true, "Eager evaluation result is displayed");
+
+  info("Turn off the eager evaluation");
+  toggleConsoleSetting(
+    hud,
+    ".webconsole-console-settings-menu-item-eager-evaluation"
+  );
+  await waitFor(() => !getEagerEvaluationElement(hud));
+  is(
+    Services.prefs.getBoolPref(EAGER_EVALUATION_PREF),
+    false,
+    "Pref was changed"
+  );
+  ok(true, "Eager evaluation element is no longer displayed");
 });
