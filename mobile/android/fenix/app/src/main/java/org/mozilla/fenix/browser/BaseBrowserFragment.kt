@@ -435,7 +435,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
             }
 
             @Suppress("ConstantConditionIf")
-            if (FeatureFlags.asFeatureWebChannelsDisabled) {
+            if (!FeatureFlags.asFeatureWebChannelsDisabled) {
                 webchannelIntegration.set(
                     feature = FxaWebChannelFeature(
                         requireContext(),
