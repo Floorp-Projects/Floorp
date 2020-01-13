@@ -6810,7 +6810,7 @@ MethodStatus BaselineCompiler::emitBody() {
   while (true) {
     JSOp op = JSOp(*handler.pc());
     JitSpew(JitSpew_BaselineOp, "Compiling op @ %d: %s",
-            int(script->pcToOffset(handler.pc())), CodeName(op));
+            int(script->pcToOffset(handler.pc())), CodeName[op]);
 
     BytecodeInfo* info = handler.analysis().maybeInfo(handler.pc());
 
@@ -6981,7 +6981,7 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
   Label opLabels[JSOP_LIMIT];
 #define EMIT_OP(OP, ...)                \
   {                                     \
-    masm.bind(&opLabels[uint8_t(OP)]);  \
+    masm.bind(&opLabels[OP]);           \
     handler.setCurrentOp(OP);           \
     if (!this->emit_##OP()) {           \
       return false;                     \

@@ -749,7 +749,7 @@ ObjectGroup* BaselineInspector::getTemplateObjectGroup(jsbytecode* pc) {
 }
 
 JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_NEW);
+  MOZ_ASSERT(*pc == JSOP_NEW);
 
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* stub = entry.firstStub();
@@ -1571,7 +1571,7 @@ MIRType BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc) {
 bool BaselineInspector::instanceOfData(jsbytecode* pc, Shape** shape,
                                        uint32_t* slot,
                                        JSObject** prototypeObject) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_INSTANCEOF);
+  MOZ_ASSERT(*pc == JSOP_INSTANCEOF);
 
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* firstStub = entry.firstStub();
