@@ -1,8 +1,8 @@
 package org.mozilla.geckoview.test
 
-import android.support.test.InstrumentationRegistry
-import android.support.test.filters.MediumTest
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.filters.MediumTest
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.util.Log
 import org.junit.After
 import org.junit.Assert.assertTrue
@@ -20,7 +20,7 @@ import org.mozilla.geckoview.test.util.Callbacks
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class ContentCrashTest : BaseSessionTest() {
-    val client = TestCrashHandler.Client(InstrumentationRegistry.getTargetContext())
+    val client = TestCrashHandler.Client(InstrumentationRegistry.getInstrumentation().targetContext)
 
     @Before
     fun setup() {

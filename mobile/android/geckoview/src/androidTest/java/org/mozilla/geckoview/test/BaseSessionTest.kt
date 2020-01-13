@@ -6,7 +6,7 @@
 package org.mozilla.geckoview.test
 
 import android.os.Parcel
-import android.support.test.InstrumentationRegistry
+import androidx.test.platform.app.InstrumentationRegistry
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
@@ -92,7 +92,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun <T> forEachCall(vararg values: T): T = sessionRule.forEachCall(*values)
 
     fun getTestBytes(path: String) =
-            InstrumentationRegistry.getTargetContext().resources.assets
+            InstrumentationRegistry.getInstrumentation().targetContext.resources.assets
                     .open(path.removePrefix("/assets/")).readBytes()
 
     val GeckoSession.isRemote

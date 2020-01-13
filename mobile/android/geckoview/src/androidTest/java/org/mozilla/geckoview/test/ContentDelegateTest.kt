@@ -20,8 +20,8 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.annotation.AnyThread
-import android.support.test.filters.MediumTest
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import android.util.Pair
 import android.util.SparseArray
 import android.view.Surface

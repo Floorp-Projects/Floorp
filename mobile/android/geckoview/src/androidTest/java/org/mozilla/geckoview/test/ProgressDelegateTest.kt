@@ -9,9 +9,9 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 
-import android.support.test.filters.MediumTest
-import android.support.test.filters.LargeTest
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.filters.MediumTest
+import androidx.test.filters.LargeTest
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 import org.hamcrest.Matchers.*
 import org.junit.Assume.assumeThat
