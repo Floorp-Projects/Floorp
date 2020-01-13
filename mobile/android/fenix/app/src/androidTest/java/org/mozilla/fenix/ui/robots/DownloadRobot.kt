@@ -6,12 +6,15 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.content.Intent
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.RootMatchers.isDialog
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
@@ -19,8 +22,10 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
 
 /**
  * Implementation of Robot Pattern for download UI handling.
@@ -34,13 +39,15 @@ class DownloadRobot {
 
     fun verifyDownloadNotificationShade() = assertDownloadNotificationShade()
 
+    fun verifyPhotosAppOpens() = assertPhotosOpens()
+
     class Transition {
 
-        fun clickDownload(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
+        fun clickDownload(interact: DownloadRobot.() -> Unit): Transition {
             clickDownloadButton().click()
 
             DownloadRobot().interact()
-            return DownloadRobot.Transition()
+            return Transition()
         }
 
         fun closePrompt(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
@@ -48,6 +55,36 @@ class DownloadRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun clickOpen(type: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            clickOpenButton().click()
+
+            // verify open intent is matched with associated data type
+            Intents.intended(
+                CoreMatchers.allOf(
+                    IntentMatchers.hasAction(Intent.ACTION_VIEW),
+                    IntentMatchers.hasType(type)
+                )
+            )
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun clickAllowPermission(interact: DownloadRobot.() -> Unit): Transition {
+            val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+
+            mDevice.waitNotNull(
+                Until.findObject(By.res(TestHelper.getPermissionAllowID() + ":id/permission_allow_button")),
+                TestAssetHelper.waitingTime
+            )
+
+            val allowPermissionButton = mDevice.findObject(By.res(TestHelper.getPermissionAllowID() + ":id/permission_allow_button"))
+            allowPermissionButton.click()
+
+            DownloadRobot().interact()
+            return Transition()
         }
     }
 }
@@ -84,3 +121,20 @@ private fun closePromptButton() =
 
 private fun clickDownloadButton() =
     onView(withText("Download")).inRoot(isDialog()).check(matches(isDisplayed()))
+
+private fun clickOpenButton() =
+    onView(withId(R.id.download_notification_action_button)).inRoot(isDialog()).check(
+        matches(isDisplayed())
+    )
+
+private fun assertPhotosOpens() {
+    if (isPackageInstalled(GOOGLE_APPS_PHOTOS)) {
+        Intents.intended(IntentMatchers.toPackage(GOOGLE_APPS_PHOTOS))
+    } else {
+        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        mDevice.waitNotNull(
+            Until.findObject(By.text("Could not open file")),
+            TestAssetHelper.waitingTime
+        )
+    }
+}

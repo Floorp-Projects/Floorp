@@ -30,7 +30,7 @@ object TestAssetHelper {
      */
     fun getGenericAssets(server: MockWebServer): List<TestAsset> {
         @Suppress("MagicNumber")
-        return (1..3).map {
+        return (1..4).map {
             TestAsset(
                 server.url("pages/generic$it.html").toString().toUri()!!,
                 "Page content: $it"
@@ -74,6 +74,12 @@ object TestAssetHelper {
 
     fun getEnhancedTrackingProtectionAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/etp.html").toString().toUri()!!
+
+        return TestAsset(url, "")
+    }
+
+    fun getImageAsset(server: MockWebServer): TestAsset {
+        val url = server.url("resources/rabbit.jpg").toString().toUri()!!
 
         return TestAsset(url, "")
     }

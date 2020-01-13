@@ -4,7 +4,10 @@
 
 package org.mozilla.fenix.helpers
 
+import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.preference.PreferenceManager
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -17,8 +20,6 @@ import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.ui.robots.mDevice
-import android.preference.PreferenceManager
-import android.content.Context
 
 object TestHelper {
     fun scrollToElementByText(text: String): UiScrollable {
@@ -45,5 +46,13 @@ object TestHelper {
         val editor = preferences.edit()
         editor.putInt(pref, value)
         editor.apply()
+    }
+
+    fun getPermissionAllowID(): String {
+        return when
+            (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            true -> "com.android.permissioncontroller"
+            false -> "com.android.packageinstaller"
+        }
     }
 }

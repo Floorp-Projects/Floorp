@@ -6,11 +6,13 @@
 
 package org.mozilla.fenix.ui.robots
 
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -82,6 +84,7 @@ class HomeScreenRobot {
     fun verifyCloseTabsButton(visible: Boolean = true) = assertCloseTabsButton(visible)
 
     fun verifyExistingTabList() = assertExistingTabList()
+    fun verifyExistingOpenTabs(title: String) = assertExistingOpenTabs(title)
 
     // Collections element
     fun clickCollectionThreeDotButton() {
@@ -360,6 +363,13 @@ private fun visibleOrGone(visibility: Boolean) = if (visibility) Visibility.VISI
 private fun assertExistingTabList() =
     onView(CoreMatchers.allOf(withId(R.id.item_tab)))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+private fun assertExistingOpenTabs(title: String) =
+    onView(withId(R.id.home_component)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            ViewMatchers.hasDescendant(withText(title))
+        )
+    ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun tabsListThreeDotButton() = onView(allOf(withId(R.id.tabs_overflow_button)))
 
