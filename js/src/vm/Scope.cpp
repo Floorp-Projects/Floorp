@@ -1441,7 +1441,6 @@ WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
   MOZ_ASSERT(data->length == namesCount);
 
   data->instance.init(instance);
-  data->memoriesStart = 0;
   data->globalsStart = globalsStart;
 
   RootedScope enclosing(cx, &cx->global()->emptyGlobalScope());
@@ -1498,8 +1497,6 @@ WasmFunctionScope* WasmFunctionScope::create(JSContext* cx,
     InitializeNextTrailingName(data, wasmName);
   }
   MOZ_ASSERT(data->length == namesCount);
-
-  data->funcIndex = funcIndex;
 
   return Scope::create<WasmFunctionScope>(cx, ScopeKind::WasmFunction,
                                           enclosing,
