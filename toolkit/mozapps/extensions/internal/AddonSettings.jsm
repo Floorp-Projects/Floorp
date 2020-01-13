@@ -16,6 +16,7 @@ const { AppConstants } = ChromeUtils.import(
 const PREF_SIGNATURES_REQUIRED = "xpinstall.signatures.required";
 const PREF_LANGPACK_SIGNATURES = "extensions.langpacks.signatures.required";
 const PREF_ALLOW_LEGACY = "extensions.legacy.enabled";
+const PREF_IS_EMBEDDED = "extensions.isembedded";
 
 var AddonSettings = {};
 
@@ -46,6 +47,18 @@ if (AppConstants.MOZ_REQUIRE_SIGNING && !Cu.isInAutomation) {
     PREF_LANGPACK_SIGNATURES,
     false
   );
+}
+
+// Whether or not we're running in GeckoView embedded in an Android app
+if (Cu.isInAutomation) {
+  XPCOMUtils.defineLazyPreferenceGetter(
+    AddonSettings,
+    "IS_EMBEDDED",
+    PREF_IS_EMBEDDED,
+    false
+  );
+} else {
+  makeConstant("IS_EMBEDDED", AppConstants.platform === "android");
 }
 
 if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS || Cu.isInAutomation) {
