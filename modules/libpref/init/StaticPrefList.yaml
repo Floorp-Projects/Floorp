@@ -1603,6 +1603,14 @@
   value: false
   mirror: always
 
+# <img loading="lazy">
+#
+# See https://github.com/whatwg/html/pull/3752
+- name: dom.image-lazy-loading.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Enable passing the "storage" option to indexedDB.open.
 - name: dom.indexedDB.storageOption.enabled
   type: RelaxedAtomicBool
