@@ -264,12 +264,12 @@ static inline void SET_ICINDEX(jsbytecode* pc, uint32_t icIndex) {
 }
 
 static inline unsigned LoopHeadDepthHint(jsbytecode* pc) {
-  MOZ_ASSERT(*pc == JSOP_LOOPHEAD);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
   return GET_UINT8(pc + 4);
 }
 
 static inline void SetLoopHeadDepthHint(jsbytecode* pc, unsigned loopDepth) {
-  MOZ_ASSERT(*pc == JSOP_LOOPHEAD);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
   uint8_t data = std::min(loopDepth, unsigned(UINT8_MAX));
   SET_UINT8(pc + 4, data);
 }
@@ -293,7 +293,8 @@ static inline void SetClassConstructorOperands(jsbytecode* pc,
                                                uint32_t atomIndex,
                                                uint32_t sourceStart,
                                                uint32_t sourceEnd) {
-  MOZ_ASSERT(*pc == JSOP_CLASSCONSTRUCTOR || *pc == JSOP_DERIVEDCONSTRUCTOR);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_CLASSCONSTRUCTOR ||
+             JSOp(*pc) == JSOP_DERIVEDCONSTRUCTOR);
   SET_UINT32(pc, atomIndex);
   SET_UINT32(pc + 4, sourceStart);
   SET_UINT32(pc + 8, sourceEnd);
@@ -303,7 +304,8 @@ static inline void GetClassConstructorOperands(jsbytecode* pc,
                                                uint32_t* atomIndex,
                                                uint32_t* sourceStart,
                                                uint32_t* sourceEnd) {
-  MOZ_ASSERT(*pc == JSOP_CLASSCONSTRUCTOR || *pc == JSOP_DERIVEDCONSTRUCTOR);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_CLASSCONSTRUCTOR ||
+             JSOp(*pc) == JSOP_DERIVEDCONSTRUCTOR);
   *atomIndex = GET_UINT32(pc);
   *sourceStart = GET_UINT32(pc + 4);
   *sourceEnd = GET_UINT32(pc + 8);
@@ -355,13 +357,20 @@ struct JSCodeSpec {
 
 namespace js {
 
-extern const JSCodeSpec CodeSpec[];
-extern const char* const CodeName[];
+extern const JSCodeSpec CodeSpecTable[];
+
+inline const JSCodeSpec& CodeSpec(JSOp op) {
+  return CodeSpecTable[uint8_t(op)];
+}
+
+extern const char* const CodeNameTable[];
+
+inline const char* CodeName(JSOp op) { return CodeNameTable[uint8_t(op)]; }
 
 /* Shorthand for type from opcode. */
 
 static inline uint32_t JOF_OPTYPE(JSOp op) {
-  return JOF_TYPE(CodeSpec[op].format);
+  return JOF_TYPE(CodeSpec(op).format);
 }
 
 static inline bool IsJumpOpcode(JSOp op) { return JOF_OPTYPE(op) == JOF_JUMP; }
@@ -398,7 +407,7 @@ static inline bool BytecodeIsJumpTarget(JSOp op) {
 
 MOZ_ALWAYS_INLINE unsigned StackUses(jsbytecode* pc) {
   JSOp op = JSOp(*pc);
-  int nuses = CodeSpec[op].nuses;
+  int nuses = CodeSpec(op).nuses;
   if (nuses >= 0) {
     return nuses;
   }
@@ -421,7 +430,7 @@ MOZ_ALWAYS_INLINE unsigned StackUses(jsbytecode* pc) {
 }
 
 MOZ_ALWAYS_INLINE unsigned StackDefs(jsbytecode* pc) {
-  int ndefs = CodeSpec[*pc].ndefs;
+  int ndefs = CodeSpec(JSOp(*pc)).ndefs;
   MOZ_ASSERT(ndefs >= 0);
   return ndefs;
 }
@@ -473,8 +482,8 @@ JSString* DecompileArgument(JSContext* cx, int formalIndex, HandleValue v);
 
 static inline unsigned GetOpLength(JSOp op) {
   MOZ_ASSERT(op < JSOP_LIMIT);
-  MOZ_ASSERT(CodeSpec[op].length > 0);
-  return CodeSpec[op].length;
+  MOZ_ASSERT(CodeSpec(op).length > 0);
+  return CodeSpec(op).length;
 }
 
 static inline unsigned GetBytecodeLength(jsbytecode* pc) {
@@ -490,29 +499,29 @@ static inline bool BytecodeIsPopped(jsbytecode* pc) {
 static inline bool BytecodeFlowsToBitop(jsbytecode* pc) {
   // Look for simple bytecode for integer conversions like (x | 0) or (x & -1).
   jsbytecode* next = pc + GetBytecodeLength(pc);
-  if (*next == JSOP_BITOR || *next == JSOP_BITAND) {
+  if (JSOp(*next) == JSOP_BITOR || JSOp(*next) == JSOP_BITAND) {
     return true;
   }
-  if (*next == JSOP_INT8 && GET_INT8(next) == -1) {
+  if (JSOp(*next) == JSOP_INT8 && GET_INT8(next) == -1) {
     next += GetBytecodeLength(next);
-    if (*next == JSOP_BITAND) {
+    if (JSOp(*next) == JSOP_BITAND) {
       return true;
     }
     return false;
   }
-  if (*next == JSOP_ONE) {
+  if (JSOp(*next) == JSOP_ONE) {
     next += GetBytecodeLength(next);
-    if (*next == JSOP_NEG) {
+    if (JSOp(*next) == JSOP_NEG) {
       next += GetBytecodeLength(next);
-      if (*next == JSOP_BITAND) {
+      if (JSOp(*next) == JSOP_BITAND) {
         return true;
       }
     }
     return false;
   }
-  if (*next == JSOP_ZERO) {
+  if (JSOp(*next) == JSOP_ZERO) {
     next += GetBytecodeLength(next);
-    if (*next == JSOP_BITOR) {
+    if (JSOp(*next) == JSOP_BITOR) {
       return true;
     }
     return false;
@@ -545,14 +554,14 @@ inline bool IsLocalOp(JSOp op) { return JOF_OPTYPE(op) == JOF_LOCAL; }
 
 inline bool IsAliasedVarOp(JSOp op) { return JOF_OPTYPE(op) == JOF_ENVCOORD; }
 
-inline bool IsGlobalOp(JSOp op) { return CodeSpec[op].format & JOF_GNAME; }
+inline bool IsGlobalOp(JSOp op) { return CodeSpec(op).format & JOF_GNAME; }
 
 inline bool IsPropertySetOp(JSOp op) {
-  return CodeSpec[op].format & JOF_PROPSET;
+  return CodeSpec(op).format & JOF_PROPSET;
 }
 
 inline bool IsPropertyInitOp(JSOp op) {
-  return CodeSpec[op].format & JOF_PROPINIT;
+  return CodeSpec(op).format & JOF_PROPINIT;
 }
 
 inline bool IsLooseEqualityOp(JSOp op) {
@@ -572,16 +581,16 @@ inline bool IsRelationalOp(JSOp op) {
 }
 
 inline bool IsCheckStrictOp(JSOp op) {
-  return CodeSpec[op].format & JOF_CHECKSTRICT;
+  return CodeSpec(op).format & JOF_CHECKSTRICT;
 }
 
-inline bool IsDetecting(JSOp op) { return CodeSpec[op].format & JOF_DETECTING; }
+inline bool IsDetecting(JSOp op) { return CodeSpec(op).format & JOF_DETECTING; }
 
-inline bool IsNameOp(JSOp op) { return CodeSpec[op].format & JOF_NAME; }
+inline bool IsNameOp(JSOp op) { return CodeSpec(op).format & JOF_NAME; }
 
 #ifdef DEBUG
 inline bool IsCheckSloppyOp(JSOp op) {
-  return CodeSpec[op].format & JOF_CHECKSLOPPY;
+  return CodeSpec(op).format & JOF_CHECKSLOPPY;
 }
 #endif
 
@@ -626,10 +635,10 @@ inline bool IsSetElemOp(JSOp op) {
 inline bool IsSetElemPC(const jsbytecode* pc) { return IsSetElemOp(JSOp(*pc)); }
 
 inline bool IsElemPC(const jsbytecode* pc) {
-  return CodeSpec[*pc].format & JOF_ELEM;
+  return CodeSpec(JSOp(*pc)).format & JOF_ELEM;
 }
 
-inline bool IsInvokeOp(JSOp op) { return CodeSpec[op].format & JOF_INVOKE; }
+inline bool IsInvokeOp(JSOp op) { return CodeSpec(op).format & JOF_INVOKE; }
 
 inline bool IsInvokePC(jsbytecode* pc) { return IsInvokeOp(JSOp(*pc)); }
 
@@ -639,13 +648,13 @@ inline bool IsStrictEvalPC(jsbytecode* pc) {
 }
 
 inline bool IsConstructOp(JSOp op) {
-  return CodeSpec[op].format & JOF_CONSTRUCT;
+  return CodeSpec(op).format & JOF_CONSTRUCT;
 }
 inline bool IsConstructPC(const jsbytecode* pc) {
   return IsConstructOp(JSOp(*pc));
 }
 
-inline bool IsSpreadOp(JSOp op) { return CodeSpec[op].format & JOF_SPREAD; }
+inline bool IsSpreadOp(JSOp op) { return CodeSpec(op).format & JOF_SPREAD; }
 
 inline bool IsSpreadPC(const jsbytecode* pc) { return IsSpreadOp(JSOp(*pc)); }
 
@@ -668,10 +677,10 @@ static inline int32_t GetBytecodeInteger(jsbytecode* pc) {
   }
 }
 
-inline bool BytecodeOpHasIC(JSOp op) { return CodeSpec[op].format & JOF_IC; }
+inline bool BytecodeOpHasIC(JSOp op) { return CodeSpec(op).format & JOF_IC; }
 
 inline bool BytecodeOpHasTypeSet(JSOp op) {
-  return CodeSpec[op].format & JOF_TYPESET;
+  return CodeSpec(op).format & JOF_TYPESET;
 }
 
 /*

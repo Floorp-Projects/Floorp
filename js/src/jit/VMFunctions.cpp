@@ -899,7 +899,7 @@ JSObject* CreateGenerator(JSContext* cx, BaselineFrame* frame) {
 
 bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
                    uint32_t frameSize, jsbytecode* pc) {
-  MOZ_ASSERT(*pc == JSOP_YIELD || *pc == JSOP_AWAIT);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_YIELD || JSOp(*pc) == JSOP_AWAIT);
 
   uint32_t numValueSlots = frame->numValueSlots(frameSize);
 
@@ -929,7 +929,7 @@ bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
 }
 
 bool FinalSuspend(JSContext* cx, HandleObject obj, jsbytecode* pc) {
-  MOZ_ASSERT(*pc == JSOP_FINALYIELDRVAL);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_FINALYIELDRVAL);
   AbstractGeneratorObject::finalSuspend(obj);
   return true;
 }
@@ -1067,7 +1067,7 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr) {
                DebugAPI::hasBreakpointsAt(script, pc));
   }
 
-  if (*pc == JSOP_AFTERYIELD) {
+  if (JSOp(*pc) == JSOP_AFTERYIELD) {
     // JSOP_AFTERYIELD will set the frame's debuggee flag and call the
     // onEnterFrame handler, but if we set a breakpoint there we have to do
     // it now.

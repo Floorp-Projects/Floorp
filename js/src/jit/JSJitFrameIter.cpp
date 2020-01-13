@@ -317,7 +317,7 @@ void JSJitFrameIter::dumpBaseline() const {
 
   fprintf(stderr, "  script = %p, pc = %p (offset %u)\n", (void*)script, pc,
           uint32_t(script->pcToOffset(pc)));
-  fprintf(stderr, "  current op: %s\n", CodeName[*pc]);
+  fprintf(stderr, "  current op: %s\n", CodeName(JSOp(*pc)));
 
   fprintf(stderr, "  actual args: %d\n", numActualArgs());
 
