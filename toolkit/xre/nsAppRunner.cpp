@@ -4366,6 +4366,11 @@ nsresult XREMain::XRE_mainRun() {
     }
 
     if (gDoProfileReset) {
+      if (!initializedJSContext) {
+        xpc::InitializeJSContext();
+        initializedJSContext = true;
+      }
+
       nsresult backupCreated =
           ProfileResetCleanup(mProfileSvc, gResetOldProfile);
       if (NS_FAILED(backupCreated)) {
