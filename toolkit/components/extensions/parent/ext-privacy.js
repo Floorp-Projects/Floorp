@@ -20,6 +20,9 @@ var { getSettingsAPI } = ExtensionPreferencesManager;
 
 const cookieSvc = Ci.nsICookieService;
 
+const TLS_MIN_PREF = "security.tls.version.min";
+const TLS_MAX_PREF = "security.tls.version.max";
+
 const cookieBehaviorValues = new Map([
   ["allow_all", cookieSvc.BEHAVIOR_ACCEPT],
   ["reject_third_party", cookieSvc.BEHAVIOR_REJECT_FOREIGN],
@@ -28,11 +31,15 @@ const cookieBehaviorValues = new Map([
   ["reject_trackers", cookieSvc.BEHAVIOR_REJECT_TRACKER],
 ]);
 
+function isTLSMinVersionLowerOrEQThan(version) {
+  return Services.prefs.getIntPref(TLS_MIN_PREF) <= version;
+}
+
 const TLS_VERSIONS = [
-  [1, "TLSv1"],
-  [2, "TLSv1.1"],
-  [3, "TLSv1.2"],
-  [4, "TLSv1.3"],
+  { version: 1, name: "TLSv1", settable: isTLSMinVersionLowerOrEQThan(1) },
+  { version: 2, name: "TLSv1.1", settable: isTLSMinVersionLowerOrEQThan(2) },
+  { version: 3, name: "TLSv1.2", settable: true },
+  { version: 4, name: "TLSv1.3", settable: true },
 ];
 
 // Add settings objects for supported APIs to the preferences manager.
@@ -187,14 +194,18 @@ ExtensionPreferencesManager.addSetting("websites.trackingProtectionMode", {
 });
 
 ExtensionPreferencesManager.addSetting("network.tlsVersionRestriction", {
-  prefNames: ["security.tls.version.min", "security.tls.version.max"],
+  prefNames: [TLS_MIN_PREF, TLS_MAX_PREF],
 
   setCallback(value) {
     function tlsStringToVersion(string) {
-      const version = TLS_VERSIONS.find(a => a[1] === string);
-      if (version) {
-        return version[0];
+      const version = TLS_VERSIONS.find(a => a.name === string);
+      if (version && version.settable) {
+        return version.version;
       }
+
+      Services.console.logStringMessage(
+        `Setting TLS version ${string} is not allowed for security reasons.`
+      );
       return 0;
     }
 
@@ -202,12 +213,12 @@ ExtensionPreferencesManager.addSetting("network.tlsVersionRestriction", {
 
     const minimum = tlsStringToVersion(value.minimum);
     if (minimum) {
-      prefs["security.tls.version.min"] = minimum;
+      prefs[TLS_MIN_PREF] = minimum;
     }
 
     const maximum = tlsStringToVersion(value.maximum);
     if (maximum) {
-      prefs["security.tls.version.max"] = maximum;
+      prefs[TLS_MAX_PREF] = maximum;
     }
 
     return prefs;
@@ -276,16 +287,16 @@ this.privacy = class extends ExtensionAPI {
             callback() {
               function tlsVersionToString(pref) {
                 const value = Services.prefs.getIntPref(pref);
-                const version = TLS_VERSIONS.find(a => a[0] === value);
+                const version = TLS_VERSIONS.find(a => a.version === value);
                 if (version) {
-                  return version[1];
+                  return version.name;
                 }
                 return "unknown";
               }
 
               return {
-                minimum: tlsVersionToString("security.tls.version.min"),
-                maximum: tlsVersionToString("security.tls.version.max"),
+                minimum: tlsVersionToString(TLS_MIN_PREF),
+                maximum: tlsVersionToString(TLS_MAX_PREF),
               };
             },
             validate() {
