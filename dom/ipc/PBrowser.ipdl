@@ -609,9 +609,6 @@ parent:
                            RequestData aRequestData, uint32_t aState,
                            WebProgressSecurityChangeData? aSecurityChangeData);
 
-    async OnContentBlockingEvent(WebProgressData? aWebProgressData,
-                                 RequestData aRequestData, uint32_t aEvent);
-
     async NotifyContentBlockingEvent(uint32_t aEvent, RequestData aRequestData,
                                      bool aBlocked, nsIURI aHintURI,
                                      nsCString[] aTrackingFullHashes,
