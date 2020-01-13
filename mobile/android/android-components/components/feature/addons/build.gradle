@@ -34,7 +34,10 @@ dependencies {
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.androidx_work_runtime
     implementation Dependencies.androidx_core_ktx
+    implementation Dependencies.androidx_recyclerview
+    implementation Dependencies.androidx_cardview
 
+    implementation project(':ui-colors')
     implementation project(':ui-icons')
     implementation project(':browser-state')
     implementation project(':concept-engine')
