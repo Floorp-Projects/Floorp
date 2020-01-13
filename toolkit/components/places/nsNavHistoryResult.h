@@ -687,6 +687,12 @@ class nsNavHistoryQueryResultNode final
                        uint16_t aItemType, nsIURI* aURI, PRTime aDateAdded,
                        const nsACString& aGUID, const nsACString& aParentGUID,
                        uint16_t aSource);
+
+  nsresult OnItemRemoved(int64_t aItemId, int64_t aParentFolder, int32_t aIndex,
+                         uint16_t aItemType, nsIURI* aURI,
+                         const nsACString& aGUID, const nsACString& aParentGUID,
+                         uint16_t aSource);
+
   // The internal version has an output aAdded parameter, it is incremented by
   // query nodes when the visited uri belongs to them. If no such query exists,
   // the history result creates a new query node dynamically.
@@ -768,7 +774,10 @@ class nsNavHistoryFolderResultNode final
                        uint16_t aItemType, nsIURI* aURI, PRTime aDateAdded,
                        const nsACString& aGUID, const nsACString& aParentGUID,
                        uint16_t aSource);
-
+  nsresult OnItemRemoved(int64_t aItemId, int64_t aParentFolder, int32_t aIndex,
+                         uint16_t aItemType, nsIURI* aURI,
+                         const nsACString& aGUID, const nsACString& aParentGUID,
+                         uint16_t aSource);
   virtual void OnRemoving() override;
 
   // this indicates whether the folder contents are valid, they don't go away

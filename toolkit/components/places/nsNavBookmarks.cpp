@@ -18,6 +18,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/storage.h"
 #include "mozilla/dom/PlacesBookmarkAddition.h"
+#include "mozilla/dom/PlacesBookmarkRemoved.h"
 #include "mozilla/dom/PlacesObservers.h"
 #include "mozilla/dom/PlacesVisit.h"
 
@@ -58,11 +59,6 @@ bool SkipTags(nsCOMPtr<nsINavBookmarkObserver> obs) {
   bool skipTags = false;
   (void)obs->GetSkipTags(&skipTags);
   return skipTags;
-}
-bool SkipDescendants(nsCOMPtr<nsINavBookmarkObserver> obs) {
-  bool skipDescendantsOnItemRemoval = false;
-  (void)obs->GetSkipDescendantsOnItemRemoval(&skipDescendantsOnItemRemoval);
-  return skipDescendantsOnItemRemoval;
 }
 
 template <typename Method, typename DataType>
@@ -643,14 +639,27 @@ nsNavBookmarks::RemoveItem(int64_t aItemId, uint16_t aSource) {
     NS_WARNING_ASSERTION(uri, "Invalid URI in RemoveItem");
   }
 
-  NOTIFY_BOOKMARKS_OBSERVERS(
-      mCanNotify, mObservers,
-      SKIP_TAGS(bookmark.parentId == tagsRootId ||
-                bookmark.grandParentId == tagsRootId),
-      OnItemRemoved(bookmark.id, bookmark.parentId, bookmark.position,
-                    bookmark.type, uri, bookmark.guid, bookmark.parentGuid,
-                    aSource));
+  if (mCanNotify) {
+    Sequence<OwningNonNull<PlacesEvent>> events;
+    RefPtr<PlacesBookmarkRemoved> bookmarkRef = new PlacesBookmarkRemoved();
+    bookmarkRef->mItemType = bookmark.type;
+    bookmarkRef->mId = bookmark.id;
+    bookmarkRef->mParentId = bookmark.parentId;
+    bookmarkRef->mIndex = bookmark.position;
+    if (bookmark.type == TYPE_BOOKMARK) {
+      bookmarkRef->mUrl.Assign(NS_ConvertUTF8toUTF16(bookmark.url));
+    }
+    bookmarkRef->mGuid.Assign(bookmark.guid);
+    bookmarkRef->mParentGuid.Assign(bookmark.parentGuid);
+    bookmarkRef->mSource = aSource;
+    bookmarkRef->mIsTagging =
+        bookmark.parentId == tagsRootId || bookmark.grandParentId == tagsRootId;
+    bookmarkRef->mIsDescendantRemoval = false;
+    bool success = !!events.AppendElement(bookmarkRef.forget(), fallible);
+    MOZ_RELEASE_ASSERT(success);
 
+    PlacesObservers::NotifyListeners(events);
+  }
   if (bookmark.type == TYPE_BOOKMARK && bookmark.grandParentId == tagsRootId &&
       uri) {
     // If the removed bookmark was child of a tag container, notify a tags
@@ -930,12 +939,24 @@ nsresult nsNavBookmarks::RemoveFolderChildren(int64_t aFolderId,
       NS_WARNING_ASSERTION(uri, "Invalid URI in RemoveFolderChildren");
     }
 
-    NOTIFY_BOOKMARKS_OBSERVERS(
-        mCanNotify, mObservers,
-        ((child.grandParentId == tagsRootId) ? SkipTags : SkipDescendants),
-        OnItemRemoved(child.id, child.parentId, child.position, child.type, uri,
-                      child.guid, child.parentGuid, aSource));
+    if (mCanNotify) {
+      Sequence<OwningNonNull<PlacesEvent>> events;
+      RefPtr<PlacesBookmarkRemoved> bookmark = new PlacesBookmarkRemoved();
+      bookmark->mItemType = TYPE_BOOKMARK;
+      bookmark->mId = child.id;
+      bookmark->mParentId = child.parentId;
+      bookmark->mIndex = child.position;
+      bookmark->mUrl.Assign(NS_ConvertUTF8toUTF16(child.url));
+      bookmark->mGuid.Assign(child.guid);
+      bookmark->mParentGuid.Assign(child.parentGuid);
+      bookmark->mSource = aSource;
+      bookmark->mIsTagging = (child.grandParentId == tagsRootId);
+      bookmark->mIsDescendantRemoval = (child.grandParentId != tagsRootId);
+      bool success = !!events.AppendElement(bookmark.forget(), fallible);
+      MOZ_RELEASE_ASSERT(success);
 
+      PlacesObservers::NotifyListeners(events);
+    }
     if (child.type == TYPE_BOOKMARK && child.grandParentId == tagsRootId &&
         uri) {
       // If the removed bookmark was a child of a tag container, notify all
