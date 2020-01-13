@@ -4172,7 +4172,16 @@ void GCRuntime::markWeakReferences(gcstats::PhaseKind phase) {
 
   gcstats::AutoPhase ap1(stats(), phase);
 
-  marker.enterWeakMarkingMode();
+  if (marker.enterWeakMarkingMode()) {
+    for (ZoneIterT zone(this); !zone.done(); zone.next()) {
+      zone->enterWeakMarkingMode(&marker);
+    }
+#ifdef DEBUG
+    for (ZoneIterT zone(this); !zone.done(); zone.next()) {
+      zone->checkWeakMarkingMode();
+    }
+#endif
+  }
 
   // TODO bug 1167452: Make weak marking incremental
   drainMarkStack();
