@@ -56,6 +56,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIDirectoryEnumerator.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIFileStreams.h"
 #include "nsIMemoryReporter.h"
 #include "nsISeekableStream.h"
@@ -1165,6 +1166,31 @@ TelemetryImpl::GetIsOfficialTelemetry(bool* ret) {
   return NS_OK;
 }
 
+#if defined(MOZ_FOGOTYPE)
+// The FOGotype API is implemented in Rust and exposed to C++ via a set of
+// C functions with the "fog_" prefix.
+// See toolkit/components/telemetry/fog/*.
+extern "C" {
+nsresult fog_init(bool useTelemetry, const nsAString* dataDir);
+}
+
+static void internal_initFogotype(bool aUseTelemetry) {
+  nsCOMPtr<nsIFile> dataDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(dataDir));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Couldn't get data dir. Bailing on FOGotype.");
+    return;
+  }
+  nsAutoString path;
+  rv = dataDir->GetPath(path);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Couldn't get data path. Bailing on FOGotype.");
+    return;
+  }
+  NS_WARN_IF(NS_FAILED(fog_init(aUseTelemetry, &path)));
+}
+#endif  // defined(MOZ_FOGOTYPE)
+
 already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
   {
     auto lock = sTelemetry.Lock();
@@ -1219,6 +1245,12 @@ already_AddRefed<nsITelemetry> TelemetryImpl::CreateTelemetryInstance() {
   // is Android but not Fennec.
   if (GetCurrentProduct() == SupportedProduct::Geckoview) {
     TelemetryGeckoViewPersistence::InitPersistence();
+  }
+#endif
+
+#if defined(MOZ_FOGOTYPE)
+  if (XRE_IsParentProcess()) {
+    internal_initFogotype(useTelemetry);
   }
 #endif
 
