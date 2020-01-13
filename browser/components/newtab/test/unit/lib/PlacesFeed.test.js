@@ -111,7 +111,7 @@ describe("PlacesFeed", () => {
       );
       assert.calledWith(
         global.PlacesUtils.observers.addListener,
-        ["bookmark-added", "bookmark-removed"],
+        ["bookmark-added"],
         feed.placesObserver.handlePlacesEvent
       );
       assert.calledWith(global.Services.obs.addObserver, feed, BLOCKED_EVENT);
@@ -133,7 +133,7 @@ describe("PlacesFeed", () => {
       );
       assert.calledWith(
         global.PlacesUtils.observers.removeListener,
-        ["bookmark-added", "bookmark-removed"],
+        ["bookmark-added"],
         feed.placesObserver.handlePlacesEvent
       );
       assert.calledWith(
@@ -708,10 +708,10 @@ describe("PlacesFeed", () => {
         "",
         SOURCES.DEFAULT,
       ];
-      await feed.bookmarksObserver.handlePlacesEvent(args);
-      await feed.bookmarksObserver.handlePlacesEvent(args);
-      await feed.bookmarksObserver.handlePlacesEvent(args);
-      await feed.bookmarksObserver.handlePlacesEvent(args);
+      await feed.bookmarksObserver.onItemRemoved(...args);
+      await feed.bookmarksObserver.onItemRemoved(...args);
+      await feed.bookmarksObserver.onItemRemoved(...args);
+      await feed.bookmarksObserver.onItemRemoved(...args);
 
       assert.calledOnce(
         feed.store.dispatch.withArgs(
@@ -733,13 +733,13 @@ describe("PlacesFeed", () => {
   });
 
   describe("PlacesObserver", () => {
-    let dispatch;
-    let observer;
-    beforeEach(() => {
-      dispatch = sandbox.spy();
-      observer = new PlacesObserver(dispatch);
-    });
     describe("#bookmark-added", () => {
+      let dispatch;
+      let observer;
+      beforeEach(() => {
+        dispatch = sandbox.spy();
+        observer = new PlacesObserver(dispatch);
+      });
       it("should dispatch a PLACES_BOOKMARK_ADDED action with the bookmark data - http", async () => {
         const args = [
           {
@@ -774,7 +774,6 @@ describe("PlacesFeed", () => {
             title: FAKE_BOOKMARK.bookmarkTitle,
             url: "https://www.foo.com",
             isTagging: false,
-            type: "bookmark-added",
           },
         ];
         await observer.handlePlacesEvent(args);
@@ -799,7 +798,6 @@ describe("PlacesFeed", () => {
             title: FAKE_BOOKMARK.bookmarkTitle,
             url: "foo.com",
             isTagging: false,
-            type: "bookmark-added",
           },
         ];
         await observer.handlePlacesEvent(args);
@@ -816,7 +814,6 @@ describe("PlacesFeed", () => {
             title: FAKE_BOOKMARK.bookmarkTitle,
             url: "foo.com",
             isTagging: false,
-            type: "bookmark-added",
           },
         ];
         await observer.handlePlacesEvent(args);
@@ -833,7 +830,6 @@ describe("PlacesFeed", () => {
             title: FAKE_BOOKMARK.bookmarkTitle,
             url: "foo.com",
             isTagging: false,
-            type: "bookmark-added",
           },
         ];
         await observer.handlePlacesEvent(args);
@@ -850,7 +846,6 @@ describe("PlacesFeed", () => {
             title: FAKE_BOOKMARK.bookmarkTitle,
             url: "foo.com",
             isTagging: false,
-            type: "bookmark-added",
           },
         ];
         await observer.handlePlacesEvent(args);
@@ -867,7 +862,6 @@ describe("PlacesFeed", () => {
             title: FAKE_BOOKMARK.bookmarkTitle,
             url: "foo.com",
             isTagging: false,
-            type: "bookmark-added",
           },
         ];
         await observer.handlePlacesEvent(args);
@@ -884,123 +878,11 @@ describe("PlacesFeed", () => {
             title: FAKE_BOOKMARK.bookmarkTitle,
             url: "https://www.foo.com",
             isTagging: false,
-            type: "bookmark-added",
           },
         ];
         await observer.handlePlacesEvent(args);
 
         assert.notCalled(dispatch);
-      });
-    });
-    describe("#bookmark-removed", () => {
-      it("should ignore events that are not of TYPE_BOOKMARK", async () => {
-        const args = [
-          {
-            id: null,
-            parentId: null,
-            index: null,
-            itemType: "nottypebookmark",
-            url: null,
-            guid: "123foo",
-            parentGuid: "",
-            source: SOURCES.DEFAULT,
-            type: "bookmark-removed",
-          },
-        ];
-        await observer.handlePlacesEvent(args);
-        assert.notCalled(dispatch);
-      });
-      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has SYNC source", async () => {
-        const args = [
-          {
-            id: null,
-            parentId: null,
-            index: null,
-            itemType: TYPE_BOOKMARK,
-            url: "foo.com",
-            guid: "123foo",
-            parentGuid: "",
-            source: SOURCES.SYNC,
-            type: "bookmark-removed",
-          },
-        ];
-        await observer.handlePlacesEvent(args);
-
-        assert.notCalled(dispatch);
-      });
-      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has IMPORT source", async () => {
-        const args = [
-          {
-            id: null,
-            parentId: null,
-            index: null,
-            itemType: TYPE_BOOKMARK,
-            url: "foo.com",
-            guid: "123foo",
-            parentGuid: "",
-            source: SOURCES.IMPORT,
-            type: "bookmark-removed",
-          },
-        ];
-        await observer.handlePlacesEvent(args);
-
-        assert.notCalled(dispatch);
-      });
-      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has RESTORE source", async () => {
-        const args = [
-          {
-            id: null,
-            parentId: null,
-            index: null,
-            itemType: TYPE_BOOKMARK,
-            url: "foo.com",
-            guid: "123foo",
-            parentGuid: "",
-            source: SOURCES.RESTORE,
-            type: "bookmark-removed",
-          },
-        ];
-        await observer.handlePlacesEvent(args);
-
-        assert.notCalled(dispatch);
-      });
-      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has RESTORE_ON_STARTUP source", async () => {
-        const args = [
-          {
-            id: null,
-            parentId: null,
-            index: null,
-            itemType: TYPE_BOOKMARK,
-            url: "foo.com",
-            guid: "123foo",
-            parentGuid: "",
-            source: SOURCES.RESTORE_ON_STARTUP,
-            type: "bookmark-removed",
-          },
-        ];
-        await observer.handlePlacesEvent(args);
-
-        assert.notCalled(dispatch);
-      });
-      it("should dispatch a PLACES_BOOKMARK_REMOVED action with the right URL and bookmarkGuid", async () => {
-        const args = [
-          {
-            id: null,
-            parentId: null,
-            index: null,
-            itemType: TYPE_BOOKMARK,
-            url: "foo.com",
-            guid: "123foo",
-            parentGuid: "",
-            source: SOURCES.DEFAULT,
-            type: "bookmark-removed",
-          },
-        ];
-        await observer.handlePlacesEvent(args);
-        assert.calledWith(dispatch, {
-          type: at.PLACES_BOOKMARK_REMOVED,
-          data: { bookmarkGuid: "123foo", url: "foo.com" },
-        });
       });
     });
   });
@@ -1014,6 +896,97 @@ describe("PlacesFeed", () => {
     });
     it("should have a QueryInterface property", () => {
       assert.property(observer, "QueryInterface");
+    });
+    describe("#onItemRemoved", () => {
+      it("should ignore events that are not of TYPE_BOOKMARK", async () => {
+        await observer.onItemRemoved(
+          null,
+          null,
+          null,
+          "nottypebookmark",
+          null,
+          "123foo",
+          "",
+          SOURCES.DEFAULT
+        );
+        assert.notCalled(dispatch);
+      });
+      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has SYNC source", async () => {
+        const args = [
+          null,
+          null,
+          null,
+          TYPE_BOOKMARK,
+          { spec: "foo.com" },
+          "123foo",
+          "",
+          SOURCES.SYNC,
+        ];
+        await observer.onItemRemoved(...args);
+
+        assert.notCalled(dispatch);
+      });
+      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has IMPORT source", async () => {
+        const args = [
+          null,
+          null,
+          null,
+          TYPE_BOOKMARK,
+          { spec: "foo.com" },
+          "123foo",
+          "",
+          SOURCES.IMPORT,
+        ];
+        await observer.onItemRemoved(...args);
+
+        assert.notCalled(dispatch);
+      });
+      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has RESTORE source", async () => {
+        const args = [
+          null,
+          null,
+          null,
+          TYPE_BOOKMARK,
+          { spec: "foo.com" },
+          "123foo",
+          "",
+          SOURCES.RESTORE,
+        ];
+        await observer.onItemRemoved(...args);
+
+        assert.notCalled(dispatch);
+      });
+      it("should not dispatch a PLACES_BOOKMARK_REMOVED action - has RESTORE_ON_STARTUP source", async () => {
+        const args = [
+          null,
+          null,
+          null,
+          TYPE_BOOKMARK,
+          { spec: "foo.com" },
+          "123foo",
+          "",
+          SOURCES.RESTORE_ON_STARTUP,
+        ];
+        await observer.onItemRemoved(...args);
+
+        assert.notCalled(dispatch);
+      });
+      it("should dispatch a PLACES_BOOKMARK_REMOVED action with the right URL and bookmarkGuid", () => {
+        observer.onItemRemoved(
+          null,
+          null,
+          null,
+          TYPE_BOOKMARK,
+          { spec: "foo.com" },
+          "123foo",
+          "",
+          SOURCES.DEFAULT
+        );
+        assert.calledWith(dispatch, {
+          type: at.PLACES_BOOKMARK_REMOVED,
+          data: { bookmarkGuid: "123foo", url: "foo.com" },
+        });
+      });
     });
     describe("Other empty methods (to keep code coverage happy)", () => {
       it("should have a various empty functions for xpconnect happiness", () => {

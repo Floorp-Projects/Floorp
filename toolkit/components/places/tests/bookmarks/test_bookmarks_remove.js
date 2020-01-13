@@ -198,14 +198,11 @@ add_task(async function remove_multiple_bookmarks_complex() {
   let bmsToRemove = bms.slice(2, 4);
   let notifiedIndexes = [];
   let notificationPromise = PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    events => {
-      for (let event of events) {
-        notifiedIndexes.push({ guid: event.guid, index: event.index });
-      }
+    "onItemRemoved",
+    (itemId, parentId, index, itemType, uri, guid, parentGuid, source) => {
+      notifiedIndexes.push({ guid, index });
       return notifiedIndexes.length == bmsToRemove.length;
-    },
-    "places"
+    }
   );
   await PlacesUtils.bookmarks.remove(bmsToRemove);
   await notificationPromise;
@@ -241,14 +238,11 @@ add_task(async function remove_multiple_bookmarks_complex() {
   bmsToRemove = [bms[1], bms[5], bms[6], bms[8]];
   notifiedIndexes = [];
   notificationPromise = PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    events => {
-      for (let event of events) {
-        notifiedIndexes.push({ guid: event.guid, index: event.index });
-      }
+    "onItemRemoved",
+    (itemId, parentId, index, itemType, uri, guid, parentGuid, source) => {
+      notifiedIndexes.push({ guid, index });
       return notifiedIndexes.length == bmsToRemove.length;
-    },
-    "places"
+    }
   );
   await PlacesUtils.bookmarks.remove(bmsToRemove);
   await notificationPromise;
@@ -350,16 +344,8 @@ add_task(async function test_contents_removed() {
     title: "",
   });
 
-  let skipDescendantsObserver = expectPlacesObserverNotifications(
-    ["bookmark-removed"],
-    false,
-    true
-  );
-  let receiveAllObserver = expectPlacesObserverNotifications(
-    ["bookmark-removed"],
-    false,
-    false
-  );
+  let skipDescendantsObserver = expectNotifications(true);
+  let receiveAllObserver = expectNotifications(false);
   let frecencyChangedPromise = promiseFrecencyChanged("http://example.com/", 0);
   await PlacesUtils.bookmarks.remove(folder1);
   Assert.strictEqual(await PlacesUtils.bookmarks.fetch(folder1.guid), null);
@@ -369,8 +355,10 @@ add_task(async function test_contents_removed() {
 
   let expectedNotifications = [
     {
-      type: "bookmark-removed",
-      guid: folder1.guid,
+      name: "onItemRemoved",
+      arguments: {
+        guid: folder1.guid,
+      },
     },
   ];
 
@@ -379,9 +367,12 @@ add_task(async function test_contents_removed() {
 
   // Note: Items of folders get notified first.
   expectedNotifications.unshift({
-    type: "bookmark-removed",
-    guid: bm1.guid,
+    name: "onItemRemoved",
+    arguments: {
+      guid: bm1.guid,
+    },
   });
+
   // If we don't skip descendents, we'll be notified of the folder and the
   // bookmark.
   receiveAllObserver.check(expectedNotifications);

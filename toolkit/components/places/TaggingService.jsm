@@ -22,7 +22,7 @@ function TaggingService() {
   // Observe bookmarks changes.
   PlacesUtils.bookmarks.addObserver(this);
   PlacesUtils.observers.addListener(
-    ["bookmark-added", "bookmark-removed"],
+    ["bookmark-added"],
     this.handlePlacesEvents
   );
 
@@ -104,6 +104,7 @@ TaggingService.prototype = {
     }
     return -1;
   },
+
   /**
    * Makes a proper array of tag objects like  { id: number, name: string }.
    *
@@ -327,7 +328,7 @@ TaggingService.prototype = {
     if (aTopic == TOPIC_SHUTDOWN) {
       PlacesUtils.bookmarks.removeObserver(this);
       PlacesUtils.observers.removeListener(
-        ["bookmark-added", "bookmark-removed"],
+        ["bookmark-added"],
         this.handlePlacesEvents
       );
       Services.obs.removeObserver(this, TOPIC_SHUTDOWN);
@@ -346,7 +347,7 @@ TaggingService.prototype = {
    * @returns an array of item ids
    */
   _getTaggedItemIdsIfUnbookmarkedURI: function TS__getTaggedItemIdsIfUnbookmarkedURI(
-    url
+    aURI
   ) {
     var itemIds = [];
     var isBookmarked = false;
@@ -359,7 +360,7 @@ TaggingService.prototype = {
        FROM moz_bookmarks
        WHERE fk = (SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url)`
     );
-    stmt.params.page_url = url;
+    stmt.params.page_url = aURI.spec;
     try {
       while (stmt.executeStep() && !isBookmarked) {
         if (this._tagFolders[stmt.row.parent]) {
@@ -379,46 +380,45 @@ TaggingService.prototype = {
 
   handlePlacesEvents(events) {
     for (let event of events) {
-      switch (event.type) {
-        case "bookmark-added":
-          if (
-            !event.isTagging ||
-            event.itemType != PlacesUtils.bookmarks.TYPE_FOLDER
-          ) {
-            continue;
-          }
-
-          this._tagFolders[event.id] = event.title;
-          break;
-        case "bookmark-removed":
-          // Item is a tag folder.
-          if (
-            event.parentId == PlacesUtils.tagsFolderId &&
-            this._tagFolders[event.id]
-          ) {
-            delete this._tagFolders[event.id];
-            break;
-          }
-
-          Services.tm.dispatchToMainThread(() => {
-            if (event.url && !this._tagFolders[event.parentId]) {
-              // Item is a bookmark that was removed from a non-tag folder.
-              // If the only bookmark items now associated with the bookmark's URI are
-              // contained in tag folders, the URI is no longer properly bookmarked, so
-              // untag it.
-              let itemIds = this._getTaggedItemIdsIfUnbookmarkedURI(event.url);
-              for (let i = 0; i < itemIds.length; i++) {
-                try {
-                  PlacesUtils.bookmarks.removeItem(itemIds[i], event.source);
-                } catch (ex) {}
-              }
-            } else if (event.url && this._tagFolders[event.parentId]) {
-              // Item is a tag entry.  If this was the last entry for this tag, remove it.
-              this._removeTagIfEmpty(event.parentId, event.source);
-            }
-          });
-          break;
+      if (
+        !event.isTagging ||
+        event.itemType != PlacesUtils.bookmarks.TYPE_FOLDER
+      ) {
+        continue;
       }
+
+      this._tagFolders[event.id] = event.title;
+    }
+  },
+
+  // nsINavBookmarkObserver
+  onItemRemoved: function TS_onItemRemoved(
+    aItemId,
+    aFolderId,
+    aIndex,
+    aItemType,
+    aURI,
+    aGuid,
+    aParentGuid,
+    aSource
+  ) {
+    // Item is a tag folder.
+    if (aFolderId == PlacesUtils.tagsFolderId && this._tagFolders[aItemId]) {
+      delete this._tagFolders[aItemId];
+    } else if (aURI && !this._tagFolders[aFolderId]) {
+      // Item is a bookmark that was removed from a non-tag folder.
+      // If the only bookmark items now associated with the bookmark's URI are
+      // contained in tag folders, the URI is no longer properly bookmarked, so
+      // untag it.
+      let itemIds = this._getTaggedItemIdsIfUnbookmarkedURI(aURI);
+      for (let i = 0; i < itemIds.length; i++) {
+        try {
+          PlacesUtils.bookmarks.removeItem(itemIds[i], aSource);
+        } catch (ex) {}
+      }
+    } else if (aURI && this._tagFolders[aFolderId]) {
+      // Item is a tag entry.  If this was the last entry for this tag, remove it.
+      this._removeTagIfEmpty(aFolderId, aSource);
     }
   },
 

@@ -84,32 +84,23 @@ async function promiseAllChangesMade({ itemsToAdd, itemsToRemove }) {
   return new Promise(resolve => {
     let listener = events => {
       is(events.length, 1, "Should only have 1 event.");
-      switch (events[0].type) {
-        case "bookmark-added":
-          itemsToAdd--;
-          if (itemsToAdd == 0 && itemsToRemove == 0) {
-            PlacesUtils.bookmarks.removeObserver(bmObserver);
-            PlacesUtils.observers.removeListener(
-              ["bookmark-added", "bookmark-removed"],
-              listener
-            );
-            resolve();
-          }
-          break;
-        case "bookmark-removed":
-          itemsToRemove--;
-          if (itemsToAdd == 0 && itemsToRemove == 0) {
-            PlacesUtils.bookmarks.removeObserver(bmObserver);
-            PlacesUtils.observers.removeListener(
-              ["bookmark-added", "bookmark-removed"],
-              listener
-            );
-            resolve();
-          }
-          break;
+      itemsToAdd--;
+      if (itemsToAdd == 0 && itemsToRemove == 0) {
+        PlacesUtils.bookmarks.removeObserver(bmObserver);
+        PlacesUtils.observers.removeListener(["bookmark-added"], listener);
+        resolve();
       }
     };
     let bmObserver = {
+      onItemRemoved() {
+        itemsToRemove--;
+        if (itemsToAdd == 0 && itemsToRemove == 0) {
+          PlacesUtils.bookmarks.removeObserver(bmObserver);
+          PlacesUtils.observers.removeListener(["bookmark-added"], listener);
+          resolve();
+        }
+      },
+
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},
       onItemChanged() {},
@@ -117,10 +108,7 @@ async function promiseAllChangesMade({ itemsToAdd, itemsToRemove }) {
       onItemMoved() {},
     };
     PlacesUtils.bookmarks.addObserver(bmObserver);
-    PlacesUtils.observers.addListener(
-      ["bookmark-added", "bookmark-removed"],
-      listener
-    );
+    PlacesUtils.observers.addListener(["bookmark-added"], listener);
   });
 }
 

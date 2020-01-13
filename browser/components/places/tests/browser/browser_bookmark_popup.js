@@ -126,17 +126,13 @@ async function test_bookmarks_popup({
         );
       }
 
-      let bookmarkRemovedPromise = Promise.resolve();
+      let onItemRemovedPromise = Promise.resolve();
       if (isBookmarkRemoved) {
-        bookmarkRemovedPromise = PlacesTestUtils.waitForNotification(
-          "bookmark-removed",
-          events =>
-            events.some(
-              event =>
-                event.parentGuid == PlacesUtils.bookmarks.unfiledGuid &&
-                TEST_URL == event.url
-            ),
-          "places"
+        onItemRemovedPromise = PlacesTestUtils.waitForNotification(
+          "onItemRemoved",
+          (id, parentId, index, type, uri, guid, parentGuid) =>
+            parentGuid == PlacesUtils.bookmarks.unfiledGuid &&
+            TEST_URL == uri.spec
         );
       }
 
@@ -144,7 +140,7 @@ async function test_bookmarks_popup({
       if (popupHideFn) {
         await popupHideFn();
       }
-      await Promise.all([hiddenPromise, bookmarkRemovedPromise]);
+      await Promise.all([hiddenPromise, onItemRemovedPromise]);
 
       Assert.equal(
         bookmarkStar.hasAttribute("starred"),

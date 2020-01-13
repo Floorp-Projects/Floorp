@@ -51,6 +51,7 @@
 
 var EXPORTED_SYMBOLS = ["SyncedBookmarksMirror"];
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -2076,6 +2077,7 @@ class BookmarkObserverRecorder {
     this.notifyInStableOrder = notifyInStableOrder;
     this.signal = signal;
     this.placesEvents = [];
+    this.itemRemovedNotifications = [];
     this.guidChangedArgs = [];
     this.itemMovedArgs = [];
     this.itemChangedArgs = [];
@@ -2386,20 +2388,20 @@ class BookmarkObserverRecorder {
   }
 
   noteItemRemoved(info) {
-    this.placesEvents.push(
-      new PlacesBookmarkRemoved({
-        id: info.id,
-        parentId: info.parentId,
-        index: info.position,
-        url: info.urlHref || "",
-        guid: info.guid,
-        parentGuid: info.parentGuid,
-        source: PlacesUtils.bookmarks.SOURCES.SYNC,
-        itemType: info.type,
-        isTagging: info.isUntagging,
-        isDescendantRemoval: false,
-      })
-    );
+    let uri = info.urlHref ? Services.io.newURI(info.urlHref) : null;
+    this.itemRemovedNotifications.push({
+      isTagging: info.isUntagging,
+      args: [
+        info.id,
+        info.parentId,
+        info.position,
+        info.type,
+        uri,
+        info.guid,
+        info.parentGuid,
+        PlacesUtils.bookmarks.SOURCES.SYNC,
+      ],
+    });
   }
 
   async notifyBookmarkObservers() {
@@ -2408,6 +2410,18 @@ class BookmarkObserverRecorder {
     for (let observer of observers) {
       this.notifyObserver(observer, "onBeginUpdateBatch");
     }
+    await Async.yieldingForEach(
+      this.itemRemovedNotifications,
+      info => {
+        if (this.signal.aborted) {
+          throw new SyncedBookmarksMirror.InterruptedError(
+            "Interrupted while notifying observers for removed items"
+          );
+        }
+        this.notifyObserversWithInfo(observers, "onItemRemoved", info);
+      },
+      yieldState
+    );
     await Async.yieldingForEach(
       this.guidChangedArgs,
       args => {

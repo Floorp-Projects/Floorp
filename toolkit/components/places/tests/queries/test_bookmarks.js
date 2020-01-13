@@ -37,12 +37,7 @@ add_task(async function test_eraseEverything() {
   }
   Assert.equal(root.getChild(0).title, "title 1");
   Assert.equal(root.getChild(1).title, "title 2");
-
   await PlacesUtils.bookmarks.eraseEverything();
-
-  // Refetch the guid to refresh the data.
-  unfiled = PlacesUtils.getFolderContents(PlacesUtils.bookmarks.unfiledGuid)
-    .root;
   Assert.equal(unfiled.childCount, 0);
   unfiled.containerOpen = false;
 });

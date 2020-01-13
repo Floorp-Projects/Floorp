@@ -10,11 +10,6 @@ enum PlacesEventType {
    * (or a bookmark folder/separator) is created.
    */
   "bookmark-added",
-  /**
-   * data: PlacesBookmarkRemoved. Fired whenever a bookmark
-   * (or a bookmark folder/separator) is created.
-   */
-  "bookmark-removed",
 };
 
 [ChromeOnly, Exposed=Window]
@@ -158,31 +153,4 @@ interface PlacesBookmarkAddition : PlacesBookmark {
    * The time that the item was added, in milliseconds from the epoch.
    */
   readonly attribute unsigned long long dateAdded;
-};
-
-dictionary PlacesBookmarkRemovedInit {
-  required long long id;
-  required long long parentId;
-  required unsigned short itemType;
-  required DOMString url;
-  required ByteString guid;
-  required ByteString parentGuid;
-  required unsigned short source;
-  required long index;
-  required boolean isTagging;
-  boolean isDescendantRemoval = false;
-};
-
-[ChromeOnly, Exposed=Window]
-interface PlacesBookmarkRemoved : PlacesBookmark {
-  constructor(PlacesBookmarkRemovedInit initDict);
-  /**
-   * The item's index in the folder.
-   */
-  readonly attribute long index;
-
-  /**
-   * The item is a descendant of an item whose notification has been sent out.
-   */
-  readonly attribute boolean isDescendantRemoval;
 };

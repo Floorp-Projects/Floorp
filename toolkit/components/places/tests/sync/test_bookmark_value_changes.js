@@ -1890,22 +1890,11 @@ add_task(async function test_tags() {
     "eleven",
     "twelve",
   ]);
-
-  let wait = PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    events =>
-      events.some(event => event.parentGuid == PlacesUtils.bookmarks.tagsGuid),
-    "places"
-  );
-
   PlacesUtils.tagging.untagURI(
     Services.io.newURI("http://example.com/d"),
     null
   );
 
-  await wait;
-
-  await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
   info("Apply remote");
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
