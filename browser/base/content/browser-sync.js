@@ -780,6 +780,7 @@ var gSync = {
 
     const url = new URL(serviceUrl);
     url.searchParams.set("utm_source", "fxa-toolbar");
+    url.searchParams.set("utm_medium", "referral");
     url.searchParams.set("entrypoint", entryPoint);
 
     const state = UIState.get();
