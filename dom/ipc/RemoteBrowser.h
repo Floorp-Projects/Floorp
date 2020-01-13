@@ -19,10 +19,12 @@
 #include "Units.h"
 
 namespace mozilla {
+
 namespace dom {
 
 class BrowserHost;
 class BrowserBridgeHost;
+class OwnerShowInfo;
 
 /**
  * An interface to control a browser hosted in another process.
@@ -57,7 +59,7 @@ class RemoteBrowser : public nsISupports {
   virtual void DestroyStart() = 0;
   virtual void DestroyComplete() = 0;
 
-  virtual bool Show(const ScreenIntSize& aSize, bool aParentIsActive) = 0;
+  virtual bool Show(const OwnerShowInfo&) = 0;
   virtual void UpdateDimensions(const nsIntRect& aRect,
                                 const ScreenIntSize& aSize) = 0;
 
