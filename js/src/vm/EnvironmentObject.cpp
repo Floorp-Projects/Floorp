@@ -1907,7 +1907,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
 
   /*
    * If the value of |this| is requested before the this-binding has been
-   * initialized by JSOP_FUNCTIONTHIS, the this-binding will be |undefined|.
+   * initialized by JSOp::FunctionThis, the this-binding will be |undefined|.
    * In that case, we have to call createMissingThis to initialize the
    * this-binding.
    *
@@ -3386,13 +3386,13 @@ static bool GetThisValueForDebuggerEnvironmentIterMaybeOptimizedOut(
     if (ei.withinInitialFrame()) {
       MOZ_ASSERT(pc, "must have PC if there is an initial frame");
 
-      // Figure out if we executed JSOP_FUNCTIONTHIS and set it.
+      // Figure out if we executed JSOp::FunctionThis and set it.
       bool executedInitThisOp = false;
       if (script->functionHasThisBinding()) {
         for (jsbytecode* it = script->code(); it < script->codeEnd();
              it = GetNextPc(it)) {
           if (JSOp(*it) == JSOP_FUNCTIONTHIS) {
-            // The next op after JSOP_FUNCTIONTHIS always sets it.
+            // The next op after JSOp::FunctionThis always sets it.
             executedInitThisOp = pc > GetNextPc(it);
             break;
           }
@@ -3402,7 +3402,7 @@ static bool GetThisValueForDebuggerEnvironmentIterMaybeOptimizedOut(
       if (!executedInitThisOp) {
         AbstractFramePtr initialFrame = ei.initialFrame();
         // Either we're yet to initialize the this-binding
-        // (JSOP_FUNCTIONTHIS), or the script does not have a this-binding
+        // (JSOp::FunctionThis), or the script does not have a this-binding
         // (because it doesn't use |this|).
 
         // If our this-argument is an object, or we're in strict mode,
@@ -3415,7 +3415,7 @@ static bool GetThisValueForDebuggerEnvironmentIterMaybeOptimizedOut(
         // We didn't initialize the this-binding yet. Determine the
         // correct |this| value for this frame (box primitives if not
         // in strict mode), and assign it to the this-argument slot so
-        // JSOP_FUNCTIONTHIS will use it and not box a second time.
+        // JSOp::FunctionThis will use it and not box a second time.
         if (!GetFunctionThis(cx, initialFrame, res)) {
           return false;
         }

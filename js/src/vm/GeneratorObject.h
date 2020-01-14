@@ -103,9 +103,9 @@ class AbstractGeneratorObject : public NativeObject {
   // RESUME_INDEX_RUNNING.
   //
   // If the generator is suspended, it's the resumeIndex (stored as
-  // JSOP_INITIALYIELD/JSOP_YIELD/JSOP_AWAIT operand) of the yield instruction
-  // that suspended the generator. The resumeIndex can be mapped to the
-  // bytecode offset (interpreter) or to the native code offset (JIT).
+  // JSOp::InitialYield/JSOp::Yield/JSOp::Await operand) of the yield
+  // instruction that suspended the generator. The resumeIndex can be mapped to
+  // the bytecode offset (interpreter) or to the native code offset (JIT).
 
   bool isBeforeInitialYield() const {
     return getFixedSlot(RESUME_INDEX_SLOT).isUndefined();

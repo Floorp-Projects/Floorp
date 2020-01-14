@@ -2157,7 +2157,7 @@ bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
   // Don't need to clone the script if newParent is a syntactic scope, since
   // in that case we have some actual scope objects on our scope chain and
   // whatnot; whoever put them there should be responsible for setting our
-  // script's flags appropriately.  We hit this case for JSOP_LAMBDA, for
+  // script's flags appropriately.  We hit this case for JSOp::Lambda, for
   // example.
   if (IsSyntacticEnvironment(newParent)) {
     return true;
@@ -2195,7 +2195,7 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
   // cloning the function, but since we can't differentiate between both
   // cases here, we'll end up with a momentarily incorrect function name.
   // This will be fixed up in SetFunctionName(), which should happen through
-  // JSOP_SETFUNNAME directly after JSOP_LAMBDA.
+  // JSOp::SetFunName directly after JSOp::Lambda.
   constexpr uint16_t NonCloneableFlags = FunctionFlags::EXTENDED |
                                          FunctionFlags::RESOLVED_LENGTH |
                                          FunctionFlags::RESOLVED_NAME;

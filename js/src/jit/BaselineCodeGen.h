@@ -191,16 +191,16 @@ class BaselineCodeGen {
   FOR_EACH_OPCODE(EMIT_OP)
 #undef EMIT_OP
 
-  // JSOP_NEG, JSOP_BITNOT, JSOP_INC, JSOP_DEC
+  // JSOp::Neg, JSOp::BitNot, JSOp::Inc, JSOp::Dec
   MOZ_MUST_USE bool emitUnaryArith();
 
-  // JSOP_BITXOR, JSOP_LSH, JSOP_ADD etc.
+  // JSOp::BitXor, JSOp::Lsh, JSOp::Add etc.
   MOZ_MUST_USE bool emitBinaryArith();
 
-  // Handles JSOP_LT, JSOP_GT, and friends
+  // Handles JSOp::Lt, JSOp::Gt, and friends
   MOZ_MUST_USE bool emitCompare();
 
-  // Handles JSOP_NEWOBJECT, JSOP_NEWOBJECT_WITHGROUP, and JSOP_NEWINIT.
+  // Handles JSOp::NewObject, JSOp::NewObjectWithGroup, and JSOp::NewInit.
   MOZ_MUST_USE bool emitNewObject();
 
   // For a JOF_JUMP op, jumps to the op's jump target.
@@ -216,7 +216,7 @@ class BaselineCodeGen {
                                Register scratch1, Register scratch2);
 
   // Jumps to the target of a table switch based on |key| and the
-  // firstResumeIndex stored in JSOP_TABLESWITCH.
+  // firstResumeIndex stored in JSOp::TableSwitch.
   void emitTableSwitchJump(Register key, Register scratch1, Register scratch2);
 
   MOZ_MUST_USE bool emitReturn();
@@ -297,7 +297,7 @@ class BaselineCompilerHandler {
   FixedList<Label> labels_;
   RetAddrEntryVector retAddrEntries_;
 
-  // Native code offsets for OSR at JSOP_LOOPHEAD ops.
+  // Native code offsets for OSR at JSOp::LoopHead ops.
   using OSREntryVector =
       Vector<BaselineScript::OSREntry, 16, SystemAllocPolicy>;
   OSREntryVector osrEntries_;

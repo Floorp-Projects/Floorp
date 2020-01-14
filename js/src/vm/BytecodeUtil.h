@@ -536,8 +536,8 @@ extern bool IsValidBytecodeOffset(JSContext* cx, JSScript* script,
                                   size_t offset);
 
 inline bool FlowsIntoNext(JSOp op) {
-  // JSOP_YIELD/JSOP_AWAIT is considered to flow into the next instruction,
-  // like JSOP_CALL.
+  // JSOp::Yield/JSOp::Await is considered to flow into the next instruction,
+  // like JSOp::Call.
   switch (op) {
     case JSOP_RETRVAL:
     case JSOP_RETURN:

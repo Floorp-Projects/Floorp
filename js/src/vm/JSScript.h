@@ -2097,7 +2097,7 @@ class BaseScript : public gc::TenuredCell {
     BindingsAccessedDynamically = 1 << 5,
     FunHasExtensibleScope = 1 << 6,
 
-    // Bytecode contains JSOP_CALLSITEOBJ
+    // Bytecode contains JSOp::CallSiteObj
     // (We don't relazify functions with template strings, due to observability)
     HasCallSiteObj = 1 << 7,
 
@@ -2698,7 +2698,7 @@ class JSScript : public js::BaseScript {
   }
 
   bool hasForceInterpreterOp() const {
-    // JSOP_FORCEINTERPRETER, if present, must be the first op.
+    // JSOp::ForceInterpreter, if present, must be the first op.
     MOZ_ASSERT(length() >= 1);
     return JSOp(*code()) == JSOP_FORCEINTERPRETER;
   }

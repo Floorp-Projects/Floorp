@@ -52,7 +52,7 @@ using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
 //
 // Forward branches
 // ----------------
-// Most branches in the bytecode are forward branches to a JSOP_JUMPTARGET
+// Most branches in the bytecode are forward branches to a JSOp::JumpTarget
 // instruction that we have not inspected yet. We compile them in two phases:
 //
 // 1) When compiling the source instruction: the MBasicBlock is terminated
@@ -60,7 +60,7 @@ using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
 //    a PendingEdge instance to the PendingEdges list for the target bytecode
 //    location.
 //
-// 2) When finally compiling the JSOP_JUMPTARGET: IonBuilder::visitJumpTarget
+// 2) When finally compiling the JSOp::JumpTarget: IonBuilder::visitJumpTarget
 //    creates the target block and uses the list of PendingEdges to 'link' the
 //    blocks.
 //
@@ -79,11 +79,11 @@ using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
 // Unreachable/dead code
 // ---------------------
 // Some bytecode instructions never fall through to the next instruction, for
-// example JSOP_RETURN, JSOP_GOTO, or JSOP_THROW. Code after such instructions
-// is guaranteed to be dead so IonBuilder skips it until it gets to a jump
-// target instruction with pending edges.
+// example JSOp::Return, JSOp::Goto, or JSOp::Throw. Code after such
+// instructions is guaranteed to be dead so IonBuilder skips it until it gets to
+// a jump target instruction with pending edges.
 //
-// Note: The frontend may generate unnecessary JSOP_JUMPTARGET instructions we
+// Note: The frontend may generate unnecessary JSOp::JumpTarget instructions we
 // can ignore when they have no incoming pending edges.
 //
 // Try-catch
@@ -1406,7 +1406,7 @@ class CallInfo {
   MDefinition* newTargetArg_;
   MDefinitionVector args_;
   // If non-empty, this corresponds to the stack prior any implicit inlining
-  // such as before JSOP_FUNAPPLY.
+  // such as before JSOp::FunApply.
   MDefinitionVector priorArgs_;
 
   bool constructing_ : 1;

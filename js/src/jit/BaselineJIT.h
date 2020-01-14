@@ -80,7 +80,7 @@ static constexpr uint32_t BaselineMaxScriptSlots = 0xffffu;
 // * callVM
 // * IC
 // * DebugTrap (trampoline call)
-// * JSOP_RESUME (because this is like a scripted call)
+// * JSOp::Resume (because this is like a scripted call)
 //
 // Note: see also BaselineFrame::HAS_OVERRIDE_PC.
 class RetAddrEntry {
@@ -215,7 +215,7 @@ struct BaselineScript final {
   };
 
   // Native code offset for OSR from Baseline Interpreter into Baseline JIT at
-  // JSOP_LOOPHEAD ops.
+  // JSOp::LoopHead ops.
   class OSREntry : public BasePCToNativeEntry {
    public:
     using BasePCToNativeEntry::BasePCToNativeEntry;

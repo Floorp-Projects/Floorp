@@ -938,8 +938,8 @@ bool InterpretResume(JSContext* cx, HandleObject obj, Value* stackValues,
                      MutableHandleValue rval) {
   MOZ_ASSERT(obj->is<AbstractGeneratorObject>());
 
-  // The |stackValues| argument points to the JSOP_RESUME operands on the native
-  // stack. Because the stack grows down, these values are:
+  // The |stackValues| argument points to the JSOp::Resume operands on the
+  // native stack. Because the stack grows down, these values are:
   //
   //   [resumeKind, argument, generator, ..]
 
@@ -959,10 +959,10 @@ bool InterpretResume(JSContext* cx, HandleObject obj, Value* stackValues,
 }
 
 bool DebugAfterYield(JSContext* cx, BaselineFrame* frame) {
-  // The BaselineFrame has just been constructed by JSOP_RESUME in the
+  // The BaselineFrame has just been constructed by JSOp::Resume in the
   // caller. We need to set its debuggee flag as necessary.
   //
-  // If a breakpoint is set on JSOP_AFTERYIELD, or stepping is enabled,
+  // If a breakpoint is set on JSOp::AfterYield, or stepping is enabled,
   // we may already have done this work. Don't fire onEnterFrame again.
   if (frame->script()->isDebuggee() && !frame->isDebuggee()) {
     frame->setIsDebuggee();
@@ -1068,7 +1068,7 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr) {
   }
 
   if (JSOp(*pc) == JSOP_AFTERYIELD) {
-    // JSOP_AFTERYIELD will set the frame's debuggee flag and call the
+    // JSOp::AfterYield will set the frame's debuggee flag and call the
     // onEnterFrame handler, but if we set a breakpoint there we have to do
     // it now.
     MOZ_ASSERT(!frame->isDebuggee());

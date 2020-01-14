@@ -719,7 +719,7 @@ class InlineFrameIterator {
       unsigned nformal = calleeTemplate()->nargs();
 
       // Get the non overflown arguments, which are taken from the inlined
-      // frame, because it will have the updated value when JSOP_SETARG is
+      // frame, because it will have the updated value when JSOp::SetArg is
       // done.
       if (behavior != ReadFrame_Overflown) {
         s.readFunctionFrameArgs(argOp, argsObj, thisv, 0, nformal, script(),

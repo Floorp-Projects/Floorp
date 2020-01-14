@@ -154,7 +154,7 @@ extern bool Construct(JSContext* cx, HandleValue fval,
 // |IsConstructor(args.callee())|. If this is not the case, throw a TypeError.
 // Otherwise, the user must ensure that, additionally,
 // |IsConstructor(args.newTarget())|. (If |args| comes directly from the
-// interpreter stack, as set up by JSOP_NEW, this comes for free.) Then perform
+// interpreter stack, as set up by JSOp::New, this comes for free.) Then perform
 // a Construct() operation using |args|.
 //
 // This internal operation is intended only for use with arguments known to be

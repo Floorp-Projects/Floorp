@@ -399,7 +399,7 @@ class JSFunction : public js::NativeObject {
   //      in |var o = {[Symbol.iterator]: function(){}}|. When it happens at
   //      compile-time, the HAS_INFERRED_NAME is set directly in the
   //      bytecode emitter, when it happens at runtime, the flag is set when
-  //      evaluating the JSOP_SETFUNNAME bytecode.
+  //      evaluating the JSOp::SetFunName bytecode.
   //   d. HAS_GUESSED_ATOM and HAS_INFERRED_NAME cannot both be set.
   //   e. |atom_| can be null if neither an explicit, nor inferred, nor a
   //      guessed name was set.

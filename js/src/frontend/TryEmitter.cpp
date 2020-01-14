@@ -69,7 +69,7 @@ bool TryEmitter::emitTryEnd() {
     }
   }
 
-  // Patch the JSOP_TRY offset.
+  // Patch the JSOp::Try offset.
   jsbytecode* trypc = bce_->bytecodeSection().code(tryOpOffset_);
   BytecodeOffsetDiff offset = bce_->bytecodeSection().offset() - tryOpOffset_;
   MOZ_ASSERT(JSOp(*trypc) == JSOP_TRY);

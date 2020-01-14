@@ -2268,7 +2268,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_VOID() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_UNDEFINED() {
-  // If this ever changes, change what JSOP_GIMPLICITTHIS does too.
+  // If this ever changes, change what JSOp::GImplicitThis does too.
   frame.push(UndefinedValue());
   return true;
 }
@@ -4805,8 +4805,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TRY() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_FINALLY() {
-  // JSOP_FINALLY has a def count of 2, but these values are already on the
-  // stack (they're pushed by JSOP_GOSUB). Update the compiler's stack state.
+  // JSOp::Finally has a def count of 2, but these values are already on the
+  // stack (they're pushed by JSOp::Gosub). Update the compiler's stack state.
   frame.incStackDepth(2);
 
   // To match the interpreter, emit an interrupt check at the start of the
@@ -5179,7 +5179,7 @@ bool BaselineCodeGen<Handler>::emitReturn() {
     }
   }
 
-  // Only emit the jump if this JSOP_RETRVAL is not the last instruction.
+  // Only emit the jump if this JSOp::RetRval is not the last instruction.
   // Not needed for last instruction, because last instruction flows
   // into return label.
   if (!handler.isDefinitelyLastOp()) {
@@ -6075,7 +6075,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_RESUME() {
   masm.unboxObject(
       Address(genObj, AbstractGeneratorObject::offsetOfCalleeSlot()), callee);
 
-  // Save a pointer to the JSOP_RESUME operand stack Values.
+  // Save a pointer to the JSOp::Resume operand stack Values.
   Register callerStackPtr = regs.takeAny();
   masm.computeEffectiveAddress(frame.addressOfStackValue(-1), callerStackPtr);
 

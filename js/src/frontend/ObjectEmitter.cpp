@@ -232,7 +232,7 @@ bool PropertyEmitter::emitInitHomeObject() {
   //   * the 2nd CTOR if isStatic_
   //   * KEY if isIndexOrComputed_
   //
-  // JSOP_INITHOMEOBJECT uses one of the following:
+  // JSOp::InitHomeObject uses one of the following:
   //   * HOMEOBJ if !isStatic_
   //     (`super.foo` points the super prototype property)
   //   * the 2nd CTOR if isStatic_

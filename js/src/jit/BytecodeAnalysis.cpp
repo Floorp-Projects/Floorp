@@ -109,8 +109,8 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
           }
         }
 
-        // Get the pc of the last instruction in the try block. It's a JSOP_GOTO
-        // to jump over the catch/finally blocks.
+        // Get the pc of the last instruction in the try block. It's a
+        // JSOp::Goto to jump over the catch/finally blocks.
         BytecodeLocation endOfTryLoc(script_,
                                      it.toRawBytecode() + it.codeOffset());
         MOZ_ASSERT(endOfTryLoc.is(JSOP_GOTO));
@@ -161,8 +161,8 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
 
       uint32_t targetOffset = it.getJumpTargetOffset(script_);
 
-      // If this is a backedge, the target JSOP_LOOPHEAD must have been analyzed
-      // already.
+      // If this is a backedge, the target JSOp::LoopHead must have been
+      // analyzed already.
       MOZ_ASSERT_IF(targetOffset < offset, infos_[targetOffset].initialized);
 
       infos_[targetOffset].init(newStackDepth);

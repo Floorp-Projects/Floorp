@@ -346,7 +346,7 @@ class BytecodeSection {
   // code array).
   CGResumeOffsetList resumeOffsetList_;
 
-  // Number of yield instructions emitted. Does not include JSOP_AWAIT.
+  // Number of yield instructions emitted. Does not include JSOp::Await.
   uint32_t numYields_ = 0;
 
   // ---- Line and column ----

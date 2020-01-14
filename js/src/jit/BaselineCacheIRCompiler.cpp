@@ -765,7 +765,7 @@ bool BaselineCacheIRCompiler::emitCompareStringResult() {
     AutoStubFrame stubFrame(*this);
     stubFrame.enter(masm, scratch);
 
-    // Push the operands in reverse order for JSOP_LE and JSOP_GT:
+    // Push the operands in reverse order for JSOp::Le and JSOp::Gt:
     // - |left <= right| is implemented as |right >= left|.
     // - |left > right| is implemented as |right < left|.
     if (op == JSOP_LE || op == JSOP_GT) {

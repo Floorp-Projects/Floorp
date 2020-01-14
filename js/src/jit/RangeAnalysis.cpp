@@ -291,7 +291,7 @@ bool RangeAnalysis::addBetaNodes() {
         if (!compare->isNumericComparison()) {
           continue;
         }
-        // Otherwise fall through to handle JSOP_STRICTEQ the same as JSOP_EQ.
+        // Otherwise fall through to handle JSOp::StrictEq the same as JSOp::Eq.
         [[fallthrough]];
       case JSOP_EQ:
         comp.setDouble(bound, bound);
@@ -301,7 +301,7 @@ bool RangeAnalysis::addBetaNodes() {
         if (!compare->isNumericComparison()) {
           continue;
         }
-        // Otherwise fall through to handle JSOP_STRICTNE the same as JSOP_NE.
+        // Otherwise fall through to handle JSOp::StrictNe the same as JSOp::Ne.
         [[fallthrough]];
       case JSOP_NE:
         // Negative zero is not not-equal to zero.

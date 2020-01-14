@@ -320,7 +320,7 @@ class ArgumentsObject : public NativeObject {
    *    forwarding when the value is the magic forwarding value;
    *  - VM argument access should use arg(i) which will assert that the
    *    value is not the magic forwarding value (since, if such forwarding was
-   *    needed, the frontend should have emitted JSOP_GETALIASEDVAR).
+   *    needed, the frontend should have emitted JSOp::GetAliasedVar).
    */
   const Value& element(uint32_t i) const;
 

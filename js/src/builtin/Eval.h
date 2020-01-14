@@ -15,7 +15,7 @@ namespace js {
 
 // The C++ native for 'eval' (ES5 15.1.2.1). The function is named "indirect
 // eval" because "direct eval" calls (as defined by the spec) will emit
-// JSOP_EVAL which in turn calls DirectEval. Thus, even though IndirectEval is
+// JSOp::Eval which in turn calls DirectEval. Thus, even though IndirectEval is
 // the callee function object for *all* calls to eval, it is by construction
 // only ever called in the case indirect eval.
 extern MOZ_MUST_USE bool IndirectEval(JSContext* cx, unsigned argc, Value* vp);
