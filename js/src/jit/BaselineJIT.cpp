@@ -138,7 +138,7 @@ static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
 JitExecStatus jit::EnterBaselineInterpreterAtBranch(JSContext* cx,
                                                     InterpreterFrame* fp,
                                                     jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::LoopHead);
 
   EnterJitData data(cx);
 
@@ -410,7 +410,7 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
 
   RootedScript script(cx, frame->script());
   jsbytecode* pc = frame->interpreterPC();
-  MOZ_ASSERT(pc == script->code() || JSOp(*pc) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(pc == script->code() || JSOp(*pc) == JSOp::LoopHead);
 
   MethodStatus status = CanEnterBaselineJIT(cx, script,
                                             /* osrSourceFrame = */ frame);
@@ -424,7 +424,7 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
       return true;
 
     case Method_Compiled: {
-      if (JSOp(*pc) == JSOP_LOOPHEAD) {
+      if (JSOp(*pc) == JSOp::LoopHead) {
         MOZ_ASSERT(pc > script->code(),
                    "Prologue vs OSR cases must not be ambiguous");
         BaselineScript* baselineScript = script->baselineScript();

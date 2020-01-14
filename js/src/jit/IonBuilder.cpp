@@ -546,7 +546,7 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
 
 AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(MBasicBlock* entry) {
   MOZ_ASSERT(!entry->isDead());
-  MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::LoopHead);
 
   // The phi inputs at the loop head only reflect types for variables that
   // were present at the start of the loop. If the variable changes to a new
@@ -639,9 +639,9 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypesForLocation(
 
   // We're only interested in JSOp::SetLocal and JSOp::SetArg.
   uint32_t slot;
-  if (loc.is(JSOP_SETLOCAL)) {
+  if (loc.is(JSOp::SetLocal)) {
     slot = info().localSlot(loc.local());
-  } else if (loc.is(JSOP_SETARG)) {
+  } else if (loc.is(JSOp::SetArg)) {
     slot = info().argSlotUnchecked(loc.arg());
   } else {
     return Ok();
@@ -670,7 +670,7 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypesForLocation(
   };
 
   // If it's a JSOp::Pos or JSOp::ToNumeric, use its operand instead.
-  if (last->is(JSOP_POS) || last->is(JSOP_TONUMERIC)) {
+  if (last->is(JSOp::Pos) || last->is(JSOp::ToNumeric)) {
     MOZ_ASSERT(earlier);
     last = earlier;
   }
@@ -686,8 +686,8 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypesForLocation(
 
   // If the |last| op was a JSOp::GetLocal or JSOp::GetArg, use that slot's
   // type.
-  if (last->is(JSOP_GETLOCAL) || last->is(JSOP_GETARG)) {
-    uint32_t slot = (last->is(JSOP_GETLOCAL))
+  if (last->is(JSOp::GetLocal) || last->is(JSOp::GetArg)) {
+    uint32_t slot = (last->is(JSOp::GetLocal))
                         ? info().localSlot(last->local())
                         : info().argSlotUnchecked(last->arg());
     if (slot >= info().firstStackSlot()) {
@@ -704,80 +704,80 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypesForLocation(
   // BaselineInspector), use that.
   MIRType type = MIRType::None;
   switch (last->getOp()) {
-    case JSOP_VOID:
-    case JSOP_UNDEFINED:
+    case JSOp::Void:
+    case JSOp::Undefined:
       type = MIRType::Undefined;
       break;
-    case JSOP_GIMPLICITTHIS:
+    case JSOp::GImplicitThis:
       if (!script()->hasNonSyntacticScope()) {
         type = MIRType::Undefined;
       }
       break;
-    case JSOP_NULL:
+    case JSOp::Null:
       type = MIRType::Null;
       break;
-    case JSOP_ZERO:
-    case JSOP_ONE:
-    case JSOP_INT8:
-    case JSOP_INT32:
-    case JSOP_UINT16:
-    case JSOP_UINT24:
-    case JSOP_RESUMEINDEX:
+    case JSOp::Zero:
+    case JSOp::One:
+    case JSOp::Int8:
+    case JSOp::Int32:
+    case JSOp::Uint16:
+    case JSOp::Uint24:
+    case JSOp::ResumeIndex:
       type = MIRType::Int32;
       break;
-    case JSOP_BITAND:
-    case JSOP_BITOR:
-    case JSOP_BITXOR:
-    case JSOP_BITNOT:
-    case JSOP_RSH:
-    case JSOP_LSH:
+    case JSOp::BitAnd:
+    case JSOp::BitOr:
+    case JSOp::BitXor:
+    case JSOp::BitNot:
+    case JSOp::Rsh:
+    case JSOp::Lsh:
       type = inspector->expectedResultType(last->toRawBytecode());
       break;
-    case JSOP_URSH:
+    case JSOp::Ursh:
       // Unsigned right shift is not applicable to BigInts, so we don't need
       // to query the baseline inspector for the possible result types.
       type = MIRType::Int32;
       break;
-    case JSOP_FALSE:
-    case JSOP_TRUE:
-    case JSOP_EQ:
-    case JSOP_NE:
-    case JSOP_LT:
-    case JSOP_LE:
-    case JSOP_GT:
-    case JSOP_GE:
-    case JSOP_NOT:
-    case JSOP_STRICTEQ:
-    case JSOP_STRICTNE:
-    case JSOP_IN:
-    case JSOP_INSTANCEOF:
-    case JSOP_HASOWN:
+    case JSOp::False:
+    case JSOp::True:
+    case JSOp::Eq:
+    case JSOp::Ne:
+    case JSOp::Lt:
+    case JSOp::Le:
+    case JSOp::Gt:
+    case JSOp::Ge:
+    case JSOp::Not:
+    case JSOp::StrictEq:
+    case JSOp::StrictNe:
+    case JSOp::In:
+    case JSOp::Instanceof:
+    case JSOp::HasOwn:
       type = MIRType::Boolean;
       break;
-    case JSOP_DOUBLE:
+    case JSOp::Double:
       type = MIRType::Double;
       break;
-    case JSOP_ITERNEXT:
-    case JSOP_STRING:
-    case JSOP_TOSTRING:
-    case JSOP_TYPEOF:
-    case JSOP_TYPEOFEXPR:
+    case JSOp::IterNext:
+    case JSOp::String:
+    case JSOp::ToString:
+    case JSOp::Typeof:
+    case JSOp::TypeofExpr:
       type = MIRType::String;
       break;
-    case JSOP_SYMBOL:
+    case JSOp::Symbol:
       type = MIRType::Symbol;
       break;
-    case JSOP_ADD:
-    case JSOP_SUB:
-    case JSOP_MUL:
-    case JSOP_DIV:
-    case JSOP_MOD:
-    case JSOP_NEG:
-    case JSOP_INC:
-    case JSOP_DEC:
+    case JSOp::Add:
+    case JSOp::Sub:
+    case JSOp::Mul:
+    case JSOp::Div:
+    case JSOp::Mod:
+    case JSOp::Neg:
+    case JSOp::Inc:
+    case JSOp::Dec:
       type = inspector->expectedResultType(last->toRawBytecode());
       break;
-    case JSOP_BIGINT:
+    case JSOp::BigInt:
       type = MIRType::BigInt;
       break;
     default:
@@ -1588,24 +1588,24 @@ class MOZ_RAII PoppedValueUseChecker {
 
     // Don't require SSA uses for values popped by these ops.
     switch (op) {
-      case JSOP_POP:
-      case JSOP_POPN:
-      case JSOP_DUPAT:
-      case JSOP_DUP:
-      case JSOP_DUP2:
-      case JSOP_PICK:
-      case JSOP_UNPICK:
-      case JSOP_SWAP:
-      case JSOP_SETARG:
-      case JSOP_SETLOCAL:
-      case JSOP_INITLEXICAL:
-      case JSOP_SETRVAL:
-      case JSOP_VOID:
+      case JSOp::Pop:
+      case JSOp::PopN:
+      case JSOp::DupAt:
+      case JSOp::Dup:
+      case JSOp::Dup2:
+      case JSOp::Pick:
+      case JSOp::Unpick:
+      case JSOp::Swap:
+      case JSOp::SetArg:
+      case JSOp::SetLocal:
+      case JSOp::InitLexical:
+      case JSOp::SetRval:
+      case JSOp::Void:
         // Basic stack/local/argument management opcodes.
         return;
 
-      case JSOP_CASE:
-      case JSOP_DEFAULT:
+      case JSOp::Case:
+      case JSOp::Default:
         // These ops have to pop the switch value when branching but don't
         // actually use it.
         return;
@@ -1616,10 +1616,10 @@ class MOZ_RAII PoppedValueUseChecker {
 
     for (size_t i = 0; i < popped_.length(); i++) {
       switch (op) {
-        case JSOP_POS:
-        case JSOP_TONUMERIC:
-        case JSOP_TOID:
-        case JSOP_TOSTRING:
+        case JSOp::Pos:
+        case JSOp::ToNumeric:
+        case JSOp::ToId:
+        case JSOp::ToString:
           // These ops may leave their input on the stack without setting
           // the ImplicitlyUsed flag. If this value will be popped immediately,
           // we may replace it with |undefined|, but the difference is
@@ -1634,7 +1634,7 @@ class MOZ_RAII PoppedValueUseChecker {
           MOZ_ASSERT(popped_[i]->isImplicitlyUsed() ||
                      // First value popped by JSOp::EndIter is not used at all,
                      // it's similar to JSOp::Pop above.
-                     (op == JSOP_ENDITER && i == 0) ||
+                     (op == JSOp::EndIter && i == 0) ||
                      // MNewDerivedTypedObject instances are
                      // often dead unless they escape from the
                      // fn. See IonBuilder::loadTypedObjectData()
@@ -1757,7 +1757,7 @@ AbortReasonOr<Ok> IonBuilder::startTraversingBlock(MBasicBlock* block) {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_goto(bool* restarted) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_GOTO);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::Goto);
 
   if (IsBackedgePC(pc)) {
     return visitBackEdge(restarted);
@@ -1802,7 +1802,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
   //    ...
   //    IfNe/Goto to LoopHead
 
-  MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::LoopHead);
 
   if (hasTerminatedBlock()) {
     // The whole loop is unreachable.
@@ -1864,7 +1864,7 @@ AbortReasonOr<Ok> IonBuilder::visitBackEdge(bool* restarted) {
 }
 
 AbortReasonOr<Ok> IonBuilder::emitLoopHeadInstructions(jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::LoopHead);
 
   MInterruptCheck* check = MInterruptCheck::New(alloc());
   current->add(check);
@@ -1884,165 +1884,165 @@ AbortReasonOr<Ok> IonBuilder::emitLoopHeadInstructions(jsbytecode* pc) {
 AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
   // Add not yet implemented opcodes at the bottom of the switch!
   switch (op) {
-    case JSOP_NOP_DESTRUCTURING:
-    case JSOP_TRY_DESTRUCTURING:
-    case JSOP_LINENO:
-    case JSOP_NOP:
+    case JSOp::NopDestructuring:
+    case JSOp::TryDestructuring:
+    case JSOp::Lineno:
+    case JSOp::Nop:
       return Ok();
 
-    case JSOP_LOOPHEAD:
+    case JSOp::LoopHead:
       return jsop_loophead();
 
-    case JSOP_UNDEFINED:
+    case JSOp::Undefined:
       // If this ever changes, change what JSOp::GImplicitThis does too.
       pushConstant(UndefinedValue());
       return Ok();
 
-    case JSOP_TRY:
+    case JSOp::Try:
       return visitTry();
 
-    case JSOP_DEFAULT:
+    case JSOp::Default:
       current->pop();
       return visitGoto(pc + GET_JUMP_OFFSET(pc));
 
-    case JSOP_GOTO:
+    case JSOp::Goto:
       return jsop_goto(restarted);
 
-    case JSOP_IFNE:
-    case JSOP_IFEQ:
-    case JSOP_AND:
-    case JSOP_OR:
-    case JSOP_CASE:
+    case JSOp::IfNe:
+    case JSOp::IfEq:
+    case JSOp::And:
+    case JSOp::Or:
+    case JSOp::Case:
       return visitTest(op, restarted);
 
-    case JSOP_COALESCE:
+    case JSOp::Coalesce:
       return jsop_coalesce();
 
-    case JSOP_RETURN:
-    case JSOP_RETRVAL:
+    case JSOp::Return:
+    case JSOp::RetRval:
       return visitReturn(op);
 
-    case JSOP_THROW:
+    case JSOp::Throw:
       return visitThrow();
 
-    case JSOP_JUMPTARGET:
+    case JSOp::JumpTarget:
       return visitJumpTarget(op);
 
-    case JSOP_TABLESWITCH:
+    case JSOp::TableSwitch:
       return visitTableSwitch();
 
-    case JSOP_BITNOT:
+    case JSOp::BitNot:
       return jsop_bitnot();
 
-    case JSOP_BITAND:
-    case JSOP_BITOR:
-    case JSOP_BITXOR:
-    case JSOP_LSH:
-    case JSOP_RSH:
-    case JSOP_URSH:
+    case JSOp::BitAnd:
+    case JSOp::BitOr:
+    case JSOp::BitXor:
+    case JSOp::Lsh:
+    case JSOp::Rsh:
+    case JSOp::Ursh:
       return jsop_bitop(op);
 
-    case JSOP_ADD:
-    case JSOP_SUB:
-    case JSOP_MUL:
-    case JSOP_DIV:
-    case JSOP_MOD:
+    case JSOp::Add:
+    case JSOp::Sub:
+    case JSOp::Mul:
+    case JSOp::Div:
+    case JSOp::Mod:
       return jsop_binary_arith(op);
 
-    case JSOP_POW:
+    case JSOp::Pow:
       return jsop_pow();
 
-    case JSOP_POS:
+    case JSOp::Pos:
       return jsop_pos();
 
-    case JSOP_TONUMERIC:
+    case JSOp::ToNumeric:
       return jsop_tonumeric();
 
-    case JSOP_NEG:
+    case JSOp::Neg:
       return jsop_neg();
 
-    case JSOP_INC:
-    case JSOP_DEC:
+    case JSOp::Inc:
+    case JSOp::Dec:
       return jsop_inc_or_dec(op);
 
-    case JSOP_TOSTRING:
+    case JSOp::ToString:
       return jsop_tostring();
 
-    case JSOP_DEFVAR:
+    case JSOp::DefVar:
       return jsop_defvar();
 
-    case JSOP_DEFLET:
-    case JSOP_DEFCONST:
+    case JSOp::DefLet:
+    case JSOp::DefConst:
       return jsop_deflexical();
 
-    case JSOP_DEFFUN:
+    case JSOp::DefFun:
       return jsop_deffun();
 
-    case JSOP_EQ:
-    case JSOP_NE:
-    case JSOP_STRICTEQ:
-    case JSOP_STRICTNE:
-    case JSOP_LT:
-    case JSOP_LE:
-    case JSOP_GT:
-    case JSOP_GE:
+    case JSOp::Eq:
+    case JSOp::Ne:
+    case JSOp::StrictEq:
+    case JSOp::StrictNe:
+    case JSOp::Lt:
+    case JSOp::Le:
+    case JSOp::Gt:
+    case JSOp::Ge:
       return jsop_compare(op);
 
-    case JSOP_DOUBLE:
+    case JSOp::Double:
       pushConstant(GET_INLINE_VALUE(pc));
       return Ok();
 
-    case JSOP_BIGINT:
+    case JSOp::BigInt:
       pushConstant(BigIntValue(info().getBigInt(pc)));
       return Ok();
 
-    case JSOP_STRING:
+    case JSOp::String:
       pushConstant(StringValue(info().getAtom(pc)));
       return Ok();
 
-    case JSOP_SYMBOL: {
+    case JSOp::Symbol: {
       unsigned which = GET_UINT8(pc);
       JS::Symbol* sym = realm->runtime()->wellKnownSymbols().get(which);
       pushConstant(SymbolValue(sym));
       return Ok();
     }
 
-    case JSOP_ZERO:
+    case JSOp::Zero:
       pushConstant(Int32Value(0));
       return Ok();
 
-    case JSOP_ONE:
+    case JSOp::One:
       pushConstant(Int32Value(1));
       return Ok();
 
-    case JSOP_NULL:
+    case JSOp::Null:
       pushConstant(NullValue());
       return Ok();
 
-    case JSOP_VOID:
+    case JSOp::Void:
       current->pop();
       pushConstant(UndefinedValue());
       return Ok();
 
-    case JSOP_HOLE:
+    case JSOp::Hole:
       pushConstant(MagicValue(JS_ELEMENTS_HOLE));
       return Ok();
 
-    case JSOP_FALSE:
+    case JSOp::False:
       pushConstant(BooleanValue(false));
       return Ok();
 
-    case JSOP_TRUE:
+    case JSOp::True:
       pushConstant(BooleanValue(true));
       return Ok();
 
-    case JSOP_ARGUMENTS:
+    case JSOp::Arguments:
       return jsop_arguments();
 
-    case JSOP_REST:
+    case JSOp::Rest:
       return jsop_rest();
 
-    case JSOP_GETARG:
+    case JSOp::GetArg:
       if (info().argsObjAliasesFormals()) {
         MGetArgumentsObjectArg* getArg = MGetArgumentsObjectArg::New(
             alloc(), current->argumentsObject(), GET_ARGNO(pc));
@@ -2053,30 +2053,30 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       }
       return Ok();
 
-    case JSOP_SETARG:
+    case JSOp::SetArg:
       return jsop_setarg(GET_ARGNO(pc));
 
-    case JSOP_GETLOCAL:
+    case JSOp::GetLocal:
       current->pushLocal(GET_LOCALNO(pc));
       return Ok();
 
-    case JSOP_SETLOCAL:
+    case JSOp::SetLocal:
       current->setLocal(GET_LOCALNO(pc));
       return Ok();
 
-    case JSOP_THROWSETCONST:
-    case JSOP_THROWSETALIASEDCONST:
-    case JSOP_THROWSETCALLEE:
+    case JSOp::ThrowSetConst:
+    case JSOp::ThrowSetAliasedConst:
+    case JSOp::ThrowSetCallee:
       return jsop_throwsetconst();
 
-    case JSOP_CHECKLEXICAL:
+    case JSOp::CheckLexical:
       return jsop_checklexical();
 
-    case JSOP_INITLEXICAL:
+    case JSOp::InitLexical:
       current->setLocal(GET_LOCALNO(pc));
       return Ok();
 
-    case JSOP_INITGLEXICAL: {
+    case JSOp::InitGLexical: {
       MOZ_ASSERT(!script()->hasNonSyntacticScope());
       MDefinition* value = current->pop();
       current->push(
@@ -2085,24 +2085,24 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       return jsop_setprop(info().getAtom(pc)->asPropertyName());
     }
 
-    case JSOP_CHECKALIASEDLEXICAL:
+    case JSOp::CheckAliasedLexical:
       return jsop_checkaliasedlexical(EnvironmentCoordinate(pc));
 
-    case JSOP_INITALIASEDLEXICAL:
+    case JSOp::InitAliasedLexical:
       return jsop_setaliasedvar(EnvironmentCoordinate(pc));
 
-    case JSOP_UNINITIALIZED:
+    case JSOp::Uninitialized:
       pushConstant(MagicValue(JS_UNINITIALIZED_LEXICAL));
       return Ok();
 
-    case JSOP_POP: {
+    case JSOp::Pop: {
       MDefinition* def = current->pop();
 
       // Pop opcodes frequently appear where values are killed, e.g. after
       // SET* opcodes. Place a resume point afterwards to avoid capturing
       // the dead value in later snapshots, except in places where that
       // resume point is obviously unnecessary.
-      if (JSOp(pc[JSOpLength_Pop]) == JSOP_POP) {
+      if (JSOp(pc[JSOpLength_Pop]) == JSOp::Pop) {
         return Ok();
       }
       if (def->isConstant()) {
@@ -2111,98 +2111,98 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       return maybeInsertResume();
     }
 
-    case JSOP_POPN:
+    case JSOp::PopN:
       for (uint32_t i = 0, n = GET_UINT16(pc); i < n; i++) {
         current->pop();
       }
       return Ok();
 
-    case JSOP_DUPAT:
+    case JSOp::DupAt:
       current->pushSlot(current->stackDepth() - 1 - GET_UINT24(pc));
       return Ok();
 
-    case JSOP_NEWARRAY:
+    case JSOp::NewArray:
       return jsop_newarray(GET_UINT32(pc));
 
-    case JSOP_NEWARRAY_COPYONWRITE:
+    case JSOp::NewArrayCopyOnWrite:
       return jsop_newarray_copyonwrite();
 
-    case JSOP_NEWINIT:
-    case JSOP_NEWOBJECT:
-    case JSOP_NEWOBJECT_WITHGROUP:
+    case JSOp::NewInit:
+    case JSOp::NewObject:
+    case JSOp::NewObjectWithGroup:
       return jsop_newobject();
 
-    case JSOP_INITELEM:
-    case JSOP_INITHIDDENELEM:
+    case JSOp::InitElem:
+    case JSOp::InitHiddenElem:
       return jsop_initelem();
 
-    case JSOP_INITELEM_INC:
+    case JSOp::InitElemInc:
       return jsop_initelem_inc();
 
-    case JSOP_INITELEM_ARRAY:
+    case JSOp::InitElemArray:
       return jsop_initelem_array();
 
-    case JSOP_INITPROP:
-    case JSOP_INITLOCKEDPROP:
-    case JSOP_INITHIDDENPROP: {
+    case JSOp::InitProp:
+    case JSOp::InitLockedProp:
+    case JSOp::InitHiddenProp: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       return jsop_initprop(name);
     }
 
-    case JSOP_MUTATEPROTO: {
+    case JSOp::MutateProto: {
       return jsop_mutateproto();
     }
 
-    case JSOP_INITPROP_GETTER:
-    case JSOP_INITHIDDENPROP_GETTER:
-    case JSOP_INITPROP_SETTER:
-    case JSOP_INITHIDDENPROP_SETTER: {
+    case JSOp::InitPropGetter:
+    case JSOp::InitHiddenPropGetter:
+    case JSOp::InitPropSetter:
+    case JSOp::InitHiddenPropSetter: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       return jsop_initprop_getter_setter(name);
     }
 
-    case JSOP_INITELEM_GETTER:
-    case JSOP_INITHIDDENELEM_GETTER:
-    case JSOP_INITELEM_SETTER:
-    case JSOP_INITHIDDENELEM_SETTER:
+    case JSOp::InitElemGetter:
+    case JSOp::InitHiddenElemGetter:
+    case JSOp::InitElemSetter:
+    case JSOp::InitHiddenElemSetter:
       return jsop_initelem_getter_setter();
 
-    case JSOP_FUNCALL:
+    case JSOp::FunCall:
       return jsop_funcall(GET_ARGC(pc));
 
-    case JSOP_FUNAPPLY:
+    case JSOp::FunApply:
       return jsop_funapply(GET_ARGC(pc));
 
-    case JSOP_SPREADCALL:
+    case JSOp::SpreadCall:
       return jsop_spreadcall();
 
-    case JSOP_CALL:
-    case JSOP_CALL_IGNORES_RV:
-    case JSOP_CALLITER:
-    case JSOP_NEW:
+    case JSOp::Call:
+    case JSOp::CallIgnoresRv:
+    case JSOp::CallIter:
+    case JSOp::New:
       MOZ_TRY(jsop_call(GET_ARGC(pc),
-                        JSOp(*pc) == JSOP_NEW || JSOp(*pc) == JSOP_SUPERCALL,
-                        JSOp(*pc) == JSOP_CALL_IGNORES_RV));
-      if (op == JSOP_CALLITER) {
+                        JSOp(*pc) == JSOp::New || JSOp(*pc) == JSOp::SuperCall,
+                        JSOp(*pc) == JSOp::CallIgnoresRv));
+      if (op == JSOp::CallIter) {
         if (!outermostBuilder()->iterators_.append(current->peek(-1))) {
           return abort(AbortReason::Alloc);
         }
       }
       return Ok();
 
-    case JSOP_EVAL:
-    case JSOP_STRICTEVAL:
+    case JSOp::Eval:
+    case JSOp::StrictEval:
       return jsop_eval(GET_ARGC(pc));
 
-    case JSOP_INT8:
+    case JSOp::Int8:
       pushConstant(Int32Value(GET_INT8(pc)));
       return Ok();
 
-    case JSOP_UINT16:
+    case JSOp::Uint16:
       pushConstant(Int32Value(GET_UINT16(pc)));
       return Ok();
 
-    case JSOP_GETGNAME: {
+    case JSOp::GetGName: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       if (!script()->hasNonSyntacticScope()) {
         return jsop_getgname(name);
@@ -2210,8 +2210,8 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       return jsop_getname(name);
     }
 
-    case JSOP_SETGNAME:
-    case JSOP_STRICTSETGNAME: {
+    case JSOp::SetGName:
+    case JSOp::StrictSetGName: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       JSObject* obj = nullptr;
       if (!script()->hasNonSyntacticScope()) {
@@ -2223,22 +2223,22 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       return jsop_setprop(name);
     }
 
-    case JSOP_GETNAME: {
+    case JSOp::GetName: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       return jsop_getname(name);
     }
 
-    case JSOP_GETINTRINSIC: {
+    case JSOp::GetIntrinsic: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       return jsop_intrinsic(name);
     }
 
-    case JSOP_GETIMPORT: {
+    case JSOp::GetImport: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       return jsop_getimport(name);
     }
 
-    case JSOP_BINDGNAME:
+    case JSOp::BindGName:
       if (!script()->hasNonSyntacticScope()) {
         if (JSObject* env = testGlobalLexicalBinding(info().getName(pc))) {
           pushConstant(ObjectValue(*env));
@@ -2247,223 +2247,223 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       }
       // Fall through to JSOp::BindName
       [[fallthrough]];
-    case JSOP_BINDNAME:
+    case JSOp::BindName:
       return jsop_bindname(info().getName(pc));
 
-    case JSOP_BINDVAR:
+    case JSOp::BindVar:
       return jsop_bindvar();
 
-    case JSOP_DUP:
+    case JSOp::Dup:
       current->pushSlot(current->stackDepth() - 1);
       return Ok();
 
-    case JSOP_DUP2:
+    case JSOp::Dup2:
       return jsop_dup2();
 
-    case JSOP_SWAP:
+    case JSOp::Swap:
       current->swapAt(-1);
       return Ok();
 
-    case JSOP_PICK:
+    case JSOp::Pick:
       current->pick(-GET_INT8(pc));
       return Ok();
 
-    case JSOP_UNPICK:
+    case JSOp::Unpick:
       current->unpick(-GET_INT8(pc));
       return Ok();
 
-    case JSOP_GETALIASEDVAR:
+    case JSOp::GetAliasedVar:
       return jsop_getaliasedvar(EnvironmentCoordinate(pc));
 
-    case JSOP_SETALIASEDVAR:
+    case JSOp::SetAliasedVar:
       return jsop_setaliasedvar(EnvironmentCoordinate(pc));
 
-    case JSOP_UINT24:
-    case JSOP_RESUMEINDEX:
+    case JSOp::Uint24:
+    case JSOp::ResumeIndex:
       pushConstant(Int32Value(GET_UINT24(pc)));
       return Ok();
 
-    case JSOP_INT32:
+    case JSOp::Int32:
       pushConstant(Int32Value(GET_INT32(pc)));
       return Ok();
 
-    case JSOP_GETELEM:
-    case JSOP_CALLELEM:
+    case JSOp::GetElem:
+    case JSOp::CallElem:
       MOZ_TRY(jsop_getelem());
-      if (op == JSOP_CALLELEM) {
+      if (op == JSOp::CallElem) {
         MOZ_TRY(improveThisTypesForCall());
       }
       return Ok();
 
-    case JSOP_SETELEM:
-    case JSOP_STRICTSETELEM:
+    case JSOp::SetElem:
+    case JSOp::StrictSetElem:
       return jsop_setelem();
 
-    case JSOP_LENGTH:
+    case JSOp::Length:
       return jsop_length();
 
-    case JSOP_NOT:
+    case JSOp::Not:
       return jsop_not();
 
-    case JSOP_FUNCTIONTHIS:
+    case JSOp::FunctionThis:
       return jsop_functionthis();
 
-    case JSOP_GLOBALTHIS:
+    case JSOp::GlobalThis:
       return jsop_globalthis();
 
-    case JSOP_CALLEE: {
+    case JSOp::Callee: {
       MDefinition* callee = getCallee();
       current->push(callee);
       return Ok();
     }
 
-    case JSOP_ENVCALLEE:
+    case JSOp::EnvCallee:
       return jsop_envcallee();
 
-    case JSOP_SUPERBASE:
+    case JSOp::SuperBase:
       return jsop_superbase();
 
-    case JSOP_GETPROP_SUPER: {
+    case JSOp::GetPropSuper: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       return jsop_getprop_super(name);
     }
 
-    case JSOP_GETELEM_SUPER:
+    case JSOp::GetElemSuper:
       return jsop_getelem_super();
 
-    case JSOP_GETPROP:
-    case JSOP_CALLPROP: {
+    case JSOp::GetProp:
+    case JSOp::CallProp: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       MOZ_TRY(jsop_getprop(name));
-      if (op == JSOP_CALLPROP) {
+      if (op == JSOp::CallProp) {
         MOZ_TRY(improveThisTypesForCall());
       }
       return Ok();
     }
 
-    case JSOP_SETPROP:
-    case JSOP_STRICTSETPROP:
-    case JSOP_SETNAME:
-    case JSOP_STRICTSETNAME: {
+    case JSOp::SetProp:
+    case JSOp::StrictSetProp:
+    case JSOp::SetName:
+    case JSOp::StrictSetName: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       return jsop_setprop(name);
     }
 
-    case JSOP_DELPROP:
-    case JSOP_STRICTDELPROP: {
+    case JSOp::DelProp:
+    case JSOp::StrictDelProp: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       return jsop_delprop(name);
     }
 
-    case JSOP_DELELEM:
-    case JSOP_STRICTDELELEM:
+    case JSOp::DelElem:
+    case JSOp::StrictDelElem:
       return jsop_delelem();
 
-    case JSOP_REGEXP:
+    case JSOp::RegExp:
       return jsop_regexp(info().getRegExp(pc));
 
-    case JSOP_CALLSITEOBJ:
+    case JSOp::CallSiteObj:
       pushConstant(ObjectValue(*info().getObject(pc)));
       return Ok();
 
-    case JSOP_OBJECT:
+    case JSOp::Object:
       return jsop_object(info().getObject(pc));
 
-    case JSOP_CLASSCONSTRUCTOR:
+    case JSOp::ClassConstructor:
       return jsop_classconstructor();
 
-    case JSOP_TYPEOF:
-    case JSOP_TYPEOFEXPR:
+    case JSOp::Typeof:
+    case JSOp::TypeofExpr:
       return jsop_typeof();
 
-    case JSOP_TOASYNCITER:
+    case JSOp::ToAsyncIter:
       return jsop_toasynciter();
 
-    case JSOP_TOID:
+    case JSOp::ToId:
       return jsop_toid();
 
-    case JSOP_ITERNEXT:
+    case JSOp::IterNext:
       return jsop_iternext();
 
-    case JSOP_LAMBDA:
+    case JSOp::Lambda:
       return jsop_lambda(info().getFunction(pc));
 
-    case JSOP_LAMBDA_ARROW:
+    case JSOp::LambdaArrow:
       return jsop_lambda_arrow(info().getFunction(pc));
 
-    case JSOP_SETFUNNAME:
+    case JSOp::SetFunName:
       return jsop_setfunname(GET_UINT8(pc));
 
-    case JSOP_PUSHLEXICALENV:
+    case JSOp::PushLexicalEnv:
       return jsop_pushlexicalenv(GET_UINT32_INDEX(pc));
 
-    case JSOP_POPLEXICALENV:
+    case JSOp::PopLexicalEnv:
       current->setEnvironmentChain(walkEnvironmentChain(1));
       return Ok();
 
-    case JSOP_FRESHENLEXICALENV:
+    case JSOp::FreshenLexicalEnv:
       return jsop_copylexicalenv(true);
 
-    case JSOP_RECREATELEXICALENV:
+    case JSOp::RecreateLexicalEnv:
       return jsop_copylexicalenv(false);
 
-    case JSOP_ITER:
+    case JSOp::Iter:
       return jsop_iter();
 
-    case JSOP_MOREITER:
+    case JSOp::MoreIter:
       return jsop_itermore();
 
-    case JSOP_ISNOITER:
+    case JSOp::IsNoIter:
       return jsop_isnoiter();
 
-    case JSOP_ENDITER:
+    case JSOp::EndIter:
       return jsop_iterend();
 
-    case JSOP_IN:
+    case JSOp::In:
       return jsop_in();
 
-    case JSOP_HASOWN:
+    case JSOp::HasOwn:
       return jsop_hasown();
 
-    case JSOP_SETRVAL:
+    case JSOp::SetRval:
       MOZ_ASSERT(!script()->noScriptRval());
       current->setSlot(info().returnValueSlot(), current->pop());
       return Ok();
 
-    case JSOP_INSTANCEOF:
+    case JSOp::Instanceof:
       return jsop_instanceof();
 
-    case JSOP_DEBUGLEAVELEXICALENV:
+    case JSOp::DebugLeaveLexicalEnv:
       return Ok();
 
-    case JSOP_DEBUGGER:
+    case JSOp::Debugger:
       return jsop_debugger();
 
-    case JSOP_GIMPLICITTHIS:
+    case JSOp::GImplicitThis:
       if (!script()->hasNonSyntacticScope()) {
         pushConstant(UndefinedValue());
         return Ok();
       }
       // Fallthrough to ImplicitThis in non-syntactic scope case
       [[fallthrough]];
-    case JSOP_IMPLICITTHIS: {
+    case JSOp::ImplicitThis: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
       return jsop_implicitthis(name);
     }
 
-    case JSOP_NEWTARGET:
+    case JSOp::NewTarget:
       return jsop_newtarget();
 
-    case JSOP_CHECKISOBJ:
+    case JSOp::CheckIsObj:
       return jsop_checkisobj(GET_UINT8(pc));
 
-    case JSOP_CHECKISCALLABLE:
+    case JSOp::CheckIsCallable:
       return jsop_checkiscallable(GET_UINT8(pc));
 
-    case JSOP_CHECKOBJCOERCIBLE:
+    case JSOp::CheckObjCoercible:
       return jsop_checkobjcoercible();
 
-    case JSOP_DEBUGCHECKSELFHOSTED: {
+    case JSOp::DebugCheckSelfHosted: {
 #ifdef DEBUG
       MDebugCheckSelfHosted* check =
           MDebugCheckSelfHosted::New(alloc(), current->pop());
@@ -2474,102 +2474,102 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       return Ok();
     }
 
-    case JSOP_IS_CONSTRUCTING:
+    case JSOp::IsConstructing:
       pushConstant(MagicValue(JS_IS_CONSTRUCTING));
       return Ok();
 
-    case JSOP_OPTIMIZE_SPREADCALL:
+    case JSOp::OptimizeSpreadCall:
       return jsop_optimize_spreadcall();
 
-    case JSOP_IMPORTMETA:
+    case JSOp::ImportMeta:
       return jsop_importmeta();
 
-    case JSOP_DYNAMIC_IMPORT:
+    case JSOp::DynamicImport:
       return jsop_dynamic_import();
 
-    case JSOP_INSTRUMENTATION_ACTIVE:
+    case JSOp::InstrumentationActive:
       return jsop_instrumentation_active();
 
-    case JSOP_INSTRUMENTATION_CALLBACK:
+    case JSOp::InstrumentationCallback:
       return jsop_instrumentation_callback();
 
-    case JSOP_INSTRUMENTATION_SCRIPT_ID:
+    case JSOp::InstrumentationScriptId:
       return jsop_instrumentation_scriptid();
 
     // ===== NOT Yet Implemented =====
     // Read below!
 
     // With
-    case JSOP_ENTERWITH:
-    case JSOP_LEAVEWITH:
+    case JSOp::EnterWith:
+    case JSOp::LeaveWith:
 
     // Spread
-    case JSOP_SPREADNEW:
-    case JSOP_SPREADEVAL:
-    case JSOP_STRICTSPREADEVAL:
+    case JSOp::SpreadNew:
+    case JSOp::SpreadEval:
+    case JSOp::StrictSpreadEval:
 
     // Classes
-    case JSOP_CHECKCLASSHERITAGE:
-    case JSOP_FUNWITHPROTO:
-    case JSOP_OBJWITHPROTO:
-    case JSOP_BUILTINPROTO:
-    case JSOP_INITHOMEOBJECT:
-    case JSOP_DERIVEDCONSTRUCTOR:
-    case JSOP_CHECKTHIS:
-    case JSOP_CHECKRETURN:
-    case JSOP_CHECKTHISREINIT:
+    case JSOp::CheckClassHeritage:
+    case JSOp::FunWithProto:
+    case JSOp::ObjWithProto:
+    case JSOp::BuiltinProto:
+    case JSOp::InitHomeObject:
+    case JSOp::DerivedConstructor:
+    case JSOp::CheckThis:
+    case JSOp::CheckReturn:
+    case JSOp::CheckThisReinit:
 
     // Super
-    case JSOP_SETPROP_SUPER:
-    case JSOP_SETELEM_SUPER:
-    case JSOP_STRICTSETPROP_SUPER:
-    case JSOP_STRICTSETELEM_SUPER:
-    case JSOP_SUPERFUN:
+    case JSOp::SetPropSuper:
+    case JSOp::SetElemSuper:
+    case JSOp::StrictSetPropSuper:
+    case JSOp::StrictSetElemSuper:
+    case JSOp::SuperFun:
     // Most of the infrastructure for these exists in Ion, but needs review
     // and testing before these are enabled. Once other opcodes that are used
     // in derived classes are supported in Ion, this can be better validated
     // with testcases. Pay special attention to bailout and other areas where
     // JSOp::New has special handling.
-    case JSOP_SPREADSUPERCALL:
-    case JSOP_SUPERCALL:
+    case JSOp::SpreadSuperCall:
+    case JSOp::SuperCall:
 
     // Environments (bug 1366470)
-    case JSOP_PUSHVARENV:
-    case JSOP_POPVARENV:
+    case JSOp::PushVarEnv:
+    case JSOp::PopVarEnv:
 
     // Compound assignment
-    case JSOP_GETBOUNDNAME:
+    case JSOp::GetBoundName:
 
     // Generators / Async (bug 1317690)
-    case JSOP_EXCEPTION:
-    case JSOP_ISGENCLOSING:
-    case JSOP_INITIALYIELD:
-    case JSOP_YIELD:
-    case JSOP_FINALYIELDRVAL:
-    case JSOP_RESUME:
-    case JSOP_RESUMEKIND:
-    case JSOP_CHECK_RESUMEKIND:
-    case JSOP_AFTERYIELD:
-    case JSOP_AWAIT:
-    case JSOP_TRYSKIPAWAIT:
-    case JSOP_GENERATOR:
-    case JSOP_ASYNCAWAIT:
-    case JSOP_ASYNCRESOLVE:
+    case JSOp::Exception:
+    case JSOp::IsGenClosing:
+    case JSOp::InitialYield:
+    case JSOp::Yield:
+    case JSOp::FinalYieldRval:
+    case JSOp::Resume:
+    case JSOp::ResumeKind:
+    case JSOp::CheckResumeKind:
+    case JSOp::AfterYield:
+    case JSOp::Await:
+    case JSOp::TrySkipAwait:
+    case JSOp::Generator:
+    case JSOp::AsyncAwait:
+    case JSOp::AsyncResolve:
 
     // Misc
-    case JSOP_DELNAME:
-    case JSOP_FINALLY:
-    case JSOP_GETRVAL:
-    case JSOP_GOSUB:
-    case JSOP_RETSUB:
-    case JSOP_SETINTRINSIC:
-    case JSOP_THROWMSG:
+    case JSOp::DelName:
+    case JSOp::Finally:
+    case JSOp::GetRval:
+    case JSOp::Gosub:
+    case JSOp::Retsub:
+    case JSOp::SetIntrinsic:
+    case JSOp::ThrowMsg:
       // === !! WARNING WARNING WARNING !! ===
       // Do you really want to sacrifice performance by not implementing this
       // operation in the optimizing compiler?
       break;
 
-    case JSOP_FORCEINTERPRETER:
+    case JSOp::ForceInterpreter:
       // Intentionally not implemented.
       break;
   }
@@ -2636,7 +2636,7 @@ AbortReasonOr<Ok> IonBuilder::restartLoop(MBasicBlock* header) {
   graph().addBlock(current);
 
   jsbytecode* loopHead = header->pc();
-  MOZ_ASSERT(JSOp(*loopHead) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(JSOp(*loopHead) == JSOp::LoopHead);
 
   // Since we discarded the header's instructions above, emit them again. This
   // includes the interrupt check.
@@ -2762,8 +2762,8 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtTypeOfCompare(MCompare* ins,
     return Ok();
   }
 
-  bool equal = ins->jsop() == JSOP_EQ || ins->jsop() == JSOP_STRICTEQ;
-  bool notEqual = ins->jsop() == JSOP_NE || ins->jsop() == JSOP_STRICTNE;
+  bool equal = ins->jsop() == JSOp::Eq || ins->jsop() == JSOp::StrictEq;
+  bool notEqual = ins->jsop() == JSOp::Ne || ins->jsop() == JSOp::StrictNe;
 
   if (notEqual) {
     trueBranch = !trueBranch;
@@ -2850,13 +2850,13 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtNullOrUndefinedCompare(
   JSOp op = ins->jsop();
 
   switch (op) {
-    case JSOP_STRICTNE:
-    case JSOP_STRICTEQ:
+    case JSOp::StrictNe:
+    case JSOp::StrictEq:
       altersUndefined = ins->compareType() == MCompare::Compare_Undefined;
       altersNull = ins->compareType() == MCompare::Compare_Null;
       break;
-    case JSOP_NE:
-    case JSOP_EQ:
+    case JSOp::Ne:
+    case JSOp::Eq:
       altersUndefined = altersNull = true;
       break;
     default:
@@ -2886,7 +2886,7 @@ AbortReasonOr<Ok> IonBuilder::improveTypesAtNullOrUndefinedCompare(
   TemporaryTypeSet* type;
 
   // Decide if we need to filter the type or set it.
-  if ((op == JSOP_STRICTEQ || op == JSOP_EQ) ^ trueBranch) {
+  if ((op == JSOp::StrictEq || op == JSOp::Eq) ^ trueBranch) {
     // Remove undefined/null
     TemporaryTypeSet remove;
     if (altersUndefined) {
@@ -3097,13 +3097,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_dup2() {
 }
 
 AbortReasonOr<Ok> IonBuilder::visitTestBackedge(JSOp op, bool* restarted) {
-  MOZ_ASSERT(op == JSOP_IFNE);
+  MOZ_ASSERT(op == JSOp::IfNe);
   MOZ_ASSERT(loopDepth_ > 0);
 
   MDefinition* ins = current->pop();
 
   jsbytecode* loopHead = pc + GET_JUMP_OFFSET(pc);
-  MOZ_ASSERT(JSOp(*loopHead) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(JSOp(*loopHead) == JSOp::LoopHead);
 
   jsbytecode* successorPC = GetNextPc(pc);
 
@@ -3124,14 +3124,14 @@ AbortReasonOr<Ok> IonBuilder::visitTestBackedge(JSOp op, bool* restarted) {
 // with the join point in the bytecode.
 static bool TestTrueTargetIsJoinPoint(JSOp op) {
   switch (op) {
-    case JSOP_IFNE:
-    case JSOP_OR:
-    case JSOP_CASE:
+    case JSOp::IfNe:
+    case JSOp::Or:
+    case JSOp::Case:
       return true;
 
-    case JSOP_IFEQ:
-    case JSOP_AND:
-    case JSOP_COALESCE:
+    case JSOp::IfEq:
+    case JSOp::And:
+    case JSOp::Coalesce:
       return false;
 
     default:
@@ -3140,8 +3140,8 @@ static bool TestTrueTargetIsJoinPoint(JSOp op) {
 }
 
 AbortReasonOr<Ok> IonBuilder::visitTest(JSOp op, bool* restarted) {
-  MOZ_ASSERT(op == JSOP_IFEQ || op == JSOP_IFNE || op == JSOP_AND ||
-             op == JSOP_OR || op == JSOP_CASE);
+  MOZ_ASSERT(op == JSOp::IfEq || op == JSOp::IfNe || op == JSOp::And ||
+             op == JSOp::Or || op == JSOp::Case);
 
   if (IsBackedgePC(pc)) {
     return visitTestBackedge(op, restarted);
@@ -3154,7 +3154,7 @@ AbortReasonOr<Ok> IonBuilder::visitTest(JSOp op, bool* restarted) {
   // Also note that JSOp::Case must pop a second value on the true-branch (the
   // input to the switch-statement). This conditional pop happens in
   // visitJumpTarget.
-  bool mustKeepCondition = (op == JSOP_AND || op == JSOP_OR);
+  bool mustKeepCondition = (op == JSOp::And || op == JSOp::Or);
   MDefinition* ins = mustKeepCondition ? current->peek(-1) : current->pop();
 
   // If this op always branches to the same pc we treat this as a JSOp::Goto.
@@ -3190,9 +3190,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_coalesce() {
   MTest* mir = newTest(isNullOrUndefined, nullptr, nullptr);
   current->end(mir);
 
-  MOZ_TRY(addPendingEdge(PendingEdge::NewTestTrue(current, JSOP_COALESCE),
+  MOZ_TRY(addPendingEdge(PendingEdge::NewTestTrue(current, JSOp::Coalesce),
                          target1));
-  MOZ_TRY(addPendingEdge(PendingEdge::NewTestFalse(current, JSOP_COALESCE),
+  MOZ_TRY(addPendingEdge(PendingEdge::NewTestFalse(current, JSOp::Coalesce),
                          target2));
   setTerminatedBlock();
 
@@ -3219,7 +3219,7 @@ AbortReasonOr<Ok> IonBuilder::visitTry() {
   // Get the pc of the last instruction in the try block. It's a JSOp::Goto to
   // jump over the catch block.
   jsbytecode* endpc = pc + GET_CODE_OFFSET(pc);
-  MOZ_ASSERT(JSOp(*endpc) == JSOP_GOTO);
+  MOZ_ASSERT(JSOp(*endpc) == JSOp::Goto);
   MOZ_ASSERT(GET_JUMP_OFFSET(endpc) > 0);
 
   jsbytecode* afterTry = endpc + GET_JUMP_OFFSET(endpc);
@@ -3351,7 +3351,7 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
         // If we create an empty block, we have to pop the value there instead
         // of as part of the emptyBlock -> joinBlock edge so stack depths match
         // the current depth.
-        const size_t numToPop = (edge.testOp() == JSOP_CASE) ? 1 : 0;
+        const size_t numToPop = (edge.testOp() == JSOp::Case) ? 1 : 0;
 
         const size_t successor = 0;  // true-branch
         if (joinBlock && TestTrueTargetIsJoinPoint(edge.testOp())) {
@@ -3413,12 +3413,12 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
 AbortReasonOr<Ok> IonBuilder::visitReturn(JSOp op) {
   MDefinition* def;
   switch (op) {
-    case JSOP_RETURN:
+    case JSOp::Return:
       // Return the last instruction.
       def = current->pop();
       break;
 
-    case JSOP_RETRVAL:
+    case JSOp::RetRval:
       // Return undefined eagerly if script doesn't use return value.
       if (script()->noScriptRval()) {
         MInstruction* ins = MConstant::New(alloc(), UndefinedValue());
@@ -3595,7 +3595,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_bitnot() {
     if (emitted) return Ok();
   }
 
-  MOZ_TRY(arithTryBinaryStub(&emitted, JSOP_BITNOT, nullptr, input));
+  MOZ_TRY(arithTryBinaryStub(&emitted, JSOp::BitNot, nullptr, input));
   if (emitted) {
     return Ok();
   }
@@ -3616,27 +3616,27 @@ AbortReasonOr<MBinaryBitwiseInstruction*> IonBuilder::binaryBitOpEmit(
 
   MBinaryBitwiseInstruction* ins;
   switch (op) {
-    case JSOP_BITAND:
+    case JSOp::BitAnd:
       ins = MBitAnd::New(alloc(), left, right);
       break;
 
-    case JSOP_BITOR:
+    case JSOp::BitOr:
       ins = MBitOr::New(alloc(), left, right);
       break;
 
-    case JSOP_BITXOR:
+    case JSOp::BitXor:
       ins = MBitXor::New(alloc(), left, right);
       break;
 
-    case JSOP_LSH:
+    case JSOp::Lsh:
       ins = MLsh::New(alloc(), left, right);
       break;
 
-    case JSOP_RSH:
+    case JSOp::Rsh:
       ins = MRsh::New(alloc(), left, right);
       break;
 
-    case JSOP_URSH:
+    case JSOp::Ursh:
       ins = MUrsh::New(alloc(), left, right);
       break;
 
@@ -3653,7 +3653,7 @@ AbortReasonOr<MBinaryBitwiseInstruction*> IonBuilder::binaryBitOpEmit(
   MOZ_ASSERT_IF(
       specialization == MIRType::Int32,
       ins->specialization() == MIRType::Int32 ||
-          (op == JSOP_URSH && ins->specialization() == MIRType::Double));
+          (op == JSOp::Ursh && ins->specialization() == MIRType::Double));
 
   current->push(ins);
   if (ins->isEffectful()) {
@@ -3714,15 +3714,15 @@ AbortReasonOr<Ok> IonBuilder::jsop_bitop(JSOp op) {
 
 MDefinition::Opcode BinaryJSOpToMDefinition(JSOp op) {
   switch (op) {
-    case JSOP_ADD:
+    case JSOp::Add:
       return MDefinition::Opcode::Add;
-    case JSOP_SUB:
+    case JSOp::Sub:
       return MDefinition::Opcode::Sub;
-    case JSOP_MUL:
+    case JSOp::Mul:
       return MDefinition::Opcode::Mul;
-    case JSOP_DIV:
+    case JSOp::Div:
       return MDefinition::Opcode::Div;
-    case JSOP_MOD:
+    case JSOp::Mod:
       return MDefinition::Opcode::Mod;
     default:
       MOZ_CRASH("unexpected binary opcode");
@@ -3738,7 +3738,7 @@ AbortReasonOr<Ok> IonBuilder::binaryArithTryConcat(bool* emitted, JSOp op,
   // indicate this might be a concatenation.
 
   // Only try to replace this with concat when we have an addition.
-  if (op != JSOP_ADD) {
+  if (op != JSOp::Add) {
     return Ok();
   }
 
@@ -3922,31 +3922,31 @@ AbortReasonOr<Ok> IonBuilder::arithTryBinaryStub(bool* emitted, JSOp op,
 
   // The actual jsop 'jsop_pos' is not supported yet.
   // There's no IC support for JSOp::Pow either.
-  if (actualOp == JSOP_POS || actualOp == JSOP_POW) {
+  if (actualOp == JSOp::Pos || actualOp == JSOp::Pow) {
     return Ok();
   }
 
   MInstruction* stub = nullptr;
   switch (actualOp) {
-    case JSOP_NEG:
-    case JSOP_BITNOT:
-      MOZ_ASSERT_IF(op == JSOP_MUL,
+    case JSOp::Neg:
+    case JSOp::BitNot:
+      MOZ_ASSERT_IF(op == JSOp::Mul,
                     left->maybeConstantValue() &&
                         left->maybeConstantValue()->toInt32() == -1);
-      MOZ_ASSERT_IF(op != JSOP_MUL, !left);
+      MOZ_ASSERT_IF(op != JSOp::Mul, !left);
       stub = MUnaryCache::New(alloc(), right);
       break;
-    case JSOP_ADD:
-    case JSOP_SUB:
-    case JSOP_MUL:
-    case JSOP_DIV:
-    case JSOP_MOD:
-    case JSOP_BITAND:
-    case JSOP_BITOR:
-    case JSOP_BITXOR:
-    case JSOP_LSH:
-    case JSOP_RSH:
-    case JSOP_URSH:
+    case JSOp::Add:
+    case JSOp::Sub:
+    case JSOp::Mul:
+    case JSOp::Div:
+    case JSOp::Mod:
+    case JSOp::BitAnd:
+    case JSOp::BitOr:
+    case JSOp::BitXor:
+    case JSOp::Lsh:
+    case JSOp::Rsh:
+    case JSOp::Ursh:
       stub = MBinaryCache::New(alloc(), left, right, MIRType::Value);
       break;
     default:
@@ -4037,7 +4037,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_pow() {
     }
   }
 
-  MOZ_TRY(arithTryBinaryStub(&emitted, JSOP_POW, base, exponent));
+  MOZ_TRY(arithTryBinaryStub(&emitted, JSOp::Pow, base, exponent));
   if (emitted) {
     return Ok();
   }
@@ -4064,7 +4064,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_pos() {
   MConstant* one = MConstant::New(alloc(), Int32Value(1));
   current->add(one);
 
-  return jsop_binary_arith(JSOP_MUL, value, one);
+  return jsop_binary_arith(JSOp::Mul, value, one);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_neg() {
@@ -4075,7 +4075,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_neg() {
 
   MDefinition* right = current->pop();
 
-  return jsop_binary_arith(JSOP_MUL, negator, right);
+  return jsop_binary_arith(JSOp::Mul, negator, right);
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_tonumeric() {
@@ -4117,13 +4117,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_tonumeric() {
 MDefinition* IonBuilder::unaryArithConvertToBinary(JSOp op,
                                                    MDefinition::Opcode* defOp) {
   switch (op) {
-    case JSOP_INC: {
+    case JSOp::Inc: {
       *defOp = MDefinition::Opcode::Add;
       MConstant* right = MConstant::New(alloc(), Int32Value(1));
       current->add(right);
       return right;
     }
-    case JSOP_DEC: {
+    case JSOp::Dec: {
       *defOp = MDefinition::Opcode::Sub;
       MConstant* right = MConstant::New(alloc(), Int32Value(1));
       current->add(right);
@@ -6198,7 +6198,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_call(uint32_t argc, bool constructing,
   if (observed->empty()) {
     if (BytecodeFlowsToBitop(pc)) {
       observed->addType(TypeSet::Int32Type(), alloc_->lifoAlloc());
-    } else if (JSOp(*GetNextPc(pc)) == JSOP_POS) {
+    } else if (JSOp(*GetNextPc(pc)) == JSOp::Pos) {
       // Note: this is lame, overspecialized on the code patterns used
       // by asm.js and should be replaced by a more general mechanism.
       // See bug 870847.
@@ -6877,8 +6877,8 @@ AbortReasonOr<Ok> IonBuilder::compareTryBitwise(bool* emitted, JSOp op,
   // result for all observed operand types.
 
   // Only allow loose and strict equality.
-  if (op != JSOP_EQ && op != JSOP_NE && op != JSOP_STRICTEQ &&
-      op != JSOP_STRICTNE) {
+  if (op != JSOp::Eq && op != JSOp::Ne && op != JSOp::StrictEq &&
+      op != JSOp::StrictNe) {
     if (canTrackOptimization) {
       trackOptimizationOutcome(TrackedOutcome::RelationalCompare);
     }
@@ -6896,7 +6896,7 @@ AbortReasonOr<Ok> IonBuilder::compareTryBitwise(bool* emitted, JSOp op,
 
   // In the loose comparison more values could be the same,
   // but value comparison reporting otherwise.
-  if (op == JSOP_EQ || op == JSOP_NE) {
+  if (op == JSOp::Eq || op == JSOp::Ne) {
     // Objects that emulate undefined are not supported.
     if (left->maybeEmulatesUndefined(constraints()) ||
         right->maybeEmulatesUndefined(constraints())) {
@@ -6978,7 +6978,7 @@ AbortReasonOr<Ok> IonBuilder::compareTrySpecializedOnBaselineInspector(
   // fallible unboxes to the appropriate input types.
 
   // Strict equality isn't supported.
-  if (op == JSOP_STRICTEQ || op == JSOP_STRICTNE) {
+  if (op == JSOp::StrictEq || op == JSOp::StrictNe) {
     trackOptimizationOutcome(TrackedOutcome::StrictCompare);
     return Ok();
   }
@@ -7203,8 +7203,8 @@ AbortReasonOr<Ok> IonBuilder::newObjectTryTemplateObject(
   // Emit fastpath.
 
   MNewObject::Mode mode;
-  if (JSOp(*pc) == JSOP_NEWOBJECT || JSOp(*pc) == JSOP_NEWOBJECT_WITHGROUP ||
-      JSOp(*pc) == JSOP_NEWINIT) {
+  if (JSOp(*pc) == JSOp::NewObject || JSOp(*pc) == JSOp::NewObjectWithGroup ||
+      JSOp(*pc) == JSOp::NewInit) {
     mode = MNewObject::ObjectLiteral;
   } else {
     mode = MNewObject::ObjectCreate;
@@ -7232,9 +7232,9 @@ AbortReasonOr<Ok> IonBuilder::newObjectTryTemplateObject(
 AbortReasonOr<Ok> IonBuilder::newObjectTryVM(bool* emitted,
                                              JSObject* templateObject) {
   // Emit a VM call.
-  MOZ_ASSERT(JSOp(*pc) == JSOP_NEWOBJECT ||
-             JSOp(*pc) == JSOP_NEWOBJECT_WITHGROUP ||
-             JSOp(*pc) == JSOP_NEWINIT);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::NewObject ||
+             JSOp(*pc) == JSOp::NewObjectWithGroup ||
+             JSOp(*pc) == JSOp::NewInit);
 
   trackOptimizationAttempt(TrackedStrategy::NewObject_Call);
 
@@ -7280,7 +7280,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_newobject() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_initelem() {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_INITELEM || JSOp(*pc) == JSOP_INITHIDDENELEM);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::InitElem || JSOp(*pc) == JSOp::InitHiddenElem);
 
   MDefinition* value = current->pop();
   MDefinition* id = current->pop();
@@ -7288,7 +7288,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem() {
 
   bool emitted = false;
 
-  if (!forceInlineCaches() && JSOp(*pc) == JSOP_INITELEM) {
+  if (!forceInlineCaches() && JSOp(*pc) == JSOp::InitElem) {
     MOZ_TRY(initOrSetElemTryDense(&emitted, obj, id, value,
                                   /* writeHole = */ true));
     if (emitted) {
@@ -7322,8 +7322,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem_inc() {
 AbortReasonOr<Ok> IonBuilder::initArrayElement(MDefinition* obj,
                                                MDefinition* id,
                                                MDefinition* value) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_INITELEM_ARRAY ||
-             JSOp(*pc) == JSOP_INITELEM_INC);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::InitElemArray ||
+             JSOp(*pc) == JSOp::InitElemInc);
 
   bool emitted = false;
 
@@ -7357,8 +7357,8 @@ AbortReasonOr<Ok> IonBuilder::initArrayElemTryFastPath(bool* emitted,
                                                        MDefinition* id,
                                                        MDefinition* value) {
   MOZ_ASSERT(*emitted == false);
-  MOZ_ASSERT(JSOp(*pc) == JSOP_INITELEM_ARRAY ||
-             JSOp(*pc) == JSOP_INITELEM_INC);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::InitElemArray ||
+             JSOp(*pc) == JSOp::InitElemInc);
 
   // Make sure that arrays have the type being written to them by the
   // intializer, and that arrays are marked as non-packed when writing holes
@@ -7405,7 +7405,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem_array() {
   uint32_t index = GET_UINT32(pc);
   MOZ_ASSERT(index <= INT32_MAX,
              "the bytecode emitter must fail to compile code that would "
-             "produce JSOP_INITELEM_ARRAY with an index exceeding "
+             "produce JSOp::InitElemArray with an index exceeding "
              "int32_t range");
 
   MConstant* id = MConstant::New(alloc(), Int32Value(index));
@@ -7592,7 +7592,7 @@ AbortReasonOr<MBasicBlock*> IonBuilder::newBlockAfter(
 
 AbortReasonOr<MBasicBlock*> IonBuilder::newOsrPreheader(
     MBasicBlock* predecessor, jsbytecode* loopHead) {
-  MOZ_ASSERT(JSOp(*loopHead) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(JSOp(*loopHead) == JSOp::LoopHead);
   MOZ_ASSERT(loopHead == info().osrPc());
 
   // Create two blocks: one for the OSR entry with no predecessors, one for
@@ -7980,7 +7980,7 @@ static bool ObjectHasExtraOwnProperty(CompileRealm* realm,
 }
 
 void IonBuilder::insertRecompileCheck(jsbytecode* pc) {
-  MOZ_ASSERT(pc == script()->code() || JSOp(*pc) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(pc == script()->code() || JSOp(*pc) == JSOp::LoopHead);
 
   // No need for recompile checks if this is the highest optimization level or
   // if we're performing an analysis instead of compilation.
@@ -7995,7 +7995,7 @@ void IonBuilder::insertRecompileCheck(jsbytecode* pc) {
   // works.
 
   MRecompileCheck::RecompileCheckType type;
-  if (JSOp(*pc) == JSOP_LOOPHEAD) {
+  if (JSOp(*pc) == JSOp::LoopHead) {
     type = MRecompileCheck::RecompileCheckType::OptimizationLevelOSR;
   } else if (this != outermostBuilder()) {
     type = MRecompileCheck::RecompileCheckType::OptimizationLevelInlined;
@@ -8568,8 +8568,8 @@ AbortReasonOr<Ok> IonBuilder::setStaticName(JSObject* staticObject,
 }
 
 JSObject* IonBuilder::testGlobalLexicalBinding(PropertyName* name) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_BINDGNAME || JSOp(*pc) == JSOP_GETGNAME ||
-             JSOp(*pc) == JSOP_SETGNAME || JSOp(*pc) == JSOP_STRICTSETGNAME);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::BindGName || JSOp(*pc) == JSOp::GetGName ||
+             JSOp(*pc) == JSOp::SetGName || JSOp(*pc) == JSOp::StrictSetGName);
 
   // The global isn't the global lexical env's prototype, but its enclosing
   // env. Test for the existence of |name| manually on the global lexical
@@ -8594,7 +8594,7 @@ JSObject* IonBuilder::testGlobalLexicalBinding(PropertyName* name) {
   }
   Shape* shape = obj->lookupPure(name);
   if (shape) {
-    if ((JSOp(*pc) != JSOP_GETGNAME && !shape->writable()) ||
+    if ((JSOp(*pc) != JSOp::GetGName && !shape->writable()) ||
         obj->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
       return nullptr;
     }
@@ -10185,7 +10185,7 @@ AbortReasonOr<Ok> IonBuilder::initOrSetElemTryCache(bool* emitted,
   object = addMaybeCopyElementsForWrite(object, checkNative);
 
   // Emit SetPropertyCache.
-  bool strict = JSOp(*pc) == JSOP_STRICTSETELEM;
+  bool strict = JSOp(*pc) == JSOp::StrictSetElem;
   MSetPropertyCache* ins =
       MSetPropertyCache::New(alloc(), object, index, value, strict,
                              needsPostBarrier(value), barrier, guardHoles);
@@ -11213,7 +11213,7 @@ MDefinition* IonBuilder::maybeUnboxForPropertyAccess(MDefinition* def) {
   // If we have better type information to unbox the first copy going into
   // the CallProp operation, we can replace the duplicated copy on the
   // stack as well.
-  if (JSOp(*pc) == JSOP_CALLPROP || JSOp(*pc) == JSOP_CALLELEM) {
+  if (JSOp(*pc) == JSOp::CallProp || JSOp(*pc) == JSOp::CallElem) {
     uint32_t idx = current->stackDepth() - 1;
     MOZ_ASSERT(current->getSlot(idx) == def);
     current->setSlot(idx, unbox);
@@ -11382,7 +11382,7 @@ AbortReasonOr<Ok> IonBuilder::improveThisTypesForCall() {
   // at this point we can remove null and undefined from obj's TypeSet, to
   // improve type information for the call that will follow.
 
-  MOZ_ASSERT(JSOp(*pc) == JSOP_CALLPROP || JSOp(*pc) == JSOP_CALLELEM);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::CallProp || JSOp(*pc) == JSOp::CallElem);
 
   // Ensure |this| has types {object, null/undefined}. For simplicity don't
   // optimize if the callee is a Phi (this can happen in rare cases after
@@ -11473,7 +11473,7 @@ AbortReasonOr<Ok> IonBuilder::getPropTryArgumentsLength(bool* emitted,
                                                         MDefinition* obj) {
   MOZ_ASSERT(*emitted == false);
 
-  if (JSOp(*pc) != JSOP_LENGTH) {
+  if (JSOp(*pc) != JSOp::Length) {
     return Ok();
   }
 
@@ -12203,7 +12203,7 @@ AbortReasonOr<Ok> IonBuilder::getPropAddCache(MDefinition* obj,
   // fallback path (see inlineObjectGroupFallback).  Otherwise, we always have
   // to do the GetPropertyCache, and we can dispatch based on the JSFunction
   // value.
-  if (JSOp(*pc) == JSOP_CALLPROP && load->idempotent()) {
+  if (JSOp(*pc) == JSOp::CallProp && load->idempotent()) {
     MOZ_TRY(
         annotateGetPropertyCache(obj, name, load, obj->resultTypeSet(), types));
   }
@@ -12226,7 +12226,7 @@ AbortReasonOr<Ok> IonBuilder::getPropAddCache(MDefinition* obj,
   }
   load->setResultType(rvalType);
 
-  if (JSOp(*pc) != JSOP_CALLPROP || !IsNullOrUndefined(obj->type())) {
+  if (JSOp(*pc) != JSOp::CallProp || !IsNullOrUndefined(obj->type())) {
     // Due to inlining, it's possible the observed TypeSet is non-empty,
     // even though we know |obj| is null/undefined and the MCallGetProperty
     // will throw. Don't push a TypeBarrier in this case, to avoid
@@ -12813,7 +12813,7 @@ AbortReasonOr<Ok> IonBuilder::setPropTryCache(bool* emitted, MDefinition* obj,
 AbortReasonOr<Ok> IonBuilder::jsop_delprop(PropertyName* name) {
   MDefinition* obj = current->pop();
 
-  bool strict = JSOp(*pc) == JSOP_STRICTDELPROP;
+  bool strict = JSOp(*pc) == JSOp::StrictDelProp;
   MInstruction* ins = MDeleteProperty::New(alloc(), obj, name, strict);
 
   current->add(ins);
@@ -12826,7 +12826,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_delelem() {
   MDefinition* index = current->pop();
   MDefinition* obj = current->pop();
 
-  bool strict = JSOp(*pc) == JSOP_STRICTDELELEM;
+  bool strict = JSOp(*pc) == JSOp::StrictDelElem;
   MDeleteElement* ins = MDeleteElement::New(alloc(), obj, index, strict);
   current->add(ins);
   current->push(ins);
@@ -12994,7 +12994,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_defvar() {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_DEFVAR);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::DefVar);
 
   // Pass the EnvironmentChain.
   MOZ_ASSERT(usesEnvironmentChain());
@@ -13006,7 +13006,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_defvar() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_deflexical() {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_DEFLET || JSOp(*pc) == JSOP_DEFCONST);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::DefLet || JSOp(*pc) == JSOp::DefConst);
   MOZ_ASSERT(usesEnvironmentChain());
 
   MDefinition* env = current->environmentChain();
@@ -13048,14 +13048,14 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkaliasedlexical(
   MOZ_TRY_VAR(let, addLexicalCheck(getAliasedVar(ec)));
 
   jsbytecode* nextPc = pc + JSOpLength_CheckAliasedLexical;
-  MOZ_ASSERT(JSOp(*nextPc) == JSOP_GETALIASEDVAR ||
-             JSOp(*nextPc) == JSOP_SETALIASEDVAR ||
-             JSOp(*nextPc) == JSOP_THROWSETALIASEDCONST);
+  MOZ_ASSERT(JSOp(*nextPc) == JSOp::GetAliasedVar ||
+             JSOp(*nextPc) == JSOp::SetAliasedVar ||
+             JSOp(*nextPc) == JSOp::ThrowSetAliasedConst);
   MOZ_ASSERT(ec == EnvironmentCoordinate(nextPc));
 
   // If we are checking for a load, push the checked let so that the load
   // can use it.
-  if (JSOp(*nextPc) == JSOP_GETALIASEDVAR) {
+  if (JSOp(*nextPc) == JSOp::GetAliasedVar) {
     setLexicalCheck(let);
   }
 
@@ -13102,7 +13102,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_functionthis() {
   // currently support this so just abort.
   if (script()->hasNonSyntacticScope()) {
     return abort(AbortReason::Disable,
-                 "JSOP_FUNCTIONTHIS would need non-syntactic global");
+                 "JSOp::FunctionThis would need non-syntactic global");
   }
 
   if (IsNullOrUndefined(def->type())) {
@@ -13124,7 +13124,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_globalthis() {
     // Ion does not compile global scripts with a non-syntactic scope, but
     // we can end up here when we're compiling an arrow function.
     return abort(AbortReason::Disable,
-                 "JSOP_GLOBALTHIS in script with non-syntactic scope");
+                 "JSOp::GlobalThis in script with non-syntactic scope");
   }
 
   LexicalEnvironmentObject* globalLexical =
@@ -14272,9 +14272,9 @@ MDefinition* IonBuilder::getCallee() {
 }
 
 AbortReasonOr<MDefinition*> IonBuilder::addLexicalCheck(MDefinition* input) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_CHECKLEXICAL ||
-             JSOp(*pc) == JSOP_CHECKALIASEDLEXICAL ||
-             JSOp(*pc) == JSOP_GETIMPORT);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::CheckLexical ||
+             JSOp(*pc) == JSOp::CheckAliasedLexical ||
+             JSOp(*pc) == JSOp::GetImport);
 
   MInstruction* lexicalCheck;
 
