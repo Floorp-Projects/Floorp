@@ -11,6 +11,11 @@ const {
   registerFront,
 } = require("devtools/shared/protocol");
 const { Ci } = require("chrome");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/debugger.properties"
+);
 
 class ServiceWorkerFront extends FrontClassWithSpec(serviceWorkerSpec) {
   get fetch() {
@@ -28,19 +33,19 @@ class ServiceWorkerFront extends FrontClassWithSpec(serviceWorkerSpec) {
   get stateText() {
     switch (this.state) {
       case Ci.nsIServiceWorkerInfo.STATE_PARSED:
-        return "parsed";
+        return L10N.getStr("serviceWorkerInfo.parsed");
       case Ci.nsIServiceWorkerInfo.STATE_INSTALLING:
-        return "installing";
+        return L10N.getStr("serviceWorkerInfo.installing");
       case Ci.nsIServiceWorkerInfo.STATE_INSTALLED:
-        return "installed";
+        return L10N.getStr("serviceWorkerInfo.installed");
       case Ci.nsIServiceWorkerInfo.STATE_ACTIVATING:
-        return "activating";
+        return L10N.getStr("serviceWorkerInfo.activating");
       case Ci.nsIServiceWorkerInfo.STATE_ACTIVATED:
-        return "activated";
+        return L10N.getStr("serviceWorkerInfo.activated");
       case Ci.nsIServiceWorkerInfo.STATE_REDUNDANT:
-        return "redundant";
+        return L10N.getStr("serviceWorkerInfo.redundant");
       default:
-        return "unknown";
+        return L10N.getStr("serviceWorkerInfo.unknown");
     }
   }
 
