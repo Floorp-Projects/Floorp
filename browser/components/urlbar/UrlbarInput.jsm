@@ -946,7 +946,17 @@ class UrlbarInput {
   }
 
   get openViewOnFocus() {
-    return this._openViewOnFocus && !this.isPrivate;
+    return (
+      this._openViewOnFocus &&
+      !this.isPrivate &&
+      // We do not show Top Sites if the user disabled them on about:newtab. We
+      // handle this here instead of disabling UrlbarProviderTopSites so that
+      // the user can still show Top Sites with the down arrow.
+      Services.prefs.getBoolPref(
+        "browser.newtabpage.activity-stream.feeds.topsites",
+        true
+      )
+    );
   }
 
   async updateLayoutBreakout() {
