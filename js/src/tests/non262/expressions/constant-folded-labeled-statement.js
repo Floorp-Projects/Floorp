@@ -7,7 +7,7 @@ if (typeof disassemble === "function") {
     var code = disassemble(() => { x: 2+2; });
 
     if (typeof reportCompare === "function")
-        reportCompare(true, /int8 4/.test(code));
+        reportCompare(true, /Int8 4/.test(code));
 }
 
 if (typeof reportCompare === "function")
