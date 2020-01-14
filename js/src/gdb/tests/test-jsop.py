@@ -5,5 +5,5 @@ assert_subprinter_registered('SpiderMonkey', 'JSOp')
 
 run_fragment('jsop.simple')
 
-assert_pretty('undefined', 'JSOP_UNDEFINED')
-assert_pretty('debugger', 'JSOP_DEBUGGER')
+assert_pretty('undefined', 'JSOp::Undefined')
+assert_pretty('debugger', 'JSOp::Debugger')
