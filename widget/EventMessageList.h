@@ -458,7 +458,6 @@ NS_EVENT_MESSAGE_FIRST_LAST(eGamepadEvent, eGamepadButtonDown,
 
 // input and beforeinput events.
 NS_EVENT_MESSAGE(eEditorInput)
-NS_EVENT_MESSAGE(eEditorBeforeInput)
 
 // selection events
 NS_EVENT_MESSAGE(eSelectStart)

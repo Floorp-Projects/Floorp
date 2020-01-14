@@ -13,65 +13,48 @@
 </pre>
 
 <script class="testbody" type="application/javascript">
-"use strict";
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+SimpleTest.waitForFocus(function() {
   let editor = document.getElementById("content");
   let selection = document.getSelection();
 
   function checkInputEvent(aEvent, aDescription) {
     ok(aEvent instanceof InputEvent,
-       `"${aEvent.type}" event should be dispatched with InputEvent interface ${aDescription}`);
-    is(aEvent.cancelable, aEvent.type === "beforeinput",
-       `"${aEvent.type}" event should ${aEvent.type === "beforeinput" ? "be" : "be never"} cancelable ${aDescription}`);
+       `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+    is(aEvent.cancelable, false,
+       `"input" event should be never cancelable ${aDescription}`);
     is(aEvent.bubbles, true,
-       `"${aEvent.type}" event should always bubble ${aDescription}`);
+       `"input" event should always bubble ${aDescription}`);
     is(aEvent.inputType, "deleteContent",
-       `inputType of "${aEvent.type}" event should be "deleteContent" ${aDescription}`);
+       `inputType should be "deleteContent" ${aDescription}`);
     is(aEvent.data, null,
-       `data of "${aEvent.type}" event should be null ${aDescription}`);
+       `data should be null ${aDescription}`);
     is(aEvent.dataTransfer, null,
-       `dataTransfer of "${aEvent.type}" event should be null ${aDescription}`);
+       `data should be null ${aDescription}`);
   }
 
-  let beforeInputEvents = [];
   let inputEvents = [];
-  function onBeforeInput(aEvent) {
-    beforeInputEvents.push(aEvent);
-  }
   function onInput(aEvent) {
     inputEvents.push(aEvent);
   }
-  editor.addEventListener("beforeinput", onBeforeInput);
   editor.addEventListener("input", onInput);
 
-  beforeInputEvents = [];
   inputEvents = [];
   selection.collapse(editor.firstChild, 0);
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(1) should do nothing if selection is not in <table>");
-  is(beforeInputEvents.length, 1,
-     '"beforeinput" event should be fired when a call of nsITableEditor.deleteTableRow(1) even though it will do nothing');
-  checkInputEvent(beforeInputEvents[0], "when selection is collapsed outside table element (nsITableEditor.deleteTableRow(1))");
   is(inputEvents.length, 0,
      'No "input" event should be fired when a call of nsITableEditor.deleteTableRow(1) does nothing');
 
   selection.removeAllRanges();
   try {
-    beforeInputEvents = [];
     inputEvents = [];
     getTableEditor().deleteTableRow(1);
     ok(false, "getTableEditor().deleteTableRow(1) without selection ranges should throw exception");
   } catch (e) {
     ok(true, "getTableEditor().deleteTableRow(1) without selection ranges should throw exception");
-    is(beforeInputEvents.length, 0,
-       'No "beforeinput" event should be fired when nsITableEditor.deleteTableRow(1) causes exception due to no selection range');
     is(inputEvents.length, 0,
        'No "input" event should be fired when nsITableEditor.deleteTableRow(1) causes exception due to no selection range');
   }
@@ -84,7 +67,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   let range = document.createRange();
   range.selectNode(document.getElementById("select"));
@@ -92,9 +74,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, "<table><tbody><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(1) should delete the first row when a cell in the first row is selected");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell in the first row is selected');
-  checkInputEvent(beforeInputEvents[0], "when a cell in the first row is selected");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell in the first row is selected');
   checkInputEvent(inputEvents[0], "when a cell in the first row is selected");
@@ -102,7 +81,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
@@ -110,9 +88,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(1) should delete the second row when a cell in the second row is selected");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell in the second row is selected');
-  checkInputEvent(beforeInputEvents[0], "when a cell in the second row is selected");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell in the second row is selected');
   checkInputEvent(inputEvents[0], "when a cell in the second row is selected");
@@ -120,7 +95,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
@@ -128,9 +102,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(2);
   is(editor.innerHTML, "",
      "nsITableEditor.deleteTableRow(2) should delete the <table> since there is only 2 rows");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell in first row is selected and argument is same as number of rows');
-  checkInputEvent(beforeInputEvents[0], "when a cell in first row is selected and argument is same as number of rows");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell in first row is selected and argument is same as number of rows');
   checkInputEvent(inputEvents[0], "when a cell in first row is selected and argument is same as number of rows");
@@ -138,7 +109,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
@@ -146,9 +116,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(3);
   is(editor.innerHTML, "",
      "nsITableEditor.deleteTableRow(3) should delete the <table> when argument is larger than actual number of rows");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when argument is larger than actual number of rows');
-  checkInputEvent(beforeInputEvents[0], "when argument is larger than actual number of rows");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when argument is larger than actual number of rows');
   checkInputEvent(inputEvents[0], "when argument is larger than actual number of rows");
@@ -156,7 +123,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
@@ -164,9 +130,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(2);
   is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(2) should delete the second row containing selected cell and next row");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell in second row and argument is same as the remaining rows');
-  checkInputEvent(beforeInputEvents[0], "when a cell in second row and argument is same as the remaining rows");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell in second row and argument is same as the remaining rows');
   checkInputEvent(inputEvents[0], "when a cell in second row and argument is same as the remaining rows");
@@ -174,7 +137,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
@@ -182,9 +144,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(3);
   is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(3) should delete the second row (containing selected cell) and the third row even though the argument is larger than the rows");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell in second row and argument is larger than the remaining rows');
-  checkInputEvent(beforeInputEvents[0], "when a cell in second row and argument is larger than the remaining rows");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell in second row and argument is larger than the remaining rows');
   checkInputEvent(inputEvents[0], "when a cell in second row and argument is larger than the remaining rows");
@@ -195,7 +154,6 @@ SimpleTest.waitForFocus(async () => {
   editor.innerHTML =
     '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
   editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select").firstChild);
@@ -203,9 +161,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, "<table><tbody><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(1) should delete the first row when a cell in the first row contains selection range");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell in the first row contains selection range');
-  checkInputEvent(beforeInputEvents[0], "when a cell in the first row contains selection range");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell in the first row contains selection range');
   checkInputEvent(inputEvents[0], "when a cell in the first row contains selection range");
@@ -214,7 +169,6 @@ SimpleTest.waitForFocus(async () => {
   editor.innerHTML =
     '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr></table>';
   editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select").firstChild);
@@ -222,9 +176,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(1) should delete the second row when a cell in the second row contains selection range");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell in the second row contains selection range');
-  checkInputEvent(beforeInputEvents[0], "when a cell in the second row contains selection range");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell in the second row contains selection range');
   checkInputEvent(inputEvents[0], "when a cell in the second row contains selection range");
@@ -233,7 +184,6 @@ SimpleTest.waitForFocus(async () => {
   editor.innerHTML =
     '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
   editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select").firstChild);
@@ -241,9 +191,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(2);
   is(editor.innerHTML, "",
      "nsITableEditor.deleteTableRow(2) should delete the <table> since there is only 2 rows");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when all text in a cell in first row is selected and argument includes next row');
-  checkInputEvent(beforeInputEvents[0], "when all text in a cell in first row is selected and argument includes next row");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when all text in a cell in first row is selected and argument includes next row');
   checkInputEvent(inputEvents[0], "when all text in a cell in first row is selected and argument includes next row");
@@ -252,7 +199,6 @@ SimpleTest.waitForFocus(async () => {
   editor.innerHTML =
     '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
   editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select").firstChild);
@@ -260,9 +206,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(3);
   is(editor.innerHTML, "",
      "nsITableEditor.deleteTableRow(3) should delete the <table> when argument is larger than actual number of rows");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when all text in a cell in first row is selected and argument is same as number of all rows');
-  checkInputEvent(beforeInputEvents[0], "when all text in a cell in first row is selected and argument is same as number of all rows");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when all text in a cell in first row is selected and argument is same as number of all rows');
   checkInputEvent(inputEvents[0], "when all text in a cell in first row is selected and argument is same as number of all rows");
@@ -271,7 +214,6 @@ SimpleTest.waitForFocus(async () => {
   editor.innerHTML =
     '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
   editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select").firstChild);
@@ -279,9 +221,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(2);
   is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(2) should delete the second row containing a cell containing selection range and next row");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when all text in a cell is selected and argument is same than renaming number of rows');
-  checkInputEvent(beforeInputEvents[0], "when all text in a cell is selected and argument is same than renaming number of rows");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when all text in a cell is selected and argument is same than renaming number of rows');
   checkInputEvent(inputEvents[0], "when all text in a cell is selected and argument is same than renaming number of rows");
@@ -290,7 +229,6 @@ SimpleTest.waitForFocus(async () => {
   editor.innerHTML =
     '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
   editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select").firstChild);
@@ -298,9 +236,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(3);
   is(editor.innerHTML, "<table><tbody><tr><td>cell1-1</td><td>cell1-2</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(3) should delete the second row (containing selection range) and the third row even though the argument is larger than the rows");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when all text in a cell in the second row and argument is larger than renaming number of rows');
-  checkInputEvent(beforeInputEvents[0], "when all text in a cell in the second row and argument is larger than renaming number of rows");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when all text in a cell in the second row and argument is larger than renaming number of rows');
   checkInputEvent(inputEvents[0], "when all text in a cell in the second row and argument is larger than renaming number of rows");
@@ -312,7 +247,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select1">cell1-1</td><td>cell1-2</td></tr><tr><td id="select2">cell2-1</td><td>cell2-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select1"));
@@ -323,9 +257,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, "<table><tbody></tbody></table>",
      "nsITableEditor.deleteTableRow(1) should delete all rows if every row's cell is selected");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when cells in every row are selected #1');
-  checkInputEvent(beforeInputEvents[0], "when cells in every row are selected #1");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when cells in every row are selected #1');
   checkInputEvent(inputEvents[0], "when cells in every row are selected #1");
@@ -333,7 +264,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select1">cell1-1</td><td>cell1-2</td></tr><tr><td id="select2">cell2-1</td><td>cell2-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select1"));
@@ -344,9 +274,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(2);
   is(editor.innerHTML, "",
      "nsITableEditor.deleteTableRow(2) should delete the <table> since 2 is number of rows of the <table>");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when cells in every row are selected #2');
-  checkInputEvent(beforeInputEvents[0], "when cells in every row are selected #2");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when cells in every row are selected #2');
   checkInputEvent(inputEvents[0], "when cells in every row are selected #2");
@@ -354,7 +281,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select1">cell1-1</td><td id="select2">cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select1"));
@@ -365,9 +291,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(2);
   is(editor.innerHTML, "",
      "nsITableEditor.deleteTableRow(2) should delete the <table> since 2 is number of rows of the <table>");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when 2 cells in same row are selected');
-  checkInputEvent(beforeInputEvents[0], "when 2 cells in same row are selected");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when 2 cells in same row are selected');
   checkInputEvent(inputEvents[0], "when 2 cells in same row are selected");
@@ -375,7 +298,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select1">cell1-1</td><td>cell1-2</td></tr><tr><td id="select2">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select1"));
@@ -386,9 +308,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, "<table><tbody><tr><td>cell3-1</td><td>cell3-2</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(1) should delete first 2 rows because cells in the both rows are selected");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when 2 cell elements in different rows are selected #1');
-  checkInputEvent(beforeInputEvents[0], "when 2 cell elements in different rows are selected #1");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when 2 cell elements in different rows are selected #1');
   checkInputEvent(inputEvents[0], "when 2 cell elements in different rows are selected #1");
@@ -396,7 +315,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select1">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr><tr><td id="select2">cell3-1</td><td>cell3-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select1"));
@@ -407,9 +325,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, "<table><tbody><tr><td>cell2-1</td><td>cell2-2</td></tr></tbody></table>",
      "nsITableEditor.deleteTableRow(1) should delete the first and the last rows because cells in the both rows are selected");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when 2 cell elements in different rows are selected #2');
-  checkInputEvent(beforeInputEvents[0], "when 2 cell elements in different rows are selected #2");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when 2 cell elements in different rows are selected #2');
   checkInputEvent(inputEvents[0], "when 2 cell elements in different rows are selected #2");
@@ -417,7 +332,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select" rowspan="2">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
@@ -425,9 +339,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, '<table><tbody><tr><td valign="top"><br></td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></tbody></table>',
      "nsITableEditor.deleteTableRow(1) with a selected cell is rowspan=\"2\" should delete the first row and add empty cell to the second row");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell is selected and its rowspan is 2');
-  checkInputEvent(beforeInputEvents[0], "when a cell is selected and its rowspan is 2");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell is selected and its rowspan is 2');
   checkInputEvent(inputEvents[0], "when a cell is selected and its rowspan is 2");
@@ -435,7 +346,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select" rowspan="3">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-2</td></tr><tr><td>cell3-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
@@ -443,9 +353,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, '<table><tbody><tr><td rowspan="2" valign="top"><br></td><td>cell2-2</td></tr><tr><td>cell3-2</td></tr></tbody></table>',
      "nsITableEditor.deleteTableRow(1) with a selected cell is rowspan=\"3\" should delete the first row and add empty cell whose rowspan is 2 to the second row");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell is selected and its rowspan is 3');
-  checkInputEvent(beforeInputEvents[0], "when a cell is selected and its rowspan is 3");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell is selected and its rowspan is 3');
   checkInputEvent(inputEvents[0], "when a cell is selected and its rowspan is 3");
@@ -455,7 +362,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td rowspan="3">cell1-1</td><td>cell1-2</td></tr><tr><td id="select1">cell2-2</td></tr><tr><td>cell3-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select1"));
@@ -463,9 +369,6 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, '<table><tbody><tr><td rowspan="1">cell1-1</td><td>cell1-2</td></tr><tr><td>cell3-2</td></tr></tbody></table>',
      "nsITableEditor.deleteTableRow(1) with selected cell in the second row should delete the second row and the row span should be adjusted");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell in 2nd row which is only cell defined by the row #1');
-  checkInputEvent(beforeInputEvents[0], "when a cell in 2nd row which is only cell defined by the row #1");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell in 2nd row which is only cell defined by the row #1');
   checkInputEvent(inputEvents[0], "when a cell in 2nd row which is only cell defined by the row #1");
@@ -473,7 +376,6 @@ SimpleTest.waitForFocus(async () => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td rowspan="2">cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
-  beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
   range.selectNode(document.getElementById("select"));
@@ -481,14 +383,10 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().deleteTableRow(1);
   is(editor.innerHTML, '<table><tbody><tr><td rowspan="1">cell1-1</td><td>cell1-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></tbody></table>',
      "nsITableEditor.deleteTableRow(1) with selected cell in the second row should delete the second row and the row span should be adjusted");
-  is(beforeInputEvents.length, 1,
-     'Only one "beforeinput" event should be fired when a cell in 2nd row which is only cell defined by the row #2');
-  checkInputEvent(beforeInputEvents[0], "when a cell in 2nd row which is only cell defined by the row #2");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell in 2nd row which is only cell defined by the row #2');
   checkInputEvent(inputEvents[0], "when a cell in 2nd row which is only cell defined by the row #2");
 
-  editor.removeEventListener("beforeinput", onBeforeInput);
   editor.removeEventListener("input", onInput);
 
   SimpleTest.finish();

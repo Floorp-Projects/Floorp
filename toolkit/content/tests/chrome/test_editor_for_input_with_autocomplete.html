@@ -43,10 +43,6 @@ async function registerWord(aTarget, aAutoCompleteController) {
 }
 
 async function runTests() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
   var formFillController =
     SpecialPowers.getFormFillController()
                  .QueryInterface(Ci.nsIAutoCompleteInput);

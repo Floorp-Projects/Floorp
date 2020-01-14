@@ -196,6 +196,30 @@ nsresult StyleUpdatingCommand::ToggleState(nsAtom* aTagName,
   }
 
   if (doTagRemoval) {
+    // Also remove equivalent properties (bug 317093)
+    // XXX Why don't we make the following two transactions as an atomic
+    //     transaction?  If the element is <b>, <i> or <strike>, user
+    //     needs to undo twice.
+    if (aTagName == nsGkAtoms::b) {
+      nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
+          *nsGkAtoms::strong, nullptr, aPrincipal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else if (aTagName == nsGkAtoms::i) {
+      nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
+          *nsGkAtoms::em, nullptr, aPrincipal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    } else if (aTagName == nsGkAtoms::strike) {
+      nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
+          *nsGkAtoms::s, nullptr, aPrincipal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
     nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(*aTagName, nullptr,
                                                             aPrincipal);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -591,6 +615,35 @@ nsresult FontFaceStateCommand::SetState(HTMLEditor* aHTMLEditor,
     return NS_ERROR_INVALID_ARG;
   }
 
+  // Handling `<tt>` element code was implemented for composer (bug 115922).
+  // This shouldn't work with `Document.execCommand()`.  Currently, aPrincipal
+  // is set only when the root caller is Document::ExecCommand() so that
+  // we should handle `<tt>` element only when aPrincipal is nullptr that
+  // must be only when XUL command is executed on composer.
+  if (!aPrincipal) {
+    if (aNewState.EqualsLiteral("tt")) {
+      // The old "teletype" attribute
+      nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(
+          *nsGkAtoms::tt, nullptr, EmptyString(), aPrincipal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      // Clear existing font face
+      rv = aHTMLEditor->RemoveInlinePropertyAsAction(
+          *nsGkAtoms::font, nsGkAtoms::face, aPrincipal);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "RemoveInlinePropertyAsAction() failed");
+      return rv;
+    }
+
+    // Remove any existing `<tt>` elements before setting new font face.
+    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
+        *nsGkAtoms::tt, nullptr, aPrincipal);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
   if (aNewState.IsEmpty() || aNewState.EqualsLiteral("normal")) {
     nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
         *nsGkAtoms::font, nsGkAtoms::face, aPrincipal);
@@ -661,6 +714,18 @@ nsresult FontSizeStateCommand::SetState(HTMLEditor* aHTMLEditor,
   // remove any existing font size, big or small
   nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
       *nsGkAtoms::font, nsGkAtoms::size, aPrincipal);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::big, nullptr,
+                                                 aPrincipal);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::small, nullptr,
+                                                 aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "RemoveInlinePropertyAsAction() failed");
   return rv;

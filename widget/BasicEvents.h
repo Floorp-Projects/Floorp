@@ -8,10 +8,10 @@
 
 #include <stdint.h>
 
-#include "mozilla/EventForwards.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/EventForwards.h"
+#include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "nsISupportsImpl.h"
@@ -855,8 +855,7 @@ class WidgetEvent : public WidgetEventTime {
                            mMessage == eDragStart || mMessage == eDrop;
         break;
       case eEditorInputEventClass:
-        mFlags.mComposed =
-            mMessage == eEditorInput || mMessage == eEditorBeforeInput;
+        mFlags.mComposed = mMessage == eEditorInput;
         break;
       case eFocusEventClass:
         mFlags.mComposed = mMessage == eBlur || mMessage == eFocus ||

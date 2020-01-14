@@ -141,8 +141,7 @@ Form History test: form field autocomplete
 <script class="testbody" type="text/javascript">
 /** Test for Form History autocomplete **/
 
-SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true],
-                                   ["dom.input_events.beforeinput.enabled", true]]});
+SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal", true]]});
 
 var input = $_(1, "field1");
 
@@ -998,68 +997,29 @@ function runTest() { // eslint-disable-line complexity
       break;
 
     // Check that the input event is fired.
-    case 500: {
-      let beforeInputFired = false;
-      input.addEventListener("beforeinput", (event) => {
-        beforeInputFired = true;
+    case 500:
+      input.addEventListener("input", function(event) {
+        ok(true, testNum + " oninput should have been received");
         ok(event instanceof InputEvent,
-           `${testNum} "beforeinput" event should be dispatched with InputEvent interface`);
-        ok(event.bubbles, `${testNum} "beforeinput" event should bubble`);
-        ok(event.cancelable, `${testNum} "beforeinput" event for "insertReplacementText" should be cancelable`);
+           testNum + " input event should be dispatched with InputEvent interface");
+        ok(event.bubbles, testNum + " input event should bubble");
+        ok(!event.cancelable, testNum + " input event shouldn't be cancelable");
         is(event.inputType, "insertReplacementText",
-           `${testNum} inputType of "beforeinput" event should be "insertReplacementText"`);
+           testNum + ' inputType should be "insertReplacementText"');
         is(event.data, "value1",
-           `${testNum} data of "beforeinput" event should be "value1"`);
+           testNum + ' data should be "value1"');
         is(event.dataTransfer, null,
-           `${testNum} dataTransfer of "beforeinput" event should be null`);
-        is(input.value, "", `${testNum} input value should've not been modified yet at "beforeinput" event`);
-      }, {once: true});
-      let inputFired = false;
-      input.addEventListener("input", (event) => {
-        inputFired = true;
-        ok(event instanceof InputEvent,
-           `${testNum} "input" event should be dispatched with InputEvent interface`);
-        ok(event.bubbles, `${testNum} "input" event should bubble`);
-        ok(!event.cancelable, `${testNum} "input" event shouldn't be cancelable`);
-        is(event.inputType, "insertReplacementText",
-           `${testNum} inputType of "input" event should be "insertReplacementText"`);
-        is(event.data, "value1",
-           `${testNum} data of "input" event should be "value1"`);
-        is(event.dataTransfer, null,
-           `${testNum} dataTransfer of "input" event should be null`);
-        is(input.value, "value1", `${testNum} input value should've already been modified at "input" event`);
+           testNum + " dataTransfer should be null");
       }, {once: true});
 
       synthesizeKey("KEY_ArrowDown");
       checkForm("");
       synthesizeKey("KEY_Enter");
-      ok(beforeInputFired, `${testNum} "beforeinput" event should have been fired`);
-      ok(inputFired, `${testNum} "input" event should have been fired`);
       checkForm("value1");
-
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      break;
-    }
-    // Check that canceling the beforeinput event cancels autocompletion.
-    case 501: {
-      input.addEventListener("beforeinput", (event) => { event.preventDefault(); }, {once: true});
-      let inputFired = false;
-      input.addEventListener("input", () => { inputFired = true; }, {once: true});
-
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      checkForm("");
-      synthesizeKey("KEY_Enter");
-      ok(!inputFired, `${testNum} "input" event should not have been fired since "beforeinput" was canceled`);
-      checkForm("");
-
-      // Go to test 500.
       testNum = 599;
       setTimeout(runTest, 100);
       break;
-    }
+
     case 600:
       // check we don't show autocomplete for searchbar-history
       input = $_(13, "searchbar-history");

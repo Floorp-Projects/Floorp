@@ -276,10 +276,6 @@ class HTMLTextAreaElement final : public TextControlElement,
     MOZ_ASSERT(mState);
     return mState->GetTextEditor();
   }
-  bool HasEditor() {
-    MOZ_ASSERT(mState);
-    return !!mState->GetTextEditorWithoutCreation();
-  }
 
   bool IsInputEventTarget() const { return true; }
 

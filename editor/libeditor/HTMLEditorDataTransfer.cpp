@@ -176,14 +176,13 @@ nsresult HTMLEditor::InsertHTMLAsAction(const nsAString& aInString,
                                         nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertHTML,
                                           aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = DoInsertHTMLWithContext(aInString, EmptyString(), EmptyString(),
-                               EmptyString(), nullptr, EditorDOMPoint(), true,
-                               true, false);
+  nsresult rv = DoInsertHTMLWithContext(aInString, EmptyString(), EmptyString(),
+                                        EmptyString(), nullptr,
+                                        EditorDOMPoint(), true, true, false);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DoInsertHTMLWithContext() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -993,9 +992,8 @@ HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
 
 nsresult HTMLEditor::BlobReader::OnResult(const nsACString& aResult) {
   AutoEditActionDataSetter editActionData(*mHTMLEditor, mEditAction);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   nsString blobType;
@@ -1003,7 +1001,7 @@ nsresult HTMLEditor::BlobReader::OnResult(const nsACString& aResult) {
 
   NS_ConvertUTF16toUTF8 type(blobType);
   nsAutoString stuffToPaste;
-  rv = ImgFromData(type, aResult, stuffToPaste);
+  nsresult rv = ImgFromData(type, aResult, stuffToPaste);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
@@ -1477,11 +1475,16 @@ bool HTMLEditor::HavePrivateHTMLFlavor(nsIClipboard* aClipboard) {
   return false;
 }
 
-nsresult HTMLEditor::PasteInternal(int32_t aClipboardType) {
+nsresult HTMLEditor::PasteInternal(int32_t aClipboardType,
+                                   bool aDispatchPasteEvent) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
+  if (aDispatchPasteEvent && !FireClipboardEvent(ePaste, aClipboardType)) {
+    return NS_ERROR_EDITOR_ACTION_CANCELED;
+  }
+
   // Get Clipboard Service
-  nsresult rv = NS_OK;
+  nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard =
       do_GetService("@mozilla.org/widget/clipboard;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1576,17 +1579,13 @@ nsresult HTMLEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
     return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
   }
 
-  // Dispatch "beforeinput" event after "paste" event.
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+  nsAutoString contextStr, infoStr;
+  nsresult rv = InsertFromTransferable(aTransferable, nullptr, contextStr,
+                                       infoStr, false, true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
-
-  nsAutoString contextStr, infoStr;
-  rv = InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr,
-                              false, true);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertFromTransferable() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  return NS_OK;
 }
 
 /**
@@ -1613,20 +1612,10 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
     return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
   }
 
-  // Dispatch "beforeinput" event after "paste" event.  And perhaps, before
-  // committing composition because if pasting is canceled, we don't need to
-  // commit the active composition.
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
   CommitComposition();
-  if (NS_WARN_IF(Destroyed())) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
-  }
 
   // Get Clipboard Service
+  nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(
       do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1656,8 +1645,10 @@ nsresult HTMLEditor::PasteNoFormattingAsAction(int32_t aSelectionType,
 
   const nsString& empty = EmptyString();
   rv = InsertFromTransferable(trans, nullptr, empty, empty, false, true);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertFromTransferable() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 // The following arrays contain the MIME types that we can paste. The arrays
@@ -1754,28 +1745,16 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
 
-  if (IsReadonly() || IsDisabled()) {
-    return NS_OK;
-  }
-
   AutoEditActionDataSetter editActionData(*this, EditAction::ePasteAsQuotation,
                                           aPrincipal);
-  editActionData.InitializeDataTransferWithClipboard(
-      SettingDataTransfer::eWithFormat, aClipboardType);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-
-  if (aDispatchPasteEvent && !FireClipboardEvent(ePaste, aClipboardType)) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
-
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
+  editActionData.InitializeDataTransferWithClipboard(
+      SettingDataTransfer::eWithFormat, aClipboardType);
 
   if (IsPlaintextEditor()) {
+    // XXX In this case, we don't dispatch ePaste event.  Why?
     nsresult rv = PasteAsPlaintextQuotation(aClipboardType);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "PasteAsPlaintextQuotation() failed");
@@ -1786,6 +1765,10 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   // <blockquote type="cite"> element after removing selection.
 
   // XXX Why don't we test these first?
+  if (IsReadonly() || IsDisabled()) {
+    return NS_OK;
+  }
+
   EditActionResult result = CanHandleHTMLEditSubAction();
   if (NS_WARN_IF(result.Failed()) || result.Canceled()) {
     return EditorBase::ToGenericNSResult(result.Rv());
@@ -1804,7 +1787,7 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
       !ignoredError.Failed(),
       "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  rv = EnsureNoPaddingBRElementForEmptyEditor();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -1853,7 +1836,11 @@ nsresult HTMLEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
     return rv;
   }
 
-  rv = PasteInternal(aClipboardType);
+  // XXX If ePaste event has not been dispatched yet but selected content
+  //     has already been removed and created a <blockquote> element.
+  //     So, web apps cannot prevent the default of ePaste event which
+  //     will be dispatched by PasteInternal().
+  rv = PasteInternal(aClipboardType, aDispatchPasteEvent);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "PasteInternal() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -1979,22 +1966,22 @@ nsresult HTMLEditor::InsertWithQuotationsAsSubAction(
 nsresult HTMLEditor::InsertTextWithQuotations(
     const nsAString& aStringToInsert) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   MOZ_ASSERT(!aStringToInsert.IsVoid());
   editActionData.SetData(aStringToInsert);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
 
   // The whole operation should be undoable in one transaction:
   // XXX Why isn't enough to use only AutoPlaceholderBatch here?
   AutoTransactionBatch bundleAllTransactions(*this);
   AutoPlaceholderBatch treatAsOneTransaction(*this);
 
-  rv = InsertTextWithQuotationsInternal(aStringToInsert);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "InsertTextWithQuotationsInternal() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = InsertTextWithQuotationsInternal(aStringToInsert);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::InsertTextWithQuotationsInternal(
@@ -2099,14 +2086,13 @@ nsresult HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
                                        nsINode** aNodeInserted) {
   if (IsPlaintextEditor()) {
     AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     MOZ_ASSERT(!aQuotedText.IsVoid());
     editActionData.SetData(aQuotedText);
-    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-      return EditorBase::ToGenericNSResult(rv);
-    }
     AutoPlaceholderBatch treatAsOneTransaction(*this);
-    rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
+    nsresult rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "InsertAsPlaintextQuotation() failed");
     return EditorBase::ToGenericNSResult(rv);
@@ -2114,15 +2100,14 @@ nsresult HTMLEditor::InsertAsQuotation(const nsAString& aQuotedText,
 
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertBlockquoteElement);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
   nsAutoString citation;
-  rv = InsertAsCitedQuotationInternal(aQuotedText, citation, false,
-                                      aNodeInserted);
+  nsresult rv = InsertAsCitedQuotationInternal(aQuotedText, citation, false,
+                                               aNodeInserted);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "InsertAsCitedQuotationInternal() failed");
   return EditorBase::ToGenericNSResult(rv);
@@ -2267,9 +2252,8 @@ nsresult HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
 NS_IMETHODIMP
 HTMLEditor::Rewrap(bool aRespectNewlines) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eRewrap);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   // Rewrap makes no sense if there's no wrap column; default to 72.
@@ -2280,9 +2264,9 @@ HTMLEditor::Rewrap(bool aRespectNewlines) {
 
   nsAutoString current;
   bool isCollapsed;
-  rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted |
-                              nsIDocumentEncoder::OutputLFLineBreak,
-                          &isCollapsed, current);
+  nsresult rv = SharedOutputString(nsIDocumentEncoder::OutputFormatted |
+                                       nsIDocumentEncoder::OutputLFLineBreak,
+                                   &isCollapsed, current);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
@@ -2324,15 +2308,14 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
         "InsertAsCitedQuotation: trying to insert html into plaintext editor");
 
     AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     MOZ_ASSERT(!aQuotedText.IsVoid());
     editActionData.SetData(aQuotedText);
-    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-      return EditorBase::ToGenericNSResult(rv);
-    }
 
     AutoPlaceholderBatch treatAsOneTransaction(*this);
-    rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
+    nsresult rv = InsertAsPlaintextQuotation(aQuotedText, true, aNodeInserted);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "InsertAsPlaintextQuotation() failed");
     return EditorBase::ToGenericNSResult(rv);
@@ -2340,14 +2323,13 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
 
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertBlockquoteElement);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  rv = InsertAsCitedQuotationInternal(aQuotedText, aCitation, aInsertHTML,
-                                      aNodeInserted);
+  nsresult rv = InsertAsCitedQuotationInternal(aQuotedText, aCitation,
+                                               aInsertHTML, aNodeInserted);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "InsertAsCitedQuotationInternal() failed");
   return EditorBase::ToGenericNSResult(rv);

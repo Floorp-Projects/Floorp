@@ -3285,8 +3285,11 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aClipboardType      nsIClipboard::kGlobalClipboard or
    *                            nsIClipboard::kSelectionClipboard.
+   * @param aDispatchPasteEvent true if this should dispatch ePaste event
+   *                            before pasting.  Otherwise, false.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult PasteInternal(int32_t aClipboardType);
+  MOZ_CAN_RUN_SCRIPT
+  nsresult PasteInternal(int32_t aClipboardType, bool aDispatchPasteEvent);
 
   /**
    * InsertWithQuotationsAsSubAction() inserts aQuotedText with appending ">"
@@ -3387,22 +3390,16 @@ class HTMLEditor final : public TextEditor,
   /**
    * RemoveInlinePropertyInternal() removes specified style from `mTypeInState`
    * if `Selection` is collapsed.  Otherwise, removing the style.
+   * XXX Looks like that this has a lot of bugs in HTML mode.
    *
    * @param aProperty           nullptr if you want to remove all inline styles.
    *                            Otherwise, one of the presentation tag names
    *                            which we support in style editor.
    * @param aAttribute          For some aProperty values, need to be set to
    *                            its attribute name.  Otherwise, nullptr.
-   * @param aRemoveRelatedElements      If Yes, this method removes different
-   *                                    name's elements in the block if
-   *                                    necessary.  For example, if aProperty
-   *                                    is nsGkAtoms::b, `<strong>` elements
-   *                                    are also removed.
    */
-  enum class RemoveRelatedElements { Yes, No };
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-  RemoveInlinePropertyInternal(nsAtom* aProperty, nsAtom* aAttribute,
-                               RemoveRelatedElements aRemoveRelatedElements);
+  RemoveInlinePropertyInternal(nsAtom* aProperty, nsAtom* aAttribute);
 
   /**
    * ReplaceHeadContentsWithSourceWithTransaction() replaces all children of
