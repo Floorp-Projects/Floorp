@@ -56,6 +56,12 @@ configurations {
     jnaForTest
 }
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += [
+            "-Xuse-experimental=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    ]
+}
+
 dependencies {
     implementation project(':concept-engine')
     implementation project(':browser-session')
@@ -69,6 +75,9 @@ dependencies {
     implementation project(':lib-state')
 
     implementation project(':support-ktx')
+    implementation project(':support-utils')
+
+    implementation project(':feature-intent')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

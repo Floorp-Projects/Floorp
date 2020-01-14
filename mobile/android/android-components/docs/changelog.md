@@ -68,6 +68,7 @@ permalink: /changelog/
 * **support-migration**
   * **New Telemetry Notice**
   * Added a 'migration' ping, which contains telemetry data about migration via Glean. It's emitted whenever a migration is executed.
+  * Added `MigrationIntentProcessor` for handling incoming intents when migration is in progress.
 
 # 27.0.0
 
