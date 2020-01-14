@@ -26,7 +26,6 @@
 #include "vm/Shape-inl.h"
 
 using namespace js;
-using namespace js::frontend;
 
 using mozilla::Maybe;
 
