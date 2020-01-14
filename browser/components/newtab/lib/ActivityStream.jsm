@@ -235,6 +235,13 @@ const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "discoverystream.personalization.version",
+    {
+      title: "",
+      value: 1,
+    },
+  ],
+  [
     "showSponsored",
     {
       title:

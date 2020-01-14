@@ -12,6 +12,7 @@ const { Dedupe } = ChromeUtils.import(
 
 const TOP_SITES_DEFAULT_ROWS = 1;
 const TOP_SITES_MAX_SITES_PER_ROW = 8;
+const PREF_PERSONALIZATION_VERSION = "discoverystream.personalization.version";
 
 const dedupe = new Dedupe(site => site && site.url);
 
@@ -71,6 +72,11 @@ const INITIAL_STATE = {
       blocked: [],
       placements: [],
     },
+  },
+  Personalization: {
+    version: 1,
+    lastUpdated: null,
+    initialized: false,
   },
   Search: {
     // When search hand-off is enabled, we render a big button that is styled to
@@ -518,6 +524,36 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   }
 }
 
+function Personalization(prevState = INITIAL_STATE.Personalization, action) {
+  switch (action.type) {
+    case at.DISCOVERY_STREAM_PERSONALIZATION_VERSION:
+      return {
+        ...prevState,
+        version: action.data.version,
+      };
+    case at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED:
+      return {
+        ...prevState,
+        lastUpdated: action.data.lastUpdated,
+      };
+    case at.DISCOVERY_STREAM_PERSONALIZATION_INIT:
+      return {
+        ...prevState,
+        initialized: true,
+      };
+    case at.PREF_CHANGED:
+      if (action.data.name === PREF_PERSONALIZATION_VERSION) {
+        return {
+          ...prevState,
+          version: action.data.value,
+        };
+      }
+      return prevState;
+    default:
+      return prevState;
+  }
+}
+
 function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
   // Return if action data is empty, or spocs or feeds data is not loaded
   const isNotReady = () =>
@@ -762,6 +798,7 @@ this.reducers = {
   Dialog,
   Sections,
   Pocket,
+  Personalization,
   DiscoveryStream,
   Search,
 };
