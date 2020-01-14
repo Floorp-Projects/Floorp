@@ -4855,12 +4855,13 @@ blocklist:
   lastModified_xml:
     bug_numbers:
       - 1572711
+      - 1607744
     description: >
       Keep track of the lastupdate datetime from a successfully loaded xml blocklist,
       set to "Invalid Date" or "Missing Date" when the timestamp is invalid or missing.
       (based on the lastupdate attribute set on the XML document element,
       converted from a milliseconds timestamp into a datetime string in UTC format).
-    expires: "75"
+    expires: "77"
     kind: string
     release_channel_collection: opt-out
     notification_emails:
@@ -4877,11 +4878,12 @@ blocklist:
   lastModified_rs_addons:
     bug_numbers:
       - 1572711
+      - 1607744
     description: >
       Keep track of the last time the "addons" remotesetting blocklist has been successfully
       updated (as a datetime string in UTC format), set to "Missing Date" when the timestamp
       couldn't be retrieved.
-    expires: "75"
+    expires: "81"
     kind: string
     release_channel_collection: opt-out
     notification_emails:
@@ -4898,11 +4900,12 @@ blocklist:
   lastModified_rs_plugins:
     bug_numbers:
       - 1572711
+      - 1607744
     description: >
       Keep track of the last time the "plugins" remotesetting blocklist has been successfully
       updated (as a datetime string in UTC format), set to "Missing Date" when the timestamp
       couldn't be retrieved.
-    expires: "75"
+    expires: "81"
     kind: string
     release_channel_collection: opt-out
     notification_emails:
@@ -4918,10 +4921,11 @@ blocklist:
   useXML:
     bug_numbers:
       - 1572711
+      - 1607744
     description: >
       Keep track of the currently enabled blocklist engine (set to false if the
       remote settings blocklist is the one enabled).
-    expires: "75"
+    expires: "77"
     kind: boolean
     release_channel_collection: opt-out
     notification_emails:
