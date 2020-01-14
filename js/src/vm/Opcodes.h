@@ -20,17 +20,14 @@
  *
  * To use this header, define a macro of the form:
  *
- *     #define MACRO(op, op_camel, op_snake, name, token, length, \
- *                   nuses, ndefs, format) ...
+ *     #define MACRO(op, op_snake, token, length, nuses, ndefs, format) ...
  *
  * Then `FOR_EACH_OPCODE(MACRO)` invokes `MACRO` for every opcode.
  *
  * Field        Description
  * -----        -----------
- * op           Bytecode name (including JSOP_ prefix)
- * op_camel     UpperCamelCase form of opcode id
+ * op           UpperCamelCase form of opcode id
  * op_snake     snake_case form of opcode id
- * name         C string containing name for disassembler
  * token        Pretty-printer string, or null if ugly
  * length       Number of bytes including any immediate operands
  * nuses        Number of stack slots consumed by bytecode, -1 if variadic
@@ -260,7 +257,7 @@
      *   Operands:
      *   Stack: => undefined
      */ \
-    MACRO(JSOP_UNDEFINED, Undefined, undefined, js_undefined_str, "", 1, 0, 1, JOF_BYTE) \
+    MACRO(Undefined, undefined, "", 1, 0, 1, JOF_BYTE) \
     /*
      * Push `null`.
      *
@@ -268,7 +265,7 @@
      *   Operands:
      *   Stack: => null
      */ \
-    MACRO(JSOP_NULL, Null, null, js_null_str, js_null_str, 1, 0, 1, JOF_BYTE) \
+    MACRO(Null, null, js_null_str, 1, 0, 1, JOF_BYTE) \
     /*
      * Push a boolean constant.
      *
@@ -276,8 +273,8 @@
      *   Operands:
      *   Stack: => true/false
      */ \
-    MACRO(JSOP_FALSE, False, false_, js_false_str, js_false_str, 1, 0, 1, JOF_BYTE) \
-    MACRO(JSOP_TRUE, True, true_, js_true_str, js_true_str, 1, 0, 1, JOF_BYTE) \
+    MACRO(False, false_, js_false_str, 1, 0, 1, JOF_BYTE) \
+    MACRO(True, true_, js_true_str, 1, 0, 1, JOF_BYTE) \
     /*
      * Push the `int32_t` immediate operand as an `Int32Value`.
      *
@@ -288,7 +285,7 @@
      *   Operands: int32_t val
      *   Stack: => val
      */ \
-    MACRO(JSOP_INT32, Int32, int32, "int32", NULL, 5, 0, 1, JOF_INT32) \
+    MACRO(Int32, int32, NULL, 5, 0, 1, JOF_INT32) \
     /*
      * Push the number `0`.
      *
@@ -296,7 +293,7 @@
      *   Operands:
      *   Stack: => 0
      */ \
-    MACRO(JSOP_ZERO, Zero, zero, "zero", "0", 1, 0, 1, JOF_BYTE) \
+    MACRO(Zero, zero, "0", 1, 0, 1, JOF_BYTE) \
     /*
      * Push the number `1`.
      *
@@ -304,7 +301,7 @@
      *   Operands:
      *   Stack: => 1
      */ \
-    MACRO(JSOP_ONE, One, one, "one", "1", 1, 0, 1, JOF_BYTE) \
+    MACRO(One, one, "1", 1, 0, 1, JOF_BYTE) \
     /*
      * Push the `int8_t` immediate operand as an `Int32Value`.
      *
@@ -312,7 +309,7 @@
      *   Operands: int8_t val
      *   Stack: => val
      */ \
-    MACRO(JSOP_INT8, Int8, int8, "int8", NULL, 2, 0, 1, JOF_INT8) \
+    MACRO(Int8, int8, NULL, 2, 0, 1, JOF_INT8) \
     /*
      * Push the `uint16_t` immediate operand as an `Int32Value`.
      *
@@ -320,7 +317,7 @@
      *   Operands: uint16_t val
      *   Stack: => val
      */ \
-    MACRO(JSOP_UINT16, Uint16, uint16, "uint16", NULL, 3, 0, 1, JOF_UINT16) \
+    MACRO(Uint16, uint16, NULL, 3, 0, 1, JOF_UINT16) \
     /*
      * Push the `uint24_t` immediate operand as an `Int32Value`.
      *
@@ -328,7 +325,7 @@
      *   Operands: uint24_t val
      *   Stack: => val
      */ \
-    MACRO(JSOP_UINT24, Uint24, uint24, "uint24", NULL, 4, 0, 1, JOF_UINT24) \
+    MACRO(Uint24, uint24, NULL, 4, 0, 1, JOF_UINT24) \
     /*
      * Push the 64-bit floating-point immediate operand as a `DoubleValue`.
      *
@@ -339,7 +336,7 @@
      *   Operands: double val
      *   Stack: => val
      */ \
-    MACRO(JSOP_DOUBLE, Double, double_, "double", NULL, 9, 0, 1, JOF_DOUBLE) \
+    MACRO(Double, double_, NULL, 9, 0, 1, JOF_DOUBLE) \
     /*
      * Push the BigInt constant `script->getBigInt(bigIntIndex)`.
      *
@@ -347,7 +344,7 @@
      *   Operands: uint32_t bigIntIndex
      *   Stack: => bigint
      */ \
-    MACRO(JSOP_BIGINT, BigInt, big_int, "bigint", NULL, 5, 0, 1, JOF_BIGINT) \
+    MACRO(BigInt, big_int, NULL, 5, 0, 1, JOF_BIGINT) \
     /*
      * Push the string constant `script->getAtom(atomIndex)`.
      *
@@ -355,7 +352,7 @@
      *   Operands: uint32_t atomIndex
      *   Stack: => string
      */ \
-    MACRO(JSOP_STRING, String, string, "string", NULL, 5, 0, 1, JOF_ATOM) \
+    MACRO(String, string, NULL, 5, 0, 1, JOF_ATOM) \
     /*
      * Push a well-known symbol.
      *
@@ -365,7 +362,7 @@
      *   Operands: uint8_t symbol (the JS::SymbolCode of the symbol to use)
      *   Stack: => symbol
      */ \
-    MACRO(JSOP_SYMBOL, Symbol, symbol, "symbol", NULL, 2, 0, 1, JOF_UINT8) \
+    MACRO(Symbol, symbol, NULL, 2, 0, 1, JOF_UINT8) \
     /*
      * Pop the top value on the stack, discard it, and push `undefined`.
      *
@@ -378,7 +375,7 @@
      *   Operands:
      *   Stack: val => undefined
      */ \
-    MACRO(JSOP_VOID, Void, void_, js_void_str, NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(Void, void_, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * [The `typeof` operator][1].
      *
@@ -407,8 +404,8 @@
      *   Operands:
      *   Stack: val => (typeof val)
      */ \
-    MACRO(JSOP_TYPEOF, Typeof, typeof_, js_typeof_str, NULL, 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
-    MACRO(JSOP_TYPEOFEXPR, TypeofExpr, typeof_expr, "typeofexpr", NULL, 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(Typeof, typeof_, NULL, 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(TypeofExpr, typeof_expr, NULL, 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     /*
      * [The unary `+` operator][1].
      *
@@ -426,7 +423,7 @@
      *   Operands:
      *   Stack: val => (+val)
      */ \
-    MACRO(JSOP_POS, Pos, pos, "pos", "+ ", 1, 1, 1, JOF_BYTE) \
+    MACRO(Pos, pos, "+ ", 1, 1, 1, JOF_BYTE) \
     /*
      * [The unary `-` operator][1].
      *
@@ -441,7 +438,7 @@
      *   Operands:
      *   Stack: val => (-val)
      */ \
-    MACRO(JSOP_NEG, Neg, neg, "neg", "- ", 1, 1, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Neg, neg, "- ", 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
      * [The bitwise NOT operator][1] (`~`).
      *
@@ -456,7 +453,7 @@
      *   Operands:
      *   Stack: val => (~val)
      */ \
-    MACRO(JSOP_BITNOT, BitNot, bit_not, "bitnot", "~", 1, 1, 1, JOF_BYTE|JOF_IC) \
+    MACRO(BitNot, bit_not, "~", 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
      * [The logical NOT operator][1] (`!`).
      *
@@ -472,7 +469,7 @@
      *   Operands:
      *   Stack: val => (!val)
      */ \
-    MACRO(JSOP_NOT, Not, not_, "not", "!", 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(Not, not_, "!", 1, 1, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     /*
      * [Binary bitwise operations][1] (`|`, `^`, `&`).
      *
@@ -487,9 +484,9 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    MACRO(JSOP_BITOR, BitOr, bit_or, "bitor", "|",  1, 2, 1, JOF_BYTE|JOF_IC) \
-    MACRO(JSOP_BITXOR, BitXor, bit_xor, "bitxor", "^", 1, 2, 1, JOF_BYTE|JOF_IC) \
-    MACRO(JSOP_BITAND, BitAnd, bit_and, "bitand", "&", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(BitOr, bit_or, "|",  1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(BitXor, bit_xor, "^", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(BitAnd, bit_and, "&", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * Loose equality operators (`==` and `!=`).
      *
@@ -506,8 +503,8 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    MACRO(JSOP_EQ, Eq, eq, "eq", "==", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
-    MACRO(JSOP_NE, Ne, ne, "ne", "!=", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(Eq, eq, "==", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(Ne, ne, "!=", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     /*
      * Strict equality operators (`===` and `!==`).
      *
@@ -524,8 +521,8 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    MACRO(JSOP_STRICTEQ, StrictEq, strict_eq, "stricteq", "===", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
-    MACRO(JSOP_STRICTNE, StrictNe, strict_ne, "strictne", "!==", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(StrictEq, strict_eq, "===", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
+    MACRO(StrictNe, strict_ne, "!==", 1, 2, 1, JOF_BYTE|JOF_DETECTING|JOF_IC) \
     /*
      * Relative operators (`<`, `>`, `<=`, `>=`).
      *
@@ -542,10 +539,10 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    MACRO(JSOP_LT, Lt, lt, "lt", "<",  1, 2, 1, JOF_BYTE|JOF_IC) \
-    MACRO(JSOP_GT, Gt, gt, "gt", ">",  1, 2, 1, JOF_BYTE|JOF_IC) \
-    MACRO(JSOP_LE, Le, le, "le", "<=", 1, 2, 1, JOF_BYTE|JOF_IC) \
-    MACRO(JSOP_GE, Ge, ge, "ge", ">=", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Lt, lt, "<",  1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Gt, gt, ">",  1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Le, le, "<=", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Ge, ge, ">=", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * [The `instanceof` operator][1].
      *
@@ -560,7 +557,7 @@
      *   Operands:
      *   Stack: value, target => (value instanceof target)
      */ \
-    MACRO(JSOP_INSTANCEOF, Instanceof, instanceof, js_instanceof_str, js_instanceof_str, 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Instanceof, instanceof, js_instanceof_str, 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * [The `in` operator][1].
      *
@@ -577,7 +574,7 @@
      *   Operands:
      *   Stack: id, obj => (id in obj)
      */ \
-    MACRO(JSOP_IN, In, in_, js_in_str, js_in_str, 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(In, in_, js_in_str, 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * [Bitwise shift operators][1] (`<<`, `>>`, `>>>`).
      *
@@ -594,9 +591,9 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    MACRO(JSOP_LSH, Lsh, lsh, "lsh", "<<", 1, 2, 1, JOF_BYTE|JOF_IC) \
-    MACRO(JSOP_RSH, Rsh, rsh, "rsh", ">>", 1, 2, 1, JOF_BYTE|JOF_IC) \
-    MACRO(JSOP_URSH, Ursh, ursh, "ursh", ">>>", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Lsh, lsh, "<<", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Rsh, rsh, ">>", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Ursh, ursh, ">>>", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * [The binary `+` operator][1].
      *
@@ -613,7 +610,7 @@
      *   Operands:
      *   Stack: lval, rval => (lval + rval)
      */ \
-    MACRO(JSOP_ADD, Add, add, "add", "+", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Add, add, "+", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * [The binary `-` operator][1].
      *
@@ -630,7 +627,7 @@
      *   Operands:
      *   Stack: lval, rval => (lval - rval)
      */ \
-    MACRO(JSOP_SUB, Sub, sub, "sub", "-", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Sub, sub, "-", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * Add or subtract 1.
      *
@@ -646,8 +643,8 @@
      *   Operands:
      *   Stack: val => (val +/- 1)
      */ \
-    MACRO(JSOP_INC, Inc, inc, "inc", NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
-    MACRO(JSOP_DEC, Dec, dec, "dec", NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Inc, inc, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Dec, dec, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
      * [The multiplicative operators][1] (`*`, `/`, `%`).
      *
@@ -664,9 +661,9 @@
      *   Operands:
      *   Stack: lval, rval => (lval OP rval)
      */ \
-    MACRO(JSOP_MUL, Mul, mul, "mul", "*", 1, 2, 1, JOF_BYTE|JOF_IC) \
-    MACRO(JSOP_DIV, Div, div, "div", "/", 1, 2, 1, JOF_BYTE|JOF_IC) \
-    MACRO(JSOP_MOD, Mod, mod, "mod", "%", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Mul, mul, "*", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Div, div, "/", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Mod, mod, "%", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * [The exponentiation operator][1] (`**`).
      *
@@ -684,7 +681,7 @@
      *   Operands:
      *   Stack: lval, rval => (lval ** rval)
      */ \
-    MACRO(JSOP_POW, Pow, pow, "pow", "**", 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Pow, pow, "**", 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * Convert a value to a property key.
      *
@@ -708,7 +705,7 @@
      *   Operands:
      *   Stack: propertyNameValue => propertyKey
      */ \
-    MACRO(JSOP_TOID, ToId, to_id, "toid", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(ToId, to_id, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Convert a value to a numeric value (a Number or BigInt).
      *
@@ -729,7 +726,7 @@
      *   Operands:
      *   Stack: val => ToNumeric(val)
      */ \
-    MACRO(JSOP_TONUMERIC, ToNumeric, to_numeric, "tonumeric", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(ToNumeric, to_numeric, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Convert a value to a string.
      *
@@ -746,7 +743,7 @@
      *   Type: Conversions
      *   Stack: val => ToString(val)
      */ \
-    MACRO(JSOP_TOSTRING, ToString, to_string, "tostring", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(ToString, to_string, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Push the global `this` value. Not to be confused with the `globalThis`
      * property on the global.
@@ -759,7 +756,7 @@
      *   Operands:
      *   Stack: => this
      */ \
-    MACRO(JSOP_GLOBALTHIS, GlobalThis, global_this, "globalthis", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(GlobalThis, global_this, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Push the value of `new.target`.
      *
@@ -778,7 +775,7 @@
      *   Operands:
      *   Stack: => new.target
      */ \
-    MACRO(JSOP_NEWTARGET, NewTarget, new_target, "newtarget", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(NewTarget, new_target, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Dynamic import of the module specified by the string value on the top of
      * the stack.
@@ -792,7 +789,7 @@
      *   Operands:
      *   Stack: moduleId => promise
      */ \
-    MACRO(JSOP_DYNAMIC_IMPORT, DynamicImport, dynamic_import, "dynamic-import", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(DynamicImport, dynamic_import, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Push the `import.meta` object.
      *
@@ -803,7 +800,7 @@
      *   Operands:
      *   Stack: => import.meta
      */ \
-    MACRO(JSOP_IMPORTMETA, ImportMeta, import_meta, "importmeta", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(ImportMeta, import_meta, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Create and push a new object with no properties.
      *
@@ -815,7 +812,7 @@
      *   Operands: uint32_t _unused
      *   Stack: => obj
      */ \
-    MACRO(JSOP_NEWINIT, NewInit, new_init, "newinit", NULL, 5, 0, 1, JOF_UINT32|JOF_IC) \
+    MACRO(NewInit, new_init, NULL, 5, 0, 1, JOF_UINT32|JOF_IC) \
     /*
      * Create and push a new object of a predetermined shape.
      *
@@ -834,8 +831,8 @@
      *   Operands: uint32_t baseobjIndex
      *   Stack: => obj
      */ \
-    MACRO(JSOP_NEWOBJECT, NewObject, new_object, "newobject", NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
-    MACRO(JSOP_NEWOBJECT_WITHGROUP, NewObjectWithGroup, new_object_with_group, "newobjectwithgroup", NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
+    MACRO(NewObject, new_object, NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
+    MACRO(NewObjectWithGroup, new_object_with_group, NULL, 5, 0, 1, JOF_OBJECT|JOF_IC) \
     /*
      * Push a preconstructed object.
      *
@@ -856,7 +853,7 @@
      *   Operands: uint32_t objectIndex
      *   Stack: => obj
      */ \
-    MACRO(JSOP_OBJECT, Object, object, "object", NULL, 5, 0, 1, JOF_OBJECT) \
+    MACRO(Object, object, NULL, 5, 0, 1, JOF_OBJECT) \
     /*
      * Create and push a new ordinary object with the provided [[Prototype]].
      *
@@ -867,7 +864,7 @@
      *   Operands:
      *   Stack: proto => obj
      */ \
-    MACRO(JSOP_OBJWITHPROTO, ObjWithProto, obj_with_proto, "objwithproto", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(ObjWithProto, obj_with_proto, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Define a data property on an object.
      *
@@ -885,7 +882,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
-    MACRO(JSOP_INITPROP, InitProp, init_prop, "initprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitProp, init_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
      * Like `JSOp::InitProp`, but define a non-enumerable property.
      *
@@ -901,7 +898,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
-    MACRO(JSOP_INITHIDDENPROP, InitHiddenProp, init_hidden_prop, "inithiddenprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitHiddenProp, init_hidden_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
      * Like `JSOp::InitProp`, but define a non-enumerable, non-writable,
      * non-configurable property.
@@ -918,7 +915,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => obj
      */ \
-    MACRO(JSOP_INITLOCKEDPROP, InitLockedProp, init_locked_prop, "initlockedprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitLockedProp, init_locked_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
      * Define a data property on `obj` with property key `id` and value `val`.
      *
@@ -936,8 +933,8 @@
      *   Operands:
      *   Stack: obj, id, val => obj
      */ \
-    MACRO(JSOP_INITELEM, InitElem, init_elem, "initelem", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
-    MACRO(JSOP_INITHIDDENELEM, InitHiddenElem, init_hidden_elem, "inithiddenelem", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitElem, init_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitHiddenElem, init_hidden_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
      * Define an accessor property on `obj` with the given `getter`.
      * `nameIndex` gives the property name.
@@ -950,8 +947,8 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, getter => obj
      */ \
-    MACRO(JSOP_INITPROP_GETTER, InitPropGetter, init_prop_getter, "initprop_getter", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
-    MACRO(JSOP_INITHIDDENPROP_GETTER, InitHiddenPropGetter, init_hidden_prop_getter, "inithiddenprop_getter", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitPropGetter, init_prop_getter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitHiddenPropGetter, init_hidden_prop_getter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
     /*
      * Define an accessor property on `obj` with property key `id` and the given `getter`.
      *
@@ -965,8 +962,8 @@
      *   Operands:
      *   Stack: obj, id, getter => obj
      */ \
-    MACRO(JSOP_INITELEM_GETTER, InitElemGetter, init_elem_getter, "initelem_getter", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
-    MACRO(JSOP_INITHIDDENELEM_GETTER, InitHiddenElemGetter, init_hidden_elem_getter, "inithiddenelem_getter", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitElemGetter, init_elem_getter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitHiddenElemGetter, init_hidden_elem_getter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
     /*
      * Define an accessor property on `obj` with the given `setter`.
      *
@@ -980,8 +977,8 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, setter => obj
      */ \
-    MACRO(JSOP_INITPROP_SETTER, InitPropSetter, init_prop_setter, "initprop_setter", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
-    MACRO(JSOP_INITHIDDENPROP_SETTER, InitHiddenPropSetter, init_hidden_prop_setter, "inithiddenprop_setter", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitPropSetter, init_prop_setter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitHiddenPropSetter, init_hidden_prop_setter, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING) \
     /*
      * Define an accesssor property on `obj` with property key `id` and the
      * given `setter`.
@@ -997,8 +994,8 @@
      *   Operands:
      *   Stack: obj, id, setter => obj
      */ \
-    MACRO(JSOP_INITELEM_SETTER, InitElemSetter, init_elem_setter, "initelem_setter", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
-    MACRO(JSOP_INITHIDDENELEM_SETTER, InitHiddenElemSetter, init_hidden_elem_setter, "inithiddenelem_setter", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitElemSetter, init_elem_setter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitHiddenElemSetter, init_hidden_elem_setter, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING) \
     /*
      * Get the value of the property `obj.name`. This can call getters and
      * proxy traps.
@@ -1016,8 +1013,8 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj => obj[name]
      */ \
-    MACRO(JSOP_GETPROP, GetProp, get_prop, "getprop", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
-    MACRO(JSOP_CALLPROP, CallProp, call_prop, "callprop", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
+    MACRO(GetProp, get_prop, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
+    MACRO(CallProp, call_prop, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     /*
      * Get the value of the property `obj[key]`.
      *
@@ -1034,8 +1031,8 @@
      *   Operands:
      *   Stack: obj, key => obj[key]
      */ \
-    MACRO(JSOP_GETELEM, GetElem, get_elem, "getelem", NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
-    MACRO(JSOP_CALLELEM, CallElem, call_elem, "callelem", NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
+    MACRO(GetElem, get_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
+    MACRO(CallElem, call_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
     /*
      * Push the value of `obj.length`.
      *
@@ -1047,7 +1044,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj => obj.length
      */ \
-    MACRO(JSOP_LENGTH, Length, length, "length", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
+    MACRO(Length, length, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     /*
      * Non-strict assignment to a property, `obj.name = val`.
      *
@@ -1064,7 +1061,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => val
      */ \
-    MACRO(JSOP_SETPROP, SetProp, set_prop, "setprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(SetProp, set_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Like `JSOp::SetProp`, but for strict mode code. Throw a TypeError if
      * `obj[key]` exists but is non-writable, if it's an accessor property with
@@ -1075,7 +1072,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj, val => val
      */ \
-    MACRO(JSOP_STRICTSETPROP, StrictSetProp, strict_set_prop, "strict-setprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictSetProp, strict_set_prop, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Non-strict assignment to a property, `obj[key] = val`.
      *
@@ -1088,7 +1085,7 @@
      *   Operands:
      *   Stack: obj, key, val => val
      */ \
-    MACRO(JSOP_SETELEM, SetElem, set_elem, "setelem", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(SetElem, set_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Like `JSOp::SetElem`, but for strict mode code. Throw a TypeError if
      * `obj[key]` exists but is non-writable, if it's an accessor property with
@@ -1099,7 +1096,7 @@
      *   Operands:
      *   Stack: obj, key, val => val
      */ \
-    MACRO(JSOP_STRICTSETELEM, StrictSetElem, strict_set_elem, "strict-setelem", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictSetElem, strict_set_elem, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Delete a property from `obj`. Push true on success, false if the
      * property existed but could not be deleted. This implements `delete
@@ -1116,7 +1113,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj => succeeded
      */ \
-    MACRO(JSOP_DELPROP, DelProp, del_prop, "delprop", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_CHECKSLOPPY) \
+    MACRO(DelProp, del_prop, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_CHECKSLOPPY) \
     /*
      * Like `JSOp::DelProp`, but for strict mode code. Push `true` on success,
      * else throw a TypeError.
@@ -1126,7 +1123,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: obj => succeeded
      */ \
-    MACRO(JSOP_STRICTDELPROP, StrictDelProp, strict_del_prop, "strict-delprop", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_CHECKSTRICT) \
+    MACRO(StrictDelProp, strict_del_prop, NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_CHECKSTRICT) \
     /*
      * Delete the property `obj[key]` and push `true` on success, `false`
      * if the property existed but could not be deleted.
@@ -1142,7 +1139,7 @@
      *   Operands:
      *   Stack: obj, key => succeeded
      */ \
-    MACRO(JSOP_DELELEM, DelElem, del_elem, "delelem", NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_CHECKSLOPPY) \
+    MACRO(DelElem, del_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_CHECKSLOPPY) \
     /*
      * Like `JSOp::DelElem, but for strict mode code. Push `true` on success,
      * else throw a TypeError.
@@ -1152,7 +1149,7 @@
      *   Operands:
      *   Stack: obj, key => succeeded
      */ \
-    MACRO(JSOP_STRICTDELELEM, StrictDelElem, strict_del_elem, "strict-delelem", NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_CHECKSTRICT) \
+    MACRO(StrictDelElem, strict_del_elem, NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_CHECKSTRICT) \
     /*
      * Push true if `obj` has an own property `id`.
      *
@@ -1168,7 +1165,7 @@
      *   Operands:
      *   Stack: id, obj => (obj.hasOwnProperty(id))
      */ \
-    MACRO(JSOP_HASOWN, HasOwn, has_own, "hasown", NULL, 1, 2, 1, JOF_BYTE|JOF_IC) \
+    MACRO(HasOwn, has_own, NULL, 1, 2, 1, JOF_BYTE|JOF_IC) \
     /*
      * Push the SuperBase of the method `callee`. The SuperBase is
      * `callee.[[HomeObject]].[[GetPrototypeOf]]()`, the object where `super`
@@ -1187,7 +1184,7 @@
      *   Operands:
      *   Stack: callee => superBase
      */ \
-    MACRO(JSOP_SUPERBASE, SuperBase, super_base, "superbase", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(SuperBase, super_base, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Get the value of `receiver.name`, starting the property search at `obj`.
      * In spec terms, `obj.[[Get]](name, receiver)`.
@@ -1204,7 +1201,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: receiver, obj => super.name
      */ \
-    MACRO(JSOP_GETPROP_SUPER, GetPropSuper, get_prop_super, "getprop-super", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
+    MACRO(GetPropSuper, get_prop_super, NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_IC) \
     /*
      * Get the value of `receiver[key]`, starting the property search at `obj`.
      * In spec terms, `obj.[[Get]](key, receiver)`.
@@ -1222,7 +1219,7 @@
      *   Operands:
      *   Stack: receiver, key, obj => super[key]
      */ \
-    MACRO(JSOP_GETELEM_SUPER, GetElemSuper, get_elem_super, "getelem-super", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
+    MACRO(GetElemSuper, get_elem_super, NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_TYPESET|JOF_IC) \
     /*
      * Assign `val` to `receiver.name`, starting the search for an existing
      * property at `obj`. In spec terms, `obj.[[Set]](name, val, receiver)`.
@@ -1239,7 +1236,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: receiver, obj, val => val
      */ \
-    MACRO(JSOP_SETPROP_SUPER, SetPropSuper, set_prop_super, "setprop-super", NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
+    MACRO(SetPropSuper, set_prop_super, NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
     /*
      * Like `JSOp::SetPropSuper`, but for strict mode code.
      *
@@ -1248,7 +1245,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: receiver, obj, val => val
      */ \
-    MACRO(JSOP_STRICTSETPROP_SUPER, StrictSetPropSuper, strict_set_prop_super, "strictsetprop-super", NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
+    MACRO(StrictSetPropSuper, strict_set_prop_super, NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
     /*
      * Assign `val` to `receiver[key]`, strating the search for an existing
      * property at `obj`. In spec terms, `obj.[[Set]](key, val, receiver)`.
@@ -1265,7 +1262,7 @@
      *   Operands:
      *   Stack: receiver, key, obj, val => val
      */ \
-    MACRO(JSOP_SETELEM_SUPER, SetElemSuper, set_elem_super, "setelem-super", NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
+    MACRO(SetElemSuper, set_elem_super, NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
     /*
      * Like `JSOp::SetElemSuper`, but for strict mode code.
      *
@@ -1274,7 +1271,7 @@
      *   Operands:
      *   Stack: receiver, key, obj, val => val
      */ \
-    MACRO(JSOP_STRICTSETELEM_SUPER, StrictSetElemSuper, strict_set_elem_super, "strict-setelem-super", NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
+    MACRO(StrictSetElemSuper, strict_set_elem_super, NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT) \
     /*
      * Set up a for-in loop by pushing a `PropertyIteratorObject` over the
      * enumerable properties of `val`.
@@ -1314,7 +1311,7 @@
      *   Operands:
      *   Stack: val => iter
      */ \
-    MACRO(JSOP_ITER, Iter, iter, "iter", NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
+    MACRO(Iter, iter, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
      * Get the next property name for a for-in loop.
      *
@@ -1329,7 +1326,7 @@
      *   Operands:
      *   Stack: iter => iter, name
      */ \
-    MACRO(JSOP_MOREITER, MoreIter, more_iter, "moreiter", NULL, 1, 1, 2, JOF_BYTE) \
+    MACRO(MoreIter, more_iter, NULL, 1, 1, 2, JOF_BYTE) \
     /*
      * Test whether the value on top of the stack is
      * `MagicValue(JS_NO_ITER_VALUE)` and push the boolean result.
@@ -1339,7 +1336,7 @@
      *   Operands:
      *   Stack: val => val, done
      */ \
-    MACRO(JSOP_ISNOITER, IsNoIter, is_no_iter, "isnoiter", NULL, 1, 1, 2, JOF_BYTE) \
+    MACRO(IsNoIter, is_no_iter, NULL, 1, 1, 2, JOF_BYTE) \
     /*
      * No-op instruction to hint to IonBuilder that the value on top of the
      * stack is the (likely string) key in a for-in loop.
@@ -1349,7 +1346,7 @@
      *   Operands:
      *   Stack: val => val
      */ \
-    MACRO(JSOP_ITERNEXT, IterNext, iter_next, "iternext", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(IterNext, iter_next, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Exit a for-in loop, closing the iterator.
      *
@@ -1360,7 +1357,7 @@
      *   Operands:
      *   Stack: iter, iterval =>
      */ \
-    MACRO(JSOP_ENDITER, EndIter, end_iter, "enditer", NULL, 1, 2, 0, JOF_BYTE) \
+    MACRO(EndIter, end_iter, NULL, 1, 2, 0, JOF_BYTE) \
     /*
      * Check that the top value on the stack is an object, and throw a
      * TypeError if not. `kind` is used only to generate an appropriate error
@@ -1378,7 +1375,7 @@
      *   Operands: uint8_t kind
      *   Stack: result => result
      */ \
-    MACRO(JSOP_CHECKISOBJ, CheckIsObj, check_is_obj, "checkisobj", NULL, 2, 1, 1, JOF_UINT8) \
+    MACRO(CheckIsObj, check_is_obj, NULL, 2, 1, 1, JOF_UINT8) \
     /*
      * Check that the top value on the stack is callable, and throw a TypeError
      * if not. The operand `kind` is used only to generate an appropriate error
@@ -1389,7 +1386,7 @@
      *   Operands: uint8_t kind
      *   Stack: obj => obj
      */ \
-    MACRO(JSOP_CHECKISCALLABLE, CheckIsCallable, check_is_callable, "checkiscallable", NULL, 2, 1, 1, JOF_UINT8) \
+    MACRO(CheckIsCallable, check_is_callable, NULL, 2, 1, 1, JOF_UINT8) \
     /*
      * Throw a TypeError if `val` is `null` or `undefined`.
      *
@@ -1407,7 +1404,7 @@
      *   Operands:
      *   Stack: val => val
      */ \
-    MACRO(JSOP_CHECKOBJCOERCIBLE, CheckObjCoercible, check_obj_coercible, "checkobjcoercible", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(CheckObjCoercible, check_obj_coercible, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Create and push an async iterator wrapping the sync iterator `iter`.
      * `next` should be `iter`'s `.next` method.
@@ -1425,7 +1422,7 @@
      *   Operands:
      *   Stack: iter, next => asynciter
      */ \
-    MACRO(JSOP_TOASYNCITER, ToAsyncIter, to_async_iter, "toasynciter", NULL, 1, 2, 1, JOF_BYTE) \
+    MACRO(ToAsyncIter, to_async_iter, NULL, 1, 2, 1, JOF_BYTE) \
     /*
      * Set the prototype of `obj`.
      *
@@ -1440,7 +1437,7 @@
      *   Operands:
      *   Stack: obj, protoVal => obj
      */ \
-    MACRO(JSOP_MUTATEPROTO, MutateProto, mutate_proto, "mutateproto", NULL, 1, 2, 1, JOF_BYTE) \
+    MACRO(MutateProto, mutate_proto, NULL, 1, 2, 1, JOF_BYTE) \
     /*
      * Create and push a new Array object with the given `length`,
      * preallocating enough memory to hold that many elements.
@@ -1450,7 +1447,7 @@
      *   Operands: uint32_t length
      *   Stack: => array
      */ \
-    MACRO(JSOP_NEWARRAY, NewArray, new_array, "newarray", NULL, 5, 0, 1, JOF_UINT32|JOF_IC) \
+    MACRO(NewArray, new_array, NULL, 5, 0, 1, JOF_UINT32|JOF_IC) \
     /*
      * Initialize an array element `array[index]` with value `val`.
      *
@@ -1471,7 +1468,7 @@
      *   Operands: uint32_t index
      *   Stack: array, val => array
      */ \
-    MACRO(JSOP_INITELEM_ARRAY, InitElemArray, init_elem_array, "initelem_array", NULL, 5, 2, 1, JOF_UINT32|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
+    MACRO(InitElemArray, init_elem_array, NULL, 5, 2, 1, JOF_UINT32|JOF_ELEM|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
      * Initialize an array element `array[index++]` with value `val`.
      *
@@ -1502,7 +1499,7 @@
      *   Operands:
      *   Stack: array, index, val => array, (index + 1)
      */ \
-    MACRO(JSOP_INITELEM_INC, InitElemInc, init_elem_inc, "initelem_inc", NULL, 1, 3, 2, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
+    MACRO(InitElemInc, init_elem_inc, NULL, 1, 3, 2, JOF_BYTE|JOF_ELEM|JOF_PROPINIT|JOF_IC) \
     /*
      * Push `MagicValue(JS_ELEMENTS_HOLE)`, representing an *Elision* in an
      * array literal (like the missing property 0 in the array `[, 1]`).
@@ -1515,7 +1512,7 @@
      *   Operands:
      *   Stack: => hole
      */ \
-    MACRO(JSOP_HOLE, Hole, hole, "hole", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(Hole, hole, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Create and push a new array that shares the elements of a template
      * object.
@@ -1532,7 +1529,7 @@
      *   Operands: uint32_t objectIndex
      *   Stack: => array
      */ \
-    MACRO(JSOP_NEWARRAY_COPYONWRITE, NewArrayCopyOnWrite, new_array_copy_on_write, "newarray_copyonwrite", NULL, 5, 0, 1, JOF_OBJECT) \
+    MACRO(NewArrayCopyOnWrite, new_array_copy_on_write, NULL, 5, 0, 1, JOF_OBJECT) \
     /*
      * Clone and push a new RegExp object.
      *
@@ -1545,7 +1542,7 @@
      *   Operands: uint32_t regexpIndex
      *   Stack: => regexp
      */ \
-    MACRO(JSOP_REGEXP, RegExp, reg_exp, "regexp", NULL, 5, 0, 1, JOF_REGEXP) \
+    MACRO(RegExp, reg_exp, NULL, 5, 0, 1, JOF_REGEXP) \
     /*
      * Push a function object.
      *
@@ -1569,7 +1566,7 @@
      *   Operands: uint32_t funcIndex
      *   Stack: => fn
      */ \
-    MACRO(JSOP_LAMBDA, Lambda, lambda, "lambda", NULL, 5, 0, 1, JOF_OBJECT) \
+    MACRO(Lambda, lambda, NULL, 5, 0, 1, JOF_OBJECT) \
     /*
      * Push a new arrow function.
      *
@@ -1585,7 +1582,7 @@
      *   Operands: uint32_t funcIndex
      *   Stack: newTarget => arrowFn
      */ \
-    MACRO(JSOP_LAMBDA_ARROW, LambdaArrow, lambda_arrow, "lambda_arrow", NULL, 5, 1, 1, JOF_OBJECT) \
+    MACRO(LambdaArrow, lambda_arrow, NULL, 5, 1, 1, JOF_OBJECT) \
     /*
      * Set the name of a function.
      *
@@ -1602,7 +1599,7 @@
      *   Operands: uint8_t prefixKind
      *   Stack: fun, name => fun
      */ \
-    MACRO(JSOP_SETFUNNAME, SetFunName, set_fun_name, "setfunname", NULL, 2, 2, 1, JOF_UINT8) \
+    MACRO(SetFunName, set_fun_name, NULL, 2, 2, 1, JOF_UINT8) \
     /*
      * Initialize the home object for functions with super bindings.
      *
@@ -1611,7 +1608,7 @@
      *   Operands:
      *   Stack: fun, homeObject => fun
      */ \
-    MACRO(JSOP_INITHOMEOBJECT, InitHomeObject, init_home_object, "inithomeobject", NULL, 1, 2, 1, JOF_BYTE) \
+    MACRO(InitHomeObject, init_home_object, NULL, 1, 2, 1, JOF_BYTE) \
     /*
      * Throw a TypeError if `baseClass` isn't either `null` or a constructor.
      *
@@ -1624,7 +1621,7 @@
      *   Operands:
      *   Stack: baseClass => baseClass
      */ \
-    MACRO(JSOP_CHECKCLASSHERITAGE, CheckClassHeritage, check_class_heritage, "checkclassheritage", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(CheckClassHeritage, check_class_heritage, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Like `JSOp::Lambda`, but using `proto` as the new function's
      * `[[Prototype]]` (or `%FunctionPrototype%` if `proto` is `null`).
@@ -1644,7 +1641,7 @@
      *   Operands: uint32_t funcIndex
      *   Stack: proto => obj
      */ \
-    MACRO(JSOP_FUNWITHPROTO, FunWithProto, fun_with_proto, "funwithproto", NULL, 5, 1, 1, JOF_OBJECT) \
+    MACRO(FunWithProto, fun_with_proto, NULL, 5, 1, 1, JOF_OBJECT) \
     /*
      * Create and push a default constructor for a base class.
      *
@@ -1663,7 +1660,7 @@
      *   Operands: uint32_t nameIndex, uint32_t sourceStart, uint32_t sourceEnd
      *   Stack: => constructor
      */ \
-    MACRO(JSOP_CLASSCONSTRUCTOR, ClassConstructor, class_constructor, "classconstructor", NULL, 13, 0, 1, JOF_CLASS_CTOR) \
+    MACRO(ClassConstructor, class_constructor, NULL, 13, 0, 1, JOF_CLASS_CTOR) \
     /*
      * Create and push a default constructor for a derived class.
      *
@@ -1683,7 +1680,7 @@
      *   Operands: uint32_t nameIndex, uint32_t sourceStart, uint32_t sourceEnd
      *   Stack: proto => constructor
      */ \
-    MACRO(JSOP_DERIVEDCONSTRUCTOR, DerivedConstructor, derived_constructor, "derivedconstructor", NULL, 13, 1, 1, JOF_CLASS_CTOR) \
+    MACRO(DerivedConstructor, derived_constructor, NULL, 13, 1, 1, JOF_CLASS_CTOR) \
     /*
      * Pushes the current global's builtin prototype for a given proto key.
      *
@@ -1692,7 +1689,7 @@
      *   Operands: uint8_t kind
      *   Stack: => %BuiltinPrototype%
      */ \
-    MACRO(JSOP_BUILTINPROTO, BuiltinProto, builtin_proto, "builtinproto", NULL, 2, 0, 1, JOF_UINT8) \
+    MACRO(BuiltinProto, builtin_proto, NULL, 2, 0, 1, JOF_UINT8) \
     /*
      * Invoke `callee` with `this` and `args`, and push the return value. Throw
      * a TypeError if `callee` isn't a function.
@@ -1721,11 +1718,11 @@
      *   Operands: uint16_t argc
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      */ \
-    MACRO(JSOP_CALL, Call, call, "call", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    MACRO(JSOP_CALLITER, CallIter, call_iter, "calliter", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    MACRO(JSOP_FUNAPPLY, FunApply, fun_apply, "funapply", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    MACRO(JSOP_FUNCALL, FunCall, fun_call, "funcall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
-    MACRO(JSOP_CALL_IGNORES_RV, CallIgnoresRv, call_ignores_rv, "call-ignores-rv", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    MACRO(Call, call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    MACRO(CallIter, call_iter, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    MACRO(FunApply, fun_apply, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    MACRO(FunCall, fun_call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
+    MACRO(CallIgnoresRv, call_ignores_rv, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
      * Like `JSOp::Call`, but the arguments are provided in an array rather than
      * a span of stack slots. Used to implement spread-call syntax:
@@ -1741,7 +1738,7 @@
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
-    MACRO(JSOP_SPREADCALL, SpreadCall, spread_call, "spreadcall", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
+    MACRO(SpreadCall, spread_call, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
     /*
      * Push true if `arr` is an array object that can be passed directly as the
      * `args` argument to `JSOp::SpreadCall`.
@@ -1758,7 +1755,7 @@
      *   Operands:
      *   Stack: arr => arr, optimized
      */ \
-    MACRO(JSOP_OPTIMIZE_SPREADCALL, OptimizeSpreadCall, optimize_spread_call, "optimize-spreadcall", NULL, 1, 1, 2, JOF_BYTE) \
+    MACRO(OptimizeSpreadCall, optimize_spread_call, NULL, 1, 1, 2, JOF_BYTE) \
     /*
      * Perform a direct eval in the current environment if `callee` is the
      * builtin `eval` function, otherwise follow same behaviour as `JSOp::Call`.
@@ -1784,7 +1781,7 @@
      *   Operands: uint16_t argc
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      */ \
-    MACRO(JSOP_EVAL, Eval, eval, "eval", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(Eval, eval, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Spread-call variant of `JSOp::Eval`.
      *
@@ -1795,7 +1792,7 @@
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
-    MACRO(JSOP_SPREADEVAL, SpreadEval, spread_eval, "spreadeval", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(SpreadEval, spread_eval, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Like `JSOp::Eval`, but for strict mode code.
      *
@@ -1804,7 +1801,7 @@
      *   Operands: uint16_t argc
      *   Stack: evalFn, this, args[0], ..., args[argc-1] => rval
      */ \
-    MACRO(JSOP_STRICTEVAL, StrictEval, strict_eval, "strict-eval", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictEval, strict_eval, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Spread-call variant of `JSOp::StrictEval`.
      *
@@ -1815,7 +1812,7 @@
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
-    MACRO(JSOP_STRICTSPREADEVAL, StrictSpreadEval, strict_spread_eval, "strict-spreadeval", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictSpreadEval, strict_spread_eval, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Push the implicit `this` value for an unqualified function call, like
      * `foo()`. `nameIndex` gives the name of the function we're calling.
@@ -1840,7 +1837,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => this
      */ \
-    MACRO(JSOP_IMPLICITTHIS, ImplicitThis, implicit_this, "implicitthis", "", 5, 0, 1, JOF_ATOM) \
+    MACRO(ImplicitThis, implicit_this, "", 5, 0, 1, JOF_ATOM) \
     /*
      * Like `JSOp::ImplicitThis`, but the name must not be bound in any local
      * environments.
@@ -1860,7 +1857,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => this
      */ \
-    MACRO(JSOP_GIMPLICITTHIS, GImplicitThis, g_implicit_this, "gimplicitthis", "", 5, 0, 1, JOF_ATOM) \
+    MACRO(GImplicitThis, g_implicit_this, "", 5, 0, 1, JOF_ATOM) \
     /*
      * Push the call site object for a tagged template call.
      *
@@ -1880,7 +1877,7 @@
      *   Operands: uint32_t objectIndex
      *   Stack: => callSiteObj
      */ \
-    MACRO(JSOP_CALLSITEOBJ, CallSiteObj, call_site_obj, "callsiteobj", NULL, 5, 0, 1, JOF_OBJECT) \
+    MACRO(CallSiteObj, call_site_obj, NULL, 5, 0, 1, JOF_OBJECT) \
     /*
      * Push `MagicValue(JS_IS_CONSTRUCTING)`.
      *
@@ -1892,7 +1889,7 @@
      *   Operands:
      *   Stack: => JS_IS_CONSTRUCTING
      */ \
-    MACRO(JSOP_IS_CONSTRUCTING, IsConstructing, is_constructing, "is-constructing", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(IsConstructing, is_constructing, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Invoke `callee` as a constructor with `args` and `newTarget`, and push
      * the return value. Throw a TypeError if `callee` isn't a constructor.
@@ -1912,8 +1909,8 @@
      *   Operands: uint16_t argc
      *   Stack: callee, isConstructing, args[0], ..., args[argc-1], newTarget => rval
      */ \
-    MACRO(JSOP_NEW, New, new_, "new", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_TYPESET|JOF_IC|JOF_IC) \
-    MACRO(JSOP_SUPERCALL, SuperCall, super_call, "supercall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_TYPESET|JOF_IC) \
+    MACRO(New, new_, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_TYPESET|JOF_IC|JOF_IC) \
+    MACRO(SuperCall, super_call, NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_TYPESET|JOF_IC) \
     /*
      * Spread-call variant of `JSOp::New`.
      *
@@ -1931,8 +1928,8 @@
      *   Operands:
      *   Stack: callee, isConstructing, args, newTarget => rval
      */ \
-    MACRO(JSOP_SPREADNEW, SpreadNew, spread_new, "spreadnew", NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_CONSTRUCT|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
-    MACRO(JSOP_SPREADSUPERCALL, SpreadSuperCall, spread_super_call, "spreadsupercall", NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_CONSTRUCT|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
+    MACRO(SpreadNew, spread_new, NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_CONSTRUCT|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
+    MACRO(SpreadSuperCall, spread_super_call, NULL, 1, 4, 1, JOF_BYTE|JOF_INVOKE|JOF_CONSTRUCT|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
     /*
      * Push the prototype of `callee` in preparation for calling `super()`.
      * Throw a TypeError if that value is not a constructor.
@@ -1948,7 +1945,7 @@
      *   Operands:
      *   Stack: callee => superFun
      */ \
-    MACRO(JSOP_SUPERFUN, SuperFun, super_fun, "superfun", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(SuperFun, super_fun, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Throw a ReferenceError if `thisval` is not
      * `MagicValue(JS_UNINITIALIZED_LEXICAL)`. Used in derived class
@@ -1963,7 +1960,7 @@
      *   Operands:
      *   Stack: thisval => thisval
      */ \
-    MACRO(JSOP_CHECKTHISREINIT, CheckThisReinit, check_this_reinit, "checkthisreinit", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(CheckThisReinit, check_this_reinit, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Initializes generator frame, creates a generator and pushes it on the
      * stack.
@@ -1973,7 +1970,7 @@
      *   Operands:
      *   Stack: => generator
      */ \
-    MACRO(JSOP_GENERATOR, Generator, generator, "generator", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(Generator, generator, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Pops the generator from the top of the stack, suspends it and stops
      * execution.
@@ -1986,7 +1983,7 @@
      *   Operands: uint24_t resumeIndex
      *   Stack: gen => rval, gen, resumeKind
      */ \
-    MACRO(JSOP_INITIALYIELD, InitialYield, initial_yield, "initialyield", NULL, 4, 1, 3, JOF_RESUMEINDEX) \
+    MACRO(InitialYield, initial_yield, NULL, 4, 1, 3, JOF_RESUMEINDEX) \
     /*
      * Bytecode emitted after 'yield' expressions. This is useful for the
      * Debugger and `AbstractGeneratorObject::isAfterYieldOrAwait`. It's
@@ -1999,7 +1996,7 @@
      *   Operands: uint32_t icIndex
      *   Stack: =>
      */ \
-    MACRO(JSOP_AFTERYIELD, AfterYield, after_yield, "afteryield", NULL, 5, 0, 0, JOF_ICINDEX) \
+    MACRO(AfterYield, after_yield, NULL, 5, 0, 0, JOF_ICINDEX) \
     /*
      * Pops the generator and suspends and closes it. Yields the value in the
      * frame's return value slot.
@@ -2009,7 +2006,7 @@
      *   Operands:
      *   Stack: gen =>
      */ \
-    MACRO(JSOP_FINALYIELDRVAL, FinalYieldRval, final_yield_rval, "finalyieldrval", NULL, 1, 1, 0, JOF_BYTE) \
+    MACRO(FinalYieldRval, final_yield_rval, NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Pops the generator and the return value 'rval1', stops execution and
      * returns 'rval1'.
@@ -2022,7 +2019,7 @@
      *   Operands: uint24_t resumeIndex
      *   Stack: rval1, gen => rval2, gen, resumeKind
      */ \
-    MACRO(JSOP_YIELD, Yield, yield, "yield", NULL, 4, 2, 3, JOF_RESUMEINDEX) \
+    MACRO(Yield, yield, NULL, 4, 2, 3, JOF_RESUMEINDEX) \
     /*
      * Pushes a boolean indicating whether the top of the stack is
      * `MagicValue(JS_GENERATOR_CLOSING)`.
@@ -2032,7 +2029,7 @@
      *   Operands:
      *   Stack: val => val, res
      */ \
-    MACRO(JSOP_ISGENCLOSING, IsGenClosing, is_gen_closing, "isgenclosing", NULL, 1, 1, 2, JOF_BYTE) \
+    MACRO(IsGenClosing, is_gen_closing, NULL, 1, 1, 2, JOF_BYTE) \
     /*
      * Pops the top two values 'value' and 'gen' from the stack, then starts
      * "awaiting" for 'value' to be resolved, which will then resume the
@@ -2044,7 +2041,7 @@
      *   Operands:
      *   Stack: value, gen => promise
      */ \
-    MACRO(JSOP_ASYNCAWAIT, AsyncAwait, async_await, "async-await", NULL, 1, 2, 1, JOF_BYTE) \
+    MACRO(AsyncAwait, async_await, NULL, 1, 2, 1, JOF_BYTE) \
     /*
      * Pops the top two values 'valueOrReason' and 'gen' from the stack, then
      * pushes the promise resolved with 'valueOrReason'. `gen` must be the
@@ -2056,7 +2053,7 @@
      *   Operands: uint8_t fulfillOrReject
      *   Stack: valueOrReason, gen => promise
      */ \
-    MACRO(JSOP_ASYNCRESOLVE, AsyncResolve, async_resolve, "async-resolve", NULL, 2, 2, 1, JOF_UINT8) \
+    MACRO(AsyncResolve, async_resolve, NULL, 2, 2, 1, JOF_UINT8) \
     /*
      * Pops the generator and the return value 'promise', stops execution and
      * returns 'promise'.
@@ -2069,7 +2066,7 @@
      *   Operands: uint24_t resumeIndex
      *   Stack: promise, gen => resolved, gen, resumeKind
      */ \
-    MACRO(JSOP_AWAIT, Await, await, "await", NULL, 4, 2, 3, JOF_RESUMEINDEX) \
+    MACRO(Await, await, NULL, 4, 2, 3, JOF_RESUMEINDEX) \
     /*
      * Pops the top of stack value as 'value', checks if the await for 'value'
      * can be skipped. If the await operation can be skipped and the resolution
@@ -2082,7 +2079,7 @@
      *   Operands:
      *   Stack: value => value_or_resolved, canskip
      */ \
-    MACRO(JSOP_TRYSKIPAWAIT, TrySkipAwait, try_skip_await, "tryskipawait", NULL, 1, 1, 2, JOF_BYTE) \
+    MACRO(TrySkipAwait, try_skip_await, NULL, 1, 1, 2, JOF_BYTE) \
     /*
      * Pushes one of the GeneratorResumeKind values as Int32Value.
      *
@@ -2091,7 +2088,7 @@
      *   Operands: GeneratorResumeKind resumeKind (encoded as uint8_t)
      *   Stack: => resumeKind
      */ \
-    MACRO(JSOP_RESUMEKIND, ResumeKind, resume_kind, "resumekind", NULL, 2, 0, 1, JOF_UINT8) \
+    MACRO(ResumeKind, resume_kind, NULL, 2, 0, 1, JOF_UINT8) \
     /*
      * Pops the generator and resumeKind values. resumeKind is the
      * GeneratorResumeKind stored as int32. If resumeKind is Next, continue
@@ -2103,7 +2100,7 @@
      *   Operands:
      *   Stack: rval, gen, resumeKind => rval
      */ \
-    MACRO(JSOP_CHECK_RESUMEKIND, CheckResumeKind, check_resume_kind, "check-resumekind", NULL, 1, 3, 1, JOF_BYTE) \
+    MACRO(CheckResumeKind, check_resume_kind, NULL, 1, 3, 1, JOF_BYTE) \
     /*
      * Pops the generator, argument and resumeKind from the stack, pushes a new
      * generator frame and resumes execution of it. Pushes the return value
@@ -2114,7 +2111,7 @@
      *   Operands:
      *   Stack: gen, val, resumeKind => rval
      */ \
-    MACRO(JSOP_RESUME, Resume, resume, "resume", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE) \
+    MACRO(Resume, resume, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE) \
     /*
      * No-op instruction marking the target of a jump instruction.
      *
@@ -2128,7 +2125,7 @@
      *   Operands: uint32_t icIndex
      *   Stack: =>
      */ \
-    MACRO(JSOP_JUMPTARGET, JumpTarget, jump_target, "jumptarget", NULL, 5, 0, 0, JOF_ICINDEX) \
+    MACRO(JumpTarget, jump_target, NULL, 5, 0, 0, JOF_ICINDEX) \
     /*
      * Marks the target of the backwards jump for some loop.
      *
@@ -2146,7 +2143,7 @@
      *   Operands: uint32_t icIndex, uint8_t depthHint
      *   Stack: =>
      */ \
-    MACRO(JSOP_LOOPHEAD, LoopHead, loop_head, "loophead", NULL, 6, 0, 0, JOF_LOOPHEAD) \
+    MACRO(LoopHead, loop_head, NULL, 6, 0, 0, JOF_LOOPHEAD) \
     /*
      * Jump to a 32-bit offset from the current bytecode.
      *
@@ -2157,7 +2154,7 @@
      *   Operands: int32_t offset
      *   Stack: =>
      */ \
-    MACRO(JSOP_GOTO, Goto, goto_, "goto", NULL, 5, 0, 0, JOF_JUMP) \
+    MACRO(Goto, goto_, NULL, 5, 0, 0, JOF_JUMP) \
     /*
      * If ToBoolean(`cond`) is false, jumps to a 32-bit offset from the current
      * instruction.
@@ -2167,7 +2164,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: cond =>
      */ \
-    MACRO(JSOP_IFEQ, IfEq, if_eq, "ifeq", NULL, 5, 1, 0, JOF_JUMP|JOF_DETECTING|JOF_IC) \
+    MACRO(IfEq, if_eq, NULL, 5, 1, 0, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     /*
      * If ToBoolean(`cond`) is true, jump to a 32-bit offset from the current
      * instruction.
@@ -2180,7 +2177,7 @@
      *   Operands: int32_t offset
      *   Stack: cond =>
      */ \
-    MACRO(JSOP_IFNE, IfNe, if_ne, "ifne", NULL, 5, 1, 0, JOF_JUMP|JOF_IC) \
+    MACRO(IfNe, if_ne, NULL, 5, 1, 0, JOF_JUMP|JOF_IC) \
     /*
      * Short-circuit for logical AND.
      *
@@ -2192,7 +2189,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: cond => cond
      */ \
-    MACRO(JSOP_AND, And, and_, "and", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
+    MACRO(And, and_, NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     /*
      * Short-circuit for logical OR.
      *
@@ -2204,7 +2201,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: cond => cond
      */ \
-    MACRO(JSOP_OR, Or, or_, "or", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
+    MACRO(Or, or_, NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING|JOF_IC) \
     /*
      * Short-circuiting for nullish coalescing.
      *
@@ -2216,7 +2213,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: val => val
      */ \
-    MACRO(JSOP_COALESCE, Coalesce, coalesce, "coalesce", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING) \
+    MACRO(Coalesce, coalesce, NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING) \
      /*
      * Like `JSOp::IfNe` ("jump if true"), but if the branch is taken,
      * pop and discard an additional stack value.
@@ -2254,7 +2251,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: val, cond => val (if !cond)
      */ \
-    MACRO(JSOP_CASE, Case, case_, "case", NULL, 5, 2, 1, JOF_JUMP) \
+    MACRO(Case, case_, NULL, 5, 2, 1, JOF_JUMP) \
     /*
      * Like `JSOp::Goto`, but pop and discard an additional stack value.
      *
@@ -2267,7 +2264,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: lval =>
      */ \
-    MACRO(JSOP_DEFAULT, Default, default_, "default", NULL, 5, 1, 0, JOF_JUMP) \
+    MACRO(Default, default_, NULL, 5, 1, 0, JOF_JUMP) \
     /*
      * Optimized switch-statement dispatch, used when all `case` labels are
      * small integer constants.
@@ -2288,7 +2285,7 @@
      *             uint24_t firstResumeIndex
      *   Stack: i =>
      */ \
-    MACRO(JSOP_TABLESWITCH, TableSwitch, table_switch, "tableswitch", NULL, 16, 1, 0, JOF_TABLESWITCH|JOF_DETECTING) \
+    MACRO(TableSwitch, table_switch, NULL, 16, 1, 0, JOF_TABLESWITCH|JOF_DETECTING) \
     /*
      * Return `rval`.
      *
@@ -2300,7 +2297,7 @@
      *   Operands:
      *   Stack: rval =>
      */ \
-    MACRO(JSOP_RETURN, Return, return_, "return", NULL, 1, 1, 0, JOF_BYTE) \
+    MACRO(Return, return_, NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Push the current stack frame's `returnValue`. If no `JSOp::SetRval`
      * instruction has been executed in this stack frame, this is `undefined`.
@@ -2314,7 +2311,7 @@
      *   Operands:
      *   Stack: => rval
      */ \
-    MACRO(JSOP_GETRVAL, GetRval, get_rval, "getrval", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(GetRval, get_rval, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Store `rval` in the current stack frame's `returnValue` slot.
      *
@@ -2323,7 +2320,7 @@
      *   Operands:
      *   Stack: rval =>
      */ \
-    MACRO(JSOP_SETRVAL, SetRval, set_rval, "setrval", NULL, 1, 1, 0, JOF_BYTE) \
+    MACRO(SetRval, set_rval, NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Stop execution and return the current stack frame's `returnValue`. If no
      * `JSOp::SetRval` instruction has been executed in this stack frame, this
@@ -2340,7 +2337,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_RETRVAL, RetRval, ret_rval, "retrval", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(RetRval, ret_rval, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Check the return value in a derived class constructor.
      *
@@ -2365,7 +2362,7 @@
      *   Operands:
      *   Stack: thisval =>
      */ \
-    MACRO(JSOP_CHECKRETURN, CheckReturn, check_return, "checkreturn", NULL, 1, 1, 0, JOF_BYTE) \
+    MACRO(CheckReturn, check_return, NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Throw `exc`. (ノಠ益ಠ)ノ彡┴──┴
      *
@@ -2387,7 +2384,7 @@
      *   Operands:
      *   Stack: exc =>
      */ \
-    MACRO(JSOP_THROW, Throw, throw_, js_throw_str, NULL, 1, 1, 0, JOF_BYTE) \
+    MACRO(Throw, throw_, NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Create and throw an Error object.
      *
@@ -2404,7 +2401,7 @@
      *   Operands: uint16_t msgNumber
      *   Stack: =>
      */ \
-    MACRO(JSOP_THROWMSG, ThrowMsg, throw_msg, "throwmsg", NULL, 3, 0, 0, JOF_UINT16) \
+    MACRO(ThrowMsg, throw_msg, NULL, 3, 0, 0, JOF_UINT16) \
     /*
      * Throw a TypeError for invalid assignment to a `const`. The environment
      * coordinate is used to get the variable name for the error message.
@@ -2414,7 +2411,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: v => v
      */ \
-    MACRO(JSOP_THROWSETALIASEDCONST, ThrowSetAliasedConst, throw_set_aliased_const, "throwsetaliasedconst", NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_DETECTING) \
+    MACRO(ThrowSetAliasedConst, throw_set_aliased_const, NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_DETECTING) \
     /*
      * Throw a TypeError for invalid assignment to the callee binding in a named
      * lambda, which is always a `const` binding. This is a different bytecode
@@ -2427,7 +2424,7 @@
      *   Operands:
      *   Stack: v => v
      */ \
-    MACRO(JSOP_THROWSETCALLEE, ThrowSetCallee, throw_set_callee, "throwsetcallee", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(ThrowSetCallee, throw_set_callee, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Throws a runtime TypeError for invalid assignment to an optimized
      * `const` binding. `localno` is used to get the variable name for the
@@ -2438,7 +2435,7 @@
      *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
-    MACRO(JSOP_THROWSETCONST, ThrowSetConst, throw_set_const, "throwsetconst", NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
+    MACRO(ThrowSetConst, throw_set_const, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
     /*
      * No-op instruction that marks the top of the bytecode for a
      * *TryStatement*.
@@ -2455,7 +2452,7 @@
      *   Operands: int32_t jumpAtEndOffset
      *   Stack: =>
      */ \
-    MACRO(JSOP_TRY, Try, try_, "try", NULL, 5, 0, 0, JOF_CODE_OFFSET) \
+    MACRO(Try, try_, NULL, 5, 0, 0, JOF_CODE_OFFSET) \
     /*
      * No-op instruction used by the exception unwinder to determine the
      * correct environment to unwind to when performing IteratorClose due to
@@ -2466,7 +2463,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_TRY_DESTRUCTURING, TryDestructuring, try_destructuring, "try-destructuring", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(TryDestructuring, try_destructuring, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Push and clear the pending exception. ┬──┬◡ﾉ(° -°ﾉ)
      *
@@ -2482,7 +2479,7 @@
      *   Operands:
      *   Stack: => exception
      */ \
-    MACRO(JSOP_EXCEPTION, Exception, exception, "exception", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(Exception, exception, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Push `resumeIndex`.
      *
@@ -2493,7 +2490,7 @@
      *   Operands: uint24_t resumeIndex
      *   Stack: => resumeIndex
      */ \
-    MACRO(JSOP_RESUMEINDEX, ResumeIndex, resume_index, "resume-index", NULL, 4, 0, 1, JOF_RESUMEINDEX) \
+    MACRO(ResumeIndex, resume_index, NULL, 4, 0, 1, JOF_RESUMEINDEX) \
     /*
      * Jump to the start of a `finally` block.
      *
@@ -2545,7 +2542,7 @@
      *   Operands: int32_t forwardOffset
      *   Stack: false, resumeIndex =>
      */ \
-    MACRO(JSOP_GOSUB, Gosub, gosub, "gosub", NULL, 5, 2, 0, JOF_JUMP) \
+    MACRO(Gosub, gosub, NULL, 5, 2, 0, JOF_JUMP) \
     /*
      * No-op instruction that marks the start of a `finally` block. This has a
      * def count of 2, but the values are already on the stack (they're
@@ -2558,7 +2555,7 @@
      *   Operands:
      *   Stack: => false, resumeIndex
      */ \
-    MACRO(JSOP_FINALLY, Finally, finally, "finally", NULL, 1, 0, 2, JOF_BYTE) \
+    MACRO(Finally, finally, NULL, 1, 0, 2, JOF_BYTE) \
     /*
      * Jump back to the next instruction, or rethrow an exception, at the end
      * of a `finally` block. See `JSOp::Gosub` for the explanation.
@@ -2574,7 +2571,7 @@
      *   Operands:
      *   Stack: throwing, v =>
      */ \
-    MACRO(JSOP_RETSUB, Retsub, retsub, "retsub", NULL, 1, 2, 0, JOF_BYTE) \
+    MACRO(Retsub, retsub, NULL, 1, 2, 0, JOF_BYTE) \
     /*
      * Push `MagicValue(JS_UNINITIALIZED_LEXICAL)`, a magic value used to mark
      * a binding as uninitialized.
@@ -2586,7 +2583,7 @@
      *   Operands:
      *   Stack: => uninitialized
      */ \
-    MACRO(JSOP_UNINITIALIZED, Uninitialized, uninitialized, "uninitialized", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(Uninitialized, uninitialized, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Initialize an optimized local lexical binding; or mark it as
      * uninitialized.
@@ -2608,7 +2605,7 @@
      *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
-    MACRO(JSOP_INITLEXICAL, InitLexical, init_lexical, "initlexical", NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
+    MACRO(InitLexical, init_lexical, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
     /*
      * Initialize a global lexical binding; or mark it as uninitialized.
      *
@@ -2619,7 +2616,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: val => val
      */ \
-    MACRO(JSOP_INITGLEXICAL, InitGLexical, init_g_lexical, "initglexical", NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_PROPINIT|JOF_GNAME|JOF_IC) \
+    MACRO(InitGLexical, init_g_lexical, NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_PROPINIT|JOF_GNAME|JOF_IC) \
     /*
      * Initialize an aliased lexical binding; or mark it as uninitialized.
      *
@@ -2637,7 +2634,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: v => v
      */ \
-    MACRO(JSOP_INITALIASEDLEXICAL, InitAliasedLexical, init_aliased_lexical, "initaliasedlexical", NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPINIT|JOF_DETECTING) \
+    MACRO(InitAliasedLexical, init_aliased_lexical, NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPINIT|JOF_DETECTING) \
     /*
      * Throw a ReferenceError if the optimized local `localno` is
      * uninitialized.
@@ -2658,7 +2655,7 @@
      *   Operands: uint24_t localno
      *   Stack: =>
      */ \
-    MACRO(JSOP_CHECKLEXICAL, CheckLexical, check_lexical, "checklexical", NULL, 4, 0, 0, JOF_LOCAL|JOF_NAME) \
+    MACRO(CheckLexical, check_lexical, NULL, 4, 0, 0, JOF_LOCAL|JOF_NAME) \
     /*
      * Like `JSOp::CheckLexical` but for aliased bindings.
      *
@@ -2671,7 +2668,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: =>
      */ \
-    MACRO(JSOP_CHECKALIASEDLEXICAL, CheckAliasedLexical, check_aliased_lexical, "checkaliasedlexical", NULL, 5, 0, 0, JOF_ENVCOORD|JOF_NAME) \
+    MACRO(CheckAliasedLexical, check_aliased_lexical, NULL, 5, 0, 0, JOF_ENVCOORD|JOF_NAME) \
     /*
      * Throw a ReferenceError if the value on top of the stack is
      * `MagicValue(JS_UNINITIALIZED_LEXICAL)`. Used in derived class
@@ -2687,7 +2684,7 @@
      *   Operands:
      *   Stack: this => this
      */ \
-    MACRO(JSOP_CHECKTHIS, CheckThis, check_this, "checkthis", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(CheckThis, check_this, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Push the global environment onto the stack, unless the script has a
      * non-syntactic global scope. In that case, this acts like JSOp::BindName.
@@ -2699,7 +2696,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => global
      */ \
-    MACRO(JSOP_BINDGNAME, BindGName, bind_g_name, "bindgname", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_GNAME|JOF_IC) \
+    MACRO(BindGName, bind_g_name, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_GNAME|JOF_IC) \
     /*
      * Look up a name on the environment chain and push the environment which
      * contains a binding for that name. If no such binding exists, push the
@@ -2710,7 +2707,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => env
      */ \
-    MACRO(JSOP_BINDNAME, BindName, bind_name, "bindname", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_IC) \
+    MACRO(BindName, bind_name, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_IC) \
     /*
      * Find a binding on the environment chain and push its value.
      *
@@ -2732,7 +2729,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
-    MACRO(JSOP_GETNAME, GetName, get_name, "getname", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
+    MACRO(GetName, get_name, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
      * Find a global binding and push its value.
      *
@@ -2756,7 +2753,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
-    MACRO(JSOP_GETGNAME, GetGName, get_g_name, "getgname", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME|JOF_IC) \
+    MACRO(GetGName, get_g_name, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_GNAME|JOF_IC) \
     /*
      * Push the value of an argument that is stored in the stack frame
      * or in an `ArgumentsObject`.
@@ -2766,7 +2763,7 @@
      *   Operands: uint16_t argno
      *   Stack: => arguments[argno]
      */ \
-    MACRO(JSOP_GETARG, GetArg, get_arg, "getarg", NULL, 3, 0, 1, JOF_QARG|JOF_NAME) \
+    MACRO(GetArg, get_arg, NULL, 3, 0, 1, JOF_QARG|JOF_NAME) \
     /*
      * Push the value of an optimized local variable.
      *
@@ -2778,7 +2775,7 @@
      *   Operands: uint24_t localno
      *   Stack: => val
      */ \
-    MACRO(JSOP_GETLOCAL, GetLocal, get_local, "getlocal", NULL, 4, 0, 1, JOF_LOCAL|JOF_NAME) \
+    MACRO(GetLocal, get_local, NULL, 4, 0, 1, JOF_LOCAL|JOF_NAME) \
     /*
      * Push the value of an aliased binding.
      *
@@ -2805,7 +2802,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: => aliasedVar
      */ \
-    MACRO(JSOP_GETALIASEDVAR, GetAliasedVar, get_aliased_var, "getaliasedvar", NULL, 5, 0, 1, JOF_ENVCOORD|JOF_NAME|JOF_TYPESET|JOF_IC) \
+    MACRO(GetAliasedVar, get_aliased_var, NULL, 5, 0, 1, JOF_ENVCOORD|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
      * Get the value of a module import by name and pushes it onto the stack.
      *
@@ -2814,7 +2811,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => val
      */ \
-    MACRO(JSOP_GETIMPORT, GetImport, get_import, "getimport", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
+    MACRO(GetImport, get_import, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
      * Get the value of a binding from the environment `env`. If the name is
      * not bound in `env`, throw a ReferenceError.
@@ -2839,7 +2836,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env => v
      */ \
-    MACRO(JSOP_GETBOUNDNAME, GetBoundName, get_bound_name, "getboundname", NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
+    MACRO(GetBoundName, get_bound_name, NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
      * Push the value of an intrinsic onto the stack.
      *
@@ -2852,7 +2849,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => intrinsic[name]
      */ \
-    MACRO(JSOP_GETINTRINSIC, GetIntrinsic, get_intrinsic, "getintrinsic", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
+    MACRO(GetIntrinsic, get_intrinsic, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_TYPESET|JOF_IC) \
     /*
      * Pushes the currently executing function onto the stack.
      *
@@ -2872,7 +2869,7 @@
      *   Operands:
      *   Stack: => callee
      */ \
-    MACRO(JSOP_CALLEE, Callee, callee, "callee", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(Callee, callee, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Load the callee stored in a CallObject on the environment chain. The
      * numHops operand is the number of environment objects to skip on the
@@ -2883,7 +2880,7 @@
      *   Operands: uint8_t numHops
      *   Stack: => callee
      */ \
-    MACRO(JSOP_ENVCALLEE, EnvCallee, env_callee, "envcallee", NULL, 2, 0, 1, JOF_UINT8) \
+    MACRO(EnvCallee, env_callee, NULL, 2, 0, 1, JOF_UINT8) \
     /*
      * Assign `val` to the binding in `env` with the name given by `nameIndex`.
      * Throw a ReferenceError if the binding is an uninitialized lexical.
@@ -2911,7 +2908,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    MACRO(JSOP_SETNAME, SetName, set_name, "setname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(SetName, set_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Like `JSOp::SetName`, but throw a TypeError if there is no binding for
      * the specified name in `env`, or if the binding is immutable (a `const`
@@ -2926,7 +2923,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    MACRO(JSOP_STRICTSETNAME, StrictSetName, strict_set_name, "strict-setname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictSetName, strict_set_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Like `JSOp::SetName`, but for assigning to globals. `env` must be an
      * environment pushed by `JSOp::BindGName`.
@@ -2936,7 +2933,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    MACRO(JSOP_SETGNAME, SetGName, set_g_name, "setgname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSLOPPY|JOF_IC) \
+    MACRO(SetGName, set_g_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSLOPPY|JOF_IC) \
     /*
      * Like `JSOp::StrictSetGName`, but for assigning to globals. `env` must be
      * an environment pushed by `JSOp::BindGName`.
@@ -2946,7 +2943,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: env, val => val
      */ \
-    MACRO(JSOP_STRICTSETGNAME, StrictSetGName, strict_set_g_name, "strict-setgname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSTRICT|JOF_IC) \
+    MACRO(StrictSetGName, strict_set_g_name, NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSTRICT|JOF_IC) \
     /*
      * Assign `val` to an argument binding that's stored in the stack frame or
      * in an `ArgumentsObject`.
@@ -2956,7 +2953,7 @@
      *   Operands: uint16_t argno
      *   Stack: val => val
      */ \
-    MACRO(JSOP_SETARG, SetArg, set_arg, "setarg", NULL, 3, 1, 1, JOF_QARG|JOF_NAME) \
+    MACRO(SetArg, set_arg, NULL, 3, 1, 1, JOF_QARG|JOF_NAME) \
     /*
      * Assign to an optimized local binding.
      *
@@ -2965,7 +2962,7 @@
      *   Operands: uint24_t localno
      *   Stack: v => v
      */ \
-    MACRO(JSOP_SETLOCAL, SetLocal, set_local, "setlocal", NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
+    MACRO(SetLocal, set_local, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME|JOF_DETECTING) \
     /*
      * Assign to an aliased binding.
      *
@@ -2980,7 +2977,7 @@
      *   Operands: uint8_t hops, uint24_t slot
      *   Stack: val => val
      */ \
-    MACRO(JSOP_SETALIASEDVAR, SetAliasedVar, set_aliased_var, "setaliasedvar", NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPSET|JOF_DETECTING) \
+    MACRO(SetAliasedVar, set_aliased_var, NULL, 5, 1, 1, JOF_ENVCOORD|JOF_NAME|JOF_PROPSET|JOF_DETECTING) \
     /*
      * Assign to an intrinsic.
      *
@@ -2994,7 +2991,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: val => val
      */ \
-    MACRO(JSOP_SETINTRINSIC, SetIntrinsic, set_intrinsic, "setintrinsic", NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_DETECTING) \
+    MACRO(SetIntrinsic, set_intrinsic, NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_DETECTING) \
     /*
      * Push a lexical environment onto the environment chain.
      *
@@ -3037,7 +3034,7 @@
      *   Operands: uint32_t lexicalScopeIndex
      *   Stack: =>
      */ \
-    MACRO(JSOP_PUSHLEXICALENV, PushLexicalEnv, push_lexical_env, "pushlexicalenv", NULL, 5, 0, 0, JOF_SCOPE) \
+    MACRO(PushLexicalEnv, push_lexical_env, NULL, 5, 0, 0, JOF_SCOPE) \
     /*
      * Pop a lexical environment from the environment chain.
      *
@@ -3048,7 +3045,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_POPLEXICALENV, PopLexicalEnv, pop_lexical_env, "poplexicalenv", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(PopLexicalEnv, pop_lexical_env, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * No-op instruction that indicates leaving an optimized lexical scope.
      *
@@ -3067,7 +3064,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_DEBUGLEAVELEXICALENV, DebugLeaveLexicalEnv, debug_leave_lexical_env, "debugleavelexicalenv", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(DebugLeaveLexicalEnv, debug_leave_lexical_env, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Recreate the current block on the environment chain with a fresh block
      * with uninitialized bindings. This implements the behavior of inducing a
@@ -3079,7 +3076,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_RECREATELEXICALENV, RecreateLexicalEnv, recreate_lexical_env, "recreatelexicalenv", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(RecreateLexicalEnv, recreate_lexical_env, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Replace the current block on the environment chain with a fresh block
      * that copies all the bindings in the block. This implements the behavior
@@ -3092,7 +3089,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_FRESHENLEXICALENV, FreshenLexicalEnv, freshen_lexical_env, "freshenlexicalenv", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(FreshenLexicalEnv, freshen_lexical_env, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Push a var environment onto the environment chain.
      *
@@ -3129,7 +3126,7 @@
      *   Operands: uint32_t scopeIndex
      *   Stack: =>
      */ \
-    MACRO(JSOP_PUSHVARENV, PushVarEnv, push_var_env, "pushvarenv", NULL, 5, 0, 0, JOF_SCOPE) \
+    MACRO(PushVarEnv, push_var_env, NULL, 5, 0, 0, JOF_SCOPE) \
     /*
      * Pop a `VarEnvironmentObject` from the environment chain.
      *
@@ -3140,7 +3137,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_POPVARENV, PopVarEnv, pop_var_env, "popvarenv", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(PopVarEnv, pop_var_env, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Push a `WithEnvironmentObject` wrapping ToObject(`val`) to the
      * environment chain.
@@ -3163,7 +3160,7 @@
      *   Operands: uint32_t staticWithIndex
      *   Stack: val =>
      */ \
-    MACRO(JSOP_ENTERWITH, EnterWith, enter_with, "enterwith", NULL, 5, 1, 0, JOF_SCOPE) \
+    MACRO(EnterWith, enter_with, NULL, 5, 1, 0, JOF_SCOPE) \
     /*
      * Pop a `WithEnvironmentObject` from the environment chain.
      *
@@ -3178,7 +3175,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_LEAVEWITH, LeaveWith, leave_with, "leavewith", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(LeaveWith, leave_with, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Push the current VariableEnvironment (the environment on the environment
      * chain designated to receive new variables).
@@ -3195,7 +3192,7 @@
      *   Operands:
      *   Stack: => env
      */ \
-    MACRO(JSOP_BINDVAR, BindVar, bind_var, "bindvar", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(BindVar, bind_var, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Create a new binding on the current VariableEnvironment (the environment
      * on the environment chain designated to receive new variables).
@@ -3219,7 +3216,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: =>
      */ \
-    MACRO(JSOP_DEFVAR, DefVar, def_var, "defvar", NULL, 5, 0, 0, JOF_ATOM) \
+    MACRO(DefVar, def_var, NULL, 5, 0, 0, JOF_ATOM) \
     /*
      * Create a new binding for the given function on the current scope.
      *
@@ -3239,7 +3236,7 @@
      *   Operands:
      *   Stack: fun =>
      */ \
-    MACRO(JSOP_DEFFUN, DefFun, def_fun, "deffun", NULL, 1, 1, 0, JOF_BYTE) \
+    MACRO(DefFun, def_fun, NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Create a new mutable binding in the global lexical environment. Throw a
      * SyntaxError if a binding with the same name already exists on that
@@ -3251,7 +3248,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: =>
      */ \
-    MACRO(JSOP_DEFLET, DefLet, def_let, "deflet", NULL, 5, 0, 0, JOF_ATOM) \
+    MACRO(DefLet, def_let, NULL, 5, 0, 0, JOF_ATOM) \
     /*
      * Create a new constant binding in the global lexical environment.
      *
@@ -3264,7 +3261,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: =>
      */ \
-    MACRO(JSOP_DEFCONST, DefConst, def_const, "defconst", NULL, 5, 0, 0, JOF_ATOM) \
+    MACRO(DefConst, def_const, NULL, 5, 0, 0, JOF_ATOM) \
     /*
      * Look up a variable on the environment chain and delete it. Push `true`
      * on success (if a binding was deleted, or if no such binding existed in
@@ -3282,7 +3279,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => succeeded
      */ \
-    MACRO(JSOP_DELNAME, DelName, del_name, "delname", NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_CHECKSLOPPY) \
+    MACRO(DelName, del_name, NULL, 5, 0, 1, JOF_ATOM|JOF_NAME|JOF_CHECKSLOPPY) \
     /*
      * Create and push the `arguments` object for the current function activation.
      *
@@ -3327,7 +3324,7 @@
      *   Operands:
      *   Stack: => arguments
      */ \
-    MACRO(JSOP_ARGUMENTS, Arguments, arguments, "arguments", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(Arguments, arguments, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Create and push the rest parameter array for current function call.
      *
@@ -3338,7 +3335,7 @@
      *   Operands:
      *   Stack: => rest
      */ \
-    MACRO(JSOP_REST, Rest, rest, "rest", NULL, 1, 0, 1, JOF_BYTE|JOF_TYPESET|JOF_IC) \
+    MACRO(Rest, rest, NULL, 1, 0, 1, JOF_BYTE|JOF_TYPESET|JOF_IC) \
     /*
      * Determines the `this` value for current function frame and pushes it
      * onto the stack.
@@ -3357,7 +3354,7 @@
      *   Operands:
      *   Stack: => this
      */ \
-    MACRO(JSOP_FUNCTIONTHIS, FunctionThis, function_this, "functionthis", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(FunctionThis, function_this, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Pop the top value from the stack and discard it.
      *
@@ -3365,7 +3362,7 @@
      *   Operands:
      *   Stack: v =>
      */ \
-    MACRO(JSOP_POP, Pop, pop, "pop", NULL, 1, 1, 0, JOF_BYTE) \
+    MACRO(Pop, pop, NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Pop the top `n` values from the stack. `n` must be <= the current stack
      * depth.
@@ -3374,7 +3371,7 @@
      *   Operands: uint16_t n
      *   Stack: v[n-1], ..., v[1], v[0] =>
      */ \
-    MACRO(JSOP_POPN, PopN, pop_n, "popn", NULL, 3, -1, 0, JOF_UINT16) \
+    MACRO(PopN, pop_n, NULL, 3, -1, 0, JOF_UINT16) \
     /*
      * Push a copy of the top value on the stack.
      *
@@ -3382,7 +3379,7 @@
      *   Operands:
      *   Stack: v => v, v
      */ \
-    MACRO(JSOP_DUP, Dup, dup, "dup", NULL, 1, 1, 2, JOF_BYTE) \
+    MACRO(Dup, dup, NULL, 1, 1, 2, JOF_BYTE) \
     /*
      * Duplicate the top two values on the stack.
      *
@@ -3390,7 +3387,7 @@
      *   Operands:
      *   Stack: v1, v2 => v1, v2, v1, v2
      */ \
-    MACRO(JSOP_DUP2, Dup2, dup2, "dup2", NULL, 1, 2, 4, JOF_BYTE) \
+    MACRO(Dup2, dup2, NULL, 1, 2, 4, JOF_BYTE) \
     /*
      * Push a copy of the nth value from the top of the stack.
      *
@@ -3401,7 +3398,7 @@
      *   Stack: v[n], v[n-1], ..., v[1], v[0] =>
      *          v[n], v[n-1], ..., v[1], v[0], v[n]
      */ \
-    MACRO(JSOP_DUPAT, DupAt, dup_at, "dupat", NULL, 4, 0, 1, JOF_UINT24) \
+    MACRO(DupAt, dup_at, NULL, 4, 0, 1, JOF_UINT24) \
     /*
      * Swap the top two values on the stack.
      *
@@ -3409,7 +3406,7 @@
      *   Operands:
      *   Stack: v1, v2 => v2, v1
      */ \
-    MACRO(JSOP_SWAP, Swap, swap, "swap", NULL, 1, 2, 2, JOF_BYTE) \
+    MACRO(Swap, swap, NULL, 1, 2, 2, JOF_BYTE) \
     /*
      * Pick the nth element from the stack and move it to the top of the stack.
      *
@@ -3417,7 +3414,7 @@
      *   Operands: uint8_t n
      *   Stack: v[n], v[n-1], ..., v[1], v[0] => v[n-1], ..., v[1], v[0], v[n]
      */ \
-    MACRO(JSOP_PICK, Pick, pick, "pick", NULL, 2, 0, 0, JOF_UINT8) \
+    MACRO(Pick, pick, NULL, 2, 0, 0, JOF_UINT8) \
     /*
      * Move the top of the stack value under the `n`th element of the stack.
      * `n` must not be 0.
@@ -3426,7 +3423,7 @@
      *   Operands: uint8_t n
      *   Stack: v[n], v[n-1], ..., v[1], v[0] => v[0], v[n], v[n-1], ..., v[1]
      */ \
-    MACRO(JSOP_UNPICK, Unpick, unpick, "unpick", NULL, 2, 0, 0, JOF_UINT8) \
+    MACRO(Unpick, unpick, NULL, 2, 0, 0, JOF_UINT8) \
     /*
      * Do nothing. This is used when we need distinct bytecode locations for
      * various mechanisms.
@@ -3435,7 +3432,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_NOP, Nop, nop, "nop", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(Nop, nop, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * No-op instruction used to speed up pc-to-line mapping.
      *
@@ -3443,7 +3440,7 @@
      *   Operands: uint32_t lineno
      *   Stack: =>
      */ \
-    MACRO(JSOP_LINENO, Lineno, lineno, "lineno", NULL, 5, 0, 0, JOF_UINT32) \
+    MACRO(Lineno, lineno, NULL, 5, 0, 0, JOF_UINT32) \
     /*
      * No-op instruction used by the decompiler to produce nicer error messages
      * about destructuring code.
@@ -3452,7 +3449,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_NOP_DESTRUCTURING, NopDestructuring, nop_destructuring, "nop-destructuring", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(NopDestructuring, nop_destructuring, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * No-op instruction only emitted in some self-hosted functions. Not
      * handled by the JITs or Baseline Interpreter so the script always runs in
@@ -3462,7 +3459,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_FORCEINTERPRETER, ForceInterpreter, force_interpreter, "forceinterpreter", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(ForceInterpreter, force_interpreter, NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Examine the top stack value, asserting that it's either a self-hosted
      * function or a self-hosted intrinsic. This does nothing in a non-debug
@@ -3472,7 +3469,7 @@
      *   Operands:
      *   Stack: checkVal => checkVal
      */ \
-    MACRO(JSOP_DEBUGCHECKSELFHOSTED, DebugCheckSelfHosted, debug_check_self_hosted, "debug-checkselfhosted", NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(DebugCheckSelfHosted, debug_check_self_hosted, NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Push a boolean indicating if instrumentation is active.
      *
@@ -3480,7 +3477,7 @@
      *   Operands:
      *   Stack: => val
      */ \
-    MACRO(JSOP_INSTRUMENTATION_ACTIVE, InstrumentationActive, instrumentation_active, "instrumentationActive", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(InstrumentationActive, instrumentation_active, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Push the instrumentation callback for the current realm.
      *
@@ -3488,7 +3485,7 @@
      *   Operands:
      *   Stack: => val
      */ \
-    MACRO(JSOP_INSTRUMENTATION_CALLBACK, InstrumentationCallback, instrumentation_callback, "instrumentationCallback", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(InstrumentationCallback, instrumentation_callback, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Push the current script's instrumentation ID.
      *
@@ -3496,7 +3493,7 @@
      *   Operands:
      *   Stack: => val
      */ \
-    MACRO(JSOP_INSTRUMENTATION_SCRIPT_ID, InstrumentationScriptId, instrumentation_script_id, "instrumentationScriptId", NULL, 1, 0, 1, JOF_BYTE) \
+    MACRO(InstrumentationScriptId, instrumentation_script_id, NULL, 1, 0, 1, JOF_BYTE) \
     /*
      * Break in the debugger, if one is attached. Otherwise this is a no-op.
      *
@@ -3511,7 +3508,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_DEBUGGER, Debugger, debugger, "debugger", NULL, 1, 0, 0, JOF_BYTE)
+    MACRO(Debugger, debugger, NULL, 1, 0, 0, JOF_BYTE)
 
 // clang-format on
 
@@ -3560,8 +3557,8 @@ static_assert((JSOP_LIMIT ==
 // clang-format on
 
 // Define JSOpLength_* constants for all ops.
-#define DEFINE_LENGTH_CONSTANT(op, op_camel, op_snake, name, image, len, ...) \
-  constexpr size_t JSOpLength_##op_camel = len;
+#define DEFINE_LENGTH_CONSTANT(op, op_snake, image, len, ...) \
+  constexpr size_t JSOpLength_##op = len;
 FOR_EACH_OPCODE(DEFINE_LENGTH_CONSTANT)
 #undef DEFINE_LENGTH_CONSTANT
 
