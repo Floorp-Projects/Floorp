@@ -29,8 +29,6 @@
 #include <webrtc/common_video/libyuv/include/webrtc_libyuv.h>
 
 using namespace mozilla;
-using namespace mozilla::java;
-using namespace mozilla::java::sdk;
 
 static const int32_t DECODER_TIMEOUT = 10 * PR_USEC_PER_MSEC;  // 10ms
 static const char MEDIACODEC_VIDEO_MIME_VP8[] = "video/x-vnd.on2.vp8";
@@ -78,14 +76,15 @@ class CallbacksSupport final : public JavaCallbacksSupport {
     CSFLogDebug(LOGTAG, "%s %p", __FUNCTION__, this);
   }
 
-  void HandleOutputFormatChanged(MediaFormat::Param aFormat) override {
+  void HandleOutputFormatChanged(
+      java::sdk::MediaFormat::Param aFormat) override {
     CSFLogDebug(LOGTAG, "%s %p", __FUNCTION__, this);
   }
 
-  void HandleOutput(Sample::Param aSample,
-                    SampleBuffer::Param aBuffer) override {
+  void HandleOutput(java::Sample::Param aSample,
+                    java::SampleBuffer::Param aBuffer) override {
     CSFLogDebug(LOGTAG, "%s %p", __FUNCTION__, this);
-    BufferInfo::LocalRef info = aSample->Info();
+    java::sdk::BufferInfo::LocalRef info = aSample->Info();
 
     int32_t size;
     bool ok = NS_SUCCEEDED(info->Size(&size));
@@ -106,7 +105,7 @@ class CallbacksSupport final : public JavaCallbacksSupport {
       ok = NS_SUCCEEDED(info->Flags(&flags));
       MOZ_ASSERT(ok);
 
-      if (flags == MediaCodec::BUFFER_FLAG_SYNC_FRAME) {
+      if (flags == java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME) {
         mEncodedImage._frameType = webrtc::kVideoFrameKey;
       } else {
         mEncodedImage._frameType = webrtc::kVideoFrameDelta;
@@ -151,23 +150,23 @@ class CallbacksSupport final : public JavaCallbacksSupport {
   uint32_t mPictureId;
 };
 
-static MediaCodec::LocalRef CreateDecoder(const char* aMimeType) {
+static java::sdk::MediaCodec::LocalRef CreateDecoder(const char* aMimeType) {
   if (!aMimeType) {
     return nullptr;
   }
 
-  MediaCodec::LocalRef codec;
-  MediaCodec::CreateDecoderByType(aMimeType, &codec);
+  java::sdk::MediaCodec::LocalRef codec;
+  java::sdk::MediaCodec::CreateDecoderByType(aMimeType, &codec);
   return codec;
 }
 
-static MediaCodec::LocalRef CreateEncoder(const char* aMimeType) {
+static java::sdk::MediaCodec::LocalRef CreateEncoder(const char* aMimeType) {
   if (!aMimeType) {
     return nullptr;
   }
 
-  MediaCodec::LocalRef codec;
-  MediaCodec::CreateEncoderByType(aMimeType, &codec);
+  java::sdk::MediaCodec::LocalRef codec;
+  java::sdk::MediaCodec::CreateEncoderByType(aMimeType, &codec);
   return codec;
 }
 
@@ -290,10 +289,10 @@ class WebrtcAndroidMediaCodec {
       mWidth = width;
       mHeight = height;
 
-      MediaFormat::LocalRef format;
+      java::sdk::MediaFormat::LocalRef format;
 
-      res = MediaFormat::CreateVideoFormat(nsCString(mime), mWidth, mHeight,
-                                           &format);
+      res = java::sdk::MediaFormat::CreateVideoFormat(nsCString(mime), mWidth,
+                                                      mHeight, &format);
 
       if (NS_FAILED(res)) {
         CSFLogDebug(
@@ -314,11 +313,13 @@ class WebrtcAndroidMediaCodec {
           return NS_ERROR_FAILURE;
         }
 
-        res = format->SetInteger(MediaFormat::KEY_BIT_RATE, 1000 * 300);
-        res = format->SetInteger(MediaFormat::KEY_BITRATE_MODE, 2);
-        res = format->SetInteger(MediaFormat::KEY_COLOR_FORMAT, 21);
-        res = format->SetInteger(MediaFormat::KEY_FRAME_RATE, 30);
-        res = format->SetInteger(MediaFormat::KEY_I_FRAME_INTERVAL, 100);
+        res = format->SetInteger(java::sdk::MediaFormat::KEY_BIT_RATE,
+                                 1000 * 300);
+        res = format->SetInteger(java::sdk::MediaFormat::KEY_BITRATE_MODE, 2);
+        res = format->SetInteger(java::sdk::MediaFormat::KEY_COLOR_FORMAT, 21);
+        res = format->SetInteger(java::sdk::MediaFormat::KEY_FRAME_RATE, 30);
+        res = format->SetInteger(java::sdk::MediaFormat::KEY_I_FRAME_INTERVAL,
+                                 100);
 
       } else {
         mCoder = CreateDecoder(mime);
@@ -462,8 +463,8 @@ class WebrtcAndroidMediaCodec {
     uint32_t time = PR_IntervalNow();
 #endif
     nsresult res;
-    BufferInfo::LocalRef bufferInfo;
-    res = BufferInfo::New(&bufferInfo);
+    java::sdk::BufferInfo::LocalRef bufferInfo;
+    res = java::sdk::BufferInfo::New(&bufferInfo);
     if (NS_FAILED(res)) {
       CSFLogDebug(
           LOGTAG,
@@ -473,15 +474,17 @@ class WebrtcAndroidMediaCodec {
     }
     int32_t outputIndex = DequeueOutputBuffer(bufferInfo);
 
-    if (outputIndex == MediaCodec::INFO_TRY_AGAIN_LATER) {
+    if (outputIndex == java::sdk::MediaCodec::INFO_TRY_AGAIN_LATER) {
       // Not an error: output not available yet. Try later.
       CSFLogDebug(LOGTAG, "%s dequeue output buffer try again:%d", __FUNCTION__,
                   outputIndex);
-    } else if (outputIndex == MediaCodec::INFO_OUTPUT_FORMAT_CHANGED) {
+    } else if (outputIndex ==
+               java::sdk::MediaCodec::INFO_OUTPUT_FORMAT_CHANGED) {
       // handle format change
       CSFLogDebug(LOGTAG, "%s dequeue output buffer format changed:%d",
                   __FUNCTION__, outputIndex);
-    } else if (outputIndex == MediaCodec::INFO_OUTPUT_BUFFERS_CHANGED) {
+    } else if (outputIndex ==
+               java::sdk::MediaCodec::INFO_OUTPUT_BUFFERS_CHANGED) {
       CSFLogDebug(LOGTAG, "%s dequeue output buffer changed:%d", __FUNCTION__,
                   outputIndex);
       GetOutputBuffers();
@@ -561,7 +564,7 @@ class WebrtcAndroidMediaCodec {
     }
   }
 
-  int32_t DequeueOutputBuffer(BufferInfo::Param aInfo) {
+  int32_t DequeueOutputBuffer(java::sdk::BufferInfo::Param aInfo) {
     nsresult res;
 
     int32_t outputStatus;
@@ -655,7 +658,7 @@ class WebrtcAndroidMediaCodec {
   friend class WebrtcMediaCodecVP8VideoEncoder;
   friend class WebrtcMediaCodecVP8VideoDecoder;
 
-  MediaCodec::GlobalRef mCoder;
+  java::sdk::MediaCodec::GlobalRef mCoder;
   webrtc::EncodedImageCallback* mEncoderCallback;
   webrtc::DecodedImageCallback* mDecoderCallback;
   std::unique_ptr<webrtc::VideoFrame> mVideoFrame;
@@ -767,8 +770,9 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
 
     mMediaCodecEncoder->SetEncoderCallback(mCallback);
     nsresult res = mMediaCodecEncoder->Configure(
-        mFrameWidth, mFrameHeight, nullptr, MediaCodec::CONFIGURE_FLAG_ENCODE,
-        MEDIACODEC_VIDEO_MIME_VP8, true /* encoder */);
+        mFrameWidth, mFrameHeight, nullptr,
+        java::sdk::MediaCodec::CONFIGURE_FLAG_ENCODE, MEDIACODEC_VIDEO_MIME_VP8,
+        true /* encoder */);
 
     if (res != NS_OK) {
       CSFLogDebug(LOGTAG, "%s, encoder configure return err = %d", __FUNCTION__,
@@ -862,8 +866,8 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
     mEncodedImage.capture_time_ms_ = inputImage.timestamp();
 
     nsresult res;
-    BufferInfo::LocalRef bufferInfo;
-    res = BufferInfo::New(&bufferInfo);
+    java::sdk::BufferInfo::LocalRef bufferInfo;
+    res = java::sdk::BufferInfo::New(&bufferInfo);
     if (NS_FAILED(res)) {
       CSFLogDebug(LOGTAG,
                   "WebrtcMediaCodecVP8VideoEncoder::%s, BufferInfo::New return "
@@ -874,15 +878,17 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
 
     int32_t outputIndex = mMediaCodecEncoder->DequeueOutputBuffer(bufferInfo);
 
-    if (outputIndex == MediaCodec::INFO_TRY_AGAIN_LATER) {
+    if (outputIndex == java::sdk::MediaCodec::INFO_TRY_AGAIN_LATER) {
       // Not an error: output not available yet. Try later.
       CSFLogDebug(LOGTAG, "%s dequeue output buffer try again:%d", __FUNCTION__,
                   outputIndex);
-    } else if (outputIndex == MediaCodec::INFO_OUTPUT_FORMAT_CHANGED) {
+    } else if (outputIndex ==
+               java::sdk::MediaCodec::INFO_OUTPUT_FORMAT_CHANGED) {
       // handle format change
       CSFLogDebug(LOGTAG, "%s dequeue output buffer format changed:%d",
                   __FUNCTION__, outputIndex);
-    } else if (outputIndex == MediaCodec::INFO_OUTPUT_BUFFERS_CHANGED) {
+    } else if (outputIndex ==
+               java::sdk::MediaCodec::INFO_OUTPUT_BUFFERS_CHANGED) {
       CSFLogDebug(LOGTAG, "%s dequeue output buffer changed:%d", __FUNCTION__,
                   outputIndex);
       mMediaCodecEncoder->GetOutputBuffers();
@@ -910,7 +916,7 @@ int32_t WebrtcMediaCodecVP8VideoEncoder::Encode(
             reinterpret_cast<uint8_t*>(env->GetDirectBufferAddress(buffer)) +
             offset;
 
-        if (flags == MediaCodec::BUFFER_FLAG_SYNC_FRAME) {
+        if (flags == java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME) {
           mEncodedImage._frameType = webrtc::kVideoFrameKey;
         } else {
           mEncodedImage._frameType = webrtc::kVideoFrameDelta;
@@ -1044,14 +1050,14 @@ int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
 
   if (!mJavaEncoder) {
     JavaCallbacksSupport::Init();
-    mJavaCallbacks = CodecProxy::NativeCallbacks::New();
+    mJavaCallbacks = java::CodecProxy::NativeCallbacks::New();
 
     JavaCallbacksSupport::AttachNative(
         mJavaCallbacks, mozilla::MakeUnique<CallbacksSupport>(mCallback));
 
-    MediaFormat::LocalRef format;
+    java::sdk::MediaFormat::LocalRef format;
 
-    nsresult res = MediaFormat::CreateVideoFormat(
+    nsresult res = java::sdk::MediaFormat::CreateVideoFormat(
         nsCString(MEDIACODEC_VIDEO_MIME_VP8), inputImage.width(),
         inputImage.height(), &format);
 
@@ -1067,8 +1073,8 @@ int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
     res = format->SetInteger(nsCString("frame-rate"), 30);
     res = format->SetInteger(nsCString("i-frame-interval"), 100);
 
-    mJavaEncoder = CodecProxy::Create(true, format, nullptr, mJavaCallbacks,
-                                      EmptyString());
+    mJavaEncoder = java::CodecProxy::Create(true, format, nullptr,
+                                            mJavaCallbacks, EmptyString());
 
     if (mJavaEncoder == nullptr) {
       return WEBRTC_VIDEO_CODEC_ERROR;
@@ -1100,15 +1106,15 @@ int32_t WebrtcMediaCodecVP8VideoRemoteEncoder::Encode(
 
   jni::ByteBuffer::LocalRef bytes = jni::ByteBuffer::New(mConvertBuf, size);
 
-  BufferInfo::LocalRef bufferInfo;
-  nsresult rv = BufferInfo::New(&bufferInfo);
+  java::sdk::BufferInfo::LocalRef bufferInfo;
+  nsresult rv = java::sdk::BufferInfo::New(&bufferInfo);
   if (NS_FAILED(rv)) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
   if ((*frame_types)[0] == webrtc::kVideoFrameKey) {
     bufferInfo->Set(0, size, inputImage.render_time_ms() * PR_USEC_PER_MSEC,
-                    MediaCodec::BUFFER_FLAG_SYNC_FRAME);
+                    java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME);
   } else {
     bufferInfo->Set(0, size, inputImage.render_time_ms() * PR_USEC_PER_MSEC, 0);
   }
