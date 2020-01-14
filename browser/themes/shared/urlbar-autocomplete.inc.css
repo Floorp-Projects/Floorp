@@ -52,6 +52,9 @@
   width: calc(100% - 2 * @urlbarViewMarginInline@);
   /* Match urlbar-background's border. */
   border-inline: 1px solid transparent;
+  /* Offsets the toolbar overlap so the view's top border aligns with the
+     toolbar. */
+  margin-block-start: -@urlbarBreakoutExtend@;
 }
 
 .urlbarView {
