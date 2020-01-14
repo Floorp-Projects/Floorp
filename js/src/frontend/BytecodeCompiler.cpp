@@ -207,14 +207,12 @@ static void tellDebuggerAboutCompiledScript(JSContext* cx,
 }
 
 template <typename Unit>
-static JSScript* CreateGlobalScript(
-    GlobalScriptInfo& info, JS::SourceText<Unit>& srcBuf,
-    ScriptSourceObject** sourceObjectOut = nullptr) {
+static JSScript* CreateGlobalScript(GlobalScriptInfo& info,
+                                    JS::SourceText<Unit>& srcBuf) {
   AutoAssertReportedException assertException(info.context());
 
   LifoAllocScope allocScope(&info.context()->tempLifoAlloc());
   frontend::ScriptCompiler<Unit> compiler(srcBuf);
-  AutoInitializeSourceObject autoSSO(info, sourceObjectOut);
 
   if (!compiler.prepareScriptParse(allocScope, info)) {
     return nullptr;
@@ -230,16 +228,14 @@ static JSScript* CreateGlobalScript(
   return info.getScript();
 }
 
-JSScript* frontend::CompileGlobalScript(
-    GlobalScriptInfo& info, JS::SourceText<char16_t>& srcBuf,
-    ScriptSourceObject** sourceObjectOut /* = nullptr */) {
-  return CreateGlobalScript(info, srcBuf, sourceObjectOut);
+JSScript* frontend::CompileGlobalScript(GlobalScriptInfo& info,
+                                        JS::SourceText<char16_t>& srcBuf) {
+  return CreateGlobalScript(info, srcBuf);
 }
 
-JSScript* frontend::CompileGlobalScript(
-    GlobalScriptInfo& info, JS::SourceText<Utf8Unit>& srcBuf,
-    ScriptSourceObject** sourceObjectOut /* = nullptr */) {
-  return CreateGlobalScript(info, srcBuf, sourceObjectOut);
+JSScript* frontend::CompileGlobalScript(GlobalScriptInfo& info,
+                                        JS::SourceText<Utf8Unit>& srcBuf) {
+  return CreateGlobalScript(info, srcBuf);
 }
 
 template <typename Unit>

@@ -125,13 +125,11 @@ class MOZ_STACK_CLASS GlobalScriptInfo final : public BytecodeCompiler {
   GlobalSharedContext* sharedContext() { return &globalsc_; }
 };
 
-extern JSScript* CompileGlobalScript(
-    GlobalScriptInfo& info, JS::SourceText<char16_t>& srcBuf,
-    ScriptSourceObject** sourceObjectOut = nullptr);
+extern JSScript* CompileGlobalScript(GlobalScriptInfo& info,
+                                     JS::SourceText<char16_t>& srcBuf);
 
-extern JSScript* CompileGlobalScript(
-    GlobalScriptInfo& info, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    ScriptSourceObject** sourceObjectOut = nullptr);
+extern JSScript* CompileGlobalScript(GlobalScriptInfo& info,
+                                     JS::SourceText<mozilla::Utf8Unit>& srcBuf);
 
 class MOZ_STACK_CLASS EvalScriptInfo final : public BytecodeCompiler {
   JS::Handle<JSObject*> environment_;
