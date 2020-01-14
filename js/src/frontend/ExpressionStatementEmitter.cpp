@@ -41,7 +41,7 @@ bool ExpressionStatementEmitter::emitEnd() {
 
   //                [stack] VAL
 
-  JSOp op = valueUsage_ == ValueUsage::WantValue ? JSOP_SETRVAL : JSOP_POP;
+  JSOp op = valueUsage_ == ValueUsage::WantValue ? JSOp::SetRval : JSOp::Pop;
   if (!bce_->emit1(op)) {
     //              [stack] # if WantValue
     //              [stack] VAL

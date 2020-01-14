@@ -4239,7 +4239,7 @@ bool CacheIRCompiler::emitCompareBigIntResult() {
   // Push the operands in reverse order for JSOp::Le and JSOp::Gt:
   // - |left <= right| is implemented as |right >= left|.
   // - |left > right| is implemented as |right < left|.
-  if (op == JSOP_LE || op == JSOP_GT) {
+  if (op == JSOp::Le || op == JSOp::Gt) {
     masm.passABIArg(rhs);
     masm.passABIArg(lhs);
   } else {
@@ -4249,14 +4249,14 @@ bool CacheIRCompiler::emitCompareBigIntResult() {
 
   using Fn = bool (*)(BigInt*, BigInt*);
   Fn fn;
-  if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
+  if (op == JSOp::Eq || op == JSOp::StrictEq) {
     fn = jit::BigIntEqual<EqualityKind::Equal>;
-  } else if (op == JSOP_NE || op == JSOP_STRICTNE) {
+  } else if (op == JSOp::Ne || op == JSOp::StrictNe) {
     fn = jit::BigIntEqual<EqualityKind::NotEqual>;
-  } else if (op == JSOP_LT || op == JSOP_GT) {
+  } else if (op == JSOp::Lt || op == JSOp::Gt) {
     fn = jit::BigIntCompare<ComparisonKind::LessThan>;
   } else {
-    MOZ_ASSERT(op == JSOP_LE || op == JSOP_GE);
+    MOZ_ASSERT(op == JSOp::Le || op == JSOp::Ge);
     fn = jit::BigIntCompare<ComparisonKind::GreaterThanOrEqual>;
   }
 
@@ -4286,8 +4286,8 @@ bool CacheIRCompiler::emitCompareBigIntInt32ResultShared(
   // If the absolute value of the BigInt can't be expressed in an uint32/uint64,
   // the result of the comparison is a constant.
   Label ifTrue, ifFalse;
-  if (op == JSOP_EQ || op == JSOP_NE) {
-    Label* tooLarge = op == JSOP_EQ ? &ifFalse : &ifTrue;
+  if (op == JSOp::Eq || op == JSOp::Ne) {
+    Label* tooLarge = op == JSOp::Eq ? &ifFalse : &ifTrue;
     masm.branch32(Assembler::GreaterThan,
                   Address(bigInt, BigInt::offsetOfDigitLength()), Imm32(1),
                   tooLarge);
@@ -4298,7 +4298,7 @@ bool CacheIRCompiler::emitCompareBigIntInt32ResultShared(
                   &doCompare);
 
     // Still need to take the sign-bit into account for relational operations.
-    if (op == JSOP_LT || op == JSOP_LE) {
+    if (op == JSOp::Lt || op == JSOp::Le) {
       masm.branchIfNegativeBigInt(bigInt, &ifTrue);
       masm.jump(&ifFalse);
     } else {
@@ -4318,17 +4318,17 @@ bool CacheIRCompiler::emitCompareBigIntInt32ResultShared(
     // operator.
     Label* greaterThan;
     Label* lessThan;
-    if (op == JSOP_EQ) {
+    if (op == JSOp::Eq) {
       greaterThan = &ifFalse;
       lessThan = &ifFalse;
-    } else if (op == JSOP_NE) {
+    } else if (op == JSOp::Ne) {
       greaterThan = &ifTrue;
       lessThan = &ifTrue;
-    } else if (op == JSOP_LT || op == JSOP_LE) {
+    } else if (op == JSOp::Lt || op == JSOp::Le) {
       greaterThan = &ifFalse;
       lessThan = &ifTrue;
     } else {
-      MOZ_ASSERT(op == JSOP_GT || op == JSOP_GE);
+      MOZ_ASSERT(op == JSOp::Gt || op == JSOp::Ge);
       greaterThan = &ifTrue;
       lessThan = &ifFalse;
     }
@@ -4431,7 +4431,7 @@ bool CacheIRCompiler::emitCompareBigIntNumberResult() {
   // Push the operands in reverse order for JSOp::Le and JSOp::Gt:
   // - |left <= right| is implemented as |right >= left|.
   // - |left > right| is implemented as |right < left|.
-  if (op == JSOP_LE || op == JSOP_GT) {
+  if (op == JSOp::Le || op == JSOp::Gt) {
     masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
     masm.passABIArg(lhs);
   } else {
@@ -4443,33 +4443,33 @@ bool CacheIRCompiler::emitCompareBigIntNumberResult() {
   using FnNumberBigInt = bool (*)(double, BigInt*);
   void* fun;
   switch (op) {
-    case JSOP_EQ: {
+    case JSOp::Eq: {
       FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::Equal>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
       break;
     }
-    case JSOP_NE: {
+    case JSOp::Ne: {
       FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::NotEqual>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
       break;
     }
-    case JSOP_LT: {
+    case JSOp::Lt: {
       FnBigIntNumber fn = jit::BigIntNumberCompare<ComparisonKind::LessThan>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
       break;
     }
-    case JSOP_GT: {
+    case JSOp::Gt: {
       FnNumberBigInt fn = jit::NumberBigIntCompare<ComparisonKind::LessThan>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
       break;
     }
-    case JSOP_LE: {
+    case JSOp::Le: {
       FnNumberBigInt fn =
           jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
       break;
     }
-    case JSOP_GE: {
+    case JSOp::Ge: {
       FnBigIntNumber fn =
           jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
@@ -4511,7 +4511,7 @@ bool CacheIRCompiler::emitCompareNumberBigIntResult() {
   // - |left <= right| is implemented as |right >= left|.
   // - |left > right| is implemented as |right < left|.
   // Also push the operands in reverse order for JSOp::Eq and JSOp::Ne.
-  if (op == JSOP_LT || op == JSOP_GE) {
+  if (op == JSOp::Lt || op == JSOp::Ge) {
     masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
     masm.passABIArg(rhs);
   } else {
@@ -4523,33 +4523,33 @@ bool CacheIRCompiler::emitCompareNumberBigIntResult() {
   using FnNumberBigInt = bool (*)(double, BigInt*);
   void* fun;
   switch (op) {
-    case JSOP_EQ: {
+    case JSOp::Eq: {
       FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::Equal>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
       break;
     }
-    case JSOP_NE: {
+    case JSOp::Ne: {
       FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::NotEqual>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
       break;
     }
-    case JSOP_LT: {
+    case JSOp::Lt: {
       FnNumberBigInt fn = jit::NumberBigIntCompare<ComparisonKind::LessThan>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
       break;
     }
-    case JSOP_GT: {
+    case JSOp::Gt: {
       FnBigIntNumber fn = jit::BigIntNumberCompare<ComparisonKind::LessThan>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
       break;
     }
-    case JSOP_LE: {
+    case JSOp::Le: {
       FnBigIntNumber fn =
           jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
       break;
     }
-    case JSOP_GE: {
+    case JSOp::Ge: {
       FnNumberBigInt fn =
           jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>;
       fun = JS_FUNC_TO_DATA_PTR(void*, fn);
@@ -4583,7 +4583,7 @@ bool CacheIRCompiler::emitCompareBigIntStringResult() {
   // Push the operands in reverse order for JSOp::Le and JSOp::Gt:
   // - |left <= right| is implemented as |right >= left|.
   // - |left > right| is implemented as |right < left|.
-  if (op == JSOP_LE || op == JSOP_GT) {
+  if (op == JSOp::Le || op == JSOp::Gt) {
     masm.Push(lhs);
     masm.Push(rhs);
   } else {
@@ -4597,32 +4597,32 @@ bool CacheIRCompiler::emitCompareBigIntStringResult() {
       bool (*)(JSContext*, HandleString, HandleBigInt, bool*);
 
   switch (op) {
-    case JSOP_EQ: {
+    case JSOp::Eq: {
       constexpr auto Equal = EqualityKind::Equal;
       callvm.call<FnBigIntString, BigIntStringEqual<Equal>>();
       break;
     }
-    case JSOP_NE: {
+    case JSOp::Ne: {
       constexpr auto NotEqual = EqualityKind::NotEqual;
       callvm.call<FnBigIntString, BigIntStringEqual<NotEqual>>();
       break;
     }
-    case JSOP_LT: {
+    case JSOp::Lt: {
       constexpr auto LessThan = ComparisonKind::LessThan;
       callvm.call<FnBigIntString, BigIntStringCompare<LessThan>>();
       break;
     }
-    case JSOP_GT: {
+    case JSOp::Gt: {
       constexpr auto LessThan = ComparisonKind::LessThan;
       callvm.call<FnStringBigInt, StringBigIntCompare<LessThan>>();
       break;
     }
-    case JSOP_LE: {
+    case JSOp::Le: {
       constexpr auto GreaterThanOrEqual = ComparisonKind::GreaterThanOrEqual;
       callvm.call<FnStringBigInt, StringBigIntCompare<GreaterThanOrEqual>>();
       break;
     }
-    case JSOP_GE: {
+    case JSOp::Ge: {
       constexpr auto GreaterThanOrEqual = ComparisonKind::GreaterThanOrEqual;
       callvm.call<FnBigIntString, BigIntStringCompare<GreaterThanOrEqual>>();
       break;
@@ -4647,7 +4647,7 @@ bool CacheIRCompiler::emitCompareStringBigIntResult() {
   // - |left <= right| is implemented as |right >= left|.
   // - |left > right| is implemented as |right < left|.
   // Also push the operands in reverse order for JSOp::Eq and JSOp::Ne.
-  if (op == JSOP_LT || op == JSOP_GE) {
+  if (op == JSOp::Lt || op == JSOp::Ge) {
     masm.Push(rhs);
     masm.Push(lhs);
   } else {
@@ -4661,32 +4661,32 @@ bool CacheIRCompiler::emitCompareStringBigIntResult() {
       bool (*)(JSContext*, HandleString, HandleBigInt, bool*);
 
   switch (op) {
-    case JSOP_EQ: {
+    case JSOp::Eq: {
       constexpr auto Equal = EqualityKind::Equal;
       callvm.call<FnBigIntString, BigIntStringEqual<Equal>>();
       break;
     }
-    case JSOP_NE: {
+    case JSOp::Ne: {
       constexpr auto NotEqual = EqualityKind::NotEqual;
       callvm.call<FnBigIntString, BigIntStringEqual<NotEqual>>();
       break;
     }
-    case JSOP_LT: {
+    case JSOp::Lt: {
       constexpr auto LessThan = ComparisonKind::LessThan;
       callvm.call<FnStringBigInt, StringBigIntCompare<LessThan>>();
       break;
     }
-    case JSOP_GT: {
+    case JSOp::Gt: {
       constexpr auto LessThan = ComparisonKind::LessThan;
       callvm.call<FnBigIntString, BigIntStringCompare<LessThan>>();
       break;
     }
-    case JSOP_LE: {
+    case JSOp::Le: {
       constexpr auto GreaterThanOrEqual = ComparisonKind::GreaterThanOrEqual;
       callvm.call<FnBigIntString, BigIntStringCompare<GreaterThanOrEqual>>();
       break;
     }
-    case JSOP_GE: {
+    case JSOp::Ge: {
       constexpr auto GreaterThanOrEqual = ComparisonKind::GreaterThanOrEqual;
       callvm.call<FnStringBigInt, StringBigIntCompare<GreaterThanOrEqual>>();
       break;
@@ -4709,19 +4709,19 @@ bool CacheIRCompiler::emitCompareObjectUndefinedNullResult() {
     return false;
   }
 
-  if (op == JSOP_STRICTEQ || op == JSOP_STRICTNE) {
+  if (op == JSOp::StrictEq || op == JSOp::StrictNe) {
     // obj !== undefined/null for all objects.
-    EmitStoreBoolean(masm, op == JSOP_STRICTNE, output);
+    EmitStoreBoolean(masm, op == JSOp::StrictNe, output);
   } else {
-    MOZ_ASSERT(op == JSOP_EQ || op == JSOP_NE);
+    MOZ_ASSERT(op == JSOp::Eq || op == JSOp::Ne);
     AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
     Label done, emulatesUndefined;
     masm.branchIfObjectEmulatesUndefined(obj, scratch, failure->label(),
                                          &emulatesUndefined);
-    EmitStoreBoolean(masm, op == JSOP_NE, output);
+    EmitStoreBoolean(masm, op == JSOp::Ne, output);
     masm.jump(&done);
     masm.bind(&emulatesUndefined);
-    EmitStoreBoolean(masm, op == JSOP_EQ, output);
+    EmitStoreBoolean(masm, op == JSOp::Eq, output);
     masm.bind(&done);
   }
   return true;

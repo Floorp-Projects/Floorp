@@ -877,13 +877,13 @@ void CodeGenerator::visitBitOpI(LBitOpI* ins) {
   const ARMRegister dest = toWRegister(ins->getDef(0));
 
   switch (ins->bitop()) {
-    case JSOP_BITOR:
+    case JSOp::BitOr:
       masm.Orr(dest, lhs, rhs);
       break;
-    case JSOP_BITXOR:
+    case JSOp::BitXor:
       masm.Eor(dest, lhs, rhs);
       break;
-    case JSOP_BITAND:
+    case JSOp::BitAnd:
       masm.And(dest, lhs, rhs);
       break;
     default:
@@ -899,13 +899,13 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
   if (rhs->isConstant()) {
     int32_t shift = ToInt32(rhs) & 0x1F;
     switch (ins->bitop()) {
-      case JSOP_LSH:
+      case JSOp::Lsh:
         masm.Lsl(dest, lhs, shift);
         break;
-      case JSOP_RSH:
+      case JSOp::Rsh:
         masm.Asr(dest, lhs, shift);
         break;
-      case JSOP_URSH:
+      case JSOp::Ursh:
         if (shift) {
           masm.Lsr(dest, lhs, shift);
         } else if (ins->mir()->toUrsh()->fallible()) {
@@ -922,13 +922,13 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
   } else {
     const ARMRegister rhsreg = toWRegister(rhs);
     switch (ins->bitop()) {
-      case JSOP_LSH:
+      case JSOp::Lsh:
         masm.Lsl(dest, lhs, rhsreg);
         break;
-      case JSOP_RSH:
+      case JSOp::Rsh:
         masm.Asr(dest, lhs, rhsreg);
         break;
-      case JSOP_URSH:
+      case JSOp::Ursh:
         masm.Lsr(dest, lhs, rhsreg);
         if (ins->mir()->toUrsh()->fallible()) {
           /// x >>> 0 can overflow.
@@ -1093,16 +1093,16 @@ void CodeGenerator::visitMathD(LMathD* math) {
   ARMFPRegister output(ToFloatRegister(math->output()), 64);
 
   switch (math->jsop()) {
-    case JSOP_ADD:
+    case JSOp::Add:
       masm.Fadd(output, lhs, rhs);
       break;
-    case JSOP_SUB:
+    case JSOp::Sub:
       masm.Fsub(output, lhs, rhs);
       break;
-    case JSOP_MUL:
+    case JSOp::Mul:
       masm.Fmul(output, lhs, rhs);
       break;
-    case JSOP_DIV:
+    case JSOp::Div:
       masm.Fdiv(output, lhs, rhs);
       break;
     default:
@@ -1116,16 +1116,16 @@ void CodeGenerator::visitMathF(LMathF* math) {
   ARMFPRegister output(ToFloatRegister(math->output()), 32);
 
   switch (math->jsop()) {
-    case JSOP_ADD:
+    case JSOp::Add:
       masm.Fadd(output, lhs, rhs);
       break;
-    case JSOP_SUB:
+    case JSOp::Sub:
       masm.Fsub(output, lhs, rhs);
       break;
-    case JSOP_MUL:
+    case JSOp::Mul:
       masm.Fmul(output, lhs, rhs);
       break;
-    case JSOP_DIV:
+    case JSOp::Div:
       masm.Fdiv(output, lhs, rhs);
       break;
     default:
@@ -1629,7 +1629,7 @@ void CodeGenerator::visitCompareB(LCompareB* lir) {
   vixl::UseScratchRegisterScope temps(&masm.asVIXL());
   const Register scratch = temps.AcquireX().asUnsized();
 
-  MOZ_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
+  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
 
   // Load boxed boolean into scratch.
   if (rhs->isConstant()) {
@@ -1652,7 +1652,7 @@ void CodeGenerator::visitCompareBAndBranch(LCompareBAndBranch* lir) {
   vixl::UseScratchRegisterScope temps(&masm.asVIXL());
   const Register scratch = temps.AcquireX().asUnsized();
 
-  MOZ_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
+  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
 
   // Load boxed boolean into scratch.
   if (rhs->isConstant()) {
@@ -1685,8 +1685,8 @@ void CodeGenerator::visitCompareBitwiseAndBranch(
   const ValueOperand lhs = ToValue(lir, LCompareBitwiseAndBranch::LhsInput);
   const ValueOperand rhs = ToValue(lir, LCompareBitwiseAndBranch::RhsInput);
 
-  MOZ_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
-             mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
+  MOZ_ASSERT(mir->jsop() == JSOp::Eq || mir->jsop() == JSOp::StrictEq ||
+             mir->jsop() == JSOp::Ne || mir->jsop() == JSOp::StrictNe);
 
   masm.cmpPtr(lhs.valueReg(), rhs.valueReg());
   emitBranch(cond, lir->ifTrue(), lir->ifFalse());
