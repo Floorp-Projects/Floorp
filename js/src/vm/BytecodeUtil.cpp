@@ -47,6 +47,7 @@
 #include "vm/Opcodes.h"
 #include "vm/Realm.h"
 #include "vm/Shape.h"
+#include "vm/ToSource.h"  // js::ValueToSource
 
 #include "gc/GC-inl.h"
 #include "vm/BytecodeIterator-inl.h"
