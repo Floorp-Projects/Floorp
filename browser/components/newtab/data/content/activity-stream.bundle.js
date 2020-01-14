@@ -194,7 +194,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 // }
 const actionTypes = {};
 
-for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TARGETING_UPDATE", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "CLEAR_PREF", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_DEV_EXPIRE_CACHE", "DISCOVERY_STREAM_DEV_IDLE_DAILY", "DISCOVERY_STREAM_DEV_SYNC_RS", "DISCOVERY_STREAM_DEV_SYSTEM_TICK", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_FEED_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_RETRY_FEED", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_FILL", "DISCOVERY_STREAM_SPOCS_PLACEMENTS", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_BLOCKED", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_PRIVACY_INFO", "HIDE_SEARCH", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_PRIVACY_INFO", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SUBMIT_SIGNIN", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "TRAILHEAD_ENROLL_EVENT", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
+for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM_POCKET", "AS_ROUTER_INITIALIZED", "AS_ROUTER_PREF_CHANGED", "AS_ROUTER_TARGETING_UPDATE", "AS_ROUTER_TELEMETRY_USER_EVENT", "BLOCK_URL", "BOOKMARK_URL", "CLEAR_PREF", "COPY_DOWNLOAD_LINK", "DELETE_BOOKMARK_BY_ID", "DELETE_FROM_POCKET", "DELETE_HISTORY_URL", "DIALOG_CANCEL", "DIALOG_OPEN", "DISCOVERY_STREAM_CONFIG_CHANGE", "DISCOVERY_STREAM_CONFIG_RESET_DEFAULTS", "DISCOVERY_STREAM_CONFIG_SETUP", "DISCOVERY_STREAM_CONFIG_SET_VALUE", "DISCOVERY_STREAM_DEV_EXPIRE_CACHE", "DISCOVERY_STREAM_DEV_IDLE_DAILY", "DISCOVERY_STREAM_DEV_SYNC_RS", "DISCOVERY_STREAM_DEV_SYSTEM_TICK", "DISCOVERY_STREAM_FEEDS_UPDATE", "DISCOVERY_STREAM_FEED_UPDATE", "DISCOVERY_STREAM_IMPRESSION_STATS", "DISCOVERY_STREAM_LAYOUT_RESET", "DISCOVERY_STREAM_LAYOUT_UPDATE", "DISCOVERY_STREAM_LINK_BLOCKED", "DISCOVERY_STREAM_LOADED_CONTENT", "DISCOVERY_STREAM_PERSONALIZATION_INIT", "DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED", "DISCOVERY_STREAM_PERSONALIZATION_VERSION", "DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE", "DISCOVERY_STREAM_RETRY_FEED", "DISCOVERY_STREAM_SPOCS_CAPS", "DISCOVERY_STREAM_SPOCS_ENDPOINT", "DISCOVERY_STREAM_SPOCS_FILL", "DISCOVERY_STREAM_SPOCS_PLACEMENTS", "DISCOVERY_STREAM_SPOCS_UPDATE", "DISCOVERY_STREAM_SPOC_BLOCKED", "DISCOVERY_STREAM_SPOC_IMPRESSION", "DOWNLOAD_CHANGED", "FAKE_FOCUS_SEARCH", "FILL_SEARCH_TERM", "HANDOFF_SEARCH_TO_AWESOMEBAR", "HIDE_PRIVACY_INFO", "HIDE_SEARCH", "INIT", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_DOWNLOAD_FILE", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "OPEN_WEBEXT_SETTINGS", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_CHANGED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PLACES_SAVED_TO_POCKET", "POCKET_CTA", "POCKET_LINK_DELETED_OR_ARCHIVED", "POCKET_LOGGED_IN", "POCKET_WAITING_FOR_SPOC", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "PREVIEW_REQUEST", "PREVIEW_REQUEST_CANCEL", "PREVIEW_RESPONSE", "REMOVE_DOWNLOAD_FILE", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_MOVE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_DOWNLOAD_FILE", "SHOW_FIREFOX_ACCOUNTS", "SHOW_PRIVACY_INFO", "SHOW_SEARCH", "SKIPPED_SIGNIN", "SNIPPETS_BLOCKLIST_CLEARED", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_PREVIEW_MODE", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SUBMIT_EMAIL", "SUBMIT_SIGNIN", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL", "TOP_SITES_PIN", "TOP_SITES_PREFS_UPDATED", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "TOTAL_BOOKMARKS_REQUEST", "TOTAL_BOOKMARKS_RESPONSE", "TRAILHEAD_ENROLL_EVENT", "UNINIT", "UPDATE_PINNED_SEARCH_SHORTCUTS", "UPDATE_SEARCH_SHORTCUTS", "UPDATE_SECTION_PREFS", "WEBEXT_CLICK", "WEBEXT_DISMISS"]) {
   actionTypes[type] = type;
 } // These are acceptable actions for AS Router messages to have. They can show up
 // as call-to-action buttons in snippets, onboarding tour, etc.
@@ -755,6 +755,7 @@ const Base = Object(react_redux__WEBPACK_IMPORTED_MODULE_4__["connect"])(state =
 __webpack_require__.r(__webpack_exports__);
 /* WEBPACK VAR INJECTION */(function(global) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ToggleStoryButton", function() { return ToggleStoryButton; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "TogglePrefCheckbox", function() { return TogglePrefCheckbox; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Personalization", function() { return Personalization; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DiscoveryStreamAdmin", function() { return DiscoveryStreamAdmin; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ASRouterAdminInner", function() { return ASRouterAdminInner; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CollapseToggle", function() { return CollapseToggle; });
@@ -846,6 +847,37 @@ class TogglePrefCheckbox extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
   }
 
 }
+class Personalization extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.togglePersonalizationVersion = this.togglePersonalizationVersion.bind(this);
+  }
+
+  togglePersonalizationVersion() {
+    this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
+      type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE
+    }));
+  }
+
+  render() {
+    const {
+      lastUpdated,
+      version,
+      initialized
+    } = this.props.state.Personalization;
+    return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
+      className: "button",
+      onClick: this.togglePersonalizationVersion
+    }, version === 1 ? "Enable V2 Personalization" : "Enable V1 Personalization"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(Row, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
+      className: "min"
+    }, "Personalization version"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, version)), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(Row, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
+      className: "min"
+    }, "Personalization Last Updated"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, relativeTime(lastUpdated) || "(no data)")), version === 2 ? react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(Row, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", {
+      className: "min"
+    }, "Personalization V2 Initialized"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("td", null, initialized ? "true" : "false")) : null)));
+  }
+
+}
 class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.PureComponent {
   constructor(props) {
     super(props);
@@ -882,7 +914,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
   refreshCache() {
     const {
       config
-    } = this.props.state;
+    } = this.props.state.DiscoveryStream;
     this.props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].OnlyToMain({
       type: common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionTypes"].DISCOVERY_STREAM_CONFIG_CHANGE,
       data: config
@@ -912,7 +944,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
   }
 
   changeEndpointVariant(event) {
-    const endpoint = this.props.state.config.layout_endpoint;
+    const endpoint = this.props.state.DiscoveryStream.config.layout_endpoint;
 
     if (endpoint) {
       this.setConfigValue("layout_endpoint", endpoint.replace(/layout_variant=.+/, `layout_variant=${event.target.value}`));
@@ -928,7 +960,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
   }
 
   isCurrentVariant(id) {
-    const endpoint = this.props.state.config.layout_endpoint;
+    const endpoint = this.props.state.DiscoveryStream.config.layout_endpoint;
     const isMatch = endpoint && !!endpoint.match(`layout_variant=${id}`);
     return isMatch;
   }
@@ -936,7 +968,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
   renderFeedData(url) {
     const {
       feeds
-    } = this.props.state;
+    } = this.props.state.DiscoveryStream;
     const feed = feeds.data[url].data;
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h4", null, "Feed url: ", url), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("table", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("tbody", null, feed.recommendations.map(story => this.renderStoryData(story)))));
   }
@@ -944,14 +976,14 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
   renderFeedsData() {
     const {
       feeds
-    } = this.props.state;
+    } = this.props.state.DiscoveryStream;
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, Object.keys(feeds.data).map(url => this.renderFeedData(url)));
   }
 
   renderSpocs() {
     const {
       spocs
-    } = this.props.state;
+    } = this.props.state.DiscoveryStream;
     let spocsData = [];
 
     if (spocs.data && spocs.data.spocs && spocs.data.spocs.length) {
@@ -999,7 +1031,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
   renderFeed(feed) {
     const {
       feeds
-    } = this.props.state;
+    } = this.props.state.DiscoveryStream;
 
     if (!feed.url) {
       return null;
@@ -1018,7 +1050,7 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
       config,
       lastUpdated,
       layout
-    } = this.props.state;
+    } = this.props.state.DiscoveryStream;
     return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("button", {
       className: "button",
       onClick: this.restorePrefDefaults
@@ -1069,7 +1101,12 @@ class DiscoveryStreamAdmin extends react__WEBPACK_IMPORTED_MODULE_4___default.a.
     }, row.components.map((component, componentIndex) => react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("div", {
       key: `component-${componentIndex}`,
       className: "ds-component"
-    }, this.renderComponent(row.width, component))))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", null, "Feeds Data"), this.renderFeedsData(), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", null, "Spocs"), this.renderSpocs());
+    }, this.renderComponent(row.width, component))))), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", null, "Personalization"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(Personalization, {
+      dispatch: this.props.dispatch,
+      state: {
+        Personalization: this.props.state.Personalization
+      }
+    }), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", null, "Spocs"), this.renderSpocs(), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h3", null, "Feeds Data"), this.renderFeedsData());
   }
 
 }
@@ -1768,7 +1805,10 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_4___default.a.Pu
 
       case "ds":
         return react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_4___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement("h2", null, "Discovery Stream"), react__WEBPACK_IMPORTED_MODULE_4___default.a.createElement(DiscoveryStreamAdmin, {
-          state: this.props.DiscoveryStream,
+          state: {
+            DiscoveryStream: this.props.DiscoveryStream,
+            Personalization: this.props.Personalization
+          },
           otherPrefs: this.props.Prefs.values,
           dispatch: this.props.dispatch
         }));
@@ -1889,6 +1929,7 @@ const _ASRouterAdmin = props => react__WEBPACK_IMPORTED_MODULE_4___default.a.cre
 const ASRouterAdmin = Object(react_redux__WEBPACK_IMPORTED_MODULE_2__["connect"])(state => ({
   Sections: state.Sections,
   DiscoveryStream: state.DiscoveryStream,
+  Personalization: state.Personalization,
   Prefs: state.Prefs
 }))(_ASRouterAdmin);
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
@@ -14141,6 +14182,7 @@ class Dedupe {
 
 const TOP_SITES_DEFAULT_ROWS = 1;
 const TOP_SITES_MAX_SITES_PER_ROW = 8;
+const PREF_PERSONALIZATION_VERSION = "discoverystream.personalization.version";
 const dedupe = new Dedupe(site => site && site.url);
 const INITIAL_STATE = {
   App: {
@@ -14205,6 +14247,11 @@ const INITIAL_STATE = {
       blocked: [],
       placements: []
     }
+  },
+  Personalization: {
+    version: 1,
+    lastUpdated: null,
+    initialized: false
   },
   Search: {
     // When search hand-off is enabled, we render a big button that is styled to
@@ -14745,6 +14792,37 @@ function Pocket(prevState = INITIAL_STATE.Pocket, action) {
   }
 }
 
+function Personalization(prevState = INITIAL_STATE.Personalization, action) {
+  switch (action.type) {
+    case Actions["actionTypes"].DISCOVERY_STREAM_PERSONALIZATION_VERSION:
+      return { ...prevState,
+        version: action.data.version
+      };
+
+    case Actions["actionTypes"].DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED:
+      return { ...prevState,
+        lastUpdated: action.data.lastUpdated
+      };
+
+    case Actions["actionTypes"].DISCOVERY_STREAM_PERSONALIZATION_INIT:
+      return { ...prevState,
+        initialized: true
+      };
+
+    case Actions["actionTypes"].PREF_CHANGED:
+      if (action.data.name === PREF_PERSONALIZATION_VERSION) {
+        return { ...prevState,
+          version: action.data.value
+        };
+      }
+
+      return prevState;
+
+    default:
+      return prevState;
+  }
+}
+
 function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
   // Return if action data is empty, or spocs or feeds data is not loaded
   const isNotReady = () => !action.data || !prevState.spocs.loaded || !prevState.feeds.loaded;
@@ -14982,6 +15060,7 @@ var reducers = {
   Dialog,
   Sections,
   Pocket,
+  Personalization,
   DiscoveryStream,
   Search
 };

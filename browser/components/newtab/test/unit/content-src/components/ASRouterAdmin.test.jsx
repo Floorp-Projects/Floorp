@@ -3,6 +3,7 @@ import {
   ASRouterAdminInner,
   CollapseToggle,
   DiscoveryStreamAdmin,
+  Personalization,
   ToggleStoryButton,
 } from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import { GlobalOverrider } from "test/unit/utils";
@@ -332,7 +333,9 @@ describe("ASRouterAdmin", () => {
         <DiscoveryStreamAdmin
           dispatch={dispatch}
           otherPrefs={{}}
-          state={state}
+          state={{
+            DiscoveryStream: state,
+          }}
         />
       );
     });
@@ -356,7 +359,12 @@ describe("ASRouterAdmin", () => {
           ],
         },
       };
-      wrapper = shallow(<DiscoveryStreamAdmin otherPrefs={{}} state={state} />);
+      wrapper = shallow(
+        <DiscoveryStreamAdmin
+          otherPrefs={{}}
+          state={{ DiscoveryStream: state }}
+        />
+      );
       wrapper.instance().onStoryToggle({ id: 12345 });
       const messageSummary = wrapper.find(".message-summary").at(0);
       const pre = messageSummary.find("pre").at(0);
@@ -449,6 +457,110 @@ describe("ASRouterAdmin", () => {
       );
     });
   });
+
+  describe("#Personalization", () => {
+    let dispatch;
+    beforeEach(() => {
+      dispatch = sandbox.stub();
+      wrapper = shallow(
+        <Personalization
+          dispatch={dispatch}
+          state={{
+            Personalization: {
+              version: 1,
+              lastUpdated: 1000,
+              initialized: true,
+            },
+          }}
+        />
+      );
+    });
+    it("should render with buttons, version, and lastUpdated", () => {
+      assert.equal(
+        wrapper
+          .find("button")
+          .at(0)
+          .text(),
+        "Enable V2 Personalization"
+      );
+      assert.equal(
+        wrapper
+          .find("td")
+          .at(1)
+          .text(),
+        "1"
+      );
+      assert.equal(
+        wrapper
+          .find("td")
+          .at(3)
+          .text(),
+        new Date(1000).toLocaleString()
+      );
+    });
+    it("should render with proper version 2 state", () => {
+      wrapper = shallow(
+        <Personalization
+          dispatch={dispatch}
+          state={{
+            Personalization: {
+              version: 2,
+              lastUpdated: 1000,
+              initialized: true,
+            },
+          }}
+        />
+      );
+      assert.equal(
+        wrapper
+          .find("button")
+          .at(0)
+          .text(),
+        "Enable V1 Personalization"
+      );
+      assert.equal(
+        wrapper
+          .find("td")
+          .at(1)
+          .text(),
+        "2"
+      );
+    });
+    it("should render with no data with no last updated", () => {
+      wrapper = shallow(
+        <Personalization
+          dispatch={dispatch}
+          state={{
+            Personalization: {
+              version: 2,
+              lastUpdated: 0,
+              initialized: true,
+            },
+          }}
+        />
+      );
+      assert.equal(
+        wrapper
+          .find("td")
+          .at(3)
+          .text(),
+        "(no data)"
+      );
+    });
+    it("should fire DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE with version", () => {
+      wrapper
+        .find("button")
+        .at(0)
+        .simulate("click");
+      assert.calledWith(
+        dispatch,
+        ac.OnlyToMain({
+          type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE,
+        })
+      );
+    });
+  });
+
   describe("#ToggleStoryButton", () => {
     it("should fire onClick in toggle button", async () => {
       let result = "";
