@@ -7832,15 +7832,25 @@ void nsGridContainerFrame::UpdateSubgridFrameState() {
 nsFrameState nsGridContainerFrame::ComputeSelfSubgridBits() const {
   // 'contain:layout/paint' makes us an "independent formatting context",
   // which prevents us from being a subgrid in this case (but not always).
+  // We will also need to check our containing scroll frame for this property.
   // https://drafts.csswg.org/css-display-3/#establish-an-independent-formatting-context
-  auto* display = StyleDisplay();
-  if (display->IsContainLayout() || display->IsContainPaint()) {
-    return nsFrameState(0);
+  {
+    const auto* display = StyleDisplay();
+    if (display->IsContainLayout() || display->IsContainPaint()) {
+      return nsFrameState(0);
+    }
   }
 
   // skip our scroll frame and such if we have it
   auto* parent = GetParent();
   while (parent && parent->GetContent() == GetContent()) {
+    // If we find our containing frame has 'contain:layout/paint' we can't be
+    // subgrid, for the same reasons as above. This can happen when this frame
+    // is itself a grid item.
+    const auto* parentDisplay = parent->StyleDisplay();
+    if (parentDisplay->IsContainLayout() || parentDisplay->IsContainPaint()) {
+      return nsFrameState(0);
+    }
     parent = parent->GetParent();
   }
   nsFrameState bits = nsFrameState(0);
