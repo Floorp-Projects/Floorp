@@ -979,10 +979,9 @@ static PreambleResult Preamble_pthread_self(CallArguments* aArguments) {
 }
 
 static void*
-GetTLVTemplate(void* aPtr, size_t* aTemplateSize, size_t* aTotalSize) {
-  void* tlvTemplate;
-  *aTemplateSize = 0;
-  *aTotalSize = 0;
+GetTLVTemplate(void* aPtr, size_t* aSize) {
+  uint8_t* tlvTemplate = nullptr;
+  *aSize = 0;
 
   Dl_info info;
   dladdr(aPtr, &info);
@@ -998,13 +997,11 @@ GetTLVTemplate(void* aPtr, size_t* aTemplateSize, size_t* aTotalSize) {
       for (size_t i = 0; i < ncmd->nsects; i++, sect++) {
         switch (sect->flags & SECTION_TYPE) {
         case S_THREAD_LOCAL_REGULAR:
-          MOZ_RELEASE_ASSERT(!*aTotalSize);
-          tlvTemplate = (uint8_t*)header + sect->addr;
-          *aTemplateSize += sect->size;
-          *aTotalSize += sect->size;
-          break;
         case S_THREAD_LOCAL_ZEROFILL:
-          *aTotalSize += sect->size;
+          if (!tlvTemplate) {
+            tlvTemplate = (uint8_t*)header + sect->addr;
+          }
+          *aSize = (uint8_t*)header + sect->addr + sect->size - tlvTemplate;
           break;
         }
       }
@@ -1022,10 +1019,10 @@ static PreambleResult Preamble__tlv_bootstrap(CallArguments* aArguments) {
       auto desc = aArguments->Arg<0, tlv_descriptor*>();
       void** ptr = thread->GetOrCreateStorage(desc->key);
       if (!(*ptr)) {
-        size_t templateSize, totalSize;
-        void* tlvTemplate = GetTLVTemplate(desc, &templateSize, &totalSize);
-        MOZ_RELEASE_ASSERT(desc->offset < totalSize);
-        void* memory = DirectAllocateMemory(totalSize);
+        size_t templateSize;
+        void* tlvTemplate = GetTLVTemplate(desc, &templateSize);
+        MOZ_RELEASE_ASSERT(desc->offset < templateSize);
+        void* memory = DirectAllocateMemory(templateSize);
         memcpy(memory, tlvTemplate, templateSize);
         *ptr = memory;
       }
