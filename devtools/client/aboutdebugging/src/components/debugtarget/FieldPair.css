@@ -25,5 +25,5 @@
   flex: 1;
   font-size: var(--caption-20-font-size);
   font-weight: var(--caption-20-font-weight);
-  text-align: right;
+  text-align: end;
 }
