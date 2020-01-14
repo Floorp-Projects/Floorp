@@ -1939,28 +1939,3 @@ def fogotype(milestone):
 
 set_config('MOZ_FOGOTYPE', True, when=fogotype)
 set_define('MOZ_FOGOTYPE', True, when=fogotype)
-
-# dump_syms
-# ==============================================================
-
-option(env='DUMP_SYMS', nargs=1, when=compile_environment & target_is_windows,
-       help='Path to dump_syms')
-
-@depends('DUMP_SYMS', toolchain_search_path, when=compile_environment & target_is_windows)
-@checking('for dump_syms')
-@imports(_from='textwrap', _import='dedent')
-def dump_syms(dump_syms_override, toolchain_search_path):
-    if dump_syms_override:
-        return dump_syms_override[0]
-
-    program = find_program('dump_syms', paths=toolchain_search_path)
-
-    if program:
-        return program
-
-    raise FatalCheckError(dedent('''\
-    Cannot find dump_syms. Please run `mach bootstrap`, `cargo install dump_syms`,
-    ensure that `dump_syms` is on your PATH, or point at an executable with `DUMP_SYMS`.
-    '''))
-
-set_config('DUMP_SYMS', dump_syms)

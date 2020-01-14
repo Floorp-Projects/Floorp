@@ -714,7 +714,6 @@ def toolchain_search_path_for(host_or_target):
             os.path.join(mozbuild_state_path, *rest) for rest in (
                 ['clang', 'bin'],
                 ['cbindgen'],
-                ['dump_syms'],
                 ['nasm'],
                 ['lucetc'],
             )]
