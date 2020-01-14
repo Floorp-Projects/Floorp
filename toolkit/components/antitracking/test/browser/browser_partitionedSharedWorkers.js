@@ -55,6 +55,7 @@ PartitionedStorageHelper.runTestInNormalAndPrivateMode(
 
 PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
   "Partitioned tabs - SharedWorker",
+  "sharedworker",
 
   // getDataCallback
   async win => {

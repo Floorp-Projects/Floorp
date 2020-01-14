@@ -26,6 +26,8 @@ interface nsICookieSettings : nsISupports
    */
   [infallible] readonly attribute boolean rejectThirdPartyTrackers;
 
+  [infallible] readonly attribute boolean limitForeignContexts;
+
   /**
    * CookiePermission at the loading of the document for a particular
    * principal. It returns the same cookiePermission also in case it changes
