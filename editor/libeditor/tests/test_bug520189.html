@@ -541,7 +541,7 @@ function runTest(test) {
     win.addEventListener("beforeinput", aEvent => { beforeInputEvent = aEvent; }, {once: true});
     win.addEventListener("input", aEvent => { inputEvent = aEvent; }, {once: true});
     editor.pasteTransferable(trans);
-    todo_isnot(beforeInputEvent, null, '"beforeinput" event should be fired');
+    isnot(beforeInputEvent, null, '"beforeinput" event should be fired');
     if (beforeInputEvent) {
       is(beforeInputEvent.cancelable, true, '"beforeinput" event for "insertFromPaste" should be cancelable');
       is(beforeInputEvent.inputType, "insertFromPaste", `inputType of "beforeinput" event should be "insertFromPaste"`);

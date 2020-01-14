@@ -216,62 +216,75 @@ nsresult HTMLEditor::DoInlineTableEditingAction(const Element& aElement) {
   if (anonclass.EqualsLiteral("mozTableAddColumnBefore")) {
     AutoEditActionDataSetter editActionData(*this,
                                             EditAction::eInsertTableColumn);
-    if (NS_WARN_IF(!editActionData.CanHandle())) {
-      return NS_ERROR_NOT_INITIALIZED;
+    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
     }
-    DebugOnly<nsresult> rv = InsertTableColumnsWithTransaction(
+    DebugOnly<nsresult> rvIgnored = InsertTableColumnsWithTransaction(
         1, InsertPosition::eBeforeSelectedCell);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to insert a column before the selected cell");
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "InsertTableColumnsWithTransaction() failed, but ignored");
   } else if (anonclass.EqualsLiteral("mozTableAddColumnAfter")) {
     AutoEditActionDataSetter editActionData(*this,
                                             EditAction::eInsertTableColumn);
-    if (NS_WARN_IF(!editActionData.CanHandle())) {
-      return NS_ERROR_NOT_INITIALIZED;
+    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
     }
-    DebugOnly<nsresult> rv = InsertTableColumnsWithTransaction(
+    DebugOnly<nsresult> rvIgnored = InsertTableColumnsWithTransaction(
         1, InsertPosition::eAfterSelectedCell);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to insert a column after the selected cell");
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "InsertTableColumnsWithTransaction() failed, but ignored");
   } else if (anonclass.EqualsLiteral("mozTableAddRowBefore")) {
     AutoEditActionDataSetter editActionData(*this,
                                             EditAction::eInsertTableRowElement);
-    if (NS_WARN_IF(!editActionData.CanHandle())) {
-      return NS_ERROR_NOT_INITIALIZED;
+    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
     }
-    DebugOnly<nsresult> rv =
+    DebugOnly<nsresult> rvIgnored =
         InsertTableRowsWithTransaction(1, InsertPosition::eBeforeSelectedCell);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to insert a row before the selected cell");
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "InsertTableRowsWithTransaction() failed, but ignored");
   } else if (anonclass.EqualsLiteral("mozTableAddRowAfter")) {
     AutoEditActionDataSetter editActionData(*this,
                                             EditAction::eInsertTableRowElement);
-    if (NS_WARN_IF(!editActionData.CanHandle())) {
-      return NS_ERROR_NOT_INITIALIZED;
+    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
     }
-    DebugOnly<nsresult> rv =
+    DebugOnly<nsresult> rvIgnored =
         InsertTableRowsWithTransaction(1, InsertPosition::eAfterSelectedCell);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to insert a row after the selected cell");
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "InsertTableRowsWithTransaction() failed, but ignored");
   } else if (anonclass.EqualsLiteral("mozTableRemoveColumn")) {
     AutoEditActionDataSetter editActionData(*this,
                                             EditAction::eRemoveTableColumn);
-    if (NS_WARN_IF(!editActionData.CanHandle())) {
-      return NS_ERROR_NOT_INITIALIZED;
+    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
     }
-    DebugOnly<nsresult> rv = DeleteSelectedTableColumnsWithTransaction(1);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to delete the selected table column");
+    DebugOnly<nsresult> rvIgnored =
+        DeleteSelectedTableColumnsWithTransaction(1);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "DeleteSelectedTableColumnsWithTransaction() failed, but ignored");
     hideUI = (colCount == 1);
   } else if (anonclass.EqualsLiteral("mozTableRemoveRow")) {
     AutoEditActionDataSetter editActionData(*this,
                                             EditAction::eRemoveTableRowElement);
-    if (NS_WARN_IF(!editActionData.CanHandle())) {
-      return NS_ERROR_NOT_INITIALIZED;
+    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
     }
-    DebugOnly<nsresult> rv = DeleteSelectedTableRowsWithTransaction(1);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to delete the selected table row");
+    DebugOnly<nsresult> rvIgnored = DeleteSelectedTableRowsWithTransaction(1);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "DeleteSelectedTableRowsWithTransaction() failed, but ignored");
     hideUI = (rowCount == 1);
   } else {
     return NS_OK;

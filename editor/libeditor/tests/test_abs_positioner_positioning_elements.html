@@ -130,7 +130,7 @@ SimpleTest.waitForFocus(async function() {
       // Release the mouse button
       synthesizeMouse(target, kPositionerX + aDeltaX, kPositionerY + aDeltaY, {type: "mouseup"});
 
-      todo(beforeInputFired, `${description}"beforeinput" event should be fired by moving absolute position container`);
+      ok(beforeInputFired, `${description}"beforeinput" event should be fired by moving absolute position container`);
       ok(inputFired, `${description}"input" event should be fired by moving absolute position container`);
 
       beforeInputEventExpected = false;
