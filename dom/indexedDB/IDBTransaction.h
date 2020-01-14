@@ -108,16 +108,17 @@ class IDBTransaction final
   FlippedOnce<false> mStarted;
   const Mode mMode;
 
+  bool mCreating;    ///< Set between successful creation until the transaction
+                     ///< has run on the event-loop.
   bool mRegistered;  ///< Whether mDatabase->RegisterTransaction() has been
                      ///< called (which may not be the case if construction was
                      ///< incomplete).
   FlippedOnce<false> mAbortedByScript;
   bool mNotedActiveTransaction;
-  FlippedOnce<false> mSentCommitOrAbort;
 
 #ifdef DEBUG
+  FlippedOnce<false> mSentCommitOrAbort;
   FlippedOnce<false> mFiredCompleteOrAbort;
-  FlippedOnce<false> mWasExplicitlyCommitted;
 #endif
 
  public:
@@ -203,10 +204,6 @@ class IDBTransaction final
     AssertIsOnOwningThread();
     return NS_FAILED(mAbortCode);
   }
-
-#ifdef DEBUG
-  bool WasExplicitlyCommitted() const { return mWasExplicitlyCommitted; }
-#endif
 
   template <ReadyState OriginalState, ReadyState TemporaryState>
   class AutoRestoreState {
@@ -319,8 +316,6 @@ class IDBTransaction final
   NS_DECL_NSIRUNNABLE
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction, DOMEventTargetHelper)
 
-  void CommitIfNotStarted();
-
   // nsWrapperCache
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -362,7 +357,7 @@ class IDBTransaction final
 
   void AbortInternal(nsresult aAbortCode, RefPtr<DOMException> aError);
 
-  void SendCommit(bool aAutoCommit);
+  void SendCommit();
 
   void SendAbort(nsresult aResultCode);
 
