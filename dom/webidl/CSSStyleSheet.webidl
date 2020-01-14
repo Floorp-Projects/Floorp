@@ -38,7 +38,7 @@ interface CSSStyleSheet : StyleSheet {
   [Throws, Pref="layout.css.constructable-stylesheets.enabled"]
   Promise<CSSStyleSheet> replace(USVString text);
   [Throws, Pref="layout.css.constructable-stylesheets.enabled"]
-  void replaceSync(USVString text);
+  void replaceSync(UTF8String text);
 
   // Non-standard WebKit things.
   [Throws, NeedsSubjectPrincipal, BinaryName="cssRules"]

@@ -41,7 +41,6 @@ add_task(async () => {
 
 // Test implemented properties (i.e. non custom properties).
 add_task(async () => {
-
   let iframe = document.getElementById("iframe");
 
   const style = document.createElement('style');
@@ -124,6 +123,91 @@ add_task(async () => {
   // TODO: Make work (and test) inline style and CSSOM.
   style.remove();
   await SpecialPowers.flushPrefEnv();
+});
+
+// Test implemented properties (i.e. non custom properties)
+// for constructed stylesheets.
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["layout.css.constructable-stylesheets.enabled", true]
+    ]
+  });
+
+  await iframe_reload();
+  let iframe = document.getElementById("iframe");
+  const win = iframe.contentWindow;
+
+  const sheet = new win.CSSStyleSheet();
+  sheet.replaceSync(`
+    * {
+      content: "";
+      grid-gap: 1px; /* shorthand alias */
+      -webkit-background-size: 100px 100px; /* longhand alias */
+      transform-origin: top left; /* longhand */
+      background: green; /* shorthand */
+    }
+  `);
+
+  assert_recorded(win, true, [
+    "content",
+    "grid-gap",
+    "-webkit-background-size",
+    "transform-origin",
+    "background"
+  ], "Test non-custom properties for constructed stylesheets");
+
+  // Should only record the aliases, not the non-aliased property.
+  // Should only record shorthands, not the longhands it expands to.
+  assert_recorded(win, false, [
+    "gap",
+    "background-size",
+    "-moz-transform-origin",
+    "-webkit-transform-origin",
+    "background-color",
+  ], "Test non-custom properties for constructed stylesheets");
+});
+
+// Test unimplemented properties for constructed stylesheets.
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      ["layout.css.constructable-stylesheets.enabled", true]
+    ]
+  });
+
+  await iframe_reload();
+  let iframe = document.getElementById("iframe");
+  const win = iframe.contentWindow;
+
+  const sheet = new win.CSSStyleSheet();
+  sheet.replaceSync(`
+    * {
+      content: "";
+      grid-gap: 1px; /* shorthand alias */
+      -webkit-background-size: 100px 100px; /* longhand alias */
+      transform-origin: top left; /* longhand */
+      background: green; /* shorthand */
+      -webkit-font-smoothing: auto; /* counted unknown */
+      zoom: 0.5; /* counted unknown */
+    }
+  `);
+
+  assert_recorded(win, true, [
+    "content",
+    "grid-gap",
+    "-webkit-background-size",
+    "transform-origin",
+    "background",
+    "-webkit-font-smoothing",
+    "zoom",
+  ], "Test unimplemented properties for constructed stylesheets");
+
+  // Shouldn't record counted unknown properties which don't show up.
+  assert_recorded(win, false, [
+    "size",
+    "speak",
+  ], "Test unimplemented properties for constructed stylesheets");
 });
 
 </script>

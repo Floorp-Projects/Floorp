@@ -579,7 +579,7 @@ int32_t StyleSheet::AddRule(const nsAString& aSelector, const nsAString& aBlock,
 // https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-replace
 already_AddRefed<dom::Promise> StyleSheet::Replace(const nsAString& aText,
                                                    ErrorResult& aRv) {
-  // TODO(nordzilla) This is a stub to land the Constructable Stylesheets
+  // TODO(nordzilla): This is a stub to land the Constructable Stylesheets
   // API under a preference (Bug 1604296). Functionality will be added later.
 
   // Step 1 and 4 are variable declarations
@@ -612,23 +612,58 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsAString& aText,
 }
 
 // https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-replacesync
-void StyleSheet::ReplaceSync(const nsAString& aText, ErrorResult& aRv) {
-  // TODO(nordzilla) This is a stub to land the Constructable Stylesheets
-  // API under a preference (Bug 1604296). Functionality will be added later.
-
+void StyleSheet::ReplaceSync(const nsACString& aText, ErrorResult& aRv) {
   // Step 1 is a variable declaration
 
   // 2.1 Check if sheet is constructed, else throw.
   if (!mConstructorDocument) {
-    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_ALLOWED_ERR,
-                          "The replaceSync() method can only be called on "
-                          "constructed style sheets");
-    return;
+    return aRv.ThrowDOMException(
+        NS_ERROR_DOM_NOT_ALLOWED_ERR,
+        "The replaceSync() method can only be called on "
+        "constructed style sheets");
   }
+
   // 2.2 Check if sheet is modifiable, else throw.
+  if (ModificationDisallowed()) {
+    return aRv.ThrowDOMException(
+        NS_ERROR_DOM_NOT_ALLOWED_ERR,
+        "The replaceSync() method can only be called on "
+        "modifiable style sheets");
+  }
+
   // 3. Parse aText into rules.
-  // 4. If rules contain @imports, throw NotAllowedError
-  // 5. Set sheet's rules to rules.
+  // We need to create a disabled loader so that the parser will
+  // accept @import rules, but we do not want to trigger any loads.
+  auto disabledLoader = MakeRefPtr<css::Loader>();
+  disabledLoader->SetEnabled(false);
+  SetURLExtraData();
+  RefPtr<const RawServoStyleSheetContents> rawContent =
+      Servo_StyleSheet_FromUTF8Bytes(
+          disabledLoader, this,
+          /* load_data = */ nullptr, &aText, mParsingMode, Inner().mURLData,
+          /* line_number_offset = */ 0,
+          mConstructorDocument->GetCompatibilityMode(),
+          /* reusable_sheets = */ nullptr,
+          mConstructorDocument->GetStyleUseCounters(),
+          StyleSanitizationKind::None,
+          /* sanitized_output = */ nullptr)
+          .Consume();
+
+  // 4. If rules contain @imports, make no changes and throw NotAllowedError.
+  // FIXME(nordzilla): Checking for @import rules after parse time means that
+  // the document's use counters will be affected even if this function throws.
+  // Consider changing this to detect @import rules during parse time.
+  if (Servo_StyleSheet_HasImportRules(rawContent)) {
+    return aRv.ThrowDOMException(
+        NS_ERROR_DOM_NOT_ALLOWED_ERR,
+        "The replaceSync() method does not support @import "
+        "rules. Use the async replace() method instead.");
+  }
+
+  // 5. Set sheet's rules to the new rules.
+  DropRuleList();
+  Inner().mContents = rawContent.forget();
+  FinishParse();
 }
 
 nsresult StyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup,
