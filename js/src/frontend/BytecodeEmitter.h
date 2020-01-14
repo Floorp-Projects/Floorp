@@ -153,8 +153,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     Normal,
 
     // Emit JSOp::GetIntrinsic instead of JSOp::GetName and assert that
-    // JSOp::GetName and JSOP_*GNAME don't ever get emitted. See the comment for
-    // the field |selfHostingMode| in Parser.h for details.
+    // JSOp::GetName and JSOp::*GName don't ever get emitted. See the comment
+    // for the field |selfHostingMode| in Parser.h for details.
     SelfHosting,
 
     // Check the static scope chain of the root function for resolving free

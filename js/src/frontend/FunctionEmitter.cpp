@@ -18,7 +18,7 @@
 #include "frontend/SharedContext.h"        // SharedContext
 #include "vm/AsyncFunction.h"              // AsyncFunctionResolveKind
 #include "vm/JSScript.h"                   // JSScript
-#include "vm/Opcodes.h"                    // JSOP_*
+#include "vm/Opcodes.h"                    // JSOp
 #include "vm/Scope.h"                      // BindingKind
 #include "wasm/AsmJS.h"                    // IsAsmJSModule
 

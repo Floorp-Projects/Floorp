@@ -10,7 +10,7 @@
 #include "frontend/EmitterScope.h"     // EmitterScope
 #include "frontend/SourceNotes.h"      // SRC_*, SrcNote
 #include "vm/JSScript.h"               // JSTRY_LOOP
-#include "vm/Opcodes.h"                // JSOP_*
+#include "vm/Opcodes.h"                // JSOp
 #include "vm/Scope.h"                  // ScopeKind
 
 using namespace js;

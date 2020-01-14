@@ -12,7 +12,7 @@
 #include "frontend/SharedContext.h"    // StatementKind
 #include "frontend/SourceNotes.h"      // SrcNote, SRC_*
 #include "vm/JSScript.h"               // JSTRY_CATCH, JSTRY_FINALLY
-#include "vm/Opcodes.h"                // JSOP_*
+#include "vm/Opcodes.h"                // JSOp
 
 using namespace js;
 using namespace js::frontend;

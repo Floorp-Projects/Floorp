@@ -9,7 +9,7 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
-#include "vm/Opcodes.h"                // JSOP_*
+#include "vm/Opcodes.h"                // JSOp
 
 using namespace js;
 using namespace js::frontend;

@@ -61,7 +61,7 @@
 #include "vm/JSContext.h"        // JSContext
 #include "vm/JSFunction.h"       // FunctionPrefixKind, JSFunction,
 #include "vm/JSScript.h"  // JSScript, ScopeNote, ScriptSourceObject, FieldInitializers, JSScript, LazyScript
-#include "vm/Opcodes.h"   // JSOP_*
+#include "vm/Opcodes.h"   // JSOp, JSOP_*_LENGTH
 #include "wasm/AsmJS.h"   // IsAsmJSModule
 
 #include "vm/JSObject-inl.h"  // JSObject
@@ -7214,7 +7214,7 @@ bool BytecodeEmitter::emitCallOrNew(
    * For operator new, we emit JSOp::GetProp instead of JSOp::CallProp, etc.
    * This is necessary to interpose the lambda-initialized method read
    * barrier -- see the code in jsinterp.cpp for JSOp::Lambda followed by
-   * JSOP_{SET,INIT}PROP.
+   * JSOp::{Set,Init}Prop.
    *
    * Then (or in a call case that has no explicit reference-base
    * object) we emit JSOp::Undefined to produce the undefined |this|
