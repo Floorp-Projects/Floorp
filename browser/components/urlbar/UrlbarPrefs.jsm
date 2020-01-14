@@ -118,6 +118,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // results.
   ["restyleSearches", false],
 
+  // If true, we show new users and those about to start an organic search a tip
+  // encouraging them to use the Urlbar.
+  ["searchTips", false],
+
+  // The number of times the user has been shown a search tip.
+  ["searchTips.shownCount", 0],
+
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
 

@@ -358,6 +358,7 @@ class UrlbarView {
     }
 
     this.window.removeEventListener("resize", this);
+    this.window.removeEventListener("blur", this);
 
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
   }
@@ -608,6 +609,7 @@ class UrlbarView {
     this.input.startLayoutExtend();
 
     this.window.addEventListener("resize", this);
+    this.window.addEventListener("blur", this);
     this._windowOuterWidth = this.window.outerWidth;
 
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_OPEN);
@@ -1384,6 +1386,13 @@ class UrlbarView {
         favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
       }
     }
+  }
+
+  _on_blur(event) {
+    // If the view is open without the input being focused, it will not close
+    // automatically when the window loses focus. We might be in this state
+    // after a Search Tip is shown on an engine homepage.
+    this.close();
   }
 
   _on_mousedown(event) {
