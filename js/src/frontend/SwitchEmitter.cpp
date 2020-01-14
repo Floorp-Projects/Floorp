@@ -18,7 +18,7 @@
 #include "js/TypeDecls.h"              // jsbytecode
 #include "util/BitArray.h"
 #include "vm/BytecodeUtil.h"  // SET_JUMP_OFFSET, JUMP_OFFSET_LEN, SET_RESUMEINDEX
-#include "vm/Opcodes.h"       // JSOp, JSOP_TABLESWITCH_LENGTH
+#include "vm/Opcodes.h"       // JSOp, JSOpLength_TableSwitch
 #include "vm/Runtime.h"       // ReportOutOfMemory
 
 using namespace js;
@@ -185,7 +185,7 @@ bool SwitchEmitter::emitTable(const TableGenerator& tableGen) {
 
   MOZ_ASSERT(top_ == bce_->bytecodeSection().offset());
   if (!bce_->emitN(JSOP_TABLESWITCH,
-                   JSOP_TABLESWITCH_LENGTH - sizeof(jsbytecode))) {
+                   JSOpLength_TableSwitch - sizeof(jsbytecode))) {
     return false;
   }
 

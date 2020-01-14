@@ -33,7 +33,7 @@
 #include "js/Value.h"                  // JS::Vector
 #include "js/Vector.h"                 // Vector
 #include "vm/JSScript.h"               // JSTryNote, JSTryNoteKind, ScopeNote
-#include "vm/Opcodes.h"                // JSOP_JUMPTARGET_LENGTH
+#include "vm/Opcodes.h"                // JSOpLength_JumpTarget
 
 namespace js {
 
@@ -206,7 +206,7 @@ class BytecodeSection {
   bool lastOpcodeIsJumpTarget() const {
     return lastTarget_.offset.valid() &&
            offset() - lastTarget_.offset ==
-               BytecodeOffsetDiff(JSOP_JUMPTARGET_LENGTH);
+               BytecodeOffsetDiff(JSOpLength_JumpTarget);
   }
 
   // JumpTarget should not be part of the emitted statement, as they can be

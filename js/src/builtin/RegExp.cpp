@@ -1784,19 +1784,19 @@ bool js::intrinsic_GetElemBaseForLambda(JSContext* cx, unsigned argc,
     env = &env->enclosingEnvironment().as<EnvironmentObject>();
   }
   Value b = env->aliasedBinding(ec);
-  pc += JSOP_GETALIASEDVAR_LENGTH;
+  pc += JSOpLength_GetAliasedVar;
 
   /* Look for 'a' to be the lambda's first argument. */
   if (JSOp(*pc) != JSOP_GETARG || GET_ARGNO(pc) != 0) {
     return true;
   }
-  pc += JSOP_GETARG_LENGTH;
+  pc += JSOpLength_GetArg;
 
   /* 'b[a]' */
   if (JSOp(*pc) != JSOP_GETELEM) {
     return true;
   }
-  pc += JSOP_GETELEM_LENGTH;
+  pc += JSOpLength_GetElem;
 
   /* 'return b[a]' */
   if (JSOp(*pc) != JSOP_RETURN) {
