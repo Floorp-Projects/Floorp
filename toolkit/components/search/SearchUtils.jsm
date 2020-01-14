@@ -85,14 +85,13 @@ var SearchUtils = {
   },
 
   /**
-   * Outputs text to the JavaScript console as well as to stdout.
+   * Outputs text to the JavaScript console.
    *
    * @param {string} text
    *   The message to log.
    */
   log(text) {
     if (SearchUtils.loggingEnabled) {
-      dump("*** Search: " + text + "\n");
       Services.console.logStringMessage(text);
     }
   },
