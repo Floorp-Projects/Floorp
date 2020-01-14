@@ -5521,10 +5521,9 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     const JS::TransitiveCompileOptions& transitiveOptions = parser->options();
     JS::CompileOptions options(cx, transitiveOptions);
 
-    Rooted<ScriptSourceObject*> sourceObject(cx, script->sourceObject());
     RootedFunction fun(cx, funbox->function());
     RootedScript innerScript(
-        cx, JSScript::Create(cx, fun, options, sourceObject,
+        cx, JSScript::Create(cx, fun, options, parseInfo.sourceObject,
                              funbox->sourceStart, funbox->sourceEnd,
                              funbox->toStringStart, funbox->toStringEnd,
                              funbox->startLine, funbox->startColumn));
