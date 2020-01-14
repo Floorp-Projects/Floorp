@@ -40,7 +40,8 @@ function* testSteps() {
       // upgraded flat origin directories).
       // FF 36 renamed storage/persistent/ to storage/default/ and all not yet
       // upgraded flat origin directories were upgraded. There's a separate
-      // test for that.
+      // test for that
+      // (test_upgradeFromPersistentStorageDirectory_upgradeOriginDirectories).
       package: "persistentStorageDirectory_flatOriginDirectories_profile",
       origins: [
         {

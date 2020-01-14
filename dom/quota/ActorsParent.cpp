@@ -5309,7 +5309,8 @@ QuotaManager::MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory() {
   return NS_OK;
 }
 
-nsresult QuotaManager::MaybeUpgradePersistentStorageDirectory() {
+nsresult QuotaManager::
+    MaybeUpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory() {
   AssertIsOnIOThread();
 
   nsCOMPtr<nsIFile> persistentStorageDir;
@@ -6335,7 +6336,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
       return rv;
     }
 
-    rv = MaybeUpgradePersistentStorageDirectory();
+    rv = MaybeUpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
