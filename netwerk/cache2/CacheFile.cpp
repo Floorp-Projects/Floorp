@@ -1166,7 +1166,7 @@ nsresult CacheFile::SetFrecency(uint32_t aFrecency) {
 
   if (mHandle && !mHandle->IsDoomed())
     CacheFileIOManager::UpdateIndexEntry(mHandle, &aFrecency, nullptr, nullptr,
-                                         nullptr, nullptr, nullptr, 0);
+                                         nullptr, nullptr);
 
   mMetadata->SetFrecency(aFrecency);
   return NS_OK;
@@ -1216,8 +1216,7 @@ nsresult CacheFile::SetNetworkTimes(uint64_t aOnStartTime,
 
   if (mHandle && !mHandle->IsDoomed()) {
     CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr,
-                                         &onStartTime16, &onStopTime16, nullptr,
-                                         nullptr, 0);
+                                         &onStartTime16, &onStopTime16, nullptr);
   }
   return NS_OK;
 }
@@ -1272,54 +1271,7 @@ nsresult CacheFile::SetContentType(uint8_t aContentType) {
 
   if (mHandle && !mHandle->IsDoomed()) {
     CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr, nullptr,
-                                         nullptr, &aContentType, nullptr, 0);
-  }
-  return NS_OK;
-}
-
-nsresult CacheFile::AddBaseDomainAccess(uint32_t aSiteID) {
-  CacheFileAutoLock lock(this);
-
-  nsresult rv;
-
-  LOG(("CacheFile::AddBaseDomainAccess() this=%p, siteID=%u", this, aSiteID));
-
-  MOZ_ASSERT(mMetadata);
-  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
-
-  uint32_t trID = CacheObserver::TelemetryReportID();
-  uint16_t siteIDCount = 0;
-  bool siteIDFound = false;
-  const char* elem = mMetadata->GetElement("eTLD1Access");
-  if (elem) {
-    rv = CacheFileUtils::ParseBaseDomainAccessInfo(elem, trID, &aSiteID,
-                                                   &siteIDFound, &siteIDCount);
-    if (NS_FAILED(rv)) {
-      // Ignore existing element, it's not valid anymore.
-      elem = nullptr;
-    } else if (siteIDFound) {
-      // Access from this site is already logged, nothing to do here.
-      return NS_OK;
-    }
-  }
-
-  PostWriteTimer();
-
-  // This site accessed this element for the first time within this telemetry
-  // report ID. Add it and update count of accessing site in the index.
-  ++siteIDCount;
-
-  nsAutoCString newElem;
-  CacheFileUtils::BuildOrAppendBaseDomainAccessInfo(elem, trID, aSiteID,
-                                                    newElem);
-  rv = mMetadata->SetElement("eTLD1Access", newElem.get());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (mHandle && !mHandle->IsDoomed()) {
-    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr, nullptr,
-                                         nullptr, nullptr, &siteIDCount, trID);
+                                         nullptr, &aContentType);
   }
   return NS_OK;
 }
@@ -1350,7 +1302,7 @@ nsresult CacheFile::SetAltMetadata(const char* aAltMetadata) {
 
   if (mHandle && !mHandle->IsDoomed()) {
     CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, &hasAltData, nullptr,
-                                         nullptr, nullptr, nullptr, 0);
+                                         nullptr, nullptr);
   }
   return rv;
 }
@@ -2586,17 +2538,9 @@ nsresult CacheFile::InitIndexEntry() {
     contentType = n64;
   }
 
-  uint32_t trID = CacheObserver::TelemetryReportID();
-  const char* siteIDInfo = mMetadata->GetElement("eTLD1Access");
-  uint16_t siteIDCount = 0;
-  if (siteIDInfo) {
-    CacheFileUtils::ParseBaseDomainAccessInfo(siteIDInfo, trID, nullptr,
-                                              nullptr, &siteIDCount);
-  }
-
   rv = CacheFileIOManager::UpdateIndexEntry(mHandle, &frecency, &hasAltData,
                                             &onStartTime, &onStopTime,
-                                            &contentType, &siteIDCount, trID);
+                                            &contentType);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
