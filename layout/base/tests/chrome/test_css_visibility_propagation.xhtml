@@ -13,10 +13,10 @@ const baseURL = "chrome://mochitests/content/chrome/layout/base/tests/chrome/";
 add_task(async () => {
   // Open two new windows to swap iframes.
   const window1 = docShell.rootTreeItem.domWindow.open(
-      baseURL + "window_css_visibility_propagation-1.html",
+      baseURL + "window_css_visibility_propagation-1.xhtml",
       "_blank", "chrome");
   const window2 = docShell.rootTreeItem.domWindow.open(
-      baseURL + "window_css_visibility_propagation-2.html",
+      baseURL + "window_css_visibility_propagation-2.xhtml",
       "_blank", "chrome");
 
   const loadWindow1 =
