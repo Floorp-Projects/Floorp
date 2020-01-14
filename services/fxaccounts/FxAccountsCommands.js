@@ -282,13 +282,13 @@ class SendTab {
     return urlsafeBase64Encode(encrypted);
   }
 
-  async _getKeys() {
+  async _getPersistedKeys() {
     const { device } = await this._fxai.getUserAccountData(["device"]);
     return device && device.sendTabKeys;
   }
 
   async _decrypt(ciphertext) {
-    let { privateKey, publicKey, authSecret } = await this._getKeys();
+    let { privateKey, publicKey, authSecret } = await this._getPersistedKeys();
     publicKey = urlsafeBase64Decode(publicKey);
     authSecret = urlsafeBase64Decode(authSecret);
     ciphertext = new Uint8Array(urlsafeBase64Decode(ciphertext));
@@ -325,7 +325,7 @@ class SendTab {
   }
 
   async getEncryptedKey() {
-    let sendTabKeys = await this._getKeys();
+    let sendTabKeys = await this._getPersistedKeys();
     if (!sendTabKeys) {
       sendTabKeys = await this._generateAndPersistKeys();
     }
@@ -334,12 +334,27 @@ class SendTab {
       publicKey: sendTabKeys.publicKey,
       authSecret: sendTabKeys.authSecret,
     };
-    // getEncryptedKey() can be called right after a sign-in/up to FxA:
-    // We get -cached- keys using getSignedInUser() instead of getKeys()
-    // because we will await on getKeys() which is already awaiting on
-    // the promise we return.
-    const { kSync, kXCS } = await this._fxai.getUserAccountData();
-    if (!kSync || !kXCS) {
+    // getEncryptedKey() will be called as part of device registration, which
+    // happens immediately after signup/signin, so there's a good chance we
+    // don't yet have kSync et. al. Unverified users will be unable to fetch
+    // keys, meaning they will end up registering the device twice (once without
+    // sendtab support, then once with sendtab support when they verify), but
+    // that's OK.
+    if (!(await this._fxai.keys.canGetKeys())) {
+      log.info("Can't fetch keys, so unable to determine sendtab keys");
+      return null;
+    }
+    let kSync, kXCS;
+    try {
+      ({ kSync, kXCS } = await this._fxai.keys.getKeys());
+      if (!kSync || !kXCS) {
+        log.warn(
+          "Fetched the keys but didn't get any, so unable to determine sendtab keys"
+        );
+        return null;
+      }
+    } catch (ex) {
+      log.warn("Failed to fetch keys, so unable to determine sendtab keys", ex);
       return null;
     }
     const wrapper = new CryptoWrapper();

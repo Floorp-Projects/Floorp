@@ -16,6 +16,7 @@ const {
   ON_NEW_DEVICE_ID,
   ON_DEVICE_CONNECTED_NOTIFICATION,
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
+  ONVERIFIED_NOTIFICATION,
   PREF_ACCOUNT_ROOT,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
@@ -64,20 +65,15 @@ class FxAccountsDevice {
     // Invalidate our cached device list when a device is connected or disconnected.
     Services.obs.addObserver(this, ON_DEVICE_CONNECTED_NOTIFICATION, true);
     Services.obs.addObserver(this, ON_DEVICE_DISCONNECTED_NOTIFICATION, true);
+    // A user becoming verified probably means we need to re-register the device
+    // because we are now able to get the sendtab keys.
+    Services.obs.addObserver(this, ONVERIFIED_NOTIFICATION, true);
   }
 
   async getLocalId() {
-    let data = await this._fxai.currentAccountState.getUserAccountData();
-    if (!data) {
-      // Without a signed-in user, there can be no device id.
-      return null;
-    }
-    const { device } = data;
-    if (await this.checkDeviceUpdateNeeded(device)) {
-      return this._registerOrUpdateDevice(data);
-    }
-    // Return the device id that we already registered with the server.
-    return device.id;
+    // It turns out _updateDeviceRegistrationIfNecessary() does exactly what we
+    // need.
+    return this._updateDeviceRegistrationIfNecessary();
   }
 
   // Generate a client name if we don't have a useful one yet
@@ -173,7 +169,7 @@ class FxAccountsDevice {
     return DEVICE_TYPE_DESKTOP;
   }
 
-  async checkDeviceUpdateNeeded(device) {
+  async _checkDeviceUpdateNeeded(device) {
     // There is no device registered or the device registration is outdated.
     // Either way, we should register the device with FxA
     // before returning the id to the caller.
@@ -268,9 +264,11 @@ class FxAccountsDevice {
           devices,
         };
 
-        // Check if our push registration is still good.
+        // Check if our push registration is still good (although background
+        // device registration means it's possible we'll be fetching the device
+        // list before we've actually registered ourself!)
         const ourDevice = devices.find(device => device.isCurrentDevice);
-        if (ourDevice.pushEndpointExpired) {
+        if (ourDevice && ourDevice.pushEndpointExpired) {
           await this._fxai.fxaPushService.unsubscribe();
           await this._registerOrUpdateDevice(accountData);
         }
@@ -291,6 +289,20 @@ class FxAccountsDevice {
     } catch (error) {
       await this._logErrorAndResetDeviceRegistrationVersion(error);
     }
+  }
+
+  async _updateDeviceRegistrationIfNecessary() {
+    let data = await this._fxai.currentAccountState.getUserAccountData();
+    if (!data) {
+      // Can't register a device without a signed-in user.
+      return null;
+    }
+    const { device } = data;
+    if (await this._checkDeviceUpdateNeeded(device)) {
+      return this._registerOrUpdateDevice(data);
+    }
+    // Return the device ID we already had.
+    return device.id;
   }
 
   // If you change what we send to the FxA servers during device registration,
@@ -321,6 +333,7 @@ class FxAccountsDevice {
       const availableCommandsKeys = Object.keys(
         deviceOptions.availableCommands
       ).sort();
+      log.info("registering with available commands", availableCommandsKeys);
 
       let device;
       if (currentDevice && currentDevice.id) {
@@ -482,6 +495,14 @@ class FxAccountsDevice {
             );
           });
         }
+        break;
+      case ONVERIFIED_NOTIFICATION:
+        this._updateDeviceRegistrationIfNecessary().catch(error => {
+          log.warn(
+            "_updateDeviceRegistrationIfNecessary failed after verification",
+            error
+          );
+        });
         break;
     }
   }

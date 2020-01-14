@@ -34,7 +34,6 @@ const BOGUS_PUBLICKEY =
 const BOGUS_AUTHKEY = "GSsIiaD2Mr83iPqwFNK4rw";
 
 Services.prefs.setCharPref("identity.fxaccounts.loglevel", "Trace");
-Log.repository.getLogger("FirefoxAccounts").level = Log.Level.Trace;
 
 const DEVICE_REGISTRATION_VERSION = 42;
 
@@ -72,6 +71,8 @@ MockStorageManager.prototype = {
 
 function MockFxAccountsClient(device) {
   this._email = "nobody@example.com";
+  // Be careful relying on `this._verified` as it doesn't change if the user's
+  // state does via setting the `verified` flag in the user data.
   this._verified = false;
   this._deletedOnServer = false; // for testing accountStatus
 
@@ -83,6 +84,18 @@ function MockFxAccountsClient(device) {
       email: this._email,
       verified: this._verified,
     });
+  };
+
+  this.accountKeys = function(keyFetchToken) {
+    Assert.ok(keyFetchToken, "must be called with a key-fetch-token");
+    // ideally we'd check the verification status here to more closely simulate
+    // the server, but `this._verified` is a test-only construct and doesn't
+    // update when the user changes verification status.
+    Assert.ok(!this._deletedOnServer, "this test thinks the acct is deleted!");
+    return {
+      kA: "test-ka",
+      wrapKB: "X".repeat(32),
+    };
   };
 
   this.accountStatus = function(uid) {
@@ -124,7 +137,7 @@ async function MockFxAccounts(credentials, device = {}) {
       storage.initialize(creds);
       return new AccountState(storage);
     },
-    fxAccountsClient: new MockFxAccountsClient(device),
+    fxAccountsClient: new MockFxAccountsClient(device, credentials),
     fxaPushService: {
       registerPushEndpoint() {
         return new Promise(resolve => {
@@ -151,6 +164,7 @@ async function MockFxAccounts(credentials, device = {}) {
     device: {
       DEVICE_REGISTRATION_VERSION,
     },
+    VERIFICATION_POLL_TIMEOUT_INITIAL: 1,
   });
   await fxa._internal.setSignedInUser(credentials);
   Services.prefs.setStringPref(
@@ -221,6 +235,7 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
 
   Assert.equal(data.device.id, "newly-generated device id");
   Assert.equal(data.device.registrationVersion, DEVICE_REGISTRATION_VERSION);
+  await fxa.signOut(true);
 });
 
 add_task(async function test_updateDeviceRegistration_with_existing_device() {
@@ -283,6 +298,7 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
 
   Assert.equal(data.device.id, deviceId);
   Assert.equal(data.device.registrationVersion, DEVICE_REGISTRATION_VERSION);
+  await fxa.signOut(true);
 });
 
 add_task(
@@ -352,6 +368,7 @@ add_task(
     const data = await state.getUserAccountData();
 
     Assert.equal(null, data.device);
+    await fxa.signOut(true);
   }
 );
 
@@ -443,6 +460,7 @@ add_task(
 
     Assert.equal(data.device.id, conflictingDeviceId);
     Assert.equal(data.device.registrationVersion, null);
+    await fxa.signOut(true);
   }
 );
 
@@ -490,6 +508,7 @@ add_task(
     const data = await state.getUserAccountData();
 
     Assert.equal(null, data.device);
+    await fxa.signOut(true);
   }
 );
 
@@ -519,6 +538,7 @@ add_task(
     Assert.equal(spy.args[0][0].email, credentials.email);
     Assert.equal(null, spy.args[0][0].device);
     Assert.equal(result, "bar");
+    await fxa.signOut(true);
   }
 );
 
@@ -549,6 +569,7 @@ add_task(
     Assert.equal(spy.args[0].length, 1);
     Assert.equal(spy.args[0][0].device.id, "my id");
     Assert.equal(result, "wibble");
+    await fxa.signOut(true);
   }
 );
 
@@ -575,6 +596,7 @@ add_task(
 
     Assert.equal(spy.count, 0);
     Assert.equal(result, "foo's device id");
+    await fxa.signOut(true);
   }
 );
 
@@ -599,8 +621,47 @@ add_task(
     Assert.equal(spy.args[0].length, 1);
     Assert.equal(spy.args[0][0].device.id, "wibble");
     Assert.equal(result, "wibble");
+    await fxa.signOut(true);
   }
 );
+
+add_task(async function test_verification_updates_registration() {
+  const deviceName = "foo";
+
+  const credentials = getTestUser("baz");
+  const fxa = await MockFxAccounts(credentials, {
+    id: "device-id",
+    name: deviceName,
+  });
+
+  // We should already have a device registration, but without send-tab due to
+  // our inability to fetch keys for an unverified users.
+  const state = fxa._internal.currentAccountState;
+  const { device } = await state.getUserAccountData();
+  Assert.equal(device.registeredCommandsKeys.length, 0);
+
+  let updatePromise = new Promise(resolve => {
+    const old_registerOrUpdateDevice = fxa.device._registerOrUpdateDevice.bind(
+      fxa.device
+    );
+    fxa.device._registerOrUpdateDevice = async function(signedInUser) {
+      await old_registerOrUpdateDevice(signedInUser);
+      fxa.device._registerOrUpdateDevice = old_registerOrUpdateDevice;
+      resolve();
+    };
+  });
+
+  fxa._internal.checkEmailStatus = async function(sessionToken) {
+    credentials.verified = true;
+    return credentials;
+  };
+
+  await updatePromise;
+
+  const { device: newDevice } = await state.getUserAccountData();
+  Assert.equal(newDevice.registeredCommandsKeys.length, 1);
+  await fxa.signOut(true);
+});
 
 add_task(async function test_devicelist_pushendpointexpired() {
   const deviceId = "mydeviceid";
@@ -644,6 +705,7 @@ add_task(async function test_devicelist_pushendpointexpired() {
 
   Assert.equal(spy.getDeviceList.count, 1);
   Assert.equal(spy.updateDevice.count, 1);
+  await fxa.signOut(true);
 });
 
 add_task(async function test_refreshDeviceList() {
