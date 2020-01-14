@@ -65,7 +65,7 @@ using js::frontend::IsIdentifier;
  */
 JS_STATIC_ASSERT(sizeof(uint32_t) * CHAR_BIT >= INDEX_LIMIT_LOG2 + 1);
 
-const JSCodeSpec js::CodeSpec[] = {
+const JSCodeSpec js::CodeSpecTable[] = {
 #define MAKE_CODESPEC(op, name, token, length, nuses, ndefs, format) \
   {length, nuses, ndefs, format},
     FOR_EACH_OPCODE(MAKE_CODESPEC)
@@ -86,7 +86,7 @@ static const char* const CodeToken[] = {
  * Array of JS bytecode names used by PC count JSON, DEBUG-only Disassemble
  * and JIT debug spew.
  */
-const char* const js::CodeName[] = {
+const char* const js::CodeNameTable[] = {
 #define OPNAME(op, name, ...) name,
     FOR_EACH_OPCODE(OPNAME)
 #undef OPNAME
@@ -1291,7 +1291,7 @@ static bool DumpJumpOrigins(HandleScript script, jsbytecode* pc,
         break;
     }
 
-    if (!sp->jsprintf("from %s @ %05u", CodeName[*pc],
+    if (!sp->jsprintf("from %s @ %05u", CodeName(JSOp(*pc)),
                       unsigned(script->pcToOffset(pc)))) {
       return false;
     }
@@ -1376,17 +1376,17 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     return true;
   };
 
-  JSOp op = (JSOp)*pc;
-  if (op >= JSOP_LIMIT) {
+  if (*pc >= uint8_t(JSOP_LIMIT)) {
     char numBuf1[12], numBuf2[12];
-    SprintfLiteral(numBuf1, "%d", op);
-    SprintfLiteral(numBuf2, "%d", JSOP_LIMIT);
+    SprintfLiteral(numBuf1, "%d", int(*pc));
+    SprintfLiteral(numBuf2, "%d", int(uint8_t(JSOP_LIMIT)));
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BYTECODE_TOO_BIG, numBuf1, numBuf2);
     return 0;
   }
-  const JSCodeSpec* cs = &CodeSpec[op];
-  const unsigned len = cs->length;
+  JSOp op = JSOp(*pc);
+  const JSCodeSpec& cs = CodeSpec(op);
+  const unsigned len = cs.length;
   if (!sp->jsprintf("%05u:", loc)) {
     return 0;
   }
@@ -1395,12 +1395,12 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       return 0;
     }
   }
-  if (!sp->jsprintf("  %s", CodeName[op])) {
+  if (!sp->jsprintf("  %s", CodeName(op))) {
     return 0;
   }
 
   int i;
-  switch (JOF_TYPE(cs->format)) {
+  switch (JOF_TYPE(cs.format)) {
     case JOF_BYTE:
       break;
 
@@ -1621,7 +1621,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
 
     default: {
       char numBuf[12];
-      SprintfLiteral(numBuf, "%x", cs->format);
+      SprintfLiteral(numBuf, "%x", cs.format);
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_UNKNOWN_FORMAT, numBuf);
       return 0;
@@ -1727,12 +1727,12 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
   JSOp op = (JSOp)*pc;
 
-  if (const char* token = CodeToken[op]) {
+  if (const char* token = CodeToken[uint8_t(op)]) {
     MOZ_ASSERT(defIndex == 0);
-    MOZ_ASSERT(CodeSpec[op].ndefs == 1);
+    MOZ_ASSERT(CodeSpec(op).ndefs == 1);
 
     // Handle simple cases of binary and unary operators.
-    switch (CodeSpec[op].nuses) {
+    switch (CodeSpec(op).nuses) {
       case 2: {
         jssrcnote* sn = GetSrcNote(cx, script, pc);
         if (!sn || SN_TYPE(sn) != SRC_ASSIGNOP) {
@@ -2750,7 +2750,7 @@ static bool GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac,
 
     json.property("id", offset);
     json.property("line", range.frontLineNumber());
-    json.property("name", CodeName[op]);
+    json.property("name", CodeName(op));
 
     {
       ExpressionDecompiler ed(cx, script, parser);
@@ -3034,7 +3034,7 @@ bool js::GetSuccessorBytecodes(JSScript* script, jsbytecode* pc,
     }
   }
 
-  if (CodeSpec[op].type() == JOF_JUMP) {
+  if (CodeSpec(op).type() == JOF_JUMP) {
     if (!successors.append(pc + GET_JUMP_OFFSET(pc))) {
       return false;
     }
