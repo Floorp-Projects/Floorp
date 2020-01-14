@@ -3,6 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/**
+ * This test is mainly to verify UpgradeStorageFrom2_0To2_1 method.
+ */
+
 var testGenerator = testSteps();
 
 function* testSteps() {
@@ -17,6 +21,7 @@ function* testSteps() {
   clear(continueToNextStepSync);
   yield undefined;
 
+  // Storage used by FF 55-56 (storage version 2.0).
   // The profile contains two cache storages:
   // - storage/default/chrome/cache,
   // - storage/default/http+++www.mozilla.org/cache
@@ -31,30 +36,28 @@ function* testSteps() {
   //    "storage/default/http+++www.mozilla.org".
   // 3. Manually create an asmjs folder under the
   //    "storage/default/http+++www.mozilla.org/".
-  installPackage("version2_1upgrade_profile");
+  installPackage("version2_0_profile");
 
-  info("Checking padding file before upgrade (QM version 2.0)");
+  info("Checking padding files before upgrade (storage version 2.0)");
 
   for (let origin of origins) {
     let paddingFile = getRelativeFile(origin + paddingFilePath);
-
     let exists = paddingFile.exists();
     ok(!exists, "Padding file doesn't exist");
   }
 
   info("Initializing");
 
-  // Initialize QuotaManager to trigger upgrade the QM to version 2.1
+  // Initialize to trigger storage upgrade from version 2.0.
   let request = init(continueToNextStepSync);
   yield undefined;
 
   ok(request.resultCode == NS_OK, "Initialization succeeded");
 
-  info("Checking padding files after upgrade (QM version 2.1)");
+  info("Checking padding files after upgrade");
 
   for (let origin of origins) {
     let paddingFile = getRelativeFile(origin + paddingFilePath);
-
     let exists = paddingFile.exists();
     ok(exists, "Padding file does exist");
 
