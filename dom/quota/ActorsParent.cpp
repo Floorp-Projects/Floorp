@@ -1974,6 +1974,7 @@ struct StorageOperationBase::OriginProps {
   nsCString mSuffix;
   nsCString mGroup;
   nsCString mOrigin;
+  nsCString mOriginalSuffix;
 
   Type mType;
   bool mNeedsRestore;
@@ -2028,7 +2029,6 @@ class MOZ_STACK_CLASS OriginParser final {
   };
 
   const nsCString mOrigin;
-  const OriginAttributes mOriginAttributes;
   Tokenizer mTokenizer;
 
   nsCString mScheme;
@@ -2049,10 +2049,8 @@ class MOZ_STACK_CLASS OriginParser final {
   uint8_t mIPGroup;
 
  public:
-  OriginParser(const nsACString& aOrigin,
-               const OriginAttributes& aOriginAttributes)
+  explicit OriginParser(const nsACString& aOrigin)
       : mOrigin(aOrigin),
-        mOriginAttributes(aOriginAttributes),
         mTokenizer(aOrigin, '+'),
         mPort(),
         mSchemeType(eNone),
@@ -2065,9 +2063,10 @@ class MOZ_STACK_CLASS OriginParser final {
         mIPGroup(0) {}
 
   static ResultType ParseOrigin(const nsACString& aOrigin, nsCString& aSpec,
-                                OriginAttributes* aAttrs);
+                                OriginAttributes* aAttrs,
+                                nsCString& aOriginalSuffix);
 
-  ResultType Parse(nsACString& aSpec, OriginAttributes* aAttrs);
+  ResultType Parse(nsACString& aSpec);
 
  private:
   void HandleScheme(const nsDependentCSubstring& aToken);
@@ -7441,8 +7440,9 @@ bool QuotaManager::ParseOrigin(const nsACString& aOrigin, nsCString& aSpec,
   nsCString sanitizedOrigin(aOrigin);
   SanitizeOriginString(sanitizedOrigin);
 
+  nsCString originalSuffix;
   OriginParser::ResultType result =
-      OriginParser::ParseOrigin(sanitizedOrigin, aSpec, aAttrs);
+      OriginParser::ParseOrigin(sanitizedOrigin, aSpec, aAttrs, originalSuffix);
   if (NS_WARN_IF(result != OriginParser::ValidOrigin)) {
     return false;
   }
@@ -7761,8 +7761,9 @@ bool QuotaManager::IsSanitizedOriginValid(const nsACString& aSanitizedOrigin) {
   } else {
     nsCString spec;
     OriginAttributes attrs;
-    OriginParser::ResultType result =
-        OriginParser::ParseOrigin(aSanitizedOrigin, spec, &attrs);
+    nsCString originalSuffix;
+    OriginParser::ResultType result = OriginParser::ParseOrigin(
+        aSanitizedOrigin, spec, &attrs, originalSuffix);
 
     valid = result == OriginParser::ValidOrigin;
     entry.OrInsert([valid]() { return valid; });
@@ -10513,8 +10514,9 @@ nsresult StorageOperationBase::OriginProps::Init(nsIFile* aDirectory) {
 
   nsCString spec;
   OriginAttributes attrs;
-  OriginParser::ResultType result =
-      OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName), spec, &attrs);
+  nsCString originalSuffix;
+  OriginParser::ResultType result = OriginParser::ParseOrigin(
+      NS_ConvertUTF16toUTF8(leafName), spec, &attrs, originalSuffix);
   if (NS_WARN_IF(result == OriginParser::InvalidOrigin)) {
     mType = OriginProps::eInvalid;
     return NS_ERROR_FAILURE;
@@ -10524,6 +10526,7 @@ nsresult StorageOperationBase::OriginProps::Init(nsIFile* aDirectory) {
   mLeafName = leafName;
   mSpec = spec;
   mAttrs = attrs;
+  mOriginalSuffix = originalSuffix;
   if (result == OriginParser::ObsoleteOrigin) {
     mType = eObsolete;
   } else if (mSpec.EqualsLiteral(kChromeOrigin)) {
@@ -10537,9 +10540,19 @@ nsresult StorageOperationBase::OriginProps::Init(nsIFile* aDirectory) {
 
 // static
 auto OriginParser::ParseOrigin(const nsACString& aOrigin, nsCString& aSpec,
-                               OriginAttributes* aAttrs) -> ResultType {
+                               OriginAttributes* aAttrs,
+                               nsCString& aOriginalSuffix) -> ResultType {
   MOZ_ASSERT(!aOrigin.IsEmpty());
   MOZ_ASSERT(aAttrs);
+
+  nsCString origin(aOrigin);
+  int32_t pos = origin.RFindChar('^');
+
+  if (pos == kNotFound) {
+    aOriginalSuffix.Truncate();
+  } else {
+    aOriginalSuffix = Substring(origin, pos);
+  }
 
   OriginAttributes originAttributes;
 
@@ -10549,14 +10562,13 @@ auto OriginParser::ParseOrigin(const nsACString& aOrigin, nsCString& aSpec,
     return InvalidOrigin;
   }
 
-  OriginParser parser(originNoSuffix, originAttributes);
-  return parser.Parse(aSpec, aAttrs);
+  OriginParser parser(originNoSuffix);
+
+  *aAttrs = originAttributes;
+  return parser.Parse(aSpec);
 }
 
-auto OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
-    -> ResultType {
-  MOZ_ASSERT(aAttrs);
-
+auto OriginParser::Parse(nsACString& aSpec) -> ResultType {
   while (mTokenizer.hasMoreTokens()) {
     const nsDependentCSubstring& token = mTokenizer.nextToken();
 
@@ -10591,7 +10603,6 @@ auto OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
   // For IPv6 URL, it should at least have three groups.
   MOZ_ASSERT_IF(mIPGroup > 0, mIPGroup >= 3);
 
-  *aAttrs = mOriginAttributes;
   nsAutoCString spec(mScheme);
 
   if (mSchemeType == eFile) {
@@ -11496,6 +11507,45 @@ nsresult UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveMorgueDirectory(
 nsresult UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveAppsData(
     const OriginProps& aOriginProps, bool* aRemoved) {
   AssertIsOnIOThread();
+
+  // TODO: This method was empty for some time due to accidental changes done
+  //       in bug 1320404. This led to renaming of origin directories like:
+  //         https+++developer.cdn.mozilla.net^appId=1007&inBrowser=1
+  //       to:
+  //         https+++developer.cdn.mozilla.net^inBrowser=1
+  //       instead of just removing them.
+
+  class MOZ_STACK_CLASS ParamsIterator final
+      : public URLParams::ForEachIterator {
+   public:
+    bool URLParamsIterator(const nsAString& aName,
+                           const nsAString& aValue) override {
+      if (aName.EqualsLiteral("appId")) {
+        return false;
+      }
+
+      return true;
+    }
+  };
+
+  const nsCString& originalSuffix = aOriginProps.mOriginalSuffix;
+  if (!originalSuffix.IsEmpty()) {
+    MOZ_ASSERT(originalSuffix[0] == '^');
+
+    ParamsIterator iterator;
+    if (!URLParams::Parse(
+            Substring(originalSuffix, 1, originalSuffix.Length() - 1),
+            iterator)) {
+      nsresult rv = RemoveObsoleteOrigin(aOriginProps);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      *aRemoved = true;
+      return NS_OK;
+    }
+  }
+
   *aRemoved = false;
   return NS_OK;
 }
