@@ -1499,7 +1499,7 @@ class CallInfo {
   void popCallStack(MBasicBlock* current) { current->popn(numFormals()); }
 
   AbortReasonOr<Ok> pushCallStack(MIRGenerator* mir, MBasicBlock* current) {
-    // Ensure sufficient space in the slots: needed for inlining from FUNAPPLY.
+    // Ensure sufficient space in the slots: needed for inlining from FunApply.
     if (apply_) {
       uint32_t depth = current->stackDepth() + numFormals();
       if (depth > current->nslots()) {

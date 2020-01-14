@@ -201,7 +201,7 @@ bool GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
  * - While a generator call evaluates default argument values and performs
  *   destructuring, which occurs before the generator object is created.
  *
- * - Between the `GENERATOR` instruction and the `SETALIASEDVAR .generator`
+ * - Between the `Generator` instruction and the `SetAliasedVar .generator`
  *   instruction, at which point the generator object does exist, but is held
  *   only on the stack, and not the `.generator` pseudo-variable this function
  *   consults.

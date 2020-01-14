@@ -3416,7 +3416,7 @@ void JitScript::MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
   }
 
   // In derived class constructors (including nested arrows/eval)
-  // GETALIASEDVAR can return the magic TDZ value.
+  // GetAliasedVar can return the magic TDZ value.
   MOZ_ASSERT(rval.whyMagic() == JS_UNINITIALIZED_LEXICAL);
   MOZ_ASSERT(script->function() || script->isForEval());
   MOZ_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_CHECKTHIS ||
@@ -4049,14 +4049,14 @@ bool TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx,
     // If not finished, number of properties that have been added.
     uint32_t numProperties = 0;
 
-    // Whether the current SETPROP is within an inner frame which has
+    // Whether the current SetProp is within an inner frame which has
     // finished entirely.
     bool pastProperty = false;
 
     // Index in pcOffsets of the outermost frame.
     int callDepth = pcOffsets.length() - 1;
 
-    // Index in pcOffsets of the frame currently being checked for a SETPROP.
+    // Index in pcOffsets of the frame currently being checked for a SetProp.
     int setpropDepth = callDepth;
 
     size_t i;

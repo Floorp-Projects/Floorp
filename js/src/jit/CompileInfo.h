@@ -203,8 +203,8 @@ class CompileInfo {
     nargs_ = fun ? fun->nargs() : 0;
     nlocals_ = script->nfixed();
 
-    // An extra slot is needed for global scopes because INITGLEXICAL (stack
-    // depth 1) is compiled as a SETPROP (stack depth 2) on the global lexical
+    // An extra slot is needed for global scopes because InitGLexical (stack
+    // depth 1) is compiled as a SetProp (stack depth 2) on the global lexical
     // scope.
     uint32_t extra = script->isGlobalCode() ? 1 : 0;
     nstack_ = std::max<unsigned>(script->nslots() - script->nfixed(),

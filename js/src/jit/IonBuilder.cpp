@@ -1798,9 +1798,9 @@ AbortReasonOr<Ok> IonBuilder::visitGoto(jsbytecode* target) {
 AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
   // All loops have the following bytecode structure:
   //
-  //    LOOPHEAD
+  //    LoopHead
   //    ...
-  //    IFNE/GOTO to LOOPHEAD
+  //    IfNe/Goto to LoopHead
 
   MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
 
@@ -2098,7 +2098,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOP_POP: {
       MDefinition* def = current->pop();
 
-      // POP opcodes frequently appear where values are killed, e.g. after
+      // Pop opcodes frequently appear where values are killed, e.g. after
       // SET* opcodes. Place a resume point afterwards to avoid capturing
       // the dead value in later snapshots, except in places where that
       // resume point is obviously unnecessary.
@@ -2444,7 +2444,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
         pushConstant(UndefinedValue());
         return Ok();
       }
-      // Fallthrough to IMPLICITTHIS in non-syntactic scope case
+      // Fallthrough to ImplicitThis in non-syntactic scope case
       [[fallthrough]];
     case JSOP_IMPLICITTHIS: {
       PropertyName* name = info().getAtom(pc)->asPropertyName();
@@ -7491,7 +7491,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_initprop(PropertyName* name) {
     MOZ_ASSERT(emitted == true);
   }
 
-  // SETPROP pushed the value, instead of the object. Fix this on the stack,
+  // SetProp pushed the value, instead of the object. Fix this on the stack,
   // and check the most recent resume point to see if it needs updating too.
   current->pop();
   current->push(obj);
@@ -9191,8 +9191,8 @@ AbortReasonOr<Ok> IonBuilder::pushDerivedTypedObject(
 
 AbortReasonOr<Ok> IonBuilder::getElemTryGetProp(bool* emitted, MDefinition* obj,
                                                 MDefinition* index) {
-  // If index is a constant string or symbol, try to optimize this GETELEM
-  // as a GETPROP.
+  // If index is a constant string or symbol, try to optimize this GetElem
+  // as a GetProp.
 
   MOZ_ASSERT(*emitted == false);
 
@@ -10228,7 +10228,7 @@ AbortReasonOr<Ok> IonBuilder::initOrSetElemDense(
       return Ok();
     }
 
-    // Don't optimize INITELEM (DefineProperty) on potentially non-extensible
+    // Don't optimize InitElem (DefineProperty) on potentially non-extensible
     // objects: when the array is sealed, we have to throw an exception.
     if (IsPropertyInitOp(JSOp(*pc))) {
       return Ok();
@@ -10280,7 +10280,7 @@ AbortReasonOr<Ok> IonBuilder::initOrSetElemDense(
       MOZ_CRASH("Unknown double conversion");
   }
 
-  // Use MStoreElementHole if this SETELEM has written to out-of-bounds
+  // Use MStoreElementHole if this SetElem has written to out-of-bounds
   // indexes in the past. Otherwise, use MStoreElement so that we can hoist
   // the initialized length and bounds check.
   // If an object may have been made non-extensible, no previous expectations
@@ -11204,14 +11204,14 @@ MDefinition* IonBuilder::maybeUnboxForPropertyAccess(MDefinition* def) {
   //
   //      a.foo()
   // ================= Compiles to ================
-  //      LOAD "a"
-  //      DUP
-  //      CALLPROP "foo"
-  //      SWAP
-  //      CALL 0
+  //      GetLocal "a" (or similar)
+  //      Dup
+  //      CallProp "foo"
+  //      Swap
+  //      Call 0
   //
   // If we have better type information to unbox the first copy going into
-  // the CALLPROP operation, we can replace the duplicated copy on the
+  // the CallProp operation, we can replace the duplicated copy on the
   // stack as well.
   if (JSOp(*pc) == JSOP_CALLPROP || JSOp(*pc) == JSOP_CALLELEM) {
     uint32_t idx = current->stackDepth() - 1;
@@ -11373,7 +11373,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_getprop(PropertyName* name) {
 }
 
 AbortReasonOr<Ok> IonBuilder::improveThisTypesForCall() {
-  // After a CALLPROP (or CALLELEM) for obj.prop(), the this-value and callee
+  // After a CallProp (or CallElem) for obj.prop(), the this-value and callee
   // for the call are on top of the stack:
   //
   // ... [this: obj], [callee: obj.prop]
@@ -12944,7 +12944,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
   // To handle this case, we should spill the arguments to the space where
   // actual arguments are stored. The tricky part is that if we add a MIR
   // to wrap the spilling action, we don't want the spilling to be
-  // captured by the GETARG and by the resume point, only by
+  // captured by the GetArg and by the resume point, only by
   // MGetFrameArgument.
   MOZ_ASSERT(script()->jitScript()->modifiesArguments());
   MDefinition* val = current->peek(-1);
@@ -12971,8 +12971,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
   }
 
   // Otherwise, if a magic arguments is in use, and it aliases formals, and
-  // there exist arguments[...] GETELEM expressions in the script, then
-  // SetFrameArgument must be used. If no arguments[...] GETELEM expressions are
+  // there exist arguments[...] GetElem expressions in the script, then
+  // SetFrameArgument must be used. If no arguments[...] GetElem expressions are
   // in the script, and an argsobj is not required, then it means that any
   // aliased argument set can never be observed, and the frame does not actually
   // need to be updated with the new arg value.

@@ -34,7 +34,7 @@ bool WhileEmitter::emitCond(const Maybe<uint32_t>& whilePos,
     if (!bce_->updateSourceCoordNotes(*whilePos)) {
       return false;
     }
-    // Emit a NOP to ensure the source position is not part of the loop.
+    // Emit a Nop to ensure the source position is not part of the loop.
     if (!bce_->emit1(JSOP_NOP)) {
       return false;
     }

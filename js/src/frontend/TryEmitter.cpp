@@ -62,7 +62,7 @@ bool TryEmitter::emitTryEnd() {
   MOZ_ASSERT(state_ == State::Try);
   MOZ_ASSERT(depth_ == bce_->bytecodeSection().stackDepth());
 
-  // GOSUB to finally, if present.
+  // Gosub to finally, if present.
   if (hasFinally() && controlInfo_) {
     if (!bce_->emitGoSub(&controlInfo_->gosubs)) {
       return false;

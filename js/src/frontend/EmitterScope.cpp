@@ -920,8 +920,8 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
         return false;
       }
 
-      // Define the name in the prologue. Do not emit DEFVAR for
-      // functions that we'll emit DEFFUN for.
+      // Define the name in the prologue. Do not emit DefVar for
+      // functions that we'll emit DefFun for.
       if (bi.isTopLevelFunction()) {
         continue;
       }
@@ -1000,7 +1000,7 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
       return false;
     }
   } else {
-    // Resolve binding names and emit DEFVAR prologue ops if we don't have
+    // Resolve binding names and emit DefVar prologue ops if we don't have
     // an environment (i.e., a sloppy eval not in a parameter expression).
     // Eval scripts always have their own lexical scope, but non-strict
     // scopes may introduce 'var' bindings to the nearest var scope.
