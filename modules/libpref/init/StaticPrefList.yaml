@@ -977,7 +977,7 @@
 - name: browser.tabs.remote.useCORP
   type: bool
 #if !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false # Blocked by DocumentChannel, see Bug 1589982.
 #endif
