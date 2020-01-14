@@ -7,10 +7,8 @@
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Helpers injected as props by extension-sidebar.js and used by the
-// ObjectInspector component (which is part of the ObjectValueGripView).
+// ObjectInspector component (which is part of the ExpressionResultView).
 exports.serviceContainer = {
-  createObjectFront: PropTypes.func.isRequired,
-  releaseActor: PropTypes.func.isRequired,
   highlightDomElement: PropTypes.func.isRequired,
   unHighlightDomElement: PropTypes.func.isRequired,
   openNodeInInspector: PropTypes.func.isRequired,

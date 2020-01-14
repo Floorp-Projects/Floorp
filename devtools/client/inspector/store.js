@@ -7,16 +7,9 @@
 const createStore = require("devtools/client/shared/redux/create-store");
 const reducers = require("devtools/client/inspector/reducers");
 
-module.exports = services =>
+module.exports = () =>
   createStore(reducers, {
     // Enable log middleware in tests
     shouldLog: true,
-    thunkOptions: {
-      // Needed for the ObjectInspector
-      client: {
-        createObjectFront: services && services.createObjectFront,
-        createLongStringFront: services && services.createLongStringFront,
-        releaseActor: services && services.releaseActor,
-      },
-    },
+    thunkOptions: {},
   });

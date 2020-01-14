@@ -380,10 +380,10 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
     // Set by setObject if the sidebar has not been created yet.
     this._initializeSidebar = null;
 
-    // Set by _updateLastObjectValueGrip to keep track of the last
+    // Set by _updateLastExpressionResult to keep track of the last
     // object value grip (to release the previous selected actor
     // on the remote debugging server when the actor changes).
-    this._lastObjectValueGrip = null;
+    this._lastExpressionResult = null;
 
     this.toolbox.registerInspectorExtensionSidebar(this.id, {
       title: panelOptions.title,
@@ -415,7 +415,7 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
     }
 
     // Release the last selected actor on the remote debugging server.
-    this._updateLastObjectValueGrip(null);
+    this._updateLastExpressionResult(null);
 
     this.toolbox.off(
       `extension-sidebar-created-${this.id}`,
@@ -514,7 +514,7 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
   setObject(object, rootTitle) {
     delete this.panelOptions.url;
 
-    this._updateLastObjectValueGrip(null);
+    this._updateLastExpressionResult(null);
 
     // Nest the object inside an object, as the value of the `rootTitle` property.
     if (rootTitle) {
@@ -533,40 +533,36 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
     this._lazySidebarInit = cb;
   }
 
-  setObjectValueGrip(objectValueGrip, rootTitle) {
+  setExpressionResult(expressionResult, rootTitle) {
     delete this.panelOptions.url;
 
-    this._updateLastObjectValueGrip(objectValueGrip);
+    this._updateLastExpressionResult(expressionResult);
 
     if (this.extensionSidebar) {
-      this.extensionSidebar.setObjectValueGrip(objectValueGrip, rootTitle);
+      this.extensionSidebar.setExpressionResult(expressionResult, rootTitle);
     } else {
-      // Defer the sidebar.setObjectValueGrip call.
+      // Defer the sidebar.setExpressionResult call.
       this._setLazySidebarInit(() => {
-        this.extensionSidebar.setObjectValueGrip(objectValueGrip, rootTitle);
+        this.extensionSidebar.setExpressionResult(expressionResult, rootTitle);
       });
     }
   }
 
-  _updateLastObjectValueGrip(newObjectValueGrip = null) {
-    const { _lastObjectValueGrip } = this;
+  _updateLastExpressionResult(newExpressionResult = null) {
+    const { _lastExpressionResult } = this;
 
-    this._lastObjectValueGrip = newObjectValueGrip;
+    this._lastExpressionResult = newExpressionResult;
 
-    const oldActor = _lastObjectValueGrip && _lastObjectValueGrip.actor;
-    const newActor = newObjectValueGrip && newObjectValueGrip.actor;
-    const client = this.toolbox.target.client;
+    const oldActor = _lastExpressionResult && _lastExpressionResult.actorID;
+    const newActor = newExpressionResult && newExpressionResult.actorID;
 
     // Release the previously active actor on the remote debugging server.
-    if (oldActor && oldActor !== newActor) {
-      const objFront = client.getFrontByID(oldActor);
-      if (objFront) {
-        objFront.release();
-        return;
-      }
-
-      // In case there's no object front, use the client's release method.
-      client.release(oldActor).catch(() => {});
+    if (
+      oldActor &&
+      oldActor !== newActor &&
+      typeof _lastExpressionResult.release === "function"
+    ) {
+      _lastExpressionResult.release();
     }
   }
 }
@@ -658,16 +654,16 @@ this.devtools_panels = class extends ExtensionAPI {
 
                 const front = await waitForInspectedWindowFront;
                 const toolboxEvalOptions = await getToolboxEvalOptions(context);
-                const evalOptions = Object.assign(
-                  {
-                    evalResultAsGrip: true,
-                  },
-                  toolboxEvalOptions
+
+                const consoleFront = await context.devToolsToolbox.target.getFront(
+                  "console"
                 );
+                toolboxEvalOptions.consoleFront = consoleFront;
+
                 const evalResult = await front.eval(
                   callerInfo,
                   evalExpression,
-                  evalOptions
+                  toolboxEvalOptions
                 );
 
                 let jsonObject;
@@ -678,10 +674,7 @@ this.devtools_panels = class extends ExtensionAPI {
                   return sidebar.setObject(jsonObject, rootTitle);
                 }
 
-                return sidebar.setObjectValueGrip(
-                  evalResult.valueGrip,
-                  rootTitle
-                );
+                return sidebar.setExpressionResult(evalResult, rootTitle);
               },
             },
           },

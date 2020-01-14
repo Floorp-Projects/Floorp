@@ -11,8 +11,8 @@ createEnum(
     // Update the extension sidebar with an object TreeView.
     "EXTENSION_SIDEBAR_OBJECT_TREEVIEW_UPDATE",
 
-    // Update the extension sidebar with an object value grip preview.
-    "EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE",
+    // Update the extension sidebar with an expression result.
+    "EXTENSION_SIDEBAR_EXPRESSION_RESULT_VIEW_UPDATE",
 
     // Switch the extension sidebar into an extension page container.
     "EXTENSION_SIDEBAR_PAGE_UPDATE",
