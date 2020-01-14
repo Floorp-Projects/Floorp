@@ -46,6 +46,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.TypedArray;
@@ -2083,5 +2084,13 @@ public class GeckoAppShell {
 
         locales[0] = getLanguageTag(locale);
         return locales;
+    }
+
+    @WrapForJNI
+    public static String getAppName() {
+        final Context context = getApplicationContext();
+        final ApplicationInfo info = context.getApplicationInfo();
+        final int id = info.labelRes;
+        return id == 0 ? info.nonLocalizedLabel.toString() : context.getString(id);
     }
 }
