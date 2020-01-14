@@ -22,6 +22,10 @@
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.input_events.beforeinput.enabled", true]],
+  });
+
   document.execCommand("enableAbsolutePositionEditing", false, true);
   ok(document.queryCommandState("enableAbsolutePositionEditing"),
      "Absolute positioned element editor should be enabled by the call of execCommand");
@@ -72,26 +76,51 @@ SimpleTest.waitForFocus(async function() {
       // XXX Perhaps, we need to add border-top-width here if you add new test to have thick border.
       const kPositionerY = -7;
 
+      let beforeInputEventExpected = true;
+      let beforeInputFired = false;
       let inputEventExpected = true;
-      function onInput(aEvent) {
-        if (!inputEventExpected) {
-          ok(false, "\"input\" event shouldn't be fired after stopping resizing");
+      let inputFired = false;
+      function onBeforeInput(aEvent) {
+        beforeInputFired = true;
+        aEvent.preventDefault();  // For making sure this preventDefault() call does not cancel the operation.
+        if (!beforeInputEventExpected) {
+          ok(false, '"beforeinput" event should not be fired after stopping resizing');
           return;
         }
         ok(aEvent instanceof InputEvent,
-           '"input" event should be dispatched with InputEvent interface');
+           '"beforeinput" event for position changing of absolute position should be dispatched with InputEvent interface');
         is(aEvent.cancelable, false,
-           '"input" event should be never cancelable');
+           '"beforeinput" event for position changing of absolute position container should not be cancelable');
         is(aEvent.bubbles, true,
-           '"input" event should always bubble');
+           '"beforeinput" event for position changing of absolute position should always bubble');
         is(aEvent.inputType, "",
-           "inputType should be empty string when an element is moved");
+           'inputType of "beforeinput" event for position changing of absolute position should be empty string');
         is(aEvent.data, null,
-           "data should be null when an element is moved");
+           'data of "beforeinput" event for position changing of absolute position should be null');
         is(aEvent.dataTransfer, null,
-           "dataTransfer should be null when an element is moved");
+           'dataTransfer of "beforeinput" event for position changing of absolute position should be null');
+      }
+      function onInput(aEvent) {
+        inputFired = true;
+        if (!inputEventExpected) {
+          ok(false, '"input" event should not be fired after stopping resizing');
+          return;
+        }
+        ok(aEvent instanceof InputEvent,
+           '"input" event for position changing of absolute position container should be dispatched with InputEvent interface');
+        is(aEvent.cancelable, false,
+           '"input" event for position changing of absolute position container should be never cancelable');
+        is(aEvent.bubbles, true,
+           '"input" event for position changing of absolute position should always bubble');
+        is(aEvent.inputType, "",
+           'inputType of "input" event for position changing of absolute position should be empty string');
+        is(aEvent.data, null,
+           'data of "input" event for position changing of absolute position should be null');
+        is(aEvent.dataTransfer, null,
+           'dataTransfer of "input" event for position changing of absolute position should be null');
       }
 
+      content.addEventListener("beforeinput", onBeforeInput);
       content.addEventListener("input", onInput);
 
       // Click on the positioner.
@@ -101,6 +130,10 @@ SimpleTest.waitForFocus(async function() {
       // Release the mouse button
       synthesizeMouse(target, kPositionerX + aDeltaX, kPositionerY + aDeltaY, {type: "mouseup"});
 
+      todo(beforeInputFired, `${description}"beforeinput" event should be fired by moving absolute position container`);
+      ok(inputFired, `${description}"input" event should be fired by moving absolute position container`);
+
+      beforeInputEventExpected = false;
       inputEventExpected = false;
 
       // Move the mouse delta more pixels to the same direction to make sure that the
@@ -109,6 +142,7 @@ SimpleTest.waitForFocus(async function() {
       // Click outside of the image to hide the positioner.
       synthesizeMouseAtCenter(outOfEditor, {});
 
+      content.removeEventListener("beforeinput", onBeforeInput);
       content.removeEventListener("input", onInput);
 
       // Get the new dimensions for the absolute positioned element.

@@ -60,13 +60,19 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         this._controller.input.completeDefaultIndex = test.completeDefaultIndex;
       }
 
+      let beforeInputEvents = [];
       let inputEvents = [];
+      function onBeforeInput(aEvent) {
+        beforeInputEvents.push(aEvent);
+      }
       function onInput(aEvent) {
         inputEvents.push(aEvent);
       }
+      this._target.addEventListener("beforeinput", onBeforeInput);
       this._target.addEventListener("input", onInput);
 
       if (test.execute(this._window, this._target) === false) {
+        this._target.removeEventListener("beforeinput", onBeforeInput);
         this._target.removeEventListener("input", onInput);
         continue;
       }
@@ -77,13 +83,14 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
           Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH
         );
       });
+      this._target.removeEventListener("beforeinput", onBeforeInput);
       this._target.removeEventListener("input", onInput);
-      this._checkResult(test, inputEvents);
+      this._checkResult(test, beforeInputEvents, inputEvents);
     }
     this._controller.input.completeDefaultIndex = this._DefaultCompleteDefaultIndex;
   },
 
-  _checkResult(aTest, aInputEvents) {
+  _checkResult(aTest, aBeforeInputEvents, aInputEvents) {
     this._is(
       this._getTargetValue(),
       aTest.value,
@@ -104,6 +111,25 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
       Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH,
       this._description + ", " + aTest.description + ": status"
     );
+    if (aTest.inputEvents.length) {
+      this._todo_is(
+        aBeforeInputEvents.length,
+        aTest.inputEvents.length,
+        this._description +
+          ", " +
+          aTest.description +
+          ": number of beforeinput events wrong"
+      );
+    } else {
+      this._is(
+        aBeforeInputEvents.length,
+        aTest.inputEvents.length,
+        this._description +
+          ", " +
+          aTest.description +
+          ": number of beforeinput events wrong"
+      );
+    }
     this._is(
       aInputEvents.length,
       aTest.inputEvents.length,
@@ -112,66 +138,64 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         aTest.description +
         ": number of input events wrong"
     );
-    for (let i = 0; i < aInputEvents.length; i++) {
-      if (aTest.inputEvents[i] === undefined) {
+    for (let events of [aBeforeInputEvents, aInputEvents]) {
+      for (let i = 0; i < events.length; i++) {
+        if (aTest.inputEvents[i] === undefined) {
+          this._is(
+            true,
+            false,
+            this._description +
+              ", " +
+              aTest.description +
+              ': "beforeinput" and "input" event shouldn\'t be dispatched anymore'
+          );
+          return;
+        }
         this._is(
+          events[i] instanceof this._window.InputEvent,
           true,
-          false,
-          this._description +
-            ", " +
-            aTest.description +
-            ': "input" event shouldn\'t be dispatched anymore'
+          `${this._description}, ${aTest.description}: "${
+            events[i].type
+          }" event should be dispatched with InputEvent interface`
         );
-        return;
+        this._is(
+          events[i].cancelable,
+          events[i].type === "beforeinput",
+          `${this._description}, ${aTest.description}: "${
+            events[i].type
+          }" event should ${
+            events[i].type === "beforeinput" ? "be" : "be never"
+          } cancelable`
+        );
+        this._is(
+          events[i].bubbles,
+          true,
+          `${this._description}, ${aTest.description}: "${
+            events[i].type
+          }" event should always bubble`
+        );
+        this._is(
+          events[i].inputType,
+          aTest.inputEvents[i].inputType,
+          `${this._description}, ${aTest.description}: inputType of "${
+            events[i].type
+          }" event should be "${aTest.inputEvents[i].inputType}"`
+        );
+        this._is(
+          events[i].data,
+          aTest.inputEvents[i].data,
+          `${this._description}, ${aTest.description}: data of "${
+            events[i].type
+          }" event should be ${aTest.inputEvents[i].data}`
+        );
+        this._is(
+          events[i].dataTransfer,
+          null,
+          `${this._description}, ${aTest.description}: dataTransfer of "${
+            events[i].type
+          }" event should be null`
+        );
       }
-      this._is(
-        aInputEvents[i] instanceof this._window.InputEvent,
-        true,
-        this._description +
-          ", " +
-          aTest.description +
-          ': "input" event should be dispatched with InputEvent interface'
-      );
-      this._is(
-        aInputEvents[i].cancelable,
-        false,
-        this._description +
-          ", " +
-          aTest.description +
-          ': "input" event should be never cancelable'
-      );
-      this._is(
-        aInputEvents[i].bubbles,
-        true,
-        this._description +
-          ", " +
-          aTest.description +
-          ': "input" event should always bubble'
-      );
-      this._is(
-        aInputEvents[i].inputType,
-        aTest.inputEvents[i].inputType,
-        this._description +
-          ", " +
-          aTest.description +
-          ': inputType of "input" event should be "${aTest.inputEvents[i].inputType}"'
-      );
-      this._is(
-        aInputEvents[i].data,
-        aTest.inputEvents[i].data,
-        this._description +
-          ", " +
-          aTest.description +
-          ': data of "input" event should be ${aTest.inputEvents[i].data}'
-      );
-      this._is(
-        aInputEvents[i].dataTransfer,
-        null,
-        this._description +
-          ", " +
-          aTest.description +
-          ': dataTransfer of "input" event should be null'
-      );
     }
   },
 
