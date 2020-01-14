@@ -37,10 +37,16 @@ async function promiseForChange(mediaQuery) {
 }
 
 add_task(async () => {
+  const initiallyMatches =
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   SpecialPowers.DOMWindowUtils.setPrefersReducedMotionOverrideForTest(false);
 
-  // Need to wait a frame since MediaQuery changes are asynchronously processed.
-  await waitForFrame();
+  if (initiallyMatches) {
+    await promiseForChange('(prefers-reduced-motion: reduce)');
+  } else {
+    await waitForFrame();
+  }
 
   ok(!window.matchMedia('(prefers-reduced-motion: reduce)').matches,
      'Does not matches prefers-reduced-motion: reduced) when the system sets ' +
