@@ -7,7 +7,7 @@ assert_subprinter_registered('SpiderMonkey', 'js::InterpreterRegs')
 
 run_fragment('Interpreter.Regs')
 
-assert_pretty('regs', '{ fp_ = , sp = fp_.slots() + 2, pc =  (JSOP_TRUE) }')
+assert_pretty('regs', '{ fp_ = , sp = fp_.slots() + 2, pc =  (JSOp::True) }')
 
 run_fragment('Interpreter.AbstractFramePtr')
 
