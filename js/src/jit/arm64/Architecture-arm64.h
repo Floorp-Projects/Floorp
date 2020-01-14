@@ -494,6 +494,7 @@ struct FloatRegister {
   bool isSingle() const { return k_ == FloatRegisters::Single; }
   bool isDouble() const { return k_ == FloatRegisters::Double; }
   bool isSimd128() const { return false; }
+  bool isInvalid() const { return code_ == FloatRegisters::Code(-1); }
 
   FloatRegister asSingle() const {
     return FloatRegister(code_, FloatRegisters::Single);
