@@ -197,8 +197,8 @@ promise_test(async testCase => {
 
   // Exercise the IndexedDB transaction ordering by executing one with a
   // different scope.
-  const txn3 = db.transaction(['not_books'], 'readwrite');
-  txn3.objectStore('not_books').put({'title': 'not_title'}, 'key');
+  const txn3 = db.transaction(['not_books'], 'readonly');
+  txn3.objectStore('not_books').getAllKeys();
   txn3.oncomplete = function() {
     releaseTxnFunction();
   }
