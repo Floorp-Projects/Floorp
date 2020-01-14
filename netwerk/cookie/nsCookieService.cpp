@@ -2654,8 +2654,16 @@ OpenDBResult nsCookieService::Read() {
 
     if (!hasResult) break;
 
-    // Make sure we haven't already read the data.
-    stmt->GetUTF8String(IDX_BASE_DOMAIN, baseDomain);
+    // IDX_BASE_DOMAIN cannot be used, because updates to the public suffix list
+    // may invalidate the value of the stored baseDomain.
+    stmt->GetUTF8String(IDX_HOST, host);
+
+    rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+    if (NS_FAILED(rv)) {
+      COOKIE_LOGSTRING(LogLevel::Debug,
+                       ("Read(): Ignoring invalid host '%s'", host.get()));
+      continue;
+    }
 
     nsAutoCString suffix;
     OriginAttributes attrs;
