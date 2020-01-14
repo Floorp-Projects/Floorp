@@ -187,7 +187,7 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitTraceLoggerResume(Register script,
                                           AllocatableGeneralRegisterSet& regs);
 
-#define EMIT_OP(op, op_camel, ...) bool emit_##op_camel();
+#define EMIT_OP(op, ...) bool emit_##op();
   FOR_EACH_OPCODE(EMIT_OP)
 #undef EMIT_OP
 
