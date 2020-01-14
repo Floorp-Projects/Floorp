@@ -92,6 +92,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   char16_t mInvisibleCharacter = 0;
   float mCaretRatio = 0.0f;
   int32_t mCaretBlinkTime = 0;
+  int32_t mPrefersReducedMotion = -1;
   bool mMenuSupportsDrag = false;
   bool mCSDAvailable = false;
   bool mCSDHideTitlebarByDefault = false;
@@ -102,6 +103,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   bool mSystemUsesDarkTheme = false;
   bool mHighContrast = false;
   bool mInitialized = false;
+  bool mPrefersReducedMotionCached = false;
 
   void EnsureInit();
   void ConfigureContentGtkTheme();

@@ -226,6 +226,8 @@ int32_t nsXPLookAndFeel::sCachedColors[size_t(LookAndFeel::ColorID::End)] = {0};
 int32_t nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 
 bool nsXPLookAndFeel::sInitialized = false;
+bool nsXPLookAndFeel::sIsInPrefersReducedMotionForTest = false;
+bool nsXPLookAndFeel::sPrefersReducedMotionForTest = false;
 
 nsXPLookAndFeel* nsXPLookAndFeel::sInstance = nullptr;
 bool nsXPLookAndFeel::sShutdown = false;
@@ -255,6 +257,9 @@ void nsXPLookAndFeel::Shutdown() {
   delete sInstance;
   sInstance = nullptr;
 }
+
+nsXPLookAndFeel::nsXPLookAndFeel()
+    : LookAndFeel(), mShouldRetainCacheForTest(false) {}
 
 // static
 void nsXPLookAndFeel::IntPrefChanged(nsLookAndFeelIntPref* data) {
@@ -1086,28 +1091,6 @@ void LookAndFeel::SetIntCache(
 // static
 void LookAndFeel::SetShouldRetainCacheForTest(bool aValue) {
   nsLookAndFeel::GetInstance()->SetShouldRetainCacheImplForTest(aValue);
-}
-
-// static
-void LookAndFeel::SetPrefersReducedMotionOverrideForTest(bool aValue) {
-  // Tell that the cache value we are going to set isn't cleared via
-  // nsPresContext::ThemeChangedInternal which is called right before
-  // we queue the media feature value change for this prefers-reduced-motion
-  // change.
-  SetShouldRetainCacheForTest(true);
-
-  int32_t value = aValue ? 1 : 0;
-
-  AutoTArray<LookAndFeelInt, 1> lookAndFeelCache;
-  lookAndFeelCache.AppendElement(
-      LookAndFeelInt{eIntID_PrefersReducedMotion, .value = value});
-
-  SetIntCache(lookAndFeelCache);
-}
-
-// static
-void LookAndFeel::ResetPrefersReducedMotionOverrideForTest() {
-  SetShouldRetainCacheForTest(false);
 }
 
 }  // namespace mozilla
