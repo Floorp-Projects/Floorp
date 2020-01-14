@@ -258,9 +258,6 @@ void nsXPLookAndFeel::Shutdown() {
   sInstance = nullptr;
 }
 
-nsXPLookAndFeel::nsXPLookAndFeel()
-    : LookAndFeel(), mShouldRetainCacheForTest(false) {}
-
 // static
 void nsXPLookAndFeel::IntPrefChanged(nsLookAndFeelIntPref* data) {
   if (!data) {
@@ -1091,6 +1088,28 @@ void LookAndFeel::SetIntCache(
 // static
 void LookAndFeel::SetShouldRetainCacheForTest(bool aValue) {
   nsLookAndFeel::GetInstance()->SetShouldRetainCacheImplForTest(aValue);
+}
+
+// static
+void LookAndFeel::SetPrefersReducedMotionOverrideForTest(bool aValue) {
+  // Tell that the cache value we are going to set isn't cleared via
+  // nsPresContext::ThemeChangedInternal which is called right before
+  // we queue the media feature value change for this prefers-reduced-motion
+  // change.
+  SetShouldRetainCacheForTest(true);
+
+  int32_t value = aValue ? 1 : 0;
+
+  AutoTArray<LookAndFeelInt, 1> lookAndFeelCache;
+  lookAndFeelCache.AppendElement(
+      LookAndFeelInt{eIntID_PrefersReducedMotion, .value = value});
+
+  SetIntCache(lookAndFeelCache);
+}
+
+// static
+void LookAndFeel::ResetPrefersReducedMotionOverrideForTest() {
+  SetShouldRetainCacheForTest(false);
 }
 
 }  // namespace mozilla
