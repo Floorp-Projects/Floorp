@@ -52,10 +52,14 @@ permalink: /changelog/
 * **feature-prompts**
   * `PromptFeature` may now optionally accept a `LoginValidationDelegate`. If present, it users 
   will be prompted to save their information after logging in to a website.
+  * `PromptFeature` now accepts a false by default `isSaveLoginEnabled` lambda to be invoked before showing prompts. If true, users
+    will be prompted to save their information after logging in to a website.
   
 * **service-sync-logins**
   * Added `GeckoLoginStorageDelegate`. This can be attached to a GeckoEngine, where it will be used 
   to save user login credentials.
+  * `GeckoLoginStorageDelegate` now accepts a false by default `isAutofillEnabled` lambda to be invoked before fetching logins. If false,
+   logins will not be fetched to autofill.
 
 * **service-firefox-accounts**
   * `signInWithShareableAccountAsync` now takes a `reuseAccount` parameter, allowing consumers

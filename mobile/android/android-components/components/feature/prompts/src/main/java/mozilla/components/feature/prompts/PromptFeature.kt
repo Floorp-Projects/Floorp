@@ -90,6 +90,8 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * @property shareDelegate Delegate used to display share sheet.
  * @property loginStorageDelegate Delegate used to access login storage. If null,
  * 'save login'prompts will not be shown.
+ * @property isSaveLoginEnabled A callback invoked when a login prompt is triggered. If false,
+ * 'save login'prompts will not be shown.
  * @property onNeedToRequestPermissions A callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
@@ -102,6 +104,7 @@ class PromptFeature private constructor(
     private val fragmentManager: FragmentManager,
     private val shareDelegate: ShareDelegate,
     override val loginValidationDelegate: LoginValidationDelegate? = null,
+    private val isSaveLoginEnabled: () -> Boolean = { false },
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature, Prompter {
     private var scope: CoroutineScope? = null
@@ -372,10 +375,14 @@ class PromptFeature private constructor(
         val dialog = when (promptRequest) {
 
             is LoginPrompt -> {
+                if (!isSaveLoginEnabled.invoke()) return
+
                 if (loginValidationDelegate == null) {
-                    logger.debug("Ignoring received LoginPrompt because PromptFeature." +
-                        "loginValidationDelegate is null. If you are trying to autofill logins, " +
-                        "try attaching a LoginValidationDelegate to PromptFeature")
+                    logger.debug(
+                        "Ignoring received LoginPrompt because PromptFeature." +
+                                "loginValidationDelegate is null. If you are trying to autofill logins, " +
+                                "try attaching a LoginValidationDelegate to PromptFeature"
+                    )
                     return
                 }
 
