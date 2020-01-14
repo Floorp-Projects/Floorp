@@ -6,7 +6,6 @@ package mozilla.components.feature.prompts.dialog
 
 import android.content.DialogInterface
 import android.view.View.GONE
-import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -43,7 +42,8 @@ class AuthenticationDialogFragmentTest {
                 "message",
                 "username",
                 "password",
-                onlyShowPassword = false
+                onlyShowPassword = false,
+                url = "https://mozilla.com"
             )
         )
 
@@ -55,8 +55,8 @@ class AuthenticationDialogFragmentTest {
 
         val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
         val messageTextView = dialog.findViewById<TextView>(android.R.id.message)
-        val usernameEditText = dialog.findViewById<EditText>(id.username)
-        val passwordEditText = dialog.findViewById<EditText>(id.password)
+        val usernameEditText = dialog.findViewById<AutofillEditText>(id.username)
+        val passwordEditText = dialog.findViewById<AutofillEditText>(id.password)
 
         assertEquals(fragment.sessionId, "sessionId")
         assertEquals(fragment.title, "title")
@@ -74,7 +74,9 @@ class AuthenticationDialogFragmentTest {
         passwordEditText.setText("new_password")
 
         assertEquals(usernameEditText.text.toString(), "new_username")
+        assertEquals(usernameEditText.sessionUrl, "https://mozilla.com")
         assertEquals(passwordEditText.text.toString(), "new_password")
+        assertEquals(passwordEditText.sessionUrl, "https://mozilla.com")
     }
 
     @Test
@@ -87,7 +89,8 @@ class AuthenticationDialogFragmentTest {
                 "message",
                 "username",
                 "password",
-                true
+                true,
+                url = "https://mozilla.com"
             )
         )
 
@@ -97,7 +100,7 @@ class AuthenticationDialogFragmentTest {
 
         dialog.show()
 
-        val usernameEditText = dialog.findViewById<EditText>(id.username)
+        val usernameEditText = dialog.findViewById<AutofillEditText>(id.username)
 
         assertEquals(usernameEditText.visibility, GONE)
     }
@@ -112,7 +115,8 @@ class AuthenticationDialogFragmentTest {
                 "message",
                 "username",
                 "password",
-                true
+                true,
+                url = "https://mozilla.com"
             )
         )
 
@@ -137,7 +141,8 @@ class AuthenticationDialogFragmentTest {
                 "message",
                 "username",
                 "password",
-                false
+                false,
+                url = "https://mozilla.com"
             )
         )
 
@@ -163,7 +168,8 @@ class AuthenticationDialogFragmentTest {
                 "message",
                 "username",
                 "password",
-                false
+                false,
+                url = "https://mozilla.com"
             )
         )
 

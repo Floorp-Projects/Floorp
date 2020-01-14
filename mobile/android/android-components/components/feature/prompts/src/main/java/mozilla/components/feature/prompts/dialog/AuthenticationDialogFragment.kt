@@ -13,7 +13,6 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
-import android.widget.EditText
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
@@ -23,6 +22,7 @@ import mozilla.components.feature.prompts.R
 private const val KEY_USERNAME_EDIT_TEXT = "KEY_USERNAME_EDIT_TEXT"
 private const val KEY_PASSWORD_EDIT_TEXT = "KEY_PASSWORD_EDIT_TEXT"
 private const val KEY_ONLY_SHOW_PASSWORD = "KEY_ONLY_SHOW_PASSWORD"
+private const val KEY_SESSION_URL = "KEY_SESSION_URL"
 
 /**
  * [android.support.v4.app.DialogFragment] implementation to display a
@@ -32,6 +32,12 @@ private const val KEY_ONLY_SHOW_PASSWORD = "KEY_ONLY_SHOW_PASSWORD"
 internal class AuthenticationDialogFragment : PromptDialogFragment() {
 
     internal val onlyShowPassword: Boolean by lazy { safeArguments.getBoolean(KEY_ONLY_SHOW_PASSWORD) }
+
+    private var sessionUrl: String
+        get() = safeArguments.getString(KEY_SESSION_URL, "")
+        set(value) {
+            safeArguments.putString(KEY_SESSION_URL, value)
+        }
 
     internal var username: String
         get() = safeArguments.getString(KEY_USERNAME_EDIT_TEXT, "")
@@ -80,7 +86,10 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
     }
 
     private fun bindUsername(view: View) {
-        val usernameEditText = view.findViewById<EditText>(R.id.username)
+        // Username field uses the AutofillEditText so if the user focus is here, the autofill
+        // application can get the web domain info without searching through the view tree.
+        val usernameEditText = view.findViewById<AutofillEditText>(R.id.username)
+        usernameEditText.sessionUrl = sessionUrl
 
         if (onlyShowPassword) {
             usernameEditText.visibility = GONE
@@ -99,7 +108,10 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
     }
 
     private fun bindPassword(view: View) {
-        val passwordEditText = view.findViewById<EditText>(R.id.password)
+        // Password field uses the AutofillEditText so if the user focus is here, the autofill
+        // application can get the web domain info without searching through the view tree.
+        val passwordEditText = view.findViewById<AutofillEditText>(R.id.password)
+        passwordEditText.sessionUrl = sessionUrl
 
         passwordEditText.setText(password)
         passwordEditText.addTextChangedListener(object : TextWatcher {
@@ -130,7 +142,8 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
             message: String,
             username: String,
             password: String,
-            onlyShowPassword: Boolean
+            onlyShowPassword: Boolean,
+            url: String
         ): AuthenticationDialogFragment {
 
             val fragment = AuthenticationDialogFragment()
@@ -143,6 +156,7 @@ internal class AuthenticationDialogFragment : PromptDialogFragment() {
                 putBoolean(KEY_ONLY_SHOW_PASSWORD, onlyShowPassword)
                 putString(KEY_USERNAME_EDIT_TEXT, username)
                 putString(KEY_PASSWORD_EDIT_TEXT, password)
+                putString(KEY_SESSION_URL, url)
             }
 
             fragment.arguments = arguments
