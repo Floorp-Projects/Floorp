@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width; minimum-scale=1.0; initial-scale=8.0">
+  <meta name="viewport" content="width=device-width; minimum-scale=1.0">
   <title>position:fixed display port sizing</title>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
@@ -93,6 +93,7 @@
       yield* scrollToVisual(vv.width * 3, vv.height * 30, testDriver);
       checkFixedPosDisplayport();
     }
+    SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(8.0);
     waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
   </script>
 </body>

@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width; initial-scale=2.0">
+  <meta name="viewport" content="width=device-width">
   <title>Hittest position:fixed zoomed scroll</title>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
@@ -47,6 +47,7 @@
       is(e.target, input, "got click");
       subtestDone();
     });
+    SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
     waitUntilApzStable().then(runContinuation(test));
   </script>
 </body>
