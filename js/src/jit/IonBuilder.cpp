@@ -1756,7 +1756,7 @@ AbortReasonOr<Ok> IonBuilder::startTraversingBlock(MBasicBlock* block) {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_goto(bool* restarted) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_GOTO);
+  MOZ_ASSERT(*pc == JSOP_GOTO);
 
   if (IsBackedgePC(pc)) {
     return visitBackEdge(restarted);
@@ -1801,7 +1801,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_loophead() {
   //    ...
   //    IFNE/GOTO to LOOPHEAD
 
-  MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(*pc == JSOP_LOOPHEAD);
 
   if (hasTerminatedBlock()) {
     // The whole loop is unreachable.
@@ -2101,7 +2101,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       // SET* opcodes. Place a resume point afterwards to avoid capturing
       // the dead value in later snapshots, except in places where that
       // resume point is obviously unnecessary.
-      if (JSOp(pc[JSOP_POP_LENGTH]) == JSOP_POP) {
+      if (pc[JSOP_POP_LENGTH] == JSOP_POP) {
         return Ok();
       }
       if (def->isConstant()) {
@@ -2180,8 +2180,8 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOP_CALLITER:
     case JSOP_NEW:
       MOZ_TRY(jsop_call(GET_ARGC(pc),
-                        JSOp(*pc) == JSOP_NEW || JSOp(*pc) == JSOP_SUPERCALL,
-                        JSOp(*pc) == JSOP_CALL_IGNORES_RV));
+                        (JSOp)*pc == JSOP_NEW || (JSOp)*pc == JSOP_SUPERCALL,
+                        (JSOp)*pc == JSOP_CALL_IGNORES_RV));
       if (op == JSOP_CALLITER) {
         if (!outermostBuilder()->iterators_.append(current->peek(-1))) {
           return abort(AbortReason::Alloc);
@@ -2571,6 +2571,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     case JSOP_FORCEINTERPRETER:
       // Intentionally not implemented.
       break;
+
+    case JSOP_LIMIT:
+      break;
   }
 
   // Track a simpler message, since the actionable abort message is a
@@ -2578,10 +2581,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
   // thing anyways.
   trackActionableAbort("Unsupported bytecode");
 #ifdef DEBUG
-  return abort(AbortReason::Disable, "Unsupported opcode: %s", CodeName(op));
+  return abort(AbortReason::Disable, "Unsupported opcode: %s", CodeName[op]);
 #else
-  return abort(AbortReason::Disable, "Unsupported opcode: %d",
-               int(uint8_t(op)));
+  return abort(AbortReason::Disable, "Unsupported opcode: %d", op);
 #endif
 }
 
@@ -6197,7 +6199,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_call(uint32_t argc, bool constructing,
   if (observed->empty()) {
     if (BytecodeFlowsToBitop(pc)) {
       observed->addType(TypeSet::Int32Type(), alloc_->lifoAlloc());
-    } else if (JSOp(*GetNextPc(pc)) == JSOP_POS) {
+    } else if (*GetNextPc(pc) == JSOP_POS) {
       // Note: this is lame, overspecialized on the code patterns used
       // by asm.js and should be replaced by a more general mechanism.
       // See bug 870847.
@@ -7279,7 +7281,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_newobject() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_initelem() {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_INITELEM || JSOp(*pc) == JSOP_INITHIDDENELEM);
+  MOZ_ASSERT(*pc == JSOP_INITELEM || *pc == JSOP_INITHIDDENELEM);
 
   MDefinition* value = current->pop();
   MDefinition* id = current->pop();
@@ -7287,7 +7289,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem() {
 
   bool emitted = false;
 
-  if (!forceInlineCaches() && JSOp(*pc) == JSOP_INITELEM) {
+  if (!forceInlineCaches() && *pc == JSOP_INITELEM) {
     MOZ_TRY(initOrSetElemTryDense(&emitted, obj, id, value,
                                   /* writeHole = */ true));
     if (emitted) {
@@ -7321,8 +7323,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_initelem_inc() {
 AbortReasonOr<Ok> IonBuilder::initArrayElement(MDefinition* obj,
                                                MDefinition* id,
                                                MDefinition* value) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_INITELEM_ARRAY ||
-             JSOp(*pc) == JSOP_INITELEM_INC);
+  MOZ_ASSERT(*pc == JSOP_INITELEM_ARRAY || *pc == JSOP_INITELEM_INC);
 
   bool emitted = false;
 
@@ -7356,8 +7357,7 @@ AbortReasonOr<Ok> IonBuilder::initArrayElemTryFastPath(bool* emitted,
                                                        MDefinition* id,
                                                        MDefinition* value) {
   MOZ_ASSERT(*emitted == false);
-  MOZ_ASSERT(JSOp(*pc) == JSOP_INITELEM_ARRAY ||
-             JSOp(*pc) == JSOP_INITELEM_INC);
+  MOZ_ASSERT(*pc == JSOP_INITELEM_ARRAY || *pc == JSOP_INITELEM_INC);
 
   // Make sure that arrays have the type being written to them by the
   // intializer, and that arrays are marked as non-packed when writing holes
@@ -7979,7 +7979,7 @@ static bool ObjectHasExtraOwnProperty(CompileRealm* realm,
 }
 
 void IonBuilder::insertRecompileCheck(jsbytecode* pc) {
-  MOZ_ASSERT(pc == script()->code() || JSOp(*pc) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(pc == script()->code() || *pc == JSOP_LOOPHEAD);
 
   // No need for recompile checks if this is the highest optimization level or
   // if we're performing an analysis instead of compilation.
@@ -7994,7 +7994,7 @@ void IonBuilder::insertRecompileCheck(jsbytecode* pc) {
   // works.
 
   MRecompileCheck::RecompileCheckType type;
-  if (JSOp(*pc) == JSOP_LOOPHEAD) {
+  if (*pc == JSOP_LOOPHEAD) {
     type = MRecompileCheck::RecompileCheckType::OptimizationLevelOSR;
   } else if (this != outermostBuilder()) {
     type = MRecompileCheck::RecompileCheckType::OptimizationLevelInlined;
@@ -11212,7 +11212,7 @@ MDefinition* IonBuilder::maybeUnboxForPropertyAccess(MDefinition* def) {
   // If we have better type information to unbox the first copy going into
   // the CALLPROP operation, we can replace the duplicated copy on the
   // stack as well.
-  if (JSOp(*pc) == JSOP_CALLPROP || JSOp(*pc) == JSOP_CALLELEM) {
+  if (*pc == JSOP_CALLPROP || *pc == JSOP_CALLELEM) {
     uint32_t idx = current->stackDepth() - 1;
     MOZ_ASSERT(current->getSlot(idx) == def);
     current->setSlot(idx, unbox);
@@ -11381,7 +11381,7 @@ AbortReasonOr<Ok> IonBuilder::improveThisTypesForCall() {
   // at this point we can remove null and undefined from obj's TypeSet, to
   // improve type information for the call that will follow.
 
-  MOZ_ASSERT(JSOp(*pc) == JSOP_CALLPROP || JSOp(*pc) == JSOP_CALLELEM);
+  MOZ_ASSERT(*pc == JSOP_CALLPROP || *pc == JSOP_CALLELEM);
 
   // Ensure |this| has types {object, null/undefined}. For simplicity don't
   // optimize if the callee is a Phi (this can happen in rare cases after
@@ -12225,7 +12225,7 @@ AbortReasonOr<Ok> IonBuilder::getPropAddCache(MDefinition* obj,
   }
   load->setResultType(rvalType);
 
-  if (JSOp(*pc) != JSOP_CALLPROP || !IsNullOrUndefined(obj->type())) {
+  if (*pc != JSOP_CALLPROP || !IsNullOrUndefined(obj->type())) {
     // Due to inlining, it's possible the observed TypeSet is non-empty,
     // even though we know |obj| is null/undefined and the MCallGetProperty
     // will throw. Don't push a TypeBarrier in this case, to avoid

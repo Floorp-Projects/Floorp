@@ -1826,7 +1826,7 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
   jsbytecode* pc = stub->icEntry()->pc(frame->script());
 
   JSOp op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "GetElem(%s)", CodeName(op));
+  FallbackICSpew(cx, stub, "GetElem(%s)", CodeName[op]);
 
   MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
@@ -1892,7 +1892,7 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
   jsbytecode* pc = stub->icEntry()->pc(frame->script());
 
   JSOp op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "GetElemSuper(%s)", CodeName(op));
+  FallbackICSpew(cx, stub, "GetElemSuper(%s)", CodeName[op]);
 
   MOZ_ASSERT(op == JSOP_GETELEM_SUPER);
 
@@ -2034,7 +2034,7 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
   RootedScript outerScript(cx, script);
   jsbytecode* pc = stub->icEntry()->pc(script);
   JSOp op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "SetElem(%s)", CodeName(JSOp(*pc)));
+  FallbackICSpew(cx, stub, "SetElem(%s)", CodeName[JSOp(*pc)]);
 
   MOZ_ASSERT(op == JSOP_SETELEM || op == JSOP_STRICTSETELEM ||
              op == JSOP_INITELEM || op == JSOP_INITHIDDENELEM ||
@@ -2318,7 +2318,7 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(script);
   mozilla::DebugOnly<JSOp> op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "GetName(%s)", CodeName(JSOp(*pc)));
+  FallbackICSpew(cx, stub, "GetName(%s)", CodeName[JSOp(*pc)]);
 
   MOZ_ASSERT(op == JSOP_GETNAME || op == JSOP_GETGNAME);
 
@@ -2368,7 +2368,7 @@ bool DoBindNameFallback(JSContext* cx, BaselineFrame* frame,
 
   jsbytecode* pc = stub->icEntry()->pc(frame->script());
   mozilla::DebugOnly<JSOp> op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "BindName(%s)", CodeName(JSOp(*pc)));
+  FallbackICSpew(cx, stub, "BindName(%s)", CodeName[JSOp(*pc)]);
 
   MOZ_ASSERT(op == JSOP_BINDNAME || op == JSOP_BINDGNAME);
 
@@ -2413,7 +2413,7 @@ bool DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame,
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(script);
   mozilla::DebugOnly<JSOp> op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "GetIntrinsic(%s)", CodeName(JSOp(*pc)));
+  FallbackICSpew(cx, stub, "GetIntrinsic(%s)", CodeName[JSOp(*pc)]);
 
   MOZ_ASSERT(op == JSOP_GETINTRINSIC);
 
@@ -2489,7 +2489,7 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(script);
   JSOp op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "GetProp(%s)", CodeName(op));
+  FallbackICSpew(cx, stub, "GetProp(%s)", CodeName[op]);
 
   MOZ_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH ||
              op == JSOP_GETBOUNDNAME);
@@ -2514,7 +2514,7 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
 
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(script);
-  FallbackICSpew(cx, stub, "GetPropSuper(%s)", CodeName(JSOp(*pc)));
+  FallbackICSpew(cx, stub, "GetPropSuper(%s)", CodeName[JSOp(*pc)]);
 
   MOZ_ASSERT(JSOp(*pc) == JSOP_GETPROP_SUPER);
 
@@ -2617,7 +2617,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(script);
   JSOp op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "SetProp(%s)", CodeName(op));
+  FallbackICSpew(cx, stub, "SetProp(%s)", CodeName[op]);
 
   MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP ||
              op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
@@ -2819,7 +2819,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(script);
   JSOp op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "Call(%s)", CodeName(op));
+  FallbackICSpew(cx, stub, "Call(%s)", CodeName[op]);
 
   MOZ_ASSERT(argc == GET_ARGC(pc));
   bool constructing = (op == JSOP_NEW || op == JSOP_SUPERCALL);
@@ -2962,7 +2962,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
   jsbytecode* pc = stub->icEntry()->pc(script);
   JSOp op = JSOp(*pc);
   bool constructing = (op == JSOP_SPREADNEW || op == JSOP_SPREADSUPERCALL);
-  FallbackICSpew(cx, stub, "SpreadCall(%s)", CodeName(op));
+  FallbackICSpew(cx, stub, "SpreadCall(%s)", CodeName[op]);
 
   // Ensure vp array is rooted - we may GC in here.
   AutoArrayRooter vpRoot(cx, 3 + constructing, vp);
@@ -3400,7 +3400,7 @@ bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(script);
   JSOp op = JSOp(*pc);
-  FallbackICSpew(cx, stub, "UnaryArith(%s)", CodeName(op));
+  FallbackICSpew(cx, stub, "UnaryArith(%s)", CodeName[op]);
 
   // The unary operations take a copied val because the original value is needed
   // below.
@@ -3476,7 +3476,7 @@ bool DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame,
   jsbytecode* pc = stub->icEntry()->pc(script);
   JSOp op = JSOp(*pc);
   FallbackICSpew(
-      cx, stub, "CacheIRBinaryArith(%s,%d,%d)", CodeName(op),
+      cx, stub, "CacheIRBinaryArith(%s,%d,%d)", CodeName[op],
       int(lhs.isDouble() ? JSVAL_TYPE_DOUBLE : lhs.extractNonDoubleType()),
       int(rhs.isDouble() ? JSVAL_TYPE_DOUBLE : rhs.extractNonDoubleType()));
 
@@ -3601,7 +3601,7 @@ bool DoCompareFallback(JSContext* cx, BaselineFrame* frame,
   jsbytecode* pc = stub->icEntry()->pc(script);
   JSOp op = JSOp(*pc);
 
-  FallbackICSpew(cx, stub, "Compare(%s)", CodeName(op));
+  FallbackICSpew(cx, stub, "Compare(%s)", CodeName[op]);
 
   // Don't pass lhs/rhs directly, we need the original values when
   // generating stubs.

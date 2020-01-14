@@ -122,10 +122,10 @@ uint32_t OptimizationInfo::compilerWarmUpThreshold(JSScript* script,
 
 uint32_t OptimizationInfo::recompileWarmUpThreshold(JSScript* script,
                                                     jsbytecode* pc) const {
-  MOZ_ASSERT(pc == script->code() || JSOp(*pc) == JSOP_LOOPHEAD);
+  MOZ_ASSERT(pc == script->code() || *pc == JSOP_LOOPHEAD);
 
   uint32_t threshold = compilerWarmUpThreshold(script, pc);
-  if (JSOp(*pc) != JSOP_LOOPHEAD || JitOptions.eagerIonCompilation()) {
+  if (*pc != JSOP_LOOPHEAD || JitOptions.eagerIonCompilation()) {
     return threshold;
   }
 

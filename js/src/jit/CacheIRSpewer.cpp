@@ -189,7 +189,7 @@ void CacheIRSpewer::opcodeProperty(const char* name, const JSOp op) {
   JSONPrinter& j = json_.ref();
 
   j.beginStringProperty(name);
-  output_.put(CodeName(op));
+  output_.put(CodeName[op]);
   j.endStringProperty();
 }
 
