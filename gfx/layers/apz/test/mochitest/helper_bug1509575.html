@@ -5,12 +5,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1509575
 -->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=2000, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test for Bug 1509575</title>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+  <div id="expand" style="background-color: paleturquoise ;">
+    Now you're scrolled, now you're not?
+  </div>
   <script type="application/javascript">
 
 function* test(testDriver) {
@@ -64,15 +69,11 @@ function* test(testDriver) {
   is(window.visualViewport.pageLeft, visualX, "visual viewport remains unchanged");
 }
 
+SpecialPowers.getDOMWindowUtils(window).setResolutionAndScaleTo(2.0);
 waitUntilApzStable()
 .then(runContinuation(test))
 .then(subtestDone);
 
   </script>
-</head>
-<body>
- <div id="expand" style="background-color: paleturquoise ;">
-  Now you're scrolled, now you're not?
- </div>
 </body>
 </html>
