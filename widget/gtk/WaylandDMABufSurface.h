@@ -74,6 +74,7 @@ class WaylandDMABufSurface {
   bool CreateEGLImage(mozilla::gl::GLContext* aGLContext);
   void ReleaseEGLImage();
   EGLImageKHR GetEGLImage() { return mEGLImage; };
+  GLuint GetGLTexture() { return mTexture; };
 
   void SetWLBuffer(struct wl_buffer* aWLBuffer);
   wl_buffer* GetWLBuffer();
