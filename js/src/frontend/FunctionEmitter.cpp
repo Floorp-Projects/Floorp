@@ -34,7 +34,7 @@ FunctionEmitter::FunctionEmitter(BytecodeEmitter* bce, FunctionBox* funbox,
     : bce_(bce),
       funbox_(funbox),
       fun_(bce_->cx, funbox_->function()),
-      name_(bce_->cx, fun_->explicitName()),
+      name_(bce_->cx, funbox_->explicitName()),
       syntaxKind_(syntaxKind),
       isHoisted_(isHoisted) {}
 
@@ -59,8 +59,8 @@ bool FunctionEmitter::interpretedCommon() {
 bool FunctionEmitter::prepareForNonLazy() {
   MOZ_ASSERT(state_ == State::Start);
 
-  MOZ_ASSERT(fun_->isInterpreted());
-  MOZ_ASSERT(!fun_->isInterpretedLazy());
+  MOZ_ASSERT(funbox_->isInterpreted());
+  MOZ_ASSERT(!funbox_->isInterpretedLazy());
   MOZ_ASSERT(!funbox_->wasEmitted);
 
   //                [stack]
@@ -98,8 +98,8 @@ bool FunctionEmitter::emitNonLazyEnd() {
 bool FunctionEmitter::emitLazy() {
   MOZ_ASSERT(state_ == State::Start);
 
-  MOZ_ASSERT(fun_->isInterpreted());
-  MOZ_ASSERT(fun_->isInterpretedLazy());
+  MOZ_ASSERT(funbox_->isInterpreted());
+  MOZ_ASSERT(funbox_->isInterpretedLazy());
   MOZ_ASSERT(!funbox_->wasEmitted);
 
   //                [stack]
@@ -114,7 +114,7 @@ bool FunctionEmitter::emitLazy() {
   if (bce_->emittingRunOnceLambda) {
     // NOTE: The 'funbox' is only partially initialized so we defer checking
     // the shouldSuppressRunOnce condition until delazification.
-    fun_->baseScript()->setTreatAsRunOnce();
+    funbox_->setTreatAsRunOnce();
   }
 
   if (!emitFunction()) {
@@ -262,9 +262,9 @@ bool FunctionEmitter::emitNonHoisted(unsigned index) {
 
   // JSOp::LambdaArrow is always preceded by a opcode that pushes new.target.
   // See below.
-  MOZ_ASSERT(fun_->isArrow() == (syntaxKind_ == FunctionSyntaxKind::Arrow));
+  MOZ_ASSERT(funbox_->isArrow() == (syntaxKind_ == FunctionSyntaxKind::Arrow));
 
-  if (fun_->isArrow()) {
+  if (funbox_->isArrow()) {
     if (!emitNewTargetForArrow()) {
       //            [stack] NEW.TARGET/NULL
       return false;

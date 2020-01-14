@@ -698,6 +698,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
     return true;
   }
 
+  void setTreatAsRunOnce() { function()->baseScript()->setTreatAsRunOnce(); }
+
   void trace(JSTracer* trc) override;
 };
 
