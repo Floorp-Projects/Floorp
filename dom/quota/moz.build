@@ -13,6 +13,7 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/telemetry/xpcshell.ini',
+    'test/unit/upgrades/xpcshell.ini',
     'test/unit/xpcshell.ini'
 ]
 
