@@ -12,7 +12,7 @@ job-defaults:
             default: null
     variants:
         by-test-platform:
-            linux64/debug: ['fission', 'serviceworker']
+            linux1804-64/debug: ['fission', 'serviceworker']
             default: ['fission']
     fission-tier: 2
     run-on-projects:
@@ -71,10 +71,10 @@ jsreftest:
             windows10-64-asan/opt: 3
             windows10-64-ccov/debug: 5
             windows10-64-ccov/opt: 5
-            linux64-ccov/.*: 5
-            linux64-qr/opt: 4
-            linux64-qr/debug: 5
-            linux64/debug: 5
+            linux.*64-ccov/.*: 5
+            linux1804-64-qr/opt: 4
+            linux1804-64-qr/debug: 5
+            linux1804-64/debug: 5
             macosx.*-64-ccov/.*: 5
             macosx.*-64(-shippable)?/opt: 2
             default: 3
@@ -101,7 +101,7 @@ reftest:
     chunks:
         by-test-platform:
             android-em-7.*: 2
-            linux64(-shippable|-devedition|-qr)?/opt: 5
+            linux1804-64(-shippable|-devedition|-qr)?/opt: 5
             macosx101.*-64-shippable(-qr)?/opt: 3
             macosx101.*-64/debug: 4
             macosx101.*-64(-ccov|-qr)/debug: 6
@@ -133,11 +133,11 @@ reftest:
             default: default
     fission-tier:
         by-test-platform:
-            linux64-qr/debug: 1
+            linux1804-64-qr/debug: 1
             default: 2
     fission-run-on-projects:
         by-test-platform:
-            linux64-qr/debug: ['trunk']
+            linux1804-64-qr/debug: ['trunk']
             default: []
 
 reftest-gpu:
@@ -170,7 +170,7 @@ reftest-no-accel:
         by-test-platform:
             macosx.*: 1
             windows.*: 4
-            linux64(-shippable|-devedition)?/opt: 4
+            linux1804-64(-shippable|-devedition)?/opt: 4
             default: 8
     mozharness:
         chunked:

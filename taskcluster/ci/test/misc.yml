@@ -48,7 +48,7 @@ test-verify:
             # do not run on ccov
             .*-ccov/.*: []
             .*-asan/.*: []
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            (?:windows10-64|windows7-32|linux1804-64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
@@ -105,7 +105,7 @@ test-verify-gpu:
             # do not run on ccov
             .*-ccov/.*: []
             .*-asan/.*: []
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            (?:windows10-64|windows7-32|linux1804-64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
             # do not run on beta or release: usually just confirms earlier results
             default: ['trunk', 'try']
