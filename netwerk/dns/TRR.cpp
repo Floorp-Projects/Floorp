@@ -235,17 +235,18 @@ nsresult TRR::SendHTTPRequest() {
     return rv;
   }
 
-  rv = NS_NewChannel(
-      getter_AddRefs(mChannel), dnsURI, nsContentUtils::GetSystemPrincipal(),
-      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-      nsIContentPolicy::TYPE_OTHER,
-      nullptr,  // nsICookieSettings
-      nullptr,  // PerformanceStorage
-      nullptr,  // aLoadGroup
-      this,
-      nsIRequest::LOAD_ANONYMOUS | (mPB ? nsIRequest::INHIBIT_CACHING : 0) |
-          nsIChannel::LOAD_BYPASS_URL_CLASSIFIER,
-      ios);
+  rv = NS_NewChannel(getter_AddRefs(mChannel), dnsURI,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsIContentPolicy::TYPE_OTHER,
+                     nullptr,  // nsICookieSettings
+                     nullptr,  // PerformanceStorage
+                     nullptr,  // aLoadGroup
+                     this,
+                     nsIRequest::LOAD_ANONYMOUS | nsIRequest::INHIBIT_CACHING |
+                         nsIRequest::LOAD_BYPASS_CACHE |
+                         nsIChannel::LOAD_BYPASS_URL_CLASSIFIER,
+                     ios);
   if (NS_FAILED(rv)) {
     LOG(("TRR:SendHTTPRequest: NewChannel failed!\n"));
     return rv;
