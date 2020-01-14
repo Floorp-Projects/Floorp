@@ -62,9 +62,29 @@ async function checkIsFormCleared(patch = {}) {
 }
 
 async function confirmClear(selector) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.input_events.beforeinput.enabled", true]],
+  });
   info("Await for clearing input");
-  let promise = new Promise(resolve =>
+  let promise = new Promise(resolve => {
+    let beforeInputFired = false;
+    document.querySelector(selector).addEventListener("beforeinput", (event) => {
+      beforeInputFired = true;
+      ok(event instanceof InputEvent,
+         '"beforeinput" event should be dispatched with InputEvent interface');
+      is(event.cancelable, true,
+         '"beforeinput" event should be cancelable');
+      is(event.bubbles, true,
+         '"beforeinput" event should always bubble');
+      is(event.inputType, "insertReplacementText",
+         'inputType value of "beforeinput" should be "insertReplacementText"');
+      is(event.data, "",
+         'data value of "beforeinput" should be empty string');
+      is(event.dataTransfer, null,
+         'dataTransfer value of "beforeinput" should be null');
+    }, {once: true});
     document.querySelector(selector).addEventListener("input", (event) => {
+      todo(beforeInputFired, '"beforeinput" event should\'ve been fired before "input"');
       ok(event instanceof InputEvent,
          '"input" event should be dispatched with InputEvent interface');
       is(event.cancelable, false,
@@ -72,14 +92,14 @@ async function confirmClear(selector) {
       is(event.bubbles, true,
          '"input" event should always bubble');
       is(event.inputType, "insertReplacementText",
-         'inputType value should be "insertReplacementText"');
+         'inputType value of "input" should be "insertReplacementText"');
       is(event.data, "",
-         "data value should be empty string");
+         'data value of "input" should be empty string');
       is(event.dataTransfer, null,
-         "dataTransfer value should be null");
+         'dataTransfer value of "input" should be null');
       resolve();
     }, {once: true})
-  );
+  });
   synthesizeKey("KEY_Enter");
   await promise;
 }

@@ -28,6 +28,10 @@
 var input = document.querySelector("input[name=field1]");
 
 async function runTest() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.input_events.beforeinput.enabled", true]],
+  });
+
   let resolveFunc = null;
   function onPopup() {
     if (resolveFunc) {
@@ -42,9 +46,25 @@ async function runTest() {
     });
   }
 
+  let beforeInputFired = false;
+  let inputFired = false;
   let waitForPopup = promisePopup();
   input.focus();
+  input.addEventListener("beforeinput", (event) => {
+    ok(!beforeInputFired, '"input" event should be fired only once at typing');
+    beforeInputFired = true;
+    ok(event.cancelable,
+       '"beforeinput" event for "insertText" should be cancelable');
+    is(event.inputType, "insertText",
+       "inputType of \"beforeinput\" event should be \"insertText\"");
+    ok(input.validity.valid,
+       "Should be valid immediately before inserting a character");
+    ok(!input.matches(":invalid"),
+       "Shouldn't match \":invalid\" immediately before inserting a character");
+  }, {once: true});
   input.addEventListener("input", (event) => {
+    ok(!inputFired, '"input" event should be fired only once at typing');
+    inputFired = true;
     is(event.inputType, "insertText",
        "inputType of \"input\" event should be \"insertText\"");
     ok(!input.validity.valid,
@@ -52,11 +72,29 @@ async function runTest() {
     ok(input.matches(":invalid"),
        "Should match \":invalid\" immediately after inserting a character");
   }, {once: true});
+  beforeInputFired = false;
+  inputFired = false;
   synthesizeKey("e");
+  todo(beforeInputFired, '"beforeinput" event should have been fired at typing "e"');
+  ok(inputFired, '"input" event should have been fired at typing "e"');
 
   await waitForPopup;
   synthesizeKey("KEY_ArrowDown");
+  input.addEventListener("beforeinput", (event) => {
+    ok(!beforeInputFired, '"input" event should be fired only once at typing');
+    beforeInputFired = true;
+    ok(event.cancelable,
+       '"beforeinput" event for "insertReplacementText" should be cancelable');
+    is(event.inputType, "insertReplacementText",
+       "inputType of \"beforeinput\" event should be \"insertReplacementText\"");
+    ok(!input.validity.valid,
+       "Should be invalid immediately before selecting valid item in autocomplete list");
+    ok(input.matches(":invalid"),
+       "Should match \":invalid\" immediately before selecting valid item in autocomplete list");
+  }, {once: true});
   input.addEventListener("input", (event) => {
+    ok(!inputFired, '"input" event should be fired only once at typing');
+    inputFired = true;
     is(event.inputType, "insertReplacementText",
        "inputType of \"input\" event should be \"insertReplacementText\"");
     ok(input.validity.valid,
@@ -64,14 +102,32 @@ async function runTest() {
     ok(!input.matches(":invalid"),
        "Shouldn't match \":invalid\" immediately after selecting valid item in autocomplete list");
   }, {once: true});
+  beforeInputFired = false;
+  inputFired = false;
   synthesizeKey("KEY_Enter"); // Select valid item
+  todo(beforeInputFired, '"beforeinput" event should have been fired at selecting valid item');
+  ok(inputFired, '"input" event should have been fired at selecting valid item');
 
   waitForPopup = promisePopup();
   synthesizeKey("KEY_Backspace");
   await waitForPopup;
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowDown");
+  input.addEventListener("beforeinput", (event) => {
+    ok(!beforeInputFired, '"input" event should be fired only once at typing');
+    beforeInputFired = true;
+    ok(event.cancelable,
+       '"beforeinput" event for "insertReplacementText" should be cancelable');
+    is(event.inputType, "insertReplacementText",
+       "inputType of \"beforeinput\" event should be \"insertReplacementText\"");
+    ok(input.validity.valid,
+       "Should be valid immediately before selecting invalid item in autocomplete list");
+    ok(!input.matches(":invalid"),
+       "Shouldn't match \":invalid\" immediately after selecting invalid item in autocomplete list");
+  }, {once: true});
   input.addEventListener("input", (event) => {
+    ok(!inputFired, '"input" event should be fired only once at typing');
+    inputFired = true;
     is(event.inputType, "insertReplacementText",
        "inputType of \"input\" event should be \"insertReplacementText\"");
     ok(!input.validity.valid,
@@ -79,7 +135,11 @@ async function runTest() {
     ok(input.matches(":invalid"),
        "Should match \":invalid\" immediately after selecting invalid item in autocomplete list");
   }, {once: true});
+  beforeInputFired = false;
+  inputFired = false;
   synthesizeKey("KEY_Enter"); // Select invalid item
+  todo(beforeInputFired, '"beforeinput" event should have been fired at selecting invalid item');
+  ok(inputFired, '"input" event should have been fired at selecting invalid item');
 
   SimpleTest.finish();
 }
