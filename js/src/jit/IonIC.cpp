@@ -322,7 +322,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
 
   jsbytecode* pc = ic->pc();
   if (ic->kind() == CacheKind::SetElem) {
-    if (*pc == JSOP_INITELEM_INC || *pc == JSOP_INITELEM_ARRAY) {
+    if (JSOp(*pc) == JSOP_INITELEM_INC || JSOp(*pc) == JSOP_INITELEM_ARRAY) {
       if (!InitArrayElemOperation(cx, pc, obj, idVal.toInt32(), rhs)) {
         return false;
       }
@@ -339,7 +339,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   } else {
     MOZ_ASSERT(ic->kind() == CacheKind::SetProp);
 
-    if (*pc == JSOP_INITGLEXICAL) {
+    if (JSOp(*pc) == JSOP_INITGLEXICAL) {
       RootedScript script(cx, ic->script());
       MOZ_ASSERT(!script->hasNonSyntacticScope());
       InitGlobalLexicalOperation(cx, &cx->global()->lexicalEnvironment(),
@@ -421,7 +421,7 @@ bool IonGetNameIC::update(JSContext* cx, HandleScript outerScript,
     return false;
   }
 
-  if (*GetNextPc(pc) == JSOP_TYPEOF) {
+  if (JSOp(*GetNextPc(pc)) == JSOP_TYPEOF) {
     if (!FetchName<GetNameMode::TypeOf>(cx, obj, holder, name, prop, res)) {
       return false;
     }

@@ -2453,7 +2453,7 @@ static bool GetNonexistentProperty(JSContext* cx, HandleId id,
     return true;
   }
 
-  if (*pc != JSOP_GETPROP && *pc != JSOP_GETELEM) {
+  if (JSOp(*pc) != JSOP_GETPROP && JSOp(*pc) != JSOP_GETELEM) {
     return true;
   }
 

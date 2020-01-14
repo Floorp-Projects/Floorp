@@ -62,13 +62,13 @@ void AbstractGeneratorObject::trace(JSTracer* trc) {
 bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
                                       AbstractFramePtr frame, jsbytecode* pc,
                                       Value* vp, unsigned nvalues) {
-  MOZ_ASSERT(*pc == JSOP_INITIALYIELD || *pc == JSOP_YIELD ||
-             *pc == JSOP_AWAIT);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_INITIALYIELD || JSOp(*pc) == JSOP_YIELD ||
+             JSOp(*pc) == JSOP_AWAIT);
 
   auto genObj = obj.as<AbstractGeneratorObject>();
   MOZ_ASSERT(!genObj->hasExpressionStack() || genObj->isExpressionStackEmpty());
-  MOZ_ASSERT_IF(*pc == JSOP_AWAIT, genObj->callee().isAsync());
-  MOZ_ASSERT_IF(*pc == JSOP_YIELD, genObj->callee().isGenerator());
+  MOZ_ASSERT_IF(JSOp(*pc) == JSOP_AWAIT, genObj->callee().isAsync());
+  MOZ_ASSERT_IF(JSOp(*pc) == JSOP_YIELD, genObj->callee().isGenerator());
 
   ArrayObject* stack = nullptr;
   if (nvalues > 0) {
@@ -358,7 +358,7 @@ bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
   JSScript* script = callee().nonLazyScript();
   jsbytecode* code = script->code();
   uint32_t nextOffset = script->resumeOffsets()[resumeIndex()];
-  if (code[nextOffset] != JSOP_AFTERYIELD) {
+  if (JSOp(code[nextOffset]) != JSOP_AFTERYIELD) {
     return false;
   }
 
@@ -368,10 +368,11 @@ bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
                 "JSOP_YIELD and JSOP_AWAIT must have the same length");
 
   uint32_t offset = nextOffset - JSOP_YIELD_LENGTH;
-  MOZ_ASSERT(code[offset] == JSOP_INITIALYIELD || code[offset] == JSOP_YIELD ||
-             code[offset] == JSOP_AWAIT);
+  JSOp prevOp = JSOp(code[offset]);
+  MOZ_ASSERT(prevOp == JSOP_INITIALYIELD || prevOp == JSOP_YIELD ||
+             prevOp == JSOP_AWAIT);
 
-  return code[offset] == op;
+  return prevOp == op;
 }
 
 template <>

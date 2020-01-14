@@ -2724,7 +2724,7 @@ class JSScript : public js::BaseScript {
 
   jsbytecode* lastPC() const {
     jsbytecode* pc = codeEnd() - js::JSOP_RETRVAL_LENGTH;
-    MOZ_ASSERT(*pc == JSOP_RETRVAL);
+    MOZ_ASSERT(JSOp(*pc) == JSOP_RETRVAL);
     return pc;
   }
 
@@ -3099,7 +3099,7 @@ class JSScript : public js::BaseScript {
 
   uint32_t tableSwitchCaseOffset(jsbytecode* pc, uint32_t caseIndex) const {
     MOZ_ASSERT(containsPC(pc));
-    MOZ_ASSERT(*pc == JSOP_TABLESWITCH);
+    MOZ_ASSERT(JSOp(*pc) == JSOP_TABLESWITCH);
     uint32_t firstResumeIndex = GET_RESUMEINDEX(pc + 3 * JUMP_OFFSET_LEN);
     return resumeOffsets()[firstResumeIndex + caseIndex];
   }
