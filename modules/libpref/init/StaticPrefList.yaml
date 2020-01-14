@@ -5545,7 +5545,7 @@
 # Is layout of CSS outline-style:auto enabled?
 - name: layout.css.outline-style-auto.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Pref to control enabling scroll anchoring.
