@@ -68,6 +68,9 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::ParseInfo parseInfo(cx, allocScope);
+  if (!parseInfo.initFromOptions(cx, options)) {
+    return nullptr;
+  }
 
   frontend::GlobalScriptInfo info(cx, parseInfo, options, scopeKind);
   return frontend::CompileGlobalScript(info, srcBuf);
@@ -217,7 +220,6 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   // our caller doesn't try to collect more buffered source.
   bool result = true;
 
-  using frontend::CreateScriptSourceObject;
   using frontend::FullParseHandler;
   using frontend::ParseGoal;
   using frontend::ParseInfo;
@@ -226,17 +228,15 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   CompileOptions options(cx);
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   ParseInfo parseInfo(cx, allocScope);
-
-  Rooted<ScriptSourceObject*> sourceObject(cx);
-  sourceObject = CreateScriptSourceObject(cx, options);
-  if (!sourceObject) {
+  if (!parseInfo.initFromOptions(cx, options)) {
     return false;
   }
 
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
-  Parser<FullParseHandler, char16_t> parser(
-      cx, options, chars.get(), length,
-      /* foldConstants = */ true, parseInfo, nullptr, nullptr, sourceObject);
+  Parser<FullParseHandler, char16_t> parser(cx, options, chars.get(), length,
+                                            /* foldConstants = */ true,
+                                            parseInfo, nullptr, nullptr,
+                                            parseInfo.sourceObject);
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of source, we
     // return false so our caller knows to try to collect more buffered
@@ -550,6 +550,9 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
   {
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
     frontend::ParseInfo parseInfo(cx, allocScope);
+    if (!parseInfo.initFromOptions(cx, options)) {
+      return false;
+    }
 
     frontend::GlobalScriptInfo info(cx, parseInfo, options, scopeKind);
     script = frontend::CompileGlobalScript(info, srcBuf);

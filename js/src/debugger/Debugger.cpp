@@ -42,7 +42,6 @@
 #include "debugger/Object.h"             // for DebuggerObject
 #include "debugger/Script.h"             // for DebuggerScript
 #include "debugger/Source.h"             // for DebuggerSource
-#include "frontend/BytecodeCompiler.h"   // for CreateScriptSourceObject
 #include "frontend/NameAnalysisTypes.h"  // for ParseGoal, ParseGoal::Script
 #include "frontend/ParseContext.h"       // for UsedNameTracker
 #include "frontend/Parser.h"             // for Parser
@@ -5924,17 +5923,15 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
   CompileOptions options(cx);
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   frontend::ParseInfo parseInfo(cx, allocScope);
-
-  RootedScriptSourceObject sourceObject(
-      cx, frontend::CreateScriptSourceObject(cx, options));
-  if (!sourceObject) {
+  if (!parseInfo.initFromOptions(cx, options)) {
     return false;
   }
 
   JS::AutoSuppressWarningReporter suppressWarnings(cx);
   frontend::Parser<frontend::FullParseHandler, char16_t> parser(
       cx, options, chars.twoByteChars(), length,
-      /* foldConstants = */ true, parseInfo, nullptr, nullptr, sourceObject);
+      /* foldConstants = */ true, parseInfo, nullptr, nullptr,
+      parseInfo.sourceObject);
   if (!parser.checkOptions() || !parser.parse()) {
     // We ran into an error. If it was because we ran out of memory we report
     // it in the usual way.
