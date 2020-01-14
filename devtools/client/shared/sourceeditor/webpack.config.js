@@ -7,8 +7,8 @@
 /* global __dirname */
 const path = require("path");
 
-module.exports = [
-  {
+module.exports = (env, argv) => {
+  return {
     bail: true,
     entry: [
       "./codemirror/addon/dialog/dialog.js",
@@ -40,11 +40,21 @@ module.exports = [
       "./codemirror/addon/runmode/runmode.js",
       "./codemirror/lib/codemirror.js",
     ],
+    optimization: {
+      minimize: !(
+        argv &&
+        argv.optimization &&
+        argv.optimization.minimizer === "false"
+      ),
+    },
     output: {
       path: path.resolve(__dirname, "./codemirror/"),
       filename: "codemirror.bundle.js",
       libraryTarget: "var",
       library: "CodeMirror",
     },
-  },
-];
+    resolve: {
+      modules: [path.resolve(__dirname, "../../../..")],
+    },
+  };
+};

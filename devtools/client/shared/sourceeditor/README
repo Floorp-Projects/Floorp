@@ -12,7 +12,10 @@ CSS files inside the codemirror directory [2].
 Then to recreate codemirror.bundle.js:
  > cd devtools/client/shared/sourceeditor
  > npm install
- > webpack
+ > npm run build
+
+When investigating an issue in CodeMirror, you might want to have a non-minified bundle.
+You can do this by running `npm run build-unminified` instead of `npm run build`.
 
 To confirm the functionality run mochitests for the following components:
 
@@ -20,6 +23,7 @@ To confirm the functionality run mochitests for the following components:
  * debugger
  * styleditor
  * netmonitor
+ * webconsole
 
 The sourceeditor component contains imported CodeMirror tests [3].
 
