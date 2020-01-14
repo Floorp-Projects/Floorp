@@ -51,10 +51,17 @@
         app:layout_constraintBottom_toTopOf="@id/bottom_bar"/>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     <View
         android:id="@+id/bottom_bar"
         android:layout_width="0dp"
         android:layout_height="56dp"
+=======
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/bottom_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+>>>>>>> 52d4338e... For #7423: remove unnecessary CoordinatorLayout in fragment_home.
         android:background="?bottomBarBackground"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -125,4 +132,3 @@
             app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.motion.widget.MotionLayout>
-
