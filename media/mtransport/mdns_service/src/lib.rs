@@ -262,8 +262,8 @@ impl MDNSService {
 
         let socket = socket.into_udp_socket();
         socket.set_multicast_loop_v4(true)?;
-        socket.set_read_timeout(Some(time::Duration::from_millis(10)))?;
-        socket.set_write_timeout(Some(time::Duration::from_millis(10)))?;
+        socket.set_read_timeout(Some(time::Duration::from_millis(1)))?;
+        socket.set_write_timeout(Some(time::Duration::from_millis(1)))?;
         for addr in addrs {
             if let Err(err) = socket.join_multicast_v4(&mdns_addr, &addr) {
                 warn!(
