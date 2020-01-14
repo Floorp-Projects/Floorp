@@ -22,7 +22,7 @@
     let db = event.target.result;
     db.onerror = errorHandler;
 
-    request = db.mozCreateFileHandle("test.txt");
+    request = db.createMutableFile("test.txt");
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
     event = yield undefined;

@@ -209,10 +209,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
       JSContext* aCx, const nsAString& aName, const Optional<nsAString>& aType,
       ErrorResult& aRv);
 
-  MOZ_MUST_USE RefPtr<IDBRequest> MozCreateFileHandle(
-      JSContext* aCx, const nsAString& aName, const Optional<nsAString>& aType,
-      ErrorResult& aRv);
-
   void ClearBackgroundActor() {
     AssertIsOnOwningThread();
 
