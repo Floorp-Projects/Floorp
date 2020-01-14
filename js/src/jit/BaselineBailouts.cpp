@@ -1082,7 +1082,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
 #ifdef JS_JITSPEW
   JitSpew(JitSpew_BaselineBailouts,
           "      Resuming %s pc offset %d (op %s) (line %d) of %s:%u:%u",
-          resumeAfter ? "after" : "at", (int)pcOff, CodeName[op],
+          resumeAfter ? "after" : "at", (int)pcOff, CodeName(op),
           PCToLineNumber(script, pc), script->filename(), script->lineno(),
           script->column());
   JitSpew(JitSpew_BaselineBailouts, "      Bailout kind: %s",
@@ -1141,7 +1141,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       }
       snprintf(buf.get(), len, "%s %s %s on line %u of %s:%u",
                BailoutKindString(bailoutKind), resumeAfter ? "after" : "at",
-               CodeName[op], PCToLineNumber(script, pc), filename,
+               CodeName(op), PCToLineNumber(script, pc), filename,
                script->lineno());
       cx->runtime()->geckoProfiler().markEvent(buf.get());
     }

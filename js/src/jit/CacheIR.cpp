@@ -514,7 +514,7 @@ static bool IsCacheableNoProperty(JSContext* cx, JSObject* obj,
   // If we're doing a name lookup, we have to throw a ReferenceError. If
   // extra warnings are enabled, we may have to report a warning.
   // Note that Ion does not generate idempotent caches for JSOP_GETBOUNDNAME.
-  if ((pc && *pc == JSOP_GETBOUNDNAME) ||
+  if ((pc && JSOp(*pc) == JSOP_GETBOUNDNAME) ||
       cx->realm()->behaviors().extraWarnings(cx)) {
     return false;
   }
