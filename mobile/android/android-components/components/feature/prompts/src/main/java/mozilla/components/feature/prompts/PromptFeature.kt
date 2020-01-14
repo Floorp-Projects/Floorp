@@ -120,6 +120,7 @@ class PromptFeature private constructor(
         fragmentManager: FragmentManager,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
         loginValidationDelegate: LoginValidationDelegate? = null,
+        isSaveLoginEnabled: () -> Boolean = { false },
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Activity(activity),
@@ -128,6 +129,7 @@ class PromptFeature private constructor(
         fragmentManager = fragmentManager,
         shareDelegate = shareDelegate,
         loginValidationDelegate = loginValidationDelegate,
+        isSaveLoginEnabled = isSaveLoginEnabled,
         onNeedToRequestPermissions = onNeedToRequestPermissions
     )
 
@@ -138,6 +140,7 @@ class PromptFeature private constructor(
         fragmentManager: FragmentManager,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
         loginValidationDelegate: LoginValidationDelegate? = null,
+        isSaveLoginEnabled: () -> Boolean = { false },
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Fragment(fragment),
@@ -146,6 +149,7 @@ class PromptFeature private constructor(
         fragmentManager = fragmentManager,
         shareDelegate = shareDelegate,
         loginValidationDelegate = loginValidationDelegate,
+        isSaveLoginEnabled = isSaveLoginEnabled,
         onNeedToRequestPermissions = onNeedToRequestPermissions
     )
 
