@@ -590,7 +590,7 @@ static void InitKeyEvent(WidgetKeyboardEvent& aEvent, int32_t aAction,
 
   aEvent.mIsRepeat =
       (aEvent.mMessage == eKeyDown || aEvent.mMessage == eKeyPress) &&
-      ((aFlags & sdk::KeyEvent::FLAG_LONG_PRESS) || aRepeatCount);
+      ((aFlags & java::sdk::KeyEvent::FLAG_LONG_PRESS) || aRepeatCount);
 
   aEvent.mKeyNameIndex = ConvertAndroidKeyCodeToKeyNameIndex(
       aKeyCode, aAction, aDomPrintableKeyValue);
@@ -616,15 +616,16 @@ static jni::ObjectArray::LocalRef ConvertRectArrayToJavaRectFArray(
     const nsTArray<LayoutDeviceIntRect>& aRects,
     const CSSToLayoutDeviceScale aScale) {
   const size_t length = aRects.Length();
-  auto rects = jni::ObjectArray::New<sdk::RectF>(length);
+  auto rects = jni::ObjectArray::New<java::sdk::RectF>(length);
 
   for (size_t i = 0; i < length; i++) {
     const LayoutDeviceIntRect& tmp = aRects[i];
 
     // Character bounds in CSS units.
-    auto rect = sdk::RectF::New(tmp.x / aScale.scale, tmp.y / aScale.scale,
-                                (tmp.x + tmp.width) / aScale.scale,
-                                (tmp.y + tmp.height) / aScale.scale);
+    auto rect =
+        java::sdk::RectF::New(tmp.x / aScale.scale, tmp.y / aScale.scale,
+                              (tmp.x + tmp.width) / aScale.scale,
+                              (tmp.y + tmp.height) / aScale.scale);
     rects->SetElement(i, rect);
   }
   return rects;
@@ -675,11 +676,11 @@ void GeckoEditableSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
   }
 
   EventMessage msg;
-  if (aAction == sdk::KeyEvent::ACTION_DOWN) {
+  if (aAction == java::sdk::KeyEvent::ACTION_DOWN) {
     msg = eKeyDown;
-  } else if (aAction == sdk::KeyEvent::ACTION_UP) {
+  } else if (aAction == java::sdk::KeyEvent::ACTION_UP) {
     msg = eKeyUp;
-  } else if (aAction == sdk::KeyEvent::ACTION_MULTIPLE) {
+  } else if (aAction == java::sdk::KeyEvent::ACTION_MULTIPLE) {
     // Keys with multiple action are handled in Java,
     // and we should never see one here
     MOZ_CRASH("Cannot handle key with multiple action");
