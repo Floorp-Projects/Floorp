@@ -3,5 +3,6 @@
 
 [include]
 path:gfx/wgpu/
+path:gfx/wr/
 path:taskcluster/scripts/misc/
 path:tools/github-sync/
