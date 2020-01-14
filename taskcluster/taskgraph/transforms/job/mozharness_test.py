@@ -32,7 +32,6 @@ VARIANTS = [
     'asan',
     'stylo',
     'stylo-disabled',
-    'stylo-sequential',
     'qr',
     'ccov',
 ]

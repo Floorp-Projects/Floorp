@@ -86,12 +86,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             "default": "1200",
             "help": "Specify headless virtual screen height (default: 1200)."}
          ],
-        [["--single-stylo-traversal"], {
-            "action": "store_true",
-            "dest": "single_stylo_traversal",
-            "default": False,
-            "help": "Forcibly enable single thread traversal in Stylo with STYLO_THREADS=1"}
-         ],
         [["--setpref"], {
             "action": "append",
             "metavar": "PREF=VALUE",
@@ -250,11 +244,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         if c["enable_webrender"]:
             cmd.append("--enable-webrender")
 
-        if c["single_stylo_traversal"]:
-            cmd.append("--stylo-threads=1")
-        else:
-            cmd.append("--stylo-threads=4")
-
         if not (self.verify_enabled or self.per_test_coverage):
             test_paths = json.loads(os.environ.get('MOZHARNESS_TEST_PATHS', '""'))
             if test_paths:
@@ -365,10 +354,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             env['MOZ_HEADLESS_WIDTH'] = self.config['headless_width']
             env['MOZ_HEADLESS_HEIGHT'] = self.config['headless_height']
 
-        if self.config['single_stylo_traversal']:
-            env['STYLO_THREADS'] = '1'
-        else:
-            env['STYLO_THREADS'] = '4'
+        env['STYLO_THREADS'] = '4'
 
         if self.is_android:
             env['ADB_PATH'] = self.adb_path
