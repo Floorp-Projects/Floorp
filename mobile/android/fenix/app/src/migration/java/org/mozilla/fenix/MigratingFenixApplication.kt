@@ -29,6 +29,14 @@ class MigratingFenixApplication : FenixApplication() {
 
     val migrationStore by lazy { MigrationStore() }
 
+    val migrationPushSubscriber by lazy {
+        MigrationPushSubscriber(
+            this,
+            components.backgroundServices.pushService,
+            migrationStore
+        )
+    }
+
     override fun setupInMainProcessOnly() {
         // These migrations need to run before regular initialization happens.
         migrateBlocking()
@@ -37,6 +45,7 @@ class MigratingFenixApplication : FenixApplication() {
         super.setupInMainProcessOnly()
 
         // The rest of the migrations can happen now.
+        migrationPushSubscriber.start()
         migrator.startMigrationIfNeeded(migrationStore, MigrationService::class.java)
     }
 
