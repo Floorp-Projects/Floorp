@@ -3,6 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/**
+ * This test is mainly to verify UpgradeStorageFrom0_0To1_0 method.
+ */
+
 var testGenerator = testSteps();
 
 function* testSteps() {
@@ -29,14 +33,14 @@ function* testSteps() {
   const metadataFileName = ".metadata";
   const metadata2FileName = ".metadata-v2";
 
-  // Test upgrade from FF 48 (no storage.sqlite and no .metadata-v2 files).
-
   info("Clearing");
 
   clear(continueToNextStepSync);
   yield undefined;
 
-  installPackage("originAttributesUpgrade_profile");
+  // Storage used by FF 36-48 (storage/default/ directory, but no
+  // storage.sqlite and no .metadata-v2 files).
+  installPackage("version0_0_profile");
 
   info("Checking storage file");
 
