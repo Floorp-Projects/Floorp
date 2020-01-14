@@ -742,6 +742,10 @@ nsresult ChannelMediaResource::RecreateChannel() {
           ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
           : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
 
+  if (element->GetCORSMode() == CORS_USE_CREDENTIALS) {
+    securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+  }
+
   MOZ_ASSERT(element->IsAnyOfHTMLElements(nsGkAtoms::audio, nsGkAtoms::video));
   nsContentPolicyType contentPolicyType =
       element->IsHTMLElement(nsGkAtoms::audio)
