@@ -366,6 +366,7 @@
   MACRO(RegExpSearcher, RegExpSearcher, "RegExpSearcher")                      \
   MACRO(RegExpStringIterator, RegExpStringIterator, "RegExp String Iterator")  \
   MACRO(RegExpTester, RegExpTester, "RegExpTester")                            \
+  MACRO(RegExpToString, RegExpToString, "$RegExpToString")                     \
   MACRO(RegExp_prototype_Exec, RegExp_prototype_Exec, "RegExp_prototype_Exec") \
   MACRO(region, region, "region")                                              \
   MACRO(register, register_, "register")                                       \
