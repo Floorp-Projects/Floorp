@@ -1056,6 +1056,7 @@ class FullParseHandler {
 
   bool canSkipLazyInnerFunctions() { return !!lazyOuterFunction_; }
   bool canSkipLazyClosedOverBindings() { return !!lazyOuterFunction_; }
+  bool canSkipRegexpSyntaxParse() { return !!lazyOuterFunction_; }
   JSFunction* nextLazyInnerFunction() {
     return &lazyOuterFunction_->gcthings()[lazyInnerFunctionIndex++]
                 .as<JSObject>()
