@@ -6,9 +6,10 @@
 
 #include "AudioSampleFormat.h"
 #include "BufferReader.h"
-#include "WAVDecoder.h"
+#include "mozilla/Casting.h"
 #include "mozilla/SyncRunnable.h"
 #include "VideoUtils.h"
+#include "WAVDecoder.h"
 
 namespace mozilla {
 
@@ -76,7 +77,16 @@ RefPtr<MediaDataDecoder::DecodePromise> WaveDataDecoder::ProcessDecode(
   }
   for (int i = 0; i < frames; ++i) {
     for (unsigned int j = 0; j < mInfo.mChannels; ++j) {
-      if (mInfo.mProfile == 6) {  // ALAW Data
+      if (mInfo.mProfile == 3) {  // IEEE Float Data
+        auto res = aReader.ReadLEU32();
+        if (res.isErr()) {
+          return DecodePromise::CreateAndReject(
+              MediaResult(res.unwrapErr(), __func__), __func__);
+        }
+        float sample = BitwiseCast<float>(res.unwrap());
+        buffer[i * mInfo.mChannels + j] =
+            FloatToAudioSample<AudioDataValue>(sample);
+      } else if (mInfo.mProfile == 6) {  // ALAW Data
         auto res = aReader.ReadU8();
         if (res.isErr()) {
           return DecodePromise::CreateAndReject(
@@ -148,6 +158,7 @@ bool WaveDataDecoder::IsWave(const nsACString& aMimeType) {
   // WAVdemuxer uses "audio/wave; codecs=aNum".
   return aMimeType.EqualsLiteral("audio/x-wav") ||
          aMimeType.EqualsLiteral("audio/wave; codecs=1") ||
+         aMimeType.EqualsLiteral("audio/wave; codecs=3") ||
          aMimeType.EqualsLiteral("audio/wave; codecs=6") ||
          aMimeType.EqualsLiteral("audio/wave; codecs=7") ||
          aMimeType.EqualsLiteral("audio/wave; codecs=65534");
