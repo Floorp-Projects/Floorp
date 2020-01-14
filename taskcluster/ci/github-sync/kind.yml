@@ -34,9 +34,20 @@ jobs:
         description: Sync wgpu to github mirror
         secret: gecko/gfx-github-sync/token
         run:
-            command: '$GECKO_PATH/tools/github-sync/sync-to-github.sh wgpu gfx/wgpu gfx-rs/wgpu'
+            command: '$GECKO_PATH/tools/github-sync/sync-to-github.sh wgpu gfx/wgpu gfx-rs/wgpu bors'
         when:
             files-changed:
                 - 'gfx/wgpu/**'
         treeherder:
             symbol: GhS(wgpu)
+
+    webrender:
+        description: Sync webrender to github mirror
+        secret: gecko/gfx-github-sync/token
+        run:
+            command: '$GECKO_PATH/tools/github-sync/sync-to-github.sh webrender gfx/wr servo/webrender @bors-servo'
+        when:
+            files-changed:
+                - 'gfx/wr/**'
+        treeherder:
+            symbol: GhS(wr)

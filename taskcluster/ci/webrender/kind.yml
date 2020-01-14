@@ -9,7 +9,6 @@ kind-dependencies:
     - build
 
 transforms:
-    - taskgraph.transforms.webrender:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -472,22 +471,3 @@ jobs:
                 - 'gfx/wr/**'
                 - 'testing/mozharness/scripts/android_wrench.py'
                 - 'testing/mozharness/configs/android/wrench.py'
-
-    wrupdater-sync:
-        run-on-projects: ['mozilla-central', 'try']  # the webrender transform enforces this
-        description: Sync webrender to github mirror
-        worker-type: b-linux
-        worker:
-            max-run-time: 3600
-            docker-image: {in-tree: webrender-updater}
-            wrupdater-secrets: true
-        run:
-            using: run-task
-            command: '$GECKO_PATH/gfx/wr/ci-scripts/wrupdater/sync-to-github.sh'
-        treeherder:
-            platform: linux64-qr/opt
-            symbol: WR(sync)
-            tier: 2
-        when:
-            files-changed:
-                - 'gfx/wr/**'

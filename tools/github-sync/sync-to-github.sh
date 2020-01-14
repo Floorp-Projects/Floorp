@@ -31,6 +31,7 @@ TMPDIR="${WORKDIR}/tmp"
 NAME="$1"
 RELATIVE_PATH="$2"
 DOWNSTREAM_REPO="$3"
+BORS="$4"
 BRANCH="github-sync"
 
 mkdir -p "${TMPDIR}"
@@ -149,7 +150,7 @@ fi
 # At this point COMMENTS_URL should be set, so leave a comment to tell bors
 # to merge the PR.
 echo "Posting r+ comment to ${COMMENT_URL}..."
-echo '{ "body": "bors r=auto" }' > "${TMPDIR}/bors_rplus"
+echo '{ "body": "'"$BORS"' r=auto" }' > "${TMPDIR}/bors_rplus"
 "${CURL[@]}" -d "@${TMPDIR}/bors_rplus" "${COMMENT_URL}"
 
 echo "All done!"
