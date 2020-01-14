@@ -232,7 +232,7 @@ CreateMFT(const CLSID& clsid, const char* aDllName,
 
 // Returns the name of the DLL that is needed to decode H.264 on
 // the given windows version we're running on.
-const char* WMFDecoderDllName();
+inline const char* WMFDecoderDllName() { return "msmpeg2vdec.dll"; }
 
 // Returns the maximum number of threads we want WMF to use for decoding
 // given the number of logical processors available.
