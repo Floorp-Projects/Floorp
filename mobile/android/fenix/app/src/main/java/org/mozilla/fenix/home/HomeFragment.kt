@@ -24,6 +24,7 @@ import androidx.constraintlayout.widget.ConstraintSet.END
 import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintSet.START
 import androidx.constraintlayout.widget.ConstraintSet.TOP
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -58,6 +59,7 @@ import mozilla.components.feature.media.ext.getSession
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -199,11 +201,16 @@ class HomeFragment : Fragment() {
 
         ConstraintSet().apply {
             clone(view.homeLayout)
-            connect(sessionControlView.view.id, TOP, view.wordmark_spacer.id, BOTTOM)
+            connect(sessionControlView.view.id, TOP, view.wordmark.id, BOTTOM)
             connect(sessionControlView.view.id, START, PARENT_ID, START)
             connect(sessionControlView.view.id, END, PARENT_ID, END)
             connect(sessionControlView.view.id, BOTTOM, view.bottom_bar.id, TOP)
             applyTo(view.homeLayout)
+        }
+
+        @Suppress("MagicNumber") // we need constants if we define layouts in code.
+        sessionControlView.view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            topMargin = 32.dpToPx(resources.displayMetrics)
         }
 
         activity.themeManager.applyStatusBarTheme(activity)
