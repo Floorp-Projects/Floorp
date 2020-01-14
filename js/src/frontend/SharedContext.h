@@ -700,6 +700,28 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   void setTreatAsRunOnce() { function()->baseScript()->setTreatAsRunOnce(); }
 
+  void setInferredName(JSAtom* atom) {
+    if (hasObject()) {
+      function()->setInferredName(atom);
+      return;
+    }
+    functionCreationData()->setInferredName(atom);
+  }
+
+  JSAtom* inferredName() const {
+    if (hasObject()) {
+      return function()->inferredName();
+    }
+    return functionCreationData()->inferredName();
+  }
+
+  bool hasInferredName() const {
+    if (hasObject()) {
+      return function()->hasInferredName();
+    }
+    return functionCreationData()->hasInferredName();
+  }
+
   void trace(JSTracer* trc) override;
 };
 
