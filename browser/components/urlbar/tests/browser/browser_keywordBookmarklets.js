@@ -7,7 +7,7 @@ add_task(async function setup() {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmarklet",
-    url: "javascript:'%s'%20",
+    url: "javascript:'%sx'%20",
   });
   await PlacesUtils.keywords.insert({ keyword: "bm", url: bm.url });
   registerCleanupFunction(async function() {
@@ -20,47 +20,47 @@ add_task(async function setup() {
       gURLBar.value = "bm";
       gURLBar.focus();
       EventUtils.synthesizeKey("KEY_Enter");
-      return "javascript:''%20";
+      return "x";
     },
     function() {
       info("Type keyword with searchstring and immediately press enter");
       gURLBar.value = "bm a";
       gURLBar.focus();
       EventUtils.synthesizeKey("KEY_Enter");
-      return "javascript:'a'%20";
+      return "ax";
     },
     async function() {
       info("Search keyword, then press enter");
       await promiseAutocompleteResultPopup("bm");
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-      Assert.equal(result.title, "javascript:'' ", "Check title");
+      Assert.equal(result.title, "javascript:'x' ", "Check title");
       EventUtils.synthesizeKey("KEY_Enter");
-      return "javascript:''%20";
+      return "x";
     },
     async function() {
       info("Search keyword with searchstring, then press enter");
       await promiseAutocompleteResultPopup("bm a");
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-      Assert.equal(result.title, "javascript:'a' ", "Check title");
+      Assert.equal(result.title, "javascript:'ax' ", "Check title");
       EventUtils.synthesizeKey("KEY_Enter");
-      return "javascript:'a'%20";
+      return "ax";
     },
     async function() {
       await promiseAutocompleteResultPopup("bm");
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-      Assert.equal(result.title, "javascript:'' ", "Check title");
+      Assert.equal(result.title, "javascript:'x' ", "Check title");
       let element = UrlbarTestUtils.getSelectedRow(window);
       EventUtils.synthesizeMouseAtCenter(element, {});
-      return "javascript:''%20";
+      return "x";
     },
     async function() {
       info("Search keyword with searchstring, then click");
       await promiseAutocompleteResultPopup("bm a");
       let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-      Assert.equal(result.title, "javascript:'a' ", "Check title");
+      Assert.equal(result.title, "javascript:'ax' ", "Check title");
       let element = UrlbarTestUtils.getSelectedRow(window);
       EventUtils.synthesizeMouseAtCenter(element, {});
-      return "javascript:'a'%20";
+      return "ax";
     },
   ];
   for (let testFn of testFns) {
@@ -78,10 +78,15 @@ async function do_test(loadFn) {
       let originalPrincipalURI = await getPrincipalURI(browser);
 
       let promise = BrowserTestUtils.waitForContentEvent(browser, "pageshow");
-      let expectedUrl = await loadFn();
+      const expectedTextContent = await loadFn();
       info("Awaiting pageshow event");
       await promise;
-      Assert.equal(gBrowser.currentURI.spec, expectedUrl);
+      // URI should not change when we run a javascript: URL.
+      Assert.equal(gBrowser.currentURI.spec, "about:blank");
+      const textContent = await ContentTask.spawn(browser, [], function() {
+        return content.document.documentElement.textContent;
+      });
+      Assert.equal(textContent, expectedTextContent);
 
       let newPrincipalURI = await getPrincipalURI(browser);
       Assert.equal(

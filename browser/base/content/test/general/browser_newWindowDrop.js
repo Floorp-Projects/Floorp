@@ -41,10 +41,10 @@ add_task(async function single_url() {
   await dropText("mochi.test/first", ["http://www.mochi.test/first"]);
 });
 add_task(async function single_javascript() {
-  await dropText("javascript:'bad'", ["javascript:'bad'"]);
+  await dropText("javascript:'bad'", ["about:blank"]);
 });
 add_task(async function single_javascript_capital() {
-  await dropText("jAvascript:'bad'", ["javascript:'bad'"]);
+  await dropText("jAvascript:'bad'", ["about:blank"]);
 });
 add_task(async function single_url2() {
   await dropText("mochi.test/second", ["http://www.mochi.test/second"]);
@@ -65,7 +65,7 @@ add_task(async function multiple_urls() {
 });
 add_task(async function multiple_urls_javascript() {
   await dropText("javascript:'bad1'\nmochi.test/3", [
-    "javascript:'bad1'",
+    "about:blank",
     "http://www.mochi.test/3",
   ]);
 });
