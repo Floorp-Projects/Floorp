@@ -1177,8 +1177,6 @@ nsGlobalWindowOuter::~nsGlobalWindowOuter() {
   AssertIsOnMainThread();
 
   if (sOuterWindowsById) {
-    MOZ_ASSERT(sOuterWindowsById->Get(mWindowID),
-               "This window should be in the hash table");
     sOuterWindowsById->Remove(mWindowID);
   }
 
@@ -1399,6 +1397,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
+  tmp->ClearWeakReferences();
+  if (sOuterWindowsById) {
+    sOuterWindowsById->Remove(tmp->mWindowID);
+  }
+
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
