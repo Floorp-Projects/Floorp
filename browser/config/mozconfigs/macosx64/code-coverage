@@ -4,6 +4,7 @@ unset MOZ_LTO
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 
+ac_add_options --enable-debug-symbols=-g1
 ac_add_options --disable-sandbox
 ac_add_options --disable-warnings-as-errors
 ac_add_options --enable-coverage
