@@ -14,6 +14,8 @@ to have their reported Telemetry data deleted.
 As such it attempts to send itself at the moment the user opts out of data collection,
 and continues to try and send itself.
 
+This ping contains scalars present in the "deletion-request" store.
+
 Structure:
 
 .. code-block:: js
@@ -22,7 +24,13 @@ Structure:
       version: 4,
       type: "deletion-request",
       ... common ping data (including clientId)
-      payload: { }
+      payload: {
+        scalars: {
+          <process-type>: { // like "parent" or "content"
+            <id name>: <id>, // like "deletion.request.impression_id": "<RFC 4122 GUID>"
+          },
+        },
+      }
     }
 
 Expected behaviours
@@ -38,3 +46,7 @@ Version History
 - Firefox 72:
 
   - "deletion-request" ping replaces the "optout" ping (`bug 1585410 <https://bugzilla.mozilla.org/show_bug.cgi?id=1585410>`_).
+
+- Firefox 73:
+
+  - Added support for subordinate ids in the "deletion-request" store (`bug 1604312 <https://bugzilla.mozilla.org/show_bug.cgi?id=1604312>`_).
