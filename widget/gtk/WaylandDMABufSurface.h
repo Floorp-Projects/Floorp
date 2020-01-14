@@ -29,6 +29,10 @@ typedef enum {
   DMABUF_TEXTURE = 1 << 1,
   // Automatically create wl_buffer / EGLImage in Create routines.
   DMABUF_CREATE_WL_BUFFER = 1 << 2,
+  // Use modifiers. Such dmabuf surface may have more planes
+  // and complex internal structure (tiling/compression/etc.)
+  // so we can't do direct rendering to it.
+  DMABUF_USE_MODIFIERS = 1 << 3,
 } WaylandDMABufSurfaceFlags;
 
 class WaylandDMABufSurface {
@@ -88,6 +92,7 @@ class WaylandDMABufSurface {
   bool CreateWLBuffer();
 
   void FillFdData(struct gbm_import_fd_data& aData);
+  void FillFdData(struct gbm_import_fd_modifier_data& aData);
   void ImportSurfaceDescriptor(const mozilla::layers::SurfaceDescriptor& aDesc);
 
   void* MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
