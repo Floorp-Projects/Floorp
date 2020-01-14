@@ -21,6 +21,7 @@ bool WaveDecoder::IsSupportedType(const MediaContainerType& aContainerType) {
       aContainerType.Type() == MEDIAMIMETYPE("audio/x-pn-wav")) {
     return (aContainerType.ExtendedType().Codecs().IsEmpty() ||
             aContainerType.ExtendedType().Codecs() == "1" ||
+            aContainerType.ExtendedType().Codecs() == "3" ||
             aContainerType.ExtendedType().Codecs() == "6" ||
             aContainerType.ExtendedType().Codecs() == "7");
   }

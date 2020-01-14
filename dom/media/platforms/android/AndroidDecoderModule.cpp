@@ -74,6 +74,7 @@ bool AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType) {
   // To avoid this we check for wav types here.
   if (aMimeType.EqualsLiteral("audio/x-wav") ||
       aMimeType.EqualsLiteral("audio/wave; codecs=1") ||
+      aMimeType.EqualsLiteral("audio/wave; codecs=3") ||
       aMimeType.EqualsLiteral("audio/wave; codecs=6") ||
       aMimeType.EqualsLiteral("audio/wave; codecs=7") ||
       aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {

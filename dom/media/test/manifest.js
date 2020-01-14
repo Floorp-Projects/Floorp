@@ -300,6 +300,8 @@ var gPlayTests = [
     type: "audio/x-wav",
     duration: 1.108,
   },
+  // IEEE float wave file
+  { name: "wavedata_float.wav", type: "audio/x-wav", duration: 1.0 },
   // 24-bit samples
   { name: "wavedata_s24.wav", type: "audio/x-wav", duration: 1.0 },
   // aLaw compressed wave file
