@@ -76,10 +76,18 @@ void nsLookAndFeel::NativeInit() {
 
 /* virtual */
 void nsLookAndFeel::RefreshImpl() {
+  if (mShouldRetainCacheForTest) {
+    return;
+  }
+
   nsXPLookAndFeel::RefreshImpl();
 
   mInitializedSystemColors = false;
   mInitializedShowPassword = false;
+
+  if (XRE_IsParentProcess()) {
+    mPrefersReducedMotionCached = false;
+  }
 }
 
 nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
@@ -412,11 +420,11 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       break;
 
     case eIntID_PrefersReducedMotion:
-      if (sIsInPrefersReducedMotionForTest) {
-        aResult = sPrefersReducedMotionForTest ? 1 : 0;
-        break;
+      if (!mPrefersReducedMotionCached && XRE_IsParentProcess()) {
+        mPrefersReducedMotion =
+            java::GeckoSystemStateListener::PrefersReducedMotion() ? 1 : 0;
       }
-      aResult = java::GeckoSystemStateListener::PrefersReducedMotion() ? 1 : 0;
+      aResult = mPrefersReducedMotion;
       break;
 
     case eIntID_PrimaryPointerCapabilities:
@@ -513,3 +521,28 @@ void nsLookAndFeel::EnsureInitShowPassword() {
   }
 }
 
+nsTArray<LookAndFeelInt> nsLookAndFeel::GetIntCacheImpl() {
+  nsTArray<LookAndFeelInt> lookAndFeelIntCache =
+      nsXPLookAndFeel::GetIntCacheImpl();
+
+  const IntID kIdsToCache[] = {eIntID_PrefersReducedMotion};
+
+  for (IntID id : kIdsToCache) {
+    lookAndFeelIntCache.AppendElement(
+        LookAndFeelInt{id, {.value = GetInt(id)}});
+  }
+
+  return lookAndFeelIntCache;
+}
+
+void nsLookAndFeel::SetIntCacheImpl(
+    const nsTArray<LookAndFeelInt>& aLookAndFeelIntCache) {
+  for (const auto& entry : aLookAndFeelIntCache) {
+    switch (entry.id) {
+      case eIntID_PrefersReducedMotion:
+        mPrefersReducedMotion = entry.value;
+        mPrefersReducedMotionCached = true;
+        break;
+    }
+  }
+}
