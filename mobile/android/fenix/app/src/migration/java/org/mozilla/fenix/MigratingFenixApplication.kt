@@ -15,7 +15,6 @@ import mozilla.components.support.migration.state.MigrationStore
 class MigratingFenixApplication : FenixApplication() {
     val migrator by lazy {
         FennecMigrator.Builder(this, this.components.analytics.crashReporter)
-            .migrateSettings()
             .migrateOpenTabs(this.components.core.sessionManager)
             .migrateHistory(this.components.core.historyStorage)
             .migrateBookmarks(this.components.core.bookmarksStorage)
@@ -30,16 +29,22 @@ class MigratingFenixApplication : FenixApplication() {
     val migrationStore by lazy { MigrationStore() }
 
     override fun setupInMainProcessOnly() {
-        migrateGeckoBlocking()
+        // These migrations need to run before regular initialization happens.
+        migrateBlocking()
 
+        // Fenix application initialization can happen now.
         super.setupInMainProcessOnly()
 
+        // The rest of the migrations can happen now.
         migrator.startMigrationIfNeeded(migrationStore, MigrationService::class.java)
     }
 
-    private fun migrateGeckoBlocking() {
+    private fun migrateBlocking() {
         val migrator = FennecMigrator.Builder(this, this.components.analytics.crashReporter)
             .migrateGecko()
+            // Telemetry may have been disabled in Fennec, so we need to migrate Settings first
+            // to correctly initialize telemetry.
+            .migrateSettings()
             .build()
 
         runBlocking {
