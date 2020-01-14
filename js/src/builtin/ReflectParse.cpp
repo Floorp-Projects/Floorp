@@ -3664,7 +3664,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
   ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObject(
-      cx, frontend::CreateScriptSourceObject(cx, options, mozilla::Nothing()));
+      cx, frontend::CreateScriptSourceObject(cx, options));
   if (!sourceObject) {
     return false;
   }

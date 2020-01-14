@@ -175,8 +175,7 @@ MOZ_MUST_USE bool CompileStandaloneAsyncGenerator(
     const mozilla::Maybe<uint32_t>& parameterListEnd);
 
 ScriptSourceObject* CreateScriptSourceObject(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    const mozilla::Maybe<uint32_t>& parameterListEnd = mozilla::Nothing());
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options);
 
 /*
  * True if str consists of an IdentifierStart character, followed by one or

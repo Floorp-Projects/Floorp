@@ -5219,7 +5219,7 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObj(
-      cx, frontend::CreateScriptSourceObject(cx, options, Nothing()));
+      cx, frontend::CreateScriptSourceObject(cx, options));
   if (!sourceObj) {
     return false;
   }
@@ -5305,7 +5305,7 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
   ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObject(
-      cx, frontend::CreateScriptSourceObject(cx, options, Nothing()));
+      cx, frontend::CreateScriptSourceObject(cx, options));
   if (!sourceObject) {
     return false;
   }
@@ -5378,7 +5378,7 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
   ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObject(
-      cx, frontend::CreateScriptSourceObject(cx, options, Nothing()));
+      cx, frontend::CreateScriptSourceObject(cx, options));
   if (!sourceObject) {
     return false;
   }

@@ -56,8 +56,7 @@ static int testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
   GlobalSharedContext globalsc(gCx, ScopeKind::Global, directives, false);
 
   RootedScriptSourceObject sourceObj(
-      gCx,
-      frontend::CreateScriptSourceObject(gCx, options, mozilla::Nothing()));
+      gCx, frontend::CreateScriptSourceObject(gCx, options));
   if (!sourceObj) {
     ReportOutOfMemory(gCx);
     return 0;

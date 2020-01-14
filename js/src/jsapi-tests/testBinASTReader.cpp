@@ -284,8 +284,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
     frontend::ParseInfo parseInfo(cx, allocScope);
 
     RootedScriptSourceObject sourceObject(
-        cx,
-        frontend::CreateScriptSourceObject(cx, txtOptions, mozilla::Nothing()));
+        cx, frontend::CreateScriptSourceObject(cx, txtOptions));
     if (!sourceObject) {
       MOZ_CRASH("Couldn't initialize ScriptSourceObject");
     }
@@ -335,8 +334,7 @@ void runTestFromPath(JSContext* cx, const char* path) {
                                            false);
 
     RootedScriptSourceObject sourceObj(
-        cx,
-        frontend::CreateScriptSourceObject(cx, binOptions, mozilla::Nothing()));
+        cx, frontend::CreateScriptSourceObject(cx, binOptions));
     if (!sourceObj) {
       MOZ_CRASH();
     }
