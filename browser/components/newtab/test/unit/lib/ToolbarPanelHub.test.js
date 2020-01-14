@@ -891,5 +891,13 @@ describe("ToolbarPanelHub", () => {
         },
       });
     });
+    it("should handleUserAction from mouseup and keyup", async () => {
+      await fakeInsert();
+
+      eventListeners.mouseup();
+      eventListeners.keyup({ key: "Enter" });
+      eventListeners.keyup({ key: " " });
+      assert.calledThrice(handleUserActionStub);
+    });
   });
 });
