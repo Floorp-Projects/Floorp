@@ -81,6 +81,8 @@ PRBool aesni_support();
 PRBool clmul_support();
 PRBool avx_support();
 PRBool ssse3_support();
+PRBool sse4_1_support();
+PRBool sse4_2_support();
 PRBool arm_neon_support();
 PRBool arm_aes_support();
 PRBool arm_pmull_support();
