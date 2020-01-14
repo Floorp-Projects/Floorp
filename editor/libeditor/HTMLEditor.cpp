@@ -974,9 +974,8 @@ HTMLEditor::InsertLineBreak() {
   // HTMLEditor.
   AutoEditActionDataSetter editActionData(
       *this, EditAction::eInsertParagraphSeparator);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   EditActionResult result = InsertParagraphSeparatorAsSubAction();
@@ -988,27 +987,26 @@ HTMLEditor::InsertLineBreak() {
 nsresult HTMLEditor::InsertLineBreakAsAction(nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak,
                                           aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   // XXX This method may be called by "insertLineBreak" command.  So, using
   //     TypingTxnName here is odd in such case.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
-  rv = InsertBrElementAtSelectionWithTransaction();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "InsertBrElementAtSelectionWithTransaction() failed");
-  return rv;
+  nsresult rv = InsertBrElementAtSelectionWithTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::InsertParagraphSeparatorAsAction(
     nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
       *this, EditAction::eInsertParagraphSeparator, aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   EditActionResult result = InsertParagraphSeparatorAsSubAction();
@@ -1080,9 +1078,8 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
   //     browsers later.
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertTableRowElement);
-  rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditActionHandled(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return EditActionResult(NS_ERROR_FAILURE);
   }
   rv = InsertTableRowsWithTransaction(1, InsertPosition::eAfterSelectedCell);
   if (NS_WARN_IF(Destroyed())) {
@@ -1276,9 +1273,8 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString) {
   CommitComposition();
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eSetHTML);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   RefPtr<Element> rootElement = GetRoot();
@@ -1378,7 +1374,7 @@ HTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString) {
     }
   }
 
-  rv = SelectAll();
+  nsresult rv = SelectAll();
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!foundbody) {
@@ -1531,9 +1527,8 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
 
   AutoEditActionDataSetter editActionData(
       *this, HTMLEditUtils::GetEditActionForInsert(*aElement), aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   CommitComposition();
@@ -1560,7 +1555,7 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
       !ignoredError.Failed(),
       "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  rv = EnsureNoPaddingBRElementForEmptyEditor();
+  nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
     return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -1835,9 +1830,8 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
     const nsAString& aParagraphFormat, nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
       *this, EditAction::eInsertBlockElement, aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   nsAutoString lowerCaseTagName(aParagraphFormat);
@@ -1851,7 +1845,7 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
                          "MakeOrChangeListAndListItemAsSubAction() failed");
     return EditorBase::ToGenericNSResult(result.Rv());
   }
-  rv = FormatBlockContainerAsSubAction(*tagName);
+  nsresult rv = FormatBlockContainerAsSubAction(*tagName);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "FormatBlockContainerAsSubAction() failed");
   return EditorBase::ToGenericNSResult(rv);
@@ -2158,9 +2152,8 @@ nsresult HTMLEditor::MakeOrChangeListAsAction(
 
   AutoEditActionDataSetter editActionData(
       *this, HTMLEditUtils::GetEditActionForInsert(aListTagName), aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   EditActionResult result = MakeOrChangeListAndListItemAsSubAction(
@@ -2197,12 +2190,11 @@ nsresult HTMLEditor::RemoveListAsAction(const nsAString& aListType,
   }
   AutoEditActionDataSetter editActionData(
       *this, HTMLEditUtils::GetEditActionForRemoveList(*listAtom), aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = RemoveListAtSelectionAsSubAction();
+  nsresult rv = RemoveListAtSelectionAsSubAction();
   NS_WARNING_ASSERTION(NS_FAILED(rv),
                        "RemoveListAtSelectionAsSubAction() failed");
   return rv;
@@ -2300,9 +2292,8 @@ nsresult HTMLEditor::IndentAsAction(nsIPrincipal* aPrincipal) {
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eIndent,
                                           aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   EditActionResult result = IndentAsSubAction();
@@ -2317,9 +2308,8 @@ nsresult HTMLEditor::OutdentAsAction(nsIPrincipal* aPrincipal) {
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eOutdent,
                                           aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   EditActionResult result = OutdentAsSubAction();
@@ -2340,9 +2330,8 @@ nsresult HTMLEditor::AlignAsAction(const nsAString& aAlignType,
                                    nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
       *this, HTMLEditUtils::GetEditActionForAlignment(aAlignType), aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   EditActionResult result = AlignAsSubAction(aAlignType);
@@ -2749,17 +2738,13 @@ nsresult HTMLEditor::InsertLinkAroundSelectionAsAction(
   anchor->GetAttr(kNameSpaceID_None, nsGkAtoms::href, rawHref);
   editActionData.SetData(rawHref);
 
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
   nsAutoString href;
   anchor->GetHref(href);
   if (href.IsEmpty()) {
     return NS_OK;
   }
 
+  nsresult rv;
   AutoPlaceholderBatch treatAsOneTransaction(*this);
 
   // Set all attributes found on the supplied anchor element
@@ -2781,8 +2766,7 @@ nsresult HTMLEditor::InsertLinkAroundSelectionAsAction(
 
       attribute->GetValue(value);
 
-      nsresult rv =
-          SetInlinePropertyInternal(*nsGkAtoms::a, MOZ_KnownLive(name), value);
+      rv = SetInlinePropertyInternal(*nsGkAtoms::a, MOZ_KnownLive(name), value);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -3281,14 +3265,15 @@ HTMLEditor::DeleteNode(nsINode* aNode) {
   }
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eRemoveNode);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = DeleteNodeWithTransaction(*aNode);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DeleteNodeWithTransaction() failed");
-  return rv;
+  nsresult rv = DeleteNodeWithTransaction(*aNode);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::DeleteTextWithTransaction(Text& aTextNode,
@@ -4474,9 +4459,8 @@ nsresult HTMLEditor::SetBackgroundColorAsAction(const nsAString& aColor,
                                                 nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
       *this, EditAction::eSetBackgroundColor, aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   if (IsCSSEnabled()) {
@@ -4490,10 +4474,8 @@ nsresult HTMLEditor::SetBackgroundColorAsAction(const nsAString& aColor,
   }
 
   // but in HTML mode, we can only set the document's background color
-  rv = SetHTMLBackgroundColorWithTransaction(aColor);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "SetHTMLBackgroundColorWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  return EditorBase::ToGenericNSResult(
+      SetHTMLBackgroundColorWithTransaction(aColor));
 }
 
 nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(

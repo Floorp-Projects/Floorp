@@ -13,44 +13,28 @@
 </pre>
 
 <script class="testbody" type="application/javascript">
-"use strict";
 
 SimpleTest.waitForExplicitFinish();
-
-SimpleTest.waitForFocus(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+SimpleTest.waitForFocus(function() {
   let editor = document.getElementById("content");
   let selection = window.getSelection();
   let description, condition;
-  let beforeInputEvents = [];
   let inputEvents = [];
-  function onBeforeInput(aEvent) {
-    beforeInputEvents.push(aEvent);
-  }
   function onInput(aEvent) {
     inputEvents.push(aEvent);
   }
-  editor.addEventListener("beforeinput", onBeforeInput);
   editor.addEventListener("input", onInput);
 
   function checkInputEvent(aEvent, aInputType, aDescription) {
-    if (aEvent.type !== "input" && aEvent.type !== "beforeinput") {
+    if (aEvent.type != "input") {
       return;
     }
-    ok(aEvent instanceof InputEvent, `${aDescription}"${aEvent.type}" event should be dispatched with InputEvent interface`);
-    // If it were cancelable whose inputType is empty string, web apps would
-    // block any Firefox specific modification whose inputType are not declared
-    // by the spec.
-    let expectedCancelable = aEvent.type === "beforeinput" && aInputType !== "";
-    is(aEvent.cancelable, expectedCancelable,
-       `${aDescription}"${aEvent.type}" event should ${expectedCancelable ? "be" : "be never"} cancelable`);
-    is(aEvent.bubbles, true, `${aDescription}"${aEvent.type}" event should always bubble`);
-    is(aEvent.inputType, aInputType, `${aDescription}inputType of "${aEvent.type}" event should be ${aInputType}`);
-    is(aEvent.data, null, `${aDescription}data of "${aEvent.type}" event should be null`);
-    is(aEvent.dataTransfer, null, `${aDescription}dataTransfer of "${aEvent.type}" event should be null`);
+    ok(aEvent instanceof InputEvent, `${aDescription}"input" event should be dispatched with InputEvent interface`);
+    is(aEvent.cancelable, false, `${aDescription}"input" event should be never cancelable`);
+    is(aEvent.bubbles, true, `${aDescription}"input" event should always bubble`);
+    is(aEvent.inputType, aInputType, `${aDescription}inputType should be ${aInputType}`);
+    is(aEvent.data, null, `${aDescription}data should be null`);
+    is(aEvent.dataTransfer, null, `${aDescription}dataTransfer should be null`);
   }
 
   function selectFromTextSiblings(aNode) {
@@ -81,180 +65,160 @@ SimpleTest.waitForFocus(async () => {
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = "<p>test: <b>here</b> is bolden text</p>";
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, "<p>test: here is bolden text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should remove the <b> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "formatBold", description);
+    }
   }
 
   description = "When there is a <b> element which has style attribute and ";
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = '<p>test: <b style="font-style: italic">here</b> is bolden text</p>';
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, '<p>test: <span style="font-style: italic">here</span> is bolden text</p>',
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should replace the <b> element with <span> element to keep the style');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "formatBold", description);
+    }
   }
 
   description = "When there is a <b> element which has class attribute and ";
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = '<p>test: <b class="foo">here</b> is bolden text</p>';
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, '<p>test: <span class="foo">here</span> is bolden text</p>',
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should replace the <b> element with <span> element to keep the class');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "formatBold", description);
+    }
   }
 
   description = "When there is a <b> element which has an <i> element and ";
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = "<p>test: <b><i>here</i></b> is bolden and italic text</p>";
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, "<p>test: <i>here</i> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should remove only the <b> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "formatBold", description);
+    }
   }
 
   description = "When there is a <b> element which has an <i> element and ";
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = "<p>test: <b><i>here</i></b> is bolden and italic text</p>";
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("i", "");
     is(editor.innerHTML, "<p>test: <b>here</b> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should remove only the <i> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "formatItalic", description);
+    }
   }
 
   description = "When there is an <i> element in a <b> element and ";
   for (let prepare of [selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = "<p>test: <b><i>here</i></b> is bolden and italic text</p>";
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling.firstChild);
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, "<p>test: <i>here</i> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should remove only the <b> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "formatBold", description);
+    }
   }
 
   description = "When there is an <i> element in a <b> element and ";
   for (let prepare of [selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = "<p>test: <b><i>here</i></b> is bolden and italic text</p>";
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling.firstChild);
     getHTMLEditor().removeInlineProperty("i", "");
     is(editor.innerHTML, "<p>test: <b>here</b> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should remove only the <i> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "formatItalic", description);
+    }
   }
 
   description = "When there is an <i> element between text nodes in a <b> element and ";
   for (let prepare of [selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = "<p>test: <b>h<i>e</i>re</b> is bolden and italic text</p>";
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("i", "");
     is(editor.innerHTML, "<p>test: <b>here</b> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should remove only the <i> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "formatItalic", description);
+    }
   }
 
   description = "When there is an <i> element between text nodes in a <b> element and ";
   for (let prepare of [selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = "<p>test: <b>h<i>e</i>re</b> is bolden and italic text</p>";
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, "<p>test: <b>h</b><i>e</i><b>re</b> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should split the <b> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "formatBold", description);
+    }
   }
 
   description = "When there is an <a> element whose href attribute is not empty and ";
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = '<p>test: <a href="about:blank">here</a> is a link</p>';
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("href", "");
     is(editor.innerHTML, "<p>test: here is a link</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should remove the <a> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "", description);
+    }
   }
 
   // XXX In the case of "name", removeInlineProperty() does not the <a> element when name attribute is empty.
@@ -262,33 +226,27 @@ SimpleTest.waitForFocus(async () => {
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = '<p>test: <a href="">here</a> is a link</p>';
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("href", "");
     is(editor.innerHTML, "<p>test: here is a link</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should remove the <a> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "", description);
+    }
   }
 
   description = "When there is an <a> element which does not have href attribute and ";
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = "<p>test: <a>here</a> is an anchor</p>";
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("href", "");
     is(editor.innerHTML, "<p>test: <a>here</a> is an anchor</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should NOT remove the <a> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause a "beforeinput" event even though HTMLEditor will do nothing');
-    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
     is(inputEvents.length, 0,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should NOT cause an "input" event');
   }
@@ -297,15 +255,11 @@ SimpleTest.waitForFocus(async () => {
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = '<p>test: <a name="foo">here</a> is a named anchor</p>';
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("href", "");
     is(editor.innerHTML, '<p>test: <a name="foo">here</a> is a named anchor</p>',
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should NOT remove the <a> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause a "beforeinput" event even though HTMLEditor will do nothing');
-    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
     is(inputEvents.length, 0,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should NOT cause an "input" event');
   }
@@ -314,18 +268,16 @@ SimpleTest.waitForFocus(async () => {
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = '<p>test: <a name="foo">here</a> is a named anchor</p>';
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("name", "");
     is(editor.innerHTML, "<p>test: here is a named anchor</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should remove the <a> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause a "beforeinput" event');
-    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause an "input" event');
-    checkInputEvent(inputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", ""): ');
+    if (inputEvents.length > 0) {
+      checkInputEvent(inputEvents[0], "", description);
+    }
   }
 
   // XXX In the case of "href", removeInlineProperty() removes the <a> element when href attribute is empty.
@@ -333,15 +285,11 @@ SimpleTest.waitForFocus(async () => {
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = '<p>test: <a name="">here</a> is a named anchor</p>';
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("name", "");
     is(editor.innerHTML, '<p>test: <a name="">here</a> is a named anchor</p>',
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT remove the <a> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause a "beforeinput" event even though HTMLEditor will do nothing');
-    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", ""): ');
     is(inputEvents.length, 0,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT cause an "input" event');
   }
@@ -350,15 +298,11 @@ SimpleTest.waitForFocus(async () => {
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = "<p>test: <a>here</a> is an anchor</p>";
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("name", "");
     is(editor.innerHTML, "<p>test: <a>here</a> is an anchor</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT remove the <a> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause a "beforeinput" event even though HTMLEditor will do nothing');
-    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "")');
     is(inputEvents.length, 0,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT cause an "input" event');
   }
@@ -367,20 +311,15 @@ SimpleTest.waitForFocus(async () => {
   for (let prepare of [selectFromTextSiblings, selectNode, selectAllChildren, selectChildContents]) {
     editor.innerHTML = '<p>test: <a href="about:blank">here</a> is a link</p>';
     editor.focus();
-    beforeInputEvents = [];
     inputEvents = [];
     prepare(editor.firstChild.firstChild.nextSibling);
     getHTMLEditor().removeInlineProperty("name", "");
     is(editor.innerHTML, '<p>test: <a href="about:blank">here</a> is a link</p>',
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT remove the <a> element');
-    is(beforeInputEvents.length, 1,
-      description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause a "beforeinput" event even though HTMLEditor will do nothing');
-    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "")');
     is(inputEvents.length, 0,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT cause an "input" event');
   }
 
-  editor.removeEventListener("beforeinput", onBeforeInput);
   editor.removeEventListener("input", onInput);
 
   SimpleTest.finish();

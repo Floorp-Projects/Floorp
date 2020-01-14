@@ -46,42 +46,18 @@ let MOCK_STORAGE = [{
 function checkElementFilled(element, expectedvalue) {
   return [
     new Promise(resolve => {
-      let beforeInputFired = false;
-      let oldValue = element.value;
-      element.addEventListener("beforeinput", function onBeforeInput(event) {
-        ok(true, "Checking " + element.name + " field fires beforeinput event");
-        beforeInputFired = true;
-        ok(event instanceof InputEvent,
-           `"beforeinput" event should be dispatched with InputEvent interface on ${element.name}`);
-        is(event.inputType, "insertReplacementText",
-           'inputType value of "beforeinput" event should be "insertReplacementText"');
-        is(event.data, expectedvalue,
-           'data value of "beforeinput" event should be same as expected value');
-        is(event.dataTransfer, null,
-           'dataTransfer value of "beforeinput" event should be null');
-        is(event.cancelable, true,
-           `"beforeinput" event should be cancelable on ${element.name}`);
-        is(event.bubbles, true,
-           `"input" event should always bubble on ${element.name}`);
-        is(element.value, oldValue,
-           'value of the element should not be modified at "beforeinput" event yet');
-      }, {once: true});
       element.addEventListener("input", function onInput(event) {
         ok(true, "Checking " + element.name + " field fires input event");
         if (element.tagName == "INPUT" && element.type == "text") {
-          ok(beforeInputFired, `"beforeinput" event shoud've been fired on ${element.name} before "input" event`);
           ok(event instanceof InputEvent,
              `"input" event should be dispatched with InputEvent interface on ${element.name}`);
           is(event.inputType, "insertReplacementText",
              "inputType value should be \"insertReplacementText\"");
-          is(event.data, expectedvalue,
-             "data value should be same as expected value");
+          is(event.data, element.value,
+             "data value should be same as value of the input element");
           is(event.dataTransfer, null,
              "dataTransfer value should be null");
-          is(element.value, expectedvalue,
-             'value of the element should be modified at "input" event');
         } else {
-          ok(!beforeInputFired, `"beforeinput" event shoudn't be fired on ${element.name} before "input" event`);
           ok(event instanceof Event && !(event instanceof UIEvent),
              `"input" event should be dispatched with Event interface on ${element.name}`);
         }
@@ -142,8 +118,7 @@ initPopupListener();
 add_task(async function setup() {
   // This test relies on being able to fill a Canadian address which isn't possible
   // without `supportedCountries` allowing Canada
-  await SpecialPowers.pushPrefEnv({"set": [["extensions.formautofill.supportedCountries", "US,CA"],
-                                           ["dom.input_events.beforeinput.enabled", true]]});
+  await SpecialPowers.pushPrefEnv({"set": [["extensions.formautofill.supportedCountries", "US,CA"]]});
 
   await setupAddressStorage();
 });

@@ -22,15 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1473515
 <pre id="test">
 
 <script class="testbody" type="application/javascript">
-"use strict";
-
 SimpleTest.waitForExplicitFinish();
-SimpleTest.expectAssertions(0, 1);  // In a11y module
-SimpleTest.waitForFocus(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+SimpleTest.waitForFocus(function() {
   let editableElements = [
     document.getElementById("input"),
     document.getElementById("textarea"),
@@ -38,66 +31,46 @@ SimpleTest.waitForFocus(async () => {
   for (let editableElement of editableElements) {
     function checkInputEvent(aEvent, aInputType, aData, aDescription) {
       ok(aEvent instanceof InputEvent,
-         `"${aEvent.type}" event should be dispatched with InputEvent interface ${aDescription}`);
-      is(aEvent.cancelable, aEvent.type === "beforeinput",
-         `"${aEvent.type}" event should ${aEvent.type === "beforeinput" ? "be" : "be never"} cancelable ${aDescription}`);
+         `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+      is(aEvent.cancelable, false,
+         `"input" event should be never cancelable ${aDescription}`);
       is(aEvent.bubbles, true,
-         `"${aEvent.type}" event should always bubble ${aDescription}`);
+         `"input" event should always bubble ${aDescription}`);
       is(aEvent.inputType, aInputType,
-         `inputType of "${aEvent.type}" event should be "${aInputType}" ${aDescription}`);
+         `inputType should be "${aInputType}" ${aDescription}`);
       is(aEvent.data, aData,
-         `data of "${aEvent.type}" event should be ${aData} ${aDescription}`);
+         `data should be ${aData} ${aDescription}`);
       is(aEvent.dataTransfer, null,
-         `dataTransfer of "${aEvent.type}" should be null ${aDescription}`);
+         `dataTransfer should be null ${aDescription}`);
     }
 
-    let beforeInputEvents = [];
     let inputEvents = [];
-    function onBeforeInput(aEvent) {
-      beforeInputEvents.push(aEvent);
-    }
     function onInput(aEvent) {
       inputEvents.push(aEvent);
     }
-    editableElement.addEventListener("beforeinput", onBeforeInput);
     editableElement.addEventListener("input", onInput);
 
     editableElement.focus();
 
-    beforeInputEvents = [];
     inputEvents = [];
     synthesizeKey("a");
-    is(beforeInputEvents.length, 1,
-       `Only one "beforeinput" event should be fired when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    checkInputEvent(beforeInputEvents[0], "insertText", "a", `when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
     checkInputEvent(inputEvents[0], "insertText", "a", `when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
 
-    beforeInputEvents = [];
     inputEvents = [];
     synthesizeKey("c");
-    is(beforeInputEvents.length, 1,
-       `Only one "beforeinput" event should be fired when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    checkInputEvent(beforeInputEvents[0], "insertText", "c", `when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
     checkInputEvent(inputEvents[0], "insertText", "c", `when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
 
-    beforeInputEvents = [];
     inputEvents = [];
     synthesizeKey("KEY_ArrowLeft");
-    is(beforeInputEvents.length, 0,
-       `No "beforeinput" event should be fired when pressing "ArrowLeft" key on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 0,
        `No "input" event should be fired when pressing "ArrowLeft" key on <${editableElement.tagName.toLowerCase()}> element`);
 
-    beforeInputEvents = [];
     inputEvents = [];
     synthesizeKey("b");
-    is(beforeInputEvents.length, 1,
-       `Only one "beforeinput" event should be fired when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    checkInputEvent(beforeInputEvents[0], "insertText", "b", `when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
     checkInputEvent(inputEvents[0], "insertText", "b", `when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
@@ -110,11 +83,8 @@ SimpleTest.waitForFocus(async () => {
     is(transactionManager.maxTransactionCount, 1000,
        editableElement.tagName + ": Initially, transaction manager should be able to have 1,000 undo items");
 
-    beforeInputEvents = [];
     inputEvents = [];
     editableElement.value = "def";
-    is(beforeInputEvents.length, 0,
-       `No "beforeinput" event should be fired when setting value of <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 0,
        `No "input" event should be fired when setting value of <${editableElement.tagName.toLowerCase()}> element`);
 
@@ -123,24 +93,16 @@ SimpleTest.waitForFocus(async () => {
     is(transactionManager.maxTransactionCount, 1000,
        editableElement.tagName + ": After setting value, maximum transaction count should be restored to the previous value");
 
-    beforeInputEvents = [];
     inputEvents = [];
     synthesizeKey("a");
-    is(beforeInputEvents.length, 1,
-       `Only one "beforeinput" event should be fired when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
-    checkInputEvent(beforeInputEvents[0], "insertText", "a", `when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
     checkInputEvent(inputEvents[0], "insertText", "a", `when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
 
-    beforeInputEvents = [];
     inputEvents = [];
     synthesizeKey("z", { accelKey: true });
     is(editableElement.value, "def",
        editableElement.tagName + ": undo should work after setting value");
-    is(beforeInputEvents.length, 1,
-       `Only one "beforeinput" event should be fired when undoing on <${editableElement.tagName.toLowerCase()}> element`);
-    checkInputEvent(beforeInputEvents[0], "historyUndo", null, `when undoing on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when undoing on <${editableElement.tagName.toLowerCase()}> element`);
     checkInputEvent(inputEvents[0], "historyUndo", null, `when undoing on <${editableElement.tagName.toLowerCase()}> element`);
@@ -153,7 +115,6 @@ SimpleTest.waitForFocus(async () => {
     is(transactionManager.maxTransactionCount, 0,
        editableElement.tagName + ": Transaction manager should not be able to have undo items after setting value");
 
-    editableElement.removeEventListener("beforeinput", onBeforeInput);
     editableElement.removeEventListener("input", onInput);
   }
   SimpleTest.finish();

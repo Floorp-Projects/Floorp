@@ -154,18 +154,18 @@ HTMLEditor::InsertTableCell(int32_t aNumberOfCellsToInsert,
                             bool aInsertAfterSelectedCell) {
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertTableCellElement);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = InsertTableCellsWithTransaction(
+  nsresult rv = InsertTableCellsWithTransaction(
       aNumberOfCellsToInsert, aInsertAfterSelectedCell
                                   ? InsertPosition::eAfterSelectedCell
                                   : InsertPosition::eBeforeSelectedCell);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "InsertTableCellsWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::InsertTableCellsWithTransaction(
@@ -394,18 +394,18 @@ HTMLEditor::InsertTableColumn(int32_t aNumberOfColumnsToInsert,
                               bool aInsertAfterSelectedCell) {
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertTableColumn);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = InsertTableColumnsWithTransaction(
+  nsresult rv = InsertTableColumnsWithTransaction(
       aNumberOfColumnsToInsert, aInsertAfterSelectedCell
                                     ? InsertPosition::eAfterSelectedCell
                                     : InsertPosition::eBeforeSelectedCell);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "InsertTableColumnsWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::InsertTableColumnsWithTransaction(
@@ -588,18 +588,18 @@ HTMLEditor::InsertTableRow(int32_t aNumberOfRowsToInsert,
                            bool aInsertAfterSelectedCell) {
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertTableRowElement);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = InsertTableRowsWithTransaction(
+  nsresult rv = InsertTableRowsWithTransaction(
       aNumberOfRowsToInsert, aInsertAfterSelectedCell
                                  ? InsertPosition::eAfterSelectedCell
                                  : InsertPosition::eBeforeSelectedCell);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "InsertTableRowsWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::InsertTableRowsWithTransaction(
@@ -854,14 +854,13 @@ NS_IMETHODIMP
 HTMLEditor::DeleteTable() {
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eRemoveTableElement);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   RefPtr<Element> table;
-  rv = GetCellContext(getter_AddRefs(table), nullptr, nullptr, nullptr, nullptr,
-                      nullptr);
+  nsresult rv = GetCellContext(getter_AddRefs(table), nullptr, nullptr, nullptr,
+                               nullptr, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
@@ -871,24 +870,25 @@ HTMLEditor::DeleteTable() {
 
   AutoPlaceholderBatch treateAsOneTransaction(*this);
   rv = DeleteTableElementAndChildrenWithTransaction(*table);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "DeleteTableElementAndChildrenWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLEditor::DeleteTableCell(int32_t aNumberOfCellsToDelete) {
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eRemoveTableCellElement);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = DeleteTableCellWithTransaction(aNumberOfCellsToDelete);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "DeleteTableCellWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = DeleteTableCellWithTransaction(aNumberOfCellsToDelete);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::DeleteTableCellWithTransaction(
@@ -1159,15 +1159,15 @@ NS_IMETHODIMP
 HTMLEditor::DeleteTableCellContents() {
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eDeleteTableCellContents);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = DeleteTableCellContentsWithTransaction();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "DeleteTableCellContentsWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = DeleteTableCellContentsWithTransaction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::DeleteTableCellContentsWithTransaction() {
@@ -1245,15 +1245,16 @@ NS_IMETHODIMP
 HTMLEditor::DeleteTableColumn(int32_t aNumberOfColumnsToDelete) {
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eRemoveTableColumn);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = DeleteSelectedTableColumnsWithTransaction(aNumberOfColumnsToDelete);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "DeleteSelectedTableColumnsWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv =
+      DeleteSelectedTableColumnsWithTransaction(aNumberOfColumnsToDelete);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::DeleteSelectedTableColumnsWithTransaction(
@@ -1477,15 +1478,15 @@ NS_IMETHODIMP
 HTMLEditor::DeleteTableRow(int32_t aNumberOfRowsToDelete) {
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eRemoveTableRowElement);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = DeleteSelectedTableRowsWithTransaction(aNumberOfRowsToDelete);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "DeleteSelectedTableRowsWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = DeleteSelectedTableRowsWithTransaction(aNumberOfRowsToDelete);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::DeleteSelectedTableRowsWithTransaction(
@@ -2141,17 +2142,17 @@ NS_IMETHODIMP
 HTMLEditor::SplitTableCell() {
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eSplitTableCellElement);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   RefPtr<Element> table;
   RefPtr<Element> cell;
   int32_t startRowIndex, startColIndex, actualRowSpan, actualColSpan;
   // Get cell, table, etc. at selection anchor node
-  rv = GetCellContext(getter_AddRefs(table), getter_AddRefs(cell), nullptr,
-                      nullptr, &startRowIndex, &startColIndex);
+  nsresult rv =
+      GetCellContext(getter_AddRefs(table), getter_AddRefs(cell), nullptr,
+                     nullptr, &startRowIndex, &startColIndex);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
@@ -2425,9 +2426,8 @@ HTMLEditor::SwitchTableCellHeaderType(Element* aSourceCell,
 
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eSetTableCellElementType);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
@@ -2472,9 +2472,8 @@ NS_IMETHODIMP
 HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eJoinTableCellElements);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   RefPtr<Element> table;
@@ -2482,8 +2481,9 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
   int32_t startRowIndex, startColIndex;
 
   // Get cell, table, etc. at selection anchor node
-  rv = GetCellContext(getter_AddRefs(table), getter_AddRefs(targetCell),
-                      nullptr, nullptr, &startRowIndex, &startColIndex);
+  nsresult rv =
+      GetCellContext(getter_AddRefs(table), getter_AddRefs(targetCell), nullptr,
+                     nullptr, &startRowIndex, &startColIndex);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
@@ -3068,9 +3068,8 @@ nsresult HTMLEditor::FixBadColSpan(Element* aTable, int32_t aColIndex,
 NS_IMETHODIMP
 HTMLEditor::NormalizeTable(Element* aTableOrElementInTable) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNormalizeTable);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   if (!aTableOrElementInTable) {
@@ -3080,9 +3079,11 @@ HTMLEditor::NormalizeTable(Element* aTableOrElementInTable) {
       return NS_OK;  // Don't throw error even if the element is not in <table>.
     }
   }
-  rv = NormalizeTableInternal(*aTableOrElementInTable);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NormalizeTableInternal() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = NormalizeTableInternal(*aTableOrElementInTable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult HTMLEditor::NormalizeTableInternal(Element& aTableOrElementInTable) {

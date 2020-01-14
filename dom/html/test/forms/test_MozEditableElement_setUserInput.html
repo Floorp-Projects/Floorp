@@ -3,7 +3,6 @@
 <head>
   <title>Test for MozEditableElement.setUserInput()</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
@@ -16,11 +15,7 @@
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 // eslint-disable-next-line complexity
-SimpleTest.waitForFocus(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+SimpleTest.waitForFocus(() => {
   let content = document.getElementById("content");
   /**
    * Test structure:
@@ -32,85 +27,84 @@ SimpleTest.waitForFocus(async () => {
    *   result: the results of calling setUserInput().
    *     before: the element's expected value of calling setUserInput() before the element gets focus.
    *     after: the element's expected value of calling setUserInput() after the element gets focus.
-   *     fireBeforeInputEvent: true if "beforeinput" event should be fired.  Otherwise, false.
    *     fireInputEvent: true if "input" event should be fired.  Otherwise, false.
    */
   for (let test of [{element: "input", type: "hidden",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: false}},
+                     result: {before: "3", after:"6", fireInputEvent: false}},
                     {element: "input", type: "text",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: true, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     {element: "input", type: "search",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: true, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     {element: "input", type: "tel",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: true, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     {element: "input", type: "url",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: true, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     {element: "input", type: "email",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: true, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     {element: "input", type: "password",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: true, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     // "date" does not support setUserInput, but dispatches "input" event...
                     {element: "input", type: "date",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     // "month" does not support setUserInput, but dispatches "input" event...
                     {element: "input", type: "month",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     // "week" does not support setUserInput, but dispatches "input" event...
                     {element: "input", type: "week",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     // "time" does not support setUserInput, but dispatches "input" event...
                     {element: "input", type: "time",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     // "datetime-local" does not support setUserInput, but dispatches "input" event...
                     {element: "input", type: "datetime-local",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     {element: "input", type: "number",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: true, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     {element: "input", type: "range",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     // "color" does not support setUserInput, but dispatches "input" event...
                     {element: "input", type: "color",
                      input: {before: "#5C5C5C", after: "#FFFFFF"},
-                     result: {before: "#5c5c5c", after:"#ffffff", fireBeforeInputEvent: false, fireInputEvent: true}},
+                     result: {before: "#5c5c5c", after:"#ffffff", fireInputEvent: true}},
                     {element: "input", type: "checkbox",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     {element: "input", type: "radio",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: true}},
+                     result: {before: "3", after:"6", fireInputEvent: true}},
                     // "file" is not supported by setUserInput? But there is a path...
                     {element: "input", type: "file",
                      input: {before: "3", after: "6"},
-                     result: {before: "", after:"", fireBeforeInputEvent: false, fireInputEvent: true}},
+                     result: {before: "", after:"", fireInputEvent: true}},
                     {element: "input", type: "submit",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: false}},
+                     result: {before: "3", after:"6", fireInputEvent: false}},
                     {element: "input", type: "image",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: false}},
+                     result: {before: "3", after:"6", fireInputEvent: false}},
                     {element: "input", type: "reset",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: false}},
+                     result: {before: "3", after:"6", fireInputEvent: false}},
                     {element: "input", type: "button",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: false, fireInputEvent: false}},
+                     result: {before: "3", after:"6", fireInputEvent: false}},
                     {element: "textarea",
                      input: {before: "3", after: "6"},
-                     result: {before: "3", after:"6", fireBeforeInputEvent: true, fireInputEvent: true}}]) {
+                     result: {before: "3", after:"6", fireInputEvent: true}}]) {
     let tag =
       test.type !== undefined ? `<${test.element} type="${test.type}">` :
                                 `<${test.element}>`;
@@ -119,14 +113,10 @@ SimpleTest.waitForFocus(async () => {
     content.scrollTop; // Flush pending layout.
     let target = content.firstChild;
 
-    let inputEvents = [], beforeInputEvents = [];
-    function onBeforeInput(aEvent) {
-      beforeInputEvents.push(aEvent);
-    }
+    let inputEvents = [];
     function onInput(aEvent) {
       inputEvents.push(aEvent);
     }
-    target.addEventListener("beforeinput", onBeforeInput);
     target.addEventListener("input", onInput);
 
     // Before setting focus, editor of the element may have not been created yet.
@@ -145,37 +135,25 @@ SimpleTest.waitForFocus(async () => {
         is(inputEvents.length, 0,
            `No "input" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
       }
+    } else if (!test.result.fireInputEvent) {
+      // HTML spec defines that "input" elements whose type are "hidden",
+      // "submit", "image", "reset" and "button" shouldn't fire input event
+      // when its value is changed.
+      // XXX Perhaps, we shouldn't support setUserInput() with such types.
+      if (test.type === "hidden" ||
+          test.type === "submit" ||
+          test.type === "image" ||
+          test.type === "reset" ||
+          test.type === "button") {
+        todo_is(inputEvents.length, 0,
+                `No "input" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+      } else {
+        is(inputEvents.length, 0,
+           `No "input" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+      }
     } else {
-      if (!test.result.fireBeforeInputEvent) {
-        is(beforeInputEvents.length, 0,
-           `No "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-      } else if (test.type === "number") {
-        todo_is(beforeInputEvents.length, 1,
-           `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-      } else {
-        is(beforeInputEvents.length, 1,
-           `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-      }
-      if (!test.result.fireInputEvent) {
-        // HTML spec defines that "input" elements whose type are "hidden",
-        // "submit", "image", "reset" and "button" shouldn't fire input event
-        // when its value is changed.
-        // XXX Perhaps, we shouldn't support setUserInput() with such types.
-        if (test.type === "hidden" ||
-            test.type === "submit" ||
-            test.type === "image" ||
-            test.type === "reset" ||
-            test.type === "button") {
-          todo_is(inputEvents.length, 0,
-                  `No "input" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-        } else {
-          is(inputEvents.length, 0,
-             `No "input" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-        }
-      } else {
-        is(inputEvents.length, 1,
-           `Only one "input" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-      }
+      is(inputEvents.length, 1,
+         `Only one "input" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
     }
     if (inputEvents.length > 0) {
       if (SpecialPowers.wrap(target).isInputEventTarget) {
@@ -183,24 +161,14 @@ SimpleTest.waitForFocus(async () => {
           todo(inputEvents[0] instanceof InputEvent,
                `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
         } else {
-          if (beforeInputEvents.length > 0 && test.result.fireBeforeInputEvent) {
-            is(beforeInputEvents[0].cancelable, true,
-               `"beforeinput" event for "insertReplacementText" should be cancelable when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-            is(beforeInputEvents[0].inputType, "insertReplacementText",
-               `inputType of "beforeinput"event should be "insertReplacementText" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-            is(beforeInputEvents[0].data, test.input.before,
-               `data of "beforeinput" event should be "${test.input.before}" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-            is(beforeInputEvents[0].dataTransfer, null,
-               `dataTransfer of "beforeinput" event should be null when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-          }
           ok(inputEvents[0] instanceof InputEvent,
              `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
           is(inputEvents[0].inputType, "insertReplacementText",
-             `inputType of "input" event should be "insertReplacementText" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+             `inputType should be "insertReplacementText" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
           is(inputEvents[0].data, test.input.before,
-             `data of "input" event should be "${test.input.before}" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+             `data should be "${test.input.before}" when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
           is(inputEvents[0].dataTransfer, null,
-             `dataTransfer of "input" event should be null when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
+             `dataTransfer should be null when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
         }
       } else {
         ok(inputEvents[0] instanceof Event && !(inputEvents[0] instanceof UIEvent),
@@ -212,7 +180,6 @@ SimpleTest.waitForFocus(async () => {
          `"input" event should always bubble (${tag}, before getting focus)`);
     }
 
-    beforeInputEvents = [];
     inputEvents = [];
     target.focus();
     previousValue = target.value;
@@ -230,37 +197,25 @@ SimpleTest.waitForFocus(async () => {
         is(inputEvents.length, 0,
            `No "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
       }
+    } else if (!test.result.fireInputEvent) {
+      // HTML spec defines that "input" elements whose type are "hidden",
+      // "submit", "image", "reset" and "button" shouldn't fire input event
+      // when its value is changed.
+      // XXX Perhaps, we shouldn't support setUserInput() with such types.
+      if (test.type === "hidden" ||
+          test.type === "submit" ||
+          test.type === "image" ||
+          test.type === "reset" ||
+          test.type === "button") {
+        todo_is(inputEvents.length, 0,
+                `No "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
+      } else {
+        is(inputEvents.length, 0,
+           `No "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
+      }
     } else {
-      if (!test.result.fireBeforeInputEvent) {
-        is(beforeInputEvents.length, 0,
-           `No "beforeinput" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-      } else if (test.type === "number") {
-        todo_is(beforeInputEvents.length, 1,
-           `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.after}") is called before ${tag} gets focus`);
-      } else {
-        is(beforeInputEvents.length, 1,
-           `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-      }
-      if (!test.result.fireInputEvent) {
-        // HTML spec defines that "input" elements whose type are "hidden",
-        // "submit", "image", "reset" and "button" shouldn't fire input event
-        // when its value is changed.
-        // XXX Perhaps, we shouldn't support setUserInput() with such types.
-        if (test.type === "hidden" ||
-            test.type === "submit" ||
-            test.type === "image" ||
-            test.type === "reset" ||
-            test.type === "button") {
-          todo_is(inputEvents.length, 0,
-                  `No "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-        } else {
-          is(inputEvents.length, 0,
-             `No "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-        }
-      } else {
-        is(inputEvents.length, 1,
-           `Only one "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-      }
+      is(inputEvents.length, 1,
+         `Only one "input" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
     }
     if (inputEvents.length > 0) {
       if (SpecialPowers.wrap(target).isInputEventTarget) {
@@ -268,24 +223,14 @@ SimpleTest.waitForFocus(async () => {
           todo(inputEvents[0] instanceof InputEvent,
                `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
         } else {
-          if (beforeInputEvents.length > 0 && test.result.fireBeforeInputEvent) {
-            is(beforeInputEvents[0].cancelable, true,
-               `"beforeinput" event should be cancelable when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-            is(beforeInputEvents[0].inputType, "insertReplacementText",
-               `inputType of "beforeinput" event should be "insertReplacementText" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-            is(beforeInputEvents[0].data, test.input.after,
-               `data of "beforeinput" should be "${test.input.after}" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-            is(beforeInputEvents[0].dataTransfer, null,
-               `dataTransfer of "beforeinput" should be null when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-          }
           ok(inputEvents[0] instanceof InputEvent,
              `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
           is(inputEvents[0].inputType, "insertReplacementText",
-             `inputType of "input" event should be "insertReplacementText" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
+             `inputType should be "insertReplacementText" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
           is(inputEvents[0].data, test.input.after,
-             `data of "input" event should be "${test.input.after}" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
+             `data should be "${test.input.after}" when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
           is(inputEvents[0].dataTransfer, null,
-             `dataTransfer of "input" event should be null when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
+             `dataTransfer should be null when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
         }
       } else {
         ok(inputEvents[0] instanceof Event && !(inputEvents[0] instanceof UIEvent),
@@ -380,87 +325,6 @@ SimpleTest.waitForFocus(async () => {
     target.removeEventListener("input", onInput);
   }
   testValidationMessage("email", "f", "foo@example.com");
-
-  function testEditorValueAtEachEvent(aType) {
-    let tag = aType === "textarea" ? "<textarea>" : `<input type="${aType}">`
-    let closeTag = aType === "textarea" ? "</textarea>" : "";
-    content.innerHTML = `${tag}${closeTag}`;
-    content.scrollTop; // Flush pending layout.
-    let target = content.firstChild;
-    target.value = "Old Value";
-    let description = `Setting new value of ${tag} before setting focus: `;
-    let onBeforeInput = (aEvent) => {
-      is(target.value, "Old Value",
-         `${description}The value should not have been modified at "beforeinput" event yet (inputType: "${aEvent.inputType}", data: "${aEvent.data}")`);
-    };
-    let onInput = (aEvent) => {
-      is(target.value, "New Value",
-         `${description}The value should have been modified at "input" event (inputType: "${aEvent.inputType}", data: "${aEvent.data}"`);
-    };
-    target.addEventListener("beforeinput", onBeforeInput);
-    target.addEventListener("input", onInput);
-    SpecialPowers.wrap(target).setUserInput("New Value");
-
-    description = `Setting new value of ${tag} after setting focus: `;
-    target.value = "Old Value";
-    target.focus();
-    SpecialPowers.wrap(target).setUserInput("New Value");
-
-    target.removeEventListener("beforeinput", onBeforeInput);
-    target.removeEventListener("input", onInput);
-
-    // FYI: This is not realistic situation because we should do nothing
-    //      while user composing IME.
-    // TODO: TextControlState should stop returning setting value as the value
-    //       while committing composition.
-    description = `Setting new value of ${tag} during composition: `;
-    target.value = "";
-    target.focus();
-    synthesizeCompositionChange({
-      composition: {
-        string: "composition string",
-        clauses: [{length: 18, attr: COMPOSITION_ATTR_RAW_CLAUSE}],
-      },
-      caret: {start: 18, length: 0},
-    });
-    let onCompositionUpdate = (aEvent) => {
-      todo_is(target.value, "composition string",
-         `${description}The value should not have been modified at "compositionupdate" event yet (data: "${aEvent.data}")`);
-    };
-    let onCompositionEnd = (aEvent) => {
-      todo_is(target.value, "composition string",
-         `${description}The value should not have been modified at "compositionupdate" event yet (data: "${aEvent.data}")`);
-    };
-    onBeforeInput = (aEvent) => {
-      if (aEvent.inputType === "insertCompositionText") {
-        todo_is(target.value, "composition string",
-           `${description}The value should not have been modified at "beforeinput" event yet (inputType: "${aEvent.inputType}", data: "${aEvent.data}")`);
-      } else {
-        is(target.value, "composition string",
-           `${description}The value should not have been modified at "beforeinput" event yet (inputType: "${aEvent.inputType}", data: "${aEvent.data}")`);
-      }
-    };
-    onInput = (aEvent) => {
-      if (aEvent.inputType === "insertCompositionText") {
-        todo_is(target.value, "composition string",
-           `${description}The value should not have been modified at "input" event yet (inputType: "${aEvent.inputType}", data: "${aEvent.data}")`);
-      } else {
-        is(target.value, "New Value",
-           `${description}The value should have been modified at "input" event (inputType: "${aEvent.inputType}", data: "${aEvent.data}"`);
-      }
-    };
-    target.addEventListener("compositionupdate", onCompositionUpdate);
-    target.addEventListener("compositionend", onCompositionEnd);
-    target.addEventListener("beforeinput", onBeforeInput);
-    target.addEventListener("input", onInput);
-    SpecialPowers.wrap(target).setUserInput("New Value");
-    target.removeEventListener("compositionupdate", onCompositionUpdate);
-    target.removeEventListener("compositionend", onCompositionEnd);
-    target.removeEventListener("beforeinput", onBeforeInput);
-    target.removeEventListener("input", onInput);
-  }
-  testEditorValueAtEachEvent("text");
-  testEditorValueAtEachEvent("textarea");
 
   SimpleTest.finish();
 });

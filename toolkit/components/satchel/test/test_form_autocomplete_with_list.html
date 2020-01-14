@@ -458,59 +458,26 @@ function runTest() {
       synthesizeKey("KEY_ArrowDown");
       break;
 
-    case 400: {
-      let beforeInputFired = false;
-      input.addEventListener("beforeinput", (event) => {
-        beforeInputFired = true;
-        ok(event instanceof InputEvent,
-           `${testNum} "beforeinput" event should be dispatched with InputEvent interface`);
-        ok(event.bubbles, `${testNum} "beforeinput" event should bubble`);
-        ok(event.cancelable, `${testNum} "beforeinput" event for "insertReplacementText" should be cancelable`);
-        is(event.inputType, "insertReplacementText", `${testNum} inputType of "beforeinput" event should be "insertReplacementText"`);
-        is(event.data, "Google", `${testNum} data of "beforeinput" event should be "Google"`);
-        is(event.dataTransfer, null, `${testNum} dataTransfer of "beforeinput" event should be null`);
-      }, {once: true});
-      let inputFired = false;
+    case 400:
+      // Check that the input event is fired.
       input.addEventListener("input", function(event) {
-        inputFired = true;
+        ok(true, "oninput should have been received");
         ok(event instanceof InputEvent,
-           `${testNum} "input" event should be dispatched with InputEvent interface`);
-        ok(event.bubbles, `${testNum} "input" event should bubble`);
-        ok(!event.cancelable, `${testNum} "input" event should be cancelable`);
-        is(event.inputType, "insertReplacementText", `${testNum} inputType of "input" event should be "insertReplacementText"`);
-        is(event.data, "Google", `${testNum} data of "input" event should be "Google"`);
-        is(event.dataTransfer, null, `${testNum} dataTransfer of "input" event should be null`);
+           "input event should be dispatched with InputEvent interface");
+        ok(event.bubbles, "input event should bubble");
+        ok(!event.cancelable, "input event should be cancelable");
+        is(event.inputType, "insertReplacementText", 'inputType should be "insertReplacementText"');
+        is(event.data, "Google", 'data should be "Google"');
+        is(event.dataTransfer, null, "dataTransfer should be null");
         checkForm("Google");
+        input.blur();
+        SimpleTest.finish();
       }, {once: true});
 
       synthesizeKey("KEY_ArrowDown");
       checkForm("");
       synthesizeKey("KEY_Enter");
-      ok(beforeInputFired, `${testNum} "beforeinput" event should've been fired`);
-      ok(inputFired, `${testNum} "input" event should've been fired`);
-
-      expectPopup();
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
       break;
-    }
-
-    case 401: {
-      input.addEventListener("beforeinput", (event) => { event.preventDefault(); }, {once: true});
-      let inputFired = false;
-      input.addEventListener("input", () => { inputFired = true; }, {once: true});
-
-      restoreForm();
-      synthesizeKey("KEY_ArrowDown");
-      checkForm("");
-      synthesizeKey("KEY_Enter");
-      ok(!inputFired, `${testNum} "input" event should not have been fired since "beforeinput" was canceled`);
-      checkForm("");
-
-      input.blur();
-      SimpleTest.finish();
-      break;
-    }
 
     default:
       ok(false, "Unexpected invocation of test #" + testNum);
@@ -530,11 +497,7 @@ function checkMenuEntries(expectedValues, testNumber) {
   }
 }
 
-async function startTest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+function startTest() {
   setupFormHistory(runTest);
 }
 

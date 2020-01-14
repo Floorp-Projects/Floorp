@@ -779,61 +779,11 @@ class EditorBase : public nsIEditor,
                              nsIPrincipal* aPrincipal = nullptr);
     ~AutoEditActionDataSetter();
 
-    void UpdateEditAction(EditAction aEditAction) {
-      MOZ_ASSERT(!mHasTriedToDispatchedBeforeInputEvent,
-                 "It's too late to update EditAction since this may have "
-                 "already dispatched a beforeinput event");
-      mEditAction = aEditAction;
-    }
+    void UpdateEditAction(EditAction aEditAction) { mEditAction = aEditAction; }
 
-    /**
-     * CanHandle() or CanHandleAndHandleBeforeInput() must be called
-     * immediately after creating the instance.  If caller does not need to
-     * handle "beforeinput" event or caller needs to set additional information
-     * the events later, use the former.  Otherwise, use the latter.  If caller
-     * uses the former, it's required to call MaybeDispatchBeforeInputEvent() by
-     * itself.
-     *
-     */
-    MOZ_MUST_USE bool CanHandle() const {
-#ifdef DEBUG
-      mHasCanHandleChecked = true;
-#endif  // #ifdefn DEBUG
-      return mSelection && mEditorBase.IsInitialized();
-    }
-    MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
-    CanHandleAndMaybeDispatchBeforeInputEvent() {
-      if (NS_WARN_IF(!CanHandle())) {
-        return NS_ERROR_NOT_INITIALIZED;
-      }
-      return MaybeDispatchBeforeInputEvent();
-    }
-
-    /**
-     * MaybeDispatchBeforeInputEvent() considers whether this instance needs to
-     * dispatch "beforeinput" event or not.  Then,
-     * mHasTriedToDispatchedBeforeInputEvent is set to true.
-     *
-     * @return          If this method actually dispatches "beforeinput" event
-     *                  and it's canceled, returns
-     *                  NS_ERROR_EDITOR_ACTION_CANCELED.
-     */
-    MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MaybeDispatchBeforeInputEvent();
-
-    /**
-     * NeedsToDispatchBeforeInputEvent() returns true if the edit action
-     * requires to handle "beforeinput" event but not yet dispatched it nor
-     * considered as not dispatched it.
-     */
-    bool NeedsToDispatchBeforeInputEvent() const {
-      return !mHasTriedToDispatchedBeforeInputEvent &&
-             NeedsBeforeInputEventHandling(mEditAction);
-    }
-
-    bool IsCanceled() const { return mBeforeInputEventCanceled; }
+    bool CanHandle() const { return mSelection && mEditorBase.IsInitialized(); }
 
     const RefPtr<Selection>& SelectionRefPtr() const { return mSelection; }
-    nsIPrincipal* GetPrincipal() const { return mPrincipal; }
     EditAction GetEditAction() const { return mEditAction; }
 
     template <typename PT, typename CT>
@@ -851,12 +801,7 @@ class EditorBase : public nsIEditor,
       return mSpellCheckRestartPoint;
     }
 
-    void SetData(const nsAString& aData) {
-      MOZ_ASSERT(!mHasTriedToDispatchedBeforeInputEvent,
-                 "It's too late to set data since this may have already "
-                 "dispatched a beforeinput event");
-      mData = aData;
-    }
+    void SetData(const nsAString& aData) { mData = aData; }
     const nsString& GetData() const { return mData; }
 
     void SetColorData(const nsAString& aData);
@@ -1001,54 +946,8 @@ class EditorBase : public nsIEditor,
     }
 
    private:
-    static bool NeedsBeforeInputEventHandling(EditAction aEditAction) {
-      MOZ_ASSERT(aEditAction != EditAction::eNone);
-      switch (aEditAction) {
-        case EditAction::eNone:
-        // If we're not handling edit action, we don't need to handle
-        // "beforeinput" event.
-        case EditAction::eNotEditing:
-        // If raw level transaction API is used, the API user needs to handle
-        // both "beforeinput" event and "input" event if it's necessary.
-        case EditAction::eUnknown:
-        // Hiding/showing password affects only layout so that we don't need
-        // to handle beforeinput event for it.
-        case EditAction::eHidePassword:
-        // We don't need to dispatch "beforeinput" event before
-        // "compositionstart".
-        case EditAction::eStartComposition:
-        // We don't need to let web apps know changing UA stylesheet.
-        case EditAction::eAddOverrideStyleSheet:
-        case EditAction::eRemoveOverrideStyleSheet:
-        case EditAction::eReplaceOverrideStyleSheet:
-        // We don't need to let web apps know the mode change.
-        case EditAction::eEnableStyleSheet:
-        case EditAction::eEnableOrDisableCSS:
-        case EditAction::eEnableOrDisableAbsolutePositionEditor:
-        case EditAction::eEnableOrDisableResizer:
-        case EditAction::eEnableOrDisableInlineTableEditingUI:
-        // We don't need to let contents in chrome's editor to know the size
-        // change.
-        case EditAction::eSetWrapWidth:
-        case EditAction::eRewrap:
-        // While resizing or moving element, we update only shadow, i.e.,
-        // don't touch to the DOM in content.  Therefore, we don't need to
-        // dispatch "beforeinput" event.
-        case EditAction::eResizingElement:
-        case EditAction::eMovingElement:
-        // Perhaps, we don't need to dispatch "beforeinput" event for
-        // padding `<br>` element for empty editor because it's internal
-        // handling and it should be occurred by another change.
-        case EditAction::eCreatePaddingBRElementForEmptyEditor:
-          return false;
-        default:
-          return true;
-      }
-    }
-
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
-    nsCOMPtr<nsIPrincipal> mPrincipal;
     // EditAction may be nested, for example, a command may be executed
     // from mutation event listener which is run while editor changes
     // the DOM tree.  In such case, we need to handle edit action separately.
@@ -1091,17 +990,6 @@ class EditorBase : public nsIEditor,
 
     bool mAborted;
 
-    // Set to true when this handles "beforeinput" event dispatching.  Note
-    // that even if "beforeinput" event shouldn't be dispatched for this,
-    // instance, this is set to true when it's considered.
-    bool mHasTriedToDispatchedBeforeInputEvent;
-    // Set to true if "beforeinput" event was dispatched and it's canceled.
-    bool mBeforeInputEventCanceled;
-
-#ifdef DEBUG
-    mutable bool mHasCanHandleChecked = false;
-#endif  // #ifdef DEBUG
-
     AutoEditActionDataSetter() = delete;
     AutoEditActionDataSetter(const AutoEditActionDataSetter& aOther) = delete;
   };
@@ -1117,21 +1005,6 @@ class EditorBase : public nsIEditor,
    * necessary for them.  So, if you call them from friend classes, you need
    * to make sure that AutoEditActionDataSetter is created.
    ****************************************************************************/
-
-  bool IsEditActionCanceled() const {
-    MOZ_ASSERT(mEditActionData);
-    return mEditActionData->IsCanceled();
-  }
-
-  bool NeedsToDispatchBeforeInputEvent() const {
-    MOZ_ASSERT(mEditActionData);
-    return mEditActionData->NeedsToDispatchBeforeInputEvent();
-  }
-
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MaybeDispatchBeforeInputEvent() {
-    MOZ_ASSERT(mEditActionData);
-    return mEditActionData->MaybeDispatchBeforeInputEvent();
-  }
 
   bool IsEditActionDataAvailable() const {
     return mEditActionData && mEditActionData->CanHandle();
@@ -1157,11 +1030,6 @@ class EditorBase : public nsIEditor,
   const RefPtr<Selection>& SelectionRefPtr() const {
     MOZ_ASSERT(mEditActionData);
     return mEditActionData->SelectionRefPtr();
-  }
-
-  nsIPrincipal* GetEditActionPrincipal() const {
-    MOZ_ASSERT(mEditActionData);
-    return mEditActionData->GetPrincipal();
   }
 
   /**
@@ -2349,6 +2217,9 @@ class EditorBase : public nsIEditor,
    * asynchronously if it's not safe to dispatch.
    */
   MOZ_CAN_RUN_SCRIPT void DispatchInputEvent();
+  MOZ_CAN_RUN_SCRIPT void DispatchInputEvent(EditAction aEditAction,
+                                             const nsAString& aData,
+                                             dom::DataTransfer* aDataTransfer);
 
   /**
    * Called after a transaction is done successfully.
@@ -2549,10 +2420,6 @@ class EditorBase : public nsIEditor,
  protected:  // helper classes which may be used by friends
   /**
    * Stack based helper class for calling EditorBase::EndTransactionInternal().
-   * NOTE:  This does not suppress multiple input events.  In most cases,
-   *        only one "input" event should be fired for an edit action rather
-   *        than per edit sub-action.  In such case, you should use
-   *        AutoPlaceholderBatch instead.
    */
   class MOZ_RAII AutoTransactionBatch final {
    public:
@@ -2574,9 +2441,7 @@ class EditorBase : public nsIEditor,
 
   /**
    * Stack based helper class for batching a collection of transactions inside
-   * a placeholder transaction.  Different from AutoTransactionBatch, this
-   * notifies editor observers of before/end edit action handling, and
-   * dispatches "input" event if it's necessary.
+   * a placeholder transaction.
    */
   class MOZ_RAII AutoPlaceholderBatch final {
    public:
