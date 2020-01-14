@@ -15,15 +15,14 @@
 #include "mozilla/widget/ScreenManager.h"
 
 using namespace mozilla;
-using namespace mozilla::java;
 using namespace mozilla::widget;
 
 static ScreenHelperAndroid* gHelper = nullptr;
 
 class ScreenHelperAndroid::ScreenHelperSupport final
-    : public ScreenManagerHelper::Natives<ScreenHelperSupport> {
+    : public java::ScreenManagerHelper::Natives<ScreenHelperSupport> {
  public:
-  typedef ScreenManagerHelper::Natives<ScreenHelperSupport> Base;
+  typedef java::ScreenManagerHelper::Natives<ScreenHelperSupport> Base;
 
   static void RefreshScreenInfo() { gHelper->Refresh(); }
 
@@ -61,12 +60,12 @@ class ScreenHelperAndroid::ScreenHelperSupport final
 
 static already_AddRefed<Screen> MakePrimaryScreen() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  java::sdk::Rect::LocalRef rect = GeckoAppShell::GetScreenSize();
+  java::sdk::Rect::LocalRef rect = java::GeckoAppShell::GetScreenSize();
   LayoutDeviceIntRect bounds = LayoutDeviceIntRect(
       rect->Left(), rect->Top(), rect->Width(), rect->Height());
-  uint32_t depth = GeckoAppShell::GetScreenDepth();
-  float density = GeckoAppShell::GetDensity();
-  float dpi = GeckoAppShell::GetDpi();
+  uint32_t depth = java::GeckoAppShell::GetScreenDepth();
+  float density = java::GeckoAppShell::GetDensity();
+  float dpi = java::GeckoAppShell::GetDpi();
   RefPtr<Screen> screen = new Screen(bounds, bounds, depth, depth,
                                      DesktopToLayoutDeviceScale(density),
                                      CSSToLayoutDeviceScale(1.0f), dpi);
