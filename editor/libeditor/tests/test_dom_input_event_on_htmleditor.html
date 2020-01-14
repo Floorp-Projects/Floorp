@@ -83,17 +83,12 @@ async function runTests() {
     }
 
     let cancelBeforeInput = false;
-    let todoMultipleInputEvents = false;
     let beforeInputEvent = null;
     let inputEvent = null;
     let action = "";
     let beforeInputHandler = (aEvent) => {
       if (cancelBeforeInput) {
         aEvent.preventDefault();
-      }
-      if (todoMultipleInputEvents && beforeInputEvent) {
-        todo(!beforeInputEvent, `${aDescription}Multiple "beforeinput" events are fired at ${action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
-        return;
       }
       ok(!beforeInputEvent, `${aDescription}Multiple "beforeinput" events are fired at ${action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
       ok(aEvent.isTrusted, `${aDescription}"beforeinput" event at ${action} must be trusted`);
@@ -103,10 +98,6 @@ async function runTests() {
       beforeInputEvent = aEvent;
     };
     let inputHandler = (aEvent) => {
-      if (todoMultipleInputEvents && inputEvent) {
-        todo(!inputEvent, `${aDescription}Multiple "input" events are fired at ${action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
-        return;
-      }
       ok(!inputEvent, `${aDescription}Multiple "input" events are fired at ${action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
       ok(aEvent.isTrusted, `${aDescription}"input" event at ${action} must be trusted`);
       is(aEvent.target, eventTarget, `${aDescription}"input" event at ${action} is fired on unexpected element: ${aEvent.target.tagName}`);
@@ -124,7 +115,6 @@ async function runTests() {
     aWindow.addEventListener("input", inputHandler, true);
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'inserting "a"';
@@ -143,7 +133,6 @@ async function runTests() {
     is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'inserting "b"';
@@ -153,7 +142,6 @@ async function runTests() {
     todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     editTarget.innerHTML = "ab";
@@ -165,7 +153,6 @@ async function runTests() {
     todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     editTarget.innerHTML = "a";
@@ -186,7 +173,6 @@ async function runTests() {
     is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'typing "Backspace" in empty editor';
@@ -207,7 +193,6 @@ async function runTests() {
     }
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'typing "B"';
@@ -230,7 +215,6 @@ async function runTests() {
     is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'typing "Enter"';
@@ -245,7 +229,6 @@ async function runTests() {
     todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'typing "Enter"';
@@ -270,7 +253,6 @@ async function runTests() {
     is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'typing "C" in new paragraph';
@@ -292,7 +274,6 @@ async function runTests() {
     is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'typing "Enter" again';
@@ -364,7 +345,6 @@ async function runTests() {
     ok(!inputEvent, `${aDescription}${action} should not fire "input" event since no content has been modified`);
 
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'typing "Delete"';
@@ -378,7 +358,6 @@ async function runTests() {
     htmlEditor.enableUndo(true);
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     editTarget.innerHTML = "\u00A0";
@@ -400,7 +379,6 @@ async function runTests() {
     // TODO: Check canceling "beforeinput" case of "historyUndo" here.
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'doing "Undo"';
@@ -429,7 +407,6 @@ async function runTests() {
     // TODO: Check canceling "beforeinput" case of "historyRedo" here.
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'doing "Redo"';
@@ -456,7 +433,6 @@ async function runTests() {
     ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since there is no redo transaction`);
 
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = "inserting a line break";
@@ -466,7 +442,6 @@ async function runTests() {
     todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     editTarget.innerHTML = "<br>";
@@ -489,7 +464,6 @@ async function runTests() {
     editTarget.focus();
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'removing "a" with "Backspace" (with selection)';
@@ -502,7 +476,6 @@ async function runTests() {
     editTarget.focus();
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     synthesizeKey("KEY_Backspace", {}, aWindow);
@@ -524,7 +497,6 @@ async function runTests() {
     editTarget.focus();
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'removing "a" with "Delete" (with selection)';
@@ -543,7 +515,6 @@ async function runTests() {
     editTarget.focus();
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'removing "a" with "Delete" (with selection)';
@@ -566,7 +537,6 @@ async function runTests() {
     editTarget.focus();
     selection.collapse(editTarget.firstChild, "abc def".length);
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'removing last word, "def", with backward deletion from its end';
@@ -579,7 +549,6 @@ async function runTests() {
     editTarget.focus();
     selection.collapse(editTarget.firstChild, "abc def".length);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     SpecialPowers.doCommand(aWindow, "cmd_deleteWordBackward");
@@ -600,7 +569,6 @@ async function runTests() {
     editTarget.focus();
     selection.collapse(editTarget.firstChild, 0);
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = `removing first word, "${kWordSelectEatSpaceToNextWord ? "abc" : "abc "}", with forward deletion from its start`;
@@ -613,7 +581,6 @@ async function runTests() {
     editTarget.focus();
     selection.collapse(editTarget.firstChild, 0);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     SpecialPowers.doCommand(aWindow, "cmd_deleteWordForward");
@@ -636,7 +603,6 @@ async function runTests() {
     editTarget.focus();
     selection.setBaseAndExtent(editTarget.firstChild, "abc d".length, editTarget.firstChild, "abc de".length);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = "removing characters backward from middle of second word";
@@ -661,7 +627,6 @@ async function runTests() {
     editTarget.focus();
     selection.setBaseAndExtent(editTarget.firstChild, "a".length, editTarget.firstChild, "ab".length);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = "removing characters forward from middle of first word";
@@ -691,7 +656,6 @@ async function runTests() {
     editTarget.focus();
     selection.collapse(editTarget.firstChild, "abc d".length);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = "removing characters backward to start of line";
@@ -714,7 +678,6 @@ async function runTests() {
     editTarget.focus();
     selection.collapse(editTarget.firstChild, "ab".length);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = "removing characters forward to end of line";
@@ -738,7 +701,6 @@ async function runTests() {
     editTarget.focus();
     selection.setBaseAndExtent(editTarget.firstChild, "abc d".length, editTarget.firstChild, "abc_de".length);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = "removing characters backward to start of line (with selection in second word)";
@@ -763,7 +725,6 @@ async function runTests() {
     editTarget.focus();
     selection.setBaseAndExtent(editTarget.firstChild, "a".length, editTarget.firstChild, "ab".length);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = "removing characters forward to end of line (with selection in second word)";
@@ -787,7 +748,6 @@ async function runTests() {
     // Toggling text direction
     editTarget.focus();
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'switching text direction from "ltr" to "rtl"';
@@ -810,7 +770,6 @@ async function runTests() {
     aDocument.documentElement.scrollTop; // XXX Update the body frame
     editTarget.focus();
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'switching text direction from "rtl" to "ltr"';
@@ -834,7 +793,6 @@ async function runTests() {
     aDocument.documentElement.scrollTop; // XXX Update the body frame
     editTarget.focus();
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'switching text direction from "ltr" to "rtl"';
@@ -856,7 +814,6 @@ async function runTests() {
 
     editTarget.focus();
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = 'switching text direction from "rtl" to "ltr"';
@@ -881,7 +838,6 @@ async function runTests() {
     editTarget.focus();
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = "setting link with absolute URL";
@@ -901,7 +857,6 @@ async function runTests() {
     editTarget.focus();
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = "setting link with absolute URL";
@@ -924,7 +879,6 @@ async function runTests() {
     editTarget.innerHTML = "link";
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = "setting link with relative URL";
@@ -970,7 +924,6 @@ async function runTests() {
       editTarget.focus();
       selection.selectAllChildren(editTarget);
       cancelBeforeInput = false;
-      todoMultipleInputEvents = false;
       beforeInputEvent = null;
       inputEvent = null;
       action = `formatting with "${test.command}"`;
@@ -992,7 +945,6 @@ async function runTests() {
 
       selection.selectAllChildren(editTarget);
       cancelBeforeInput = false;
-      todoMultipleInputEvents = false;
       beforeInputEvent = null;
       inputEvent = null;
       action = `removing format with "${test.command}"`;
@@ -1014,7 +966,6 @@ async function runTests() {
 
       selection.selectAllChildren(editTarget);
       cancelBeforeInput = true;
-      todoMultipleInputEvents = false;
       beforeInputEvent = null;
       inputEvent = null;
       action = `formatting with "${test.command}" but "beforeinput" is canceled`;
@@ -1034,7 +985,6 @@ async function runTests() {
       editTarget.focus();
       selection.selectAllChildren(editTarget);
       cancelBeforeInput = true;
-      todoMultipleInputEvents = false;
       beforeInputEvent = null;
       inputEvent = null;
       action = `removing format with "${test.command}" but "beforeinput" is canceled`;
@@ -1056,7 +1006,6 @@ async function runTests() {
           editTarget.focus();
           selection.selectAllChildren(editTarget);
           cancelBeforeInput = false;
-          todoMultipleInputEvents = false;
           beforeInputEvent = null;
           inputEvent = null;
           action = `removing <${anotherTag}> element with "${test.command}"`;
@@ -1072,7 +1021,7 @@ async function runTests() {
           }
           ok(inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
           is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
-          todo_is(inputEvent.inputType, test.inputType, `${aDescription}inputType of "input" event should be "${test.inputType}"`);
+          is(inputEvent.inputType, test.inputType, `${aDescription}inputType of "input" event should be "${test.inputType}"`);
           is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
           is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
@@ -1080,7 +1029,6 @@ async function runTests() {
           editTarget.focus();
           selection.selectAllChildren(editTarget);
           cancelBeforeInput = true;
-          todoMultipleInputEvents = false;
           beforeInputEvent = null;
           inputEvent = null;
           action = `removing <${anotherTag}> element with "${test.command}" but "beforeinput" is canceled`;
@@ -1100,7 +1048,6 @@ async function runTests() {
           editTarget.focus();
           selection.selectAllChildren(editTarget);
           cancelBeforeInput = false;
-          todoMultipleInputEvents = true;
           beforeInputEvent = null;
           inputEvent = null;
           action = `removing both <${test.tag}> and <${anotherTag}> elements with "${test.command}"`;
@@ -1116,7 +1063,7 @@ async function runTests() {
           }
           ok(inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
           is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
-          todo_is(inputEvent.inputType, test.inputType, `${aDescription}inputType of "input" event should be "${test.inputType}"`);
+          is(inputEvent.inputType, test.inputType, `${aDescription}inputType of "input" event should be "${test.inputType}"`);
           is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
           is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
@@ -1124,7 +1071,6 @@ async function runTests() {
           editTarget.focus();
           selection.selectAllChildren(editTarget);
           cancelBeforeInput = true;
-          todoMultipleInputEvents = true;
           beforeInputEvent = null;
           inputEvent = null;
           action = `removing both <${test.tag}> and <${anotherTag}> elements with "${test.command}" but "beforeinput" is canceled`;
@@ -1147,7 +1093,6 @@ async function runTests() {
           editTarget.focus();
           selection.selectAllChildren(editTarget);
           cancelBeforeInput = false;
-          todoMultipleInputEvents = true;
           beforeInputEvent = null;
           inputEvent = null;
           action = `removing <${exclusiveTag}> element with formatting with "${test.command}"`;
@@ -1171,7 +1116,6 @@ async function runTests() {
           editTarget.focus();
           selection.selectAllChildren(editTarget);
           cancelBeforeInput = true;
-          todoMultipleInputEvents = true;
           beforeInputEvent = null;
           inputEvent = null;
           action = `removing <${exclusiveTag}> element with formatting with "${test.command}" but "beforeinput" is canceled`;
@@ -1195,7 +1139,6 @@ async function runTests() {
     editTarget.focus();
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = `indenting with "cmd_indent"`;
@@ -1217,7 +1160,6 @@ async function runTests() {
 
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = false;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = `outdenting with "cmd_outdent"`;
@@ -1239,7 +1181,6 @@ async function runTests() {
 
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = `indenting with "cmd_indent" but "beforeinput" is canceled`;
@@ -1259,7 +1200,6 @@ async function runTests() {
     editTarget.focus();
     selection.selectAllChildren(editTarget);
     cancelBeforeInput = true;
-    todoMultipleInputEvents = false;
     beforeInputEvent = null;
     inputEvent = null;
     action = `outdenting with "cmd_outdent" but "beforeinput" is canceled`;
