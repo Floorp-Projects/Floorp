@@ -94,7 +94,7 @@ internal object AddonMigration {
 
         val migratedAddons = mutableListOf<WebExtension>()
         val failures = mutableMapOf<WebExtension, Exception>()
-        installedAddons.forEach { addon ->
+        installedAddons.filter { !it.isBuiltIn() }.forEach { addon ->
             try {
                 migratedAddons += migrateAddon(engine, addon)
             } catch (e: Exception) {
