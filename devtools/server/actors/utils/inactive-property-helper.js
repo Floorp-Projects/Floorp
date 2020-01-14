@@ -21,14 +21,27 @@ const INACTIVE_CSS_ENABLED = Services.prefs.getBoolPref(
 
 const VISITED_MDN_LINK = "https://developer.mozilla.org/docs/Web/CSS/:visited";
 const VISITED_INVALID_PROPERTIES = allCssPropertiesExcept([
+  "all",
   "color",
+  "background",
   "background-color",
+  "border",
   "border-color",
   "border-bottom-color",
   "border-left-color",
   "border-right-color",
   "border-top-color",
+  "border-block",
+  "border-block-color",
+  "border-block-start-color",
+  "border-block-end-color",
+  "border-inline",
+  "border-inline-color",
+  "border-inline-start-color",
+  "border-inline-end-color",
+  "column-rule",
   "column-rule-color",
+  "outline",
   "outline-color",
 ]);
 
