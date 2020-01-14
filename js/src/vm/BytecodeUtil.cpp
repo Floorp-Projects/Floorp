@@ -837,8 +837,8 @@ bool BytecodeParser::parse() {
     // Next bytecode to analyze.
     nextOffset = offset + GetBytecodeLength(pc);
 
-    JSOp op = (JSOp)*pc;
-    MOZ_ASSERT(op < JSOP_LIMIT);
+    MOZ_ASSERT(*pc < JSOP_LIMIT);
+    JSOp op = JSOp(*pc);
 
     if (!code) {
       // Haven't found a path by which this bytecode is reachable.
@@ -1376,10 +1376,10 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     return true;
   };
 
-  if (*pc >= uint8_t(JSOP_LIMIT)) {
+  if (*pc >= JSOP_LIMIT) {
     char numBuf1[12], numBuf2[12];
     SprintfLiteral(numBuf1, "%d", int(*pc));
-    SprintfLiteral(numBuf2, "%d", int(uint8_t(JSOP_LIMIT)));
+    SprintfLiteral(numBuf2, "%d", JSOP_LIMIT);
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BYTECODE_TOO_BIG, numBuf1, numBuf2);
     return 0;
