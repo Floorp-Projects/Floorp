@@ -303,29 +303,6 @@ void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
   // Notify the parent process of the embedding status. We don't need to do
   // this when clearing our embedder, as we're being destroyed either way.
   if (aEmbedder) {
-    // If our embedder element is being mutated to a different embedder, and we
-    // have a parent edge, bad things might be happening!
-    //
-    // XXX: This is a workaround to some parent edges not being immutable in the
-    // parent process. It can be fixed once bug 1539979 has been fixed.
-    if (mParent && mEmbedderElement && mEmbedderElement != aEmbedder) {
-      NS_WARNING("Non root content frameLoader swap! This will crash soon!");
-
-      MOZ_DIAGNOSTIC_ASSERT(mType == Type::Chrome, "must be chrome");
-      MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "must be in parent");
-      MOZ_DIAGNOSTIC_ASSERT(!mGroup->IsContextCached(this),
-                            "cannot be in bfcache");
-
-      RefPtr<BrowsingContext> kungFuDeathGrip(this);
-      RefPtr<BrowsingContext> newParent(
-          aEmbedder->OwnerDoc()->GetBrowsingContext());
-      mParent->mChildren.RemoveElement(this);
-      if (newParent) {
-        newParent->mChildren.AppendElement(this);
-      }
-      mParent = newParent;
-    }
-
     if (nsCOMPtr<nsPIDOMWindowInner> inner =
             do_QueryInterface(aEmbedder->GetOwnerGlobal())) {
       SetEmbedderInnerWindowId(inner->WindowID());
