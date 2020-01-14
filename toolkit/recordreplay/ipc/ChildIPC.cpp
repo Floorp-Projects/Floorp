@@ -786,6 +786,8 @@ bool Repaint(nsACString& aData) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(HasDivergedFromRecording());
 
+  EnsureNonMainThreadsAreSpawned();
+
   // Don't try to repaint if the first normal paint hasn't occurred yet.
   if (!gCompositorThreadId) {
     return false;

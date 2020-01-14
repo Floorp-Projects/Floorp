@@ -91,6 +91,9 @@ size_t GetLastCheckpoint();
 // process, or false if this is the fork.
 bool ForkProcess();
 
+// Ensure that non-main threads have been respawned after a fork.
+void EnsureNonMainThreadsAreSpawned();
+
 // When paused at a breakpoint or at a checkpoint, unpause and proceed with
 // execution.
 void ResumeExecution();

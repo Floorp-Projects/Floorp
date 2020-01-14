@@ -149,7 +149,26 @@ void PauseMainThreadAndInvokeCallback(const std::function<void()>& aCallback) {
   }
 }
 
+// After forking, the child process does not respawn its threads until
+// needed. Child processes will generally either sit idle and only fork more
+// processes, or run forward a brief distance, do some operation and then
+// terminate. Avoiding respawning the non-main threads in the former case
+// greatly reduces pressure on the kernel from having many forks around.
+static bool gNeedRespawnThreads;
+
+void EnsureNonMainThreadsAreSpawned() {
+  if (gNeedRespawnThreads) {
+    AutoPassThroughThreadEvents pt;
+    Thread::RespawnAllThreadsAfterFork();
+    Thread::OperateOnIdleThreadLocks(Thread::OwnedLockState::NeedAcquire);
+    Thread::ResumeIdleThreads();
+    gNeedRespawnThreads = false;
+  }
+}
+
 void ResumeExecution() {
+  EnsureNonMainThreadsAreSpawned();
+
   MonitorAutoLock lock(*gMainThreadCallbackMonitor);
   gMainThreadShouldPause = false;
   gMainThreadCallbackMonitor->Notify();
@@ -158,19 +177,23 @@ void ResumeExecution() {
 bool ForkProcess() {
   MOZ_RELEASE_ASSERT(IsReplaying());
 
-  Thread::WaitForIdleThreads();
+  if (!gNeedRespawnThreads) {
+    Thread::WaitForIdleThreads();
 
-  // Before forking all other threads need to release any locks they are
-  // holding. After the fork the new process will only have a main thread and
-  // will not be able to acquire any lock held at the time of the fork.
-  Thread::OperateOnIdleThreadLocks(Thread::OwnedLockState::NeedRelease);
+    // Before forking all other threads need to release any locks they are
+    // holding. After the fork the new process will only have a main thread and
+    // will not be able to acquire any lock held at the time of the fork.
+    Thread::OperateOnIdleThreadLocks(Thread::OwnedLockState::NeedRelease);
+  }
 
   AutoEnsurePassThroughThreadEvents pt;
   pid_t pid = fork();
 
   if (pid > 0) {
-    Thread::OperateOnIdleThreadLocks(Thread::OwnedLockState::NeedAcquire);
-    Thread::ResumeIdleThreads();
+    if (!gNeedRespawnThreads) {
+      Thread::OperateOnIdleThreadLocks(Thread::OwnedLockState::NeedAcquire);
+      Thread::ResumeIdleThreads();
+    }
     return true;
   }
 
@@ -182,9 +205,7 @@ bool ForkProcess() {
 
   ResetPid();
 
-  Thread::RespawnAllThreadsAfterFork();
-  Thread::OperateOnIdleThreadLocks(Thread::OwnedLockState::NeedAcquire);
-  Thread::ResumeIdleThreads();
+  gNeedRespawnThreads = true;
   return false;
 }
 
