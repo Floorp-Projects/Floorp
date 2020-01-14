@@ -489,7 +489,7 @@ bool BytecodeEmitter::emitPopN(unsigned n) {
     return emit1(JSOP_POP);
   }
 
-  // 2 JSOP_POPs (2 bytes) are shorter than JSOP_POPN (3 bytes).
+  // 2 JSOP_POP instructions (2 bytes) are shorter than JSOP_POPN (3 bytes).
   if (n == 2) {
     return emit1(JSOP_POP) && emit1(JSOP_POP);
   }
@@ -593,9 +593,9 @@ Maybe<uint32_t> BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {
     return Nothing();
   }
 
-  // Try to give the JSOP_LOOPHEAD and JSOP_LOOPENTRY the same line number as
-  // the next instruction. nextpn is often a block, in which case the next
-  // instruction typically comes from the first statement inside.
+  // Try to give the JSOP_LOOPHEAD the same line number as the next
+  // instruction. nextpn is often a block, in which case the next instruction
+  // typically comes from the first statement inside.
   if (nextpn->is<LexicalScopeNode>()) {
     nextpn = nextpn->as<LexicalScopeNode>().scopeBody();
   }

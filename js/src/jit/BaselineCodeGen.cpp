@@ -1777,7 +1777,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DUP() {
   frame.popRegsAndSync(1);
   masm.moveValue(R0, R1);
 
-  // inc/dec ops use DUP followed by ONE, ADD. Push R0 last to avoid a move.
+  // inc/dec ops use DUP followed by INC/DEC. Push R0 last to avoid a move.
   frame.push(R1);
   frame.push(R0);
   return true;

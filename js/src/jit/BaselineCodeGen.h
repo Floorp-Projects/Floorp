@@ -297,7 +297,7 @@ class BaselineCompilerHandler {
   FixedList<Label> labels_;
   RetAddrEntryVector retAddrEntries_;
 
-  // Native code offsets for OSR at JSOP_LOOPENTRY ops.
+  // Native code offsets for OSR at JSOP_LOOPHEAD ops.
   using OSREntryVector =
       Vector<BaselineScript::OSREntry, 16, SystemAllocPolicy>;
   OSREntryVector osrEntries_;
