@@ -1954,6 +1954,22 @@ pub extern "C" fn Servo_StyleSheet_HasRules(raw_contents: &RawServoStyleSheetCon
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_StyleSheet_HasImportRules(raw_contents: &RawServoStyleSheetContents) -> bool {
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+    let rules = StylesheetContents::as_arc(&raw_contents).rules(&guard);
+
+    let first_is_import = rules.iter().next().map_or(false, |r| r.rule_type() == CssRuleType::Import);
+    debug_assert_eq!(
+         first_is_import,
+         rules.iter().any(|r| r.rule_type() == CssRuleType::Import),
+         "@import must come before every other rule",
+    );
+
+    first_is_import
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_StyleSheet_GetRules(
     sheet: &RawServoStyleSheetContents,
 ) -> Strong<ServoCssRules> {
