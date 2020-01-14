@@ -84,7 +84,10 @@ add_task(async function test_install_source_blocked_installtrigger() {
   });
   let popup = await popupPromise;
   let description = popup.querySelector(".popup-notification-description");
-  ok(description.textContent.endsWith("blocked_install_message"), "Custom install message present");
+  ok(
+    description.textContent.endsWith("blocked_install_message"),
+    "Custom install message present"
+  );
   BrowserTestUtils.removeTab(tab);
 });
 
