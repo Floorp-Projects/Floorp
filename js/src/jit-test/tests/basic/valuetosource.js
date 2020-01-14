@@ -20,6 +20,8 @@ const TEST_CASES = [
             this.name = "X";
         }
     }, `(new X("msg", "file", 1))`],
+    [/a(b)c/, `/a(b)c/`],
+    [/abc/gi, `/abc/gi`],
 ]
 
 for (let [actual, expected] of TEST_CASES) {
