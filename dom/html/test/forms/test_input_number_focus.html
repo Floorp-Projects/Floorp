@@ -60,7 +60,7 @@ function test_focus_redirects_to_text_control_but_not_for_activeElement() {
                         .getService(SpecialPowers.Ci.nsIFocusManager);
   var focusedElement = fm.focusedElement;
   is (focusedElement.localName, "input", "focusedElement should be an input element");
-  is (focusedElement.getAttribute("type"), "text", "focusedElement should of type text");
+  is (focusedElement.getAttribute("type"), "number", "focusedElement should of type number");
 }
 
 var blurEventCounter = 0;
