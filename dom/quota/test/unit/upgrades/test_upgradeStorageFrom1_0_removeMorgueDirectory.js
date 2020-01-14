@@ -3,6 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/**
+ * This test is mainly to verify MaybeRemoveMorgueDirectory method.
+ */
+
 var testGenerator = testSteps();
 
 function* testSteps() {
@@ -15,7 +19,8 @@ function* testSteps() {
 
   info("Installing package");
 
-  installPackage("morgueCleanup_profile");
+  // Storage used by FF 49-54 (storage version 1.0 with morgue directory).
+  installPackage("version1_0_morgueDirectory_profile");
 
   info("Checking morgue file");
 
