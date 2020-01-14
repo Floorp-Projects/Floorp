@@ -3477,7 +3477,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       /*
        * Skip the same-compartment assertion if the local will be immediately
        * popped. We do not guarantee sync for dead locals when coming in from
-       * the method JIT, and a GETLOCAL followed by POP is not considered to be
+       * the method JIT, and a GetLocal followed by Pop is not considered to be
        * a use of the variable.
        */
       if (JSOp(REGS.pc[JSOP_GETLOCAL_LENGTH]) != JSOP_POP) {

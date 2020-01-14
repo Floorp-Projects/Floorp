@@ -135,7 +135,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
   // Emit code to assign result.value to the iteration variable.
   //
   // Note that ES 13.7.5.13, step 5.c says getting result.value does not
-  // call IteratorClose, so start JSTRY_ITERCLOSE after the GETPROP.
+  // call IteratorClose, so start JSTRY_ITERCLOSE after the GetProp.
   if (!bce_->emitAtomOp(JSOP_GETPROP, bce_->cx->names().value)) {
     //              [stack] NEXT ITER VALUE
     return false;

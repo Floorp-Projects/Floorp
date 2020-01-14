@@ -4574,18 +4574,18 @@ MDefinition* MNot::foldsTo(TempAllocator& alloc) {
     }
   }
 
-  // NOT of an undefined or null value is always true
+  // Not of an undefined or null value is always true
   if (input()->type() == MIRType::Undefined ||
       input()->type() == MIRType::Null) {
     return MConstant::New(alloc, BooleanValue(true));
   }
 
-  // NOT of a symbol is always false.
+  // Not of a symbol is always false.
   if (input()->type() == MIRType::Symbol) {
     return MConstant::New(alloc, BooleanValue(false));
   }
 
-  // NOT of an object that can't emulate undefined is always false.
+  // Not of an object that can't emulate undefined is always false.
   if (input()->type() == MIRType::Object && !operandMightEmulateUndefined()) {
     return MConstant::New(alloc, BooleanValue(false));
   }

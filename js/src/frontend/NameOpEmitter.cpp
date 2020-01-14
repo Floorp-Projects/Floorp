@@ -166,8 +166,8 @@ bool NameOpEmitter::prepareForRhs() {
         return false;
       }
       if (loc_.isLexical() && isInitialize()) {
-        // INITGLEXICAL always gets the global lexical scope. It doesn't
-        // need a BINDGNAME.
+        // InitGLexical always gets the global lexical scope. It doesn't
+        // need a BindGName.
         MOZ_ASSERT(bce_->innermostScope().is<GlobalScope>());
       } else {
         if (!bce_->emitAtomOp(JSOP_BINDGNAME, atomIndex_)) {
@@ -205,13 +205,13 @@ bool NameOpEmitter::prepareForRhs() {
   // the RHS and the op.
   if (isCompoundAssignment() || isIncDec()) {
     if (loc_.kind() == NameLocation::Kind::Dynamic) {
-      // For dynamic accesses we need to emit GETBOUNDNAME instead of
-      // GETNAME for correctness: looking up @@unscopables on the
+      // For dynamic accesses we need to emit GetBoundName instead of
+      // GetName for correctness: looking up @@unscopables on the
       // environment chain (due to 'with' environments) must only happen
       // once.
       //
-      // GETBOUNDNAME uses the environment already pushed on the stack
-      // from the earlier BINDNAME.
+      // GetBoundName uses the environment already pushed on the stack
+      // from the earlier BindName.
       if (!bce_->emit1(JSOP_DUP)) {
         //          [stack] ENV ENV
         return false;

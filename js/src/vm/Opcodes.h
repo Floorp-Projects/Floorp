@@ -2234,14 +2234,14 @@
      *         # dispatch code - evaluate expr, check it against each `case`,
      *         # jump to the right place in the body or to the end.
      *         <expr>
-     *         dup; <A>; stricteq; case L1; jumptarget
-     *         dup; <B>; stricteq; case L2; jumptarget
-     *         default LE
+     *         Dup; <A>; StrictEq; Case L1; JumpTarget
+     *         Dup; <B>; StrictEq; Case L2; JumpTarget
+     *         Default LE
      *
      *         # body code
-     *     L1: jumptarget; <stmt1>
-     *     L2: jumptarget; <stmt2>
-     *     LE: jumptarget
+     *     L1: JumpTarget; <stmt1>
+     *     L2: JumpTarget; <stmt2>
+     *     LE: JumpTarget
      *
      * This opcode is weird: it's the only one whose ndefs varies depending on
      * which way a conditional branch goes. We could implement switch

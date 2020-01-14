@@ -9347,7 +9347,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             // syntax when the initial name is "async".
             maybeAsyncArrow = true;
           } else if (handler_.isEvalName(lhs, cx_)) {
-            // Select the right EVAL op and flag pc_ as having a
+            // Select the right Eval op and flag pc_ as having a
             // direct eval.
             op = pc_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
             pc_->sc()->setBindingsAccessedDynamically();

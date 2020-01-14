@@ -1751,8 +1751,8 @@ template <>
 bool BaselineCompilerCodeGen::emit_JSOP_DUPAT() {
   frame.syncStack(0);
 
-  // DUPAT takes a value on the stack and re-pushes it on top.  It's like
-  // GETLOCAL but it addresses from the top of the stack instead of from the
+  // DupAt takes a value on the stack and re-pushes it on top.  It's like
+  // GetLocal but it addresses from the top of the stack instead of from the
   // stack frame.
 
   int depth = -(GET_UINT24(handler.pc()) + 1);
@@ -1777,7 +1777,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DUP() {
   frame.popRegsAndSync(1);
   masm.moveValue(R0, R1);
 
-  // inc/dec ops use DUP followed by INC/DEC. Push R0 last to avoid a move.
+  // inc/dec ops use Dup followed by Inc/Dec. Push R0 last to avoid a move.
   frame.push(R1);
   frame.push(R0);
   return true;
@@ -2128,7 +2128,7 @@ template <typename Handler>
 bool BaselineCodeGen<Handler>::emitAndOr(bool branchIfTrue) {
   bool knownBoolean = frame.stackValueHasKnownType(-1, JSVAL_TYPE_BOOLEAN);
 
-  // AND and OR leave the original value on the stack.
+  // And and Or leave the original value on the stack.
   frame.syncStack(0);
 
   masm.loadValue(frame.addressOfStackValue(-1), R0);
@@ -2152,7 +2152,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_OR() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_COALESCE() {
-  // COALESCE leaves the original value on the stack.
+  // Coalesce leaves the original value on the stack.
   frame.syncStack(0);
 
   masm.loadValue(frame.addressOfStackValue(-1), R0);
@@ -3834,7 +3834,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETNAME() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitBindName(JSOp op) {
-  // If we have a BINDGNAME without a non-syntactic scope, we pass the global
+  // If we have a BindGName without a non-syntactic scope, we pass the global
   // lexical environment to the IC instead of the frame's environment.
 
   frame.syncStack(0);
@@ -5868,7 +5868,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_YIELD() {
   masm.unboxObject(R0, genObj);
 
   if (frame.hasKnownStackDepth(1)) {
-    // If the expression stack is empty, we can inline the YIELD. Note that this
+    // If the expression stack is empty, we can inline the Yield. Note that this
     // branch is never taken for the interpreter because it doesn't know static
     // stack depths.
 

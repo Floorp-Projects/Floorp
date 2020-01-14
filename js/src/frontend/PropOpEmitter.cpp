@@ -108,7 +108,7 @@ bool PropOpEmitter::prepareForRhs() {
   MOZ_ASSERT_IF(isCompoundAssignment(), state_ == State::Get);
 
   if (isSimpleAssignment() || isPropInit()) {
-    // For CompoundAssignment, SUPERBASE is already emitted by emitGet.
+    // For CompoundAssignment, SuperBase is already emitted by emitGet.
     if (isSuper()) {
       if (!bce_->emitSuperBase()) {
         //          [stack] THIS SUPERBASE
