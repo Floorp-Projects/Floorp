@@ -309,7 +309,10 @@ class MachBrowsertime(MachCommandBase):
         # otherwise compare won't be found, and the built-in OS convert
         # method will be used instead of the ImageMagick one.
         if 'win64' in host_platform() and path_to_imagemagick:
-            path.insert(0, path_to_imagemagick)
+            # Bug 1596237 - In the windows ImageMagick distribution, the ffmpeg
+            # binary is directly located in the root directory, so here we
+            # insert in the 3rd position to avoid taking precedence over ffmpeg
+            path.insert(2, path_to_imagemagick)
 
         # On macOs, we can't install our own ImageMagick because the
         # System Integrity Protection (SIP) won't let us set DYLD_LIBRARY_PATH
