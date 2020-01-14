@@ -3419,9 +3419,9 @@ void JitScript::MonitorMagicValueBytecodeType(JSContext* cx, JSScript* script,
   // GetAliasedVar can return the magic TDZ value.
   MOZ_ASSERT(rval.whyMagic() == JS_UNINITIALIZED_LEXICAL);
   MOZ_ASSERT(script->function() || script->isForEval());
-  MOZ_ASSERT(JSOp(*GetNextPc(pc)) == JSOp::CheckThis ||
-             JSOp(*GetNextPc(pc)) == JSOp::CheckThisReinit ||
-             JSOp(*GetNextPc(pc)) == JSOp::CheckReturn);
+  MOZ_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_CHECKTHIS ||
+             JSOp(*GetNextPc(pc)) == JSOP_CHECKTHISREINIT ||
+             JSOp(*GetNextPc(pc)) == JSOP_CHECKRETURN);
 
   MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
 }

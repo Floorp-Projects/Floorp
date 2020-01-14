@@ -2700,7 +2700,7 @@ class JSScript : public js::BaseScript {
   bool hasForceInterpreterOp() const {
     // JSOp::ForceInterpreter, if present, must be the first op.
     MOZ_ASSERT(length() >= 1);
-    return JSOp(*code()) == JSOp::ForceInterpreter;
+    return JSOp(*code()) == JSOP_FORCEINTERPRETER;
   }
 
   js::AllBytecodesIterable allLocations() {
@@ -2723,8 +2723,8 @@ class JSScript : public js::BaseScript {
   jsbytecode* codeEnd() const { return code() + length(); }
 
   jsbytecode* lastPC() const {
-    jsbytecode* pc = codeEnd() - js::JSOpLength_RetRval;
-    MOZ_ASSERT(JSOp(*pc) == JSOp::RetRval);
+    jsbytecode* pc = codeEnd() - js::JSOP_RETRVAL_LENGTH;
+    MOZ_ASSERT(JSOp(*pc) == JSOP_RETRVAL);
     return pc;
   }
 
@@ -3099,7 +3099,7 @@ class JSScript : public js::BaseScript {
 
   uint32_t tableSwitchCaseOffset(jsbytecode* pc, uint32_t caseIndex) const {
     MOZ_ASSERT(containsPC(pc));
-    MOZ_ASSERT(JSOp(*pc) == JSOp::TableSwitch);
+    MOZ_ASSERT(JSOp(*pc) == JSOP_TABLESWITCH);
     uint32_t firstResumeIndex = GET_RESUMEINDEX(pc + 3 * JUMP_OFFSET_LEN);
     return resumeOffsets()[firstResumeIndex + caseIndex];
   }
@@ -3206,10 +3206,10 @@ class JSScript : public js::BaseScript {
     }
 
     jsbytecode* pc = code();
-    if (noScriptRval() && JSOp(*pc) == JSOp::False) {
+    if (noScriptRval() && JSOp(*pc) == JSOP_FALSE) {
       ++pc;
     }
-    return JSOp(*pc) == JSOp::RetRval;
+    return JSOp(*pc) == JSOP_RETRVAL;
   }
 
   bool formalIsAliased(unsigned argSlot);

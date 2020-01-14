@@ -9324,18 +9324,18 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           return null();
         }
 
-        JSOp op = JSOp::Call;
+        JSOp op = JSOP_CALL;
         bool maybeAsyncArrow = false;
         if (PropertyName* prop = handler_.maybeDottedProperty(lhs)) {
           // Use the JSOp::Fun{Apply,Call} optimizations given the right
           // syntax.
           if (prop == cx_->names().apply) {
-            op = JSOp::FunApply;
+            op = JSOP_FUNAPPLY;
             if (pc_->isFunctionBox()) {
               pc_->functionBox()->usesApply = true;
             }
           } else if (prop == cx_->names().call) {
-            op = JSOp::FunCall;
+            op = JSOP_FUNCALL;
           }
         } else if (tt == TokenKind::LeftParen) {
           if (handler_.isAsyncKeyword(lhs, cx_)) {
@@ -9349,7 +9349,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
           } else if (handler_.isEvalName(lhs, cx_)) {
             // Select the right Eval op and flag pc_ as having a
             // direct eval.
-            op = pc_->sc()->strict() ? JSOp::StrictEval : JSOp::Eval;
+            op = pc_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
             pc_->sc()->setBindingsAccessedDynamically();
             pc_->sc()->setHasDirectEval();
 
@@ -9377,12 +9377,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
             return null();
           }
           if (isSpread) {
-            if (op == JSOp::Eval) {
-              op = JSOp::SpreadEval;
-            } else if (op == JSOp::StrictEval) {
-              op = JSOp::StrictSpreadEval;
+            if (op == JSOP_EVAL) {
+              op = JSOP_SPREADEVAL;
+            } else if (op == JSOP_STRICTEVAL) {
+              op = JSOP_STRICTSPREADEVAL;
             } else {
-              op = JSOp::SpreadCall;
+              op = JSOP_SPREADCALL;
             }
           }
 

@@ -209,10 +209,10 @@ bool RangeAnalysis::addBetaNodes() {
                right->type() == MIRType::Int32) {
       MDefinition* smaller = nullptr;
       MDefinition* greater = nullptr;
-      if (jsop == JSOp::Lt) {
+      if (jsop == JSOP_LT) {
         smaller = left;
         greater = right;
-      } else if (jsop == JSOp::Gt) {
+      } else if (jsop == JSOP_GT) {
         smaller = right;
         greater = left;
       }
@@ -248,10 +248,10 @@ bool RangeAnalysis::addBetaNodes() {
 
     Range comp;
     switch (jsop) {
-      case JSOp::Le:
+      case JSOP_LE:
         comp.setDouble(conservativeLower, bound);
         break;
-      case JSOp::Lt:
+      case JSOP_LT:
         // For integers, if x < c, the upper bound of x is c-1.
         if (val->type() == MIRType::Int32) {
           int32_t intbound;
@@ -267,10 +267,10 @@ bool RangeAnalysis::addBetaNodes() {
           comp.refineToExcludeNegativeZero();
         }
         break;
-      case JSOp::Ge:
+      case JSOP_GE:
         comp.setDouble(bound, conservativeUpper);
         break;
-      case JSOp::Gt:
+      case JSOP_GT:
         // For integers, if x > c, the lower bound of x is c+1.
         if (val->type() == MIRType::Int32) {
           int32_t intbound;
@@ -286,24 +286,24 @@ bool RangeAnalysis::addBetaNodes() {
           comp.refineToExcludeNegativeZero();
         }
         break;
-      case JSOp::StrictEq:
+      case JSOP_STRICTEQ:
         // A strict comparison can test for things other than numeric value.
         if (!compare->isNumericComparison()) {
           continue;
         }
         // Otherwise fall through to handle JSOp::StrictEq the same as JSOp::Eq.
         [[fallthrough]];
-      case JSOp::Eq:
+      case JSOP_EQ:
         comp.setDouble(bound, bound);
         break;
-      case JSOp::StrictNe:
+      case JSOP_STRICTNE:
         // A strict comparison can test for things other than numeric value.
         if (!compare->isNumericComparison()) {
           continue;
         }
         // Otherwise fall through to handle JSOp::StrictNe the same as JSOp::Ne.
         [[fallthrough]];
-      case JSOp::Ne:
+      case JSOP_NE:
         // Negative zero is not not-equal to zero.
         if (bound == 0) {
           comp.refineToExcludeNegativeZero();

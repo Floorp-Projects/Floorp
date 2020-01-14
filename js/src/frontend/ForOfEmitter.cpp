@@ -82,7 +82,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
                ScopeKind::Lexical);
 
     if (headLexicalEmitterScope_->hasEnvironment()) {
-      if (!bce_->emit1(JSOp::RecreateLexicalEnv)) {
+      if (!bce_->emit1(JSOP_RECREATELEXICALENV)) {
         //          [stack] NEXT ITER
         return false;
       }
@@ -105,7 +105,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
     }
   }
 
-  if (!bce_->emit1(JSOp::Dup2)) {
+  if (!bce_->emit1(JSOP_DUP2)) {
     //              [stack] NEXT ITER NEXT ITER
     return false;
   }
@@ -115,11 +115,11 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
     return false;
   }
 
-  if (!bce_->emit1(JSOp::Dup)) {
+  if (!bce_->emit1(JSOP_DUP)) {
     //              [stack] NEXT ITER RESULT RESULT
     return false;
   }
-  if (!bce_->emitAtomOp(JSOp::GetProp, bce_->cx->names().done)) {
+  if (!bce_->emitAtomOp(JSOP_GETPROP, bce_->cx->names().done)) {
     //              [stack] NEXT ITER RESULT DONE
     return false;
   }
@@ -127,7 +127,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
   // if (done) break;
   MOZ_ASSERT(bce_->innermostNestableControl == loopInfo_.ptr(),
              "must be at the top-level of the loop");
-  if (!bce_->emitJump(JSOp::IfNe, &loopInfo_->breaks)) {
+  if (!bce_->emitJump(JSOP_IFNE, &loopInfo_->breaks)) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
@@ -136,7 +136,7 @@ bool ForOfEmitter::emitInitialize(const Maybe<uint32_t>& forPos) {
   //
   // Note that ES 13.7.5.13, step 5.c says getting result.value does not
   // call IteratorClose, so start JSTRY_ITERCLOSE after the GetProp.
-  if (!bce_->emitAtomOp(JSOp::GetProp, bce_->cx->names().value)) {
+  if (!bce_->emitAtomOp(JSOP_GETPROP, bce_->cx->names().value)) {
     //              [stack] NEXT ITER VALUE
     return false;
   }
@@ -190,12 +190,12 @@ bool ForOfEmitter::emitEnd(const Maybe<uint32_t>& iteratedPos) {
     }
   }
 
-  if (!bce_->emit1(JSOp::Pop)) {
+  if (!bce_->emit1(JSOP_POP)) {
     //              [stack] NEXT ITER
     return false;
   }
 
-  if (!loopInfo_->emitLoopEnd(bce_, JSOp::Goto, JSTRY_FOR_OF)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOP_GOTO, JSTRY_FOR_OF)) {
     //              [stack] NEXT ITER
     return false;
   }

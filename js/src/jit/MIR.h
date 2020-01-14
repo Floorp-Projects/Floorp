@@ -3225,7 +3225,7 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
   bool operandsAreNeverNaN() const { return operandsAreNeverNaN_; }
   AliasSet getAliasSet() const override {
     // Strict equality is never effectful.
-    if (jsop_ == JSOp::StrictEq || jsop_ == JSOp::StrictNe) {
+    if (jsop_ == JSOP_STRICTEQ || jsop_ == JSOP_STRICTNE) {
       return AliasSet::None();
     }
     if (compareType_ == Compare_Unknown) {

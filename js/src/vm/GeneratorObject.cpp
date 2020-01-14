@@ -62,13 +62,13 @@ void AbstractGeneratorObject::trace(JSTracer* trc) {
 bool AbstractGeneratorObject::suspend(JSContext* cx, HandleObject obj,
                                       AbstractFramePtr frame, jsbytecode* pc,
                                       Value* vp, unsigned nvalues) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::InitialYield || JSOp(*pc) == JSOp::Yield ||
-             JSOp(*pc) == JSOp::Await);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_INITIALYIELD || JSOp(*pc) == JSOP_YIELD ||
+             JSOp(*pc) == JSOP_AWAIT);
 
   auto genObj = obj.as<AbstractGeneratorObject>();
   MOZ_ASSERT(!genObj->hasExpressionStack() || genObj->isExpressionStackEmpty());
-  MOZ_ASSERT_IF(JSOp(*pc) == JSOp::Await, genObj->callee().isAsync());
-  MOZ_ASSERT_IF(JSOp(*pc) == JSOp::Yield, genObj->callee().isGenerator());
+  MOZ_ASSERT_IF(JSOp(*pc) == JSOP_AWAIT, genObj->callee().isAsync());
+  MOZ_ASSERT_IF(JSOp(*pc) == JSOP_YIELD, genObj->callee().isGenerator());
 
   ArrayObject* stack = nullptr;
   if (nvalues > 0) {
@@ -343,11 +343,11 @@ const JSClass js::GeneratorFunctionClass = {
     "GeneratorFunction", 0, JS_NULL_CLASS_OPS, &GeneratorFunctionClassSpec};
 
 bool AbstractGeneratorObject::isAfterYield() {
-  return isAfterYieldOrAwait(JSOp::Yield);
+  return isAfterYieldOrAwait(JSOP_YIELD);
 }
 
 bool AbstractGeneratorObject::isAfterAwait() {
-  return isAfterYieldOrAwait(JSOp::Await);
+  return isAfterYieldOrAwait(JSOP_AWAIT);
 }
 
 bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
@@ -358,19 +358,19 @@ bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
   JSScript* script = callee().nonLazyScript();
   jsbytecode* code = script->code();
   uint32_t nextOffset = script->resumeOffsets()[resumeIndex()];
-  if (JSOp(code[nextOffset]) != JSOp::AfterYield) {
+  if (JSOp(code[nextOffset]) != JSOP_AFTERYIELD) {
     return false;
   }
 
-  static_assert(JSOpLength_Yield == JSOpLength_InitialYield,
-                "JSOp::Yield and JSOp::InitialYield must have the same length");
-  static_assert(JSOpLength_Yield == JSOpLength_Await,
-                "JSOp::Yield and JSOp::Await must have the same length");
+  static_assert(JSOP_YIELD_LENGTH == JSOP_INITIALYIELD_LENGTH,
+                "JSOP_YIELD and JSOP_INITIALYIELD must have the same length");
+  static_assert(JSOP_YIELD_LENGTH == JSOP_AWAIT_LENGTH,
+                "JSOP_YIELD and JSOP_AWAIT must have the same length");
 
-  uint32_t offset = nextOffset - JSOpLength_Yield;
+  uint32_t offset = nextOffset - JSOP_YIELD_LENGTH;
   JSOp prevOp = JSOp(code[offset]);
-  MOZ_ASSERT(prevOp == JSOp::InitialYield || prevOp == JSOp::Yield ||
-             prevOp == JSOp::Await);
+  MOZ_ASSERT(prevOp == JSOP_INITIALYIELD || prevOp == JSOP_YIELD ||
+             prevOp == JSOP_AWAIT);
 
   return prevOp == op;
 }

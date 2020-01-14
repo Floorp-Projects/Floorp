@@ -582,7 +582,7 @@ MIRType BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc) {
   MIRType result;
   ICStub* stubs[2];
 
-  if (JSOp(*pc) == JSOp::Pos) {
+  if (JSOp(*pc) == JSOP_POS) {
     // +x expanding to x*1, but no corresponding IC.
     return MIRType::None;
   }
@@ -749,7 +749,7 @@ ObjectGroup* BaselineInspector::getTemplateObjectGroup(jsbytecode* pc) {
 }
 
 JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::New);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_NEW);
 
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* stub = entry.firstStub();
@@ -1143,7 +1143,7 @@ bool BaselineInspector::commonGetPropFunction(
     jsbytecode* pc, jsid id, bool innerized, JSObject** holder,
     Shape** holderShape, JSFunction** commonGetter, Shape** globalShape,
     bool* isOwnProperty, ReceiverVector& receivers) {
-  MOZ_ASSERT(IsGetPropPC(pc) || IsGetElemPC(pc) || JSOp(*pc) == JSOp::GetGName);
+  MOZ_ASSERT(IsGetPropPC(pc) || IsGetElemPC(pc) || JSOp(*pc) == JSOP_GETGNAME);
   MOZ_ASSERT(receivers.empty());
 
   // Only GetElem operations need to guard against a specific property id.
@@ -1222,9 +1222,9 @@ static JSFunction* GetMegamorphicGetterSetterFunction(
 bool BaselineInspector::megamorphicGetterSetterFunction(
     jsbytecode* pc, jsid id, bool isGetter, JSFunction** getterOrSetter) {
   MOZ_ASSERT(IsGetPropPC(pc) || IsGetElemPC(pc) || IsSetPropPC(pc) ||
-             JSOp(*pc) == JSOp::GetGName || JSOp(*pc) == JSOp::InitGLexical ||
-             JSOp(*pc) == JSOp::InitProp || JSOp(*pc) == JSOp::InitLockedProp ||
-             JSOp(*pc) == JSOp::InitHiddenProp);
+             JSOp(*pc) == JSOP_GETGNAME || JSOp(*pc) == JSOP_INITGLEXICAL ||
+             JSOp(*pc) == JSOP_INITPROP || JSOp(*pc) == JSOP_INITLOCKEDPROP ||
+             JSOp(*pc) == JSOP_INITHIDDENPROP);
 
   // Only GetElem operations need to guard against a specific property id.
   if (!IsGetElemPC(pc)) {
@@ -1382,9 +1382,9 @@ bool BaselineInspector::commonSetPropFunction(jsbytecode* pc, JSObject** holder,
                                               JSFunction** commonSetter,
                                               bool* isOwnProperty,
                                               ReceiverVector& receivers) {
-  MOZ_ASSERT(IsSetPropPC(pc) || JSOp(*pc) == JSOp::InitGLexical ||
-             JSOp(*pc) == JSOp::InitProp || JSOp(*pc) == JSOp::InitLockedProp ||
-             JSOp(*pc) == JSOp::InitHiddenProp);
+  MOZ_ASSERT(IsSetPropPC(pc) || JSOp(*pc) == JSOP_INITGLEXICAL ||
+             JSOp(*pc) == JSOP_INITPROP || JSOp(*pc) == JSOP_INITLOCKEDPROP ||
+             JSOp(*pc) == JSOP_INITHIDDENPROP);
   MOZ_ASSERT(receivers.empty());
 
   *commonSetter = nullptr;
@@ -1571,7 +1571,7 @@ MIRType BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc) {
 bool BaselineInspector::instanceOfData(jsbytecode* pc, Shape** shape,
                                        uint32_t* slot,
                                        JSObject** prototypeObject) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::Instanceof);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_INSTANCEOF);
 
   const ICEntry& entry = icEntryFromPC(pc);
   ICStub* firstStub = entry.firstStub();

@@ -20,12 +20,12 @@ static inline unsigned GetDefCount(jsbytecode* pc) {
    * in the pushed array of stack values for type inference.
    */
   switch (JSOp(*pc)) {
-    case JSOp::Or:
-    case JSOp::And:
-    case JSOp::Coalesce:
+    case JSOP_OR:
+    case JSOP_AND:
+    case JSOP_COALESCE:
       return 1;
-    case JSOp::Pick:
-    case JSOp::Unpick:
+    case JSOP_PICK:
+    case JSOP_UNPICK:
       /*
        * Pick pops and pushes how deep it looks in the stack + 1
        * items. i.e. if the stack were |a b[2] c[1] d[0]|, pick 2
@@ -39,7 +39,7 @@ static inline unsigned GetDefCount(jsbytecode* pc) {
 }
 
 static inline unsigned GetUseCount(jsbytecode* pc) {
-  if (JSOp(*pc) == JSOp::Pick || JSOp(*pc) == JSOp::Unpick) {
+  if (JSOp(*pc) == JSOP_PICK || JSOp(*pc) == JSOP_UNPICK) {
     return pc[1] + 1;
   }
 
@@ -48,18 +48,18 @@ static inline unsigned GetUseCount(jsbytecode* pc) {
 
 static inline JSOp ReverseCompareOp(JSOp op) {
   switch (op) {
-    case JSOp::Gt:
-      return JSOp::Lt;
-    case JSOp::Ge:
-      return JSOp::Le;
-    case JSOp::Lt:
-      return JSOp::Gt;
-    case JSOp::Le:
-      return JSOp::Ge;
-    case JSOp::Eq:
-    case JSOp::Ne:
-    case JSOp::StrictEq:
-    case JSOp::StrictNe:
+    case JSOP_GT:
+      return JSOP_LT;
+    case JSOP_GE:
+      return JSOP_LE;
+    case JSOP_LT:
+      return JSOP_GT;
+    case JSOP_LE:
+      return JSOP_GE;
+    case JSOP_EQ:
+    case JSOP_NE:
+    case JSOP_STRICTEQ:
+    case JSOP_STRICTNE:
       return op;
     default:
       MOZ_CRASH("unrecognized op");
@@ -68,22 +68,22 @@ static inline JSOp ReverseCompareOp(JSOp op) {
 
 static inline JSOp NegateCompareOp(JSOp op) {
   switch (op) {
-    case JSOp::Gt:
-      return JSOp::Le;
-    case JSOp::Ge:
-      return JSOp::Lt;
-    case JSOp::Lt:
-      return JSOp::Ge;
-    case JSOp::Le:
-      return JSOp::Gt;
-    case JSOp::Eq:
-      return JSOp::Ne;
-    case JSOp::Ne:
-      return JSOp::Eq;
-    case JSOp::StrictNe:
-      return JSOp::StrictEq;
-    case JSOp::StrictEq:
-      return JSOp::StrictNe;
+    case JSOP_GT:
+      return JSOP_LE;
+    case JSOP_GE:
+      return JSOP_LT;
+    case JSOP_LT:
+      return JSOP_GE;
+    case JSOP_LE:
+      return JSOP_GT;
+    case JSOP_EQ:
+      return JSOP_NE;
+    case JSOP_NE:
+      return JSOP_EQ;
+    case JSOP_STRICTNE:
+      return JSOP_STRICTEQ;
+    case JSOP_STRICTEQ:
+      return JSOP_STRICTNE;
     default:
       MOZ_CRASH("unrecognized op");
   }
@@ -130,7 +130,7 @@ class BytecodeRangeWithPosition : private BytecodeRange {
       popFront();
     }
 
-    if (frontOpcode() != JSOp::JumpTarget) {
+    if (frontOpcode() != JSOP_JUMPTARGET) {
       isEntryPoint = true;
     } else {
       wasArtifactEntryPoint = true;
@@ -153,7 +153,7 @@ class BytecodeRangeWithPosition : private BytecodeRange {
       isEntryPoint = true;
     }
 
-    if (isEntryPoint && frontOpcode() == JSOp::JumpTarget) {
+    if (isEntryPoint && frontOpcode() == JSOP_JUMPTARGET) {
       wasArtifactEntryPoint = isEntryPoint;
       isEntryPoint = false;
     }

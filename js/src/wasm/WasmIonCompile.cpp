@@ -3668,7 +3668,7 @@ static bool EmitRefIsNull(FunctionCompiler& f) {
     return false;
   }
   f.iter().setResult(
-      f.compare(input, nullVal, JSOp::Eq, MCompare::Compare_RefOrNull));
+      f.compare(input, nullVal, JSOP_EQ, MCompare::Compare_RefOrNull));
   return true;
 }
 #endif  // ENABLE_WASM_REFTYPES
@@ -3826,102 +3826,102 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(EmitConversion<MNot>(f, ValType::I32, ValType::I32));
       case uint16_t(Op::I32Eq):
         CHECK(
-            EmitComparison(f, ValType::I32, JSOp::Eq, MCompare::Compare_Int32));
+            EmitComparison(f, ValType::I32, JSOP_EQ, MCompare::Compare_Int32));
       case uint16_t(Op::I32Ne):
         CHECK(
-            EmitComparison(f, ValType::I32, JSOp::Ne, MCompare::Compare_Int32));
+            EmitComparison(f, ValType::I32, JSOP_NE, MCompare::Compare_Int32));
       case uint16_t(Op::I32LtS):
         CHECK(
-            EmitComparison(f, ValType::I32, JSOp::Lt, MCompare::Compare_Int32));
+            EmitComparison(f, ValType::I32, JSOP_LT, MCompare::Compare_Int32));
       case uint16_t(Op::I32LtU):
-        CHECK(EmitComparison(f, ValType::I32, JSOp::Lt,
-                             MCompare::Compare_UInt32));
+        CHECK(
+            EmitComparison(f, ValType::I32, JSOP_LT, MCompare::Compare_UInt32));
       case uint16_t(Op::I32GtS):
         CHECK(
-            EmitComparison(f, ValType::I32, JSOp::Gt, MCompare::Compare_Int32));
+            EmitComparison(f, ValType::I32, JSOP_GT, MCompare::Compare_Int32));
       case uint16_t(Op::I32GtU):
-        CHECK(EmitComparison(f, ValType::I32, JSOp::Gt,
-                             MCompare::Compare_UInt32));
+        CHECK(
+            EmitComparison(f, ValType::I32, JSOP_GT, MCompare::Compare_UInt32));
       case uint16_t(Op::I32LeS):
         CHECK(
-            EmitComparison(f, ValType::I32, JSOp::Le, MCompare::Compare_Int32));
+            EmitComparison(f, ValType::I32, JSOP_LE, MCompare::Compare_Int32));
       case uint16_t(Op::I32LeU):
-        CHECK(EmitComparison(f, ValType::I32, JSOp::Le,
-                             MCompare::Compare_UInt32));
+        CHECK(
+            EmitComparison(f, ValType::I32, JSOP_LE, MCompare::Compare_UInt32));
       case uint16_t(Op::I32GeS):
         CHECK(
-            EmitComparison(f, ValType::I32, JSOp::Ge, MCompare::Compare_Int32));
+            EmitComparison(f, ValType::I32, JSOP_GE, MCompare::Compare_Int32));
       case uint16_t(Op::I32GeU):
-        CHECK(EmitComparison(f, ValType::I32, JSOp::Ge,
-                             MCompare::Compare_UInt32));
+        CHECK(
+            EmitComparison(f, ValType::I32, JSOP_GE, MCompare::Compare_UInt32));
       case uint16_t(Op::I64Eqz):
         CHECK(EmitConversion<MNot>(f, ValType::I64, ValType::I32));
       case uint16_t(Op::I64Eq):
         CHECK(
-            EmitComparison(f, ValType::I64, JSOp::Eq, MCompare::Compare_Int64));
+            EmitComparison(f, ValType::I64, JSOP_EQ, MCompare::Compare_Int64));
       case uint16_t(Op::I64Ne):
         CHECK(
-            EmitComparison(f, ValType::I64, JSOp::Ne, MCompare::Compare_Int64));
+            EmitComparison(f, ValType::I64, JSOP_NE, MCompare::Compare_Int64));
       case uint16_t(Op::I64LtS):
         CHECK(
-            EmitComparison(f, ValType::I64, JSOp::Lt, MCompare::Compare_Int64));
+            EmitComparison(f, ValType::I64, JSOP_LT, MCompare::Compare_Int64));
       case uint16_t(Op::I64LtU):
-        CHECK(EmitComparison(f, ValType::I64, JSOp::Lt,
-                             MCompare::Compare_UInt64));
+        CHECK(
+            EmitComparison(f, ValType::I64, JSOP_LT, MCompare::Compare_UInt64));
       case uint16_t(Op::I64GtS):
         CHECK(
-            EmitComparison(f, ValType::I64, JSOp::Gt, MCompare::Compare_Int64));
+            EmitComparison(f, ValType::I64, JSOP_GT, MCompare::Compare_Int64));
       case uint16_t(Op::I64GtU):
-        CHECK(EmitComparison(f, ValType::I64, JSOp::Gt,
-                             MCompare::Compare_UInt64));
+        CHECK(
+            EmitComparison(f, ValType::I64, JSOP_GT, MCompare::Compare_UInt64));
       case uint16_t(Op::I64LeS):
         CHECK(
-            EmitComparison(f, ValType::I64, JSOp::Le, MCompare::Compare_Int64));
+            EmitComparison(f, ValType::I64, JSOP_LE, MCompare::Compare_Int64));
       case uint16_t(Op::I64LeU):
-        CHECK(EmitComparison(f, ValType::I64, JSOp::Le,
-                             MCompare::Compare_UInt64));
+        CHECK(
+            EmitComparison(f, ValType::I64, JSOP_LE, MCompare::Compare_UInt64));
       case uint16_t(Op::I64GeS):
         CHECK(
-            EmitComparison(f, ValType::I64, JSOp::Ge, MCompare::Compare_Int64));
+            EmitComparison(f, ValType::I64, JSOP_GE, MCompare::Compare_Int64));
       case uint16_t(Op::I64GeU):
-        CHECK(EmitComparison(f, ValType::I64, JSOp::Ge,
-                             MCompare::Compare_UInt64));
+        CHECK(
+            EmitComparison(f, ValType::I64, JSOP_GE, MCompare::Compare_UInt64));
       case uint16_t(Op::F32Eq):
-        CHECK(EmitComparison(f, ValType::F32, JSOp::Eq,
+        CHECK(EmitComparison(f, ValType::F32, JSOP_EQ,
                              MCompare::Compare_Float32));
       case uint16_t(Op::F32Ne):
-        CHECK(EmitComparison(f, ValType::F32, JSOp::Ne,
+        CHECK(EmitComparison(f, ValType::F32, JSOP_NE,
                              MCompare::Compare_Float32));
       case uint16_t(Op::F32Lt):
-        CHECK(EmitComparison(f, ValType::F32, JSOp::Lt,
+        CHECK(EmitComparison(f, ValType::F32, JSOP_LT,
                              MCompare::Compare_Float32));
       case uint16_t(Op::F32Gt):
-        CHECK(EmitComparison(f, ValType::F32, JSOp::Gt,
+        CHECK(EmitComparison(f, ValType::F32, JSOP_GT,
                              MCompare::Compare_Float32));
       case uint16_t(Op::F32Le):
-        CHECK(EmitComparison(f, ValType::F32, JSOp::Le,
+        CHECK(EmitComparison(f, ValType::F32, JSOP_LE,
                              MCompare::Compare_Float32));
       case uint16_t(Op::F32Ge):
-        CHECK(EmitComparison(f, ValType::F32, JSOp::Ge,
+        CHECK(EmitComparison(f, ValType::F32, JSOP_GE,
                              MCompare::Compare_Float32));
       case uint16_t(Op::F64Eq):
-        CHECK(EmitComparison(f, ValType::F64, JSOp::Eq,
-                             MCompare::Compare_Double));
+        CHECK(
+            EmitComparison(f, ValType::F64, JSOP_EQ, MCompare::Compare_Double));
       case uint16_t(Op::F64Ne):
-        CHECK(EmitComparison(f, ValType::F64, JSOp::Ne,
-                             MCompare::Compare_Double));
+        CHECK(
+            EmitComparison(f, ValType::F64, JSOP_NE, MCompare::Compare_Double));
       case uint16_t(Op::F64Lt):
-        CHECK(EmitComparison(f, ValType::F64, JSOp::Lt,
-                             MCompare::Compare_Double));
+        CHECK(
+            EmitComparison(f, ValType::F64, JSOP_LT, MCompare::Compare_Double));
       case uint16_t(Op::F64Gt):
-        CHECK(EmitComparison(f, ValType::F64, JSOp::Gt,
-                             MCompare::Compare_Double));
+        CHECK(
+            EmitComparison(f, ValType::F64, JSOP_GT, MCompare::Compare_Double));
       case uint16_t(Op::F64Le):
-        CHECK(EmitComparison(f, ValType::F64, JSOp::Le,
-                             MCompare::Compare_Double));
+        CHECK(
+            EmitComparison(f, ValType::F64, JSOP_LE, MCompare::Compare_Double));
       case uint16_t(Op::F64Ge):
-        CHECK(EmitComparison(f, ValType::F64, JSOp::Ge,
-                             MCompare::Compare_Double));
+        CHECK(
+            EmitComparison(f, ValType::F64, JSOP_GE, MCompare::Compare_Double));
 
       // Numeric operators
       case uint16_t(Op::I32Clz):
@@ -4113,7 +4113,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         if (!f.env().gcTypesEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
         }
-        CHECK(EmitComparison(f, RefType::any(), JSOp::Eq,
+        CHECK(EmitComparison(f, RefType::any(), JSOP_EQ,
                              MCompare::Compare_RefOrNull));
 #endif
 #ifdef ENABLE_WASM_REFTYPES

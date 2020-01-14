@@ -121,9 +121,9 @@ class PendingEdge {
  private:
   MBasicBlock* block_;
   Kind kind_;
-  JSOp testOp_ = JSOp::Undefined;
+  JSOp testOp_ = JSOP_UNDEFINED;
 
-  PendingEdge(MBasicBlock* block, Kind kind, JSOp testOp = JSOp::Undefined)
+  PendingEdge(MBasicBlock* block, Kind kind, JSOp testOp = JSOP_UNDEFINED)
       : block_(block), kind_(kind), testOp_(testOp) {}
 
  public:
@@ -1428,7 +1428,7 @@ class CallInfo {
         constructing_(constructing),
         ignoresReturnValue_(ignoresReturnValue),
         setter_(false),
-        apply_(JSOp(*pc) == JSOp::FunApply) {}
+        apply_(JSOp(*pc) == JSOP_FUNAPPLY) {}
 
   MOZ_MUST_USE bool init(CallInfo& callInfo) {
     MOZ_ASSERT(constructing_ == callInfo.constructing());

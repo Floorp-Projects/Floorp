@@ -2130,17 +2130,17 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
                      parseArguments(FieldContext(
                          BinASTInterfaceAndField::CallExpression__Arguments)));
 
-  auto op = JSOp::Call;
+  auto op = JSOP_CALL;
 
   // Try to optimize funcall and funapply at the bytecode level
   if (PropertyName* prop = handler_.maybeDottedProperty(callee)) {
     if (prop == cx_->names().apply) {
-      op = JSOp::FunApply;
+      op = JSOP_FUNAPPLY;
       if (pc_->isFunctionBox()) {
         pc_->functionBox()->usesApply = true;
       }
     } else if (prop == cx_->names().call) {
-      op = JSOp::FunCall;
+      op = JSOP_FUNCALL;
     }
   }
 
@@ -2153,7 +2153,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
         return raiseMissingDirectEvalInAssertedScope();
       }
 
-      op = pc_->sc()->strict() ? JSOp::StrictEval : JSOp::Eval;
+      op = pc_->sc()->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
     }
   }
 

@@ -3391,7 +3391,7 @@ static bool GetThisValueForDebuggerEnvironmentIterMaybeOptimizedOut(
       if (script->functionHasThisBinding()) {
         for (jsbytecode* it = script->code(); it < script->codeEnd();
              it = GetNextPc(it)) {
-          if (JSOp(*it) == JSOp::FunctionThis) {
+          if (JSOp(*it) == JSOP_FUNCTIONTHIS) {
             // The next op after JSOp::FunctionThis always sets it.
             executedInitThisOp = pc > GetNextPc(it);
             break;
@@ -3845,15 +3845,15 @@ static bool RemoveReferencedNames(JSContext* cx, HandleScript script,
     PropertyName* name;
 
     switch (loc.getOp()) {
-      case JSOp::GetName:
-      case JSOp::SetName:
-      case JSOp::StrictSetName:
+      case JSOP_GETNAME:
+      case JSOP_SETNAME:
+      case JSOP_STRICTSETNAME:
         name = script->getName(loc.toRawBytecode());
         break;
 
-      case JSOp::GetGName:
-      case JSOp::SetGName:
-      case JSOp::StrictSetGName:
+      case JSOP_GETGNAME:
+      case JSOP_SETGNAME:
+      case JSOP_STRICTSETGNAME:
         if (script->hasNonSyntacticScope()) {
           name = script->getName(loc.toRawBytecode());
         } else {
@@ -3861,8 +3861,8 @@ static bool RemoveReferencedNames(JSContext* cx, HandleScript script,
         }
         break;
 
-      case JSOp::GetAliasedVar:
-      case JSOp::SetAliasedVar:
+      case JSOP_GETALIASEDVAR:
+      case JSOP_SETALIASEDVAR:
         name = EnvironmentCoordinateNameSlow(script, loc.toRawBytecode());
         break;
 
