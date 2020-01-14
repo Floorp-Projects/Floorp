@@ -2223,8 +2223,6 @@ void HTMLInputElement::SetUserInput(const nsAString& aValue,
 
 nsIEditor* HTMLInputElement::GetEditor() { return GetTextEditorFromState(); }
 
-bool HTMLInputElement::HasEditor() { return !!GetTextEditorWithoutCreation(); }
-
 TextEditor* HTMLInputElement::GetTextEditorFromState() {
   TextControlState* state = GetEditorState();
   if (state) {

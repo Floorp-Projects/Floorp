@@ -31,8 +31,6 @@ interface mixin GlobalEventHandlers {
            attribute EventHandler onfocus;
            //(Not implemented)attribute EventHandler oncancel;
            attribute EventHandler onauxclick;
-           [Pref="dom.input_events.beforeinput.enabled"]
-           attribute EventHandler onbeforeinput;
            attribute EventHandler oncanplay;
            attribute EventHandler oncanplaythrough;
            attribute EventHandler onchange;

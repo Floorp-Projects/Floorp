@@ -622,8 +622,7 @@ nsresult HTMLEditor::OnMouseDown(int32_t aClientX, int32_t aClientY,
   aTarget->GetAttr(nsGkAtoms::_moz_anonclass, anonclass);
 
   if (anonclass.EqualsLiteral("mozResizer")) {
-    AutoEditActionDataSetter editActionData(*this,
-                                            EditAction::eResizingElement);
+    AutoEditActionDataSetter editActionData(*this, EditAction::eResizeElement);
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return NS_ERROR_NOT_INITIALIZED;
     }
@@ -641,7 +640,7 @@ nsresult HTMLEditor::OnMouseDown(int32_t aClientX, int32_t aClientY,
   }
 
   if (anonclass.EqualsLiteral("mozGrabber")) {
-    AutoEditActionDataSetter editActionData(*this, EditAction::eMovingElement);
+    AutoEditActionDataSetter editActionData(*this, EditAction::eMoveElement);
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return NS_ERROR_NOT_INITIALIZED;
     }
@@ -672,36 +671,22 @@ nsresult HTMLEditor::OnMouseUp(int32_t aClientX, int32_t aClientY,
     // end the resizing process
     mIsResizing = false;
     HideShadowAndInfo();
-
-    nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-      return EditorBase::ToGenericNSResult(rv);
-    }
-
     SetFinalSize(aClientX, aClientY);
-    return NS_OK;
-  }
-
-  if (mIsMoving || mGrabberClicked) {
+  } else if (mIsMoving || mGrabberClicked) {
     AutoEditActionDataSetter editActionData(*this, EditAction::eMoveElement);
-    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-    if (rv != NS_ERROR_EDITOR_ACTION_CANCELED && NS_WARN_IF(NS_FAILED(rv))) {
-      return EditorBase::ToGenericNSResult(rv);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
     }
 
     if (mIsMoving) {
       mPositioningShadow->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                   NS_LITERAL_STRING("hidden"), true);
-      if (rv != NS_ERROR_EDITOR_ACTION_CANCELED) {
-        SetFinalPosition(aClientX, aClientY);
-      }
+      SetFinalPosition(aClientX, aClientY);
     }
     if (mGrabberClicked) {
       EndMoving();
     }
-    return EditorBase::ToGenericNSResult(rv);
   }
-
   return NS_OK;
 }
 
@@ -898,8 +883,7 @@ nsresult HTMLEditor::OnMouseMove(MouseEvent* aMouseEvent) {
   MOZ_ASSERT(aMouseEvent);
 
   if (mIsResizing) {
-    AutoEditActionDataSetter editActionData(*this,
-                                            EditAction::eResizingElement);
+    AutoEditActionDataSetter editActionData(*this, EditAction::eResizeElement);
     if (NS_WARN_IF(!editActionData.CanHandle())) {
       return NS_ERROR_NOT_INITIALIZED;
     }
@@ -926,7 +910,7 @@ nsresult HTMLEditor::OnMouseMove(MouseEvent* aMouseEvent) {
     return SetResizingInfoPosition(newX, newY, newWidth, newHeight);
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eMovingElement);
+  AutoEditActionDataSetter editActionData(*this, EditAction::eMoveElement);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }

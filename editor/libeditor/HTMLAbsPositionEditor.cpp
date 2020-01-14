@@ -45,9 +45,8 @@ nsresult HTMLEditor::SetSelectionToAbsoluteOrStaticAsAction(
 
   AutoEditActionDataSetter editActionData(
       *this, EditAction::eSetPositionToAbsoluteOrStatic, aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   if (aEnabled) {
@@ -129,9 +128,8 @@ nsresult HTMLEditor::AddZIndexAsAction(int32_t aChange,
 
   AutoEditActionDataSetter editActionData(
       *this, EditAction::eIncreaseOrDecreaseZIndex, aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   EditActionResult result = AddZIndexAsSubAction(aChange);

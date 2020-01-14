@@ -133,11 +133,6 @@ nsresult TextEditor::InsertTextFromTransferable(
     //     XP line breaks.
     UpdateEditActionData(stuffToPaste);
 
-    nsresult rv = MaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
     if (!stuffToPaste.IsEmpty()) {
       // Sanitize possible carriage returns in the string to be inserted
       nsContentUtils::PlatformToDOMLineBreaks(stuffToPaste);
@@ -165,8 +160,6 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
   CommitComposition();
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eDrop);
-  // We need to initialize data or dataTransfer later.  Therefore, we cannot
-  // dispatch "beforeinput" event until then.
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -334,8 +327,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
         (rv == NS_ERROR_NOT_INITIALIZED || rv == NS_ERROR_EDITOR_DESTROYED)) {
       rv = NS_OK;
     }
-    // Don't cancel "insertFromDrop" even if "deleteByDrag" is canceled.
-    if (rv != NS_ERROR_EDITOR_ACTION_CANCELED && NS_WARN_IF(NS_FAILED(rv))) {
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       editActionData.Abort();
       return EditorBase::ToGenericNSResult(rv);
     }
@@ -446,11 +438,6 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     //     XP line breaks.
     editActionData.SetData(data);
 
-    nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-      return EditorBase::ToGenericNSResult(rv);
-    }
-
     // Then, insert the text.  Note that we shouldn't need to walk the array
     // anymore because nobody should listen to mutation events of anonymous
     // text node in <input>/<textarea>.
@@ -461,10 +448,6 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     }
   } else {
     editActionData.InitializeDataTransfer(dataTransfer);
-    nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-      return EditorBase::ToGenericNSResult(rv);
-    }
     RefPtr<HTMLEditor> htmlEditor(AsHTMLEditor());
     for (uint32_t i = 0; i < numItems; ++i) {
       htmlEditor->InsertFromDataTransfer(dataTransfer, i, srcdoc, droppedAt,
@@ -484,23 +467,23 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
 nsresult TextEditor::DeleteSelectionByDragAsAction(bool aDispatchInputEvent) {
   AutoRestore<bool> saveDispatchInputEvent(mDispatchInputEvent);
   mDispatchInputEvent = aDispatchInputEvent;
-  // Even if we're handling "deleteByDrag" in same editor as "insertFromDrop",
-  // we need to recreate edit action data here because
-  // `AutoEditActionDataSetter` needs to manage event state separately.
-  bool requestedByAnotherEditor = GetEditAction() != EditAction::eDrop;
-  AutoEditActionDataSetter editActionData(*this, EditAction::eDeleteByDrag);
-  MOZ_ASSERT(!SelectionRefPtr()->IsCollapsed());
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  // But keep using placeholder transaction for "insertFromDrop" if there is.
+  // If we're handling "deleteByDrag" in same editor of handling drop,
+  // we already have an edit action data for "insertFromDrop".  Therefore,
+  // create edit action data only when the drag source and drop target are
+  // in different editor.
+  Maybe<AutoEditActionDataSetter> editActionData;
   Maybe<AutoPlaceholderBatch> treatAsOneTransaction;
-  if (requestedByAnotherEditor) {
+  if (GetEditAction() != EditAction::eDrop) {
+    editActionData.emplace(*this, EditAction::eDeleteByDrag);
+    if (NS_WARN_IF(!editActionData->CanHandle())) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
     treatAsOneTransaction.emplace(*this);
   }
 
-  rv = DeleteSelectionAsSubAction(eNone, eStrip);
+  MOZ_ASSERT(!SelectionRefPtr()->IsCollapsed());
+
+  nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -512,8 +495,8 @@ nsresult TextEditor::DeleteSelectionByDragAsAction(bool aDispatchInputEvent) {
     return NS_OK;
   }
 
-  if (treatAsOneTransaction.isNothing()) {
-    DispatchInputEvent();
+  if (editActionData.isNothing()) {
+    DispatchInputEvent(EditAction::eDeleteByDrag, VoidString(), nullptr);
   }
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
 }
@@ -527,25 +510,21 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (aDispatchPasteEvent && !FireClipboardEvent(ePaste, aClipboardType)) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
-  }
-
   if (AsHTMLEditor()) {
     editActionData.InitializeDataTransferWithClipboard(
         SettingDataTransfer::eWithFormat, aClipboardType);
-    nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    // MOZ_KnownLive because we know "this" must be alive.
+    nsresult rv = MOZ_KnownLive(AsHTMLEditor())
+                      ->PasteInternal(aClipboardType, aDispatchPasteEvent);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditorBase::ToGenericNSResult(rv);
     }
-    rv = MOZ_KnownLive(AsHTMLEditor())->PasteInternal(aClipboardType);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::PasteInternal() failed");
-    return EditorBase::ToGenericNSResult(rv);
+    return NS_OK;
   }
 
-  // The data will be initialized in InsertTextFromTransferable() if we're not
-  // an HTMLEditor.  Therefore, we cannot dispatch "beforeinput" here.
+  if (aDispatchPasteEvent && !FireClipboardEvent(ePaste, aClipboardType)) {
+    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_ACTION_CANCELED);
+  }
 
   // Get Clipboard Service
   nsresult rv;
@@ -584,8 +563,6 @@ nsresult TextEditor::PasteTransferableAsAction(nsITransferable* aTransferable,
                                                nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(*this, EditAction::ePaste,
                                           aPrincipal);
-  // The data will be initialized in InsertTextFromTransferable().  Therefore,
-  // we cannot dispatch "beforeinput" here.
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }

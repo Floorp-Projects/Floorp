@@ -536,24 +536,14 @@ function runTest(test) {
       win = window;
     }
     editor = SpecialPowers.wrap(win).docShell.editor;
-    let beforeInputEvent = null;
     let inputEvent = null;
-    win.addEventListener("beforeinput", aEvent => { beforeInputEvent = aEvent; }, {once: true});
     win.addEventListener("input", aEvent => { inputEvent = aEvent; }, {once: true});
     editor.pasteTransferable(trans);
-    isnot(beforeInputEvent, null, '"beforeinput" event should be fired');
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, '"beforeinput" event for "insertFromPaste" should be cancelable');
-      is(beforeInputEvent.inputType, "insertFromPaste", `inputType of "beforeinput" event should be "insertFromPaste"`);
-      is(beforeInputEvent.data, null, 'data of "beforeinput" event should be null');
-      is(beforeInputEvent.dataTransfer.getData("text/html"), test.payload, 'dataTransfer of "beforeinput" event should have the HTML data');
-      is(beforeInputEvent.dataTransfer.getData("text/plain"), "", 'dataTransfer of "beforeinput" event should not have have plain text');
-    }
-    is(inputEvent.type, "input", '"input" event should be fired');
-    is(inputEvent.inputType, "insertFromPaste", `inputType of "input" event should be "insertFromPaste"`);
-    is(inputEvent.data, null, 'data of "input" event should be null');
-    is(inputEvent.dataTransfer.getData("text/html"), test.payload, 'dataTransfer of "input" event should have the HTML data');
-    is(inputEvent.dataTransfer.getData("text/plain"), "", 'dataTransfer of "input" event should not have have plain text');
+    is(inputEvent.type, "input", "input event should be fired");
+    is(inputEvent.inputType, "insertFromPaste", "inputType should be insertFromPaste");
+    is(inputEvent.data, null, "data should be null");
+    is(inputEvent.dataTransfer.getData("text/html"), test.payload, "dataTransfer should have the HTML data");
+    is(inputEvent.dataTransfer.getData("text/plain"), "", "dataTransfer shouldn't have plain text");
   } else {
     var clipboard = SpecialPowers.Services.clipboard;
 
@@ -583,8 +573,7 @@ SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
   SpecialPowers.pushPrefEnv(
-    { "set": [["layout.css.moz-document.content.enabled", true],
-              ["dom.input_events.beforeinput.enabled", true]]},
+    { "set": [["layout.css.moz-document.content.enabled", true]]},
     doNextTest);
 });
 </script>

@@ -24,37 +24,16 @@ Form History test: Test for keydown handler submitting the form
 var form = document.getElementById("form1");
 var input = $_(1, "field1");
 var expectedValue = "value1";
-var beforeInputFired = false;
 
 function handleSubmit() { // eslint-disable-line no-unused-vars
   info("Submit");
   ok(false, "The form should not be submitted");
-  input.removeEventListener("beforeinput", handleBeforeInput, true);
   input.removeEventListener("input", handleInput, true);
   SimpleTest.finish();
 }
 
-function handleBeforeInput(aEvent) {
-  info("BeforeInput");
-  beforeInputFired = true;
-  is(input.value, "value", "The value should've not been modified yet");
-  ok(aEvent instanceof InputEvent,
-     '"beforeinput" event should be dispatched with InputEvent interface');
-  is(aEvent.cancelable, true,
-     '"beforeinput" event should be cancelable');
-  is(aEvent.bubbles, true,
-     '"beforeinput" event should always bubble');
-  is(aEvent.inputType, "insertReplacementText",
-     'inputType of "beforeinput" event should be "insertReplacementText"');
-  is(aEvent.data, expectedValue,
-     `data of "beforeinput" event should be "${expectedValue}"`);
-  is(aEvent.dataTransfer, null,
-     'dataTransfer of "beforeinput" event should be null');
-}
-
 function handleInput(aEvent) {
   info("Input");
-  ok(beforeInputFired, '"beforeinput" event should have been fired');
   is(input.value, expectedValue, "Check input value");
   ok(aEvent instanceof InputEvent,
      '"input" event should be dispatched with InputEvent interface');
@@ -63,22 +42,16 @@ function handleInput(aEvent) {
   is(aEvent.bubbles, true,
      '"input" event should always bubble');
   is(aEvent.inputType, "insertReplacementText",
-     'inputType of "input" event should be "insertReplacementText"');
+     'inputType should be "insertReplacementText"');
   is(aEvent.data, expectedValue,
-     `data of "input" event should be "${expectedValue}"`);
+     `data should be "${expectedValue}"`);
   is(aEvent.dataTransfer, null,
-     'dataTransfer of "input" event should be null');
-  input.removeEventListener("beforeinput", handleBeforeInput, true);
+     "dataTransfer should be null");
   input.removeEventListener("input", handleInput, true);
   SimpleTest.finish();
 }
 
-async function runTest() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
-  input.addEventListener("beforeinput", handleBeforeInput, true);
+function runTest() {
   input.addEventListener("input", handleInput, true);
   input.addEventListener("keydown", function handleEnterDown(e) {
     if (e.keyCode != KeyEvent.DOM_VK_RETURN) {

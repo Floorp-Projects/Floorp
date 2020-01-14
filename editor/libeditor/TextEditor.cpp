@@ -193,12 +193,11 @@ void TextEditor::GetDefaultEditorPrefs(int32_t& aNewlineHandling,
 NS_IMETHODIMP
 TextEditor::SetDocumentCharacterSet(const nsACString& characterSet) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eSetCharacterSet);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = EditorBase::SetDocumentCharacterSet(characterSet);
+  nsresult rv = EditorBase::SetDocumentCharacterSet(characterSet);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
@@ -361,14 +360,10 @@ nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
       return OnInputText(NS_LITERAL_STRING("\t"));
     }
     case NS_VK_RETURN:
-      if (!aKeyboardEvent->IsInputtingLineBreak()) {
+      if (IsSingleLineEditor() || !aKeyboardEvent->IsInputtingLineBreak()) {
         return NS_OK;
       }
-      if (!IsSingleLineEditor()) {
-        aKeyboardEvent->PreventDefault();
-      }
-      // We need to dispatch "beforeinput" event at least even if we're a
-      // single line text editor.
+      aKeyboardEvent->PreventDefault();
       return InsertLineBreakAsAction();
   }
 
@@ -393,43 +388,35 @@ nsresult TextEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
 
 nsresult TextEditor::OnInputText(const nsAString& aStringToInsert) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   MOZ_ASSERT(!aStringToInsert.IsVoid());
   editActionData.SetData(aStringToInsert);
-  // FYI: For conforming to current UI Events spec, we should dispatch
-  //      "beforeinput" event before "keypress" event, but here is in a
-  //      "keypress" event listener.  However, the other browsers dispatch
-  //      "beforeinput" event after "keypress" event.  Therefore, it makes
-  //      sense to follow the other browsers.  Spec issue:
-  //      https://github.com/w3c/uievents/issues/220
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
-  rv = InsertTextAsSubAction(aStringToInsert);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertTextAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = InsertTextAsSubAction(aStringToInsert);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::InsertLineBreakAsAction(nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak,
                                           aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  if (IsSingleLineEditor()) {
-    return NS_OK;
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   // XXX This may be called by execCommand() with "insertParagraph".
   //     In such case, naming the transaction "TypingTxnName" is odd.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::TypingTxnName);
-  rv = InsertLineBreakAsSubAction();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertLineBreakAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = InsertLineBreakAsSubAction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 static bool UseFrameSelectionToExtendSelection(nsIEditor::EDirection aAction,
@@ -644,14 +631,9 @@ nsresult TextEditor::DeleteSelectionAsAction(EDirection aDirection,
     }
   }
 
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
   // delete placeholder txns merge.
   AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName);
-  rv = DeleteSelectionAsSubAction(aDirection, aStripWrappers);
+  nsresult rv = DeleteSelectionAsSubAction(aDirection, aStripWrappers);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DeleteSelectionAsSubAction() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -941,23 +923,24 @@ nsresult TextEditor::InsertTextAsAction(const nsAString& aStringToInsert,
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText,
                                           aPrincipal);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   // Note that we don't need to replace native line breaks with XP line breaks
   // here because Chrome does not do it.
   MOZ_ASSERT(!aStringToInsert.IsVoid());
   editActionData.SetData(aStringToInsert);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
 
   nsString stringToInsert(aStringToInsert);
   if (!AsHTMLEditor()) {
     nsContentUtils::PlatformToDOMLineBreaks(stringToInsert);
   }
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  rv = InsertTextAsSubAction(stringToInsert);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertTextAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = InsertTextAsSubAction(stringToInsert);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert) {
@@ -991,20 +974,21 @@ nsresult TextEditor::InsertTextAsSubAction(const nsAString& aStringToInsert) {
 
 NS_IMETHODIMP
 TextEditor::InsertLineBreak() {
-  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
   if (NS_WARN_IF(IsSingleLineEditor())) {
     return NS_ERROR_FAILURE;
   }
 
+  AutoEditActionDataSetter editActionData(*this, EditAction::eInsertLineBreak);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  rv = InsertLineBreakAsSubAction();
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "InsertLineBreakAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = InsertLineBreakAsSubAction();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::InsertLineBreakAsSubAction() {
@@ -1040,13 +1024,12 @@ nsresult TextEditor::SetTextAsAction(const nsAString& aString,
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eSetText,
                                           aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
-  rv = SetTextAsSubAction(aString);
+  nsresult rv = SetTextAsSubAction(aString);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetTextAsSubAction() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -1058,14 +1041,13 @@ nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eReplaceText,
                                           aPrincipal);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
   if (!AsHTMLEditor()) {
     editActionData.SetData(aString);
   } else {
     editActionData.InitializeDataTransfer(aString);
-  }
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
@@ -1098,7 +1080,7 @@ nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
 
   // Select the range but as far as possible, we should not create new range
   // even if it's part of special Selection.
-  rv = SelectionRefPtr()->RemoveAllRangesTemporarily();
+  nsresult rv = SelectionRefPtr()->RemoveAllRangesTemporarily();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1110,9 +1092,10 @@ nsresult TextEditor::ReplaceTextAsAction(const nsAString& aString,
   }
 
   rv = ReplaceSelectionAsSubAction(aString);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "ReplaceSelectionAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
@@ -1225,7 +1208,6 @@ nsresult TextEditor::OnCompositionStart(
     return NS_OK;
   }
 
-  // "beforeinput" event shouldn't be fired before "compositionstart".
   AutoEditActionDataSetter editActionData(*this, EditAction::eStartComposition);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1272,23 +1254,7 @@ nsresult TextEditor::OnCompositionChange(
     editActionData.SetData(aCompositionChangeEvent.mData);
   }
 
-  // TODO: We need to use different EditAction value for beforeinput event
-  //       if the event is followed by "compositionend" because corresponding
-  //       "input" event will be fired from OnCompositionEnd() later with
-  //       different EditAction value.
-  // TODO: If Input Events Level 2 is enabled, "beforeinput" event may be
-  //       actually canceled if edit action is eDeleteByComposition. In such
-  //       case, we might need to keep selected text, but insert composition
-  //       string before or after the selection.  However, the spec is still
-  //       unstable.  We should keep handling the composition since other
-  //       parts including widget may not be ready for such complicated
-  //       behavior.
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (rv != NS_ERROR_EDITOR_ACTION_CANCELED && NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  if (NS_WARN_IF(!EnsureComposition(aCompositionChangeEvent))) {
+  if (!EnsureComposition(aCompositionChangeEvent)) {
     return NS_OK;
   }
 
@@ -1313,6 +1279,7 @@ nsresult TextEditor::OnCompositionChange(
 
   RefPtr<nsCaret> caret = GetCaret();
 
+  nsresult rv;
   {
     AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::IMETxnName);
 
@@ -1357,6 +1324,9 @@ void TextEditor::OnCompositionEnd(
                               ? EditAction::eCancelComposition
                               : EditAction::eCommitComposition;
   AutoEditActionDataSetter editActionData(*this, editAction);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return;
+  }
   // If Input Events Level 2 is enabled, EditAction::eCancelComposition is
   // mapped to EditorInputType::eDeleteCompositionText and it requires null
   // for InputEvent.data.  Therefore, only otherwise, we should set data.
@@ -1374,23 +1344,11 @@ void TextEditor::OnCompositionEnd(
     nsCOMPtr<nsITransaction> txn = mTransactionManager->PeekUndoStack();
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryInterface(txn);
     if (plcTxn) {
-      DebugOnly<nsresult> rvIgnored = plcTxn->Commit();
-      NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
+      DebugOnly<nsresult> rv = plcTxn->Commit();
+      NS_ASSERTION(NS_SUCCEEDED(rv),
                    "nsIAbsorbingTransaction::Commit() failed");
     }
   }
-
-  // Note that this just marks as that we've already handled "beforeinput" for
-  // preventing assertions in FireInputEvent().  Note that corresponding
-  // "beforeinput" event for the following "input" event should've already
-  // been dispatched from `OnCompositionChange()`.
-  DebugOnly<nsresult> rvIgnored =
-      editActionData.MaybeDispatchBeforeInputEvent();
-  MOZ_ASSERT(rvIgnored != NS_ERROR_EDITOR_ACTION_CANCELED,
-             "Why beforeinput event was canceled in this case?");
-  MOZ_ASSERT(NS_SUCCEEDED(rvIgnored),
-             "MaybeDispatchBeforeInputEvent() should just mark the instance as "
-             "handled it");
 
   // Composition string may have hidden the caret.  Therefore, we need to
   // cancel it here.
@@ -1403,10 +1361,6 @@ void TextEditor::OnCompositionEnd(
   mComposition = nullptr;
 
   // notify editor observers of action
-  // FYI: With current draft, "input" event should be fired from
-  //      OnCompositionChange(), however, it requires a lot of our UI code
-  //      change and does not make sense.  See spec issue:
-  //      https://github.com/w3c/uievents/issues/202
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
 }
 
@@ -1597,9 +1551,8 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
   }
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eUndo, aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   AutoUpdateViewBatch preventSelectionChangeEvent(*this);
@@ -1609,7 +1562,7 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
     return NS_ERROR_FAILURE;
   }
 
-  rv = NS_OK;
+  nsresult rv = NS_OK;
   {
     IgnoredErrorResult ignoredError;
     AutoEditSubActionNotifier startToHandleEditSubAction(
@@ -1630,7 +1583,6 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
     }
 
     if (NS_WARN_IF(!mRootElement)) {
-      NS_WARNING("Failed to handle padding BR Element due to no root element");
       rv = NS_ERROR_FAILURE;
     } else {
       // The idea here is to see if the magic empty node has suddenly
@@ -1651,7 +1603,10 @@ nsresult TextEditor::UndoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
   }
 
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
-  return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
@@ -1675,9 +1630,8 @@ nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
   }
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eRedo, aPrincipal);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   AutoUpdateViewBatch preventSelectionChangeEvent(*this);
@@ -1687,7 +1641,7 @@ nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
     return NS_ERROR_FAILURE;
   }
 
-  rv = NS_OK;
+  nsresult rv = NS_OK;
   {
     IgnoredErrorResult ignoredError;
     AutoEditSubActionNotifier startToHandleEditSubAction(
@@ -1708,7 +1662,6 @@ nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
     }
 
     if (NS_WARN_IF(!mRootElement)) {
-      NS_WARNING("Failed to handle padding BR element due to no root element");
       rv = NS_ERROR_FAILURE;
     } else {
       // We may take empty <br> element for empty editor back with this redo.
@@ -1731,7 +1684,10 @@ nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
   }
 
   NotifyEditorObservers(eNotifyEditorObserversOfEnd);
-  return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 bool TextEditor::IsCopyToClipboardAllowedInternal() const {
@@ -1795,23 +1751,20 @@ nsresult TextEditor::CutAsAction(nsIPrincipal* aPrincipal) {
   }
 
   bool actionTaken = false;
-  if (!FireClipboardEvent(eCut, nsIClipboard::kGlobalClipboard, &actionTaken)) {
-    return EditorBase::ToGenericNSResult(
-        actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
+  if (FireClipboardEvent(eCut, nsIClipboard::kGlobalClipboard, &actionTaken)) {
+    // XXX This transaction name is referred by PlaceholderTransaction::Merge()
+    //     so that we need to keep using it here.
+    AutoPlaceholderBatch treatAsOneTransaction(*this,
+                                               *nsGkAtoms::DeleteTxnName);
+    nsresult rv = DeleteSelectionAsSubAction(eNone, eStrip);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "DeleteSelectionAsSubAction() failed, but ignored");
   }
-
-  // Dispatch "beforeinput" event after dispatching "cut" event.
-  nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  // XXX This transaction name is referred by PlaceholderTransaction::Merge()
-  //     so that we need to keep using it here.
-  AutoPlaceholderBatch treatAsOneTransaction(*this, *nsGkAtoms::DeleteTxnName);
-  rv = DeleteSelectionAsSubAction(eNone, eStrip);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "DeleteSelectionAsSubAction() failed, but ignored");
-  return EditorBase::ToGenericNSResult(rv);
+  return EditorBase::ToGenericNSResult(
+      actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
 }
 
 bool TextEditor::IsCutCommandEnabled() const {
@@ -2043,31 +1996,20 @@ nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
     return NS_OK;
   }
 
-  nsCOMPtr<nsISupportsString> text = do_QueryInterface(genericDataObj);
-  if (!text) {
-    return NS_OK;
+  if (nsCOMPtr<nsISupportsString> text = do_QueryInterface(genericDataObj)) {
+    nsString stuffToPaste;
+    text->GetData(stuffToPaste);
+    editActionData.SetData(stuffToPaste);
+    if (!stuffToPaste.IsEmpty()) {
+      nsContentUtils::PlatformToDOMLineBreaks(stuffToPaste);
+      AutoPlaceholderBatch treatAsOneTransaction(*this);
+      nsresult rv = InsertWithQuotationsAsSubAction(stuffToPaste);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "InsertWithQuotationsAsSubAction() failed");
+      return EditorBase::ToGenericNSResult(rv);
+    }
   }
-
-  nsString stuffToPaste;
-  text->GetData(stuffToPaste);
-  if (stuffToPaste.IsEmpty()) {
-    return NS_OK;
-  }
-
-  editActionData.SetData(stuffToPaste);
-  if (!stuffToPaste.IsEmpty()) {
-    nsContentUtils::PlatformToDOMLineBreaks(stuffToPaste);
-  }
-  rv = editActionData.MaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-
-  AutoPlaceholderBatch treatAsOneTransaction(*this);
-  rv = InsertWithQuotationsAsSubAction(stuffToPaste);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "InsertWithQuotationsAsSubAction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  return NS_OK;
 }
 
 nsresult TextEditor::InsertWithQuotationsAsSubAction(
@@ -2198,15 +2140,15 @@ nsresult TextEditor::SetAttributeOrEquivalent(Element* aElement,
   }
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eSetAttribute);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = SetAttributeWithTransaction(*aElement, *aAttribute, aValue);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "SetAttributeWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = SetAttributeWithTransaction(*aElement, *aAttribute, aValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::RemoveAttributeOrEquivalent(Element* aElement,
@@ -2217,15 +2159,15 @@ nsresult TextEditor::RemoveAttributeOrEquivalent(Element* aElement,
   }
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eRemoveAttribute);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
-  rv = RemoveAttributeWithTransaction(*aElement, *aAttribute);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "RemoveAttributeWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  nsresult rv = RemoveAttributeWithTransaction(*aElement, *aAttribute);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  return NS_OK;
 }
 
 nsresult TextEditor::EnsurePaddingBRElementForEmptyEditor() {

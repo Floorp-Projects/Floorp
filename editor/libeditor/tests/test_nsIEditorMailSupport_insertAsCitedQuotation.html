@@ -15,52 +15,23 @@
 <script class="testbody" type="application/javascript">
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(async () => {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.input_events.beforeinput.enabled", true]],
-  });
-
+SimpleTest.waitForFocus(function() {
   let editor = document.getElementById("content");
   let selection = document.getSelection();
 
-  let beforeInputEvents = [];
   let inputEvents = [];
-  function onBeforeInput(aEvent) {
-    beforeInputEvents.push(aEvent);
-  }
   function onInput(aEvent) {
     inputEvents.push(aEvent);
   }
-  editor.addEventListener("beforeinput", onBeforeInput);
   editor.addEventListener("input", onInput);
 
   editor.focus();
   selection.collapse(editor, 0);
 
-  function checkInputEvent(aEvent, aInputType, aData, aDescription) {
-    ok(aEvent instanceof InputEvent,
-       `"${aEvent.type}" event should be dispatched with InputEvent interface ${aDescription}`);
-    // If it were cancelable whose inputType is empty string, web apps would
-    // block any Firefox specific modification whose inputType are not declared
-    // by the spec.
-    let expectedCancelable = aEvent.type === "beforeinput" && aInputType !== "";
-    is(aEvent.cancelable, expectedCancelable,
-       `"${aEvent.type}" event should ${expectedCancelable ? "be" : "be never"} cancelable ${aDescription}`);
-    is(aEvent.bubbles, true,
-       `"${aEvent.type}" event should always bubble ${aDescription}`);
-    is(aEvent.inputType, aInputType,
-       `inputType of "${aEvent.type}" event should be "${aInputType}" ${aDescription}`);
-    is(aEvent.data, aData,
-       `data of "${aEvent.type}" event should be ${aData} ${aDescription}`);
-    is(aEvent.dataTransfer, null,
-       `dataTransfer of "${aEvent.type}" event should be null ${aDescription}`);
-  }
-
   // Tests when the editor is in plaintext mode.
 
   getEditor().flags |= SpecialPowers.Ci.nsIPlaintextEditor.eEditorPlaintextMask;
 
-  beforeInputEvents = [];
   inputEvents = [];
   getEditorMailSupport().insertAsCitedQuotation("this is quoted text\nAnd here is second line.", "this is cited text", false);
 
@@ -72,21 +43,26 @@ SimpleTest.waitForFocus(async () => {
      "focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
   is(editor.innerHTML, '<span style="white-space: pre-wrap;">&gt; this is quoted text<br>&gt; And here is second line.<br><br></span>',
      "The quoted text should be inserted as plaintext into the plaintext editor");
-  is(beforeInputEvents.length, 1,
-     'One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
-  checkInputEvent(beforeInputEvents[0], "insertText", "this is quoted text\nAnd here is second line.",
-                  "after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
   is(inputEvents.length, 1,
      'One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
-  checkInputEvent(inputEvents[0], "insertText", "this is quoted text\nAnd here is second line.",
-                  "after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
+  ok(inputEvents[0] instanceof InputEvent,
+     '"input" event should be dispatched with InputEvent interface after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
+  is(inputEvents[0].cancelable, false,
+     '"input" event should be never cancelable even if "click" event after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
+  is(inputEvents[0].bubbles, true,
+     '"input" event should always bubble after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
+  is(inputEvents[0].inputType, "insertText",
+     'inputType should be "insertText" after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
+  is(inputEvents[0].data, "this is quoted text\nAnd here is second line.",
+     "data should be the quoted text after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
+  is(inputEvents[0].dataTransfer, null,
+     "dataTransfer should be null after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
 
   // Tests when the editor is in HTML editor mode.
   getEditor().flags &= ~SpecialPowers.Ci.nsIPlaintextEditor.eEditorPlaintextMask;
 
   editor.innerHTML = "";
 
-  beforeInputEvents = [];
   inputEvents = [];
   getEditorMailSupport().insertAsCitedQuotation("this is quoted text<br>", "this is cited text", false);
 
@@ -98,18 +74,23 @@ SimpleTest.waitForFocus(async () => {
      "focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
   is(editor.innerHTML,
      '<blockquote type="cite" cite="this is cited text">this is quoted text&lt;br&gt;</blockquote>', "The quoted text should be inserted as plaintext into the HTML editor");
-  is(beforeInputEvents.length, 1,
-     'One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)');
-  checkInputEvent(beforeInputEvents[0], "", null,
-                  "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
   is(inputEvents.length, 1,
      'One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)');
-  checkInputEvent(inputEvents[0], "", null,
-                  "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
+  ok(inputEvents[0] instanceof InputEvent,
+     '"input" event should be dispatched with InputEvent interface after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)');
+  is(inputEvents[0].cancelable, false,
+     '"input" event should be never cancelable even if "click" event after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)');
+  is(inputEvents[0].bubbles, true,
+     '"input" event should always bubble after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)');
+  is(inputEvents[0].inputType, "",
+     "inputType should be empty string after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
+  is(inputEvents[0].data, null,
+     "data should be null after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
+  is(inputEvents[0].dataTransfer, null,
+     "dataTransfer should be null after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
 
   editor.innerHTML = "";
 
-  beforeInputEvents = [];
   inputEvents = [];
   getEditorMailSupport().insertAsCitedQuotation("this is quoted text<br>And here is second line.", "this is cited text", true);
 
@@ -121,14 +102,20 @@ SimpleTest.waitForFocus(async () => {
      "focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
   is(editor.innerHTML, '<blockquote type="cite" cite="this is cited text">this is quoted text<br>And here is second line.</blockquote>',
      "The quoted text should be inserted as HTML source into the HTML editor");
-  is(beforeInputEvents.length, 1,
-     'One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)');
-  checkInputEvent(beforeInputEvents[0], "", null,
-                  "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
   is(inputEvents.length, 1,
      'One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)');
-  checkInputEvent(inputEvents[0], "", null,
-                  "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
+  ok(inputEvents[0] instanceof InputEvent,
+     '"input" event should be dispatched with InputEvent interface after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)');
+  is(inputEvents[0].cancelable, false,
+     '"input" event should be never cancelable even if "click" event after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)');
+  is(inputEvents[0].bubbles, true,
+     '"input" event should always bubble after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)');
+  is(inputEvents[0].inputType, "",
+     "inputType should be empty string after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
+  is(inputEvents[0].data, null,
+     "data should be null after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
+  is(inputEvents[0].dataTransfer, null,
+     "dataTransfer should be null after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
 
   SimpleTest.finish();
 });
