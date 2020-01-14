@@ -287,14 +287,14 @@ addonsManager:
     extra_keys:
       status_code: included when error is DOWNLOAD_ERROR and UNEXPECTED_STATUS_CODE
     notification_emails: ["addons-dev-internal@mozilla.com"]
-    expiry_version: "75"
+    expiry_version: "77"
     products:
       - "firefox"
       - "fennec"
       - "geckoview"
       - "thunderbird"
     record_in_processes: ["main"]
-    bug_numbers: [1572711]
+    bug_numbers: [1572711, 1607744]
     release_channel_collection: opt-out
 
 extensions.data:
