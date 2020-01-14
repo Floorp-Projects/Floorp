@@ -244,7 +244,7 @@ MockFilePickerInstance.prototype = {
   },
   open(aFilePickerShownCallback) {
     MockFilePicker.showing = true;
-    this.window.setTimeout(() => {
+    Services.tm.dispatchToMainThread(() => {
       // Maybe all the pending promises are already resolved, but we want to be sure.
       Promise.all(MockFilePicker.pendingPromises)
         .then(
@@ -299,9 +299,9 @@ MockFilePickerInstance.prototype = {
           }
 
           if (typeof MockFilePicker.afterOpenCallback == "function") {
-            this.window.setTimeout(() => {
+            Services.tm.dispatchToMainThread(() => {
               MockFilePicker.afterOpenCallback(this);
-            }, 0);
+            });
           }
         });
     });
