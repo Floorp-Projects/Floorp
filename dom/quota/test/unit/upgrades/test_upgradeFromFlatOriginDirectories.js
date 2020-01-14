@@ -3,58 +3,76 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// A flat origin directory is an origin directory with no sub directories for
+// quota clients. The upgrade was initially done lazily and an empty .metadata
+// file was used to indicate a successful upgrade.
+
 var testGenerator = testSteps();
 
 function* testSteps() {
-  const origins = [
-    [
-      {
-        oldPath: "indexedDB/1007+f+app+++system.gaiamobile.org",
-      },
+  const setups = [
+    {
+      // Storage used prior FF 22 (indexedDB/ directory with flat origin
+      // directories).
+      // FF 26 renamed indexedDB/ to storage/persistent and the lazy upgrade
+      // of flat origin directories remained. There's a test for that below.
+      package: "indexedDBDirectory_flatOriginDirectories_profile",
+      origins: [
+        {
+          oldPath: "indexedDB/1007+f+app+++system.gaiamobile.org",
+        },
 
-      {
-        oldPath: "indexedDB/1007+t+https+++developer.cdn.mozilla.net",
-      },
+        {
+          oldPath: "indexedDB/1007+t+https+++developer.cdn.mozilla.net",
+        },
 
-      {
-        oldPath: "indexedDB/http+++www.mozilla.org",
-        newPath: "storage/default/http+++www.mozilla.org",
-        url: "http://www.mozilla.org",
-        persistence: "default",
-      },
-    ],
+        {
+          oldPath: "indexedDB/http+++www.mozilla.org",
+          newPath: "storage/default/http+++www.mozilla.org",
+          url: "http://www.mozilla.org",
+          persistence: "default",
+        },
+      ],
+    },
 
-    [
-      {
-        oldPath: "storage/persistent/1007+f+app+++system.gaiamobile.org",
-      },
+    {
+      // Storage used by FF 26-35 (storage/persistent/ directory with not yet
+      // upgraded flat origin directories).
+      // FF 36 renamed storage/persistent/ to storage/default/ and all not yet
+      // upgraded flat origin directories were upgraded. There's a separate
+      // test for that.
+      package: "persistentStorageDirectory_flatOriginDirectories_profile",
+      origins: [
+        {
+          oldPath: "storage/persistent/1007+f+app+++system.gaiamobile.org",
+        },
 
-      {
-        oldPath: "storage/persistent/1007+t+https+++developer.cdn.mozilla.net",
-      },
+        {
+          oldPath:
+            "storage/persistent/1007+t+https+++developer.cdn.mozilla.net",
+        },
 
-      {
-        oldPath: "storage/persistent/http+++www.mozilla.org",
-        newPath: "storage/default/http+++www.mozilla.org",
-        url: "http://www.mozilla.org",
-        persistence: "default",
-      },
-    ],
+        {
+          oldPath: "storage/persistent/http+++www.mozilla.org",
+          newPath: "storage/default/http+++www.mozilla.org",
+          url: "http://www.mozilla.org",
+          persistence: "default",
+        },
+      ],
+    },
   ];
 
   const metadataFileName = ".metadata";
 
-  // Test upgrade from FF 21 (no idb subdirs).
-
-  for (let i = 1; i <= 2; i++) {
+  for (const setup of setups) {
     clear(continueToNextStepSync);
     yield undefined;
 
-    installPackage("idbSubdirUpgrade" + i + "_profile");
+    installPackage(setup.package);
 
     info("Checking origin directories");
 
-    for (let origin of origins[i - 1]) {
+    for (const origin of setup.origins) {
       let originDir = getRelativeFile(origin.oldPath);
       let exists = originDir.exists();
       ok(exists, "Origin directory does exist");
@@ -87,7 +105,7 @@ function* testSteps() {
 
     info("Checking origin directories");
 
-    for (let origin of origins[i - 1]) {
+    for (const origin of setup.origins) {
       let originDir = getRelativeFile(origin.oldPath);
       let exists = originDir.exists();
       ok(!exists, "Origin directory doesn't exist");
