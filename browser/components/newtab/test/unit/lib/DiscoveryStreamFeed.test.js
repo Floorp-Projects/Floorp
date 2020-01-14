@@ -2032,27 +2032,6 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
-  describe("#onAction: DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE", () => {
-    it("should fire SET_PREF with version", async () => {
-      sandbox.spy(feed.store, "dispatch");
-      feed.store.getState = () => ({
-        Prefs: {
-          values: {
-            "discoverystream.personalization.version": 1,
-          },
-        },
-      });
-
-      await feed.onAction({
-        type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE,
-      });
-      assert.calledWith(
-        feed.store.dispatch,
-        ac.SetPref("discoverystream.personalization.version", 2)
-      );
-    });
-  });
-
   describe("#onAction: DISCOVERY_STREAM_DEV_IDLE_DAILY", () => {
     it("should trigger idle-daily observer", async () => {
       sandbox.stub(global.Services.obs, "notifyObservers").returns();
@@ -2367,48 +2346,6 @@ describe("DiscoveryStreamFeed", () => {
           at.DISCOVERY_STREAM_FEEDS_UPDATE
         );
       });
-    });
-  });
-
-  describe("#setAffinityProviderVersion", () => {
-    beforeEach(() => {
-      sandbox.spy(feed.store, "dispatch");
-    });
-    it("should properly set affinity provider with version 1", async () => {
-      feed.store.getState = () => ({
-        Prefs: {
-          values: {
-            "discoverystream.personalization.version": 1,
-          },
-        },
-      });
-      feed.setAffinityProviderVersion();
-      assert.calledWith(
-        feed.store.dispatch,
-        ac.BroadcastToContent({
-          type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION,
-          data: { version: 1 },
-        })
-      );
-      assert.equal(feed.affinityProviderV2, null);
-    });
-    it("should properly set affinity provider with version 2", async () => {
-      feed.store.getState = () => ({
-        Prefs: {
-          values: {
-            "discoverystream.personalization.modelKeys": "1,2,3,4",
-            "discoverystream.personalization.version": 2,
-          },
-        },
-      });
-      feed.setAffinityProviderVersion();
-      assert.calledWith(
-        feed.store.dispatch,
-        ac.BroadcastToContent({
-          type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION,
-          data: { version: 2 },
-        })
-      );
     });
   });
 
