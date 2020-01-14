@@ -6178,7 +6178,7 @@ static void DumpTrackedSite(const BytecodeSite* site) {
   unsigned column = 0;
   unsigned lineNumber = PCToLineNumber(site->script(), site->pc(), &column);
   JitSpew(JitSpew_OptimizationTracking, "Types for %s at %s:%u:%u",
-          CodeName[JSOp(*site->pc())], site->script()->filename(), lineNumber,
+          CodeName(JSOp(*site->pc())), site->script()->filename(), lineNumber,
           column);
 #endif
 }
@@ -11106,7 +11106,7 @@ void CodeGenerator::visitCallGetElement(LCallGetElement* lir) {
   pushArg(ToValue(lir, LCallGetElement::RhsInput));
   pushArg(ToValue(lir, LCallGetElement::LhsInput));
 
-  JSOp op = JSOp(*lir->mir()->resumePoint()->pc());
+  uint8_t op = *lir->mir()->resumePoint()->pc();
   pushArg(Imm32(op));
 
   using Fn =

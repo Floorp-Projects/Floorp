@@ -1124,7 +1124,7 @@ static void EliminateTriviallyDeadResumePointOperands(MIRGraph& graph,
                                                       MResumePoint* rp) {
   // If we will pop the top of the stack immediately after resuming,
   // then don't preserve the top value in the resume point.
-  if (rp->mode() != MResumePoint::ResumeAt || *rp->pc() != JSOP_POP) {
+  if (rp->mode() != MResumePoint::ResumeAt || JSOp(*rp->pc()) != JSOP_POP) {
     return;
   }
 
@@ -4742,7 +4742,7 @@ static bool ArgumentsUseCanBeLazy(JSContext* cx, JSScript* script,
                                   bool* argumentsContentsObserved) {
   // We can read the frame's arguments directly for f.apply(x, arguments).
   if (ins->isCall()) {
-    if (*ins->toCall()->resumePoint()->pc() == JSOP_FUNAPPLY &&
+    if (JSOp(*ins->toCall()->resumePoint()->pc()) == JSOP_FUNAPPLY &&
         ins->toCall()->numActualArgs() == 2 &&
         index == MCall::IndexOfArgument(1)) {
       *argumentsContentsObserved = true;
