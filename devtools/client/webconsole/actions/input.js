@@ -229,6 +229,11 @@ function terminalInputChanged(expression) {
       return;
     }
 
+    // TODO support eagerly-evaluating $_ expressions (#1609264)
+    if (expression.startsWith("$_")) {
+      return;
+    }
+
     const originalExpression = expression;
     dispatch({
       type: SET_TERMINAL_INPUT,
@@ -239,18 +244,24 @@ function terminalInputChanged(expression) {
     ({ expression, mapped } = await getMappedExpression(hud, expression));
 
     const { frameActor, webConsoleFront } = webConsoleUI.getFrameActor();
+    let response;
+    try {
+      response = await client.evaluateJSAsync(expression, {
+        frameActor,
+        selectedNodeFront: webConsoleUI.getSelectedNodeFront(),
+        webConsoleFront,
+        mapped,
+        eager: true,
+      });
+    } catch (e) {}
 
-    const response = await client.evaluateJSAsync(expression, {
-      frameActor,
-      selectedNodeFront: webConsoleUI.getSelectedNodeFront(),
-      webConsoleFront,
-      mapped,
-      eager: true,
-    });
-
-    const result = response.exception || response.result;
+    // Bail if evaluation fails
+    if (!response) {
+      return;
+    }
 
     // Don't show syntax errors or undefined results to the user.
+    const result = response.exception || response.result;
     if (result.isSyntaxError || result.type == "undefined") {
       return;
     }
