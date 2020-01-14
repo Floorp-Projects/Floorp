@@ -5248,7 +5248,8 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
   return NS_OK;
 }
 
-nsresult QuotaManager::MaybeUpgradeIndexedDBDirectory() {
+nsresult
+QuotaManager::MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory() {
   AssertIsOnIOThread();
 
   nsCOMPtr<nsIFile> indexedDBDir;
@@ -6329,7 +6330,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
   }
 
   if (!exists) {
-    rv = MaybeUpgradeIndexedDBDirectory();
+    rv = MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
