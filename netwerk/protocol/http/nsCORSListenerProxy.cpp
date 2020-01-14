@@ -50,6 +50,8 @@ using namespace mozilla;
 using namespace mozilla::net;
 
 #define PREFLIGHT_CACHE_SIZE 100
+// 5 seconds is chosen to be compatible with Chromium.
+#define PREFLIGHT_DEFAULT_EXPIRY_SECONDS 5
 
 static void LogBlockedRequest(nsIRequest* aRequest, const char* aProperty,
                               const char16_t* aParam, uint32_t aBlockingReason,
@@ -1112,27 +1114,27 @@ void nsCORSPreflightListener::AddResultToCache(nsIRequest* aRequest) {
 
   // The "Access-Control-Max-Age" header should return an age in seconds.
   nsAutoCString headerVal;
+  uint32_t age = 0;
   Unused << http->GetResponseHeader(
       NS_LITERAL_CSTRING("Access-Control-Max-Age"), headerVal);
   if (headerVal.IsEmpty()) {
-    return;
-  }
-
-  // Sanitize the string. We only allow 'delta-seconds' as specified by
-  // http://dev.w3.org/2006/waf/access-control (digits 0-9 with no leading or
-  // trailing non-whitespace characters).
-  uint32_t age = 0;
-  nsACString::const_char_iterator iter, end;
-  headerVal.BeginReading(iter);
-  headerVal.EndReading(end);
-  while (iter != end) {
-    if (*iter < '0' || *iter > '9') {
-      return;
+    age = PREFLIGHT_DEFAULT_EXPIRY_SECONDS;
+  } else {
+    // Sanitize the string. We only allow 'delta-seconds' as specified by
+    // http://dev.w3.org/2006/waf/access-control (digits 0-9 with no leading or
+    // trailing non-whitespace characters).
+    nsACString::const_char_iterator iter, end;
+    headerVal.BeginReading(iter);
+    headerVal.EndReading(end);
+    while (iter != end) {
+      if (*iter < '0' || *iter > '9') {
+        return;
+      }
+      age = age * 10 + (*iter - '0');
+      // Cap at 24 hours. This also avoids overflow
+      age = std::min(age, 86400U);
+      ++iter;
     }
-    age = age * 10 + (*iter - '0');
-    // Cap at 24 hours. This also avoids overflow
-    age = std::min(age, 86400U);
-    ++iter;
   }
 
   if (!age || !EnsurePreflightCache()) {
