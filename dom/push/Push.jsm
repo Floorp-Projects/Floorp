@@ -70,7 +70,8 @@ Push.prototype = {
   askPermission() {
     console.debug("askPermission()");
 
-    let isHandlingUserInput = this._window.windowUtils.isHandlingUserInput;
+    let isHandlingUserInput = this._window.document
+      .hasValidTransientUserGestureActivation;
 
     return this.createPromise((resolve, reject) => {
       let permissionDenied = () => {
