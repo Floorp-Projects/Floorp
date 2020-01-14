@@ -1969,18 +1969,18 @@ static ComparatorMatchResult MatchNumericComparator(JSContext* cx,
     return Match_None;
   }
   arg0 = GET_ARGNO(pc);
-  pc += JSOP_GETARG_LENGTH;
+  pc += JSOpLength_GetArg;
 
   if (JSOp(*pc) != JSOP_GETARG) {
     return Match_None;
   }
   arg1 = GET_ARGNO(pc);
-  pc += JSOP_GETARG_LENGTH;
+  pc += JSOpLength_GetArg;
 
   if (JSOp(*pc) != JSOP_SUB) {
     return Match_None;
   }
-  pc += JSOP_SUB_LENGTH;
+  pc += JSOpLength_Sub;
 
   if (JSOp(*pc) != JSOP_RETURN) {
     return Match_None;

@@ -3559,9 +3559,9 @@ static_assert((JSOP_LIMIT ==
 #undef TRAILING_VALUE_AND_VALUE_PLUS_ONE
 // clang-format on
 
-// Define JSOP_*_LENGTH constants for all ops.
+// Define JSOpLength_* constants for all ops.
 #define DEFINE_LENGTH_CONSTANT(op, op_camel, op_snake, name, image, len, ...) \
-  constexpr size_t op##_LENGTH = len;
+  constexpr size_t JSOpLength_##op_camel = len;
 FOR_EACH_OPCODE(DEFINE_LENGTH_CONSTANT)
 #undef DEFINE_LENGTH_CONSTANT
 
