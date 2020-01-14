@@ -838,8 +838,7 @@ nsresult nsTextControlFrame::SetFormProperty(nsAtom* aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(already_AddRefed<TextEditor>)
-nsTextControlFrame::GetTextEditor() {
+already_AddRefed<TextEditor> nsTextControlFrame::GetTextEditor() {
   if (NS_WARN_IF(NS_FAILED(EnsureEditorInitialized()))) {
     return nullptr;
   }
