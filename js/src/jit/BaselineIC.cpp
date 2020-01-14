@@ -3119,7 +3119,7 @@ bool FallbackICCodeCompiler::emitCall(bool isSpread, bool isConstructing) {
     leaveStubFrame(masm);
     EmitReturnFromIC(masm);
 
-    // SPREADCALL is not yet supported in Ion, so do not generate asmcode for
+    // SpreadCall is not yet supported in Ion, so do not generate asmcode for
     // bailout.
     return true;
   }

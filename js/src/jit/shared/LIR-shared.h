@@ -2062,7 +2062,7 @@ class LBitNotI : public LInstructionHelper<1, 1, 0> {
   LBitNotI() : LInstructionHelper(classOpcode) {}
 };
 
-// Call a VM function to perform a BITNOT operation.
+// Call a VM function to perform a BitNot operation.
 class LBitNotV : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0> {
  public:
   LIR_HEADER(BitNotV)

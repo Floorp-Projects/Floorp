@@ -3717,7 +3717,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetDenseElement(
     return AttachDecision::NoAction;
   }
 
-  // Don't optimize INITELEM (DefineProperty) on non-extensible objects: when
+  // Don't optimize InitElem (DefineProperty) on non-extensible objects: when
   // the elements are sealed, we have to throw an exception. Note that we have
   // to check !isExtensible instead of denseElementsAreSealed because sealing
   // a (non-extensible) object does not necessarily trigger a Shape change.
@@ -3849,7 +3849,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetDenseElementHole(
   }
   TestMatchingNativeReceiver(writer, nobj, objId);
 
-  // Also shape guard the proto chain, unless this is an INITELEM or we know
+  // Also shape guard the proto chain, unless this is an InitElem or we know
   // the proto chain has no indexed props.
   if (IsPropertySetOp(op) && maybeHasExtraIndexedProps_) {
     ShapeGuardProtoChain(writer, obj, objId);
@@ -5801,7 +5801,7 @@ AttachDecision CompareIRGenerator::tryAttachNumberUndefined(
     writer.guardIsUndefined(rhsId);
   }
 
-  // Comparing a number with undefined will always be true for NE/STRICTNE,
+  // Comparing a number with undefined will always be true for Ne/StrictNe,
   // and always be false for other compare ops.
   writer.loadBooleanResult(op_ == JSOP_NE || op_ == JSOP_STRICTNE);
   writer.returnFromIC();
@@ -5857,7 +5857,7 @@ AttachDecision CompareIRGenerator::tryAttachPrimitiveUndefined(
                        : writer.guardIsNullOrUndefined(rhsId);
 
   // Comparing a primitive with undefined/null will always be true for
-  // NE/STRICTNE, and always be false for other compare ops.
+  // Ne/StrictNe, and always be false for other compare ops.
   writer.loadBooleanResult(op_ == JSOP_NE || op_ == JSOP_STRICTNE);
   writer.returnFromIC();
 
@@ -5971,7 +5971,7 @@ AttachDecision CompareIRGenerator::tryAttachPrimitiveSymbol(
     writer.guardToSymbol(rhsId);
   }
 
-  // Comparing a primitive with symbol will always be true for NE/STRICTNE, and
+  // Comparing a primitive with symbol will always be true for Ne/StrictNe, and
   // always be false for other compare ops.
   writer.loadBooleanResult(op_ == JSOP_NE || op_ == JSOP_STRICTNE);
   writer.returnFromIC();
@@ -6516,7 +6516,7 @@ AttachDecision BinaryArithIRGenerator::tryAttachBitwise() {
     return AttachDecision::NoAction;
   }
 
-  // All ops, with the exception of URSH produce Int32 values.
+  // All ops, with the exception of Ursh produce Int32 values.
   MOZ_ASSERT_IF(op_ != JSOP_URSH, res_.isInt32());
 
   ValOperandId lhsId(writer.setInputOperandId(0));

@@ -3732,7 +3732,7 @@ void LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins) {
     gen->setNeedsOverrecursedCheck();
   }
 
-  // If this is a GETPROP, the id is a constant string. Allow passing it as a
+  // If this is a GetProp, the id is a constant string. Allow passing it as a
   // constant to reduce register allocation pressure.
   bool useConstId =
       id->type() == MIRType::String || id->type() == MIRType::Symbol;
@@ -3977,7 +3977,7 @@ void LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins) {
   MOZ_ASSERT(id->type() == MIRType::String || id->type() == MIRType::Symbol ||
              id->type() == MIRType::Int32 || id->type() == MIRType::Value);
 
-  // If this is a SETPROP, the id is a constant string. Allow passing it as a
+  // If this is a SetProp, the id is a constant string. Allow passing it as a
   // constant to reduce register allocation pressure.
   bool useConstId =
       id->type() == MIRType::String || id->type() == MIRType::Symbol;
@@ -3987,8 +3987,8 @@ void LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins) {
   // attach a scripted setter stub that calls this script recursively.
   gen->setNeedsOverrecursedCheck();
 
-  // We need a double temp register for typed array stubs if this is a SETELEM
-  // or INITELEM op.
+  // We need a double temp register for typed array stubs if this is a SetElem
+  // or InitElem op.
   LDefinition tempD = LDefinition::BogusTemp();
   if (IsElemPC(ins->resumePoint()->pc())) {
     tempD = tempFixed(FloatReg0);

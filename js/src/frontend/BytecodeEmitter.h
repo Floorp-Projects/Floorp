@@ -584,8 +584,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitComputedPropertyName(UnaryNode* computedPropName);
 
-  // Emit bytecode to put operands for a JSOp::GetElem/CALLELEM/SETELEM/DELELEM
-  // opcode onto the stack in the right order. In the case of SETELEM, the
+  // Emit bytecode to put operands for a JSOp::GetElem/CallElem/SetElem/DelElem
+  // opcode onto the stack in the right order. In the case of SetElem, the
   // value to be assigned must already be pushed.
   enum class EmitElemOption { Get, Call, IncDec, CompoundAssign, Ref };
   MOZ_MUST_USE bool emitElemOperands(PropertyByValue* elem,

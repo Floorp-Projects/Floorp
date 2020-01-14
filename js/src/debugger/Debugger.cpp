@@ -1801,8 +1801,8 @@ Completion Completion::fromJSFramePop(JSContext* cx, AbstractFramePtr frame,
   // an `onStep` handler, which looks almost the same.
   //
   // GetGeneratorObjectForFrame can return nullptr even when a generator
-  // object does exist, if the frame is paused between the GENERATOR and
-  // SETALIASEDVAR opcodes. But by checking the opcode first we eliminate that
+  // object does exist, if the frame is paused between the Generator and
+  // SetAliasedVar opcodes. But by checking the opcode first we eliminate that
   // possibility, so it's fine to call genObj->isClosed().
   Rooted<AbstractGeneratorObject*> generatorObj(
       cx, GetGeneratorObjectForFrame(cx, frame));

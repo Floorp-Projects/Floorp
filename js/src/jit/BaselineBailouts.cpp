@@ -466,7 +466,7 @@ static jsbytecode* GetResumePC(JSScript* script, jsbytecode* pc,
     return GetNextPc(pc);
   }
 
-  // If we are resuming at a LOOPHEAD op, resume at the next op to avoid
+  // If we are resuming at a LoopHead op, resume at the next op to avoid
   // a bailout -> enter Ion -> bailout loop with --ion-eager.
   //
   // The algorithm below is the "tortoise and the hare" algorithm. See bug
@@ -886,7 +886,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
 
   const JSOp op = JSOp(*pc);
 
-  // Inlining of SPREADCALL-like frames not currently supported.
+  // Inlining of SpreadCall-like frames not currently supported.
   MOZ_ASSERT_IF(IsSpreadOp(op), !iter.moreFrames());
 
   // Fixup inlined JSOp::FunCall, JSOp::FunApply, and accessors on the caller
@@ -974,7 +974,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
         // We would love to just save all the arguments and leave them
         // in the stub frame pushed below, but we will lose the inital
         // argument which the function was called with, which we must
-        // leave on the stack. It's pushed as the result of the SETPROP.
+        // leave on the stack. It's pushed as the result of the SetProp.
         Value initialArg = savedCallerArgs[inlined_args - 1];
         JitSpew(JitSpew_BaselineBailouts,
                 "     pushing setter's initial argument");
@@ -1220,7 +1220,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   unsigned actualArgc;
   Value callee;
   if (needToSaveArgs) {
-    // For FUNAPPLY or an accessor, the arguments are not on the stack anymore,
+    // For FunApply or an accessor, the arguments are not on the stack anymore,
     // but they are copied in a vector and are written here.
     if (op == JSOP_FUNAPPLY) {
       actualArgc = blFrame->numActualArgs();

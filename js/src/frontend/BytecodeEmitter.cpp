@@ -4112,7 +4112,7 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
                             lhs->isKind(ParseNodeKind::ElemExpr));
 
   // Name assignments are handled separately because choosing ops and when
-  // to emit BINDNAME is involved and should avoid duplication.
+  // to emit BindName is involved and should avoid duplication.
   if (lhs->isKind(ParseNodeKind::Name)) {
     NameNode* nameNode = &lhs->as<NameNode>();
     RootedAtom name(cx, nameNode->name());
@@ -4542,11 +4542,11 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitTry(TryNode* tryNode) {
 MOZ_MUST_USE bool BytecodeEmitter::emitGoSub(JumpList* jump) {
   // Emit the following:
   //
-  //   JSOp::False
-  //   JSOp::ResumeIndex <resumeIndex>
-  //   JSOp::Gosub <target>
-  //  resumeOffset:
-  //   JSOp::JumpTarget
+  //     False
+  //     ResumeIndex <resumeIndex>
+  //     Gosub <target>
+  //   resumeOffset:
+  //     JumpTarget
   //
   // The order is important: the Baseline Interpreter relies on JSOp::JumpTarget
   // setting the frame's ICEntry when resuming at resumeOffset.
@@ -5884,7 +5884,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
     }
   } else if (top + BytecodeOffsetDiff(JSOP_RETURN_LENGTH) !=
                  bytecodeSection().offset() ||
-             // If we are instrumenting, make sure we use RETRVAL and add any
+             // If we are instrumenting, make sure we use RetRval and add any
              // instrumentation for the frame exit.
              instrumentationKinds) {
     bytecodeSection().code()[top.value()] = jsbytecode(JSOP_SETRVAL);
@@ -8291,9 +8291,9 @@ bool BytecodeEmitter::emitInitializeInstanceFields() {
 
   for (size_t fieldIndex = 0; fieldIndex < numFields; fieldIndex++) {
     if (fieldIndex < numFields - 1) {
-      // We DUP to keep the array around (it is consumed in the bytecode
+      // We Dup to keep the array around (it is consumed in the bytecode
       // below) for next iterations of this loop, except for the last
-      // iteration, which avoids an extra POP at the end of the loop.
+      // iteration, which avoids an extra Pop at the end of the loop.
       if (!emit1(JSOP_DUP)) {
         //          [stack] ARRAY ARRAY
         return false;
@@ -8305,7 +8305,7 @@ bool BytecodeEmitter::emitInitializeInstanceFields() {
       return false;
     }
 
-    // Don't use CALLELEM here, because the receiver of the call != the
+    // Don't use CallElem here, because the receiver of the call != the
     // receiver of this getelem. (Specifically, the call receiver is `this`,
     // and the receiver of this getelem is `.initializers`)
     if (!emit1(JSOP_GETELEM)) {
@@ -8364,10 +8364,10 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
   //    *empty* object (all values left undefined) with the right fields, which
   //    will become a JSOp::NewObject opcode using this template object to speed
   //    the creation of the object each time it executes (stealing its shape,
-  //    etc.). The emitted bytecode still needs INITPROP ops to set the values
+  //    etc.). The emitted bytecode still needs InitProp ops to set the values
   //    in this case.
   //
-  // 3. Any other case. As a fallback, we use NEWINIT to create a new, empty
+  // 3. Any other case. As a fallback, we use NewInit to create a new, empty
   //    object (i.e., `{}`) and then emit bytecode to initialize its properties
   //    one-by-one.
 
@@ -8423,7 +8423,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
     }
     // Put the ObjectEmitter in the right state. This tells it that there will
     // already be an object on the stack as a result of the (eventual)
-    // NEWOBJECT or OBJECT op, and prepares it to emit values if needed.
+    // NewObject or Object op, and prepares it to emit values if needed.
     if (!oe.emitObjectWithTemplateOnStack()) {
       //              [stack] OBJ
       return false;

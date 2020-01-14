@@ -117,7 +117,7 @@ class MOZ_STACK_CLASS TryEmitter {
   // Track jumps-over-catches and gosubs-to-finally for later fixup.
   //
   // When a finally block is active, non-local jumps (including
-  // jumps-over-catches) result in a GOSUB being written into the bytecode
+  // jumps-over-catches) result in a Gosub being written into the bytecode
   // stream and fixed-up later.
   //
   // For non-syntactic try-catch-finally, all that handling is skipped.

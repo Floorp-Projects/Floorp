@@ -16,7 +16,7 @@ namespace js {
 
 static inline unsigned GetDefCount(jsbytecode* pc) {
   /*
-   * Add an extra pushed value for OR/AND opcodes, so that they are included
+   * Add an extra pushed value for Or/And opcodes, so that they are included
    * in the pushed array of stack values for type inference.
    */
   switch (JSOp(*pc)) {

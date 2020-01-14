@@ -266,7 +266,7 @@ BEGIN_TEST(testJitRangeAnalysis_StrictCompareBeta) {
   // If range analysis inserts a beta node for p, it will be able to compute
   // a meaningful range for p + -0.
 
-  // We can't do beta node insertion with STRICTEQ and a non-numeric
+  // We can't do beta node insertion with StrictEq and a non-numeric
   // comparison though.
   MCompare::CompareType nonNumerics[] = {
       MCompare::Compare_Unknown, MCompare::Compare_Object,
