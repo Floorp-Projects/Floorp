@@ -3,6 +3,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/**
+ * This test is mainly to verify
+ * MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory method.
+ */
+
 var testGenerator = testSteps();
 
 function* testSteps() {
@@ -23,8 +28,6 @@ function* testSteps() {
     },
   ];
 
-  // Test upgrade from FF 25 (no storage/persistent directory).
-
   info("Clearing");
 
   clear(continueToNextStepSync);
@@ -32,7 +35,8 @@ function* testSteps() {
 
   info("Installing package");
 
-  installPackage("storagePersistentUpgrade_profile");
+  // Storage used prior FF 26 (indexedDB/ directory).
+  installPackage("indexedDBDirectory_profile");
 
   for (let origin of origins) {
     let originDir = getRelativeFile(origin.oldPath);
