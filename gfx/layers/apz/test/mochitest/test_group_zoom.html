@@ -29,18 +29,21 @@ var prefs = [
   // Explicitly enable pinch-zooming, so this test can run on desktop
   // even though zooming isn't enabled by default on desktop yet.
   ["apz.allow_zooming", true],
-  // Similarly, explicitly enable support for meta viewport tags (which the
-  // test cases use) so they're processed even on desktop.
-  ["dom.meta-viewport.enabled", true],
   // Increase the content response timeout because some tests do preventDefault
   // and we want to make sure APZ actually waits for them.
   ["apz.content_response_timeout", 60000],
 ];
 
+var meta_viewport_prefs = [
+  ...prefs,
+  // Some tests use mobile viewport sizing, enable it even on desktop.
+  ["dom.meta-viewport.enabled", true],
+];
+
 // Increase the tap timeouts so the double-tap is still detected in case of
 // random delays during testing.
 var doubletap_prefs = [
-  ...prefs,
+  ...meta_viewport_prefs,
   ["ui.click_hold_context_menus.delay", 10000],
   ["apz.max_tap_time", 10000],
 ];
@@ -60,13 +63,13 @@ var subtests = [
   {"file": "helper_basic_onetouchpinch.html", "prefs": onetouchpinch_prefs},
   {"file": "helper_zoom_prevented.html", "prefs": prefs},
   {"file": "helper_zoomed_pan.html", "prefs": prefs},
-  {"file": "helper_fixed_position_scroll_hittest.html", "prefs": prefs},
+  {"file": "helper_fixed_position_scroll_hittest.html", "prefs": meta_viewport_prefs},
   {"file": "helper_basic_doubletap_zoom.html", "prefs": doubletap_prefs},
   {"file": "helper_onetouchpinch_nested.html", "prefs": onetouchpinch_prefs},
-  {"file": "helper_visual_smooth_scroll.html", "prefs": prefs},
-  {"file": "helper_scroll_into_view_bug1516056.html", "prefs": prefs},
-  {"file": "helper_scroll_into_view_bug1562757.html", "prefs": prefs},
-  {"file": "helper_fixed_pos_displayport.html", "prefs": prefs},
+  {"file": "helper_visual_smooth_scroll.html", "prefs": meta_viewport_prefs},
+  {"file": "helper_scroll_into_view_bug1516056.html", "prefs": meta_viewport_prefs},
+  {"file": "helper_scroll_into_view_bug1562757.html", "prefs": meta_viewport_prefs},
+  {"file": "helper_fixed_pos_displayport.html", "prefs": meta_viewport_prefs},
 ];
 
 if (isApzEnabled()) {
