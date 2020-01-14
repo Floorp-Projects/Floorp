@@ -450,23 +450,24 @@ class MachBrowsertime(MachCommandBase):
         if not specifies_har:
             extra_args.append('--skipHar')
 
-        # If --firefox.binaryPath is not specified, default to the objdir binary
-        # Note: --firefox.release is not a real browsertime option, but it will
-        #       silently ignore it instead and default to a release installation.
-        specifies_binaryPath = matches(args, '--firefox.binaryPath',
-                                       '--firefox.release', '--firefox.nightly',
-                                       '--firefox.beta', '--firefox.developer')
+        if not matches(args, "--android"):
+            # If --firefox.binaryPath is not specified, default to the objdir binary
+            # Note: --firefox.release is not a real browsertime option, but it will
+            #       silently ignore it instead and default to a release installation.
+            specifies_binaryPath = matches(args, '--firefox.binaryPath',
+                                           '--firefox.release', '--firefox.nightly',
+                                           '--firefox.beta', '--firefox.developer')
 
-        if not specifies_binaryPath:
-            specifies_binaryPath = extract_browser_name(args) == 'chrome'
+            if not specifies_binaryPath:
+                specifies_binaryPath = extract_browser_name(args) == 'chrome'
 
-        if not specifies_binaryPath:
-            try:
-                extra_args.extend(('--firefox.binaryPath', self.get_binary_path()))
-            except Exception:
-                print('Please run |./mach build| '
-                      'or specify a Firefox binary with --firefox.binaryPath.')
-                return 1
+            if not specifies_binaryPath:
+                try:
+                    extra_args.extend(('--firefox.binaryPath', self.get_binary_path()))
+                except Exception:
+                    print('Please run |./mach build| '
+                          'or specify a Firefox binary with --firefox.binaryPath.')
+                    return 1
 
         if extra_args:
             self.log(
