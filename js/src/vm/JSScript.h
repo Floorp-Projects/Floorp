@@ -2726,7 +2726,7 @@ class JSScript : public js::BaseScript {
   jsbytecode* codeEnd() const { return code() + length(); }
 
   jsbytecode* lastPC() const {
-    jsbytecode* pc = codeEnd() - js::JSOP_RETRVAL_LENGTH;
+    jsbytecode* pc = codeEnd() - js::JSOpLength_RetRval;
     MOZ_ASSERT(JSOp(*pc) == JSOP_RETRVAL);
     return pc;
   }

@@ -4635,7 +4635,7 @@ void JSScript::assertValidJumpTargets() const {
     }
 
     jsbytecode* tryStart = offsetToPC(tn.start);
-    jsbytecode* tryPc = tryStart - JSOP_TRY_LENGTH;
+    jsbytecode* tryPc = tryStart - JSOpLength_Try;
     MOZ_ASSERT(JSOp(*tryPc) == JSOP_TRY);
 
     jsbytecode* tryTarget = tryStart + tn.length;
@@ -4841,9 +4841,9 @@ void js::DescribeScriptedCallerForDirectEval(JSContext* cx, HandleScript script,
                                              bool* mutedErrors) {
   MOZ_ASSERT(script->containsPC(pc));
 
-  static_assert(JSOP_SPREADEVAL_LENGTH == JSOP_STRICTSPREADEVAL_LENGTH,
+  static_assert(JSOpLength_SpreadEval == JSOpLength_StrictSpreadEval,
                 "next op after a spread must be at consistent offset");
-  static_assert(JSOP_EVAL_LENGTH == JSOP_STRICTEVAL_LENGTH,
+  static_assert(JSOpLength_Eval == JSOpLength_StrictEval,
                 "next op after a direct eval must be at consistent offset");
 
   MOZ_ASSERT(JSOp(*pc) == JSOP_EVAL || JSOp(*pc) == JSOP_STRICTEVAL ||
@@ -4853,7 +4853,7 @@ void js::DescribeScriptedCallerForDirectEval(JSContext* cx, HandleScript script,
   bool isSpread =
       (JSOp(*pc) == JSOP_SPREADEVAL || JSOp(*pc) == JSOP_STRICTSPREADEVAL);
   jsbytecode* nextpc =
-      pc + (isSpread ? JSOP_SPREADEVAL_LENGTH : JSOP_EVAL_LENGTH);
+      pc + (isSpread ? JSOpLength_SpreadEval : JSOpLength_Eval);
   MOZ_ASSERT(JSOp(*nextpc) == JSOP_LINENO);
 
   *file = script->filename();
@@ -5449,7 +5449,7 @@ void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
     while (JSOp(*pc) != JSOP_ARGUMENTS) {
       pc += GetBytecodeLength(pc);
     }
-    pc += JSOP_ARGUMENTS_LENGTH;
+    pc += JSOpLength_Arguments;
     MOZ_ASSERT(JSOp(*pc) == JSOP_SETALIASEDVAR);
 
     // Note that here and below, it is insufficient to only check for

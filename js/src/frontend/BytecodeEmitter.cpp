@@ -61,7 +61,7 @@
 #include "vm/JSContext.h"        // JSContext
 #include "vm/JSFunction.h"       // FunctionPrefixKind, JSFunction,
 #include "vm/JSScript.h"  // JSScript, ScopeNote, ScriptSourceObject, FieldInitializers, JSScript, LazyScript
-#include "vm/Opcodes.h"   // JSOp, JSOP_*_LENGTH
+#include "vm/Opcodes.h"   // JSOp, JSOpLength_*
 #include "wasm/AsmJS.h"   // IsAsmJSModule
 
 #include "vm/JSObject-inl.h"  // JSObject
@@ -373,7 +373,7 @@ bool BytecodeEmitter::emitJumpTarget(JumpTarget* target) {
   // Alias consecutive jump targets.
   if (bytecodeSection().lastTargetOffset().valid() &&
       off == bytecodeSection().lastTargetOffset() +
-                 BytecodeOffsetDiff(JSOP_JUMPTARGET_LENGTH)) {
+                 BytecodeOffsetDiff(JSOpLength_JumpTarget)) {
     target->offset = bytecodeSection().lastTargetOffset();
     return true;
   }
@@ -5881,7 +5881,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
     if (!emitReturnRval()) {
       return false;
     }
-  } else if (top + BytecodeOffsetDiff(JSOP_RETURN_LENGTH) !=
+  } else if (top + BytecodeOffsetDiff(JSOpLength_Return) !=
                  bytecodeSection().offset() ||
              // If we are instrumenting, make sure we use RetRval and add any
              // instrumentation for the frame exit.
@@ -8464,7 +8464,7 @@ bool BytecodeEmitter::replaceNewInitWithNewObject(JSObject* obj,
   }
 
   static_assert(
-      JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
+      JSOpLength_NewInit == JSOpLength_NewObject,
       "newinit and newobject must have equal length to edit in-place");
 
   uint32_t index;

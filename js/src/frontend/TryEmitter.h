@@ -187,7 +187,7 @@ class MOZ_STACK_CLASS TryEmitter {
   }
 
   BytecodeOffset offsetAfterTryOp() const {
-    return tryOpOffset_ + BytecodeOffsetDiff(JSOP_TRY_LENGTH);
+    return tryOpOffset_ + BytecodeOffsetDiff(JSOpLength_Try);
   }
 
  public:

@@ -101,7 +101,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
 
       case JSOP_TRY: {
         for (const JSTryNote& tn : script_->trynotes()) {
-          if (tn.start == offset + JSOP_TRY_LENGTH &&
+          if (tn.start == offset + JSOpLength_Try &&
               (tn.kind == JSTRY_CATCH || tn.kind == JSTRY_FINALLY)) {
             uint32_t catchOrFinallyOffset = tn.start + tn.length;
             infos_[catchOrFinallyOffset].init(stackDepth);
