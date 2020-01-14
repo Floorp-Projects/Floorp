@@ -897,10 +897,30 @@ function addAutofillTasks(origins) {
   // Expected result:
   //   should autofill: yes
   add_task(async function suggestHistoryFalse_bookmark_0() {
-    Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
+    // Add the bookmark.
     await addBookmark({
       uri: "http://" + url,
     });
+
+    // Make the bookmark fall below the autofill frecency threshold so we ensure
+    // the bookmark is always autofilled in this case, even if it doesn't meet
+    // the threshold.
+    let meetsThreshold = true;
+    while (meetsThreshold) {
+      // Add a visit to another origin to boost the threshold.
+      await PlacesTestUtils.addVisits("http://foo-" + url);
+      let originFrecency = await getOriginFrecency("http://", host);
+      let threshold = await getOriginAutofillThreshold();
+      meetsThreshold = threshold <= originFrecency;
+    }
+
+    // At this point, the bookmark doesn't meet the threshold, but it should
+    // still be autofilled.
+    let originFrecency = await getOriginFrecency("http://", host);
+    let threshold = await getOriginAutofillThreshold();
+    Assert.ok(originFrecency < threshold);
+
+    Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
     await check_autocomplete({
       search,
       autofilled: url,
@@ -959,6 +979,29 @@ function addAutofillTasks(origins) {
   // Expected result:
   //   should autofill: yes
   add_task(async function suggestHistoryFalse_bookmark_prefix_0() {
+    // Add the bookmark.
+    await addBookmark({
+      uri: "http://" + url,
+    });
+
+    // Make the bookmark fall below the autofill frecency threshold so we ensure
+    // the bookmark is always autofilled in this case, even if it doesn't meet
+    // the threshold.
+    let meetsThreshold = true;
+    while (meetsThreshold) {
+      // Add a visit to another origin to boost the threshold.
+      await PlacesTestUtils.addVisits("http://foo-" + url);
+      let originFrecency = await getOriginFrecency("http://", host);
+      let threshold = await getOriginAutofillThreshold();
+      meetsThreshold = threshold <= originFrecency;
+    }
+
+    // At this point, the bookmark doesn't meet the threshold, but it should
+    // still be autofilled.
+    let originFrecency = await getOriginFrecency("http://", host);
+    let threshold = await getOriginAutofillThreshold();
+    Assert.ok(originFrecency < threshold);
+
     Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
     await addBookmark({
       uri: "http://" + url,
