@@ -228,7 +228,7 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   ParseInfo parseInfo(cx, allocScope);
 
   Rooted<ScriptSourceObject*> sourceObject(cx);
-  sourceObject = CreateScriptSourceObject(cx, options, mozilla::Nothing());
+  sourceObject = CreateScriptSourceObject(cx, options);
   if (!sourceObject) {
     return false;
   }
