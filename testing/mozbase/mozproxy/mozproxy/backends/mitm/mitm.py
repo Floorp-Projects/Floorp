@@ -274,6 +274,8 @@ class Mitmproxy(Playback):
             # to startup mitmxproy next time if it is already running
             if exit_code is None:
                 LOG.error("Failed to kill the mitmproxy playback process")
+            elif exit_code == 572 and mozinfo.os == "win":
+                LOG.info("Successfully killed the mitmproxy playback process with exit code 572")
             else:
                 log_func = LOG.error
                 if self.ignore_mitmdump_exit_failure:
