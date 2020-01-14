@@ -1,0 +1,13 @@
+<!doctype html>
+<title>color: transparent should not make other text below it not show up</title>
+<style>
+  p {
+    color: transparent;
+  }
+  span {
+    color: red;
+  }
+</style>
+<p>
+  Only the <span>span</span> should show up.
+</p>
