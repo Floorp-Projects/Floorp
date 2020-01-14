@@ -39,7 +39,6 @@
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "nsNumberControlFrame.h"
 #include "nsFrameSelection.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Telemetry.h"
@@ -3090,8 +3089,7 @@ void TextControlState::InitializeKeyboardEventListeners() {
                                     TrustedEventsAtSystemGroupBubble());
   }
 
-  mSelCon->SetScrollableFrame(
-      do_QueryFrame(mBoundFrame->PrincipalChildList().FirstChild()));
+  mSelCon->SetScrollableFrame(mBoundFrame->GetScrollTargetFrame());
 }
 
 void TextControlState::ValueWasChanged(bool aNotify) {

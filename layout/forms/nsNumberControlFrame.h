@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
+#include "nsTextControlFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
@@ -28,10 +29,10 @@ class HTMLInputElement;
 
 /**
  * This frame type is used for <input type=number>.
+ *
+ * TODO(emilio): Maybe merge with nsTextControlFrame?
  */
-class nsNumberControlFrame final : public nsContainerFrame,
-                                   public nsIAnonymousContentCreator,
-                                   public nsIFormControlFrame {
+class nsNumberControlFrame final : public nsTextControlFrame {
   friend nsIFrame* NS_NewNumberControlFrame(mozilla::PresShell* aPresShell,
                                             ComputedStyle* aStyle);
 
@@ -48,79 +49,22 @@ class nsNumberControlFrame final : public nsContainerFrame,
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsNumberControlFrame)
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
-  virtual void ContentStatesChanged(mozilla::EventStates aStates) override;
+  void DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData&) override;
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
-
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
-
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
-
-  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
-                                 BaselineSharingGroup aGroup,
-                                 nscoord* aBaseline) const override;
-
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(
-      nsTArray<ContentInfo>& aElements) override;
-  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) override;
+  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                uint32_t aFilter) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("NumberControl"), aResult);
   }
 #endif
-
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsContainerFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
-  }
-
-  // nsIFormControlFrame
-  virtual void SetFocus(bool aOn, bool aRepaint) override;
-  virtual nsresult SetFormProperty(nsAtom* aName,
-                                   const nsAString& aValue) override;
-
-  /**
-   * This method attempts to localizes aValue and then sets the result as the
-   * value of our anonymous text control. It's called when our
-   * HTMLInputElement's value changes, when we need to sync up the value
-   * displayed in our anonymous text control.
-   */
-  void SetValueOfAnonTextControl(const nsAString& aValue);
-
-  /**
-   * This method gets the string value of our anonymous text control,
-   * attempts to normalizes (de-localizes) it, then sets the outparam aValue to
-   * the result. It's called when user input changes the text value of our
-   * anonymous text control so that we can sync up the internal value of our
-   * HTMLInputElement.
-   */
-  void GetValueOfAnonTextControl(nsAString& aValue);
-
-  bool AnonTextControlIsEmpty();
-
-  /**
-   * Called to notify this frame that its HTMLInputElement is currently
-   * processing a DOM 'input' event.
-   */
-  void HandlingInputEvent(bool aHandlingEvent) {
-    mHandlingInputEvent = aHandlingEvent;
-  }
-
-  HTMLInputElement* GetAnonTextControl() const;
 
   /**
    * If the frame is the frame for an nsNumberControlFrame's anonymous text
@@ -150,10 +94,6 @@ class nsNumberControlFrame final : public nsContainerFrame,
   bool SpinnerUpButtonIsDepressed() const;
   bool SpinnerDownButtonIsDepressed() const;
 
-  bool IsFocused() const;
-
-  void HandleFocusEvent(WidgetEvent* aEvent);
-
   /**
    * Our element had HTMLInputElement::Select() called on it.
    */
@@ -162,47 +102,16 @@ class nsNumberControlFrame final : public nsContainerFrame,
   bool ShouldUseNativeStyleForSpinner() const;
 
  private:
-  nsITextControlFrame* GetTextFieldFrame();
   already_AddRefed<Element> MakeAnonymousElement(Element* aParent,
                                                  nsAtom* aTagName,
                                                  PseudoStyleType aPseudoType);
 
-  class SyncDisabledStateEvent;
-  friend class SyncDisabledStateEvent;
-  class SyncDisabledStateEvent : public mozilla::Runnable {
-   public:
-    explicit SyncDisabledStateEvent(nsNumberControlFrame* aFrame)
-        : mozilla::Runnable("nsNumberControlFrame::SyncDisabledStateEvent"),
-          mFrame(aFrame) {}
-
-    NS_IMETHOD Run() override {
-      nsNumberControlFrame* frame =
-          static_cast<nsNumberControlFrame*>(mFrame.GetFrame());
-      NS_ENSURE_STATE(frame);
-
-      frame->SyncDisabledState();
-      return NS_OK;
-    }
-
-   private:
-    WeakFrame mFrame;
-  };
-
-  /**
-   * Sync the disabled state of the anonymous children up with our content's.
-   */
-  void SyncDisabledState();
-
-  /**
-   * The text field used to edit and show the number.
-   * @see nsNumberControlFrame::CreateAnonymousContent.
-   */
+  // See nsNumberControlFrame::CreateAnonymousContent for a description of
+  // these.
   nsCOMPtr<Element> mOuterWrapper;
-  nsCOMPtr<Element> mTextField;
   nsCOMPtr<Element> mSpinBox;
   nsCOMPtr<Element> mSpinUp;
   nsCOMPtr<Element> mSpinDown;
-  bool mHandlingInputEvent;
 };
 
 #endif  // nsNumberControlFrame_h__

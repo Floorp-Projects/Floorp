@@ -28,17 +28,23 @@ class Element;
 }  // namespace dom
 }  // namespace mozilla
 
-class nsTextControlFrame final : public nsContainerFrame,
-                                 public nsIAnonymousContentCreator,
-                                 public nsITextControlFrame,
-                                 public nsIStatefulFrame {
+class nsTextControlFrame : public nsContainerFrame,
+                           public nsIAnonymousContentCreator,
+                           public nsITextControlFrame,
+                           public nsIStatefulFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsTextControlFrame)
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(ContentScrollPos, nsPoint)
 
+ protected:
+  nsTextControlFrame(ComputedStyle*, nsPresContext*, nsIFrame::ClassID);
+
+ public:
   explicit nsTextControlFrame(ComputedStyle* aStyle,
-                              nsPresContext* aPresContext);
+                              nsPresContext* aPresContext)
+      : nsTextControlFrame(aStyle, aPresContext, kClassID) {}
+
   virtual ~nsTextControlFrame();
 
   /**
@@ -50,25 +56,26 @@ class nsTextControlFrame final : public nsContainerFrame,
    * latter won't run content script too.  Therefore, this won't run
    * unsafe script.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void DestroyFrom(
-      nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DestroyFrom(nsIFrame* aDestructRoot,
+                                               PostDestroyData&) override;
 
-  virtual nsIScrollableFrame* GetScrollTargetFrame() override {
-    return do_QueryFrame(PrincipalChildList().FirstChild());
+  nsIScrollableFrame* GetScrollTargetFrame() override;
+  nsIScrollableFrame* GetScrollTargetFrame() const {
+    return const_cast<nsTextControlFrame*>(this)->GetScrollTargetFrame();
   }
 
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
-  virtual mozilla::LogicalSize ComputeAutoSize(
+  mozilla::LogicalSize ComputeAutoSize(
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin, const mozilla::LogicalSize& aBorder,
       const mozilla::LogicalSize& aPadding, ComputeSizeFlags aFlags) override;
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
   bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
                                 nscoord* aBaseline) const override {
@@ -92,21 +99,21 @@ class nsTextControlFrame final : public nsContainerFrame,
     return true;
   }
 
-  virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
-  virtual bool IsXULCollapsed() override;
+  nsSize GetXULMinSize(nsBoxLayoutState&) override;
+  bool IsXULCollapsed() override;
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() override;
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     aResult.AssignLiteral("nsTextControlFrame");
     return NS_OK;
   }
 #endif
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     return nsContainerFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
@@ -119,21 +126,19 @@ class nsTextControlFrame final : public nsContainerFrame,
 #endif
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(
-      nsTArray<ContentInfo>& aElements) override;
-  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) override;
+  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                uint32_t aFilter) override;
 
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override;
+  void SetInitialChildList(ChildListID, nsFrameList&) override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
   //==== BEGIN NSIFORMCONTROLFRAME
-  virtual void SetFocus(bool aOn, bool aRepaint) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult SetFormProperty(
-      nsAtom* aName, const nsAString& aValue) override;
+  void SetFocus(bool aOn, bool aRepaint) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
 
   //==== END NSIFORMCONTROLFRAME
 
@@ -146,15 +151,14 @@ class nsTextControlFrame final : public nsContainerFrame,
                     SelectionDirection aDirection = eNone) override;
   NS_IMETHOD GetOwnedSelectionController(
       nsISelectionController** aSelCon) override;
-  virtual nsFrameSelection* GetOwnedFrameSelection() override;
+  nsFrameSelection* GetOwnedFrameSelection() override;
 
   /**
    * Ensure mEditor is initialized with the proper flags and the default value.
    * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
    * @throws various and sundry other things
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult EnsureEditorInitialized()
-      override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult EnsureEditorInitialized() override;
 
   //==== END NSITEXTCONTROLFRAME
 
@@ -168,8 +172,8 @@ class nsTextControlFrame final : public nsContainerFrame,
   //==== OVERLOAD of nsIFrame
 
   /** handler for attribute changes to mContent */
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
   void GetText(nsString& aText);
 
@@ -180,7 +184,7 @@ class nsTextControlFrame final : public nsContainerFrame,
    */
   bool TextEquals(const nsAString& aText) const;
 
-  virtual nsresult PeekOffset(nsPeekOffsetStruct* aPos) override;
+  nsresult PeekOffset(nsPeekOffsetStruct* aPos) override;
 
   NS_DECL_QUERYFRAME
 
@@ -193,12 +197,16 @@ class nsTextControlFrame final : public nsContainerFrame,
                               nsReflowStatus& aStatus,
                               ReflowOutput& aParentDesiredSize);
 
+  void ComputeBaseline(const ReflowInput&, ReflowOutput&);
+
  public:  // for methods who access nsTextControlFrame directly
   void SetValueChanged(bool aValueChanged);
 
   mozilla::dom::Element* GetRootNode() const { return mRootNode; }
 
   mozilla::dom::Element* GetPreviewNode() const { return mPreviewDiv; }
+
+  mozilla::dom::Element* GetPlaceholderNode() const { return mPlaceholderDiv; }
 
   // called by the focus listener
   nsresult MaybeBeginSecureKeyboardInput();
@@ -335,7 +343,7 @@ class nsTextControlFrame final : public nsContainerFrame,
     return true;
   }
 
- private:
+ protected:
   class nsAnonDivObserver;
 
   nsresult CreateRootNode();

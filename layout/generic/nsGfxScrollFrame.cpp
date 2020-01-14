@@ -4813,18 +4813,16 @@ already_AddRefed<Element> ScrollFrameHelper::MakeScrollbar(
 }
 
 bool ScrollFrameHelper::IsForTextControlWithNoScrollbars() const {
-  nsIFrame* parent = mOuter->GetParent();
-  // The anonymous <div> used by <inputs> never gets scrollbars.
-  nsITextControlFrame* textFrame = do_QueryFrame(parent);
-  if (textFrame) {
-    // Make sure we are not a text area.
-    HTMLTextAreaElement* textAreaElement =
-        HTMLTextAreaElement::FromNode(parent->GetContent());
-    if (!textAreaElement) {
-      return true;
-    }
+  // FIXME(emilio): we should probably make the scroller inside <input> an
+  // internal pseudo-element, and then this would be simpler.
+  //
+  // Also, this could just use scrollbar-width these days.
+  auto* content = mOuter->GetContent();
+  if (!content) {
+    return false;
   }
-  return false;
+  auto* input = content->GetClosestNativeAnonymousSubtreeRootParent();
+  return input && input->IsHTMLElement(nsGkAtoms::input);
 }
 
 nsresult ScrollFrameHelper::CreateAnonymousContent(
