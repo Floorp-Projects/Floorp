@@ -3285,11 +3285,8 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aClipboardType      nsIClipboard::kGlobalClipboard or
    *                            nsIClipboard::kSelectionClipboard.
-   * @param aDispatchPasteEvent true if this should dispatch ePaste event
-   *                            before pasting.  Otherwise, false.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult PasteInternal(int32_t aClipboardType, bool aDispatchPasteEvent);
+  MOZ_CAN_RUN_SCRIPT nsresult PasteInternal(int32_t aClipboardType);
 
   /**
    * InsertWithQuotationsAsSubAction() inserts aQuotedText with appending ">"

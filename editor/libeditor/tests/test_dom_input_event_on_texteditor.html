@@ -27,8 +27,6 @@ SimpleTest.waitForFocus(runTests, window);
 const kIsWin = navigator.platform.indexOf("Win") == 0;
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 
-// TODO: When we remove `beforeInputEvent[0]` instance check, we should enable complexity check again.
-/* eslint-disable complexity */
 async function runTests() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.input_events.beforeinput.enabled", true]],
@@ -78,15 +76,13 @@ async function runTests() {
     inputEvent = null;
     action = 'typing "a"';
     sendString("a");
-    todo_is(aElement.value, "", `${aDescription}${action} shouldn't insert "a" since "beforeinput" was canceled"`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event by ${action} should be "insertText"`);
-      is(beforeInputEvent.data, "a", `${aDescription}data of "beforeinput" event by ${action} should be "a"`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-    }
-    todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
+    is(aElement.value, "", `${aDescription}${action} shouldn't insert "a" since "beforeinput" was canceled"`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event by ${action} should be "insertText"`);
+    is(beforeInputEvent.data, "a", `${aDescription}data of "beforeinput" event by ${action} should be "a"`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
 
     aElement.value = "";
     cancelBeforeInput = false;
@@ -95,13 +91,11 @@ async function runTests() {
     action = 'typing "a"';
     sendString("a");
     is(aElement.value, "a", `${aDescription}${action} should've inserted "a"`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event by ${action} should be "insertText"`);
-      is(beforeInputEvent.data, "a", `${aDescription}data of "beforeinput" event by ${action} should be "a"`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event by ${action} should be "insertText"`);
+    is(beforeInputEvent.data, "a", `${aDescription}data of "beforeinput" event by ${action} should be "a"`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "insertText", `${aDescription}inputType of "input" event by ${action} should be "insertText"`);
     is(inputEvent.data, "a", `${aDescription}data of "input" event by ${action} should be "a"`);
@@ -112,15 +106,13 @@ async function runTests() {
     inputEvent = null;
     action = 'removing "a" with "Backspace"';
     synthesizeKey("KEY_Backspace");
-    todo_is(aElement.value, "a", `${aDescription}${action} shouldn't remove "a" since "beforeinput" was canceled"`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentBackward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-    }
-    todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
+    is(aElement.value, "a", `${aDescription}${action} shouldn't remove "a" since "beforeinput" was canceled"`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentBackward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
 
     aElement.value = "a";
     aElement.setSelectionStart = "a".length;
@@ -130,13 +122,11 @@ async function runTests() {
     action = 'removing "a" with "Backspace"';
     synthesizeKey("KEY_Backspace");
     is(aElement.value, "", `${aDescription}${action} should've removed "a"`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentBackward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentBackward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "input" event by ${action} should be "deleteContentBackward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event by ${action} should be null`);
@@ -148,19 +138,17 @@ async function runTests() {
     action = 'typing "Enter"';
     synthesizeKey("KEY_Enter");
     if (aIsTextarea) {
-      todo_is(aElement.value, "", `${aDescription}${action} shouldn't insert a line break since "beforeinput" was canceled"`);
+      is(aElement.value, "", `${aDescription}${action} shouldn't insert a line break since "beforeinput" was canceled"`);
     } else {
       is(aElement.value, "", `${aDescription}${action} shouldn't insert a line break since it's a single line editor"`);
     }
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "insertLineBreak", `${aDescription}inputType of "beforeinput" event by ${action} should be "insertLineBreak"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "insertLineBreak", `${aDescription}inputType of "beforeinput" event by ${action} should be "insertLineBreak"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
     if (aIsTextarea) {
-      todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
+      ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
     } else {
       ok(!inputEvent, `${aDescription}$"input" event shouldn't have been fired at ${action} since it's a single line editor"`);
     }
@@ -176,13 +164,11 @@ async function runTests() {
     } else {
       is(aElement.value, "", `${aDescription}${action} shouldn't insert a line break since it's a single line editor"`);
     }
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "insertLineBreak", `${aDescription}inputType of "beforeinput" event by ${action} should be "insertLineBreak"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "insertLineBreak", `${aDescription}inputType of "beforeinput" event by ${action} should be "insertLineBreak"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
     if (aIsTextarea) {
       ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
       is(inputEvent.inputType, "insertLineBreak", `${aDescription}inputType of "input" event by ${action} should be "insertLineBreak"`);
@@ -217,13 +203,11 @@ async function runTests() {
     action = "typing a space";
     sendString(" ");
     is(aElement.value, " ", `${aDescription}" " should've been inserted by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event by ${action} should be "insertText"`);
-      is(beforeInputEvent.data, " ", `${aDescription}data of "beforeinput" event by ${action} should be " "`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event by ${action} should be "insertText"`);
+    is(beforeInputEvent.data, " ", `${aDescription}data of "beforeinput" event by ${action} should be " "`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "insertText", `${aDescription}inputType of "input" event by ${action} should be "insertText"`);
     is(inputEvent.data, " ", `${aDescription}data of "input" event by ${action} should be " "`);
@@ -235,13 +219,11 @@ async function runTests() {
     action = 'typing "Delete" at end';
     synthesizeKey("KEY_Delete");
     is(aElement.value, " ", `${aDescription}${action} shouldn't remove anything since no removable content`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentForward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentForward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
     ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired by ${action} since no removable content`);
 
     cancelBeforeInput = false;
@@ -258,16 +240,15 @@ async function runTests() {
     inputEvent = null;
     action = 'typing "Delete"';
     synthesizeKey("KEY_Delete");
-    todo_is(aElement.value, " ", `${aDescription}${action} shouldn't remove the content since "beforeinput" was canceled`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentForward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-    }
-    todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
+    is(aElement.value, " ", `${aDescription}${action} shouldn't remove the content since "beforeinput" was canceled`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentForward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
 
+    aElement.value = "";
     aElement.value = " ";
     aElement.selectionStart = 0;
     cancelBeforeInput = false;
@@ -276,19 +257,28 @@ async function runTests() {
     action = 'typing "Delete"';
     synthesizeKey("KEY_Delete");
     is(aElement.value, "", `${aDescription}${action} should've removed " "`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentForward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event by ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event by ${action} should be "deleteContentForward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event by ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event by ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "input" event by ${action} should be "deleteContentForward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event by ${action} should be null`);
     is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event by ${action} should be null`);
 
-    // TODO: Check canceling "beforeinput" case of "historyUndo" here.
+    cancelBeforeInput = true;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'doing "Undo"';
+    synthesizeKey("z", {accelKey: true});
+    is(aElement.value, "", `${aDescription}${action} shouldn't restore`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "historyUndo", `${aDescription}inputType of "beforeinput" event for ${action} should be "historyUndo"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
 
     cancelBeforeInput = false;
     beforeInputEvent = null;
@@ -296,13 +286,11 @@ async function runTests() {
     action = 'doing "Undo"';
     synthesizeKey("z", {accelKey: true});
     is(aElement.value, " ", `${aDescription}${action} should restore " "`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "historyUndo", `${aDescription}inputType of "beforeinput" event for ${action} should be "historyUndo"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "historyUndo", `${aDescription}inputType of "beforeinput" event for ${action} should be "historyUndo"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "historyUndo", `${aDescription}inputType of "input" event for ${action} should be "historyUndo"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -317,7 +305,18 @@ async function runTests() {
     ok(!beforeInputEvent, `${aDescription}"beforeinput" event shouldn't have been fired at ${action} since no undo transaction`);
     ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since no undo transaction`);
 
-    // TODO: Check canceling "beforeinput" case of "historyRedo" here.
+    cancelBeforeInput = true;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'doing "Redo"';
+    synthesizeKey("Z", {accelKey: true, shiftKey: true});
+    is(aElement.value, " ", `${aDescription}${action} shouldn't restore`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "historyRedo", `${aDescription}inputType of "beforeinput" event for ${action} should be "historyRedo"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
 
     cancelBeforeInput = false;
     beforeInputEvent = null;
@@ -325,13 +324,11 @@ async function runTests() {
     action = 'doing "Redo"';
     synthesizeKey("Z", {accelKey: true, shiftKey: true});
     is(aElement.value, "", `${aDescription}${action} should remove " "`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "historyRedo", `${aDescription}inputType of "beforeinput" event for ${action} should be "historyRedo"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "historyRedo", `${aDescription}inputType of "beforeinput" event for ${action} should be "historyRedo"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "historyRedo", `${aDescription}inputType of "input" event for ${action} should be "historyRedo"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -341,10 +338,10 @@ async function runTests() {
     beforeInputEvent = null;
     inputEvent = null;
     action = 'doing "Redo" again';
-    synthesizeKey("z", {accelKey: true});
-    is(aElement.value, " ", `${aDescription}${action} shouldn't modify the value since no redo transaction`);
+    synthesizeKey("Z", {accelKey: true, shiftKey: true});
+    is(aElement.value, "", `${aDescription}${action} shouldn't modify the value since no redo transaction`);
     ok(!beforeInputEvent, `${aDescription}"beforeinput" event shouldn't have been fired at ${action} since no redo transaction`);
-    todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since no redo transaction`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since no redo transaction`);
 
     // Backspace/Delete with non-collapsed selection.
     aElement.value = "a";
@@ -355,9 +352,9 @@ async function runTests() {
     inputEvent = null;
     action = 'removing "a" with "Backspace" (with selection)';
     synthesizeKey("KEY_Backspace");
-    todo_is(aElement.value, "a", `${aDescription}"a" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
+    is(aElement.value, "a", `${aDescription}"a" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
     aElement.value = "a";
     aElement.focus();
@@ -367,14 +364,12 @@ async function runTests() {
     inputEvent = null;
     synthesizeKey("KEY_Backspace");
     is(aElement.value, "", `${aDescription}"a" should've been removed by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentBackward",
-         `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentBackward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteContentBackward",
+       `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentBackward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentBackward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -388,15 +383,13 @@ async function runTests() {
     inputEvent = null;
     action = 'removing "a" with "Delete" (with selection)';
     synthesizeKey("KEY_Delete");
-    todo_is(aElement.value, "a", `${aDescription}"a" should've been removed by ${action} since "beforeinput" was canceled`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should be fired at ${action} even if it won't remove any content`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
-    todo(!inputEvent, `${aDescription}${action} should not fire "input" event since "beforeinput" was canceled`);
+    is(aElement.value, "a", `${aDescription}"a" should've been removed by ${action} since "beforeinput" was canceled`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should be fired at ${action} even if it won't remove any content`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    ok(!inputEvent, `${aDescription}${action} should not fire "input" event since "beforeinput" was canceled`);
 
     aElement.value = "a";
     aElement.focus();
@@ -407,13 +400,11 @@ async function runTests() {
     action = 'removing "a" with "Delete" (with selection)';
     synthesizeKey("KEY_Delete");
     is(aElement.value, "", `${aDescription}" " should've been removed by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentForward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -429,9 +420,9 @@ async function runTests() {
     inputEvent = null;
     action = 'removing last word, "def", with backward deletion from its end';
     SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
-    todo_is(aElement.value, "abc def", `${aDescription}"def" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
+    is(aElement.value, "abc def", `${aDescription}"def" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
     aElement.value = "abc def";
     aElement.focus();
@@ -442,13 +433,11 @@ async function runTests() {
     inputEvent = null;
     SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
     is(aElement.value, "abc ", `${aDescription}"def" should've been removed by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteWordBackward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteWordBackward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteWordBackward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteWordBackward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteWordBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteWordBackward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -463,10 +452,10 @@ async function runTests() {
     inputEvent = null;
     action = `removing first word, "${kWordSelectEatSpaceToNextWord ? "abc" : "abc "}", with forward deletion from its start`;
     SpecialPowers.doCommand(window, "cmd_deleteWordForward");
-    todo_is(aElement.value, "abc def",
+    is(aElement.value, "abc def",
        `${aDescription}"${kWordSelectEatSpaceToNextWord ? "abc" : "abc "}" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
     aElement.value = "abc def";
     aElement.focus();
@@ -478,13 +467,11 @@ async function runTests() {
     SpecialPowers.doCommand(window, "cmd_deleteWordForward");
     is(aElement.value, kWordSelectEatSpaceToNextWord ? "def" : " def",
        `${aDescription}"${kWordSelectEatSpaceToNextWord ? "abc" : "abc "}" should've been removed by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteWordForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteWordForward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteWordForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteWordForward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteWordForward", `${aDescription}inputType of "input" event for ${action} should be "deleteWordForward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -504,13 +491,11 @@ async function runTests() {
     let expectedInputType = kIsWin ? "deleteWordBackward" : "deleteContentBackward";
     is(aElement.value, kIsWin ? "abc ef" : "abc df",
       `${aDescription}${kIsWin ? "characters between current word start and selection start" : "selected characters"} should've been removed by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, expectedInputType, `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -533,13 +518,11 @@ async function runTests() {
     }
     is(aElement.value, expectedValue,
       `${aDescription}${kIsWin ? "characters between selection start and next word start" : "selected characters"} should've been removed by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, expectedInputType, `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -556,14 +539,12 @@ async function runTests() {
     action = "removing characters backward to start of line";
     SpecialPowers.doCommand(window, "cmd_deleteToBeginningOfLine");
     is(aElement.value, "ef", `${aDescription}characters between start of line and caret should've been removed by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteSoftLineBackward",
-         `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteSoftLineBackward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteSoftLineBackward",
+       `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteSoftLineBackward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteSoftLineBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteSoftLineBackward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -579,14 +560,12 @@ async function runTests() {
     action = "removing characters forward to end of line";
     SpecialPowers.doCommand(window, "cmd_deleteToEndOfLine");
     is(aElement.value, "ab", `${aDescription}characters between caret and end of line should've been removed by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "deleteSoftLineForward",
-         `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteSoftLineForward"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "deleteSoftLineForward",
+       `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteSoftLineForward"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "deleteSoftLineForward", `${aDescription}inputType of "input" event for ${action} should be "deleteSoftLineForward"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -606,13 +585,11 @@ async function runTests() {
     expectedInputType = kIsWin ? "deleteSoftLineBackward" : "deleteContentBackward";
     is(aElement.value, kIsWin ? "ef" : "abc df",
       `${aDescription}${kIsWin ? "characters between start of line and caret" : "selected characters"} should've been removed by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, expectedInputType, `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -631,13 +608,11 @@ async function runTests() {
     expectedInputType = kIsWin ? "deleteSoftLineForward" : "deleteContentForward";
     is(aElement.value, kIsWin ? "a" : "ac def",
       `${aDescription}${kIsWin ? "characters between caret anc end of line" : "selected characters"} should've been removed by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
-      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+    is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, expectedInputType, `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
     is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
@@ -650,16 +625,14 @@ async function runTests() {
     inputEvent = null;
     action = 'switching text direction from "ltr" to "rtl"';
     SpecialPowers.doCommand(window, "cmd_switchTextDirection");
-    todo_is(aElement.getAttribute("dir"), null, `${aDescription}dir attribute of the element should not be set" by ${action} since "beforeinput" was canceled`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
-         `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
-      is(beforeInputEvent.data, "rtl", `${aDescription}data of "beforeinput" event for ${action} should be "rtl"`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
-    todo(!inputEvent, `${aDescription}"input" event should not have been fired at ${action} since "beforeinput" was canceled`);
+    is(aElement.getAttribute("dir"), null, `${aDescription}dir attribute of the element should not be set" by ${action} since "beforeinput" was canceled`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
+       `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
+    is(beforeInputEvent.data, "rtl", `${aDescription}data of "beforeinput" event for ${action} should be "rtl"`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    ok(!inputEvent, `${aDescription}"input" event should not have been fired at ${action} since "beforeinput" was canceled`);
 
     aElement.setAttribute("dir", "rtl");
     aElement.scrollTop; // XXX Update the root frame
@@ -669,17 +642,15 @@ async function runTests() {
     inputEvent = null;
     action = 'switching text direction from "rtl" to "ltr"';
     SpecialPowers.doCommand(window, "cmd_switchTextDirection");
-    todo_is(aElement.getAttribute("dir"), "rtl",
+    is(aElement.getAttribute("dir"), "rtl",
        `${aDescription}dir attribute of the element should not have been modified by ${action} since "beforeinput" was canceled`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
-         `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
-      is(beforeInputEvent.data, "ltr", `${aDescription}data of "beforeinput" event for ${action} should be "ltr"`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
-    todo(!inputEvent, `${aDescription}"input" event should not have been fired at ${action} since "beforeinput" was canceled`);
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
+       `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
+    is(beforeInputEvent.data, "ltr", `${aDescription}data of "beforeinput" event for ${action} should be "ltr"`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    ok(!inputEvent, `${aDescription}"input" event should not have been fired at ${action} since "beforeinput" was canceled`);
 
     aElement.removeAttribute("dir");
     aElement.scrollTop; // XXX Update the root frame
@@ -690,14 +661,12 @@ async function runTests() {
     action = 'switching text direction from "ltr" to "rtl"';
     SpecialPowers.doCommand(window, "cmd_switchTextDirection");
     is(aElement.getAttribute("dir"), "rtl", `${aDescription}dir attribute of the element should've been set to "rtl" by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
-         `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
-      is(beforeInputEvent.data, "rtl", `${aDescription}data of "beforeinput" event for ${action} should be "rtl"`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
+       `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
+    is(beforeInputEvent.data, "rtl", `${aDescription}data of "beforeinput" event for ${action} should be "rtl"`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "formatSetBlockTextDirection", `${aDescription}inputType of "input" event for ${action} should be "formatSetBlockTextDirection"`);
     is(inputEvent.data, "rtl", `${aDescription}data of "input" event for ${action} should be "rtl"`);
@@ -710,14 +679,12 @@ async function runTests() {
     action = 'switching text direction from "rtl" to "ltr"';
     SpecialPowers.doCommand(window, "cmd_switchTextDirection");
     is(aElement.getAttribute("dir"), "ltr", `${aDescription}dir attribute of the element should've been set to "ltr" by ${action}`);
-    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
-    if (beforeInputEvent) {
-      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
-      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
-         `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
-      is(beforeInputEvent.data, "ltr", `${aDescription}data of "beforeinput" event for ${action} should be "ltr"`);
-      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
-    }
+    ok(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+    is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
+       `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
+    is(beforeInputEvent.data, "ltr", `${aDescription}data of "beforeinput" event for ${action} should be "ltr"`);
+    is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
     is(inputEvent.inputType, "formatSetBlockTextDirection", `${aDescription}inputType of "input" event for ${action} should be "formatSetBlockTextDirection"`);
     is(inputEvent.data, "ltr", `${aDescription}data of "input" event for ${action} should be "ltr"`);

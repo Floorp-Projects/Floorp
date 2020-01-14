@@ -17,8 +17,6 @@
 
 SimpleTest.waitForExplicitFinish();
 
-// TODO: When we remove `beforeInputEvent[0]` instance check, we should enable complexity check again.
-/* eslint-disable complexity */
 SimpleTest.waitForFocus(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.input_events.beforeinput.enabled", true]],
@@ -89,16 +87,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, "<p>test: here is bolden text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should remove the <b> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
   }
 
   description = "When there is a <b> element which has style attribute and ";
@@ -111,16 +105,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, '<p>test: <span style="font-style: italic">here</span> is bolden text</p>',
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should replace the <b> element with <span> element to keep the style');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
   }
 
   description = "When there is a <b> element which has class attribute and ";
@@ -133,16 +123,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, '<p>test: <span class="foo">here</span> is bolden text</p>',
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should replace the <b> element with <span> element to keep the class');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
   }
 
   description = "When there is a <b> element which has an <i> element and ";
@@ -155,16 +141,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, "<p>test: <i>here</i> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should remove only the <b> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
   }
 
   description = "When there is a <b> element which has an <i> element and ";
@@ -177,16 +159,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("i", "");
     is(editor.innerHTML, "<p>test: <b>here</b> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should remove only the <i> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
   }
 
   description = "When there is an <i> element in a <b> element and ";
@@ -199,16 +177,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, "<p>test: <i>here</i> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should remove only the <b> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
   }
 
   description = "When there is an <i> element in a <b> element and ";
@@ -221,16 +195,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("i", "");
     is(editor.innerHTML, "<p>test: <b>here</b> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should remove only the <i> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
   }
 
   description = "When there is an <i> element between text nodes in a <b> element and ";
@@ -243,16 +213,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("i", "");
     is(editor.innerHTML, "<p>test: <b>here</b> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should remove only the <i> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("i", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "formatItalic", description + condition + ': nsIHTMLEditor.removeInlineProperty("i", ""): ');
   }
 
   description = "When there is an <i> element between text nodes in a <b> element and ";
@@ -265,16 +231,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("b", "");
     is(editor.innerHTML, "<p>test: <b>h</b><i>e</i><b>re</b> is bolden and italic text</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should split the <b> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("b", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "formatBold", description + condition + ': nsIHTMLEditor.removeInlineProperty("b", ""): ');
   }
 
   description = "When there is an <a> element whose href attribute is not empty and ";
@@ -287,16 +249,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("href", "");
     is(editor.innerHTML, "<p>test: here is a link</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should remove the <a> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
   }
 
   // XXX In the case of "name", removeInlineProperty() does not the <a> element when name attribute is empty.
@@ -310,16 +268,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("href", "");
     is(editor.innerHTML, "<p>test: here is a link</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should remove the <a> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
   }
 
   description = "When there is an <a> element which does not have href attribute and ";
@@ -332,11 +286,9 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("href", "");
     is(editor.innerHTML, "<p>test: <a>here</a> is an anchor</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should NOT remove the <a> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause a "beforeinput" event even though HTMLEditor will do nothing');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
     is(inputEvents.length, 0,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should NOT cause an "input" event');
   }
@@ -351,11 +303,9 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("href", "");
     is(editor.innerHTML, '<p>test: <a name="foo">here</a> is a named anchor</p>',
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should NOT remove the <a> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should cause a "beforeinput" event even though HTMLEditor will do nothing');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("href", ""): ');
     is(inputEvents.length, 0,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("href", "") should NOT cause an "input" event');
   }
@@ -370,16 +320,12 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("name", "");
     is(editor.innerHTML, "<p>test: here is a named anchor</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should remove the <a> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause a "beforeinput" event');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", ""): ');
     is(inputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause an "input" event');
-    if (inputEvents.length > 0) {
-      checkInputEvent(inputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", ""): ');
-    }
+    checkInputEvent(inputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", ""): ');
   }
 
   // XXX In the case of "href", removeInlineProperty() removes the <a> element when href attribute is empty.
@@ -393,11 +339,9 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("name", "");
     is(editor.innerHTML, '<p>test: <a name="">here</a> is a named anchor</p>',
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT remove the <a> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause a "beforeinput" event even though HTMLEditor will do nothing');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", ""): ');
-    }
+    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", ""): ');
     is(inputEvents.length, 0,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT cause an "input" event');
   }
@@ -412,11 +356,9 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("name", "");
     is(editor.innerHTML, "<p>test: <a>here</a> is an anchor</p>",
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT remove the <a> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause a "beforeinput" event even though HTMLEditor will do nothing');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "")');
-    }
+    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "")');
     is(inputEvents.length, 0,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT cause an "input" event');
   }
@@ -431,11 +373,9 @@ SimpleTest.waitForFocus(async () => {
     getHTMLEditor().removeInlineProperty("name", "");
     is(editor.innerHTML, '<p>test: <a href="about:blank">here</a> is a link</p>',
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT remove the <a> element');
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should cause a "beforeinput" event even though HTMLEditor will do nothing');
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "")');
-    }
+    checkInputEvent(beforeInputEvents[0], "", description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "")');
     is(inputEvents.length, 0,
       description + condition + ': nsIHTMLEditor.removeInlineProperty("name", "") should NOT cause an "input" event');
   }

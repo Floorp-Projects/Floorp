@@ -57,11 +57,9 @@ SimpleTest.waitForFocus(async () => {
   is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
      "nsITableEditor.deleteTableCellContents() should do nothing if selection is not in <table>");
   // If there were specific inputType value for this API, we should dispatch cancelable "beforeinput", though.
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      '"beforeinput" event should be fired when a call of nsITableEditor.deleteTableCellContents() even though it will do nothing');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when selection is collapsed outside table element");
-  }
+  checkInputEvent(beforeInputEvents[0], "when selection is collapsed outside table element");
   is(inputEvents.length, 0,
      'No "input" event should be fired when a call of nsITableEditor.deleteTableCellContents() does nothing');
 
@@ -96,11 +94,9 @@ SimpleTest.waitForFocus(async () => {
                          "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected cell's text with <br> element");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when all text in a cell is selected');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when all text in a cell is selected");
-  }
+  checkInputEvent(beforeInputEvents[0], "when all text in a cell is selected");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when all text in a cell is selected');
   checkInputEvent(inputEvents[0], "when all text in a cell is selected");
@@ -122,11 +118,9 @@ SimpleTest.waitForFocus(async () => {
                          "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected cell's <ul> element with <br> element");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when <ul> element in a cell is selected');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when <ul> element in a cell is selected");
-  }
+  checkInputEvent(beforeInputEvents[0], "when <ul> element in a cell is selected");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when <ul> element in a cell is selected');
   checkInputEvent(inputEvents[0], "when <ul> element in a cell is selected");
@@ -151,11 +145,9 @@ SimpleTest.waitForFocus(async () => {
                          '<tr><td id="select2"><br></td><td>cell2-2</td></tr>' +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected 2 cells' text with <br> element");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when 2 cell elements are selected');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when 2 cell elements are selected");
-  }
+  checkInputEvent(beforeInputEvents[0], "when 2 cell elements are selected");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when 2 cell elements are selected');
   checkInputEvent(inputEvents[0], "when 2 cell elements are selected");
@@ -186,11 +178,9 @@ SimpleTest.waitForFocus(async () => {
                          '<tr><td id="select3"><br></td><td id="select4"><br></td></tr>' +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected 4 cells' text with <br> element");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when 4 cell elements are selected');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when 4 cell elements are selected");
-  }
+  checkInputEvent(beforeInputEvents[0], "when 4 cell elements are selected");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when 4 cell elements are selected');
   checkInputEvent(inputEvents[0], "when 4 cell elements are selected");
@@ -212,11 +202,9 @@ SimpleTest.waitForFocus(async () => {
                          "<tr><td>cell2-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected cell's text with <br> element (even if the cell is row-spanning)");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when a cell element are selected (even if the cell is row-spanning)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when a cell element are selected (even if the cell is row-spanning)");
-  }
+  checkInputEvent(beforeInputEvents[0], "when a cell element are selected (even if the cell is row-spanning)");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell element are selected (even if the cell is row-spanning)');
   checkInputEvent(inputEvents[0], "when a cell element are selected (even if the cell is row-spanning)");
@@ -238,11 +226,9 @@ SimpleTest.waitForFocus(async () => {
                           "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                         "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace the selected cell's text with <br> element (even if the cell is column-spanning)");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when a cell element are selected (even if the cell is column-spanning)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when a cell element are selected (even if the cell is column-spanning)");
-  }
+  checkInputEvent(beforeInputEvents[0], "when a cell element are selected (even if the cell is column-spanning)");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when a cell element are selected (even if the cell is column-spanning)');
   checkInputEvent(inputEvents[0], "when a cell element are selected (even if the cell is column-spanning)");
@@ -264,11 +250,9 @@ SimpleTest.waitForFocus(async () => {
                          "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.deleteTableCellContents() should replace a cell's text with <br> element when the cell contains selection range");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when the cell contains selection range');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when the cell contains selection range");
-  }
+  checkInputEvent(beforeInputEvents[0], "when the cell contains selection range");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when the cell contains selection range');
   checkInputEvent(inputEvents[0], "when the cell contains selection range");
