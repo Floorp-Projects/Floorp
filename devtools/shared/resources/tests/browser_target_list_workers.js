@@ -15,6 +15,10 @@ add_task(async function() {
   // Enabled fission's pref as the TargetList is almost disabled without it
   await pushPref("devtools.browsertoolbox.fission", true);
 
+  // Disable the preloaded process as it creates processes intermittently
+  // which forces the emission of RDP requests we aren't correctly waiting for.
+  await pushPref("dom.ipc.processPrelaunch.enabled", false);
+
   const client = await createLocalClient();
   const mainRoot = client.mainRoot;
 
