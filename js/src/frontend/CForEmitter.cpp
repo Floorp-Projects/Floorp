@@ -61,7 +61,7 @@ bool CForEmitter::emitCond(const Maybe<uint32_t>& condPos) {
                ScopeKind::Lexical);
 
     if (headLexicalEmitterScopeForLet_->hasEnvironment()) {
-      if (!bce_->emit1(JSOP_FRESHENLEXICALENV)) {
+      if (!bce_->emit1(JSOp::FreshenLexicalEnv)) {
         return false;
       }
     }
@@ -83,7 +83,7 @@ bool CForEmitter::emitBody(Cond cond) {
   cond_ = cond;
 
   if (cond_ == Cond::Present) {
-    if (!bce_->emitJump(JSOP_IFEQ, &loopInfo_->breaks)) {
+    if (!bce_->emitJump(JSOp::IfEq, &loopInfo_->breaks)) {
       return false;
     }
   }
@@ -115,7 +115,7 @@ bool CForEmitter::emitUpdate(Update update, const Maybe<uint32_t>& updatePos) {
                ScopeKind::Lexical);
 
     if (headLexicalEmitterScopeForLet_->hasEnvironment()) {
-      if (!bce_->emit1(JSOP_FRESHENLEXICALENV)) {
+      if (!bce_->emit1(JSOp::FreshenLexicalEnv)) {
         return false;
       }
     }
@@ -147,7 +147,7 @@ bool CForEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
 
     //              [stack] UPDATE
 
-    if (!bce_->emit1(JSOP_POP)) {
+    if (!bce_->emit1(JSOp::Pop)) {
       //            [stack]
       return false;
     }
@@ -166,7 +166,7 @@ bool CForEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   }
 
   // Emit the loop-closing jump.
-  if (!loopInfo_->emitLoopEnd(bce_, JSOP_GOTO, JSTRY_LOOP)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOp::Goto, JSTRY_LOOP)) {
     //              [stack]
     return false;
   }

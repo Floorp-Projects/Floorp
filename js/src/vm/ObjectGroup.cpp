@@ -206,11 +206,11 @@ bool ObjectGroup::useSingletonForNewObject(JSContext* cx, JSScript* script,
   if (script->isGenerator() || script->isAsync()) {
     return false;
   }
-  if (JSOp(*pc) != JSOP_NEW) {
+  if (JSOp(*pc) != JSOp::New) {
     return false;
   }
   pc += JSOpLength_New;
-  if (JSOp(*pc) != JSOP_SETPROP) {
+  if (JSOp(*pc) != JSOp::SetProp) {
     return false;
   }
   return script->getName(pc) == cx->names().prototype;
@@ -1454,7 +1454,7 @@ ObjectGroup* ObjectGroup::allocationSiteGroup(
     return nullptr;
   }
 
-  if (JSOp(*pc) == JSOP_NEWOBJECT) {
+  if (JSOp(*pc) == JSOp::NewObject) {
     // Keep track of the preliminary objects with this group, so we can try
     // to use an unboxed layout for the object once some are allocated.
     Shape* shape = script->getObject(pc)->as<PlainObject>().lastProperty();
