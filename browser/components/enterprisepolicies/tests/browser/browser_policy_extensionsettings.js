@@ -65,6 +65,7 @@ add_task(async function test_install_source_blocked_installtrigger() {
       ExtensionSettings: {
         "*": {
           install_sources: ["http://blocks.other.install.sources/*"],
+          blocked_install_message: "blocked_install_message",
         },
       },
     },
@@ -81,7 +82,9 @@ add_task(async function test_install_source_blocked_installtrigger() {
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.getElementById("policytest_installtrigger").click();
   });
-  await popupPromise;
+  let popup = await popupPromise;
+  let description = popup.querySelector(".popup-notification-description");
+  ok(description.textContent.endsWith("blocked_install_message"), "Custom install message present");
   BrowserTestUtils.removeTab(tab);
 });
 
