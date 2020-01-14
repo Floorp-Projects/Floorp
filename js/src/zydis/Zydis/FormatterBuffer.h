@@ -50,7 +50,7 @@ extern "C" {
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @biref   Defines the `ZydisTokenType` datatype.
+ * @biref   Defines the `ZydisTokenType` data-type.
  */
 typedef ZyanU8 ZydisTokenType;
 
@@ -150,7 +150,7 @@ typedef struct ZydisFormatterToken_
 #pragma pack(pop)
 
 /**
- * @brief   Defines the `ZydisFormatterTokenConst` datatype.
+ * @brief   Defines the `ZydisFormatterTokenConst` data-type.
  */
 typedef const ZydisFormatterToken ZydisFormatterTokenConst;
 
@@ -199,10 +199,10 @@ typedef struct ZydisFormatterBuffer_
  * @param   type    Receives the token type.
  * @param   value   Receives a pointer to the string value of the token.
  *
- * @return  A zycore status code.
+ * @return  A zyan status code.
  */
 ZYDIS_EXPORT ZyanStatus ZydisFormatterTokenGetValue(const ZydisFormatterToken* token,
-    ZydisTokenType* type, char** value);
+    ZydisTokenType* type, ZyanConstCharPointer* value);
 
 /**
  * @brief   Obtains the next `token` linked to the passed one.
@@ -210,7 +210,7 @@ ZYDIS_EXPORT ZyanStatus ZydisFormatterTokenGetValue(const ZydisFormatterToken* t
  * @param   token   Receives a pointer to the next `ZydisFormatterToken` struct linked to the
  *                  passed one.
  *
- * @return  A zycore status code.
+ * @return  A zyan status code.
  */
 ZYDIS_EXPORT ZyanStatus ZydisFormatterTokenNext(ZydisFormatterTokenConst** token);
 
@@ -224,7 +224,7 @@ ZYDIS_EXPORT ZyanStatus ZydisFormatterTokenNext(ZydisFormatterTokenConst** token
  * @param   buffer  A pointer to the `ZydisFormatterBuffer` struct.
  * @param   token   Receives a pointer to the current token.
  *
- * @return  A zycore status code.
+ * @return  A zyan status code.
  *
  * This function returns `ZYAN_STATUS_INVALID_OPERATION`, if the buffer does not contain at least
  * one token.
@@ -239,7 +239,7 @@ ZYDIS_EXPORT ZyanStatus ZydisFormatterBufferGetToken(const ZydisFormatterBuffer*
  * @param   string  Receives a pointer to the `ZyanString` instance associated with the given
  *                  buffer.
  *
- * @return  A zycore status code.
+ * @return  A zyan status code.
  *
  * This function returns `ZYAN_STATUS_INVALID_OPERATION`, if the buffer does not contain at least
  * one token.
@@ -256,7 +256,7 @@ ZYDIS_EXPORT ZyanStatus ZydisFormatterBufferGetString(ZydisFormatterBuffer* buff
  * @param   buffer  A pointer to the `ZydisFormatterBuffer` struct.
  * @param   type    The type of the new token.
  *
- * @return  A zycore status code.
+ * @return  A zyan status code.
  *
  * Note that the `ZyanString` instance returned by `ZydisFormatterBufferGetString` will
  * automatically be updated by calling this function.
@@ -270,7 +270,7 @@ ZYDIS_EXPORT ZyanStatus ZydisFormatterBufferAppend(ZydisFormatterBuffer* buffer,
  * @param   buffer  A pointer to the `ZydisFormatterBuffer` struct.
  * @param   state   Receives a snapshot of the buffer-state.
  *
- * @return  A zycore status code.
+ * @return  A zyan status code.
  *
  * Note that the buffer-state is saved inside the buffer itself and thus becomes invalid as soon
  * as the buffer gets overwritten or destroyed.
@@ -284,7 +284,7 @@ ZYDIS_EXPORT ZyanStatus ZydisFormatterBufferRemember(const ZydisFormatterBuffer*
  * @param   buffer  A pointer to the `ZydisFormatterBuffer` struct.
  * @param   state   The buffer-state to restore.
  *
- * @return  A zycore status code.
+ * @return  A zyan status code.
  *
  * All tokens added after obtaining the given `state` snapshot will be removed. This function
  * does NOT restore any string content.

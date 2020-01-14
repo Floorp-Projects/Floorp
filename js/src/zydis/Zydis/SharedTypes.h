@@ -392,7 +392,7 @@ typedef enum ZydisOperandAction_
 } ZydisOperandAction;
 
 /**
- * @brief   Defines the `ZydisOperandActions` datatype.
+ * @brief   Defines the `ZydisOperandActions` data-type.
  */
 typedef ZyanU8 ZydisOperandActions;
 

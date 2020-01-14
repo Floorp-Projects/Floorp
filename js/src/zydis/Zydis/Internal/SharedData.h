@@ -41,7 +41,7 @@ extern "C" {
 /* Enums and types                                                                                */
 /* ============================================================================================== */
 
-// MSVC does not like types other than (un-)signed int for bitfields
+// MSVC does not like types other than (un-)signed int for bit-fields
 #ifdef ZYAN_MSVC
 #   pragma warning(push)
 #   pragma warning(disable:4214)

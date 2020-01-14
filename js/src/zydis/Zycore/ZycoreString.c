@@ -71,7 +71,7 @@ ZyanStatus ZyanStringInitEx(ZyanString* string, ZyanUSize capacity, ZyanAllocato
 
     string->flags = 0;
     capacity = ZYAN_MAX(ZYAN_STRING_MIN_CAPACITY, capacity) + 1;
-    ZYAN_CHECK(ZyanVectorInitEx(&string->vector, sizeof(char), capacity, allocator,
+    ZYAN_CHECK(ZyanVectorInitEx(&string->vector, sizeof(char), capacity, ZYAN_NULL, allocator,
         growth_factor, shrink_threshold));
     ZYAN_ASSERT(string->vector.capacity >= capacity);
     // Some of the string code relies on `sizeof(char) == 1`
@@ -91,7 +91,8 @@ ZyanStatus ZyanStringInitCustomBuffer(ZyanString* string, char* buffer, ZyanUSiz
     }
 
     string->flags = ZYAN_STRING_HAS_FIXED_CAPACITY;
-    ZYAN_CHECK(ZyanVectorInitCustomBuffer(&string->vector, sizeof(char), (void*)buffer, capacity));
+    ZYAN_CHECK(ZyanVectorInitCustomBuffer(&string->vector, sizeof(char), (void*)buffer, capacity, 
+        ZYAN_NULL));
     ZYAN_ASSERT(string->vector.capacity == capacity);
     // Some of the string code relies on `sizeof(char) == 1`
     ZYAN_ASSERT(string->vector.element_size == 1);
@@ -113,7 +114,7 @@ ZyanStatus ZyanStringDestroy(ZyanString* string)
         return ZYAN_STATUS_SUCCESS;
     }
 
-    return ZyanVectorDestroy(&string->vector, ZYAN_NULL);
+    return ZyanVectorDestroy(&string->vector);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -316,6 +317,18 @@ ZyanStatus ZyanStringViewGetSize(const ZyanStringView* view, ZyanUSize* size)
     return ZYAN_STATUS_SUCCESS;
 }
 
+ZYCORE_EXPORT ZyanStatus ZyanStringViewGetData(const ZyanStringView* view, const char** buffer)
+{
+    if (!view || !buffer)
+    {
+        return ZYAN_STATUS_INVALID_ARGUMENT;
+    }
+
+    *buffer = view->string.vector.data;
+
+    return ZYAN_STATUS_SUCCESS;
+}
+
 /* ---------------------------------------------------------------------------------------------- */
 /* Character access                                                                               */
 /* ---------------------------------------------------------------------------------------------- */
@@ -394,7 +407,7 @@ ZyanStatus ZyanStringInsert(ZyanString* destination, ZyanUSize index, const Zyan
         return ZYAN_STATUS_OUT_OF_RANGE;
     }
 
-    ZYAN_CHECK(ZyanVectorInsertEx(&destination->vector, index, source->string.vector.data,
+    ZYAN_CHECK(ZyanVectorInsertRange(&destination->vector, index, source->string.vector.data,
         source->string.vector.size - 1));
     ZYCORE_STRING_ASSERT_NULLTERMINATION(destination);
 
@@ -426,7 +439,7 @@ ZyanStatus ZyanStringInsertEx(ZyanString* destination, ZyanUSize destination_ind
         return ZYAN_STATUS_OUT_OF_RANGE;
     }
 
-    ZYAN_CHECK(ZyanVectorInsertEx(&destination->vector, destination_index,
+    ZYAN_CHECK(ZyanVectorInsertRange(&destination->vector, destination_index,
         (char*)source->string.vector.data + source_index, count));
     ZYCORE_STRING_ASSERT_NULLTERMINATION(destination);
 
@@ -493,7 +506,7 @@ ZyanStatus ZyanStringDelete(ZyanString* string, ZyanUSize index, ZyanUSize count
         return ZYAN_STATUS_OUT_OF_RANGE;
     }
 
-    ZYAN_CHECK(ZyanVectorDeleteEx(&string->vector, index, count));
+    ZYAN_CHECK(ZyanVectorDeleteRange(&string->vector, index, count));
     ZYCORE_STRING_NULLTERMINATE(string);
 
     return ZYAN_STATUS_SUCCESS;
@@ -512,7 +525,7 @@ ZyanStatus ZyanStringTruncate(ZyanString* string, ZyanUSize index)
         return ZYAN_STATUS_OUT_OF_RANGE;
     }
 
-    ZYAN_CHECK(ZyanVectorDeleteEx(&string->vector, index, string->vector.size - index - 1));
+    ZYAN_CHECK(ZyanVectorDeleteRange(&string->vector, index, string->vector.size - index - 1));
     ZYCORE_STRING_NULLTERMINATE(string);
 
     return ZYAN_STATUS_SUCCESS;
