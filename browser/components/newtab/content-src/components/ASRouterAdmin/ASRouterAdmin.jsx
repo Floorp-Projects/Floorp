@@ -80,58 +80,6 @@ export class TogglePrefCheckbox extends React.PureComponent {
   }
 }
 
-export class Personalization extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    this.togglePersonalizationVersion = this.togglePersonalizationVersion.bind(
-      this
-    );
-  }
-
-  togglePersonalizationVersion() {
-    this.props.dispatch(
-      ac.OnlyToMain({
-        type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE,
-      })
-    );
-  }
-
-  render() {
-    const {
-      lastUpdated,
-      version,
-      initialized,
-    } = this.props.state.Personalization;
-    return (
-      <React.Fragment>
-        <button className="button" onClick={this.togglePersonalizationVersion}>
-          {version === 1
-            ? "Enable V2 Personalization"
-            : "Enable V1 Personalization"}
-        </button>
-        <table>
-          <tbody>
-            <Row>
-              <td className="min">Personalization version</td>
-              <td>{version}</td>
-            </Row>
-            <Row>
-              <td className="min">Personalization Last Updated</td>
-              <td>{relativeTime(lastUpdated) || "(no data)"}</td>
-            </Row>
-            {version === 2 ? (
-              <Row>
-                <td className="min">Personalization V2 Initialized</td>
-                <td>{initialized ? "true" : "false"}</td>
-              </Row>
-            ) : null}
-          </tbody>
-        </table>
-      </React.Fragment>
-    );
-  }
-}
-
 export class DiscoveryStreamAdmin extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -167,7 +115,7 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
   }
 
   refreshCache() {
-    const { config } = this.props.state.DiscoveryStream;
+    const { config } = this.props.state;
     this.props.dispatch(
       ac.OnlyToMain({
         type: at.DISCOVERY_STREAM_CONFIG_CHANGE,
@@ -201,7 +149,7 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
   }
 
   changeEndpointVariant(event) {
-    const endpoint = this.props.state.DiscoveryStream.config.layout_endpoint;
+    const endpoint = this.props.state.config.layout_endpoint;
     if (endpoint) {
       this.setConfigValue(
         "layout_endpoint",
@@ -232,13 +180,13 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
   }
 
   isCurrentVariant(id) {
-    const endpoint = this.props.state.DiscoveryStream.config.layout_endpoint;
+    const endpoint = this.props.state.config.layout_endpoint;
     const isMatch = endpoint && !!endpoint.match(`layout_variant=${id}`);
     return isMatch;
   }
 
   renderFeedData(url) {
-    const { feeds } = this.props.state.DiscoveryStream;
+    const { feeds } = this.props.state;
     const feed = feeds.data[url].data;
     return (
       <React.Fragment>
@@ -253,7 +201,7 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
   }
 
   renderFeedsData() {
-    const { feeds } = this.props.state.DiscoveryStream;
+    const { feeds } = this.props.state;
     return (
       <React.Fragment>
         {Object.keys(feeds.data).map(url => this.renderFeedData(url))}
@@ -262,7 +210,7 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
   }
 
   renderSpocs() {
-    const { spocs } = this.props.state.DiscoveryStream;
+    const { spocs } = this.props.state;
     let spocsData = [];
     if (spocs.data && spocs.data.spocs && spocs.data.spocs.length) {
       spocsData = spocs.data.spocs;
@@ -327,7 +275,7 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
   }
 
   renderFeed(feed) {
-    const { feeds } = this.props.state.DiscoveryStream;
+    const { feeds } = this.props.state;
     if (!feed.url) {
       return null;
     }
@@ -353,7 +301,7 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
     const prefToggles = "enabled hardcoded_layout show_spocs personalized collapsible".split(
       " "
     );
-    const { config, lastUpdated, layout } = this.props.state.DiscoveryStream;
+    const { config, lastUpdated, layout } = this.props.state;
     return (
       <div>
         <button className="button" onClick={this.restorePrefDefaults}>
@@ -437,17 +385,10 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
             ))}
           </div>
         ))}
-        <h3>Personalization</h3>
-        <Personalization
-          dispatch={this.props.dispatch}
-          state={{
-            Personalization: this.props.state.Personalization,
-          }}
-        />
-        <h3>Spocs</h3>
-        {this.renderSpocs()}
         <h3>Feeds Data</h3>
         {this.renderFeedsData()}
+        <h3>Spocs</h3>
+        {this.renderSpocs()}
       </div>
     );
   }
@@ -1437,10 +1378,7 @@ export class ASRouterAdminInner extends React.PureComponent {
           <React.Fragment>
             <h2>Discovery Stream</h2>
             <DiscoveryStreamAdmin
-              state={{
-                DiscoveryStream: this.props.DiscoveryStream,
-                Personalization: this.props.Personalization,
-              }}
+              state={this.props.DiscoveryStream}
               otherPrefs={this.props.Prefs.values}
               dispatch={this.props.dispatch}
             />
@@ -1609,6 +1547,5 @@ const _ASRouterAdmin = props => (
 export const ASRouterAdmin = connect(state => ({
   Sections: state.Sections,
   DiscoveryStream: state.DiscoveryStream,
-  Personalization: state.Personalization,
   Prefs: state.Prefs,
 }))(_ASRouterAdmin);
