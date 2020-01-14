@@ -1322,7 +1322,7 @@ class MStart : public MNullaryInstruction {
 };
 
 // Instruction marking on entrypoint for on-stack replacement.
-// OSR may occur at loop headers (at JSOP_TRACE).
+// OSR may occur at loop headers (at JSOP_LOOPHEAD).
 // There is at most one MOsrEntry per MIRGraph.
 class MOsrEntry : public MNullaryInstruction {
  protected:
