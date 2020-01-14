@@ -1096,6 +1096,13 @@ class BaseMarionetteTestRunner(object):
 
         if hasattr(self, 'marionette') and self.marionette:
             if self.marionette.instance is not None:
+                if self.marionette.instance.runner.is_running():
+                    # Force a clean shutdown of the application process first if
+                    # it is still running. If that fails, kill the process.
+                    # Therefore a new session needs to be started.
+                    self.marionette.start_session()
+                    self.marionette.quit(in_app=True)
+
                 self.marionette.instance.close(clean=True)
                 self.marionette.instance = None
 
