@@ -556,6 +556,16 @@ var gXPInstallObserver = {
           [brandShortName]
         );
 
+        if (Services.policies) {
+          let extensionSettings = Services.policies.getExtensionSettings("*");
+          if (
+            extensionSettings &&
+            "blocked_install_message" in extensionSettings
+          ) {
+            messageString += " " + extensionSettings.blocked_install_message;
+          }
+        }
+
         options.removeOnDismissal = true;
         options.persistent = false;
 
