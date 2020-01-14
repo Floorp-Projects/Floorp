@@ -5,5 +5,5 @@
 .runtime-actions__toolbar {
   column-gap: var(--base-unit);
   display: flex;
-  justify-content: right;
+  justify-content: end;
 }

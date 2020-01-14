@@ -22,6 +22,10 @@
   transform: rotate(0deg);
 }
 
+.debug-target-pane__icon--collapsed:dir(rtl) {
+  transform: rotate(180deg);
+}
+
 .debug-target-pane__title {
   cursor: pointer;
 }
