@@ -41,12 +41,12 @@
  * the time at which we *can* allocate objects.
  *
  * (The original intent was to allow for ObjLiteral instructions to actually be
- * invoked by a new JS opcode, JSOP_OBJLITERAL, thus replacing the more general
- * opcode sequences sometimes generated to fill in objects and removing the
- * need to attach actual objects to JSOp::Object or JSOp::NewObject. However,
- * this was far too invasive and led to performance regressions, so currently
- * ObjLiteral only carries literals as far as the end of the parse pipeline,
- * when all GC things are allocated.)
+ * invoked by a new JS opcode, JSOp::ObjLiteral, thus replacing the more
+ * general opcode sequences sometimes generated to fill in objects and removing
+ * the need to attach actual objects to JSOp::Object or JSOp::NewObject.
+ * However, this was far too invasive and led to performance regressions, so
+ * currently ObjLiteral only carries literals as far as the end of the parse
+ * pipeline, when all GC things are allocated.)
  *
  * ObjLiteral data structures are used to represent object literals whenever
  * they are "compatible". See

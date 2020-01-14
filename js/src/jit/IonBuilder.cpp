@@ -7676,7 +7676,7 @@ AbortReasonOr<MBasicBlock*> IonBuilder::newOsrPreheader(
         MOZ_ASSERT(argsObj && argsObj->isOsrArgumentsObject());
         // If this is an aliased formal, then the arguments object
         // contains a hole at this index.  Any references to this
-        // variable in the jitcode will come from JSOP_*ALIASEDVAR
+        // variable in the jitcode will come from JSOp::*AliasedVar
         // opcodes, so the slot itself can be set to undefined.  If
         // it's not aliased, it must be retrieved from the arguments
         // object.

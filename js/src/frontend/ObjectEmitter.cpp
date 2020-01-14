@@ -19,7 +19,7 @@
 #include "vm/JSContext.h"              // JSContext
 #include "vm/NativeObject.h"           // NativeDefineDataProperty
 #include "vm/ObjectGroup.h"            // TenuredObject
-#include "vm/Opcodes.h"                // JSOP_*
+#include "vm/Opcodes.h"                // JSOp
 #include "vm/Runtime.h"                // JSAtomState (cx->names())
 
 #include "gc/ObjectKind-inl.h"  // GetGCObjectKind

@@ -33,7 +33,7 @@
 #include "js/Value.h"                  // JS::Vector
 #include "js/Vector.h"                 // Vector
 #include "vm/JSScript.h"               // JSTryNote, JSTryNoteKind, ScopeNote
-#include "vm/Opcodes.h"                // JSOP_*
+#include "vm/Opcodes.h"                // JSOP_JUMPTARGET_LENGTH
 
 namespace js {
 
