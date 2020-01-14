@@ -350,7 +350,7 @@ class FullParseHandler {
 
   CallNodeType newSuperCall(Node callee, Node args, bool isSpread) {
     return new_<CallNode>(ParseNodeKind::SuperCallExpr,
-                          isSpread ? JSOP_SPREADSUPERCALL : JSOP_SUPERCALL,
+                          isSpread ? JSOp::SpreadSuperCall : JSOp::SuperCall,
                           callee, args);
   }
 
@@ -875,7 +875,7 @@ class FullParseHandler {
   CallNodeType newNewExpression(uint32_t begin, Node ctor, Node args,
                                 bool isSpread) {
     return new_<CallNode>(ParseNodeKind::NewExpr,
-                          isSpread ? JSOP_SPREADNEW : JSOP_NEW,
+                          isSpread ? JSOp::SpreadNew : JSOp::New,
                           TokenPos(begin, args->pn_pos.end), ctor, args);
   }
 

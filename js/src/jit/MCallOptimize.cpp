@@ -2802,7 +2802,7 @@ IonBuilder::InliningResult IonBuilder::inlineObjectIs(CallInfo& callInfo) {
     pushConstant(BooleanValue(false));
   } else if (strictEq) {
     // Specialize |Object.is(lhs, rhs)| as |lhs === rhs|.
-    MOZ_TRY(jsop_compare(JSOP_STRICTEQ, left, right));
+    MOZ_TRY(jsop_compare(JSOp::StrictEq, left, right));
   } else {
     MSameValue* ins = MSameValue::New(alloc(), left, right);
 

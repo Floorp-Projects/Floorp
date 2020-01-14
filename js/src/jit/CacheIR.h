@@ -1493,7 +1493,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     // Some native functions can be implemented faster if we know that
     // the return value is ignored.
     bool ignoresReturnValue =
-        op == JSOP_CALL_IGNORES_RV && calleeFunc->hasJitInfo() &&
+        op == JSOp::CallIgnoresRv && calleeFunc->hasJitInfo() &&
         calleeFunc->jitInfo()->type() == JSJitInfo::IgnoresReturnValueNative;
 
 #ifdef JS_SIMULATOR

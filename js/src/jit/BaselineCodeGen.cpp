@@ -1276,7 +1276,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   // if --ion-eager is used.
   JSScript* script = handler.script();
   jsbytecode* pc = handler.pc();
-  if (JSOp(*pc) == JSOP_LOOPHEAD) {
+  if (JSOp(*pc) == JSOp::LoopHead) {
     uint32_t pcOffset = script->pcToOffset(pc);
     uint32_t nativeOffset = masm.currentOffset();
     if (!handler.osrEntries().emplaceBack(pcOffset, nativeOffset)) {
@@ -1303,7 +1303,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
 
-  if (JSOp(*pc) == JSOP_LOOPHEAD) {
+  if (JSOp(*pc) == JSOp::LoopHead) {
     // If this is a loop inside a catch or finally block, increment the warmup
     // counter but don't attempt OSR (Ion only compiles the try block).
     if (handler.analysis().info(pc).loopHeadInCatchOrFinally) {
@@ -1327,7 +1327,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
                  &done);
 
   // Try to compile and/or finish a compilation.
-  if (JSOp(*pc) == JSOP_LOOPHEAD) {
+  if (JSOp(*pc) == JSOp::LoopHead) {
     // Try to OSR into Ion.
     computeFrameSize(R0.scratchReg());
 
@@ -1870,7 +1870,7 @@ bool BaselineCompilerCodeGen::emit_Unpick() {
   masm.loadValue(frame.addressOfStackValue(-1), R0);
 
   MOZ_ASSERT(GET_INT8(handler.pc()) > 0,
-             "Interpreter code assumes JSOP_UNPICK operand > 0");
+             "Interpreter code assumes JSOp::Unpick operand > 0");
 
   // Move the other values up.
   int32_t depth = -(GET_INT8(handler.pc()) + 1);
@@ -1911,7 +1911,7 @@ bool BaselineInterpreterCodeGen::emit_Unpick() {
   {
     Label ok;
     masm.branch32(Assembler::GreaterThan, scratch, Imm32(0), &ok);
-    masm.assumeUnreachable("JSOP_UNPICK with operand <= 0?");
+    masm.assumeUnreachable("JSOp::Unpick with operand <= 0?");
     masm.bind(&ok);
   }
 #endif
@@ -3415,7 +3415,7 @@ bool BaselineCodeGen<Handler>::emit_BindGName() {
   if (tryOptimizeBindGlobalName()) {
     return true;
   }
-  return emitBindName(JSOP_BINDGNAME);
+  return emitBindName(JSOp::BindGName);
 }
 
 template <typename Handler>
@@ -3848,12 +3848,12 @@ bool BaselineCodeGen<Handler>::emitBindName(JSOp op) {
     return true;
   };
 
-  if (op == JSOP_BINDNAME) {
+  if (op == JSOp::BindName) {
     if (!loadFrameEnv()) {
       return false;
     }
   } else {
-    MOZ_ASSERT(op == JSOP_BINDGNAME);
+    MOZ_ASSERT(op == JSOp::BindGName);
     if (!emitTestScriptFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
                             loadFrameEnv, loadGlobalLexical, R2.scratchReg())) {
       return false;
@@ -3872,7 +3872,7 @@ bool BaselineCodeGen<Handler>::emitBindName(JSOp op) {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_BindName() {
-  return emitBindName(JSOP_BINDNAME);
+  return emitBindName(JSOp::BindName);
 }
 
 template <typename Handler>
@@ -4014,7 +4014,7 @@ bool BaselineCodeGen<Handler>::emit_DefVar() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitDefLexical(JSOp op) {
-  MOZ_ASSERT(op == JSOP_DEFCONST || op == JSOP_DEFLET);
+  MOZ_ASSERT(op == JSOp::DefConst || op == JSOp::DefLet);
 
   frame.syncStack(0);
 
@@ -4032,12 +4032,12 @@ bool BaselineCodeGen<Handler>::emitDefLexical(JSOp op) {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_DefConst() {
-  return emitDefLexical(JSOP_DEFCONST);
+  return emitDefLexical(JSOp::DefConst);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_DefLet() {
-  return emitDefLexical(JSOP_DEFLET);
+  return emitDefLexical(JSOp::DefLet);
 }
 
 template <typename Handler>
@@ -4224,14 +4224,14 @@ bool BaselineInterpreterCodeGen::emit_SetLocal() {
 
 template <>
 bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
-  MOZ_ASSERT(op == JSOP_GETARG || op == JSOP_SETARG);
+  MOZ_ASSERT(op == JSOp::GetArg || op == JSOp::SetArg);
 
   uint32_t arg = GET_ARGNO(handler.pc());
 
   // Fast path: the script does not use |arguments| or formals don't
   // alias the arguments object.
   if (!handler.script()->argumentsAliasesFormals()) {
-    if (op == JSOP_GETARG) {
+    if (op == JSOp::GetArg) {
       frame.pushArg(arg);
     } else {
       // See the comment in emit_SetLocal.
@@ -4253,7 +4253,7 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
     Label hasArgsObj;
     masm.branchTest32(Assembler::NonZero, frame.addressOfFlags(),
                       Imm32(BaselineFrame::HAS_ARGS_OBJ), &hasArgsObj);
-    if (op == JSOP_GETARG) {
+    if (op == JSOp::GetArg) {
       masm.loadValue(frame.addressOfArg(arg), R0);
     } else {
       frame.storeStackValue(-1, frame.addressOfArg(arg), R0);
@@ -4269,7 +4269,7 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
 
   // Load/store the argument.
   Address argAddr(reg, ArgumentsData::offsetOfArgs() + arg * sizeof(Value));
-  if (op == JSOP_GETARG) {
+  if (op == JSOp::GetArg) {
     masm.loadValue(argAddr, R0);
     frame.push(R0);
   } else {
@@ -4300,7 +4300,7 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
 
 template <>
 bool BaselineInterpreterCodeGen::emitFormalArgAccess(JSOp op) {
-  MOZ_ASSERT(op == JSOP_GETARG || op == JSOP_SETARG);
+  MOZ_ASSERT(op == JSOp::GetArg || op == JSOp::SetArg);
 
   // Load the index.
   Register argReg = R1.scratchReg();
@@ -4326,7 +4326,7 @@ bool BaselineInterpreterCodeGen::emitFormalArgAccess(JSOp op) {
 
     // Load/store the argument.
     BaseValueIndex argAddr(reg, argReg, ArgumentsData::offsetOfArgs());
-    if (op == JSOP_GETARG) {
+    if (op == JSOp::GetArg) {
       masm.loadValue(argAddr, R0);
       frame.push(R0);
     } else {
@@ -4350,7 +4350,7 @@ bool BaselineInterpreterCodeGen::emitFormalArgAccess(JSOp op) {
   {
     BaseValueIndex addr(BaselineFrameReg, argReg,
                         BaselineFrame::offsetOfArg(0));
-    if (op == JSOP_GETARG) {
+    if (op == JSOp::GetArg) {
       masm.loadValue(addr, R0);
       frame.push(R0);
     } else {
@@ -4365,12 +4365,12 @@ bool BaselineInterpreterCodeGen::emitFormalArgAccess(JSOp op) {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_GetArg() {
-  return emitFormalArgAccess(JSOP_GETARG);
+  return emitFormalArgAccess(JSOp::GetArg);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_SetArg() {
-  return emitFormalArgAccess(JSOP_SETARG);
+  return emitFormalArgAccess(JSOp::SetArg);
 }
 
 template <>
@@ -4623,7 +4623,7 @@ bool BaselineCodeGen<Handler>::emitSpreadCall(JSOp op) {
   }
 
   // Update FrameInfo.
-  bool construct = op == JSOP_SPREADNEW || op == JSOP_SPREADSUPERCALL;
+  bool construct = op == JSOp::SpreadNew || op == JSOp::SpreadSuperCall;
   frame.popn(3 + construct);
   frame.push(R0);
   return true;
@@ -4631,72 +4631,72 @@ bool BaselineCodeGen<Handler>::emitSpreadCall(JSOp op) {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Call() {
-  return emitCall(JSOP_CALL);
+  return emitCall(JSOp::Call);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_CallIgnoresRv() {
-  return emitCall(JSOP_CALL_IGNORES_RV);
+  return emitCall(JSOp::CallIgnoresRv);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_CallIter() {
-  return emitCall(JSOP_CALLITER);
+  return emitCall(JSOp::CallIter);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_New() {
-  return emitCall(JSOP_NEW);
+  return emitCall(JSOp::New);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_SuperCall() {
-  return emitCall(JSOP_SUPERCALL);
+  return emitCall(JSOp::SuperCall);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_FunCall() {
-  return emitCall(JSOP_FUNCALL);
+  return emitCall(JSOp::FunCall);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_FunApply() {
-  return emitCall(JSOP_FUNAPPLY);
+  return emitCall(JSOp::FunApply);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Eval() {
-  return emitCall(JSOP_EVAL);
+  return emitCall(JSOp::Eval);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_StrictEval() {
-  return emitCall(JSOP_STRICTEVAL);
+  return emitCall(JSOp::StrictEval);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_SpreadCall() {
-  return emitSpreadCall(JSOP_SPREADCALL);
+  return emitSpreadCall(JSOp::SpreadCall);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_SpreadNew() {
-  return emitSpreadCall(JSOP_SPREADNEW);
+  return emitSpreadCall(JSOp::SpreadNew);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_SpreadSuperCall() {
-  return emitSpreadCall(JSOP_SPREADSUPERCALL);
+  return emitSpreadCall(JSOp::SpreadSuperCall);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_SpreadEval() {
-  return emitSpreadCall(JSOP_SPREADEVAL);
+  return emitSpreadCall(JSOp::SpreadEval);
 }
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_StrictSpreadEval() {
-  return emitSpreadCall(JSOP_STRICTSPREADEVAL);
+  return emitSpreadCall(JSOp::StrictSpreadEval);
 }
 
 template <typename Handler>
@@ -6690,12 +6690,12 @@ bool BaselineInterpreterCodeGen::emit_InstrumentationScriptId() {
 template <>
 bool BaselineCompilerCodeGen::emit_ForceInterpreter() {
   // Caller is responsible for checking script->hasForceInterpreterOp().
-  MOZ_CRASH("JSOP_FORCEINTERPRETER in baseline");
+  MOZ_CRASH("JSOp::ForceInterpreter in baseline");
 }
 
 template <>
 bool BaselineInterpreterCodeGen::emit_ForceInterpreter() {
-  masm.assumeUnreachable("JSOP_FORCEINTERPRETER");
+  masm.assumeUnreachable("JSOp::ForceInterpreter");
   return true;
 }
 
@@ -6887,7 +6887,7 @@ MethodStatus BaselineCompiler::emitBody() {
 #endif
   }
 
-  MOZ_ASSERT(JSOp(*prevpc) == JSOP_RETRVAL);
+  MOZ_ASSERT(JSOp(*prevpc) == JSOp::RetRval);
   return Method_Compiled;
 }
 

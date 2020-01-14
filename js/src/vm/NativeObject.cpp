@@ -2316,9 +2316,9 @@ static MOZ_ALWAYS_INLINE bool GetExistingProperty(
     JSScript* script = cx->currentScript(&pc);
     if (script && script->hasJitScript()) {
       switch (JSOp(*pc)) {
-        case JSOP_GETPROP:
-        case JSOP_CALLPROP:
-        case JSOP_LENGTH:
+        case JSOp::GetProp:
+        case JSOp::CallProp:
+        case JSOp::Length:
           script->jitScript()->noteAccessedGetter(script->pcToOffset(pc));
           break;
         default:
@@ -2365,7 +2365,7 @@ static bool Detecting(JSContext* cx, JSScript* script, jsbytecode* pc) {
   BytecodeIterator endIter = BytecodeIterator(script->endLocation());
 
   // Skip over jump targets and duplication operations.
-  while (scriptIterator->isJumpTarget() || scriptIterator->is(JSOP_DUP)) {
+  while (scriptIterator->isJumpTarget() || scriptIterator->is(JSOp::Dup)) {
     if (++scriptIterator == endIter) {
       // If we are at the end of the script, we cannot be detecting
       // the property.
@@ -2380,7 +2380,7 @@ static bool Detecting(JSContext* cx, JSScript* script, jsbytecode* pc) {
   }
 
   // Special case: Do not warn if we are checking whether the property is null.
-  if (scriptIterator->is(JSOP_NULL)) {
+  if (scriptIterator->is(JSOp::Null)) {
     if (++scriptIterator == endIter) {
       return false;
     }
@@ -2390,8 +2390,8 @@ static bool Detecting(JSContext* cx, JSScript* script, jsbytecode* pc) {
 
   // Special case #2: Do not warn if we are checking whether the property is
   // undefined.
-  if (scriptIterator->is(JSOP_GETGNAME) || scriptIterator->is(JSOP_GETNAME) ||
-      scriptIterator->is(JSOP_UNDEFINED)) {
+  if (scriptIterator->is(JSOp::GetGName) || scriptIterator->is(JSOp::GetName) ||
+      scriptIterator->is(JSOp::Undefined)) {
     // If we using the result of a variable lookup to use in the comparison
     // against the property and that lookup does not result in 'undefined',
     // the type of subsequent operations do not matter -- we always warn.
@@ -2453,7 +2453,7 @@ static bool GetNonexistentProperty(JSContext* cx, HandleId id,
     return true;
   }
 
-  if (JSOp(*pc) != JSOP_GETPROP && JSOp(*pc) != JSOP_GETELEM) {
+  if (JSOp(*pc) != JSOp::GetProp && JSOp(*pc) != JSOp::GetElem) {
     return true;
   }
 
