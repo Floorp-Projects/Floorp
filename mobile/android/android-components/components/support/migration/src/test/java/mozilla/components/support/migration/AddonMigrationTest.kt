@@ -39,12 +39,19 @@ class AddonMigrationTest {
     @Test
     fun `All addons migrated`() = runBlocking {
         val addon1: WebExtension = mock()
+        whenever(addon1.isBuiltIn()).thenReturn(false)
+
         val addon2: WebExtension = mock()
+        whenever(addon2.isBuiltIn()).thenReturn(false)
+
+        // Built-in add-ons (browser-icons, readerview) do not need to and shouldn't be migrated.
+        val addon3: WebExtension = mock()
+        whenever(addon3.isBuiltIn()).thenReturn(true)
 
         val engine: Engine = mock()
         val listSuccessCallback = argumentCaptor<((List<WebExtension>) -> Unit)>()
         whenever(engine.listInstalledWebExtensions(listSuccessCallback.capture(), any())).thenAnswer {
-            listSuccessCallback.value.invoke(listOf(addon1, addon2))
+            listSuccessCallback.value.invoke(listOf(addon1, addon2, addon3))
         }
 
         val addonCaptor = argumentCaptor<WebExtension>()
