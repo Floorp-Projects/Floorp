@@ -153,6 +153,23 @@ async function getCDP() {
   return window.CDP;
 }
 
+async function getScrollbarSize() {
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    const scrollbarHeight = {};
+    const scrollbarWidth = {};
+
+    content.windowUtils.getScrollbarSize(
+      false,
+      scrollbarWidth,
+      scrollbarHeight
+    );
+    return {
+      width: scrollbarWidth.value,
+      height: scrollbarHeight.value,
+    };
+  });
+}
+
 function getTargets(CDP) {
   return new Promise((resolve, reject) => {
     CDP.List(null, (err, targets) => {
