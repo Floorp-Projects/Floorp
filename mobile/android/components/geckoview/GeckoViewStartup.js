@@ -110,7 +110,6 @@ GeckoViewStartup.prototype = {
             ged: [
               "ContentBlocking:AddException",
               "ContentBlocking:RemoveException",
-              "ContentBlocking:RemoveExceptionByPrincipal",
               "ContentBlocking:CheckException",
               "ContentBlocking:SaveList",
               "ContentBlocking:RestoreList",
