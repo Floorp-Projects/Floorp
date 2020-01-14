@@ -116,6 +116,22 @@ struct FunctionCreationData {
 
   HandleAtom getAtom(JSContext* cx) const;
 
+  void setInferredName(JSAtom* name) {
+    MOZ_ASSERT(!atom);
+    MOZ_ASSERT(name);
+    MOZ_ASSERT(!flags.hasGuessedAtom());
+    atom = name;
+    flags.setInferredName();
+  }
+
+  JSAtom* inferredName() const {
+    MOZ_ASSERT(flags.hasInferredName());
+    MOZ_ASSERT(atom);
+    return atom;
+  }
+
+  bool hasInferredName() const { return flags.hasInferredName(); }
+
   void trace(JSTracer* trc) {
     TraceNullableRoot(trc, &atom, "FunctionCreationData atom");
   }
