@@ -133,13 +133,6 @@ export class BaseContent extends React.PureComponent {
     let filteredSections = props.Sections;
 
     const pocketEnabled = prefs["feeds.section.topstories"];
-
-    // Filter out highlights for DS
-    if (isDiscoveryStream) {
-      filteredSections = filteredSections.filter(
-        section => section.id !== "highlights"
-      );
-    }
     const noSectionsEnabled =
       !prefs["feeds.topsites"] &&
       filteredSections.filter(section => section.enabled).length === 0;
