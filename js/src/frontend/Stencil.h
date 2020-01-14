@@ -184,6 +184,8 @@ class BigIntCreationData {
 
 using BigIntIndex = TypedIndex<BigIntCreationData>;
 
+} /* namespace frontend */
+
 class ScopeCreationData {
   friend class AbstractScope;
   friend class GCMarker;
@@ -319,13 +321,12 @@ class ScopeCreationData {
   }
 };
 
-} /* namespace frontend */
 } /* namespace js */
 
 namespace JS {
 template <>
-struct GCPolicy<js::frontend::ScopeCreationData*> {
-  static void trace(JSTracer* trc, js::frontend::ScopeCreationData** data,
+struct GCPolicy<js::ScopeCreationData*> {
+  static void trace(JSTracer* trc, js::ScopeCreationData** data,
                     const char* name) {
     (*data)->trace(trc);
   }
