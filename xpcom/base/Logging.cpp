@@ -58,6 +58,14 @@ void log_print(const LogModule* aModule, LogLevel aLevel, const char* aFmt,
   va_end(ap);
 }
 
+void log_print(const LogModule* aModule, LogLevel aLevel, TimeStamp* aStart,
+               const char* aFmt, ...) {
+  va_list ap;
+  va_start(ap, aFmt);
+  aModule->Printv(aLevel, aStart, aFmt, ap);
+  va_end(ap);
+}
+
 }  // namespace detail
 
 LogLevel ToLogLevel(int32_t aLevel) {
@@ -377,6 +385,11 @@ class LogModuleManager {
 
   void Print(const char* aName, LogLevel aLevel, const char* aFmt,
              va_list aArgs) MOZ_FORMAT_PRINTF(4, 0) {
+    Print(aName, aLevel, nullptr, aFmt, aArgs);
+  }
+
+  void Print(const char* aName, LogLevel aLevel, const TimeStamp* aStart,
+             const char* aFmt, va_list aArgs) MOZ_FORMAT_PRINTF(5, 0) {
     long pid = static_cast<long>(base::GetCurrentProcId());
     const size_t kBuffSize = 1024;
     char buff[kBuffSize];
@@ -406,8 +419,15 @@ class LogModuleManager {
 
 #ifdef MOZ_GECKO_PROFILER
     if (mAddProfilerMarker && profiler_can_accept_markers()) {
-      PROFILER_ADD_MARKER_WITH_PAYLOAD("LogMessages", OTHER, LogMarkerPayload,
-                                       (aName, buffToWrite, TimeStamp::Now()));
+      if (aStart) {
+        PROFILER_ADD_MARKER_WITH_PAYLOAD(
+            "LogMessages", OTHER, LogMarkerPayload,
+            (aName, buffToWrite, *aStart, TimeStamp::Now()));
+      } else {
+        PROFILER_ADD_MARKER_WITH_PAYLOAD(
+            "LogMessages", OTHER, LogMarkerPayload,
+            (aName, buffToWrite, TimeStamp::Now()));
+      }
     }
 #endif
 
@@ -446,7 +466,7 @@ class LogModuleManager {
       currentThreadName = noNameThread;
     }
 
-    if (!mAddTimestamp) {
+    if (!mAddTimestamp && !aStart) {
       if (!mIsRaw) {
         fprintf_stderr(out, "[%s %ld: %s]: %s/%s %s%s",
                        nsDebugImpl::GetMultiprocessMode(), pid,
@@ -456,14 +476,38 @@ class LogModuleManager {
         fprintf_stderr(out, "%s%s", buffToWrite, newline);
       }
     } else {
-      PRExplodedTime now;
-      PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
-      fprintf_stderr(
-          out,
-          "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%s %ld: %s]: %s/%s %s%s",
-          now.tm_year, now.tm_month + 1, now.tm_mday, now.tm_hour, now.tm_min,
-          now.tm_sec, now.tm_usec, nsDebugImpl::GetMultiprocessMode(), pid,
-          currentThreadName, ToLogStr(aLevel), aName, buffToWrite, newline);
+      if (aStart) {
+        // XXX is there a reasonable way to convert one to the other?  this is
+        // bad
+        PRTime prnow = PR_Now();
+        TimeStamp tmnow = TimeStamp::NowUnfuzzed();
+        TimeDuration duration = tmnow - *aStart;
+        PRTime prstart = prnow - duration.ToMicroseconds();
+
+        PRExplodedTime now;
+        PRExplodedTime start;
+        PR_ExplodeTime(prnow, PR_GMTParameters, &now);
+        PR_ExplodeTime(prstart, PR_GMTParameters, &start);
+        // Ignore that the start time might be in a different day
+        fprintf_stderr(
+            out,
+            "%04d-%02d-%02d %02d:%02d:%02d.%06d -> %02d:%02d:%02d.%06d UTC "
+            "(%.1gms)- [%s %ld: %s]: %s/%s %s%s",
+            now.tm_year, now.tm_month + 1, start.tm_mday, start.tm_hour,
+            start.tm_min, start.tm_sec, start.tm_usec, now.tm_hour, now.tm_min,
+            now.tm_sec, now.tm_usec, duration.ToMilliseconds(),
+            nsDebugImpl::GetMultiprocessMode(), pid, currentThreadName,
+            ToLogStr(aLevel), aName, buffToWrite, newline);
+      } else {
+        PRExplodedTime now;
+        PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
+        fprintf_stderr(
+            out,
+            "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%s %ld: %s]: %s/%s %s%s",
+            now.tm_year, now.tm_month + 1, now.tm_mday, now.tm_hour, now.tm_min,
+            now.tm_sec, now.tm_usec, nsDebugImpl::GetMultiprocessMode(), pid,
+            currentThreadName, ToLogStr(aLevel), aName, buffToWrite, newline);
+      }
     }
 
     if (mIsSync) {
@@ -594,6 +638,14 @@ void LogModule::Printv(LogLevel aLevel, const char* aFmt, va_list aArgs) const {
 
   // Forward to LogModule manager w/ level and name
   sLogModuleManager->Print(Name(), aLevel, aFmt, aArgs);
+}
+
+void LogModule::Printv(LogLevel aLevel, const TimeStamp* aStart, const char* aFmt,
+                       va_list aArgs) const {
+  MOZ_ASSERT(sLogModuleManager != nullptr);
+
+  // Forward to LogModule manager w/ level and name
+  sLogModuleManager->Print(Name(), aLevel, aStart, aFmt, aArgs);
 }
 
 }  // namespace mozilla
