@@ -17,7 +17,7 @@ const ExtensionSidebarComponent = createFactory(
 const {
   updateExtensionPage,
   updateObjectTreeView,
-  updateObjectValueGripView,
+  updateExpressionResultView,
   removeExtensionSidebar,
 } = require("devtools/client/inspector/extensions/actions/sidebar");
 
@@ -151,7 +151,7 @@ class ExtensionSidebar {
    * ObjectPreview React Component, which shows the passed value grip
    * in the sidebar.
    */
-  setObjectValueGrip(objectValueGrip, rootTitle) {
+  setExpressionResult(expressionResult, rootTitle) {
     if (this.removed) {
       throw new Error(
         "Unable to set an object preview on a removed ExtensionSidebar"
@@ -159,7 +159,7 @@ class ExtensionSidebar {
     }
 
     this.store.dispatch(
-      updateObjectValueGripView(this.id, objectValueGrip, rootTitle)
+      updateExpressionResultView(this.id, expressionResult, rootTitle)
     );
   }
 

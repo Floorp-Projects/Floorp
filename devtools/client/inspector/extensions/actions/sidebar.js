@@ -6,7 +6,7 @@
 
 const {
   EXTENSION_SIDEBAR_OBJECT_TREEVIEW_UPDATE,
-  EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE,
+  EXTENSION_SIDEBAR_EXPRESSION_RESULT_VIEW_UPDATE,
   EXTENSION_SIDEBAR_PAGE_UPDATE,
   EXTENSION_SIDEBAR_REMOVE,
 } = require("devtools/client/inspector/extensions/actions/index");
@@ -24,13 +24,13 @@ module.exports = {
   },
 
   /**
-   * Update the sidebar with an object actor preview.
+   * Update the sidebar with an expression result.
    */
-  updateObjectValueGripView(sidebarId, objectValueGrip, rootTitle) {
+  updateExpressionResultView(sidebarId, expressionResult, rootTitle) {
     return {
-      type: EXTENSION_SIDEBAR_OBJECT_GRIP_VIEW_UPDATE,
+      type: EXTENSION_SIDEBAR_EXPRESSION_RESULT_VIEW_UPDATE,
       sidebarId,
-      objectValueGrip,
+      expressionResult,
       rootTitle,
     };
   },

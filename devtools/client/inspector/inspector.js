@@ -9,7 +9,7 @@ const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { executeSoon } = require("devtools/shared/DevToolsUtils");
 const { Toolbox } = require("devtools/client/framework/toolbox");
-const Store = require("devtools/client/inspector/store");
+const createStore = require("devtools/client/inspector/store");
 const InspectorStyleChangeTracker = require("devtools/client/inspector/shared/style-change-tracker");
 
 // Use privileged promise in panel documents to prevent having them to freeze
@@ -64,12 +64,6 @@ loader.lazyRequireGetter(
   this,
   "saveScreenshot",
   "devtools/shared/screenshot/save"
-);
-loader.lazyRequireGetter(
-  this,
-  "ObjectFront",
-  "devtools/shared/fronts/object",
-  true
 );
 
 // This import to chrome code is forbidden according to the inspector specific
@@ -153,29 +147,7 @@ function Inspector(toolbox) {
   this.panelWin = window;
   this.panelWin.inspector = this;
   this.telemetry = toolbox.telemetry;
-  this.store = Store({
-    createObjectFront: object => {
-      return new ObjectFront(
-        this.inspectorFront.conn,
-        this.inspectorFront.targetFront,
-        this.inspectorFront,
-        object
-      );
-    },
-    releaseActor: actor => {
-      if (!actor) {
-        return;
-      }
-      const objFront = toolbox.target.client.getFrontByID(actor);
-      if (objFront) {
-        objFront.release();
-        return;
-      }
-
-      // In case there's no object front, use the client's release method.
-      toolbox.target.client.release(actor).catch(() => {});
-    },
-  });
+  this.store = createStore();
 
   // Map [panel id => panel instance]
   // Stores all the instances of sidebar panels like rule view, computed view, ...
