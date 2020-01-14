@@ -2957,12 +2957,15 @@ bool TextControlState::SetValueWithoutTextEditor(
     // event with "insertReplacementText" since web apps may want to know
     // the user operation which changes editor value with a built-in function
     // like autocomplete, password manager, session restore, etc.
+    // XXX Should we stop dispatching `input` event if the text control
+    //     element has already removed from the DOM tree by a `beforeinput`
+    //     event listener?
     if (aHandlingSetValue.GetSetValueFlags() & eSetValue_BySetUserInput) {
       MOZ_ASSERT(aHandlingSetValue.GetTextControlElement());
       MOZ_ASSERT(!aHandlingSetValue.GetSettingValue().IsVoid());
       DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
           MOZ_KnownLive(aHandlingSetValue.GetTextControlElement()),
-          EditorInputType::eInsertReplacementText, nullptr,
+          eEditorInput, EditorInputType::eInsertReplacementText, nullptr,
           nsContentUtils::InputEventOptions(
               aHandlingSetValue.GetSettingValue()));
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
