@@ -509,8 +509,6 @@ class QuotaManager final : public BackgroundThreadObject {
   nsresult
   MaybeUpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory();
 
-  nsresult MaybeRemoveOldDirectories();
-
   template <typename Helper>
   nsresult UpgradeStorage(const int32_t aOldVersion, const int32_t aNewVersion,
                           mozIStorageConnection* aConnection);
