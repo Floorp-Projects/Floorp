@@ -1415,6 +1415,11 @@ bool FileHandle::VerifyRequestParams(const FileRequestParams& aParams) const {
         return false;
       }
 
+      if (NS_WARN_IF(params.size() > UINT32_MAX)) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
       break;
     }
 
