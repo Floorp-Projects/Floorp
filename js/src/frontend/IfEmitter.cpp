@@ -30,7 +30,7 @@ bool BranchEmitterBase::emitThenInternal() {
   }
 
   // Emit a branch-if-false around the then part.
-  if (!bce_->emitJump(JSOP_IFEQ, &jumpAroundThen_)) {
+  if (!bce_->emitJump(JSOp::IfEq, &jumpAroundThen_)) {
     return false;
   }
 
@@ -69,7 +69,7 @@ bool BranchEmitterBase::emitElseInternal() {
   // Emit a jump from the end of our then part around the else part. The
   // patchJumpsToTarget call at the bottom of this function will fix up
   // the offset with jumpsAroundElse value.
-  if (!bce_->emitJump(JSOP_GOTO, &jumpsAroundElse_)) {
+  if (!bce_->emitJump(JSOp::Goto, &jumpsAroundElse_)) {
     return false;
   }
 

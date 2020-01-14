@@ -451,10 +451,10 @@ bool js::DirectEval(JSContext* cx, HandleValue v, MutableHandleValue vp) {
   ScriptFrameIter iter(cx);
   AbstractFramePtr caller = iter.abstractFramePtr();
 
-  MOZ_ASSERT(JSOp(*iter.pc()) == JSOP_EVAL ||
-             JSOp(*iter.pc()) == JSOP_STRICTEVAL ||
-             JSOp(*iter.pc()) == JSOP_SPREADEVAL ||
-             JSOp(*iter.pc()) == JSOP_STRICTSPREADEVAL);
+  MOZ_ASSERT(JSOp(*iter.pc()) == JSOp::Eval ||
+             JSOp(*iter.pc()) == JSOp::StrictEval ||
+             JSOp(*iter.pc()) == JSOp::SpreadEval ||
+             JSOp(*iter.pc()) == JSOp::StrictSpreadEval);
   MOZ_ASSERT(caller.realm() == caller.script()->realm());
 
   RootedObject envChain(cx, caller.environmentChain());
