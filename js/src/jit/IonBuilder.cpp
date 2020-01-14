@@ -2102,7 +2102,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       // SET* opcodes. Place a resume point afterwards to avoid capturing
       // the dead value in later snapshots, except in places where that
       // resume point is obviously unnecessary.
-      if (JSOp(pc[JSOP_POP_LENGTH]) == JSOP_POP) {
+      if (JSOp(pc[JSOpLength_Pop]) == JSOP_POP) {
         return Ok();
       }
       if (def->isConstant()) {
@@ -13047,7 +13047,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_checkaliasedlexical(
   MDefinition* let;
   MOZ_TRY_VAR(let, addLexicalCheck(getAliasedVar(ec)));
 
-  jsbytecode* nextPc = pc + JSOP_CHECKALIASEDLEXICAL_LENGTH;
+  jsbytecode* nextPc = pc + JSOpLength_CheckAliasedLexical;
   MOZ_ASSERT(JSOp(*nextPc) == JSOP_GETALIASEDVAR ||
              JSOp(*nextPc) == JSOP_SETALIASEDVAR ||
              JSOp(*nextPc) == JSOP_THROWSETALIASEDCONST);
