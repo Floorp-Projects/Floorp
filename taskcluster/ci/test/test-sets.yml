@@ -29,7 +29,6 @@ common-tests:
     - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-media
-    - mochitest-remote
     - mochitest-webgpu
     - reftest
     - reftest-no-accel
@@ -342,7 +341,6 @@ linux-common-tests:
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-devtools-chrome
-    - mochitest-remote
 
 # List of tests that are green on ubuntu1804 docker image.
 # See Bug 1602863 for information.
@@ -357,6 +355,7 @@ linux1804-tests:
     - mochitest-a11y
     - mochitest-gpu
     - mochitest-media
+    - mochitest-remote
     - mochitest-webgpu
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
@@ -388,6 +387,7 @@ linux1804-qr-tests:
     - xpcshell
 
 linux1804-ccov-tests:
+    - mochitest-remote
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
@@ -608,9 +608,6 @@ mochitest-headless:
 
 marionette-headless:
     - marionette-headless
-
-remote-tests:
-    - mochitest-remote
 
 android-hw-arm7-opt-unittests:
     - mochitest-media
