@@ -7,4 +7,3 @@ run_fragment('jsop.simple')
 
 assert_pretty('undefined', 'JSOP_UNDEFINED')
 assert_pretty('debugger', 'JSOP_DEBUGGER')
-assert_pretty('limit', 'JSOP_LIMIT')
