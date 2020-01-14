@@ -16,6 +16,8 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
+import mozilla.components.concept.engine.webextension.DisabledFlags
+import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
@@ -67,26 +69,11 @@ class AddonManagerTest {
     @Test
     fun `getAddons - queries addons from provider and updates installation state`() = runBlocking {
         // Prepare addons provider
-        val addon1 = Addon(
-            id = "ext1",
-            authors = emptyList(),
-            categories = emptyList(),
-            downloadUrl = "",
-            version = "",
-            createdAt = "",
-            updatedAt = ""
-        )
-        val addon2 = Addon(
-            id = "ext2",
-            authors = emptyList(),
-            categories = emptyList(),
-            downloadUrl = "",
-            version = "",
-            createdAt = "",
-            updatedAt = ""
-        )
+        val addon1 = Addon(id = "ext1")
+        val addon2 = Addon(id = "ext2")
+        val addon3 = Addon(id = "ext3")
         val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getAvailableAddons(anyBoolean())).thenReturn(listOf(addon1, addon2))
+        whenever(addonsProvider.getAvailableAddons(anyBoolean())).thenReturn(listOf(addon1, addon2, addon3))
 
         // Prepare engine
         val engine: Engine = mock()
@@ -106,7 +93,18 @@ class AddonManagerTest {
         WebExtensionSupport.initialize(engine, store)
         val extension: WebExtension = mock()
         whenever(extension.id).thenReturn("ext1")
+        whenever(extension.isEnabled()).thenReturn(true)
         WebExtensionSupport.installedExtensions["ext1"] = extension
+
+        // Add an extension which is disabled because it wasn't supported
+        val newlySupportedExtension: WebExtension = mock()
+        val metadata: Metadata = mock()
+        whenever(newlySupportedExtension.isEnabled()).thenReturn(false)
+        whenever(metadata.disabledFlags).thenReturn(DisabledFlags.select(DisabledFlags.APP_SUPPORT))
+        whenever(newlySupportedExtension.id).thenReturn("ext3")
+        whenever(newlySupportedExtension.url).thenReturn("site_url")
+        whenever(newlySupportedExtension.getMetadata()).thenReturn(metadata)
+        WebExtensionSupport.installedExtensions["ext3"] = newlySupportedExtension
 
         val unsupportedExtension: WebExtension = mock()
         whenever(unsupportedExtension.id).thenReturn("unsupported_ext")
@@ -115,17 +113,28 @@ class AddonManagerTest {
 
         // Verify add-ons were updated with state provided by the engine/store
         val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
-        assertEquals(3, addons.size)
+        assertEquals(4, addons.size)
         assertEquals("ext1", addons[0].id)
         assertNotNull(addons[0].installedState)
         assertEquals("ext1", addons[0].installedState!!.id)
+        assertTrue(addons[0].isEnabled())
+        assertFalse(addons[0].isDisabledAsUnsupported())
 
         assertEquals("ext2", addons[1].id)
         assertNull(addons[1].installedState)
 
+        // This extension should now be marked as supported but still be
+        // disabled as unsupported.
+        assertEquals("ext3", addons[2].id)
+        assertNotNull(addons[2].installedState)
+        assertEquals("ext3", addons[2].installedState!!.id)
+        assertTrue(addons[2].isSupported())
+        assertFalse(addons[2].isEnabled())
+        assertTrue(addons[2].isDisabledAsUnsupported())
+
         // Verify the unsupported add-on was included in addons
-        assertEquals("unsupported_ext", addons[2].id)
-        assertFalse(addons[2].installedState!!.supported)
+        assertEquals("unsupported_ext", addons[3].id)
+        assertFalse(addons[3].installedState!!.supported)
     }
 
     @Test(expected = AddonManagerException::class)
