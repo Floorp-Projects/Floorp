@@ -97,9 +97,10 @@ using mozilla::dom::ContentParent;
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
-using namespace mozilla::java;
 using namespace mozilla::widget;
 using namespace mozilla::ipc;
+
+using mozilla::java::GeckoSession;
 
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorSession.h"
@@ -362,16 +363,16 @@ class nsWindow::GeckoViewSupport final
  * it separate from GeckoViewSupport.
  */
 class nsWindow::NPZCSupport final
-    : public PanZoomController::NativeProvider::Natives<NPZCSupport> {
+    : public java::PanZoomController::NativeProvider::Natives<NPZCSupport> {
   using LockedWindowPtr = WindowPtr<NPZCSupport>::Locked;
 
   WindowPtr<NPZCSupport> mWindow;
-  PanZoomController::NativeProvider::WeakRef mNPZC;
+  java::PanZoomController::NativeProvider::WeakRef mNPZC;
   int mPreviousButtons;
 
   template <typename Lambda>
   class InputEvent final : public nsAppShell::Event {
-    PanZoomController::NativeProvider::GlobalRef mNPZC;
+    java::PanZoomController::NativeProvider::GlobalRef mNPZC;
     Lambda mLambda;
 
    public:
@@ -382,8 +383,8 @@ class nsWindow::NPZCSupport final
       MOZ_ASSERT(NS_IsMainThread());
 
       JNIEnv* const env = jni::GetGeckoThreadEnv();
-      NPZCSupport* npzcSupport =
-          GetNative(PanZoomController::NativeProvider::LocalRef(env, mNPZC));
+      NPZCSupport* npzcSupport = GetNative(
+          java::PanZoomController::NativeProvider::LocalRef(env, mNPZC));
 
       if (!npzcSupport || !npzcSupport->mWindow) {
         // We already shut down.
@@ -407,10 +408,10 @@ class nsWindow::NPZCSupport final
   }
 
  public:
-  typedef PanZoomController::NativeProvider::Natives<NPZCSupport> Base;
+  typedef java::PanZoomController::NativeProvider::Natives<NPZCSupport> Base;
 
   NPZCSupport(NativePtr<NPZCSupport>* aPtr, nsWindow* aWindow,
-              const PanZoomController::NativeProvider::LocalRef& aNPZC)
+              const java::PanZoomController::NativeProvider::LocalRef& aNPZC)
       : mWindow(aPtr, aWindow), mNPZC(aNPZC), mPreviousButtons(0) {
     MOZ_ASSERT(mWindow);
   }
@@ -455,7 +456,7 @@ class nsWindow::NPZCSupport final
     // the race condition.
 
     if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
-      auto npzc = PanZoomController::NativeProvider::GlobalRef(mNPZC);
+      auto npzc = java::PanZoomController::NativeProvider::GlobalRef(mNPZC);
       if (!npzc) {
         return;
       }
@@ -468,7 +469,7 @@ class nsWindow::NPZCSupport final
     }
   }
 
-  const PanZoomController::NativeProvider::Ref& GetJavaNPZC() const {
+  const java::PanZoomController::NativeProvider::Ref& GetJavaNPZC() const {
     return mNPZC;
   }
 
@@ -646,7 +647,7 @@ class nsWindow::NPZCSupport final
   }
 
   int32_t HandleMotionEvent(
-      const PanZoomController::NativeProvider::LocalRef& aInstance,
+      const java::PanZoomController::NativeProvider::LocalRef& aInstance,
       int32_t aAction, int32_t aActionIndex, int64_t aTime, int32_t aMetaState,
       float aScreenX, float aScreenY, jni::IntArray::Param aPointerId,
       jni::FloatArray::Param aX, jni::FloatArray::Param aY,
@@ -670,23 +671,23 @@ class nsWindow::NPZCSupport final
     size_t endIndex = pointerId.Length();
 
     switch (aAction) {
-      case sdk::MotionEvent::ACTION_DOWN:
-      case sdk::MotionEvent::ACTION_POINTER_DOWN:
+      case java::sdk::MotionEvent::ACTION_DOWN:
+      case java::sdk::MotionEvent::ACTION_POINTER_DOWN:
         type = MultiTouchInput::MULTITOUCH_START;
         break;
-      case sdk::MotionEvent::ACTION_MOVE:
+      case java::sdk::MotionEvent::ACTION_MOVE:
         type = MultiTouchInput::MULTITOUCH_MOVE;
         break;
-      case sdk::MotionEvent::ACTION_UP:
-      case sdk::MotionEvent::ACTION_POINTER_UP:
+      case java::sdk::MotionEvent::ACTION_UP:
+      case java::sdk::MotionEvent::ACTION_POINTER_UP:
         // for pointer-up events we only want the data from
         // the one pointer that went up
         type = MultiTouchInput::MULTITOUCH_END;
         startIndex = aActionIndex;
         endIndex = aActionIndex + 1;
         break;
-      case sdk::MotionEvent::ACTION_OUTSIDE:
-      case sdk::MotionEvent::ACTION_CANCEL:
+      case java::sdk::MotionEvent::ACTION_OUTSIDE:
+      case java::sdk::MotionEvent::ACTION_CANCEL:
         type = MultiTouchInput::MULTITOUCH_CANCEL;
         break;
       default:
@@ -954,14 +955,16 @@ class nsWindow::LayerViewSupport final
       mWindow->mNPZCSupport.Detach(mWindow->mNPZCSupport->GetJavaNPZC());
     }
 
-    auto npzc = PanZoomController::NativeProvider::LocalRef(
+    auto npzc = java::PanZoomController::NativeProvider::LocalRef(
         jni::GetGeckoThreadEnv(),
-        PanZoomController::NativeProvider::Ref::From(aNPZC));
+        java::PanZoomController::NativeProvider::Ref::From(aNPZC));
     mWindow->mNPZCSupport.Attach(npzc, mWindow, npzc);
 
-    DispatchToUiThread("LayerViewSupport::AttachNPZC",
-                       [npzc = PanZoomController::NativeProvider::GlobalRef(
-                            npzc)] { npzc->SetAttached(true); });
+    DispatchToUiThread(
+        "LayerViewSupport::AttachNPZC",
+        [npzc = java::PanZoomController::NativeProvider::GlobalRef(npzc)] {
+          npzc->SetAttached(true);
+        });
   }
 
   void OnBoundsChanged(int32_t aLeft, int32_t aTop, int32_t aWidth,
@@ -1769,7 +1772,7 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
 
   switch (aMode) {
     case nsSizeMode_Minimized:
-      GeckoAppShell::MoveTaskToBack();
+      java::GeckoAppShell::MoveTaskToBack();
       break;
     case nsSizeMode_Fullscreen:
       MakeFullScreen(true);
@@ -2160,14 +2163,14 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
     case TOUCH_CONTACT:
       // This could be a ACTION_DOWN or ACTION_MOVE depending on the
       // existing state; it is mapped to the right thing in Java.
-      eventType = sdk::MotionEvent::ACTION_POINTER_DOWN;
+      eventType = java::sdk::MotionEvent::ACTION_POINTER_DOWN;
       break;
     case TOUCH_REMOVE:
       // This could be turned into a ACTION_UP in Java
-      eventType = sdk::MotionEvent::ACTION_POINTER_UP;
+      eventType = java::sdk::MotionEvent::ACTION_POINTER_UP;
       break;
     case TOUCH_CANCEL:
-      eventType = sdk::MotionEvent::ACTION_CANCEL;
+      eventType = java::sdk::MotionEvent::ACTION_CANCEL;
       break;
     case TOUCH_HOVER:  // not supported for now
     default:
@@ -2182,8 +2185,8 @@ nsresult nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
 
   DispatchToUiThread(
       "nsWindow::SynthesizeNativeTouchPoint",
-      [npzc = PanZoomController::NativeProvider::GlobalRef(npzc), aPointerId,
-       eventType, aPoint, aPointerPressure, aPointerOrientation] {
+      [npzc = java::PanZoomController::NativeProvider::GlobalRef(npzc),
+       aPointerId, eventType, aPoint, aPointerPressure, aPointerOrientation] {
         npzc->SynthesizeNativeTouchPoint(aPointerId, eventType, aPoint.x,
                                          aPoint.y, aPointerPressure,
                                          aPointerOrientation);
@@ -2203,12 +2206,12 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
   aPoint.x -= bounds.x;
   aPoint.y -= bounds.y;
 
-  DispatchToUiThread("nsWindow::SynthesizeNativeMouseEvent",
-                     [npzc = PanZoomController::NativeProvider::GlobalRef(npzc),
-                      aNativeMessage, aPoint] {
-                       npzc->SynthesizeNativeMouseEvent(aNativeMessage,
-                                                        aPoint.x, aPoint.y);
-                     });
+  DispatchToUiThread(
+      "nsWindow::SynthesizeNativeMouseEvent",
+      [npzc = java::PanZoomController::NativeProvider::GlobalRef(npzc),
+       aNativeMessage, aPoint] {
+        npzc->SynthesizeNativeMouseEvent(aNativeMessage, aPoint.x, aPoint.y);
+      });
   return NS_OK;
 }
 
@@ -2224,9 +2227,10 @@ nsresult nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
 
   DispatchToUiThread(
       "nsWindow::SynthesizeNativeMouseMove",
-      [npzc = PanZoomController::NativeProvider::GlobalRef(npzc), aPoint] {
-        npzc->SynthesizeNativeMouseEvent(sdk::MotionEvent::ACTION_HOVER_MOVE,
-                                         aPoint.x, aPoint.y);
+      [npzc = java::PanZoomController::NativeProvider::GlobalRef(npzc),
+       aPoint] {
+        npzc->SynthesizeNativeMouseEvent(
+            java::sdk::MotionEvent::ACTION_HOVER_MOVE, aPoint.x, aPoint.y);
       });
   return NS_OK;
 }
@@ -2256,7 +2260,7 @@ nsWindow::CreateRootContentController() {
 }
 
 uint32_t nsWindow::GetMaxTouchPoints() const {
-  return GeckoAppShell::GetMaxTouchPoints();
+  return java::GeckoAppShell::GetMaxTouchPoints();
 }
 
 void nsWindow::UpdateZoomConstraints(
