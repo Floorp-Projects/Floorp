@@ -67,11 +67,9 @@ SimpleTest.waitForFocus(async () => {
     beforeInputEvents = [];
     inputEvents = [];
     synthesizeKey("a");
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
        `Only one "beforeinput" event should be fired when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "insertText", "a", `when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    }
+    checkInputEvent(beforeInputEvents[0], "insertText", "a", `when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
     checkInputEvent(inputEvents[0], "insertText", "a", `when inserting "a" with key on <${editableElement.tagName.toLowerCase()}> element`);
@@ -79,11 +77,9 @@ SimpleTest.waitForFocus(async () => {
     beforeInputEvents = [];
     inputEvents = [];
     synthesizeKey("c");
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
        `Only one "beforeinput" event should be fired when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "insertText", "c", `when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    }
+    checkInputEvent(beforeInputEvents[0], "insertText", "c", `when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
     checkInputEvent(inputEvents[0], "insertText", "c", `when inserting "c" with key on <${editableElement.tagName.toLowerCase()}> element`);
@@ -99,11 +95,9 @@ SimpleTest.waitForFocus(async () => {
     beforeInputEvents = [];
     inputEvents = [];
     synthesizeKey("b");
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
        `Only one "beforeinput" event should be fired when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "insertText", "b", `when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
-    }
+    checkInputEvent(beforeInputEvents[0], "insertText", "b", `when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
     checkInputEvent(inputEvents[0], "insertText", "b", `when inserting "b" with key on <${editableElement.tagName.toLowerCase()}> element`);
@@ -132,11 +126,9 @@ SimpleTest.waitForFocus(async () => {
     beforeInputEvents = [];
     inputEvents = [];
     synthesizeKey("a");
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
        `Only one "beforeinput" event should be fired when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "insertText", "a", `when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
-    }
+    checkInputEvent(beforeInputEvents[0], "insertText", "a", `when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
     checkInputEvent(inputEvents[0], "insertText", "a", `when inserting "a" with key again on <${editableElement.tagName.toLowerCase()}> element`);
@@ -146,11 +138,9 @@ SimpleTest.waitForFocus(async () => {
     synthesizeKey("z", { accelKey: true });
     is(editableElement.value, "def",
        editableElement.tagName + ": undo should work after setting value");
-    todo_is(beforeInputEvents.length, 1,
+    is(beforeInputEvents.length, 1,
        `Only one "beforeinput" event should be fired when undoing on <${editableElement.tagName.toLowerCase()}> element`);
-    if (beforeInputEvents.length > 0) {
-      checkInputEvent(beforeInputEvents[0], "historyUndo", null, `when undoing on <${editableElement.tagName.toLowerCase()}> element`);
-    }
+    checkInputEvent(beforeInputEvents[0], "historyUndo", null, `when undoing on <${editableElement.tagName.toLowerCase()}> element`);
     is(inputEvents.length, 1,
        `Only one "input" event should be fired when undoing on <${editableElement.tagName.toLowerCase()}> element`);
     checkInputEvent(inputEvents[0], "historyUndo", null, `when undoing on <${editableElement.tagName.toLowerCase()}> element`);

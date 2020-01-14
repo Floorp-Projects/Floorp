@@ -48,7 +48,6 @@ function checkElementFilled(element, expectedvalue) {
     new Promise(resolve => {
       let beforeInputFired = false;
       let oldValue = element.value;
-      let hadEditor = SpecialPowers.wrap(element).hasEditor;
       element.addEventListener("beforeinput", function onBeforeInput(event) {
         ok(true, "Checking " + element.name + " field fires beforeinput event");
         beforeInputFired = true;
@@ -70,11 +69,7 @@ function checkElementFilled(element, expectedvalue) {
       element.addEventListener("input", function onInput(event) {
         ok(true, "Checking " + element.name + " field fires input event");
         if (element.tagName == "INPUT" && element.type == "text") {
-          if (hadEditor) {
-            todo(beforeInputFired, `"beforeinput" event shoud've been fired on ${element.name} before "input" event`);
-          } else {
-            ok(beforeInputFired, `"beforeinput" event shoud've been fired on ${element.name} before "input" event`);
-          }
+          ok(beforeInputFired, `"beforeinput" event shoud've been fired on ${element.name} before "input" event`);
           ok(event instanceof InputEvent,
              `"input" event should be dispatched with InputEvent interface on ${element.name}`);
           is(event.inputType, "insertReplacementText",

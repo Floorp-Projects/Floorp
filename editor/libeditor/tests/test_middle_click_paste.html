@@ -118,11 +118,9 @@ async function doTextareaTests(aTextarea) {
   is(aTextarea.value,
      "> abc\n> def\n> ghi\n\n",
      "Pasted each line should start with \"> \"");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired #1');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\nghi", null, "#1");
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\nghi", null, "#1");
   is(inputEvents.length, 1,
      'One "input" event should be fired #1');
   checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\nghi", null, "#1");
@@ -136,11 +134,9 @@ async function doTextareaTests(aTextarea) {
   is(aTextarea.value,
      ">> abc\n>> def\n>> ghi\n\n",
      "Pasted each line should be start with \">> \" when already quoted one level");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired #2');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "> abc\n> def\n> ghi", null, "#2");
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "> abc\n> def\n> ghi", null, "#2");
   is(inputEvents.length, 1,
      'One "input" event should be fired #2');
   checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", "> abc\n> def\n> ghi", null, "#2");
@@ -154,11 +150,9 @@ async function doTextareaTests(aTextarea) {
   is(aTextarea.value,
      ">> abc\n>> def\n> \n> ghi\n\n",
      "Pasted each line should be start with \">> \" when already quoted one level");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired #3');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "> abc\n> def\n\nghi", null, "#3");
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "> abc\n> def\n\nghi", null, "#3");
   is(inputEvents.length, 1,
      'One "input" event should be fired #3');
   checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", "> abc\n> def\n\nghi", null, "#3");
@@ -172,11 +166,9 @@ async function doTextareaTests(aTextarea) {
   is(aTextarea.value,
      "> abc\n> def\n> \n",
      "If pasted text ends with \"\\n\", only the last line should not started with \">\"");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired #4');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\n\n", null, "#4");
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\n\n", null, "#4");
   is(inputEvents.length, 1,
      'One "input" event should be fired #4');
   checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\n\n", null, "#4");
@@ -202,14 +194,12 @@ async function doTextareaTests(aTextarea) {
   beforeInputEvents = [];
   inputEvents = [];
   synthesizeMouseAtCenter(aTextarea, {button: 1, ctrlKey: true});
-  todo_is(aTextarea.value, "",
+  is(aTextarea.value, "",
      'Pasting as quote should have been canceled if "beforeinput" event was canceled');
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired #5');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\n\n", null, "#6");
-  }
-  todo_is(inputEvents.length, 0,
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", "abc\ndef\n\n", null, "#6");
+  is(inputEvents.length, 0,
      'No "input" event should be fired since "beforeinput" was canceled #6');
   aTextarea.value = "";
 
@@ -229,11 +219,9 @@ async function doTextareaTests(aTextarea) {
      "If 'click' event is consumed at capturing phase of the <body>, paste should not be canceled");
   is(pasteEventCount, 1,
      "If 'click' event is consumed at capturing phase of the <body>, 'paste' event should still be fired");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      '"beforeinput" event should be fired when the "click" event is canceled');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, 'when the "click" event is canceled');
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, 'when the "click" event is canceled');
   is(inputEvents.length, 1,
      '"input" event should be fired when the "click" event is canceled');
   checkInputEvent(inputEvents[0], "insertFromPaste", "abc", null, 'when the "click" event is canceled');
@@ -250,11 +238,9 @@ async function doTextareaTests(aTextarea) {
      "Even if 'mouseup' event is consumed, paste should be done");
   is(pasteEventCount, 1,
      "Even if 'mouseup' event is consumed, 'paste' event should be fired once");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired even if "mouseup" event is canceled');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, 'even if "mouseup" event is canceled');
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, 'even if "mouseup" event is canceled');
   is(inputEvents.length, 1,
      'One "input" event should be fired even if "mouseup" event is canceled');
   checkInputEvent(inputEvents[0], "insertFromPaste", "abc", null, 'even if "mouseup" event is canceled');
@@ -271,11 +257,9 @@ async function doTextareaTests(aTextarea) {
      "If 'click' event handler is added to the <textarea>, paste should not be canceled");
   is(pasteEventCount, 1,
      "If 'click' event handler is added to the <textarea>, 'paste' event should be fired once");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired even if "click" event is canceled in bubbling phase');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, 'even if "click" event is canceled in bubbling phase');
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, 'even if "click" event is canceled in bubbling phase');
   is(inputEvents.length, 1,
      'One "input" event should be fired even if "click" event is canceled in bubbling phase');
   checkInputEvent(inputEvents[0], "insertFromPaste", "abc", null, 'even if "click" event is canceled in bubbling phase');
@@ -322,16 +306,14 @@ async function doTextareaTests(aTextarea) {
   beforeInputEvents = [];
   inputEvents = [];
   synthesizeMouseAtCenter(aTextarea, {button: 1});
-  todo_is(aTextarea.value, "",
+  is(aTextarea.value, "",
      "If 'beforeinput' event is consumed, paste should be canceled");
   is(pasteEventCount, 1,
      'One "paste" event should be fired before "beforeinput" event is consumed');
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired for making it possible to consume');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, 'when "beforeinput" is canceled in bubbling phase');
-  }
-  todo_is(inputEvents.length, 0,
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", "abc", null, 'when "beforeinput" is canceled in bubbling phase');
+  is(inputEvents.length, 0,
      'No "input" event should be fired if "paste" event is canceled');
   aTextarea.value = "";
 
@@ -360,12 +342,10 @@ async function doContenteditableTests(aEditableDiv) {
   is(aEditableDiv.innerHTML,
      "<blockquote type=\"cite\">abc<br>def<br>ghi</blockquote>",
      "Pasted plaintext should be in <blockquote> element and each linebreaker should be <br> element");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired on the editing host');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", null,
-                    [{type: "text/plain", data: "abc\ndef\nghi"}], "(contenteditable)");
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", null,
+                  [{type: "text/plain", data: "abc\ndef\nghi"}], "(contenteditable)");
   is(inputEvents.length, 1,
      'One "input" event should be fired on the editing host');
   checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", null,
@@ -388,12 +368,10 @@ async function doContenteditableTests(aEditableDiv) {
      "If 'click' event is consumed at capturing phase of the window, paste should not be canceled");
   is(pasteEventCount, 1,
      "If 'click' event is consumed at capturing phase of the window, 'paste' event should be fired once");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      '"beforeinput" event should still be fired when the "click" event is canceled (contenteditable)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPaste", null,
-                    [{type: "text/plain", data: "abc"}], 'when the "click" event is canceled (contenteditable)');
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", null,
+                  [{type: "text/plain", data: "abc"}], 'when the "click" event is canceled (contenteditable)');
   is(inputEvents.length, 1,
      '"input" event should still be fired when the "click" event is canceled (contenteditable)');
   checkInputEvent(inputEvents[0], "insertFromPaste", null,
@@ -411,12 +389,10 @@ async function doContenteditableTests(aEditableDiv) {
      "Even if 'mouseup' event is consumed, paste should be done");
   is(pasteEventCount, 1,
      "Even if 'mouseup' event is consumed, 'paste' event should be fired once");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired even if "mouseup" event is canceled (contenteditable)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}],
-                    'even if "mouseup" event is canceled (contenteditable)');
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}],
+                  'even if "mouseup" event is canceled (contenteditable)');
   is(inputEvents.length, 1,
      'One "input" event should be fired even if "mouseup" event is canceled (contenteditable)');
   checkInputEvent(inputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}],
@@ -434,12 +410,10 @@ async function doContenteditableTests(aEditableDiv) {
      "Even if 'click' event handler is added to the editing host, paste should not be canceled");
   is(pasteEventCount, 1,
      "Even if 'click' event handler is added to the editing host, 'paste' event should be fired");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired even if "click" event is canceled in bubbling phase (contenteditable)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}],
-                    'even if "click" event is canceled in bubbling phase (contenteditable)');
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}],
+                  'even if "click" event is canceled in bubbling phase (contenteditable)');
   is(inputEvents.length, 1,
      'One "input" event should be fired even if "click" event is canceled in bubbling phase (contenteditable)');
   checkInputEvent(inputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}],
@@ -487,17 +461,15 @@ async function doContenteditableTests(aEditableDiv) {
   beforeInputEvents = [];
   inputEvents = [];
   synthesizeMouseAtCenter(aEditableDiv, {button: 1});
-  todo_is(aEditableDiv.innerHTML, "",
+  is(aEditableDiv.innerHTML, "",
      "If 'paste' event is consumed, paste should be canceled");
   is(pasteEventCount, 1,
      'One "paste" event should be fired before "beforeinput" event');
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired for making it possible to consume (contenteditable)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}],
-                    'when "beforeinput" will be canceled (contenteditable)');
-  }
-  todo_is(inputEvents.length, 0,
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: "abc"}],
+                  'when "beforeinput" will be canceled (contenteditable)');
+  is(inputEvents.length, 0,
      'No "input" event should be fired if "beforeinput" event is canceled (contenteditable)');
   aEditableDiv.innerHTML = "";
 
@@ -513,12 +485,10 @@ async function doContenteditableTests(aEditableDiv) {
      "Even if clipboard event is disabled, paste should be done");
   is(pasteEventCount, 0,
      "If clipboard event is disabled, 'paste' event shouldn't be fired once");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired even if clipboard event is disabled (contenteditable)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: ""}],
-                    "when clipboard event is disabled (contenteditable)");
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: ""}],
+                  "when clipboard event is disabled (contenteditable)");
   is(inputEvents.length, 1,
      'One "input" event should be fired even if clipboard event is disabled (contenteditable)');
   checkInputEvent(inputEvents[0], "insertFromPaste", null, [{type: "text/plain", data: ""}],
@@ -553,14 +523,12 @@ async function doContenteditableTests(aEditableDiv) {
   // The values are from widget/windows/nsDataObj.cpp.
   const kHTMLPrefix = (navigator.platform.includes("Win")) ? "<html><body>\n<!--StartFragment-->" : "";
   const kHTMLPostfix = (navigator.platform.includes("Win")) ? "<!--EndFragment-->\n</body>\n</html>" : "";
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired when pasting HTML');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", null,
-                    [{type: "text/html",
-                      data: `${kHTMLPrefix}<p>abc</p><p>def</p><p>ghi</p>${kHTMLPostfix}`}],
-                    "when pasting HTML");
-  }
+  checkInputEvent(beforeInputEvents[0], "insertFromPasteAsQuotation", null,
+                  [{type: "text/html",
+                    data: `${kHTMLPrefix}<p>abc</p><p>def</p><p>ghi</p>${kHTMLPostfix}`}],
+                  "when pasting HTML");
   is(inputEvents.length, 1,
      'One "input" event should be fired when pasting HTML');
   checkInputEvent(inputEvents[0], "insertFromPasteAsQuotation", null,

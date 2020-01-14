@@ -486,7 +486,7 @@ function runTest() {
       synthesizeKey("KEY_ArrowDown");
       checkForm("");
       synthesizeKey("KEY_Enter");
-      todo(beforeInputFired, `${testNum} "beforeinput" event should've been fired`);
+      ok(beforeInputFired, `${testNum} "beforeinput" event should've been fired`);
       ok(inputFired, `${testNum} "input" event should've been fired`);
 
       expectPopup();
@@ -504,8 +504,8 @@ function runTest() {
       synthesizeKey("KEY_ArrowDown");
       checkForm("");
       synthesizeKey("KEY_Enter");
-      todo(!inputFired, `${testNum} "input" event should not have been fired since "beforeinput" was canceled`);
-      checkForm("Google");  // Fix this after implementing "beforeinput"
+      ok(!inputFired, `${testNum} "input" event should not have been fired since "beforeinput" was canceled`);
+      checkForm("");
 
       input.blur();
       SimpleTest.finish();
