@@ -81,5 +81,14 @@
   font-size: var(--caption-20-font-size);
   font-weight: var(--caption-20-font-weight);
   line-height: 1.5;
-  margin-inline-start: calc(var(--base-unit) * 3);
+}
+
+/* The subname is always LTR under the Tabs section,
+   so check its parent's direction to set the correct margin. */
+.debug-target-item:dir(ltr) > .debug-target-item__subname {
+  margin-left: calc(var(--base-unit) * 3);
+}
+
+.debug-target-item:dir(rtl) > .debug-target-item__subname {
+  margin-right: calc(var(--base-unit) * 3);
 }

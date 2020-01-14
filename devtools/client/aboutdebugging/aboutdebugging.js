@@ -69,6 +69,9 @@ const AboutDebugging = {
       return;
     }
 
+    const direction = Services.locale.isAppLocaleRTL ? "rtl" : "ltr";
+    document.documentElement.setAttribute("dir", direction);
+
     this.onAdbAddonUpdated = this.onAdbAddonUpdated.bind(this);
     this.onAdbProcessReady = this.onAdbProcessReady.bind(this);
     this.onNetworkLocationsUpdated = this.onNetworkLocationsUpdated.bind(this);

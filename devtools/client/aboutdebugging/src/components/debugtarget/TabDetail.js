@@ -20,7 +20,10 @@ class TabDetail extends PureComponent {
 
   render() {
     return dom.div(
-      { className: "debug-target-item__subname ellipsis-text" },
+      {
+        className: "debug-target-item__subname ellipsis-text",
+        dir: "ltr",
+      },
       this.props.target.details.url
     );
   }
