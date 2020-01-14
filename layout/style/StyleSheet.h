@@ -75,6 +75,10 @@ enum class StyleSheetState : uint8_t {
   // Used to control whether devtools shows the rule in its authored form or
   // not.
   ModifiedRulesForDevtools = 1 << 4,
+  // Whether modifications to the sheet are currently disallowed.
+  // This flag is set during the async Replace() function to ensure
+  // that the sheet is not modified until the promise is resolved.
+  ModificationDisallowed = 1 << 5,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StyleSheetState)
@@ -364,7 +368,10 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
                   const dom::Optional<uint32_t>& aIndex,
                   nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv);
   already_AddRefed<dom::Promise> Replace(const nsAString& aText, ErrorResult&);
-  void ReplaceSync(const nsAString& aText, ErrorResult&);
+  void ReplaceSync(const nsACString& aText, ErrorResult&);
+  bool ModificationDisallowed() const {
+    return bool(mState & State::ModificationDisallowed);
+  }
 
   // WebIDL miscellaneous bits
   inline dom::ParentObject GetParentObject() const;
