@@ -111,25 +111,14 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
       Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH,
       this._description + ", " + aTest.description + ": status"
     );
-    if (aTest.inputEvents.length) {
-      this._todo_is(
-        aBeforeInputEvents.length,
-        aTest.inputEvents.length,
-        this._description +
-          ", " +
-          aTest.description +
-          ": number of beforeinput events wrong"
-      );
-    } else {
-      this._is(
-        aBeforeInputEvents.length,
-        aTest.inputEvents.length,
-        this._description +
-          ", " +
-          aTest.description +
-          ": number of beforeinput events wrong"
-      );
-    }
+    this._is(
+      aBeforeInputEvents.length,
+      aTest.inputEvents.length,
+      this._description +
+        ", " +
+        aTest.description +
+        ": number of beforeinput events wrong"
+    );
     this._is(
       aInputEvents.length,
       aTest.inputEvents.length,

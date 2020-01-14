@@ -3,6 +3,7 @@
 <head>
   <title>Test for MozEditableElement.setUserInput()</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" href="/tests/SimpleTest/test.css">
 </head>
 <body>
@@ -148,7 +149,7 @@ SimpleTest.waitForFocus(async () => {
       if (!test.result.fireBeforeInputEvent) {
         is(beforeInputEvents.length, 0,
            `No "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-      } else if (test.element === "textarea" || test.type === "number") {
+      } else if (test.type === "number") {
         todo_is(beforeInputEvents.length, 1,
            `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
       } else {
@@ -233,8 +234,11 @@ SimpleTest.waitForFocus(async () => {
       if (!test.result.fireBeforeInputEvent) {
         is(beforeInputEvents.length, 0,
            `No "beforeinput" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-      } else {
+      } else if (test.type === "number") {
         todo_is(beforeInputEvents.length, 1,
+           `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.after}") is called before ${tag} gets focus`);
+      } else {
+        is(beforeInputEvents.length, 1,
            `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
       }
       if (!test.result.fireInputEvent) {
@@ -376,6 +380,87 @@ SimpleTest.waitForFocus(async () => {
     target.removeEventListener("input", onInput);
   }
   testValidationMessage("email", "f", "foo@example.com");
+
+  function testEditorValueAtEachEvent(aType) {
+    let tag = aType === "textarea" ? "<textarea>" : `<input type="${aType}">`
+    let closeTag = aType === "textarea" ? "</textarea>" : "";
+    content.innerHTML = `${tag}${closeTag}`;
+    content.scrollTop; // Flush pending layout.
+    let target = content.firstChild;
+    target.value = "Old Value";
+    let description = `Setting new value of ${tag} before setting focus: `;
+    let onBeforeInput = (aEvent) => {
+      is(target.value, "Old Value",
+         `${description}The value should not have been modified at "beforeinput" event yet (inputType: "${aEvent.inputType}", data: "${aEvent.data}")`);
+    };
+    let onInput = (aEvent) => {
+      is(target.value, "New Value",
+         `${description}The value should have been modified at "input" event (inputType: "${aEvent.inputType}", data: "${aEvent.data}"`);
+    };
+    target.addEventListener("beforeinput", onBeforeInput);
+    target.addEventListener("input", onInput);
+    SpecialPowers.wrap(target).setUserInput("New Value");
+
+    description = `Setting new value of ${tag} after setting focus: `;
+    target.value = "Old Value";
+    target.focus();
+    SpecialPowers.wrap(target).setUserInput("New Value");
+
+    target.removeEventListener("beforeinput", onBeforeInput);
+    target.removeEventListener("input", onInput);
+
+    // FYI: This is not realistic situation because we should do nothing
+    //      while user composing IME.
+    // TODO: TextControlState should stop returning setting value as the value
+    //       while committing composition.
+    description = `Setting new value of ${tag} during composition: `;
+    target.value = "";
+    target.focus();
+    synthesizeCompositionChange({
+      composition: {
+        string: "composition string",
+        clauses: [{length: 18, attr: COMPOSITION_ATTR_RAW_CLAUSE}],
+      },
+      caret: {start: 18, length: 0},
+    });
+    let onCompositionUpdate = (aEvent) => {
+      todo_is(target.value, "composition string",
+         `${description}The value should not have been modified at "compositionupdate" event yet (data: "${aEvent.data}")`);
+    };
+    let onCompositionEnd = (aEvent) => {
+      todo_is(target.value, "composition string",
+         `${description}The value should not have been modified at "compositionupdate" event yet (data: "${aEvent.data}")`);
+    };
+    onBeforeInput = (aEvent) => {
+      if (aEvent.inputType === "insertCompositionText") {
+        todo_is(target.value, "composition string",
+           `${description}The value should not have been modified at "beforeinput" event yet (inputType: "${aEvent.inputType}", data: "${aEvent.data}")`);
+      } else {
+        is(target.value, "composition string",
+           `${description}The value should not have been modified at "beforeinput" event yet (inputType: "${aEvent.inputType}", data: "${aEvent.data}")`);
+      }
+    };
+    onInput = (aEvent) => {
+      if (aEvent.inputType === "insertCompositionText") {
+        todo_is(target.value, "composition string",
+           `${description}The value should not have been modified at "input" event yet (inputType: "${aEvent.inputType}", data: "${aEvent.data}")`);
+      } else {
+        is(target.value, "New Value",
+           `${description}The value should have been modified at "input" event (inputType: "${aEvent.inputType}", data: "${aEvent.data}"`);
+      }
+    };
+    target.addEventListener("compositionupdate", onCompositionUpdate);
+    target.addEventListener("compositionend", onCompositionEnd);
+    target.addEventListener("beforeinput", onBeforeInput);
+    target.addEventListener("input", onInput);
+    SpecialPowers.wrap(target).setUserInput("New Value");
+    target.removeEventListener("compositionupdate", onCompositionUpdate);
+    target.removeEventListener("compositionend", onCompositionEnd);
+    target.removeEventListener("beforeinput", onBeforeInput);
+    target.removeEventListener("input", onInput);
+  }
+  testEditorValueAtEachEvent("text");
+  testEditorValueAtEachEvent("textarea");
 
   SimpleTest.finish();
 });

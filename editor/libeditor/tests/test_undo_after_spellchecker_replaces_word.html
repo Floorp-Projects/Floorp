@@ -86,16 +86,14 @@ SimpleTest.waitForFocus(async () => {
           inlineSpellChecker.replaceWord(aRootElement.firstChild, 5, "aux");
           is(getValue(), "abc aux abc",
              `${aDescription}'abx' should be replaced with 'aux'`);
-          todo_is(beforeInputEvents.length, 1,
+          is(beforeInputEvents.length, 1,
              `${aDescription}Only one "beforeinput" event should be fired when replacing a word with spellchecker`);
-          if (beforeInputEvents.length > 0) {
-            if (aElement === textarea) {
-              checkInputEvent(beforeInputEvents[0], "insertReplacementText", "aux", null,
-                              "when replacing a word with spellchecker");
-            } else {
-              checkInputEvent(beforeInputEvents[0], "insertReplacementText", null, [{type: "text/plain", data: "aux"}],
-                              "when replacing a word with spellchecker");
-            }
+          if (aElement === textarea) {
+            checkInputEvent(beforeInputEvents[0], "insertReplacementText", "aux", null,
+                            "when replacing a word with spellchecker");
+          } else {
+            checkInputEvent(beforeInputEvents[0], "insertReplacementText", null, [{type: "text/plain", data: "aux"}],
+                            "when replacing a word with spellchecker");
           }
           is(inputEvents.length, 1,
              `${aDescription}Only one "input" event should be fired when replacing a word with spellchecker`);
@@ -112,12 +110,10 @@ SimpleTest.waitForFocus(async () => {
           synthesizeKey("z", { accelKey: true });
           is(getValue(), "abc abx abc",
              `${aDescription}'abx' should be restored by undo`);
-          todo_is(beforeInputEvents.length, 1,
+          is(beforeInputEvents.length, 1,
              `${aDescription}Only one "beforeinput" event should be fired when undoing the replacing word`);
-          if (beforeInputEvents.length > 0) {
-            checkInputEvent(beforeInputEvents[0], "historyUndo", null, null,
-                            "when undoing the replacing word");
-          }
+          checkInputEvent(beforeInputEvents[0], "historyUndo", null, null,
+                          "when undoing the replacing word");
           is(inputEvents.length, 1,
              `${aDescription}Only one "input" event should be fired when undoing the replacing word`);
           checkInputEvent(inputEvents[0], "historyUndo", null, null,
@@ -128,12 +124,10 @@ SimpleTest.waitForFocus(async () => {
           synthesizeKey("z", { accelKey: true, shiftKey: true });
           is(getValue(), "abc aux abc",
              `${aDescription}'aux' should be restored by redo`);
-          todo_is(beforeInputEvents.length, 1,
+          is(beforeInputEvents.length, 1,
              `${aDescription}Only one "beforeinput" event should be fired when redoing the replacing word`);
-          if (beforeInputEvents.length > 0) {
-            checkInputEvent(beforeInputEvents[0], "historyRedo", null, null,
-                            "when redoing the replacing word");
-          }
+          checkInputEvent(beforeInputEvents[0], "historyRedo", null, null,
+                          "when redoing the replacing word");
           is(inputEvents.length, 1,
              `${aDescription}Only one "input" event should be fired when redoing the replacing word`);
           checkInputEvent(inputEvents[0], "historyRedo", null, null,

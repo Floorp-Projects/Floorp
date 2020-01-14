@@ -75,7 +75,7 @@ async function runTest() {
   beforeInputFired = false;
   inputFired = false;
   synthesizeKey("e");
-  todo(beforeInputFired, '"beforeinput" event should have been fired at typing "e"');
+  ok(beforeInputFired, '"beforeinput" event should have been fired at typing "e"');
   ok(inputFired, '"input" event should have been fired at typing "e"');
 
   await waitForPopup;
@@ -105,7 +105,7 @@ async function runTest() {
   beforeInputFired = false;
   inputFired = false;
   synthesizeKey("KEY_Enter"); // Select valid item
-  todo(beforeInputFired, '"beforeinput" event should have been fired at selecting valid item');
+  ok(beforeInputFired, '"beforeinput" event should have been fired at selecting valid item');
   ok(inputFired, '"input" event should have been fired at selecting valid item');
 
   waitForPopup = promisePopup();
@@ -138,7 +138,7 @@ async function runTest() {
   beforeInputFired = false;
   inputFired = false;
   synthesizeKey("KEY_Enter"); // Select invalid item
-  todo(beforeInputFired, '"beforeinput" event should have been fired at selecting invalid item');
+  ok(beforeInputFired, '"beforeinput" event should have been fired at selecting invalid item');
   ok(inputFired, '"input" event should have been fired at selecting invalid item');
 
   SimpleTest.finish();

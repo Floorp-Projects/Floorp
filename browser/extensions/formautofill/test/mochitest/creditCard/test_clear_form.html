@@ -69,7 +69,6 @@ async function confirmClear(selector) {
   let promise = new Promise(resolve => {
     let beforeInputFired = false;
     let element = document.querySelector(selector);
-    let hadEditor = SpecialPowers.wrap(element).hasEditor;
     element.addEventListener("beforeinput", (event) => {
       beforeInputFired = true;
       ok(event instanceof InputEvent,
@@ -86,11 +85,7 @@ async function confirmClear(selector) {
          'dataTransfer value of "beforeinput" should be null');
     }, {once: true});
     element.addEventListener("input", (event) => {
-      if (hadEditor) {
-        todo(beforeInputFired, `"beforeinput" event should've been fired before "input" on <${element.tagName} type="${element.type}">`);
-      } else {
-        ok(beforeInputFired, `"beforeinput" event should've been fired before "input" on <${element.tagName} type="${element.type}">`);
-      }
+      ok(beforeInputFired, `"beforeinput" event should've been fired before "input" on <${element.tagName} type="${element.type}">`);
       ok(event instanceof InputEvent,
          '"input" event should be dispatched with InputEvent interface');
       is(event.cancelable, false,

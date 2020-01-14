@@ -185,7 +185,7 @@ async function triggerAutofillAndCheckProfile(profile) {
           event => {
             if (element.tagName == "INPUT" && element.type == "text") {
               if (hadEditor) {
-                todo(
+                ok(
                   beforeInputFired,
                   `"beforeinput" event should've been fired before "input" event on ${
                     element.tagName

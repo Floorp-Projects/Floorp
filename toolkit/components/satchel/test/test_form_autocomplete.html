@@ -1033,7 +1033,7 @@ function runTest() { // eslint-disable-line complexity
       synthesizeKey("KEY_ArrowDown");
       checkForm("");
       synthesizeKey("KEY_Enter");
-      todo(beforeInputFired, `${testNum} "beforeinput" event should have been fired`);
+      ok(beforeInputFired, `${testNum} "beforeinput" event should have been fired`);
       ok(inputFired, `${testNum} "input" event should have been fired`);
       checkForm("value1");
 
@@ -1052,8 +1052,8 @@ function runTest() { // eslint-disable-line complexity
       synthesizeKey("KEY_ArrowDown");
       checkForm("");
       synthesizeKey("KEY_Enter");
-      todo(!inputFired, `${testNum} "input" event should not have been fired since "beforeinput" was canceled`);
-      checkForm("value1");  // Fix this after implementing "beforeinput"
+      ok(!inputFired, `${testNum} "input" event should not have been fired since "beforeinput" was canceled`);
+      checkForm("");
 
       // Go to test 500.
       testNum = 599;
