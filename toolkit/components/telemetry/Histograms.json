@@ -3882,6 +3882,18 @@
     "n_buckets": 50,
     "description": "Time for a completed TRR resolution (msec)"
   },
+  "DNS_TRR_PROCESSING_TIME": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1608114],
+    "n_buckets": 50,
+    "description": "Time from the last received byte of the response until we have notified the consumer with a DNS record (msec)"
+  },
   "DNS_NATIVE_LOOKUP_TIME": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
