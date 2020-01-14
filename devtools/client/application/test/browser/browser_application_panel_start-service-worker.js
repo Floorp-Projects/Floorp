@@ -5,9 +5,6 @@
 
 const TAB_URL = URL_ROOT + "resources/service-workers/simple.html";
 
-// this tests takes longer on windows10-asan
-requestLongerTimeout(4);
-
 /**
  * Tests that the Start button works for service workers who can be debugged
  */
