@@ -477,9 +477,12 @@ class TestFunctional(HelperMixin, unittest.TestCase):
                                         'crashreporter', 'tools',
                                         'symbolstore.py')
         if target_platform() == 'WINNT':
-            fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
-            self.dump_syms = os.path.join(fetches_dir, 'dump_syms',
-                                          'dump_syms.exe')
+            if buildconfig.substs['WIN_DIA_SDK_BIN_DIR']:
+                self.dump_syms = os.path.join(buildconfig.topobjdir,
+                                              'dist', 'host', 'bin',
+                                              'dump_syms.exe')
+            else:
+                self.skip_test = True
             self.target_bin = os.path.join(buildconfig.topobjdir,
                                            'dist', 'bin',
                                            'firefox.exe')

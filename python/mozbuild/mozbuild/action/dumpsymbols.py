@@ -32,16 +32,19 @@ def dump_symbols(target, tracking_file, count_ctors=False):
     dump_syms_bin = None
     dump_syms_binaries = []
 
-    default_bin = buildconfig.substs.get('DUMP_SYMS')
-    if default_bin:
-        dump_syms_binaries.append(default_bin)
+    # Prefer the `dump_syms` toolchain.
+    fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
+    if fetches_dir:
+        dump_syms_binaries.append(
+            os.path.join(fetches_dir, 'dump_syms', 'dump_syms'))
 
     # Fallback to the in-tree breakpad version.
-    dump_syms_binaries.append(
-        os.path.join(buildconfig.topobjdir, 'dist', 'host', 'bin',
-                     'dump_syms' + buildconfig.substs['BIN_SUFFIX']))
+    dump_syms_binaries.append(os.path.join(buildconfig.topobjdir,
+                                           'dist', 'host',
+                                           'bin', 'dump_syms'))
 
-    for dump_syms_bin in dump_syms_binaries:
+    for b in dump_syms_binaries:
+        dump_syms_bin = '%s%s' % (b, buildconfig.substs['BIN_SUFFIX'])
         if os.path.exists(dump_syms_bin):
             break
 
@@ -50,6 +53,8 @@ def dump_symbols(target, tracking_file, count_ctors=False):
         sym_store_args.extend(['-c', '--vcs-info'])
         if os.environ.get('PDBSTR_PATH'):
             sym_store_args.append('-i')
+        os.environ['PATH'] = os.pathsep.join((buildconfig.substs['WIN_DIA_SDK_BIN_DIR'],
+                                              os.environ['PATH']))
     elif os_arch == 'Darwin':
         cpu = {
             'x86': 'i386',
