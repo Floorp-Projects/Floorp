@@ -1746,9 +1746,6 @@ extern JS_FRIEND_API JSObject* JS_GetObjectAsArrayBufferView(
  */
 extern JS_FRIEND_API js::Scalar::Type JS_GetArrayBufferViewType(JSObject* obj);
 
-extern JS_FRIEND_API js::Scalar::Type JS_GetSharedArrayBufferViewType(
-    JSObject* obj);
-
 /**
  * Return the number of elements in a typed array.
  *
