@@ -147,9 +147,8 @@ class MOZ_STACK_CLASS frontend::SourceAwareCompiler {
                                sharedContext);
   }
 
-  MOZ_MUST_USE bool createSourceAndParser(
-      LifoAllocScope& allocScope, BytecodeCompiler& compiler,
-      const Maybe<uint32_t>& parameterListEnd = Nothing());
+  MOZ_MUST_USE bool createSourceAndParser(LifoAllocScope& allocScope,
+                                          BytecodeCompiler& compiler);
 
   // This assumes the created script's offsets in the source used to parse it
   // are the same as are used to compute its Function.prototype.toString()
@@ -305,9 +304,8 @@ class MOZ_STACK_CLASS frontend::StandaloneFunctionCompiler final
       : Base(srcBuf) {}
 
   MOZ_MUST_USE bool prepare(LifoAllocScope& allocScope,
-                            StandaloneFunctionInfo& info,
-                            const Maybe<uint32_t>& parameterListEnd) {
-    return createSourceAndParser(allocScope, info, parameterListEnd);
+                            StandaloneFunctionInfo& info) {
+    return createSourceAndParser(allocScope, info);
   }
 
   FunctionNode* parse(StandaloneFunctionInfo& info, HandleFunction fun,
@@ -411,9 +409,8 @@ BytecodeCompiler::BytecodeCompiler(JSContext* cx, ParseInfo& parseInfo,
       directives(options.forceStrictMode()),
       script(cx) {}
 
-bool BytecodeCompiler::createScriptSource(
-    const Maybe<uint32_t>& parameterListEnd) {
-  sourceObject = CreateScriptSourceObject(cx, options, parameterListEnd);
+bool BytecodeCompiler::createScriptSource() {
+  sourceObject = CreateScriptSourceObject(cx, options);
   if (!sourceObject) {
     return false;
   }
@@ -429,9 +426,8 @@ bool BytecodeCompiler::canLazilyParse() const {
 
 template <typename Unit>
 bool frontend::SourceAwareCompiler<Unit>::createSourceAndParser(
-    LifoAllocScope& allocScope, BytecodeCompiler& info,
-    const Maybe<uint32_t>& parameterListEnd /* = Nothing() */) {
-  if (!info.createScriptSource(parameterListEnd)) {
+    LifoAllocScope& allocScope, BytecodeCompiler& info) {
+  if (!info.createScriptSource()) {
     return false;
   }
 
@@ -710,15 +706,14 @@ bool frontend::StandaloneFunctionCompiler<Unit>::compile(
 }
 
 ScriptSourceObject* frontend::CreateScriptSourceObject(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    const Maybe<uint32_t>& parameterListEnd /* = Nothing() */) {
+    JSContext* cx, const ReadOnlyCompileOptions& options) {
   ScriptSource* ss = cx->new_<ScriptSource>();
   if (!ss) {
     return nullptr;
   }
   ScriptSourceHolder ssHolder(ss);
 
-  if (!ss->initFromOptions(cx, options, parameterListEnd)) {
+  if (!ss->initFromOptions(cx, options)) {
     return nullptr;
   }
 
@@ -1197,7 +1192,7 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
   StandaloneFunctionInfo info(cx, parseInfo, options);
 
   StandaloneFunctionCompiler<char16_t> compiler(srcBuf);
-  if (!compiler.prepare(allocScope, info, parameterListEnd)) {
+  if (!compiler.prepare(allocScope, info)) {
     return false;
   }
 
@@ -1212,8 +1207,13 @@ static bool CompileStandaloneFunction(JSContext* cx, MutableHandleFunction fun,
     return false;
   }
 
-  // AsmJS may succeed compile, but does not create scripts.
+  // Note: If AsmJS successfully compiles, the into.script will still be
+  // nullptr. In this case we have compiled to a native function instead of an
+  // interpreted script.
   if (info.getScript()) {
+    if (parameterListEnd) {
+      info.getScript()->scriptSource()->setParameterListEnd(*parameterListEnd);
+    }
     tellDebuggerAboutCompiledScript(cx, info.getScript());
   }
 

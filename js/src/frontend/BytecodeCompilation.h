@@ -88,8 +88,7 @@ class MOZ_STACK_CLASS BytecodeCompiler {
     MOZ_ASSERT(scriptSource != nullptr);
   }
 
-  MOZ_MUST_USE bool createScriptSource(
-      const mozilla::Maybe<uint32_t>& parameterListEnd);
+  MOZ_MUST_USE bool createScriptSource();
 
   // Create a script for source of the given length, using the explicitly-
   // provided toString offsets as the created script's offsets in the source.

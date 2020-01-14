@@ -5926,7 +5926,7 @@ bool Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp) {
   frontend::ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObject(
-      cx, frontend::CreateScriptSourceObject(cx, options, Nothing()));
+      cx, frontend::CreateScriptSourceObject(cx, options));
   if (!sourceObject) {
     return false;
   }

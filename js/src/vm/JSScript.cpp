@@ -3926,8 +3926,7 @@ UniqueChars js::FormatIntroducedFilename(JSContext* cx, const char* filename,
 }
 
 bool ScriptSource::initFromOptions(JSContext* cx,
-                                   const ReadOnlyCompileOptions& options,
-                                   const Maybe<uint32_t>& parameterListEnd) {
+                                   const ReadOnlyCompileOptions& options) {
   MOZ_ASSERT(!filename_);
   MOZ_ASSERT(!introducerFilename_);
 
@@ -3936,7 +3935,8 @@ bool ScriptSource::initFromOptions(JSContext* cx,
   startLine_ = options.lineno;
   introductionType_ = options.introductionType;
   setIntroductionOffset(options.introductionOffset);
-  parameterListEnd_ = parameterListEnd.isSome() ? parameterListEnd.value() : 0;
+  // The parameterListEnd_ is initialized later by setParameterListEnd, before
+  // we expose any scripts that use this ScriptSource to the debugger.
 
   if (options.hasIntroductionInfo) {
     MOZ_ASSERT(options.introductionType != nullptr);
