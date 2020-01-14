@@ -1090,10 +1090,10 @@ jsbytecode* js::UnwindEnvironmentToTryPc(JSScript* script,
   jsbytecode* pc = script->offsetToPC(tn->start);
   if (tn->kind == JSTRY_CATCH || tn->kind == JSTRY_FINALLY) {
     pc -= JSOP_TRY_LENGTH;
-    MOZ_ASSERT(JSOp(*pc) == JSOP_TRY);
+    MOZ_ASSERT(*pc == JSOP_TRY);
   } else if (tn->kind == JSTRY_DESTRUCTURING) {
     pc -= JSOP_TRY_DESTRUCTURING_LENGTH;
-    MOZ_ASSERT(JSOp(*pc) == JSOP_TRY_DESTRUCTURING);
+    MOZ_ASSERT(*pc == JSOP_TRY_DESTRUCTURING);
   }
   return pc;
 }
@@ -1340,7 +1340,7 @@ JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
 
 /* See TRY_BRANCH_AFTER_COND. */
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
-JS_STATIC_ASSERT(uint8_t(JSOP_IFNE) == uint8_t(JSOP_IFEQ) + 1);
+JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 
 /*
  * Compute the implicit |this| value used by a call expression with an
@@ -2080,7 +2080,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         // first |await| expression in an async function.
         MOZ_ASSERT(
             REGS.stackDepth() == 0 ||
-            (JSOp(*REGS.pc) == JSOP_AWAIT && !REGS.fp()->isResumedGenerator()));
+            (*REGS.pc == JSOP_AWAIT && !REGS.fp()->isResumedGenerator()));
       }
       goto exit;
     }
@@ -2890,7 +2890,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       FETCH_ELEMENT_ID(-2, id);
       HandleValue value = REGS.stackHandleAt(-1);
       if (!SetObjectElementOperation(cx, obj, id, value, receiver,
-                                     JSOp(*REGS.pc) == JSOP_STRICTSETELEM)) {
+                                     *REGS.pc == JSOP_STRICTSETELEM)) {
         goto error;
       }
       REGS.sp[-3] = value;
@@ -3011,9 +3011,9 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         cx->geckoProfiler().updatePC(cx, script, REGS.pc);
       }
 
-      MaybeConstruct construct = MaybeConstruct(
-          JSOp(*REGS.pc) == JSOP_NEW || JSOp(*REGS.pc) == JSOP_SUPERCALL);
-      bool ignoresReturnValue = JSOp(*REGS.pc) == JSOP_CALL_IGNORES_RV;
+      MaybeConstruct construct =
+          MaybeConstruct(*REGS.pc == JSOP_NEW || *REGS.pc == JSOP_SUPERCALL);
+      bool ignoresReturnValue = *REGS.pc == JSOP_CALL_IGNORES_RV;
       unsigned argStackSlots = GET_ARGC(REGS.pc) + construct;
 
       MOZ_ASSERT(REGS.stackDepth() >= 2u + GET_ARGC(REGS.pc));
@@ -3035,7 +3035,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
             goto error;
           }
         } else {
-          if (JSOp(*REGS.pc) == JSOP_CALLITER && args.calleev().isPrimitive()) {
+          if (*REGS.pc == JSOP_CALLITER && args.calleev().isPrimitive()) {
             MOZ_ASSERT(args.length() == 0, "thisv must be on top of the stack");
             ReportValueError(cx, JSMSG_NOT_ITERABLE, -1, args.thisv(), nullptr);
             goto error;
@@ -3480,7 +3480,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
        * the method JIT, and a GETLOCAL followed by POP is not considered to be
        * a use of the variable.
        */
-      if (JSOp(REGS.pc[JSOP_GETLOCAL_LENGTH]) != JSOP_POP) {
+      if (REGS.pc[JSOP_GETLOCAL_LENGTH] != JSOP_POP) {
         cx->debugOnlyCheck(REGS.sp[-1]);
       }
     }
@@ -4549,10 +4549,10 @@ bool js::DefVarOperation(JSContext* cx, HandleObject envChain,
 
 bool js::DefLexicalOperation(JSContext* cx, HandleObject envChain,
                              HandleScript script, jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_DEFLET || JSOp(*pc) == JSOP_DEFCONST);
+  MOZ_ASSERT(*pc == JSOP_DEFLET || *pc == JSOP_DEFCONST);
 
   unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
-  if (JSOp(*pc) == JSOP_DEFCONST) {
+  if (*pc == JSOP_DEFCONST) {
     attrs |= JSPROP_READONLY;
   }
 
@@ -4672,7 +4672,7 @@ bool js::DefFunOperation(JSContext* cx, HandleScript script,
 JSObject* js::SingletonObjectLiteralOperation(JSContext* cx,
                                               HandleScript script,
                                               jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_OBJECT);
+  MOZ_ASSERT(*pc == JSOP_OBJECT);
 
   RootedObject obj(cx, script->getObject(pc));
   if (cx->realm()->creationOptions().cloneSingletons()) {
@@ -4690,7 +4690,7 @@ JSObject* js::ImportMetaOperation(JSContext* cx, HandleScript script) {
 }
 
 JSObject* js::BuiltinProtoOperation(JSContext* cx, jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_BUILTINPROTO);
+  MOZ_ASSERT(*pc == JSOP_BUILTINPROTO);
   MOZ_ASSERT(GET_UINT8(pc) < JSProto_LIMIT);
 
   JSProtoKey key = static_cast<JSProtoKey>(GET_UINT8(pc));
@@ -5092,8 +5092,8 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
                                  NewObjectKind newKind /* = GenericObject */) {
   MOZ_ASSERT(newKind != SingletonObject);
   bool withTemplate =
-      (JSOp(*pc) == JSOP_NEWOBJECT || JSOp(*pc) == JSOP_NEWOBJECT_WITHGROUP);
-  bool withTemplateGroup = (JSOp(*pc) == JSOP_NEWOBJECT_WITHGROUP);
+      (*pc == JSOP_NEWOBJECT || *pc == JSOP_NEWOBJECT_WITHGROUP);
+  bool withTemplateGroup = (*pc == JSOP_NEWOBJECT_WITHGROUP);
 
   RootedObjectGroup group(cx);
   RootedPlainObject baseObject(cx);
@@ -5140,7 +5140,7 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   if (withTemplate) {
     obj = CopyInitializerObject(cx, baseObject, newKind);
   } else {
-    MOZ_ASSERT(JSOp(*pc) == JSOP_NEWINIT);
+    MOZ_ASSERT(*pc == JSOP_NEWINIT);
     obj = NewBuiltinClassInstance<PlainObject>(cx, newKind);
   }
 
@@ -5204,7 +5204,7 @@ JSObject* js::CreateThisWithTemplate(JSContext* cx,
 JSObject* js::NewArrayOperation(JSContext* cx, HandleScript script,
                                 jsbytecode* pc, uint32_t length,
                                 NewObjectKind newKind /* = GenericObject */) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_NEWARRAY);
+  MOZ_ASSERT(*pc == JSOP_NEWARRAY);
   MOZ_ASSERT(newKind != SingletonObject);
 
   RootedObjectGroup group(cx);
@@ -5262,7 +5262,7 @@ JSObject* js::NewArrayOperationWithTemplate(JSContext* cx,
 ArrayObject* js::NewArrayCopyOnWriteOperation(JSContext* cx,
                                               HandleScript script,
                                               jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_NEWARRAY_COPYONWRITE);
+  MOZ_ASSERT(*pc == JSOP_NEWARRAY_COPYONWRITE);
 
   RootedArrayObject baseobj(
       cx, ObjectGroup::getOrFixupCopyOnWriteObject(cx, script, pc));

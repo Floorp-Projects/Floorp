@@ -306,16 +306,15 @@ inline void SetAliasedVarOperation(JSContext* cx, JSScript* script,
 
 inline bool SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
                              HandleObject env, HandleValue val) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_SETNAME || JSOp(*pc) == JSOP_STRICTSETNAME ||
-             JSOp(*pc) == JSOP_SETGNAME || JSOp(*pc) == JSOP_STRICTSETGNAME);
-  MOZ_ASSERT_IF(
-      (JSOp(*pc) == JSOP_SETGNAME || JSOp(*pc) == JSOP_STRICTSETGNAME) &&
-          !script->hasNonSyntacticScope(),
-      env == cx->global() || env == &cx->global()->lexicalEnvironment() ||
-          env->is<RuntimeLexicalErrorObject>());
+  MOZ_ASSERT(*pc == JSOP_SETNAME || *pc == JSOP_STRICTSETNAME ||
+             *pc == JSOP_SETGNAME || *pc == JSOP_STRICTSETGNAME);
+  MOZ_ASSERT_IF((*pc == JSOP_SETGNAME || *pc == JSOP_STRICTSETGNAME) &&
+                    !script->hasNonSyntacticScope(),
+                env == cx->global() ||
+                    env == &cx->global()->lexicalEnvironment() ||
+                    env->is<RuntimeLexicalErrorObject>());
 
-  bool strict =
-      JSOp(*pc) == JSOP_STRICTSETNAME || JSOp(*pc) == JSOP_STRICTSETGNAME;
+  bool strict = *pc == JSOP_STRICTSETNAME || *pc == JSOP_STRICTSETGNAME;
   RootedPropertyName name(cx, script->getName(pc));
 
   // In strict mode, assigning to an undeclared global variable is an
@@ -347,7 +346,7 @@ inline void InitGlobalLexicalOperation(JSContext* cx,
                                        HandleValue value) {
   MOZ_ASSERT_IF(!script->hasNonSyntacticScope(),
                 lexicalEnvArg == &cx->global()->lexicalEnvironment());
-  MOZ_ASSERT(JSOp(*pc) == JSOP_INITGLEXICAL);
+  MOZ_ASSERT(*pc == JSOP_INITGLEXICAL);
   Rooted<LexicalEnvironmentObject*> lexicalEnv(cx, lexicalEnvArg);
   RootedShape shape(cx, lexicalEnv->lookup(cx, script->getName(pc)));
   MOZ_ASSERT(shape);
@@ -668,7 +667,7 @@ static MOZ_ALWAYS_INLINE bool InitArrayElemOperation(JSContext* cx,
 static inline ArrayObject* ProcessCallSiteObjOperation(JSContext* cx,
                                                        HandleScript script,
                                                        jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOP_CALLSITEOBJ);
+  MOZ_ASSERT(*pc == JSOP_CALLSITEOBJ);
 
   RootedArrayObject cso(cx, &script->getObject(pc)->as<ArrayObject>());
 

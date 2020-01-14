@@ -2023,87 +2023,91 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
   }
 
-  void compareStringResult(JSOp op, StringOperandId lhs, StringOperandId rhs) {
+  void compareStringResult(uint32_t op, StringOperandId lhs,
+                           StringOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareStringResult, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareObjectResult(JSOp op, ObjOperandId lhs, ObjOperandId rhs) {
+  void compareObjectResult(uint32_t op, ObjOperandId lhs, ObjOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareObjectResult, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareObjectUndefinedNullResult(JSOp op, ObjOperandId object) {
+  void compareObjectUndefinedNullResult(uint32_t op, ObjOperandId object) {
     writeOpWithOperandId(CacheOp::CompareObjectUndefinedNullResult, object);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareSymbolResult(JSOp op, SymbolOperandId lhs, SymbolOperandId rhs) {
+  void compareSymbolResult(uint32_t op, SymbolOperandId lhs,
+                           SymbolOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareSymbolResult, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareInt32Result(JSOp op, Int32OperandId lhs, Int32OperandId rhs) {
+  void compareInt32Result(uint32_t op, Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareInt32Result, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareDoubleResult(JSOp op, NumberOperandId lhs, NumberOperandId rhs) {
+  void compareDoubleResult(uint32_t op, NumberOperandId lhs,
+                           NumberOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareDoubleResult, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareBigIntResult(JSOp op, BigIntOperandId lhs, BigIntOperandId rhs) {
+  void compareBigIntResult(uint32_t op, BigIntOperandId lhs,
+                           BigIntOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareBigIntResult, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareBigIntInt32Result(JSOp op, BigIntOperandId lhs,
+  void compareBigIntInt32Result(uint32_t op, BigIntOperandId lhs,
                                 Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareBigIntInt32Result, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareInt32BigIntResult(JSOp op, Int32OperandId lhs,
+  void compareInt32BigIntResult(uint32_t op, Int32OperandId lhs,
                                 BigIntOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareInt32BigIntResult, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareBigIntNumberResult(JSOp op, BigIntOperandId lhs,
+  void compareBigIntNumberResult(uint32_t op, BigIntOperandId lhs,
                                  NumberOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareBigIntNumberResult, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareNumberBigIntResult(JSOp op, NumberOperandId lhs,
+  void compareNumberBigIntResult(uint32_t op, NumberOperandId lhs,
                                  BigIntOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareNumberBigIntResult, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareBigIntStringResult(JSOp op, BigIntOperandId lhs,
+  void compareBigIntStringResult(uint32_t op, BigIntOperandId lhs,
                                  StringOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareBigIntStringResult, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
-  void compareStringBigIntResult(JSOp op, StringOperandId lhs,
+  void compareStringBigIntResult(uint32_t op, StringOperandId lhs,
                                  BigIntOperandId rhs) {
     writeOpWithOperandId(CacheOp::CompareStringBigIntResult, lhs);
     writeOperandId(rhs);
-    buffer_.writeByte(uint8_t(op));
+    buffer_.writeByte(uint32_t(op));
   }
 
   void callPrintString(const char* str) {

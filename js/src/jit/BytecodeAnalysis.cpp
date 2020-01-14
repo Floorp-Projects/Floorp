@@ -52,7 +52,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
     uint32_t offset = it.bytecodeToOffset(script_);
 
     JitSpew(JitSpew_BaselineOp, "Analyzing op @ %u (end=%u): %s",
-            unsigned(offset), unsigned(script_->length()), CodeName(op));
+            unsigned(offset), unsigned(script_->length()), CodeName[op]);
 
     // If this bytecode info has not yet been initialized, it's not reachable.
     if (!infos_[offset].initialized) {
