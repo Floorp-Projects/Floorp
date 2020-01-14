@@ -5180,25 +5180,6 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     Client::Type clientType;
     bool ok = Client::TypeFromText(leafName, clientType, fallible);
     if (!ok) {
-      // Our upgrade process should have attempted to delete the deprecated
-      // client directory and failed to upgrade if it could not be deleted. So
-      // if we're here, either a) there's a bug in our code or b) a user copied
-      // over parts of an old profile into a new profile for some reason and the
-      // upgrade process won't be run again to fix it. If it's a bug, we want to
-      // assert, but only on nightly where the bug would have been introduced
-      // and we can do something about it. If it's the user, it's best for us to
-      // try and delete the origin and/or mark it broken, so we do that for
-      // non-nightly builds by trying to delete the deprecated client directory
-      // and return the initialization error for the origin.
-      if (Client::IsDeprecatedClient(leafName)) {
-        rv = file->Remove(true);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
-        }
-
-        MOZ_DIAGNOSTIC_ASSERT(false, "Found a deprecated client");
-      }
-
       // Unknown directories during initialization are now allowed. Just warn if
       // we find them.
       UNKNOWN_FILE_WARNING(leafName);
@@ -11839,6 +11820,9 @@ nsresult UpgradeStorageFrom2_1To2_2Helper::PrepareClientDirectory(
   AssertIsOnIOThread();
 
   if (Client::IsDeprecatedClient(aLeafName)) {
+    QM_WARNING("Deleting deprecated %s client!",
+               NS_ConvertUTF16toUTF8(aLeafName).get());
+
     nsresult rv = aFile->Remove(true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;

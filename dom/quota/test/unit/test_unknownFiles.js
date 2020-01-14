@@ -6,18 +6,6 @@
 var testGenerator = testSteps();
 
 function* testSteps() {
-  const unknownRepoFiles = [
-    {
-      path: "storage/persistent/foo.bar",
-      dir: false,
-    },
-
-    {
-      path: "storage/permanent/foo.bar",
-      dir: false,
-    },
-  ];
-
   const exampleUrl = "http://example.com";
   const unknownRepoFile = {
     path: "storage/default/foo.bar",
@@ -48,29 +36,7 @@ function* testSteps() {
 
   let file, request;
 
-  info("Stage 1 - Testing unknown repo files found during upgrades");
-
-  for (let unknownFile of unknownRepoFiles) {
-    info("Creating unknown file");
-
-    file = createFile(unknownFile);
-
-    info("Initializing");
-
-    request = init(continueToNextStepSync);
-    yield undefined;
-
-    ok(request.resultCode == NS_OK, "Initialization succeeded");
-
-    info("Clearing");
-
-    request = clear(continueToNextStepSync);
-    yield undefined;
-
-    ok(request.resultCode == NS_OK, "Clearing succeeded");
-  }
-
-  info("Stage 2 - Testing unknown repo file found during tempo storage init");
+  info("Stage 1 - Testing unknown repo file found during tempo storage init");
 
   info("Initializing");
 
@@ -111,7 +77,7 @@ function* testSteps() {
   ok(request.resultCode == NS_OK, "Clearing succeeded");
 
   info(
-    "Stage 3 - Testing unknown origin files and unknown origin directories " +
+    "Stage 2 - Testing unknown origin files and unknown origin directories " +
       "found during origin init"
   );
 
