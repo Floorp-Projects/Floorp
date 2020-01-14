@@ -67,6 +67,9 @@ CSS_PSEUDO_ELEMENT(mozMathAnonymous, ":-moz-math-anonymous",
 CSS_PSEUDO_ELEMENT(mozNumberWrapper, ":-moz-number-wrapper",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
                    CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)
+CSS_PSEUDO_ELEMENT(mozNumberText, ":-moz-number-text",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
+                   CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)
 CSS_PSEUDO_ELEMENT(mozNumberSpinBox, ":-moz-number-spin-box",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
                    CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)

@@ -51,7 +51,7 @@ const SPIN_DOWN_Y = inputRect.height - 3;
 function checkInputEvent(aEvent, aDescription) {
   // Probably, key operation should fire "input" event with InputEvent interface.
   // See https://github.com/w3c/input-events/issues/88
-  ok(aEvent instanceof InputEvent, `"input" event should be dispatched with InputEvent interface on input element whose type is number ${aDescription}`);
+  todo(aEvent instanceof InputEvent, `"input" event should be dispatched with InputEvent interface on input element whose type is number ${aDescription}`);
   is(aEvent.cancelable, false, `"input" event should be never cancelable on input element whose type is number ${aDescription}`);
   is(aEvent.bubbles, true, `"input" event should always bubble on input element whose type is number ${aDescription}`);
   info(`Data: ${aEvent.data}, value: ${aEvent.target.value}`);
@@ -233,6 +233,7 @@ var spinTests = [
     synthesizeMouse(input, SPIN_DOWN_X, SPIN_DOWN_Y, { type: "mousedown" });
   }
 ];
+
 </script>
 </pre>
 </body>

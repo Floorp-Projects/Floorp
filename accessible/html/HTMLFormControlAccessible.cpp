@@ -466,7 +466,7 @@ Accessible* HTMLFileInputAccessible::CurrentItem() const {
 role HTMLSpinnerAccessible::NativeRole() const { return roles::SPINBUTTON; }
 
 void HTMLSpinnerAccessible::Value(nsString& aValue) const {
-  HTMLTextFieldAccessible::Value(aValue);
+  AccessibleWrap::Value(aValue);
   if (!aValue.IsEmpty()) return;
 
   // Pass NonSystem as the caller type, to be safe.  We don't expect to have a
@@ -475,28 +475,28 @@ void HTMLSpinnerAccessible::Value(nsString& aValue) const {
 }
 
 double HTMLSpinnerAccessible::MaxValue() const {
-  double value = HTMLTextFieldAccessible::MaxValue();
+  double value = AccessibleWrap::MaxValue();
   if (!IsNaN(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetMaximum().toDouble();
 }
 
 double HTMLSpinnerAccessible::MinValue() const {
-  double value = HTMLTextFieldAccessible::MinValue();
+  double value = AccessibleWrap::MinValue();
   if (!IsNaN(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetMinimum().toDouble();
 }
 
 double HTMLSpinnerAccessible::Step() const {
-  double value = HTMLTextFieldAccessible::Step();
+  double value = AccessibleWrap::Step();
   if (!IsNaN(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetStep().toDouble();
 }
 
 double HTMLSpinnerAccessible::CurValue() const {
-  double value = HTMLTextFieldAccessible::CurValue();
+  double value = AccessibleWrap::CurValue();
   if (!IsNaN(value)) return value;
 
   return HTMLInputElement::FromNode(mContent)->GetValueAsDecimal().toDouble();

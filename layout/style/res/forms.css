@@ -102,7 +102,7 @@ input {
   overflow-clip-box: padding-box content-box;
 }
 
-input .anonymous-div,
+input > .anonymous-div,
 input::placeholder {
   word-wrap: normal;
   /* Make the line-height equal to the available height */
@@ -144,12 +144,12 @@ textarea > scrollbar {
   cursor: default;
 }
 
-textarea .anonymous-div,
-input .anonymous-div,
+textarea > .anonymous-div,
+input > .anonymous-div,
 input::placeholder,
 textarea::placeholder,
-input .preview-div
-textarea .preview-div {
+input > .preview-div
+textarea > .preview-div {
   overflow: auto;
   border: 0px;
   padding: inherit;
@@ -163,14 +163,14 @@ textarea .preview-div {
   overflow-clip-box: inherit;
 }
 
-input .anonymous-div,
+input > .anonymous-div,
 input::placeholder,
-input .preview-div {
+input > .preview-div {
   white-space: pre;
 }
 
-input[type=password] .anonymous-div,
-input[type=password] .preview-div {
+input[type=password] > .anonymous-div,
+input[type=password] > .preview-div {
   /*
    * In password fields, any character should be put same direction.  Otherwise,
    * caret position at typing tells everybody whether the character is an RTL
@@ -191,8 +191,8 @@ textarea > .anonymous-div.inherit-overflow {
 
 input::placeholder,
 textarea::placeholder,
-input .preview-div,
-textarea .preview-div {
+input > .preview-div,
+textarea > .preview-div {
   /*
    * Changing display to inline can leads to broken behaviour and will assert.
    */
@@ -218,7 +218,7 @@ textarea::placeholder {
 }
 
 textarea::placeholder,
-textarea .preview-div {
+textarea > .preview-div {
   white-space: pre-wrap !important;
 }
 
@@ -993,12 +993,27 @@ input[type=number]::-moz-number-wrapper {
   block-size: 100%;
 }
 
-input[type=number] .anonymous-div {
+input[type=number]::-moz-number-text {
   display: block; /* Flex items must be block-level. Normally we do fixup in
                      the style system to ensure this, but that fixup is disabled
                      inside of form controls. So, we hardcode display here. */
+  -moz-appearance: none;
+  /* work around autofocus bug 939248 on initial load */
+  -moz-user-modify: read-write;
+  /* This pseudo-element is also an 'input' element (nested inside and
+   * distinct from the <input type=number> element) so we need to prevent the
+   * explicit setting of 'text-align' by the general CSS rule for 'input'
+   * above. We want to inherit its value from its <input type=number>
+   * ancestor, not have that general CSS rule reset it.
+   */
+  text-align: unset;
+  text-decoration: inherit;
+  ime-mode: inherit;
   flex: 1;
   min-inline-size: 0;
+  padding: unset;
+  border: 0;
+  margin: 0;
 }
 
 input[type=number]::-moz-number-spin-box {

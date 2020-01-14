@@ -15,3 +15,20 @@ input[type="number"] {
 input[type="number"][hidespinbuttons="true"] {
   -moz-appearance: textfield !important;
 }
+
+/* input[type=number] uses display: flex; by default which is incompatible with XUL flexbox
+   Forcing XUL flexbox allows changing the size of the input. */
+.input-number-mozbox,
+.input-number-mozbox::-moz-number-wrapper {
+  display: -moz-box;
+  -moz-box-align: center;
+}
+
+.input-number-mozbox::-moz-number-wrapper,
+.input-number-mozbox::-moz-number-text {
+  -moz-box-flex: 1;
+}
+
+.input-number-mozbox::-moz-number-wrapper {
+  width: 100%;
+}

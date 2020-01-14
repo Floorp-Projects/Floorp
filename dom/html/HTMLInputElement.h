@@ -206,6 +206,11 @@ class HTMLInputElement final : public TextControlElement,
 
   virtual EventStates IntrinsicState() const override;
 
+  // Element
+ private:
+  virtual void AddStates(EventStates aStates) override;
+  virtual void RemoveStates(EventStates aStates) override;
+
  public:
   // TextControlElement
   virtual nsresult SetValueChanged(bool aValueChanged) override;
@@ -803,6 +808,8 @@ class HTMLInputElement final : public TextControlElement,
   double GetMinimumAsDouble() { return GetMinimum().toDouble(); }
   double GetMaximumAsDouble() { return GetMaximum().toDouble(); }
 
+  HTMLInputElement* GetOwnerNumberControl();
+
   void StartNumberControlSpinnerSpin();
   enum SpinnerStopState { eAllowDispatchingEvents, eDisallowDispatchingEvents };
   void StopNumberControlSpinnerSpin(
@@ -1386,13 +1393,6 @@ class HTMLInputElement final : public TextControlElement,
    * time and month. TODO: week and datetime-local.
    */
   static bool IsDateTimeInputType(uint8_t aType);
-
-  /**
-   * Returns whether getting `.value` as a string should sanitize the value.
-   *
-   * See SanitizeValue.
-   */
-  bool SanitizesOnValueGetter() const;
 
   /**
    * Returns true if the element should prevent dispatching another DOMActivate.
