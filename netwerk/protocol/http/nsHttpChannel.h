@@ -573,10 +573,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   // writing a new entry. The content type is used in cache internally only.
   void SetCachedContentType();
 
-  // Stores information about access from eTLD+1 of the top level document to
-  // the cache entry.
-  void StoreSiteAccessToCacheEntry();
-
  private:
   // this section is for main-thread-only object
   // all the references need to be proxy released on main thread.
