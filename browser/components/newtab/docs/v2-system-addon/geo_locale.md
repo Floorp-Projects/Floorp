@@ -18,5 +18,6 @@ There are instances where you may need to change your local build's locale, geo,
 - Toggle `xpinstall.signatures.required` to `false`
 - Toggle `intl.multilingual.downloadEnabled` to `true`
 - Toggle `intl.multilingual.enabled` to `true`
-- Open the [langpack](https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central-l10n/mac/xpi/) for target locale in your local build (eg `firefox-70.0a1.en-CA.langpack.xpi` if you want an `en-CA` locale)
+- For Mac and Linux builds, open the [langpack](https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central-l10n/linux-x86_64/xpi/) for target locale in your local build (eg `firefox-70.0a1.en-CA.langpack.xpi` if you want an `en-CA` locale).
+- For Windows, use [https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central-l10n/](https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central-l10n/)
 - In `about:preferences` click "Set Alternatives" under "Language", move desired locale to the top position, click OK, click "Apply And Restart"
