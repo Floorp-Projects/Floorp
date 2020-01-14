@@ -32,9 +32,8 @@ class ReportFetchHandler final : public PromiseNativeHandler {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit ReportFetchHandler(
-      const std::vector<ReportDeliver::ReportData>& aReportData)
-      : mReports(aReportData) {}
+  explicit ReportFetchHandler(const ReportDeliver::ReportData& aReportData)
+      : mReportData(aReportData) {}
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     if (!gReportDeliver) {
@@ -58,37 +57,85 @@ class ReportFetchHandler final : public PromiseNativeHandler {
         mozilla::ipc::PBackgroundChild* actorChild =
             mozilla::ipc::BackgroundChild::GetOrCreateForCurrentThread();
 
-        for (const auto& report : mReports) {
-          mozilla::ipc::PrincipalInfo principalInfo;
-          nsresult rv =
-              PrincipalToPrincipalInfo(report.mPrincipal, &principalInfo);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            continue;
-          }
-
-          actorChild->SendRemoveEndpoint(report.mGroupName, report.mEndpointURL,
-                                         principalInfo);
+        mozilla::ipc::PrincipalInfo principalInfo;
+        nsresult rv =
+            PrincipalToPrincipalInfo(mReportData.mPrincipal, &principalInfo);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
         }
+
+        actorChild->SendRemoveEndpoint(mReportData.mGroupName,
+                                       mReportData.mEndpointURL, principalInfo);
       }
     }
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     if (gReportDeliver) {
-      for (auto& report : mReports) {
-        ++report.mFailures;
-        gReportDeliver->AppendReportData(report);
-      }
+      ++mReportData.mFailures;
+      gReportDeliver->AppendReportData(mReportData);
     }
   }
 
  private:
   ~ReportFetchHandler() = default;
 
-  std::vector<ReportDeliver::ReportData> mReports;
+  ReportDeliver::ReportData mReportData;
 };
 
 NS_IMPL_ISUPPORTS0(ReportFetchHandler)
+
+// This RAII class keeps a list of sandboxed globals for the delivering of
+// reports. In this way, if we have to deliver more than 1 report to the same
+// origin, we reuse the sandbox.
+class MOZ_RAII SandboxGlobalHolder final {
+ public:
+  nsIGlobalObject* GetOrCreateSandboxGlobalObject(nsIPrincipal* aPrincipal) {
+    MOZ_ASSERT(aPrincipal);
+
+    nsAutoCString origin;
+    nsresult rv = aPrincipal->GetOrigin(origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIGlobalObject> globalObject = mGlobals.Get(origin);
+    if (globalObject) {
+      return globalObject;
+    }
+
+    nsIXPConnect* xpc = nsContentUtils::XPConnect();
+    MOZ_ASSERT(xpc, "This should never be null!");
+
+    AutoJSAPI jsapi;
+    jsapi.Init();
+
+    JSContext* cx = jsapi.cx();
+    JS::Rooted<JSObject*> sandbox(cx);
+    rv = xpc->CreateSandbox(cx, aPrincipal, sandbox.address());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nullptr;
+    }
+
+    // The JSContext is not in a realm, so CreateSandbox returned an unwrapped
+    // global.
+    MOZ_ASSERT(JS_IsGlobalObject(sandbox));
+
+    globalObject = xpc::NativeGlobal(sandbox);
+    if (NS_WARN_IF(!globalObject)) {
+      return nullptr;
+    }
+
+    if (NS_WARN_IF(!mGlobals.Put(origin, globalObject, fallible))) {
+      return nullptr;
+    }
+
+    return globalObject;
+  }
+
+ private:
+  nsInterfaceHashtable<nsCStringHashKey, nsIGlobalObject> mGlobals;
+};
 
 struct StringWriteFunc final : public JSONWriteFunc {
   nsACString&
@@ -110,34 +157,10 @@ class ReportJSONWriter final : public JSONWriter {
   }
 };
 
-void SendReports(std::vector<ReportDeliver::ReportData>& aReports,
-                 nsCString aEndPointUrl, nsIPrincipal* aPrincipal) {
-  if (NS_WARN_IF(aReports.empty())) {
-    return;
-  }
-
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  MOZ_ASSERT(xpc, "This should never be null!");
-
-  nsCOMPtr<nsIGlobalObject> globalObject;
-  {
-    AutoJSAPI jsapi;
-    jsapi.Init();
-
-    JSContext* cx = jsapi.cx();
-    JS::Rooted<JSObject*> sandbox(cx);
-    nsresult rv = xpc->CreateSandbox(cx, aPrincipal, sandbox.address());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-
-    // The JSContext is not in a realm, so CreateSandbox returned an unwrapped
-    // global.
-    MOZ_ASSERT(JS_IsGlobalObject(sandbox));
-
-    globalObject = xpc::NativeGlobal(sandbox);
-  }
-
+void SendReport(ReportDeliver::ReportData& aReportData,
+                SandboxGlobalHolder& aHolder) {
+  nsCOMPtr<nsIGlobalObject> globalObject =
+      aHolder.GetOrCreateSandboxGlobalObject(aReportData.mPrincipal);
   if (NS_WARN_IF(!globalObject)) {
     return;
   }
@@ -146,21 +169,16 @@ void SendReports(std::vector<ReportDeliver::ReportData>& aReports,
   nsAutoCString body;
   ReportJSONWriter w(body);
 
-  w.StartArrayElement();
-  for (const auto& report : aReports) {
-    MOZ_ASSERT(report.mPrincipal == aPrincipal);
-    MOZ_ASSERT(report.mEndPointURL == aEndPointUrl);
-    w.StartObjectElement();
-    w.IntProperty("age",
-                  (TimeStamp::Now() - report.mCreationTime).ToMilliseconds());
-    w.StringProperty("type", NS_ConvertUTF16toUTF8(report.mType).get());
-    w.StringProperty("url", NS_ConvertUTF16toUTF8(report.mURL).get());
-    w.StringProperty("user_agent",
-                     NS_ConvertUTF16toUTF8(report.mUserAgent).get());
-    w.JSONProperty("body", report.mReportBodyJSON.get());
-    w.EndObject();
-  }
-  w.EndArray();
+  w.Start();
+
+  w.IntProperty(
+      "age", (TimeStamp::Now() - aReportData.mCreationTime).ToMilliseconds());
+  w.StringProperty("type", NS_ConvertUTF16toUTF8(aReportData.mType).get());
+  w.StringProperty("url", NS_ConvertUTF16toUTF8(aReportData.mURL).get());
+  w.StringProperty("user_agent",
+                   NS_ConvertUTF16toUTF8(aReportData.mUserAgent).get());
+  w.JSONProperty("body", aReportData.mReportBodyJSON.get());
+  w.End();
 
   // The body as stream
   nsCOMPtr<nsIInputStream> streamBody;
@@ -178,7 +196,7 @@ void SendReports(std::vector<ReportDeliver::ReportData>& aReports,
 
   // URL and fragments
   nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), aEndPointUrl);
+  rv = NS_NewURI(getter_AddRefs(uri), aReportData.mEndpointURL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -220,16 +238,14 @@ void SendReports(std::vector<ReportDeliver::ReportData>& aReports,
   RefPtr<Promise> promise = FetchRequest(
       globalObject, fetchInput, RequestInit(), CallerType::NonSystem, error);
   if (error.Failed()) {
-    for (auto& report : aReports) {
-      ++report.mFailures;
-      if (gReportDeliver) {
-        gReportDeliver->AppendReportData(report);
-      }
+    ++aReportData.mFailures;
+    if (gReportDeliver) {
+      gReportDeliver->AppendReportData(aReportData);
     }
     return;
   }
 
-  RefPtr<ReportFetchHandler> handler = new ReportFetchHandler(aReports);
+  RefPtr<ReportFetchHandler> handler = new ReportFetchHandler(aReportData);
   promise->AppendNativeHandler(handler);
 }
 
@@ -341,29 +357,10 @@ ReportDeliver::Notify(nsITimer* aTimer) {
   nsTArray<ReportData> reports;
   reports.SwapElements(mReportQueue);
 
-  // group reports by endpoint and nsIPrincipal
-  std::map<std::pair<nsCString, nsCOMPtr<nsIPrincipal>>,
-           std::vector<ReportData>>
-      reportsByPrincipal;
-  for (ReportData& report : reports) {
-    auto already_seen =
-        reportsByPrincipal.find({report.mEndpointURL, report.mPrincipal});
-    if (already_seen == reportsByPrincipal.end()) {
-      reportsByPrincipal.emplace(
-          std::make_pair(report.mEndpointURL, report.mPrincipal),
-          std::vector<ReportData>({report}));
-    } else {
-      already_seen->second.emplace_back(report);
-    }
-  }
+  SandboxGlobalHolder holder;
 
-  for (const auto& iter : reportsByPrincipal) {
-    std::pair<nsCString, nsCOMPtr<nsIPrincipal>> key = iter.first;
-    std::vector<ReportData> value = iter.second;
-    nsCString url = key.first;
-    nsCOMPtr<nsIPrincipal> principal = key.second;
-    nsAutoCString u(url);
-    SendReports(value, url, principal);
+  for (ReportData& report : reports) {
+    SendReport(report, holder);
   }
 
   return NS_OK;
