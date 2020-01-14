@@ -199,6 +199,7 @@ class ContextMenusTest {
         }
     }
 
+    @Ignore("Temp disable intermittent failure - https://github.com/mozilla-mobile/fenix/issues/7693")
     @Test
     fun verifyContextMixedVariations() {
         val pageLinks =
