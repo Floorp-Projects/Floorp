@@ -36,7 +36,9 @@ import os
 import stat
 import sys
 import re
+import contextlib
 
+from six import StringIO
 from mach.decorators import CommandArgument, CommandProvider, Command
 from mozbuild.base import MachCommandBase
 from mozbuild.util import mkdir
@@ -46,6 +48,16 @@ import mozpack.path as mozpath
 BROWSERTIME_ROOT = os.path.dirname(__file__)
 PILLOW_VERSION = "6.0.0"
 PYSSIM_VERSION = "0.4"
+
+
+@contextlib.contextmanager
+def silence():
+    oldout, olderr = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = StringIO(), StringIO()
+        yield
+    finally:
+        sys.stdout, sys.stderr = oldout, olderr
 
 
 def node_path():
@@ -465,6 +477,25 @@ class MachBrowsertime(MachCommandBase):
 
         return extra_args
 
+    def _verify_node_install(self):
+        # check if Node is installed
+        sys.path.append(mozpath.join(self.topsrcdir, 'tools', 'lint', 'eslint'))
+        import setup_helper
+        with silence():
+            node_valid = setup_helper.check_node_executables_valid()
+        if not node_valid:
+            print("Can't find Node. did you run ./mach bootstrap ?")
+            return False
+
+        # check if the browsertime package has been deployed correctly
+        # for this we just check for the browsertime directory presence
+        if not os.path.exists(browsertime_path()):
+            print("Could not find browsertime.js, try ./mach browsertime --setup")
+            print("If that still fails, try ./mach browsertime --setup --clobber")
+            return False
+
+        return True
+
     @Command('browsertime', category='testing',
              description='Run [browsertime](https://github.com/sitespeedio/browsertime) '
                          'performance tests.')
@@ -484,6 +515,9 @@ class MachBrowsertime(MachCommandBase):
 
         if setup:
             return self.setup(should_clobber=clobber)
+        else:
+            if not self._verify_node_install():
+                return 1
 
         if check:
             return self.check()
