@@ -131,6 +131,16 @@ class MOZ_RAII BufferReader {
     return mozilla::BigEndian::readInt32(ptr);
   }
 
+  mozilla::Result<uint32_t, nsresult> ReadLEU32() {
+    auto ptr = Read(4);
+    if (!ptr) {
+      MOZ_LOG(gMP4MetadataLog, mozilla::LogLevel::Error,
+              ("%s: failure", __func__));
+      return mozilla::Err(NS_ERROR_FAILURE);
+    }
+    return mozilla::LittleEndian::readUint32(ptr);
+  }
+
   mozilla::Result<uint64_t, nsresult> ReadU64() {
     auto ptr = Read(8);
     if (!ptr) {
