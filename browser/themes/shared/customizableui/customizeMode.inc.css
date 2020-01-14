@@ -75,6 +75,11 @@
   color: rgb(71, 71, 71) !important;
 }
 
+.customizationmode-checkbox[disabled]:-moz-lwtheme {
+  color: inherit;
+  opacity: 0.4;
+}
+
 #customization-reset-button,
 #customization-undo-reset-button,
 #customization-done-button {
