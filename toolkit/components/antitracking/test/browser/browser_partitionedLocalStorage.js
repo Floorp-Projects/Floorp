@@ -92,6 +92,7 @@ AntiTracking.runTestInNormalAndPrivateMode(
 
 PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
   "Partitioned tabs - localStorage",
+  "localstorage",
 
   // getDataCallback
   async win => {

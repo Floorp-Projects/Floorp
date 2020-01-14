@@ -3999,8 +3999,7 @@ CookieStatus nsCookieService::CheckPrefs(
       return STATUS_REJECTED;
     }
 
-    if (aCookieSettings->GetCookieBehavior() ==
-            nsICookieService::BEHAVIOR_LIMIT_FOREIGN &&
+    if (aCookieSettings->GetLimitForeignContexts() &&
         !aFirstPartyStorageAccessGranted && aNumOfCookies == 0) {
       COOKIE_LOGFAILURE(aCookieHeader.IsVoid() ? GET_COOKIE : SET_COOKIE,
                         aHostURI, aCookieHeader, "context is third party");

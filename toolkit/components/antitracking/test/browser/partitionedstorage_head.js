@@ -53,6 +53,7 @@ this.PartitionedStorageHelper = {
 
   runPartitioningTestInNormalAndPrivateMode(
     name,
+    testCategory,
     getDataCallback,
     addDataCallback,
     cleanupFunction
@@ -60,6 +61,7 @@ this.PartitionedStorageHelper = {
     // Normal mode
     this.runPartitioningTest(
       name,
+      testCategory,
       getDataCallback,
       addDataCallback,
       cleanupFunction,
@@ -69,6 +71,7 @@ this.PartitionedStorageHelper = {
     // Private mode
     this.runPartitioningTest(
       name,
+      testCategory,
       getDataCallback,
       addDataCallback,
       cleanupFunction,
@@ -78,41 +81,44 @@ this.PartitionedStorageHelper = {
 
   runPartitioningTest(
     name,
+    testCategory,
     getDataCallback,
     addDataCallback,
     cleanupFunction,
     runInPrivateWindow = false
   ) {
-    this.runPartitioningTestInner(
-      name,
-      getDataCallback,
-      addDataCallback,
-      cleanupFunction,
-      "normal",
-      runInPrivateWindow
-    );
-    this.runPartitioningTestInner(
-      name,
-      getDataCallback,
-      addDataCallback,
-      cleanupFunction,
-      "initial-aboutblank",
-      runInPrivateWindow
-    );
+    for (let variant of ["normal", "initial-aboutblank"]) {
+      for (let limitForeignContexts of [false, true]) {
+        this.runPartitioningTestInner(
+          name,
+          testCategory,
+          getDataCallback,
+          addDataCallback,
+          cleanupFunction,
+          variant,
+          runInPrivateWindow,
+          limitForeignContexts
+        );
+      }
+    }
   },
 
   runPartitioningTestInner(
     name,
+    testCategory,
     getDataCallback,
     addDataCallback,
     cleanupFunction,
     variant,
-    runInPrivateWindow
+    runInPrivateWindow,
+    limitForeignContexts
   ) {
     add_task(async _ => {
       info(
         "Starting test `" +
           name +
+          "' testCategory `" +
+          testCategory +
           "' variant `" +
           variant +
           "' in a " +
@@ -128,6 +134,7 @@ this.PartitionedStorageHelper = {
             "network.cookie.cookieBehavior",
             Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
           ],
+          ["privacy.dynamic_firstparty.limitForeign", limitForeignContexts],
           ["privacy.trackingprotection.enabled", false],
           ["privacy.trackingprotection.pbmode.enabled", false],
           ["privacy.trackingprotection.annotate_channels", true],
@@ -170,6 +177,12 @@ this.PartitionedStorageHelper = {
       await BrowserTestUtils.browserLoaded(browser3);
 
       async function getDataFromThirdParty(browser, result) {
+        // Overwrite the special case here since third party cookies are not
+        // avilable when `limitForeignContexts` is enabled.
+        if (testCategory === "cookies" && limitForeignContexts) {
+          result = "";
+        }
+
         await SpecialPowers.spawn(
           browser,
           [
