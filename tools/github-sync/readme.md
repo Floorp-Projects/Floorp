@@ -10,6 +10,7 @@ The main entry point is the `sync-to-github.sh` script that is called with the f
   1. name of the project, matching the repository under `https://github.com/moz-gfx` user
   2. relative folder in mozilla-central, which is the upstream for the changes
   3. downstream repository specified as "organization/project-name"
+  4. name to call for auto-approving the pull request ("bors" or "@bors-servo")
 
 It creates a staging directory at `~/.ghsync` if one doesn't already exist,
 and clones the the downstream repo into it.

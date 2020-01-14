@@ -246,9 +246,6 @@ jobs:
     condprof:
         symbol: I(condprof)
         parent: debian10-test
-    webrender-updater:
-        symbol: I(wrupdater)
-        parent: debian9-base
     visual-metrics:
         symbol: I(visual-metrics)
         parent: debian9-base
