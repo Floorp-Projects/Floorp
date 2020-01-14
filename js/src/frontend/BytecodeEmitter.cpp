@@ -3108,7 +3108,7 @@ bool BytecodeEmitter::emitAnonymousFunctionWithName(ParseNode* node,
   if (node->is<FunctionNode>()) {
     // Function doesn't have 'name' property at this point.
     // Set function's name at compile time.
-    if (!setFunName(node->as<FunctionNode>().funbox()->function(), name)) {
+    if (!setFunName(node->as<FunctionNode>().funbox(), name)) {
       return false;
     }
 
@@ -3146,18 +3146,18 @@ bool BytecodeEmitter::emitAnonymousFunctionWithComputedName(
   return emitClass(&node->as<ClassNode>(), ClassNameKind::ComputedName);
 }
 
-bool BytecodeEmitter::setFunName(JSFunction* fun, JSAtom* name) {
+bool BytecodeEmitter::setFunName(FunctionBox* funbox, JSAtom* name) {
   // The inferred name may already be set if this function is an interpreted
   // lazy function and we OOM'ed after we set the inferred name the first
   // time.
-  if (fun->hasInferredName()) {
-    MOZ_ASSERT(fun->isInterpretedLazy());
-    MOZ_ASSERT(fun->inferredName() == name);
+  if (funbox->hasInferredName()) {
+    MOZ_ASSERT(funbox->isInterpretedLazy());
+    MOZ_ASSERT(funbox->inferredName() == name);
 
     return true;
   }
 
-  fun->setInferredName(name);
+  funbox->setInferredName(name);
   return true;
 }
 
@@ -9007,7 +9007,7 @@ bool BytecodeEmitter::emitClass(
     bool needsHomeObject = ctor->funbox()->needsHomeObject();
     // HERITAGE is consumed inside emitFunction.
     if (nameKind == ClassNameKind::InferredName) {
-      if (!setFunName(ctor->funbox()->function(), nameForAnonymousClass)) {
+      if (!setFunName(ctor->funbox(), nameForAnonymousClass)) {
         return false;
       }
     }

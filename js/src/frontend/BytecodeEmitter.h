@@ -690,7 +690,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitAnonymousFunctionWithComputedName(
       ParseNode* node, FunctionPrefixKind prefixKind);
 
-  MOZ_MUST_USE bool setFunName(JSFunction* fun, JSAtom* name);
+  MOZ_MUST_USE bool setFunName(FunctionBox* fun, JSAtom* name);
   MOZ_MUST_USE bool emitInitializer(ParseNode* initializer, ParseNode* pattern);
 
   MOZ_MUST_USE bool emitCallSiteObject(CallSiteNode* callSiteObj);
