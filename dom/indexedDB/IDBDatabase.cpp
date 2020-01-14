@@ -676,12 +676,6 @@ RefPtr<IDBRequest> IDBDatabase::CreateMutableFile(
   return request;
 }
 
-RefPtr<IDBRequest> IDBDatabase::MozCreateFileHandle(
-    JSContext* aCx, const nsAString& aName, const Optional<nsAString>& aType,
-    ErrorResult& aRv) {
-  return CreateMutableFile(aCx, aName, aType, aRv);
-}
-
 void IDBDatabase::RegisterTransaction(IDBTransaction* aTransaction) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aTransaction);
