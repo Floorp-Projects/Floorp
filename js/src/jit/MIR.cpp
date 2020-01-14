@@ -4522,12 +4522,12 @@ void MCompare::filtersUndefinedOrNull(bool trueBranch, MDefinition** subject,
   MOZ_ASSERT(jsop() == JSOP_STRICTNE || jsop() == JSOP_NE ||
              jsop() == JSOP_STRICTEQ || jsop() == JSOP_EQ);
 
-  // JSOP_*NE only removes undefined/null from if/true branch
+  // JSOp::*Ne only removes undefined/null from if/true branch
   if (!trueBranch && (jsop() == JSOP_STRICTNE || jsop() == JSOP_NE)) {
     return;
   }
 
-  // JSOP_*EQ only removes undefined/null from else/false branch
+  // JSOp::*Eq only removes undefined/null from else/false branch
   if (trueBranch && (jsop() == JSOP_STRICTEQ || jsop() == JSOP_EQ)) {
     return;
   }

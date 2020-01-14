@@ -81,8 +81,8 @@
  * instruction immediately before the span and a `JSOp::JumpTarget immediately
  * after it. Instructions must not jump to this `JSOp::JumpTarget`. (The VM puts
  * us there on exception.) Furthermore, the instruction sequence immediately
- * following a `JSTRY_CATCH` span must read `JUMPTARGET; EXCEPTION` or, in
- * non-function scripts, `JUMPTARGET; UNDEFINED; SETRVAL; EXCEPTION`. (These
+ * following a `JSTRY_CATCH` span must read `JumpTarget; Exception` or, in
+ * non-function scripts, `JumpTarget; Undefined; SetRval; Exception`. (These
  * instructions run with an exception pending; other instructions aren't
  * designed to handle that.)
  *
@@ -393,8 +393,8 @@
      *
      * In a global scope:
      *
-     * -   `typeof x` compiles to `GETGNAME "x"; TYPEOF`.
-     * -   `typeof (0, x)` compiles to `GETGNAME "x"; TYPEOFEXPR`.
+     * -   `typeof x` compiles to `GetGName "x"; Typeof`.
+     * -   `typeof (0, x)` compiles to `GetGName "x"; TypeofExpr`.
      *
      * Emitting the same bytecode for these two expressions would be a bug.
      * Per spec, the latter throws a ReferenceError if `x` doesn't exist.
@@ -719,7 +719,7 @@
      * alone. For one thing, `JSOp::Add` sometimes does string concatenation,
      * while `++` always does numeric addition. More fundamentally, the result
      * of evaluating `--x` is ToNumeric(old value of `x`), a value that the
-     * sequence `GETLOCAL "x"; ONE; SUB; SETLOCAL "x"` does not give us.
+     * sequence `GetLocal "x"; One; Sub; SetLocal "x"` does not give us.
      *
      * [1]: https://tc39.es/ecma262/#sec-tonumeric
      * [2]: https://tc39.es/ecma262/#sec-postfix-increment-operator
@@ -820,7 +820,7 @@
      * Create and push a new object of a predetermined shape.
      *
      * The new object has the shape of the template object
-     * `script->getObject(baseobjIndex)`. Subsequent `INITPROP` instructions
+     * `script->getObject(baseobjIndex)`. Subsequent `InitProp` instructions
      * must fill in all slots of the new object before it is used in any other
      * way.
      *
@@ -1488,8 +1488,8 @@
      * `INT32_MAX`, this throws a RangeError.
      *
      * This instruction is used when an array literal contains a
-     * *SpreadElement*. In `[a, ...b, c]`, `INITELEM_ARRAY 0` is used to put
-     * `a` into the array, but `INITELEM_INC` is used for the elements of `b`
+     * *SpreadElement*. In `[a, ...b, c]`, `InitElemArray 0` is used to put
+     * `a` into the array, but `InitElemInc` is used for the elements of `b`
      * and for `c`.
      *
      * Implements: Several steps in [ArrayAccumulation][1] that call
@@ -1763,7 +1763,7 @@
      * Perform a direct eval in the current environment if `callee` is the
      * builtin `eval` function, otherwise follow same behaviour as `JSOp::Call`.
      *
-     * All direct evals use one of the JSOP_*EVAL operations here and these
+     * All direct evals use one of the JSOp::*Eval instructions here and these
      * opcodes are only used when the syntactic conditions for a direct eval
      * are met. If the builtin `eval` function is called though other means, it
      * becomes an indirect eval.
@@ -1771,7 +1771,7 @@
      * Direct eval causes all bindings in *enclosing* non-global scopes to be
      * marked "aliased". The optimization that puts bindings in stack slots has
      * to prove that the bindings won't need to be captured by closures or
-     * accessed using `JSOP_{GET,BIND,SET,DEL}NAME` instructions. Direct eval
+     * accessed using `JSOp::{Get,Bind,Set,Del}Name` instructions. Direct eval
      * makes that analysis impossible.
      *
      * Implements: [Function Call Evaluation][1], steps 5-7 and 9, when the
@@ -2246,8 +2246,8 @@
      * This opcode is weird: it's the only one whose ndefs varies depending on
      * which way a conditional branch goes. We could implement switch
      * statements using `JSOp::IfNe` and `JSOp::Pop`, but that would also be
-     * awkward--putting the `POP` inside the `switch` body would complicate
-     * fallthrough.
+     * awkward--putting the `JSOp::Pop` inside the `switch` body would
+     * complicate fallthrough.
      *
      *   Category: Control flow
      *   Type: Jumps
@@ -2509,7 +2509,7 @@
      * separately; but all those success paths are written as bytecode, and
      * each one needs to run the `finally` block before continuing with
      * whatever they were doing. They use `JSOp::Gosub` for this. It is thus
-     * normal for multiple `GOSUB` instructions in a script to target the same
+     * normal for multiple `Gosub` instructions in a script to target the same
      * `finally` block.
      *
      * Rules: `forwardOffset` must be positive and must target a
@@ -2579,7 +2579,7 @@
      * Push `MagicValue(JS_UNINITIALIZED_LEXICAL)`, a magic value used to mark
      * a binding as uninitialized.
      *
-     * This magic value must be used only by `JSOP_INIT*LEXICAL`.
+     * This magic value must be used only by `JSOp::Init*Lexical`.
      *
      *   Category: Variables and scopes
      *   Type: Initialization
@@ -2625,7 +2625,7 @@
      *
      * Like `JSOp::InitLexical` but for aliased bindings.
      *
-     * Note: There is no even-less-optimized `INITNAME` instruction because JS
+     * Note: There is no even-less-optimized `InitName` instruction because JS
      * doesn't need it. We always know statically which binding we're
      * initializing.
      *
@@ -2662,8 +2662,8 @@
     /*
      * Like `JSOp::CheckLexical` but for aliased bindings.
      *
-     * Note: There are no `CHECKNAME` or `CHECKGNAME` instructions because
-     * they're unnecessary. `JSOP_{GET,SET}{NAME,GNAME}` all check for
+     * Note: There are no `CheckName` or `CheckGName` instructions because
+     * they're unnecessary. `JSOp::{Get,Set}{Name,GName}` all check for
      * uninitialized lexicals and throw if needed.
      *
      *   Category: Variables and scopes
@@ -2721,7 +2721,7 @@
      * Implements: [ResolveBinding][1] followed by [GetValue][2]
      * (adjusted hackily for `typeof`).
      *
-     * This is the fallback `GET` instruction that handles all unoptimized
+     * This is the fallback `Get` instruction that handles all unoptimized
      * cases. Optimized instructions follow.
      *
      * [1]: https://tc39.es/ecma262/#sec-resolvebinding
@@ -2787,15 +2787,15 @@
      * All other bindings are called "aliased" and stored in
      * `EnvironmentObject`s.
      *
-     * Where possible, `ALIASED` instructions are used to access aliased
-     * bindings.  (There's no difference in meaning between `ALIASEDVAR` and
-     * `ALIASEDLEXICAL`.) Each of these instructions has operands `hops` and
+     * Where possible, `Aliased` instructions are used to access aliased
+     * bindings.  (There's no difference in meaning between `AliasedVar` and
+     * `AliasedLexical`.) Each of these instructions has operands `hops` and
      * `slot` that encode an [`EnvironmentCoordinate`][1], directions to the
      * binding from the current environment object.
      *
      * `hops` and `slot` must be valid for the current scope.
      *
-     * `ALIASED` instructions can't be used when there's a dynamic scope (due
+     * `Aliased` instructions can't be used when there's a dynamic scope (due
      * to non-strict `eval` or `with`) that might shadow the aliased binding.
      *
      * [1]: https://searchfox.org/mozilla-central/search?q=symbol:T_js%3A%3AEnvironmentCoordinate
@@ -2892,7 +2892,7 @@
      * `env` must be an environment currently on the environment chain,
      * pushed by `JSOp::BindName`.
      *
-     * This is the fallback `SET` instruction that handles all unoptimized
+     * This is the fallback `Set` instruction that handles all unoptimized
      * cases. Optimized instructions follow.
      *
      * Implements: [PutValue][1] steps 5 and 7 for unoptimized bindings.
@@ -2901,7 +2901,7 @@
      * assignment: finding and setting a variable. They are two separate
      * instructions because, per spec, the "finding" part happens before
      * evaluating the right-hand side of the assignment, and the "setting" part
-     * after. Optimized cases don't need a `BIND` instruction because the
+     * after. Optimized cases don't need a `Bind` instruction because the
      * "finding" is done statically.
      *
      * [1]: https://tc39.es/ecma262/#sec-putvalue
@@ -3006,18 +3006,18 @@
      *
      * #### Fine print for environment chain instructions
      *
-     * The following rules for `JSOP_{PUSH,POP}LEXICALENV` also apply to
-     * `JSOP_{PUSH,POP}VARENV` and `JSOP_{ENTER,LEAVE}WITH`.
+     * The following rules for `JSOp::{Push,Pop}LexicalEnv` also apply to
+     * `JSOp::{Push,Pop}VarEnv` and `JSOp::{Enter,Leave}With`.
      *
      * Each `JSOp::PopLexicalEnv` instruction matches a particular
      * `JSOp::PushLexicalEnv` instruction in the same script and must have the
      * same scope and stack depth as the instruction immediately after that
-     * `PUSHLEXICALENV`.
+     * `PushLexicalEnv`.
      *
      * `JSOp::PushLexicalEnv` enters a scope that extends to some set of
      * instructions in the script. Code must not jump into or out of this
-     * region: control can enter only by executing `PUSHLEXICALENV` and can
-     * exit only by executing a `POPLEXICALENV` or by exception unwinding. (A
+     * region: control can enter only by executing `PushLexicalEnv` and can
+     * exit only by executing a `PopLexicalEnv` or by exception unwinding. (A
      * `JSOp::PopLexicalEnv` is always emitted at the end of the block, and
      * extra copies are emitted on "exit slides", where a `break`, `continue`,
      * or `return` statement exits the scope.)
@@ -3054,13 +3054,13 @@
      *
      * If all bindings in a lexical scope are optimized into stack slots, then
      * the runtime environment objects for that scope are optimized away. No
-     * `JSOP_{PUSH,POP}LEXICALENV` instructions are emitted. However, the
+     * `JSOp::{Push,Pop}LexicalEnv` instructions are emitted. However, the
      * debugger still needs to be notified when control exits a scope; that's
      * what this instruction does.
      *
      * The last instruction in a lexical scope, as indicated by scope notes,
-     * must be marked with either this instruction (if the scope is optimized)
-     * or `JSOp::PopLexicalEnv` (if not).
+     * must be either this instruction (if the scope is optimized) or
+     * `JSOp::PopLexicalEnv` (if not).
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
@@ -3149,8 +3149,8 @@
      *
      * Operations that may need to consult a WithEnvironment can't be correctly
      * implemented using optimized instructions like `JSOp::GetLocal`. A script
-     * must use the deoptimized `JSOp::GetName`, `BINDNAME`, `SETNAME`, and
-     * `DELNAME` instead. Since those instructions don't work correctly with
+     * must use the deoptimized `JSOp::GetName`, `BindName`, `SetName`, and
+     * `DelName` instead. Since those instructions don't work correctly with
      * optimized locals and arguments, all bindings in scopes enclosing a
      * `with` statement are marked as "aliased" and deoptimized too.
      *
@@ -3200,7 +3200,7 @@
      * Create a new binding on the current VariableEnvironment (the environment
      * on the environment chain designated to receive new variables).
      *
-     * `JSOP_DEF{VAR,LET,CONST,FUN}` instructions must appear in the script
+     * `JSOp::Def{Var,Let,Const,Fun}` instructions must appear in the script
      * before anything else that might add bindings to the environment, and
      * only once per binding. There must be a correct entry for the new binding
      * in `script->bodyScope()`. (All this ensures that at run time, there is

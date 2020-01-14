@@ -18,7 +18,7 @@
 #include "js/TypeDecls.h"              // jsbytecode
 #include "util/BitArray.h"
 #include "vm/BytecodeUtil.h"  // SET_JUMP_OFFSET, JUMP_OFFSET_LEN, SET_RESUMEINDEX
-#include "vm/Opcodes.h"       // JSOP_*
+#include "vm/Opcodes.h"       // JSOp, JSOP_TABLESWITCH_LENGTH
 #include "vm/Runtime.h"       // ReportOutOfMemory
 
 using namespace js;

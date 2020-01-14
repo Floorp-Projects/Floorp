@@ -9327,8 +9327,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         JSOp op = JSOP_CALL;
         bool maybeAsyncArrow = false;
         if (PropertyName* prop = handler_.maybeDottedProperty(lhs)) {
-          // Use the JSOP_FUN{APPLY,CALL} optimizations given the
-          // right syntax.
+          // Use the JSOp::Fun{Apply,Call} optimizations given the right
+          // syntax.
           if (prop == cx_->names().apply) {
             op = JSOP_FUNAPPLY;
             if (pc_->isFunctionBox()) {
