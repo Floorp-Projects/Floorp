@@ -835,9 +835,10 @@ class HTMLInputElement final : public TextControlElement,
   bool MozIsTextField(bool aExcludePassword);
 
   /**
-   * GetEditor() is for webidl bindings.
+   * GetEditor() and HasEditor() for webidl bindings.
    */
   MOZ_CAN_RUN_SCRIPT nsIEditor* GetEditor();
+  bool HasEditor();
 
   bool IsInputEventTarget() const { return IsSingleLineTextControl(false); }
 
