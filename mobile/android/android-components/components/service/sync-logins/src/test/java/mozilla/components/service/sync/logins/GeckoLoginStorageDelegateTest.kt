@@ -33,7 +33,27 @@ class GeckoLoginStorageDelegateTest {
         loginsStorage = mockLoginsStorage()
         keystore = SecureAbove22Preferences(testContext, "name")
         scope = TestCoroutineScope()
-        delegate = GeckoLoginStorageDelegate(loginsStorage, keystore, scope)
+        delegate = GeckoLoginStorageDelegate(loginsStorage, keystore, { false }, scope)
+    }
+
+    @Test
+    @Config(sdk = [21])
+    fun `WHEN passed false for shouldAutofill onLoginsFetch returns early`() {
+        scope.launch {
+            delegate.onLoginFetch("login")
+            verify(loginsStorage, times(0)).touch(any()).await()
+        }
+    }
+
+    @Test
+    @Config(sdk = [21])
+    fun `WHEN passed true for shouldAutofill onLoginsFetch does not return early`() {
+        delegate = GeckoLoginStorageDelegate(loginsStorage, keystore, { true }, scope)
+
+        scope.launch {
+            delegate.onLoginFetch("login")
+            verify(loginsStorage, times(1)).touch(any()).await()
+        }
     }
 
     @Test

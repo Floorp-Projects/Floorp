@@ -56,6 +56,7 @@ internal const val PASSWORDS_KEY = "passwords"
 class GeckoLoginStorageDelegate(
     private val loginStorage: AsyncLoginsStorage,
     keyStore: SecureAbove22Preferences,
+    private val isAutofillEnabled: () -> Boolean = { false },
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : LoginStorageDelegate {
 
@@ -74,6 +75,7 @@ class GeckoLoginStorageDelegate(
     }
 
     override fun onLoginFetch(domain: String): List<Login> {
+        if (!isAutofillEnabled.invoke()) return listOf()
         return runBlocking {
             // GV expects a synchronous response. Blocking here hasn't caused problems during
             // testing, but we should add telemetry to verify. See #5531
@@ -112,9 +114,11 @@ class GeckoLoginStorageDelegate(
     fun getPersistenceOperation(newLogin: Login, savedLogin: ServerPassword?): Operation = when {
         newLogin.guid.isNullOrEmpty() || savedLogin == null -> Operation.CREATE
         newLogin.guid != savedLogin.id -> {
-            logger.debug("getPersistenceOperation called with a non-null `savedLogin` with" +
-                " a guid that does not match `newLogin`. This is unexpected. Falling back to create " +
-                "new login.")
+            logger.debug(
+                "getPersistenceOperation called with a non-null `savedLogin` with" +
+                        " a guid that does not match `newLogin`. This is unexpected. Falling back to create " +
+                        "new login."
+            )
             Operation.CREATE
         }
         // This means a password was saved for this site with a blank username. Update that record
@@ -130,7 +134,9 @@ class GeckoLoginStorageDelegate(
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 fun ServerPassword.mergeWithLogin(login: Login): ServerPassword {
-    infix fun String?.orUseExisting(other: String?) = if (this?.isNotEmpty() == true) this else other
+    infix fun String?.orUseExisting(other: String?) =
+        if (this?.isNotEmpty() == true) this else other
+
     infix fun String?.orUseExisting(other: String) = if (this?.isNotEmpty() == true) this else other
 
     val hostname = login.origin orUseExisting hostname
