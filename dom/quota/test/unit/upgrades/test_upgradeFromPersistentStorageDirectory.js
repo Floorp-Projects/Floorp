@@ -3,6 +3,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/**
+ * This test is mainly to verify
+ * MaybeUpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory method.
+ */
+
 var testGenerator = testSteps();
 
 function* testSteps() {
@@ -211,14 +216,13 @@ function* testSteps() {
 
   let metadataBuffers = [];
 
-  // Test upgrade from FF 36 (no storage/default, tracked only timestamp in
-  // .metadata for persistent storage and isApp not tracked in .metadata for
-  // temporary storage).
-
   clear(continueToNextStepSync);
   yield undefined;
 
-  installPackage("defaultStorageUpgrade_profile");
+  // Storage used by 26-35 (storage/persistent/ directory, tracked only
+  // timestamp in .metadata for persistent storage and isApp not tracked in
+  // .metadata for temporary storage).
+  installPackage("persistentStorageDirectory_profile");
 
   info("Checking origin directories");
 
