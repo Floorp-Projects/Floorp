@@ -428,7 +428,10 @@
     }
 
     detachController() {
-      if (this.mController.input.wrappedJSObject == this.nsIAutocompleteInput) {
+      if (
+        this.mController.input &&
+        this.mController.input.wrappedJSObject == this.nsIAutocompleteInput
+      ) {
         this.mController.input = null;
       }
     }
