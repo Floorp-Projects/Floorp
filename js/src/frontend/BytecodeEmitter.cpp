@@ -8523,8 +8523,8 @@ bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count,
   // Array literal's length is limited to NELEMENTS_LIMIT in parser.
   static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= INT32_MAX,
                 "array literals' maximum length must not exceed limits "
-                "required by BaselineCompiler::emit_JSOP_NEWARRAY, "
-                "BaselineCompiler::emit_JSOP_INITELEM_ARRAY, "
+                "required by BaselineCompiler::emit_NewArray, "
+                "BaselineCompiler::emit_InitElemArray, "
                 "and DoSetElemFallback's handling of JSOP_INITELEM_ARRAY");
   MOZ_ASSERT(count >= nspread);
   MOZ_ASSERT(count <= NativeObject::MAX_DENSE_ELEMENTS_COUNT,

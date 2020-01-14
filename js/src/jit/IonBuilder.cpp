@@ -10580,9 +10580,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_rest() {
     }
   }
 
-  // The array's length is incorrectly 0 now, from the template object
-  // created by BaselineCompiler::emit_JSOP_REST() before the actual argument
-  // count was known. Set the correct length now that we know that count.
+  // The array's length is incorrectly 0 now, from the template object created
+  // by BaselineCompiler::emit_Rest() before the actual argument count was
+  // known. Set the correct length now that we know that count.
   MSetArrayLength* length = MSetArrayLength::New(alloc(), elements, index);
   current->add(length);
 
