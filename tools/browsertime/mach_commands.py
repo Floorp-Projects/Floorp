@@ -44,6 +44,8 @@ import mozpack.path as mozpath
 
 
 BROWSERTIME_ROOT = os.path.dirname(__file__)
+PILLOW_VERSION = "6.0.0"
+PYSSIM_VERSION = "0.4"
 
 
 def node_path():
@@ -353,19 +355,25 @@ class MachBrowsertime(MachCommandBase):
         return append_env
 
     def _activate_virtualenv(self, *args, **kwargs):
+        r'''Activates virtualenv.
+
+        This function will also install Pillow and pyssim if needed.
+        It will raise an error in case the install failed.
+        '''
         MachCommandBase._activate_virtualenv(self, *args, **kwargs)
-
+        # installing Python deps on the fly
         try:
-            self.virtualenv_manager.install_pip_package('Pillow==6.0.0')
-        except Exception:
-            print('Could not install Pillow from pip.')
-            return 1
-
+            import PIL
+            if PIL.__version__ != PILLOW_VERSION:
+                raise ImportError("Wrong version %s" % PIL.__version__)
+        except ImportError:
+            self.virtualenv_manager.install_pip_package('Pillow==%s' % PILLOW_VERSION)
         try:
-            self.virtualenv_manager.install_pip_package('pyssim==0.4')
-        except Exception:
-            print('Could not install pyssim from pip.')
-            return 1
+            # No __version__ in that package.
+            # We make the assumption it's fine.
+            import ssim  # noqa
+        except ImportError:
+            self.virtualenv_manager.install_pip_package('pyssim==%s' % PYSSIM_VERSION)
 
     def check(self):
         r'''Run `visualmetrics.py --check`.'''
