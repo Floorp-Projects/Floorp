@@ -64,3 +64,6 @@ FINAL_TARGET_FILES.features['doh-rollout@mozilla.org']["_locales"]["zh_CN"] += [
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Security')
