@@ -21,11 +21,11 @@ class Scope;
 class GlobalScope;
 class EvalScope;
 class GCMarker;
-class ScopeCreationData;
 
 namespace frontend {
 struct ParseInfo;
 class FunctionBox;
+class ScopeCreationData;
 }  // namespace frontend
 
 using ScopeIndex = frontend::TypedIndex<Scope>;
@@ -89,7 +89,7 @@ class AbstractScope {
   bool isScopeCreationData() const { return scope_.is<Deferred>(); }
 
   // Note: this handle is rooted in the ParseInfo.
-  MutableHandle<ScopeCreationData> scopeCreationData() const;
+  MutableHandle<frontend::ScopeCreationData> scopeCreationData() const;
 
   Scope* scope() const { return scope_.as<HeapPtrScope>(); }
 
