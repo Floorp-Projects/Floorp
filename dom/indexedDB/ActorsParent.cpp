@@ -6288,7 +6288,6 @@ class TransactionBase {
   FlippedOnce<false> mCommitOrAbortReceived;
   FlippedOnce<false> mCommittedOrAborted;
   FlippedOnce<false> mForceAborted;
-  bool mHasFailedRequest = false;
 
  public:
   void AssertIsOnConnectionThread() const {
@@ -6380,8 +6379,6 @@ class TransactionBase {
   void NoteActiveRequest();
 
   void NoteFinishedRequest();
-
-  void NoteFailedRequest(nsresult aResultCode);
 
   void Invalidate();
 
@@ -14082,10 +14079,6 @@ bool TransactionBase::RecvCommit() {
 
   mCommitOrAbortReceived.Flip();
 
-  // Ignore requests that failed before we were committing (cf.
-  // https://w3c.github.io/IndexedDB/#async-execute-request step 5.3 vs. 5.4).
-  mHasFailedRequest = false;
-
   MaybeCommitOrAbort();
   return true;
 }
@@ -14640,15 +14633,6 @@ void TransactionBase::NoteFinishedRequest() {
   mActiveRequestCount--;
 
   MaybeCommitOrAbort();
-}
-
-void TransactionBase::NoteFailedRequest(const nsresult aResultCode) {
-  AssertIsOnConnectionThread();
-
-  // TODO: Should we store the result code? Maybe also the request that failed?
-  MOZ_ASSERT(NS_FAILED(aResultCode));
-
-  mHasFailedRequest = true;
 }
 
 void TransactionBase::Invalidate() {
@@ -22609,8 +22593,6 @@ void TransactionDatabaseOperationBase::RunOnConnectionThread() {
         }
 
         if (NS_FAILED(rv)) {
-          (*mTransaction)->NoteFailedRequest(rv);
-
           SetFailureCode(rv);
         }
       }
@@ -22918,10 +22900,6 @@ NS_IMETHODIMP
 TransactionBase::CommitOp::Run() {
   MOZ_ASSERT(mTransaction);
   mTransaction->AssertIsOnConnectionThread();
-
-  if (NS_SUCCEEDED(mResultCode) && mTransaction->mHasFailedRequest) {
-    mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
-  }
 
   AUTO_PROFILER_LABEL("TransactionBase::CommitOp::Run", DOM);
 

@@ -692,7 +692,7 @@ void DispatchErrorEvent(IDBRequest* aRequest, nsresult aErrorCode,
   }
 
   MOZ_ASSERT(!transaction || transaction->IsActive() ||
-             transaction->IsAborted() || transaction->WasExplicitlyCommitted());
+             transaction->IsAborted());
 
   if (transaction && transaction->IsActive()) {
     transaction->TransitionToInactive();
@@ -760,7 +760,7 @@ void DispatchSuccessEvent(ResultHelper* aResultHelper,
                                IDB_LOG_STRINGIFY(aEvent, kSuccessEventType));
   }
 
-  MOZ_ASSERT_IF(transaction && !transaction->WasExplicitlyCommitted(),
+  MOZ_ASSERT_IF(transaction,
                 transaction->IsActive() && !transaction->IsAborted());
 
   IgnoredErrorResult rv;
@@ -779,7 +779,7 @@ void DispatchSuccessEvent(ResultHelper* aResultHelper,
       transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
     } else {
       // To handle upgrade transaction.
-      transaction->CommitIfNotStarted();
+      transaction->Run();
     }
   }
 }
