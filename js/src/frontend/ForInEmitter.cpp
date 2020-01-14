@@ -36,7 +36,7 @@ bool ForInEmitter::emitInitialize() {
   MOZ_ASSERT(state_ == State::Iterated);
   tdzCacheForIteratedValue_.reset();
 
-  if (!bce_->emit1(JSOp::Iter)) {
+  if (!bce_->emit1(JSOP_ITER)) {
     //              [stack] ITER
     return false;
   }
@@ -48,15 +48,15 @@ bool ForInEmitter::emitInitialize() {
     return false;
   }
 
-  if (!bce_->emit1(JSOp::MoreIter)) {
+  if (!bce_->emit1(JSOP_MOREITER)) {
     //              [stack] ITER NEXTITERVAL?
     return false;
   }
-  if (!bce_->emit1(JSOp::IsNoIter)) {
+  if (!bce_->emit1(JSOP_ISNOITER)) {
     //              [stack] ITER NEXTITERVAL? ISNOITER
     return false;
   }
-  if (!bce_->emitJump(JSOp::IfNe, &loopInfo_->breaks)) {
+  if (!bce_->emitJump(JSOP_IFNE, &loopInfo_->breaks)) {
     //              [stack] ITER NEXTITERVAL?
     return false;
   }
@@ -75,7 +75,7 @@ bool ForInEmitter::emitInitialize() {
                ScopeKind::Lexical);
 
     if (headLexicalEmitterScope_->hasEnvironment()) {
-      if (!bce_->emit1(JSOp::RecreateLexicalEnv)) {
+      if (!bce_->emit1(JSOP_RECREATELEXICALENV)) {
         //          [stack] ITER ITERVAL
         return false;
       }
@@ -92,7 +92,7 @@ bool ForInEmitter::emitInitialize() {
 #endif
   MOZ_ASSERT(loopDepth_ >= 2);
 
-  if (!bce_->emit1(JSOp::IterNext)) {
+  if (!bce_->emit1(JSOP_ITERNEXT)) {
     //              [stack] ITER ITERVAL
     return false;
   }
@@ -130,11 +130,11 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
     return false;
   }
 
-  if (!bce_->emit1(JSOp::Pop)) {
+  if (!bce_->emit1(JSOP_POP)) {
     //              [stack] ITER
     return false;
   }
-  if (!loopInfo_->emitLoopEnd(bce_, JSOp::Goto, JSTRY_FOR_IN)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOP_GOTO, JSTRY_FOR_IN)) {
     //              [stack] ITER
     return false;
   }
@@ -148,7 +148,7 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   //                [stack] ITER ITERVAL
 
   // Pop the value and iterator and close the iterator.
-  if (!bce_->emit1(JSOp::EndIter)) {
+  if (!bce_->emit1(JSOP_ENDITER)) {
     //              [stack]
     return false;
   }

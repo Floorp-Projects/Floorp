@@ -125,12 +125,12 @@ class AbstractGeneratorObject : public NativeObject {
     setFixedSlot(RESUME_INDEX_SLOT, Int32Value(RESUME_INDEX_RUNNING));
   }
   void setResumeIndex(jsbytecode* pc) {
-    MOZ_ASSERT(JSOp(*pc) == JSOp::InitialYield || JSOp(*pc) == JSOp::Yield ||
-               JSOp(*pc) == JSOp::Await);
+    MOZ_ASSERT(JSOp(*pc) == JSOP_INITIALYIELD || JSOp(*pc) == JSOP_YIELD ||
+               JSOp(*pc) == JSOP_AWAIT);
 
-    MOZ_ASSERT_IF(JSOp(*pc) == JSOp::InitialYield,
+    MOZ_ASSERT_IF(JSOp(*pc) == JSOP_INITIALYIELD,
                   getFixedSlot(RESUME_INDEX_SLOT).isUndefined());
-    MOZ_ASSERT_IF(JSOp(*pc) != JSOp::InitialYield, isRunning());
+    MOZ_ASSERT_IF(JSOp(*pc) != JSOP_INITIALYIELD, isRunning());
 
     uint32_t resumeIndex = GET_UINT24(pc);
     MOZ_ASSERT(resumeIndex < uint32_t(RESUME_INDEX_RUNNING));
@@ -217,7 +217,7 @@ inline GeneratorResumeKind IntToResumeKind(int32_t value) {
 }
 
 inline GeneratorResumeKind ResumeKindFromPC(jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::ResumeKind);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_RESUMEKIND);
   return IntToResumeKind(GET_UINT8(pc));
 }
 

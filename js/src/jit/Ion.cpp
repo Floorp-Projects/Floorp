@@ -2276,7 +2276,7 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
                                              uint32_t osrFrameSize,
                                              jsbytecode* pc) {
   MOZ_ASSERT(jit::IsIonEnabled(cx));
-  MOZ_ASSERT((JSOp)*pc == JSOp::LoopHead);
+  MOZ_ASSERT((JSOp)*pc == JSOP_LOOPHEAD);
 
   // Skip if the script has been disabled.
   if (!script->canIonCompile()) {
@@ -2352,7 +2352,7 @@ static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
   MOZ_ASSERT(frame->debugFrameSize() == frameSize);
 
   RootedScript script(cx, frame->script());
-  bool isLoopHead = JSOp(*pc) == JSOp::LoopHead;
+  bool isLoopHead = JSOp(*pc) == JSOP_LOOPHEAD;
 
   // The Baseline JIT code checks for Ion disabled or compiling off-thread.
   MOZ_ASSERT(script->canIonCompile());
@@ -2506,7 +2506,7 @@ bool jit::IonCompileScriptForBaselineOSR(JSContext* cx, BaselineFrame* frame,
   *infoPtr = nullptr;
 
   MOZ_ASSERT(frame->debugFrameSize() == frameSize);
-  MOZ_ASSERT(JSOp(*pc) == JSOp::LoopHead);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
 
   if (!IonCompileScriptForBaseline(cx, frame, frameSize, pc)) {
     return false;

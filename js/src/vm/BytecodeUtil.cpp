@@ -66,7 +66,8 @@ using js::frontend::IsIdentifier;
 JS_STATIC_ASSERT(sizeof(uint32_t) * CHAR_BIT >= INDEX_LIMIT_LOG2 + 1);
 
 const JSCodeSpec js::CodeSpecTable[] = {
-#define MAKE_CODESPEC(op, op_snake, token, length, nuses, ndefs, format) \
+#define MAKE_CODESPEC(op, op_camel, op_snake, name, token, length, nuses, \
+                      ndefs, format)                                      \
   {length, nuses, ndefs, format},
     FOR_EACH_OPCODE(MAKE_CODESPEC)
 #undef MAKE_CODESPEC
@@ -77,7 +78,7 @@ const JSCodeSpec js::CodeSpecTable[] = {
  * bytecode or null.
  */
 static const char* const CodeToken[] = {
-#define TOKEN(op, op_snake, token, ...) token,
+#define TOKEN(op, op_camel, op_snake, name, token, ...) token,
     FOR_EACH_OPCODE(TOKEN)
 #undef TOKEN
 };
@@ -87,7 +88,7 @@ static const char* const CodeToken[] = {
  * and JIT debug spew.
  */
 const char* const js::CodeNameTable[] = {
-#define OPNAME(op, ...) #op,
+#define OPNAME(op, op_camel, op_snake, name, ...) name,
     FOR_EACH_OPCODE(OPNAME)
 #undef OPNAME
 };
@@ -570,25 +571,25 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
     // after adding properties.
     // For stack dump, keeping the input is better.
     switch (op) {
-      case JSOp::InitHiddenProp:
-      case JSOp::InitHiddenPropGetter:
-      case JSOp::InitHiddenPropSetter:
-      case JSOp::InitLockedProp:
-      case JSOp::InitProp:
-      case JSOp::InitPropGetter:
-      case JSOp::InitPropSetter:
-      case JSOp::SetFunName:
+      case JSOP_INITHIDDENPROP:
+      case JSOP_INITHIDDENPROP_GETTER:
+      case JSOP_INITHIDDENPROP_SETTER:
+      case JSOP_INITLOCKEDPROP:
+      case JSOP_INITPROP:
+      case JSOP_INITPROP_GETTER:
+      case JSOP_INITPROP_SETTER:
+      case JSOP_SETFUNNAME:
         // Keep the second value.
         MOZ_ASSERT(nuses == 2);
         MOZ_ASSERT(ndefs == 1);
         goto end;
 
-      case JSOp::InitElem:
-      case JSOp::InitElemGetter:
-      case JSOp::InitElemSetter:
-      case JSOp::InitHiddenElem:
-      case JSOp::InitHiddenElemGetter:
-      case JSOp::InitHiddenElemSetter:
+      case JSOP_INITELEM:
+      case JSOP_INITELEM_GETTER:
+      case JSOP_INITELEM_SETTER:
+      case JSOP_INITHIDDENELEM:
+      case JSOP_INITHIDDENELEM_GETTER:
+      case JSOP_INITHIDDENELEM_SETTER:
         // Keep the third value.
         MOZ_ASSERT(nuses == 3);
         MOZ_ASSERT(ndefs == 1);
@@ -610,28 +611,28 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
       }
       break;
 
-    case JSOp::NopDestructuring:
+    case JSOP_NOP_DESTRUCTURING:
       // Poison the last offset to not obfuscate the error message.
       offsetStack[stackDepth - 1].setIgnored();
       break;
 
-    case JSOp::Case:
+    case JSOP_CASE:
       // Keep the switch value.
       MOZ_ASSERT(ndefs == 1);
       break;
 
-    case JSOp::Dup:
+    case JSOP_DUP:
       MOZ_ASSERT(ndefs == 2);
       offsetStack[stackDepth + 1] = offsetStack[stackDepth];
       break;
 
-    case JSOp::Dup2:
+    case JSOP_DUP2:
       MOZ_ASSERT(ndefs == 4);
       offsetStack[stackDepth + 2] = offsetStack[stackDepth];
       offsetStack[stackDepth + 3] = offsetStack[stackDepth + 1];
       break;
 
-    case JSOp::DupAt: {
+    case JSOP_DUPAT: {
       MOZ_ASSERT(ndefs == 1);
       unsigned n = GET_UINT24(pc);
       MOZ_ASSERT(n < stackDepth);
@@ -639,7 +640,7 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
       break;
     }
 
-    case JSOp::Swap: {
+    case JSOP_SWAP: {
       MOZ_ASSERT(ndefs == 2);
       OffsetAndDefIndex tmp = offsetStack[stackDepth + 1];
       offsetStack[stackDepth + 1] = offsetStack[stackDepth];
@@ -647,7 +648,7 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
       break;
     }
 
-    case JSOp::Pick: {
+    case JSOP_PICK: {
       unsigned n = GET_UINT8(pc);
       MOZ_ASSERT(ndefs == n + 1);
       uint32_t top = stackDepth + n;
@@ -659,7 +660,7 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
       break;
     }
 
-    case JSOp::Unpick: {
+    case JSOP_UNPICK: {
       unsigned n = GET_UINT8(pc);
       MOZ_ASSERT(ndefs == n + 1);
       uint32_t top = stackDepth + n;
@@ -671,76 +672,76 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
       break;
     }
 
-    case JSOp::And:
-    case JSOp::CheckIsObj:
-    case JSOp::CheckIsCallable:
-    case JSOp::CheckObjCoercible:
-    case JSOp::CheckThis:
-    case JSOp::CheckThisReinit:
-    case JSOp::CheckClassHeritage:
-    case JSOp::DebugCheckSelfHosted:
-    case JSOp::InitGLexical:
-    case JSOp::InitLexical:
-    case JSOp::Or:
-    case JSOp::Coalesce:
-    case JSOp::SetAliasedVar:
-    case JSOp::SetArg:
-    case JSOp::SetIntrinsic:
-    case JSOp::SetLocal:
-    case JSOp::ThrowSetAliasedConst:
-    case JSOp::ThrowSetCallee:
-    case JSOp::ThrowSetConst:
-    case JSOp::InitAliasedLexical:
-    case JSOp::IterNext:
+    case JSOP_AND:
+    case JSOP_CHECKISOBJ:
+    case JSOP_CHECKISCALLABLE:
+    case JSOP_CHECKOBJCOERCIBLE:
+    case JSOP_CHECKTHIS:
+    case JSOP_CHECKTHISREINIT:
+    case JSOP_CHECKCLASSHERITAGE:
+    case JSOP_DEBUGCHECKSELFHOSTED:
+    case JSOP_INITGLEXICAL:
+    case JSOP_INITLEXICAL:
+    case JSOP_OR:
+    case JSOP_COALESCE:
+    case JSOP_SETALIASEDVAR:
+    case JSOP_SETARG:
+    case JSOP_SETINTRINSIC:
+    case JSOP_SETLOCAL:
+    case JSOP_THROWSETALIASEDCONST:
+    case JSOP_THROWSETCALLEE:
+    case JSOP_THROWSETCONST:
+    case JSOP_INITALIASEDLEXICAL:
+    case JSOP_ITERNEXT:
       // Keep the top value.
       MOZ_ASSERT(nuses == 1);
       MOZ_ASSERT(ndefs == 1);
       break;
 
-    case JSOp::InitHomeObject:
+    case JSOP_INITHOMEOBJECT:
       // Pop the top value, keep the other value.
       MOZ_ASSERT(nuses == 2);
       MOZ_ASSERT(ndefs == 1);
       break;
 
-    case JSOp::CheckResumeKind:
+    case JSOP_CHECK_RESUMEKIND:
       // Pop the top two values, keep the other value.
       MOZ_ASSERT(nuses == 3);
       MOZ_ASSERT(ndefs == 1);
       break;
 
-    case JSOp::SetGName:
-    case JSOp::SetName:
-    case JSOp::SetProp:
-    case JSOp::StrictSetGName:
-    case JSOp::StrictSetName:
-    case JSOp::StrictSetProp:
+    case JSOP_SETGNAME:
+    case JSOP_SETNAME:
+    case JSOP_SETPROP:
+    case JSOP_STRICTSETGNAME:
+    case JSOP_STRICTSETNAME:
+    case JSOP_STRICTSETPROP:
       // Keep the top value, removing other 1 value.
       MOZ_ASSERT(nuses == 2);
       MOZ_ASSERT(ndefs == 1);
       offsetStack[stackDepth] = offsetStack[stackDepth + 1];
       break;
 
-    case JSOp::SetPropSuper:
-    case JSOp::StrictSetPropSuper:
+    case JSOP_SETPROP_SUPER:
+    case JSOP_STRICTSETPROP_SUPER:
       // Keep the top value, removing other 2 values.
       MOZ_ASSERT(nuses == 3);
       MOZ_ASSERT(ndefs == 1);
       offsetStack[stackDepth] = offsetStack[stackDepth + 2];
       break;
 
-    case JSOp::SetElemSuper:
-    case JSOp::StrictSetElemSuper:
+    case JSOP_SETELEM_SUPER:
+    case JSOP_STRICTSETELEM_SUPER:
       // Keep the top value, removing other 3 values.
       MOZ_ASSERT(nuses == 4);
       MOZ_ASSERT(ndefs == 1);
       offsetStack[stackDepth] = offsetStack[stackDepth + 3];
       break;
 
-    case JSOp::IsGenClosing:
-    case JSOp::IsNoIter:
-    case JSOp::MoreIter:
-    case JSOp::OptimizeSpreadCall:
+    case JSOP_ISGENCLOSING:
+    case JSOP_ISNOITER:
+    case JSOP_MOREITER:
+    case JSOP_OPTIMIZE_SPREADCALL:
       // Keep the top value and push one more value.
       MOZ_ASSERT(nuses == 1);
       MOZ_ASSERT(ndefs == 2);
@@ -873,7 +874,7 @@ bool BytecodeParser::parse() {
 #endif /* DEBUG */
 
     switch (op) {
-      case JSOp::TableSwitch: {
+      case JSOP_TABLESWITCH: {
         uint32_t defaultOffset = offset + GET_JUMP_OFFSET(pc);
         jsbytecode* pc2 = pc + JUMP_OFFSET_LEN;
         int32_t low = GET_JUMP_OFFSET(pc2);
@@ -900,14 +901,14 @@ bool BytecodeParser::parse() {
         break;
       }
 
-      case JSOp::Try: {
+      case JSOP_TRY: {
         // Everything between a try and corresponding catch or finally is
         // conditional. Note that there is no problem with code which is skipped
         // by a thrown exception but is not caught by a later handler in the
         // same function: no more code will execute, and it does not matter what
         // is defined.
         for (const JSTryNote& tn : script_->trynotes()) {
-          if (tn.start == offset + JSOpLength_Try) {
+          if (tn.start == offset + JSOP_TRY_LENGTH) {
             uint32_t catchOffset = tn.start + tn.length;
             if (tn.kind == JSTRY_CATCH) {
               if (!addJump(catchOffset, stackDepth, offsetStack, pc,
@@ -933,7 +934,7 @@ bool BytecodeParser::parse() {
     if (IsJumpOpcode(op)) {
       // Case instructions do not push the lvalue back when branching.
       uint32_t newStackDepth = stackDepth;
-      if (op == JSOp::Case) {
+      if (op == JSOP_CASE) {
         newStackDepth--;
       }
 
@@ -1611,7 +1612,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       goto print_int;
 
     case JOF_INT32:
-      MOZ_ASSERT(op == JSOp::Int32);
+      MOZ_ASSERT(op == JSOP_INT32);
       i = GET_INT32(pc);
     print_int:
       if (!sp->jsprintf(" %d", i)) {
@@ -1751,14 +1752,14 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
   }
 
   switch (op) {
-    case JSOp::DelName:
+    case JSOP_DELNAME:
       return write("(delete ") && write(loadAtom(pc)) && write(")");
 
-    case JSOp::GetGName:
-    case JSOp::GetName:
-    case JSOp::GetIntrinsic:
+    case JSOP_GETGNAME:
+    case JSOP_GETNAME:
+    case JSOP_GETINTRINSIC:
       return write(loadAtom(pc));
-    case JSOp::GetArg: {
+    case JSOP_GETARG: {
       unsigned slot = GET_ARGNO(pc);
 
       // For self-hosted scripts that are called from non-self-hosted code,
@@ -1788,26 +1789,26 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       }
       return write(atom);
     }
-    case JSOp::GetLocal: {
+    case JSOP_GETLOCAL: {
       JSAtom* atom = FrameSlotName(script, pc);
       MOZ_ASSERT(atom);
       return write(atom);
     }
-    case JSOp::GetAliasedVar: {
+    case JSOP_GETALIASEDVAR: {
       JSAtom* atom = EnvironmentCoordinateNameSlow(script, pc);
       MOZ_ASSERT(atom);
       return write(atom);
     }
 
-    case JSOp::DelProp:
-    case JSOp::StrictDelProp:
-    case JSOp::Length:
-    case JSOp::GetProp:
-    case JSOp::GetBoundName:
-    case JSOp::CallProp: {
-      bool hasDelete = op == JSOp::DelProp || op == JSOp::StrictDelProp;
+    case JSOP_DELPROP:
+    case JSOP_STRICTDELPROP:
+    case JSOP_LENGTH:
+    case JSOP_GETPROP:
+    case JSOP_GETBOUNDNAME:
+    case JSOP_CALLPROP: {
+      bool hasDelete = op == JSOP_DELPROP || op == JSOP_STRICTDELPROP;
       RootedAtom prop(cx,
-                      (op == JSOp::Length) ? cx->names().length : loadAtom(pc));
+                      (op == JSOP_LENGTH) ? cx->names().length : loadAtom(pc));
       MOZ_ASSERT(prop);
       return (hasDelete ? write("(delete ") : true) &&
              decompilePCForStackOperand(pc, -1) &&
@@ -1816,12 +1817,12 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
                   : write("[") && quote(prop, '\'') && write("]")) &&
              (hasDelete ? write(")") : true);
     }
-    case JSOp::GetPropSuper: {
+    case JSOP_GETPROP_SUPER: {
       RootedAtom prop(cx, loadAtom(pc));
       return write("super.") && quote(prop, '\0');
     }
-    case JSOp::SetElem:
-    case JSOp::StrictSetElem:
+    case JSOP_SETELEM:
+    case JSOP_STRICTSETELEM:
       // NOTE: We don't show the right hand side of the operation because
       // it's used in error messages like: "a[0] is not readable".
       //
@@ -1829,36 +1830,36 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       return decompilePCForStackOperand(pc, -3) && write("[") &&
              decompilePCForStackOperand(pc, -2) && write("]");
 
-    case JSOp::DelElem:
-    case JSOp::StrictDelElem:
-    case JSOp::GetElem:
-    case JSOp::CallElem: {
-      bool hasDelete = (op == JSOp::DelElem || op == JSOp::StrictDelElem);
+    case JSOP_DELELEM:
+    case JSOP_STRICTDELELEM:
+    case JSOP_GETELEM:
+    case JSOP_CALLELEM: {
+      bool hasDelete = (op == JSOP_DELELEM || op == JSOP_STRICTDELELEM);
       return (hasDelete ? write("(delete ") : true) &&
              decompilePCForStackOperand(pc, -2) && write("[") &&
              decompilePCForStackOperand(pc, -1) && write("]") &&
              (hasDelete ? write(")") : true);
     }
 
-    case JSOp::GetElemSuper:
+    case JSOP_GETELEM_SUPER:
       return write("super[") && decompilePCForStackOperand(pc, -2) &&
              write("]");
-    case JSOp::Null:
+    case JSOP_NULL:
       return write(js_null_str);
-    case JSOp::True:
+    case JSOP_TRUE:
       return write(js_true_str);
-    case JSOp::False:
+    case JSOP_FALSE:
       return write(js_false_str);
-    case JSOp::Zero:
-    case JSOp::One:
-    case JSOp::Int8:
-    case JSOp::Uint16:
-    case JSOp::Uint24:
-    case JSOp::Int32:
+    case JSOP_ZERO:
+    case JSOP_ONE:
+    case JSOP_INT8:
+    case JSOP_UINT16:
+    case JSOP_UINT24:
+    case JSOP_INT32:
       return sprinter.printf("%d", GetBytecodeInteger(pc));
-    case JSOp::String:
+    case JSOP_STRING:
       return quote(loadAtom(pc), '"');
-    case JSOp::Symbol: {
+    case JSOP_SYMBOL: {
       unsigned i = uint8_t(pc[1]);
       MOZ_ASSERT(i < JS::WellKnownSymbolLimit);
       if (i < JS::WellKnownSymbolLimit) {
@@ -1866,26 +1867,26 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       }
       break;
     }
-    case JSOp::Undefined:
+    case JSOP_UNDEFINED:
       return write(js_undefined_str);
-    case JSOp::GlobalThis:
+    case JSOP_GLOBALTHIS:
       // |this| could convert to a very long object initialiser, so cite it by
       // its keyword name.
       return write(js_this_str);
-    case JSOp::NewTarget:
+    case JSOP_NEWTARGET:
       return write("new.target");
-    case JSOp::Call:
-    case JSOp::CallIgnoresRv:
-    case JSOp::CallIter:
-    case JSOp::FunCall:
-    case JSOp::FunApply:
+    case JSOP_CALL:
+    case JSOP_CALL_IGNORES_RV:
+    case JSOP_CALLITER:
+    case JSOP_FUNCALL:
+    case JSOP_FUNAPPLY:
       return decompilePCForStackOperand(pc, -int32_t(GET_ARGC(pc) + 2)) &&
              write("(...)");
-    case JSOp::SpreadCall:
+    case JSOP_SPREADCALL:
       return decompilePCForStackOperand(pc, -3) && write("(...)");
-    case JSOp::NewArray:
+    case JSOP_NEWARRAY:
       return write("[]");
-    case JSOp::RegExp: {
+    case JSOP_REGEXP: {
       RootedObject obj(cx, script->getObject(GET_UINT32_INDEX(pc)));
       JSString* str = obj->as<RegExpObject>().toString(cx);
       if (!str) {
@@ -1893,7 +1894,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       }
       return write(str);
     }
-    case JSOp::NewArrayCopyOnWrite: {
+    case JSOP_NEWARRAY_COPYONWRITE: {
       RootedObject obj(cx, script->getObject(GET_UINT32_INDEX(pc)));
       Handle<ArrayObject*> aobj = obj.as<ArrayObject>();
       if (!write("[")) {
@@ -1914,7 +1915,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       }
       return write("]");
     }
-    case JSOp::Object: {
+    case JSOP_OBJECT: {
       JSObject* obj = script->getObject(GET_UINT32_INDEX(pc));
       RootedValue objv(cx, ObjectValue(*obj));
       JSString* str = ValueToSource(cx, objv);
@@ -1923,40 +1924,40 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       }
       return write(str);
     }
-    case JSOp::Void:
+    case JSOP_VOID:
       return write("(void ") && decompilePCForStackOperand(pc, -1) &&
              write(")");
 
-    case JSOp::SuperCall:
-    case JSOp::SpreadSuperCall:
+    case JSOP_SUPERCALL:
+    case JSOP_SPREADSUPERCALL:
       return write("super(...)");
-    case JSOp::SuperFun:
+    case JSOP_SUPERFUN:
       return write("super");
 
-    case JSOp::Eval:
-    case JSOp::SpreadEval:
-    case JSOp::StrictEval:
-    case JSOp::StrictSpreadEval:
+    case JSOP_EVAL:
+    case JSOP_SPREADEVAL:
+    case JSOP_STRICTEVAL:
+    case JSOP_STRICTSPREADEVAL:
       return write("eval(...)");
 
-    case JSOp::New:
+    case JSOP_NEW:
       return write("(new ") &&
              decompilePCForStackOperand(pc, -int32_t(GET_ARGC(pc) + 3)) &&
              write("(...))");
 
-    case JSOp::SpreadNew:
+    case JSOP_SPREADNEW:
       return write("(new ") && decompilePCForStackOperand(pc, -4) &&
              write("(...))");
 
-    case JSOp::Typeof:
-    case JSOp::TypeofExpr:
+    case JSOP_TYPEOF:
+    case JSOP_TYPEOFEXPR:
       return write("(typeof ") && decompilePCForStackOperand(pc, -1) &&
              write(")");
 
-    case JSOp::InitElemArray:
+    case JSOP_INITELEM_ARRAY:
       return write("[...]");
 
-    case JSOp::InitElemInc:
+    case JSOP_INITELEM_INC:
       if (defIndex == 0) {
         return write("[...]");
       }
@@ -1969,17 +1970,17 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 #endif
       break;
 
-    case JSOp::ToNumeric:
+    case JSOP_TONUMERIC:
       return write("(tonumeric ") && decompilePCForStackOperand(pc, -1) &&
              write(")");
 
-    case JSOp::Inc:
+    case JSOP_INC:
       return write("(inc ") && decompilePCForStackOperand(pc, -1) && write(")");
 
-    case JSOp::Dec:
+    case JSOP_DEC:
       return write("(dec ") && decompilePCForStackOperand(pc, -1) && write(")");
 
-    case JSOp::BigInt:
+    case JSOP_BIGINT:
 #if defined(DEBUG) || defined(JS_JITSPEW)
       // BigInt::dump() only available in this configuration.
       script->getBigInt(pc)->dump(sprinter);
@@ -1996,126 +1997,126 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
   if (isStackDump) {
     // Special decompilation for stack dump.
     switch (op) {
-      case JSOp::Arguments:
+      case JSOP_ARGUMENTS:
         return write("arguments");
 
-      case JSOp::BindGName:
+      case JSOP_BINDGNAME:
         return write("GLOBAL");
 
-      case JSOp::BindName:
-      case JSOp::BindVar:
+      case JSOP_BINDNAME:
+      case JSOP_BINDVAR:
         return write("ENV");
 
-      case JSOp::Callee:
+      case JSOP_CALLEE:
         return write("CALLEE");
 
-      case JSOp::EnvCallee:
+      case JSOP_ENVCALLEE:
         return write("ENVCALLEE");
 
-      case JSOp::CallSiteObj:
+      case JSOP_CALLSITEOBJ:
         return write("OBJ");
 
-      case JSOp::ClassConstructor:
-      case JSOp::DerivedConstructor:
+      case JSOP_CLASSCONSTRUCTOR:
+      case JSOP_DERIVEDCONSTRUCTOR:
         return write("CONSTRUCTOR");
 
-      case JSOp::Double:
+      case JSOP_DOUBLE:
         return sprinter.printf("%lf", GET_INLINE_VALUE(pc).toDouble());
 
-      case JSOp::Exception:
+      case JSOP_EXCEPTION:
         return write("EXCEPTION");
 
-      case JSOp::Finally:
+      case JSOP_FINALLY:
         if (defIndex == 0) {
           return write("THROWING");
         }
         MOZ_ASSERT(defIndex == 1);
         return write("PC");
 
-      case JSOp::GImplicitThis:
-      case JSOp::FunctionThis:
-      case JSOp::ImplicitThis:
+      case JSOP_GIMPLICITTHIS:
+      case JSOP_FUNCTIONTHIS:
+      case JSOP_IMPLICITTHIS:
         return write("THIS");
 
-      case JSOp::FunWithProto:
+      case JSOP_FUNWITHPROTO:
         return write("FUN");
 
-      case JSOp::Generator:
+      case JSOP_GENERATOR:
         return write("GENERATOR");
 
-      case JSOp::GetImport:
+      case JSOP_GETIMPORT:
         return write("VAL");
 
-      case JSOp::GetRval:
+      case JSOP_GETRVAL:
         return write("RVAL");
 
-      case JSOp::Hole:
+      case JSOP_HOLE:
         return write("HOLE");
 
-      case JSOp::IsGenClosing:
+      case JSOP_ISGENCLOSING:
         // For stack dump, defIndex == 0 is not used.
         MOZ_ASSERT(defIndex == 1);
         return write("ISGENCLOSING");
 
-      case JSOp::IsNoIter:
+      case JSOP_ISNOITER:
         // For stack dump, defIndex == 0 is not used.
         MOZ_ASSERT(defIndex == 1);
         return write("ISNOITER");
 
-      case JSOp::IsConstructing:
+      case JSOP_IS_CONSTRUCTING:
         return write("JS_IS_CONSTRUCTING");
 
-      case JSOp::Iter:
+      case JSOP_ITER:
         return write("ITER");
 
-      case JSOp::Lambda:
-      case JSOp::LambdaArrow:
+      case JSOP_LAMBDA:
+      case JSOP_LAMBDA_ARROW:
         return write("FUN");
 
-      case JSOp::ToAsyncIter:
+      case JSOP_TOASYNCITER:
         return write("ASYNCITER");
 
-      case JSOp::MoreIter:
+      case JSOP_MOREITER:
         // For stack dump, defIndex == 0 is not used.
         MOZ_ASSERT(defIndex == 1);
         return write("MOREITER");
 
-      case JSOp::MutateProto:
+      case JSOP_MUTATEPROTO:
         return write("SUCCEEDED");
 
-      case JSOp::NewInit:
-      case JSOp::NewObject:
-      case JSOp::NewObjectWithGroup:
-      case JSOp::ObjWithProto:
+      case JSOP_NEWINIT:
+      case JSOP_NEWOBJECT:
+      case JSOP_NEWOBJECT_WITHGROUP:
+      case JSOP_OBJWITHPROTO:
         return write("OBJ");
 
-      case JSOp::OptimizeSpreadCall:
+      case JSOP_OPTIMIZE_SPREADCALL:
         // For stack dump, defIndex == 0 is not used.
         MOZ_ASSERT(defIndex == 1);
         return write("OPTIMIZED");
 
-      case JSOp::Rest:
+      case JSOP_REST:
         return write("REST");
 
-      case JSOp::Resume:
+      case JSOP_RESUME:
         return write("RVAL");
 
-      case JSOp::SuperBase:
+      case JSOP_SUPERBASE:
         return write("HOMEOBJECTPROTO");
 
-      case JSOp::ToId:
+      case JSOP_TOID:
         return write("TOID(") && decompilePCForStackOperand(pc, -1) &&
                write(")");
-      case JSOp::ToString:
+      case JSOP_TOSTRING:
         return write("TOSTRING(") && decompilePCForStackOperand(pc, -1) &&
                write(")");
 
-      case JSOp::Uninitialized:
+      case JSOP_UNINITIALIZED:
         return write("UNINITIALIZED");
 
-      case JSOp::InitialYield:
-      case JSOp::Await:
-      case JSOp::Yield:
+      case JSOP_INITIALYIELD:
+      case JSOP_AWAIT:
+      case JSOP_YIELD:
         // Printing "yield SOMETHING" is confusing since the operand doesn't
         // match to the syntax, since the stack operand for "yield 10" is
         // the result object, not 10.
@@ -2128,11 +2129,11 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         MOZ_ASSERT(defIndex == 2);
         return write("RESUMEKIND");
 
-      case JSOp::ResumeKind:
+      case JSOP_RESUMEKIND:
         return write("RESUMEKIND");
 
-      case JSOp::AsyncAwait:
-      case JSOp::AsyncResolve:
+      case JSOP_ASYNCAWAIT:
+      case JSOP_ASYNCRESOLVE:
         return write("PROMISE");
 
       default:
@@ -2456,7 +2457,7 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
 
   /* Don't handle getters, setters or calls from fun.call/fun.apply. */
   JSOp op = JSOp(*current);
-  if (op != JSOp::Call && op != JSOp::CallIgnoresRv && op != JSOp::New) {
+  if (op != JSOP_CALL && op != JSOP_CALL_IGNORES_RV && op != JSOP_NEW) {
     return true;
   }
 
@@ -2470,7 +2471,7 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
     return false;
   }
 
-  bool pushedNewTarget = op == JSOp::New;
+  bool pushedNewTarget = op == JSOP_NEW;
   int formalStackIndex = parser.stackDepthAtPC(current) - GET_ARGC(current) -
                          pushedNewTarget + formalIndex;
   MOZ_ASSERT(formalStackIndex >= 0);
@@ -3038,7 +3039,7 @@ bool js::GetSuccessorBytecodes(JSScript* script, jsbytecode* pc,
     if (!successors.append(pc + GET_JUMP_OFFSET(pc))) {
       return false;
     }
-  } else if (op == JSOp::TableSwitch) {
+  } else if (op == JSOP_TABLESWITCH) {
     if (!successors.append(pc + GET_JUMP_OFFSET(pc))) {
       return false;
     }

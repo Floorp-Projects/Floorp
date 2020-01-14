@@ -257,60 +257,60 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
     }
 
     switch (op) {
-      case JSOp::Not:
-      case JSOp::And:
-      case JSOp::Or:
-      case JSOp::IfEq:
-      case JSOp::IfNe: {
+      case JSOP_NOT:
+      case JSOP_AND:
+      case JSOP_OR:
+      case JSOP_IFEQ:
+      case JSOP_IFNE: {
         ICStub* stub = alloc.newStub<ICToBool_Fallback>(Kind::ToBool);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::BitNot:
-      case JSOp::Neg:
-      case JSOp::Inc:
-      case JSOp::Dec: {
+      case JSOP_BITNOT:
+      case JSOP_NEG:
+      case JSOP_INC:
+      case JSOP_DEC: {
         ICStub* stub = alloc.newStub<ICUnaryArith_Fallback>(Kind::UnaryArith);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::BitOr:
-      case JSOp::BitXor:
-      case JSOp::BitAnd:
-      case JSOp::Lsh:
-      case JSOp::Rsh:
-      case JSOp::Ursh:
-      case JSOp::Add:
-      case JSOp::Sub:
-      case JSOp::Mul:
-      case JSOp::Div:
-      case JSOp::Mod:
-      case JSOp::Pow: {
+      case JSOP_BITOR:
+      case JSOP_BITXOR:
+      case JSOP_BITAND:
+      case JSOP_LSH:
+      case JSOP_RSH:
+      case JSOP_URSH:
+      case JSOP_ADD:
+      case JSOP_SUB:
+      case JSOP_MUL:
+      case JSOP_DIV:
+      case JSOP_MOD:
+      case JSOP_POW: {
         ICStub* stub = alloc.newStub<ICBinaryArith_Fallback>(Kind::BinaryArith);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::Eq:
-      case JSOp::Ne:
-      case JSOp::Lt:
-      case JSOp::Le:
-      case JSOp::Gt:
-      case JSOp::Ge:
-      case JSOp::StrictEq:
-      case JSOp::StrictNe: {
+      case JSOP_EQ:
+      case JSOP_NE:
+      case JSOP_LT:
+      case JSOP_LE:
+      case JSOP_GT:
+      case JSOP_GE:
+      case JSOP_STRICTEQ:
+      case JSOP_STRICTNE: {
         ICStub* stub = alloc.newStub<ICCompare_Fallback>(Kind::Compare);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::NewArray: {
+      case JSOP_NEWARRAY: {
         ObjectGroup* group = ObjectGroup::allocationSiteGroup(
             cx, script, loc.toRawBytecode(), JSProto_Array);
         if (!group) {
@@ -323,107 +323,107 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
         }
         break;
       }
-      case JSOp::NewObject:
-      case JSOp::NewObjectWithGroup:
-      case JSOp::NewInit: {
+      case JSOP_NEWOBJECT:
+      case JSOP_NEWOBJECT_WITHGROUP:
+      case JSOP_NEWINIT: {
         ICStub* stub = alloc.newStub<ICNewObject_Fallback>(Kind::NewObject);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::InitElem:
-      case JSOp::InitHiddenElem:
-      case JSOp::InitElemArray:
-      case JSOp::InitElemInc:
-      case JSOp::SetElem:
-      case JSOp::StrictSetElem: {
+      case JSOP_INITELEM:
+      case JSOP_INITHIDDENELEM:
+      case JSOP_INITELEM_ARRAY:
+      case JSOP_INITELEM_INC:
+      case JSOP_SETELEM:
+      case JSOP_STRICTSETELEM: {
         ICStub* stub = alloc.newStub<ICSetElem_Fallback>(Kind::SetElem);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::InitProp:
-      case JSOp::InitLockedProp:
-      case JSOp::InitHiddenProp:
-      case JSOp::InitGLexical:
-      case JSOp::SetProp:
-      case JSOp::StrictSetProp:
-      case JSOp::SetName:
-      case JSOp::StrictSetName:
-      case JSOp::SetGName:
-      case JSOp::StrictSetGName: {
+      case JSOP_INITPROP:
+      case JSOP_INITLOCKEDPROP:
+      case JSOP_INITHIDDENPROP:
+      case JSOP_INITGLEXICAL:
+      case JSOP_SETPROP:
+      case JSOP_STRICTSETPROP:
+      case JSOP_SETNAME:
+      case JSOP_STRICTSETNAME:
+      case JSOP_SETGNAME:
+      case JSOP_STRICTSETGNAME: {
         ICStub* stub = alloc.newStub<ICSetProp_Fallback>(Kind::SetProp);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::GetProp:
-      case JSOp::CallProp:
-      case JSOp::Length:
-      case JSOp::GetBoundName: {
+      case JSOP_GETPROP:
+      case JSOP_CALLPROP:
+      case JSOP_LENGTH:
+      case JSOP_GETBOUNDNAME: {
         ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetProp);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::GetPropSuper: {
+      case JSOP_GETPROP_SUPER: {
         ICStub* stub = alloc.newStub<ICGetProp_Fallback>(Kind::GetPropSuper);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::GetElem:
-      case JSOp::CallElem: {
+      case JSOP_GETELEM:
+      case JSOP_CALLELEM: {
         ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElem);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::GetElemSuper: {
+      case JSOP_GETELEM_SUPER: {
         ICStub* stub = alloc.newStub<ICGetElem_Fallback>(Kind::GetElemSuper);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::In: {
+      case JSOP_IN: {
         ICStub* stub = alloc.newStub<ICIn_Fallback>(Kind::In);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::HasOwn: {
+      case JSOP_HASOWN: {
         ICStub* stub = alloc.newStub<ICHasOwn_Fallback>(Kind::HasOwn);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::GetName:
-      case JSOp::GetGName: {
+      case JSOP_GETNAME:
+      case JSOP_GETGNAME: {
         ICStub* stub = alloc.newStub<ICGetName_Fallback>(Kind::GetName);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::BindName:
-      case JSOp::BindGName: {
+      case JSOP_BINDNAME:
+      case JSOP_BINDGNAME: {
         ICStub* stub = alloc.newStub<ICBindName_Fallback>(Kind::BindName);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::GetAliasedVar:
-      case JSOp::GetImport: {
+      case JSOP_GETALIASEDVAR:
+      case JSOP_GETIMPORT: {
         ICStub* stub =
             alloc.newStub<ICTypeMonitor_Fallback>(Kind::TypeMonitor, nullptr);
         if (!addIC(loc, stub)) {
@@ -431,7 +431,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
         }
         break;
       }
-      case JSOp::GetIntrinsic: {
+      case JSOP_GETINTRINSIC: {
         ICStub* stub =
             alloc.newStub<ICGetIntrinsic_Fallback>(Kind::GetIntrinsic);
         if (!addIC(loc, stub)) {
@@ -439,38 +439,38 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
         }
         break;
       }
-      case JSOp::Call:
-      case JSOp::CallIgnoresRv:
-      case JSOp::CallIter:
-      case JSOp::FunCall:
-      case JSOp::FunApply:
-      case JSOp::Eval:
-      case JSOp::StrictEval: {
+      case JSOP_CALL:
+      case JSOP_CALL_IGNORES_RV:
+      case JSOP_CALLITER:
+      case JSOP_FUNCALL:
+      case JSOP_FUNAPPLY:
+      case JSOP_EVAL:
+      case JSOP_STRICTEVAL: {
         ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::Call);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::SuperCall:
-      case JSOp::New: {
+      case JSOP_SUPERCALL:
+      case JSOP_NEW: {
         ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::CallConstructing);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::SpreadCall:
-      case JSOp::SpreadEval:
-      case JSOp::StrictSpreadEval: {
+      case JSOP_SPREADCALL:
+      case JSOP_SPREADEVAL:
+      case JSOP_STRICTSPREADEVAL: {
         ICStub* stub = alloc.newStub<ICCall_Fallback>(Kind::SpreadCall);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::SpreadSuperCall:
-      case JSOp::SpreadNew: {
+      case JSOP_SPREADSUPERCALL:
+      case JSOP_SPREADNEW: {
         ICStub* stub =
             alloc.newStub<ICCall_Fallback>(Kind::SpreadCallConstructing);
         if (!addIC(loc, stub)) {
@@ -478,29 +478,29 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
         }
         break;
       }
-      case JSOp::Instanceof: {
+      case JSOP_INSTANCEOF: {
         ICStub* stub = alloc.newStub<ICInstanceOf_Fallback>(Kind::InstanceOf);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::Typeof:
-      case JSOp::TypeofExpr: {
+      case JSOP_TYPEOF:
+      case JSOP_TYPEOFEXPR: {
         ICStub* stub = alloc.newStub<ICTypeOf_Fallback>(Kind::TypeOf);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::Iter: {
+      case JSOP_ITER: {
         ICStub* stub = alloc.newStub<ICGetIterator_Fallback>(Kind::GetIterator);
         if (!addIC(loc, stub)) {
           return false;
         }
         break;
       }
-      case JSOp::Rest: {
+      case JSOP_REST: {
         ArrayObject* templateObject = ObjectGroup::newArrayObject(
             cx, nullptr, 0, TenuredObject,
             ObjectGroup::NewArrayKind::UnknownIndex);
@@ -1828,7 +1828,7 @@ bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
   JSOp op = JSOp(*pc);
   FallbackICSpew(cx, stub, "GetElem(%s)", CodeName(op));
 
-  MOZ_ASSERT(op == JSOp::GetElem || op == JSOp::CallElem);
+  MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
   // Don't pass lhs directly, we need it when generating stubs.
   RootedValue lhsCopy(cx, lhs);
@@ -1894,7 +1894,7 @@ bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
   JSOp op = JSOp(*pc);
   FallbackICSpew(cx, stub, "GetElemSuper(%s)", CodeName(op));
 
-  MOZ_ASSERT(op == JSOp::GetElemSuper);
+  MOZ_ASSERT(op == JSOP_GETELEM_SUPER);
 
   bool attached =
       TryAttachGetPropStub("GetElemSuper", cx, frame, stub,
@@ -2036,9 +2036,9 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
   JSOp op = JSOp(*pc);
   FallbackICSpew(cx, stub, "SetElem(%s)", CodeName(JSOp(*pc)));
 
-  MOZ_ASSERT(op == JSOp::SetElem || op == JSOp::StrictSetElem ||
-             op == JSOp::InitElem || op == JSOp::InitHiddenElem ||
-             op == JSOp::InitElemArray || op == JSOp::InitElemInc);
+  MOZ_ASSERT(op == JSOP_SETELEM || op == JSOP_STRICTSETELEM ||
+             op == JSOP_INITELEM || op == JSOP_INITHIDDENELEM ||
+             op == JSOP_INITELEM_ARRAY || op == JSOP_INITELEM_INC);
 
   RootedObject obj(cx, ToObjectFromStackForPropertyAccess(cx, objv, index));
   if (!obj) {
@@ -2094,33 +2094,33 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     }
   }
 
-  if (op == JSOp::InitElem || op == JSOp::InitHiddenElem) {
+  if (op == JSOP_INITELEM || op == JSOP_INITHIDDENELEM) {
     if (!InitElemOperation(cx, pc, obj, index, rhs)) {
       return false;
     }
-  } else if (op == JSOp::InitElemArray) {
+  } else if (op == JSOP_INITELEM_ARRAY) {
     MOZ_ASSERT(uint32_t(index.toInt32()) <= INT32_MAX,
                "the bytecode emitter must fail to compile code that would "
-               "produce JSOp::InitElemArray with an index exceeding "
+               "produce JSOP_INITELEM_ARRAY with an index exceeding "
                "int32_t range");
     MOZ_ASSERT(uint32_t(index.toInt32()) == GET_UINT32(pc));
     if (!InitArrayElemOperation(cx, pc, obj, index.toInt32(), rhs)) {
       return false;
     }
-  } else if (op == JSOp::InitElemInc) {
+  } else if (op == JSOP_INITELEM_INC) {
     if (!InitArrayElemOperation(cx, pc, obj, index.toInt32(), rhs)) {
       return false;
     }
   } else {
     if (!SetObjectElement(cx, obj, index, rhs, objv,
-                          JSOp(*pc) == JSOp::StrictSetElem, script, pc)) {
+                          JSOp(*pc) == JSOP_STRICTSETELEM, script, pc)) {
       return false;
     }
   }
 
   // Don't try to attach stubs that wish to be hidden. We don't know how to
   // have different enumerability in the stubs for the moment.
-  if (op == JSOp::InitHiddenElem) {
+  if (op == JSOP_INITHIDDENELEM) {
     return true;
   }
 
@@ -2320,7 +2320,7 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
   mozilla::DebugOnly<JSOp> op = JSOp(*pc);
   FallbackICSpew(cx, stub, "GetName(%s)", CodeName(JSOp(*pc)));
 
-  MOZ_ASSERT(op == JSOp::GetName || op == JSOp::GetGName);
+  MOZ_ASSERT(op == JSOP_GETNAME || op == JSOP_GETGNAME);
 
   RootedPropertyName name(cx, script->getName(pc));
 
@@ -2328,9 +2328,9 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
                                     BaselineCacheIRStubKind::Monitored,
                                     envChain, name);
 
-  static_assert(JSOpLength_GetGName == JSOpLength_GetName,
-                "Otherwise our check for JSOp::Typeof isn't ok");
-  if (JSOp(pc[JSOpLength_GetGName]) == JSOp::Typeof) {
+  static_assert(JSOP_GETGNAME_LENGTH == JSOP_GETNAME_LENGTH,
+                "Otherwise our check for JSOP_TYPEOF isn't ok");
+  if (JSOp(pc[JSOP_GETGNAME_LENGTH]) == JSOP_TYPEOF) {
     if (!GetEnvironmentName<GetNameMode::TypeOf>(cx, envChain, name, res)) {
       return false;
     }
@@ -2370,7 +2370,7 @@ bool DoBindNameFallback(JSContext* cx, BaselineFrame* frame,
   mozilla::DebugOnly<JSOp> op = JSOp(*pc);
   FallbackICSpew(cx, stub, "BindName(%s)", CodeName(JSOp(*pc)));
 
-  MOZ_ASSERT(op == JSOp::BindName || op == JSOp::BindGName);
+  MOZ_ASSERT(op == JSOP_BINDNAME || op == JSOP_BINDGNAME);
 
   RootedPropertyName name(cx, frame->script()->getName(pc));
 
@@ -2415,7 +2415,7 @@ bool DoGetIntrinsicFallback(JSContext* cx, BaselineFrame* frame,
   mozilla::DebugOnly<JSOp> op = JSOp(*pc);
   FallbackICSpew(cx, stub, "GetIntrinsic(%s)", CodeName(JSOp(*pc)));
 
-  MOZ_ASSERT(op == JSOp::GetIntrinsic);
+  MOZ_ASSERT(op == JSOP_GETINTRINSIC);
 
   if (!GetIntrinsicOperation(cx, script, pc, res)) {
     return false;
@@ -2455,7 +2455,7 @@ static bool ComputeGetPropResult(JSContext* cx, BaselineFrame* frame, JSOp op,
   // Handle arguments.length and arguments.callee on optimized arguments, as
   // it is not an object.
   if (val.isMagic(JS_OPTIMIZED_ARGUMENTS) && IsOptimizedArguments(frame, val)) {
-    if (op == JSOp::Length) {
+    if (op == JSOP_LENGTH) {
       res.setInt32(frame->numActualArgs());
     } else {
       MOZ_ASSERT(name == cx->names().callee);
@@ -2463,15 +2463,15 @@ static bool ComputeGetPropResult(JSContext* cx, BaselineFrame* frame, JSOp op,
       res.setObject(*frame->callee());
     }
   } else {
-    if (op == JSOp::GetBoundName) {
+    if (op == JSOP_GETBOUNDNAME) {
       RootedObject env(cx, &val.toObject());
       RootedId id(cx, NameToId(name));
       if (!GetNameBoundInEnvironment(cx, env, id, res)) {
         return false;
       }
     } else {
-      MOZ_ASSERT(op == JSOp::GetProp || op == JSOp::CallProp ||
-                 op == JSOp::Length);
+      MOZ_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP ||
+                 op == JSOP_LENGTH);
       if (!GetProperty(cx, val, name, res)) {
         return false;
       }
@@ -2491,8 +2491,8 @@ bool DoGetPropFallback(JSContext* cx, BaselineFrame* frame,
   JSOp op = JSOp(*pc);
   FallbackICSpew(cx, stub, "GetProp(%s)", CodeName(op));
 
-  MOZ_ASSERT(op == JSOp::GetProp || op == JSOp::CallProp ||
-             op == JSOp::Length || op == JSOp::GetBoundName);
+  MOZ_ASSERT(op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH ||
+             op == JSOP_GETBOUNDNAME);
 
   RootedPropertyName name(cx, script->getName(pc));
   RootedValue idVal(cx, StringValue(name));
@@ -2516,7 +2516,7 @@ bool DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame,
   jsbytecode* pc = stub->icEntry()->pc(script);
   FallbackICSpew(cx, stub, "GetPropSuper(%s)", CodeName(JSOp(*pc)));
 
-  MOZ_ASSERT(JSOp(*pc) == JSOp::GetPropSuper);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_GETPROP_SUPER);
 
   RootedPropertyName name(cx, script->getName(pc));
   RootedValue idVal(cx, StringValue(name));
@@ -2619,11 +2619,11 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   JSOp op = JSOp(*pc);
   FallbackICSpew(cx, stub, "SetProp(%s)", CodeName(op));
 
-  MOZ_ASSERT(op == JSOp::SetProp || op == JSOp::StrictSetProp ||
-             op == JSOp::SetName || op == JSOp::StrictSetName ||
-             op == JSOp::SetGName || op == JSOp::StrictSetGName ||
-             op == JSOp::InitProp || op == JSOp::InitLockedProp ||
-             op == JSOp::InitHiddenProp || op == JSOp::InitGLexical);
+  MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP ||
+             op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
+             op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME ||
+             op == JSOP_INITPROP || op == JSOP_INITLOCKEDPROP ||
+             op == JSOP_INITHIDDENPROP || op == JSOP_INITGLEXICAL);
 
   RootedPropertyName name(cx, script->getName(pc));
   RootedId id(cx, NameToId(name));
@@ -2677,17 +2677,17 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     }
   }
 
-  if (op == JSOp::InitProp || op == JSOp::InitLockedProp ||
-      op == JSOp::InitHiddenProp) {
+  if (op == JSOP_INITPROP || op == JSOP_INITLOCKEDPROP ||
+      op == JSOP_INITHIDDENPROP) {
     if (!InitPropertyOperation(cx, op, obj, name, rhs)) {
       return false;
     }
-  } else if (op == JSOp::SetName || op == JSOp::StrictSetName ||
-             op == JSOp::SetGName || op == JSOp::StrictSetGName) {
+  } else if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
+             op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME) {
     if (!SetNameOperation(cx, script, pc, obj, rhs)) {
       return false;
     }
-  } else if (op == JSOp::InitGLexical) {
+  } else if (op == JSOP_INITGLEXICAL) {
     RootedValue v(cx, rhs);
     LexicalEnvironmentObject* lexicalEnv;
     if (script->hasNonSyntacticScope()) {
@@ -2698,12 +2698,12 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     }
     InitGlobalLexicalOperation(cx, lexicalEnv, script, pc, v);
   } else {
-    MOZ_ASSERT(op == JSOp::SetProp || op == JSOp::StrictSetProp);
+    MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
 
     ObjectOpResult result;
     if (!SetProperty(cx, obj, id, rhs, lhs, result) ||
         !result.checkStrictErrorOrWarning(cx, obj, id,
-                                          op == JSOp::StrictSetProp)) {
+                                          op == JSOP_STRICTSETPROP)) {
       return false;
     }
   }
@@ -2822,8 +2822,8 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   FallbackICSpew(cx, stub, "Call(%s)", CodeName(op));
 
   MOZ_ASSERT(argc == GET_ARGC(pc));
-  bool constructing = (op == JSOp::New || op == JSOp::SuperCall);
-  bool ignoresReturnValue = (op == JSOp::CallIgnoresRv);
+  bool constructing = (op == JSOP_NEW || op == JSOP_SUPERCALL);
+  bool ignoresReturnValue = (op == JSOP_CALL_IGNORES_RV);
 
   // Ensure vp array is rooted - we may GC in here.
   size_t numValues = argc + 2 + constructing;
@@ -2835,7 +2835,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   RootedValue newTarget(cx, constructing ? callArgs.newTarget() : NullValue());
 
   // Handle funapply with JSOp::Arguments
-  if (op == JSOp::FunApply && argc == 2 &&
+  if (op == JSOP_FUNAPPLY && argc == 2 &&
       callArgs[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
     if (!GuardFunApplyArgumentsOptimization(cx, frame, callArgs)) {
       return false;
@@ -2887,17 +2887,16 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
       return false;
     }
     res.set(callArgs.rval());
-  } else if ((op == JSOp::Eval || op == JSOp::StrictEval) &&
+  } else if ((op == JSOP_EVAL || op == JSOP_STRICTEVAL) &&
              cx->global()->valueIsEval(callee)) {
     if (!DirectEval(cx, callArgs.get(0), res)) {
       return false;
     }
   } else {
-    MOZ_ASSERT(op == JSOp::Call || op == JSOp::CallIgnoresRv ||
-               op == JSOp::CallIter || op == JSOp::FunCall ||
-               op == JSOp::FunApply || op == JSOp::Eval ||
-               op == JSOp::StrictEval);
-    if (op == JSOp::CallIter && callee.isPrimitive()) {
+    MOZ_ASSERT(op == JSOP_CALL || op == JSOP_CALL_IGNORES_RV ||
+               op == JSOP_CALLITER || op == JSOP_FUNCALL ||
+               op == JSOP_FUNAPPLY || op == JSOP_EVAL || op == JSOP_STRICTEVAL);
+    if (op == JSOP_CALLITER && callee.isPrimitive()) {
       MOZ_ASSERT(argc == 0, "thisv must be on top of the stack");
       ReportValueError(cx, JSMSG_NOT_ITERABLE, -1, callArgs.thisv(), nullptr);
       return false;
@@ -2962,7 +2961,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(script);
   JSOp op = JSOp(*pc);
-  bool constructing = (op == JSOp::SpreadNew || op == JSOp::SpreadSuperCall);
+  bool constructing = (op == JSOP_SPREADNEW || op == JSOP_SPREADSUPERCALL);
   FallbackICSpew(cx, stub, "SpreadCall(%s)", CodeName(op));
 
   // Ensure vp array is rooted - we may GC in here.
@@ -2980,7 +2979,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
 
   // Try attaching a call stub.
   bool handled = false;
-  if (op != JSOp::SpreadEval && op != JSOp::StrictSpreadEval &&
+  if (op != JSOP_SPREADEVAL && op != JSOP_STRICTSPREADEVAL &&
       stub->state().canAttachStub()) {
     // Try CacheIR first:
     RootedArrayObject aobj(cx, &arr.toObject().as<ArrayObject>());
@@ -3407,25 +3406,25 @@ bool DoUnaryArithFallback(JSContext* cx, BaselineFrame* frame,
   // below.
   RootedValue valCopy(cx, val);
   switch (op) {
-    case JSOp::BitNot: {
+    case JSOP_BITNOT: {
       if (!BitNot(cx, &valCopy, res)) {
         return false;
       }
       break;
     }
-    case JSOp::Neg: {
+    case JSOP_NEG: {
       if (!NegOperation(cx, &valCopy, res)) {
         return false;
       }
       break;
     }
-    case JSOp::Inc: {
+    case JSOP_INC: {
       if (!IncOperation(cx, &valCopy, res)) {
         return false;
       }
       break;
     }
-    case JSOp::Dec: {
+    case JSOP_DEC: {
       if (!DecOperation(cx, &valCopy, res)) {
         return false;
       }
@@ -3488,68 +3487,68 @@ bool DoBinaryArithFallback(JSContext* cx, BaselineFrame* frame,
 
   // Perform the compare operation.
   switch (op) {
-    case JSOp::Add:
+    case JSOP_ADD:
       // Do an add.
       if (!AddValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::Sub:
+    case JSOP_SUB:
       if (!SubValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::Mul:
+    case JSOP_MUL:
       if (!MulValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::Div:
+    case JSOP_DIV:
       if (!DivValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::Mod:
+    case JSOP_MOD:
       if (!ModValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::Pow:
+    case JSOP_POW:
       if (!PowValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::BitOr: {
+    case JSOP_BITOR: {
       if (!BitOr(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
     }
-    case JSOp::BitXor: {
+    case JSOP_BITXOR: {
       if (!BitXor(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
     }
-    case JSOp::BitAnd: {
+    case JSOP_BITAND: {
       if (!BitAnd(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
     }
-    case JSOp::Lsh: {
+    case JSOP_LSH: {
       if (!BitLsh(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
     }
-    case JSOp::Rsh: {
+    case JSOP_RSH: {
       if (!BitRsh(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
     }
-    case JSOp::Ursh: {
+    case JSOP_URSH: {
       if (!UrshOperation(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
@@ -3612,42 +3611,42 @@ bool DoCompareFallback(JSContext* cx, BaselineFrame* frame,
   // Perform the compare operation.
   bool out;
   switch (op) {
-    case JSOp::Lt:
+    case JSOP_LT:
       if (!LessThan(cx, &lhsCopy, &rhsCopy, &out)) {
         return false;
       }
       break;
-    case JSOp::Le:
+    case JSOP_LE:
       if (!LessThanOrEqual(cx, &lhsCopy, &rhsCopy, &out)) {
         return false;
       }
       break;
-    case JSOp::Gt:
+    case JSOP_GT:
       if (!GreaterThan(cx, &lhsCopy, &rhsCopy, &out)) {
         return false;
       }
       break;
-    case JSOp::Ge:
+    case JSOP_GE:
       if (!GreaterThanOrEqual(cx, &lhsCopy, &rhsCopy, &out)) {
         return false;
       }
       break;
-    case JSOp::Eq:
+    case JSOP_EQ:
       if (!LooselyEqual<EqualityKind::Equal>(cx, &lhsCopy, &rhsCopy, &out)) {
         return false;
       }
       break;
-    case JSOp::Ne:
+    case JSOP_NE:
       if (!LooselyEqual<EqualityKind::NotEqual>(cx, &lhsCopy, &rhsCopy, &out)) {
         return false;
       }
       break;
-    case JSOp::StrictEq:
+    case JSOP_STRICTEQ:
       if (!StrictlyEqual<EqualityKind::Equal>(cx, &lhsCopy, &rhsCopy, &out)) {
         return false;
       }
       break;
-    case JSOp::StrictNe:
+    case JSOP_STRICTNE:
       if (!StrictlyEqual<EqualityKind::NotEqual>(cx, &lhsCopy, &rhsCopy,
                                                  &out)) {
         return false;

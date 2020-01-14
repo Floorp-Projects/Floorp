@@ -58,7 +58,7 @@ bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
   // JSOp::LoopHead. This avoids JIT issues with prologue code + try notes
   // or OSR. See bug 1602390 and bug 1602681.
   if (bce->bytecodeSection().offset().toUint32() == 0) {
-    if (!bce->emit1(JSOp::Nop)) {
+    if (!bce->emit1(JSOP_NOP)) {
       return false;
     }
   }
@@ -74,7 +74,7 @@ bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
   head_ = {bce->bytecodeSection().offset()};
 
   BytecodeOffset off;
-  if (!bce->emitJumpTargetOp(JSOp::LoopHead, &off)) {
+  if (!bce->emitJumpTargetOp(JSOP_LOOPHEAD, &off)) {
     return false;
   }
   SetLoopHeadDepthHint(bce->bytecodeSection().code(off), loopDepth_);

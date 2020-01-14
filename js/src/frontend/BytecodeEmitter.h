@@ -797,7 +797,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitReturnRval() {
     return emitInstrumentation(InstrumentationKind::Exit) &&
-           emit1(JSOp::RetRval);
+           emit1(JSOP_RETRVAL);
   }
 
   MOZ_MUST_USE bool emitInstrumentation(InstrumentationKind kind,

@@ -444,14 +444,14 @@ static inline jsbytecode* GetNextNonLoopHeadPc(jsbytecode* pc,
                                                jsbytecode** skippedLoopHead) {
   JSOp op = JSOp(*pc);
   switch (op) {
-    case JSOp::Goto:
+    case JSOP_GOTO:
       return pc + GET_JUMP_OFFSET(pc);
 
-    case JSOp::LoopHead:
+    case JSOP_LOOPHEAD:
       *skippedLoopHead = pc;
       return GetNextPc(pc);
 
-    case JSOp::Nop:
+    case JSOP_NOP:
       return GetNextPc(pc);
 
     default:
@@ -895,12 +895,12 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   uint32_t pushedSlots = 0;
   RootedValueVector savedCallerArgs(cx);
   bool needToSaveArgs =
-      op == JSOp::FunApply || IsIonInlinableGetterOrSetterOp(op);
-  if (iter.moreFrames() && (op == JSOp::FunCall || needToSaveArgs)) {
+      op == JSOP_FUNAPPLY || IsIonInlinableGetterOrSetterOp(op);
+  if (iter.moreFrames() && (op == JSOP_FUNCALL || needToSaveArgs)) {
     uint32_t inlined_args = 0;
-    if (op == JSOp::FunCall) {
+    if (op == JSOP_FUNCALL) {
       inlined_args = 2 + GET_ARGC(pc) - 1;
-    } else if (op == JSOp::FunApply) {
+    } else if (op == JSOP_FUNAPPLY) {
       inlined_args = 2 + blFrame->numActualArgs();
     } else {
       MOZ_ASSERT(IsIonInlinableGetterOrSetterOp(op));
@@ -920,7 +920,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       }
     }
 
-    if (op == JSOp::FunCall) {
+    if (op == JSOP_FUNCALL) {
       // When funcall got inlined and the native js_fun_call was bypassed,
       // the stack state is incorrect. To restore correctly it must look like
       // js_fun_call was actually called. This means transforming the stack
@@ -945,7 +945,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       // to |js_fun_apply, target, this, argObject|.
       // Since the information is never read, we can just push undefined
       // for all values.
-      if (op == JSOp::FunApply) {
+      if (op == JSOP_FUNAPPLY) {
         JitSpew(JitSpew_BaselineBailouts,
                 "      pushing 4x undefined to fixup funapply");
         if (!builder.writeValue(UndefinedValue(), "StackValue")) {
@@ -1050,8 +1050,8 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   }
 
   if (reachablePC) {
-    if (op != JSOp::FunApply || !iter.moreFrames() || resumeAfter) {
-      if (op == JSOp::FunCall) {
+    if (op != JSOP_FUNAPPLY || !iter.moreFrames() || resumeAfter) {
+      if (op == JSOP_FUNCALL) {
         // For fun.call(this, ...); the reconstructStackDepth will
         // include the this. When inlining that is not included.
         // So the exprStackSlots will be one less.
@@ -1222,7 +1222,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   if (needToSaveArgs) {
     // For FunApply or an accessor, the arguments are not on the stack anymore,
     // but they are copied in a vector and are written here.
-    if (op == JSOp::FunApply) {
+    if (op == JSOP_FUNAPPLY) {
       actualArgc = blFrame->numActualArgs();
     } else {
       actualArgc = IsSetPropOp(op);
@@ -1248,7 +1248,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     }
   } else {
     actualArgc = GET_ARGC(pc);
-    if (op == JSOp::FunCall) {
+    if (op == JSOP_FUNCALL) {
       MOZ_ASSERT(actualArgc > 0);
       actualArgc--;
     }

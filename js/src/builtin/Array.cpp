@@ -1965,24 +1965,24 @@ static ComparatorMatchResult MatchNumericComparator(JSContext* cx,
   jsbytecode* pc = script->code();
 
   uint16_t arg0, arg1;
-  if (JSOp(*pc) != JSOp::GetArg) {
+  if (JSOp(*pc) != JSOP_GETARG) {
     return Match_None;
   }
   arg0 = GET_ARGNO(pc);
-  pc += JSOpLength_GetArg;
+  pc += JSOP_GETARG_LENGTH;
 
-  if (JSOp(*pc) != JSOp::GetArg) {
+  if (JSOp(*pc) != JSOP_GETARG) {
     return Match_None;
   }
   arg1 = GET_ARGNO(pc);
-  pc += JSOpLength_GetArg;
+  pc += JSOP_GETARG_LENGTH;
 
-  if (JSOp(*pc) != JSOp::Sub) {
+  if (JSOp(*pc) != JSOP_SUB) {
     return Match_None;
   }
-  pc += JSOpLength_Sub;
+  pc += JSOP_SUB_LENGTH;
 
-  if (JSOp(*pc) != JSOp::Return) {
+  if (JSOp(*pc) != JSOP_RETURN) {
     return Match_None;
   }
 

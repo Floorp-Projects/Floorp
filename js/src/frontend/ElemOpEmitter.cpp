@@ -29,13 +29,13 @@ bool ElemOpEmitter::prepareForKey() {
   MOZ_ASSERT(state_ == State::Obj);
 
   if (!isSuper() && isIncDec()) {
-    if (!bce_->emit1(JSOp::CheckObjCoercible)) {
+    if (!bce_->emit1(JSOP_CHECKOBJCOERCIBLE)) {
       //            [stack] OBJ
       return false;
     }
   }
   if (isCall()) {
-    if (!bce_->emit1(JSOp::Dup)) {
+    if (!bce_->emit1(JSOP_DUP)) {
       //            [stack] # if Super
       //            [stack] THIS THIS
       //            [stack] # otherwise
@@ -54,7 +54,7 @@ bool ElemOpEmitter::emitGet() {
   MOZ_ASSERT(state_ == State::Key);
 
   if (isIncDec() || isCompoundAssignment()) {
-    if (!bce_->emit1(JSOp::ToId)) {
+    if (!bce_->emit1(JSOP_TOID)) {
       //            [stack] # if Super
       //            [stack] THIS KEY
       //            [stack] # otherwise
@@ -75,7 +75,7 @@ bool ElemOpEmitter::emitGet() {
         return false;
       }
     } else {
-      if (!bce_->emit1(JSOp::Dup2)) {
+      if (!bce_->emit1(JSOP_DUP2)) {
         //          [stack] OBJ KEY OBJ KEY
         return false;
       }
@@ -84,11 +84,11 @@ bool ElemOpEmitter::emitGet() {
 
   JSOp op;
   if (isSuper()) {
-    op = JSOp::GetElemSuper;
+    op = JSOP_GETELEM_SUPER;
   } else if (isCall()) {
-    op = JSOp::CallElem;
+    op = JSOP_CALLELEM;
   } else {
-    op = JSOp::GetElem;
+    op = JSOP_GETELEM;
   }
   if (!bce_->emitElemOpBase(op, ShouldInstrument::Yes)) {
     //              [stack] # if Get
@@ -102,7 +102,7 @@ bool ElemOpEmitter::emitGet() {
     return false;
   }
   if (isCall()) {
-    if (!bce_->emit1(JSOp::Swap)) {
+    if (!bce_->emit1(JSOP_SWAP)) {
       //            [stack] ELEM THIS
       return false;
     }
@@ -150,7 +150,7 @@ bool ElemOpEmitter::emitDelete() {
   MOZ_ASSERT(isDelete());
 
   if (isSuper()) {
-    if (!bce_->emit1(JSOp::ToId)) {
+    if (!bce_->emit1(JSOP_TOID)) {
       //            [stack] THIS KEY
       return false;
     }
@@ -160,7 +160,7 @@ bool ElemOpEmitter::emitDelete() {
     }
 
     // Unconditionally throw when attempting to delete a super-reference.
-    if (!bce_->emitUint16Operand(JSOp::ThrowMsg, JSMSG_CANT_DELETE_SUPER)) {
+    if (!bce_->emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER)) {
       //            [stack] THIS KEY SUPERBASE
       return false;
     }
@@ -172,7 +172,7 @@ bool ElemOpEmitter::emitDelete() {
       return false;
     }
   } else {
-    JSOp op = bce_->sc->strict() ? JSOp::StrictDelElem : JSOp::DelElem;
+    JSOp op = bce_->sc->strict() ? JSOP_STRICTDELELEM : JSOP_DELELEM;
     if (!bce_->emitElemOpBase(op)) {
       // SUCCEEDED
       return false;
@@ -191,12 +191,12 @@ bool ElemOpEmitter::emitAssignment() {
 
   MOZ_ASSERT_IF(isPropInit(), !isSuper());
 
-  JSOp setOp = isPropInit()
-                   ? JSOp::InitElem
-                   : isSuper() ? bce_->sc->strict() ? JSOp::StrictSetElemSuper
-                                                    : JSOp::SetElemSuper
-                               : bce_->sc->strict() ? JSOp::StrictSetElem
-                                                    : JSOp::SetElem;
+  JSOp setOp =
+      isPropInit()
+          ? JSOP_INITELEM
+          : isSuper() ? bce_->sc->strict() ? JSOP_STRICTSETELEM_SUPER
+                                           : JSOP_SETELEM_SUPER
+                      : bce_->sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
   if (!bce_->emitElemOpBase(setOp, ShouldInstrument::Yes)) {
     //              [stack] ELEM
     return false;
@@ -219,18 +219,18 @@ bool ElemOpEmitter::emitIncDec() {
 
   MOZ_ASSERT(state_ == State::Get);
 
-  JSOp incOp = isInc() ? JSOp::Inc : JSOp::Dec;
-  if (!bce_->emit1(JSOp::ToNumeric)) {
+  JSOp incOp = isInc() ? JSOP_INC : JSOP_DEC;
+  if (!bce_->emit1(JSOP_TONUMERIC)) {
     //              [stack] ... N
     return false;
   }
   if (isPostIncDec()) {
     //              [stack] OBJ KEY SUPERBASE? N
-    if (!bce_->emit1(JSOp::Dup)) {
+    if (!bce_->emit1(JSOP_DUP)) {
       //            [stack] ... N N
       return false;
     }
-    if (!bce_->emit2(JSOp::Unpick, 3 + isSuper())) {
+    if (!bce_->emit2(JSOP_UNPICK, 3 + isSuper())) {
       //            [stack] N OBJ KEY SUPERBASE? N
       return false;
     }
@@ -242,14 +242,14 @@ bool ElemOpEmitter::emitIncDec() {
 
   JSOp setOp =
       isSuper()
-          ? (bce_->sc->strict() ? JSOp::StrictSetElemSuper : JSOp::SetElemSuper)
-          : (bce_->sc->strict() ? JSOp::StrictSetElem : JSOp::SetElem);
+          ? (bce_->sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER)
+          : (bce_->sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM);
   if (!bce_->emitElemOpBase(setOp, ShouldInstrument::Yes)) {
     //              [stack] N? N+1
     return false;
   }
   if (isPostIncDec()) {
-    if (!bce_->emit1(JSOp::Pop)) {
+    if (!bce_->emit1(JSOP_POP)) {
       //            [stack] N
       return false;
     }

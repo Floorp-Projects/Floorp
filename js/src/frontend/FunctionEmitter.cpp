@@ -186,7 +186,7 @@ bool FunctionEmitter::emitAgain() {
     return false;
   }
 
-  if (!bce_->emit1(JSOp::Pop)) {
+  if (!bce_->emit1(JSOP_POP)) {
     //              [stack]
     return false;
   }
@@ -273,7 +273,7 @@ bool FunctionEmitter::emitNonHoisted(unsigned index) {
 
   if (syntaxKind_ == FunctionSyntaxKind::DerivedClassConstructor) {
     //              [stack] PROTO
-    if (!bce_->emitIndexOp(JSOp::FunWithProto, index)) {
+    if (!bce_->emitIndexOp(JSOP_FUNWITHPROTO, index)) {
       //            [stack] FUN
       return false;
     }
@@ -282,8 +282,8 @@ bool FunctionEmitter::emitNonHoisted(unsigned index) {
 
   // This is a FunctionExpression, ArrowFunctionExpression, or class
   // constructor. Emit the single instruction (without location info).
-  JSOp op = syntaxKind_ == FunctionSyntaxKind::Arrow ? JSOp::LambdaArrow
-                                                     : JSOp::Lambda;
+  JSOp op = syntaxKind_ == FunctionSyntaxKind::Arrow ? JSOP_LAMBDA_ARROW
+                                                     : JSOP_LAMBDA;
   if (!bce_->emitIndexOp(op, index)) {
     //              [stack] FUN
     return false;
@@ -306,7 +306,7 @@ bool FunctionEmitter::emitHoisted(unsigned index) {
     return false;
   }
 
-  if (!bce_->emitIndexOp(JSOp::Lambda, index)) {
+  if (!bce_->emitIndexOp(JSOP_LAMBDA, index)) {
     //              [stack] FUN
     return false;
   }
@@ -316,7 +316,7 @@ bool FunctionEmitter::emitHoisted(unsigned index) {
     return false;
   }
 
-  if (!bce_->emit1(JSOp::Pop)) {
+  if (!bce_->emit1(JSOP_POP)) {
     //              [stack]
     return false;
   }
@@ -343,11 +343,11 @@ bool FunctionEmitter::emitTopLevelFunction(unsigned index) {
   MOZ_ASSERT(syntaxKind_ == FunctionSyntaxKind::Statement);
   MOZ_ASSERT(bce_->inPrologue());
 
-  if (!bce_->emitIndexOp(JSOp::Lambda, index)) {
+  if (!bce_->emitIndexOp(JSOP_LAMBDA, index)) {
     //              [stack] FUN
     return false;
   }
-  if (!bce_->emit1(JSOp::DefFun)) {
+  if (!bce_->emit1(JSOP_DEFFUN)) {
     //              [stack]
     return false;
   }
@@ -358,12 +358,12 @@ bool FunctionEmitter::emitNewTargetForArrow() {
   //                [stack]
 
   if (bce_->sc->allowNewTarget()) {
-    if (!bce_->emit1(JSOp::NewTarget)) {
+    if (!bce_->emit1(JSOP_NEWTARGET)) {
       //            [stack] NEW.TARGET
       return false;
     }
   } else {
-    if (!bce_->emit1(JSOp::Null)) {
+    if (!bce_->emit1(JSOP_NULL)) {
       //            [stack] NULL
       return false;
     }
@@ -513,12 +513,12 @@ bool FunctionScriptEmitter::emitAsyncFunctionRejectEpilogue() {
     //              [stack] EXC GEN
     return false;
   }
-  if (!bce_->emit2(JSOp::AsyncResolve,
+  if (!bce_->emit2(JSOP_ASYNCRESOLVE,
                    uint8_t(AsyncFunctionResolveKind::Reject))) {
     //              [stack] PROMISE
     return false;
   }
-  if (!bce_->emit1(JSOp::SetRval)) {
+  if (!bce_->emit1(JSOP_SETRVAL)) {
     //              [stack]
     return false;
   }
@@ -526,7 +526,7 @@ bool FunctionScriptEmitter::emitAsyncFunctionRejectEpilogue() {
     //              [stack] GEN
     return false;
   }
-  if (!bce_->emitYieldOp(JSOp::FinalYieldRval)) {
+  if (!bce_->emitYieldOp(JSOP_FINALYIELDRVAL)) {
     //              [stack]
     return false;
   }
@@ -594,7 +594,7 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
       return false;
     }
 
-    if (!bce_->emit1(JSOp::Pop)) {
+    if (!bce_->emit1(JSOP_POP)) {
       //            [stack]
       return false;
     }
@@ -618,7 +618,7 @@ bool FunctionScriptEmitter::emitEndBody() {
       }
     }
 
-    if (!bce_->emit1(JSOp::Undefined)) {
+    if (!bce_->emit1(JSOP_UNDEFINED)) {
       //            [stack] RESULT? UNDEF
       return false;
     }
@@ -636,14 +636,14 @@ bool FunctionScriptEmitter::emitEndBody() {
         return false;
       }
 
-      if (!bce_->emit2(JSOp::AsyncResolve,
+      if (!bce_->emit2(JSOP_ASYNCRESOLVE,
                        uint8_t(AsyncFunctionResolveKind::Fulfill))) {
         //          [stack] PROMISE
         return false;
       }
     }
 
-    if (!bce_->emit1(JSOp::SetRval)) {
+    if (!bce_->emit1(JSOP_SETRVAL)) {
       //            [stack]
       return false;
     }
@@ -654,7 +654,7 @@ bool FunctionScriptEmitter::emitEndBody() {
     }
 
     // No need to check for finally blocks, etc as in EmitReturn.
-    if (!bce_->emitYieldOp(JSOp::FinalYieldRval)) {
+    if (!bce_->emitYieldOp(JSOP_FINALYIELDRVAL)) {
       //            [stack]
       return false;
     }
@@ -665,11 +665,11 @@ bool FunctionScriptEmitter::emitEndBody() {
     // value in the return value slot. Make sure the return value
     // is |undefined|.
     if (bce_->hasTryFinally) {
-      if (!bce_->emit1(JSOp::Undefined)) {
+      if (!bce_->emit1(JSOP_UNDEFINED)) {
         //          [stack] UNDEF
         return false;
       }
-      if (!bce_->emit1(JSOp::SetRval)) {
+      if (!bce_->emit1(JSOP_SETRVAL)) {
         //          [stack]
         return false;
       }
@@ -765,7 +765,7 @@ bool FunctionParamsEmitter::emitSimple(JS::Handle<JSAtom*> paramName) {
   //                [stack]
 
   if (funbox_->hasParameterExprs) {
-    if (!bce_->emitArgOp(JSOp::GetArg, argSlot_)) {
+    if (!bce_->emitArgOp(JSOP_GETARG, argSlot_)) {
       //            [stack] ARG
       return false;
     }
@@ -834,7 +834,7 @@ bool FunctionParamsEmitter::prepareForDestructuring() {
     return false;
   }
 
-  if (!bce_->emitArgOp(JSOp::GetArg, argSlot_)) {
+  if (!bce_->emitArgOp(JSOP_GETARG, argSlot_)) {
     //              [stack] ARG
     return false;
   }
@@ -850,7 +850,7 @@ bool FunctionParamsEmitter::emitDestructuringEnd() {
 
   //                [stack] ARG
 
-  if (!bce_->emit1(JSOp::Pop)) {
+  if (!bce_->emit1(JSOP_POP)) {
     //              [stack]
     return false;
   }
@@ -907,7 +907,7 @@ bool FunctionParamsEmitter::emitDestructuringDefaultEnd() {
 
   //                [stack] ARG/DEFAULT
 
-  if (!bce_->emit1(JSOp::Pop)) {
+  if (!bce_->emit1(JSOP_POP)) {
     //              [stack]
     return false;
   }
@@ -968,7 +968,7 @@ bool FunctionParamsEmitter::emitDestructuringRestEnd() {
 
   //                [stack] REST
 
-  if (!bce_->emit1(JSOp::Pop)) {
+  if (!bce_->emit1(JSOP_POP)) {
     //              [stack]
     return false;
   }
@@ -1018,7 +1018,7 @@ bool FunctionParamsEmitter::prepareForInitializer() {
   // If we have an initializer, emit the initializer and assign it
   // to the argument slot. TDZ is taken care of afterwards.
   MOZ_ASSERT(funbox_->hasParameterExprs);
-  if (!bce_->emitArgOp(JSOp::GetArg, argSlot_)) {
+  if (!bce_->emitArgOp(JSOP_GETARG, argSlot_)) {
     //              [stack] ARG
     return false;
   }
@@ -1044,7 +1044,7 @@ bool FunctionParamsEmitter::emitInitializerEnd() {
 bool FunctionParamsEmitter::emitRestArray() {
   //                [stack]
 
-  if (!bce_->emit1(JSOp::Rest)) {
+  if (!bce_->emit1(JSOP_REST)) {
     //              [stack] REST
     return false;
   }
@@ -1074,7 +1074,7 @@ bool FunctionParamsEmitter::emitAssignment(JS::Handle<JSAtom*> paramName) {
     return false;
   }
 
-  if (!bce_->emit1(JSOp::Pop)) {
+  if (!bce_->emit1(JSOP_POP)) {
     //              [stack]
     return false;
   }

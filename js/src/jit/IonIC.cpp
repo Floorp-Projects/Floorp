@@ -322,7 +322,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
 
   jsbytecode* pc = ic->pc();
   if (ic->kind() == CacheKind::SetElem) {
-    if (JSOp(*pc) == JSOp::InitElemInc || JSOp(*pc) == JSOp::InitElemArray) {
+    if (JSOp(*pc) == JSOP_INITELEM_INC || JSOp(*pc) == JSOP_INITELEM_ARRAY) {
       if (!InitArrayElemOperation(cx, pc, obj, idVal.toInt32(), rhs)) {
         return false;
       }
@@ -339,7 +339,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
   } else {
     MOZ_ASSERT(ic->kind() == CacheKind::SetProp);
 
-    if (JSOp(*pc) == JSOp::InitGLexical) {
+    if (JSOp(*pc) == JSOP_INITGLEXICAL) {
       RootedScript script(cx, ic->script());
       MOZ_ASSERT(!script->hasNonSyntacticScope());
       InitGlobalLexicalOperation(cx, &cx->global()->lexicalEnvironment(),
@@ -421,7 +421,7 @@ bool IonGetNameIC::update(JSContext* cx, HandleScript outerScript,
     return false;
   }
 
-  if (JSOp(*GetNextPc(pc)) == JSOp::Typeof) {
+  if (JSOp(*GetNextPc(pc)) == JSOP_TYPEOF) {
     if (!FetchName<GetNameMode::TypeOf>(cx, obj, holder, name, prop, res)) {
       return false;
     }
@@ -520,25 +520,25 @@ bool IonUnaryArithIC::update(JSContext* cx, HandleScript outerScript,
   // below.
   RootedValue valCopy(cx, val);
   switch (op) {
-    case JSOp::BitNot: {
+    case JSOP_BITNOT: {
       if (!BitNot(cx, &valCopy, res)) {
         return false;
       }
       break;
     }
-    case JSOp::Neg: {
+    case JSOP_NEG: {
       if (!NegOperation(cx, &valCopy, res)) {
         return false;
       }
       break;
     }
-    case JSOp::Inc: {
+    case JSOP_INC: {
       if (!IncOperation(cx, &valCopy, res)) {
         return false;
       }
       break;
     }
-    case JSOp::Dec: {
+    case JSOP_DEC: {
       if (!DecOperation(cx, &valCopy, res)) {
         return false;
       }
@@ -570,63 +570,63 @@ bool IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript,
 
   // Perform the compare operation.
   switch (op) {
-    case JSOp::Add:
+    case JSOP_ADD:
       // Do an add.
       if (!AddValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::Sub:
+    case JSOP_SUB:
       if (!SubValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::Mul:
+    case JSOP_MUL:
       if (!MulValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::Div:
+    case JSOP_DIV:
       if (!DivValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::Mod:
+    case JSOP_MOD:
       if (!ModValues(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
-    case JSOp::BitOr: {
+    case JSOP_BITOR: {
       if (!BitOr(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
     }
-    case JSOp::BitXor: {
+    case JSOP_BITXOR: {
       if (!BitXor(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
     }
-    case JSOp::BitAnd: {
+    case JSOP_BITAND: {
       if (!BitAnd(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
     }
-    case JSOp::Lsh: {
+    case JSOP_LSH: {
       if (!BitLsh(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
     }
-    case JSOp::Rsh: {
+    case JSOP_RSH: {
       if (!BitRsh(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
       break;
     }
-    case JSOp::Ursh: {
+    case JSOP_URSH: {
       if (!UrshOperation(cx, &lhsCopy, &rhsCopy, ret)) {
         return false;
       }
@@ -658,42 +658,42 @@ bool IonCompareIC::update(JSContext* cx, HandleScript outerScript,
 
   // Perform the compare operation.
   switch (op) {
-    case JSOp::Lt:
+    case JSOP_LT:
       if (!LessThan(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;
-    case JSOp::Le:
+    case JSOP_LE:
       if (!LessThanOrEqual(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;
-    case JSOp::Gt:
+    case JSOP_GT:
       if (!GreaterThan(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;
-    case JSOp::Ge:
+    case JSOP_GE:
       if (!GreaterThanOrEqual(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;
-    case JSOp::Eq:
+    case JSOP_EQ:
       if (!LooselyEqual<EqualityKind::Equal>(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;
-    case JSOp::Ne:
+    case JSOP_NE:
       if (!LooselyEqual<EqualityKind::NotEqual>(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;
-    case JSOp::StrictEq:
+    case JSOP_STRICTEQ:
       if (!StrictlyEqual<EqualityKind::Equal>(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }
       break;
-    case JSOp::StrictNe:
+    case JSOP_STRICTNE:
       if (!StrictlyEqual<EqualityKind::NotEqual>(cx, &lhsCopy, &rhsCopy, res)) {
         return false;
       }

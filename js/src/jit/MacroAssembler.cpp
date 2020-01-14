@@ -1239,8 +1239,8 @@ void MacroAssembler::compareStrings(JSOp op, Register left, Register right,
   // If operands point to the same instance, the strings are trivially equal.
   branchPtr(Assembler::NotEqual, left, right,
             IsEqualityOp(op) ? &notPointerEqual : fail);
-  move32(Imm32(op == JSOp::Eq || op == JSOp::StrictEq || op == JSOp::Le ||
-               op == JSOp::Ge),
+  move32(Imm32(op == JSOP_EQ || op == JSOP_STRICTEQ || op == JSOP_LE ||
+               op == JSOP_GE),
          result);
 
   if (IsEqualityOp(op)) {
@@ -1265,7 +1265,7 @@ void MacroAssembler::compareStrings(JSOp op, Register left, Register right,
              result, fail);
 
     bind(&setNotEqualResult);
-    move32(Imm32(op == JSOp::Ne || op == JSOp::StrictNe), result);
+    move32(Imm32(op == JSOP_NE || op == JSOP_STRICTNE), result);
 
     bind(&done);
   }

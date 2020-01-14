@@ -898,7 +898,7 @@ void CodeGenerator::visitBitOpI(LBitOpI* ins) {
 
   // All of these bitops should be either imm32's, or integer registers.
   switch (ins->bitop()) {
-    case JSOp::BitOr:
+    case JSOP_BITOR:
       if (rhs->isConstant()) {
         masm.ma_orr(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest),
                     scratch);
@@ -906,7 +906,7 @@ void CodeGenerator::visitBitOpI(LBitOpI* ins) {
         masm.ma_orr(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
       }
       break;
-    case JSOp::BitXor:
+    case JSOP_BITXOR:
       if (rhs->isConstant()) {
         masm.ma_eor(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest),
                     scratch);
@@ -914,7 +914,7 @@ void CodeGenerator::visitBitOpI(LBitOpI* ins) {
         masm.ma_eor(ToRegister(rhs), ToRegister(lhs), ToRegister(dest));
       }
       break;
-    case JSOp::BitAnd:
+    case JSOP_BITAND:
       if (rhs->isConstant()) {
         masm.ma_and(Imm32(ToInt32(rhs)), ToRegister(lhs), ToRegister(dest),
                     scratch);
@@ -935,21 +935,21 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
   if (rhs->isConstant()) {
     int32_t shift = ToInt32(rhs) & 0x1F;
     switch (ins->bitop()) {
-      case JSOp::Lsh:
+      case JSOP_LSH:
         if (shift) {
           masm.ma_lsl(Imm32(shift), lhs, dest);
         } else {
           masm.ma_mov(lhs, dest);
         }
         break;
-      case JSOp::Rsh:
+      case JSOP_RSH:
         if (shift) {
           masm.ma_asr(Imm32(shift), lhs, dest);
         } else {
           masm.ma_mov(lhs, dest);
         }
         break;
-      case JSOp::Ursh:
+      case JSOP_URSH:
         if (shift) {
           masm.ma_lsr(Imm32(shift), lhs, dest);
         } else {
@@ -971,13 +971,13 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
     masm.as_and(dest, ToRegister(rhs), Imm8(0x1F));
 
     switch (ins->bitop()) {
-      case JSOp::Lsh:
+      case JSOP_LSH:
         masm.ma_lsl(dest, lhs, dest);
         break;
-      case JSOp::Rsh:
+      case JSOP_RSH:
         masm.ma_asr(dest, lhs, dest);
         break;
-      case JSOp::Ursh:
+      case JSOP_URSH:
         masm.ma_lsr(dest, lhs, dest);
         if (ins->mir()->toUrsh()->fallible()) {
           // x >>> 0 can overflow.
@@ -1171,16 +1171,16 @@ void CodeGenerator::visitMathD(LMathD* math) {
   FloatRegister output = ToFloatRegister(math->getDef(0));
 
   switch (math->jsop()) {
-    case JSOp::Add:
+    case JSOP_ADD:
       masm.ma_vadd(src1, src2, output);
       break;
-    case JSOp::Sub:
+    case JSOP_SUB:
       masm.ma_vsub(src1, src2, output);
       break;
-    case JSOp::Mul:
+    case JSOP_MUL:
       masm.ma_vmul(src1, src2, output);
       break;
-    case JSOp::Div:
+    case JSOP_DIV:
       masm.ma_vdiv(src1, src2, output);
       break;
     default:
@@ -1194,16 +1194,16 @@ void CodeGenerator::visitMathF(LMathF* math) {
   FloatRegister output = ToFloatRegister(math->getDef(0));
 
   switch (math->jsop()) {
-    case JSOp::Add:
+    case JSOP_ADD:
       masm.ma_vadd_f32(src1, src2, output);
       break;
-    case JSOp::Sub:
+    case JSOP_SUB:
       masm.ma_vsub_f32(src1, src2, output);
       break;
-    case JSOp::Mul:
+    case JSOP_MUL:
       masm.ma_vmul_f32(src1, src2, output);
       break;
-    case JSOp::Div:
+    case JSOP_DIV:
       masm.ma_vdiv_f32(src1, src2, output);
       break;
     default:
@@ -1477,7 +1477,7 @@ void CodeGenerator::visitCompareB(LCompareB* lir) {
   const LAllocation* rhs = lir->rhs();
   const Register output = ToRegister(lir->output());
 
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
+  MOZ_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
 
   Label notBoolean, done;
   masm.branchTestBoolean(Assembler::NotEqual, lhs, &notBoolean);
@@ -1492,7 +1492,7 @@ void CodeGenerator::visitCompareB(LCompareB* lir) {
   }
 
   masm.bind(&notBoolean);
-  { masm.move32(Imm32(mir->jsop() == JSOp::StrictNe), output); }
+  { masm.move32(Imm32(mir->jsop() == JSOP_STRICTNE), output); }
 
   masm.bind(&done);
 }
@@ -1502,10 +1502,10 @@ void CodeGenerator::visitCompareBAndBranch(LCompareBAndBranch* lir) {
   const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
   const LAllocation* rhs = lir->rhs();
 
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
+  MOZ_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
 
   Assembler::Condition cond = masm.testBoolean(Assembler::NotEqual, lhs);
-  jumpToBlock((mir->jsop() == JSOp::StrictEq) ? lir->ifFalse() : lir->ifTrue(),
+  jumpToBlock((mir->jsop() == JSOP_STRICTEQ) ? lir->ifFalse() : lir->ifTrue(),
               cond);
 
   if (rhs->isConstant()) {
@@ -1524,8 +1524,8 @@ void CodeGenerator::visitCompareBitwise(LCompareBitwise* lir) {
   const ValueOperand rhs = ToValue(lir, LCompareBitwise::RhsInput);
   const Register output = ToRegister(lir->output());
 
-  MOZ_ASSERT(mir->jsop() == JSOp::Eq || mir->jsop() == JSOp::StrictEq ||
-             mir->jsop() == JSOp::Ne || mir->jsop() == JSOp::StrictNe);
+  MOZ_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
+             mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
 
   Label notEqual, done;
   masm.cmp32(lhs.typeReg(), rhs.typeReg());
@@ -1548,8 +1548,8 @@ void CodeGenerator::visitCompareBitwiseAndBranch(
   const ValueOperand lhs = ToValue(lir, LCompareBitwiseAndBranch::LhsInput);
   const ValueOperand rhs = ToValue(lir, LCompareBitwiseAndBranch::RhsInput);
 
-  MOZ_ASSERT(mir->jsop() == JSOp::Eq || mir->jsop() == JSOp::StrictEq ||
-             mir->jsop() == JSOp::Ne || mir->jsop() == JSOp::StrictNe);
+  MOZ_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
+             mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
 
   MBasicBlock* notEqual =
       (cond == Assembler::Equal) ? lir->ifFalse() : lir->ifTrue();
@@ -2796,17 +2796,17 @@ void CodeGenerator::visitShiftI64(LShiftI64* lir) {
   if (rhs->isConstant()) {
     int32_t shift = int32_t(rhs->toConstant()->toInt64() & 0x3F);
     switch (lir->bitop()) {
-      case JSOp::Lsh:
+      case JSOP_LSH:
         if (shift) {
           masm.lshift64(Imm32(shift), ToRegister64(lhs));
         }
         break;
-      case JSOp::Rsh:
+      case JSOP_RSH:
         if (shift) {
           masm.rshift64Arithmetic(Imm32(shift), ToRegister64(lhs));
         }
         break;
-      case JSOp::Ursh:
+      case JSOP_URSH:
         if (shift) {
           masm.rshift64(Imm32(shift), ToRegister64(lhs));
         }
@@ -2818,13 +2818,13 @@ void CodeGenerator::visitShiftI64(LShiftI64* lir) {
   }
 
   switch (lir->bitop()) {
-    case JSOp::Lsh:
+    case JSOP_LSH:
       masm.lshift64(ToRegister(rhs), ToRegister64(lhs));
       break;
-    case JSOp::Rsh:
+    case JSOP_RSH:
       masm.rshift64Arithmetic(ToRegister(rhs), ToRegister64(lhs));
       break;
-    case JSOp::Ursh:
+    case JSOP_URSH:
       masm.rshift64(ToRegister(rhs), ToRegister64(lhs));
       break;
     default:
@@ -2839,21 +2839,21 @@ void CodeGenerator::visitBitOpI64(LBitOpI64* lir) {
   MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
 
   switch (lir->bitop()) {
-    case JSOp::BitOr:
+    case JSOP_BITOR:
       if (IsConstant(rhs)) {
         masm.or64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
       } else {
         masm.or64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
       }
       break;
-    case JSOp::BitXor:
+    case JSOP_BITXOR:
       if (IsConstant(rhs)) {
         masm.xor64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
       } else {
         masm.xor64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
       }
       break;
-    case JSOp::BitAnd:
+    case JSOP_BITAND:
       if (IsConstant(rhs)) {
         masm.and64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
       } else {

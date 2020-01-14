@@ -1184,7 +1184,7 @@ bool IonCacheIRCompiler::emitCompareStringResult() {
   // Push the operands in reverse order for JSOp::Le and JSOp::Gt:
   // - |left <= right| is implemented as |right >= left|.
   // - |left > right| is implemented as |right < left|.
-  if (op == JSOp::Le || op == JSOp::Gt) {
+  if (op == JSOP_LE || op == JSOP_GT) {
     masm.Push(left);
     masm.Push(right);
   } else {
@@ -1193,14 +1193,14 @@ bool IonCacheIRCompiler::emitCompareStringResult() {
   }
 
   using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
-  if (op == JSOp::Eq || op == JSOp::StrictEq) {
+  if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
     callVM<Fn, jit::StringsEqual<EqualityKind::Equal>>(masm);
-  } else if (op == JSOp::Ne || op == JSOp::StrictNe) {
+  } else if (op == JSOP_NE || op == JSOP_STRICTNE) {
     callVM<Fn, jit::StringsEqual<EqualityKind::NotEqual>>(masm);
-  } else if (op == JSOp::Lt || op == JSOp::Gt) {
+  } else if (op == JSOP_LT || op == JSOP_GT) {
     callVM<Fn, jit::StringsCompare<ComparisonKind::LessThan>>(masm);
   } else {
-    MOZ_ASSERT(op == JSOp::Le || op == JSOp::Ge);
+    MOZ_ASSERT(op == JSOP_LE || op == JSOP_GE);
     callVM<Fn, jit::StringsCompare<ComparisonKind::GreaterThanOrEqual>>(masm);
   }
 
