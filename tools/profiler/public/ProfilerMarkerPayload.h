@@ -620,6 +620,13 @@ class LogMarkerPayload : public ProfilerMarkerPayload {
         mModule(aModule),
         mText(aText) {}
 
+  LogMarkerPayload(const char* aModule, const char* aText,
+                   const mozilla::TimeStamp& aStartTime,
+                   const mozilla::TimeStamp& aEndTime)
+      : ProfilerMarkerPayload(aStartTime, aEndTime),
+        mModule(aModule),
+        mText(aText) {}
+
   DECL_STREAM_PAYLOAD
 
  private:
