@@ -7722,7 +7722,16 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
 }
 
 nsresult nsWindow::SetPrefersReducedMotionOverrideForTest(bool aValue) {
-  LookAndFeel::SetPrefersReducedMotionOverrideForTest(aValue);
+  LookAndFeel::SetShouldRetainCacheForTest(true);
+
+  LookAndFeelInt prefersReducedMotion;
+  prefersReducedMotion.id = LookAndFeel::eIntID_PrefersReducedMotion;
+  prefersReducedMotion.value = aValue ? 1 : 0;
+
+  AutoTArray<LookAndFeelInt, 1> lookAndFeelCache;
+  lookAndFeelCache.AppendElement(prefersReducedMotion);
+
+  LookAndFeel::SetIntCache(lookAndFeelCache);
 
   // Notify as if the corresponding setting changed.
   g_object_notify(G_OBJECT(gtk_settings_get_default()),
@@ -7732,7 +7741,7 @@ nsresult nsWindow::SetPrefersReducedMotionOverrideForTest(bool aValue) {
 }
 
 nsresult nsWindow::ResetPrefersReducedMotionOverrideForTest() {
-  LookAndFeel::ResetPrefersReducedMotionOverrideForTest();
+  LookAndFeel::SetShouldRetainCacheForTest(false);
 
   return NS_OK;
 }

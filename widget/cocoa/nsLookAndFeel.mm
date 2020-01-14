@@ -40,6 +40,8 @@ nsLookAndFeel::nsLookAndFeel()
       mUseOverlayScrollbarsCached(false),
       mAllowOverlayScrollbarsOverlap(-1),
       mAllowOverlayScrollbarsOverlapCached(false),
+      mPrefersReducedMotion(-1),
+      mPrefersReducedMotionCached(false),
       mSystemUsesDarkTheme(-1),
       mSystemUsesDarkThemeCached(false),
       mColorTextSelectBackground(0),

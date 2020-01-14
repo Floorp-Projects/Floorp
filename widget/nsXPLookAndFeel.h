@@ -81,8 +81,17 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   virtual void NativeInit() = 0;
 
+  void SetPrefersReducedMotionOverrideForTest(bool aValue) {
+    sIsInPrefersReducedMotionForTest = true;
+    sPrefersReducedMotionForTest = aValue;
+  }
+  void ResetPrefersReducedMotionOverrideForTest() {
+    sIsInPrefersReducedMotionForTest = false;
+    sPrefersReducedMotionForTest = false;
+  }
+
  protected:
-  nsXPLookAndFeel() = default;
+  nsXPLookAndFeel();
 
   static void IntPrefChanged(nsLookAndFeelIntPref* data);
   static void FloatPrefChanged(nsLookAndFeelFloatPref* data);
@@ -112,11 +121,12 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   static nsXPLookAndFeel* sInstance;
   static bool sShutdown;
 
-  int32_t mPrefersReducedMotion = -1;
-  bool mPrefersReducedMotionCached = false;
+  static bool sIsInPrefersReducedMotionForTest;
+  static bool sPrefersReducedMotionForTest;
+
   // True if we shouldn't clear the cache value in RefreshImpl().
   // NOTE: This should be used only for testing.
-  bool mShouldRetainCacheForTest = false;
+  bool mShouldRetainCacheForTest;
 };
 
 #endif
