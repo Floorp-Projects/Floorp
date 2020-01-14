@@ -2250,7 +2250,7 @@ void EditorBase::DispatchInputEvent(EditAction aEditAction,
   }
   RefPtr<TextEditor> textEditor = AsTextEditor();
   DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
-      targetElement, ToInputType(aEditAction), textEditor,
+      targetElement, eEditorInput, ToInputType(aEditAction), textEditor,
       aDataTransfer ? nsContentUtils::InputEventOptions(aDataTransfer)
                     : nsContentUtils::InputEventOptions(aData));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
