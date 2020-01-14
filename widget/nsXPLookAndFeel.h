@@ -81,15 +81,6 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   virtual void NativeInit() = 0;
 
-  void SetPrefersReducedMotionOverrideForTest(bool aValue) {
-    sIsInPrefersReducedMotionForTest = true;
-    sPrefersReducedMotionForTest = aValue;
-  }
-  void ResetPrefersReducedMotionOverrideForTest() {
-    sIsInPrefersReducedMotionForTest = false;
-    sPrefersReducedMotionForTest = false;
-  }
-
  protected:
   nsXPLookAndFeel() = default;
 
@@ -120,9 +111,6 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   static nsXPLookAndFeel* sInstance;
   static bool sShutdown;
-
-  static bool sIsInPrefersReducedMotionForTest;
-  static bool sPrefersReducedMotionForTest;
 
   int32_t mPrefersReducedMotion = -1;
   bool mPrefersReducedMotionCached = false;
