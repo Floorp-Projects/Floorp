@@ -406,12 +406,14 @@ class GeckoWebExtensionTest {
         assertFalse(webExtension.isEnabled())
 
         val metaDataBundle = GeckoBundle()
+        metaDataBundle.putBoolean("enabled", true)
         metaDataBundle.putStringArray("disabledFlags", emptyArray())
         bundle.putBundle("metaData", metaDataBundle)
         val nativeEnabledWebExtension = MockWebExtension(bundle)
         val enabledWebExtension = GeckoWebExtension(nativeEnabledWebExtension, webExtensionController)
         assertTrue(enabledWebExtension.isEnabled())
 
+        metaDataBundle.putBoolean("enabled", false)
         metaDataBundle.putStringArray("disabledFlags", arrayOf("userDisabled"))
         bundle.putBundle("metaData", metaDataBundle)
         val nativeDisabledWebExtnesion = MockWebExtension(bundle)
