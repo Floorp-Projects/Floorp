@@ -17,6 +17,7 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/UserActivation.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
@@ -539,7 +540,7 @@ ContentPermissionRequestBase::ContentPermissionRequestBase(
       mRequester(aWindow ? new nsContentPermissionRequester(aWindow) : nullptr),
       mPrefName(aPrefName),
       mType(aType),
-      mIsHandlingUserInput(false),
+      mIsHandlingUserInput(UserActivation::IsHandlingUserInput()),
       mMaybeUnsafePermissionDelegate(false) {
   if (!aWindow) {
     return;
@@ -549,8 +550,6 @@ ContentPermissionRequestBase::ContentPermissionRequestBase(
   if (!doc) {
     return;
   }
-
-  mIsHandlingUserInput = doc->HasValidTransientUserGestureActivation();
 
   mPermissionHandler = doc->GetPermissionDelegateHandler();
   if (mPermissionHandler) {
