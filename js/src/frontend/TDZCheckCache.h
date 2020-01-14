@@ -32,7 +32,7 @@ using CheckTDZMap = RecyclableNameMap<MaybeCheckTDZ>;
 //
 // When a scope containing lexical variables is entered, all such variables are
 // marked as CheckTDZ.  When a lexical variable is accessed, its entry is
-// checked.  If it's CheckTDZ, a JSOP_CHECKLEXICAL is emitted and then the
+// checked.  If it's CheckTDZ, a JSOp::CheckLexical is emitted and then the
 // entry is marked DontCheckTDZ.  If it's DontCheckTDZ, no check is emitted
 // because a prior check would have already failed.  Finally, because
 // evaluating a lexical variable declaration initializes it (after any

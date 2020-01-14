@@ -513,7 +513,7 @@ static bool IsCacheableNoProperty(JSContext* cx, JSObject* obj,
 
   // If we're doing a name lookup, we have to throw a ReferenceError. If
   // extra warnings are enabled, we may have to report a warning.
-  // Note that Ion does not generate idempotent caches for JSOP_GETBOUNDNAME.
+  // Note that Ion does not generate idempotent caches for JSOp::GetBoundName.
   if ((pc && JSOp(*pc) == JSOP_GETBOUNDNAME) ||
       cx->realm()->behaviors().extraWarnings(cx)) {
     return false;
@@ -3322,7 +3322,7 @@ static Shape* LookupShapeForSetSlot(JSOp op, NativeObject* obj, jsid id) {
     return nullptr;
   }
 
-  // If this is an op like JSOP_INITELEM / [[DefineOwnProperty]], the
+  // If this is an op like JSOp::InitElem / [[DefineOwnProperty]], the
   // property's attributes may have to be changed too, so make sure it's a
   // simple data property.
   if (IsPropertyInitOp(op) &&
@@ -3377,7 +3377,7 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
                                       : AttachDecision::NoAction;
   }
 
-  // Don't attach a megamorphic store slot stub for ops like JSOP_INITELEM.
+  // Don't attach a megamorphic store slot stub for ops like JSOp::InitElem.
   if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp &&
       IsPropertySetOp(JSOp(*pc_))) {
     writer.megamorphicStoreSlot(objId, JSID_TO_ATOM(id)->asPropertyName(),
@@ -3604,7 +3604,7 @@ static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj,
                             HandleId id, MutableHandleObject holder,
                             MutableHandleShape propShape,
                             bool* isTemporarilyUnoptimizable) {
-  // Don't attach a setter stub for ops like JSOP_INITELEM.
+  // Don't attach a setter stub for ops like JSOp::InitElem.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc)));
 
   PropertyResult prop;
@@ -3687,7 +3687,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetArrayLength(HandleObject obj,
                                                            ObjOperandId objId,
                                                            HandleId id,
                                                            ValOperandId rhsId) {
-  // Don't attach an array length stub for ops like JSOP_INITELEM.
+  // Don't attach an array length stub for ops like JSOp::InitElem.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
 
   if (!obj->is<ArrayObject>() || !JSID_IS_ATOM(id, cx_->names().length) ||
@@ -4192,7 +4192,7 @@ AttachDecision SetPropIRGenerator::tryAttachProxy(HandleObject obj,
                                                   ObjOperandId objId,
                                                   HandleId id,
                                                   ValOperandId rhsId) {
-  // Don't attach a proxy stub for ops like JSOP_INITELEM.
+  // Don't attach a proxy stub for ops like JSOp::InitElem.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
 
   ProxyStubType type = GetProxyStubType(cx_, obj, id);
@@ -4228,7 +4228,7 @@ AttachDecision SetPropIRGenerator::tryAttachProxy(HandleObject obj,
 AttachDecision SetPropIRGenerator::tryAttachProxyElement(HandleObject obj,
                                                          ObjOperandId objId,
                                                          ValOperandId rhsId) {
-  // Don't attach a proxy stub for ops like JSOP_INITELEM.
+  // Don't attach a proxy stub for ops like JSOp::InitElem.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc_)));
 
   if (!obj->is<ProxyObject>()) {
@@ -5162,7 +5162,7 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
 
 AttachDecision CallIRGenerator::tryAttachCallScripted(
     HandleFunction calleeFunc) {
-  // Never attach optimized scripted call stubs for JSOP_FUNAPPLY.
+  // Never attach optimized scripted call stubs for JSOp::FunApply.
   // MagicArguments may escape the frame through them.
   if (op_ == JSOP_FUNAPPLY) {
     return AttachDecision::NoAction;

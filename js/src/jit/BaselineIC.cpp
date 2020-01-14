@@ -2834,7 +2834,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   RootedValue callee(cx, vp[0]);
   RootedValue newTarget(cx, constructing ? callArgs.newTarget() : NullValue());
 
-  // Handle funapply with JSOP_ARGUMENTS
+  // Handle funapply with JSOp::Arguments
   if (op == JSOP_FUNAPPLY && argc == 2 &&
       callArgs[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
     if (!GuardFunApplyArgumentsOptimization(cx, frame, callArgs)) {
@@ -2851,7 +2851,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   bool handled = false;
   bool deferred = false;
 
-  // Only bother to try optimizing JSOP_CALL with CacheIR if the chain is still
+  // Only bother to try optimizing JSOp::Call with CacheIR if the chain is still
   // allowed to attach stubs.
   if (canAttachStub) {
     HandleValueArray args = HandleValueArray::fromMarkedLocation(argc, vp + 2);

@@ -236,7 +236,7 @@ struct OffsetAndDefIndex {
     Normal = 0,
 
     // Ignored this value in the expression decompilation.
-    // Used by JSOP_NOP_DESTRUCTURING.  See BytecodeParser::simulateOp.
+    // Used by JSOp::NopDestructuring.  See BytecodeParser::simulateOp.
     Ignored,
 
     // The value in this slot comes from 2 or more paths.
@@ -792,7 +792,7 @@ bool BytecodeParser::addJump(uint32_t offset, uint32_t stackDepth,
     }
   }
 
-  // If this is a backedge, assert we parsed the target JSOP_LOOPHEAD.
+  // If this is a backedge, assert we parsed the target JSOp::LoopHead.
   MOZ_ASSERT_IF(offset < currentOffset, codeArray_[offset]->parsed);
 #endif /* DEBUG */
 
@@ -2304,7 +2304,7 @@ static bool FindStartPC(JSContext* cx, const FrameIter& iter,
 
     // If the current PC has fewer values on the stack than the index we are
     // looking for, the blamed value must be one pushed by the current
-    // bytecode (e.g. JSOP_MOREITER), so restore *valuepc.
+    // bytecode (e.g. JSOp::MoreIter), so restore *valuepc.
     if (index < size_t(parser.stackDepthAtPC(current))) {
       *valuepc = parser.pcForStackOperand(current, index, defIndex);
     } else {

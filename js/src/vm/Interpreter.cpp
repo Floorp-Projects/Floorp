@@ -556,7 +556,7 @@ bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
     return false;
   }
 
-  /* Run function until JSOP_RETRVAL, JSOP_RETURN or error. */
+  /* Run function until JSOp::RetRval, JSOp::Return or error. */
   InvokeState state(cx, args, construct);
 
   // Create |this| if we're constructing. Switch to the callee's realm to
@@ -1078,7 +1078,7 @@ void js::UnwindAllEnvironmentsInFrame(JSContext* cx, EnvironmentIter& ei) {
 }
 
 // Compute the pc needed to unwind the environment to the beginning of a try
-// block. We cannot unwind to *after* the JSOP_TRY, because that might be the
+// block. We cannot unwind to *after* the JSOp::Try, because that might be the
 // first opcode of an inner scope, with the same problem as above. e.g.,
 //
 // try { { let x; } }
@@ -1100,7 +1100,7 @@ jsbytecode* js::UnwindEnvironmentToTryPc(JSScript* script,
 
 static void SettleOnTryNote(JSContext* cx, const JSTryNote* tn,
                             EnvironmentIter& ei, InterpreterRegs& regs) {
-  // Unwind the environment to the beginning of the JSOP_TRY.
+  // Unwind the environment to the beginning of the JSOp::Try.
   UnwindEnvironment(cx, ei, UnwindEnvironmentToTryPc(regs.fp()->script(), tn));
 
   // Set pc to the first bytecode after the the try note to point
@@ -1173,7 +1173,7 @@ static HandleErrorContinuation ProcessTryNotes(JSContext* cx,
         return FinallyContinuation;
 
       case JSTRY_FOR_IN: {
-        /* This is similar to JSOP_ENDITER in the interpreter loop. */
+        /* This is similar to JSOp::EndIter in the interpreter loop. */
         MOZ_ASSERT(tn->stackDepth <= regs.stackDepth());
         Value* sp = regs.spForStackDepth(tn->stackDepth);
         JSObject* obj = &sp[-1].toObject();
@@ -1333,7 +1333,7 @@ again:
   JS_END_MACRO
 
 /*
- * Same for JSOP_SETNAME and JSOP_SETPROP, which differ only slightly but
+ * Same for JSOp::SetName and JSOp::SetProp, which differ only slightly but
  * remain distinct for the decompiler.
  */
 JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
@@ -1971,7 +1971,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(JSOP_FORCEINTERPRETER)
 
     CASE(JSOP_UNDEFINED) {
-      // If this ever changes, change what JSOP_GIMPLICITTHIS does too.
+      // If this ever changes, change what JSOp::GImplicitThis does too.
       PUSH_UNDEFINED();
     }
     END_CASE(JSOP_UNDEFINED)
@@ -3130,7 +3130,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       INIT_COVERAGE();
       COUNT_COVERAGE_MAIN();
 
-      /* Load first op and dispatch it (safe since JSOP_RETRVAL). */
+      /* Load first op and dispatch it (safe since JSOp::RetRval). */
       ADVANCE_AND_DISPATCH(0);
     }
 
@@ -3168,7 +3168,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         Value v = ComputeImplicitThis(env);
         PUSH_COPY(v);
       } else {
-        // Treat it like JSOP_UNDEFINED.
+        // Treat it like JSOp::Undefined.
         PUSH_UNDEFINED();
       }
       static_assert(JSOP_IMPLICITTHIS_LENGTH == JSOP_GIMPLICITTHIS_LENGTH,
@@ -5104,7 +5104,7 @@ JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
   }
 
   // Choose the group. Three cases:
-  // - JSOP_NEWOBJECT_WITHGROUP explicitly indicates that we should use the
+  // - JSOp::NewObjectWithGroup explicitly indicates that we should use the
   //   same group as the template object's group.
   // - otherwise, if some heuristics indicate that we should use a singleton,
   //   we set the allocation-kind to ensure this.

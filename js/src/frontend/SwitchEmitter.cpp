@@ -271,7 +271,7 @@ bool SwitchEmitter::emitCaseBody() {
   tdzCacheCaseAndBody_.reset();
 
   if (state_ == State::Cond || state_ == State::Case) {
-    // For cond switch, JSOP_DEFAULT is always emitted.
+    // For cond switch, JSOp::Default is always emitted.
     if (!emitImplicitDefault()) {
       return false;
     }
@@ -323,7 +323,7 @@ bool SwitchEmitter::emitDefaultBody() {
   tdzCacheCaseAndBody_.reset();
 
   if (state_ == State::Cond || state_ == State::Case) {
-    // For cond switch, JSOP_DEFAULT is always emitted.
+    // For cond switch, JSOp::Default is always emitted.
     if (!emitImplicitDefault()) {
       return false;
     }

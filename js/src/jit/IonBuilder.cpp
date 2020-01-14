@@ -637,7 +637,7 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypesForLocation(
   // here.
   Maybe<BytecodeLocation> last = last_;
 
-  // We're only interested in JSOP_SETLOCAL and JSOP_SETARG.
+  // We're only interested in JSOp::SetLocal and JSOp::SetArg.
   uint32_t slot;
   if (loc.is(JSOP_SETLOCAL)) {
     slot = info().localSlot(loc.local());
@@ -669,7 +669,7 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypesForLocation(
     return Ok();
   };
 
-  // If it's a JSOP_POS or JSOP_TONUMERIC, use its operand instead.
+  // If it's a JSOp::Pos or JSOp::ToNumeric, use its operand instead.
   if (last->is(JSOP_POS) || last->is(JSOP_TONUMERIC)) {
     MOZ_ASSERT(earlier);
     last = earlier;
@@ -684,7 +684,8 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypesForLocation(
     return addPhiBackedgeType(typeSet->getKnownMIRType(), typeSet);
   }
 
-  // If the |last| op was a JSOP_GETLOCAL or JSOP_GETARG, use that slot's type.
+  // If the |last| op was a JSOp::GetLocal or JSOp::GetArg, use that slot's
+  // type.
   if (last->is(JSOP_GETLOCAL) || last->is(JSOP_GETARG)) {
     uint32_t slot = (last->is(JSOP_GETLOCAL))
                         ? info().localSlot(last->local())
@@ -1631,8 +1632,8 @@ class MOZ_RAII PoppedValueUseChecker {
 
         default:
           MOZ_ASSERT(popped_[i]->isImplicitlyUsed() ||
-                     // First value popped by JSOP_ENDITER is not used at all,
-                     // it's similar to JSOP_POP above.
+                     // First value popped by JSOp::EndIter is not used at all,
+                     // it's similar to JSOp::Pop above.
                      (op == JSOP_ENDITER && i == 0) ||
                      // MNewDerivedTypedObject instances are
                      // often dead unless they escape from the
@@ -1893,7 +1894,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
       return jsop_loophead();
 
     case JSOP_UNDEFINED:
-      // If this ever changes, change what JSOP_GIMPLICITTHIS does too.
+      // If this ever changes, change what JSOp::GImplicitThis does too.
       pushConstant(UndefinedValue());
       return Ok();
 
@@ -2244,7 +2245,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
           return Ok();
         }
       }
-      // Fall through to JSOP_BINDNAME
+      // Fall through to JSOp::BindName
       [[fallthrough]];
     case JSOP_BINDNAME:
       return jsop_bindname(info().getName(pc));
@@ -2528,7 +2529,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op, bool* restarted) {
     // and testing before these are enabled. Once other opcodes that are used
     // in derived classes are supported in Ion, this can be better validated
     // with testcases. Pay special attention to bailout and other areas where
-    // JSOP_NEW has special handling.
+    // JSOp::New has special handling.
     case JSOP_SPREADSUPERCALL:
     case JSOP_SUPERCALL:
 
@@ -3149,14 +3150,14 @@ AbortReasonOr<Ok> IonBuilder::visitTest(JSOp op, bool* restarted) {
   jsbytecode* target1 = GetNextPc(pc);
   jsbytecode* target2 = pc + GET_JUMP_OFFSET(pc);
 
-  // JSOP_AND and JSOP_OR inspect the top stack value but don't pop it.
-  // Also note that JSOP_CASE must pop a second value on the true-branch (the
+  // JSOp::And and JSOp::Or inspect the top stack value but don't pop it.
+  // Also note that JSOp::Case must pop a second value on the true-branch (the
   // input to the switch-statement). This conditional pop happens in
   // visitJumpTarget.
   bool mustKeepCondition = (op == JSOP_AND || op == JSOP_OR);
   MDefinition* ins = mustKeepCondition ? current->peek(-1) : current->pop();
 
-  // If this op always branches to the same pc we treat this as a JSOP_GOTO.
+  // If this op always branches to the same pc we treat this as a JSOp::Goto.
   if (target1 == target2) {
     ins->setImplicitlyUsedUnchecked();
     return visitGoto(target1);
@@ -3215,7 +3216,7 @@ AbortReasonOr<Ok> IonBuilder::visitTry() {
     return abort(AbortReason::Disable, "Try-catch during analysis");
   }
 
-  // Get the pc of the last instruction in the try block. It's a JSOP_GOTO to
+  // Get the pc of the last instruction in the try block. It's a JSOp::Goto to
   // jump over the catch block.
   jsbytecode* endpc = pc + GET_CODE_OFFSET(pc);
   MOZ_ASSERT(JSOp(*endpc) == JSOP_GOTO);
@@ -3302,7 +3303,7 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
   // Although this is fine for correctness, it has the following issues:
   //
   // 1) The FoldTests pass is unable to optimize this pattern. This matters for
-  //    short-circuit operations (JSOP_AND, JSOP_COALESCE, etc).
+  //    short-circuit operations (JSOp::And, JSOp::Coalesce, etc).
   //
   // 2) We can't easily use improveTypesAtTest to improve type information in
   //    this case:
@@ -3346,7 +3347,7 @@ AbortReasonOr<Ok> IonBuilder::visitJumpTarget(JSOp op) {
     MControlInstruction* lastIns = source->lastIns();
     switch (edge.kind()) {
       case PendingEdge::Kind::TestTrue: {
-        // JSOP_CASE must pop the value when branching to the true-target.
+        // JSOp::Case must pop the value when branching to the true-target.
         // If we create an empty block, we have to pop the value there instead
         // of as part of the emptyBlock -> joinBlock edge so stack depths match
         // the current depth.
@@ -3920,7 +3921,7 @@ AbortReasonOr<Ok> IonBuilder::arithTryBinaryStub(bool* emitted, JSOp op,
   JSOp actualOp = JSOp(*pc);
 
   // The actual jsop 'jsop_pos' is not supported yet.
-  // There's no IC support for JSOP_POW either.
+  // There's no IC support for JSOp::Pow either.
   if (actualOp == JSOP_POS || actualOp == JSOP_POW) {
     return Ok();
   }
@@ -4067,8 +4068,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_pos() {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_neg() {
-  // Since JSOP_NEG does not use a slot, we cannot push the MConstant.
-  // The MConstant is therefore passed to JSOP_MUL without slot traffic.
+  // Since JSOp::Neg does not use a slot, we cannot push the MConstant.
+  // The MConstant is therefore passed to JSOp::Mul without slot traffic.
   MConstant* negator = MConstant::New(alloc(), Int32Value(-1));
   current->add(negator);
 
@@ -5728,7 +5729,7 @@ MDefinition* IonBuilder::createThis(JSFunction* target, MDefinition* callee,
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_funcall(uint32_t argc) {
-  // Stack for JSOP_FUNCALL:
+  // Stack for JSOp::FunCall:
   // 1:      arg0
   // ...
   // argc:   argN
@@ -5859,7 +5860,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_funapply(uint32_t argc) {
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_spreadcall() {
-  // The arguments array is constructed by a JSOP_NEWARRAY and not
+  // The arguments array is constructed by a JSOp::NewArray and not
   // leaked to user. The complications of spread call iterator behaviour are
   // handled when the user objects are expanded and copied into this hidden
   // array.
@@ -6080,7 +6081,7 @@ AbortReasonOr<Ok> CallInfo::savePriorCallStack(MIRGenerator* mir,
 }
 
 AbortReasonOr<Ok> IonBuilder::jsop_funapplyarguments(uint32_t argc) {
-  // Stack for JSOP_FUNAPPLY:
+  // Stack for JSOp::FunApply:
   // 1:      Vp
   // 2:      This
   // argc+1: JSFunction*, the 'f' in |f.call()|, in |this| position.
@@ -12229,7 +12230,7 @@ AbortReasonOr<Ok> IonBuilder::getPropAddCache(MDefinition* obj,
     // Due to inlining, it's possible the observed TypeSet is non-empty,
     // even though we know |obj| is null/undefined and the MCallGetProperty
     // will throw. Don't push a TypeBarrier in this case, to avoid
-    // inlining the following (unreachable) JSOP_CALL.
+    // inlining the following (unreachable) JSOp::Call.
     MOZ_TRY(pushTypeBarrier(load, types, barrier));
   }
 
@@ -12962,7 +12963,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
     return Ok();
   }
 
-  // :TODO: if hasArguments() is true, and the script has a JSOP_SETARG, then
+  // :TODO: if hasArguments() is true, and the script has a JSOp::SetArg, then
   // convert all arg accesses to go through the arguments object. (see Bug
   // 957475)
   if (info().hasArguments()) {
@@ -12976,7 +12977,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
   // aliased argument set can never be observed, and the frame does not actually
   // need to be updated with the new arg value.
   if (info().argumentsAliasesFormals()) {
-    // JSOP_SETARG with magic arguments within inline frames is not yet
+    // JSOp::SetArg with magic arguments within inline frames is not yet
     // supported.
     if (isInlineBuilder()) {
       return abort(AbortReason::Disable, "setarg with magic args and inlining");

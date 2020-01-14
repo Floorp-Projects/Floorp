@@ -1771,7 +1771,7 @@ bool js::intrinsic_GetElemBaseForLambda(JSContext* cx, unsigned argc,
   jsbytecode* pc = script->code();
 
   /*
-   * JSOP_GETALIASEDVAR tells us exactly where to find the base object 'b'.
+   * JSOp::GetAliasedVar tells us exactly where to find the base object 'b'.
    * Rule out the (unlikely) possibility of a function with environment
    * objects since it would make our environment walk off.
    */

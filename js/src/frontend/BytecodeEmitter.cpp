@@ -489,7 +489,7 @@ bool BytecodeEmitter::emitPopN(unsigned n) {
     return emit1(JSOP_POP);
   }
 
-  // 2 JSOP_POP instructions (2 bytes) are shorter than JSOP_POPN (3 bytes).
+  // 2 JSOp::Pop instructions (2 bytes) are shorter than JSOp::PopN (3 bytes).
   if (n == 2) {
     return emit1(JSOP_POP) && emit1(JSOP_POP);
   }
@@ -593,7 +593,7 @@ Maybe<uint32_t> BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {
     return Nothing();
   }
 
-  // Try to give the JSOP_LOOPHEAD the same line number as the next
+  // Try to give the JSOp::LoopHead the same line number as the next
   // instruction. nextpn is often a block, in which case the next instruction
   // typically comes from the first statement inside.
   if (nextpn->is<LexicalScopeNode>()) {
@@ -735,7 +735,7 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
   for (NestableControl* control = bce_->innermostNestableControl;
        control != target; control = control->enclosing()) {
     // Walk the scope stack and leave the scopes we entered. Leaving a scope
-    // may emit administrative ops like JSOP_POPLEXICALENV but never anything
+    // may emit administrative ops like JSOp::PopLexicalEnv but never anything
     // that manipulates the stack.
     for (; es != control->emitterScope(); es = es->enclosingInFrame()) {
       if (!leaveScope(es)) {
@@ -882,8 +882,8 @@ bool BytecodeEmitter::emitAtomOp(JSOp op, JSAtom* atom,
                                  ShouldInstrument shouldInstrument) {
   MOZ_ASSERT(atom);
 
-  // .generator lookups should be emitted as JSOP_GETALIASEDVAR instead of
-  // JSOP_GETNAME etc, to bypass |with| objects on the scope chain.
+  // .generator lookups should be emitted as JSOp::GetAliasedVar instead of
+  // JSOp::GetName etc, to bypass |with| objects on the scope chain.
   // It's safe to emit .this lookups though because |with| objects skip
   // those.
   MOZ_ASSERT_IF(op == JSOP_GETNAME || op == JSOP_GETGNAME,
@@ -1400,7 +1400,7 @@ restart:
       MOZ_ASSERT(pn->is<FunctionNode>());
       /*
        * A named function, contrary to ES3, is no longer effectful, because
-       * we bind its name lexically (using JSOP_CALLEE) instead of creating
+       * we bind its name lexically (using JSOp::Callee) instead of creating
        * an Object instance and binding a readonly, permanent property in it
        * (the object and binding can be detected and hijacked or captured).
        * This is a bug fix to ES3; it is fixed in ES3.1 drafts.
@@ -2699,13 +2699,13 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
           // This is like ordinary assignment, but with one difference.
           //
           // In `a = b`, we first determine a binding for `a` (using
-          // JSOP_BINDNAME or JSOP_BINDGNAME), then we evaluate `b`, then
-          // a JSOP_SETNAME instruction.
+          // JSOp::BindName or JSOp::BindGName), then we evaluate `b`, then
+          // a JSOp::SetName instruction.
           //
           // In `[a] = [b]`, per spec, `b` is evaluated first, then we
           // determine a binding for `a`. Then we need to do assignment--
           // but the operands are on the stack in the wrong order for
-          // JSOP_SETPROP, so we have to add a JSOP_SWAP.
+          // JSOp::SetProp, so we have to add a JSOp::Swap.
           //
           // In the cases where we are emitting a name op, emit a swap
           // because of this.
@@ -2918,11 +2918,11 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
     //   7. If innerResult.[[Type]] is throw, return
     //      Completion(innerResult).
     //
-    // For CompletionKind::Normal case, JSOP_CALL for step 5 checks if RET
+    // For CompletionKind::Normal case, JSOp::Call for step 5 checks if RET
     // is callable, and throws if not.  Since step 6 doesn't match and
     // error handling in step 3 and step 7 can be merged.
     //
-    // For CompletionKind::Throw case, an error thrown by JSOP_CALL for
+    // For CompletionKind::Throw case, an error thrown by JSOp::Call for
     // step 5 is ignored by try-catch.  So we should check if RET is
     // callable here, outside of try-catch, and the throw immediately if
     // not.
@@ -3798,7 +3798,7 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
   }
 
   // Try to construct the shape of the object as we go, so we can emit a
-  // JSOP_NEWOBJECT with the final shape instead.
+  // JSOp::NewObject with the final shape instead.
   // In the case of computed property names and indices, we cannot fix the
   // shape at bytecode compile time. When the shape cannot be determined,
   // |obj| is nulled out.
@@ -3901,7 +3901,7 @@ bool BytecodeEmitter::emitTemplateString(ListNode* templateString) {
 
     // Skip empty strings. These are very common: a template string like
     // `${a}${b}` has three empty strings and without this optimization
-    // we'd emit four JSOP_ADD operations instead of just one.
+    // we'd emit four JSOp::Add operations instead of just one.
     if (isString && item->as<NameNode>().atom()->empty()) {
       continue;
     }
@@ -4260,7 +4260,7 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
         break;
       }
       case ParseNodeKind::CallExpr:
-        // We just emitted a JSOP_THROWMSG and popped the call's return
+        // We just emitted a JSOp::ThrowMsg and popped the call's return
         // value.  Push a random value to make sure the stack depth is
         // correct.
         if (!emit1(JSOP_NULL)) {
@@ -4542,13 +4542,13 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitTry(TryNode* tryNode) {
 MOZ_MUST_USE bool BytecodeEmitter::emitGoSub(JumpList* jump) {
   // Emit the following:
   //
-  //   JSOP_FALSE
-  //   JSOP_RESUMEINDEX <resumeIndex>
-  //   JSOP_GOSUB <target>
+  //   JSOp::False
+  //   JSOp::ResumeIndex <resumeIndex>
+  //   JSOp::Gosub <target>
   //  resumeOffset:
-  //   JSOP_JUMPTARGET
+  //   JSOp::JumpTarget
   //
-  // The order is important: the Baseline Interpreter relies on JSOP_JUMPTARGET
+  // The order is important: the Baseline Interpreter relies on JSOp::JumpTarget
   // setting the frame's ICEntry when resuming at resumeOffset.
 
   if (!emit1(JSOP_FALSE)) {
@@ -5814,8 +5814,8 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
    * with the correct stack pointer (i.e., after popping any with,
    * for/in, etc., slots nested inside the finally's try).
    *
-   * In this case we mutate JSOP_RETURN into JSOP_SETRVAL and add an
-   * extra JSOP_RETRVAL after the fixups.
+   * In this case we mutate JSOp::Return into JSOp::SetRval and add an
+   * extra JSOp::RetRval after the fixups.
    */
   BytecodeOffset top = bytecodeSection().offset();
 
@@ -6556,7 +6556,7 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
    * that it appears useless to the compiler.
    *
    * API users may also set the JSOPTION_NO_SCRIPT_RVAL option when
-   * calling JS_Compile* to suppress JSOP_SETRVAL.
+   * calling JS_Compile* to suppress JSOp::SetRval.
    */
   bool wantval = false;
   bool useful = false;
@@ -6742,7 +6742,7 @@ bool BytecodeEmitter::emitDeleteExpression(UnaryNode* deleteNode) {
 
   ParseNode* expression = deleteNode->kid();
 
-  // If useless, just emit JSOP_TRUE; otherwise convert |delete <expr>| to
+  // If useless, just emit JSOp::True; otherwise convert |delete <expr>| to
   // effectively |<expr>, true|.
   bool useful = false;
   if (!checkSideEffects(expression, &useful)) {
@@ -6899,8 +6899,8 @@ bool BytecodeEmitter::emitSelfHostedResumeGenerator(BinaryNode* callNode) {
 }
 
 bool BytecodeEmitter::emitSelfHostedForceInterpreter() {
-  // JSScript::hasForceInterpreterOp() relies on JSOP_FORCEINTERPRETER being the
-  // first bytecode op in the script.
+  // JSScript::hasForceInterpreterOp() relies on JSOp::ForceInterpreter being
+  // the first bytecode op in the script.
   MOZ_ASSERT(bytecodeSection().code().empty());
 
   if (!emit1(JSOP_FORCEINTERPRETER)) {
@@ -7211,13 +7211,13 @@ bool BytecodeEmitter::emitCallOrNew(
    * First, emit code for the left operand to evaluate the callable or
    * constructable object expression.
    *
-   * For operator new, we emit JSOP_GETPROP instead of JSOP_CALLPROP, etc.
+   * For operator new, we emit JSOp::GetProp instead of JSOp::CallProp, etc.
    * This is necessary to interpose the lambda-initialized method read
-   * barrier -- see the code in jsinterp.cpp for JSOP_LAMBDA followed by
+   * barrier -- see the code in jsinterp.cpp for JSOp::Lambda followed by
    * JSOP_{SET,INIT}PROP.
    *
    * Then (or in a call case that has no explicit reference-base
-   * object) we emit JSOP_UNDEFINED to produce the undefined |this|
+   * object) we emit JSOp::Undefined to produce the undefined |this|
    * value required for calls (which non-strict mode functions
    * will box into the global object).
    */
@@ -7331,7 +7331,7 @@ bool BytecodeEmitter::emitCallOrNew(
 //   - the binary operators in TokenKind.h
 //   - the precedence list in Parser.cpp
 static const JSOp ParseNodeKindToJSOp[] = {
-    // JSOP_NOP is for pipeline operator which does not emit its own JSOp
+    // JSOp::Nop is for pipeline operator which does not emit its own JSOp
     // but has highest precedence in binary operators
     JSOP_NOP,        JSOP_COALESCE, JSOP_OR,       JSOP_AND, JSOP_BITOR,
     JSOP_BITXOR,     JSOP_BITAND,   JSOP_STRICTEQ, JSOP_EQ,  JSOP_STRICTNE,
@@ -7395,12 +7395,12 @@ bool BytecodeEmitter::emitShortCircuit(ListNode* node) {
              node->isKind(ParseNodeKind::AndExpr));
 
   /*
-   * JSOP_OR converts the operand on the stack to boolean, leaves the original
+   * JSOp::Or converts the operand on the stack to boolean, leaves the original
    * value on the stack and jumps if true; otherwise it falls into the next
    * bytecode, which pops the left operand and then evaluates the right operand.
    * The jump goes around the right operand evaluation.
    *
-   * JSOP_AND converts the operand on the stack to boolean and jumps if false;
+   * JSOp::And converts the operand on the stack to boolean and jumps if false;
    * otherwise it falls into the right operand's bytecode.
    */
 
@@ -7621,7 +7621,7 @@ void BytecodeEmitter::isPropertyListObjLiteralCompatible(ListNode* obj,
   }
 
   if (propCount >= PropertyTree::MAX_HEIGHT) {
-    // JSOP_NEWOBJECT cannot accept dictionary-mode objects.
+    // JSOp::NewObject cannot accept dictionary-mode objects.
     keysOK = false;
   }
 
@@ -8354,15 +8354,15 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
   //    (numbers, booleans, strings), *and* this occurs in a run-once
   //    (singleton) context. In this case, we can emit ObjLiteral
   //    instructions to build an object with values, and the object will be
-  //    attached to a JSOP_OBJECT opcode, whose semantics are for the backend to
-  //    simply steal the object from the script.
+  //    attached to a JSOp::Object opcode, whose semantics are for the backend
+  //    to simply steal the object from the script.
   //
   // 2. The list of property names is "normal" and constant as above, but some
   //    values are complex (computed expressions, sub-objects, functions,
   //    etc.), or else this occurs in a non-run-once (non-singleton) context.
   //    In this case, we can use the ObjLiteral functionality to describe an
   //    *empty* object (all values left undefined) with the right fields, which
-  //    will become a JSOP_NEWOBJECT opcode using this template object to speed
+  //    will become a JSOp::NewObject opcode using this template object to speed
   //    the creation of the object each time it executes (stealing its shape,
   //    etc.). The emitted bytecode still needs INITPROP ops to set the values
   //    in this case.
@@ -8377,8 +8377,8 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitObject(ListNode* objNode,
                                      &useObjLiteralValues, &useObjLiteral);
 
   // We can't rely on the ObjLiteral-constructed object's values to be used if
-  // we're only using ObjLiteral to build a template for JSOP_NEWOBJECT instead
-  // of JSOP_OBJECT. This is the case either when we're not in singleton
+  // we're only using ObjLiteral to build a template for JSOp::NewObject instead
+  // of JSOp::Object. This is the case either when we're not in singleton
   // context, or when we are but we're treating it as non-singleton (see other
   // comments related to isInner).
   if (!isSingletonContext || isInner) {
@@ -8508,9 +8508,9 @@ bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count,
    * Emit code for [a, b, c] that is equivalent to constructing a new
    * array and in source order evaluating each element value and adding
    * it to the array, without invoking latent setters.  We use the
-   * JSOP_NEWINIT and JSOP_INITELEM_ARRAY bytecodes to ignore setters and
+   * JSOp::NewInit and JSOp::InitElemArray bytecodes to ignore setters and
    * to avoid dup'ing and popping the array as each element is added, as
-   * JSOP_SETELEM/JSOP_SETPROP would do.
+   * JSOp::SetElem/JSOp::SetProp would do.
    */
 
   uint32_t nspread = 0;

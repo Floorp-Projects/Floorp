@@ -26,7 +26,7 @@ bool WhileEmitter::emitCond(const Maybe<uint32_t>& whilePos,
   // line note before the loop, so that the debugger sees a single entry point.
   // This way, if there is a breakpoint on the line, it will only fire once; and
   // "next"ing will skip the whole loop. However, for the multi-line case we
-  // want to emit the line note for the JSOP_LOOPHEAD, so that "cont" stops on
+  // want to emit the line note for the JSOp::LoopHead, so that "cont" stops on
   // each iteration -- but without a stop before the first iteration.
   if (whilePos && endPos &&
       bce_->parser->errorReporter().lineAt(*whilePos) ==

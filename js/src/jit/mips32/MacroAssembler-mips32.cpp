@@ -1789,7 +1789,7 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
   jump(a0);
 
   // If we found a finally block, this must be a baseline frame. Push
-  // two values expected by JSOP_RETSUB: BooleanValue(true) and the
+  // two values expected by JSOp::Retsub: BooleanValue(true) and the
   // exception.
   bind(&finally);
   ValueOperand exception = ValueOperand(a1, a2);

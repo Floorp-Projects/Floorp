@@ -53,23 +53,23 @@ class MOZ_STACK_CLASS CForEmitter {
   // If `cond` is not empty:
   //     {init}
   //   loop:
-  //     JSOP_LOOPHEAD
+  //     JSOp::LoopHead
   //     {cond}
-  //     JSOP_IFEQ break
+  //     JSOp::IfEq break
   //     {body}
   //   continue:
   //     {update}
-  //     JSOP_GOTO loop
+  //     JSOp::Goto loop
   //   break:
   //
   // If `cond` is empty:
   //     {init}
   //   loop:
-  //     JSOP_LOOPHEAD
+  //     JSOp::LoopHead
   //     {body}
   //   continue:
   //     {update}
-  //     JSOP_GOTO loop
+  //     JSOp::Goto loop
   //   break:
   //
  public:

@@ -509,7 +509,7 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
     return true;
   }
 
-  // Derived class constructors emit JSOP_CHECKRETURN, which requires
+  // Derived class constructors emit JSOp::CheckReturn, which requires
   // '.this' to be bound.
   FunctionBox* funbox = functionBox();
   HandlePropertyName dotThis = sc()->cx_->names().dotThis;
