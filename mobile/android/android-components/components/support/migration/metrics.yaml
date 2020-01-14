@@ -1,0 +1,550 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+
+migration:
+  migration_versions:
+    type: labeled_string
+    description: >
+      Versions of the migrations which were executed.
+    labels:
+      - history
+      - bookmarks
+      - logins
+      - open_tabs
+      - fxa
+      - gecko
+      - settings
+      - telemetry_identifiers
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+
+migration.telemetry_identifiers:
+  fennec_client_id:
+    type: uuid
+    description: >
+      Records clientID of the migrated Fennec profile.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  fennec_profile_creation_date:
+    type: datetime
+    time_unit: millisecond
+    description: >
+      Records when the migrated Fennec profile was created.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  any_failures:
+    type: boolean
+    description: >
+      Did this migration encounter any failures (exceptions)?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+
+migration.history:
+  migrated:
+    type: labeled_counter
+    description: >
+      Counters describing how history migration went; should add-up to 'migration.history.detected'.
+    labels:
+      - succeeded
+      - failed
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  detected:
+    type: counter
+    description: >
+      Total number of detected history items prior to a migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Duration of the history migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  any_failures:
+    type: boolean
+    description: >
+      Did this migration encounter any failures (exceptions)?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+
+migration.bookmarks:
+  migrated:
+    type: labeled_counter
+    description: >
+      Counters describing how bookmark migration went; should add-up to 'migration.bookmarks.detected'.
+    labels:
+      - succeeded
+      - failed
+    send_in_pings:
+    - migration
+    bugs:
+    - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+    - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  detected:
+    type: counter
+    description: >
+      Total number of detected bookmarks prior to a migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  duration:
+    type: timespan
+    time_unit: millisecond
+    description: >
+      Duration of the bookmarks migration.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  any_failures:
+    type: boolean
+    description: >
+      Did this migration encounter any failures (exceptions)?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+
+migration.open_tabs:
+  detected:
+    type: counter
+    description: >
+      Number of detected open tabs.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  migrated:
+    type: counter
+    description: >
+      Number of migrated open tabs.
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  any_failures:
+    type: boolean
+    description: >
+      Did this migration encounter any failures (exceptions)?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+
+migration.fxa:
+  any_failures:
+    type: boolean
+    description: >
+      Did this migration encounter any failures (exceptions)?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  failure_reason:
+    type: counter
+    description: >
+      Why this migration failed. See codes in TelemetryHelpers.kt
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  failure_reason_rust:
+    type: string
+    description: >
+      Why this migration failed (rust exception).
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  success_reason:
+    type: counter
+    description: >
+      Why this migration succeeded. See codes in TelemetryHelpers.kt
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  bad_auth_state:
+    type: string
+    description: >
+      If we couldn't migrate due to a bad auth state, what was it?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+
+migration.gecko:
+  any_failures:
+    type: boolean
+    description: >
+      Did this migration encounter any failures (exceptions)?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+
+migration.logins:
+  any_failures:
+    type: boolean
+    description: >
+      Did this migration encounter any failures (exceptions)?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  failure_reason:
+    type: counter
+    description: >
+      Why this migration failed. See codes in TelemetryHelpers.kt
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  unsupported_db_version:
+    type: counter
+    description: >
+      If we couldn't migrate due to an unsupported db version, what was it?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  success_reason:
+    type: counter
+    description: >
+      Why this migration succeeded. See codes in TelemetryHelpers.kt
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  detected:
+    type: counter
+    description: >
+      How many logins were detected?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  failure_counts:
+    type: labeled_counter
+    labels:
+      - process
+      - import
+    description: >
+      How many logins failed to be migrated, and in which ways?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+
+migration.settings:
+  any_failures:
+    type: boolean
+    description: >
+      Did this migration encounter any failures (exceptions)?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  failure_reason:
+    type: counter
+    description: >
+      Why this migration failed. See codes in TelemetryHelpers.kt
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  success_reason:
+    type: counter
+    description: >
+      Why this migration succeeded. See codes in TelemetryHelpers.kt
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  telemetry_enabled:
+    type: boolean
+    description: >
+      Is telemetry enabled after this migration?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+
+migration.addons:
+  any_failures:
+    type: boolean
+    description: >
+      Did this migration encounter any failures (exceptions)?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  failure_reason:
+    type: counter
+    description: >
+      Why this migration failed. See codes in TelemetryHelpers.kt
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  success_reason:
+    type: counter
+    description: >
+      Why this migration succeeded. See codes in TelemetryHelpers.kt
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  failed_addons:
+    type: counter
+    description: >
+      How many addons failed to migrate?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping
+  migrated_addons:
+    type: counter
+    description: >
+      How many addons were migrated?
+    send_in_pings:
+      - migration
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5888
+    data_reviews:
+      - https://github.com/mozilla-mobile/android-components/pull/5483#issuecomment-573971458
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: 2020-10-01
+    lifetime: ping

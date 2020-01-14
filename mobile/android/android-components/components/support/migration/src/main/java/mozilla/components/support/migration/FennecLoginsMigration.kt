@@ -31,9 +31,9 @@ internal sealed class LoginsMigrationResult {
         internal object MasterPasswordIsSet : Success()
 
         internal data class ImportedLoginRecords(
-            val totalRecordsDetected: Long,
-            val failedToProcess: Long,
-            val failedToImport: Long
+            val totalRecordsDetected: Int,
+            val failedToProcess: Int,
+            val failedToImport: Int
         ) : Success()
     }
 
@@ -119,7 +119,8 @@ internal object FennecLoginsMigration {
         }
 
         loginsStorage.ensureUnlocked(loginsStorageKey).await()
-        val importMetrics = try {
+
+        val migrationMetrics = try {
             loginsStorage.importLoginsAsync(fennecRecords.records).await()
         } catch (e: Exception) {
             return Result.Failure(LoginMigrationException(LoginsMigrationResult.Failure.RustImportThrew(e)))
@@ -127,17 +128,18 @@ internal object FennecLoginsMigration {
             loginsStorage.ensureLocked().await()
         }
 
-        // TODO parse other metrics.
+        // TODO process login migration metrics properly:
         // See https://github.com/mozilla/application-services/commit/d1a12d98a8c428567a3fff9e4333869b980952a8
         val failedToImport = try {
-            importMetrics.getLong("num_failed")
+            migrationMetrics.getInt("num_failed")
         } catch (e: Exception) {
-            0L
+            crashReporter.submitCaughtException(e)
+            0
         }
 
         return Result.Success(LoginsMigrationResult.Success.ImportedLoginRecords(
-            totalRecordsDetected = fennecRecords.totalRecordsDetected.toLong(),
-            failedToProcess = (fennecRecords.totalRecordsDetected - fennecRecords.records.size).toLong(),
+            totalRecordsDetected = fennecRecords.totalRecordsDetected,
+            failedToProcess = (fennecRecords.totalRecordsDetected - fennecRecords.records.size),
             failedToImport = failedToImport
         ))
     }
