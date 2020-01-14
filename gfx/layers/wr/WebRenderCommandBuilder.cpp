@@ -1391,6 +1391,32 @@ static mozilla::gfx::IntRect ScaleToOutsidePixelsOffset(
   return rect;
 }
 
+/* This function is the same as the above except that it rounds to the
+ * nearest instead of rounding out. We use it for attempting to compute the
+ * actual pixel bounds of opaque items */
+static mozilla::gfx::IntRect ScaleToNearestPixelsOffset(
+    nsRect aRect, float aXScale, float aYScale, nscoord aAppUnitsPerPixel,
+    LayerPoint aOffset) {
+  mozilla::gfx::IntRect rect;
+  rect.SetNonEmptyBox(
+      NSToIntFloor(NSAppUnitsToFloatPixels(aRect.x, float(aAppUnitsPerPixel)) *
+                       aXScale +
+                   aOffset.x + 0.5),
+      NSToIntFloor(NSAppUnitsToFloatPixels(aRect.y, float(aAppUnitsPerPixel)) *
+                       aYScale +
+                   aOffset.y + 0.5),
+      NSToIntFloor(
+          NSAppUnitsToFloatPixels(aRect.XMost(), float(aAppUnitsPerPixel)) *
+              aXScale +
+          aOffset.x + 0.5),
+      NSToIntFloor(
+          NSAppUnitsToFloatPixels(aRect.YMost(), float(aAppUnitsPerPixel)) *
+              aYScale +
+          aOffset.y + 0.5));
+  return rect;
+}
+
+
 RenderRootStateManager* WebRenderCommandBuilder::GetRenderRootStateManager(
     wr::RenderRoot aRenderRoot) {
   return mManager->GetRenderRootStateManager(aRenderRoot);
@@ -2145,15 +2171,41 @@ WebRenderCommandBuilder::GenerateFallbackData(
   auto snappedTrans = LayerIntPoint::Floor(trans);
   LayerPoint residualOffset = trans - snappedTrans;
 
-  auto dtRect = LayerIntRect::FromUnknownRect(
+  nsRegion opaqueRegion =
+    aItem->GetOpaqueRegion(aDisplayListBuilder, &snap);
+  wr::OpacityType opacity = opaqueRegion.Contains(paintBounds)
+    ? wr::OpacityType::Opaque
+    : wr::OpacityType::HasAlphaChannel;
+
+  LayerIntRect dtRect, visibleRect;
+  // If we think the item is opaque we round the bounds
+  // to the nearest pixel instead of rounding them out. If we rounded
+  // out we'd potentially introduce transparent pixels.
+  //
+  // Ideally we'd be able to ask an item its bounds in pixels and whether
+  // they're all opaque. Unfortunately no such API exists so we currently
+  // just hope that we get it right.
+  if (opacity == wr::OpacityType::Opaque && snap) {
+    dtRect = LayerIntRect::FromUnknownRect(
+      ScaleToNearestPixelsOffset(paintBounds, scale.width, scale.height,
+                                 appUnitsPerDevPixel, residualOffset));
+
+    visibleRect = LayerIntRect::FromUnknownRect(
+                         ScaleToNearestPixelsOffset(
+                             aItem->GetBuildingRect(), scale.width,
+                             scale.height, appUnitsPerDevPixel, residualOffset))
+                         .Intersect(dtRect);
+  } else {
+    dtRect = LayerIntRect::FromUnknownRect(
       ScaleToOutsidePixelsOffset(paintBounds, scale.width, scale.height,
                                  appUnitsPerDevPixel, residualOffset));
 
-  auto visibleRect = LayerIntRect::FromUnknownRect(
+    visibleRect = LayerIntRect::FromUnknownRect(
                          ScaleToOutsidePixelsOffset(
                              aItem->GetBuildingRect(), scale.width,
                              scale.height, appUnitsPerDevPixel, residualOffset))
                          .Intersect(dtRect);
+  }
 
   auto visibleSize = visibleRect.Size();
   if (visibleSize.IsEmpty()) {
@@ -2211,15 +2263,12 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
     gfx::SurfaceFormat format = aItem->GetType() == DisplayItemType::TYPE_MASK
                                     ? gfx::SurfaceFormat::A8
-                                    : gfx::SurfaceFormat::B8G8R8A8;
+                                    : (opacity == wr::OpacityType::Opaque ?
+                                       gfx::SurfaceFormat::B8G8R8X8 :
+                                       gfx::SurfaceFormat::B8G8R8A8);
     if (useBlobImage) {
-      bool snapped;
-      nsRegion opaqueRegion =
-          aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped);
       MOZ_ASSERT(!opaqueRegion.IsComplex());
-      wr::OpacityType opacity = opaqueRegion.Contains(paintBounds)
-                                    ? wr::OpacityType::Opaque
-                                    : wr::OpacityType::HasAlphaChannel;
+
       std::vector<RefPtr<ScaledFont>> fonts;
       bool validFonts = true;
       RefPtr<WebRenderDrawEventRecorder> recorder =
