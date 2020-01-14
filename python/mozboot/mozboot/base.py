@@ -312,6 +312,12 @@ class BaseBootstrapper(object):
             '%s does not yet implement ensure_node_packages()'
             % __name__)
 
+    def ensure_dump_syms_packages(self, state_dir, checkout_root):
+        '''
+        Install dump_syms.
+        '''
+        pass
+
     def install_toolchain_static_analysis(self, state_dir, checkout_root, toolchain_job):
         clang_tools_path = os.path.join(state_dir, 'clang-tools')
         if not os.path.exists(clang_tools_path):

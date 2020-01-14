@@ -22,11 +22,3 @@ if CONFIG['OS_ARCH'] == 'Darwin':
         '/toolkit/crashreporter/google-breakpad/src/common/mac',
         '/toolkit/crashreporter/google-breakpad/src/tools/mac/dump_syms',
     ]
-
-# While the Linux and Mac dump_syms can be cross-built, the Windows one can't,
-# and at the moment, it's a host tool, so only build it when the host is
-# Windows.
-if CONFIG['HOST_OS_ARCH'] == 'WINNT':
-    DIRS += [
-        '/toolkit/crashreporter/google-breakpad/src/tools/windows/dump_syms',
-    ]
