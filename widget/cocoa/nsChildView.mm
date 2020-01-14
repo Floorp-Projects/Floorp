@@ -2190,24 +2190,7 @@ void nsChildView::LookUpDictionary(const nsAString& aText,
 }
 
 nsresult nsChildView::SetPrefersReducedMotionOverrideForTest(bool aValue) {
-  // Tell that the cache value we are going to set isn't cleared via
-  // nsPresContext::ThemeChangedInternal which is called right before
-  // we queue the media feature value change for this prefers-reduced-motion
-  // change.
-  LookAndFeel::SetShouldRetainCacheForTest(true);
-
-  LookAndFeelInt prefersReducedMotion;
-  prefersReducedMotion.id = LookAndFeel::eIntID_PrefersReducedMotion;
-  prefersReducedMotion.value = aValue ? 1 : 0;
-
-  AutoTArray<LookAndFeelInt, 1> lookAndFeelCache;
-  lookAndFeelCache.AppendElement(prefersReducedMotion);
-
-  // If we could have a way to modify
-  // NSWorkspace.accessibilityDisplayShouldReduceMotion, we could use it, but
-  // unfortunately there is no way, so we change the cache value instead as if
-  // it's set in the parent process.
-  LookAndFeel::SetIntCache(lookAndFeelCache);
+  LookAndFeel::SetPrefersReducedMotionOverrideForTest(aValue);
 
   if (nsCocoaFeatures::OnMojaveOrLater() &&
       NSWorkspaceAccessibilityDisplayOptionsDidChangeNotification) {
@@ -2227,7 +2210,7 @@ nsresult nsChildView::SetPrefersReducedMotionOverrideForTest(bool aValue) {
 }
 
 nsresult nsChildView::ResetPrefersReducedMotionOverrideForTest() {
-  LookAndFeel::SetShouldRetainCacheForTest(false);
+  LookAndFeel::ResetPrefersReducedMotionOverrideForTest();
   return NS_OK;
 }
 
