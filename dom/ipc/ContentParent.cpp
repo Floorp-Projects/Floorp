@@ -970,30 +970,33 @@ ContentParent::GetNewOrUsedBrowserProcessAsync(Element* aFrameElement,
   RefPtr<LaunchPromise> launchPromise = p->LaunchSubprocessAsync(aPriority);
   MOZ_ASSERT(launchPromise);
 
+  // Until the new process is ready let's not allow to start up any
+  // preallocated processes. In case of success, the blocker is removed
+  // when we receive the first `idle` message. In case of failure, we
+  // cleanup manually in the `OnReject`.
+  PreallocatedProcessManager::AddBlocker(p);
+
+  nsAutoString remoteType(aRemoteType);
   return launchPromise->Then(
       GetCurrentThreadSerialEventTarget(), __func__,
       // on resolve
-      [&p, &recordReplayState, &aRemoteType,
-       launchPromise =
-           std::move(launchPromise)](const RefPtr<ContentParent>& subProcess) {
-        // Until the new process is ready let's not allow to start up any
-        // preallocated processes.
-        PreallocatedProcessManager::AddBlocker(p);
-
+      [p, recordReplayState, remoteType,
+       launchPromise](const RefPtr<ContentParent>& subProcess) {
         if (recordReplayState == eNotRecordingOrReplaying) {
           // We cannot reuse `contentParents` as it may have been
           // overwritten or otherwise altered by another process launch.
           nsTArray<ContentParent*>& contentParents =
-              GetOrCreatePool(aRemoteType);
+              GetOrCreatePool(remoteType);
           contentParents.AppendElement(p);
         }
 
         p->mActivateTS = TimeStamp::Now();
         return launchPromise;
       },
-      [launchPromise = std::move(launchPromise)]() { return launchPromise; }
-      // on reject, propagate LaunchError
-  );
+      [p, launchPromise]() {
+        PreallocatedProcessManager::RemoveBlocker(p);
+        return launchPromise;
+      });
 }
 
 /*static*/
