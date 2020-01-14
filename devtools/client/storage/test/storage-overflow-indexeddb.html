@@ -41,6 +41,7 @@ function deleteDB(dbName, storage) {
 window.clear = async function() {
   await deleteDB("database", "temporary");
   await deleteDB("database", "default");
+  await deleteDB("database", "persistent");
 
   dump(`removed indexedDB data from ${document.location}\n`);
 };

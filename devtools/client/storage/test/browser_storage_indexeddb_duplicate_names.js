@@ -24,8 +24,10 @@ add_task(async function() {
       [
         "idb1 (default)",
         "idb1 (temporary)",
+        "idb1 (persistent)",
         "idb2 (default)",
         "idb2 (temporary)",
+        "idb2 (persistent)",
       ],
     ],
   ]);

@@ -45,9 +45,9 @@ async function testInternalDBs(front) {
   const data = await front.listStores();
   const hosts = data.indexedDB.hosts;
 
-  // According to bug 1594810 "persistent" storage is deprecated and we plan
-  // to remove support completely in dom/indexedDB. To make this possible
-  // we need to skip "persistent" storage entries to prevent the toolbox
-  // from breaking when support is removed.
-  ok(!hosts.chrome, `indexedDB hosts doesn't contain "chrome"`);
+  ok(hosts.chrome, `indexedDB hosts contains "chrome"`);
+
+  const path = `["MyDatabase (persistent)","MyObjectStore"]`;
+  const foundDB = hosts.chrome.includes(path);
+  ok(foundDB, `Host "chrome" includes ${path}`);
 }
