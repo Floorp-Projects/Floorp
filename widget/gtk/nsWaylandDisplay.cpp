@@ -541,9 +541,10 @@ bool nsGbmLib::IsAvailable() {
 }
 
 bool nsGbmLib::IsModifierAvailable() {
-  // Disable the modifiers for now. We may use modifiers for 3D rendering
-  // only but not for cairo/skia backends which are used now.
-  return false;
+  if (!Load()) {
+    return false;
+  }
+  return sDrmPrimeHandleToFD != nullptr;
 }
 
 bool nsGbmLib::Load() {
