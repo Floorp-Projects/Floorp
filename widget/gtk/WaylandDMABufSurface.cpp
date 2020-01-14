@@ -132,7 +132,10 @@ bool WaylandDMABufSurface::Create(int aWidth, int aHeight,
     return false;
   }
 
-  if (nsGbmLib::IsModifierAvailable() && mGmbFormat->mModifiersCount > 0) {
+  bool useModifiers = (aWaylandDMABufSurfaceFlags & DMABUF_USE_MODIFIERS) &&
+                      nsGbmLib::IsModifierAvailable() &&
+                      mGmbFormat->mModifiersCount > 0;
+  if (useModifiers) {
     mGbmBufferObject = nsGbmLib::CreateWithModifiers(
         display->GetGbmDevice(), mWidth, mHeight, mGmbFormat->mFormat,
         mGmbFormat->mModifiers, mGmbFormat->mModifiersCount);
@@ -141,6 +144,7 @@ bool WaylandDMABufSurface::Create(int aWidth, int aHeight,
     }
   }
 
+  // Create without modifiers - use plain/linear format.
   if (!mGbmBufferObject) {
     mGbmBufferFlags = (GBM_BO_USE_SCANOUT | GBM_BO_USE_LINEAR);
     if (mSurfaceFlags & DMABUF_CREATE_WL_BUFFER) {
@@ -163,7 +167,7 @@ bool WaylandDMABufSurface::Create(int aWidth, int aHeight,
     return false;
   }
 
-  if (nsGbmLib::IsModifierAvailable() && display->GetGbmDeviceFd() != -1) {
+  if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {
     mBufferPlaneCount = nsGbmLib::GetPlaneCount(mGbmBufferObject);
     for (int i = 0; i < mBufferPlaneCount; i++) {
       uint32_t handle = nsGbmLib::GetHandleForPlane(mGbmBufferObject, i).u32;
@@ -201,6 +205,21 @@ void WaylandDMABufSurface::FillFdData(struct gbm_import_fd_data& aData) {
   aData.format = mGmbFormat->mFormat;
 }
 
+void WaylandDMABufSurface::FillFdData(
+    struct gbm_import_fd_modifier_data& aData) {
+  aData.width = mWidth;
+  aData.height = mHeight;
+  aData.format = mGmbFormat->mFormat;
+  aData.num_fds = mBufferPlaneCount;
+  aData.modifier = mBufferModifier;
+
+  for (int i = 0; i < mBufferPlaneCount; i++) {
+    aData.fds[i] = mDmabufFds[i];
+    aData.strides[i] = mStrides[i];
+    aData.offsets[i] = mOffsets[i];
+  }
+}
+
 void WaylandDMABufSurface::ImportSurfaceDescriptor(
     const SurfaceDescriptor& aDesc) {
   const SurfaceDescriptorDMABuf& desc = aDesc.get_SurfaceDescriptorDMABuf();
@@ -208,11 +227,15 @@ void WaylandDMABufSurface::ImportSurfaceDescriptor(
   mWidth = desc.width();
   mHeight = desc.height();
   mGmbFormat = WaylandDisplayGet()->GetExactGbmFormat(desc.format());
-  mBufferPlaneCount = 1;
+  mBufferPlaneCount = desc.numFds();
+  mBufferModifier = desc.modifier();
   mGbmBufferFlags = desc.flags();
-  mDmabufFds[0] = desc.fd().ClonePlatformHandle().release();
-  mStrides[0] = desc.stride();
-  mOffsets[0] = desc.offset();
+
+  for (int i = 0; i < mBufferPlaneCount; i++) {
+    mDmabufFds[i] = desc.fds()[i].ClonePlatformHandle().release();
+    mStrides[i] = desc.strides()[i];
+    mOffsets[i] = desc.offsets()[i];
+  }
 }
 
 bool WaylandDMABufSurface::Create(const SurfaceDescriptor& aDesc) {
@@ -220,11 +243,19 @@ bool WaylandDMABufSurface::Create(const SurfaceDescriptor& aDesc) {
 
   ImportSurfaceDescriptor(aDesc);
 
-  struct gbm_import_fd_data importData;
-  FillFdData(importData);
-  mGbmBufferObject =
-      nsGbmLib::Import(WaylandDisplayGet()->GetGbmDevice(), GBM_BO_IMPORT_FD,
-                       &importData, mGbmBufferFlags);
+  if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {
+    struct gbm_import_fd_modifier_data importData;
+    FillFdData(importData);
+    mGbmBufferObject = nsGbmLib::Import(WaylandDisplayGet()->GetGbmDevice(),
+                                        GBM_BO_IMPORT_FD_MODIFIER, &importData,
+                                        mGbmBufferFlags);
+  } else {
+    struct gbm_import_fd_data importData;
+    FillFdData(importData);
+    mGbmBufferObject =
+        nsGbmLib::Import(WaylandDisplayGet()->GetGbmDevice(), GBM_BO_IMPORT_FD,
+                         &importData, mGbmBufferFlags);
+  }
 
   if (!mGbmBufferObject) {
     ReleaseDMABufSurface();
@@ -236,13 +267,19 @@ bool WaylandDMABufSurface::Create(const SurfaceDescriptor& aDesc) {
 
 bool WaylandDMABufSurface::Serialize(
     mozilla::layers::SurfaceDescriptor& aOutDescriptor) {
-  MOZ_ASSERT(mBufferPlaneCount == 1,
-             "We can't export multi-plane dmabuf surfaces!");
+  AutoTArray<ipc::FileDescriptor, DMABUF_BUFFER_PLANES> fds;
+  AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> strides;
+  AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> offsets;
+
+  for (int i = 0; i < mBufferPlaneCount; i++) {
+    fds.AppendElement(ipc::FileDescriptor(mDmabufFds[i]));
+    strides.AppendElement(mStrides[i]);
+    offsets.AppendElement(mOffsets[i]);
+  }
 
   aOutDescriptor = SurfaceDescriptorDMABuf(
-      mWidth, mHeight, mGmbFormat->mFormat, mGbmBufferFlags,
-      ipc::FileDescriptor(mDmabufFds[0]), mStrides[0], mOffsets[0]);
-
+      mWidth, mHeight, mGmbFormat->mFormat, mBufferModifier, mGbmBufferFlags,
+      mBufferPlaneCount, fds, strides, offsets);
   return true;
 }
 
@@ -281,7 +318,6 @@ bool WaylandDMABufSurface::IsEGLSupported(mozilla::gl::GLContext* aGLContext) {
 
 bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
   MOZ_ASSERT(mGbmBufferObject, "Can't create EGLImage, missing dmabuf object!");
-  MOZ_ASSERT(mBufferPlaneCount == 1, "Modifiers are not supported yet!");
   MOZ_ASSERT(!mEGLImage && !mGLFbo, "EGLImage is already created!");
 
   nsTArray<EGLint> attribs;
@@ -299,8 +335,19 @@ bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
     attribs.AppendElement((int)mOffsets[plane_idx]);                        \
     attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_PITCH_EXT);  \
     attribs.AppendElement((int)mStrides[plane_idx]);                        \
+    if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {                        \
+      attribs.AppendElement(                                                \
+          LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_LO_EXT);            \
+      attribs.AppendElement(mBufferModifier & 0xFFFFFFFF);                  \
+      attribs.AppendElement(                                                \
+          LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_HI_EXT);            \
+      attribs.AppendElement(mBufferModifier >> 32);                         \
+    }                                                                       \
   }
   ADD_PLANE_ATTRIBS(0);
+  if (mBufferPlaneCount > 1) ADD_PLANE_ATTRIBS(1);
+  if (mBufferPlaneCount > 2) ADD_PLANE_ATTRIBS(2);
+  if (mBufferPlaneCount > 3) ADD_PLANE_ATTRIBS(3);
 #undef ADD_PLANE_ATTRIBS
   attribs.AppendElement(LOCAL_EGL_NONE);
 

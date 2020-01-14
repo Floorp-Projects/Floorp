@@ -63,10 +63,12 @@ struct SurfaceDescriptorDMABuf {
   uint32_t width;
   uint32_t height;
   uint32_t format;
+  uint64_t modifier;
   uint32_t flags;
-  FileDescriptor fd;
-  uint32_t stride;
-  uint32_t offset;
+  uint32_t numFds;
+  FileDescriptor[] fds;
+  uint32_t[] strides;
+  uint32_t[] offsets;
 };
 
 struct SurfaceTextureDescriptor {
