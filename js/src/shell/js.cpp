@@ -5217,10 +5217,7 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   ParseInfo parseInfo(cx, allocScope);
-
-  RootedScriptSourceObject sourceObj(
-      cx, frontend::CreateScriptSourceObject(cx, options));
-  if (!sourceObj) {
+  if (!parseInfo.initFromOptions(cx, options)) {
     return false;
   }
 
@@ -5231,7 +5228,7 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
                        ? ParseBinASTData<frontend::BinASTTokenReaderMultipart>
                        : ParseBinASTData<frontend::BinASTTokenReaderContext>;
   if (!parseFunc(cx, buf_data, buf_length, &globalsc, parseInfo, options,
-                 sourceObj)) {
+                 parseInfo.sourceObject)) {
     return false;
   }
 
@@ -5303,16 +5300,14 @@ static bool Parse(JSContext* cx, unsigned argc, Value* vp) {
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   ParseInfo parseInfo(cx, allocScope);
-
-  RootedScriptSourceObject sourceObject(
-      cx, frontend::CreateScriptSourceObject(cx, options));
-  if (!sourceObject) {
+  if (!parseInfo.initFromOptions(cx, options)) {
     return false;
   }
 
-  Parser<FullParseHandler, char16_t> parser(
-      cx, options, chars, length,
-      /* foldConstants = */ false, parseInfo, nullptr, nullptr, sourceObject);
+  Parser<FullParseHandler, char16_t> parser(cx, options, chars, length,
+                                            /* foldConstants = */ false,
+                                            parseInfo, nullptr, nullptr,
+                                            parseInfo.sourceObject);
   if (!parser.checkOptions()) {
     return false;
   }
@@ -5376,16 +5371,13 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
   ParseInfo parseInfo(cx, allocScope);
-
-  RootedScriptSourceObject sourceObject(
-      cx, frontend::CreateScriptSourceObject(cx, options));
-  if (!sourceObject) {
+  if (!parseInfo.initFromOptions(cx, options)) {
     return false;
   }
 
   Parser<frontend::SyntaxParseHandler, char16_t> parser(
       cx, options, chars, length, false, parseInfo, nullptr, nullptr,
-      sourceObject);
+      parseInfo.sourceObject);
   if (!parser.checkOptions()) {
     return false;
   }

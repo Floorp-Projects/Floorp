@@ -979,6 +979,9 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
     frontend::ParseInfo parseInfo(cx, allocScope);
+    if (!parseInfo.initFromOptions(cx, options)) {
+      return false;
+    }
 
     frontend::EvalScriptInfo info(cx, parseInfo, options, env, scope);
     script = frontend::CompileEvalScript(info, srcBuf);
@@ -994,6 +997,9 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
     frontend::ParseInfo parseInfo(cx, allocScope);
+    if (!parseInfo.initFromOptions(cx, options)) {
+      return false;
+    }
 
     frontend::GlobalScriptInfo info(cx, parseInfo, options, scopeKind);
     script = frontend::CompileGlobalScript(info, srcBuf);

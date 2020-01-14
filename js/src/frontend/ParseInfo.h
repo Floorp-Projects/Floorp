@@ -53,6 +53,9 @@ struct MOZ_RAII ParseInfo {
   // an index (and ParseInfo reference).
   JS::RootedVector<ScopeCreationData> scopeCreationData;
 
+  JS::Rooted<ScriptSourceObject*> sourceObject;
+
+  // Construct a ParseInfo
   ParseInfo(JSContext* cx, LifoAllocScope& alloc)
       : usedNames(cx),
         allocScope(alloc),
@@ -62,7 +65,13 @@ struct MOZ_RAII ParseInfo {
                  : ParseInfo::Mode::Eager),
         regExpData(cx),
         bigIntData(cx),
-        scopeCreationData(cx) {}
+        scopeCreationData(cx),
+        sourceObject(cx) {}
+
+  bool initFromOptions(JSContext* cx,
+                       const JS::ReadOnlyCompileOptions& options);
+
+  void initFromSourceObject(ScriptSourceObject* sso) { sourceObject = sso; }
 
   // To avoid any misuses, make sure this is neither copyable,
   // movable or assignable.

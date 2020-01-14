@@ -326,6 +326,9 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
     frontend::ParseInfo parseInfo(cx, allocScope);
+    if (!parseInfo.initFromOptions(cx, options)) {
+      return false;
+    }
 
     frontend::EvalScriptInfo info(cx, parseInfo, options, env, enclosing);
     RootedScript compiled(cx, frontend::CompileEvalScript(info, srcBuf));
@@ -421,6 +424,9 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
 
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
     frontend::ParseInfo parseInfo(cx, allocScope);
+    if (!parseInfo.initFromOptions(cx, options)) {
+      return false;
+    }
 
     frontend::EvalScriptInfo info(cx, parseInfo, options, env, enclosing);
     JSScript* compiled = frontend::CompileEvalScript(info, srcBuf);

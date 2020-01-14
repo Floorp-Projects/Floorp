@@ -282,17 +282,14 @@ void runTestFromPath(JSContext* cx, const char* path) {
     txtOptions.setFileAndLine(txtPath.begin(), 0);
 
     frontend::ParseInfo parseInfo(cx, allocScope);
-
-    RootedScriptSourceObject sourceObject(
-        cx, frontend::CreateScriptSourceObject(cx, txtOptions));
-    if (!sourceObject) {
-      MOZ_CRASH("Couldn't initialize ScriptSourceObject");
+    if (!parseInfo.initFromOptions(cx, txtOptions)) {
+      MOZ_CRASH("Couldn't initialize ParseInfo");
     }
 
     js::frontend::Parser<js::frontend::FullParseHandler, mozilla::Utf8Unit>
         txtParser(cx, txtOptions, txtSource.begin(), txtSource.length(),
                   /* foldConstants = */ false, parseInfo, nullptr, nullptr,
-                  sourceObject);
+                  parseInfo.sourceObject);
     if (!txtParser.checkOptions()) {
       MOZ_CRASH("Bad options");
     }
@@ -328,19 +325,16 @@ void runTestFromPath(JSContext* cx, const char* path) {
     binOptions.setFileAndLine(binPath.begin(), 0);
 
     frontend::ParseInfo binParseInfo(cx, allocScope);
+    if (!binParseInfo.initFromOptions(cx, binOptions)) {
+      MOZ_CRASH();
+    }
 
     frontend::Directives directives(false);
     frontend::GlobalSharedContext globalsc(cx, ScopeKind::Global, directives,
                                            false);
 
-    RootedScriptSourceObject sourceObj(
-        cx, frontend::CreateScriptSourceObject(cx, binOptions));
-    if (!sourceObj) {
-      MOZ_CRASH();
-    }
-
     frontend::BinASTParser<Tok> binParser(cx, binParseInfo, binOptions,
-                                          sourceObj);
+                                          binParseInfo.sourceObject);
 
     auto binParsed = binParser.parse(
         &globalsc,
