@@ -90,6 +90,9 @@ class WaylandDMABufSurface {
   void FillFdData(struct gbm_import_fd_data& aData);
   void ImportSurfaceDescriptor(const mozilla::layers::SurfaceDescriptor& aDesc);
 
+  void* MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
+                    uint32_t* aStride, int aGbmFlags);
+
  private:
   int mSurfaceFlags;
 

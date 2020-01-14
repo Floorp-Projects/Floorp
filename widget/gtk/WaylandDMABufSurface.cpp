@@ -389,41 +389,43 @@ void WaylandDMABufSurface::ReleaseDMABufSurface() {
   }
 }
 
-void* WaylandDMABufSurface::MapReadOnly(uint32_t aX, uint32_t aY,
+void* WaylandDMABufSurface::MapInternal(uint32_t aX, uint32_t aY,
                                         uint32_t aWidth, uint32_t aHeight,
-                                        uint32_t* aStride) {
+                                        uint32_t* aStride, int aGbmFlags) {
   NS_ASSERTION(!IsMapped(), "Already mapped!");
+  if (mSurfaceFlags & DMABUF_USE_MODIFIERS) {
+    NS_WARNING("We should not map dmabuf surfaces with modifiers!");
+  }
+
   void* map_data = nullptr;
   mMappedRegionStride = 0;
-  mMappedRegion =
-      nsGbmLib::Map(mGbmBufferObject, aX, aY, aWidth, aHeight,
-                    GBM_BO_TRANSFER_READ, &mMappedRegionStride, &map_data);
+  mMappedRegion = nsGbmLib::Map(mGbmBufferObject, aX, aY, aWidth, aHeight,
+                                aGbmFlags, &mMappedRegionStride, &map_data);
   if (aStride) {
     *aStride = mMappedRegionStride;
   }
   return mMappedRegion;
 }
 
+void* WaylandDMABufSurface::MapReadOnly(uint32_t aX, uint32_t aY,
+                                        uint32_t aWidth, uint32_t aHeight,
+                                        uint32_t* aStride) {
+  return MapInternal(aX, aY, aWidth, aHeight, aStride, GBM_BO_TRANSFER_READ);
+}
+
 void* WaylandDMABufSurface::MapReadOnly(uint32_t* aStride) {
-  return MapReadOnly(0, 0, mWidth, mHeight, aStride);
+  return MapInternal(0, 0, mWidth, mHeight, aStride, GBM_BO_TRANSFER_READ);
 }
 
 void* WaylandDMABufSurface::Map(uint32_t aX, uint32_t aY, uint32_t aWidth,
                                 uint32_t aHeight, uint32_t* aStride) {
-  NS_ASSERTION(!IsMapped(), "Already mapped!");
-  void* map_data = nullptr;
-  mMappedRegionStride = 0;
-  mMappedRegion = nsGbmLib::Map(mGbmBufferObject, aX, aY, aWidth, aHeight,
-                                GBM_BO_TRANSFER_READ_WRITE,
-                                &mMappedRegionStride, &map_data);
-  if (aStride) {
-    *aStride = mMappedRegionStride;
-  }
-  return mMappedRegion;
+  return MapInternal(aX, aY, aWidth, aHeight, aStride,
+                     GBM_BO_TRANSFER_READ_WRITE);
 }
 
 void* WaylandDMABufSurface::Map(uint32_t* aStride) {
-  return Map(0, 0, mWidth, mHeight, aStride);
+  return MapInternal(0, 0, mWidth, mHeight, aStride,
+                     GBM_BO_TRANSFER_READ_WRITE);
 }
 
 void WaylandDMABufSurface::Unmap() {
