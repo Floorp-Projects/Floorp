@@ -36,7 +36,12 @@
         }
       }
 
-      this.eventSeq = [ new invokerChecker(EVENT_REORDER, gRootAcc) ];
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, gRootAcc),
+        // We use a function here to get the target because gDialog isn't set
+        // yet, but it will be when the function is called.
+        new invokerChecker(EVENT_FOCUS, () => gDialog.document)
+      ];
 
       this.invoke = () => (gDialog = window.docShell.rootTreeItem.domWindow.openDialog(aURL));
 
