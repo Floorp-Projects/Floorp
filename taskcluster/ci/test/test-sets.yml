@@ -609,7 +609,7 @@ mochitest-headless:
 marionette-headless:
     - marionette-headless
 
-android-hw-arm7-opt-unittests:
+android-hw-aarch64-opt-unittests:
     - mochitest-media
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
@@ -618,17 +618,21 @@ android-hw-arm7-opt-unittests:
 android-hw-arm7-pgo-unittests:
     - jittest
     - jsreftest
+
+android-hw-aarch64-pgo-unittests:
     - mochitest-media
 
 android-hw-arm7-debug-unittests:
     - jittest
     - jsreftest
+
+android-hw-aarch64-debug-unittests:
     - mochitest-media
     - mochitest-webgl1-core
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
 
-android-hw-arm7-qr:
+android-hw-aarch64-qr:
     - crashtest
     - reftest
 
