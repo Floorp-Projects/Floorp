@@ -4865,8 +4865,12 @@ nsresult nsContentUtils::ParseFragmentHTML(
 
   RefPtr<DocumentFragment> fragment;
   // We sanitize if the fragment occurs in a system privileged
-  // context or if there are explicit sanitization flags.
-  bool shouldSanitize = nodePrincipal->IsSystemPrincipal() || aFlags >= 0;
+  // context, an about: page, or if there are explicit sanitization flags.
+  // Please note that about:blank and about:srcdoc inherit the security
+  // context from the embedding context and hence are not loaded using
+  // an about: scheme principal.
+  bool shouldSanitize = nodePrincipal->IsSystemPrincipal() ||
+                        nodePrincipal->SchemeIs("about") || aFlags >= 0;
   if (shouldSanitize) {
     fragment = new DocumentFragment(aTargetNode->OwnerDoc()->NodeInfoManager());
     target = fragment;
@@ -4972,8 +4976,12 @@ nsresult nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
 #endif
 
   // We sanitize if the fragment occurs in a system privileged
-  // context or if there are explicit sanitization flags.
-  bool shouldSanitize = nodePrincipal->IsSystemPrincipal() || aFlags >= 0;
+  // context, an about: page, or if there are explicit sanitization flags.
+  // Please note that about:blank and about:srcdoc inherit the security
+  // context from the embedding context and hence are not loaded using
+  // an about: scheme principal.
+  bool shouldSanitize = nodePrincipal->IsSystemPrincipal() ||
+                        nodePrincipal->SchemeIs("about") || aFlags >= 0;
 
   if (shouldSanitize) {
     uint32_t sanitizationFlags =
