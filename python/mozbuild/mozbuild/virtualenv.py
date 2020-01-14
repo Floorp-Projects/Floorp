@@ -188,6 +188,9 @@ class VirtualenvManager(object):
         This should be the main API used from this class as it is the
         highest-level.
         """
+        # __PYVENV_LAUNCHER__ confuses pip about the python interpreter
+        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1607470
+        os.environ.pop('__PYVENV_LAUNCHER__', None)
         if self.up_to_date(python):
             return self.virtualenv_root
         return self.build(python)
