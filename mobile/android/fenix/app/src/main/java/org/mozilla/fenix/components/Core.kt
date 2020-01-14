@@ -35,9 +35,9 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.webcompat.WebCompatFeature
+import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.dataprotect.generateEncryptionKey
-import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import org.mozilla.fenix.AppRequestInterceptor
@@ -73,7 +73,13 @@ class Core(private val context: Context) {
             forceUserScalableContent = context.settings().forceEnableZoom
         )
 
-        GeckoEngine(context, defaultSettings, GeckoProvider.getOrCreateRuntime(context)).also {
+        GeckoEngine(
+            context,
+            defaultSettings,
+            GeckoProvider.getOrCreateRuntime(
+                context, asyncPasswordsStorage, getSecureAbove22Preferences()
+            )
+        ).also {
             WebCompatFeature.install(it)
         }
     }
@@ -82,7 +88,14 @@ class Core(private val context: Context) {
      * [Client] implementation to be used for code depending on `concept-fetch``
      */
     val client: Client by lazy {
-        GeckoViewFetchClient(context, GeckoProvider.getOrCreateRuntime(context))
+        GeckoViewFetchClient(
+            context,
+            GeckoProvider.getOrCreateRuntime(
+                context,
+                asyncPasswordsStorage,
+                getSecureAbove22Preferences()
+            )
+        )
     }
 
     val sessionStorage: SessionStorage by lazy {
@@ -143,8 +156,10 @@ class Core(private val context: Context) {
                 MediaFeature(context).enable()
             }
 
-            WebNotificationFeature(context, engine, icons, R.drawable.ic_status_logo,
-                HomeActivity::class.java)
+            WebNotificationFeature(
+                context, engine, icons, R.drawable.ic_status_logo,
+                HomeActivity::class.java
+            )
         }
     }
 
@@ -181,14 +196,18 @@ class Core(private val context: Context) {
 
     val webAppManifestStorage by lazy { ManifestStorage(context) }
 
-    val passwordsStorage by lazy {
+    val asyncPasswordsStorage by lazy {
+        AsyncLoginsStorageAdapter.forDatabase(
+            File(
+                context.filesDir,
+                "logins.sqlite"
+            ).canonicalPath
+        )
+    }
+
+    val syncablePasswordsStorage by lazy {
         SyncableLoginsStore(
-            AsyncLoginsStorageAdapter.forDatabase(
-                File(
-                    context.filesDir,
-                    "logins.sqlite"
-                ).canonicalPath
-            )
+            asyncPasswordsStorage
         ) {
             CompletableDeferred(passwordsEncryptionKey)
         }

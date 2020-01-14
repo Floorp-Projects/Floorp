@@ -1,7 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.preference.Preference
+        android:key="@string/pref_key_save_logins_settings"
+        android:summary="@string/preferences_passwords_save_logins_ask_to_save"
+        android:title="@string/preferences_passwords_save_logins" />
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="@string/pref_key_autofill_logins"
+        android:title="@string/preferences_passwords_autofill" />
     <androidx.preference.Preference
         android:key="@string/pref_key_password_sync_logins"
         android:summary="@string/preferences_passwords_sync_logins_off"

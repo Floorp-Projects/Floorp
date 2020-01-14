@@ -20,7 +20,7 @@ class Components(private val context: Context) {
             analytics.crashReporter,
             core.historyStorage,
             core.bookmarksStorage,
-            core.passwordsStorage,
+            core.syncablePasswordsStorage,
             core.getSecureAbove22Preferences()
         )
     }

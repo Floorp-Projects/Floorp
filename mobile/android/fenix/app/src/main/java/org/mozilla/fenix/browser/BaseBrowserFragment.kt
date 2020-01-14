@@ -52,6 +52,7 @@ import mozilla.components.feature.session.SwipeRefreshFeature
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.service.sync.logins.DefaultLoginValidationDelegate
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -317,6 +318,13 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Session
                     store = store,
                     customTabId = customTabSessionId,
                     fragmentManager = parentFragmentManager,
+                    loginValidationDelegate = DefaultLoginValidationDelegate(
+                        context.components.core.asyncPasswordsStorage,
+                        context.components.core.getSecureAbove22Preferences()
+                    ),
+                    isSaveLoginEnabled = {
+                        context.settings().shouldPromptToSaveLogins
+                    },
                     shareDelegate = object : ShareDelegate {
                         override fun showShareSheet(
                             context: Context,

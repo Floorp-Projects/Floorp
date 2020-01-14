@@ -340,6 +340,9 @@
         <action
             android:id="@+id/action_loginsFragment_to_turnOnSyncFragment"
             app:destination="@id/turnOnSyncFragment" />
+        <action
+            android:id="@+id/action_loginsFragment_to_saveLoginSettingFragment"
+            app:destination="@id/saveLoginSettingFragment" />
     </fragment>
 
     <fragment
@@ -650,7 +653,7 @@
     </fragment>
     <fragment
         android:id="@+id/savedLoginsFragment"
-        android:name="org.mozilla.fenix.logins.SavedLoginsFragment"
+        android:name="org.mozilla.fenix.settings.logins.SavedLoginsFragment"
         tools:layout="@layout/fragment_saved_logins">
         <action
             android:id="@+id/action_savedLoginsFragment_to_savedLoginSiteInfoFragment"
@@ -658,11 +661,11 @@
     </fragment>
     <fragment
         android:id="@+id/savedLoginSiteInfoFragment"
-        android:name="org.mozilla.fenix.logins.SavedLoginSiteInfoFragment"
+        android:name="org.mozilla.fenix.settings.logins.SavedLoginSiteInfoFragment"
         tools:layout="@layout/fragment_saved_login_site_info">
         <argument
             android:name="savedLoginItem"
-            app:argType="org.mozilla.fenix.logins.SavedLoginsItem" />
+            app:argType="org.mozilla.fenix.settings.logins.SavedLoginsItem" />
     </fragment>
     <fragment
         android:id="@+id/addSearchEngineFragment"
@@ -680,4 +683,8 @@
     <fragment
         android:id="@+id/localeSettingsFragment"
         android:name="org.mozilla.fenix.settings.advanced.LocaleSettingsFragment" />
+    <fragment
+        android:id="@+id/saveLoginSettingFragment"
+        android:name="org.mozilla.fenix.settings.logins.SaveLoginSettingFragment"
+        android:label="SaveLoginSettingFragment" />
 </navigation>

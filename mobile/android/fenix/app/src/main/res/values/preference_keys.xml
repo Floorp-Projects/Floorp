@@ -114,6 +114,10 @@
     <string name="pref_key_tracking_protection_onboarding" translatable="false">pref_key_tracking_protection_onboarding</string>
 
     <!-- Logins Settings -->
+    <string name="pref_key_save_logins_settings" translatable="false">pref_key_save_logins_settings</string>
+    <string name="pref_key_save_logins" translatable="false">pref_key_save_logins</string>
+    <string name="pref_key_autofill_logins" translatable="false">pref_key_autofill_logins</string>
+    <string name="pref_key_never_save_logins" translatable="false">pref_key_never_save_logins</string>
     <string name="pref_key_saved_logins" translatable="false">pref_key_saved_logins</string>
     <string name="pref_key_password_sync_logins" translatable="false">pref_key_password_sync_logins</string>
     <string name="pref_key_logins_secure_warning_sync" translatable="false">pref_key_logins_secure_warning_sync</string>

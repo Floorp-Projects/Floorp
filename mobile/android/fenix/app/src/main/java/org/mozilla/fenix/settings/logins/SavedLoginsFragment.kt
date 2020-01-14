@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.logins
+package org.mozilla.fenix.settings.logins
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -88,7 +88,7 @@ class SavedLoginsFragment : Fragment() {
 
     private suspend fun loadAndMapLogins() {
         val syncedLogins = withContext(IO) {
-            requireContext().components.core.passwordsStorage.withUnlocked {
+            requireContext().components.core.syncablePasswordsStorage.withUnlocked {
                 it.list().await().map { item ->
                     SavedLoginsItem(item.hostname, item.username, item.password)
                 }

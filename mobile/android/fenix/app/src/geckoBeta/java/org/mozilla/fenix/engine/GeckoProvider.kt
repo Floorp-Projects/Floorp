@@ -6,7 +6,9 @@ import android.content.Context
 import android.os.Bundle
 import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.lib.crash.handler.CrashHandlerService
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.experiments.Experiments
+import mozilla.components.service.sync.logins.AsyncLoginsStorage
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.geckoview.GeckoRuntime
@@ -17,7 +19,12 @@ object GeckoProvider {
     private var runtime: GeckoRuntime? = null
 
     @Synchronized
-    fun getOrCreateRuntime(context: Context): GeckoRuntime {
+    @Suppress("UNUSED_PARAMETER") // API not yet landed in GV beta
+    fun getOrCreateRuntime(
+        context: Context,
+        storage: AsyncLoginsStorage,
+        securePreferences: SecureAbove22Preferences
+    ): GeckoRuntime {
         if (runtime == null) {
             runtime = createRuntime(context)
         }
