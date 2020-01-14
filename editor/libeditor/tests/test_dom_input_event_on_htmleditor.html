@@ -21,6 +21,7 @@
 </pre>
 
 <script class="testbody" type="application/javascript">
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests, window);
@@ -28,27 +29,50 @@ SimpleTest.waitForFocus(runTests, window);
 const kIsWin = navigator.platform.indexOf("Win") == 0;
 const kIsMac = navigator.platform.indexOf("Mac") == 0;
 
-function runTests() {
+// TODO: When we remove `beforeInputEvent[0]` instance check, we should enable complexity check again.
+/* eslint-disable complexity */
+async function runTests() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.input_events.beforeinput.enabled", true]],
+  });
+
+  const kWordSelectEatSpaceToNextWord = SpecialPowers.getBoolPref("layout.word_select.eat_space_to_next_word");
+
   function doTests(aDocument, aWindow, aDescription) {
     aDescription += ": ";
     aWindow.focus();
 
-    var body = aDocument.body;
-    var selection = aWindow.getSelection();
+    let body = aDocument.body;
+    let selection = aWindow.getSelection();
 
-    var eventTarget = aDocument.getElementById("eventTarget");
+    function getHTMLEditor() {
+      let editingSession = SpecialPowers.wrap(aWindow).docShell.editingSession;
+      if (!editingSession) {
+        return null;
+      }
+      let editor = editingSession.getEditorForWindow(aWindow);
+      if (!editor) {
+        return null;
+      }
+      return editor.QueryInterface(SpecialPowers.Ci.nsIHTMLEditor);
+    }
+    let htmlEditor = getHTMLEditor();
+
+    let eventTarget = aDocument.getElementById("eventTarget");
     // The event target must be focusable because it's the editing host.
     eventTarget.focus();
 
-    var editTarget = aDocument.getElementById("editTarget");
+    let editTarget = aDocument.getElementById("editTarget");
     if (!editTarget) {
       editTarget = eventTarget;
     }
 
     // Root element never can be edit target.  If the editTarget is the root
     // element, replace with its body.
+    let isEditTargetIsDescendantOfEditingHost = false;
     if (editTarget == aDocument.documentElement) {
       editTarget = body;
+      isEditTargetIsDescendantOfEditingHost = true;
     }
 
     editTarget.innerHTML = "";
@@ -58,415 +82,1201 @@ function runTests() {
       aDocument.getSelection().collapse(editTarget, 0);
     }
 
-    var inputEvent = null;
-
-    var handler = function(aEvent) {
-      is(aEvent.target, eventTarget,
-         "input event is fired on unexpected element: " + aEvent.target.tagName);
-      ok(aEvent instanceof InputEvent,
-         "input event should be dispatched with InputEvent interface");
-      ok(!aEvent.cancelable, "input event must not be cancelable");
-      ok(aEvent.bubbles, "input event must be bubbles");
+    let cancelBeforeInput = false;
+    let todoMultipleInputEvents = false;
+    let beforeInputEvent = null;
+    let inputEvent = null;
+    let action = "";
+    let beforeInputHandler = (aEvent) => {
+      if (cancelBeforeInput) {
+        aEvent.preventDefault();
+      }
+      if (todoMultipleInputEvents && beforeInputEvent) {
+        todo(!beforeInputEvent, `${aDescription}Multiple "beforeinput" events are fired at ${action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
+        return;
+      }
+      ok(!beforeInputEvent, `${aDescription}Multiple "beforeinput" events are fired at ${action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
+      ok(aEvent.isTrusted, `${aDescription}"beforeinput" event at ${action} must be trusted`);
+      is(aEvent.target, eventTarget, `${aDescription}"beforeinput" event at ${action} is fired on unexpected element: ${aEvent.target.tagName}`);
+      ok(aEvent instanceof InputEvent, `${aDescription}"beforeinput" event at ${action} should be dispatched with InputEvent interface`);
+      ok(aEvent.bubbles, `${aDescription}"beforeinput" event at ${action} must be bubbles`);
+      beforeInputEvent = aEvent;
+    };
+    let inputHandler = (aEvent) => {
+      if (todoMultipleInputEvents && inputEvent) {
+        todo(!inputEvent, `${aDescription}Multiple "input" events are fired at ${action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
+        return;
+      }
+      ok(!inputEvent, `${aDescription}Multiple "input" events are fired at ${action} (inputType: "${aEvent.inputType}", data: ${aEvent.data})`);
+      ok(aEvent.isTrusted, `${aDescription}"input" event at ${action} must be trusted`);
+      is(aEvent.target, eventTarget, `${aDescription}"input" event at ${action} is fired on unexpected element: ${aEvent.target.tagName}`);
+      ok(aEvent instanceof InputEvent, `${aDescription}"input" event at ${action} should be dispatched with InputEvent interface`);
+      ok(!aEvent.cancelable, `${aDescription}"input" event at ${action} must not be cancelable`);
+      ok(aEvent.bubbles, `${aDescription}"input" event at ${action} must be bubbles`);
       let duration = Math.abs(window.performance.now() - aEvent.timeStamp);
       ok(duration < 30 * 1000,
-         "perhaps, timestamp wasn't set correctly :" + aEvent.timeStamp +
-         " (expected it to be within 30s of the current time but it " +
-         "differed by " + duration + "ms)");
+         `${aDescription}perhaps, timestamp wasn't set correctly :${aEvent.timeStamp} (expected it to be within 30s of ` +
+         `the current time but it differed by ${duration}ms)`);
       inputEvent = aEvent;
     };
 
-    aWindow.addEventListener("input", handler, true);
+    aWindow.addEventListener("beforeinput", beforeInputHandler, true);
+    aWindow.addEventListener("input", inputHandler, true);
 
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey("a", { }, aWindow);
-    is(editTarget.innerHTML, "a", aDescription + "wrong element was edited");
-    ok(inputEvent, aDescription + "input event wasn't fired by 'a' key");
-    ok(inputEvent.isTrusted, aDescription + "input event by 'a' key wasn't trusted event");
-    is(inputEvent.inputType, "insertText",
-       aDescription + 'inputType should be "insertText" when typing "a"');
-    is(inputEvent.data, "a",
-       aDescription + 'data should be "a" when typing "a"');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when typing "a"');
+    action = 'inserting "a"';
+    synthesizeKey("a", {}, aWindow);
+    is(editTarget.innerHTML, "a", `${aDescription}"a" should've been inserted by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertText"`);
+      is(beforeInputEvent.data, "a", `${aDescription}data of "beforeinput" event for ${action} should be "a"`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "insertText", `${aDescription}inputType of "input" event for ${action} should be "insertText"`);
+    is(inputEvent.data, "a", `${aDescription}data of "input" event for ${action} should be "a"`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey("KEY_Backspace", { }, aWindow);
-    ok(inputEvent, aDescription + "input event wasn't fired by BackSpace key");
-    ok(inputEvent.isTrusted, aDescription + "input event by BackSpace key wasn't trusted event");
-    is(inputEvent.inputType, "deleteContentBackward",
-       aDescription + 'inputType should be "deleteContentBackward" when pressing "Backspace" with collapsed selection');
-    is(inputEvent.data, null,
-       aDescription + 'data should be null when pressing "Backspace" with collapsed selection');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when pressing "Backspace" with collapsed selection');
+    action = 'inserting "b"';
+    synthesizeKey("b", {}, aWindow);
+    todo_is(editTarget.innerHTML, "a", `${aDescription}"a" shouldn't have been modified by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey("B", { shiftKey: true }, aWindow);
-    ok(inputEvent, aDescription + "input event wasn't fired by 'B' key");
-    ok(inputEvent.isTrusted, aDescription + "input event by 'B' key wasn't trusted event");
-    is(inputEvent.inputType, "insertText",
-       aDescription + 'inputType should be "insertText" when typing "B"');
-    is(inputEvent.data, "B",
-       aDescription + 'data should be "B" when typing "B"');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when typing "B"');
+    editTarget.innerHTML = "ab";
+    selection.collapse(editTarget.firstChild, 2);
+    action = 'removing "a" with "Backspace" (with collapsed selection)';
+    synthesizeKey("KEY_Backspace", {}, aWindow);
+    todo_is(editTarget.innerHTML, "ab", `${aDescription}"a" shouldn't have been modified by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey("KEY_Enter", { }, aWindow);
-    ok(inputEvent, aDescription + "input event wasn't fired by Enter key");
-    ok(inputEvent.isTrusted, aDescription + "input event by Enter key wasn't trusted event");
-    is(inputEvent.inputType, "insertParagraph",
-       aDescription + 'inputType should be "insertParagraph" when pressing "Enter"');
-    is(inputEvent.data, null,
-       aDescription + 'data should be null when pressing "Enter"');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when pressing "Enter"');
+    editTarget.innerHTML = "a";
+    selection.collapse(editTarget.firstChild, 1);
+    synthesizeKey("KEY_Backspace", {}, aWindow);
+    is(editTarget.innerHTML, "<br>", `${aDescription}"a" should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteContentBackward",
+        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentBackward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentBackward"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey("C", { shiftKey: true }, aWindow);
-    ok(inputEvent, aDescription + "input event wasn't fired by 'C' key");
-    ok(inputEvent.isTrusted, aDescription + "input event by 'C' key wasn't trusted event");
-    is(inputEvent.inputType, "insertText",
-       aDescription + 'inputType should be "insertText" when typing "C"');
-    is(inputEvent.data, "C",
-       aDescription + 'data should be "C" when typing "C"');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when typing "C"');
+    action = 'typing "Backspace" in empty editor';
+    synthesizeKey("KEY_Backspace", {}, aWindow);
+    is(editTarget.innerHTML, "<br>", `${aDescription}$shouldn't change empty editor by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should be fired at ${action} even if it won't remove any content`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteContentBackward",
+        `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentBackward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    if (!isEditTargetIsDescendantOfEditingHost) {
+      ok(!inputEvent, `${aDescription}"input" event shouldn't be fired at ${action}`);
+    } else {
+      todo(!inputEvent, `${aDescription}"input" event should be fired at ${action} but we replace the padding <br> element`);
+    }
 
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey("KEY_Enter", { }, aWindow);
-    ok(inputEvent, aDescription + "input event wasn't fired by Enter key (again)");
-    ok(inputEvent.isTrusted, aDescription + "input event by Enter key (again) wasn't trusted event");
-    is(inputEvent.inputType, "insertParagraph",
-       aDescription + 'inputType should be "insertParagraph" when pressing "Enter" again');
-    is(inputEvent.data, null,
-       aDescription + 'data should be null when pressing "Enter" again');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when pressing "Enter" again');
+    action = 'typing "B"';
+    synthesizeKey("B", {shiftKey: true}, aWindow);
+    // XXX This inconsistency must be a bug.
+    if (!isEditTargetIsDescendantOfEditingHost) {
+      is(editTarget.innerHTML, "B<br>", `${aDescription}"B" should've been inserted by ${action}`);
+    } else {
+      is(editTarget.innerHTML, "B", `${aDescription}"B" should've been inserted by ${action}`);
+    }
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertText"`);
+      is(beforeInputEvent.data, "B", `${aDescription}data of "beforeinput" event for ${action} should be "B"`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "insertText", `${aDescription}inputType of "input" event for ${action} should be "insertText"`);
+    is(inputEvent.data, "B", `${aDescription}data of "input" event for ${action} should be "B"`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'typing "Enter"';
+    synthesizeKey("KEY_Enter", {}, aWindow);
+    // XXX This inconsistency must be a bug.
+    if (!isEditTargetIsDescendantOfEditingHost) {
+      todo_is(editTarget.innerHTML, "B<br>", `${aDescription}shouldn't modify the editor by ${action} since "beforeinput" was canceled`);
+    } else {
+      todo_is(editTarget.innerHTML, "B", `${aDescription}shouldn't modify the editor by ${action} since "beforeinput" was canceled`);
+    }
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
+
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'typing "Enter"';
+    editTarget.innerHTML = "B";
+    selection.collapse(editTarget.firstChild, 1);
+    synthesizeKey("KEY_Enter", {}, aWindow);
+    if (!isEditTargetIsDescendantOfEditingHost) {
+      is(editTarget.innerHTML, "<div>B</div><div><br></div>", `${aDescription}should insert new paragraph by ${action}`);
+    } else {
+      // XXX Perhaps, this is a bug since we shouldn't change behavior when contenteditable element is <html> or <body>.
+      is(editTarget.innerHTML, "B<br><br>", `${aDescription}should insert new paragraph by ${action}`);
+    }
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "insertParagraph", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertParagraph"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "insertParagraph", `${aDescription}inputType of "input" event for ${action} should be "insertParagraph"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'typing "C" in new paragraph';
+    synthesizeKey("C", {shiftKey: true}, aWindow);
+    if (!isEditTargetIsDescendantOfEditingHost) {
+      is(editTarget.innerHTML, "<div>B</div><div>C<br></div>", `${aDescription}should insert "C" into the new paragraph by ${action}`);
+    } else {
+      is(editTarget.innerHTML, "B<br>C<br>", `${aDescription}should insert "C" into the new paragraph by ${action}`);
+    }
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertText"`);
+      is(beforeInputEvent.data, "C", `${aDescription}data of "beforeinput" event for ${action} should be "C"`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "insertText", `${aDescription}inputType of "input" event for ${action} should be "insertText"`);
+    is(inputEvent.data, "C", `${aDescription}data of "input" event for ${action} should be "C"`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'typing "Enter" again';
+    synthesizeKey("KEY_Enter", {}, aWindow);
+    if (!isEditTargetIsDescendantOfEditingHost) {
+      is(editTarget.innerHTML, "<div>B</div><div>C</div><div><br></div>", `${aDescription}should insert new paragraph again by ${action}`);
+    } else {
+      is(editTarget.innerHTML, "B<br>C<br><br>", `${aDescription}should insert new paragraph again by ${action}`);
+    }
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "insertParagraph", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertParagraph"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "insertParagraph", `${aDescription}inputType of "input" event for ${action} should be "insertParagraph"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+    beforeInputEvent = null;
     inputEvent = null;
     editTarget.innerHTML = "foo-bar";
-    ok(!inputEvent, aDescription + "input event was fired by setting value");
+    ok(!beforeInputEvent, `${aDescription}"beforeinput" event should not be fired when setting value`);
+    ok(!inputEvent, `${aDescription}"input" event should not be fired when setting value`);
 
+    beforeInputEvent = null;
     inputEvent = null;
     editTarget.innerHTML = "";
-    ok(!inputEvent, aDescription + "input event was fired by setting empty value");
+    ok(!beforeInputEvent, `${aDescription}"beforeinput" event should not be fired when setting empty value`);
+    ok(!inputEvent, `${aDescription}"input" event should not be fired when setting empty value`);
 
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey(" ", { }, aWindow);
-    ok(inputEvent, aDescription + "input event wasn't fired by Space key");
-    ok(inputEvent.isTrusted, aDescription + "input event by Space key wasn't trusted event");
-    is(inputEvent.inputType, "insertText",
-       aDescription + 'inputType should be "insertText" when typing " "');
-    is(inputEvent.data, " ",
-       aDescription + 'data should be " " when typing " "');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when typing " "');
+    action = 'inserting " " into empty editor';
+    synthesizeKey(" ", {}, aWindow);
+    is(editTarget.innerHTML, "&nbsp;", `${aDescription}" " should've been inserted by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "insertText", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertText"`);
+      is(beforeInputEvent.data, " ", `${aDescription}data of "beforeinput" event for ${action} should be " "`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "insertText", `${aDescription}inputType of "input" event for ${action} should be "insertText"`);
+    is(inputEvent.data, " ", `${aDescription}data of "input" event for ${action} should be " "`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey("KEY_Delete", { }, aWindow);
-    ok(!inputEvent, aDescription + "input event was fired by Delete key at the end");
+    action = 'typing "Delete" at end';
+    synthesizeKey("KEY_Delete", {}, aWindow);
+    is(editTarget.innerHTML, "&nbsp;", `${aDescription}shouldn't modify the editor by ${action} since there is no content to remove`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should be fired at ${action} even if it won't remove any content`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(!inputEvent, `${aDescription}${action} should not fire "input" event since no content has been removed`);
 
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey("KEY_ArrowLeft", { }, aWindow);
-    ok(!inputEvent, aDescription + "input event was fired by Left key");
+    action = 'typing "ArrowLeft"';
+    synthesizeKey("KEY_ArrowLeft", {}, aWindow);
+    ok(!beforeInputEvent, `${aDescription}${action} should not fire "beforeinput" event since no content has been modified`);
+    ok(!inputEvent, `${aDescription}${action} should not fire "input" event since no content has been modified`);
 
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey("KEY_Delete", { }, aWindow);
-    ok(inputEvent, aDescription + "input event wasn't fired by Delete key at the start");
-    ok(inputEvent.isTrusted, aDescription + "input event by Delete key wasn't trusted event");
-    is(inputEvent.inputType, "deleteContentForward",
-       aDescription + 'inputType should be "deleteContentForward" when pressing "Delete" with collapsed selection');
-    is(inputEvent.data, null,
-       aDescription + 'data should be null when pressing "Delete" with collapsed selection');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when pressing "Delete" with collapsed selection');
+    action = 'typing "Delete"';
+    synthesizeKey("KEY_Delete", {}, aWindow);
+    todo_is(editTarget.innerHTML, "&nbsp;", `${aDescription}"\u00A0" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
 
-    inputEvent = null;
-    synthesizeKey("z", { accelKey: true }, aWindow);
-    ok(inputEvent, aDescription + "input event wasn't fired by Undo");
-    ok(inputEvent.isTrusted, aDescription + "input event by Undo wasn't trusted event");
-    is(inputEvent.inputType, "historyUndo",
-       aDescription + 'inputType should be "historyUndo" when doing "Undo"');
-    is(inputEvent.data, null,
-       aDescription + 'data should be null when doing "Undo"');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when doing "Undo"');
+    // Reset undo/redo transaction for the following undo/redo tests.
+    htmlEditor.enableUndo(false);
+    htmlEditor.enableUndo(true);
 
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    synthesizeKey("z", { accelKey: true, shiftKey: true }, aWindow);
-    ok(inputEvent, aDescription + "input event wasn't fired by Redo");
-    ok(inputEvent.isTrusted, aDescription + "input event by Redo wasn't trusted event");
-    is(inputEvent.inputType, "historyRedo",
-       aDescription + 'inputType should be "historyRedo" when doing "Redo"');
-    is(inputEvent.data, null,
-       aDescription + 'data should be null when doing "Redo"');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when doing "Redo"');
+    editTarget.innerHTML = "\u00A0";
+    selection.collapse(editTarget.firstChild, 0);
+    synthesizeKey("KEY_Delete", {}, aWindow);
+    is(editTarget.innerHTML, "<br>", `${aDescription}" " should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentForward"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
+    // TODO: Check canceling "beforeinput" case of "historyUndo" here.
+
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
+    action = 'doing "Undo"';
+    synthesizeKey("z", {accelKey: true}, aWindow);
+    is(editTarget.innerHTML, "&nbsp;", `${aDescription}" " should've been restored by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "historyUndo", `${aDescription}inputType of "beforeinput" event for ${action} should be "historyUndo"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "historyUndo", `${aDescription}inputType of "input" event for ${action} should be "historyUndo"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'doing "Undo" again';
+    synthesizeKey("z", {accelKey: true}, aWindow);
+    is(editTarget.innerHTML, "&nbsp;", `${aDescription}the editor shouldn't have been modified by ${action} since there is no undo transaction`);
+    ok(!beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action} since there is no undo transaction`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since there is no undo transaction`);
+
+    // TODO: Check canceling "beforeinput" case of "historyRedo" here.
+
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'doing "Redo"';
+    synthesizeKey("z", {accelKey: true, shiftKey: true}, aWindow);
+    is(editTarget.innerHTML, "<br>", `${aDescription}the padding <br> should've been restored by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "historyRedo", `${aDescription}inputType of "beforeinput" event for ${action} should be "historyRedo"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "historyRedo", `${aDescription}inputType of "input" event for ${action} should be "historyRedo"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'doing "Redo" again';
+    synthesizeKey("z", {accelKey: true, shiftKey: true}, aWindow);
+    is(editTarget.innerHTML, "<br>", `${aDescription}the editor shouldn't have been modified by ${action} since there is no redo transaction`);
+    ok(!beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action} since there is no redo transaction`);
+    ok(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since there is no redo transaction`);
+
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = "inserting a line break";
     synthesizeKey("KEY_Enter", {shiftKey: true}, aWindow);
-    ok(inputEvent, aDescription + "input event wasn't fired by Shift + Enter key");
-    ok(inputEvent.isTrusted, aDescription + "input event by Shift + Enter key wasn't trusted event");
-    is(inputEvent.inputType, "insertLineBreak",
-       aDescription + 'inputType should be "insertLineBreak" when pressing Shift + "Enter"');
-    is(inputEvent.data, null,
-       aDescription + 'data should be null when pressing Shift + "Enter"');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when pressing Shift + "Enter"');
+    todo_is(editTarget.innerHTML, "<br>", `${aDescription}shouldn't modify the editor by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
+
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    editTarget.innerHTML = "<br>";
+    selection.collapse(editTarget, 0);
+    synthesizeKey("KEY_Enter", {shiftKey: true}, aWindow);
+    is(editTarget.innerHTML, "<br><br>", `${aDescription}should insert new <br> element by ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "insertLineBreak", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertLineBreak"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "insertLineBreak", `${aDescription}inputType of "input" event for ${action} should be "insertLineBreak"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     // Backspace/Delete with non-collapsed selection.
     editTarget.innerHTML = "a";
     editTarget.focus();
     selection.selectAllChildren(editTarget);
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'removing "a" with "Backspace" (with selection)';
+    synthesizeKey("KEY_Backspace", {}, aWindow);
+    todo_is(editTarget.innerHTML, "a", `${aDescription}"a" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
+
+    editTarget.innerHTML = "a";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
     synthesizeKey("KEY_Backspace", {}, aWindow);
-    ok(inputEvent,
-       aDescription + 'input event should be fired by pressing "Backspace" with non-collapsed selection');
-    ok(inputEvent.isTrusted,
-       aDescription + 'input event should be trusted when pressing "Backspace" with non-collapsed selection');
-    is(inputEvent.inputType, "deleteContentBackward",
-       aDescription + 'inputType should be "deleteContentBackward" when pressing "Backspace" with non-collapsed selection');
-    is(inputEvent.data, null,
-       aDescription + 'data should be null when pressing "Backspace" with non-collapsed selection');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when pressing "Backspace" with non-collapsed selection');
+    is(editTarget.innerHTML, "<br>", `${aDescription}"a" should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteContentBackward",
+         `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentBackward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "deleteContentBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentBackward"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     editTarget.innerHTML = "a";
     editTarget.focus();
     selection.selectAllChildren(editTarget);
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
+    action = 'removing "a" with "Delete" (with selection)';
     synthesizeKey("KEY_Delete", {}, aWindow);
-    ok(inputEvent,
-       aDescription + 'input event should be fired by pressing "Delete" with non-collapsed selection');
-    ok(inputEvent.isTrusted,
-       aDescription + 'input event should be trusted when pressing "Delete" with non-collapsed selection');
-    is(inputEvent.inputType, "deleteContentForward",
-       aDescription + 'inputType should be "deleteContentBackward" when Delete "Backspace" with non-collapsed selection');
-    is(inputEvent.data, null,
-       aDescription + 'data should be null when Delete "Backspace" with non-collapsed selection');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when Delete "Backspace" with non-collapsed selection');
+    todo_is(editTarget.innerHTML, "a", `${aDescription}"a" should've been removed by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should be fired at ${action} even if it won't remove any content`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    todo(!inputEvent, `${aDescription}${action} should not fire "input" event since "beforeinput" was canceled`);
+
+    editTarget.innerHTML = "a";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'removing "a" with "Delete" (with selection)';
+    synthesizeKey("KEY_Delete", {}, aWindow);
+    is(editTarget.innerHTML, "<br>", `${aDescription}" " should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteContentForward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "deleteContentForward", `${aDescription}inputType of "input" event for ${action} should be "deleteContentForward"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     // Delete to previous/next word boundary with collapsed selection.
-    editTarget.innerHTML = "a";
+    editTarget.innerHTML = "abc def";
     editTarget.focus();
-    selection.selectAllChildren(editTarget);
-    selection.collapseToEnd();
+    selection.collapse(editTarget.firstChild, "abc def".length);
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'removing last word, "def", with backward deletion from its end';
+    SpecialPowers.doCommand(aWindow, "cmd_deleteWordBackward");
+    todo_is(editTarget.innerHTML, "abc def", `${aDescription}"def" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
+
+    editTarget.innerHTML = "abc def";
+    editTarget.focus();
+    selection.collapse(editTarget.firstChild, "abc def".length);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
     SpecialPowers.doCommand(aWindow, "cmd_deleteWordBackward");
-    ok(inputEvent,
-       aDescription + "input event should be fired by deleting to previous word boundary with collapsed selection");
-    ok(inputEvent.isTrusted,
-       aDescription + "input event should be trusted when deleting to previous word boundary with collapsed selection");
-    is(inputEvent.inputType, "deleteWordBackward",
-       aDescription + 'inputType should be "deleteWordBackward" when deleting to previous word boundary with collapsed selection');
-    is(inputEvent.data, null,
-       aDescription + "data should be null when deleting to previous word boundary with collapsed selection");
-    is(inputEvent.dataTransfer, null,
-       aDescription + "dataTransfer should be null when deleting to previous word boundary with collapsed selection");
+    is(editTarget.innerHTML, "abc ", `${aDescription}"def" should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteWordBackward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteWordBackward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "deleteWordBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteWordBackward"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
-    editTarget.innerHTML = "a";
+    editTarget.innerHTML = "abc def";
     editTarget.focus();
-    selection.selectAllChildren(editTarget);
-    selection.collapseToStart();
+    selection.collapse(editTarget.firstChild, 0);
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = `removing first word, "${kWordSelectEatSpaceToNextWord ? "abc" : "abc "}", with forward deletion from its start`;
+    SpecialPowers.doCommand(aWindow, "cmd_deleteWordForward");
+    todo_is(editTarget.innerHTML, "abc def", `${aDescription}"abc" shouldn't have been removed by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    todo(!inputEvent, `${aDescription}"input" event shouldn't been fired at ${action} since "beforeinput" was canceled`);
+
+    editTarget.innerHTML = "abc def";
+    editTarget.focus();
+    selection.collapse(editTarget.firstChild, 0);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
     SpecialPowers.doCommand(aWindow, "cmd_deleteWordForward");
-    ok(inputEvent,
-       aDescription + "input event should be fired by deleting to next word boundary with collapsed selection");
-    ok(inputEvent.isTrusted,
-       aDescription + "input event should be trusted when deleting to next word boundary with collapsed selection");
-    is(inputEvent.inputType, "deleteWordForward",
-       aDescription + 'inputType should be "deleteWordForward" when deleting to next word boundary with collapsed selection');
-    is(inputEvent.data, null,
-       aDescription + "data should be null when deleting to next word boundary with collapsed selection");
-    is(inputEvent.dataTransfer, null,
-       aDescription + "dataTransfer should be null when deleting to next word boundary with collapsed selection");
+    is(editTarget.innerHTML, kWordSelectEatSpaceToNextWord ? "def" : " def",
+       `${aDescription}"${kWordSelectEatSpaceToNextWord ? "abc " : "abc"}" should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteWordForward", `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteWordForward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "deleteWordForward", `${aDescription}inputType of "input" event for ${action} should be "deleteWordForward"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     // Delete to previous/next word boundary with non-collapsed selection.
-    editTarget.innerHTML = "abc";
+    editTarget.innerHTML = "abc def";
     editTarget.focus();
-    selection.setBaseAndExtent(editTarget.firstChild, 1, editTarget.firstChild, 2);
+    selection.setBaseAndExtent(editTarget.firstChild, "abc d".length, editTarget.firstChild, "abc de".length);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
+    action = "removing characters backward from middle of second word";
     SpecialPowers.doCommand(aWindow, "cmd_deleteWordBackward");
-    ok(inputEvent,
-       aDescription + "input event should be fired by deleting to previous word boundary with non-collapsed selection");
-    ok(inputEvent.isTrusted,
-       aDescription + "input event should be trusted when deleting to previous word boundary with non-collapsed selection");
-    if (kIsWin) {
-      // Only on Windows, we collapse selection to start before handling this command.
-      is(inputEvent.inputType, "deleteWordBackward",
-         aDescription + 'inputType should be "deleteWordBackward" when deleting to previous word boundary with non-collapsed selection');
-    } else {
-      is(inputEvent.inputType, "deleteContentBackward",
-         aDescription + 'inputType should be "deleteContentBackward" when deleting to previous word boundary with non-collapsed selection');
+    // Only on Windows, we collapse selection to start before handling this command.
+    let expectedInputType = kIsWin ? "deleteWordBackward" : "deleteContentBackward";
+    is(editTarget.innerHTML, kIsWin ? "abc ef" : "abc df",
+      `${aDescription}${kIsWin ? "characters between current word start and selection start" : "selected characters"} should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     }
-    is(inputEvent.data, null,
-       aDescription + "data should be null when deleting to previous word boundary with non-collapsed selection");
-    is(inputEvent.dataTransfer, null,
-       aDescription + "dataTransfer should be null when deleting to previous word boundary with non-collapsed selection");
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, expectedInputType, `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
-    editTarget.innerHTML = "abc";
+    editTarget.innerHTML = "abc def";
     editTarget.focus();
-    selection.setBaseAndExtent(editTarget.firstChild, 1, editTarget.firstChild, 2);
+    selection.setBaseAndExtent(editTarget.firstChild, "a".length, editTarget.firstChild, "ab".length);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
+    action = "removing characters forward from middle of first word";
     SpecialPowers.doCommand(aWindow, "cmd_deleteWordForward");
-    ok(inputEvent,
-       aDescription + "input event should be fired by deleting to next word boundary with non-collapsed selection");
-    ok(inputEvent.isTrusted,
-       aDescription + "input event should be trusted when deleting to next word boundary with non-collapsed selection");
+    // Only on Windows, we collapse selection to start before handling this command.
+    expectedInputType = kIsWin ? "deleteWordForward" : "deleteContentForward";
+    let expectedValue = "ac def";
     if (kIsWin) {
-      // Only on Windows, we collapse selection to start before handling this command.
-      is(inputEvent.inputType, "deleteWordForward",
-         aDescription + 'inputType should be "deleteWordForward" when deleting to next word boundary with non-collapsed selection');
-    } else {
-      is(inputEvent.inputType, "deleteContentForward",
-         aDescription + 'inputType should be "deleteContentForward" when deleting to next word boundary with non-collapsed selection');
+      expectedValue = kWordSelectEatSpaceToNextWord ? "adef" : "a def";
     }
-    is(inputEvent.data, null,
-       aDescription + "data should be null when deleting to next word boundary with non-collapsed selection");
-    is(inputEvent.dataTransfer, null,
-       aDescription + "dataTransfer should be null when deleting to next word boundary with non-collapsed selection");
+    is(editTarget.innerHTML, expectedValue,
+      `${aDescription}${kIsWin ? "characters between selection start and next word start" : "selected characters"} should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, expectedInputType, `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     // Delete to previous/next visual line boundary with collapsed selection.
-    editTarget.innerHTML = "a";
+    editTarget.innerHTML = "abc def";
     editTarget.focus();
-    selection.selectAllChildren(editTarget);
-    selection.collapseToEnd();
+    selection.collapse(editTarget.firstChild, "abc d".length);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
+    action = "removing characters backward to start of line";
     SpecialPowers.doCommand(aWindow, "cmd_deleteToBeginningOfLine");
-    ok(inputEvent,
-       aDescription + "input event should be fired by deleting to previous visual line boundary with collapsed selection");
-    ok(inputEvent.isTrusted,
-       aDescription + "input event should be trusted when deleting to previous visual line boundary with collapsed selection");
-    is(inputEvent.inputType, "deleteSoftLineBackward",
-       aDescription + 'inputType should be "deleteSoftLineBackward" when deleting to previous visual line boundary with collapsed selection');
-    is(inputEvent.data, null,
-       aDescription + "data should be null when deleting to previous visual line boundary with collapsed selection");
-    is(inputEvent.dataTransfer, null,
-       aDescription + "dataTransfer should be null when deleting to previous visual line boundary with collapsed selection");
+    is(editTarget.innerHTML, "ef", `${aDescription}characters between start of line and caret should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteSoftLineBackward",
+         `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteSoftLineBackward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "deleteSoftLineBackward", `${aDescription}inputType of "input" event for ${action} should be "deleteSoftLineBackward"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
-    editTarget.innerHTML = "a";
+    editTarget.innerHTML = "abc def";
     editTarget.focus();
-    selection.selectAllChildren(editTarget);
-    selection.collapseToStart();
+    selection.collapse(editTarget.firstChild, "ab".length);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
+    action = "removing characters forward to end of line";
     SpecialPowers.doCommand(aWindow, "cmd_deleteToEndOfLine");
-    ok(inputEvent,
-       aDescription + "input event should be fired by deleting to next visual line boundary with collapsed selection");
-    ok(inputEvent.isTrusted,
-       aDescription + "input event should be trusted when deleting to next visual line boundary with collapsed selection");
-    is(inputEvent.inputType, "deleteSoftLineForward",
-       aDescription + 'inputType should be "deleteSoftLineForward" when deleting to visual line boundary with collapsed selection');
-    is(inputEvent.data, null,
-       aDescription + "data should be null when deleting to visual line boundary with collapsed selection");
-    is(inputEvent.dataTransfer, null,
-       aDescription + "dataTransfer should be null when deleting to visual line boundary with collapsed selection");
+    is(editTarget.innerHTML, "ab", `${aDescription}characters between caret and end of line should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "deleteSoftLineForward",
+         `${aDescription}inputType of "beforeinput" event for ${action} should be "deleteSoftLineForward"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "deleteSoftLineForward", `${aDescription}inputType of "input" event for ${action} should be "deleteSoftLineForward"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     // Delete to previous/next visual line boundary with non-collapsed selection.
-    editTarget.innerHTML = "abc";
+    editTarget.innerHTML = "abc def";
     editTarget.focus();
-    selection.setBaseAndExtent(editTarget.firstChild, 1, editTarget.firstChild, 2);
+    selection.setBaseAndExtent(editTarget.firstChild, "abc d".length, editTarget.firstChild, "abc_de".length);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
+    action = "removing characters backward to start of line (with selection in second word)";
     SpecialPowers.doCommand(aWindow, "cmd_deleteToBeginningOfLine");
-    ok(inputEvent,
-       aDescription + "input event should be fired by deleting to previous visual line boundary with non-collapsed selection");
-    ok(inputEvent.isTrusted,
-       aDescription + "input event should be trusted when deleting to previous visual line boundary with non-collapsed selection");
-    if (kIsWin) {
-      // Only on Windows, we collapse selection to start before handling this command.
-      is(inputEvent.inputType, "deleteSoftLineBackward",
-         aDescription + 'inputType should be "deleteSoftLineBackward" when deleting to next visual line boundary with non-collapsed selection');
-    } else {
-      is(inputEvent.inputType, "deleteContentBackward",
-         aDescription + 'inputType should be "deleteContentBackward" when deleting to previous visual line boundary with non-collapsed selection');
+    // Only on Windows, we collapse selection to start before handling this command.
+    expectedInputType = kIsWin ? "deleteSoftLineBackward" : "deleteContentBackward";
+    is(editTarget.innerHTML, kIsWin ? "ef" : "abc df",
+      `${aDescription}${kIsWin ? "characters between start of line and caret" : "selected characters"} should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     }
-    is(inputEvent.data, null,
-       aDescription + "data should be null when deleting to previous visual line boundary with non-collapsed selection");
-    is(inputEvent.dataTransfer, null,
-       aDescription + "dataTransfer should be null when deleting to previous visual line boundary with non-collapsed selection");
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, expectedInputType, `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
-    editTarget.innerHTML = "abc";
+    editTarget.innerHTML = "abc def";
     editTarget.focus();
-    selection.setBaseAndExtent(editTarget.firstChild, 1, editTarget.firstChild, 2);
+    selection.setBaseAndExtent(editTarget.firstChild, "a".length, editTarget.firstChild, "ab".length);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
+    action = "removing characters forward to end of line (with selection in second word)";
     SpecialPowers.doCommand(aWindow, "cmd_deleteToEndOfLine");
-    ok(inputEvent,
-       aDescription + "input event should be fired by deleting to next visual line boundary with non-collapsed selection");
-    ok(inputEvent.isTrusted,
-       aDescription + "input event should be trusted when deleting to next visual line boundary with non-collapsed selection");
-    if (kIsWin) {
-      // Only on Windows, we collapse selection to start before handling this command.
-      is(inputEvent.inputType, "deleteSoftLineForward",
-         aDescription + 'inputType should be "deleteSoftLineForward" when deleting to next visual line boundary with non-collapsed selection');
-    } else {
-      is(inputEvent.inputType, "deleteContentForward",
-         aDescription + 'inputType should be "deleteContentForward" when deleting to next visual line boundary with non-collapsed selection');
+    // Only on Windows, we collapse selection to start before handling this command.
+    expectedInputType = kIsWin ? "deleteSoftLineForward" : "deleteContentForward";
+    is(editTarget.innerHTML, kIsWin ? "a" : "ac def",
+      `${aDescription}${kIsWin ? "characters between caret anc end of line" : "selected characters"} should've been removed by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, expectedInputType, `${aDescription}inputType of "beforeinput" event for ${action} should be "${expectedInputType}"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
     }
-    is(inputEvent.data, null,
-       aDescription + "data should be null when deleting to next visual line boundary with non-collapsed selection");
-    is(inputEvent.dataTransfer, null,
-       aDescription + "dataTransfer should be null when deleting to next visual line boundary with non-collapsed selection");
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, expectedInputType, `${aDescription}inputType of "input" event for ${action} should be "${expectedInputType}"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     // Toggling text direction
     editTarget.focus();
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    SpecialPowers.doCommand(window, "cmd_switchTextDirection");
-    ok(inputEvent,
-       aDescription + "input event should be fired by dispatching cmd_switchTextDirection command #1");
-    ok(inputEvent.isTrusted,
-       aDescription + "input event should be trusted when dispatching cmd_switchTextDirection command #1");
-    is(inputEvent.inputType, "formatSetBlockTextDirection",
-       aDescription + 'inputType should be "formatSetBlockTextDirection" when dispatching cmd_switchTextDirection command #1');
-    is(inputEvent.data, "rtl",
-       aDescription + 'data should be "rtl" when dispatching cmd_switchTextDirection command #1');
-    is(inputEvent.dataTransfer, null,
-       aDescription + "dataTransfer should be null when dispatching cmd_switchTextDirection command #1");
+    action = 'switching text direction from "ltr" to "rtl"';
+    SpecialPowers.doCommand(aWindow, "cmd_switchTextDirection");
+    // XXX If editing host is a descendant of `<body>`, this must be a bug.
+    todo_is(body.getAttribute("dir"), null, `${aDescription}dir attribute of <body> should not be set" by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
+         `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
+      is(beforeInputEvent.data, "rtl", `${aDescription}data of "beforeinput" event for ${action} should be "rtl"`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    todo(!inputEvent, `${aDescription}"input" event should not have been fired at ${action} since "beforeinput" was canceled`);
 
+    body.setAttribute("dir", "rtl");
+    htmlEditor.flags &= ~SpecialPowers.Ci.nsIPlaintextEditor.eEditorLeftToRight;
+    htmlEditor.flags |= SpecialPowers.Ci.nsIPlaintextEditor.eEditorRightToLeft; // XXX flags update is required, must be a bug.
+    aDocument.documentElement.scrollTop; // XXX Update the body frame
+    editTarget.focus();
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    SpecialPowers.doCommand(window, "cmd_switchTextDirection");
-    ok(inputEvent,
-       aDescription + "input event should be fired by dispatching cmd_switchTextDirection command #2");
-    ok(inputEvent.isTrusted,
-       aDescription + "input event should be trusted when dispatching cmd_switchTextDirection command #2");
-    is(inputEvent.inputType, "formatSetBlockTextDirection",
-       aDescription + 'inputType should be "formatSetBlockTextDirection" when dispatching cmd_switchTextDirection command #2');
-    is(inputEvent.data, "ltr",
-       aDescription + 'data should be "ltr" when dispatching cmd_switchTextDirection command #2');
-    is(inputEvent.dataTransfer, null,
-       aDescription + "dataTransfer should be null when dispatching cmd_switchTextDirection command #2");
+    action = 'switching text direction from "rtl" to "ltr"';
+    SpecialPowers.doCommand(aWindow, "cmd_switchTextDirection");
+    // XXX If editing host is a descendant of `<body>`, this must be a bug.
+    todo_is(body.getAttribute("dir"), "rtl",
+       `${aDescription}dir attribute of <body> should not have been modified by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
+         `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
+      is(beforeInputEvent.data, "ltr", `${aDescription}data of "beforeinput" event for ${action} should be "ltr"`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    todo(!inputEvent, `${aDescription}"input" event should not have been fired at ${action} since "beforeinput" was canceled`);
+
+    body.removeAttribute("dir");
+    htmlEditor.flags &= ~SpecialPowers.Ci.nsIPlaintextEditor.eEditorRightToLeft;
+    htmlEditor.flags |= SpecialPowers.Ci.nsIPlaintextEditor.eEditorLeftToRight; // XXX flags update is required, must be a bug.
+    aDocument.documentElement.scrollTop; // XXX Update the body frame
+    editTarget.focus();
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'switching text direction from "ltr" to "rtl"';
+    SpecialPowers.doCommand(aWindow, "cmd_switchTextDirection");
+    // XXX If editing host is a descendant of `<body>`, this must be a bug.
+    is(body.getAttribute("dir"), "rtl", `${aDescription}dir attribute of <body> should've been set to "rtl" by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
+         `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
+      is(beforeInputEvent.data, "rtl", `${aDescription}data of "beforeinput" event for ${action} should be "rtl"`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "formatSetBlockTextDirection", `${aDescription}inputType of "input" event for ${action} should be "formatSetBlockTextDirection"`);
+    is(inputEvent.data, "rtl", `${aDescription}data of "input" event for ${action} should be "rtl"`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+    editTarget.focus();
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = 'switching text direction from "rtl" to "ltr"';
+    SpecialPowers.doCommand(aWindow, "cmd_switchTextDirection");
+    // XXX If editing host is a descendant of `<body>`, this must be a bug.
+    is(body.getAttribute("dir"), "ltr", `${aDescription}dir attribute of <body> should've been set to "ltr" by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "formatSetBlockTextDirection",
+         `${aDescription}inputType of "beforeinput" event for ${action} should be "formatSetBlockTextDirection"`);
+      is(beforeInputEvent.data, "ltr", `${aDescription}data of "beforeinput" event for ${action} should be "ltr"`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "formatSetBlockTextDirection", `${aDescription}inputType of "input" event for ${action} should be "formatSetBlockTextDirection"`);
+    is(inputEvent.data, "ltr", `${aDescription}data of "input" event for ${action} should be "ltr"`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     // Inserting link
     editTarget.innerHTML = "link";
     editTarget.focus();
     selection.selectAllChildren(editTarget);
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
     inputEvent = null;
-    aDocument.execCommand("createLink", false, "https://example.com/foo/bar.html");
-    ok(inputEvent,
-       aDescription + 'input event should be fired by execCommand("createLink", false, "https://example.com/foo/bar.html")');
-    ok(inputEvent.isTrusted,
-       aDescription + 'input event should be trusted when execCommand("createLink", false, "https://example.com/foo/bar.html")');
-    is(inputEvent.inputType, "insertLink",
-       aDescription + 'inputType should be "insertLink" when execCommand("createLink", false, "https://example.com/foo/bar.html")');
-    is(inputEvent.data, "https://example.com/foo/bar.html",
-       aDescription + 'data should be "https://example.com/foo/bar.html" when execCommand("createLink", false, "https://example.com/foo/bar.html")');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when execCommand("createLink", false, "https://example.com/foo/bar.html")');
+    action = "setting link with absolute URL";
+    SpecialPowers.doCommand(aWindow, "cmd_insertLinkNoUI", "https://example.com/foo/bar.html");
+    todo_is(editTarget.innerHTML, "link", `${aDescription}the text should not habe been modified by ${action} since "beforeinput" was canceled`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "insertLink", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertLink"`);
+      is(beforeInputEvent.data, "https://example.com/foo/bar.html",
+         `${aDescription}data of "beforeinput" event for ${action} should be "https://example.com/foo/bar.html"`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action} since "beforeinput" was canceled`);
+
+    editTarget.innerHTML = "link";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = "setting link with absolute URL";
+    SpecialPowers.doCommand(aWindow, "cmd_insertLinkNoUI", "https://example.com/foo/bar.html");
+    is(editTarget.innerHTML, '<a href="https://example.com/foo/bar.html">link</a>',
+       `${aDescription}the text should've been wrapped by <a href> element by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "insertLink", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertLink"`);
+      is(beforeInputEvent.data, "https://example.com/foo/bar.html",
+         `${aDescription}data of "beforeinput" event for ${action} should be "https://example.com/foo/bar.html"`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "insertLink", `${aDescription}inputType of "input" event for ${action} should be "insertLink"`);
+    is(inputEvent.data, "https://example.com/foo/bar.html", `${aDescription}data of "input" event for ${action} should be "https://example.com/foo/bar.html"`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+    editTarget.innerHTML = "link";
+    selection.selectAllChildren(editTarget);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = "setting link with relative URL";
+    SpecialPowers.doCommand(aWindow, "cmd_insertLinkNoUI", "foo/bar.html");
+    is(editTarget.innerHTML, '<a href="foo/bar.html">link</a>', `${aDescription}the text should've been wrapped by <a href> element by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "insertLink", `${aDescription}inputType of "beforeinput" event for ${action} should be "insertLink"`);
+      is(beforeInputEvent.data, "foo/bar.html", `${aDescription}data of "beforeinput" event for ${action} should be "foo/bar.html"`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.inputType, "insertLink", `${aDescription}inputType of "input" event for ${action} should be "insertLink"`);
+    is(inputEvent.data, "foo/bar.html", `${aDescription}data of "input" event for ${action} should be "foo/bar.html"`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+    // Format commands, which we might support with shortcut keys.
+    for (let test of [{command: "cmd_bold",
+                       tag: "b",
+                       otherRemoveTags: ["strong"],
+                       inputType: "formatBold"},
+                      {command: "cmd_italic",
+                       tag: "i",
+                       otherRemoveTags: ["em"],
+                       inputType: "formatItalic"},
+                      {command: "cmd_underline",
+                       tag: "u",
+                       inputType: "formatUnderline"},
+                      {command: "cmd_strikethrough",
+                       tag: "strike",
+                       otherRemoveTags: ["s"],
+                       inputType: "formatStrikeThrough"},
+                      {command: "cmd_subscript",
+                       tag: "sub",
+                       exclusiveTags: ["sup"],
+                       inputType: "formatSubscript"},
+                      {command: "cmd_superscript",
+                       tag: "sup",
+                       exclusiveTags: ["sub"],
+                       inputType: "formatSuperscript"}]) {
+      editTarget.innerHTML = "format";
+      editTarget.focus();
+      selection.selectAllChildren(editTarget);
+      cancelBeforeInput = false;
+      todoMultipleInputEvents = false;
+      beforeInputEvent = null;
+      inputEvent = null;
+      action = `formatting with "${test.command}"`;
+      SpecialPowers.doCommand(aWindow, test.command);
+      is(editTarget.innerHTML, `<${test.tag}>format</${test.tag}>`,
+         `${aDescription}all text should be wrapped with <${test.tag}> element at ${action}`);
+      todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+      if (beforeInputEvent) {
+        is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        is(beforeInputEvent.inputType, test.inputType, `${aDescription}inputType of "beforeinput" event should be "${test.inputType}"`);
+        is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+      }
+      ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+      is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
+      is(inputEvent.inputType, test.inputType, `${aDescription}inputType of "input" event should be "${test.inputType}"`);
+      is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+      is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+      selection.selectAllChildren(editTarget);
+      cancelBeforeInput = false;
+      todoMultipleInputEvents = false;
+      beforeInputEvent = null;
+      inputEvent = null;
+      action = `removing format with "${test.command}"`;
+      SpecialPowers.doCommand(aWindow, test.command);
+      is(editTarget.innerHTML, "format",
+         `${aDescription}<${test.tag}> element should be unwrapped by ${action}`);
+      todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+      if (beforeInputEvent) {
+        is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        is(beforeInputEvent.inputType, test.inputType, `${aDescription}inputType of "beforeinput" event should be "${test.inputType}"`);
+        is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+      }
+      ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+      is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
+      is(inputEvent.inputType, test.inputType, `${aDescription}inputType of "input" event should be "${test.inputType}"`);
+      is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+      is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+      selection.selectAllChildren(editTarget);
+      cancelBeforeInput = true;
+      todoMultipleInputEvents = false;
+      beforeInputEvent = null;
+      inputEvent = null;
+      action = `formatting with "${test.command}" but "beforeinput" is canceled`;
+      SpecialPowers.doCommand(aWindow, test.command);
+      todo_is(editTarget.innerHTML, "format",
+         `${aDescription}text shouldn't have been modified at ${action}`);
+      todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+      if (beforeInputEvent) {
+        is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        is(beforeInputEvent.inputType, test.inputType, `${aDescription}inputType of "beforeinput" event should be "${test.inputType}"`);
+        is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+      }
+      todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
+
+      editTarget.innerHTML = `<${test.tag}>format</${test.tag}>`;
+      editTarget.focus();
+      selection.selectAllChildren(editTarget);
+      cancelBeforeInput = true;
+      todoMultipleInputEvents = false;
+      beforeInputEvent = null;
+      inputEvent = null;
+      action = `removing format with "${test.command}" but "beforeinput" is canceled`;
+      SpecialPowers.doCommand(aWindow, test.command);
+      todo_is(editTarget.innerHTML, `<${test.tag}>format</${test.tag}>`,
+         `${aDescription}text shouldn't have been modified at ${action}`);
+      todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+      if (beforeInputEvent) {
+        is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+        is(beforeInputEvent.inputType, test.inputType, `${aDescription}inputType of "beforeinput" event should be "${test.inputType}"`);
+        is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+        is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+      }
+      todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
+
+      if (test.otherRemoveTags) {
+        for (let anotherTag of test.otherRemoveTags) {
+          editTarget.innerHTML = `<${anotherTag}>format</${anotherTag}>`;
+          editTarget.focus();
+          selection.selectAllChildren(editTarget);
+          cancelBeforeInput = false;
+          todoMultipleInputEvents = false;
+          beforeInputEvent = null;
+          inputEvent = null;
+          action = `removing <${anotherTag}> element with "${test.command}"`;
+          SpecialPowers.doCommand(aWindow, test.command);
+          is(editTarget.innerHTML, `format`,
+             `${aDescription}<${anotherTag}> element should be unwrapped by ${action}`);
+          todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+          if (beforeInputEvent) {
+            is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+            is(beforeInputEvent.inputType, test.inputType, `${aDescription}inputType of "beforeinput" event should be "${test.inputType}"`);
+            is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+            is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+          }
+          ok(inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
+          is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
+          todo_is(inputEvent.inputType, test.inputType, `${aDescription}inputType of "input" event should be "${test.inputType}"`);
+          is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+          is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+          editTarget.innerHTML = `<${anotherTag}>format</${anotherTag}>`;
+          editTarget.focus();
+          selection.selectAllChildren(editTarget);
+          cancelBeforeInput = true;
+          todoMultipleInputEvents = false;
+          beforeInputEvent = null;
+          inputEvent = null;
+          action = `removing <${anotherTag}> element with "${test.command}" but "beforeinput" is canceled`;
+          SpecialPowers.doCommand(aWindow, test.command);
+          todo_is(editTarget.innerHTML, `<${anotherTag}>format</${anotherTag}>`,
+             `${aDescription}text shouldn't have been modified at ${action}`);
+          todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+          if (beforeInputEvent) {
+            is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+            is(beforeInputEvent.inputType, test.inputType, `${aDescription}inputType of "beforeinput" event should be "${test.inputType}"`);
+            is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+            is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+          }
+          todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
+
+          editTarget.innerHTML = `<${test.tag}><${anotherTag}>format</${anotherTag}></${test.tag}>`;
+          editTarget.focus();
+          selection.selectAllChildren(editTarget);
+          cancelBeforeInput = false;
+          todoMultipleInputEvents = true;
+          beforeInputEvent = null;
+          inputEvent = null;
+          action = `removing both <${test.tag}> and <${anotherTag}> elements with "${test.command}"`;
+          SpecialPowers.doCommand(aWindow, test.command);
+          is(editTarget.innerHTML, `format`,
+             `${aDescription}Both <${test.tag}> and <${anotherTag}> elements should be unwrapped by ${action}`);
+          todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+          if (beforeInputEvent) {
+            is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+            is(beforeInputEvent.inputType, test.inputType, `${aDescription}inputType of "beforeinput" event should be "${test.inputType}"`);
+            is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+            is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+          }
+          ok(inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
+          is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
+          todo_is(inputEvent.inputType, test.inputType, `${aDescription}inputType of "input" event should be "${test.inputType}"`);
+          is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+          is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+          editTarget.innerHTML = `<${test.tag}><${anotherTag}>format</${anotherTag}></${test.tag}>`;
+          editTarget.focus();
+          selection.selectAllChildren(editTarget);
+          cancelBeforeInput = true;
+          todoMultipleInputEvents = true;
+          beforeInputEvent = null;
+          inputEvent = null;
+          action = `removing both <${test.tag}> and <${anotherTag}> elements with "${test.command}" but "beforeinput" is canceled`;
+          SpecialPowers.doCommand(aWindow, test.command);
+          todo_is(editTarget.innerHTML, `<${test.tag}><${anotherTag}>format</${anotherTag}></${test.tag}>`,
+             `${aDescription}text shouldn't have been modified at ${action}`);
+          todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+          if (beforeInputEvent) {
+            is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+            is(beforeInputEvent.inputType, test.inputType, `${aDescription}inputType of "beforeinput" event should be "${test.inputType}"`);
+            is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+            is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+          }
+          todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
+        }
+      }
+      if (test.exclusiveTags) {
+        for (let exclusiveTag of test.exclusiveTags) {
+          editTarget.innerHTML = `<${exclusiveTag}>format</${exclusiveTag}>`;
+          editTarget.focus();
+          selection.selectAllChildren(editTarget);
+          cancelBeforeInput = false;
+          todoMultipleInputEvents = true;
+          beforeInputEvent = null;
+          inputEvent = null;
+          action = `removing <${exclusiveTag}> element with formatting with "${test.command}"`;
+          SpecialPowers.doCommand(aWindow, test.command);
+          is(editTarget.innerHTML, `<${test.tag}>format</${test.tag}>`,
+             `${aDescription}<${exclusiveTag}> element should be replaced with <${test.tag}> element by ${action}`);
+          todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+          if (beforeInputEvent) {
+            is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+            is(beforeInputEvent.inputType, test.inputType, `${aDescription}inputType of "beforeinput" event should be "${test.inputType}"`);
+            is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+            is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+          }
+          ok(inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
+          is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
+          is(inputEvent.inputType, test.inputType, `${aDescription}inputType of "input" event should be "${test.inputType}"`);
+          is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+          is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
+
+          editTarget.innerHTML = `<${exclusiveTag}>format</${exclusiveTag}>`;
+          editTarget.focus();
+          selection.selectAllChildren(editTarget);
+          cancelBeforeInput = true;
+          todoMultipleInputEvents = true;
+          beforeInputEvent = null;
+          inputEvent = null;
+          action = `removing <${exclusiveTag}> element with formatting with "${test.command}" but "beforeinput" is canceled`;
+          SpecialPowers.doCommand(aWindow, test.command);
+          todo_is(editTarget.innerHTML, `<${exclusiveTag}>format</${exclusiveTag}>`,
+             `${aDescription}text shouldn't have been modified at ${action}`);
+          todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+          if (beforeInputEvent) {
+            is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+            is(beforeInputEvent.inputType, test.inputType, `${aDescription}inputType of "beforeinput" event should be "${test.inputType}"`);
+            is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+            is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+          }
+          todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
+        }
+      }
+    }
+
+    // Indent and Outdent
+    editTarget.innerHTML = "format";
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = `indenting with "cmd_indent"`;
+    SpecialPowers.doCommand(aWindow, "cmd_indent");
+    is(editTarget.innerHTML, `<blockquote>format</blockquote>`,
+       `${aDescription}all text should be wrapped with <blockquote> element at ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "formatIndent", `${aDescription}inputType of "beforeinput" event should be "formatIndent"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
+    is(inputEvent.inputType, "formatIndent", `${aDescription}inputType of "input" event should be "formatIndent"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
     selection.selectAllChildren(editTarget);
-    aDocument.execCommand("createLink", false, "foo/bar.html");
-    ok(inputEvent,
-       aDescription + 'input event should be fired by execCommand("createLink", false, "foo/bar.html")');
-    ok(inputEvent.isTrusted,
-       aDescription + 'input event should be trusted when execCommand("createLink", false, "foo/bar.html")');
-    is(inputEvent.inputType, "insertLink",
-       aDescription + 'inputType should be "insertLink" when execCommand("createLink", false, "foo/bar.html")');
-    is(inputEvent.data, "foo/bar.html",
-       aDescription + 'data should be "foo/bar.html" when execCommand("createLink", false, "foo/bar.html")');
-    is(inputEvent.dataTransfer, null,
-       aDescription + 'dataTransfer should be null when execCommand("createLink", false, "foo/bar.html")');
+    cancelBeforeInput = false;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = `outdenting with "cmd_outdent"`;
+    SpecialPowers.doCommand(aWindow, "cmd_outdent");
+    is(editTarget.innerHTML, "format",
+       `${aDescription}<blockquote> element should be unwrapped by ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "formatOutdent", `${aDescription}inputType of "beforeinput" event should be "formatOutdent"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    ok(inputEvent, `${aDescription}"input" event should've been fired at ${action}`);
+    is(inputEvent.cancelable, false, `${aDescription}"input" event for ${action} should never be cancelable`);
+    is(inputEvent.inputType, "formatOutdent", `${aDescription}inputType of "input" event should be "formatOutdent"`);
+    is(inputEvent.data, null, `${aDescription}data of "input" event for ${action} should be null`);
+    is(inputEvent.dataTransfer, null, `${aDescription}dataTransfer of "input" event for ${action} should be null`);
 
-    aWindow.removeEventListener("input", handler, true);
+    selection.selectAllChildren(editTarget);
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = `indenting with "cmd_indent" but "beforeinput" is canceled`;
+    SpecialPowers.doCommand(aWindow, "cmd_indent");
+    todo_is(editTarget.innerHTML, "format",
+       `${aDescription}text shouldn't have been modified at ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "formatIndent", `${aDescription}inputType of "beforeinput" event should be "formatIndent"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
+
+    editTarget.innerHTML = `<blockquote>format</blockquote>`;
+    editTarget.focus();
+    selection.selectAllChildren(editTarget);
+    cancelBeforeInput = true;
+    todoMultipleInputEvents = false;
+    beforeInputEvent = null;
+    inputEvent = null;
+    action = `outdenting with "cmd_outdent" but "beforeinput" is canceled`;
+    SpecialPowers.doCommand(aWindow, "cmd_outdent");
+    todo_is(editTarget.innerHTML, `<blockquote>format</blockquote>`,
+       `${aDescription}text shouldn't have been modified at ${action}`);
+    todo(beforeInputEvent, `${aDescription}"beforeinput" event should've been fired at ${action}`);
+    if (beforeInputEvent) {
+      is(beforeInputEvent.cancelable, true, `${aDescription}"beforeinput" event for ${action} should be cancelable`);
+      is(beforeInputEvent.inputType, "formatOutdent", `${aDescription}inputType of "beforeinput" event should be "formatOutdent"`);
+      is(beforeInputEvent.data, null, `${aDescription}data of "beforeinput" event for ${action} should be null`);
+      is(beforeInputEvent.dataTransfer, null, `${aDescription}dataTransfer of "beforeinput" event for ${action} should be null`);
+    }
+    todo(!inputEvent, `${aDescription}"input" event shouldn't have been fired at ${action}`);
+
+    aWindow.removeEventListener("beforeinput", beforeInputHandler, true);
+    aWindow.removeEventListener("input", inputHandler, true);
   }
 
   doTests(document.getElementById("editor1").contentDocument,

@@ -15,50 +15,78 @@
 </pre>
 
 <script class="testbody" type="application/javascript">
+"use strict";
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(function() {
+SimpleTest.expectAssertions(0, 2);  // In a11y module
+SimpleTest.waitForFocus(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.input_events.beforeinput.enabled", true]],
+  });
+
   let input = document.getElementsByTagName("input")[0];
   let textarea = document.getElementsByTagName("textarea")[0];
   let contenteditable = document.getElementById("content");
   let selection = window.getSelection();
 
+  let beforeInputEvents = [];
   let inputEvents = [];
+  function onBeforeInput(event) {
+    beforeInputEvents.push(event);
+  }
   function onInput(event) {
     inputEvents.push(event);
   }
 
+  function checkInputEvent(aEvent, aInputType, aDescription) {
+    ok(aEvent instanceof InputEvent,
+       `"${aEvent.type}" event should be dispatched with InputEvent interface (${aDescription})`);
+    is(aEvent.cancelable, aEvent.type === "beforeinput",
+       `"${aEvent.type}" event should ${aEvent.type === "beforeinput" ? "be" : "be never"} cancelable (${aDescription})`);
+    is(aEvent.bubbles, true,
+       `"${aEvent.type}" event should always bubble (${aDescription})`);
+    is(aEvent.inputType, aInputType,
+       `inputType of "${aEvent.type}" event should be "${aInputType}" ${aDescription}`);
+    is(aEvent.data, null,
+       `data of "${aEvent.type}" event should be null ${aDescription}`);
+    is(aEvent.dataTransfer, null,
+       `dataTransfer of "${aEvent.type}" event should be null ${aDescription}`);
+  }
+
   input.focus();
   input.selectionStart = input.selectionEnd = 3;
+  beforeInputEvents = [];
   inputEvents = [];
+  input.addEventListener("beforeinput", onBeforeInput);
   input.addEventListener("input", onInput);
   try {
     getPlaintextEditor(input).insertLineBreak();
   } catch (e) {}
+  input.removeEventListener("beforeinput", onBeforeInput);
   input.removeEventListener("input", onInput);
   is(input.value, "abcdef", "nsIPlaintextEditor.insertLineBreak() should do nothing on single line editor");
-  is(inputEvents.length, 0, "nsIPlaintextEditor.insertLineBreak() shouldn't cause 'input' event on single line editor");
+  todo_is(beforeInputEvents.length, 1, 'nsIPlaintextEditor.insertLineBreak() should cause a "beforeinput" event on single line editor');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertLineBreak", "on single line editor");
+  }
+  is(inputEvents.length, 0, 'nsIPlaintextEditor.insertLineBreak() should not cause "input" event on single line editor');
 
   textarea.focus();
   textarea.selectionStart = textarea.selectionEnd = 3;
+  beforeInputEvents = [];
   inputEvents = [];
+  textarea.addEventListener("beforeinput", onBeforeInput);
   textarea.addEventListener("input", onInput);
   getPlaintextEditor(textarea).insertLineBreak();
+  textarea.removeEventListener("beforeinput", onBeforeInput);
   textarea.removeEventListener("input", onInput);
-  is(textarea.value, "abc\ndef", "nsIPlaintextEditor.insertLineBreak() should insert \n into multi-line editor");
-  is(inputEvents.length, 1, "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on multi-line editor");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (on multi-line editor)');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (on multi-line editor)');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (on multi-line editor)');
-  is(inputEvents[0].inputType, "insertLineBreak",
-     'inputType should be "insertLineBreak" on multi-line editor');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertLineBreak" on multi-line editor');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertLineBreak" on multi-line editor');
+  is(textarea.value, "abc\ndef", "nsIPlaintextEditor.insertLineBreak() should insert \\n into multi-line editor");
+  todo_is(beforeInputEvents.length, 1, 'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on multi-line editor');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertLineBreak", "on multi-line editor");
+  }
+  is(inputEvents.length, 1, 'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on multi-line editor');
+  checkInputEvent(inputEvents[0], "insertLineBreak", "on multi-line editor");
 
   // Note that despite of the name, insertLineBreak() should insert paragraph separator in HTMLEditor.
 
@@ -68,101 +96,89 @@ SimpleTest.waitForFocus(function() {
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "abc<br>def",
-     "nsIPlaintextEditor.insertLineBreak() should insert <br> element into text node when defaultParagraphSeparator is \"br\"");
+     'nsIPlaintextEditor.insertLineBreak() should insert <br> element into text node when defaultParagraphSeparator is "br"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has only text node when defaultParagraphSeparator is "br"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "br")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has only text node when defaultParagraphSeparator is \"br\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "br") #1');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "br") #1');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "br") #1');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #1');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #1');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #1');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has only text node when defaultParagraphSeparator is "br"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "br")');
 
   contenteditable.innerHTML = "<p>abcdef</p>";
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<p>abc</p><p>def</p>",
-     "nsIPlaintextEditor.insertLineBreak() should add <p> element after <p> element even when defaultParagraphSeparator is \"br\"");
+     'nsIPlaintextEditor.insertLineBreak() should add <p> element after <p> element even when defaultParagraphSeparator is "br"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <p> element when defaultParagraphSeparator is "br"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "br")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has <p> element when defaultParagraphSeparator is \"br\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "br") #2');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "br") #2');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "br") #2');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #2');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #2');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #2');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has <p> element when defaultParagraphSeparator is "br"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "br")');
 
   contenteditable.innerHTML = "<div>abcdef</div>";
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<div>abc<br>def</div>",
-     "nsIPlaintextEditor.insertLineBreak() should insert <br> element into <div> element when defaultParagraphSeparator is \"br\"");
+     'nsIPlaintextEditor.insertLineBreak() should insert <br> element into <div> element when defaultParagraphSeparator is "br"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <div> element when defaultParagraphSeparator is "br"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "br")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has <div> element when defaultParagraphSeparator is \"br\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "br") #3');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "br") #3');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "br") #3');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #3');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #3');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #3');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has <div> element when defaultParagraphSeparator is "br"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "br")');
 
   contenteditable.innerHTML = "<pre>abcdef</pre>";
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<pre>abc<br>def</pre>",
-     "nsIPlaintextEditor.insertLineBreak() should insert <br> element into <pre> element when defaultParagraphSeparator is \"br\"");
+     'nsIPlaintextEditor.insertLineBreak() should insert <br> element into <pre> element when defaultParagraphSeparator is "br"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "br"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "br")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has <pre> element when defaultParagraphSeparator is \"br\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "br") #4');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "br") #4');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "br") #4');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #4');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #4');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "br") #4');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "br"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "br")');
 
   document.execCommand("defaultParagraphSeparator", false, "p");
 
@@ -170,101 +186,89 @@ SimpleTest.waitForFocus(function() {
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<p>abc</p><p>def</p>",
-     "nsIPlaintextEditor.insertLineBreak() should create <p> elements when there is only text node and defaultParagraphSeparator is \"p\"");
+     'nsIPlaintextEditor.insertLineBreak() should create <p> elements when there is only text node and defaultParagraphSeparator is "p"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has only text node when defaultParagraphSeparator is "p"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "p")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has only text node when defaultParagraphSeparator is \"p\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "p") #1');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "p") #1');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "p") #1');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #1');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #1');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #1');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has only text node when defaultParagraphSeparator is "p"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "p")');
 
   contenteditable.innerHTML = "<p>abcdef</p>";
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<p>abc</p><p>def</p>",
-     "nsIPlaintextEditor.insertLineBreak() should add <p> element after <p> element when defaultParagraphSeparator is \"p\"");
+     'nsIPlaintextEditor.insertLineBreak() should add <p> element after <p> element when defaultParagraphSeparator is "p"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <p> element when defaultParagraphSeparator is "p"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "p")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has <p> element when defaultParagraphSeparator is \"p\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "p") #2');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "p") #2');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "p") #2');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #2');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #2');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #2');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has <p> element when defaultParagraphSeparator is "p"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "p")');
 
   contenteditable.innerHTML = "<div>abcdef</div>";
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<div>abc</div><div>def</div>",
-     "nsIPlaintextEditor.insertLineBreak() should add <div> element after <div> element even when defaultParagraphSeparator is \"p\"");
+     'nsIPlaintextEditor.insertLineBreak() should add <div> element after <div> element even when defaultParagraphSeparator is "p"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <div> element when defaultParagraphSeparator is "p"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "p")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has <div> element when defaultParagraphSeparator is \"p\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "p") #3');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "p") #3');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "p") #3');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #3');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #3');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #3');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has <div> element when defaultParagraphSeparator is "p"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "p")');
 
   contenteditable.innerHTML = "<pre>abcdef</pre>";
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<pre>abc<br>def</pre>",
-     "nsIPlaintextEditor.insertLineBreak() should insert <br> element into <pre> element when defaultParagraphSeparator is \"p\"");
+     'nsIPlaintextEditor.insertLineBreak() should insert <br> element into <pre> element when defaultParagraphSeparator is "p"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "p"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "p")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has <pre> element when defaultParagraphSeparator is \"p\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "p") #4');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "p") #4');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "p") #4');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #4');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #4');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "p") #4');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "p"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "p")');
 
   document.execCommand("defaultParagraphSeparator", false, "div");
 
@@ -272,101 +276,89 @@ SimpleTest.waitForFocus(function() {
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<div>abc</div><div>def</div>",
-     "nsIPlaintextEditor.insertLineBreak() should create <div> elements when there is only text node and defaultParagraphSeparator is \"div\"");
+     'nsIPlaintextEditor.insertLineBreak() should create <div> elements when there is only text node and defaultParagraphSeparator is "div"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has only text node when defaultParagraphSeparator is "div"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "div")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has only text node when defaultParagraphSeparator is \"div\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "div") #1');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "div") #1');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "div") #1');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #1');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #1');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #1');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has only text node when defaultParagraphSeparator is "div"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'on HTMLEditor (when defaultParagraphSeparator is "div")');
 
   contenteditable.innerHTML = "<p>abcdef</p>";
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<p>abc</p><p>def</p>",
-     "nsIPlaintextEditor.insertLineBreak() should add <p> element after <p> element even when defaultParagraphSeparator is \"div\"");
+     'nsIPlaintextEditor.insertLineBreak() should add <p> element after <p> element even when defaultParagraphSeparator is "div"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <p> element when defaultParagraphSeparator is "div"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "div")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has <p> element when defaultParagraphSeparator is \"div\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "div") #2');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "div") #2');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "div") #2');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #2');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #2');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #2');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has <p> element when defaultParagraphSeparator is "div"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'in <p> element on HTMLEditor (when defaultParagraphSeparator is "div")');
 
   contenteditable.innerHTML = "<div>abcdef</div>";
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<div>abc</div><div>def</div>",
-     "nsIPlaintextEditor.insertLineBreak() should add <div> element after <div> element when defaultParagraphSeparator is \"div\"");
+     'nsIPlaintextEditor.insertLineBreak() should add <div> element after <div> element when defaultParagraphSeparator is "div"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <div> element when defaultParagraphSeparator is "div"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "div")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has <div> element when defaultParagraphSeparator is \"div\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "div") #3');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "div") #3');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "div") #3');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #3');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #3');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #3');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has <div> element when defaultParagraphSeparator is "div"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'in <div> element on HTMLEditor (when defaultParagraphSeparator is "div")');
 
   contenteditable.innerHTML = "<pre>abcdef</pre>";
   contenteditable.focus();
   contenteditable.scrollTop;
   selection.collapse(contenteditable.firstChild.firstChild, 3);
+  beforeInputEvents = [];
   inputEvents = [];
+  contenteditable.addEventListener("beforeinput", onBeforeInput);
   contenteditable.addEventListener("input", onInput);
   getPlaintextEditor(contenteditable).insertLineBreak();
+  contenteditable.removeEventListener("beforeinput", onBeforeInput);
   contenteditable.removeEventListener("input", onInput);
   is(contenteditable.innerHTML, "<pre>abc<br>def</pre>",
-     "nsIPlaintextEditor.insertLineBreak() should insert <br> element into <pre> element when defaultParagraphSeparator is \"div\"");
+     'nsIPlaintextEditor.insertLineBreak() should insert <br> element into <pre> element when defaultParagraphSeparator is "div"');
+  todo_is(beforeInputEvents.length, 1,
+     'nsIPlaintextEditor.insertLineBreak() should cause "beforeinput" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "div"');
+  if (beforeInputEvents.length > 0) {
+    checkInputEvent(beforeInputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "div")');
+  }
   is(inputEvents.length, 1,
-     "nsIPlaintextEditor.insertLineBreak() should cause 'input' event once on contenteditable which has <pre> element when defaultParagraphSeparator is \"div\"");
-  ok(inputEvents[0] instanceof InputEvent,
-     '"input" event should be dispatched with InputEvent interface (when defaultParagraphSeparator is "div") #4');
-  is(inputEvents[0].cancelable, false,
-     '"input" event should be never cancelable even if "click" event (when defaultParagraphSeparator is "div") #4');
-  is(inputEvents[0].bubbles, true,
-     '"input" event should always bubble (when defaultParagraphSeparator is "div") #4');
-  is(inputEvents[0].inputType, "insertParagraph",
-     'inputType should be "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #4');
-  is(inputEvents[0].data, null,
-     'data should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #4');
-  is(inputEvents[0].dataTransfer, null,
-     'dataTransfer should be null if inputType is "insertParagraph" on HTMLEditor (when defaultParagraphSeparator is "div") #4');
+     'nsIPlaintextEditor.insertLineBreak() should cause "input" event once on contenteditable which has <pre> element when defaultParagraphSeparator is "div"');
+  checkInputEvent(inputEvents[0], "insertParagraph", 'in <pre> element on HTMLEditor (when defaultParagraphSeparator is "div")');
 
   SimpleTest.finish();
 });
