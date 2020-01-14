@@ -1122,7 +1122,7 @@ void IMEStateManager::SetInputContextForChildProcess(
   SetInputContext(widget, aInputContext, aAction);
 }
 
-static bool IsNextFocusableElementTextOrNumberControl(Element* aInputContent) {
+static bool IsNextFocusableElementTextControl(Element* aInputContent) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return false;
@@ -1136,7 +1136,7 @@ static bool IsNextFocusableElementTextOrNumberControl(Element* aInputContent) {
   }
   nextContent = nextContent->FindFirstNonChromeOnlyAccessContent();
   nsCOMPtr<nsIFormControl> nextControl = do_QueryInterface(nextContent);
-  if (!nextControl || !nextControl->IsTextOrNumberControl(false)) {
+  if (!nextControl || !nextControl->IsTextControl(false)) {
     return false;
   }
 
@@ -1217,8 +1217,7 @@ static void GetActionHint(nsIContent& aContent, nsAString& aActionHint) {
     if (!isLastElement && formElement) {
       // If next tabbable content in form is text control, hint should be "next"
       // even there is submit in form.
-      if (IsNextFocusableElementTextOrNumberControl(
-              inputContent->AsElement())) {
+      if (IsNextFocusableElementTextControl(inputContent->AsElement())) {
         // This is focusable text control
         // XXX What good hint for read only field?
         aActionHint.AssignLiteral("next");
@@ -1274,22 +1273,8 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
   if (aContent &&
       aContent->IsAnyOfHTMLElements(nsGkAtoms::input, nsGkAtoms::textarea)) {
     if (!aContent->IsHTMLElement(nsGkAtoms::textarea)) {
-      // <input type=number> has an anonymous <input type=text> descendant
-      // that gets focus whenever anyone tries to focus the number control. We
-      // need to check if aContent is one of those anonymous text controls and,
-      // if so, use the number control instead:
-      Element* element = aContent->AsElement();
-      HTMLInputElement* inputElement =
-          HTMLInputElement::FromNodeOrNull(aContent);
-      if (inputElement) {
-        HTMLInputElement* ownerNumberControl =
-            inputElement->GetOwnerNumberControl();
-        if (ownerNumberControl) {
-          element = ownerNumberControl;  // an <input type=number>
-        }
-      }
-      element->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                       context.mHTMLInputType);
+      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
+                                     context.mHTMLInputType);
     } else {
       context.mHTMLInputType.Assign(nsGkAtoms::textarea->GetUTF16String());
     }
