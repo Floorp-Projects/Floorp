@@ -1688,7 +1688,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 #  define INTERPRETER_LOOP() \
   the_switch:                \
     switch (switchOp)
-#  define CASE(OP) case OP:
+#  define CASE(OP) case jsbytecode(OP):
 #  define DEFAULT() default:
 #  define DISPATCH_TO(OP) \
     JS_BEGIN_MACRO        \
