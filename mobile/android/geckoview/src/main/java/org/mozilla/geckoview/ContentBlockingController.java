@@ -33,11 +33,57 @@ import java.util.List;
 public class ContentBlockingController {
     private static final String LOGTAG = "GeckoContentBlocking";
 
+    @AnyThread
+    public static class ContentBlockingException {
+        private final @NonNull String mEncodedPrincipal;
+
+        /**
+         * A String representing the URI of this content blocking exception.
+         */
+        public final @NonNull String uri;
+
+        /* package */ ContentBlockingException(final @NonNull String encodedPrincipal,
+                                               final @NonNull String uri) {
+            mEncodedPrincipal = encodedPrincipal;
+            this.uri = uri;
+        }
+
+        /**
+         * Returns a JSONObject representation of the content blocking exception.
+         *
+         * @return A JSONObject representing the exception.
+         *
+         * @throws JSONException if conversion to JSONObject fails.
+         */
+        public @NonNull JSONObject toJson() throws JSONException {
+            final JSONObject res = new JSONObject();
+            res.put("principal", mEncodedPrincipal);
+            res.put("uri", uri);
+            return res;
+        }
+
+        /**
+         *
+         * Returns a ContentBlockingException reconstructed from JSON.
+         *
+         * @param savedException A JSONObject representation of a saved exception; should be the output of
+         *                       {@link toJson}.
+         *
+         * @return A ContentBlockingException reconstructed from the supplied JSONObject.
+         *
+         * @throws JSONException if the JSONObject cannot be converted for any reason.
+         */
+        public static @NonNull ContentBlockingException fromJson(final @NonNull JSONObject savedException) throws JSONException {
+            return new ContentBlockingException(savedException.getString("principal"), savedException.getString("uri"));
+        }
+    }
+
     /**
      * ExceptionList represents a content blocking exception list exported
      * from Gecko. It can be used to persist the list or to inspect the URIs
      * present in the list.
      */
+    @Deprecated
     @AnyThread
     public class ExceptionList {
         private final @NonNull GeckoBundle mBundle;
@@ -144,6 +190,21 @@ public class ContentBlockingController {
     }
 
     /**
+     * Remove the exception specified by the supplied {@link ContentBlockingException} from
+     * the content blocking exception list, if it is present. If there is no such exception,
+     * this is a no-op.
+     *
+     * @param exception A {@link ContentBlockingException} which will be removed from the
+     *                  content blocking exception list.
+     */
+    @AnyThread
+    public void removeException(final @NonNull ContentBlockingException exception) {
+        final GeckoBundle msg = new GeckoBundle(1);
+        msg.putString("principal", exception.mEncodedPrincipal);
+        EventDispatcher.getInstance().dispatch("ContentBlocking:RemoveExceptionByPrincipal", msg);
+    }
+
+    /**
      * Check whether or not there is an exception for the site currently loaded by the
      * supplied {@link GeckoSession}.
      *
@@ -168,17 +229,31 @@ public class ContentBlockingController {
     }
 
     /**
-     * Save the current content blocking exception list as an {@link ExceptionList}.
+     * Save the current content blocking exception list as a List of {@link ContentBlockingException}.
      *
-     * @return An {@link ExceptionList} which can be used to restore the current
-     *         exception list.
+     * @return A List of {@link ContentBlockingException} which can be used to restore or
+     *         inspect the current exception list.
      */
     @UiThread
-    public @NonNull GeckoResult<ExceptionList> saveExceptionList() {
-        final CallbackResult<ExceptionList> result = new CallbackResult<ExceptionList>() {
+    public @NonNull GeckoResult<List<ContentBlockingException>> saveExceptionList() {
+        final CallbackResult<List<ContentBlockingException>> result = new CallbackResult<List<ContentBlockingException>>() {
             @Override
             public void sendSuccess(final Object value) {
-                complete(new ExceptionList((GeckoBundle) value));
+                final String[] principals = ((GeckoBundle) value).getStringArray("principals");
+                final String[] uris = ((GeckoBundle) value).getStringArray("uris");
+
+                if (principals == null || uris == null) {
+                    completeExceptionally(new RuntimeException("Received invalid content blocking exception list"));
+                    return;
+                }
+
+                final ArrayList<ContentBlockingException> res = new ArrayList<ContentBlockingException>(principals.length);
+
+                for (int i = 0; i < principals.length; i++) {
+                    res.add(new ContentBlockingException(principals[i], uris[i]));
+                }
+
+                complete(Collections.unmodifiableList(res));
             }
         };
         EventDispatcher.getInstance().dispatch("ContentBlocking:SaveList", null, result);
@@ -190,9 +265,32 @@ public class ContentBlockingController {
      *
      * @param list An {@link ExceptionList} originally created by {@link saveExceptionList}.
      */
+    @Deprecated
     @UiThread
     public void restoreExceptionList(final @NonNull ExceptionList list) {
         EventDispatcher.getInstance().dispatch("ContentBlocking:RestoreList", list.getBundle());
+    }
+
+    /**
+     * Restore the supplied List of {@link ContentBlockingException}, overwriting the existing exception list.
+     *
+     * @param list A List of {@link ContentBlockingException} originally created by {@link saveExceptionList}.
+     */
+    @AnyThread
+    public void restoreExceptionList(final @NonNull List<ContentBlockingException> list) {
+        final GeckoBundle bundle = new GeckoBundle(2);
+        final String[] principals = new String[list.size()];
+        final String[] uris = new String[list.size()];
+
+        for (int i = 0; i < list.size(); i++) {
+            principals[i] = list.get(i).mEncodedPrincipal;
+            uris[i] = list.get(i).uri;
+        }
+
+        bundle.putStringArray("principals", principals);
+        bundle.putStringArray("uris", uris);
+
+        EventDispatcher.getInstance().dispatch("ContentBlocking:RestoreList", bundle);
     }
 
     /**
