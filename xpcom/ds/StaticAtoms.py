@@ -2458,6 +2458,7 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_mozFocusOuter", ":-moz-focus-outer"),
     PseudoElementAtom("PseudoElement_mozMathAnonymous", ":-moz-math-anonymous"),
     PseudoElementAtom("PseudoElement_mozNumberWrapper", ":-moz-number-wrapper"),
+    PseudoElementAtom("PseudoElement_mozNumberText", ":-moz-number-text"),
     PseudoElementAtom("PseudoElement_mozNumberSpinBox", ":-moz-number-spin-box"),
     PseudoElementAtom("PseudoElement_mozNumberSpinUp", ":-moz-number-spin-up"),
     PseudoElementAtom("PseudoElement_mozNumberSpinDown", ":-moz-number-spin-down"),

@@ -57,19 +57,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
     is(aEvent.bubbles, true,
        `"beforeinput" event should always bubble ${aDescription}`);
   }
-
-  let skipExpectedDataCheck = false;
-  function checkIfInputIsInputEvent(aEvent, aDescription) {
-    ok(aEvent instanceof InputEvent,
-       `"input" event should be dispatched with InputEvent interface ${aDescription}`);
-    is(aEvent.inputType, expectedInputType,
-       `inputType should be "${expectedInputType}" ${aDescription}`);
-    if (!skipExpectedDataCheck)
-      is(aEvent.data, expectedData, `data should be ${expectedData} ${aDescription}`);
-    else
-      info(`data is ${aEvent.data} ${aDescription}`);
-    is(aEvent.dataTransfer, null,
-       `dataTransfer should be null ${aDescription}`);
+  function checkIfInputIsInputEvent(aEvent, aToDo, aDescription) {
+    if (aToDo) {
+      // Probably, key operation should fire "input" event with InputEvent interface.
+      // See https://github.com/w3c/input-events/issues/88
+      todo(aEvent instanceof InputEvent,
+         `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+    } else {
+      ok(aEvent instanceof InputEvent,
+         `"input" event should be dispatched with InputEvent interface ${aDescription}`);
+      is(aEvent.inputType, expectedInputType,
+         `inputType of "input" event should be "${expectedInputType}" ${aDescription}`);
+      is(aEvent.data, expectedData,
+         `data of "input" event should be ${expectedData} ${aDescription}`);
+      is(aEvent.dataTransfer, null,
+         `dataTransfer of "input" event should be null ${aDescription}`);
+    }
     is(aEvent.cancelable, false,
        `"input" event should be never cancelable ${aDescription}`);
     is(aEvent.bubbles, true,
@@ -92,7 +95,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   };
   document.getElementById("textarea").oninput = (aEvent) => {
     ++textareaInput;
-    checkIfInputIsInputEvent(aEvent, "on textarea element");
+    checkIfInputIsInputEvent(aEvent, false, "on textarea element");
   };
 
   // These are the type were the input event apply.
@@ -106,7 +109,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
     };
     document.getElementById(id).oninput = (aEvent) => {
       ++textInput[textTypes.indexOf(aEvent.target.type)];
-      checkIfInputIsInputEvent(aEvent, `on input element whose type is ${aEvent.target.type}`);
+      checkIfInputIsInputEvent(aEvent, false, `on input element whose type is ${aEvent.target.type}`);
     };
   }
 
@@ -139,7 +142,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   };
   document.getElementById("input_number").oninput = (aEvent) => {
     ++numberInput;
-    checkIfInputIsInputEvent(aEvent, "on input element whose type is number");
+    checkIfInputIsInputEvent(aEvent, true, "on input element whose type is number");
   };
 
   SimpleTest.waitForExplicitFinish();
@@ -366,22 +369,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
       number.focus();
       // <input type="number">'s inputType value hasn't been decided, see
       // https://github.com/w3c/input-events/issues/88
-      expectedInputType = "insertReplacementText";
-      expectedData = "1";
+      expectedInputType = "";
+      expectedData = null;
       expectedBeforeInputCancelable = false;
       synthesizeKey("KEY_ArrowUp");
       todo_is(numberBeforeInput, 1, "beforeinput event should be dispatched for up/down arrow key keypress");
       is(numberInput, 1, "input event should be dispatched for up/down arrow key keypress");
       is(number.value, "1", "sanity check value of number control after keypress");
 
-      // `data` will be the value of the input, but we can't change
-      // `expectedData` and use {repeat: 3} at the same time.
-      skipExpectedDataCheck = true;
       synthesizeKey("KEY_ArrowDown", {repeat: 3});
       todo_is(numberBeforeInput, 4, "beforeinput event should be dispatched for each up/down arrow key keypress event, even when rapidly repeated");
       is(numberInput, 4, "input event should be dispatched for each up/down arrow key keypress event, even when rapidly repeated");
       is(number.value, "-2", "sanity check value of number control after multiple keydown events");
-      skipExpectedDataCheck = false;
 
       number.blur();
       todo_is(numberBeforeInput, 4, "beforeinput event shouldn't be dispatched on blur");

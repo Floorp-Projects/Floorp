@@ -186,11 +186,25 @@ class nsIFormControl : public nsISupports {
   inline bool IsTextControl(bool aExcludePassword) const;
 
   /**
+   * Returns true if this is a text control or a number control.
+   * @param  aExcludePassword  to have NS_FORM_INPUT_PASSWORD returning false.
+   * @return true if this is a text control or a number control.
+   */
+  inline bool IsTextOrNumberControl(bool aExcludePassword) const;
+
+  /**
    * Returns whether this is a single line text control.
    * @param  aExcludePassword  to have NS_FORM_INPUT_PASSWORD returning false.
    * @return whether this is a single line text control.
    */
   inline bool IsSingleLineTextControl(bool aExcludePassword) const;
+
+  /**
+   * Returns true if this is a single line text control or a number control.
+   * @param  aExcludePassword  to have NS_FORM_INPUT_PASSWORD returning false.
+   * @return true if this is a single line text control or a number control.
+   */
+  inline bool IsSingleLineTextOrNumberControl(bool aExcludePassword) const;
 
   /**
    * Returns whether this is a submittable form control.
@@ -249,8 +263,19 @@ bool nsIFormControl::IsTextControl(bool aExcludePassword) const {
          IsSingleLineTextControl(aExcludePassword, type);
 }
 
+bool nsIFormControl::IsTextOrNumberControl(bool aExcludePassword) const {
+  return IsTextControl(aExcludePassword) ||
+         ControlType() == NS_FORM_INPUT_NUMBER;
+}
+
 bool nsIFormControl::IsSingleLineTextControl(bool aExcludePassword) const {
   return IsSingleLineTextControl(aExcludePassword, ControlType());
+}
+
+bool nsIFormControl::IsSingleLineTextOrNumberControl(
+    bool aExcludePassword) const {
+  return IsSingleLineTextControl(aExcludePassword) ||
+         ControlType() == NS_FORM_INPUT_NUMBER;
 }
 
 /*static*/
@@ -258,7 +283,7 @@ bool nsIFormControl::IsSingleLineTextControl(bool aExcludePassword,
                                              uint32_t aType) {
   return aType == NS_FORM_INPUT_TEXT || aType == NS_FORM_INPUT_EMAIL ||
          aType == NS_FORM_INPUT_SEARCH || aType == NS_FORM_INPUT_TEL ||
-         aType == NS_FORM_INPUT_URL || aType == NS_FORM_INPUT_NUMBER ||
+         aType == NS_FORM_INPUT_URL ||
          // TODO: those are temporary until bug 773205 is fixed.
          aType == NS_FORM_INPUT_MONTH || aType == NS_FORM_INPUT_WEEK ||
          aType == NS_FORM_INPUT_DATETIME_LOCAL ||

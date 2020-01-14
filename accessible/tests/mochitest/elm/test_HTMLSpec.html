@@ -712,7 +712,15 @@
         role: ROLE_SPINBUTTON,
         interfaces: [ nsIAccessibleValue ],
         children: [
-          { role: ROLE_TEXT_LEAF },
+          {
+            role: ROLE_ENTRY,
+            extraStates: EXT_STATE_EDITABLE | EXT_STATE_SINGLE_LINE,
+            actions: "activate",
+            interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ],
+            children: [
+              { role: ROLE_TEXT_LEAF },
+            ],
+          },
           {
             role: ROLE_PUSHBUTTON,
             actions: "press",

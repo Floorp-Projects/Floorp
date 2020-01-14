@@ -124,7 +124,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("search", {"text-input-type": "search"}, true);
       testAttrs("tel", {"text-input-type": "tel"}, true);
       testAttrs("url", {"text-input-type": "url"}, true);
-      testAttrs("number", {"text-input-type": "number"}, true);
+      testAttrs(getAccessible("number").firstChild, {"text-input-type": "number"}, true);
 
       // ARIA
       testAttrs("searchbox", {"text-input-type": "search"}, true);
