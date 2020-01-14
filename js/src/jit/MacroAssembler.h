@@ -3265,19 +3265,19 @@ inline void MacroAssembler::implicitPop(uint32_t bytes) {
 
 static inline Assembler::DoubleCondition JSOpToDoubleCondition(JSOp op) {
   switch (op) {
-    case JSOp::Eq:
-    case JSOp::StrictEq:
+    case JSOP_EQ:
+    case JSOP_STRICTEQ:
       return Assembler::DoubleEqual;
-    case JSOp::Ne:
-    case JSOp::StrictNe:
+    case JSOP_NE:
+    case JSOP_STRICTNE:
       return Assembler::DoubleNotEqualOrUnordered;
-    case JSOp::Lt:
+    case JSOP_LT:
       return Assembler::DoubleLessThan;
-    case JSOp::Le:
+    case JSOP_LE:
       return Assembler::DoubleLessThanOrEqual;
-    case JSOp::Gt:
+    case JSOP_GT:
       return Assembler::DoubleGreaterThan;
-    case JSOp::Ge:
+    case JSOP_GE:
       return Assembler::DoubleGreaterThanOrEqual;
     default:
       MOZ_CRASH("Unexpected comparison operation");
@@ -3290,38 +3290,38 @@ static inline Assembler::DoubleCondition JSOpToDoubleCondition(JSOp op) {
 static inline Assembler::Condition JSOpToCondition(JSOp op, bool isSigned) {
   if (isSigned) {
     switch (op) {
-      case JSOp::Eq:
-      case JSOp::StrictEq:
+      case JSOP_EQ:
+      case JSOP_STRICTEQ:
         return Assembler::Equal;
-      case JSOp::Ne:
-      case JSOp::StrictNe:
+      case JSOP_NE:
+      case JSOP_STRICTNE:
         return Assembler::NotEqual;
-      case JSOp::Lt:
+      case JSOP_LT:
         return Assembler::LessThan;
-      case JSOp::Le:
+      case JSOP_LE:
         return Assembler::LessThanOrEqual;
-      case JSOp::Gt:
+      case JSOP_GT:
         return Assembler::GreaterThan;
-      case JSOp::Ge:
+      case JSOP_GE:
         return Assembler::GreaterThanOrEqual;
       default:
         MOZ_CRASH("Unrecognized comparison operation");
     }
   } else {
     switch (op) {
-      case JSOp::Eq:
-      case JSOp::StrictEq:
+      case JSOP_EQ:
+      case JSOP_STRICTEQ:
         return Assembler::Equal;
-      case JSOp::Ne:
-      case JSOp::StrictNe:
+      case JSOP_NE:
+      case JSOP_STRICTNE:
         return Assembler::NotEqual;
-      case JSOp::Lt:
+      case JSOP_LT:
         return Assembler::Below;
-      case JSOp::Le:
+      case JSOP_LE:
         return Assembler::BelowOrEqual;
-      case JSOp::Gt:
+      case JSOP_GT:
         return Assembler::Above;
-      case JSOp::Ge:
+      case JSOP_GE:
         return Assembler::AboveOrEqual;
       default:
         MOZ_CRASH("Unrecognized comparison operation");

@@ -2086,7 +2086,7 @@ class LBitOpI : public LInstructionHelper<1, 2, 0> {
   explicit LBitOpI(JSOp op) : LInstructionHelper(classOpcode), op_(op) {}
 
   const char* extraName() const {
-    if (bitop() == JSOp::Ursh && mir_->toUrsh()->bailoutsDisabled()) {
+    if (bitop() == JSOP_URSH && mir_->toUrsh()->bailoutsDisabled()) {
       return "ursh:BailoutsDisabled";
     }
     return CodeName(op_);

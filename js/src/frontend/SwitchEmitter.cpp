@@ -18,7 +18,7 @@
 #include "js/TypeDecls.h"              // jsbytecode
 #include "util/BitArray.h"
 #include "vm/BytecodeUtil.h"  // SET_JUMP_OFFSET, JUMP_OFFSET_LEN, SET_RESUMEINDEX
-#include "vm/Opcodes.h"       // JSOp, JSOpLength_TableSwitch
+#include "vm/Opcodes.h"       // JSOp, JSOP_TABLESWITCH_LENGTH
 #include "vm/Runtime.h"       // ReportOutOfMemory
 
 using namespace js;
@@ -184,8 +184,8 @@ bool SwitchEmitter::emitTable(const TableGenerator& tableGen) {
   }
 
   MOZ_ASSERT(top_ == bce_->bytecodeSection().offset());
-  if (!bce_->emitN(JSOp::TableSwitch,
-                   JSOpLength_TableSwitch - sizeof(jsbytecode))) {
+  if (!bce_->emitN(JSOP_TABLESWITCH,
+                   JSOP_TABLESWITCH_LENGTH - sizeof(jsbytecode))) {
     return false;
   }
 
@@ -205,14 +205,14 @@ bool SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault) {
   MOZ_ASSERT(kind_ == Kind::Cond);
 
   if (isDefault) {
-    if (!bce_->emitJump(JSOp::Default, &condSwitchDefaultOffset_)) {
+    if (!bce_->emitJump(JSOP_DEFAULT, &condSwitchDefaultOffset_)) {
       return false;
     }
     return true;
   }
 
   JumpList caseJump;
-  if (!bce_->emitJump(JSOp::Case, &caseJump)) {
+  if (!bce_->emitJump(JSOP_CASE, &caseJump)) {
     return false;
   }
   caseOffsets_[caseIndex] = caseJump.offset;
@@ -225,7 +225,7 @@ bool SwitchEmitter::prepareForCaseValue() {
   MOZ_ASSERT(kind_ == Kind::Cond);
   MOZ_ASSERT(state_ == State::Cond || state_ == State::Case);
 
-  if (!bce_->emit1(JSOp::Dup)) {
+  if (!bce_->emit1(JSOP_DUP)) {
     return false;
   }
 
@@ -237,7 +237,7 @@ bool SwitchEmitter::emitCaseJump() {
   MOZ_ASSERT(kind_ == Kind::Cond);
   MOZ_ASSERT(state_ == State::CaseValue);
 
-  if (!bce_->emit1(JSOp::StrictEq)) {
+  if (!bce_->emit1(JSOP_STRICTEQ)) {
     return false;
   }
 

@@ -2690,7 +2690,7 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
     for (BytecodeLocation loc : AllBytecodesIterable(script)) {
       JSOp op = loc.getOp();
 
-      if (op == JSOp::GetIntrinsic) {
+      if (op == JSOP_GETINTRINSIC) {
         PropertyName* name = loc.getPropertyName(script);
         id = NameToId(name);
 

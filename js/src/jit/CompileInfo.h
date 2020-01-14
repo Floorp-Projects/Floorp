@@ -187,7 +187,7 @@ class CompileInfo {
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
         trackRecordReplayProgress_(script->trackRecordReplayProgress()),
         inlineScriptTree_(inlineScriptTree) {
-    MOZ_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOp::LoopHead);
+    MOZ_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPHEAD);
 
     // The function here can flow in from anywhere so look up the canonical
     // function to ensure that we do not try to embed a nursery pointer in
@@ -265,7 +265,7 @@ class CompileInfo {
   InlineScriptTree* inlineScriptTree() const { return inlineScriptTree_; }
 
   bool hasOsrAt(jsbytecode* pc) const {
-    MOZ_ASSERT(JSOp(*pc) == JSOp::LoopHead);
+    MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPHEAD);
     return pc == osrPc();
   }
 

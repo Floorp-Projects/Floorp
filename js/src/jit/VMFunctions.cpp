@@ -594,7 +594,7 @@ bool SetProperty(JSContext* cx, HandleObject obj, HandlePropertyName name,
 
   JSOp op = JSOp(*pc);
 
-  if (op == JSOp::SetAliasedVar || op == JSOp::InitAliasedLexical) {
+  if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL) {
     // Aliased var assigns ignore readonly attributes on the property, as
     // required for initializing 'const' closure variables.
     Shape* shape = obj->as<NativeObject>().lookup(cx, name);
@@ -606,8 +606,8 @@ bool SetProperty(JSContext* cx, HandleObject obj, HandlePropertyName name,
   RootedValue receiver(cx, ObjectValue(*obj));
   ObjectOpResult result;
   if (MOZ_LIKELY(!obj->getOpsSetProperty())) {
-    if (op == JSOp::SetName || op == JSOp::StrictSetName ||
-        op == JSOp::SetGName || op == JSOp::StrictSetGName) {
+    if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME || op == JSOP_SETGNAME ||
+        op == JSOP_STRICTSETGNAME) {
       if (!NativeSetProperty<Unqualified>(cx, obj.as<NativeObject>(), id, value,
                                           receiver, result)) {
         return false;
@@ -899,7 +899,7 @@ JSObject* CreateGenerator(JSContext* cx, BaselineFrame* frame) {
 
 bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
                    uint32_t frameSize, jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::Yield || JSOp(*pc) == JSOp::Await);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_YIELD || JSOp(*pc) == JSOP_AWAIT);
 
   uint32_t numValueSlots = frame->numValueSlots(frameSize);
 
@@ -929,7 +929,7 @@ bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
 }
 
 bool FinalSuspend(JSContext* cx, HandleObject obj, jsbytecode* pc) {
-  MOZ_ASSERT(JSOp(*pc) == JSOp::FinalYieldRval);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_FINALYIELDRVAL);
   AbstractGeneratorObject::finalSuspend(obj);
   return true;
 }
@@ -1067,7 +1067,7 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr) {
                DebugAPI::hasBreakpointsAt(script, pc));
   }
 
-  if (JSOp(*pc) == JSOp::AfterYield) {
+  if (JSOp(*pc) == JSOP_AFTERYIELD) {
     // JSOp::AfterYield will set the frame's debuggee flag and call the
     // onEnterFrame handler, but if we set a breakpoint there we have to do
     // it now.

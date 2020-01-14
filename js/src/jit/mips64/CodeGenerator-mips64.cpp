@@ -114,7 +114,7 @@ void CodeGenerator::visitCompareB(LCompareB* lir) {
   const LAllocation* rhs = lir->rhs();
   const Register output = ToRegister(lir->output());
 
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
+  MOZ_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
   Assembler::Condition cond = JSOpToCondition(mir->compareType(), mir->jsop());
 
   // Load boxed boolean in ScratchRegister.
@@ -134,7 +134,7 @@ void CodeGenerator::visitCompareBAndBranch(LCompareBAndBranch* lir) {
   const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
   const LAllocation* rhs = lir->rhs();
 
-  MOZ_ASSERT(mir->jsop() == JSOp::StrictEq || mir->jsop() == JSOp::StrictNe);
+  MOZ_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
 
   // Load boxed boolean in ScratchRegister.
   if (rhs->isConstant()) {
@@ -169,8 +169,8 @@ void CodeGenerator::visitCompareBitwiseAndBranch(
   const ValueOperand lhs = ToValue(lir, LCompareBitwiseAndBranch::LhsInput);
   const ValueOperand rhs = ToValue(lir, LCompareBitwiseAndBranch::RhsInput);
 
-  MOZ_ASSERT(mir->jsop() == JSOp::Eq || mir->jsop() == JSOp::StrictEq ||
-             mir->jsop() == JSOp::Ne || mir->jsop() == JSOp::StrictNe);
+  MOZ_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
+             mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
 
   emitBranch(lhs.valueReg(), rhs.valueReg(), cond, lir->ifTrue(),
              lir->ifFalse());

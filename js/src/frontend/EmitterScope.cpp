@@ -402,15 +402,15 @@ bool EmitterScope::deadZoneFrameSlotRange(BytecodeEmitter* bce,
   // throw reference errors. See 13.1.11, 9.2.13, 13.6.3.4, 13.6.4.6,
   // 13.6.4.8, 13.14.5, 15.1.8, and 15.2.0.15.
   if (slotStart != slotEnd) {
-    if (!bce->emit1(JSOp::Uninitialized)) {
+    if (!bce->emit1(JSOP_UNINITIALIZED)) {
       return false;
     }
     for (uint32_t slot = slotStart; slot < slotEnd; slot++) {
-      if (!bce->emitLocalOp(JSOp::InitLexical, slot)) {
+      if (!bce->emitLocalOp(JSOP_INITLEXICAL, slot)) {
         return false;
       }
     }
-    if (!bce->emit1(JSOp::Pop)) {
+    if (!bce->emit1(JSOP_POP)) {
       return false;
     }
   }
@@ -542,7 +542,7 @@ bool EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
 
   if (ScopeKindIsInBody(kind) && hasEnvironment()) {
     // After interning the VM scope we can get the scope index.
-    if (!bce->emitInternedScopeOp(index(), JSOp::PushLexicalEnv)) {
+    if (!bce->emitInternedScopeOp(index(), JSOP_PUSHLEXICALENV)) {
       return false;
     }
   }
@@ -798,7 +798,7 @@ bool EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce,
   }
 
   if (hasEnvironment()) {
-    if (!bce->emitInternedScopeOp(index(), JSOp::PushVarEnv)) {
+    if (!bce->emitInternedScopeOp(index(), JSOP_PUSHVARENV)) {
       return false;
     }
   }
@@ -848,7 +848,7 @@ bool EmitterScope::enterParameterExpressionVar(BytecodeEmitter* bce) {
   }
 
   MOZ_ASSERT(hasEnvironment());
-  if (!bce->emitInternedScopeOp(index(), JSOp::PushVarEnv)) {
+  if (!bce->emitInternedScopeOp(index(), JSOP_PUSHVARENV)) {
     return false;
   }
 
@@ -873,11 +873,11 @@ class DynamicBindingIter : public BindingIter {
   JSOp bindingOp() const {
     switch (kind()) {
       case BindingKind::Var:
-        return JSOp::DefVar;
+        return JSOP_DEFVAR;
       case BindingKind::Let:
-        return JSOp::DefLet;
+        return JSOP_DEFLET;
       case BindingKind::Const:
-        return JSOp::DefConst;
+        return JSOP_DEFCONST;
       default:
         MOZ_CRASH("Bad BindingKind");
     }
@@ -996,7 +996,7 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
     }
   }
   if (hasEnvironment()) {
-    if (!bce->emitInternedScopeOp(index(), JSOp::PushVarEnv)) {
+    if (!bce->emitInternedScopeOp(index(), JSOP_PUSHVARENV)) {
       return false;
     }
   } else {
@@ -1009,13 +1009,13 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
     // the frame. For now, handle everything dynamically.
     if (!hasEnvironment() && evalsc->bindings) {
       for (DynamicBindingIter bi(evalsc); bi; bi++) {
-        MOZ_ASSERT(bi.bindingOp() == JSOp::DefVar);
+        MOZ_ASSERT(bi.bindingOp() == JSOP_DEFVAR);
 
         if (bi.isTopLevelFunction()) {
           continue;
         }
 
-        if (!bce->emitAtomOp(JSOp::DefVar, bi.name())) {
+        if (!bce->emitAtomOp(JSOP_DEFVAR, bi.name())) {
           return false;
         }
       }
@@ -1139,7 +1139,7 @@ bool EmitterScope::enterWith(BytecodeEmitter* bce) {
     }
   }
 
-  if (!bce->emitInternedScopeOp(index(), JSOp::EnterWith)) {
+  if (!bce->emitInternedScopeOp(index(), JSOP_ENTERWITH)) {
     return false;
   }
 
@@ -1165,21 +1165,21 @@ bool EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal) {
     case ScopeKind::SimpleCatch:
     case ScopeKind::Catch:
     case ScopeKind::FunctionLexical:
-      if (!bce->emit1(hasEnvironment() ? JSOp::PopLexicalEnv
-                                       : JSOp::DebugLeaveLexicalEnv)) {
+      if (!bce->emit1(hasEnvironment() ? JSOP_POPLEXICALENV
+                                       : JSOP_DEBUGLEAVELEXICALENV)) {
         return false;
       }
       break;
 
     case ScopeKind::With:
-      if (!bce->emit1(JSOp::LeaveWith)) {
+      if (!bce->emit1(JSOP_LEAVEWITH)) {
         return false;
       }
       break;
 
     case ScopeKind::ParameterExpressionVar:
       MOZ_ASSERT(hasEnvironment());
-      if (!bce->emit1(JSOp::PopVarEnv)) {
+      if (!bce->emit1(JSOP_POPVARENV)) {
         return false;
       }
       break;

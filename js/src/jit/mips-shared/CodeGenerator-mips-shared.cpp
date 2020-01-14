@@ -817,21 +817,21 @@ void CodeGenerator::visitBitOpI(LBitOpI* ins) {
   const LDefinition* dest = ins->getDef(0);
   // all of these bitops should be either imm32's, or integer registers.
   switch (ins->bitop()) {
-    case JSOp::BitOr:
+    case JSOP_BITOR:
       if (rhs->isConstant()) {
         masm.ma_or(ToRegister(dest), ToRegister(lhs), Imm32(ToInt32(rhs)));
       } else {
         masm.as_or(ToRegister(dest), ToRegister(lhs), ToRegister(rhs));
       }
       break;
-    case JSOp::BitXor:
+    case JSOP_BITXOR:
       if (rhs->isConstant()) {
         masm.ma_xor(ToRegister(dest), ToRegister(lhs), Imm32(ToInt32(rhs)));
       } else {
         masm.as_xor(ToRegister(dest), ToRegister(lhs), ToRegister(rhs));
       }
       break;
-    case JSOp::BitAnd:
+    case JSOP_BITAND:
       if (rhs->isConstant()) {
         masm.ma_and(ToRegister(dest), ToRegister(lhs), Imm32(ToInt32(rhs)));
       } else {
@@ -850,21 +850,21 @@ void CodeGenerator::visitBitOpI64(LBitOpI64* lir) {
   MOZ_ASSERT(ToOutRegister64(lir) == ToRegister64(lhs));
 
   switch (lir->bitop()) {
-    case JSOp::BitOr:
+    case JSOP_BITOR:
       if (IsConstant(rhs)) {
         masm.or64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
       } else {
         masm.or64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
       }
       break;
-    case JSOp::BitXor:
+    case JSOP_BITXOR:
       if (IsConstant(rhs)) {
         masm.xor64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
       } else {
         masm.xor64(ToOperandOrRegister64(rhs), ToRegister64(lhs));
       }
       break;
-    case JSOp::BitAnd:
+    case JSOP_BITAND:
       if (IsConstant(rhs)) {
         masm.and64(Imm64(ToInt64(rhs)), ToRegister64(lhs));
       } else {
@@ -884,21 +884,21 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
   if (rhs->isConstant()) {
     int32_t shift = ToInt32(rhs) & 0x1F;
     switch (ins->bitop()) {
-      case JSOp::Lsh:
+      case JSOP_LSH:
         if (shift) {
           masm.ma_sll(dest, lhs, Imm32(shift));
         } else {
           masm.move32(lhs, dest);
         }
         break;
-      case JSOp::Rsh:
+      case JSOP_RSH:
         if (shift) {
           masm.ma_sra(dest, lhs, Imm32(shift));
         } else {
           masm.move32(lhs, dest);
         }
         break;
-      case JSOp::Ursh:
+      case JSOP_URSH:
         if (shift) {
           masm.ma_srl(dest, lhs, Imm32(shift));
         } else {
@@ -917,13 +917,13 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
     masm.ma_and(dest, ToRegister(rhs), Imm32(0x1F));
 
     switch (ins->bitop()) {
-      case JSOp::Lsh:
+      case JSOP_LSH:
         masm.ma_sll(dest, lhs, dest);
         break;
-      case JSOp::Rsh:
+      case JSOP_RSH:
         masm.ma_sra(dest, lhs, dest);
         break;
-      case JSOp::Ursh:
+      case JSOP_URSH:
         masm.ma_srl(dest, lhs, dest);
         if (ins->mir()->toUrsh()->fallible()) {
           // x >>> 0 can overflow.
@@ -945,17 +945,17 @@ void CodeGenerator::visitShiftI64(LShiftI64* lir) {
   if (rhs->isConstant()) {
     int32_t shift = int32_t(rhs->toConstant()->toInt64() & 0x3F);
     switch (lir->bitop()) {
-      case JSOp::Lsh:
+      case JSOP_LSH:
         if (shift) {
           masm.lshift64(Imm32(shift), ToRegister64(lhs));
         }
         break;
-      case JSOp::Rsh:
+      case JSOP_RSH:
         if (shift) {
           masm.rshift64Arithmetic(Imm32(shift), ToRegister64(lhs));
         }
         break;
-      case JSOp::Ursh:
+      case JSOP_URSH:
         if (shift) {
           masm.rshift64(Imm32(shift), ToRegister64(lhs));
         }
@@ -967,13 +967,13 @@ void CodeGenerator::visitShiftI64(LShiftI64* lir) {
   }
 
   switch (lir->bitop()) {
-    case JSOp::Lsh:
+    case JSOP_LSH:
       masm.lshift64(ToRegister(rhs), ToRegister64(lhs));
       break;
-    case JSOp::Rsh:
+    case JSOP_RSH:
       masm.rshift64Arithmetic(ToRegister(rhs), ToRegister64(lhs));
       break;
-    case JSOp::Ursh:
+    case JSOP_URSH:
       masm.rshift64(ToRegister(rhs), ToRegister64(lhs));
       break;
     default:
@@ -1103,16 +1103,16 @@ void CodeGenerator::visitMathD(LMathD* math) {
   FloatRegister output = ToFloatRegister(math->getDef(0));
 
   switch (math->jsop()) {
-    case JSOp::Add:
+    case JSOP_ADD:
       masm.as_addd(output, src1, src2);
       break;
-    case JSOp::Sub:
+    case JSOP_SUB:
       masm.as_subd(output, src1, src2);
       break;
-    case JSOp::Mul:
+    case JSOP_MUL:
       masm.as_muld(output, src1, src2);
       break;
-    case JSOp::Div:
+    case JSOP_DIV:
       masm.as_divd(output, src1, src2);
       break;
     default:
@@ -1126,16 +1126,16 @@ void CodeGenerator::visitMathF(LMathF* math) {
   FloatRegister output = ToFloatRegister(math->getDef(0));
 
   switch (math->jsop()) {
-    case JSOp::Add:
+    case JSOP_ADD:
       masm.as_adds(output, src1, src2);
       break;
-    case JSOp::Sub:
+    case JSOP_SUB:
       masm.as_subs(output, src1, src2);
       break;
-    case JSOp::Mul:
+    case JSOP_MUL:
       masm.as_muls(output, src1, src2);
       break;
-    case JSOp::Div:
+    case JSOP_DIV:
       masm.as_divs(output, src1, src2);
       break;
     default:

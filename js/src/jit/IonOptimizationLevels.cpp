@@ -80,11 +80,11 @@ void OptimizationInfo::initWasmOptimizationInfo() {
 uint32_t OptimizationInfo::compilerWarmUpThreshold(JSScript* script,
                                                    jsbytecode* pc) const {
   MOZ_ASSERT(pc == nullptr || pc == script->code() ||
-             JSOp(*pc) == JSOp::LoopHead);
+             JSOp(*pc) == JSOP_LOOPHEAD);
 
   // The script must not start with a LoopHead op or the code below would be
   // wrong. See bug 1602681.
-  MOZ_ASSERT_IF(pc && JSOp(*pc) == JSOp::LoopHead, pc > script->code());
+  MOZ_ASSERT_IF(pc && JSOp(*pc) == JSOP_LOOPHEAD, pc > script->code());
 
   if (pc == script->code()) {
     pc = nullptr;
@@ -122,10 +122,10 @@ uint32_t OptimizationInfo::compilerWarmUpThreshold(JSScript* script,
 
 uint32_t OptimizationInfo::recompileWarmUpThreshold(JSScript* script,
                                                     jsbytecode* pc) const {
-  MOZ_ASSERT(pc == script->code() || JSOp(*pc) == JSOp::LoopHead);
+  MOZ_ASSERT(pc == script->code() || JSOp(*pc) == JSOP_LOOPHEAD);
 
   uint32_t threshold = compilerWarmUpThreshold(script, pc);
-  if (JSOp(*pc) != JSOp::LoopHead || JitOptions.eagerIonCompilation()) {
+  if (JSOp(*pc) != JSOP_LOOPHEAD || JitOptions.eagerIonCompilation()) {
     return threshold;
   }
 

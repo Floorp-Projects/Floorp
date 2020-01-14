@@ -30,7 +30,7 @@ bool DoWhileEmitter::emitBody(const Maybe<uint32_t>& doPos,
   }
 
   // We need a nop here to make it possible to set a breakpoint on `do`.
-  if (!bce_->emit1(JSOp::Nop)) {
+  if (!bce_->emit1(JSOP_NOP)) {
     return false;
   }
 
@@ -62,7 +62,7 @@ bool DoWhileEmitter::emitCond() {
 bool DoWhileEmitter::emitEnd() {
   MOZ_ASSERT(state_ == State::Cond);
 
-  if (!loopInfo_->emitLoopEnd(bce_, JSOp::IfNe, JSTRY_LOOP)) {
+  if (!loopInfo_->emitLoopEnd(bce_, JSOP_IFNE, JSTRY_LOOP)) {
     return false;
   }
 

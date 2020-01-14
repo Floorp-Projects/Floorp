@@ -48,7 +48,7 @@ bool TryEmitter::emitTry() {
   // uses this depth to properly unwind the stack and the scope chain.
   depth_ = bce_->bytecodeSection().stackDepth();
 
-  if (!bce_->emitN(JSOp::Try, 4, &tryOpOffset_)) {
+  if (!bce_->emitN(JSOP_TRY, 4, &tryOpOffset_)) {
     return false;
   }
 
@@ -72,11 +72,11 @@ bool TryEmitter::emitTryEnd() {
   // Patch the JSOp::Try offset.
   jsbytecode* trypc = bce_->bytecodeSection().code(tryOpOffset_);
   BytecodeOffsetDiff offset = bce_->bytecodeSection().offset() - tryOpOffset_;
-  MOZ_ASSERT(JSOp(*trypc) == JSOp::Try);
+  MOZ_ASSERT(JSOp(*trypc) == JSOP_TRY);
   SET_CODE_OFFSET(trypc, offset.value());
 
   // Emit jump over catch and/or finally.
-  if (!bce_->emitJump(JSOp::Goto, &catchAndFinallyJump_)) {
+  if (!bce_->emitJump(JSOP_GOTO, &catchAndFinallyJump_)) {
     return false;
   }
 
@@ -100,15 +100,15 @@ bool TryEmitter::emitCatch() {
     // try block:
     //
     //   eval("try { 1; throw 2 } catch(e) {}"); // undefined, not 1
-    if (!bce_->emit1(JSOp::Undefined)) {
+    if (!bce_->emit1(JSOP_UNDEFINED)) {
       return false;
     }
-    if (!bce_->emit1(JSOp::SetRval)) {
+    if (!bce_->emit1(JSOP_SETRVAL)) {
       return false;
     }
   }
 
-  if (!bce_->emit1(JSOp::Exception)) {
+  if (!bce_->emit1(JSOP_EXCEPTION)) {
     return false;
   }
 
@@ -137,7 +137,7 @@ bool TryEmitter::emitCatchEnd() {
     MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
 
     // Jump over the finally block.
-    if (!bce_->emitJump(JSOp::Goto, &catchAndFinallyJump_)) {
+    if (!bce_->emitJump(JSOP_GOTO, &catchAndFinallyJump_)) {
       return false;
     }
   }
@@ -192,12 +192,12 @@ bool TryEmitter::emitFinally(
       return false;
     }
   }
-  if (!bce_->emit1(JSOp::Finally)) {
+  if (!bce_->emit1(JSOP_FINALLY)) {
     return false;
   }
 
   if (controlKind_ == ControlKind::Syntactic) {
-    if (!bce_->emit1(JSOp::GetRval)) {
+    if (!bce_->emit1(JSOP_GETRVAL)) {
       return false;
     }
 
@@ -205,10 +205,10 @@ bool TryEmitter::emitFinally(
     // correct value even if there's no other statement before them:
     //
     //   eval("x: try { 1 } finally { break x; }"); // undefined, not 1
-    if (!bce_->emit1(JSOp::Undefined)) {
+    if (!bce_->emit1(JSOP_UNDEFINED)) {
       return false;
     }
-    if (!bce_->emit1(JSOp::SetRval)) {
+    if (!bce_->emit1(JSOP_SETRVAL)) {
       return false;
     }
   }
@@ -227,12 +227,12 @@ bool TryEmitter::emitFinallyEnd() {
   MOZ_ASSERT(state_ == State::Finally);
 
   if (controlKind_ == ControlKind::Syntactic) {
-    if (!bce_->emit1(JSOp::SetRval)) {
+    if (!bce_->emit1(JSOP_SETRVAL)) {
       return false;
     }
   }
 
-  if (!bce_->emit1(JSOp::Retsub)) {
+  if (!bce_->emit1(JSOP_RETSUB)) {
     return false;
   }
 
