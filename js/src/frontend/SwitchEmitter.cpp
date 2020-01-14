@@ -184,7 +184,7 @@ bool SwitchEmitter::emitTable(const TableGenerator& tableGen) {
   }
 
   MOZ_ASSERT(top_ == bce_->bytecodeSection().offset());
-  if (!bce_->emitN(JSOP_TABLESWITCH,
+  if (!bce_->emitN(JSOp::TableSwitch,
                    JSOpLength_TableSwitch - sizeof(jsbytecode))) {
     return false;
   }
@@ -205,14 +205,14 @@ bool SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault) {
   MOZ_ASSERT(kind_ == Kind::Cond);
 
   if (isDefault) {
-    if (!bce_->emitJump(JSOP_DEFAULT, &condSwitchDefaultOffset_)) {
+    if (!bce_->emitJump(JSOp::Default, &condSwitchDefaultOffset_)) {
       return false;
     }
     return true;
   }
 
   JumpList caseJump;
-  if (!bce_->emitJump(JSOP_CASE, &caseJump)) {
+  if (!bce_->emitJump(JSOp::Case, &caseJump)) {
     return false;
   }
   caseOffsets_[caseIndex] = caseJump.offset;
@@ -225,7 +225,7 @@ bool SwitchEmitter::prepareForCaseValue() {
   MOZ_ASSERT(kind_ == Kind::Cond);
   MOZ_ASSERT(state_ == State::Cond || state_ == State::Case);
 
-  if (!bce_->emit1(JSOP_DUP)) {
+  if (!bce_->emit1(JSOp::Dup)) {
     return false;
   }
 
@@ -237,7 +237,7 @@ bool SwitchEmitter::emitCaseJump() {
   MOZ_ASSERT(kind_ == Kind::Cond);
   MOZ_ASSERT(state_ == State::CaseValue);
 
-  if (!bce_->emit1(JSOP_STRICTEQ)) {
+  if (!bce_->emit1(JSOp::StrictEq)) {
     return false;
   }
 

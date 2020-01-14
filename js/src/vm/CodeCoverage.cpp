@@ -157,8 +157,8 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
   for (jsbytecode* pc = script->code(); pc != end; pc = GetNextPc(pc)) {
     MOZ_ASSERT(script->code() <= pc && pc < end);
     JSOp op = JSOp(*pc);
-    bool jump = IsJumpOpcode(op) || op == JSOP_TABLESWITCH;
-    bool fallsthrough = BytecodeFallsThrough(op) && op != JSOP_GOSUB;
+    bool jump = IsJumpOpcode(op) || op == JSOp::TableSwitch;
+    bool fallsthrough = BytecodeFallsThrough(op) && op != JSOp::Gosub;
 
     // If the current script & pc has a hit-count report, then update the
     // current number of hits.
@@ -256,7 +256,7 @@ void LCovSource::writeScript(JSScript* script, const char* scriptName) {
 
     // If the current pc corresponds to a pre-computed switch case, then
     // reports branch hits for each case statement.
-    if (jump && op == JSOP_TABLESWITCH) {
+    if (jump && op == JSOp::TableSwitch) {
       // Get the default pc.
       jsbytecode* defaultpc = pc + GET_JUMP_OFFSET(pc);
       MOZ_ASSERT(script->code() <= defaultpc && defaultpc < end);

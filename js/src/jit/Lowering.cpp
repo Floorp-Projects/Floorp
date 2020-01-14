@@ -1202,13 +1202,13 @@ void LIRGenerator::visitBitAnd(MBitAnd* ins) {
   if (CanEmitBitAndAtUses(ins)) {
     emitAtUses(ins);
   } else {
-    lowerBitOp(JSOP_BITAND, ins);
+    lowerBitOp(JSOp::BitAnd, ins);
   }
 }
 
-void LIRGenerator::visitBitOr(MBitOr* ins) { lowerBitOp(JSOP_BITOR, ins); }
+void LIRGenerator::visitBitOr(MBitOr* ins) { lowerBitOp(JSOp::BitOr, ins); }
 
-void LIRGenerator::visitBitXor(MBitXor* ins) { lowerBitOp(JSOP_BITXOR, ins); }
+void LIRGenerator::visitBitXor(MBitXor* ins) { lowerBitOp(JSOp::BitXor, ins); }
 
 void LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins) {
   MDefinition* lhs = ins->getOperand(0);
@@ -1218,13 +1218,13 @@ void LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins) {
     MOZ_ASSERT(rhs->type() == MIRType::Int32);
 
     if (ins->type() == MIRType::Double) {
-      MOZ_ASSERT(op == JSOP_URSH);
+      MOZ_ASSERT(op == JSOp::Ursh);
       lowerUrshD(ins->toUrsh());
       return;
     }
 
     LShiftI* lir = new (alloc()) LShiftI(op);
-    if (op == JSOP_URSH) {
+    if (op == JSOp::Ursh) {
       if (ins->toUrsh()->fallible()) {
         assignSnapshot(lir, Bailout_OverflowInvalidate);
       }
@@ -1243,11 +1243,11 @@ void LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins) {
   lowerBinaryV(op, ins);
 }
 
-void LIRGenerator::visitLsh(MLsh* ins) { lowerShiftOp(JSOP_LSH, ins); }
+void LIRGenerator::visitLsh(MLsh* ins) { lowerShiftOp(JSOp::Lsh, ins); }
 
-void LIRGenerator::visitRsh(MRsh* ins) { lowerShiftOp(JSOP_RSH, ins); }
+void LIRGenerator::visitRsh(MRsh* ins) { lowerShiftOp(JSOp::Rsh, ins); }
 
-void LIRGenerator::visitUrsh(MUrsh* ins) { lowerShiftOp(JSOP_URSH, ins); }
+void LIRGenerator::visitUrsh(MUrsh* ins) { lowerShiftOp(JSOp::Ursh, ins); }
 
 void LIRGenerator::visitSignExtendInt32(MSignExtendInt32* ins) {
   LInstructionHelper<1, 1, 0>* lir;
@@ -1641,18 +1641,18 @@ void LIRGenerator::visitAdd(MAdd* ins) {
   if (ins->specialization() == MIRType::Double) {
     MOZ_ASSERT(lhs->type() == MIRType::Double);
     ReorderCommutative(&lhs, &rhs, ins);
-    lowerForFPU(new (alloc()) LMathD(JSOP_ADD), ins, lhs, rhs);
+    lowerForFPU(new (alloc()) LMathD(JSOp::Add), ins, lhs, rhs);
     return;
   }
 
   if (ins->specialization() == MIRType::Float32) {
     MOZ_ASSERT(lhs->type() == MIRType::Float32);
     ReorderCommutative(&lhs, &rhs, ins);
-    lowerForFPU(new (alloc()) LMathF(JSOP_ADD), ins, lhs, rhs);
+    lowerForFPU(new (alloc()) LMathF(JSOp::Add), ins, lhs, rhs);
     return;
   }
 
-  lowerBinaryV(JSOP_ADD, ins);
+  lowerBinaryV(JSOp::Add, ins);
 }
 
 void LIRGenerator::visitSub(MSub* ins) {
@@ -1683,17 +1683,17 @@ void LIRGenerator::visitSub(MSub* ins) {
 
   if (ins->specialization() == MIRType::Double) {
     MOZ_ASSERT(lhs->type() == MIRType::Double);
-    lowerForFPU(new (alloc()) LMathD(JSOP_SUB), ins, lhs, rhs);
+    lowerForFPU(new (alloc()) LMathD(JSOp::Sub), ins, lhs, rhs);
     return;
   }
 
   if (ins->specialization() == MIRType::Float32) {
     MOZ_ASSERT(lhs->type() == MIRType::Float32);
-    lowerForFPU(new (alloc()) LMathF(JSOP_SUB), ins, lhs, rhs);
+    lowerForFPU(new (alloc()) LMathF(JSOp::Sub), ins, lhs, rhs);
     return;
   }
 
-  lowerBinaryV(JSOP_SUB, ins);
+  lowerBinaryV(JSOp::Sub, ins);
 }
 
 void LIRGenerator::visitMul(MMul* ins) {
@@ -1733,7 +1733,7 @@ void LIRGenerator::visitMul(MMul* ins) {
         rhs->toConstant()->toDouble() == -1.0) {
       defineReuseInput(new (alloc()) LNegD(useRegisterAtStart(lhs)), ins, 0);
     } else {
-      lowerForFPU(new (alloc()) LMathD(JSOP_MUL), ins, lhs, rhs);
+      lowerForFPU(new (alloc()) LMathD(JSOp::Mul), ins, lhs, rhs);
     }
     return;
   }
@@ -1747,12 +1747,12 @@ void LIRGenerator::visitMul(MMul* ins) {
         rhs->toConstant()->toFloat32() == -1.0f) {
       defineReuseInput(new (alloc()) LNegF(useRegisterAtStart(lhs)), ins, 0);
     } else {
-      lowerForFPU(new (alloc()) LMathF(JSOP_MUL), ins, lhs, rhs);
+      lowerForFPU(new (alloc()) LMathF(JSOp::Mul), ins, lhs, rhs);
     }
     return;
   }
 
-  lowerBinaryV(JSOP_MUL, ins);
+  lowerBinaryV(JSOp::Mul, ins);
 }
 
 void LIRGenerator::visitDiv(MDiv* ins) {
@@ -1774,17 +1774,17 @@ void LIRGenerator::visitDiv(MDiv* ins) {
 
   if (ins->specialization() == MIRType::Double) {
     MOZ_ASSERT(lhs->type() == MIRType::Double);
-    lowerForFPU(new (alloc()) LMathD(JSOP_DIV), ins, lhs, rhs);
+    lowerForFPU(new (alloc()) LMathD(JSOp::Div), ins, lhs, rhs);
     return;
   }
 
   if (ins->specialization() == MIRType::Float32) {
     MOZ_ASSERT(lhs->type() == MIRType::Float32);
-    lowerForFPU(new (alloc()) LMathF(JSOP_DIV), ins, lhs, rhs);
+    lowerForFPU(new (alloc()) LMathF(JSOp::Div), ins, lhs, rhs);
     return;
   }
 
-  lowerBinaryV(JSOP_DIV, ins);
+  lowerBinaryV(JSOp::Div, ins);
 }
 
 void LIRGenerator::visitMod(MMod* ins) {
@@ -1821,7 +1821,7 @@ void LIRGenerator::visitMod(MMod* ins) {
     return;
   }
 
-  lowerBinaryV(JSOP_MOD, ins);
+  lowerBinaryV(JSOp::Mod, ins);
 }
 
 void LIRGenerator::lowerBinaryV(JSOp op, MBinaryInstruction* ins) {
@@ -2984,7 +2984,7 @@ void LIRGenerator::visitNot(MNot* ins) {
     case MIRType::Boolean: {
       MConstant* cons = MConstant::New(alloc(), Int32Value(1));
       ins->block()->insertBefore(ins, cons);
-      lowerForALU(new (alloc()) LBitOpI(JSOP_BITXOR), ins, op, cons);
+      lowerForALU(new (alloc()) LBitOpI(JSOp::BitXor), ins, op, cons);
       break;
     }
     case MIRType::Int32:
@@ -5106,8 +5106,8 @@ void LIRGenerator::visitWasmSelect(MWasmSelect* ins) {
     MCompare::CompareType compTy = comp->compareType();
     // We don't currently generate any other JSOPs for the comparison, and if
     // that changes, we want to know about it.  Hence this assertion.
-    MOZ_ASSERT(jsop == JSOP_EQ || jsop == JSOP_NE || jsop == JSOP_LT ||
-               jsop == JSOP_GT || jsop == JSOP_LE || jsop == JSOP_GE);
+    MOZ_ASSERT(jsop == JSOp::Eq || jsop == JSOp::Ne || jsop == JSOp::Lt ||
+               jsop == JSOp::Gt || jsop == JSOp::Le || jsop == JSOp::Ge);
     if (compTy == MCompare::Compare_Int32 ||
         compTy == MCompare::Compare_UInt32) {
       auto* lir = new (alloc()) LWasmCompareAndSelect(

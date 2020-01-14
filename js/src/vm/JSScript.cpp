@@ -4591,11 +4591,11 @@ void JSScript::assertValidJumpTargets() const {
 
       // All backward jumps must be to a JSOp::LoopHead op. This is an invariant
       // we want to maintain to simplify JIT compilation and bytecode analysis.
-      MOZ_ASSERT_IF(target < loc, target.is(JSOP_LOOPHEAD));
+      MOZ_ASSERT_IF(target < loc, target.is(JSOp::LoopHead));
       MOZ_ASSERT_IF(target < loc, IsBackedgePC(loc.toRawBytecode()));
 
       // All forward jumps must be to a JSOp::JumpTarget op.
-      MOZ_ASSERT_IF(target > loc, target.is(JSOP_JUMPTARGET));
+      MOZ_ASSERT_IF(target > loc, target.is(JSOp::JumpTarget));
 
       // Jumps must not cross scope boundaries.
       MOZ_ASSERT(loc.innermostScope(this) == target.innermostScope(this));
@@ -4609,12 +4609,12 @@ void JSScript::assertValidJumpTargets() const {
     }
 
     // Check table switch case labels.
-    if (loc.is(JSOP_TABLESWITCH)) {
+    if (loc.is(JSOp::TableSwitch)) {
       BytecodeLocation target = loc.getJumpTarget();
 
       // Default target.
       MOZ_ASSERT(mainLoc <= target && target < endLoc);
-      MOZ_ASSERT(target.is(JSOP_JUMPTARGET));
+      MOZ_ASSERT(target.is(JSOp::JumpTarget));
 
       int32_t low = loc.getTableSwitchLow();
       int32_t high = loc.getTableSwitchHigh();
@@ -4623,7 +4623,7 @@ void JSScript::assertValidJumpTargets() const {
         BytecodeLocation switchCase(this,
                                     tableSwitchCasePC(loc.toRawBytecode(), i));
         MOZ_ASSERT(mainLoc <= switchCase && switchCase < endLoc);
-        MOZ_ASSERT(switchCase.is(JSOP_JUMPTARGET));
+        MOZ_ASSERT(switchCase.is(JSOp::JumpTarget));
       }
     }
   }
@@ -4636,7 +4636,7 @@ void JSScript::assertValidJumpTargets() const {
 
     jsbytecode* tryStart = offsetToPC(tn.start);
     jsbytecode* tryPc = tryStart - JSOpLength_Try;
-    MOZ_ASSERT(JSOp(*tryPc) == JSOP_TRY);
+    MOZ_ASSERT(JSOp(*tryPc) == JSOp::Try);
 
     jsbytecode* tryTarget = tryStart + tn.length;
     MOZ_ASSERT(main() <= tryTarget && tryTarget < codeEnd());
@@ -4846,15 +4846,15 @@ void js::DescribeScriptedCallerForDirectEval(JSContext* cx, HandleScript script,
   static_assert(JSOpLength_Eval == JSOpLength_StrictEval,
                 "next op after a direct eval must be at consistent offset");
 
-  MOZ_ASSERT(JSOp(*pc) == JSOP_EVAL || JSOp(*pc) == JSOP_STRICTEVAL ||
-             JSOp(*pc) == JSOP_SPREADEVAL ||
-             JSOp(*pc) == JSOP_STRICTSPREADEVAL);
+  MOZ_ASSERT(JSOp(*pc) == JSOp::Eval || JSOp(*pc) == JSOp::StrictEval ||
+             JSOp(*pc) == JSOp::SpreadEval ||
+             JSOp(*pc) == JSOp::StrictSpreadEval);
 
   bool isSpread =
-      (JSOp(*pc) == JSOP_SPREADEVAL || JSOp(*pc) == JSOP_STRICTSPREADEVAL);
+      (JSOp(*pc) == JSOp::SpreadEval || JSOp(*pc) == JSOp::StrictSpreadEval);
   jsbytecode* nextpc =
       pc + (isSpread ? JSOpLength_SpreadEval : JSOpLength_Eval);
-  MOZ_ASSERT(JSOp(*nextpc) == JSOP_LINENO);
+  MOZ_ASSERT(JSOp(*nextpc) == JSOp::Lineno);
 
   *file = script->filename();
   *linenop = GET_UINT32(nextpc);
@@ -5446,11 +5446,11 @@ void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
      * is assigned to.
      */
     jsbytecode* pc = script->code();
-    while (JSOp(*pc) != JSOP_ARGUMENTS) {
+    while (JSOp(*pc) != JSOp::Arguments) {
       pc += GetBytecodeLength(pc);
     }
     pc += JSOpLength_Arguments;
-    MOZ_ASSERT(JSOp(*pc) == JSOP_SETALIASEDVAR);
+    MOZ_ASSERT(JSOp(*pc) == JSOp::SetAliasedVar);
 
     // Note that here and below, it is insufficient to only check for
     // JS_OPTIMIZED_ARGUMENTS, as Ion could have optimized out the
