@@ -6758,8 +6758,6 @@ class MClassConstructor : public MNullaryInstruction {
   TRIVIAL_NEW_WRAPPERS
 
   jsbytecode* pc() const { return pc_; }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 class MModuleMetadata : public MNullaryInstruction {
