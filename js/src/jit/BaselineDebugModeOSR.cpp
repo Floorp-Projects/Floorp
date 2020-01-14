@@ -207,7 +207,7 @@ static void SpewPatchBaselineFrame(const uint8_t* oldReturnAddress,
           "Patch return %p -> %p on BaselineJS frame (%s:%u:%u) from %s at %s",
           oldReturnAddress, newReturnAddress, script->filename(),
           script->lineno(), script->column(),
-          RetAddrEntryKindToString(frameKind), CodeName(JSOp(*pc)));
+          RetAddrEntryKindToString(frameKind), CodeName[(JSOp)*pc]);
 }
 
 static void PatchBaselineFramesForDebugMode(

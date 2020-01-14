@@ -702,7 +702,7 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
     unsigned int line = PCToLineNumber(script, pc, &column);
 
     spew->beginObject();
-    spew->property("op", CodeName(JSOp(*pc)));
+    spew->property("op", CodeName[*pc]);
     spew->property("pc", pcOffset);
     spew->property("line", line);
     spew->property("column", column);
