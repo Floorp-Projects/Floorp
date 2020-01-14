@@ -113,7 +113,6 @@
 #include "ParentChannelListener.h"
 #include "InterceptedHttpChannel.h"
 #include "../../cache2/CacheFileUtils.h"
-#include "../../cache2/CacheHashUtils.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsINetworkLinkService.h"
 #include "mozilla/dom/Promise.h"
@@ -1769,33 +1768,6 @@ void nsHttpChannel::SetCachedContentType() {
   mCacheEntry->SetContentType(contentType);
 }
 
-void nsHttpChannel::StoreSiteAccessToCacheEntry() {
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> topWindowURI;
-  rv = GetTopWindowURI(getter_AddRefs(topWindowURI));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsCOMPtr<nsIEffectiveTLDService> eTLDService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsAutoCString baseDomain;
-  rv = eTLDService->GetBaseDomain(topWindowURI, 0, baseDomain);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  RefPtr<CacheHash> hash = new CacheHash();
-  hash->Update(baseDomain.get(), baseDomain.Length());
-
-  Unused << mCacheEntry->AddBaseDomainAccess(hash->GetHash());
-}
-
 nsresult nsHttpChannel::CallOnStartRequest() {
   LOG(("nsHttpChannel::CallOnStartRequest [this=%p]", this));
 
@@ -1927,10 +1899,6 @@ nsresult nsHttpChannel::CallOnStartRequest() {
 
   if (mCacheEntry && mCacheEntryIsWriteOnly) {
     SetCachedContentType();
-  }
-
-  if (mCacheEntry) {
-    StoreSiteAccessToCacheEntry();
   }
 
   LOG(("  calling mListener->OnStartRequest [this=%p, listener=%p]\n", this,

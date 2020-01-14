@@ -42,10 +42,6 @@ bool CacheObserver::sHashStatsReported = kDefaultHashStatsReported;
 Atomic<PRIntervalTime> CacheObserver::sShutdownDemandedTime(
     PR_INTERVAL_NO_TIMEOUT);
 
-static uint32_t const kDefaultTelemetryReportID = 0;
-Atomic<uint32_t, Relaxed> CacheObserver::sTelemetryReportID(
-    kDefaultTelemetryReportID);
-
 static uint32_t const kDefaultCacheAmountWritten = 0;
 Atomic<uint32_t, Relaxed> CacheObserver::sCacheAmountWritten(
     kDefaultCacheAmountWritten);
@@ -103,9 +99,6 @@ void CacheObserver::AttachToPreferences() {
       0.01F, std::min(1440.0F, mozilla::Preferences::GetFloat(
                                    "browser.cache.frecency_half_life_hours",
                                    kDefaultHalfLifeHours)));
-  mozilla::Preferences::AddAtomicUintVarCache(
-      &sTelemetryReportID, "browser.cache.disk.telemetry_report_ID",
-      kDefaultTelemetryReportID);
 
   mozilla::Preferences::AddAtomicUintVarCache(
       &sCacheAmountWritten, "browser.cache.disk.amount_written",
@@ -213,29 +206,6 @@ void CacheObserver::SetHashStatsReported() {
 void CacheObserver::StoreHashStatsReported() {
   mozilla::Preferences::SetInt("browser.cache.disk.hashstats_reported",
                                sHashStatsReported);
-}
-
-// static
-void CacheObserver::SetTelemetryReportID(uint32_t aTelemetryReportID) {
-  sTelemetryReportID = aTelemetryReportID;
-
-  if (!sSelf) {
-    return;
-  }
-
-  if (NS_IsMainThread()) {
-    sSelf->StoreTelemetryReportID();
-  } else {
-    nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod("net::CacheObserver::StoreTelemetryReportID",
-                          sSelf.get(), &CacheObserver::StoreTelemetryReportID);
-    NS_DispatchToMainThread(event);
-  }
-}
-
-void CacheObserver::StoreTelemetryReportID() {
-  mozilla::Preferences::SetInt("browser.cache.disk.telemetry_report_ID",
-                               sTelemetryReportID);
 }
 
 // static

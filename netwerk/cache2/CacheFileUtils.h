@@ -217,23 +217,6 @@ nsresult ParseAlternativeDataInfo(const char* aInfo, int64_t* _offset,
 void BuildAlternativeDataInfo(const char* aInfo, int64_t aOffset,
                               nsACString& _retval);
 
-// Parses base domain access info. If the info cannot be parsed (e.g. it's
-// corrupted or it's invalid because aTrID has changed) an error is thrown.
-// If aSearchSiteID is null, then the whole string is parsed and number of sites
-// in the info is returned in _count.
-// If aSearchSiteID is passed, then _count argument is ignored. It only searches
-// siteID in the info and returns the result in _found.
-nsresult ParseBaseDomainAccessInfo(const char* aInfo, uint32_t aTrID,
-                                   const uint32_t* aSearchSiteID, bool* _found,
-                                   uint16_t* _count);
-
-// If aOldInfo is null then new base domain access info containing aSiteID is
-// built. If an old base domain access info is passed in aOldInfo, then only
-// aSiteID is appended to it. Note that this function doesn't parse the old base
-// domain info, i.e. it assumes that it's valid and it doesn't contain aSiteID.
-void BuildOrAppendBaseDomainAccessInfo(const char* aOldInfo, uint32_t aTrID,
-                                       uint32_t aSiteID, nsACString& _retval);
-
 }  // namespace CacheFileUtils
 }  // namespace net
 }  // namespace mozilla

@@ -82,8 +82,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static void SetCacheFSReported();
   static bool HashStatsReported() { return sHashStatsReported; }
   static void SetHashStatsReported();
-  static uint32_t TelemetryReportID() { return sTelemetryReportID; }
-  static void SetTelemetryReportID(uint32_t);
   static uint32_t CacheAmountWritten()  // result in kilobytes
   {
     return sCacheAmountWritten;
@@ -108,7 +106,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   void StoreDiskCacheCapacity();
   void StoreCacheFSReported();
   void StoreHashStatsReported();
-  void StoreTelemetryReportID();
   void StoreCacheAmountWritten();
   void AttachToPreferences();
 
@@ -118,7 +115,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   static bool sCacheFSReported;
   static bool sHashStatsReported;
   static Atomic<PRIntervalTime> sShutdownDemandedTime;
-  static Atomic<uint32_t, Relaxed> sTelemetryReportID;
   static Atomic<uint32_t, Relaxed> sCacheAmountWritten;
 
   // Non static properties, accessible via sSelf
