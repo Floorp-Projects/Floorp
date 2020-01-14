@@ -22,13 +22,27 @@ const {
   objectInspector: { ObjectInspector: ObjectInspectorClass },
 } = require("devtools/client/shared/components/reps/reps");
 
+loader.lazyRequireGetter(
+  this,
+  "LongStringFront",
+  "devtools/shared/fronts/string",
+  true
+);
+
+loader.lazyRequireGetter(
+  this,
+  "ObjectFront",
+  "devtools/shared/fronts/object",
+  true
+);
+
 const ObjectInspector = createFactory(ObjectInspectorClass);
 
 class ObjectValueGripView extends PureComponent {
   static get propTypes() {
     return {
       rootTitle: PropTypes.string,
-      objectValueGrip: PropTypes.oneOfType([
+      expressionResult: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.number,
         PropTypes.object,
@@ -39,7 +53,12 @@ class ObjectValueGripView extends PureComponent {
   }
 
   render() {
-    const { objectValueGrip, serviceContainer, rootTitle } = this.props;
+    const { expressionResult, serviceContainer, rootTitle } = this.props;
+
+    const isFront =
+      expressionResult instanceof ObjectFront ||
+      expressionResult instanceof LongStringFront;
+    const grip = isFront ? expressionResult.getGrip() : expressionResult;
 
     const objectInspectorProps = {
       autoExpandDepth: 1,
@@ -50,17 +69,15 @@ class ObjectValueGripView extends PureComponent {
       roots: [
         {
           path:
-            (objectValueGrip && objectValueGrip.actor) ||
-            JSON.stringify(objectValueGrip),
-          contents: {
-            value: objectValueGrip,
-          },
+            (expressionResult && expressionResult.actorID) ||
+            JSON.stringify(expressionResult),
+          contents: { value: grip, front: isFront ? expressionResult : null },
         },
       ],
       // TODO: evaluate if there should also be a serviceContainer.openLink.
     };
 
-    if (objectValueGrip && objectValueGrip.actor) {
+    if (expressionResult && expressionResult.actorID) {
       Object.assign(objectInspectorProps, {
         onDOMNodeMouseOver: serviceContainer.highlightDomElement,
         onDOMNodeMouseOut: serviceContainer.unHighlightDomElement,

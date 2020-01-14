@@ -138,14 +138,14 @@ add_task(async function testSidebarSetObject() {
   });
 });
 
-add_task(async function testSidebarSetObjectValueGrip() {
+add_task(async function testSidebarSetExpressionResult() {
   const inspectedWindowFront = await toolbox.target.getFront(
     "webExtensionInspectedWindow"
   );
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
-  info("Testing sidebar.setObjectValueGrip with rootTitle");
+  info("Testing sidebar.setExpressionResult with rootTitle");
 
   const expression = `
     var obj = Object.create(null);
@@ -156,16 +156,15 @@ add_task(async function testSidebarSetObjectValueGrip() {
   `;
 
   const consoleFront = await toolbox.target.getFront("console");
-  const evalResult = await inspectedWindowFront.eval(
+  let evalResult = await inspectedWindowFront.eval(
     fakeExtCallerInfo,
     expression,
     {
-      evalResultAsGrip: true,
-      toolboxConsoleActorID: consoleFront.actor,
+      consoleFront,
     }
   );
 
-  sidebar.setObjectValueGrip(evalResult.valueGrip, "Expected Root Title");
+  sidebar.setExpressionResult(evalResult, "Expected Root Title");
 
   // Wait the ObjectInspector component to be rendered and test its content.
   await testSetExpressionSidebarPanel(sidebarPanelContent, {
@@ -174,9 +173,9 @@ add_task(async function testSidebarSetObjectValueGrip() {
     rootTitle: "Expected Root Title",
   });
 
-  info("Testing sidebar.setObjectValueGrip without rootTitle");
+  info("Testing sidebar.setExpressionResult without rootTitle");
 
-  sidebar.setObjectValueGrip(evalResult.valueGrip);
+  sidebar.setExpressionResult(evalResult);
 
   // Wait the ObjectInspector component to be rendered and test its content.
   await testSetExpressionSidebarPanel(sidebarPanelContent, {
@@ -226,6 +225,41 @@ add_task(async function testSidebarSetObjectValueGrip() {
     "'prop1' node is focused"
   );
 
+  info(
+    "Testing sidebar.setExpressionResult for an expression returning a longstring"
+  );
+  evalResult = await inspectedWindowFront.eval(
+    fakeExtCallerInfo,
+    `"ab ".repeat(10000)`,
+    {
+      consoleFront,
+    }
+  );
+  sidebar.setExpressionResult(evalResult);
+
+  await ContentTaskUtils.waitForCondition(() => {
+    const longStringEl = sidebarPanelContent.querySelector(
+      ".tree .objectBox-string"
+    );
+    return (
+      longStringEl && longStringEl.textContent.includes("ab ".repeat(10000))
+    );
+  }, "Wait for the longString to be render with its full text");
+  ok(true, "The longString is expanded and its full text is displayed");
+
+  info(
+    "Testing sidebar.setExpressionResult for an expression returning a primitive"
+  );
+  evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, `1 + 2`, {
+    consoleFront,
+  });
+  sidebar.setExpressionResult(evalResult);
+  const numberEl = await ContentTaskUtils.waitForCondition(
+    () => sidebarPanelContent.querySelector(".objectBox-number"),
+    "Wait for the result number element to be rendered"
+  );
+  is(numberEl.textContent, "3", `The "1 + 2" expression was evaluated as "3"`);
+
   inspectedWindowFront.destroy();
 });
 
@@ -243,12 +277,11 @@ add_task(async function testSidebarDOMNodeHighlighting() {
     fakeExtCallerInfo,
     expression,
     {
-      evalResultAsGrip: true,
-      toolboxConsoleActorID: consoleFront.actor,
+      consoleFront,
     }
   );
 
-  sidebar.setObjectValueGrip(evalResult.valueGrip);
+  sidebar.setExpressionResult(evalResult);
 
   // Wait the DOM node to be rendered inside the component.
   await waitForObjectInspector(sidebarPanelContent, "node");

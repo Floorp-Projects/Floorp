@@ -16,10 +16,10 @@ const TreeViewClass = require("devtools/client/shared/components/tree/TreeView")
 const TreeView = createFactory(TreeViewClass);
 
 /**
- * The ObjectTreeView React Component is used in the ExtensionSidebar component to provide
- * a UI viewMode which shows a tree view of the passed JavaScript object.
+ * The ExpressionResultView React Component is used in the ExtensionSidebar component to
+ * provide a UI viewMode which shows a tree view of the passed JavaScript object.
  */
-class ObjectTreeView extends PureComponent {
+class ExpressionResultView extends PureComponent {
   static get propTypes() {
     return {
       object: PropTypes.object.isRequired,
@@ -61,4 +61,4 @@ class ObjectTreeView extends PureComponent {
   }
 }
 
-module.exports = ObjectTreeView;
+module.exports = ExpressionResultView;
