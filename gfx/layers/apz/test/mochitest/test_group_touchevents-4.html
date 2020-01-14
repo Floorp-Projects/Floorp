@@ -15,7 +15,7 @@ var subtests = [
   // clicking on element with :active::after CSS property
   {"file": "helper_bug1473108.html"},
   // Resetting isFirstPaint shouldn't clobber the visual viewport
-  {"file": "helper_bug1509575.html", "prefs": [["dom.meta-viewport.enabled", true],
+  {"file": "helper_bug1509575.html", "prefs": [["apz.allow_zooming", true],
                                                ...getPrefs("TOUCH_EVENTS:PAN")]},
   // Exercise one of the main-thread touch-action determination codepaths.
   {"file": "helper_bug1506497_touch_action_fixed_on_fixed.html", "prefs": touch_action_prefs},
