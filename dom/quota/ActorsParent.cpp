@@ -5534,22 +5534,7 @@ nsresult QuotaManager::UpgradeStorageFrom0_0To1_0(
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  nsresult rv = MaybeUpgradeIndexedDBDirectory();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = MaybeUpgradePersistentStorageDirectory();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = MaybeRemoveOldDirectories();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = UpgradeStorage<UpgradeStorageFrom0_0To1_0Helper>(
+  nsresult rv = UpgradeStorage<UpgradeStorageFrom0_0To1_0Helper>(
       0, MakeStorageVersion(1, 0), aConnection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -6337,6 +6322,29 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     return rv;
   }
 
+  bool exists;
+  rv = storageFile->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!exists) {
+    rv = MaybeUpgradeIndexedDBDirectory();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = MaybeUpgradePersistentStorageDirectory();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = MaybeRemoveOldDirectories();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
   nsCOMPtr<mozIStorageService> ss =
       do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6398,23 +6406,9 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
       return rv;
     }
 
-    bool exists;
     rv = storageDir->Exists(&exists);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
-    }
-
-    if (!exists) {
-      nsCOMPtr<nsIFile> indexedDBDir;
-      rv = NS_NewLocalFile(mIndexedDBPath, false, getter_AddRefs(indexedDBDir));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = indexedDBDir->Exists(&exists);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
     }
 
     const bool newDirectory = !exists;
