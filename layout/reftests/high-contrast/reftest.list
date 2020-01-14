@@ -21,3 +21,6 @@ fuzzy-if(cocoaWidget,255-255,32-32) == backplate-bg-image-012.html backplate-bg-
 
 fails-if(Android) needs-focus == selection-001.html selection-001-ref.html # bug 1602509
 pref(browser.display.document_color_use,0) needs-focus != selection-001.html selection-001-ref.html
+
+== color-transparent-001.html about:blank
+!= color-transparent-002.html about:blank
