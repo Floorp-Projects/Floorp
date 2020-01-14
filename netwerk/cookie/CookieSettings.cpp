@@ -115,6 +115,16 @@ CookieSettings::GetRejectThirdPartyTrackers(bool* aRejectThirdPartyTrackers) {
 }
 
 NS_IMETHODIMP
+CookieSettings::GetLimitForeignContexts(bool* aLimitForeignContexts) {
+  *aLimitForeignContexts =
+      mCookieBehavior == nsICookieService::BEHAVIOR_LIMIT_FOREIGN ||
+      (StaticPrefs::privacy_dynamic_firstparty_limitForeign() &&
+       mCookieBehavior ==
+           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
                                  uint32_t* aCookiePermission) {
   MOZ_ASSERT(NS_IsMainThread());

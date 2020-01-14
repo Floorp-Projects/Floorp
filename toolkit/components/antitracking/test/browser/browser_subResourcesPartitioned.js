@@ -1,4 +1,4 @@
-async function runTests(topPage) {
+async function runTests(topPage, limitForeignContexts) {
   info("Creating a new tab");
   let tab = BrowserTestUtils.addTab(gBrowser, topPage);
   gBrowser.selectedTab = tab;
@@ -58,7 +58,11 @@ async function runTests(topPage) {
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 1, "One cookie received for images.");
+      if (limitForeignContexts) {
+        is(text, 0, "No cookie received for images.");
+      } else {
+        is(text, 1, "One cookie received for images.");
+      }
     });
 
   await fetch(
@@ -66,7 +70,11 @@ async function runTests(topPage) {
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 1, "One cookie received received for scripts.");
+      if (limitForeignContexts) {
+        is(text, 0, "No cookie received received for scripts.");
+      } else {
+        is(text, 1, "One cookie received received for scripts.");
+      }
     });
 
   info("Creating a 3rd party content");
@@ -165,7 +173,11 @@ async function runTests(topPage) {
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 1, "One cookie received for images.");
+      if (limitForeignContexts) {
+        is(text, 0, "No cookie received for images.");
+      } else {
+        is(text, 1, "One cookie received for images.");
+      }
     });
 
   await fetch(
@@ -173,7 +185,11 @@ async function runTests(topPage) {
   )
     .then(r => r.text())
     .then(text => {
-      is(text, 1, "One cookie received received for scripts.");
+      if (limitForeignContexts) {
+        is(text, 0, "No cookie received received for scripts.");
+      } else {
+        is(text, 1, "One cookie received received for scripts.");
+      }
     });
 
   let expectTrackerBlocked = (item, blocked) => {
@@ -196,6 +212,16 @@ async function runTests(topPage) {
     ok(item[2] >= 1, "Correct repeat count reported");
   };
 
+  let expectCookiesBlockedForeign = item => {
+    is(
+      item[0],
+      Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_FOREIGN,
+      "Correct blocking type reported"
+    );
+    is(item[1], true, "Correct blocking status reported");
+    ok(item[2] >= 1, "Correct repeat count reported");
+  };
+
   let log = JSON.parse(await browser.getContentBlockingLog());
   for (let trackerOrigin in log) {
     let originLog = log[trackerOrigin];
@@ -203,12 +229,19 @@ async function runTests(topPage) {
     switch (trackerOrigin) {
       case "https://example.org":
       case "https://example.com":
+        let numEntries = 1;
+        if (limitForeignContexts) {
+          ++numEntries;
+        }
         is(
           originLog.length,
-          1,
-          "We should have 1 entries in the compressed log"
+          numEntries,
+          `We should have ${numEntries} entries in the compressed log`
         );
         expectCookiesLoaded(originLog[0]);
+        if (limitForeignContexts) {
+          expectCookiesBlockedForeign(originLog[1]);
+        }
         break;
       case "https://tracking.example.org":
         is(
@@ -241,9 +274,17 @@ add_task(async function() {
     ],
   });
 
-  for (let page of [TEST_TOP_PAGE, TEST_TOP_PAGE_2, TEST_TOP_PAGE_3]) {
-    await runTests(page);
+  for (let limitForeignContexts of [false, true]) {
+    SpecialPowers.setBoolPref(
+      "privacy.dynamic_firstparty.limitForeign",
+      limitForeignContexts
+    );
+    for (let page of [TEST_TOP_PAGE, TEST_TOP_PAGE_2, TEST_TOP_PAGE_3]) {
+      await runTests(page, limitForeignContexts);
+    }
   }
+
+  SpecialPowers.clearUserPref("privacy.dynamic_firstparty.limitForeign");
 });
 
 add_task(async function() {
