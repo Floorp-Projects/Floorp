@@ -50,10 +50,6 @@
   min-width: 60px;
 }
 
-#expires, #lastAccessed, #creationTime {
-  min-width: 115px;
-}
-
 #value {
   min-width: 95px;
 }
@@ -66,6 +62,17 @@
 
 #isSecure {
   min-width: 48px;
+}
+
+#expires,
+#lastAccessed,
+#creationTime {
+  min-width: 115px;
+}
+
+/* Prevent all columns except for value from resizing with the panel */
+#storage-table .table-widget-column:not(#value) {
+  width: 0;
 }
 
 /* Text input in storage table */
