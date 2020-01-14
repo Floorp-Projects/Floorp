@@ -54,7 +54,7 @@ function handleBeforeInput(aEvent) {
 
 function handleInput(aEvent) {
   info("Input");
-  todo(beforeInputFired, '"beforeinput" event should have been fired');
+  ok(beforeInputFired, '"beforeinput" event should have been fired');
   is(input.value, expectedValue, "Check input value");
   ok(aEvent instanceof InputEvent,
      '"input" event should be dispatched with InputEvent interface');

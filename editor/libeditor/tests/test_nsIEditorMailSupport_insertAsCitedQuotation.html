@@ -72,12 +72,10 @@ SimpleTest.waitForFocus(async () => {
      "focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
   is(editor.innerHTML, '<span style="white-space: pre-wrap;">&gt; this is quoted text<br>&gt; And here is second line.<br><br></span>',
      "The quoted text should be inserted as plaintext into the plaintext editor");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "insertText", "this is quoted text\nAnd here is second line.",
-                    "after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
-  }
+  checkInputEvent(beforeInputEvents[0], "insertText", "this is quoted text\nAnd here is second line.",
+                  "after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor");
   is(inputEvents.length, 1,
      'One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of plaintext editor');
   checkInputEvent(inputEvents[0], "insertText", "this is quoted text\nAnd here is second line.",
@@ -100,12 +98,10 @@ SimpleTest.waitForFocus(async () => {
      "focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
   is(editor.innerHTML,
      '<blockquote type="cite" cite="this is cited text">this is quoted text&lt;br&gt;</blockquote>', "The quoted text should be inserted as plaintext into the HTML editor");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "", null,
-                    "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
-  }
+  checkInputEvent(beforeInputEvents[0], "", null,
+                  "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)");
   is(inputEvents.length, 1,
      'One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as plaintext)');
   checkInputEvent(inputEvents[0], "", null,
@@ -125,12 +121,10 @@ SimpleTest.waitForFocus(async () => {
      "focus offset of Selection should be next to inserted <span> element after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
   is(editor.innerHTML, '<blockquote type="cite" cite="this is cited text">this is quoted text<br>And here is second line.</blockquote>',
      "The quoted text should be inserted as HTML source into the HTML editor");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'One "beforeinput" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "", null,
-                    "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
-  }
+  checkInputEvent(beforeInputEvents[0], "", null,
+                  "after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)");
   is(inputEvents.length, 1,
      'One "input" event should be fired on the editing host after calling nsIEditorMailSupport.insertAsCitedQuotation() of HTMLEditor editor (inserting as HTML source)');
   checkInputEvent(inputEvents[0], "", null,

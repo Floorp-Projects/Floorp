@@ -66,9 +66,6 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
       *this,
       HTMLEditUtils::GetEditActionForFormatText(aProperty, aAttribute, true),
       aPrincipal);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
   switch (editActionData.GetEditAction()) {
     case EditAction::eSetFontFamilyProperty:
       MOZ_ASSERT(!aValue.IsVoid());
@@ -81,6 +78,10 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
       break;
     default:
       break;
+  }
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
@@ -120,7 +121,7 @@ nsresult HTMLEditor::SetInlinePropertyAsAction(nsAtom& aProperty,
       }
     }
   }
-  nsresult rv = SetInlinePropertyInternal(aProperty, aAttribute, aValue);
+  rv = SetInlinePropertyInternal(aProperty, aAttribute, aValue);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetInlinePropertyInternal() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -137,9 +138,6 @@ HTMLEditor::SetInlineProperty(const nsAString& aProperty,
   AutoEditActionDataSetter editActionData(
       *this,
       HTMLEditUtils::GetEditActionForFormatText(*property, attribute, true));
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
   switch (editActionData.GetEditAction()) {
     case EditAction::eSetFontFamilyProperty:
       MOZ_ASSERT(!aValue.IsVoid());
@@ -153,7 +151,11 @@ HTMLEditor::SetInlineProperty(const nsAString& aProperty,
     default:
       break;
   }
-  nsresult rv = SetInlinePropertyInternal(*property, attribute, aValue);
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  rv = SetInlinePropertyInternal(*property, attribute, aValue);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetInlinePropertyInternal() failed");
   return EditorBase::ToGenericNSResult(rv);
 }
@@ -1429,8 +1431,9 @@ nsresult HTMLEditor::RemoveAllInlinePropertiesAsAction(
     nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
       *this, EditAction::eRemoveAllInlineStyleProperties, aPrincipal);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
   }
 
   AutoPlaceholderBatch treatAsOneTransaction(*this);
@@ -1445,7 +1448,7 @@ nsresult HTMLEditor::RemoveAllInlinePropertiesAsAction(
       !ignoredError.Failed(),
       "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  nsresult rv =
+  rv =
       RemoveInlinePropertyInternal(nullptr, nullptr, RemoveRelatedElements::No);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "RemoveInlinePropertyInternal() failed");
@@ -1459,9 +1462,6 @@ nsresult HTMLEditor::RemoveInlinePropertyAsAction(nsAtom& aProperty,
       *this,
       HTMLEditUtils::GetEditActionForFormatText(aProperty, aAttribute, false),
       aPrincipal);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
   switch (editActionData.GetEditAction()) {
     case EditAction::eRemoveFontFamilyProperty:
       MOZ_ASSERT(!EmptyString().IsVoid());
@@ -1474,9 +1474,13 @@ nsresult HTMLEditor::RemoveInlinePropertyAsAction(nsAtom& aProperty,
     default:
       break;
   }
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
 
-  nsresult rv = RemoveInlinePropertyInternal(&aProperty, aAttribute,
-                                             RemoveRelatedElements::Yes);
+  rv = RemoveInlinePropertyInternal(&aProperty, aAttribute,
+                                    RemoveRelatedElements::Yes);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "RemoveInlinePropertyInternal() failed");
   return EditorBase::ToGenericNSResult(rv);
@@ -1491,9 +1495,6 @@ HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
   AutoEditActionDataSetter editActionData(
       *this,
       HTMLEditUtils::GetEditActionForFormatText(*property, attribute, false));
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
   switch (editActionData.GetEditAction()) {
     case EditAction::eRemoveFontFamilyProperty:
       MOZ_ASSERT(!EmptyString().IsVoid());
@@ -1506,8 +1507,13 @@ HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
     default:
       break;
   }
-  nsresult rv = RemoveInlinePropertyInternal(property, attribute,
-                                             RemoveRelatedElements::No);
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  rv = RemoveInlinePropertyInternal(property, attribute,
+                                    RemoveRelatedElements::No);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "RemoveInlinePropertyInternal() failed");
   return EditorBase::ToGenericNSResult(rv);
@@ -1854,15 +1860,15 @@ HTMLEditor::IncreaseFontSize() {
 nsresult HTMLEditor::IncreaseFontSizeAsAction(nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eIncrementFontSize,
                                           aPrincipal);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsresult rv = RelativeFontChange(FontSize::incr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
-  return NS_OK;
+
+  rv = RelativeFontChange(FontSize::incr);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "RelativeFontChange(FontSize::incr) failed");
+  return EditorBase::ToGenericNSResult(rv);
 }
 
 NS_IMETHODIMP
@@ -1875,15 +1881,15 @@ HTMLEditor::DecreaseFontSize() {
 nsresult HTMLEditor::DecreaseFontSizeAsAction(nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eDecrementFontSize,
                                           aPrincipal);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  nsresult rv = RelativeFontChange(FontSize::decr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
-  return NS_OK;
+
+  rv = RelativeFontChange(FontSize::decr);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "RelativeFontChange(FontSize::decr) failed");
+  return EditorBase::ToGenericNSResult(rv);
 }
 
 nsresult HTMLEditor::RelativeFontChange(FontSize aDir) {
