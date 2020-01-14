@@ -6861,9 +6861,9 @@ MethodStatus BaselineCompiler::emitBody() {
       return Method_Error;
     }
 
-#define EMIT_OP(op, op_camel, ...)                                   \
-  case JSOp::op_camel:                                               \
-    if (MOZ_UNLIKELY(!this->emit_##op_camel())) return Method_Error; \
+#define EMIT_OP(OP, ...)                                       \
+  case JSOp::OP:                                               \
+    if (MOZ_UNLIKELY(!this->emit_##OP())) return Method_Error; \
     break;
 
     switch (op) {
@@ -6979,17 +6979,17 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 
   // Emit code for each bytecode op.
   Label opLabels[JSOP_LIMIT];
-#define EMIT_OP(op, op_camel, ...)                            \
-  {                                                           \
-    masm.bind(&opLabels[uint8_t(JSOp::op_camel)]);            \
-    handler.setCurrentOp(JSOp::op_camel);                     \
-    if (!this->emit_##op_camel()) {                           \
-      return false;                                           \
-    }                                                         \
-    if (!opEpilogue(JSOp::op_camel, JSOpLength_##op_camel)) { \
-      return false;                                           \
-    }                                                         \
-    handler.resetCurrentOp();                                 \
+#define EMIT_OP(OP, ...)                          \
+  {                                               \
+    masm.bind(&opLabels[uint8_t(JSOp::OP)]);      \
+    handler.setCurrentOp(JSOp::OP);               \
+    if (!this->emit_##OP()) {                     \
+      return false;                               \
+    }                                             \
+    if (!opEpilogue(JSOp::OP, JSOpLength_##OP)) { \
+      return false;                               \
+    }                                             \
+    handler.resetCurrentOp();                     \
   }
   FOR_EACH_OPCODE(EMIT_OP)
 #undef EMIT_OP

@@ -1674,7 +1674,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
   // Use addresses instead of offsets to optimize for runtime speed over
   // load-time relocation overhead.
   static const void* const addresses[EnableInterruptsPseudoOpcode + 1] = {
-#  define OPCODE_LABEL(op, op_camel, ...) LABEL(op_camel),
+#  define OPCODE_LABEL(op, ...) LABEL(op),
       FOR_EACH_OPCODE(OPCODE_LABEL)
 #  undef OPCODE_LABEL
 #  define TRAILING_LABEL(v)                                                    \
