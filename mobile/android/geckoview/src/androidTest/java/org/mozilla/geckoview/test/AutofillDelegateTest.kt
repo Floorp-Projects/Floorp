@@ -184,7 +184,13 @@ class AutofillDelegateTest : BaseSessionTest() {
         // Wait on the promises and check for correct values.
         for ((key, actual, expected, eventInterface) in promises.map { it.value.asJSList<String>() }) {
             assertThat("Auto-filled value must match ($key)", actual, equalTo(expected))
-            assertThat("input event should be dispatched with InputEvent interface", eventInterface, equalTo("InputEvent"))
+
+            // <input type=number> nodes don't get InputEvent events.
+            if (key == "#number1") {
+                assertThat("input type=number event should be dispatched with Event interface", eventInterface, equalTo("Event"))
+            } else {
+                assertThat("input event should be dispatched with InputEvent interface", eventInterface, equalTo("InputEvent"))
+            }
         }
     }
 

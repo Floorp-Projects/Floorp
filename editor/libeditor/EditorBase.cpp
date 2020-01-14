@@ -385,7 +385,9 @@ nsresult EditorBase::InstallEventListeners() {
   }
 
   // Initialize the event target.
-  mEventTarget = GetExposedRoot();
+  nsCOMPtr<nsIContent> rootContent = GetRoot();
+  NS_ENSURE_TRUE(rootContent, NS_ERROR_NOT_AVAILABLE);
+  mEventTarget = rootContent->GetParent();
   NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_AVAILABLE);
 
   nsresult rv = mEventListener->Connect(this);
@@ -4981,12 +4983,14 @@ void EditorBase::ReinitializeSelection(Element& aElement) {
 Element* EditorBase::GetEditorRoot() const { return GetRoot(); }
 
 Element* EditorBase::GetExposedRoot() const {
-  Element* root = GetRoot();
-  if (!root || !root->IsInNativeAnonymousSubtree()) {
-    return root;
+  Element* rootElement = GetRoot();
+
+  // For plaintext editors, we need to ask the input/textarea element directly.
+  if (rootElement && rootElement->IsRootOfNativeAnonymousSubtree()) {
+    rootElement = rootElement->GetParent()->AsElement();
   }
-  return Element::FromNodeOrNull(
-      root->GetClosestNativeAnonymousSubtreeRootParent());
+
+  return rootElement;
 }
 
 nsresult EditorBase::DetermineCurrentDirection() {

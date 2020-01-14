@@ -30,7 +30,7 @@ customElements.define(
       <toolbarbutton id="print-preview-navigateHome" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(0, 0, 'home');" data-l10n-id="printpreview-homearrow"/>
       <toolbarbutton id="print-preview-navigatePrevious" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(-1, 0, 0);" data-l10n-id="printpreview-previousarrow"/>
       <hbox align="center" pack="center">
-        <html:input id="print-preview-pageNumber" hidespinbuttons="true" type="number" value="1" min="1"/>
+        <html:input id="print-preview-pageNumber" class="input-number-mozbox" hidespinbuttons="true" type="number" value="1" min="1"/>
         <label data-l10n-id="printpreview-of"/>
         <label id="print-preview-totalPages" value="1"/>
       </hbox>

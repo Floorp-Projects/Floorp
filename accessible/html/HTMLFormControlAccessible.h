@@ -63,7 +63,7 @@ class HTMLButtonAccessible : public HyperTextAccessibleWrap {
  * Accessible for HTML input@type="text", input@type="password", textarea and
  * other HTML text controls.
  */
-class HTMLTextFieldAccessible : public HyperTextAccessibleWrap {
+class HTMLTextFieldAccessible final : public HyperTextAccessibleWrap {
  public:
   enum { eAction_Click = 0 };
 
@@ -99,7 +99,8 @@ class HTMLTextFieldAccessible : public HyperTextAccessibleWrap {
   virtual ENameValueFlag NativeName(nsString& aName) const override;
 
   /**
-   * Return a widget element this input is part of, for example, search-textbox.
+   * Return a widget element this input is part of, for example, search-textbox
+   * or HTML:input@type="number".
    *
    * FIXME: This should probably be renamed.
    */
@@ -128,10 +129,10 @@ class HTMLFileInputAccessible : public HyperTextAccessibleWrap {
 /**
  * Used for HTML input@type="number".
  */
-class HTMLSpinnerAccessible final : public HTMLTextFieldAccessible {
+class HTMLSpinnerAccessible : public AccessibleWrap {
  public:
   HTMLSpinnerAccessible(nsIContent* aContent, DocAccessible* aDoc)
-      : HTMLTextFieldAccessible(aContent, aDoc) {
+      : AccessibleWrap(aContent, aDoc) {
     mStateFlags |= eHasNumericValue;
   }
 
