@@ -149,9 +149,6 @@ SimpleTest.waitForFocus(async () => {
       if (!test.result.fireBeforeInputEvent) {
         is(beforeInputEvents.length, 0,
            `No "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
-      } else if (test.type === "number") {
-        todo_is(beforeInputEvents.length, 1,
-           `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
       } else {
         is(beforeInputEvents.length, 1,
            `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
@@ -179,7 +176,7 @@ SimpleTest.waitForFocus(async () => {
     }
     if (inputEvents.length > 0) {
       if (SpecialPowers.wrap(target).isInputEventTarget) {
-        if (test.type === "number" || test.type === "time") {
+        if (test.type === "time") {
           todo(inputEvents[0] instanceof InputEvent,
                `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.before}") is called before ${tag} gets focus`);
         } else {
@@ -234,9 +231,6 @@ SimpleTest.waitForFocus(async () => {
       if (!test.result.fireBeforeInputEvent) {
         is(beforeInputEvents.length, 0,
            `No "beforeinput" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
-      } else if (test.type === "number") {
-        todo_is(beforeInputEvents.length, 1,
-           `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.after}") is called before ${tag} gets focus`);
       } else {
         is(beforeInputEvents.length, 1,
            `Only one "beforeinput" event should be dispatched when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
@@ -264,7 +258,7 @@ SimpleTest.waitForFocus(async () => {
     }
     if (inputEvents.length > 0) {
       if (SpecialPowers.wrap(target).isInputEventTarget) {
-        if (test.type === "number" || test.type === "time") {
+        if (test.type === "time") {
           todo(inputEvents[0] instanceof InputEvent,
                `"input" event should be dispatched with InputEvent interface when setUserInput("${test.input.after}") is called after ${tag} gets focus`);
         } else {
