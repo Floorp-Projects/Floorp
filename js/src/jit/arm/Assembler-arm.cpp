@@ -1114,6 +1114,13 @@ VFPRegister VFPRegister::uintOverlay(unsigned int which) const {
   return VFPRegister(code_, UInt);
 }
 
+bool VFPRegister::isInvalid() const { return _isInvalid; }
+
+bool VFPRegister::isMissing() const {
+  MOZ_ASSERT(!_isInvalid);
+  return _isMissing;
+}
+
 bool Assembler::oom() const {
   return AssemblerShared::oom() || m_buffer.oom() || jumpRelocations_.oom() ||
          dataRelocations_.oom();
