@@ -9,6 +9,7 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -132,6 +133,7 @@ class ContextMenusTest {
         }
     }
 
+    @Ignore("Temp disable intermittent failure - https://github.com/mozilla-mobile/fenix/issues/7687")
     @Test
     fun verifyContextOpenImageNewTab() {
         val pageLinks =
@@ -151,6 +153,7 @@ class ContextMenusTest {
         }
     }
 
+    @Ignore("Temp disable intermittent failure - https://github.com/mozilla-mobile/fenix/issues/7687")
     @Test
     fun verifyContextCopyImageLocation() {
         val pageLinks =
@@ -171,6 +174,7 @@ class ContextMenusTest {
         }
     }
 
+    @Ignore("Temp disable intermittent failure - https://github.com/mozilla-mobile/fenix/issues/7666")
     @Test
     fun verifyContextSaveImage() {
         val pageLinks =
