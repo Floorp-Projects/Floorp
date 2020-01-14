@@ -1059,16 +1059,20 @@ nsDOMNavigationTiming* nsDocShell::GetNavigationTiming() const {
 // frame navigation regardless of script accessibility (bug 420425)
 //
 /* static */
-bool nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
-                                nsIDocShellTreeItem* aTargetTreeItem) {
-  MOZ_ASSERT(aOriginTreeItem && aTargetTreeItem, "need two docshells");
-
+bool nsDocShell::ValidateOrigin(BrowsingContext* aOrigin,
+                                BrowsingContext* aTarget) {
   // Get origin document principal
-  RefPtr<Document> originDocument = aOriginTreeItem->GetDocument();
+  nsPIDOMWindowOuter* originWindow = aOrigin->GetDOMWindow();
+  MOZ_ASSERT(originWindow, "originWindow must not be null");
+  Document* originDocument =
+      nsGlobalWindowOuter::Cast(originWindow)->GetDocument();
   NS_ENSURE_TRUE(originDocument, false);
 
   // Get target principal
-  RefPtr<Document> targetDocument = aTargetTreeItem->GetDocument();
+  nsPIDOMWindowOuter* targetWindow = aTarget->GetDOMWindow();
+  MOZ_ASSERT(targetWindow, "targetWindow must not be null");
+  Document* targetDocument =
+      nsGlobalWindowOuter::Cast(targetWindow)->GetDocument();
   NS_ENSURE_TRUE(targetDocument, false);
 
   bool equal;
