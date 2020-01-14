@@ -52,8 +52,8 @@ in vec4 aColor1;
 in int aFlags;
 in vec2 aWidths;
 in vec2 aRadii;
-in vec4 aHorizontallyAdjacentCorner;
-in vec4 aVerticallyAdjacentCorner;
+in vec4 aClipParams1;
+in vec4 aClipParams2;
 
 vec2 get_outer_corner_scale(int segment) {
     vec2 p;
@@ -112,16 +112,16 @@ void main(void) {
     vColorLine = vec4(outer, aWidths.y * -clip_sign.y, aWidths.x * clip_sign.x);
 
     vec2 horizontal_clip_sign = vec2(-clip_sign.x, clip_sign.y);
-    vHorizontalClipCenter_Sign = vec4(aHorizontallyAdjacentCorner.xy +
-                                      horizontal_clip_sign * aHorizontallyAdjacentCorner.zw,
+    vHorizontalClipCenter_Sign = vec4(aClipParams1.xy +
+                                      horizontal_clip_sign * aClipParams1.zw,
                                       horizontal_clip_sign);
-    vHorizontalClipRadii = aHorizontallyAdjacentCorner.zw;
+    vHorizontalClipRadii = aClipParams1.zw;
 
     vec2 vertical_clip_sign = vec2(clip_sign.x, -clip_sign.y);
-    vVerticalClipCenter_Sign = vec4(aVerticallyAdjacentCorner.xy +
-                                    vertical_clip_sign * aVerticallyAdjacentCorner.zw,
+    vVerticalClipCenter_Sign = vec4(aClipParams2.xy +
+                                    vertical_clip_sign * aClipParams2.zw,
                                     vertical_clip_sign);
-    vVerticalClipRadii = aVerticallyAdjacentCorner.zw;
+    vVerticalClipRadii = aClipParams2.zw;
 
     gl_Position = uTransform * vec4(aTaskOrigin + aRect.xy + vPos, 0.0, 1.0);
 }
