@@ -171,7 +171,7 @@ const SQL_AUTOFILL_WITH = `
   )
 `;
 
-const SQL_AUTOFILL_FRECENCY_THRESHOLD = `(
+const SQL_AUTOFILL_FRECENCY_THRESHOLD = `host_frecency >= (
   SELECT value FROM autofill_frecency_threshold
 )`;
 
@@ -197,8 +197,7 @@ function originQuery({ select = "", where = "", having = "" }) {
             WHERE host BETWEEN :searchString AND :searchString || X'FFFF'
                   ${where}
             GROUP BY host
-            HAVING host_frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
-                   ${having}
+            HAVING ${having}
             UNION ALL
             SELECT host,
                    fixup_url(host) AS fixed_up_host,
@@ -213,8 +212,7 @@ function originQuery({ select = "", where = "", having = "" }) {
             WHERE host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'
                   ${where}
             GROUP BY host
-            HAVING host_frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
-                   ${having}
+            HAVING ${having}
           ) AS grouped_hosts
           JOIN moz_origins ON moz_origins.host = grouped_hosts.host
           ORDER BY frecency DESC, id DESC
@@ -222,12 +220,12 @@ function originQuery({ select = "", where = "", having = "" }) {
 }
 
 const QUERY_ORIGIN_HISTORY_BOOKMARK = originQuery({
-  having: `OR bookmarked`,
+  having: `bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
 });
 
 const QUERY_ORIGIN_PREFIX_HISTORY_BOOKMARK = originQuery({
   where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  having: `OR bookmarked`,
+  having: `bookmarked OR ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
 });
 
 const QUERY_ORIGIN_HISTORY = originQuery({
@@ -236,7 +234,7 @@ const QUERY_ORIGIN_HISTORY = originQuery({
     FROM moz_places
     WHERE moz_places.origin_id = moz_origins.id
    ) AS visited`,
-  having: `AND (visited OR NOT bookmarked)`,
+  having: `visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
 });
 
 const QUERY_ORIGIN_PREFIX_HISTORY = originQuery({
@@ -246,16 +244,16 @@ const QUERY_ORIGIN_PREFIX_HISTORY = originQuery({
     WHERE moz_places.origin_id = moz_origins.id
    ) AS visited`,
   where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  having: `AND (visited OR NOT bookmarked)`,
+  having: `visited AND ${SQL_AUTOFILL_FRECENCY_THRESHOLD}`,
 });
 
 const QUERY_ORIGIN_BOOKMARK = originQuery({
-  having: `AND bookmarked`,
+  having: `bookmarked`,
 });
 
 const QUERY_ORIGIN_PREFIX_BOOKMARK = originQuery({
   where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
-  having: `AND bookmarked`,
+  having: `bookmarked`,
 });
 
 // Result row indexes for urlQuery()
