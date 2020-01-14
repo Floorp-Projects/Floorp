@@ -67,11 +67,9 @@ SimpleTest.waitForFocus(async () => {
   getTableEditor().insertTableRow(1, true);
   is(editor.innerHTML, "out of table<table><tbody><tr><td>default content</td></tr></tbody></table>",
      "nsITableEditor.insertTableRow(1, true) should do nothing if selection is not in <table>");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      '"beforeinput" event should be fired when a call of nsITableEditor.insertTableRow(1, true) even though it will do nothing');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when selection is collapsed outside of table element (nsITableEditor.insertTableRow(1, true))");
-  }
+  checkInputEvent(beforeInputEvents[0], "when selection is collapsed outside of table element (nsITableEditor.insertTableRow(1, true))");
   is(inputEvents.length, 0,
      'No "input" event should be fired when a call of nsITableEditor.insertTableRow(1, true) does nothing');
 
@@ -121,11 +119,9 @@ SimpleTest.waitForFocus(async () => {
                          "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(1, false) should insert a row above the second row");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when selection is collapsed in a cell in second row (before)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell in second row (before)");
-  }
+  checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell in second row (before)");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when selection is collapsed in a cell in second row (before)');
   checkInputEvent(inputEvents[0], "when selection is collapsed in a cell in second row (before)");
@@ -150,11 +146,9 @@ SimpleTest.waitForFocus(async () => {
                          "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(1, true) should insert a row below the second row");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when selection is collapsed in a cell in second row (after)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell in second row (after)");
-  }
+  checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell in second row (after)");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when selection is collapsed in a cell in second row (after)');
   checkInputEvent(inputEvents[0], "when selection is collapsed in a cell in second row (after)");
@@ -179,11 +173,9 @@ SimpleTest.waitForFocus(async () => {
                          "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(1, false) should insert a row above the second row and rowspan in the first row should be increased");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when selection is collapsed in a cell in second row which has row-spanned cell (before)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell in second row which has row-spanned cell (before)");
-  }
+  checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell in second row which has row-spanned cell (before)");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when selection is collapsed in a cell in second row which has row-spanned cell (before)');
   checkInputEvent(inputEvents[0], "when selection is collapsed in a cell in second row which has row-spanned cell (before)");
@@ -208,11 +200,9 @@ SimpleTest.waitForFocus(async () => {
                          "<tr><td>cell3-1</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(1, true) should insert a row below the second row and rowspan in the first row should be increased");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when selection is collapsed in a cell in second row which has row-spanned cell (after)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell in second row which has row-spanned cell (after)");
-  }
+  checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell in second row which has row-spanned cell (after)");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when selection is collapsed in a cell in second row which has row-spanned cell (after)');
   checkInputEvent(inputEvents[0], "when selection is collapsed in a cell in second row which has row-spanned cell (after)");
@@ -238,11 +228,9 @@ SimpleTest.waitForFocus(async () => {
                          "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(2, false) should insert 2 rows above the first row");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when selection is collapsed in a cell which is row-spanning (before)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell which is row-spanning (before)");
-  }
+  checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell which is row-spanning (before)");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when selection is collapsed in a cell which is row-spanning (before)');
   checkInputEvent(inputEvents[0], "when selection is collapsed in a cell which is row-spanning (before)");
@@ -268,11 +256,9 @@ SimpleTest.waitForFocus(async () => {
                          "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
                        "</tbody></table>",
      "nsITableEditor.insertTableRow(2, false) should insert 2 rows below the second row (i.e., below the bottom row of the row-spanning cell");
-  todo_is(beforeInputEvents.length, 1,
+  is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when selection is collapsed in a cell which is row-spanning (after)');
-  if (beforeInputEvents.length > 0) {
-    checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell which is row-spanning (after)");
-  }
+  checkInputEvent(beforeInputEvents[0], "when selection is collapsed in a cell which is row-spanning (after)");
   is(inputEvents.length, 1,
      'Only one "input" event should be fired when selection is collapsed in a cell which is row-spanning (after)');
   checkInputEvent(inputEvents[0], "when selection is collapsed in a cell which is row-spanning (after)");
