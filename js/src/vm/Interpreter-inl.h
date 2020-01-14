@@ -642,13 +642,13 @@ static MOZ_ALWAYS_INLINE bool InitArrayElemOperation(JSContext* cx,
    * If val is a hole, do not call DefineElement.
    *
    * Furthermore, if the current op is JSOP_INITELEM_INC, always call
-   * SetLengthProperty even if it is not the last element initialiser,
-   * because it may be followed by JSOP_SPREAD, which will not set the array
+   * SetLengthProperty even if it is not the last element initialiser, because
+   * it may be followed by a SpreadElement loop, which will not set the array
    * length if nothing is spread.
    *
    * Alternatively, if the current op is JSOP_INITELEM_ARRAY, the length will
    * have already been set by the earlier JSOP_NEWARRAY; JSOP_INITELEM_ARRAY
-   * cannot follow JSOP_SPREAD.
+   * cannot follow SpreadElements.
    */
   if (val.isMagic(JS_ELEMENTS_HOLE)) {
     if (op == JSOP_INITELEM_INC) {

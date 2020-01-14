@@ -215,7 +215,7 @@ struct BaselineScript final {
   };
 
   // Native code offset for OSR from Baseline Interpreter into Baseline JIT at
-  // JSOP_LOOPENTRY ops.
+  // JSOP_LOOPHEAD ops.
   class OSREntry : public BasePCToNativeEntry {
    public:
     using BasePCToNativeEntry::BasePCToNativeEntry;
