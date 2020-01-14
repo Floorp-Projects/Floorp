@@ -23,26 +23,37 @@ use xpcom::RefPtr;
 pub unsafe extern "C" fn fog_init(data_dir: &nsAString, pingsender_path: &nsAString) -> nsresult {
     let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
 
-    let cfg = Configuration {
-        data_path: data_dir.to_string(),
-        application_id: "org.mozilla.fogotype".into(),
-        upload_enabled,
-        max_events: None,
-        delay_ping_lifetime_io: false, // We will want this eventually.
-        channel: Some("nightly".into()),
-    };
+    let pingsender_path = pingsender_path.to_string();
+    let data_dir = data_dir.to_string();
+    if thread::Builder::new()
+        .name("fogotype_init".to_owned())
+        .spawn(move || {
+            let cfg = Configuration {
+                data_path: data_dir.clone(),
+                application_id: "org.mozilla.fogotype".into(),
+                upload_enabled,
+                max_events: None,
+                delay_ping_lifetime_io: false, // We will want this eventually.
+                channel: Some("nightly".into()),
+            };
 
-    // TODO: Build our own ClientInfoMetrics instead of using unknown().
-    if glean_preview::initialize(cfg, ClientInfoMetrics::unknown()).is_err() {
-        return NS_ERROR_FAILURE;
-    }
+            // TODO: Build our own ClientInfoMetrics instead of using unknown().
+            if let Err(e) = glean_preview::initialize(cfg, ClientInfoMetrics::unknown()) {
+                error!("Failed to init glean_preview due to {:?}", e);
+                return;
+            }
 
-    let mut data_path = PathBuf::from(data_dir.to_string());
-    data_path.push("pending_pings");
+            let mut data_path = PathBuf::from(data_dir);
+            data_path.push("pending_pings");
 
-    // We ignore the returned JoinHandle for the nonce.
-    // The detached thread will live until this process (the main process) dies.
-    if prototype_ping_init(data_path, pingsender_path).is_err() {
+            // We ignore the returned JoinHandle for the nonce.
+            // The detached thread will live until this process (the main process) dies.
+            if let Err(e) = prototype_ping_init(data_path, pingsender_path) {
+                error!("Failed to init fogtotype prototype ping due to {:?}", e);
+            }
+        })
+        .is_err()
+    {
         return NS_ERROR_FAILURE;
     }
 
@@ -51,9 +62,8 @@ pub unsafe extern "C" fn fog_init(data_dir: &nsAString, pingsender_path: &nsAStr
 
 fn prototype_ping_init(
     ping_dir: PathBuf,
-    pingsender_path: &nsAString,
+    pingsender_path: String,
 ) -> Result<JoinHandle<()>, Error> {
-    let pingsender_path = pingsender_path.to_string();
     thread::Builder::new()
         .name("fogotype_ping".to_owned())
         .spawn(move || {
