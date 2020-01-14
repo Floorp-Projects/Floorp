@@ -30,8 +30,6 @@ common-tests:
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgpu
-    - reftest
-    - reftest-no-accel
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
@@ -392,6 +390,8 @@ linux1804-ccov-tests:
     - mochitest-webgl1-ext
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
+    - reftest
+    - reftest-no-accel
 
 linux-qr-tests:
     - mochitest
