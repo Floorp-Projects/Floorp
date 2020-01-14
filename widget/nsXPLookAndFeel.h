@@ -91,7 +91,7 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   }
 
  protected:
-  nsXPLookAndFeel();
+  nsXPLookAndFeel() = default;
 
   static void IntPrefChanged(nsLookAndFeelIntPref* data);
   static void FloatPrefChanged(nsLookAndFeelFloatPref* data);
@@ -124,9 +124,11 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   static bool sIsInPrefersReducedMotionForTest;
   static bool sPrefersReducedMotionForTest;
 
+  int32_t mPrefersReducedMotion = -1;
+  bool mPrefersReducedMotionCached = false;
   // True if we shouldn't clear the cache value in RefreshImpl().
   // NOTE: This should be used only for testing.
-  bool mShouldRetainCacheForTest;
+  bool mShouldRetainCacheForTest = false;
 };
 
 #endif
