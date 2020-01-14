@@ -5644,7 +5644,7 @@ bool BaselineInterpreterCodeGen::emit_EnvCallee() {
   Register scratch = R0.scratchReg();
   Register env = R1.scratchReg();
 
-  static_assert(JSOP_ENVCALLEE_LENGTH - sizeof(jsbytecode) == ENVCOORD_HOPS_LEN,
+  static_assert(JSOpLength_EnvCallee - sizeof(jsbytecode) == ENVCOORD_HOPS_LEN,
                 "op must have uint8 operand for LoadAliasedVarEnv");
 
   // Load the right environment object.
@@ -6979,17 +6979,17 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 
   // Emit code for each bytecode op.
   Label opLabels[JSOP_LIMIT];
-#define EMIT_OP(op, op_camel, ...)                  \
-  {                                                 \
-    masm.bind(&opLabels[uint8_t(JSOp::op_camel)]);  \
-    handler.setCurrentOp(JSOp::op_camel);           \
-    if (!this->emit_##op_camel()) {                 \
-      return false;                                 \
-    }                                               \
-    if (!opEpilogue(JSOp::op_camel, op##_LENGTH)) { \
-      return false;                                 \
-    }                                               \
-    handler.resetCurrentOp();                       \
+#define EMIT_OP(op, op_camel, ...)                            \
+  {                                                           \
+    masm.bind(&opLabels[uint8_t(JSOp::op_camel)]);            \
+    handler.setCurrentOp(JSOp::op_camel);                     \
+    if (!this->emit_##op_camel()) {                           \
+      return false;                                           \
+    }                                                         \
+    if (!opEpilogue(JSOp::op_camel, JSOpLength_##op_camel)) { \
+      return false;                                           \
+    }                                                         \
+    handler.resetCurrentOp();                                 \
   }
   FOR_EACH_OPCODE(EMIT_OP)
 #undef EMIT_OP

@@ -2328,9 +2328,9 @@ bool DoGetNameFallback(JSContext* cx, BaselineFrame* frame,
                                     BaselineCacheIRStubKind::Monitored,
                                     envChain, name);
 
-  static_assert(JSOP_GETGNAME_LENGTH == JSOP_GETNAME_LENGTH,
+  static_assert(JSOpLength_GetGName == JSOpLength_GetName,
                 "Otherwise our check for JSOP_TYPEOF isn't ok");
-  if (JSOp(pc[JSOP_GETGNAME_LENGTH]) == JSOP_TYPEOF) {
+  if (JSOp(pc[JSOpLength_GetGName]) == JSOP_TYPEOF) {
     if (!GetEnvironmentName<GetNameMode::TypeOf>(cx, envChain, name, res)) {
       return false;
     }

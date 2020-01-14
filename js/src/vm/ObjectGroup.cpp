@@ -209,7 +209,7 @@ bool ObjectGroup::useSingletonForNewObject(JSContext* cx, JSScript* script,
   if (JSOp(*pc) != JSOP_NEW) {
     return false;
   }
-  pc += JSOP_NEW_LENGTH;
+  pc += JSOpLength_New;
   if (JSOp(*pc) != JSOP_SETPROP) {
     return false;
   }
