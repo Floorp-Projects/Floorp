@@ -111,10 +111,6 @@ function checkIsInvalid(element, infoStr)
 {
   ok(element.validity.badInput,
      "Element should suffer from bad input for " + infoStr);
-  if (element.id == "requiredinput") {
-    ok(element.validity.valueMissing,
-       "Element should suffer from value missing for " + infoStr);
-  }
   ok(!element.validity.valid, "Element should not be valid for " + infoStr);
   ok(!element.checkValidity(), "checkValidity() should return false for " + infoStr);
   ok(gInvalid, "The invalid event should have been thrown for " + infoStr);
