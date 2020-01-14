@@ -7,7 +7,6 @@
 %define fieldBorderColor hsla(240,5%,5%,.25)
 %define fieldHoverBorderColor hsla(240,5%,5%,.35)
 %define urlbarMarginInline 5px
-%define urlbarBreakoutExtend 2px
 %define urlbarSearchButtonWidth calc(16px + 2 * @identityBoxPaddingInline@)
 
 :root {
