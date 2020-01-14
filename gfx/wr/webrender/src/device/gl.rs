@@ -1970,6 +1970,24 @@ impl Device {
             // Link!
             self.gl.link_program(program.id);
 
+            if cfg!(debug_assertions) {
+                // Check that all our overrides worked
+                for (i, attr) in descriptor
+                    .vertex_attributes
+                    .iter()
+                    .chain(descriptor.instance_attributes.iter())
+                    .enumerate()
+                {
+                    //Note: we can't assert here because the driver may optimize out some of the
+                    // vertex attributes legitimately, returning their location to be -1.
+                    let location = self.gl.get_attrib_location(program.id, attr.name);
+                    if location != i as gl::GLint {
+                        warn!("Attribute {:?} is not found in the shader {}. Expected at {}, found at {}",
+                            attr, program.source_info.base_filename, i, location);
+                    }
+                }
+            }
+
             // GL recommends detaching and deleting shaders once the link
             // is complete (whether successful or not). This allows the driver
             // to free any memory associated with the parsing and compilation.
