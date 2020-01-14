@@ -70,6 +70,7 @@ const PREF_SHOW_SPONSORED = "showSponsored";
 const PREF_SPOC_IMPRESSIONS = "discoverystream.spoc.impressions";
 const PREF_FLIGHT_BLOCKS = "discoverystream.flight.blocks";
 const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
+const PREF_PERSONALIZATION_VERSION = "discoverystream.personalization.version";
 
 let getHardcodedLayout;
 
@@ -1169,10 +1170,29 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     }
   }
 
+  /**
+   * Sets affinityProvider state to the correct version.
+   */
+  setAffinityProviderVersion() {
+    const version = this.store.getState().Prefs.values[
+      PREF_PERSONALIZATION_VERSION
+    ];
+
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_PERSONALIZATION_VERSION,
+        data: {
+          version,
+        },
+      })
+    );
+  }
+
   async enable() {
     // Note that cache age needs to be reported prior to refreshAll.
     await this.reportCacheAge();
     const start = perfService.absNow();
+    this.setAffinityProviderVersion();
     await this.refreshAll({ updateOpenTabs: true, isStartup: true });
     Services.obs.addObserver(this, "idle-daily");
     this.loaded = true;
@@ -1314,6 +1334,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       case PREF_HARDCODED_BASIC_LAYOUT:
       case PREF_SPOCS_ENDPOINT:
       case PREF_LANG_LAYOUT_CONFIG:
+      case PREF_PERSONALIZATION_VERSION:
         // Clear the cached config and broadcast the newly computed value
         this._prefCache.config = null;
         this.store.dispatch(
@@ -1374,6 +1395,16 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         break;
       case at.DISCOVERY_STREAM_DEV_EXPIRE_CACHE:
         await this.resetCache();
+        break;
+      case at.DISCOVERY_STREAM_PERSONALIZATION_VERSION_TOGGLE:
+        let version = this.store.getState().Prefs.values[
+          PREF_PERSONALIZATION_VERSION
+        ];
+
+        // Toggle the version between 1 and 2.
+        this.store.dispatch(
+          ac.SetPref(PREF_PERSONALIZATION_VERSION, version === 1 ? 2 : 1)
+        );
         break;
       case at.DISCOVERY_STREAM_CONFIG_SET_VALUE:
         // Use the original string pref to then set a value instead of
