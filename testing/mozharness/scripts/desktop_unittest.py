@@ -142,12 +142,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
             "help": "Permits a software GL implementation (such as LLVMPipe) to use "
                     "the GL compositor."}
          ],
-        [["--single-stylo-traversal"], {
-            "action": "store_true",
-            "dest": "single_stylo_traversal",
-            "default": False,
-            "help": "Forcibly enable single thread traversal in Stylo with STYLO_THREADS=1"}
-         ],
         [["--enable-webrender"], {
             "action": "store_true",
             "dest": "enable_webrender",
@@ -889,10 +883,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                 if self.config['allow_software_gl_layers']:
                     env['MOZ_LAYERS_ALLOW_SOFTWARE_GL'] = '1'
 
-                if self.config['single_stylo_traversal']:
-                    env['STYLO_THREADS'] = '1'
-                else:
-                    env['STYLO_THREADS'] = '4'
+                env['STYLO_THREADS'] = '4'
 
                 env = self.query_env(partial_env=env, log_level=INFO)
                 cmd_timeout = self.get_timeout_for_category(suite_category)
