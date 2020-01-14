@@ -760,6 +760,11 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     // We will temporarily allow all jar URIs through for now
     return true;
   }
+  if (filenameU.Equals(NS_LITERAL_STRING("about:sync-log"))) {
+    // about:sync-log runs in the parent process and displays a directory
+    // listing. The listing has inline javascript that executes on load.
+    return true;
+  }
 
   // Log to MOZ_LOG
   MOZ_LOG(sCSMLog, LogLevel::Info,
