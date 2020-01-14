@@ -11,6 +11,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers
+import org.mozilla.fenix.helpers.click
 
 /**
  * Implementation of Robot Pattern for the settings turn on sync option.
@@ -19,6 +20,8 @@ class SettingsTurnOnSyncRobot {
     fun verifyUseEmailOption() = assertUseEmailField()
 
     fun verifyReadyToScanOption() = assertReadyToScan()
+
+    fun tapOnUseEmailToSignIn() = useEmailButton().click()
 
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -40,3 +43,5 @@ private fun assertUseEmailField() = Espresso.onView(ViewMatchers.withText("Use e
 
 private fun assertReadyToScan() = Espresso.onView(ViewMatchers.withText("Ready to scan"))
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun useEmailButton() = Espresso.onView(ViewMatchers.withText("Use email instead"))

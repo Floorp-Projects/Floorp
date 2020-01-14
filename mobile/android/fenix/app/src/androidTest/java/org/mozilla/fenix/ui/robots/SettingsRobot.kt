@@ -138,6 +138,7 @@ class SettingsRobot {
         }
 
         fun openLoginsAndPasswordSubMenu(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
+            TestHelper.scrollToElementByText("Logins and passwords")
             fun loginsAndPasswordsButton() = onView(ViewMatchers.withText("Logins and passwords"))
             loginsAndPasswordsButton().click()
 

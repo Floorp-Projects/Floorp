@@ -19,6 +19,7 @@ import org.junit.Test
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.accountSettings
+import org.mozilla.fenix.ui.robots.settingsSubMenuLoginsAndPassword
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -28,7 +29,6 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
-
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
 @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -79,6 +79,37 @@ class SyncIntegrationTest {
         }.disconnectAccount {
             mDevice.waitNotNull(Until.findObjects(By.text("Settings")), TestAssetHelper.waitingTime)
             verifySettingsView()
+        }
+    }
+
+    @Test
+    fun checkLoginsFromDesktopTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSyncLogins {
+            // Tap to sign in from Logins menu
+            tapOnUseEmailToSignIn()
+            typeEmail()
+            tapOnContinueButton()
+            typePassword()
+            tapOnSignIn()
+        }
+        // Automatically goes back to Logins and passwords view
+        settingsSubMenuLoginsAndPassword {
+            verifyDefaultView()
+            // Sync logings option is set to Off, no synced logins yet
+            verifyDefaultViewBeforeSyncComplete()
+        }.openSavedLogins {
+            // Discard the secure your device message
+            tapSetupLater()
+            // Check the logins synced
+            verifySavedLoginsAfterSync()
+        }.goBack {
+            // After checking the synced logins
+            // on Logins and Passwords menu the Sync logins option is set to On
+            verifyDefaultViewAfterSync()
         }
     }
 
@@ -187,7 +218,7 @@ class SyncIntegrationTest {
 }
 
 fun settingsAccount() = onView(allOf(withText("Turn on Sync"))).perform(click())
-fun tapInToolBar() = onView(withId(org.mozilla.fenix.R.id.toolbar_wrapper))
-fun awesomeBar() = onView(withId(org.mozilla.fenix.R.id.mozac_browser_toolbar_edit_url_view))
+fun tapInToolBar() = onView(withId(R.id.toolbar_wrapper))
+fun awesomeBar() = onView(withId(R.id.mozac_browser_toolbar_edit_url_view))
 fun useEmailInsteadButton() = onView(withId(R.id.signInEmailButton)).perform(click())
 fun enterAccountSettings() = onView(withId(R.id.email)).perform(click())
