@@ -6,4 +6,5 @@ DevToolsModules(
     'target-list.js',
 )
 
-BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
+if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
+    BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
