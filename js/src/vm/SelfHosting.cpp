@@ -76,6 +76,7 @@
 #include "vm/Realm.h"
 #include "vm/RegExpObject.h"
 #include "vm/StringType.h"
+#include "vm/ToSource.h"  // js::ValueToSource
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 

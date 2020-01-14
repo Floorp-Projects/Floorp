@@ -51,6 +51,7 @@
 #include "vm/Shape.h"
 #include "vm/Stack.h"
 #include "vm/StringType.h"
+#include "vm/ToSource.h"  // js::ValueToSource
 
 #include "vm/ArrayObject-inl.h"
 #include "vm/JSContext-inl.h"

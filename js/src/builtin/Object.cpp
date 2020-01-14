@@ -27,6 +27,7 @@
 #include "vm/ErrorObject.h"
 #include "vm/JSContext.h"
 #include "vm/RegExpObject.h"
+#include "vm/ToSource.h"  // js::ValueToSource
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
