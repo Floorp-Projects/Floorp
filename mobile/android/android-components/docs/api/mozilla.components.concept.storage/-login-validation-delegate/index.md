@@ -2,7 +2,7 @@
 
 # LoginValidationDelegate
 
-`interface LoginValidationDelegate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L52)
+`interface LoginValidationDelegate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L50)
 
 Provides a method for checking whether or not a given login can be stored.
 
@@ -29,4 +29,3 @@ Provides a method for checking whether or not a given login can be stored.
 | Name | Summary |
 |---|---|
 | [DefaultLoginValidationDelegate](../../mozilla.components.service.sync.logins/-default-login-validation-delegate/index.md) | `class DefaultLoginValidationDelegate : `[`LoginValidationDelegate`](./index.md)<br>A delegate that will check against [storage](#) to see if a given Login can be persisted, and return information about why it can or cannot. |
-| [NoopLoginValidationDelegate](../-noop-login-validation-delegate/index.md) | `class NoopLoginValidationDelegate : `[`LoginValidationDelegate`](./index.md)<br>Default [LoginValidationDelegate](./index.md) implementation that always returns false. |

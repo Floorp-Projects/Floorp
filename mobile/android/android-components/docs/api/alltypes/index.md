@@ -389,6 +389,7 @@
 | [mozilla.components.support.test.rule.MainCoroutineRule](../mozilla.components.support.test.rule/-main-coroutine-rule/index.md) | JUnit rule to change Dispatchers.Main in coroutines. |
 | [mozilla.components.feature.pwa.ManifestStorage](../mozilla.components.feature.pwa/-manifest-storage/index.md) | Disk storage for [WebAppManifest](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md). Other components use this class to reload a saved manifest. |
 | [mozilla.components.feature.pwa.feature.ManifestUpdateFeature](../mozilla.components.feature.pwa.feature/-manifest-update-feature/index.md) | Feature used to update the existing web app manifest and web app shortcut. |
+| [kotlin.collections.Map](../mozilla.components.feature.addons.ui/kotlin.collections.-map/index.md) (extensions in package mozilla.components.feature.addons.ui) |  |
 | [kotlin.collections.Map](../mozilla.components.support.ktx.android.org.json/kotlin.collections.-map/index.md) (extensions in package mozilla.components.support.ktx.android.org.json) |  |
 | [mozilla.components.support.android.test.Matchers](../mozilla.components.support.android.test/-matchers/index.md) | A collection of non-domain specific [Matcher](#)s. |
 | [mozilla.components.concept.engine.media.Media](../mozilla.components.concept.engine.media/-media/index.md) | Value type that represents a media element that is present on the currently displayed page in a session. |
@@ -422,7 +423,6 @@
 | [mozilla.components.browser.engine.system.NestedWebView](../mozilla.components.browser.engine.system/-nested-web-view/index.md) | WebView that supports nested scrolls (for using in a CoordinatorLayout). |
 | [mozilla.components.service.glean.private.NoExtraKeys](../mozilla.components.service.glean.private/-no-extra-keys.md) |  |
 | [mozilla.components.service.sync.logins.NoSuchRecordException](../mozilla.components.service.sync.logins/-no-such-record-exception.md) | This is thrown if `update()` is performed with a record whose ID does not exist. |
-| [mozilla.components.concept.storage.NoopLoginValidationDelegate](../mozilla.components.concept.storage/-noop-login-validation-delegate/index.md) | Default [LoginValidationDelegate](../mozilla.components.concept.storage/-login-validation-delegate/index.md) implementation that always returns false. |
 | [androidx.core.app.NotificationManagerCompat](../mozilla.components.support.base.ids/androidx.core.app.-notification-manager-compat/index.md) (extensions in package mozilla.components.support.base.ids) |  |
 | [mozilla.components.concept.sync.OAuthAccount](../mozilla.components.concept.sync/-o-auth-account/index.md) | Facilitates testing consumers of FirefoxAccount. |
 | [mozilla.components.concept.sync.OAuthScopedKey](../mozilla.components.concept.sync/-o-auth-scoped-key/index.md) | Scoped key data. |
@@ -453,6 +453,7 @@
 | [mozilla.components.lib.jexl.parser.ParserException](../mozilla.components.lib.jexl.parser/-parser-exception/index.md) |  |
 | [mozilla.components.concept.engine.permission.Permission](../mozilla.components.concept.engine.permission/-permission/index.md) | Represents all the different supported permission types. |
 | [mozilla.components.concept.engine.permission.PermissionRequest](../mozilla.components.concept.engine.permission/-permission-request/index.md) | Represents a permission request, used when engines need access to protected resources. Every request must be handled by either calling [grant](../mozilla.components.concept.engine.permission/-permission-request/grant.md) or [reject](../mozilla.components.concept.engine.permission/-permission-request/reject.md). |
+| [mozilla.components.feature.addons.ui.PermissionsDialogFragment](../mozilla.components.feature.addons.ui/-permissions-dialog-fragment/index.md) | A dialog that shows a set of permission required by an [Addon](../mozilla.components.feature.addons/-addon/index.md). |
 | [mozilla.components.support.base.feature.PermissionsFeature](../mozilla.components.support.base.feature/-permissions-feature/index.md) | Interface for features that need to request permissions from the user. |
 | [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
 | [mozilla.components.feature.session.PictureInPictureFeature](../mozilla.components.feature.session/-picture-in-picture-feature/index.md) | A simple implementation of Picture-in-picture mode if on a supported platform. |
@@ -660,6 +661,7 @@
 | [org.mozilla.telemetry.event.TelemetryEvent](../org.mozilla.telemetry.event/-telemetry-event/index.md) | TelemetryEvent specifies a common events data format, which allows for broader, shared usage of data processing tools. |
 | [org.mozilla.telemetry.ping.TelemetryEventPingBuilder](../org.mozilla.telemetry.ping/-telemetry-event-ping-builder/index.md) | A telemetry ping builder for pings of type "focus-event". |
 | [org.mozilla.telemetry.TelemetryHolder](../org.mozilla.telemetry/-telemetry-holder/index.md) | Holder of a static reference to the Telemetry instance. This is required for background services that somehow need to get access to the configuration and storage. This is not particular nice. Hopefully we can replace this with something better. |
+| [mozilla.components.support.migration.TelemetryIdentifiersResult](../mozilla.components.support.migration/-telemetry-identifiers-result/index.md) | Result of a telemetry identifier migration. |
 | [org.mozilla.telemetry.schedule.jobscheduler.TelemetryJobService](../org.mozilla.telemetry.schedule.jobscheduler/-telemetry-job-service/index.md) |  |
 | [org.mozilla.telemetry.measurement.TelemetryMeasurement](../org.mozilla.telemetry.measurement/-telemetry-measurement/index.md) |  |
 | [org.mozilla.telemetry.ping.TelemetryMobileEventPingBuilder](../org.mozilla.telemetry.ping/-telemetry-mobile-event-ping-builder/index.md) | A telemetry ping builder for events of type "mobile-event". See the schema for more details: https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/master/schemas/telemetry/mobile-event/mobile-event.1.schema.json |

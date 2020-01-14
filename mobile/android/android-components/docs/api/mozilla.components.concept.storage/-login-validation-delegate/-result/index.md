@@ -2,7 +2,7 @@
 
 # Result
 
-`sealed class Result` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L58)
+`sealed class Result` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L56)
 
 The result of validating a given [Login](../../-login/index.md) against currently stored [Login](../../-login/index.md)s.  This will
 include whether it can be created, updated, or neither, along with an explanation of any errors.

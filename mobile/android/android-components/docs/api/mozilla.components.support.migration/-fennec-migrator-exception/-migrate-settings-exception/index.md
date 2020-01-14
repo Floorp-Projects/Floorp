@@ -2,13 +2,13 @@
 
 # MigrateSettingsException
 
-`class MigrateSettingsException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L136)
+`class MigrateSettingsException : `[`FennecMigratorException`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L154)
 
 Unexpected exception while migrating settings.
 
 ### Parameters
 
-`cause` - Original exception which caused the problem
+`cause` - Original exception which caused the problem.
 
 ### Constructors
 

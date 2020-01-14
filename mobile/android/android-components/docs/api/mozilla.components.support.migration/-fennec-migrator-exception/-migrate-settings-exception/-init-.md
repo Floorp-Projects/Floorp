@@ -8,4 +8,4 @@ Unexpected exception while migrating settings.
 
 ### Parameters
 
-`cause` - Original exception which caused the problem
+`cause` - Original exception which caused the problem.

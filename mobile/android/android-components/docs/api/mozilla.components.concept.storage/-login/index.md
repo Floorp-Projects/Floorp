@@ -2,7 +2,7 @@
 
 # Login
 
-`data class Login` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L17)
+`data class Login` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L15)
 
 Represents a login that can be used by autofill APIs.
 
