@@ -20,14 +20,21 @@ add_task(async function() {
   );
   const outputNode = appNode.querySelector(".webconsole-output");
   const inputNode = appNode.querySelector(".jsterm-input-container");
+  const eagerNode = document.querySelector(".eager-evaluation-result");
+
+  // The app height is the sum of the filter bar, input, and eager evaluation
+  const calculateAppHeight = () =>
+    filterBarNode.offsetHeight +
+    inputNode.offsetHeight +
+    eagerNode.offsetHeight;
 
   testLayout(appNode);
 
   is(outputNode.offsetHeight, 0, "output node has no height");
   is(
-    filterBarNode.offsetHeight + inputNode.offsetHeight,
+    calculateAppHeight(),
     appNode.offsetHeight,
-    "The entire height is taken by filter bar and input"
+    "The entire height is taken by filter bar, input, and eager result"
   );
 
   info("Logging a message in the content window");
@@ -93,9 +100,9 @@ add_task(async function() {
   testLayout(appNode);
   is(outputNode.offsetHeight, 0, "output node has no height");
   is(
-    filterBarNode.offsetHeight + inputNode.offsetHeight,
+    calculateAppHeight(),
     appNode.offsetHeight,
-    "The entire height is taken by filter bar and input"
+    "The entire height is taken by filter bar, input, and eager result"
   );
 });
 
