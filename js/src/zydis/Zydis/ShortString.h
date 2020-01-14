@@ -26,7 +26,7 @@
 
 /**
  * @file
- * @brief   Defines the immutable and storage-efficent `ZydisShortString` struct, which is used to
+ * @brief   Defines the immutable and storage-efficient `ZydisShortString` struct, which is used to
  *          store strings in the generated tables.
  */
 
@@ -58,7 +58,7 @@ extern "C" {
 typedef struct ZydisShortString_
 {
     /**
-     * @brief   The buffer that contains the actual (nullterminated) string.
+     * @brief   The buffer that contains the actual (null-terminated) string.
     */
     const char* data;
     /**

@@ -451,6 +451,28 @@ ZYCORE_EXPORT ZyanStatus ZyanBitsetAny(const ZyanBitset* bitset);
  */
 ZYCORE_EXPORT ZyanStatus ZyanBitsetNone(const ZyanBitset* bitset);
 
+///* ---------------------------------------------------------------------------------------------- */
+//
+///**
+// * @brief   Returns a 32-bit unsigned integer representation of the data.
+// * 
+// * @param   bitset  A pointer to the `ZyanBitset` instance.
+// * @param   value   Receives the 32-bit unsigned integer representation of the data.
+// * 
+// * @return  A zyan status code. 
+// */
+//ZYCORE_EXPORT ZyanStatus ZyanBitsetToU32(const ZyanBitset* bitset, ZyanU32* value);
+//
+///**
+// * @brief   Returns a 64-bit unsigned integer representation of the data.
+// * 
+// * @param   bitset  A pointer to the `ZyanBitset` instance.
+// * @param   value   Receives the 64-bit unsigned integer representation of the data.
+// * 
+// * @return  A zyan status code. 
+// */
+//ZYCORE_EXPORT ZyanStatus ZyanBitsetToU64(const ZyanBitset* bitset, ZyanU64* value);
+
 /* ---------------------------------------------------------------------------------------------- */
 
 /* ============================================================================================== */

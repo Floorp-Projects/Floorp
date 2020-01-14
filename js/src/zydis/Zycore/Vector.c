@@ -138,7 +138,7 @@ static ZyanStatus ZyanVectorShiftLeft(ZyanVector* vector, ZyanUSize index, ZyanU
 
     void* const source   = ZYCORE_VECTOR_OFFSET(vector, index + count);
     void* const dest     = ZYCORE_VECTOR_OFFSET(vector, index);
-    const ZyanUSize size = (vector->size - index) * vector->element_size;
+    const ZyanUSize size = (vector->size - index - count) * vector->element_size;
     ZYAN_MEMMOVE(dest, source, size);
 
     return ZYAN_STATUS_SUCCESS;
@@ -182,16 +182,18 @@ static ZyanStatus ZyanVectorShiftRight(ZyanVector* vector, ZyanUSize index, Zyan
 
 #ifndef ZYAN_NO_LIBC
 
-ZyanStatus ZyanVectorInit(ZyanVector* vector, ZyanUSize element_size, ZyanUSize capacity)
+ZyanStatus ZyanVectorInit(ZyanVector* vector, ZyanUSize element_size, ZyanUSize capacity,
+    ZyanMemberProcedure destructor)
 {
-    return ZyanVectorInitEx(vector, element_size, capacity, ZyanAllocatorDefault(),
+    return ZyanVectorInitEx(vector, element_size, capacity, destructor, ZyanAllocatorDefault(),
         ZYAN_VECTOR_DEFAULT_GROWTH_FACTOR, ZYAN_VECTOR_DEFAULT_SHRINK_THRESHOLD);
 }
 
 #endif // ZYAN_NO_LIBC
 
 ZyanStatus ZyanVectorInitEx(ZyanVector* vector, ZyanUSize element_size, ZyanUSize capacity,
-    ZyanAllocator* allocator, float growth_factor, float shrink_threshold)
+    ZyanMemberProcedure destructor, ZyanAllocator* allocator, float growth_factor, 
+    float shrink_threshold)
 {
     if (!vector || !element_size || !allocator || (growth_factor < 1.0f) ||
         (shrink_threshold < 0.0f) || (shrink_threshold > 1.0f))
@@ -207,6 +209,7 @@ ZyanStatus ZyanVectorInitEx(ZyanVector* vector, ZyanUSize element_size, ZyanUSiz
     vector->size             = 0;
     vector->capacity         = ZYAN_MAX(ZYAN_VECTOR_MIN_CAPACITY, capacity);
     vector->element_size     = element_size;
+    vector->destructor       = destructor;
     vector->data             = ZYAN_NULL;
 
     return allocator->allocate(vector->allocator, &vector->data, vector->element_size,
@@ -214,7 +217,7 @@ ZyanStatus ZyanVectorInitEx(ZyanVector* vector, ZyanUSize element_size, ZyanUSiz
 }
 
 ZyanStatus ZyanVectorInitCustomBuffer(ZyanVector* vector, ZyanUSize element_size,
-    void* buffer, ZyanUSize capacity)
+    void* buffer, ZyanUSize capacity, ZyanMemberProcedure destructor)
 {
     if (!vector || !element_size || !buffer || !capacity)
     {
@@ -227,12 +230,13 @@ ZyanStatus ZyanVectorInitCustomBuffer(ZyanVector* vector, ZyanUSize element_size
     vector->size             = 0;
     vector->capacity         = capacity;
     vector->element_size     = element_size;
+    vector->destructor       = destructor;
     vector->data             = buffer;
 
     return ZYAN_STATUS_SUCCESS;
 }
 
-ZyanStatus ZyanVectorDestroy(ZyanVector* vector, ZyanMemberProcedure destructor)
+ZyanStatus ZyanVectorDestroy(ZyanVector* vector)
 {
     if (!vector)
     {
@@ -242,11 +246,11 @@ ZyanStatus ZyanVectorDestroy(ZyanVector* vector, ZyanMemberProcedure destructor)
     ZYAN_ASSERT(vector->element_size);
     ZYAN_ASSERT(vector->data);
 
-    if (destructor)
+    if (vector->destructor)
     {
         for (ZyanUSize i = 0; i < vector->size; ++i)
         {
-            destructor(ZYCORE_VECTOR_OFFSET(vector, i));
+            vector->destructor(ZYCORE_VECTOR_OFFSET(vector, i));
         }
     }
 
@@ -257,6 +261,7 @@ ZyanStatus ZyanVectorDestroy(ZyanVector* vector, ZyanMemberProcedure destructor)
             vector->element_size, vector->capacity));
     }
 
+    vector->data = ZYAN_NULL;
     return ZYAN_STATUS_SUCCESS;
 }
 
@@ -286,8 +291,8 @@ ZyanStatus ZyanVectorDuplicateEx(ZyanVector* destination, const ZyanVector* sour
     const ZyanUSize len = source->size;
 
     capacity = ZYAN_MAX(capacity, len);
-    ZYAN_CHECK(ZyanVectorInitEx(destination, source->element_size, capacity, allocator,
-        growth_factor, shrink_threshold));
+    ZYAN_CHECK(ZyanVectorInitEx(destination, source->element_size, capacity, source->destructor, 
+        allocator, growth_factor, shrink_threshold));
     ZYAN_ASSERT(destination->capacity >= len);
 
     ZYAN_MEMCPY(destination->data, source->data, len * source->element_size);
@@ -311,7 +316,8 @@ ZyanStatus ZyanVectorDuplicateCustomBuffer(ZyanVector* destination, const ZyanVe
         return ZYAN_STATUS_INSUFFICIENT_BUFFER_SIZE;
     }
 
-    ZYAN_CHECK(ZyanVectorInitCustomBuffer(destination, source->element_size, buffer, capacity));
+    ZYAN_CHECK(ZyanVectorInitCustomBuffer(destination, source->element_size, buffer, capacity, 
+        source->destructor));
     ZYAN_ASSERT(destination->capacity >= len);
 
     ZYAN_MEMCPY(destination->data, source->data, len * source->element_size);
@@ -403,6 +409,10 @@ ZyanStatus ZyanVectorSet(ZyanVector* vector, ZyanUSize index, const void* value)
     ZYAN_ASSERT(vector->data);
 
     void* const offset = ZYCORE_VECTOR_OFFSET(vector, index);
+    if (vector->destructor)
+    {
+        vector->destructor(offset);
+    }
     ZYAN_MEMCPY(offset, value, vector->element_size);
 
     return ZYAN_STATUS_SUCCESS;
@@ -412,7 +422,7 @@ ZyanStatus ZyanVectorSet(ZyanVector* vector, ZyanUSize index, const void* value)
 /* Insertion                                                                                      */
 /* ---------------------------------------------------------------------------------------------- */
 
-ZyanStatus ZyanVectorPush(ZyanVector* vector, const void* element)
+ZyanStatus ZyanVectorPushBack(ZyanVector* vector, const void* element)
 {
     if (!vector || !element)
     {
@@ -438,10 +448,10 @@ ZyanStatus ZyanVectorPush(ZyanVector* vector, const void* element)
 
 ZyanStatus ZyanVectorInsert(ZyanVector* vector, ZyanUSize index, const void* element)
 {
-    return ZyanVectorInsertEx(vector, index, element, 1);
+    return ZyanVectorInsertRange(vector, index, element, 1);
 }
 
-ZyanStatus ZyanVectorInsertEx(ZyanVector* vector, ZyanUSize index, const void* elements,
+ZyanStatus ZyanVectorInsertRange(ZyanVector* vector, ZyanUSize index, const void* elements,
     ZyanUSize count)
 {
     if (!vector || !elements || !count)
@@ -560,21 +570,29 @@ ZyanStatus ZyanVectorSwapElements(ZyanVector* vector, ZyanUSize index_first, Zya
 
 ZyanStatus ZyanVectorDelete(ZyanVector* vector, ZyanUSize index)
 {
-    return ZyanVectorDeleteEx(vector, index, 1);
+    return ZyanVectorDeleteRange(vector, index, 1);
 }
 
-ZyanStatus ZyanVectorDeleteEx(ZyanVector* vector, ZyanUSize index, ZyanUSize count)
+ZyanStatus ZyanVectorDeleteRange(ZyanVector* vector, ZyanUSize index, ZyanUSize count)
 {
     if (!vector || !count)
     {
         return ZYAN_STATUS_INVALID_ARGUMENT;
     }
-    if (index + count >= vector->size)
+    if (index + count > vector->size)
     {
         return ZYAN_STATUS_OUT_OF_RANGE;
     }
 
-    if (index < vector->size - 1)
+    if (vector->destructor)
+    {
+        for (ZyanUSize i = index; i < index + count; ++i)
+        {
+            vector->destructor(ZYCORE_VECTOR_OFFSET(vector, i));
+        }
+    }
+
+    if (index + count < vector->size)
     {
         ZYAN_CHECK(ZyanVectorShiftLeft(vector, index, count));
     }
@@ -589,7 +607,7 @@ ZyanStatus ZyanVectorDeleteEx(ZyanVector* vector, ZyanUSize index, ZyanUSize cou
     return ZYAN_STATUS_SUCCESS;
 }
 
-ZyanStatus ZyanVectorPop(ZyanVector* vector)
+ZyanStatus ZyanVectorPopBack(ZyanVector* vector)
 {
     if (!vector)
     {
@@ -598,6 +616,11 @@ ZyanStatus ZyanVectorPop(ZyanVector* vector)
     if (vector->size == 0)
     {
         return ZYAN_STATUS_OUT_OF_RANGE;
+    }
+
+    if (vector->destructor)
+    {
+         vector->destructor(ZYCORE_VECTOR_OFFSET(vector, vector->size - 1));
     }
 
     --vector->size;
@@ -612,7 +635,7 @@ ZyanStatus ZyanVectorPop(ZyanVector* vector)
 
 ZyanStatus ZyanVectorClear(ZyanVector* vector)
 {
-    return ZyanVectorResize(vector, 0);
+    return ZyanVectorResizeEx(vector, 0, ZYAN_NULL);
 }
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -726,9 +749,26 @@ ZyanStatus ZyanVectorBinarySearchEx(const ZyanVector* vector, const void* elemen
 
 ZyanStatus ZyanVectorResize(ZyanVector* vector, ZyanUSize size)
 {
+    return ZyanVectorResizeEx(vector, size, ZYAN_NULL);
+}
+
+ZyanStatus ZyanVectorResizeEx(ZyanVector* vector, ZyanUSize size, const void* initializer)
+{
     if (!vector)
     {
         return ZYAN_STATUS_INVALID_ARGUMENT;
+    }
+    if (size == vector->size)
+    {
+        return ZYAN_STATUS_SUCCESS;
+    }
+
+    if (vector->destructor && (size < vector->size))
+    {
+        for (ZyanUSize i = size; i < vector->size; ++i)
+        {
+            vector->destructor(ZYCORE_VECTOR_OFFSET(vector, i));
+        }       
     }
 
     if (ZYCORE_VECTOR_SHOULD_GROW(size, vector->capacity) ||
@@ -736,6 +776,14 @@ ZyanStatus ZyanVectorResize(ZyanVector* vector, ZyanUSize size)
     {
         ZYAN_CHECK(ZyanVectorReallocate(vector, (ZyanUSize)(size * vector->growth_factor)));
     };
+
+    if (initializer && (size > vector->size))
+    {
+        for (ZyanUSize i = vector->size; i < size; ++i)
+        {
+            ZYAN_MEMCPY(ZYCORE_VECTOR_OFFSET(vector, i), initializer, vector->element_size);
+        }       
+    }
 
     vector->size = size;
 

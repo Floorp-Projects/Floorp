@@ -68,7 +68,7 @@ cp $ZYDISTMP/zydis/dependencies/zycore/LICENSE Zycore
 rm -f Zycore/API/{Synchronization*,Terminal*,Thread*}
 mv Zydis/String.c Zydis/ZydisString.c
 mv Zycore/String.c Zycore/ZycoreString.c
-echo $REV > imported-revision.txt
+( cd $ZYDISTMP/zydis ; git log -n 1 | grep '^commit' | awk '{ print $2 }' ) > imported-revision.txt
 )
 
 # Rewrite include paths to be Firefox-canonical and reflect new

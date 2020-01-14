@@ -104,6 +104,9 @@ const ZydisDecoderTreeNode* ZydisDecoderTreeGetChildNode(const ZydisDecoderTreeN
     case ZYDIS_NODETYPE_FILTER_MODRM_RM:
         ZYAN_ASSERT(index <   8);
         return &FILTERS_MODRM_RM[parent->value][index];
+    case ZYDIS_NODETYPE_FILTER_PREFIX_GROUP1:
+        ZYAN_ASSERT(index < 2);
+        return &FILTERS_PREFIX_GROUP1[parent->value][index];
     case ZYDIS_NODETYPE_FILTER_MANDATORY_PREFIX:
         ZYAN_ASSERT(index <   5);
         return &FILTERS_MANDATORY_PREFIX[parent->value][index];

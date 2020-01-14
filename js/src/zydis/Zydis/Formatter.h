@@ -415,7 +415,7 @@ typedef enum ZydisPadding_
  * @brief   Defines the `ZydisFormatterFunction` enum.
  *
  * Do NOT change the order of the values this enum or the function fields inside the
- * `ZydisFormattter` struct.
+ * `ZydisFormatter` struct.
  */
 typedef enum ZydisFormatterFunction_
 {
