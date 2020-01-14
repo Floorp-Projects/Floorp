@@ -5288,7 +5288,13 @@ QuotaManager::MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (exists) {
-    NS_WARNING("indexedDB directory shouldn't exist after the upgrade!");
+    QM_WARNING("Deleting old <profile>/indexedDB directory!");
+
+    rv = indexedDBDir->Remove(/* aRecursive */ true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     return NS_OK;
   }
 
@@ -5361,7 +5367,13 @@ nsresult QuotaManager::
   }
 
   if (exists) {
-    NS_WARNING("storage/persistent shouldn't exist after the upgrade!");
+    QM_WARNING("Deleting old <profile>/storage/persistent directory!");
+
+    rv = persistentStorageDir->Remove(/* aRecursive */ true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
     return NS_OK;
   }
 
@@ -5414,61 +5426,6 @@ nsresult QuotaManager::
       nullptr, NS_LITERAL_STRING(DEFAULT_DIRECTORY_NAME));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult QuotaManager::MaybeRemoveOldDirectories() {
-  AssertIsOnIOThread();
-
-  nsCOMPtr<nsIFile> indexedDBDir;
-  nsresult rv =
-      NS_NewLocalFile(mIndexedDBPath, false, getter_AddRefs(indexedDBDir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool exists;
-  rv = indexedDBDir->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (exists) {
-    QM_WARNING("Deleting old <profile>/indexedDB directory!");
-
-    rv = indexedDBDir->Remove(/* aRecursive */ true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  nsCOMPtr<nsIFile> persistentStorageDir;
-  rv = NS_NewLocalFile(mStoragePath, false,
-                       getter_AddRefs(persistentStorageDir));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = persistentStorageDir->Append(
-      NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = persistentStorageDir->Exists(&exists);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (exists) {
-    QM_WARNING("Deleting old <profile>/storage/persistent directory!");
-
-    rv = persistentStorageDir->Remove(/* aRecursive */ true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
   }
 
   return NS_OK;
@@ -6337,11 +6294,6 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
     }
 
     rv = MaybeUpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = MaybeRemoveOldDirectories();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
