@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various zoom-related tests that spawn in new windows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+// Increase the tap timeouts so the double-tap is still detected in case of
+// random delays during testing.
+var doubletap_prefs = [
+  ["ui.click_hold_context_menus.delay", 10000],
+  ["apz.max_tap_time", 10000],
+];
+
+var subtests = [
+  {"file": "helper_basic_doubletap_zoom.html", "prefs": doubletap_prefs},
+];
+
+if (isApzEnabled()) {
+  // This has a lot of subtests, and Android emulators are slow.
+  SimpleTest.requestLongerTimeout(2);
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finish);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>

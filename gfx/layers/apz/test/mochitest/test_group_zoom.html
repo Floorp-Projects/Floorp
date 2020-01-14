@@ -34,20 +34,6 @@ var prefs = [
   ["apz.content_response_timeout", 60000],
 ];
 
-var meta_viewport_prefs = [
-  ...prefs,
-  // Some tests use mobile viewport sizing, enable it even on desktop.
-  ["dom.meta-viewport.enabled", true],
-];
-
-// Increase the tap timeouts so the double-tap is still detected in case of
-// random delays during testing.
-var doubletap_prefs = [
-  ...meta_viewport_prefs,
-  ["ui.click_hold_context_menus.delay", 10000],
-  ["apz.max_tap_time", 10000],
-];
-
 // Increase the tap timeouts so the one-touch-pinch gesture is still detected
 // in case of random delays during testing. Also ensure that the feature is
 // actually enabled (which it should be by default, but it's good to be safe).
@@ -64,7 +50,6 @@ var subtests = [
   {"file": "helper_zoom_prevented.html", "prefs": prefs},
   {"file": "helper_zoomed_pan.html", "prefs": prefs},
   {"file": "helper_fixed_position_scroll_hittest.html", "prefs": prefs},
-  {"file": "helper_basic_doubletap_zoom.html", "prefs": doubletap_prefs},
   {"file": "helper_onetouchpinch_nested.html", "prefs": onetouchpinch_prefs},
   {"file": "helper_visual_smooth_scroll.html", "prefs": prefs},
   {"file": "helper_scroll_into_view_bug1516056.html", "prefs": prefs},
