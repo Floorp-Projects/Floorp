@@ -174,7 +174,7 @@ class BytecodeLocation {
   JSOp getOp() const { return JSOp(*rawBytecode_); }
 
   BytecodeLocation getJumpTarget() const {
-    // The default target of a JSOP_TABLESWITCH also follows this format.
+    // The default target of a JSOp::TableSwitch also follows this format.
     MOZ_ASSERT(isJump() || is(JSOP_TABLESWITCH));
     return BytecodeLocation(*this,
                             rawBytecode_ + GET_JUMP_OFFSET(rawBytecode_));

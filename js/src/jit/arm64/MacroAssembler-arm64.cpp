@@ -175,7 +175,7 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
   Br(x0);
 
   // If we found a finally block, this must be a baseline frame.
-  // Push two values expected by JSOP_RETSUB: BooleanValue(true)
+  // Push two values expected by JSOp::Retsub: BooleanValue(true)
   // and the exception.
   bind(&finally);
   ARMRegister exception = x1;

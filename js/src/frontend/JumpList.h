@@ -20,7 +20,7 @@ namespace frontend {
 // Example:
 //
 //     JumpList brList;
-//     if (!emitJump(JSOP_IFEQ, &brList)) {
+//     if (!emitJump(JSOp::IfEq, &brList)) {
 //         return false;
 //     }
 //     ...
@@ -29,7 +29,7 @@ namespace frontend {
 //         return false;
 //     }
 //     ...
-//     if (!emitJump(JSOP_GOTO, &brList)) {
+//     if (!emitJump(JSOp::Goto, &brList)) {
 //         return false;
 //     }
 //     ...

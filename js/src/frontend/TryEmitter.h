@@ -71,39 +71,39 @@ class MOZ_STACK_CLASS TryEmitter {
   // block and the finally block, and also to save/restore the return value
   // before/after the finally block.
   //
-  //     JSOP_TRY offsetOf(jumpToEnd)
+  //     JSOp::Try offsetOf(jumpToEnd)
   //
   //     try_body...
   //
-  //     JSOP_GOSUB finally
-  //     JSOP_JUMPTARGET
+  //     JSOp::Gosub finally
+  //     JSOp::JumpTarget
   //   jumpToEnd:
-  //     JSOP_GOTO end:
+  //     JSOp::Goto end:
   //
   //   catch:
-  //     JSOP_JUMPTARGET
-  //   * JSOP_UNDEFINED
-  //   * JSOP_SETRVAL
+  //     JSOp::JumpTarget
+  //   * JSOp::Undefined
+  //   * JSOp::SetRval
   //
   //     catch_body...
   //
-  //     JSOP_GOSUB finally
-  //     JSOP_JUMPTARGET
-  //     JSOP_GOTO end
+  //     JSOp::Gosub finally
+  //     JSOp::JumpTarget
+  //     JSOp::Goto end
   //
   //   finally:
-  //     JSOP_JUMPTARGET
-  //   * JSOP_GETRVAL
-  //   * JSOP_UNDEFINED
-  //   * JSOP_SETRVAL
+  //     JSOp::JumpTarget
+  //   * JSOp::GetRval
+  //   * JSOp::Undefined
+  //   * JSOp::SetRval
   //
   //     finally_body...
   //
-  //   * JSOP_SETRVAL
-  //     JSOP_NOP
+  //   * JSOp::SetRval
+  //     JSOp::Nop
   //
   //   end:
-  //     JSOP_JUMPTARGET
+  //     JSOp::JumpTarget
   //
   // For syntactic try-catch-finally, Syntactic should be used.
   // For non-syntactic try-catch-finally, NonSyntactic should be used.
@@ -123,7 +123,7 @@ class MOZ_STACK_CLASS TryEmitter {
   // For non-syntactic try-catch-finally, all that handling is skipped.
   // The non-syntactic try-catch-finally must:
   //   * have only one catch block
-  //   * have JSOP_GOTO at the end of catch-block
+  //   * have JSOp::Goto at the end of catch-block
   //   * have no non-local-jump
   //   * don't use finally block for normal completion of try-block and
   //     catch-block
@@ -133,19 +133,19 @@ class MOZ_STACK_CLASS TryEmitter {
   // emitted.
   mozilla::Maybe<TryFinallyControl> controlInfo_;
 
-  // The stack depth before emitting JSOP_TRY.
+  // The stack depth before emitting JSOp::Try.
   int depth_;
 
-  // The offset of the JSOP_TRY op.
+  // The offset of the JSOp::Try op.
   BytecodeOffset tryOpOffset_;
 
-  // JSOP_JUMPTARGET after the entire try-catch-finally block.
+  // JSOp::JumpTarget after the entire try-catch-finally block.
   JumpList catchAndFinallyJump_;
 
-  // The offset of JSOP_GOTO at the end of the try block.
+  // The offset of JSOp::Goto at the end of the try block.
   JumpTarget tryEnd_;
 
-  // The offset of JSOP_JUMPTARGET at the beginning of the finally block.
+  // The offset of JSOp::JumpTarget at the beginning of the finally block.
   JumpTarget finallyStart_;
 
 #ifdef DEBUG

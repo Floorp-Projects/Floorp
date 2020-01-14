@@ -7148,8 +7148,8 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     const ParseContext::ClassStatement& classStmt, HandlePropertyName className,
     HasHeritage hasHeritage, uint32_t classStartOffset, uint32_t classEndOffset,
     size_t numFields, ListNodeType& classMembers) {
-  // Fields cannot re-use the constructor obtained via JSOP_CLASSCONSTRUCTOR or
-  // JSOP_DERIVEDCONSTRUCTOR due to needing to emit calls to the field
+  // Fields cannot re-use the constructor obtained via JSOp::ClassConstructor or
+  // JSOp::DerivedConstructor due to needing to emit calls to the field
   // initializers in the constructor. So, synthesize a new one.
   if (classStmt.constructorBox == nullptr && numFields > 0) {
     MOZ_ASSERT(!options().selfHostingMode);

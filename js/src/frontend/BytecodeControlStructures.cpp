@@ -55,7 +55,7 @@ bool LoopControl::emitContinueTarget(BytecodeEmitter* bce) {
 bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
                                const Maybe<uint32_t>& nextPos) {
   // Insert a NOP if needed to ensure the script does not start with a
-  // JSOP_LOOPHEAD. This avoids JIT issues with prologue code + try notes
+  // JSOp::LoopHead. This avoids JIT issues with prologue code + try notes
   // or OSR. See bug 1602390 and bug 1602681.
   if (bce->bytecodeSection().offset().toUint32() == 0) {
     if (!bce->emit1(JSOP_NOP)) {

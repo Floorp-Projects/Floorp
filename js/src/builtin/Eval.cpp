@@ -571,7 +571,7 @@ JS_FRIEND_API bool js::ExecuteInJSMEnvironment(JSContext* cx,
     //      WithEnvironmentObject[target=targetObj]
     //      LexicalEnvironmentObject[this=targetObj] (*)
     //
-    //  (*) This environment intercepts JSOP_GLOBALTHIS.
+    //  (*) This environment intercepts JSOp::GlobalThis.
 
     // Wrap the target objects in WithEnvironments.
     if (!js::CreateObjectsForEnvironmentChain(cx, targetObj, env, &env)) {

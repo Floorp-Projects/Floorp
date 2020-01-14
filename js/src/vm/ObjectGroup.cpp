@@ -187,7 +187,7 @@ bool ObjectGroup::useSingletonForClone(JSFunction* fun) {
 bool ObjectGroup::useSingletonForNewObject(JSContext* cx, JSScript* script,
                                            jsbytecode* pc) {
   /*
-   * Make a heuristic guess at a use of JSOP_NEW that the constructed object
+   * Make a heuristic guess at a use of JSOp::New that the constructed object
    * should have a fresh group. We do this when the NEW is immediately
    * followed by a simple assignment to an object's .prototype field.
    * This is designed to catch common patterns for subclassing in JS:

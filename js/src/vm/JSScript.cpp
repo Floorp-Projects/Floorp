@@ -1133,8 +1133,8 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     if (!isFunctionScript && script->treatAsRunOnce() && script->hasRunOnce()) {
       // This is a toplevel or eval script that's runOnce.  We want to
       // make sure that we're not XDR-saving an object we emitted for
-      // JSOP_OBJECT that then got modified.  So throw if we're not
-      // cloning in JSOP_OBJECT or if we ever didn't clone in it in the
+      // JSOp::Object that then got modified.  So throw if we're not
+      // cloning in JSOp::Object or if we ever didn't clone in it in the
       // past.
       Realm* realm = cx->realm();
       if (!realm->creationOptions().cloneSingletons() ||
@@ -4589,12 +4589,12 @@ void JSScript::assertValidJumpTargets() const {
       MOZ_ASSERT(mainLoc <= target && target < endLoc);
       MOZ_ASSERT(target.isJumpTarget());
 
-      // All backward jumps must be to a JSOP_LOOPHEAD op. This is an invariant
+      // All backward jumps must be to a JSOp::LoopHead op. This is an invariant
       // we want to maintain to simplify JIT compilation and bytecode analysis.
       MOZ_ASSERT_IF(target < loc, target.is(JSOP_LOOPHEAD));
       MOZ_ASSERT_IF(target < loc, IsBackedgePC(loc.toRawBytecode()));
 
-      // All forward jumps must be to a JSOP_JUMPTARGET op.
+      // All forward jumps must be to a JSOp::JumpTarget op.
       MOZ_ASSERT_IF(target > loc, target.is(JSOP_JUMPTARGET));
 
       // Jumps must not cross scope boundaries.

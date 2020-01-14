@@ -84,7 +84,7 @@ static bool AsyncFunctionResume(JSContext* cx,
                                 ResumeKind kind, HandleValue valueOrReason) {
   // We're enqueuing the promise job for Await before suspending the execution
   // of the async function. So when either the debugger or OOM errors terminate
-  // the execution after JSOP_ASYNCAWAIT, but before JSOP_AWAIT, we're in an
+  // the execution after JSOp::AsyncAwait, but before JSOp::Await, we're in an
   // inconsistent state, because we don't have a resume index set and therefore
   // don't know where to resume the async function. Return here in that case.
   if (generator->isClosed()) {

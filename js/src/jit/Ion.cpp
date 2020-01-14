@@ -1963,7 +1963,7 @@ static bool CanIonCompileOrInlineScript(JSScript* script, const char** reason) {
   if (script->isForEval()) {
     // Eval frames are not yet supported. Supporting this will require new
     // logic in pushBailoutFrame to deal with linking prev.
-    // Additionally, JSOP_DEFVAR support will require baking in isEvalFrame().
+    // Additionally, JSOp::DefVar support will require baking in isEvalFrame().
     *reason = "eval script";
     return false;
   }

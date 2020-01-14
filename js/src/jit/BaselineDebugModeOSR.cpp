@@ -232,7 +232,7 @@ static void PatchBaselineFramesForDebugMode(
   //  E. From the debug trap handler.
   //  F. From the debug prologue.
   //  G. From the debug epilogue.
-  //  H. From a JSOP_AFTERYIELD instruction.
+  //  H. From a JSOp::AfterYield instruction.
   //
   // In general, we patch the return address from VM calls and ICs to the
   // corresponding entry in the recompiled BaselineScript. For entries that are

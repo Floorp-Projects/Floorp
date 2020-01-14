@@ -763,7 +763,7 @@ static bool ShellInterruptCallback(JSContext* cx) {
     // Report any exceptions thrown by the JS interrupt callback, but do
     // *not* keep it on the cx. The interrupt handler is invoked at points
     // that are not expected to throw catchable exceptions, like at
-    // JSOP_RETRVAL.
+    // JSOp::RetRval.
     //
     // If the interrupted JS code was already throwing, any exceptions
     // thrown by the interrupt handler are silently swallowed.

@@ -1193,7 +1193,7 @@ class FlowGraphSummary {
         }
       } else if (op == JSOP_TRY) {
         // As there is no literal incoming edge into the catch block, we
-        // make a fake one by copying the JSOP_TRY location, as-if this
+        // make a fake one by copying the JSOp::Try location, as-if this
         // was an incoming edge of the catch block. This is needed
         // because we only report offsets of entry points which have
         // valid incoming edges.

@@ -849,7 +849,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
         builder.valuePointerAtStackOffset(argOffset).set(arg);
       } else if (argsObjAliasesFormals) {
         // When the arguments object aliases the formal arguments, then
-        // JSOP_SETARG mutates the argument object. In such cases, the
+        // JSOp::SetArg mutates the argument object. In such cases, the
         // list of arguments reported by the snapshot are only aliases
         // of argument object slots which are optimized to only store
         // differences compared to arguments which are on the stack.
@@ -889,7 +889,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   // Inlining of SPREADCALL-like frames not currently supported.
   MOZ_ASSERT_IF(IsSpreadOp(op), !iter.moreFrames());
 
-  // Fixup inlined JSOP_FUNCALL, JSOP_FUNAPPLY, and accessors on the caller
+  // Fixup inlined JSOp::FunCall, JSOp::FunApply, and accessors on the caller
   // side. On the caller side this must represent like the function wasn't
   // inlined.
   uint32_t pushedSlots = 0;
@@ -1861,7 +1861,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     ICFallbackStub* fallbackStub = icEntry.fallbackStub();
 
     // Not every monitored op has a monitored fallback stub, e.g.
-    // JSOP_NEWOBJECT, which always returns the same type for a
+    // JSOp::NewObject, which always returns the same type for a
     // particular script/pc location.
     if (fallbackStub->isMonitoredFallback()) {
       ICMonitoredFallbackStub* stub = fallbackStub->toMonitoredFallbackStub();

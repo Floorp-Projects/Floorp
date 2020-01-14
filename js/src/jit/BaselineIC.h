@@ -1511,7 +1511,7 @@ class ICTypeUpdate_AnyValue : public ICStub {
 };
 
 // ToBool
-//      JSOP_IFNE
+//      JSOp::IfNe
 
 class ICToBool_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
@@ -1524,8 +1524,8 @@ class ICToBool_Fallback : public ICFallbackStub {
 };
 
 // GetElem
-//      JSOP_GETELEM
-//      JSOP_GETELEM_SUPER
+//      JSOp::GetElem
+//      JSOp::GetElemSuper
 
 class ICGetElem_Fallback : public ICMonitoredFallbackStub {
   friend class ICStubSpace;
@@ -1545,8 +1545,8 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub {
 };
 
 // SetElem
-//      JSOP_SETELEM
-//      JSOP_INITELEM
+//      JSOp::SetElem
+//      JSOp::InitElem
 
 class ICSetElem_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
@@ -1566,7 +1566,7 @@ class ICSetElem_Fallback : public ICFallbackStub {
 };
 
 // In
-//      JSOP_IN
+//      JSOp::In
 class ICIn_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
@@ -1575,7 +1575,7 @@ class ICIn_Fallback : public ICFallbackStub {
 };
 
 // HasOwn
-//      JSOP_HASOWN
+//      JSOp::HasOwn
 class ICHasOwn_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
@@ -1584,8 +1584,8 @@ class ICHasOwn_Fallback : public ICFallbackStub {
 };
 
 // GetName
-//      JSOP_GETNAME
-//      JSOP_GETGNAME
+//      JSOp::GetName
+//      JSOp::GetGName
 class ICGetName_Fallback : public ICMonitoredFallbackStub {
   friend class ICStubSpace;
 
@@ -1594,7 +1594,7 @@ class ICGetName_Fallback : public ICMonitoredFallbackStub {
 };
 
 // BindName
-//      JSOP_BINDNAME
+//      JSOp::BindName
 class ICBindName_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
@@ -1603,7 +1603,7 @@ class ICBindName_Fallback : public ICFallbackStub {
 };
 
 // GetIntrinsic
-//      JSOP_GETINTRINSIC
+//      JSOp::GetIntrinsic
 class ICGetIntrinsic_Fallback : public ICMonitoredFallbackStub {
   friend class ICStubSpace;
 
@@ -1612,8 +1612,8 @@ class ICGetIntrinsic_Fallback : public ICMonitoredFallbackStub {
 };
 
 // GetProp
-//     JSOP_GETPROP
-//     JSOP_GETPROP_SUPER
+//     JSOp::GetProp
+//     JSOp::GetPropSuper
 
 class ICGetProp_Fallback : public ICMonitoredFallbackStub {
   friend class ICStubSpace;
@@ -1631,10 +1631,10 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub {
 };
 
 // SetProp
-//     JSOP_SETPROP
-//     JSOP_SETNAME
-//     JSOP_SETGNAME
-//     JSOP_INITPROP
+//     JSOp::SetProp
+//     JSOp::SetName
+//     JSOp::SetGName
+//     JSOp::InitProp
 
 class ICSetProp_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
@@ -1644,14 +1644,14 @@ class ICSetProp_Fallback : public ICFallbackStub {
 };
 
 // Call
-//      JSOP_CALL
-//      JSOP_CALL_IGNORES_RV
-//      JSOP_FUNAPPLY
-//      JSOP_FUNCALL
-//      JSOP_NEW
-//      JSOP_SPREADCALL
-//      JSOP_SPREADNEW
-//      JSOP_SPREADEVAL
+//      JSOp::Call
+//      JSOp::CallIgnoresRv
+//      JSOp::FunApply
+//      JSOp::FunCall
+//      JSOp::New
+//      JSOp::SpreadCall
+//      JSOp::SpreadNew
+//      JSOp::SpreadEval
 
 class ICCall_Fallback : public ICMonitoredFallbackStub {
   friend class ICStubSpace;
@@ -1673,7 +1673,7 @@ class ICGetIterator_Fallback : public ICFallbackStub {
 };
 
 // InstanceOf
-//      JSOP_INSTANCEOF
+//      JSOp::Instanceof
 class ICInstanceOf_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
@@ -1682,8 +1682,8 @@ class ICInstanceOf_Fallback : public ICFallbackStub {
 };
 
 // TypeOf
-//      JSOP_TYPEOF
-//      JSOP_TYPEOFEXPR
+//      JSOp::Typeof
+//      JSOp::TypeofExpr
 class ICTypeOf_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
 
@@ -1710,10 +1710,10 @@ class ICRest_Fallback : public ICFallbackStub {
 };
 
 // UnaryArith
-//     JSOP_BITNOT
-//     JSOP_NEG
-//     JSOP_INC
-//     JSOP_DEC
+//     JSOp::BitNot
+//     JSOp::Neg
+//     JSOp::Inc
+//     JSOp::Dec
 
 class ICUnaryArith_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
@@ -1729,14 +1729,14 @@ class ICUnaryArith_Fallback : public ICFallbackStub {
 };
 
 // Compare
-//      JSOP_LT
-//      JSOP_LE
-//      JSOP_GT
-//      JSOP_GE
-//      JSOP_EQ
-//      JSOP_NE
-//      JSOP_STRICTEQ
-//      JSOP_STRICTNE
+//      JSOp::Lt
+//      JSOp::Le
+//      JSOp::Gt
+//      JSOp::Ge
+//      JSOp::Eq
+//      JSOp::Ne
+//      JSOp::StrictEq
+//      JSOp::StrictNe
 
 class ICCompare_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
@@ -1746,9 +1746,9 @@ class ICCompare_Fallback : public ICFallbackStub {
 };
 
 // BinaryArith
-//      JSOP_ADD, JSOP_SUB, JSOP_MUL, JOP_DIV, JSOP_MOD
-//      JSOP_BITAND, JSOP_BITXOR, JSOP_BITOR
-//      JSOP_LSH, JSOP_RSH, JSOP_URSH
+//      JSOp::Add, JSOp::Sub, JSOp::Mul, JOP_DIV, JSOp::Mod
+//      JSOp::BitAnd, JSOp::BitXor, JSOp::BitOr
+//      JSOp::Lsh, JSOp::Rsh, JSOp::Ursh
 
 class ICBinaryArith_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
@@ -1767,7 +1767,7 @@ class ICBinaryArith_Fallback : public ICFallbackStub {
   void setSawDoubleResult() { extra_ |= SAW_DOUBLE_RESULT_BIT; }
 };
 
-// JSOP_NEWARRAY
+// JSOp::NewArray
 
 class ICNewArray_Fallback : public ICFallbackStub {
   friend class ICStubSpace;
@@ -1799,7 +1799,7 @@ class ICNewArray_Fallback : public ICFallbackStub {
   }
 };
 
-// JSOP_NEWOBJECT
+// JSOp::NewObject
 
 class ICNewObject_Fallback : public ICFallbackStub {
   friend class ICStubSpace;

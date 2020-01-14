@@ -1574,7 +1574,7 @@ BindingIter::BindingIter(JSScript* script) : BindingIter(script->bodyScope()) {}
 void BindingIter::init(LexicalScope::Data& data, uint32_t firstFrameSlot,
                        uint8_t flags) {
   // Named lambda scopes can only have environment slots. If the callee
-  // isn't closed over, it is accessed via JSOP_CALLEE.
+  // isn't closed over, it is accessed via JSOp::Callee.
   if (flags & IsNamedLambda) {
     // Named lambda binding is weird. Normal BindingKind ordering rules
     // don't apply.

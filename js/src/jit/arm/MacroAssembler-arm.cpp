@@ -3357,7 +3357,7 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   jump(r0);
 
   // If we found a finally block, this must be a baseline frame. Push two
-  // values expected by JSOP_RETSUB: BooleanValue(true) and the exception.
+  // values expected by JSOp::Retsub: BooleanValue(true) and the exception.
   bind(&finally);
   ValueOperand exception = ValueOperand(r1, r2);
   loadValue(Operand(sp, offsetof(ResumeFromException, exception)), exception);

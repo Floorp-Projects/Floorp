@@ -43,7 +43,7 @@
  * (The original intent was to allow for ObjLiteral instructions to actually be
  * invoked by a new JS opcode, JSOP_OBJLITERAL, thus replacing the more general
  * opcode sequences sometimes generated to fill in objects and removing the
- * need to attach actual objects to JSOP_OBJECT or JSOP_NEWOBJECT. However,
+ * need to attach actual objects to JSOp::Object or JSOp::NewObject. However,
  * this was far too invasive and led to performance regressions, so currently
  * ObjLiteral only carries literals as far as the end of the parse pipeline,
  * when all GC things are allocated.)
@@ -60,25 +60,25 @@
  * - To build a template object, when we can support the properties but not the
  *   keys.
  * - To build the actual result object, when we support the properties and the
- *   keys and this is a JSOP_OBJECT case (see below).
+ *   keys and this is a JSOp::Object case (see below).
  *
  * Design and Performance Considerations
  * -------------------------------------
  *
  * As a brief overview, there are a number of opcodes that allocate objects:
  *
- * - JSOP_NEWINIT allocates a new empty `{}` object.
+ * - JSOp::NewInit allocates a new empty `{}` object.
  *
- * - JSOP_NEWOBJECT, with an object as an argument (held by the script data
+ * - JSOp::NewObject, with an object as an argument (held by the script data
  *   side-tables), allocates a new object with `undefined` property values but
  *   with a defined set of properties. The given object is used as a
  *   *template*.
  *
- * - JSOP_NEWOBJECT_WITHGROUP (added as part of this ObjLiteral work), same as
+ * - JSOp::NewObjectWithGroup (added as part of this ObjLiteral work), same as
  *   above but uses the ObjectGroup of the template object for the new object,
  *   rather than trying to apply a set of heuristics to choose a group.
  *
- * - JSOP_OBJECT, with an object as argument, instructs the runtime to
+ * - JSOp::Object, with an object as argument, instructs the runtime to
  *   literally return the object argument as the result. This is thus only an
  *   "allocation" in the sense that the object was originally allocated when
  *   the script data / bytecode was created. It is only used when we know for
@@ -103,14 +103,14 @@
  * construct the ObjLiteral and the bytecode using its result appropriately:
  *
  * - If in a singleton context, and if we support the values, we use
- *   JSOP_OBJECT and we build the ObjLiteral instructions with values.
+ *   JSOp::Object and we build the ObjLiteral instructions with values.
  * - Otherwise, if we support the keys but not the values, or if we are not
- *   in a singleton context, we use JSOP_NEWOBJECT or JSOP_NEWOBJECT_WITHGROUP,
+ *   in a singleton context, we use JSOp::NewObject or JSOp::NewObjectWithGroup,
  *   depending on the "inner singleton" status (see below). In this case, the
  *   initial opcode only creates an object with empty values, so
  *   BytecodeEmitter then generates bytecode to set the values
  *   appropriately.
- * - Otherwise, we generate JSOP_NEWINIT and bytecode to add properties one at
+ * - Otherwise, we generate JSOp::NewInit and bytecode to add properties one at
  *   a time. This will always work, but is the slowest and least
  *   memory-efficient option.
  *
@@ -178,7 +178,7 @@ enum class ObjLiteralFlag : uint8_t {
   // This object is inside a top-level singleton, and so prior to ObjLiteral,
   // would have been allocated at parse time, but is now allocated in bytecode.
   // We do special things to get the right group on the template object; this
-  // flag indicates that if JSOP_NEWOBJECT copies the object, it should retain
+  // flag indicates that if JSOp::NewObject copies the object, it should retain
   // its group.
   IsInnerSingleton = 6,
 };

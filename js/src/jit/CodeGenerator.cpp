@@ -6637,7 +6637,7 @@ void CodeGenerator::visitNewTypedArrayFromArrayBuffer(
   callVM<Fn, js::NewTypedArrayWithTemplateAndBuffer>(lir);
 }
 
-// Out-of-line object allocation for JSOP_NEWOBJECT.
+// Out-of-line object allocation for JSOp::NewObject.
 class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator> {
   LNewObject* lir_;
 
@@ -8110,13 +8110,13 @@ void CodeGenerator::emitCompareS(LInstruction* lir, JSOp op, Register left,
     ool = oolCallVM<Fn, jit::StringsCompare<ComparisonKind::LessThan>>(
         lir, ArgList(left, right), StoreRegisterTo(output));
   } else if (op == JSOP_LE) {
-    // Push the operands in reverse order for JSOP_LE:
+    // Push the operands in reverse order for JSOp::Le:
     // - |left <= right| is implemented as |right >= left|.
     ool =
         oolCallVM<Fn, jit::StringsCompare<ComparisonKind::GreaterThanOrEqual>>(
             lir, ArgList(right, left), StoreRegisterTo(output));
   } else if (op == JSOP_GT) {
-    // Push the operands in reverse order for JSOP_GT:
+    // Push the operands in reverse order for JSOp::Gt:
     // - |left > right| is implemented as |right < left|.
     ool = oolCallVM<Fn, jit::StringsCompare<ComparisonKind::LessThan>>(
         lir, ArgList(right, left), StoreRegisterTo(output));

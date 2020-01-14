@@ -207,9 +207,9 @@ class DebugAPI {
    * fires .onEnterFrame (again, since we're re-entering the frame).
    *
    * Unfortunately, the interpreter and the baseline JIT arrange for this to
-   * be called in different ways. The interpreter calls it from JSOP_RESUME,
+   * be called in different ways. The interpreter calls it from JSOp::Resume,
    * immediately after pushing the resumed frame; the JIT calls it from
-   * JSOP_AFTERYIELD, just after the generator resumes. The difference
+   * JSOp::AfterYield, just after the generator resumes. The difference
    * should not be user-visible.
    */
   static inline MOZ_MUST_USE bool onResumeFrame(JSContext* cx,
@@ -319,7 +319,7 @@ class DebugAPI {
 
   /*
    * Announce to the debugger that a generator object has been created,
-   * via JSOP_GENERATOR.
+   * via JSOp::Generator.
    *
    * This does not fire user hooks, but it's needed for debugger bookkeeping.
    */

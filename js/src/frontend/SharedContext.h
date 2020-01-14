@@ -394,7 +394,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   // prologue: instead we can analyze how 'arguments' is used (using the
   // simple dataflow analysis in analyzeSSA) to determine that uses of
   // 'arguments' can just read from the stack frame directly. However, the
-  // dataflow analysis only looks at how JSOP_ARGUMENTS is used, so it will
+  // dataflow analysis only looks at how JSOp::Arguments is used, so it will
   // be unsound in several cases. The frontend filters out such cases by
   // setting this flag which eagerly sets script->needsArgsObj to true.
   //
@@ -404,7 +404,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isDerivedClassConstructor_ : 1;
 
   // Whether this function has a .this binding. If true, we need to emit
-  // JSOP_FUNCTIONTHIS in the prologue to initialize it.
+  // JSOp::FunctionThis in the prologue to initialize it.
   bool hasThisBinding_ : 1;
 
   // Whether this function has nested functions.

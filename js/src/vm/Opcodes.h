@@ -60,8 +60,8 @@
  * the start of another instruction in the same script. Operands named
  * `forwardOffset` or `defaultOffset` must be positive.
  *
- * Forward jumps must jump to a `JSOP_JUMPTARGET` instruction.  Backward jumps,
- * indicated by negative offsets, must jump to a `JSOP_LOOPHEAD` instruction.
+ * Forward jumps must jump to a `JSOp::JumpTarget` instruction.  Backward jumps,
+ * indicated by negative offsets, must jump to a `JSOp::LoopHead` instruction.
  * Jump offsets can't be zero.
  *
  * Needless to say, scripts must not contain overlapping instruction sequences
@@ -74,12 +74,12 @@
  * paths into the span must establish that invariant. In practice, this means
  * other code never jumps into the span: the only way in is to execute the
  * bytecode instruction that sets up the invariant (in our example,
- * `JSOP_ITER`).
+ * `JSOp::Iter`).
  *
  * If a script's `trynotes` (see "Try Notes" in JSScript.h) contain a
- * `JSTRY_CATCH` or `JSTRY_FINALLY` span, there must be a `JSOP_TRY`
- * instruction immediately before the span and a `JSOP_JUMPTARGET immediately
- * after it. Instructions must not jump to this `JSOP_JUMPTARGET`. (The VM puts
+ * `JSTRY_CATCH` or `JSTRY_FINALLY` span, there must be a `JSOp::Try`
+ * instruction immediately before the span and a `JSOp::JumpTarget immediately
+ * after it. Instructions must not jump to this `JSOp::JumpTarget`. (The VM puts
  * us there on exception.) Furthermore, the instruction sequence immediately
  * following a `JSTRY_CATCH` span must read `JUMPTARGET; EXCEPTION` or, in
  * non-function scripts, `JUMPTARGET; UNDEFINED; SETRVAL; EXCEPTION`. (These
@@ -89,7 +89,7 @@
  * Unreachable instructions are allowed, but they have to follow all the rules.
  *
  * Control must not reach the end of a script. (Currently, the last instruction
- * is always JSOP_RETRVAL.)
+ * is always JSOp::RetRval.)
  *
  * ## Other operands
  *
@@ -150,21 +150,21 @@
  *
  *         X's stack depth - `js::StackUses(X)` + `js::StackDefs(X)`
  *
- *     except for `JSOP_CASE` (below).
+ *     except for `JSOp::Case` (below).
  *
  *     X's "successors" are: the next instruction in the script, if
  *     `js::FlowsIntoNext(op)` is true for X's opcode; one or more
- *     `JSOP_JUMPTARGET`s elsewhere, if X is a forward jump or
- *     `JSOP_TABLESWITCH`; and/or a `JSOP_LOOPHEAD` if it's a backward jump.
+ *     `JSOp::JumpTarget`s elsewhere, if X is a forward jump or
+ *     `JSOp::TableSwitch`; and/or a `JSOp::LoopHead` if it's a backward jump.
  *
- * -   `JSOP_CASE` is a special case because its stack behavior is eccentric.
+ * -   `JSOp::Case` is a special case because its stack behavior is eccentric.
  *     The formula above is correct for the next instruction. The jump target
  *     has a stack depth that is 1 less.
  *
- * -   See `JSOP_GOSUB` for another special case.
+ * -   See `JSOp::Gosub` for another special case.
  *
- * -   The `JSOP_JUMPTARGET` instruction immediately following a `JSTRY_CATCH`
- *     or `JSTRY_FINALLY` span has the same stack depth as the `JSOP_TRY`
+ * -   The `JSOp::JumpTarget` instruction immediately following a `JSTRY_CATCH`
+ *     or `JSTRY_FINALLY` span has the same stack depth as the `JSOp::Try`
  *     instruction that precedes the span.
  *
  *     Every instruction covered by the `JSTRY_CATCH` or `JSTRY_FINALLY` span
@@ -281,8 +281,8 @@
     /*
      * Push the `int32_t` immediate operand as an `Int32Value`.
      *
-     * `JSOP_ZERO`, `JSOP_ONE`, `JSOP_INT8`, `JSOP_UINT16`, and `JSOP_UINT24`
-     * are all compact encodings for `JSOP_INT32`.
+     * `JSOp::Zero`, `JSOp::One`, `JSOp::Int8`, `JSOp::Uint16`, and `JSOp::Uint24`
+     * are all compact encodings for `JSOp::Int32`.
      *
      *   Category: Constants
      *   Operands: int32_t val
@@ -385,9 +385,9 @@
      * Infallible. The result is always a string that depends on the [type][2]
      * of `val`.
      *
-     * `JSOP_TYPEOF` and `JSOP_TYPEOFEXPR` are the same except
-     * that--amazingly--`JSOP_TYPEOF` affects the behavior of an immediately
-     * *preceding* `JSOP_GETNAME` or `JSOP_GETGNAME` instruction! This is how
+     * `JSOp::Typeof` and `JSOp::TypeofExpr` are the same except
+     * that--amazingly--`JSOp::Typeof` affects the behavior of an immediately
+     * *preceding* `JSOp::GetName` or `JSOp::GetGName` instruction! This is how
      * we implement [`typeof`][1] step 2, making `typeof nonExistingVariable`
      * return `"undefined"` instead of throwing a ReferenceError.
      *
@@ -635,7 +635,7 @@
      * Add or subtract 1.
      *
      * `val` must already be a numeric value, such as the result of
-     * `JSOP_TONUMERIC`.
+     * `JSOp::ToNumeric`.
      *
      * Implements: [The `++` and `--` operators][1], step 3 of each algorithm.
      *
@@ -694,7 +694,7 @@
      * array indices are strings, whereas for us they are integers.
      *
      * This is used for code like `++obj[index]`, which must do both a
-     * `JSOP_GETELEM` and a `JSOP_SETELEM` with the same property key. Both
+     * `JSOp::GetElem` and a `JSOp::SetElem` with the same property key. Both
      * instructions would convert `index` to a property key for us, but the
      * spec says to convert it only once.
      *
@@ -715,8 +715,8 @@
      * Implements: [ToNumeric][1](val).
      *
      * Note: This is used to implement [`++` and `--`][2]. Surprisingly, it's
-     * not possible to get the right behavior using `JSOP_ADD` and `JSOP_SUB`
-     * alone. For one thing, `JSOP_ADD` sometimes does string concatenation,
+     * not possible to get the right behavior using `JSOp::Add` and `JSOp::Sub`
+     * alone. For one thing, `JSOp::Add` sometimes does string concatenation,
      * while `++` always does numeric addition. More fundamentally, the result
      * of evaluating `--x` is ToNumeric(old value of `x`), a value that the
      * sequence `GETLOCAL "x"; ONE; SUB; SETLOCAL "x"` does not give us.
@@ -736,7 +736,7 @@
      * Implements: [ToString][1](val).
      *
      * Note: This is used in code for template literals, like `${x}${y}`. Each
-     * substituted value must be converted using ToString. `JSOP_ADD` by itself
+     * substituted value must be converted using ToString. `JSOp::Add` by itself
      * would do a slightly wrong kind of conversion (hint="number" rather than
      * hint="string").
      *
@@ -808,7 +808,7 @@
      * Create and push a new object with no properties.
      *
      * (This opcode has 4 unused bytes so it can be easily turned into
-     * `JSOP_NEWOBJECT` during bytecode generation.)
+     * `JSOp::NewObject` during bytecode generation.)
      *
      *   Category: Objects
      *   Type: Creating objects
@@ -824,9 +824,9 @@
      * must fill in all slots of the new object before it is used in any other
      * way.
      *
-     * For `JSOP_NEWOBJECT`, the new object has a group based on the allocation
+     * For `JSOp::NewObject`, the new object has a group based on the allocation
      * site (or a new group if the template's group is a singleton). For
-     * `JSOP_NEWOBJECT_WITHGROUP`, the new object has the same group as the
+     * `JSOp::NewObjectWithGroup`, the new object has the same group as the
      * template object.
      *
      *   Category: Objects
@@ -839,7 +839,7 @@
     /*
      * Push a preconstructed object.
      *
-     * Going one step further than `JSOP_NEWOBJECT`, this instruction doesn't
+     * Going one step further than `JSOp::NewObject`, this instruction doesn't
      * just reuse the shape--it actually pushes the preconstructed object
      * `script->getObject(objectIndex)` right onto the stack. The object must
      * be a singleton `PlainObject` or `ArrayObject`.
@@ -887,7 +887,7 @@
      */ \
     MACRO(JSOP_INITPROP, InitProp, init_prop, "initprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
-     * Like `JSOP_INITPROP`, but define a non-enumerable property.
+     * Like `JSOp::InitProp`, but define a non-enumerable property.
      *
      * This is used to define class methods.
      *
@@ -903,7 +903,7 @@
      */ \
     MACRO(JSOP_INITHIDDENPROP, InitHiddenProp, init_hidden_prop, "inithiddenprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPINIT|JOF_DETECTING|JOF_IC) \
     /*
-     * Like `JSOP_INITPROP`, but define a non-enumerable, non-writable,
+     * Like `JSOp::InitProp`, but define a non-enumerable, non-writable,
      * non-configurable property.
      *
      * This is used to define the `.prototype` property on classes.
@@ -926,7 +926,7 @@
      * object literals like `{0: val}` and `{[id]: val}`, and methods like
      * `*[Symbol.iterator]() {}`.
      *
-     * `JSOP_INITHIDDENELEM` is the same but defines a non-enumerable property,
+     * `JSOp::InitHiddenElem` is the same but defines a non-enumerable property,
      * for class methods.
      *
      *    [1]: https://tc39.es/ecma262/#sec-createdatapropertyorthrow
@@ -942,7 +942,7 @@
      * Define an accessor property on `obj` with the given `getter`.
      * `nameIndex` gives the property name.
      *
-     * `JSOP_INITHIDDENPROP_GETTER` is the same but defines a non-enumerable
+     * `JSOp::InitHiddenPropGetter` is the same but defines a non-enumerable
      * property, for getters in classes.
      *
      *   Category: Objects
@@ -957,7 +957,7 @@
      *
      * This is used to implement getters like `get [id]() {}` or `get 0() {}`.
      *
-     * `JSOP_INITHIDDENELEM_GETTER` is the same but defines a non-enumerable
+     * `JSOp::InitHiddenElemGetter` is the same but defines a non-enumerable
      * property, for getters in classes.
      *
      *   Category: Objects
@@ -972,7 +972,7 @@
      *
      * This is used to implement ordinary setters like `set foo(v) {}`.
      *
-     * `JSOP_INITHIDDENPROP_SETTER` is the same but defines a non-enumerable
+     * `JSOp::InitHiddenPropSetter` is the same but defines a non-enumerable
      * property, for setters in classes.
      *
      *   Category: Objects
@@ -989,7 +989,7 @@
      * This is used to implement setters with computed property keys or numeric
      * keys.
      *
-     * `JSOP_INITHIDDENELEM_SETTER` is the same but defines a non-enumerable
+     * `JSOp::InitHiddenElemSetter` is the same but defines a non-enumerable
      * property, for setters in classes.
      *
      *   Category: Objects
@@ -1003,7 +1003,7 @@
      * Get the value of the property `obj.name`. This can call getters and
      * proxy traps.
      *
-     * `JSOP_CALLPROP` is exactly like `JSOP_GETPROP` but hints to the VM that we're
+     * `JSOp::CallProp` is exactly like `JSOp::GetProp` but hints to the VM that we're
      * getting a method in order to call it.
      *
      * Implements: [GetV][1], [GetValue][2] step 5.
@@ -1021,7 +1021,7 @@
     /*
      * Get the value of the property `obj[key]`.
      *
-     * `JSOP_CALLELEM` is exactly like `JSOP_GETELEM` but hints to the VM that
+     * `JSOp::CallElem` is exactly like `JSOp::GetElem` but hints to the VM that
      * we're getting a method in order to call it.
      *
      * Implements: [GetV][1], [GetValue][2] step 5.
@@ -1040,7 +1040,7 @@
      * Push the value of `obj.length`.
      *
      * `nameIndex` must be the index of the atom `"length"`. This then behaves
-     * exactly like `JSOP_GETPROP`.
+     * exactly like `JSOp::GetProp`.
      *
      *   Category: Objects
      *   Type: Accessing properties
@@ -1066,7 +1066,7 @@
      */ \
     MACRO(JSOP_SETPROP, SetProp, set_prop, "setprop", NULL, 5, 2, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Like `JSOP_SETPROP`, but for strict mode code. Throw a TypeError if
+     * Like `JSOp::SetProp`, but for strict mode code. Throw a TypeError if
      * `obj[key]` exists but is non-writable, if it's an accessor property with
      * no setter, or if `obj` is a primitive value.
      *
@@ -1090,7 +1090,7 @@
      */ \
     MACRO(JSOP_SETELEM, SetElem, set_elem, "setelem", NULL, 1, 3, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Like `JSOP_SETELEM`, but for strict mode code. Throw a TypeError if
+     * Like `JSOp::SetElem`, but for strict mode code. Throw a TypeError if
      * `obj[key]` exists but is non-writable, if it's an accessor property with
      * no setter, or if `obj` is a primitive value.
      *
@@ -1118,7 +1118,7 @@
      */ \
     MACRO(JSOP_DELPROP, DelProp, del_prop, "delprop", NULL, 5, 1, 1, JOF_ATOM|JOF_PROP|JOF_CHECKSLOPPY) \
     /*
-     * Like `JSOP_DELPROP`, but for strict mode code. Push `true` on success,
+     * Like `JSOp::DelProp`, but for strict mode code. Push `true` on success,
      * else throw a TypeError.
      *
      *   Category: Objects
@@ -1144,7 +1144,7 @@
      */ \
     MACRO(JSOP_DELELEM, DelElem, del_elem, "delelem", NULL, 1, 2, 1, JOF_BYTE|JOF_ELEM|JOF_CHECKSLOPPY) \
     /*
-     * Like `JSOP_DELELEM, but for strict mode code. Push `true` on success,
+     * Like `JSOp::DelElem, but for strict mode code. Push `true` on success,
      * else throw a TypeError.
      *
      *   Category: Objects
@@ -1156,7 +1156,7 @@
     /*
      * Push true if `obj` has an own property `id`.
      *
-     * Note that `obj` is the top value, like `JSOP_IN`.
+     * Note that `obj` is the top value, like `JSOp::In`.
      *
      * This opcode is not used for normal JS. Self-hosted code uses it by
      * calling the intrinsic `hasOwn(id, obj)`. For example,
@@ -1175,7 +1175,7 @@
      * property lookups should begin.
      *
      * `callee` must be a function that has a HomeObject that's an object,
-     * typically produced by `JSOP_CALLEE` or `JSOP_ENVCALLEE`.
+     * typically produced by `JSOp::Callee` or `JSOp::EnvCallee`.
      *
      * Implements: [GetSuperBase][1], except that instead of the environment,
      * the argument supplies the callee.
@@ -1241,7 +1241,7 @@
      */ \
     MACRO(JSOP_SETPROP_SUPER, SetPropSuper, set_prop_super, "setprop-super", NULL, 5, 3, 1, JOF_ATOM|JOF_PROP|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
     /*
-     * Like `JSOP_SETPROP_SUPER`, but for strict mode code.
+     * Like `JSOp::SetPropSuper`, but for strict mode code.
      *
      *   Category: Objects
      *   Type: Super
@@ -1267,7 +1267,7 @@
      */ \
     MACRO(JSOP_SETELEM_SUPER, SetElemSuper, set_elem_super, "setelem-super", NULL, 1, 4, 1, JOF_BYTE|JOF_ELEM|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY) \
     /*
-     * Like `JSOP_SETELEM_SUPER`, but for strict mode code.
+     * Like `JSOp::SetElemSuper`, but for strict mode code.
      *
      *   Category: Objects
      *   Type: Super
@@ -1287,23 +1287,23 @@
      * If `val` is null or undefined, this pushes an empty iterator.
      *
      * The `iter` object pushed by this instruction must not be used or removed
-     * from the stack except by `JSOP_MOREITER` and `JSOP_ENDITER`, or by error
+     * from the stack except by `JSOp::MoreIter` and `JSOp::EndIter`, or by error
      * handling.
      *
      * The script's `JSScript::trynotes()` must mark the body of the `for-in`
      * loop, i.e. exactly those instructions that begin executing with `iter`
      * on the stack, starting with the next instruction (always
-     * `JSOP_LOOPHEAD`). Code must not jump into or out of this region: control
-     * can enter only by executing `JSOP_ITER` and can exit only by executing a
-     * `JSOP_ENDITER` or by exception unwinding. (A `JSOP_ENDITER` is always
+     * `JSOp::LoopHead`). Code must not jump into or out of this region: control
+     * can enter only by executing `JSOp::Iter` and can exit only by executing a
+     * `JSOp::EndIter` or by exception unwinding. (A `JSOp::EndIter` is always
      * emitted at the end of the loop, and extra copies are emitted on "exit
      * slides", where a `break`, `continue`, or `return` statement exits the
      * loop.)
      *
      * Typically a single try note entry marks the contiguous chunk of bytecode
-     * from the instruction after `JSOP_ITER` to `JSOP_ENDITER` (inclusive);
+     * from the instruction after `JSOp::Iter` to `JSOp::EndIter` (inclusive);
      * but if that range contains any instructions on exit slides, after a
-     * `JSOP_ENDITER`, then those must be correctly noted as *outside* the
+     * `JSOp::EndIter`, then those must be correctly noted as *outside* the
      * loop.
      *
      * [1]: https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofheadevaluation-tdznames-expr-iterationkind
@@ -1318,11 +1318,11 @@
     /*
      * Get the next property name for a for-in loop.
      *
-     * `iter` must be a `PropertyIteratorObject` produced by `JSOP_ITER`.  This
+     * `iter` must be a `PropertyIteratorObject` produced by `JSOp::Iter`.  This
      * pushes the property name for the next loop iteration, or
      * `MagicValue(JS_NO_ITER_VALUE)` if there are no more enumerable
      * properties to iterate over. The magic value must be used only by
-     * `JSOP_ISNOITER` and `JSOP_ENDITER`.
+     * `JSOp::IsNoIter` and `JSOp::EndIter`.
      *
      *   Category: Objects
      *   Type: Enumeration
@@ -1353,7 +1353,7 @@
     /*
      * Exit a for-in loop, closing the iterator.
      *
-     * `iter` must be a `PropertyIteratorObject` pushed by `JSOP_ITER`.
+     * `iter` must be a `PropertyIteratorObject` pushed by `JSOp::Iter`.
      *
      *   Category: Objects
      *   Type: Enumeration
@@ -1458,8 +1458,8 @@
      *
      * This never calls setters or proxy traps.
      *
-     * `array` must be an Array object created by `JSOP_NEWARRAY` with length >
-     * `index`, and never used except by `JSOP_INITELEM_ARRAY`.
+     * `array` must be an Array object created by `JSOp::NewArray` with length >
+     * `index`, and never used except by `JSOp::InitElemArray`.
      *
      * Implements: [ArrayAccumulation][1], the third algorithm, step 4, in the
      * common case where *nextIndex* is known.
@@ -1481,8 +1481,8 @@
      *
      * This never calls setters or proxy traps.
      *
-     * `array` must be an Array object created by `JSOP_NEWARRAY` and never used
-     * except by `JSOP_INITELEM_ARRAY` and `JSOP_INITELEM_INC`.
+     * `array` must be an Array object created by `JSOp::NewArray` and never used
+     * except by `JSOp::InitElemArray` and `JSOp::InitElemInc`.
      *
      * `index` must be an integer, `0 <= index <= INT32_MAX`. If `index` is
      * `INT32_MAX`, this throws a RangeError.
@@ -1507,8 +1507,8 @@
      * Push `MagicValue(JS_ELEMENTS_HOLE)`, representing an *Elision* in an
      * array literal (like the missing property 0 in the array `[, 1]`).
      *
-     * This magic value must be used only by `JSOP_INITELEM_ARRAY` or
-     * `JSOP_INITELEM_INC`.
+     * This magic value must be used only by `JSOp::InitElemArray` or
+     * `JSOp::InitElemInc`.
      *
      *   Category: Objects
      *   Type: Array literals
@@ -1525,7 +1525,7 @@
      *
      * This is an optimization. This single instruction implements an entire
      * array literal, saving run time, code, and memory compared to
-     * `JSOP_NEWARRAY` and a series of `JSOP_INITELEM` instructions.
+     * `JSOp::NewArray` and a series of `JSOp::InitElem` instructions.
      *
      *   Category: Objects
      *   Type: Array literals
@@ -1590,7 +1590,7 @@
      * Set the name of a function.
      *
      * `fun` must be a function object. `name` must be a string, Int32 value,
-     * or symbol (like the result of `JSOP_TOID`).
+     * or symbol (like the result of `JSOp::ToId`).
      *
      * Implements: [SetFunctionName][1], used e.g. to name methods with
      * computed property names.
@@ -1626,11 +1626,11 @@
      */ \
     MACRO(JSOP_CHECKCLASSHERITAGE, CheckClassHeritage, check_class_heritage, "checkclassheritage", NULL, 1, 1, 1, JOF_BYTE) \
     /*
-     * Like `JSOP_LAMBDA`, but using `proto` as the new function's
+     * Like `JSOp::Lambda`, but using `proto` as the new function's
      * `[[Prototype]]` (or `%FunctionPrototype%` if `proto` is `null`).
      *
      * `proto` must be either a constructor or `null`. We use
-     * `JSOP_CHECKCLASSHERITAGE` to check.
+     * `JSOp::CheckClassHeritage` to check.
      *
      * This is used to create the constructor for a derived class.
      *
@@ -1697,18 +1697,18 @@
      * Invoke `callee` with `this` and `args`, and push the return value. Throw
      * a TypeError if `callee` isn't a function.
      *
-     * `JSOP_CALLITER` is used for implicit calls to @@iterator methods, to
+     * `JSOp::CallIter` is used for implicit calls to @@iterator methods, to
      * ensure error messages are formatted with `JSMSG_NOT_ITERABLE` ("x is not
      * iterable") rather than `JSMSG_NOT_FUNCTION` ("x[Symbol.iterator] is not
      * a function"). The `argc` operand must be 0 for this variation.
      *
-     * `JSOP_FUNAPPLY` hints to the VM that this is likely a call to the
+     * `JSOp::FunApply` hints to the VM that this is likely a call to the
      * builtin method `Function.prototype.apply`, an easy optimization target.
      *
-     * `JSOP_FUNCALL` similarly hints to the VM that the callee is likely
+     * `JSOp::FunCall` similarly hints to the VM that the callee is likely
      * `Function.prototype.call`.
      *
-     * `JSOP_CALL_IGNORES_RV` hints to the VM that the return value is ignored.
+     * `JSOp::CallIgnoresRv` hints to the VM that the return value is ignored.
      * This allows alternate faster implementations to be used that avoid
      * unnecesary allocations.
      *
@@ -1727,14 +1727,14 @@
     MACRO(JSOP_FUNCALL, FunCall, fun_call, "funcall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     MACRO(JSOP_CALL_IGNORES_RV, CallIgnoresRv, call_ignores_rv, "call-ignores-rv", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_IC) \
     /*
-     * Like `JSOP_CALL`, but the arguments are provided in an array rather than
+     * Like `JSOp::Call`, but the arguments are provided in an array rather than
      * a span of stack slots. Used to implement spread-call syntax:
      * `f(...args)`.
      *
      * `args` must be an Array object containing the actual arguments. The
      * array must be packed (dense and free of holes; see IsPackedArray).
-     * This can be ensured by creating the array with `JSOP_NEWARRAY` and
-     * populating it using `JSOP_INITELEM_ARRAY`.
+     * This can be ensured by creating the array with `JSOp::NewArray` and
+     * populating it using `JSOp::InitElemArray`.
      *
      *   Category: Functions
      *   Type: Calls
@@ -1744,7 +1744,7 @@
     MACRO(JSOP_SPREADCALL, SpreadCall, spread_call, "spreadcall", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_IC) \
     /*
      * Push true if `arr` is an array object that can be passed directly as the
-     * `args` argument to `JSOP_SPREADCALL`.
+     * `args` argument to `JSOp::SpreadCall`.
      *
      * This instruction and the branch around the iterator loop are emitted
      * only when `arr` is itself a rest parameter, as in `(...arr) =>
@@ -1761,7 +1761,7 @@
     MACRO(JSOP_OPTIMIZE_SPREADCALL, OptimizeSpreadCall, optimize_spread_call, "optimize-spreadcall", NULL, 1, 1, 2, JOF_BYTE) \
     /*
      * Perform a direct eval in the current environment if `callee` is the
-     * builtin `eval` function, otherwise follow same behaviour as `JSOP_CALL`.
+     * builtin `eval` function, otherwise follow same behaviour as `JSOp::Call`.
      *
      * All direct evals use one of the JSOP_*EVAL operations here and these
      * opcodes are only used when the syntactic conditions for a direct eval
@@ -1786,9 +1786,9 @@
      */ \
     MACRO(JSOP_EVAL, Eval, eval, "eval", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Spread-call variant of `JSOP_EVAL`.
+     * Spread-call variant of `JSOp::Eval`.
      *
-     * See `JSOP_SPREADCALL` for restrictions on `args`.
+     * See `JSOp::SpreadCall` for restrictions on `args`.
      *
      *   Category: Functions
      *   Type: Calls
@@ -1797,7 +1797,7 @@
      */ \
     MACRO(JSOP_SPREADEVAL, SpreadEval, spread_eval, "spreadeval", NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_TYPESET|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Like `JSOP_EVAL`, but for strict mode code.
+     * Like `JSOp::Eval`, but for strict mode code.
      *
      *   Category: Functions
      *   Type: Calls
@@ -1806,9 +1806,9 @@
      */ \
     MACRO(JSOP_STRICTEVAL, StrictEval, strict_eval, "strict-eval", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT|JOF_IC) \
     /*
-     * Spread-call variant of `JSOP_STRICTEVAL`.
+     * Spread-call variant of `JSOp::StrictEval`.
      *
-     * See `JSOP_SPREADCALL` for restrictions on `args`.
+     * See `JSOp::SpreadCall` for restrictions on `args`.
      *
      *   Category: Functions
      *   Type: Calls
@@ -1826,8 +1826,8 @@
      *
      * This walks the run-time environment chain looking for the environment
      * record that contains the function. If the function call is not inside a
-     * `with` statement, use `JSOP_GIMPLICITTHIS` instead. If the function call
-     * definitely refers to a local binding, use `JSOP_UNDEFINED`.
+     * `with` statement, use `JSOp::GImplicitThis` instead. If the function call
+     * definitely refers to a local binding, use `JSOp::Undefined`.
      *
      * Implements: [EvaluateCall][1] step 1.b. But not entirely correctly.
      * See [bug 1166408][2].
@@ -1842,14 +1842,14 @@
      */ \
     MACRO(JSOP_IMPLICITTHIS, ImplicitThis, implicit_this, "implicitthis", "", 5, 0, 1, JOF_ATOM) \
     /*
-     * Like `JSOP_IMPLICITTHIS`, but the name must not be bound in any local
+     * Like `JSOp::ImplicitThis`, but the name must not be bound in any local
      * environments.
      *
      * The result is always `undefined` except when the name refers to a
      * binding in a non-syntactic `with` environment.
      *
-     * Note: The frontend has to emit `JSOP_GIMPLICITTHIS` (and not
-     * `JSOP_UNDEFINED`) for global unqualified function calls, even when
+     * Note: The frontend has to emit `JSOp::GImplicitThis` (and not
+     * `JSOp::Undefined`) for global unqualified function calls, even when
      * `CompileOptions::nonSyntacticScope == false`, because later
      * `js::CloneGlobalScript` can be called with `ScopeKind::NonSyntactic` to
      * clone the script into a non-syntactic environment, with the bytecode
@@ -1884,8 +1884,8 @@
     /*
      * Push `MagicValue(JS_IS_CONSTRUCTING)`.
      *
-     * This magic value is a required argument to the `JSOP_NEW` and
-     * `JSOP_SUPERCALL` instructions and must not be used any other way.
+     * This magic value is a required argument to the `JSOp::New` and
+     * `JSOp::SuperCall` instructions and must not be used any other way.
      *
      *   Category: Functions
      *   Type: Calls
@@ -1897,9 +1897,9 @@
      * Invoke `callee` as a constructor with `args` and `newTarget`, and push
      * the return value. Throw a TypeError if `callee` isn't a constructor.
      *
-     * `isConstructing` must be the value pushed by `JSOP_IS_CONSTRUCTING`.
+     * `isConstructing` must be the value pushed by `JSOp::IsConstructing`.
      *
-     * `JSOP_SUPERCALL` behaves exactly like `JSOP_NEW`, but is used for
+     * `JSOp::SuperCall` behaves exactly like `JSOp::New`, but is used for
      * *SuperCall* expressions, to allow JITs to distinguish them from `new`
      * expressions.
      *
@@ -1915,15 +1915,15 @@
     MACRO(JSOP_NEW, New, new_, "new", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_TYPESET|JOF_IC|JOF_IC) \
     MACRO(JSOP_SUPERCALL, SuperCall, super_call, "supercall", NULL, 3, -1, 1, JOF_ARGC|JOF_INVOKE|JOF_CONSTRUCT|JOF_TYPESET|JOF_IC) \
     /*
-     * Spread-call variant of `JSOP_NEW`.
+     * Spread-call variant of `JSOp::New`.
      *
      * Invokes `callee` as a constructor with `args` and `newTarget`, and
      * pushes the return value onto the stack.
      *
-     * `isConstructing` must be the value pushed by `JSOP_IS_CONSTRUCTING`.
-     * See `JSOP_SPREADCALL` for restrictions on `args`.
+     * `isConstructing` must be the value pushed by `JSOp::IsConstructing`.
+     * See `JSOp::SpreadCall` for restrictions on `args`.
      *
-     * `JSOP_SPREADSUPERCALL` behaves exactly like `JSOP_SPREADNEW`, but is
+     * `JSOp::SpreadSuperCall` behaves exactly like `JSOp::SpreadNew`, but is
      * used for *SuperCall* expressions.
      *
      *   Category: Functions
@@ -1978,7 +1978,7 @@
      * Pops the generator from the top of the stack, suspends it and stops
      * execution.
      *
-     * When resuming execution, JSOP_RESUME pushes the rval, gen and resumeKind
+     * When resuming execution, JSOp::Resume pushes the rval, gen and resumeKind
      * values. resumeKind is the GeneratorResumeKind stored as int32.
      *
      *   Category: Functions
@@ -2014,7 +2014,7 @@
      * Pops the generator and the return value 'rval1', stops execution and
      * returns 'rval1'.
      *
-     * When resuming execution, JSOP_RESUME pushes the rval2, gen and resumeKind
+     * When resuming execution, JSOp::Resume pushes the rval2, gen and resumeKind
      * values.
      *
      *   Category: Functions
@@ -2061,7 +2061,7 @@
      * Pops the generator and the return value 'promise', stops execution and
      * returns 'promise'.
      *
-     * When resuming execution, JSOP_RESUME pushes the resolved, gen and
+     * When resuming execution, JSOp::Resume pushes the resolved, gen and
      * resumeKind values. resumeKind is the GeneratorResumeKind stored as int32.
      *
      *   Category: Functions
@@ -2132,7 +2132,7 @@
     /*
      * Marks the target of the backwards jump for some loop.
      *
-     * This is a jump target instruction (see `JSOP_JUMPTARGET`). Additionally,
+     * This is a jump target instruction (see `JSOp::JumpTarget`). Additionally,
      * it checks for interrupts and handles JIT tiering.
      *
      * The `depthHint` operand is a loop depth hint for Ion. It starts at 1 and
@@ -2218,11 +2218,11 @@
      */ \
     MACRO(JSOP_COALESCE, Coalesce, coalesce, "coalesce", NULL, 5, 1, 1, JOF_JUMP|JOF_DETECTING) \
      /*
-     * Like `JSOP_IFNE` ("jump if true"), but if the branch is taken,
+     * Like `JSOp::IfNe` ("jump if true"), but if the branch is taken,
      * pop and discard an additional stack value.
      *
      * This is used to implement `switch` statements when the
-     * `JSOP_TABLESWITCH` optimization is not possible. The switch statement
+     * `JSOp::TableSwitch` optimization is not possible. The switch statement
      *
      *     switch (expr) {
      *         case A: stmt1;
@@ -2245,7 +2245,7 @@
      *
      * This opcode is weird: it's the only one whose ndefs varies depending on
      * which way a conditional branch goes. We could implement switch
-     * statements using `JSOP_IFNE` and `JSOP_POP`, but that would also be
+     * statements using `JSOp::IfNe` and `JSOp::Pop`, but that would also be
      * awkward--putting the `POP` inside the `switch` body would complicate
      * fallthrough.
      *
@@ -2256,7 +2256,7 @@
      */ \
     MACRO(JSOP_CASE, Case, case_, "case", NULL, 5, 2, 1, JOF_JUMP) \
     /*
-     * Like `JSOP_GOTO`, but pop and discard an additional stack value.
+     * Like `JSOp::Goto`, but pop and discard an additional stack value.
      *
      * This appears after all cases for a non-optimized `switch` statement. If
      * there's a `default:` label, it jumps to that point in the body;
@@ -2277,7 +2277,7 @@
      * start of the current script's bytecode. Otherwise, jump to the
      * instruction at `defaultOffset` from the current instruction. All of
      * these offsets must be in range for the current script and must point to
-     * `JSOP_JUMPTARGET` instructions.
+     * `JSOp::JumpTarget` instructions.
      *
      * The following inequalities must hold: `low <= high` and
      * `firstResumeIndex + high - low < resumeOffsets().size()`.
@@ -2293,7 +2293,7 @@
      * Return `rval`.
      *
      * This must not be used in derived class constructors. Instead use
-     * `JSOP_SETRVAL`, `JSOP_CHECKRETURN`, and `JSOP_RETRVAL`.
+     * `JSOp::SetRval`, `JSOp::CheckReturn`, and `JSOp::RetRval`.
      *
      *   Category: Control flow
      *   Type: Return
@@ -2302,12 +2302,12 @@
      */ \
     MACRO(JSOP_RETURN, Return, return_, "return", NULL, 1, 1, 0, JOF_BYTE) \
     /*
-     * Push the current stack frame's `returnValue`. If no `JSOP_SETRVAL`
+     * Push the current stack frame's `returnValue`. If no `JSOp::SetRval`
      * instruction has been executed in this stack frame, this is `undefined`.
      *
      * Every stack frame has a `returnValue` slot, used by top-level scripts,
      * generators, async functions, and derived class constructors. Plain
-     * functions usually use `JSOP_RETURN` instead.
+     * functions usually use `JSOp::Return` instead.
      *
      *   Category: Control flow
      *   Type: Return
@@ -2326,14 +2326,14 @@
     MACRO(JSOP_SETRVAL, SetRval, set_rval, "setrval", NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Stop execution and return the current stack frame's `returnValue`. If no
-     * `JSOP_SETRVAL` instruction has been executed in this stack frame, this
+     * `JSOp::SetRval` instruction has been executed in this stack frame, this
      * is `undefined`.
      *
      * Also emitted at end of every script so consumers don't need to worry
      * about running off the end.
      *
      * If the current script is a derived class constructor, `returnValue` must
-     * be an object. The script can use `JSOP_CHECKRETURN` to ensure this.
+     * be an object. The script can use `JSOp::CheckReturn` to ensure this.
      *
      *   Category: Control flow
      *   Type: Return
@@ -2377,7 +2377,7 @@
      * Implements: [*ThrowStatement* Evaluation][1], step 3.
      *
      * This is also used in for-of loops. If the body of the loop throws an
-     * exception, we catch it, close the iterator, then use `JSOP_THROW` to
+     * exception, we catch it, close the iterator, then use `JSOp::Throw` to
      * rethrow.
      *
      * [1]: https://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation
@@ -2418,7 +2418,7 @@
     /*
      * Throw a TypeError for invalid assignment to the callee binding in a named
      * lambda, which is always a `const` binding. This is a different bytecode
-     * than `JSOP_THROWSETCONST` because the named lambda callee, if not closed
+     * than `JSOp::ThrowSetConst` because the named lambda callee, if not closed
      * over, does not have a frame slot to look up the name with for the error
      * message.
      *
@@ -2444,7 +2444,7 @@
      * *TryStatement*.
      *
      * The `jumpAtEndOffset` operand is the offset (relative to the current op)
-     * of the `JSOP_GOTO` at the end of the try-block body. This is used by
+     * of the `JSOp::Goto` at the end of the try-block body. This is used by
      * bytecode analysis and JIT compilation.
      *
      * Location information for catch/finally blocks is stored in a side table,
@@ -2486,7 +2486,7 @@
     /*
      * Push `resumeIndex`.
      *
-     * This value must be used only by `JSOP_GOSUB`, `JSOP_FINALLY`, and `JSOP_RETSUB`.
+     * This value must be used only by `JSOp::Gosub`, `JSOp::Finally`, and `JSOp::Retsub`.
      *
      *   Category: Control flow
      *   Type: Exceptions
@@ -2497,9 +2497,9 @@
     /*
      * Jump to the start of a `finally` block.
      *
-     * `JSOP_GOSUB` is unusual: if the finally block finishes normally, it will
-     * reach the `JSOP_RETSUB` instruction at the end, and control then
-     * "returns" to the `JSOP_GOSUB` and picks up at the next instruction, like
+     * `JSOp::Gosub` is unusual: if the finally block finishes normally, it will
+     * reach the `JSOp::Retsub` instruction at the end, and control then
+     * "returns" to the `JSOp::Gosub` and picks up at the next instruction, like
      * a function call but within a single script and stack frame. (It's named
      * after the thing in BASIC.)
      *
@@ -2508,23 +2508,23 @@
      * with or without a label, or `continue`. Exceptions are handled
      * separately; but all those success paths are written as bytecode, and
      * each one needs to run the `finally` block before continuing with
-     * whatever they were doing. They use `JSOP_GOSUB` for this. It is thus
+     * whatever they were doing. They use `JSOp::Gosub` for this. It is thus
      * normal for multiple `GOSUB` instructions in a script to target the same
      * `finally` block.
      *
      * Rules: `forwardOffset` must be positive and must target a
-     * `JSOP_JUMPTARGET` instruction followed by `JSOP_FINALLY`. The
-     * instruction immediately following `JSOP_GOSUB` in the script must be a
-     * `JSOP_JUMPTARGET` instruction, and `resumeIndex` must be the index into
+     * `JSOp::JumpTarget` instruction followed by `JSOp::Finally`. The
+     * instruction immediately following `JSOp::Gosub` in the script must be a
+     * `JSOp::JumpTarget` instruction, and `resumeIndex` must be the index into
      * `script->resumeOffsets()` that points to that instruction.
      *
      * Note: This op doesn't actually push or pop any values. Its use count of
      * 2 is a lie to make the stack depth math work for this very odd control
      * flow instruction.
      *
-     * `JSOP_GOSUB` is considered to have two "successors": the target of
+     * `JSOp::Gosub` is considered to have two "successors": the target of
      * `offset`, which is the actual next instruction to run; and the
-     * instruction immediately following `JSOP_GOSUB`, even though it won't run
+     * instruction immediately following `JSOp::Gosub`, even though it won't run
      * until later. We define the successor graph this way in order to support
      * knowing the stack depth at that instruction without first reading the
      * whole `finally` block.
@@ -2533,12 +2533,12 @@
      * depth minus 2. So this instruction gets nuses == 2.
      *
      * Unfortunately there is a price to be paid in horribleness. When
-     * `JSOP_GOSUB` runs, it leaves two values on the stack that the stack
+     * `JSOp::Gosub` runs, it leaves two values on the stack that the stack
      * depth math doesn't know about. It jumps to the finally block, where
-     * `JSOP_FINALLY` again does nothing to the stack, but with a bogus def
-     * count of 2, restoring balance to the accounting. If `JSOP_RETSUB` is
+     * `JSOp::Finally` again does nothing to the stack, but with a bogus def
+     * count of 2, restoring balance to the accounting. If `JSOp::Retsub` is
      * reached, it pops the two values (for real this time) and control
-     * resumes at the instruction that follows JSOP_GOSUB in memory.
+     * resumes at the instruction that follows JSOp::Gosub in memory.
      *
      *   Category: Control flow
      *   Type: Exceptions
@@ -2549,9 +2549,9 @@
     /*
      * No-op instruction that marks the start of a `finally` block. This has a
      * def count of 2, but the values are already on the stack (they're
-     * actually left on the stack by `JSOP_GOSUB`).
+     * actually left on the stack by `JSOp::Gosub`).
      *
-     * These two values must not be used except by `JSOP_RETSUB`.
+     * These two values must not be used except by `JSOp::Retsub`.
      *
      *   Category: Control flow
      *   Type: Exceptions
@@ -2561,13 +2561,13 @@
     MACRO(JSOP_FINALLY, Finally, finally, "finally", NULL, 1, 0, 2, JOF_BYTE) \
     /*
      * Jump back to the next instruction, or rethrow an exception, at the end
-     * of a `finally` block. See `JSOP_GOSUB` for the explanation.
+     * of a `finally` block. See `JSOp::Gosub` for the explanation.
      *
      * If `throwing` is true, throw `v`. Otherwise, `v` must be a resume index;
      * jump to the corresponding offset within the script.
      *
      * The two values popped must be the ones notionally pushed by
-     * `JSOP_FINALLY`.
+     * `JSOp::Finally`.
      *
      *   Category: Control flow
      *   Type: Exceptions
@@ -2592,7 +2592,7 @@
      * uninitialized.
      *
      * This stores the value `v` in the fixed slot `localno` in the current
-     * stack frame. If `v` is the magic value produced by `JSOP_UNINITIALIZED`,
+     * stack frame. If `v` is the magic value produced by `JSOp::Uninitialized`,
      * this marks the binding as uninitialized. Otherwise this initializes the
      * binding with value `v`.
      *
@@ -2612,7 +2612,7 @@
     /*
      * Initialize a global lexical binding; or mark it as uninitialized.
      *
-     * Like `JSOP_INITLEXICAL` but for global lexicals.
+     * Like `JSOp::InitLexical` but for global lexicals.
      *
      *   Category: Variables and scopes
      *   Type: Initialization
@@ -2623,7 +2623,7 @@
     /*
      * Initialize an aliased lexical binding; or mark it as uninitialized.
      *
-     * Like `JSOP_INITLEXICAL` but for aliased bindings.
+     * Like `JSOp::InitLexical` but for aliased bindings.
      *
      * Note: There is no even-less-optimized `INITNAME` instruction because JS
      * doesn't need it. We always know statically which binding we're
@@ -2643,9 +2643,9 @@
      * uninitialized.
      *
      * `localno` must be the number of a fixed slot in the current stack frame
-     * previously initialized or marked uninitialized using `JSOP_INITLEXICAL`.
+     * previously initialized or marked uninitialized using `JSOp::InitLexical`.
      *
-     * Typically used before `JSOP_GETLOCAL` or `JSOP_SETLOCAL`.
+     * Typically used before `JSOp::GetLocal` or `JSOp::SetLocal`.
      *
      * Implements: [GetBindingValue][1] step 3 and [SetMutableBinding][2] step
      * 4 for declarative Environment Records.
@@ -2660,7 +2660,7 @@
      */ \
     MACRO(JSOP_CHECKLEXICAL, CheckLexical, check_lexical, "checklexical", NULL, 4, 0, 0, JOF_LOCAL|JOF_NAME) \
     /*
-     * Like `JSOP_CHECKLEXICAL` but for aliased bindings.
+     * Like `JSOp::CheckLexical` but for aliased bindings.
      *
      * Note: There are no `CHECKNAME` or `CHECKGNAME` instructions because
      * they're unnecessary. `JSOP_{GET,SET}{NAME,GNAME}` all check for
@@ -2690,9 +2690,9 @@
     MACRO(JSOP_CHECKTHIS, CheckThis, check_this, "checkthis", NULL, 1, 1, 1, JOF_BYTE) \
     /*
      * Push the global environment onto the stack, unless the script has a
-     * non-syntactic global scope. In that case, this acts like JSOP_BINDNAME.
+     * non-syntactic global scope. In that case, this acts like JSOp::BindName.
      *
-     * `nameIndex` is only used when acting like JSOP_BINDNAME.
+     * `nameIndex` is only used when acting like JSOp::BindName.
      *
      *   Category: Variables and scopes
      *   Type: Looking up bindings
@@ -2716,7 +2716,7 @@
      *
      * If the binding is an uninitialized lexical, throw a ReferenceError. If
      * no such binding exists, throw a ReferenceError unless the next
-     * instruction is `JSOP_TYPEOF`, in which case push `undefined`.
+     * instruction is `JSOp::Typeof`, in which case push `undefined`.
      *
      * Implements: [ResolveBinding][1] followed by [GetValue][2]
      * (adjusted hackily for `typeof`).
@@ -2741,14 +2741,14 @@
      * environment can gain more bindings after compilation, possibly shadowing
      * global object properties.)
      *
-     * This is an optimized version of `JSOP_GETNAME` that skips all local
+     * This is an optimized version of `JSOp::GetName` that skips all local
      * scopes, for use when the name doesn't refer to any local binding.
      * `NonSyntacticVariablesObject`s break this optimization, so if the
      * current script has a non-syntactic global scope, this acts like
-     * `JSOP_GETNAME`.
+     * `JSOp::GetName`.
      *
-     * Like `JSOP_GETNAME`, this throws a ReferenceError if no such binding is
-     * found (unless the next instruction is `JSOP_TYPEOF`) or if the binding
+     * Like `JSOp::GetName`, this throws a ReferenceError if no such binding is
+     * found (unless the next instruction is `JSOp::Typeof`) or if the binding
      * is an uninitialized lexical.
      *
      *   Category: Variables and scopes
@@ -2820,10 +2820,10 @@
      * not bound in `env`, throw a ReferenceError.
      *
      * `env` must be an environment currently on the environment chain, pushed
-     * by `JSOP_BINDNAME`.
+     * by `JSOp::BindName`.
      *
-     * Note: `JSOP_BINDNAME` and `JSOP_GETBOUNDNAME` are the two halves of the
-     * `JSOP_GETNAME` operation: finding and reading a variable. This
+     * Note: `JSOp::BindName` and `JSOp::GetBoundName` are the two halves of the
+     * `JSOp::GetName` operation: finding and reading a variable. This
      * decomposed version is needed to implement the compound assignment and
      * increment/decrement operators, which get and then set a variable. The
      * spec says the variable lookup is done only once. If we did the lookup
@@ -2890,14 +2890,14 @@
      * This can call setters and/or proxy traps.
      *
      * `env` must be an environment currently on the environment chain,
-     * pushed by `JSOP_BINDNAME`.
+     * pushed by `JSOp::BindName`.
      *
      * This is the fallback `SET` instruction that handles all unoptimized
      * cases. Optimized instructions follow.
      *
      * Implements: [PutValue][1] steps 5 and 7 for unoptimized bindings.
      *
-     * Note: `JSOP_BINDNAME` and `JSOP_SETNAME` are the two halves of simple
+     * Note: `JSOp::BindName` and `JSOp::SetName` are the two halves of simple
      * assignment: finding and setting a variable. They are two separate
      * instructions because, per spec, the "finding" part happens before
      * evaluating the right-hand side of the assignment, and the "setting" part
@@ -2913,7 +2913,7 @@
      */ \
     MACRO(JSOP_SETNAME, SetName, set_name, "setname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Like `JSOP_SETNAME`, but throw a TypeError if there is no binding for
+     * Like `JSOp::SetName`, but throw a TypeError if there is no binding for
      * the specified name in `env`, or if the binding is immutable (a `const`
      * or read-only property).
      *
@@ -2928,8 +2928,8 @@
      */ \
     MACRO(JSOP_STRICTSETNAME, StrictSetName, strict_set_name, "strict-setname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_CHECKSTRICT|JOF_IC) \
     /*
-     * Like `JSOP_SETNAME`, but for assigning to globals. `env` must be an
-     * environment pushed by `JSOP_BINDGNAME`.
+     * Like `JSOp::SetName`, but for assigning to globals. `env` must be an
+     * environment pushed by `JSOp::BindGName`.
      *
      *   Category: Variables and scopes
      *   Type: Setting binding values
@@ -2938,8 +2938,8 @@
      */ \
     MACRO(JSOP_SETGNAME, SetGName, set_g_name, "setgname", NULL, 5, 2, 1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSLOPPY|JOF_IC) \
     /*
-     * Like `JSOP_STRICTSETGNAME`, but for assigning to globals. `env` must be
-     * an environment pushed by `JSOP_BINDGNAME`.
+     * Like `JSOp::StrictSetGName`, but for assigning to globals. `env` must be
+     * an environment pushed by `JSOp::BindGName`.
      *
      *   Category: Variables and scopes
      *   Type: Setting binding values
@@ -3009,25 +3009,25 @@
      * The following rules for `JSOP_{PUSH,POP}LEXICALENV` also apply to
      * `JSOP_{PUSH,POP}VARENV` and `JSOP_{ENTER,LEAVE}WITH`.
      *
-     * Each `JSOP_POPLEXICALENV` instruction matches a particular
-     * `JSOP_PUSHLEXICALENV` instruction in the same script and must have the
+     * Each `JSOp::PopLexicalEnv` instruction matches a particular
+     * `JSOp::PushLexicalEnv` instruction in the same script and must have the
      * same scope and stack depth as the instruction immediately after that
      * `PUSHLEXICALENV`.
      *
-     * `JSOP_PUSHLEXICALENV` enters a scope that extends to some set of
+     * `JSOp::PushLexicalEnv` enters a scope that extends to some set of
      * instructions in the script. Code must not jump into or out of this
      * region: control can enter only by executing `PUSHLEXICALENV` and can
      * exit only by executing a `POPLEXICALENV` or by exception unwinding. (A
-     * `JSOP_POPLEXICALENV` is always emitted at the end of the block, and
+     * `JSOp::PopLexicalEnv` is always emitted at the end of the block, and
      * extra copies are emitted on "exit slides", where a `break`, `continue`,
      * or `return` statement exits the scope.)
      *
      * The script's `JSScript::scopeNotes()` must identify exactly which
      * instructions begin executing in this scope. Typically this means a
      * single entry marking the contiguous chunk of bytecode from the
-     * instruction after `JSOP_PUSHLEXICALENV` to `JSOP_POPLEXICALENV`
+     * instruction after `JSOp::PushLexicalEnv` to `JSOp::PopLexicalEnv`
      * (inclusive); but if that range contains any instructions on exit slides,
-     * after a `JSOP_POPLEXICALENV`, then those must be correctly noted as
+     * after a `JSOp::PopLexicalEnv`, then those must be correctly noted as
      * *outside* the scope.
      *
      * [1]: https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation
@@ -3041,7 +3041,7 @@
     /*
      * Pop a lexical environment from the environment chain.
      *
-     * See `JSOP_PUSHLEXICALENV` for the fine print.
+     * See `JSOp::PushLexicalEnv` for the fine print.
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
@@ -3060,7 +3060,7 @@
      *
      * The last instruction in a lexical scope, as indicated by scope notes,
      * must be marked with either this instruction (if the scope is optimized)
-     * or `JSOP_POPLEXICALENV` (if not).
+     * or `JSOp::PopLexicalEnv` (if not).
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
@@ -3096,12 +3096,12 @@
     /*
      * Push a var environment onto the environment chain.
      *
-     * Like `JSOP_PUSHLEXICALENV`, but pushes a `VarEnvironmentObject` rather
+     * Like `JSOp::PushLexicalEnv`, but pushes a `VarEnvironmentObject` rather
      * than a `LexicalEnvironmentObject`. The difference is that non-strict
      * direct `eval` can add bindings to a var environment; see `VarScope` in
      * Scope.h.
      *
-     * See `JSOP_PUSHLEXICALENV` for the fine print.
+     * See `JSOp::PushLexicalEnv` for the fine print.
      *
      * Implements: Places in the spec where the VariableEnvironment is set:
      *
@@ -3117,7 +3117,7 @@
      *
      * Note: The spec also pushes a new VariableEnvironment on entry to every
      * function, but the VM takes care of that as part of pushing the stack
-     * frame, before the function script starts to run, so `JSOP_PUSHVARENV` is
+     * frame, before the function script starts to run, so `JSOp::PushVarEnv` is
      * not needed.
      *
      * [1]: https://tc39.es/ecma262/#sec-performeval
@@ -3133,7 +3133,7 @@
     /*
      * Pop a `VarEnvironmentObject` from the environment chain.
      *
-     * See `JSOP_PUSHLEXICALENV` for the fine print.
+     * See `JSOp::PushLexicalEnv` for the fine print.
      *
      *   Category: Variables and scopes
      *   Type: Entering and leaving environments
@@ -3148,13 +3148,13 @@
      * Implements: [Evaluation of `with` statements][1], steps 2-6.
      *
      * Operations that may need to consult a WithEnvironment can't be correctly
-     * implemented using optimized instructions like `JSOP_GETLOCAL`. A script
-     * must use the deoptimized `JSOP_GETNAME`, `BINDNAME`, `SETNAME`, and
+     * implemented using optimized instructions like `JSOp::GetLocal`. A script
+     * must use the deoptimized `JSOp::GetName`, `BINDNAME`, `SETNAME`, and
      * `DELNAME` instead. Since those instructions don't work correctly with
      * optimized locals and arguments, all bindings in scopes enclosing a
      * `with` statement are marked as "aliased" and deoptimized too.
      *
-     * See `JSOP_PUSHLEXICALENV` for the fine print.
+     * See `JSOp::PushLexicalEnv` for the fine print.
      *
      * [1]: https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation
      *
@@ -3167,7 +3167,7 @@
     /*
      * Pop a `WithEnvironmentObject` from the environment chain.
      *
-     * See `JSOP_PUSHLEXICALENV` for the fine print.
+     * See `JSOp::PushLexicalEnv` for the fine print.
      *
      * Implements: [Evaluation of `with` statements][1], step 8.
      *
@@ -3287,12 +3287,12 @@
      * Create and push the `arguments` object for the current function activation.
      *
      * When it exists, `arguments` is stored in an ordinary local variable.
-     * `JSOP_ARGUMENTS` is used in function preludes, to populate that variable
+     * `JSOp::Arguments` is used in function preludes, to populate that variable
      * before the function body runs, *not* each time `arguments` appears in a
      * function.
      *
      * If a function clearly doesn't use `arguments`, we optimize it away when
-     * emitting bytecode. The function's script won't use `JSOP_ARGUMENTS` at
+     * emitting bytecode. The function's script won't use `JSOp::Arguments` at
      * all.
      *
      * The current script must be a function script. This instruction must
@@ -3310,12 +3310,12 @@
      * cope with the magic value when it is used in those ways.
      *
      * Example 1: `arguments[0]` is supported; therefore the interpreter's
-     * implementation of `JSOP_GETELEM` checks for optimized arguments (see
+     * implementation of `JSOp::GetElem` checks for optimized arguments (see
      * `GetElemOptimizedArguments`).
      *
      * Example 2: `f.apply(this, arguments)` is supported; therefore our
      * implementation of `Function.prototype.apply` checks for optimized
-     * arguments (`see js::fun_apply`), and all `JSOP_FUNAPPLY` implementations
+     * arguments (`see js::fun_apply`), and all `JSOp::FunApply` implementations
      * must check for cases where `f.apply` turns out to be any other function
      * (see `GuardFunApplyArgumentsOptimization`).
      *

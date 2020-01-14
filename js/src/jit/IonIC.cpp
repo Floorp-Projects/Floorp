@@ -345,7 +345,7 @@ bool IonSetPropertyIC::update(JSContext* cx, HandleScript outerScript,
       InitGlobalLexicalOperation(cx, &cx->global()->lexicalEnvironment(),
                                  script, pc, rhs);
     } else if (IsPropertyInitOp(JSOp(*pc))) {
-      // This might be a JSOP_INITELEM op with a constant string id. We
+      // This might be a JSOp::InitElem op with a constant string id. We
       // can't call InitPropertyOperation here as that function is
       // specialized for JSOP_INIT*PROP (it does not support arbitrary
       // objects that might show up here).

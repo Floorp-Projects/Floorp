@@ -22,7 +22,7 @@ struct BytecodeInfo {
   bool initialized : 1;
   bool jumpTarget : 1;
 
-  // If true, this is a JSOP_LOOPHEAD op inside a catch or finally block.
+  // If true, this is a JSOp::LoopHead op inside a catch or finally block.
   bool loopHeadInCatchOrFinally : 1;
 
   // True if the script has a resume offset for this bytecode op.

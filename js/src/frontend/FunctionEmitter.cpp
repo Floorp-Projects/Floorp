@@ -260,7 +260,7 @@ bool FunctionEmitter::emitNonHoisted(unsigned index) {
 
   //                [stack]
 
-  // JSOP_LAMBDA_ARROW is always preceded by a opcode that pushes new.target.
+  // JSOp::LambdaArrow is always preceded by a opcode that pushes new.target.
   // See below.
   MOZ_ASSERT(fun_->isArrow() == (syntaxKind_ == FunctionSyntaxKind::Arrow));
 
@@ -660,7 +660,7 @@ bool FunctionScriptEmitter::emitEndBody() {
     }
   } else {
     // Non-generator functions just return |undefined|. The
-    // JSOP_RETRVAL emitted below will do that, except if the
+    // JSOp::RetRval emitted below will do that, except if the
     // script has a finally block: there can be a non-undefined
     // value in the return value slot. Make sure the return value
     // is |undefined|.
@@ -719,7 +719,7 @@ bool FunctionScriptEmitter::emitEndBody() {
     }
   }
 
-  // Always end the script with a JSOP_RETRVAL. Some other parts of the
+  // Always end the script with a JSOp::RetRval. Some other parts of the
   // codebase depend on this opcode,
   // e.g. InterpreterRegs::setToEndOfScript.
   if (!bce_->emitReturnRval()) {

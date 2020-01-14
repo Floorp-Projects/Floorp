@@ -662,7 +662,7 @@ class WithEnvironmentObject : public EnvironmentObject {
   static inline size_t thisSlot() { return THIS_SLOT; }
 };
 
-// Internal scope object used by JSOP_BINDNAME upon encountering an
+// Internal scope object used by JSOp::BindName upon encountering an
 // uninitialized lexical slot or an assignment to a 'const' binding.
 //
 // ES6 lexical bindings cannot be accessed in any way (throwing
@@ -671,7 +671,7 @@ class WithEnvironmentObject : public EnvironmentObject {
 // looking up names, this can be done without slowing down normal operations
 // on the return value. When setting names, however, we do not want to pollute
 // all set-property paths with uninitialized lexical checks. For setting names
-// (i.e. JSOP_SETNAME), we emit an accompanying, preceding JSOP_BINDNAME which
+// (i.e. JSOp::SetName), we emit an accompanying, preceding JSOp::BindName which
 // finds the right scope on which to set the name. Moreover, when the name on
 // the scope is an uninitialized lexical, we cannot throw eagerly, as the spec
 // demands that the error be thrown after evaluating the RHS of
@@ -864,7 +864,7 @@ class LiveEnvironmentVal {
  *
  * The debugger effectively turns every opcode into a potential direct eval.
  * Naively, this would require creating a EnvironmentObject for every
- * call/block scope and using JSOP_GETALIASEDVAR for every access. To optimize
+ * call/block scope and using JSOp::GetAliasedVar for every access. To optimize
  * this, the engine assumes there is no debugger and optimizes scope access
  * and creation accordingly. When the debugger wants to perform an unexpected
  * eval-in-frame (or other, similar environment-requiring operations),
