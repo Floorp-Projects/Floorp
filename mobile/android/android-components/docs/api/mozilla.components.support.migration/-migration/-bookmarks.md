@@ -2,7 +2,7 @@
 
 # Bookmarks
 
-`object Bookmarks : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L48)
+`object Bookmarks : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L61)
 
 Migrates bookmarks. Must run after history was migrated.
 

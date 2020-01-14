@@ -15,6 +15,7 @@
 | [MigrationRun](-migration-run/index.md) | `data class MigrationRun`<br>Results of running a single versioned migration. |
 | [Result](-result/index.md) | `sealed class Result<T>`<br>Class representing the result of a successful or failed migration action. |
 | [SettingsMigrationResult](-settings-migration-result/index.md) | `sealed class SettingsMigrationResult`<br>Result of Fennec settings migration. |
+| [TelemetryIdentifiersResult](-telemetry-identifiers-result/index.md) | `sealed class TelemetryIdentifiersResult`<br>Result of a telemetry identifier migration. |
 | [VersionedMigration](-versioned-migration/index.md) | `data class VersionedMigration`<br>Describes a [Migration](-migration/index.md) at a specific version, enforcing in-range version specification. |
 
 ### Exceptions

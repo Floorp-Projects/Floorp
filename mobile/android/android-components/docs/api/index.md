@@ -85,6 +85,7 @@
 | [mozilla.components.feature.accounts.push](mozilla.components.feature.accounts.push/index.md) |  |
 | [mozilla.components.feature.addons](mozilla.components.feature.addons/index.md) |  |
 | [mozilla.components.feature.addons.amo](mozilla.components.feature.addons.amo/index.md) |  |
+| [mozilla.components.feature.addons.ui](mozilla.components.feature.addons.ui/index.md) |  |
 | [mozilla.components.feature.addons.update](mozilla.components.feature.addons.update/index.md) |  |
 | [mozilla.components.feature.app.links](mozilla.components.feature.app.links/index.md) |  |
 | [mozilla.components.feature.awesomebar](mozilla.components.feature.awesomebar/index.md) |  |

@@ -2,7 +2,7 @@
 
 # FennecMigratorException
 
-`sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L101)
+`sealed class FennecMigratorException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L119)
 
 Exceptions related to Fennec migrations.
 
@@ -20,6 +20,7 @@ exceptions.
 | [MigrateLoginsException](-migrate-logins-exception/index.md) | `class MigrateLoginsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating logins. |
 | [MigrateOpenTabsException](-migrate-open-tabs-exception/index.md) | `class MigrateOpenTabsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating open tabs. |
 | [MigrateSettingsException](-migrate-settings-exception/index.md) | `class MigrateSettingsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating settings. |
+| [TelemetryIdentifierException](-telemetry-identifier-exception/index.md) | `class TelemetryIdentifierException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating telemetry identifiers. |
 
 ### Extension Functions
 
@@ -39,3 +40,4 @@ exceptions.
 | [MigrateLoginsException](-migrate-logins-exception/index.md) | `class MigrateLoginsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating logins. |
 | [MigrateOpenTabsException](-migrate-open-tabs-exception/index.md) | `class MigrateOpenTabsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating open tabs. |
 | [MigrateSettingsException](-migrate-settings-exception/index.md) | `class MigrateSettingsException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating settings. |
+| [TelemetryIdentifierException](-telemetry-identifier-exception/index.md) | `class TelemetryIdentifierException : `[`FennecMigratorException`](./index.md)<br>Unexpected exception while migrating telemetry identifiers. |

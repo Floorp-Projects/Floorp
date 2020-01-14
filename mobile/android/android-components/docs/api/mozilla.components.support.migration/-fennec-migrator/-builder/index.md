@@ -2,7 +2,7 @@
 
 # Builder
 
-`class Builder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L177)
+`class Builder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L201)
 
 Data migration builder. Allows configuring which migrations to run, their versions and relative order.
 
@@ -25,3 +25,4 @@ Data migration builder. Allows configuring which migrations to run, their versio
 | [migrateLogins](migrate-logins.md) | `fun migrateLogins(storage: `[`AsyncLoginsStorage`](../../../mozilla.components.service.sync.logins/-async-logins-storage/index.md)`, storageKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Logins.currentVersion): `[`Builder`](./index.md)<br>Enable logins migration. |
 | [migrateOpenTabs](migrate-open-tabs.md) | `fun migrateOpenTabs(sessionManager: `[`SessionManager`](../../../mozilla.components.browser.session/-session-manager/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.OpenTabs.currentVersion): `[`Builder`](./index.md)<br>Enable open tabs migration. |
 | [migrateSettings](migrate-settings.md) | `fun migrateSettings(version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Settings.currentVersion): `[`Builder`](./index.md)<br>Enable all Fennec - Fenix common settings migration. |
+| [migrateTelemetryIdentifiers](migrate-telemetry-identifiers.md) | `fun migrateTelemetryIdentifiers(version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.TelemetryIdentifiers.currentVersion): `[`Builder`](./index.md)<br>Enable migration of Fennec telemetry identifiers. |

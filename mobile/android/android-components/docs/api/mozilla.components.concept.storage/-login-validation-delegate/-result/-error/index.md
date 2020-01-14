@@ -2,7 +2,7 @@
 
 # Error
 
-`sealed class Error : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L72)
+`sealed class Error : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/LoginsStorage.kt#L70)
 
 The [Login](../../../-login/index.md) cannot be saved.
 
@@ -12,7 +12,6 @@ The [Login](../../../-login/index.md) cannot be saved.
 |---|---|
 | [EmptyPassword](-empty-password.md) | `object EmptyPassword : `[`Error`](./index.md)<br>The passed [Login](../../../-login/index.md) had an empty password field, and so cannot be saved. |
 | [GeckoError](-gecko-error/index.md) | `data class GeckoError : `[`Error`](./index.md)<br>Something went wrong in GeckoView. We have no way to handle this type of error. See [exception](-gecko-error/exception.md) for details. |
-| [NotImplemented](-not-implemented.md) | `object NotImplemented : `[`Error`](./index.md)<br>The [LoginValidationDelegate](../../index.md) has not implemented login functionality, and will always return this error. |
 
 ### Inheritors
 
@@ -20,4 +19,3 @@ The [Login](../../../-login/index.md) cannot be saved.
 |---|---|
 | [EmptyPassword](-empty-password.md) | `object EmptyPassword : `[`Error`](./index.md)<br>The passed [Login](../../../-login/index.md) had an empty password field, and so cannot be saved. |
 | [GeckoError](-gecko-error/index.md) | `data class GeckoError : `[`Error`](./index.md)<br>Something went wrong in GeckoView. We have no way to handle this type of error. See [exception](-gecko-error/exception.md) for details. |
-| [NotImplemented](-not-implemented.md) | `object NotImplemented : `[`Error`](./index.md)<br>The [LoginValidationDelegate](../../index.md) has not implemented login functionality, and will always return this error. |
