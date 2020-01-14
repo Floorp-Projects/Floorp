@@ -36,7 +36,7 @@
 /* ---------------------------------------------------------------------------------------------- */
 
 ZyanStatus ZydisFormatterTokenGetValue(const ZydisFormatterToken* token,
-    ZydisTokenType* type, char** value)
+    ZydisTokenType* type, ZyanConstCharPointer* value)
 {
     if (!token || !type || !value)
     {
@@ -44,7 +44,7 @@ ZyanStatus ZydisFormatterTokenGetValue(const ZydisFormatterToken* token,
     }
 
     *type = token->type;
-    *value = (char*)((ZyanU8*)token + sizeof(ZydisFormatterToken));
+    *value = (ZyanConstCharPointer)((ZyanU8*)token + sizeof(ZydisFormatterToken));
 
     return ZYAN_STATUS_SUCCESS;
 }

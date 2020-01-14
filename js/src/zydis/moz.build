@@ -15,8 +15,10 @@ if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_X86']:
     SOURCES += [
         'Zycore/Allocator.c',
         'Zycore/API/Memory.c',
+        'Zycore/ArgParse.c',
         'Zycore/Bitset.c',
         'Zycore/Format.c',
+        'Zycore/List.c',
         'Zycore/Vector.c',
         'Zycore/Zycore.c',
         'Zycore/ZycoreString.c',

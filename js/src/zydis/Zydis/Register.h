@@ -57,6 +57,13 @@ extern "C" {
 
 /**
  * @brief   Defines the `ZydisRegisterClass` enum.
+ *
+ * Please note that this enum does not contain a matching entry for all values of the
+ * `ZydisRegister` enum, but only for those registers where it makes sense to logically group them
+ * for decoding/encoding purposes.
+ *
+ * These are mainly the registers that can be identified by an id within their corresponding
+ * register-class. The `IP` and `FLAGS` values are exceptions to this rule.
  */
 typedef enum ZydisRegisterClass_
 {
@@ -145,7 +152,7 @@ typedef enum ZydisRegisterClass_
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * @brief   Defines the `ZydisRegisterWidth` datatype.
+ * @brief   Defines the `ZydisRegisterWidth` data-type.
  */
 typedef ZyanU16 ZydisRegisterWidth;
 

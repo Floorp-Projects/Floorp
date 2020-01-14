@@ -153,10 +153,10 @@ typedef struct ZyanStringView_
 /**
  * @brief   Defines an uninitialized `ZyanString` instance.
  */
-#define ZYAN_STRING_UNINITIALIZED \
+#define ZYAN_STRING_INITIALIZER \
     { \
         /* flags  */ 0, \
-        /* vector */ ZYAN_VECTOR_UNINITIALIZED \
+        /* vector */ ZYAN_VECTOR_INITIALIZER \
     }
 
 /* ---------------------------------------------------------------------------------------------- */
@@ -186,6 +186,7 @@ typedef struct ZyanStringView_
                 /* size             */ sizeof(string), \
                 /* capacity         */ sizeof(string), \
                 /* element_size     */ sizeof(char), \
+                /* destructor       */ ZYAN_NULL, \
                 /* data             */ (char*)(string) \
             } \
         } \
@@ -524,6 +525,18 @@ ZYCORE_EXPORT ZyanStatus ZyanStringViewInsideBufferEx(ZyanStringView* view, cons
  * @return  A zyan status code.
  */
 ZYCORE_EXPORT ZyanStatus ZyanStringViewGetSize(const ZyanStringView* view, ZyanUSize* size);
+
+/**
+ * @brief   Returns the C-style string of the given `ZyanString` instance.
+ *
+ * @warning The string is not guaranteed to be null terminated!
+ *
+ * @param   string  A pointer to the `ZyanStringView` instance.
+ * @param   value   Receives a pointer to the C-style string.
+ *
+ * @return  A zyan status code.
+ */
+ZYCORE_EXPORT ZyanStatus ZyanStringViewGetData(const ZyanStringView* view, const char** buffer);
 
 /* ---------------------------------------------------------------------------------------------- */
 /* Character access                                                                               */

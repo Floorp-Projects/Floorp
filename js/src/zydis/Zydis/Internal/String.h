@@ -27,12 +27,12 @@
 /**
  * @file
  * @brief   Provides some internal, more performant, but unsafe helper functions for the
- *          `ZyanString` datatype.
+ *          `ZyanString` data-type.
  *
  * Most of these functions are very similar to the ones in `Zycore/String.h`, but inlined and
  * without optional overhead like parameter-validation checks, etc ...
  *
- * The `ZyanString` datatype is able to dynamically allocate memory on the heap, but as `Zydis` is
+ * The `ZyanString` data-type is able to dynamically allocate memory on the heap, but as `Zydis` is
  * designed to be a non-'malloc'ing library, all functions in this file assume that the instances
  * they are operating on are created with a user-defined static-buffer.
  */
@@ -238,7 +238,7 @@ ZYAN_INLINE ZyanStatus ZydisStringAppendShort(ZyanString* destination,
     }
 
     ZYAN_MEMCPY((char*)destination->vector.data + destination->vector.size - 1, source->data,
-        1 + source->size);
+        (ZyanUSize)source->size + 1);
 
     destination->vector.size += source->size;
     ZYDIS_STRING_ASSERT_NULLTERMINATION(destination);
@@ -269,7 +269,7 @@ ZYAN_INLINE ZyanStatus ZydisStringAppendShortCase(ZyanString* destination,
     }
 
     ZYAN_MEMCPY((char*)destination->vector.data + destination->vector.size - 1, source->data,
-        1 + source->size);
+        (ZyanUSize)source->size + 1);
 
     switch (letter_case)
     {
@@ -371,7 +371,8 @@ ZYAN_INLINE ZyanStatus ZydisStringAppendDecS(ZyanString* string, ZyanI64 value,
         {
             ZYAN_CHECK(ZydisStringAppend(string, prefix));
         }
-        return ZydisStringAppendDecU(string, -value, padding_length, ZYAN_NULL, suffix);
+        return ZydisStringAppendDecU(string, -value, padding_length, 
+            (const ZyanStringView*)ZYAN_NULL, suffix);
     }
 
     if (force_sign)
@@ -423,7 +424,7 @@ ZyanStatus ZydisStringAppendHexU(ZyanString* string, ZyanU64 value, ZyanU8 paddi
  *          sufficient to append the given `value`.
  *
  * The string-buffer pointer is increased by the number of chars written, if the call was
- * successfull.
+ * successful.
  */
 ZYAN_INLINE ZyanStatus ZydisStringAppendHexS(ZyanString* string, ZyanI64 value,
     ZyanU8 padding_length, ZyanBool uppercase, ZyanBool force_sign, const ZyanStringView* prefix,
@@ -439,7 +440,8 @@ ZYAN_INLINE ZyanStatus ZydisStringAppendHexS(ZyanString* string, ZyanI64 value,
         {
             ZYAN_CHECK(ZydisStringAppend(string, prefix));
         }
-        return ZydisStringAppendHexU(string, -value, padding_length, uppercase, ZYAN_NULL, suffix);
+        return ZydisStringAppendHexU(string, -value, padding_length, uppercase, 
+            (const ZyanStringView*)ZYAN_NULL, suffix);
     }
 
     if (force_sign)
