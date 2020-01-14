@@ -3,6 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/**
+ * This test is mainly to verify MaybeStripObsoleteOriginAttributes method.
+ */
+
 var testGenerator = testSteps();
 
 function* testSteps() {
@@ -46,7 +50,9 @@ function* testSteps() {
 
   info("Installing package");
 
-  installPackage("obsoleteOriginAttributes_profile");
+  // Storage used by FF 49-54 (storage version 1.0 with obsolete origin
+  // attributes).
+  installPackage("version1_0_obsoleteOriginAttributes_profile");
 
   info("Checking origin directories");
 
