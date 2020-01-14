@@ -33,20 +33,3 @@ async function getViewportSize() {
     };
   });
 }
-
-async function getScrollbarSize() {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    const scrollbarHeight = {};
-    const scrollbarWidth = {};
-
-    content.windowUtils.getScrollbarSize(
-      false,
-      scrollbarWidth,
-      scrollbarHeight
-    );
-    return {
-      width: scrollbarWidth.value,
-      height: scrollbarHeight.value,
-    };
-  });
-}
