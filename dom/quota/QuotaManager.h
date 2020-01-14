@@ -506,7 +506,8 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult MaybeUpgradeFromIndexedDBDirectoryToPersistentStorageDirectory();
 
-  nsresult MaybeUpgradePersistentStorageDirectory();
+  nsresult
+  MaybeUpgradeFromPersistentStorageDirectoryToDefaultStorageDirectory();
 
   nsresult MaybeRemoveOldDirectories();
 
