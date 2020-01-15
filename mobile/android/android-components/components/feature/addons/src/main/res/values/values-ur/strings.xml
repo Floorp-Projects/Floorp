@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">رازداری کی ترتیبات  پڑھیں اور ترمیم کریں</string>
     <!-- Description for all_urls add-on permission. -->
@@ -16,6 +16,8 @@
     <string name="mozac_feature_addons_home_page">ابتدائی صفحہ</string>
     <!-- The rating of the addon. -->
     <string name="mozac_feature_addons_rating">شرح کاری</string>
+    <!-- The settings of the addon. -->
+    <string name="mozac_feature_addons_settings">سیٹنگز</string>
     <!-- Indicates the addon is enable. -->
     <string name="mozac_feature_addons_settings_on">چالو</string>
     <!-- Indicates the addon is disable. -->
@@ -26,12 +28,22 @@
     <string name="mozac_feature_addons_details">تفصیلات</string>
     <!-- This is button that remove (uninstall an addon). -->
     <string name="mozac_feature_addons_remove">ہٹائیں</string>
+    <!-- This is the title of a dialog that indicates to the user if wants to install or not an addon. %1$s is the addon name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s شامل کریں؟</string>
+    <!-- This is the subtitle of a dialog that indicate to the user if wants to install or not an addon, the subtitle list the permissions that this addon requires, the permissions will dynamically listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">اس میں آپ کی اجازت کی ضرورت ہے:</string>
     <!-- This a button to add (installs) an addon . -->
     <string name="mozac_feature_addons_permissions_dialog_add">شامل کریں</string>
     <!-- This a button to cancel the addon installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">منسوخ کریں</string>
     <!-- Accessibility content description to install addon button. -->
     <string name="mozac_feature_addons_install_addon_content_description">ایڈ اون انسٹاال کریں</string>
+    <!-- Indicate how many user has rated an addon. %1$s will be replace with number of users -->
+    <string name="mozac_feature_addons_user_rating_count">صارفین: %1$s</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">ایڈ اون</string>
+    <!-- The label of the allow button, this will be shown to the user when an addons needs new permissions, with the button the user will indicate that wants to accept the new permissions and update the addon-->
+    <string name="mozac_feature_addons_updater_notification_allow_button">اجازت دیں</string>
+    <!-- The label of the deny button on a notification, this will be shown to the user when an addons needs new permissions. Indicates the user denies the new permissions and prevent the addon from be updated-->
+    <string name="mozac_feature_addons_updater_notification_deny_button">انکار کریں</string>
     </resources>

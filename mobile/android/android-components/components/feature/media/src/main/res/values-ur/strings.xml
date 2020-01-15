@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Title of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera">کیمرہ چالو ہے</string>
     <!-- Title of notification shown when the device's microphone is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_microphone">مائیکروفون چالو ہے</string>
     <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->

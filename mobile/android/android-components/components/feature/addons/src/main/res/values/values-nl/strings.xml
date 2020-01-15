@@ -70,6 +70,8 @@
     <string name="mozac_feature_addons_installed_section">Geïnstalleerd</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">Aanbevolen</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">Nog niet ondersteund</string>
     <!-- Displays a page with all the details of an addon. -->
     <string name="mozac_feature_addons_details">Details</string>
     <!-- Displays a page with all the permissions of an addon. -->
@@ -102,6 +104,8 @@
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d nieuwe machtigingen vereist</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an addon. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Add-on-updates</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">De technologie van Firefox-add-ons moderniseert. Deze add-ons gebruiken frameworks die niet compatibel zijn met Firefox 75 en hoger.</string>
     <!-- This is the caption for the addon installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Add-on downloaden en verifiëren…</string>
 
