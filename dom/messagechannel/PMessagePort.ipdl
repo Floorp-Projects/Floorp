@@ -9,12 +9,22 @@ include protocol PIPCBlobInputStream; // FIXME: bug 792908
 include protocol PParentToChildStream; // FIXME: bug 792908
 
 include DOMTypes;
+include ProtocolTypes;
 
 using struct mozilla::SerializedStructuredCloneBuffer
   from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
+
+struct RefMessageData {
+  nsID uuid;
+};
+
+union MessageData {
+  ClonedMessageData;
+  RefMessageData;
+};
 
 // This protocol is used for the MessageChannel/MessagePort API
 protocol PMessagePort
@@ -35,14 +45,14 @@ protocol PMessagePort
      4. Recv__delete__(); */
 
 parent:
-  async PostMessages(ClonedMessageData[] messages);
-  async Disentangle(ClonedMessageData[] messages);
+  async PostMessages(MessageData[] messages);
+  async Disentangle(MessageData[] messages);
   async StopSendingData();
   async Close();
 
 child:
-  async Entangled(ClonedMessageData[] messages);
-  async ReceiveData(ClonedMessageData[] messages);
+  async Entangled(MessageData[] messages);
+  async ReceiveData(MessageData[] messages);
   async StopSendingDataConfirmed();
 
   async __delete__();
