@@ -56,7 +56,7 @@ def optionally_keyed_by(*arguments):
     for _ in arguments:
         options = [schema]
         for field in fields:
-            options.append({'by-' + field: {basestring: schema}})
+            options.append({'by-' + field: {text_type: schema}})
         schema = voluptuous.Any(*options)
     return schema
 
@@ -142,9 +142,9 @@ def check_schema(schema):
 
     def iter(path, sch):
         def check_identifier(path, k):
-            if k in (basestring, text_type, voluptuous.Extra):
+            if k in (text_type, text_type, voluptuous.Extra):
                 pass
-            elif isinstance(k, basestring):
+            elif isinstance(k, text_type):
                 if not identifier_re.match(k) and not whitelisted(path):
                     raise RuntimeError(
                         'YAML schemas should use dashed lower-case identifiers, '
@@ -198,11 +198,11 @@ OptimizationSchema = voluptuous.Any(
     None,
     # search the index for the given index namespaces, and replace this task if found
     # the search occurs in order, with the first match winning
-    {'index-search': [basestring]},
+    {'index-search': [text_type]},
     # consult SETA and skip this task if it is low-value
     {'seta': None},
     # skip this task if none of the given file patterns match
-    {'skip-unless-changed': [basestring]},
+    {'skip-unless-changed': [text_type]},
     # skip this task if unless the change files' SCHEDULES contains any of these components
     {'skip-unless-schedules': list(schedules.ALL_COMPONENTS)},
     # optimize strategy aliases for the test kind
@@ -213,7 +213,7 @@ OptimizationSchema = voluptuous.Any(
 
 # shortcut for a string where task references are allowed
 taskref_or_string = voluptuous.Any(
-    basestring,
-    {voluptuous.Required('task-reference'): basestring},
-    {voluptuous.Required('artifact-reference'): basestring},
+    text_type,
+    {voluptuous.Required('task-reference'): text_type},
+    {voluptuous.Required('artifact-reference'): text_type},
 )

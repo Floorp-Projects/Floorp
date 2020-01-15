@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 
+from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -25,12 +26,12 @@ from voluptuous import Required, Optional, Extra
 
 packaging_description_schema = schema.extend({
     # depname is used in taskref's to identify the taskID of the signed things
-    Required('depname', default='build'): basestring,
+    Required('depname', default='build'): text_type,
 
     # unique label to describe this repackaging task
-    Optional('label'): basestring,
+    Optional('label'): text_type,
 
-    Optional('worker-type'): basestring,
+    Optional('worker-type'): text_type,
     Optional('worker'): object,
 
     # treeherder is allowed here to override any defaults we use for repackaging.  See
@@ -39,10 +40,10 @@ packaging_description_schema = schema.extend({
     Optional('treeherder'): job_description_schema['treeherder'],
 
     # If a l10n task, the corresponding locale
-    Optional('locale'): basestring,
+    Optional('locale'): text_type,
 
     # Routes specific to this task, if defined
-    Optional('routes'): [basestring],
+    Optional('routes'): [text_type],
 
     # passed through directly to the job description
     Optional('extra'): job_description_schema['extra'],
@@ -55,17 +56,17 @@ packaging_description_schema = schema.extend({
     Optional('shipping-phase'): job_description_schema['shipping-phase'],
 
     Required('package-formats'): optionally_keyed_by(
-        'build-platform', 'release-type', [basestring]),
+        'build-platform', 'release-type', [text_type]),
 
     # All l10n jobs use mozharness
     Required('mozharness'): {
         Extra: object,
         # Config files passed to the mozharness script
-        Required('config'): optionally_keyed_by('build-platform', [basestring]),
+        Required('config'): optionally_keyed_by('build-platform', [text_type]),
 
         # Additional paths to look for mozharness configs in. These should be
         # relative to the base of the source checkout
-        Optional('config-paths'): [basestring],
+        Optional('config-paths'): [text_type],
 
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
@@ -288,7 +289,7 @@ def make_job_description(config, jobs):
 
         if locale:
             # Make sure we specify the locale-specific upload dir
-            worker.setdefault('env', {}).update(LOCALE=locale)
+            worker.setdefault('env', {})['LOCALE'] = locale
 
         worker['artifacts'] = _generate_task_output_files(
             dep_job, worker_type_implementation(config.graph_config, worker_type),

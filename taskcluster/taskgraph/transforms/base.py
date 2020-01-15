@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import attr
+from six import text_type
 
 from ..config import GraphConfig
 from ..parameters import Parameters
@@ -22,7 +23,7 @@ class TransformConfig(object):
     kind = attr.ib()
 
     # the path to the kind configuration directory
-    path = attr.ib(type=basestring)
+    path = attr.ib(type=text_type)
 
     # the parsed contents of kind.yml
     config = attr.ib(type=dict)

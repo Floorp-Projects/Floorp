@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import json
 from pipes import quote as shell_quote
 
+import six
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.scriptworker import get_release_config
 from taskgraph.util.schema import (
@@ -87,7 +88,8 @@ def handle_keyed_by(config, jobs):
 
         if 'extra-config' in job['run']:
             env = job['worker'].setdefault('env', {})
-            env['EXTRA_MOZHARNESS_CONFIG'] = json.dumps(job['run']['extra-config'])
+            env['EXTRA_MOZHARNESS_CONFIG'] = six.ensure_text(
+                json.dumps(job['run']['extra-config']))
             del job["run"]["extra-config"]
 
         yield job
