@@ -483,12 +483,6 @@ bool WriteBlob(JSStructuredCloneWriter* aWriter, Blob* aBlob,
   MOZ_ASSERT(aBlob);
   MOZ_ASSERT(aHolder);
 
-  if (JS_GetStructuredCloneScope(aWriter) !=
-          JS::StructuredCloneScope::SameProcessSameThread &&
-      !aBlob->Impl()->MayBeClonedToOtherThreads()) {
-    return false;
-  }
-
   RefPtr<BlobImpl> blobImpl = aBlob->Impl();
 
   // We store the position of the blobImpl in the array as index.
