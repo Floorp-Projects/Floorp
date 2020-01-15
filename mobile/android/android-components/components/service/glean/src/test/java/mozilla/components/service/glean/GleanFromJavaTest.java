@@ -28,7 +28,7 @@ public class GleanFromJavaTest {
     public void testInitGleanWithDefaults() {
         Context context = ApplicationProvider.getApplicationContext();
         WorkManagerTestInitHelper.initializeTestWorkManager(context);
-        Glean.INSTANCE.initialize(context);
+        Glean.INSTANCE.initialize(context, true);
     }
 
     @Test
@@ -37,7 +37,7 @@ public class GleanFromJavaTest {
         WorkManagerTestInitHelper.initializeTestWorkManager(context);
         Configuration config =
                 new Configuration(Configuration.DEFAULT_TELEMETRY_ENDPOINT, "test-channel");
-        Glean.INSTANCE.initialize(context, config);
+        Glean.INSTANCE.initialize(context, true, config);
     }
 
     @Test

@@ -17,16 +17,10 @@ import org.junit.runner.RunWith
 import org.mozilla.samples.glean.MainActivity
 import org.mozilla.samples.glean.getPingServer
 import androidx.test.uiautomator.UiDevice
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
-import androidx.work.testing.WorkManagerTestInitHelper
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import mozilla.components.service.glean.testing.GleanTestLocalServer
 import org.json.JSONObject
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.mozilla.samples.glean.getPingServerPort
 import java.util.concurrent.TimeUnit
 
@@ -36,15 +30,10 @@ class BaselinePingTest {
     val activityRule: ActivityTestRule<MainActivity> = ActivityTestRule(MainActivity::class.java)
 
     @get:Rule
-    val gleanRule = GleanTestLocalServer(getPingServerPort())
+    val gleanRule = GleanTestLocalServer(context, getPingServerPort())
 
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
-
-    @Before
-    fun clearWorkManager() {
-        WorkManagerTestInitHelper.initializeTestWorkManager(context)
-    }
 
     private fun waitForPingContent(
         pingName: String,
@@ -66,34 +55,6 @@ class BaselinePingTest {
         return null
     }
 
-    /**
-     * Sadly, the WorkManager still requires us to manually trigger the upload job.
-     * This function goes through all the active jobs by Glean (there should only be
-     * one!) and triggers them.
-     */
-    private fun triggerEnqueuedUpload() {
-        // The tag is really internal to PingUploadWorker, but we can't do much more
-        // than copy-paste unless we want to increase our API surface.
-        val tag = "mozac_service_glean_ping_upload_worker"
-        val reasonablyHighCITimeoutMs = 5000L
-
-        runBlocking {
-            withTimeout(reasonablyHighCITimeoutMs) {
-                do {
-                    val workInfoList = WorkManager.getInstance(context).getWorkInfosByTag(tag).get()
-                    workInfoList.forEach { workInfo ->
-                        if (workInfo.state === WorkInfo.State.ENQUEUED) {
-                            // Trigger WorkManager using TestDriver
-                            val testDriver = WorkManagerTestInitHelper.getTestDriver(context)
-                            testDriver?.setAllConstraintsMet(workInfo.id)
-                            return@withTimeout
-                        }
-                    }
-                } while (true)
-            }
-        }
-    }
-
     @Test
     fun validateBaselinePing() {
         // Wait for the app to be idle/ready.
@@ -107,10 +68,6 @@ class BaselinePingTest {
 
         // Move it to background.
         device.pressHome()
-
-        // Wait for the upload job to be present and trigger it.
-        Thread.sleep(1000) // FIXME: for some reason, without this, WorkManager won't find the job
-        triggerEnqueuedUpload()
 
         // Validate the received data.
         val baselinePing = waitForPingContent("baseline")!!

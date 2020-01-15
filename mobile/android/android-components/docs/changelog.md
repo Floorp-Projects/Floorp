@@ -19,7 +19,17 @@ permalink: /changelog/
     * `browser-engine-gecko-nightly`: GeckoView 74.0
 
 * **service-glean**
-  * Glean was updated to v23.0.1:
+  * Glean was updated to v24.0.0:
+    * **Breaking Change** An `enableUpload` parameter has been added to the `initialize()`
+      function. This removes the requirement to call `setUploadEnabled()` prior to calling
+      the `initialize()` function.
+    * The metrics ping scheduler will now only send metrics pings while the
+      application is running. The application will no longer "wake up" at 4am
+      using the Work Manager.
+    * The code for migrating data from Glean SDK before version 19 was removed.
+    * When using the `GleanTestLocalServer` rule in instrumented tests, pings are
+      immediately flushed by the `WorkManager` and will reach the test endpoint as
+      soon as possible.
     * The Glean Gradle Plugin correctly triggers docs and API updates when registry files
       change, without requiring them to be deleted.
     * `parseISOTimeString` has been made 4x faster. This had an impact on Glean

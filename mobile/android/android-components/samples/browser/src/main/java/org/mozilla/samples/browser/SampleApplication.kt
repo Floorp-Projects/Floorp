@@ -30,10 +30,8 @@ class SampleApplication : Application() {
 
         // IMPORTANT: the following lines initialize the Glean SDK but disable upload
         // of pings. If, for testing purposes, upload is required to be on, change the
-        // next line to `Glean.setUploadEnabled(true)`
-        Glean.setUploadEnabled(false)
-
-        Glean.initialize(applicationContext)
+        // next line to `uploadEnabled = true`.
+        Glean.initialize(applicationContext, uploadEnabled = false)
 
         Facts.registerProcessor(LogFactProcessor())
 

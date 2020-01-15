@@ -42,7 +42,7 @@ class ExperimentsDebugActivityTest {
     fun setup() {
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
 
-        Glean.initialize(context)
+        Glean.initialize(context, uploadEnabled = true)
 
         // This makes sure we have a "launch" intent in our package, otherwise
         // it will fail looking for it in `GleanDebugActivityTest`.
