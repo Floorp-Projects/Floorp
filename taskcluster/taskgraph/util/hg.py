@@ -7,6 +7,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import requests
+import six
 import subprocess
 from redo import retry
 
@@ -48,11 +49,11 @@ def find_hg_revision_push_info(repository, revision):
 def get_hg_revision_branch(root, revision):
     """Given the parameters for a revision, find the hg_branch (aka
     relbranch) of the revision."""
-    return subprocess.check_output([
+    return six.ensure_text(subprocess.check_output([
         'hg', 'identify',
         '-T', '{branch}',
         '--rev', revision,
-    ], cwd=root)
+    ], cwd=root, universal_newlines=True))
 
 
 # For these functions, we assume that run-task has correctly checked out the

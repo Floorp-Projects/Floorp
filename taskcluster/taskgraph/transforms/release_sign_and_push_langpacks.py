@@ -7,6 +7,7 @@ Transform the release-sign-and-push task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -18,9 +19,9 @@ from voluptuous import Any, Required
 transforms = TransformSequence()
 
 langpack_sign_push_description_schema = schema.extend({
-    Required('label'): basestring,
-    Required('description'): basestring,
-    Required('worker-type'): optionally_keyed_by('release-level', basestring),
+    Required('label'): text_type,
+    Required('description'): text_type,
+    Required('worker-type'): optionally_keyed_by('release-level', text_type),
     Required('worker'): {
         Required('implementation'): 'push-addons',
         Required('channel'): optionally_keyed_by(
@@ -30,7 +31,7 @@ langpack_sign_push_description_schema = schema.extend({
     },
 
     Required('run-on-projects'): [],
-    Required('scopes'): optionally_keyed_by('release-level', [basestring]),
+    Required('scopes'): optionally_keyed_by('release-level', [text_type]),
     Required('shipping-phase'): task_description_schema['shipping-phase'],
     Required('shipping-product'): task_description_schema['shipping-product'],
 })

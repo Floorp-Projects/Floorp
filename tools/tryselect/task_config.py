@@ -11,6 +11,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import os
+import six
 import subprocess
 import sys
 from abc import ABCMeta, abstractmethod, abstractproperty
@@ -171,7 +172,8 @@ class Path(TryConfig):
         paths = [mozpath.relpath(mozpath.join(os.getcwd(), p), build.topsrcdir) for p in paths]
         return {
             'env': {
-                'MOZHARNESS_TEST_PATHS': json.dumps(resolve_tests_by_suite(paths)),
+                'MOZHARNESS_TEST_PATHS': six.ensure_text(
+                    json.dumps(resolve_tests_by_suite(paths))),
             }
         }
 

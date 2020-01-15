@@ -9,8 +9,10 @@ from __future__ import absolute_import, unicode_literals
 
 from mozbuild.shellutil import quote as shell_quote
 
+import io
 import os
 import re
+from six import text_type
 
 from voluptuous import (
     Any,
@@ -38,24 +40,24 @@ CACHE_TYPE = 'content.v1'
 
 FETCH_SCHEMA = Schema({
     # Name of the task.
-    Required('name'): basestring,
+    Required('name'): text_type,
 
     # Relative path (from config.path) to the file the task was defined
     # in.
-    Optional('job-from'): basestring,
+    Optional('job-from'): text_type,
 
     # Description of the task.
-    Required('description'): basestring,
+    Required('description'): text_type,
 
     Required('fetch'): Any(
         {
             'type': 'static-url',
 
             # The URL to download.
-            Required('url'): basestring,
+            Required('url'): text_type,
 
             # The SHA-256 of the downloaded content.
-            Required('sha256'): basestring,
+            Required('sha256'): text_type,
 
             # Size of the downloaded entity, in bytes.
             Required('size'): int,
@@ -65,17 +67,17 @@ FETCH_SCHEMA = Schema({
                 # URL where GPG signature document can be obtained. Can contain the
                 # value ``{url}``, which will be substituted with the value from
                 # ``url``.
-                Required('sig-url'): basestring,
+                Required('sig-url'): text_type,
                 # Path to file containing GPG public key(s) used to validate
                 # download.
-                Required('key-path'): basestring,
+                Required('key-path'): text_type,
             },
 
             # The name to give to the generated artifact. Defaults to the file
             # portion of the URL. Using a different extension converts the
             # archive to the given type. Only conversion to .tar.zst is
             # supported.
-            Optional('artifact-name'): basestring,
+            Optional('artifact-name'): text_type,
 
             # Strip the given number of path components at the beginning of
             # each file entry in the archive.
@@ -84,7 +86,7 @@ FETCH_SCHEMA = Schema({
 
             # Add the given prefix to each file entry in the archive.
             # Requires an artifact-name ending with .tar.zst.
-            Optional('add-prefix'): basestring,
+            Optional('add-prefix'): text_type,
 
             # IMPORTANT: when adding anything that changes the behavior of the task,
             # it is important to update the digest data used to compute cache hits.
@@ -92,23 +94,23 @@ FETCH_SCHEMA = Schema({
         {
             'type': 'chromium-fetch',
 
-            Required('script'): basestring,
+            Required('script'): text_type,
 
             # Platform type for chromium build
-            Required('platform'): basestring,
+            Required('platform'): text_type,
 
             # Chromium revision to obtain
-            Optional('revision'): basestring,
+            Optional('revision'): text_type,
 
             # The name to give to the generated artifact.
-            Required('artifact-name'): basestring
+            Required('artifact-name'): text_type
         },
         {
             'type': 'git',
-            Required('repo'): basestring,
-            Required('revision'): basestring,
-            Optional('artifact-name'): basestring,
-            Optional('path-prefix'): basestring,
+            Required('repo'): text_type,
+            Required('revision'): text_type,
+            Optional('artifact-name'): text_type,
+            Optional('path-prefix'): text_type,
         }
     ),
 })
@@ -205,7 +207,7 @@ def create_fetch_url_task(config, job):
         key_path = os.path.join(taskgraph.GECKO, fetch['gpg-signature'][
             'key-path'])
 
-        with open(key_path, 'rb') as fh:
+        with io.open(key_path, 'r') as fh:
             gpg_key = fh.read()
 
         env['FETCH_GPG_KEY'] = gpg_key

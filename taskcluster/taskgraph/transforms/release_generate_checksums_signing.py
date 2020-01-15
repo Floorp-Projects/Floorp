@@ -7,6 +7,7 @@ Transform the release-generate-checksums-signing task into task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -18,8 +19,8 @@ from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
 release_generate_checksums_signing_schema = schema.extend({
-    Required('depname', default='release-generate-checksums'): basestring,
-    Optional('label'): basestring,
+    Required('depname', default='release-generate-checksums'): text_type,
+    Optional('label'): text_type,
     Optional('treeherder'): task_description_schema['treeherder'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
@@ -48,9 +49,7 @@ def make_release_generate_checksums_signing_description(config, jobs):
         label = job.get("label", job_template)
         description = "Signing of the overall release-related checksums"
 
-        dependencies = {
-            str(dep_job.kind): dep_job.label
-        }
+        dependencies = {dep_job.kind: dep_job.label}
 
         upstream_artifacts = [{
             "taskId": {"task-reference": "<{}>".format(str(dep_job.kind))},

@@ -7,6 +7,7 @@ Transform the beetmover task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
@@ -37,14 +38,14 @@ logger = logging.getLogger(__name__)
 
 beetmover_description_schema = schema.extend({
     # depname is used in taskref's to identify the taskID of the unsigned things
-    Required('depname', default='build'): basestring,
+    Required('depname', default='build'): text_type,
 
     # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
-    Optional('label'): basestring,
+    Optional('label'): text_type,
 
-    Required('partner-bucket-scope'): optionally_keyed_by('release-level', basestring),
-    Required('partner-public-path'): Any(None, basestring),
-    Required('partner-private-path'): Any(None, basestring),
+    Required('partner-bucket-scope'): optionally_keyed_by('release-level', text_type),
+    Required('partner-public-path'): Any(None, text_type),
+    Required('partner-private-path'): Any(None, text_type),
 
     Optional('extra'): object,
     Required('shipping-phase'): task_description_schema['shipping-phase'],
