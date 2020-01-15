@@ -58,6 +58,13 @@ function isDocumentReady(selectedSource: ?SourceWithContent, selectedLocation) {
   );
 }
 
+function getCSSTiming(style: Object, variable: string): number {
+  const value = style.getPropertyValue(variable);
+  const variableNumber = value.match(/\d+/);
+
+  return variableNumber.length ? Number(variableNumber[0]) : 0;
+}
+
 export class HighlightLine extends Component<Props> {
   isStepping: boolean = false;
   previousEditorLine: ?number = null;
@@ -133,12 +140,9 @@ export class HighlightLine extends Component<Props> {
       return;
     }
 
-    // Wait for idle main thread to start animation
-    requestIdleCallback(() => {
-      const doc = getDocument(sourceId);
-      doc.addLineClass(editorLine, "line", "highlight-line");
-      this.resetHighlightLine(doc, editorLine);
-    });
+    const doc = getDocument(sourceId);
+    doc.addLineClass(editorLine, "line", "highlight-line");
+    this.resetHighlightLine(doc, editorLine);
   }
 
   resetHighlightLine(doc: SourceDocuments, editorLine: number) {
@@ -150,16 +154,13 @@ export class HighlightLine extends Component<Props> {
       return;
     }
 
-    const duration = parseInt(
-      getComputedStyle(editorWrapper).getPropertyValue(
-        "--highlight-line-duration"
-      ),
-      10
-    );
+    const style = getComputedStyle(editorWrapper);
+    const duration = getCSSTiming(style, "--highlight-line-duration");
+    const delay = getCSSTiming(style, "--highlight-line-delay");
 
     setTimeout(
       () => doc && doc.removeLineClass(editorLine, "line", "highlight-line"),
-      duration
+      duration + delay
     );
   }
 
