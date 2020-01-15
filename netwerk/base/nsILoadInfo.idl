@@ -164,12 +164,24 @@ interface nsILoadInfo : nsISupports
    * is loading the URI "http://b.com/whatever", GetChannelResultPrincipal
    * will return a principal from "http://a.com/".
    *
-   * This flag can not be used together with SANDBOXED_ORIGIN sandbox flag.  If
-   * both are passed to the LoadInfo constructor then this flag will be dropped.
-   * If you need to know whether this flag would have been present but was dropped
-   * due to sandboxing, check for the forceInheritPrincipalDropped flag.
+   * This flag can not be used together with SEC_SANDBOXED.  If both are passed
+   * to the LoadInfo constructor then this flag will be dropped.  If you need
+   * to know whether this flag would have been present but was dropped due to
+   * sandboxing, check for the forceInheritPrincipalDropped flag.
    */
   const unsigned long SEC_FORCE_INHERIT_PRINCIPAL = (1<<7);
+
+  /**
+   * Sandbox the load. The resulting resource will use a freshly created
+   * null principal. So GetChannelResultPrincipal will always return a
+   * null principal whenever this flag is set.
+   *
+   * This will happen independently of the scheme of the URI that the
+   * channel is loading.
+   *
+   * This flag can not be used together with SEC_FORCE_INHERIT_PRINCIPAL.
+   */
+  const unsigned long SEC_SANDBOXED = (1<<8);
 
   /**
    * Inherit the Principal for about:blank.
@@ -398,11 +410,6 @@ interface nsILoadInfo : nsISupports
 %}
 
   /**
-   * The sandboxFlags of that channel.
-   */
-  [infallible] readonly attribute unsigned long sandboxFlags;
-
-  /**
    * Allows to query only the security mode bits from above.
    */
   [infallible] readonly attribute unsigned long securityMode;
@@ -627,9 +634,9 @@ interface nsILoadInfo : nsISupports
 
   /**
    * The SEC_FORCE_INHERIT_PRINCIPAL flag may be dropped when a load info
-   * object is created.  Specifically, it will be dropped if the SANDBOXED_ORIGIN
-   * sandbox flag is also present.  This flag is set if SEC_FORCE_INHERIT_PRINCIPAL
-   * was dropped.
+   * object is created.  Specifically, it will be dropped if the SEC_SANDBOXED
+   * flag is also present.  This flag is set if SEC_FORCE_INHERIT_PRINCIPAL was
+   * dropped.
    */
   [infallible] readonly attribute boolean forceInheritPrincipalDropped;
 
@@ -909,7 +916,7 @@ interface nsILoadInfo : nsISupports
   attribute nsIURI resultPrincipalURI;
 
   /**
-   * Returns the null principal of the resulting resource if the SANDBOXED_ORIGIN
+   * Returns the null principal of the resulting resource if the SEC_SANDBOXED
    * flag is set.  Otherwise returns null.  This is used by
    * GetChannelResultPrincipal() to ensure that the same null principal object
    * is returned every time.

@@ -43,7 +43,6 @@
 #include "nsIJARURI.h"
 #include "nsLayoutCID.h"
 #include "nsReadableUtils.h"
-#include "nsSandboxFlags.h"
 
 #include "nsIURI.h"
 #include "nsIURIMutator.h"
@@ -2377,12 +2376,11 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
 
   nsSecurityFlags secFlags;
   nsLoadFlags loadFlags = nsIRequest::LOAD_BACKGROUND;
-  uint32_t sandboxFlags = 0;
   if (mPrincipal->IsSystemPrincipal()) {
     // When chrome is loading we want to make sure to sandbox any potential
     // result document. We also want to allow cross-origin loads.
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
-    sandboxFlags = SANDBOXED_ORIGIN;
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
+               nsILoadInfo::SEC_SANDBOXED;
   } else if (IsSystemXHR()) {
     // For pages that have appropriate permissions, we want to still allow
     // cross-origin loads, but make sure that the any potential result
@@ -2413,7 +2411,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
                        nullptr,  // aPerformanceStorage
                        loadGroup,
                        nullptr,  // aCallbacks
-                       loadFlags, nullptr, sandboxFlags);
+                       loadFlags);
   } else if (mClientInfo.isSome()) {
     rv = NS_NewChannel(getter_AddRefs(mChannel), mRequestURL, mPrincipal,
                        mClientInfo.ref(), mController, secFlags,
@@ -2422,7 +2420,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
                        mPerformanceStorage,  // aPerformanceStorage
                        loadGroup,
                        nullptr,  // aCallbacks
-                       loadFlags, nullptr, sandboxFlags);
+                       loadFlags);
   } else {
     // Otherwise use the principal.
     rv = NS_NewChannel(getter_AddRefs(mChannel), mRequestURL, mPrincipal,
@@ -2431,7 +2429,7 @@ nsresult XMLHttpRequestMainThread::CreateChannel() {
                        mPerformanceStorage,  // aPerformanceStorage
                        loadGroup,
                        nullptr,  // aCallbacks
-                       loadFlags, nullptr, sandboxFlags);
+                       loadFlags);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

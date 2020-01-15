@@ -206,12 +206,9 @@ BaseWebSocketChannel::InitLoadInfoNative(nsINode* aLoadingNode,
                                          nsIPrincipal* aTriggeringPrincipal,
                                          nsICookieSettings* aCookieSettings,
                                          uint32_t aSecurityFlags,
-                                         uint32_t aContentPolicyType,
-                                         uint32_t aSandboxFlags) {
-  mLoadInfo = new LoadInfo(
-      aLoadingPrincipal, aTriggeringPrincipal, aLoadingNode, aSecurityFlags,
-      aContentPolicyType, Maybe<mozilla::dom::ClientInfo>(),
-      Maybe<mozilla::dom::ServiceWorkerDescriptor>(), aSandboxFlags);
+                                         uint32_t aContentPolicyType) {
+  mLoadInfo = new LoadInfo(aLoadingPrincipal, aTriggeringPrincipal,
+                           aLoadingNode, aSecurityFlags, aContentPolicyType);
   if (aCookieSettings) {
     mLoadInfo->SetCookieSettings(aCookieSettings);
   }
@@ -226,7 +223,7 @@ BaseWebSocketChannel::InitLoadInfo(nsINode* aLoadingNode,
                                    uint32_t aContentPolicyType) {
   return InitLoadInfoNative(aLoadingNode, aLoadingPrincipal,
                             aTriggeringPrincipal, nullptr, aSecurityFlags,
-                            aContentPolicyType, 0);
+                            aContentPolicyType);
 }
 
 NS_IMETHODIMP
