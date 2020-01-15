@@ -19,9 +19,10 @@ async function onOpened(message) {
   SpecialPowers.wrap(input).mozSetFileArray([message.file]);
   script.destroy();
 
-  let registration = await navigator.serviceWorker.register('sw_file_upload.js',
-                                                            {scope: "." });
-  await waitForState(registration.installing, 'activated');
+  let reg = await navigator.serviceWorker.register('sw_file_upload.js',
+                                                   {scope: "." });
+  let serviceWorker = reg.installing || reg.waiting || reg.active;
+  await waitForState(serviceWorker, 'activated');
 
   let res = await fetch('server_file_upload.sjs', {
     method: 'POST',
@@ -31,7 +32,7 @@ async function onOpened(message) {
   let data = await res.clone().text();
   ok(data.length > 0, "We have data!");
 
-  await registration.unregister();
+  await reg.unregister();
   SimpleTest.finish();
 }
 

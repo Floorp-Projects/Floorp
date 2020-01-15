@@ -1,15 +1,18 @@
 function waitForState(worker, state, context) {
   return new Promise(resolve => {
-    if (worker.state === state) {
-      resolve(context);
-      return;
-    }
-    worker.addEventListener("statechange", function onStateChange() {
+    function onStateChange() {
       if (worker.state === state) {
         worker.removeEventListener("statechange", onStateChange);
         resolve(context);
       }
-    });
+    }
+
+    // First add an event listener, so we won't miss any change that happens
+    // before we check the current state.
+    worker.addEventListener("statechange", onStateChange);
+
+    // Now check if the worker is already in the desired state.
+    onStateChange();
   });
 }
 
