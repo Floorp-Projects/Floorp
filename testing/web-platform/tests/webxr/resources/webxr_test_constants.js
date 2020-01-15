@@ -157,3 +157,10 @@ const RIGHT_CONTROLLER = {
     pointerOrigin: VALID_POINTER_TRANSFORM,
     profiles: []
 };
+
+const SCREEN_CONTROLLER = {
+    handedness: "none",
+    targetRayMode: "screen",
+    pointerOrigin: VALID_POINTER_TRANSFORM,
+    profiles: []
+};
