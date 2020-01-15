@@ -355,10 +355,6 @@ mochitest-valgrind:
 mochitest-webgl1-core:
     description: "Mochitest webgl1-core run"
     treeherder-symbol: M(gl1c)
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: built-projects
     virtualization: virtual-with-gpu
     e10s: true
     loopback-video: true
@@ -368,9 +364,8 @@ mochitest-webgl1-core:
             default: default
     max-run-time:
         by-test-platform:
-            windows.*: 5400
             macosx.*64-ccov/.*: 7200
-            default: 3600
+            default: 1800
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -379,10 +374,6 @@ mochitest-webgl1-core:
 mochitest-webgl1-ext:
     description: "Mochitest webgl1-ext run"
     treeherder-symbol: M(gl1e)
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: built-projects
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
@@ -394,10 +385,7 @@ mochitest-webgl1-ext:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
-    max-run-time:
-        by-test-platform:
-            windows.*: 5400
-            default: 3600
+    max-run-time: 1800
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -407,10 +395,6 @@ mochitest-webgl1-ext:
 mochitest-webgl2-core:
     description: "Mochitest webgl2-core run"
     treeherder-symbol: M(gl2c)
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: built-projects
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
@@ -422,10 +406,7 @@ mochitest-webgl2-core:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
-    max-run-time:
-        by-test-platform:
-            windows.*: 5400
-            default: 3600
+    max-run-time: 1800
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -435,10 +416,6 @@ mochitest-webgl2-core:
 mochitest-webgl2-ext:
     description: "Mochitest webgl2-ext run"
     treeherder-symbol: M(gl2e)
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: built-projects
     virtualization: virtual-with-gpu
     chunks: 4
     e10s: true
@@ -447,10 +424,7 @@ mochitest-webgl2-ext:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
-    max-run-time:
-        by-test-platform:
-            windows.*: 5400
-            default: 3600
+    max-run-time: 1800
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -469,10 +443,7 @@ mochitest-webgl2-deqp:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
-    max-run-time:
-        by-test-platform:
-            windows.*: 5400
-            default: 3600
+    max-run-time: 1800
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
@@ -482,10 +453,6 @@ mochitest-webgl2-deqp:
 mochitest-webgpu:
     description: "Mochitest webgpu run"
     treeherder-symbol: M(webgpu)
-    run-on-projects:
-        by-test-platform:
-            windows10-aarch64/opt: ['try']
-            default: built-projects
     virtualization: virtual-with-gpu
     e10s: true
     loopback-video: true
@@ -495,9 +462,8 @@ mochitest-webgpu:
             default: default
     max-run-time:
         by-test-platform:
-            windows.*: 5400
             macosx.*64-ccov/.*: 7200
-            default: 3600
+            default: 1800
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
