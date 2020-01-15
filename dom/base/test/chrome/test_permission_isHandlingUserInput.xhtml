@@ -15,7 +15,6 @@
   <script type="application/javascript">
   <![CDATA[
   const {Integration} = ChromeUtils.import("resource://gre/modules/Integration.jsm");
-  const {E10SUtils} = ChromeUtils.import("resource://gre/modules/E10SUtils.jsm");
 
   SimpleTest.waitForExplicitFinish();
 
@@ -48,10 +47,10 @@
 
     // Test user-initiated request for persistent storage.
     request = checkPermissionRequest("persistent-storage", true);
-    E10SUtils.wrapHandlingUserInput(content, true, function() {
-      navigator.storage.persist();
-    });
+    document.notifyUserGestureActivation();
+    navigator.storage.persist();
     await request;
+    content.document.clearUserGestureActivation();
 
     // Test programmatic request for geolocation.
     request = checkPermissionRequest("geolocation", false);
@@ -60,10 +59,10 @@
 
     // Test user-initiated request for geolocation.
     request = checkPermissionRequest("geolocation", true);
-    E10SUtils.wrapHandlingUserInput(content, true, function() {
-      navigator.geolocation.getCurrentPosition(() => {});
-    });
+    document.notifyUserGestureActivation();
+    navigator.geolocation.getCurrentPosition(() => {});
     await request;
+    document.clearUserGestureActivation();
 
     // Notifications need to be tested in an HTTPS frame, because
     // chrome:// URLs are whitelisted.
@@ -76,10 +75,10 @@
 
     // Test user-initiated request for notifications.
     request = checkPermissionRequest("desktop-notification", true);
-    E10SUtils.wrapHandlingUserInput(content, true, function() {
-      frameWin.Notification.requestPermission();
-    });
+    frameWin.document.notifyUserGestureActivation();
+    frameWin.Notification.requestPermission();
     await request;
+    frameWin.document.clearUserGestureActivation();
 
     await SpecialPowers.clearUserPref("dom.webnotifications.allowcrossoriginiframe");
   }
