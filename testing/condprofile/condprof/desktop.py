@@ -29,7 +29,6 @@ class DesktopGeckodriver(Geckodriver):
             self.binary,
             "--log",
             "trace",
-            "-vv",
             "--port",
             str(port),
             "--marionette-port",
