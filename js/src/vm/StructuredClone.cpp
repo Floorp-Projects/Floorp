@@ -915,7 +915,7 @@ void JSStructuredCloneData::discardTransferables() {
 
   // DifferentProcess clones cannot contain pointers, so nothing needs to be
   // released.
-  if (scope_ == JS::StructuredCloneScope::DifferentProcess) {
+  if (scope() == JS::StructuredCloneScope::DifferentProcess) {
     return;
   }
 
@@ -3117,7 +3117,7 @@ JS_PUBLIC_API bool JS_StructuredClone(
 
 JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(
     JSAutoStructuredCloneBuffer&& other)
-    : scope_(other.scope()), data_(other.scope()) {
+    : data_(other.scope()) {
   data_.ownTransferables_ = other.data_.ownTransferables_;
   other.steal(&data_, &version_, &data_.callbacks_, &data_.closure_);
 }
@@ -3125,7 +3125,7 @@ JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(
 JSAutoStructuredCloneBuffer& JSAutoStructuredCloneBuffer::operator=(
     JSAutoStructuredCloneBuffer&& other) {
   MOZ_ASSERT(&other != this);
-  MOZ_ASSERT(scope_ == other.scope_);
+  MOZ_ASSERT(scope() == other.scope());
   clear();
   data_.ownTransferables_ = other.data_.ownTransferables_;
   other.steal(&data_, &version_, &data_.callbacks_, &data_.closure_);
@@ -3172,7 +3172,7 @@ bool JSAutoStructuredCloneBuffer::read(
     JSContext* cx, MutableHandleValue vp, JS::CloneDataPolicy cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   MOZ_ASSERT(cx);
-  return !!JS_ReadStructuredClone(cx, data_, version_, scope_, vp,
+  return !!JS_ReadStructuredClone(cx, data_, version_, data_.scope(), vp,
                                   cloneDataPolicy, optionalCallbacks, closure);
 }
 
@@ -3189,8 +3189,9 @@ bool JSAutoStructuredCloneBuffer::write(
     JS::CloneDataPolicy cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   clear();
-  bool ok = JS_WriteStructuredClone(cx, value, &data_, scope_, cloneDataPolicy,
-                                    optionalCallbacks, closure, transferable);
+  bool ok =
+      JS_WriteStructuredClone(cx, value, &data_, data_.scope(), cloneDataPolicy,
+                              optionalCallbacks, closure, transferable);
 
   if (ok) {
     data_.ownTransferables_ = OwnTransferablePolicy::OwnsTransferablesIfAny;
