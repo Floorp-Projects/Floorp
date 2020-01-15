@@ -4,6 +4,7 @@ import android.support.annotation.Nullable;
 
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
+import org.mozilla.geckoview.WebExtension;
 
 import java.util.ArrayList;
 
@@ -17,6 +18,19 @@ public class TabSessionManager {
     }
 
     public TabSessionManager() {
+    }
+
+    public void unregisterWebExtension() {
+        for (final TabSession session : mTabSessions) {
+            session.action = null;
+        }
+    }
+
+    public void setWebExtensionActionDelegate(WebExtension extension,
+                                              WebExtension.ActionDelegate delegate) {
+        for (final TabSession session : mTabSessions) {
+            session.setWebExtensionActionDelegate(extension, delegate);
+        }
     }
 
     public void setTabObserver(TabObserver observer) {
