@@ -58,7 +58,8 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
                                 nsIPrincipal* aTriggeringPrincipal,
                                 nsICookieSettings* aCookieSettings,
                                 uint32_t aSecurityFlags,
-                                uint32_t aContentPolicyType) override;
+                                uint32_t aContentPolicyType,
+                                uint32_t aSandboxFlags) override;
   NS_IMETHOD InitLoadInfo(nsINode* aLoadingNode,
                           nsIPrincipal* aLoadingPrincipal,
                           nsIPrincipal* aTriggeringPrincipal,
