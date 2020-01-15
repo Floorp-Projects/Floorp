@@ -543,6 +543,16 @@ class DisplayToolbar internal constructor(
     }
 
     /**
+     * Removes a previously added action (see [addBrowserAction]). If the provided
+     * action was never added, this method has no effect.
+     *
+     * @param action the action to remove.
+     */
+    internal fun removeBrowserAction(action: Toolbar.Action) {
+        views.browserActions.removeAction(action)
+    }
+
+    /**
      * Adds an action to be displayed on the right side of the URL in display mode.
      *
      * Related:

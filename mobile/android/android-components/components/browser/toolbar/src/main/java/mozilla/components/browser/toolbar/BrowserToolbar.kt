@@ -232,6 +232,16 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
+     * Removes a previously added action (see [addBrowserAction]). If the provided
+     * action was never added, this method has no effect.
+     *
+     * @param action the action to remove.
+     */
+    override fun removeBrowserAction(action: Toolbar.Action) {
+        display.removeBrowserAction(action)
+    }
+
+    /**
      * Adds an action to be displayed on the right side of the URL in display mode.
      *
      * Related:
