@@ -89,6 +89,40 @@ already_AddRefed<StyleSheet> DocumentOrShadowRoot::RemoveSheet(
   return sheet.forget();
 }
 
+// https://wicg.github.io/construct-stylesheets/#dom-documentorshadowroot-adoptedstylesheets
+void DocumentOrShadowRoot::SetAdoptedStyleSheets(
+    const Sequence<OwningNonNull<StyleSheet>>& aAdoptedStyleSheets,
+    ErrorResult& aRv) {
+  // TODO(nordzilla): This is just a minimal-implementation stub to land
+  // the WebIDL attribute (Bug 1608489).
+
+  // Step 1 is a variable declaration
+
+  for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
+    // 2.1 Check if all sheets are constructed, else throw NotAllowedError
+    if (!sheet->IsConstructed()) {
+      return aRv.ThrowDOMException(
+          NS_ERROR_DOM_NOT_ALLOWED_ERR,
+          "Each adopted style sheet must be created through the "
+          "Constructable StyleSheets API");
+    }
+    // 2.2 Check if all sheets' constructor documents match the
+    // DocumentOrShadowRoot's node document, else throw NotAlloweError
+    if (!sheet->ConstructorDocumentMatches(AsNode().OwnerDoc())) {
+      return aRv.ThrowDOMException(
+          NS_ERROR_DOM_NOT_ALLOWED_ERR,
+          "Each adopted style sheet's constructor document must match the "
+          "document or shadow root's node document");
+    }
+  }
+  // 3. Set the adopted style sheets to the new sheets
+  mAdoptedStyleSheets.ClearAndRetainStorage();
+  mAdoptedStyleSheets.SetCapacity(aAdoptedStyleSheets.Length());
+  for (const OwningNonNull<StyleSheet>& sheet : aAdoptedStyleSheets) {
+    mAdoptedStyleSheets.AppendElement(sheet.get());
+  }
+}
+
 Element* DocumentOrShadowRoot::GetElementById(const nsAString& aElementId) {
   if (MOZ_UNLIKELY(aElementId.IsEmpty())) {
     nsContentUtils::ReportEmptyGetElementByIdArg(AsNode().OwnerDoc());
@@ -615,14 +649,18 @@ nsRadioGroupStruct* DocumentOrShadowRoot::GetRadioGroup(
 
 nsRadioGroupStruct* DocumentOrShadowRoot::GetOrCreateRadioGroup(
     const nsAString& aName) {
-  return mRadioGroups.LookupForAdd(aName).OrInsert(
-      []() { return new nsRadioGroupStruct(); }).get();
+  return mRadioGroups.LookupForAdd(aName)
+      .OrInsert([]() { return new nsRadioGroupStruct(); })
+      .get();
 }
 
 void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
                                     nsCycleCollectionTraversalCallback& cb) {
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
+  // TODO(nordzilla): This may get more involved once the sheets are applied.
+  // This currently exists only to land the WebIDL attribute (Bug 1608489)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAdoptedStyleSheets)
   for (StyleSheet* sheet : tmp->mStyleSheets) {
     if (!sheet->IsApplicable()) {
       continue;
@@ -658,6 +696,9 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
 
 void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets)
+  // TODO(nordzilla): This may get more involved once the sheets are applied.
+  // This currently exists only to land the WebIDL attribute (Bug 1608489)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAdoptedStyleSheets)
   tmp->mIdentifierMap.Clear();
   tmp->mRadioGroups.Clear();
 }

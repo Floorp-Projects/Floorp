@@ -6,6 +6,7 @@
  * The origin of this IDL file is
  * https://dom.spec.whatwg.org/#documentorshadowroot
  * http://w3c.github.io/webcomponents/spec/shadow/#extensions-to-the-documentorshadowroot-mixin
+ * https://wicg.github.io/construct-stylesheets/#using-constructed-stylesheets
  */
 
 interface mixin DocumentOrShadowRoot {
@@ -38,4 +39,12 @@ interface mixin DocumentOrShadowRoot {
 partial interface mixin DocumentOrShadowRoot {
   [Func="Document::IsWebAnimationsGetAnimationsEnabled"]
   sequence<Animation> getAnimations();
+};
+
+// https://wicg.github.io/construct-stylesheets/#using-constructed-stylesheets
+partial interface mixin DocumentOrShadowRoot {
+  // We are using [Pure, Cached, Frozen] sequence until `FrozenArray` is implemented.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1236777 for more details.
+  [Pure, Cached, Frozen, Throws, Pref="layout.css.constructable-stylesheets.enabled"]
+  attribute sequence<CSSStyleSheet> adoptedStyleSheets;
 };
