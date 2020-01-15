@@ -6053,7 +6053,7 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(!aContext->GetParent(), "Should be top level browsing context!");
   RefPtr<MediaController> controller =
-      service->GetControllerById(aContext->Id());
+      service->GetActiveControllerById(aContext->Id());
   if (controller) {
     controller->NotifyMediaAudibleChanged(aAudible);
   }
