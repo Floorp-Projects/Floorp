@@ -43,8 +43,7 @@ class CrashApplication : Application() {
         ).install(this)
 
         // Initialize Glean for recording by the GleanCrashReporterService
-        Glean.setUploadEnabled(true)
-        Glean.initialize(applicationContext)
+        Glean.initialize(applicationContext, uploadEnabled = true)
     }
 
     companion object {

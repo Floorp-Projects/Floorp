@@ -27,7 +27,7 @@ class GleanApplication : Application() {
 
         // Initialize the Glean library. Ideally, this is the first thing that
         // must be done right after enabling logging.
-        Glean.initialize(applicationContext)
+        Glean.initialize(applicationContext, uploadEnabled = true)
 
         // Initialize the Experiments library right afterwards. Experiments can
         // not be activated before this, so it's important to do this early.
