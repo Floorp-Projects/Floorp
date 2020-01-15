@@ -7,7 +7,6 @@
 
 :root {
   --in-content-warning-container: var(--grey-20);
-  text-rendering: optimizeLegibility;
 }
 
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
@@ -18,8 +17,12 @@
 }
 }
 
-:root,
-body {
+#preferences-root {
+  text-rendering: optimizeLegibility;
+}
+
+#preferences-root,
+#preferences-body {
   margin: 0;
   padding: 0;
   height: 100%;
