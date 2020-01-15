@@ -9,13 +9,9 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.Build
-import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.BADGE_ICON_NONE
 import androidx.core.app.NotificationManagerCompat
@@ -30,21 +26,36 @@ import mozilla.components.feature.session.SessionUseCases
 
 /**
  * Displays site controls notification for fullscreen web apps.
+ * @param sessionId ID of the web app session to observe.
+ * @param manifest Web App Manifest reference used to populate the notification.
+ * @param controlsBuilder Customizes the created notification.
  */
 class WebAppSiteControlsFeature(
     private val applicationContext: Context,
     private val sessionManager: SessionManager,
-    private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     private val sessionId: String,
-    private val manifest: WebAppManifest?
+    private val manifest: WebAppManifest? = null,
+    private val controlsBuilder: SiteControlsBuilder = SiteControlsBuilder.Default()
 ) : BroadcastReceiver(), LifecycleObserver {
+
+    constructor(
+        applicationContext: Context,
+        sessionManager: SessionManager,
+        reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
+        sessionId: String,
+        manifest: WebAppManifest? = null,
+        controlsBuilder: SiteControlsBuilder = SiteControlsBuilder.CopyAndRefresh(reloadUrlUseCase)
+    ) : this(
+        applicationContext,
+        sessionManager,
+        sessionId,
+        manifest,
+        controlsBuilder
+    )
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     fun onResume() {
-        val filter = IntentFilter().apply {
-            addAction(ACTION_COPY)
-            addAction(ACTION_REFRESH)
-        }
+        val filter = controlsBuilder.getFilter()
         applicationContext.registerReceiver(this, filter)
 
         NotificationManagerCompat.from(applicationContext)
@@ -64,19 +75,7 @@ class WebAppSiteControlsFeature(
      */
     override fun onReceive(context: Context, intent: Intent) {
         sessionManager.findSessionById(sessionId)?.also { session ->
-            when (intent.action) {
-                ACTION_COPY -> {
-                    applicationContext.getSystemService<ClipboardManager>()?.let { clipboardManager ->
-                        clipboardManager.setPrimaryClip(ClipData.newPlainText(session.url, session.url))
-                        Toast.makeText(
-                            applicationContext,
-                            applicationContext.getString(R.string.mozac_feature_pwa_copy_success),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-                ACTION_REFRESH -> reloadUrlUseCase(session)
-            }
+            controlsBuilder.onReceiveBroadcast(context, session, intent)
         }
     }
 
@@ -86,27 +85,16 @@ class WebAppSiteControlsFeature(
     private fun buildNotification(): Notification {
         val channelId = ensureChannelExists()
 
-        with(applicationContext) {
-            val copyIntent = createPendingIntent(ACTION_COPY, 1)
-            val refreshAction = NotificationCompat.Action(
-                R.drawable.ic_refresh,
-                getString(R.string.mozac_feature_pwa_site_controls_refresh),
-                createPendingIntent(ACTION_REFRESH, 2)
-            )
-
-            return NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.drawable.ic_pwa)
-                .setContentTitle(manifest?.name)
-                .setContentText(getString(R.string.mozac_feature_pwa_site_controls_notification_text))
-                .setBadgeIconType(BADGE_ICON_NONE)
-                .setColor(manifest?.themeColor ?: NotificationCompat.COLOR_DEFAULT)
-                .setPriority(NotificationCompat.PRIORITY_MIN)
-                .setShowWhen(false)
-                .setContentIntent(copyIntent)
-                .addAction(refreshAction)
-                .setOngoing(true)
-                .build()
-        }
+        return NotificationCompat.Builder(applicationContext, channelId)
+            .setSmallIcon(R.drawable.ic_pwa)
+            .setContentTitle(manifest?.name ?: manifest?.shortName)
+            .setBadgeIconType(BADGE_ICON_NONE)
+            .setColor(manifest?.themeColor ?: NotificationCompat.COLOR_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setShowWhen(false)
+            .setOngoing(true)
+            .also { controlsBuilder.buildNotification(applicationContext, it, channelId) }
+            .build()
     }
 
     /**
@@ -130,17 +118,9 @@ class WebAppSiteControlsFeature(
         return NOTIFICATION_CHANNEL_ID
     }
 
-    private fun createPendingIntent(action: String, requestCode: Int): PendingIntent {
-        val intent = Intent(action)
-        intent.setPackage(applicationContext.packageName)
-        return PendingIntent.getBroadcast(applicationContext, requestCode, intent, 0)
-    }
-
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "Site Controls"
         private const val NOTIFICATION_TAG = "SiteControls"
         private const val NOTIFICATION_ID = 1
-        private const val ACTION_COPY = "mozilla.components.feature.pwa.COPY"
-        private const val ACTION_REFRESH = "mozilla.components.feature.pwa.REFRESH"
     }
 }
