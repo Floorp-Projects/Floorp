@@ -5001,6 +5001,13 @@
   mirror: always
   rust: true
 
+# Whether `min()` / `max()` / `clamp()` are enabled.
+- name: layout.css.comparison-functions.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Allow <number> and <number>/<number> both for <aspect-ratio>
 # https://github.com/w3c/csswg-drafts/issues/3757
 - name: layout.css.aspect-ratio-number.enabled
