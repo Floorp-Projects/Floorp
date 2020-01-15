@@ -412,18 +412,28 @@ class LoginManagerStorage_json {
 
     let realMatchData = {};
     let options = {};
-    // Convert nsIPropertyBag to normal JS object
-    for (let prop of matchData.enumerator) {
-      switch (prop.name) {
-        // Some property names aren't field names but are special options to affect the search.
-        case "acceptDifferentSubdomains":
-        case "schemeUpgrades": {
-          options[prop.name] = prop.value;
-          break;
-        }
-        default: {
-          realMatchData[prop.name] = prop.value;
-          break;
+
+    matchData.QueryInterface(Ci.nsIPropertyBag2);
+    if (matchData.hasKey("guid")) {
+      // Enforce GUID-based filtering when available, since the origin of the
+      // login may not match the origin of the form in the case of scheme
+      // upgrades.
+      realMatchData = { guid: matchData.getProperty("guid") };
+    } else {
+      // Convert nsIPropertyBag to normal JS object.
+      for (let prop of matchData.enumerator) {
+        switch (prop.name) {
+          // Some property names aren't field names but are special options to
+          // affect the search.
+          case "acceptDifferentSubdomains":
+          case "schemeUpgrades": {
+            options[prop.name] = prop.value;
+            break;
+          }
+          default: {
+            realMatchData[prop.name] = prop.value;
+            break;
+          }
         }
       }
     }
