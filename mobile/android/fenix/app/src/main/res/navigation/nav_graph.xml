@@ -246,7 +246,9 @@
         tools:layout="@layout/fragment_history">
         <action
             android:id="@+id/action_historyFragment_to_browserFragment"
-            app:destination="@id/browserFragment" />
+            app:destination="@id/browserFragment"
+            app:popUpToInclusive="true"
+            />
         <action
             android:id="@+id/action_historyFragment_to_homeFragment"
             app:destination="@id/homeFragment" />
@@ -264,7 +266,8 @@
             app:argType="string" />
         <action
             android:id="@+id/action_bookmarkFragment_to_browserFragment"
-            app:destination="@id/browserFragment" />
+            app:destination="@id/browserFragment"
+            app:popUpToInclusive="true"/>
         <action
             android:id="@+id/action_bookmarkFragment_self"
             app:destination="@id/bookmarkFragment" />
