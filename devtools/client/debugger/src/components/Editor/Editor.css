@@ -7,8 +7,7 @@
   --debug-expression-background: rgba(202, 227, 255, 0.5);
   --debug-line-error-border: rgb(255, 0, 0);
   --debug-expression-error-background: rgba(231, 116, 113, 0.3);
-  --highlight-line-duration: 1500ms;
-  --highlight-line-delay: 200ms;
+  --highlight-line-duration: 5000ms;
 }
 
 .theme-dark .editor-wrapper {
@@ -167,12 +166,15 @@ html[dir="rtl"] .editor-mount {
 .highlight-line .CodeMirror-line {
   animation-name: fade-highlight-out;
   animation-duration: var(--highlight-line-duration);
-  animation-delay: var(--highlight-line-delay);
+  animation-timing-function: ease-out;
   animation-direction: forwards;
 }
 
 @keyframes fade-highlight-out {
   0% {
+    background-color: var(--theme-contrast-background);
+  }
+  30% {
     background-color: var(--theme-contrast-background);
   }
   100% {
