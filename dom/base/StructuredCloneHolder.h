@@ -38,8 +38,8 @@ class StructuredCloneHolderBase {
  public:
   typedef JS::StructuredCloneScope StructuredCloneScope;
 
-  StructuredCloneHolderBase(
-      StructuredCloneScope aScope = StructuredCloneScope::SameProcess);
+  StructuredCloneHolderBase(StructuredCloneScope aScope =
+                                StructuredCloneScope::SameProcessSameThread);
   virtual ~StructuredCloneHolderBase();
 
   // Note, it is unsafe to std::move() a StructuredCloneHolderBase since a raw
@@ -56,8 +56,7 @@ class StructuredCloneHolderBase {
 
   virtual bool CustomWriteHandler(JSContext* aCx,
                                   JSStructuredCloneWriter* aWriter,
-                                  JS::Handle<JSObject*> aObj,
-                                  bool* aSameProcessScopeRequired) = 0;
+                                  JS::Handle<JSObject*> aObj) = 0;
 
   // This method has to be called when this object is not needed anymore.
   // It will free memory and the buffer. This has to be called because
@@ -87,8 +86,7 @@ class StructuredCloneHolderBase {
                                          void* aContent, uint64_t aExtraData);
 
   virtual bool CustomCanTransferHandler(JSContext* aCx,
-                                        JS::Handle<JSObject*> aObj,
-                                        bool* aSameProcessScopeRequired);
+                                        JS::Handle<JSObject*> aObj);
 
   // These methods are what you should use to read/write data.
 
@@ -199,14 +197,7 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
     return mInputStreamArray;
   }
 
-  // This method returns the final scope. If the final scope is unknown,
-  // DifferentProcess is returned because it's the most restrictive one.
-  StructuredCloneScope CloneScope() const {
-    if (mStructuredCloneScope == StructuredCloneScope::UnknownDestination) {
-      return StructuredCloneScope::DifferentProcess;
-    }
-    return mStructuredCloneScope;
-  }
+  StructuredCloneScope CloneScope() const { return mStructuredCloneScope; }
 
   // The global object is set internally just during the Read(). This method
   // can be used by read functions to retrieve it.
@@ -243,8 +234,7 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   virtual bool CustomWriteHandler(JSContext* aCx,
                                   JSStructuredCloneWriter* aWriter,
-                                  JS::Handle<JSObject*> aObj,
-                                  bool* aSameProcessScopeRequired) override;
+                                  JS::Handle<JSObject*> aObj) override;
 
   virtual bool CustomReadTransferHandler(
       JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
@@ -263,9 +253,8 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
                                          void* aContent,
                                          uint64_t aExtraData) override;
 
-  virtual bool CustomCanTransferHandler(
-      JSContext* aCx, JS::Handle<JSObject*> aObj,
-      bool* aSameProcessScopeRequired) override;
+  virtual bool CustomCanTransferHandler(JSContext* aCx,
+                                        JS::Handle<JSObject*> aObj) override;
 
   // These 2 static methods are useful to read/write fully serializable objects.
   // They can be used by custom StructuredCloneHolderBase classes to
@@ -297,8 +286,6 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
                       JSStructuredCloneData& aBuffer,
                       uint32_t aAlgorithmVersion,
                       JS::MutableHandle<JS::Value> aValue, ErrorResult& aRv);
-
-  void SameProcessScopeRequired(bool* aSameProcessScopeRequired);
 
   bool mSupportsCloning;
   bool mSupportsTransferring;

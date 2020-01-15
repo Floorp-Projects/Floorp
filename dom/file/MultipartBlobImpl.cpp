@@ -283,6 +283,16 @@ void MultipartBlobImpl::SetLengthAndModifiedDate(ErrorResult& aRv) {
   }
 }
 
+bool MultipartBlobImpl::MayBeClonedToOtherThreads() const {
+  for (uint32_t i = 0; i < mBlobImpls.Length(); ++i) {
+    if (!mBlobImpls[i]->MayBeClonedToOtherThreads()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 size_t MultipartBlobImpl::GetAllocationSize() const {
   FallibleTArray<BlobImpl*> visitedBlobs;
 

@@ -111,6 +111,8 @@ class IDBMutableFile final : public DOMEventTargetHelper {
 
   MOZ_MUST_USE RefPtr<IDBFileHandle> Open(FileMode aMode, ErrorResult& aError);
 
+  MOZ_MUST_USE RefPtr<DOMRequest> GetFile(ErrorResult& aError);
+
   IMPL_EVENT_HANDLER(abort)
   IMPL_EVENT_HANDLER(error)
 

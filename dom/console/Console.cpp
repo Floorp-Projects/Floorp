@@ -308,10 +308,10 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
   }
 
   bool CustomWriteHandler(JSContext* aCx, JSStructuredCloneWriter* aWriter,
-                          JS::Handle<JSObject*> aObj,
-                          bool* aSameProcessScopeRequired) override {
+                          JS::Handle<JSObject*> aObj) override {
     RefPtr<Blob> blob;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob)) &&
+        blob->Impl()->MayBeClonedToOtherThreads()) {
       if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_BLOB,
                                          mClonedData.mBlobs.Length()))) {
         return false;

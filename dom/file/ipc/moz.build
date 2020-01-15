@@ -21,6 +21,8 @@ EXPORTS.mozilla.dom += [
     'IPCBlobInputStreamParent.h',
     'IPCBlobInputStreamStorage.h',
     'IPCBlobUtils.h',
+    'PendingIPCBlobChild.h',
+    'PendingIPCBlobParent.h',
     'TemporaryIPCBlobChild.h',
     'TemporaryIPCBlobParent.h',
 ]
@@ -34,6 +36,8 @@ UNIFIED_SOURCES += [
     'IPCBlobInputStreamStorage.cpp',
     'IPCBlobInputStreamThread.cpp',
     'IPCBlobUtils.cpp',
+    'PendingIPCBlobChild.cpp',
+    'PendingIPCBlobParent.cpp',
     'TemporaryIPCBlobChild.cpp',
     'TemporaryIPCBlobParent.cpp',
 ]
@@ -43,6 +47,7 @@ IPDL_SOURCES += [
     'IPCBlob.ipdlh',
     'PFileCreator.ipdl',
     'PIPCBlobInputStream.ipdl',
+    'PPendingIPCBlob.ipdl',
     'PTemporaryIPCBlob.ipdl',
 ]
 

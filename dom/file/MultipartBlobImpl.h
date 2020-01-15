@@ -61,6 +61,8 @@ class MultipartBlobImpl final : public BaseBlobImpl {
 
   void SetName(const nsAString& aName) { mName = aName; }
 
+  virtual bool MayBeClonedToOtherThreads() const override;
+
   size_t GetAllocationSize() const override;
   size_t GetAllocationSize(
       FallibleTArray<BlobImpl*>& aVisitedBlobImpls) const override;
