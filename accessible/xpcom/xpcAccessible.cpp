@@ -636,11 +636,7 @@ xpcAccessible::TakeFocus() {
   if (IntlGeneric().IsNull()) return NS_ERROR_FAILURE;
 
   if (ProxyAccessible* proxy = IntlGeneric().AsProxy()) {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     proxy->TakeFocus();
-#endif
   } else {
     Intl()->TakeFocus();
   }

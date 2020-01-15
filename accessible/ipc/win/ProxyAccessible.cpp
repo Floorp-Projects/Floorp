@@ -724,5 +724,13 @@ void ProxyAccessible::DOMNodeID(nsString& aID) {
   aID = (wchar_t*)resultWrap;
 }
 
+void ProxyAccessible::TakeFocus() {
+  RefPtr<IAccessible> acc;
+  if (!GetCOMInterface((void**)getter_AddRefs(acc))) {
+    return;
+  }
+  acc->accSelect(SELFLAG_TAKEFOCUS, kChildIdSelf);
+}
+
 }  // namespace a11y
 }  // namespace mozilla
