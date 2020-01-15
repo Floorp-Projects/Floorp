@@ -405,6 +405,16 @@
   value: true
   mirror: always
 
+- name: apz.touch_acceleration_factor_x
+  type: float
+  value: 1.0f
+  mirror: always
+
+- name: apz.touch_acceleration_factor_y
+  type: float
+  value: 1.0f
+  mirror: always
+
 #ifdef MOZ_WIDGET_GTK
 -   name: apz.gtk.kinetic_scroll.enabled
     type: RelaxedAtomicBool
