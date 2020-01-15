@@ -29,11 +29,9 @@ class MessagePortChild final : public PMessagePortChild {
  private:
   ~MessagePortChild() { MOZ_ASSERT(!mPort); }
 
-  mozilla::ipc::IPCResult RecvEntangled(
-      nsTArray<ClonedMessageData>&& aMessages);
+  mozilla::ipc::IPCResult RecvEntangled(nsTArray<MessageData>&& aMessages);
 
-  mozilla::ipc::IPCResult RecvReceiveData(
-      nsTArray<ClonedMessageData>&& aMessages);
+  mozilla::ipc::IPCResult RecvReceiveData(nsTArray<MessageData>&& aMessages);
 
   mozilla::ipc::IPCResult RecvStopSendingDataConfirmed();
 
