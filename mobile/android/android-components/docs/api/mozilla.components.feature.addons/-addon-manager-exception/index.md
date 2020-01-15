@@ -2,7 +2,7 @@
 
 # AddonManagerException
 
-`class AddonManagerException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddonManager.kt#L215)
+`class AddonManagerException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddonManager.kt#L217)
 
 Wraps exceptions thrown by either the initialization process or an [AddonsProvider](../-addons-provider/index.md).
 

@@ -45,6 +45,7 @@ https://addons.mozilla.org/en-US/firefox/
 
 | Name | Summary |
 |---|---|
+| [isDisabledAsUnsupported](is-disabled-as-unsupported.md) | `fun isDisabledAsUnsupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this [Addon](./index.md) is currently disabled because it is not supported. This is based on the installed extension state in the engine. An addon can be disabled as unsupported and later become supported, so both [isSupported](is-supported.md) and [isDisabledAsUnsupported](is-disabled-as-unsupported.md) can be true. |
 | [isEnabled](is-enabled.md) | `fun isEnabled(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this [Addon](./index.md) is currently enabled. |
 | [isInstalled](is-installed.md) | `fun isInstalled(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this [Addon](./index.md) is currently installed. |
 | [isSupported](is-supported.md) | `fun isSupported(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns whether or not this [Addon](./index.md) is currently supported by the browser. |

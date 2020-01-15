@@ -24,6 +24,7 @@ Processor for Android intents which should trigger session-related actions.
 | Name | Summary |
 |---|---|
 | [CustomTabIntentProcessor](../../mozilla.components.feature.customtabs/-custom-tab-intent-processor/index.md) | `class CustomTabIntentProcessor : `[`IntentProcessor`](./index.md)<br>Processor for intents which trigger actions related to custom tabs. |
+| [MigrationIntentProcessor](../../mozilla.components.support.migration/-migration-intent-processor/index.md) | `class MigrationIntentProcessor : `[`IntentProcessor`](./index.md)<br>An [IntentProcessor](./index.md) that checks if we're in a migration state. |
 | [TabIntentProcessor](../-tab-intent-processor/index.md) | `class TabIntentProcessor : `[`IntentProcessor`](./index.md)<br>Processor for intents which should trigger session-related actions. |
 | [TrustedWebActivityIntentProcessor](../../mozilla.components.feature.pwa.intent/-trusted-web-activity-intent-processor/index.md) | `class TrustedWebActivityIntentProcessor : `[`IntentProcessor`](./index.md)<br>Processor for intents which open Trusted Web Activities. |
 | [WebAppIntentProcessor](../../mozilla.components.feature.pwa.intent/-web-app-intent-processor/index.md) | `class WebAppIntentProcessor : `[`IntentProcessor`](./index.md)<br>Processor for intents which trigger actions related to web apps. |
