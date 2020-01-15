@@ -95,10 +95,12 @@ void MediaController::NotifyMediaStateChanged(ControlledMediaState aState) {
 
 void MediaController::NotifyMediaAudibleChanged(bool aAudible) {
   mAudible = aAudible;
+  RefPtr<MediaControlService> service = MediaControlService::GetService();
+  MOZ_ASSERT(service);
   if (mAudible) {
-    RefPtr<MediaControlService> service = MediaControlService::GetService();
-    MOZ_ASSERT(service);
-    service->GetAudioFocusManager().RequestAudioFocus(Id());
+    service->GetAudioFocusManager().RequestAudioFocus(this);
+  } else {
+    service->GetAudioFocusManager().RevokeAudioFocus(this);
   }
 }
 
@@ -155,7 +157,7 @@ void MediaController::Activate() {
 void MediaController::Deactivate() {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   if (service) {
-    service->GetAudioFocusManager().RevokeAudioFocus(Id());
+    service->GetAudioFocusManager().RevokeAudioFocus(this);
     if (mIsRegisteredToService) {
       mIsRegisteredToService = !service->UnregisterActiveMediaController(this);
       MOZ_ASSERT(!mIsRegisteredToService, "Fail to unregister controller!");

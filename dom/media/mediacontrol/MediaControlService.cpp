@@ -52,7 +52,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(MediaControlService)
 NS_IMPL_RELEASE(MediaControlService)
 
-MediaControlService::MediaControlService() : mAudioFocusManager(this) {
+MediaControlService::MediaControlService() {
   LOG("create media control service");
   RefPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -93,7 +93,6 @@ MediaControlService::Observe(nsISupports* aSubject, const char* aTopic,
 
 void MediaControlService::Shutdown() {
   mControllerManager->Shutdown();
-  mAudioFocusManager.Shutdown();
   mMediaControlKeysManager->RemoveListener(mMediaKeysHandler.get());
 }
 

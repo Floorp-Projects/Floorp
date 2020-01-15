@@ -18,60 +18,49 @@
 namespace mozilla {
 namespace dom {
 
-AudioFocusManager::AudioFocusManager(MediaControlService* aService)
-    : mService(aService) {}
-
-void AudioFocusManager::RequestAudioFocus(uint64_t aId) {
-  if (mOwningFocusControllers.Contains(aId)) {
+void AudioFocusManager::RequestAudioFocus(MediaController* aController) {
+  MOZ_ASSERT(aController);
+  if (mOwningFocusControllers.Contains(aController)) {
     return;
   }
 
-  LOG("Controller %" PRId64 " grants audio focus", aId);
-  mOwningFocusControllers.AppendElement(aId);
-  HandleAudioCompetition(aId);
+  LOG("Controller %" PRId64 " grants audio focus", aController->Id());
+  mOwningFocusControllers.AppendElement(aController);
+  HandleAudioCompetition(aController);
 }
 
-void AudioFocusManager::RevokeAudioFocus(uint64_t aId) {
-  if (!mOwningFocusControllers.Contains(aId)) {
+void AudioFocusManager::RevokeAudioFocus(MediaController* aController) {
+  MOZ_ASSERT(aController);
+  if (!mOwningFocusControllers.Contains(aController)) {
     return;
   }
 
-  LOG("Controller %" PRId64 " loses audio focus", aId);
-  mOwningFocusControllers.RemoveElement(aId);
+  LOG("Controller %" PRId64 " loses audio focus", aController->Id());
+  mOwningFocusControllers.RemoveElement(aController);
 }
 
-void AudioFocusManager::HandleAudioCompetition(uint64_t aId) {
+void AudioFocusManager::HandleAudioCompetition(MediaController* aController) {
   // Enable audio focus management will start the audio competition which is
   // only allowing one controller playing at a time.
   if (!StaticPrefs::media_audioFocus_management()) {
     return;
   }
 
-  for (size_t idx = 0; idx < mOwningFocusControllers.Length(); idx++) {
-    const uint64_t controllerId = mOwningFocusControllers[idx];
-    if (controllerId != aId) {
+  for (auto& controller : mOwningFocusControllers) {
+    if (controller != aController) {
       LOG("Controller %" PRId64 " loses audio focus in audio competitition",
-          controllerId);
-      RefPtr<CanonicalBrowsingContext> context =
-          CanonicalBrowsingContext::Get(controllerId);
-      if (!context) {
-        continue;
-      }
-      if (RefPtr<MediaController> controller = context->GetMediaController()) {
-        controller->Stop();
-      }
+          controller->Id());
+      controller->Stop();
     }
   }
 
   mOwningFocusControllers.Clear();
-  mOwningFocusControllers.AppendElement(aId);
+  mOwningFocusControllers.AppendElement(aController);
 }
 
 uint32_t AudioFocusManager::GetAudioFocusNums() const {
   return mOwningFocusControllers.Length();
 }
-
-void AudioFocusManager::Shutdown() { mService = nullptr; }
 
 }  // namespace dom
 }  // namespace mozilla
