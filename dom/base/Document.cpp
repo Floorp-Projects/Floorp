@@ -2105,15 +2105,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
     uint32_t nsid = tmp->GetDefaultNamespaceID();
     nsAutoCString uri;
     if (tmp->mDocumentURI) uri = tmp->mDocumentURI->GetSpecOrDefault();
-    static const char* kNSURIs[] = {"([none])", "(xmlns)", "(xml)",
-                                    "(xhtml)",  "(XLink)", "(XSLT)",
-                                    "(MathML)", "(RDF)",   "(XUL)"};
-    if (nsid < ArrayLength(kNSURIs)) {
-      SprintfLiteral(name, "Document %s %s %s", loadedAsData.get(),
-                     kNSURIs[nsid], uri.get());
-    } else {
-      SprintfLiteral(name, "Document %s %s", loadedAsData.get(), uri.get());
-    }
+    const char* nsuri = nsNameSpaceManager::GetNameSpaceDisplayName(nsid);
+    SprintfLiteral(name, "Document %s %s %s", loadedAsData.get(), nsuri,
+                   uri.get());
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   } else {
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(Document, tmp->mRefCnt.get())
@@ -3128,10 +3122,10 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   // immutable after being set here.
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aContainer);
 
-  // If this is an error page, don't inherit sandbox flags
+  // If this is an error page, don't inherit sandbox flags from docshell
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   if (docShell && !loadInfo->GetLoadErrorPage()) {
-    mSandboxFlags = loadInfo->GetSandboxFlags();
+    mSandboxFlags = docShell->GetBrowsingContext()->GetSandboxFlags();
     WarnIfSandboxIneffective(docShell, mSandboxFlags, GetChannel());
   }
 

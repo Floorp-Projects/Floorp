@@ -15,7 +15,6 @@
 #include "nsScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 #include "NullPrincipal.h"
-#include "nsSandboxFlags.h"
 
 namespace mozilla {
 namespace net {
@@ -118,8 +117,8 @@ static int FuzzingRunNetworkWebsocket(const uint8_t* data, size_t size) {
     nsresult rv;
 
     nsSecurityFlags secFlags;
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
-    uint32_t sandboxFlags = SANDBOXED_ORIGIN;
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
+               nsILoadInfo::SEC_SANDBOXED;
 
     nsCOMPtr<nsIURI> url;
     nsAutoCString spec;
@@ -147,9 +146,9 @@ static int FuzzingRunNetworkWebsocket(const uint8_t* data, size_t size) {
     nsCOMPtr<nsIPrincipal> nullPrincipal =
         NullPrincipal::CreateWithoutOriginAttributes();
 
-    rv = gWebSocketChannel->InitLoadInfoNative(
-        nullptr, nullPrincipal, nsContentUtils::GetSystemPrincipal(), nullptr,
-        secFlags, nsIContentPolicy::TYPE_WEBSOCKET, sandboxFlags);
+    rv = gWebSocketChannel->InitLoadInfo(
+        nullptr, nullPrincipal, nsContentUtils::GetSystemPrincipal(), secFlags,
+        nsIContentPolicy::TYPE_WEBSOCKET);
 
     if (rv != NS_OK) {
       MOZ_CRASH("Failed to call InitLoadInfo");
