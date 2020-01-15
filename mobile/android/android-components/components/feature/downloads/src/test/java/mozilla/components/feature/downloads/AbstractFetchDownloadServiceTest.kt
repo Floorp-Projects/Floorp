@@ -4,11 +4,17 @@
 
 package mozilla.components.feature.downloads
 
+import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
@@ -31,6 +37,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -43,11 +50,17 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mock
+import org.mockito.Mockito.doCallRealMethod
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.initMocks
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowNotificationManager
+import java.io.IOException
+import java.io.InputStream
 
 @RunWith(AndroidJUnit4::class)
 class AbstractFetchDownloadServiceTest {
@@ -59,8 +72,12 @@ class AbstractFetchDownloadServiceTest {
     @Mock private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var service: AbstractFetchDownloadService
 
+    private val testDispatcher = TestCoroutineDispatcher()
+    private lateinit var shadowNotificationService: ShadowNotificationManager
+
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         initMocks(this)
         service = spy(object : AbstractFetchDownloadService() {
             override val httpClient = client
@@ -69,6 +86,14 @@ class AbstractFetchDownloadServiceTest {
         doReturn(broadcastManager).`when`(service).broadcastManager
         doReturn(testContext).`when`(service).context
         doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
+
+        shadowNotificationService =
+            shadowOf(testContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+    }
+
+    @After
+    fun afterEach() {
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -460,5 +485,250 @@ class AbstractFetchDownloadServiceTest {
         val transformedDownload = service.makeUniqueFileNameIfNecessary(download, true)
 
         assertEquals(download, transformedDownload)
+    }
+
+    @Test
+    fun `notification is shown when download status is ACTIVE`() = runBlocking {
+        val download = DownloadState("https://example.com/file.txt", "file.txt")
+        val response = Response(
+            "https://example.com/file.txt",
+            200,
+            MutableHeaders(),
+            Response.Body(mock())
+        )
+        doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
+
+        val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
+            putDownloadExtra(download)
+        }
+
+        service.onStartCommand(downloadIntent, 0, 0)
+        service.downloadJobs.values.forEach { it.job?.join() }
+
+        val providedDownload = argumentCaptor<DownloadState>()
+        verify(service).performDownload(providedDownload.capture())
+
+        service.downloadJobs[providedDownload.value.id]?.job?.join()
+        val downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        service.setDownloadJobStatus(downloadJobState, ACTIVE)
+        assertEquals(ACTIVE, service.getDownloadJobStatus(downloadJobState))
+
+        testDispatcher.advanceTimeBy(750)
+
+        assertEquals(1, shadowNotificationService.size())
+    }
+
+    @Test
+    fun `notification is shown when download status is PAUSED`() = runBlocking {
+        val download = DownloadState("https://example.com/file.txt", "file.txt")
+        val response = Response(
+            "https://example.com/file.txt",
+            200,
+            MutableHeaders(),
+            Response.Body(mock())
+        )
+        doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
+
+        val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
+            putDownloadExtra(download)
+        }
+
+        service.onStartCommand(downloadIntent, 0, 0)
+        service.downloadJobs.values.forEach { it.job?.join() }
+
+        val providedDownload = argumentCaptor<DownloadState>()
+        verify(service).performDownload(providedDownload.capture())
+
+        service.downloadJobs[providedDownload.value.id]?.job?.join()
+        val downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        service.setDownloadJobStatus(downloadJobState, PAUSED)
+        assertEquals(PAUSED, service.getDownloadJobStatus(downloadJobState))
+
+        testDispatcher.advanceTimeBy(750)
+
+        assertEquals(1, shadowNotificationService.size())
+    }
+
+    @Test
+    fun `notification is shown when download status is COMPLETED`() = runBlocking {
+        val download = DownloadState("https://example.com/file.txt", "file.txt")
+        val response = Response(
+            "https://example.com/file.txt",
+            200,
+            MutableHeaders(),
+            Response.Body(mock())
+        )
+        doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
+
+        val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
+            putDownloadExtra(download)
+        }
+
+        service.onStartCommand(downloadIntent, 0, 0)
+        service.downloadJobs.values.forEach { it.job?.join() }
+
+        val providedDownload = argumentCaptor<DownloadState>()
+        verify(service).performDownload(providedDownload.capture())
+
+        service.downloadJobs[providedDownload.value.id]?.job?.join()
+        val downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        service.setDownloadJobStatus(downloadJobState, COMPLETED)
+        assertEquals(COMPLETED, service.getDownloadJobStatus(downloadJobState))
+
+        testDispatcher.advanceTimeBy(750)
+
+        assertEquals(1, shadowNotificationService.size())
+    }
+
+    @Test
+    fun `notification is shown when download status is FAILED`() = runBlocking {
+        val download = DownloadState("https://example.com/file.txt", "file.txt")
+        val response = Response(
+            "https://example.com/file.txt",
+            200,
+            MutableHeaders(),
+            Response.Body(mock())
+        )
+        doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
+
+        val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
+            putDownloadExtra(download)
+        }
+
+        service.onStartCommand(downloadIntent, 0, 0)
+        service.downloadJobs.values.forEach { it.job?.join() }
+
+        val providedDownload = argumentCaptor<DownloadState>()
+        verify(service).performDownload(providedDownload.capture())
+
+        service.downloadJobs[providedDownload.value.id]?.job?.join()
+        val downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        service.setDownloadJobStatus(downloadJobState, FAILED)
+        assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
+
+        testDispatcher.advanceTimeBy(750)
+
+        assertEquals(1, shadowNotificationService.size())
+    }
+
+    @Test
+    fun `notification is not shown when download status is CANCELLED`() = runBlocking {
+        val download = DownloadState("https://example.com/file.txt", "file.txt")
+        val response = Response(
+            "https://example.com/file.txt",
+            200,
+            MutableHeaders(),
+            Response.Body(mock())
+        )
+        doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
+
+        val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
+            putDownloadExtra(download)
+        }
+
+        service.onStartCommand(downloadIntent, 0, 0)
+        service.downloadJobs.values.forEach { it.job?.join() }
+
+        val providedDownload = argumentCaptor<DownloadState>()
+        verify(service).performDownload(providedDownload.capture())
+
+        service.downloadJobs[providedDownload.value.id]?.job?.join()
+        val downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        service.setDownloadJobStatus(downloadJobState, CANCELLED)
+        assertEquals(CANCELLED, service.getDownloadJobStatus(downloadJobState))
+
+        testDispatcher.advanceTimeBy(750)
+
+        assertEquals(0, shadowNotificationService.size())
+    }
+
+    @Test
+    fun `job status is set to failed when IOException is thrown while performDownload`() = runBlocking {
+        doThrow(IOException()).`when`(client).fetch(any())
+        val download = DownloadState("https://example.com/file.txt", "file.txt")
+
+        val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
+            putDownloadExtra(download)
+        }
+
+        service.onStartCommand(downloadIntent, 0, 0)
+        service.downloadJobs.values.forEach { it.job?.join() }
+
+        val providedDownload = argumentCaptor<DownloadState>()
+        verify(service).performDownload(providedDownload.capture())
+
+        val downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+        assertEquals(FAILED, service.getDownloadJobStatus(downloadJobState))
+    }
+
+    @Test
+    fun `onDestroy cancels all running jobs`() = runBlocking {
+        val download = DownloadState("https://example.com/file.txt", "file.txt")
+        val response = Response(
+            "https://example.com/file.txt",
+            200,
+            MutableHeaders(),
+            // Simulate a long running reading operation by sleeping for 5 seconds.
+            Response.Body(object : InputStream() {
+                override fun read(): Int {
+                    Thread.sleep(5000)
+                    return 0
+                }
+            })
+        )
+        // Call the real method to force the reading of the response's body.
+        doCallRealMethod().`when`(service).useFileStream(any(), anyBoolean(), any())
+        doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
+
+        val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
+            putDownloadExtra(download)
+        }
+
+        service.onStartCommand(downloadIntent, 0, 0)
+        service.downloadJobs.values.forEach { assertTrue(it.job!!.isActive) }
+
+        val providedDownload = argumentCaptor<DownloadState>()
+        verify(service).performDownload(providedDownload.capture())
+
+        // Now destroy
+        service.onDestroy()
+
+        // Assert that jobs were cancelled rather than completed.
+        service.downloadJobs.values.forEach {
+            assertTrue(it.job!!.isCancelled)
+            assertFalse(it.job!!.isCompleted)
+        }
+    }
+
+    @Test
+    fun `onTaskRemoved cancels all notifications on the shadow notification manager`() = runBlocking {
+        val download = DownloadState("https://example.com/file.txt", "file.txt")
+        val response = Response(
+            "https://example.com/file.txt",
+            200,
+            MutableHeaders(),
+            Response.Body(mock())
+        )
+        doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
+
+        val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
+            putDownloadExtra(download)
+        }
+
+        service.onStartCommand(downloadIntent, 0, 0)
+        service.downloadJobs.values.forEach { it.job?.join() }
+
+        val providedDownload = argumentCaptor<DownloadState>()
+        verify(service).performDownload(providedDownload.capture())
+
+        // Advance the clock so that the poller posts a notification.
+        testDispatcher.advanceTimeBy(750)
+        assertEquals(1, shadowNotificationService.size())
+
+        // Now simulate onTaskRemoved.
+        service.onTaskRemoved(null)
+
+        // Assert that all currently shown notifications are gone.
+        assertEquals(0, shadowNotificationService.size())
     }
 }
