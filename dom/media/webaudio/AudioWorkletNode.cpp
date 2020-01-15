@@ -520,7 +520,7 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
       MakeUnique<StructuredCloneHolder>(
           StructuredCloneHolder::CloningSupported,
           StructuredCloneHolder::TransferringNotSupported,
-          JS::StructuredCloneScope::SameProcessDifferentThread);
+          JS::StructuredCloneScope::SameProcess);
   serializedOptions->Write(cx, optionsVal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
