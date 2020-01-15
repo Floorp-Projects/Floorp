@@ -1,0 +1,30 @@
+<!doctype html>
+<style>
+body {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+#scroll {
+  overflow-y: auto;
+  max-height: 100vh;
+}
+#padding {
+  height: 100vh;
+}
+</style>
+<script>
+  window.addEventListener("unload", () => { /* prevent bfcaching */ });
+  window.addEventListener("pageshow", function(e) {
+    window.opener.handlePageShow(e.persisted);
+  });
+</script>
+<!-- This is important as it delays layout, so that stuff goes through PresShell::Initialize under `mDelayedLayoutStart` instead of ContentAppended -->
+<link rel="stylesheet" href="slow-stylesheet.sjs">
+<div id="scroll">
+  <div id="padding"></div>
+  <a href="t1.html">t1.html</a>
+  <div id="padding"></div>
+</div>

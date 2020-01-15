@@ -1433,7 +1433,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
             start, nsCSSFrameConstructor::InsertionKind::Sync);
       } else {
         frameConstructor->ContentRangeInserted(
-            start, end, nullptr, nsCSSFrameConstructor::InsertionKind::Sync);
+            start, end, nsCSSFrameConstructor::InsertionKind::Sync);
       }
     }
     for (size_t j = lazyRangeStart; j < i; ++j) {

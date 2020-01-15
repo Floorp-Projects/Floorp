@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test for Bug 1269539</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+let loadCount = 0;
+let childWin;
+let targetScrollPosition;
+function handlePageShow(persisted) {
+  ok(typeof persisted == "boolean", "Should get the persisted state from the pageshow event");
+  ok(!persisted, "Shouldn't have gotten into the bfcache");
+  is(childWin.getComputedStyle(childWin.document.body).color, "rgb(0, 255, 0)", "Sheet should have been applied");
+  let scroller = childWin.document.querySelector("#scroll");
+  if (loadCount == 0) {
+    loadCount++;
+    targetScrollPosition = childWin.innerHeight;
+    isnot(targetScrollPosition, 0, "Should scroll somewhere");
+    scroller.scrollTo(0, childWin.innerHeight);
+    childWin.requestAnimationFrame(() => childWin.requestAnimationFrame(() => {
+      childWin.location.reload();
+    }));
+  } else {
+    childWin.requestAnimationFrame(() => childWin.requestAnimationFrame(() => {
+      // Verify that the scroll position was retained
+      is(scroller.scrollTop, targetScrollPosition, "Should have restored the scroll position");
+      childWin.close();
+      SimpleTest.finish();
+    }));
+  }
+}
+
+childWin = window.open('file_scroll_position_restore_no_bfcache.html', '_blank');
+</script>
