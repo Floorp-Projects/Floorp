@@ -83,7 +83,7 @@ bool nsDBusRemoteClient::GetRemoteDestinationName(const char* aProgram,
   nsAutoCString profileName;
   nsresult rv = mozilla::Base64Encode(nsAutoCString(aProfile), profileName);
   NS_ENSURE_SUCCESS(rv, false);
-  profileName.ReplaceChar("+/=", '_');
+  profileName.ReplaceChar("+/=-", '_');
 
   aDestinationName =
       nsPrintfCString("org.mozilla.%s.%s", aProgram, profileName.get());
@@ -114,15 +114,25 @@ nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char* aProgram,
                                                    const char* aProfile,
                                                    const char* aBuffer,
                                                    int aLength) {
+  nsAutoCString appName(aProgram);
+  appName.ReplaceChar("+/=-", '_');
+
   nsAutoCString destinationName;
-  if (!GetRemoteDestinationName(aProgram, aProfile, destinationName))
+  if (!GetRemoteDestinationName(appName.get(), aProfile, destinationName))
     return NS_ERROR_FAILURE;
 
   nsAutoCString pathName;
-  pathName = nsPrintfCString("/org/mozilla/%s/Remote", aProgram);
+  pathName = nsPrintfCString("/org/mozilla/%s/Remote", appName.get());
+
+  static auto sDBusValidatePathName = (bool (*)(const char*, DBusError*))dlsym(
+      RTLD_DEFAULT, "dbus_validate_path");
+  if (!sDBusValidatePathName ||
+      !sDBusValidatePathName(pathName.get(), nullptr)) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsAutoCString remoteInterfaceName;
-  remoteInterfaceName = nsPrintfCString("org.mozilla.%s", aProgram);
+  remoteInterfaceName = nsPrintfCString("org.mozilla.%s", appName.get());
 
   RefPtr<DBusMessage> msg =
       already_AddRefed<DBusMessage>(dbus_message_new_method_call(
