@@ -427,6 +427,8 @@ class nsWindow final : public nsBaseWidget {
 #endif
   bool IsRemoteContent() { return HasRemoteContent(); }
   static void HideWaylandOpenedPopups();
+  void NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
+                                      bool aFlippedX, bool aFlippedY);
 
  protected:
   virtual ~nsWindow();
