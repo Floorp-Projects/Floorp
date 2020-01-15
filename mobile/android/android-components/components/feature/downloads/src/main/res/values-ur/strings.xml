@@ -13,6 +13,8 @@
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">توقف کریں</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">پھر جاری کریں</string>
     <!-- Button that cancels the download when pressed -->
     <string name="mozac_feature_downloads_button_cancel">منسوخ کریں</string>
     <!-- Button that opens the downloaded file when pressed -->

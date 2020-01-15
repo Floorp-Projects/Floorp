@@ -104,6 +104,8 @@
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d neue Berechtigungen werden benötigt</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an addon. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Add-on-Updates</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">Die Firefox-Add-on-Technologie wird modernisiert. Diese Add-ons verwenden Frameworks, die nicht mit Firefox 75 und höher kompatibel sind.</string>
     <!-- This is the caption for the addon installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Add-on wird heruntergeladen und überprüft…</string>
 

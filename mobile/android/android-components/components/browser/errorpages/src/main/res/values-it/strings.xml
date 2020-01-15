@@ -161,8 +161,8 @@
 	<p>Il browser non è riuscito a trovare il server host per l’indirizzo fornito.</p>
 	<ul>
 		<li>Verificare se l’indirizzo contiene errori di battitura del tipo
-			<strong>ww</strong>.esempio.com invece di 
-			<strong>www</strong>.esempio.com</li>
+			<strong>ww</strong>.example.com invece di 
+			<strong>www</strong>.example.com</li>
 		<li>Se non è possibile caricare alcuna pagina, controllare la connessione dati o Wi-Fi del dispositivo.</li>
 	</ul>
 	]]></string>
@@ -184,20 +184,18 @@
     <!-- This string contains markup. The URL should not be localized. -->
     <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
 	<ul>
-		<li>Gli indirizzi internet normalmente si scrivono nella forma <strong>http://www.esempio.com/</strong></li>
+		<li>Gli indirizzi internet normalmente si scrivono nella forma <strong>http://www.example.com/</strong></li>
 		<li>Verificare se si stanno utilizzando le barre corrette (ad esempio <strong>/</strong>).</li>
 	</ul>
 	]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protocollo sconosciuto</string>
-    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
-	<p> L’indirizzo specifica un protocollo (per es. <q> wxyz://z/q>) che il browser non riconosce per cui non può connettersi correttamente al sito. </p>
-	<ul>
-		<li> Si sta cercando di accedere a servizi multimediali o altri servizi non in formato testo? Controllare se il sito ha ulteriori requisiti. </li>
-		<li> Alcuni protocolli potrebbero richiedere software o plug-in di terze parti prima che il browser possa riconoscerli. </li>
-	</ul>
-	]]></string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>L’indirizzo richiede un protocollo (ad es. <q>wxyz://</q>) che il browser non riconosce, quindi non può collegarsi correttamente al sito.</p>
+<ul>
+  <li>Si sta accedendo a servizi multimediali o non testuali? Verificare sul sito i requisiti necessari.</li>
+  <li>Alcuni protocolli richiedono software esterni o plugin affinché il browser li possa riconoscere.</li>
+</ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">File non trovato</string>
@@ -256,15 +254,13 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Problema di sito pericoloso</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
-	<p>Il sito web %1$s è stato segnalato come sito web potenzialmente pericoloso ed è stato bloccato sulla base delle impostazioni di sicurezza.
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[<p>Il sito web %1$s è stato segnalato come sito web potenzialmente pericoloso ed è stato bloccato sulla base delle impostazioni di sicurezza.</p>
 	]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema con sito ingannevole</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
-    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
-	<p>Il sito web %1$s è stato segnalato come sito ingannevole ed è stato bloccato sulla base delle impostazioni di sicurezza.
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Il sito web %1$s è stato segnalato come sito ingannevole ed è stato bloccato sulla base delle impostazioni di sicurezza.</p>
 	]]></string>
 
     </resources>
