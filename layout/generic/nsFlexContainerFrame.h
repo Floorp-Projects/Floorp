@@ -215,9 +215,6 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   static void ComputeFlexDirections(ComputedFlexContainerInfo& aContainerInfo,
                                     const FlexboxAxisTracker& aAxisTracker);
 
-  static void UpdateClampState(ComputedFlexContainerInfo& aContainerInfo,
-                               const mozilla::LinkedList<FlexLine>& aLines);
-
   static void UpdateFlexLineAndItemInfo(
       ComputedFlexContainerInfo& aContainerInfo,
       const mozilla::LinkedList<FlexLine>& aLines);
