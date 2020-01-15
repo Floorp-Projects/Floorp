@@ -50,7 +50,18 @@ void GCRuntime::markFinalizationGroupData(JSTracer* trc) {
   }
 }
 
-void GCRuntime::sweepFinalizationGroups(Zone* zone) {
+static FinalizationRecordObject* UnwrapFinalizationRecord(JSObject* obj) {
+  obj = UncheckedUnwrapWithoutExpose(obj);
+  if (!obj->is<FinalizationRecordObject>()) {
+    MOZ_ASSERT(JS_IsDeadWrapper(obj));
+    // CCWs between the compartments have been nuked. The
+    // FinalizationGroup's callback doesn't run in this case.
+    return nullptr;
+  }
+  return &obj->as<FinalizationRecordObject>();
+}
+
+void GCRuntime::sweepFinalizationGroups(Zone* zone, bool isShuttingDown) {
   // Queue holdings for cleanup for any entries whose target is dying and remove
   // them from the map. Sweep remaining unregister tokens.
 
@@ -60,18 +71,12 @@ void GCRuntime::sweepFinalizationGroups(Zone* zone) {
     if (IsAboutToBeFinalized(&e.front().mutableKey())) {
       // Queue holdings for targets that are dying.
       for (JSObject* obj : records) {
-        obj = UncheckedUnwrapWithoutExpose(obj);
-        if (!obj->is<FinalizationRecordObject>()) {
-          MOZ_ASSERT(JS_IsDeadWrapper(obj));
-          // CCWs between the compartments have been nuked. The
-          // FinalizationGroup's callback doesn't run in this case.
-          continue;
-        }
-        auto record = &obj->as<FinalizationRecordObject>();
-        FinalizationGroupObject* group = record->group();
-        if (group) {
-          group->queueRecordToBeCleanedUp(record);
-          queueFinalizationGroupForCleanup(group);
+        if (FinalizationRecordObject* record = UnwrapFinalizationRecord(obj)) {
+          FinalizationGroupObject* group = record->group();
+          if (group && !isShuttingDown) {
+            group->queueRecordToBeCleanedUp(record);
+            queueFinalizationGroupForCleanup(group);
+          }
         }
       }
       e.removeFront();
@@ -80,15 +85,8 @@ void GCRuntime::sweepFinalizationGroups(Zone* zone) {
       records.sweep();
       // Remove records that have been unregistered.
       records.eraseIf([](JSObject* obj) {
-        obj = UncheckedUnwrapWithoutExpose(obj);
-        if (!obj->is<FinalizationRecordObject>()) {
-          MOZ_ASSERT(JS_IsDeadWrapper(obj));
-          // CCWs between the compartments have been nuked. The
-          // FinalizationGroup's callback doesn't run in this case.
-          return true;
-        }
-        auto record = &obj->as<FinalizationRecordObject>();
-        return !record->group();
+        FinalizationRecordObject* record = UnwrapFinalizationRecord(obj);
+        return !record || !record->group();
       });
     }
   }

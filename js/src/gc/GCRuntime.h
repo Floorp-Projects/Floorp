@@ -701,7 +701,7 @@ class GCRuntime {
   void sweepDebuggerOnMainThread(JSFreeOp* fop);
   void sweepJitDataOnMainThread(JSFreeOp* fop);
   void sweepFinalizationGroupsOnMainThread();
-  void sweepFinalizationGroups(Zone* zone);
+  void sweepFinalizationGroups(Zone* zone, bool isShuttingDown = false);
   void queueFinalizationGroupForCleanup(FinalizationGroupObject* group);
   void sweepWeakRefs(Zone* zone);
   friend void SweepWeakRefs(GCParallelTask* task);
