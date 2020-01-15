@@ -69,7 +69,8 @@ class StructuredCloneData;
 namespace mozilla {
 namespace dom {
 class ClonedMessageData;
-class MessagePortMessage;
+class MessageData;
+class RefMessageData;
 namespace indexedDB {
 struct StructuredCloneReadInfo;
 class SerializedStructuredCloneReadInfo;
@@ -731,7 +732,8 @@ DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::indexedDB::IndexCursorResponse)
 DECLARE_USE_COPY_CONSTRUCTORS(
     mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo);
 DECLARE_USE_COPY_CONSTRUCTORS(JSStructuredCloneData)
-DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::MessagePortMessage)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::MessageData)
+DECLARE_USE_COPY_CONSTRUCTORS(mozilla::dom::RefMessageData)
 DECLARE_USE_COPY_CONSTRUCTORS(mozilla::SourceBufferTask)
 
 //

@@ -26,7 +26,7 @@ class MessagePortParent final
 
   bool Entangle(const nsID& aDestinationUUID, const uint32_t& aSequenceID);
 
-  bool Entangled(const nsTArray<ClonedMessageData>& aMessages);
+  bool Entangled(const nsTArray<MessageData>& aMessages);
 
   void Close();
   void CloseAndDelete();
@@ -39,11 +39,9 @@ class MessagePortParent final
                          const uint32_t& aSequenceID);
 
  private:
-  mozilla::ipc::IPCResult RecvPostMessages(
-      nsTArray<ClonedMessageData>&& aMessages);
+  mozilla::ipc::IPCResult RecvPostMessages(nsTArray<MessageData>&& aMessages);
 
-  mozilla::ipc::IPCResult RecvDisentangle(
-      nsTArray<ClonedMessageData>&& aMessages);
+  mozilla::ipc::IPCResult RecvDisentangle(nsTArray<MessageData>&& aMessages);
 
   mozilla::ipc::IPCResult RecvStopSendingData();
 
