@@ -125,7 +125,6 @@
     'disable_fips%': 1,
     'mozpkix_only%': 0,
     'coverage%': 0,
-    'softfp_cflags%': '',
   },
   'target_defaults': {
     # Settings specific to targets should go here.
