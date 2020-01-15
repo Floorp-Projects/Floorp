@@ -23,8 +23,10 @@ check(new Proxy({}, {}));
 check({get x() { throw new Error("fail"); }});
 
 // Mismatched scopes.
-for (let [write_scope, read_scope] of [['SameProcess', 'DifferentProcessForIndexedDB'],
-                                       ['SameProcess', 'DifferentProcess']])
+for (let [write_scope, read_scope] of [['SameProcessSameThread', 'SameProcessDifferentThread'],
+                                       ['SameProcessSameThread', 'DifferentProcess'],
+                                       ['SameProcessDifferentThread', 'DifferentProcessForIndexedDB'],
+                                       ['SameProcessDifferentThread', 'DifferentProcess']])
 {
   var ab = new ArrayBuffer(12);
   var buffer = serialize(ab, [ab], { scope: write_scope });

@@ -27,6 +27,7 @@
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/dom/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/PMediaTransportChild.h"
+#include "mozilla/dom/PendingIPCBlobChild.h"
 #include "mozilla/dom/TemporaryIPCBlobChild.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
@@ -308,6 +309,17 @@ bool BackgroundChildImpl::DeallocPBackgroundStorageChild(
 
   StorageDBChild* child = static_cast<StorageDBChild*>(aActor);
   child->ReleaseIPDLReference();
+  return true;
+}
+
+dom::PPendingIPCBlobChild* BackgroundChildImpl::AllocPPendingIPCBlobChild(
+    const IPCBlob& aBlob) {
+  return new dom::PendingIPCBlobChild(aBlob);
+}
+
+bool BackgroundChildImpl::DeallocPPendingIPCBlobChild(
+    dom::PPendingIPCBlobChild* aActor) {
+  delete aActor;
   return true;
 }
 

@@ -3,7 +3,8 @@
 // http://creativecommons.org/licenses/publicdomain/
 
 function* buffer_options() {
-    for (var scope of ["SameProcess",
+    for (var scope of ["SameProcessSameThread",
+                       "SameProcessDifferentThread",
                        "DifferentProcess",
                        "DifferentProcessForIndexedDB"])
     {

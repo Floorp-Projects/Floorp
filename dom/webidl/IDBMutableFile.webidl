@@ -13,6 +13,9 @@ interface IDBMutableFile : EventTarget {
   [Throws, UseCounter]
   IDBFileHandle open(optional FileMode mode = "readonly");
 
+  [Throws, UseCounter]
+  DOMRequest getFile();
+
   attribute EventHandler onabort;
   attribute EventHandler onerror;
 };

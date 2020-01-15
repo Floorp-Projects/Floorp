@@ -105,6 +105,9 @@ class BlobImpl : public nsISupports {
   // file is a directory.
   virtual bool IsDirectory() const { return false; }
 
+  // True if this implementation can be sent to other threads.
+  virtual bool MayBeClonedToOtherThreads() const { return true; }
+
  protected:
   virtual ~BlobImpl() {}
 };

@@ -67,7 +67,7 @@ class SharedJSAllocatedData final {
     return sharedData.forget();
   }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedJSAllocatedData)
+  NS_INLINE_DECL_REFCOUNTING(SharedJSAllocatedData)
 
   JSStructuredCloneData& Data() { return mData; }
   size_t DataLength() const { return mData.Size(); }
@@ -148,9 +148,6 @@ class StructuredCloneData : public StructuredCloneHolder {
   StructuredCloneData(const StructuredCloneData&) = delete;
 
   StructuredCloneData(StructuredCloneData&& aOther);
-
-  // Only DifferentProcess and UnknownDestination scopes are supported.
-  explicit StructuredCloneData(StructuredCloneScope aScope);
 
   ~StructuredCloneData();
 

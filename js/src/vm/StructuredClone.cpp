@@ -309,7 +309,6 @@ struct SCOutput {
 
   JSContext* context() const { return cx; }
   JS::StructuredCloneScope scope() const { return buf.scope(); }
-  void sameProcessScopeRequired() { buf.sameProcessScopeRequired(); }
 
   MOZ_MUST_USE bool write(uint64_t u);
   MOZ_MUST_USE bool writePair(uint32_t tag, uint32_t data);
@@ -429,8 +428,8 @@ struct JSStructuredCloneReader {
   SCInput& in;
 
   // The widest scope that the caller will accept, where
-  // SameProcess is the widest (it can store anything it wants)
-  // and DifferentProcess is the narrowest (it cannot contain pointers and must
+  // SameProcessSameThread is the widest (it can store anything it wants) and
+  // DifferentProcess is the narrowest (it cannot contain pointers and must
   // be valid cross-process.)
   JS::StructuredCloneScope allowedScope;
 
@@ -916,7 +915,7 @@ void JSStructuredCloneData::discardTransferables() {
 
   // DifferentProcess clones cannot contain pointers, so nothing needs to be
   // released.
-  if (scope() == JS::StructuredCloneScope::DifferentProcess) {
+  if (scope_ == JS::StructuredCloneScope::DifferentProcess) {
     return;
   }
 
@@ -1102,14 +1101,9 @@ bool JSStructuredCloneWriter::parseTransferable() {
       }
 
       JSAutoRealm ar(cx, unwrappedObj);
-      bool sameProcessScopeRequired = false;
-      if (!out.buf.callbacks_->canTransfer(
-              cx, unwrappedObj, &sameProcessScopeRequired, out.buf.closure_)) {
+      if (!out.buf.callbacks_->canTransfer(cx, unwrappedObj,
+                                           out.buf.closure_)) {
         return false;
-      }
-
-      if (sameProcessScopeRequired) {
-        output().sameProcessScopeRequired();
       }
     }
 
@@ -1269,13 +1263,11 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
     return false;
   }
 
-  output().sameProcessScopeRequired();
-
   // We must not transmit SAB pointers (including for WebAssembly.Memory)
   // cross-process.  The cloneDataPolicy should have guarded against this;
   // since it did not then throw, with a very explicit message.
 
-  if (output().scope() > JS::StructuredCloneScope::SameProcess) {
+  if (output().scope() > JS::StructuredCloneScope::SameProcessDifferentThread) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_SHMEM_POLICY);
     return false;
@@ -1750,18 +1742,7 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
     }
 
     if (out.buf.callbacks_ && out.buf.callbacks_->write) {
-      bool sameProcessScopeRequired = false;
-      if (!out.buf.callbacks_->write(context(), this, obj,
-                                     &sameProcessScopeRequired,
-                                     out.buf.closure_)) {
-        return false;
-      }
-
-      if (sameProcessScopeRequired) {
-        output().sameProcessScopeRequired();
-      }
-
-      return true;
+      return out.buf.callbacks_->write(context(), this, obj, out.buf.closure_);
     }
     // else fall through
   }
@@ -2674,13 +2655,7 @@ bool JSStructuredCloneReader::readHeader() {
     storedScope = JS::StructuredCloneScope::DifferentProcessForIndexedDB;
   }
 
-  // Backward compatibility with old structured clone buffers. Value '0' was
-  // used for SameProcessSameThread scope.
-  if ((int)storedScope == 0) {
-    storedScope = JS::StructuredCloneScope::SameProcess;
-  }
-
-  if (storedScope < JS::StructuredCloneScope::SameProcess ||
+  if (storedScope < JS::StructuredCloneScope::SameProcessSameThread ||
       storedScope > JS::StructuredCloneScope::DifferentProcessForIndexedDB) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA,
@@ -3109,8 +3084,8 @@ JS_PUBLIC_API bool JS_StructuredClone(
 
   const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
 
-  JSAutoStructuredCloneBuffer buf(JS::StructuredCloneScope::SameProcess,
-                                  callbacks, closure);
+  JSAutoStructuredCloneBuffer buf(
+      JS::StructuredCloneScope::SameProcessSameThread, callbacks, closure);
   {
     if (value.isObject()) {
       RootedObject obj(cx, &value.toObject());
@@ -3136,7 +3111,7 @@ JS_PUBLIC_API bool JS_StructuredClone(
 
 JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(
     JSAutoStructuredCloneBuffer&& other)
-    : data_(other.scope()) {
+    : scope_(other.scope()), data_(other.scope()) {
   data_.ownTransferables_ = other.data_.ownTransferables_;
   other.steal(&data_, &version_, &data_.callbacks_, &data_.closure_);
 }
@@ -3144,7 +3119,7 @@ JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(
 JSAutoStructuredCloneBuffer& JSAutoStructuredCloneBuffer::operator=(
     JSAutoStructuredCloneBuffer&& other) {
   MOZ_ASSERT(&other != this);
-  MOZ_ASSERT(scope() == other.scope());
+  MOZ_ASSERT(scope_ == other.scope_);
   clear();
   data_.ownTransferables_ = other.data_.ownTransferables_;
   other.steal(&data_, &version_, &data_.callbacks_, &data_.closure_);
@@ -3191,7 +3166,7 @@ bool JSAutoStructuredCloneBuffer::read(
     JSContext* cx, MutableHandleValue vp, JS::CloneDataPolicy cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   MOZ_ASSERT(cx);
-  return !!JS_ReadStructuredClone(cx, data_, version_, data_.scope(), vp,
+  return !!JS_ReadStructuredClone(cx, data_, version_, scope_, vp,
                                   cloneDataPolicy, optionalCallbacks, closure);
 }
 
@@ -3208,9 +3183,8 @@ bool JSAutoStructuredCloneBuffer::write(
     JS::CloneDataPolicy cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   clear();
-  bool ok =
-      JS_WriteStructuredClone(cx, value, &data_, data_.scope(), cloneDataPolicy,
-                              optionalCallbacks, closure, transferable);
+  bool ok = JS_WriteStructuredClone(cx, value, &data_, scope_, cloneDataPolicy,
+                                    optionalCallbacks, closure, transferable);
 
   if (ok) {
     data_.ownTransferables_ = OwnTransferablePolicy::OwnsTransferablesIfAny;
