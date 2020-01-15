@@ -1034,6 +1034,26 @@ describe("TelemetryFeed", () => {
       assert.calledWith(instance.sendStructuredIngestionEvent, expectedPayload);
     });
   });
+  describe("#sendSessionPing", () => {
+    it("should call sendStructuredIngestionEvent", async () => {
+      const data = {
+        action: "activity_stream_session",
+        page: "about:home",
+        session_duration: 10000,
+      };
+      instance = new TelemetryFeed();
+      sandbox.spy(instance, "sendStructuredIngestionEvent");
+
+      await instance.sendSessionPing(data);
+
+      const expectedPayload = {
+        client_id: FAKE_TELEMETRY_ID,
+        page: "about:home",
+        session_duration: 10000,
+      };
+      assert.calledWith(instance.sendStructuredIngestionEvent, expectedPayload);
+    });
+  });
   describe("#sendEvent", () => {
     it("should call sendEventPing on activity_stream_user_event", () => {
       FakePrefs.prototype.prefs.telemetry = true;
@@ -1045,6 +1065,17 @@ describe("TelemetryFeed", () => {
       instance.sendEvent(event);
 
       assert.calledOnce(instance.sendEventPing);
+    });
+    it("should call sendSessionPing on activity_stream_session", () => {
+      FakePrefs.prototype.prefs.telemetry = true;
+      FakePrefs.prototype.prefs[STRUCTURED_INGESTION_TELEMETRY_PREF] = true;
+      const event = { action: "activity_stream_session" };
+      instance = new TelemetryFeed();
+      sandbox.spy(instance, "sendSessionPing");
+
+      instance.sendEvent(event);
+
+      assert.calledOnce(instance.sendSessionPing);
     });
   });
   describe("#sendUTEvent", () => {

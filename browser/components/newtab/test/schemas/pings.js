@@ -227,6 +227,7 @@ export const SessionPing = Joi.object().keys(
     page: baseKeys.page.required(),
     session_duration: Joi.number().integer(),
     action: Joi.valid("activity_stream_session").required(),
+    profile_creation_date: Joi.number().integer(),
     perf: Joi.object()
       .keys({
         // How long it took in ms for data to be ready for display.
@@ -238,7 +239,7 @@ export const SessionPing = Joi.object().keys(
         // Not required at least for the error cases where the
         // observer event doesn't fire
         load_trigger_ts: Joi.number()
-          .positive()
+          .integer()
           .notes(["server counter", "server counter alert"]),
 
         // What was the perceived trigger of the load action?
@@ -261,7 +262,7 @@ export const SessionPing = Joi.object().keys(
         // topsites has yet to receive screenshots updates from the add-on code,
         // and is therefore just showing placeholder screenshots.
         topsites_first_painted_ts: Joi.number()
-          .positive()
+          .integer()
           .notes(["server counter", "server counter alert"]),
 
         // Information about the quality of TopSites images and icons.
@@ -287,7 +288,7 @@ export const SessionPing = Joi.object().keys(
         // visibility_event doesn't fire.  (It's not clear whether this
         // can happen in practice, but if it does, we'd like to know about it).
         visibility_event_rcvd_ts: Joi.number()
-          .positive()
+          .integer()
           .notes(["server counter", "server counter alert"]),
 
         // The boolean to signify whether the page is preloaded or not.
