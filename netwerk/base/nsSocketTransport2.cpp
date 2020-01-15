@@ -764,6 +764,11 @@ nsresult nsSocketTransport::Init(const nsTArray<nsCString>& types,
     NS_ENSURE_ARG(proxyInfo);
   }
 
+  // `port` is the origin target port
+  mSocketTransportService->ApplyPortRemap(&port);
+  // `portRoute` is used by alternate services and we want to remap it as well
+  mSocketTransportService->ApplyPortRemap(&portRoute);
+
   // init socket type info
 
   mOriginHost = host;
