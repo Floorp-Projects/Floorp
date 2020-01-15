@@ -157,7 +157,9 @@ nsresult nsDBusRemoteServer::Startup(const char* aAppName,
   nsAutoCString profileName;
   nsresult rv = mozilla::Base64Encode(nsAutoCString(aProfileName), profileName);
   NS_ENSURE_SUCCESS(rv, rv);
-  profileName.ReplaceChar("+/=", '_');
+
+  profileName.ReplaceChar("+/=-", '_');
+  mAppName.ReplaceChar("+/=-", '_');
 
   nsAutoCString busName;
   busName =
@@ -194,6 +196,13 @@ nsresult nsDBusRemoteServer::Startup(const char* aAppName,
   }
 
   mPathName = nsPrintfCString("/org/mozilla/%s/Remote", mAppName.get());
+  static auto sDBusValidatePathName = (bool (*)(const char*, DBusError*))dlsym(
+      RTLD_DEFAULT, "dbus_validate_path");
+  if (!sDBusValidatePathName ||
+      !sDBusValidatePathName(mPathName.get(), nullptr)) {
+    mConnection = nullptr;
+    return NS_ERROR_FAILURE;
+  }
   if (!dbus_connection_register_object_path(mConnection, mPathName.get(),
                                             &remoteHandlersTable, this)) {
     mConnection = nullptr;
