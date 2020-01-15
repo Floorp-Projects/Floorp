@@ -676,7 +676,7 @@ bool BrowsingContext::CanAccess(BrowsingContext* aTarget,
 
   // A frame can navigate any frame with a same-origin ancestor.
   for (BrowsingContext* bc = aTarget; bc; bc = bc->GetParent()) {
-    if (bc && nsDocShell::ValidateOrigin(this, bc)) {
+    if (bc->mDocShell && nsDocShell::ValidateOrigin(mDocShell, bc->mDocShell)) {
       return true;
     }
   }
