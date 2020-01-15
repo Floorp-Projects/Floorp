@@ -3381,9 +3381,7 @@ static mozilla::Maybe<JS::StructuredCloneScope> ParseCloneScope(
     return scope;
   }
 
-  if (StringEqualsLiteral(scopeStr, "SameProcessSameThread")) {
-    scope.emplace(JS::StructuredCloneScope::SameProcessSameThread);
-  } else if (StringEqualsLiteral(scopeStr, "SameProcessDifferentThread")) {
+  if (StringEqualsLiteral(scopeStr, "SameProcessDifferentThread")) {
     scope.emplace(JS::StructuredCloneScope::SameProcessDifferentThread);
   } else if (StringEqualsLiteral(scopeStr, "DifferentProcess")) {
     scope.emplace(JS::StructuredCloneScope::DifferentProcess);
@@ -3450,8 +3448,8 @@ bool js::testingFunc_serialize(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (!clonebuf) {
-    clonebuf.emplace(JS::StructuredCloneScope::SameProcessSameThread, nullptr,
-                     nullptr);
+    clonebuf.emplace(JS::StructuredCloneScope::SameProcessDifferentThread,
+                     nullptr, nullptr);
   }
 
   if (!clonebuf->write(cx, args.get(0), args.get(1), policy)) {
@@ -3480,7 +3478,7 @@ static bool Deserialize(JSContext* cx, unsigned argc, Value* vp) {
   JS::CloneDataPolicy policy;
   JS::StructuredCloneScope scope =
       obj->isSynthetic() ? JS::StructuredCloneScope::DifferentProcess
-                         : JS::StructuredCloneScope::SameProcessSameThread;
+                         : JS::StructuredCloneScope::SameProcessDifferentThread;
   if (args.get(1).isObject()) {
     RootedObject opts(cx, &args[1].toObject());
     if (!opts) {
@@ -6745,10 +6743,10 @@ gc::ZealModeHelpText),
 "  clone buffer object. 'policy' may be an options hash. Valid keys:\n"
 "    'SharedArrayBuffer' - either 'allow' or 'deny' (the default)\n"
 "      to specify whether SharedArrayBuffers may be serialized.\n"
-"    'scope' - SameProcessSameThread, SameProcessDifferentThread,\n"
-"      DifferentProcess, or DifferentProcessForIndexedDB. Determines how some\n"
-"      values will be serialized. Clone buffers may only be deserialized with a\n"
-"      compatible scope. NOTE - For DifferentProcess/DifferentProcessForIndexedDB,\n"
+"    'scope' - SameProcessDifferentThread, DifferentProcess, or\n"
+"      DifferentProcessForIndexedDB. Determines how some values will be\n"
+"      serialized. Clone buffers may only be deserialized with a compatible\n"
+"      scope. NOTE - For DifferentProcess/DifferentProcessForIndexedDB,\n"
 "      must also set SharedArrayBuffer:'deny' if data contains any shared memory\n"
 "      object."),
 
@@ -6759,10 +6757,10 @@ gc::ZealModeHelpText),
 "    'SharedArrayBuffer' - either 'allow' or 'deny' (the default)\n"
 "      to specify whether SharedArrayBuffers may be serialized.\n"
 "    'scope', which limits the clone buffers that are considered\n"
-"  valid. Allowed values: 'SameProcessSameThread', 'SameProcessDifferentThread',\n"
-"  'DifferentProcess', and 'DifferentProcessForIndexedDB'. So for example, a\n"
+"  valid. Allowed values: ''SameProcessDifferentThread', 'DifferentProcess',\n"
+"  and 'DifferentProcessForIndexedDB'. So for example, a\n"
 "  DifferentProcessForIndexedDB clone buffer may be deserialized in any scope, but\n"
-"  a SameProcessSameThread clone buffer cannot be deserialized in a\n"
+"  a SameProcessDifferentThread clone buffer cannot be deserialized in a\n"
 "  DifferentProcess scope."),
 
     JS_FN_HELP("detachArrayBuffer", DetachArrayBuffer, 1, 0,
