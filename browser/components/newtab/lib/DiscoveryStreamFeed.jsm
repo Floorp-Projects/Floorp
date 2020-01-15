@@ -755,6 +755,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
   scoreItems(items) {
     const filtered = [];
+    const scoreStart = perfService.absNow();
     const data = items
       .map(item => this.scoreItem(item))
       // Remove spocs that are scored too low.
@@ -767,6 +768,19 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       })
       // Sort by highest scores.
       .sort((a, b) => b.score - a.score);
+
+    if (this.affinityProvider) {
+      if (this.affinityProvider.dispatchRelevanceScoreDuration) {
+        this.affinityProvider.dispatchRelevanceScoreDuration(scoreStart);
+      } else {
+        this.store.dispatch(
+          ac.PerfEvent({
+            event: "PERSONALIZATION_V1_ITEM_RELEVANCE_SCORE_DURATION",
+            value: Math.round(perfService.absNow() - scoreStart),
+          })
+        );
+      }
+    }
     return { data, filtered };
   }
 
@@ -1205,6 +1219,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     await this.resetCache();
     if (this.loaded) {
       Services.obs.removeObserver(this, "idle-daily");
+    }
+    if (this.affinityProvider && this.affinityProvider.teardown) {
+      this.affinityProvider.teardown();
     }
     this.resetState();
   }
