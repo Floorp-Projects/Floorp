@@ -2,14 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY editMenu.label            "Edit">
-<!ENTITY editMenu.accesskey        "e">
-<!ENTITY undoCmd.key               "Z">
-<!ENTITY redoCmd.key               "Y">
-<!ENTITY cutCmd.key                "X">
-<!ENTITY copyCmd.key               "C">
-<!ENTITY pasteCmd.key              "V">
-<!ENTITY selectAllCmd.key          "A">
 <!ENTITY findCmd.label             "Find">
 <!ENTITY findCmd.key               "F">
 <!ENTITY findCmd.accesskey         "F">
