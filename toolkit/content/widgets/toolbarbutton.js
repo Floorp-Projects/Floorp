@@ -39,7 +39,7 @@
         ".toolbarbutton-multiline-text": "text=label,accesskey,wrap",
         ".toolbarbutton-menu-dropmarker": "disabled,label",
 
-        ".toolbarbutton-badge": "value=badge,style=badgeStyle",
+        ".toolbarbutton-badge": "text=badge,style=badgeStyle",
       };
     }
 
@@ -61,7 +61,7 @@
         MozXULElement.parseXULToFragment(`
         <stack class="toolbarbutton-badge-stack">
           <image class="toolbarbutton-icon"/>
-          <label class="toolbarbutton-badge" crop="none"/>
+          <html:label class="toolbarbutton-badge"/>
         </stack>
         <label class="toolbarbutton-text" crop="right" flex="1"/>
         <label class="toolbarbutton-multiline-text" flex="1"/>

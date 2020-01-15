@@ -520,7 +520,7 @@ add_task(async function testBadgeColorPersistence() {
 
   await badgeChanged;
 
-  is(badge.value, "hi", "badge text is set in first window");
+  is(badge.textContent, "hi", "badge text is set in first window");
   is(
     badge.style.backgroundColor,
     "rgb(0, 255, 0)",
@@ -532,7 +532,7 @@ add_task(async function testBadgeColorPersistence() {
   await windowOpenedPromise;
 
   badge = getBadgeForWindow(win);
-  is(badge.value, "hi", "badge text is set in new window");
+  is(badge.textContent, "hi", "badge text is set in new window");
   is(
     badge.style.backgroundColor,
     "rgb(0, 255, 0)",

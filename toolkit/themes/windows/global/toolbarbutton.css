@@ -6,8 +6,6 @@
   == Styles used by the XUL button element.
   ======================================================================= */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
 /* ::::: toolbarbutton ::::: */
 
 toolbarbutton {
@@ -78,6 +76,8 @@ toolbarbutton[disabled="true"] {
 }
 
 .toolbarbutton-badge {
+  box-sizing: border-box;
+  overflow: hidden;
   background-color: #d90000;
   font-size: 10px;
   font-weight: bold;
@@ -91,7 +91,7 @@ toolbarbutton[disabled="true"] {
   margin: -6px 0 0 !important;
   margin-inline-end: -8px !important;
   min-width: 14px;
-  max-width: 28px;
+  max-width: 24px;
   line-height: 10px;
   text-align: center;
   align-self: start;
