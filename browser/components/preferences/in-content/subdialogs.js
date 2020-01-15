@@ -431,7 +431,13 @@ SubDialog.prototype = {
       let contentPane =
         this._frame.contentDocument.querySelector(".contentPane") ||
         this._frame.contentDocument.querySelector("dialog");
-      contentPane.classList.add("doScroll");
+      if (contentPane) {
+        // There are also instances where the subdialog is neither implemented
+        // using a content pane, nor a <dialog> (such as manageAddresses.xhtml)
+        // so make sure to check that we actually got a contentPane before we
+        // use it.
+        contentPane.classList.add("doScroll");
+      }
     }
 
     this._frame.style.height = frameHeight;
