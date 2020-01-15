@@ -1098,6 +1098,7 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
   data.targetOrigin() = aTargetOrigin;
   data.subjectPrincipal() = &aSubjectPrincipal;
   RefPtr<nsGlobalWindowInner> callerInnerWindow;
+  nsAutoCString scriptLocation;
   // We don't need to get the caller's agentClusterId since that is used for
   // checking whether it's okay to sharing memory (and it's not allowed to share
   // memory cross processes)
@@ -1105,9 +1106,8 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
           aCx, aTargetOrigin, getter_AddRefs(sourceBc), data.origin(),
           getter_AddRefs(data.targetOriginURI()),
           getter_AddRefs(data.callerPrincipal()),
-          getter_AddRefs(callerInnerWindow),
-          getter_AddRefs(data.callerDocumentURI()),
-          /* aCallerAgentClusterId */ nullptr, aError)) {
+          getter_AddRefs(callerInnerWindow), getter_AddRefs(data.callerURI()),
+          /* aCallerAgentClusterId */ nullptr, &scriptLocation, aError)) {
     return;
   }
   if (sourceBc && sourceBc->IsDiscarded()) {
@@ -1117,7 +1117,8 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
   data.isFromPrivateWindow() =
       callerInnerWindow &&
       nsScriptErrorBase::ComputeIsFromPrivateWindow(callerInnerWindow);
-
+  data.innerWindowId() = callerInnerWindow ? callerInnerWindow->WindowID() : 0;
+  data.scriptLocation() = scriptLocation;
   JS::Rooted<JS::Value> transferArray(aCx);
   aError = nsContentUtils::CreateJSValueFromSequenceOfObject(aCx, aTransfer,
                                                              &transferArray);
