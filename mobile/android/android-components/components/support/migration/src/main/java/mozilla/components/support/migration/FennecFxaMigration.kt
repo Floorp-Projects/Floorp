@@ -111,6 +111,18 @@ sealed class FxaMigrationResult {
                 return "Failed to sign-into authenticated account in state $stateLabel"
             }
         }
+
+        /**
+         * Encountered a Fennec with customized token/idp server endpoints.
+         */
+        data class CustomServerConfigPresent(
+            val customTokenServer: Boolean,
+            val customIdpServer: Boolean
+        ) : Failure() {
+            override fun toString(): String {
+                return "Custom token ($customTokenServer) or idp ($customIdpServer) endpoints"
+            }
+        }
     }
 }
 
@@ -159,6 +171,9 @@ private object AuthenticatedAccountProcessor {
 
 internal object FennecFxaMigration {
     private val logger = Logger("FennecFxaMigration")
+
+    private const val DEFAULT_TOKEN_SERVER_URL = "https://token.services.mozilla.com/1.0/sync/1.5"
+    private const val DEFAULT_IDP_SERVER_URL = "https://api.accounts.firefox.com/v1"
 
     /**
      * Performs a migration of Fennec's FxA state located in [fxaStateFile].
@@ -219,6 +234,29 @@ internal object FennecFxaMigration {
             // This is too long ago for us to worry about migrating older versions.
             // https://bugzilla.mozilla.org/show_bug.cgi?id=1123107
             throw FxaMigrationException(Failure.UnsupportedVersions(accountVersion, pickleVersion))
+        }
+
+        val tokenServerUri = try {
+            json.getString("tokenServerURI")
+        } catch (e: JSONException) {
+            logger.error("Corrupt FxA state: couldn't read token server uri", e)
+            throw FxaMigrationException(Failure.CorruptAccountState(e))
+        }
+
+        val idpServerUri = try {
+            json.getString("idpServerURI")
+        } catch (e: JSONException) {
+            logger.error("Corrupt FxA state: couldn't read idp server uri", e)
+            throw FxaMigrationException(Failure.CorruptAccountState(e))
+        }
+
+        val customTokenServer = tokenServerUri != DEFAULT_TOKEN_SERVER_URL
+        val customIdpServer = idpServerUri != DEFAULT_IDP_SERVER_URL
+        if (customTokenServer || customIdpServer) {
+            throw FxaMigrationException(Failure.CustomServerConfigPresent(
+                customTokenServer = customTokenServer,
+                customIdpServer = customIdpServer
+            ))
         }
 
         try {

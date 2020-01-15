@@ -33,6 +33,11 @@ internal enum class FailureReasonTelemetryCodes(val code: Int) {
     SETTINGS_WRONG_TELEMETRY_VALUE(7),
 
     ADDON_QUERY(8),
+
+    FXA_CORRUPT_ACCOUNT_STATE(9),
+    FXA_UNSUPPORTED_VERSIONS(10),
+    FXA_SIGN_IN_FAILED(11),
+    FXA_CUSTOM_SERVER(12),
 }
 
 @SuppressWarnings("MagicNumber")
