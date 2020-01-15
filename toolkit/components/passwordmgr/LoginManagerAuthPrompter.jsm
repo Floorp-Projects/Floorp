@@ -504,7 +504,7 @@ LoginManagerAuthPrompter.prototype = {
       this._updateLogin(selectedLogin, newLogin);
     } else {
       this.log("Login unchanged, no further action needed.");
-      this._updateLogin(selectedLogin);
+      Services.logins.recordPasswordUse(selectedLogin);
     }
 
     return ok;
@@ -827,7 +827,7 @@ LoginManagerAuthPrompter.prototype = {
         }
       } else {
         this.log("Login unchanged, no further action needed.");
-        this._updateLogin(selectedLogin);
+        Services.logins.recordPasswordUse(selectedLogin);
       }
     } catch (e) {
       Cu.reportError("LoginManagerAuthPrompter: Fail2 in promptAuth: " + e);
@@ -1100,21 +1100,19 @@ LoginManagerAuthPrompter.prototype = {
 
   /* ---------- Internal Methods ---------- */
 
-  _updateLogin(login, aNewLogin = null) {
+  _updateLogin(login, aNewLogin) {
     var now = Date.now();
     var propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag
     );
-    if (aNewLogin) {
-      propBag.setProperty("formActionOrigin", aNewLogin.formActionOrigin);
-      propBag.setProperty("origin", aNewLogin.origin);
-      propBag.setProperty("password", aNewLogin.password);
-      propBag.setProperty("username", aNewLogin.username);
-      // Explicitly set the password change time here (even though it would
-      // be changed automatically), to ensure that it's exactly the same
-      // value as timeLastUsed.
-      propBag.setProperty("timePasswordChanged", now);
-    }
+    propBag.setProperty("formActionOrigin", aNewLogin.formActionOrigin);
+    propBag.setProperty("origin", aNewLogin.origin);
+    propBag.setProperty("password", aNewLogin.password);
+    propBag.setProperty("username", aNewLogin.username);
+    // Explicitly set the password change time here (even though it would
+    // be changed automatically), to ensure that it's exactly the same
+    // value as timeLastUsed.
+    propBag.setProperty("timePasswordChanged", now);
     propBag.setProperty("timeLastUsed", now);
     propBag.setProperty("timesUsedIncrement", 1);
     Services.logins.modifyLogin(login, propBag);

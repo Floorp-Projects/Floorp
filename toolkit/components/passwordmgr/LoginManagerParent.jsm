@@ -584,13 +584,7 @@ class LoginManagerParent extends JSWindowActorParent {
         // don't record non-interactive use in private browsing
         return;
       }
-      // Update the lastUsed timestamp and increment the use count.
-      let propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
-        Ci.nsIWritablePropertyBag
-      );
-      propBag.setProperty("timeLastUsed", Date.now());
-      propBag.setProperty("timesUsedIncrement", 1);
-      Services.logins.modifyLogin(login, propBag);
+      Services.logins.recordPasswordUse(login);
     }
 
     // If password storage is disabled, bail out.
