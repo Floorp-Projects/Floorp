@@ -43,20 +43,20 @@ permalink: /changelog/
       launchFromInterceptor = true
   )
   ```
-  
+
 * **concept-storage**
   * Added classes related to login autofill
     * `LoginStorageDelegate` may be attached to an `Engine`, where it can be used to save logins.
     * `LoginValidationDelegate` may be used to read and update currently saved logins.
-    
+
 * **feature-prompts**
-  * `PromptFeature` may now optionally accept a `LoginValidationDelegate`. If present, it users 
+  * `PromptFeature` may now optionally accept a `LoginValidationDelegate`. If present, it users
   will be prompted to save their information after logging in to a website.
   * `PromptFeature` now accepts a false by default `isSaveLoginEnabled` lambda to be invoked before showing prompts. If true, users
     will be prompted to save their information after logging in to a website.
-  
+
 * **service-sync-logins**
-  * Added `GeckoLoginStorageDelegate`. This can be attached to a GeckoEngine, where it will be used 
+  * Added `GeckoLoginStorageDelegate`. This can be attached to a GeckoEngine, where it will be used
   to save user login credentials.
   * `GeckoLoginStorageDelegate` now accepts a false by default `isAutofillEnabled` lambda to be invoked before fetching logins. If false,
    logins will not be fetched to autofill.
@@ -69,6 +69,7 @@ permalink: /changelog/
   * **New Telemetry Notice**
   * Added a 'migration' ping, which contains telemetry data about migration via Glean. It's emitted whenever a migration is executed.
   * Added `MigrationIntentProcessor` for handling incoming intents when migration is in progress.
+  * Added `AbstractMigrationProgressActivity` as a base activity to block user interactions during migration.
 
 # 27.0.0
 
