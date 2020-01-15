@@ -4212,6 +4212,15 @@
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 
+#ifdef NIGHTLY_BUILD
+  # Experimental support for weak references in JavaScript (WeakRef and
+  # FinalizationGroup).
+- name: javascript.options.experimental.weakrefs
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+#endif
+
 # The amount of time we wait between a request to GC (due to leaving a page) and doing the actual GC, in ms.
 - name: javascript.options.gc_delay
   type: uint32_t
