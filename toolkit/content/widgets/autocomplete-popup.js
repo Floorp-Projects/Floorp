@@ -547,25 +547,6 @@
           this._normalMaxRows = this.mInput.maxRows;
         }
 
-        // Set an attribute for styling the popup based on the input.
-        let inputID = "";
-        if (
-          this.mInput &&
-          this.mInput.ownerDocument &&
-          this.mInput.ownerDocument.documentURIObject.schemeIs("chrome")
-        ) {
-          inputID = this.mInput.id;
-          // Take care of elements with no id that are inside shadow DOM
-          // FIXME: Do we really need this?
-          if (!inputID) {
-            let shadow = this.mInput.containingShadowRoot;
-            if (shadow) {
-              inputID = shadow.host.id;
-            }
-          }
-        }
-        this.setAttribute("autocompleteinput", inputID);
-
         this.mPopupOpen = true;
       });
 
@@ -583,7 +564,6 @@
         }
         this.input.controller.stopSearch();
 
-        this.removeAttribute("autocompleteinput");
         this.mPopupOpen = false;
 
         // Reset the maxRows property to the cached "normal" value (if there's
