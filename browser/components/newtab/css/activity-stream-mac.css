@@ -3315,17 +3315,11 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   top: 0;
   left: 0;
   width: 100%;
-  display: none; }
+  display: none;
+  z-index: 1100;
+  overflow: auto; }
   .modalOverlayOuter.active {
-    display: block;
-    position: absolute; }
-
-.modal-scroll {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  z-index: 1100; }
+    display: flex; }
 
 .modal-height {
   padding-top: 80px; }
@@ -3334,14 +3328,14 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   min-width: min-content;
   width: 100%;
   max-width: 960px;
-  position: fixed;
-  top: 15%;
-  left: calc(50% - 480px);
+  position: relative;
+  margin: auto;
   background: var(--newtab-modal-color);
   box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
   border-radius: 4px;
   display: none;
-  z-index: 1100; }
+  z-index: 1100;
+  overflow: auto; }
   @media (max-width: 960px) {
     .modalOverlayInner {
       height: 100%;
@@ -3349,12 +3343,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       left: 0;
       box-shadow: none;
       border-radius: 0; } }
-  @media (max-height: 730px) {
-    .modalOverlayInner {
-      top: 0; } }
-  @media (max-height: 730px) and (min-width: 1024px) {
-    .modalOverlayInner {
-      top: 5%; } }
   .modalOverlayInner.active {
     display: block; }
   .modalOverlayInner .icon-dismiss {
@@ -4287,9 +4275,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
 
 .inline-onboarding.activity-stream.welcome {
   overflow-y: hidden; }
-
-.inline-onboarding .trailhead.modalOverlayInner {
-  position: absolute; }
 
 .inline-onboarding .outer-wrapper {
   position: relative;
