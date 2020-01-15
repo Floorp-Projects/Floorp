@@ -99,29 +99,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   async searchLoginsAsync(matchData) {
     this.log("searchLoginsAsync:", matchData);
 
-    let realMatchData = {};
-    let options = {};
-    for (let [name, value] of Object.entries(matchData)) {
-      switch (name) {
-        // Some property names aren't field names but are special options to affect the search.
-        case "acceptDifferentSubdomains":
-        case "schemeUpgrades": {
-          options[name] = value;
-          break;
-        }
-        default: {
-          realMatchData[name] = value;
-          break;
-        }
-      }
-    }
-
-    if (!realMatchData.origin) {
-      throw new Error("searchLoginsAsync: An `origin` is required");
-    }
-
-    let originURI = Services.io.newURI(realMatchData.origin);
-
+    let originURI = Services.io.newURI(matchData.origin);
     let baseHostname;
     try {
       baseHostname = Services.eTLD.getBaseDomain(originURI);
@@ -129,7 +107,7 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
       if (ex.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS) {
         // `getBaseDomain` cannot handle IP addresses and `nsIURI` cannot return
         // IPv6 hostnames with the square brackets so use `URL.hostname`.
-        baseHostname = new URL(realMatchData.origin).hostname;
+        baseHostname = new URL(matchData.origin).hostname;
       } else if (ex.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
         baseHostname = originURI.asciiHost;
       } else {
@@ -151,6 +129,32 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
       // May be undefined if there is no delegate attached to handle the request.
       // Ignore the request.
       return [];
+    }
+
+    let realMatchData = {};
+    let options = {};
+
+    if (matchData.guid) {
+      // Enforce GUID-based filtering when available, since the origin of the
+      // login may not match the origin of the form in the case of scheme
+      // upgrades.
+      realMatchData = { guid: matchData.guid };
+    } else {
+      for (let [name, value] of Object.entries(matchData)) {
+        switch (name) {
+          // Some property names aren't field names but are special options to
+          // affect the search.
+          case "acceptDifferentSubdomains":
+          case "schemeUpgrades": {
+            options[name] = value;
+            break;
+          }
+          default: {
+            realMatchData[name] = value;
+            break;
+          }
+        }
+      }
     }
 
     const [logins, ids] = this._searchLogins(
