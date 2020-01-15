@@ -279,6 +279,7 @@ class KeepAliveHandler final : public ExtendableEvent::ExtensionsHandler,
 
   bool WaitOnPromise(Promise& aPromise) override {
     if (!mKeepAliveToken) {
+      MOZ_ASSERT(!GetDispatchFlag());
       MOZ_ASSERT(!mSelfRef, "We shouldn't be holding a self reference!");
       return false;
     }
@@ -303,6 +304,7 @@ class KeepAliveHandler final : public ExtendableEvent::ExtensionsHandler,
 
   void MaybeDone() {
     MOZ_ASSERT(IsCurrentThreadRunningWorker());
+    MOZ_ASSERT(!GetDispatchFlag());
 
     if (mPendingPromisesCount || !mKeepAliveToken) {
       return;
@@ -352,7 +354,7 @@ class KeepAliveHandler final : public ExtendableEvent::ExtensionsHandler,
     mRejected |= (aResult == Rejected);
 
     --mPendingPromisesCount;
-    if (mPendingPromisesCount) {
+    if (mPendingPromisesCount || GetDispatchFlag()) {
       return;
     }
 
