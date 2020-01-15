@@ -7,32 +7,18 @@
  * Check basic newSource packet sent from server.
  */
 
-var gDebuggee;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee }) => {
-      gThreadFront = threadFront;
-      gDebuggee = debuggee;
-      test_simple_new_source();
-    },
-    { waitForFinish: true }
-  )
+  threadFrontTest(async ({ threadFront, debuggee }) => {
+    Cu.evalInSandbox(
+      function inc(n) {
+        return n + 1;
+      }.toString(),
+      debuggee
+    );
+
+    const sourcePacket = await waitForEvent(threadFront, "newSource");
+
+    Assert.ok(!!sourcePacket.source);
+    Assert.ok(!!sourcePacket.source.url.match(/test_new_source-01.js$/));
+  })
 );
-
-function test_simple_new_source() {
-  gThreadFront.once("newSource", function(packet) {
-    Assert.ok(!!packet.source);
-    Assert.ok(!!packet.source.url.match(/test_new_source-01.js$/));
-
-    threadFrontTestFinished();
-  });
-
-  Cu.evalInSandbox(
-    function inc(n) {
-      return n + 1;
-    }.toString(),
-    gDebuggee
-  );
-}

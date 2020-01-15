@@ -4,51 +4,44 @@
 "use strict";
 
 /**
- * Check that sourceURL has the correct effect when using gThreadFront.eval.
+ * Check that sourceURL has the correct effect when using threadFront.eval.
  */
 
-var gDebuggee;
-var gTargetFront;
-var gThreadFront;
-
 add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee, targetFront }) => {
-      gThreadFront = threadFront;
-      gTargetFront = targetFront;
-      gDebuggee = debuggee;
-      test_simple_new_source();
-    },
-    { waitForFinish: true }
-  )
+  threadFrontTest(async ({ threadFront, debuggee, targetFront }) => {
+    await executeOnNextTickAndWaitForPause(
+      () => evalCode(debuggee),
+      threadFront
+    );
+
+    const packet1 = await waitForEvent(threadFront, "newSource");
+
+    Assert.ok(!!packet1.source);
+    Assert.ok(packet1.source.introductionType, "eval");
+
+    const consoleFront = await targetFront.getFront("console");
+    consoleFront.evaluateJSAsync(
+      "function f() { }\n//# sourceURL=http://example.com/code.js"
+    );
+
+    const packet2 = await waitForEvent(threadFront, "newSource");
+    dump(JSON.stringify(packet2, null, 2));
+    Assert.ok(!!packet2.source);
+    Assert.ok(!!packet2.source.url.match(/example\.com/));
+  })
 );
 
-function test_simple_new_source() {
-  gThreadFront.once("paused", function() {
-    gThreadFront.once("newSource", async function(packet2) {
-      // The "stopMe" eval source is emitted first.
-      Assert.ok(!!packet2.source);
-      Assert.ok(packet2.source.introductionType, "eval");
-
-      gThreadFront.once("newSource", function(packet) {
-        dump(JSON.stringify(packet, null, 2));
-        Assert.ok(!!packet.source);
-        Assert.ok(!!packet.source.url.match(/example\.com/));
-
-        threadFrontTestFinished();
-      });
-
-      const consoleFront = await gTargetFront.getFront("console");
-      consoleFront.evaluateJSAsync(
-        "function f() { }\n//# sourceURL=http://example.com/code.js"
-      );
-    });
-  });
-
+function evalCode(debuggee) {
   /* eslint-disable */
-  gDebuggee.eval("(" + function () {
-    function stopMe(arg1) { debugger; }
-    stopMe({obj: true});
-  } + ")()");
+  debuggee.eval(
+    "(" +
+      function() {
+        function stopMe(arg1) {
+          debugger;
+        }
+        stopMe({ obj: true });
+      } +
+      ")()"
+  );
   /* eslint-enable */
 }
