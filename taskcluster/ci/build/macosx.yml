@@ -345,13 +345,13 @@ macosx64-shippable/opt:
             - linux64-nasm
             - linux64-node
 
-macosx64-ccov/debug:
+macosx64-ccov/opt:
     description: "MacOS X x64 Cross-compile Code Coverage"
     index:
         product: firefox
-        job-name: macosx64-ccov-debug
+        job-name: macosx64-ccov-opt
     treeherder:
-        platform: osx-cross-ccov/debug
+        platform: osx-cross-ccov/opt
         symbol: B
         tier: 1
     worker-type: b-linux
@@ -368,8 +368,8 @@ macosx64-ccov/debug:
             - builds/releng_base_mac_64_cross_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        custom-build-variant-cfg: code-coverage-debug
-        mozconfig-variant: code-coverage-debug
+        custom-build-variant-cfg: code-coverage-opt
+        mozconfig-variant: code-coverage
         tooltool-downloads: internal
     run-on-projects: ['mozilla-central', 'try']
     fetches:
