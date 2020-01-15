@@ -163,10 +163,12 @@ async function clickOn(selector, beforeContentFn) {
     const { E10SUtils } = ChromeUtils.import(
       "resource://gre/modules/E10SUtils.jsm"
     );
+    content.document.notifyUserGestureActivation();
     E10SUtils.wrapHandlingUserInput(content, true, function() {
       let element = content.document.querySelector(arg);
       element.click();
     });
+    content.document.clearUserGestureActivation();
   });
 
   // Wait for the popup to actually be shown before making the screenshot
