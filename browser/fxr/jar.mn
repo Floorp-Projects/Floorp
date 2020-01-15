@@ -11,6 +11,7 @@ browser.jar:
    content/browser/fxr/fxrui.css                (content/fxrui.css)
    content/browser/fxr/fxrui_blue.css           (content/fxrui_blue.css)
    content/browser/fxr/fxrui.js                 (content/fxrui.js)
+   content/browser/fxr/fxr-content.js           (content/fxr-content.js)
    content/browser/fxr/fxr-fullScreen.js        (content/fxr-fullScreen.js)
    content/browser/fxr/permissions.js           (content/permissions.js)
    content/browser/fxr/prefs.html               (content/prefs.html)
