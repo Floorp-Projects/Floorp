@@ -8,12 +8,12 @@ import sys
 
 import requests
 
+from taskgraph.parameters import Parameters
+from taskgraph.util.taskcluster import find_task_id, get_artifact, get_session
+from taskgraph.util.taskgraph import find_existing_tasks
+
 from ..cli import BaseTryParser
 from ..push import push_to_try
-
-from taskgraph.util.taskgraph import find_existing_tasks
-from taskgraph.util.taskcluster import get_artifact, get_session
-from taskgraph.parameters import Parameters
 
 TASK_TYPES = {
     "linux-signing": [
@@ -58,7 +58,7 @@ class ScriptworkerParser(BaseTryParser):
         [
             ["--release-type"],
             {
-                "choices": RELEASE_TO_BRANCH.keys(),
+                "choices": ["nightly"] + RELEASE_TO_BRANCH.keys(),
                 "default": "beta",
                 "help": "Release type to run",
             },
@@ -82,11 +82,17 @@ def get_releases(branch):
     return response.json()
 
 
-def get_ship_phase_graph(release):
+def get_release_graph(release):
     for phase in release["phases"]:
         if phase["name"] in ("ship_firefox",):
             return phase["actionTaskId"]
     raise Exception("No ship phase.")
+
+
+def get_nightly_graph():
+    return find_task_id(
+        "gecko.v2.mozilla-central.latest.taskgraph.decision-nightly-desktop"
+    )
 
 
 def print_available_task_types():
@@ -116,19 +122,22 @@ def run(
         print_available_task_types()
         sys.exit(0)
 
-    release = get_releases(RELEASE_TO_BRANCH[release_type])[-1]
-    ship_graph = get_ship_phase_graph(release)
-    existing_tasks = find_existing_tasks([ship_graph])
+    if release_type == "nightly":
+        previous_graph = get_nightly_graph()
+    else:
+        release = get_releases(RELEASE_TO_BRANCH[release_type])[-1]
+        previous_graph = get_release_graph(release)
+    existing_tasks = find_existing_tasks([previous_graph])
 
-    ship_parameters = Parameters(
-        strict=False, **get_artifact(ship_graph, "public/parameters.yml")
+    previous_parameters = Parameters(
+        strict=False, **get_artifact(previous_graph, "public/parameters.yml")
     )
 
     # Copy L10n configuration from the commit the release we are using was
     # based on. This *should* ensure that the chunking of L10n tasks is the
     # same between graphs.
     files_to_change = {
-        path: get_hg_file(ship_parameters, path)
+        path: get_hg_file(previous_parameters, path)
         for path in [
             "browser/locales/l10n-changesets.json",
             "browser/locales/shipped-locales",
@@ -153,7 +162,7 @@ def run(
         "release_type",
         "version",
     ):
-        task_config["parameters"][param] = ship_parameters[param]
+        task_config["parameters"][param] = previous_parameters[param]
 
     try_config["tasks"] = TASK_TYPES[task_type]
     for label in try_config["tasks"]:
