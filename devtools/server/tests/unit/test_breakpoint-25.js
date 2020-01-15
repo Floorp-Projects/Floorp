@@ -10,36 +10,33 @@
  */
 
 add_task(
-  threadFrontTest(({ threadFront, client, debuggee, targetFront }) => {
+  threadFrontTest(({ threadFront, debuggee, targetFront }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
+      (async () => {
+        await executeOnNextTickAndWaitForPause(evalCode, threadFront);
+
         ok(true, "The page is paused");
         ok(!debuggee.foo, "foo is still false after we hit the breakpoint");
 
         await targetFront.detach();
 
-        // `detach` will force the destruction of the thread actor, which,
-        // will resume the page execution. But all of that seems to be
-        // synchronous and we have to spin the event loop in order to ensure
-        // having the content javascript to execute the resumed code.
-        await new Promise(executeSoon);
-
         // Closing the connection will force the thread actor to resume page
         // execution
         ok(debuggee.foo, "foo is true after target's detach request");
 
-        executeSoon(resolve);
-      });
+        resolve();
+      })();
 
-      /* eslint-disable */
-      Cu.evalInSandbox(
-        "var foo = false;\n" +
-        "debugger;\n" +
-        "foo = true;\n",
-        debuggee
-      );
-      /* eslint-enable */
-      ok(debuggee.foo, "foo is false at startup");
+      function evalCode() {
+        /* eslint-disable */
+        Cu.evalInSandbox("var foo = false;\n", debuggee);
+        /* eslint-enable */
+        ok(!debuggee.foo, "foo is false at startup");
+
+        /* eslint-disable */
+        Cu.evalInSandbox("debugger;\n" + "foo = true;\n", debuggee);
+        /* eslint-enable */
+      }
     });
   })
 );
@@ -47,13 +44,15 @@ add_task(
 add_task(
   threadFrontTest(({ threadFront, client, debuggee }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
+      (async () => {
+        await executeOnNextTickAndWaitForPause(evalCode, threadFront);
+
         ok(true, "The page is paused");
         ok(!debuggee.foo, "foo is still false after we hit the breakpoint");
 
         await client.close();
 
-        // `detach` will force the destruction of the thread actor, which,
+        // `close` will force the destruction of the thread actor, which,
         // will resume the page execution. But all of that seems to be
         // synchronous and we have to spin the event loop in order to ensure
         // having the content javascript to execute the resumed code.
@@ -62,20 +61,20 @@ add_task(
         // Closing the connection will force the thread actor to resume page
         // execution
         ok(debuggee.foo, "foo is true after client close");
-
         executeSoon(resolve);
         dump("resolved\n");
-      });
+      })();
 
-      /* eslint-disable */
-      Cu.evalInSandbox(
-        "var foo = false;\n" +
-        "debugger;\n" +
-        "foo = true;\n",
-        debuggee
-      );
-      /* eslint-enable */
-      ok(debuggee.foo, "foo is false at startup");
+      function evalCode() {
+        /* eslint-disable */
+        Cu.evalInSandbox("var foo = false;\n", debuggee);
+        /* eslint-enable */
+        ok(!debuggee.foo, "foo is false at startup");
+
+        /* eslint-disable */
+        Cu.evalInSandbox("debugger;\n" + "foo = true;\n", debuggee);
+        /* eslint-enable */
+      }
     });
   })
 );
