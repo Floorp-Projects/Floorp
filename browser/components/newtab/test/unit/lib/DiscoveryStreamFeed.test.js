@@ -5,7 +5,7 @@ import {
 } from "common/Actions.jsm";
 import { combineReducers, createStore } from "redux";
 import { GlobalOverrider } from "test/unit/utils";
-import injector from "inject!lib/DiscoveryStreamFeed.jsm";
+import { DiscoveryStreamFeed } from "lib/DiscoveryStreamFeed.jsm";
 import { reducers } from "common/Reducers.jsm";
 
 const CONFIG_PREF_NAME = "discoverystream.config";
@@ -20,7 +20,6 @@ const FAKE_UUID = "{foo-123-foo}";
 
 // eslint-disable-next-line max-statements
 describe("DiscoveryStreamFeed", () => {
-  let DiscoveryStreamFeed;
   let feed;
   let sandbox;
   let fetchStub;
@@ -43,38 +42,11 @@ describe("DiscoveryStreamFeed", () => {
   beforeEach(() => {
     sandbox = sinon.createSandbox();
 
-    class FakeUserDomainAffinityProvider {
-      constructor(
-        timeSegments,
-        parameterSets,
-        maxHistoryQueryResults,
-        version,
-        scores
-      ) {
-        this.timeSegments = timeSegments;
-        this.parameterSets = parameterSets;
-        this.maxHistoryQueryResults = maxHistoryQueryResults;
-        this.version = version;
-        this.scores = scores;
-      }
-
-      getAffinities() {
-        return {};
-      }
-    }
-
     // Fetch
     fetchStub = sandbox.stub(global, "fetch");
 
     // Time
     clock = sinon.useFakeTimers();
-
-    // Injector
-    ({ DiscoveryStreamFeed } = injector({
-      "lib/UserDomainAffinityProvider.jsm": {
-        UserDomainAffinityProvider: FakeUserDomainAffinityProvider,
-      },
-    }));
 
     globals = new GlobalOverrider();
     globals.set("gUUIDGenerator", { generateUUID: () => FAKE_UUID });
@@ -2532,12 +2504,19 @@ describe("DiscoveryStreamFeed", () => {
       feed._prefCache.config = {
         personalized: true,
       };
+      const DEFAULT_TIME_SEGMENTS = [
+        { id: "hour", startTime: 3600, endTime: 0, weightPosition: 1 },
+        { id: "day", startTime: 86400, endTime: 3600, weightPosition: 0.75 },
+        { id: "week", startTime: 604800, endTime: 86400, weightPosition: 0.5 },
+        { id: "weekPlus", startTime: 0, endTime: 604800, weightPosition: 0.25 },
+        { id: "alltime", startTime: 0, endTime: 0, weightPosition: 0.25 },
+      ];
       feed.affinities = {
         parameterSets: {
           default: {},
         },
         maxHistoryQueryResults: 1000,
-        timeSegments: [],
+        timeSegments: DEFAULT_TIME_SEGMENTS,
         version: "123",
       };
 
