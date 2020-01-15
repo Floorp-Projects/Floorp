@@ -162,8 +162,6 @@ const PROP_JSON_FIELDS = [
   "rootURI",
 ];
 
-const LEGACY_TYPES = new Set(["extension"]);
-
 const SIGNED_TYPES = new Set(["extension", "locale", "theme"]);
 
 // Time to wait before async save of XPI JSON database, in milliseconds
@@ -2148,18 +2146,16 @@ this.XPIDatabase = {
    * @returns {boolean} Whether the addon should be disabled for being legacy
    */
   isDisabledLegacy(addon) {
+    // We still have tests that use a legacy addon type, allow them
+    // if we're in automation.  Otherwise, disable if not a webextension.
+    if (!Cu.isInAutomation) {
+      return !addon.isWebExtension;
+    }
+
     return (
-      !AddonSettings.ALLOW_LEGACY_EXTENSIONS &&
       !addon.isWebExtension &&
-      LEGACY_TYPES.has(addon.type) &&
-      // Legacy add-ons are allowed in the system location.
-      !addon.location.isSystem &&
-      // Legacy extensions may be installed temporarily in
-      // non-release builds.
-      !(
-        AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS && addon.location.isTemporary
-      ) &&
-      // Properly signed legacy extensions are allowed.
+      addon.type === "extension" &&
+      // Test addons are privileged unless forced otherwise.
       addon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED
     );
   },
