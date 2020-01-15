@@ -14,7 +14,20 @@ import androidx.core.net.toUri
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.concept.engine.manifest.WebAppManifest.Icon.Purpose
 import mozilla.components.support.utils.ColorUtils.isDark
+
+private const val MIN_INSTALLABLE_ICON_SIZE = 192
+
+/**
+ * Checks if the web app manifest can be used to create a shortcut icon.
+ */
+fun WebAppManifest.isInstallable() = icons.any { icon ->
+    (Purpose.ANY in icon.purpose || Purpose.MASKABLE in icon.purpose) &&
+        icon.sizes.any { size ->
+            size.minLength >= MIN_INSTALLABLE_ICON_SIZE
+        }
+}
 
 /**
  * Creates a [TaskDescription] for the activity manager based on the manifest.

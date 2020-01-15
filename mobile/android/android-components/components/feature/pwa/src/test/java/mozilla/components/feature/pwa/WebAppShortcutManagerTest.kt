@@ -168,7 +168,18 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `buildBasicShortcut uses session title as label by default`() = runBlockingTest {
+    fun `buildBasicShortcut uses manifest name as label by default`() = runBlockingTest {
+        setSdkInt(Build.VERSION_CODES.O)
+        val session = Session("https://mozilla.org")
+        session.title = "Internet for people, not profit — Mozilla"
+        session.webAppManifest = WebAppManifest(name = "Mozilla", startUrl = "https://mozilla.org")
+        val shortcut = manager.buildBasicShortcut(context, session)
+
+        assertEquals("Mozilla", shortcut.shortLabel)
+    }
+
+    @Test
+    fun `buildBasicShortcut uses session title as label if there is no manifest`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.O)
         val expectedTitle = "Internet for people, not profit — Mozilla"
         val session = Session("https://mozilla.org")

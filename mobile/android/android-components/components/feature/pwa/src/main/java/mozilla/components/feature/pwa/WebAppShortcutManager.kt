@@ -36,6 +36,7 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PWA_LAUNCHER
 import mozilla.components.feature.pwa.ext.installableManifest
+import mozilla.components.feature.pwa.ext.isInstallable
 
 private val pwaIconMemoryCache = IconMemoryCache()
 
@@ -105,7 +106,7 @@ class WebAppShortcutManager(
      * Create a new basic pinned website shortcut using info from the session.
      * Consuming `SHORTCUT_CATEGORY` in `AndroidManifest` is required for the package to be launched
      */
-    fun buildBasicShortcut(
+    suspend fun buildBasicShortcut(
         context: Context,
         session: Session,
         overrideShortcutName: String? = null
@@ -115,12 +116,23 @@ class WebAppShortcutManager(
             `package` = context.packageName
         }
 
+        val manifest = session.webAppManifest
+        val shortLabel = overrideShortcutName
+            ?: manifest?.shortName
+            ?: manifest?.name
+            ?: session.title
+
         val builder = ShortcutInfoCompat.Builder(context, session.url)
-            .setShortLabel((overrideShortcutName ?: session.title).ifBlank { fallbackLabel })
+            .setShortLabel(shortLabel.ifBlank { fallbackLabel })
             .setIntent(shortcutIntent)
 
-        session.icon?.let {
-            builder.setIcon(IconCompat.createWithBitmap(it))
+        val icon = if (manifest != null && manifest.isInstallable()) {
+            buildIconFromManifest(manifest)
+        } else {
+            session.icon?.let { IconCompat.createWithBitmap(it) }
+        }
+        icon?.let {
+            builder.setIcon(it)
         }
 
         return builder.build()
