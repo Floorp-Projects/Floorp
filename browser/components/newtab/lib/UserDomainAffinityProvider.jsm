@@ -287,6 +287,9 @@ this.UserDomainAffinityProvider = class UserDomainAffinityProvider {
   queryVisits(ts) {
     const visitCounts = {};
     const query = PlacesUtils.history.getNewQuery();
+    if (!query) {
+      return visitCounts;
+    }
     const wwwRegEx = /^www\./;
 
     query.beginTimeReference = query.TIME_RELATIVE_NOW;
