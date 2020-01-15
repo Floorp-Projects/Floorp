@@ -990,6 +990,9 @@ input[type=number]::-moz-number-wrapper {
 }
 
 input[type=number] .anonymous-div {
+  display: block; /* Flex items must be block-level. Normally we do fixup in
+                     the style system to ensure this, but that fixup is disabled
+                     inside of form controls. So, we hardcode display here. */
   flex: 1;
   min-inline-size: 0;
 }
