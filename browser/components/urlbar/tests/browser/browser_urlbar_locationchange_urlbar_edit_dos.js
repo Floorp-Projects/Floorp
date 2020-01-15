@@ -18,7 +18,13 @@ async function checkURLBarValueStays(browser) {
         );
         gBrowser.selectedBrowser.removeProgressListener(filter);
         filter = null;
-        resolve();
+        // Wait an extra tick before resolving.  We want to make sure that other
+        // web progress listeners queued after this one are called before we
+        // continue the test, in case the remainder of the test depends on those
+        // listeners.  That should happen anyway since promises are resolved on
+        // the next tick, but do this to be a little safer.  In particular we
+        // want to avoid having the test pass when it should fail.
+        executeSoon(resolve);
       },
     };
     let filter = Cc[
@@ -46,15 +52,16 @@ add_task(async function() {
       url: TEST_URL,
     },
     async function(browser) {
-      await SpecialPowers.spawn(browser, [""], function() {
+      let promise1 = checkURLBarValueStays(browser);
+      SpecialPowers.spawn(browser, [""], function() {
         content.wrappedJSObject.dos_hash();
       });
-      await checkURLBarValueStays(browser);
-      await SpecialPowers.spawn(browser, [""], function() {
-        content.clearTimeout(content.wrappedJSObject.dos_timeout);
+      await promise1;
+      let promise2 = checkURLBarValueStays(browser);
+      SpecialPowers.spawn(browser, [""], function() {
         content.wrappedJSObject.dos_pushState();
       });
-      await checkURLBarValueStays(browser);
+      await promise2;
     }
   );
 });
