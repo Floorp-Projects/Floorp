@@ -7051,6 +7051,12 @@
   value: 2000
   mirror: always
 
+# Whether the SOCKS proxy should be in charge of DNS resolution.
+- name: network.proxy.socks_remote_dns
+  type: bool
+  value: false
+  mirror: always
+
 # Some requests during a page load are marked as "tail", mainly trackers, but not only.
 # This pref controls whether such requests are put to the tail, behind other requests
 # emerging during page loading process.
