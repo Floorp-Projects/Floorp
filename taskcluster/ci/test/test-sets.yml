@@ -327,9 +327,6 @@ awsy:
     - awsy-base-dmd
     - awsy-tp6
 
-awsy-stylo-sequential:
-    - awsy-stylo-sequential
-
 ##
 # Limited test sets for specific platforms
 
