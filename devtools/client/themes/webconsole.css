@@ -972,6 +972,14 @@ a.learn-more-link.webconsole-learn-more-link {
   fill: var(--theme-icon-dimmed-color);
 }
 
+/* In RTL the tree arrows should usually point to the left, but in
+   this context it should point to the right.
+   This overrides the rule from other stylesheets that does the opposite. */
+.webconsole-app .tree .arrow:dir(rtl),
+.webconsole-app .object-inspector .tree-node .arrow:dir(rtl) {
+  transform: rotate(-90deg);
+}
+
 .webconsole-app .tree .arrow.expanded,
 .webconsole-app .object-inspector .tree-node .arrow.expanded {
   transform: rotate(0deg);
