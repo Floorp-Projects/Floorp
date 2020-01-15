@@ -52,22 +52,36 @@ abstract class AbstractAmazonPushService : ADMMessageHandlerBase("AbstractAmazon
         adm.startUnregister()
     }
 
+    @SuppressWarnings("TooGenericExceptionCaught")
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     public override fun onMessage(intent: Intent) {
         intent.extras?.let {
-            try {
-                val message = EncryptedPushMessage(
+            val message = try {
+                EncryptedPushMessage(
                     channelId = it.getStringWithException("chid"),
                     body = it.getStringWithException("body"),
                     encoding = it.getStringWithException("con"),
                     salt = it.getString("enc"),
                     cryptoKey = it.getString("cryptokey")
                 )
-                PushProcessor.requireInstance.onMessageReceived(message)
             } catch (e: NoSuchElementException) {
                 PushProcessor.requireInstance.onError(
                     PushError.MalformedMessage("parsing encrypted message failed: $e")
                 )
+                return
+            }
+
+            // In case of any errors, let the PushProcessor handle this exception. Instead of crashing
+            // here, just drop the message on the floor. This is fine, since we don't really need to
+            // "recover" from a bad incoming message.
+            // PushProcessor will submit relevant issues via a CrashReporter as appropriate.
+            try {
+                PushProcessor.requireInstance.onMessageReceived(message)
+            } catch (e: IllegalStateException) {
+                // Re-throw 'requireInstance' exceptions.
+                throw(e)
+            } catch (e: Exception) {
+                PushProcessor.requireInstance.onError(PushError.Rust(e))
             }
         }
     }
