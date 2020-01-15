@@ -119,17 +119,13 @@ label html|span.accesskey {
 
 /********** toolbarbutton **********/
 
-.toolbarbutton-badge:not([value]),
-.toolbarbutton-badge[value=""] {
-  display: none;
-}
-
 toolbarbutton:not([type="menu"]) > .toolbarbutton-menu-dropmarker,
 toolbar[mode="icons"] .toolbarbutton-text,
 toolbar[mode="icons"] .toolbarbutton-multiline-text,
 toolbar[mode="text"] .toolbarbutton-icon,
 .toolbarbutton-multiline-text:not([wrap="true"]),
-.toolbarbutton-text[wrap="true"] {
+.toolbarbutton-text[wrap="true"],
+html|label.toolbarbutton-badge:empty {
   display: none;
 }
 

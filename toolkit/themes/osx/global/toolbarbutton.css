@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
 toolbarbutton {
   -moz-box-align: center;
   -moz-box-pack: center;
@@ -37,6 +35,8 @@ toolbarbutton[disabled="true"] {
 /* ::::: toolbarbutton badged ::::: */
 
 .toolbarbutton-badge {
+  box-sizing: border-box;
+  overflow: hidden;
   background-color: #d90000;
   font-size: 9px;
   padding: 1px 2px;
@@ -49,7 +49,7 @@ toolbarbutton[disabled="true"] {
   margin: -6px 0 0 !important;
   margin-inline-end: -6px !important;
   min-width: 14px;
-  max-width: 28px;
+  max-width: 24px;
   line-height: 10px;
   text-align: center;
   align-self: start;
