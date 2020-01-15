@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_serviceworkerevents_h__
 #define mozilla_dom_serviceworkerevents_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ExtendableEventBinding.h"
 #include "mozilla/dom/ExtendableMessageEventBinding.h"
@@ -63,20 +64,41 @@ class ExtendableEventCallback {
 class ExtendableEvent : public Event {
  public:
   class ExtensionsHandler {
+    friend class ExtendableEvent;
+
    public:
     virtual bool WaitOnPromise(Promise& aPromise) = 0;
 
     NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+   protected:
+    virtual ~ExtensionsHandler();
+
+    // Also returns false if the owning ExtendableEvent is destroyed.
+    bool GetDispatchFlag() const;
+
+   private:
+    // Only the owning ExtendableEvent is allowed to set this data.
+    void SetExtendableEvent(const ExtendableEvent* const aExtendableEvent);
+
+    MOZ_NON_OWNING_REF const ExtendableEvent* mExtendableEvent = nullptr;
   };
 
  private:
   RefPtr<ExtensionsHandler> mExtensionsHandler;
 
  protected:
+  bool GetDispatchFlag() const { return mEvent->mFlags.mIsBeingDispatched; }
+
   bool WaitOnPromise(Promise& aPromise);
 
   explicit ExtendableEvent(mozilla::dom::EventTarget* aOwner);
-  ~ExtendableEvent() = default;
+
+  ~ExtendableEvent() {
+    if (mExtensionsHandler) {
+      mExtensionsHandler->SetExtendableEvent(nullptr);
+    }
+  };
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
