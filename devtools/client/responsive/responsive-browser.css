@@ -24,6 +24,7 @@
 
 .browserContainer.responsive-mode .browserStack.device-modal-opened > .rdm-toolbar {
   z-index: 1;
+  height: 100%;
 }
 
 .browserContainer.responsive-mode > .browserStack {
