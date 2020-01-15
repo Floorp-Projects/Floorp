@@ -13,27 +13,30 @@ import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.storage.Login
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
 import mozilla.components.concept.engine.prompt.PromptRequest.Color
 import mozilla.components.concept.engine.prompt.PromptRequest.File
+import mozilla.components.concept.engine.prompt.PromptRequest.LoginPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.Share
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
-import mozilla.components.concept.engine.prompt.PromptRequest.LoginPrompt
+import mozilla.components.concept.storage.Login
+import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.dialog.AlertDialogFragment
 import mozilla.components.feature.prompts.dialog.AuthenticationDialogFragment
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
@@ -50,7 +53,6 @@ import mozilla.components.feature.prompts.dialog.Prompter
 import mozilla.components.feature.prompts.dialog.TextPromptDialogFragment
 import mozilla.components.feature.prompts.dialog.TimePickerDialogFragment
 import mozilla.components.feature.prompts.file.FilePicker
-import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.share.DefaultShareDelegate
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.lib.state.ext.flowScoped
@@ -59,11 +61,15 @@ import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import java.lang.ref.WeakReference
 import java.security.InvalidParameterException
 import java.util.Date
 
 @VisibleForTesting(otherwise = PRIVATE)
 internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
+
+private const val PROGRESS_ALMOST_COMPLETE = 90
 
 /**
  * Feature for displaying native dialogs for html elements like: input type
@@ -107,11 +113,16 @@ class PromptFeature private constructor(
     private val isSaveLoginEnabled: () -> Boolean = { false },
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature, Prompter {
-    private var scope: CoroutineScope? = null
+    // These two scopes have identical lifetimes. We do not yet have a way of combining scopes
+    private var handlePromptScope: CoroutineScope? = null
+    private var dismissPromptScope: CoroutineScope? = null
     private var activePromptRequest: PromptRequest? = null
 
     internal val promptAbuserDetector = PromptAbuserDetector()
     private val logger = Logger("PromptFeature")
+
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal var activePrompt: WeakReference<PromptDialogFragment>? = null
 
     constructor(
         activity: Activity,
@@ -188,7 +199,7 @@ class PromptFeature private constructor(
     override fun start() {
         promptAbuserDetector.resetJSAlertAbuseState()
 
-        scope = store.flowScoped { flow ->
+        handlePromptScope = store.flowScoped { flow ->
             flow.map { state -> state.findCustomTabOrSelectedTab(customTabId) }
                 .ifAnyChanged {
                     arrayOf(it?.content?.promptRequest, it?.content?.loading)
@@ -205,6 +216,18 @@ class PromptFeature private constructor(
                 }
         }
 
+        // Dismiss all prompts when page loads are nearly finished. This prevents prompts from the
+        // previous page from covering content. See Fenix#5326
+        dismissPromptScope = store.flowScoped { flow ->
+            flow.mapNotNull { state -> state.findCustomTabOrSelectedTab(customTabId) }
+                .ifChanged { it.content.progress }
+                .filter { it.content.progress >= PROGRESS_ALMOST_COMPLETE }
+                .collect {
+                    activePrompt?.get()?.dismiss()
+                    activePrompt?.clear()
+                }
+        }
+
         fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
             // There's still a [PromptDialogFragment] visible from the last time. Re-attach this feature so that the
             // fragment can invoke the callback on this feature once the user makes a selection. This can happen when
@@ -217,7 +240,8 @@ class PromptFeature private constructor(
      * Stops observing the selected session for incoming prompt requests.
      */
     override fun stop() {
-        scope?.cancel()
+        handlePromptScope?.cancel()
+        dismissPromptScope?.cancel()
     }
 
     /**
@@ -267,7 +291,7 @@ class PromptFeature private constructor(
      * @param sessionId this is the id of the session which requested the prompt.
      */
     override fun onCancel(sessionId: String) {
-        store.consumePromptFrom(sessionId) {
+        store.consumePromptFrom(sessionId, activePrompt) {
             when (it) {
                 is PromptRequest.Dismissible -> it.onDismiss()
                 is PromptRequest.Popup -> it.onDeny()
@@ -284,7 +308,7 @@ class PromptFeature private constructor(
      */
     @Suppress("UNCHECKED_CAST", "ComplexMethod")
     override fun onConfirm(sessionId: String, value: Any?) {
-        store.consumePromptFrom(sessionId) {
+        store.consumePromptFrom(sessionId, activePrompt) {
             when (it) {
                 is TimeSelection -> it.onConfirm(value as Date)
                 is Color -> it.onConfirm(value as String)
@@ -337,7 +361,7 @@ class PromptFeature private constructor(
      * @param sessionId that requested to show the dialog.
      */
     override fun onClear(sessionId: String) {
-        store.consumePromptFrom(sessionId) {
+        store.consumePromptFrom(sessionId, activePrompt) {
             when (it) {
                 is TimeSelection -> it.onClear()
             }
@@ -519,6 +543,7 @@ class PromptFeature private constructor(
 
         if (canShowThisPrompt(promptRequest)) {
             dialog.show(fragmentManager, FRAGMENT_TAG)
+            activePrompt = WeakReference(dialog)
         } else {
             (promptRequest as PromptRequest.Dismissible).onDismiss()
             store.dispatch(ContentAction.ConsumePromptRequestAction(session.id))
@@ -545,6 +570,7 @@ class PromptFeature private constructor(
 
 internal fun BrowserStore.consumePromptFrom(
     sessionId: String?,
+    activePrompt: WeakReference<PromptDialogFragment>? = null,
     consume: (PromptRequest) -> Unit
 ) {
     if (sessionId == null) {
@@ -552,6 +578,7 @@ internal fun BrowserStore.consumePromptFrom(
     } else {
         state.findTabOrCustomTab(sessionId)
     }?.let { tab ->
+        activePrompt?.clear()
         tab.content.promptRequest?.let {
             consume(it)
             dispatch(ContentAction.ConsumePromptRequestAction(tab.id))
