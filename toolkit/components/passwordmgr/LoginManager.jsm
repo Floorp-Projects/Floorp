@@ -460,6 +460,11 @@ LoginManager.prototype = {
 
   async searchLoginsAsync(matchData) {
     log.debug("searchLoginsAsync:", matchData);
+
+    if (!matchData.origin) {
+      throw new Error("searchLoginsAsync: An `origin` is required");
+    }
+
     return this._storage.searchLoginsAsync(matchData);
   },
 
