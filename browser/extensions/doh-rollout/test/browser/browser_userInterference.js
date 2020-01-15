@@ -42,6 +42,7 @@ add_task(async function testUserInterference() {
   );
 
   await ensureTRRMode(2);
+  checkHeuristicsTelemetry("enable_doh", "startup");
 
   // Set the TRR mode pref manually and ensure we respect this.
   Preferences.set(prefs.TRR_MODE_PREF, 0);
@@ -49,6 +50,7 @@ add_task(async function testUserInterference() {
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(0);
+  checkHeuristicsTelemetry("disable_doh", "userModified");
 
   is(
     Preferences.get(prefs.DOH_DISABLED_PREF, false),
@@ -64,15 +66,15 @@ add_task(async function testUserInterference() {
   // Simulate another network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(0);
+  ensureNoHeuristicsTelemetry();
 
   // Restart the add-on for good measure.
   await restartAddon();
   await ensureNoTRRModeChange(0);
+  ensureNoHeuristicsTelemetry();
 
   // Simulate another network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(0);
-
-  // Clean up.
-  await resetPrefsAndRestartAddon();
+  ensureNoHeuristicsTelemetry();
 });
