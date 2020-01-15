@@ -1170,7 +1170,7 @@ Services.prefs.setBoolPref("extensions.strictCompatibility", true);
 // Ensure signature checks are enabled by default
 Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
 
-Services.prefs.setBoolPref("extensions.legacy.enabled", true);
+Services.prefs.setBoolPref("extensions.experiments.enabled", true);
 
 // Copies blocklistFile (an nsIFile) to gProfD/blocklist.xml.
 function copyBlocklistToProfile(blocklistFile) {

@@ -5,6 +5,9 @@
 // This verifies that app upgrades produce the expected behaviours,
 // with strict compatibility checking disabled.
 
+// turn on Cu.isInAutomation
+Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
+
 Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
 
 // Enable loading extensions from the application scope

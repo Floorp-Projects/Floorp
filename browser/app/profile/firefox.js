@@ -1687,7 +1687,9 @@ pref("browser.tabs.crashReporting.requestEmail", false);
 pref("browser.tabs.crashReporting.emailMe", false);
 pref("browser.tabs.crashReporting.email", "");
 
-pref("extensions.legacy.enabled", false);
+// If true, unprivileged extensions may use experimental APIs on
+// nightly and developer edition.
+pref("extensions.experiments.enabled", false);
 
 // Causes access on unsafe CPOWs from browser code to throw by default.
 pref("dom.ipc.cpows.forbid-unsafe-from-browser", true);

@@ -1,5 +1,9 @@
 "use strict";
 
+const { AddonSettings } = ChromeUtils.import(
+  "resource://gre/modules/addons/AddonSettings.jsm"
+);
+
 // This test checks that theme warnings are properly emitted.
 
 function waitForConsole(task, message) {
@@ -76,15 +80,7 @@ add_task(async function test_dynamic_theme() {
 });
 
 add_task(async function test_experiments_enabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.legacy.enabled", AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS],
-    ],
-  });
-
-  info(
-    "Testing that experiments are handled correctly when legacy pref is enabled"
-  );
+  info("Testing that experiments are handled correctly on nightly and deved");
 
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -101,7 +97,7 @@ add_task(async function test_experiments_enabled() {
       },
     },
   });
-  if (!AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+  if (!AddonSettings.EXPERIMENTS_ENABLED) {
     await waitForConsole(
       extension.startup,
       "This extension is not allowed to run theme experiments"
@@ -113,17 +109,15 @@ add_task(async function test_experiments_enabled() {
     );
   }
   await extension.unload();
-
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_experiments_disabled() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.legacy.enabled", false]],
+    set: [["extensions.experiments.enabled", false]],
   });
 
   info(
-    "Testing that experiments are handled correctly when legacy pref is disabled"
+    "Testing that experiments are handled correctly when experiements pref is disabled"
   );
 
   const extension = ExtensionTestUtils.loadExtension({

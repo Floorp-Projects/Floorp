@@ -9,9 +9,6 @@ export MOZ_LTO=cross
 
 ac_add_options --with-branding=browser/branding/aurora
 
-# Enable MOZ_ALLOW_LEGACY_EXTENSIONS
-ac_add_options "MOZ_ALLOW_LEGACY_EXTENSIONS=1"
-
 unset ENABLE_CLANG_PLUGIN
 
 . "$topsrcdir/build/mozconfig.common.override"

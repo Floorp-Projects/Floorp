@@ -19,7 +19,7 @@ AddonTestUtils.overrideCertDB();
 
 Services.prefs.setCharPref("extensions.minCompatibleAppVersion", "0");
 Services.prefs.setCharPref("extensions.minCompatiblePlatformVersion", "0");
-Services.prefs.setBoolPref("extensions.legacy.enabled", true);
+Services.prefs.setBoolPref("extensions.experiments.enabled", true);
 
 AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
 Svc.Prefs.set("engine.addons", true);

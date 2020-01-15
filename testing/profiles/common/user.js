@@ -36,7 +36,7 @@ user_pref("dom.send_after_paint_to_content", true);
 // Only load extensions from the application and user profile
 // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
 user_pref("extensions.enabledScopes", 5);
-user_pref("extensions.legacy.enabled", true);
+user_pref("extensions.experiments.enabled", true);
 // Turn off extension updates so they don't bother tests
 user_pref("extensions.update.enabled", false);
 // Prevent network access for recommendations by default. The payload is {"results":[]}.
