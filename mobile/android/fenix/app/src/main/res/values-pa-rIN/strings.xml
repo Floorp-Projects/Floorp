@@ -112,6 +112,16 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">ਦਿੱਖ</string>
 
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">ਚੁਣੀ ਭਾਸ਼ਾ</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">ਖੋਜੋ</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">ਡਿਵਾਈਸ ਦੀ ਭਾਸ਼ਾ ਮੁਤਾਬਕ</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">ਖੋਜ ਭਾਸ਼ਾ</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">ਸਕੈਨ ਕਰੋ</string>
@@ -225,6 +235,9 @@
     <string name="preferences_search_bookmarks">ਬੁੱਕਮਾਰਕ ਖੋਜੋ</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">ਖਾਤਾ ਸੈਟਿੰਗਾਂ</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">ਲਿੰਕ ਐਪਾਂ ਵਿੱਚ ਖੋਲ੍ਹੋ</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -1103,7 +1116,7 @@
     <string name="search_engine_delete">ਹਟਾਓ</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label">ਚੁਣਿੰਦਾ</string>
+    <string name="search_add_custom_engine_label_other">ਹੋਰ</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">ਨਾਂ</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->

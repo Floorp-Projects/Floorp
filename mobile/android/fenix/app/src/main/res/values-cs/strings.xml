@@ -249,7 +249,7 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Záložky</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Přihlašovací jména</string>
+    <string name="preferences_sync_logins">Přihlašovací údaje</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Odhlásit</string>
     <!-- Preference displays and allows changing current FxA device name -->
