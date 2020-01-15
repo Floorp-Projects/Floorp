@@ -2399,7 +2399,7 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
 }
 
 nsresult WorkerPrivate::SetIsDebuggerReady(bool aReady) {
-  AssertIsOnParentThread();
+  AssertIsOnMainThread();
   MutexAutoLock lock(mMutex);
 
   if (mDebuggerReady == aReady) {
