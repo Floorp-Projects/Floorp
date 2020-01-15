@@ -80,6 +80,7 @@ import mozinfo
 from mozprofile import Profile
 from mozprofile.cli import parse_preferences
 from mozrunner.utils import get_stack_fixer_function
+from mozbuild.util import ensure_subprocess_env
 
 # --------------------------------------------------------------
 
@@ -1141,7 +1142,8 @@ class XPCShellTests(object):
                 # We pipe stdin to node because the server will exit when its
                 # stdin reaches EOF
                 process = Popen([nodeBin, serverJs], stdin=PIPE, stdout=PIPE,
-                                stderr=PIPE, env=self.env, cwd=os.getcwd())
+                                stderr=PIPE, env=ensure_subprocess_env(self.env),
+                                cwd=os.getcwd())
                 self.nodeProc[name] = process
 
                 # Check to make sure the server starts properly by waiting for it to
