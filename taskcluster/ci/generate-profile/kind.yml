@@ -195,6 +195,7 @@ jobs:
                   path: artifacts/
         run:
             using: run-task
+            sparse-profile: profile-generate
             cwd: '{checkout}'
             command: ./taskcluster/scripts/misc/run-profileserver-macos.sh
         fetches:
