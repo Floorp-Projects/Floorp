@@ -2,8 +2,6 @@ import os
 
 PYTHON = "/usr/bin/env python"
 VENV_PATH = '%s/build/venv' % os.getcwd()
-TOOLTOOL_MANIFEST_PATH = "config/tooltool-manifests/macosx64/releng.manifest"
-MINIDUMP_STACKWALK_PATH = "macosx64-minidump_stackwalk"
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
 INSTALLER_PATH = os.path.join(ABS_WORK_DIR, "installer.dmg")
 
@@ -23,7 +21,5 @@ config = {
         "install",
         "run-tests",
     ],
-    "minidump_stackwalk_path": MINIDUMP_STACKWALK_PATH,
-    "minidump_tooltool_manifest_path": TOOLTOOL_MANIFEST_PATH,
     "tooltool_cache": os.path.join(os.getcwd(), "tooltool_cache"),
 }

@@ -18,7 +18,5 @@ config = {
     "run_cmd_checks_enabled": True,
     "preflight_run_cmd_suites": [],
     "postflight_run_cmd_suites": [],
-    "minidump_stackwalk_path": "macosx64-minidump_stackwalk",
-    "minidump_tooltool_manifest_path": "config/tooltool-manifests/macosx64/releng.manifest",
     "tooltool_cache": "/builds/tooltool_cache",
 }
