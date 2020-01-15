@@ -68,24 +68,11 @@ def main():
         description='Upload symbols in ZIP using token from Taskcluster secrets service.')
     parser.add_argument('zip',
                         help='Symbols zip file - URL or path to local file')
-    parser.add_argument('--ignore-missing',
-                        help='No error on missing files',
-                        action='store_true')
     args = parser.parse_args()
 
-    if args.zip.startswith('http'):
-        resp = requests.head(args.zip)
-        is_missing = resp.status_code != requests.codes.ok
-    else:
-        is_missing = not os.path.isfile(args.zip)
-
-    if is_missing:
-        if args.ignore_missing:
-            log.info('Zip file "{0}" does not exist!'.format(args.zip))
-            return 0
-        else:
-            log.error('Error: zip file "{0}" does not exist!'.format(args.zip))
-            return 1
+    if not args.zip.startswith('http') and not os.path.isfile(args.zip):
+        log.error('Error: zip file "{0}" does not exist!'.format(args.zip))
+        return 1
 
     secret_name = os.environ.get('SYMBOL_SECRET')
     if secret_name is not None:
