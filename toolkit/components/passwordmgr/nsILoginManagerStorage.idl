@@ -99,6 +99,19 @@ interface nsILoginManagerStorage : nsISupports {
 
 
   /**
+   * Record that the password of a saved login was used (e.g. submitted or copied).
+   *
+   * @param nsILoginInfo aLogin
+   *        The login record of the password that was used.
+   *
+   * If only the username was used, this method shouldn't be called as we don't
+   * want to double-count the use if both the username and password are copied.
+   * Copying of the username normally precedes the copying of the password anyways.
+   */
+  void recordPasswordUse(in nsILoginInfo aLogin);
+
+
+  /**
    * Remove all stored logins.
    *
    * The browser sanitization feature allows the user to clear any stored

@@ -308,6 +308,16 @@ class LoginManagerStorage_json {
     LoginHelper.notifyStorageChanged("modifyLogin", [oldStoredLogin, newLogin]);
   }
 
+  recordPasswordUse(login) {
+    // Update the lastUsed timestamp and increment the use count.
+    let propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+      Ci.nsIWritablePropertyBag
+    );
+    propBag.setProperty("timeLastUsed", Date.now());
+    propBag.setProperty("timesUsedIncrement", 1);
+    this.modifyLogin(login, propBag);
+  }
+
   async recordBreachAlertDismissal(loginGUID) {
     this._store.ensureDataReady();
     const dismissedBreachAlertsByLoginGUID = this._store._data
