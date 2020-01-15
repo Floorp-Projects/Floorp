@@ -51,8 +51,8 @@
            "Non-top-level worker debugger should have parent.");
         is(childDbg.type, Ci.nsIWorkerDebugger.TYPE_DEDICATED,
            "Content worker debugger should be dedicated.");
-        is(childDbg.window, null,
-           "Non-top-level worker debugger should not have window.");
+        is(childDbg.window, window,
+           "Non-top-level worker debugger should have window.");
 
         info("Terminate the top-level chrome worker and the non-top-level " +
              "content worker, and wait for their debuggers to be " +

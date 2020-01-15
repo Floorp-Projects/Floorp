@@ -277,12 +277,17 @@ WorkerDebugger::GetWindow(mozIDOMWindow** aResult) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (mWorkerPrivate->GetParent() || !mWorkerPrivate->IsDedicatedWorker()) {
+  WorkerPrivate* worker = mWorkerPrivate;
+  while (worker->GetParent()) {
+    worker = worker->GetParent();
+  }
+
+  if (!worker->IsDedicatedWorker()) {
     *aResult = nullptr;
     return NS_OK;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window = mWorkerPrivate->GetWindow();
+  nsCOMPtr<nsPIDOMWindowInner> window = worker->GetWindow();
   window.forget(aResult);
   return NS_OK;
 }
