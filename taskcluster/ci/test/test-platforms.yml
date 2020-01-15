@@ -83,11 +83,10 @@ linux1804-64-qr/debug:
         - linux1804-qr-tests
         - web-platform-tests-1804
 
-# Disabled temporarily due to Bug 1602863
-# linux1804-64-asan-qr/opt:
-#     build-platform: linux64-asan/opt
-#     test-sets:
-#         - linux-qr-smoketests
+linux1804-64-asan-qr/opt:
+    build-platform: linux64-asan/opt
+    test-sets:
+        - linux-qr-smoketests
 
 linux1804-64-ccov/opt:
     build-platform: linux64-ccov/opt
@@ -171,11 +170,6 @@ linux64-qr/debug:
     test-sets:
         - linux-qr-tests
         - web-platform-tests-1604
-
-linux64-asan-qr/opt:
-    build-platform: linux64-asan/opt
-    test-sets:
-        - linux-qr-smoketests
 
 linux64-ccov/opt:
     build-platform: linux64-ccov/opt
