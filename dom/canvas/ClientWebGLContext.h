@@ -180,9 +180,7 @@ class ContextGenerationInfo final {
 
   std::vector<GLenum> mCompressedTextureFormats;
 
- public:
-  // explicit ContextGenerationInfo(ClientWebGLContext& context);
-  //~ContextGenerationInfo();
+  Maybe<uvec2> mDrawingBufferSize;
 
   ObjectId NextId() { return mLastId += 1; }
 };
@@ -727,8 +725,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
  private:
   virtual ~ClientWebGLContext();
 
-  uvec2 mRequestedSize;
-  Maybe<uvec2> mDrawingBufferSize;
   const RefPtr<ClientWebGLExtensionLoseContext> mExtLoseContext;
 
   webgl::LossStatus mLossStatus = webgl::LossStatus::Ready;
@@ -759,7 +755,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void Event_webglcontextlost();
   void Event_webglcontextrestored();
 
-  bool CreateHostContext();
+  bool CreateHostContext(const uvec2& requestedSize);
   void ThrowEvent_WebGLContextCreationError(const std::string&) const;
 
  public:
@@ -987,7 +983,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void ClearVRFrame() const;
 
  private:
-  const uvec2& DrawingBufferSize();
+  uvec2 DrawingBufferSize();
   bool HasAlphaSupport() { return mSurfaceInfo.supportsAlpha; }
 
   ICRData mSurfaceInfo;
