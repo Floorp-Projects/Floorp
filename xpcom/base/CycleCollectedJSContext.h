@@ -17,6 +17,7 @@
 #include "mozilla/dom/AtomList.h"
 #include "mozilla/dom/Promise.h"
 #include "jsapi.h"
+#include "js/GCVector.h"
 #include "js/Promise.h"
 
 #include "nsCOMPtr.h"
@@ -263,6 +264,9 @@ class CycleCollectedJSContext
   class SavedMicroTaskQueue;
   js::UniquePtr<SavedJobQueue> saveJobQueue(JSContext*) override;
 
+  static void CleanupFinalizationGroupCallback(JSObject* aGroup, void* aData);
+  void QueueFinalizationGroupForCleanup(JSObject* aGroup);
+
  private:
   CycleCollectedJSRuntime* mRuntime;
 
@@ -336,6 +340,15 @@ class CycleCollectedJSContext
     CycleCollectedJSContext* mCx;
     PromiseArray mUnhandledRejections;
   };
+
+  // Support for JS FinalizationGroup objects.
+  //
+  // These allow a JS callback to be registered that is called when an object
+  // dies. The browser part of the implementation keeps a vector of
+  // FinalizationGroups with pending callbacks here.
+  friend class CleanupFinalizationGroupsRunnable;
+  using ObjectVector = JS::GCVector<JSObject*, 0, InfallibleAllocPolicy>;
+  JS::PersistentRooted<ObjectVector> mFinalizationGroupsToCleanUp;
 };
 
 class MOZ_STACK_CLASS nsAutoMicroTask {
