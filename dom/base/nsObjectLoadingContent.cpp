@@ -2271,7 +2271,6 @@ nsresult nsObjectLoadingContent::OpenChannel() {
   RefPtr<ObjectInterfaceRequestorShim> shim =
       new ObjectInterfaceRequestorShim(this);
 
-  bool isSandBoxed = doc->GetSandboxFlags() & SANDBOXED_ORIGIN;
   bool inherit = nsContentUtils::ChannelShouldInheritPrincipal(
       thisContent->NodePrincipal(), mURI,
       true,    // aInheritForAboutBlank
@@ -2285,9 +2284,6 @@ nsresult nsObjectLoadingContent::OpenChannel() {
   if (inherit && !isURIUniqueOrigin) {
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
-  if (isSandBoxed) {
-    securityFlags |= nsILoadInfo::SEC_SANDBOXED;
-  }
 
   nsContentPolicyType contentPolicyType = GetContentPolicyType();
 
@@ -2298,7 +2294,9 @@ nsresult nsObjectLoadingContent::OpenChannel() {
                      shim,     // aCallbacks
                      nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
                          nsIChannel::LOAD_BYPASS_SERVICE_WORKER |
-                         nsIRequest::LOAD_HTML_OBJECT_DATA);
+                         nsIRequest::LOAD_HTML_OBJECT_DATA,
+                     nullptr,  // aIoService
+                     doc->GetSandboxFlags());
   NS_ENSURE_SUCCESS(rv, rv);
   if (inherit) {
     nsCOMPtr<nsILoadInfo> loadinfo = chan->LoadInfo();
