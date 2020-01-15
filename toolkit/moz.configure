@@ -650,18 +650,6 @@ project_flag('MOZ_BLOCK_PROFILE_DOWNGRADE',
              help='Block users from starting profiles last used by a newer build',
              set_as_define=True)
 
-option(env='MOZ_ALLOW_LEGACY_EXTENSIONS',
-       default=milestone.is_nightly,
-       help='Allow legacy browser extensions')
-
-@depends('MOZ_ALLOW_LEGACY_EXTENSIONS')
-def legacy_extensions(value):
-    if bool(value):
-        return True
-
-set_config('MOZ_ALLOW_LEGACY_EXTENSIONS', legacy_extensions)
-set_define('MOZ_ALLOW_LEGACY_EXTENSIONS', legacy_extensions)
-
 @depends('MOZ_PLACES', 'MOZ_ANDROID_HISTORY')
 def check_places_and_android_history(places, android_history):
     if places and android_history:

@@ -1,15 +1,10 @@
 "use strict";
 
+const { AddonSettings } = ChromeUtils.import(
+  "resource://gre/modules/addons/AddonSettings.jsm"
+);
+
 // This test checks whether the theme experiments work
-
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["extensions.legacy.enabled", AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS],
-    ],
-  });
-});
-
 add_task(async function test_experiment_static_theme() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -59,7 +54,7 @@ add_task(async function test_experiment_static_theme() {
   await extension.startup();
 
   const testExperimentApplied = rootEl => {
-    if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+    if (AddonSettings.EXPERIMENTS_ENABLED) {
       is(
         rootEl.style.getPropertyValue("--some-color-property"),
         hexToCSS("#ff00ff"),
@@ -198,7 +193,7 @@ add_task(async function test_experiment_dynamic_theme() {
   await extension.awaitMessage("theme-updated");
 
   const testExperimentApplied = rootEl => {
-    if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+    if (AddonSettings.EXPERIMENTS_ENABLED) {
       is(
         rootEl.style.getPropertyValue("--some-color-property"),
         hexToCSS("#ff00ff"),
@@ -343,7 +338,7 @@ add_task(async function test_experiment_stylesheet() {
 
   await extension.startup();
 
-  if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+  if (AddonSettings.EXPERIMENTS_ENABLED) {
     // Wait for stylesheet load.
     await BrowserTestUtils.waitForCondition(
       () => computedStyle.fill === expectedFill

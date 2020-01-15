@@ -217,7 +217,7 @@ pref("extensions.webextensions.default-content-security-policy", "script-src 'se
 
 pref("extensions.webextensions.background-delayed-startup", true);
 
-pref("extensions.legacy.enabled", false);
+pref("extensions.experiments.enabled", false);
 
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);

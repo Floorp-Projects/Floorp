@@ -5,6 +5,9 @@
 // extensions.strictCompatibility, and the strictCompatibility option in
 // install.rdf
 
+// turn on Cu.isInAutomation
+Services.prefs.setBoolPref(PREF_DISABLE_SECURITY, true);
+
 // The `compatbile` array defines which of the tests below the add-on
 // should be compatible in. It's pretty gross.
 const ADDONS = [

@@ -20,7 +20,4 @@ fi
 
 ac_add_options --with-branding=browser/branding/aurora
 
-# Enable MOZ_ALLOW_LEGACY_EXTENSIONS
-ac_add_options "MOZ_ALLOW_LEGACY_EXTENSIONS=1"
-
 . "$topsrcdir/build/mozconfig.common.override"

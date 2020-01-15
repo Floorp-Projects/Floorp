@@ -26,7 +26,4 @@ export MOZILLA_OFFICIAL=1
 # Bug 1283438
 mk_add_options AUTOCLOBBER=
 
-# Enable MOZ_ALLOW_LEGACY_EXTENSIONS
-ac_add_options "MOZ_ALLOW_LEGACY_EXTENSIONS=1"
-
 . "$topsrcdir/build/mozconfig.common.override"
