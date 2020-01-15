@@ -1010,11 +1010,14 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
    * @param aCallerInnerWindow [out] Inner window of the caller of
    * postMessage, or null if the incumbent global is not a Window.
    *
-   * @param aCallerDocumentURI [out] The URI of the document of the incumbent
+   * @param aCallerURI [out] The URI of the document of the incumbent
    * global if it's a Window, null otherwise.
    *
    * @param aCallerAgentCluterId [out] If a non-nullptr is passed, it would
    * return the caller's agent cluster id.
+   *
+   * @param aScriptLocation [out] If we do not have a caller's URI, then
+   * use script location as a sourcename for creating an error object.
    *
    * @param aError [out] The error, if any.
    *
@@ -1024,8 +1027,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
       JSContext* aCx, const nsAString& aTargetOrigin,
       mozilla::dom::BrowsingContext** aSource, nsAString& aOrigin,
       nsIURI** aTargetOriginURI, nsIPrincipal** aCallerPrincipal,
-      nsGlobalWindowInner** aCallerInnerWindow, nsIURI** aCallerDocumentURI,
-      Maybe<nsID>* aCallerAgentClusterId, mozilla::ErrorResult& aError);
+      nsGlobalWindowInner** aCallerInnerWindow, nsIURI** aCallerURI,
+      Maybe<nsID>* aCallerAgentClusterId, nsACString* aScriptLocation,
+      mozilla::ErrorResult& aError);
 
   // Ask the user if further dialogs should be blocked, if dialogs are currently
   // being abused. This is used in the cases where we have no modifiable UI to

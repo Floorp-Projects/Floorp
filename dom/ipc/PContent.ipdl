@@ -334,8 +334,10 @@ struct PostMessageData
     nsIURI targetOriginURI;
     nsIPrincipal callerPrincipal;
     nsIPrincipal subjectPrincipal;
-    nsIURI callerDocumentURI;
+    nsIURI callerURI;
     bool isFromPrivateWindow;
+    nsCString scriptLocation;
+    uint64_t innerWindowId;
 };
 
 union PSHEntryOrSharedID

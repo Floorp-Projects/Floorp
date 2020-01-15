@@ -36,11 +36,14 @@
 namespace mozilla {
 namespace dom {
 
-PostMessageEvent::PostMessageEvent(
-    BrowsingContext* aSource, const nsAString& aCallerOrigin,
-    nsGlobalWindowOuter* aTargetWindow, nsIPrincipal* aProvidedPrincipal,
-    const Maybe<uint64_t>& aCallerWindowID, nsIURI* aCallerDocumentURI,
-    bool aIsFromPrivateWindow, const Maybe<nsID>& aCallerAgentClusterId)
+PostMessageEvent::PostMessageEvent(BrowsingContext* aSource,
+                                   const nsAString& aCallerOrigin,
+                                   nsGlobalWindowOuter* aTargetWindow,
+                                   nsIPrincipal* aProvidedPrincipal,
+                                   uint64_t aCallerWindowID, nsIURI* aCallerURI,
+                                   const nsCString& aScriptLocation,
+                                   bool aIsFromPrivateWindow,
+                                   const Maybe<nsID>& aCallerAgentClusterId)
     : Runnable("dom::PostMessageEvent"),
       mSource(aSource),
       mCallerOrigin(aCallerOrigin),
@@ -48,7 +51,8 @@ PostMessageEvent::PostMessageEvent(
       mProvidedPrincipal(aProvidedPrincipal),
       mCallerWindowID(aCallerWindowID),
       mCallerAgentClusterId(aCallerAgentClusterId),
-      mCallerDocumentURI(aCallerDocumentURI),
+      mCallerURI(aCallerURI),
+      mScriptLocation(Some(aScriptLocation)),
       mIsFromPrivateWindow(aIsFromPrivateWindow) {}
 
 PostMessageEvent::~PostMessageEvent() {}
@@ -63,9 +67,9 @@ PostMessageEvent::Run() {
   JSContext* cx = jsapi.cx();
 
   // The document URI is just used for the principal mismatch error message
-  // below. Use a stack variable so mCallerDocumentURI is not held onto after
+  // below. Use a stack variable so mCallerURI is not held onto after
   // this method finishes, regardless of the method outcome.
-  nsCOMPtr<nsIURI> callerDocumentURI = mCallerDocumentURI.forget();
+  nsCOMPtr<nsIURI> callerURI = mCallerURI.forget();
 
   // If we bailed before this point we're going to leak mMessage, but
   // that's probably better than crashing.
@@ -137,19 +141,20 @@ PostMessageEvent::Run() {
           do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (mCallerWindowID.isSome()) {
-        rv = errorObject->InitWithSourceURI(
-            errorText, callerDocumentURI, EmptyString(), 0, 0,
-            nsIScriptError::errorFlag, "DOM Window", mCallerWindowID.value());
+      if (mCallerWindowID == 0) {
+        rv = errorObject->Init(
+            errorText, NS_ConvertUTF8toUTF16(mScriptLocation.value()),
+            EmptyString(), 0, 0, nsIScriptError::errorFlag, "DOM Window",
+            mIsFromPrivateWindow, mProvidedPrincipal->IsSystemPrincipal());
+      } else if (callerURI) {
+        rv = errorObject->InitWithSourceURI(errorText, callerURI, EmptyString(),
+                                            0, 0, nsIScriptError::errorFlag,
+                                            "DOM Window", mCallerWindowID);
       } else {
-        nsString uriSpec;
-        rv = NS_GetSanitizedURIStringFromURI(callerDocumentURI, uriSpec);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = errorObject->Init(errorText, uriSpec, EmptyString(), 0, 0,
-                               nsIScriptError::errorFlag, "DOM Window",
-                               mIsFromPrivateWindow,
-                               mProvidedPrincipal->IsSystemPrincipal());
+        rv = errorObject->InitWithWindowID(
+            errorText, NS_ConvertUTF8toUTF16(mScriptLocation.value()),
+            EmptyString(), 0, 0, nsIScriptError::errorFlag, "DOM Window",
+            mCallerWindowID);
       }
       NS_ENSURE_SUCCESS(rv, rv);
 
