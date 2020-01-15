@@ -4539,6 +4539,29 @@ void nsFlexContainerFrame::ComputeFlexDirections(
       ConvertAxisOrientationTypeToAPIEnum(crossAxis);
 }
 
+void nsFlexContainerFrame::UpdateClampState(
+    ComputedFlexContainerInfo& aContainerInfo,
+    const mozilla::LinkedList<FlexLine>& aLines) {
+  uint32_t lineIndex = 0;
+  for (const FlexLine* line = aLines.getFirst(); line;
+       line = line->getNext(), ++lineIndex) {
+    ComputedFlexLineInfo* lineInfo = &aContainerInfo.mLines[lineIndex];
+
+    uint32_t itemIndex = 0;
+    for (const FlexItem* item = line->GetFirstItem(); item;
+         item = item->getNext(), ++itemIndex) {
+      ComputedFlexItemInfo* itemInfo = &lineInfo->mItems[itemIndex];
+
+      itemInfo->mClampState =
+          item->WasMinClamped()
+              ? mozilla::dom::FlexItemClampState::Clamped_to_min
+              : (item->WasMaxClamped()
+                     ? mozilla::dom::FlexItemClampState::Clamped_to_max
+                     : mozilla::dom::FlexItemClampState::Unclamped);
+    }
+  }
+}
+
 nsFlexContainerFrame* nsFlexContainerFrame::GetFlexFrameWithComputedInfo(
     nsIFrame* aFrame) {
   // Prepare a lambda function that we may need to call multiple times.
@@ -4695,25 +4718,8 @@ void nsFlexContainerFrame::DoFlexLayout(
   }
 
   // If needed, capture the final clamp state from all the items.
-  if (containerInfo) {
-    uint32_t lineIndex = 0;
-    for (const FlexLine* line = lines.getFirst(); line;
-         line = line->getNext(), ++lineIndex) {
-      ComputedFlexLineInfo* lineInfo = &containerInfo->mLines[lineIndex];
-
-      uint32_t itemIndex = 0;
-      for (const FlexItem* item = line->GetFirstItem(); item;
-           item = item->getNext(), ++itemIndex) {
-        ComputedFlexItemInfo* itemInfo = &lineInfo->mItems[itemIndex];
-
-        itemInfo->mClampState =
-            item->WasMinClamped()
-                ? mozilla::dom::FlexItemClampState::Clamped_to_min
-                : (item->WasMaxClamped()
-                       ? mozilla::dom::FlexItemClampState::Clamped_to_max
-                       : mozilla::dom::FlexItemClampState::Unclamped);
-      }
-    }
+  if (MOZ_UNLIKELY(containerInfo)) {
+    UpdateClampState(*containerInfo, lines);
   }
 
   // Cross Size Determination - Flexbox spec section 9.4
