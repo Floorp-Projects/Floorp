@@ -7,14 +7,20 @@
 #ifndef vm_ToSource_h
 #define vm_ToSource_h
 
-#include "js/TypeDecls.h"
+#include "jstypes.h"  // JS_PUBLIC_API
+
+#include "js/RootingAPI.h"  // JS::Handle
+#include "js/Value.h"       // JS::Value
+
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSString;
 
 namespace js {
 
 // Try to convert a value to its source expression, returning null after
 // reporting an error, otherwise returning a new string.
-JSString* ValueToSource(JSContext* cx, JS::HandleValue v);
+extern JSString* ValueToSource(JSContext* cx, JS::Handle<JS::Value> v);
 
 }  // namespace js
 
-#endif /* vm_ToSource.h */
+#endif  // vm_ToSource_h
