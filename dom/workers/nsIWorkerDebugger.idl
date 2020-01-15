@@ -33,6 +33,8 @@ interface nsIWorkerDebugger : nsISupports
 
   readonly attribute AString url;
 
+  // If this is a dedicated worker, the window this worker or (in the case of
+  // nested workers) its top-level ancestral worker is associated with.
   readonly attribute mozIDOMWindow window;
 
   readonly attribute nsIPrincipal principal;
