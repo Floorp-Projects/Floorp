@@ -8,11 +8,9 @@ import android.content.Context
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.MainScope
-import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.config.Configuration
-import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.service.glean.private.NoExtraKeys
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
@@ -474,6 +472,7 @@ private val Event.wrapper: EventWrapper<*>?
     }
 
 class GleanMetricsService(private val context: Context) : MetricsService {
+    private val logger = Logger("GleanMetricsService")
     private var initialized = false
     /*
      * We need to keep an eye on when we are done starting so that we don't
@@ -485,6 +484,8 @@ class GleanMetricsService(private val context: Context) : MetricsService {
     private val activationPing = ActivationPing(context)
 
     override fun start() {
+        logger.debug("Enabling Glean.")
+        // Initialization of Glean already happened in FenixApplication.
         Glean.setUploadEnabled(true)
 
         if (initialized) return
@@ -497,13 +498,6 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         // can handle events being recorded before it's initialized.
         gleanInitializer = MainScope().launch {
             Glean.registerPings(Pings)
-            Glean.initialize(
-                applicationContext = context,
-                uploadEnabled = true,
-                configuration = Configuration(channel = BuildConfig.BUILD_TYPE,
-                    httpClient = ConceptFetchHttpUploader(
-                        lazy(LazyThreadSafetyMode.NONE) { context.components.core.client }
-                    )))
         }
         // setStartupMetrics is not a fast function. It does not need to be done before we can consider
         // ourselves initialized. So, let's do it, well, later.

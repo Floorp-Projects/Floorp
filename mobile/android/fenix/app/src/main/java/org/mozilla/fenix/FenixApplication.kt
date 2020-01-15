@@ -20,6 +20,9 @@ import kotlinx.coroutines.runBlocking
 import mozilla.appservices.Megazord
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.service.experiments.Experiments
+import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
@@ -37,6 +40,7 @@ import org.mozilla.fenix.session.VisibilityLifecycleCallback
 @SuppressLint("Registered")
 @Suppress("TooManyFunctions")
 open class FenixApplication : LocaleAwareApplication() {
+    private val logger = Logger("FenixApplication")
 
     open val components by lazy { Components(this) }
 
@@ -55,6 +59,27 @@ open class FenixApplication : LocaleAwareApplication() {
             // situation where we create a GeckoRuntime from the Gecko child process.
             return
         }
+
+        // We need to always initialize Glean and do it early here. Note that we are disabling it
+        // here too (uploadEnabled = false). If needed Glean will be enabled later by the migration
+        // code (if this user used to be a fennec user with the right flags enabled) or by
+        // GleanMetricsService if telemetry is enabled for this user.
+        // It is important that this initialization happens *here* before calling into
+        // setupInMainProcessOnly() which behaves differently for fenix and fennec builds.
+        // Glean needs to be disabled initially because otherwise we may already collect telemetry
+        // before we know whether we want that (which is *after* the migration).
+        // As a side effect this means pings submitted between the initialization here and until we
+        // potentially enable Glean would be lost. However such pings do not exist at this moment.
+        logger.debug("Initializing Glean (uploadEnabled=false)")
+        Glean.initialize(
+            applicationContext = this,
+            configuration = Configuration(
+                channel = BuildConfig.BUILD_TYPE,
+                httpClient = ConceptFetchHttpUploader(
+                    lazy(LazyThreadSafetyMode.NONE) { components.core.client }
+                )),
+            uploadEnabled = false
+        )
 
         setupInMainProcessOnly()
     }
