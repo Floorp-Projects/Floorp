@@ -43,8 +43,15 @@ add_task(async function contextCreatedAfterNavigation({ client }) {
   const history = recordEvents(Runtime, 4);
   await Runtime.enable();
   info("Runtime notifications are enabled");
+  await Page.enable();
+  info("Page notifications are enabled");
   info("Navigating...");
   const { frameId } = await Page.navigate({ url: DOC });
+
+  // Workaround for Bug 1603776 TODO
+  const { frame } = await Page.frameNavigated();
+  is(frame.url, DOC, "Navigated to expected url");
+
   const { executionContextId: isolatedId } = await Page.createIsolatedWorld({
     frameId,
     worldName: WORLD_NAME_3,
