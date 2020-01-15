@@ -125,12 +125,12 @@ function createUrlRecord(url, isAbsUrl) {
   return createRecord('url', url, test_record_id);
 }
 
-function createNDEFPushOptions(ignoreRead) {
+function createNDEFWriteOptions(ignoreRead) {
   return {ignoreRead};
 }
 
 // Compares NDEFMessageSource that was provided to the API
-// (e.g. NDEFWriter.push), and NDEFMessage that was received by the
+// (e.g. NDEFWriter.write), and NDEFMessage that was received by the
 // mock NFC service.
 function assertNDEFMessagesEqual(providedMessage, receivedMessage) {
   // If simple data type is passed, e.g. String or ArrayBuffer or
