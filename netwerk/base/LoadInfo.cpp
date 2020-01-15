@@ -56,8 +56,7 @@ LoadInfo::LoadInfo(
     nsINode* aLoadingContext, nsSecurityFlags aSecurityFlags,
     nsContentPolicyType aContentPolicyType,
     const Maybe<mozilla::dom::ClientInfo>& aLoadingClientInfo,
-    const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
-    uint32_t aSandboxFlags)
+    const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController)
     : mLoadingPrincipal(aLoadingContext ? aLoadingContext->NodePrincipal()
                                         : aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal ? aTriggeringPrincipal
@@ -68,7 +67,6 @@ LoadInfo::LoadInfo(
       mLoadingContext(do_GetWeakReference(aLoadingContext)),
       mContextForTopLevelLoad(nullptr),
       mSecurityFlags(aSecurityFlags),
-      mSandboxFlags(aSandboxFlags),
       mInternalContentPolicyType(aContentPolicyType),
       mTainting(LoadTainting::Basic),
       mBlockAllMixedContent(false),
@@ -136,7 +134,7 @@ LoadInfo::LoadInfo(
              aLoadingContext->NodePrincipal() == aLoadingPrincipal);
 
   // if the load is sandboxed, we can not also inherit the principal
-  if (mSandboxFlags & SANDBOXED_ORIGIN) {
+  if (mSecurityFlags & nsILoadInfo::SEC_SANDBOXED) {
     mForceInheritPrincipalDropped =
         (mSecurityFlags & nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL);
     mSecurityFlags &= ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
@@ -324,13 +322,12 @@ LoadInfo::LoadInfo(
 LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
                    nsIPrincipal* aTriggeringPrincipal,
                    nsISupports* aContextForTopLevelLoad,
-                   nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags)
+                   nsSecurityFlags aSecurityFlags)
     : mLoadingPrincipal(nullptr),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mPrincipalToInherit(nullptr),
       mContextForTopLevelLoad(do_GetWeakReference(aContextForTopLevelLoad)),
       mSecurityFlags(aSecurityFlags),
-      mSandboxFlags(aSandboxFlags),
       mInternalContentPolicyType(nsIContentPolicy::TYPE_DOCUMENT),
       mTainting(LoadTainting::Basic),
       mBlockAllMixedContent(false),
@@ -370,7 +367,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   MOZ_ASSERT(mTriggeringPrincipal);
 
   // if the load is sandboxed, we can not also inherit the principal
-  if (mSandboxFlags & SANDBOXED_ORIGIN) {
+  if (mSecurityFlags & nsILoadInfo::SEC_SANDBOXED) {
     mForceInheritPrincipalDropped =
         (mSecurityFlags & nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL);
     mSecurityFlags &= ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
@@ -438,7 +435,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mLoadingContext(rhs.mLoadingContext),
       mContextForTopLevelLoad(rhs.mContextForTopLevelLoad),
       mSecurityFlags(rhs.mSecurityFlags),
-      mSandboxFlags(rhs.mSandboxFlags),
       mInternalContentPolicyType(rhs.mInternalContentPolicyType),
       mTainting(rhs.mTainting),
       mBlockAllMixedContent(rhs.mBlockAllMixedContent),
@@ -495,10 +491,9 @@ LoadInfo::LoadInfo(
     const Maybe<ClientInfo>& aReservedClientInfo,
     const Maybe<ClientInfo>& aInitialClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController,
-    nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags,
-    nsContentPolicyType aContentPolicyType, LoadTainting aTainting,
-    bool aBlockAllMixedContent, bool aUpgradeInsecureRequests,
-    bool aBrowserUpgradeInsecureRequests,
+    nsSecurityFlags aSecurityFlags, nsContentPolicyType aContentPolicyType,
+    LoadTainting aTainting, bool aBlockAllMixedContent,
+    bool aUpgradeInsecureRequests, bool aBrowserUpgradeInsecureRequests,
     bool aBrowserWouldUpgradeInsecureRequests, bool aForceAllowDataURI,
     bool aAllowInsecureRedirectToDataURI, bool aBypassCORSChecks,
     bool aSkipContentPolicyCheckForWebRequest,
@@ -533,7 +528,6 @@ LoadInfo::LoadInfo(
       mController(aController),
       mLoadingContext(do_GetWeakReference(aLoadingContext)),
       mSecurityFlags(aSecurityFlags),
-      mSandboxFlags(aSandboxFlags),
       mInternalContentPolicyType(aContentPolicyType),
       mTainting(aTainting),
       mBlockAllMixedContent(aBlockAllMixedContent),
@@ -672,7 +666,7 @@ nsIPrincipal* LoadInfo::FindPrincipalToInherit(nsIChannel* aChannel) {
 }
 
 nsIPrincipal* LoadInfo::GetSandboxedLoadingPrincipal() {
-  if (!(mSandboxFlags & SANDBOXED_ORIGIN)) {
+  if (!(mSecurityFlags & nsILoadInfo::SEC_SANDBOXED)) {
     return nullptr;
   }
 
@@ -739,12 +733,6 @@ LoadInfo::GetLoadingContextXPCOM(nsISupports** aResult) {
 NS_IMETHODIMP
 LoadInfo::GetSecurityFlags(nsSecurityFlags* aResult) {
   *aResult = mSecurityFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetSandboxFlags(uint32_t* aResult) {
-  *aResult = mSandboxFlags;
   return NS_OK;
 }
 
@@ -846,7 +834,7 @@ LoadInfo::GetForceInheritPrincipalOverruleOwner(bool* aInheritPrincipal) {
 
 NS_IMETHODIMP
 LoadInfo::GetLoadingSandboxed(bool* aLoadingSandboxed) {
-  *aLoadingSandboxed = (mSandboxFlags & SANDBOXED_ORIGIN);
+  *aLoadingSandboxed = (mSecurityFlags & nsILoadInfo::SEC_SANDBOXED);
   return NS_OK;
 }
 

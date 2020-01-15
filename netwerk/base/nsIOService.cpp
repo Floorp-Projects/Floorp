@@ -904,13 +904,13 @@ nsresult nsIOService::NewChannelFromURIWithClientAndController(
     nsIPrincipal* aTriggeringPrincipal,
     const Maybe<ClientInfo>& aLoadingClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController, uint32_t aSecurityFlags,
-    uint32_t aContentPolicyType, uint32_t aSandboxFlags, nsIChannel** aResult) {
+    uint32_t aContentPolicyType, nsIChannel** aResult) {
   return NewChannelFromURIWithProxyFlagsInternal(
       aURI,
       nullptr,  // aProxyURI
       0,        // aProxyFlags
       aLoadingNode, aLoadingPrincipal, aTriggeringPrincipal, aLoadingClientInfo,
-      aController, aSecurityFlags, aContentPolicyType, aSandboxFlags, aResult);
+      aController, aSecurityFlags, aContentPolicyType, aResult);
 }
 
 NS_IMETHODIMP
@@ -928,7 +928,7 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
     nsIPrincipal* aTriggeringPrincipal,
     const Maybe<ClientInfo>& aLoadingClientInfo,
     const Maybe<ServiceWorkerDescriptor>& aController, uint32_t aSecurityFlags,
-    uint32_t aContentPolicyType, uint32_t aSandboxFlags, nsIChannel** result) {
+    uint32_t aContentPolicyType, nsIChannel** result) {
   // Ideally all callers of NewChannelFromURIWithProxyFlagsInternal provide
   // the necessary arguments to create a loadinfo.
   //
@@ -946,7 +946,7 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
       aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
     loadInfo = new LoadInfo(aLoadingPrincipal, aTriggeringPrincipal,
                             aLoadingNode, aSecurityFlags, aContentPolicyType,
-                            aLoadingClientInfo, aController, aSandboxFlags);
+                            aLoadingClientInfo, aController);
   }
   if (!loadInfo) {
     JSContext* cx = nsContentUtils::GetCurrentJSContext();
@@ -1050,7 +1050,7 @@ nsIOService::NewChannelFromURIWithProxyFlags(
   return NewChannelFromURIWithProxyFlagsInternal(
       aURI, aProxyURI, aProxyFlags, aLoadingNode, aLoadingPrincipal,
       aTriggeringPrincipal, Maybe<ClientInfo>(),
-      Maybe<ServiceWorkerDescriptor>(), aSecurityFlags, aContentPolicyType, 0,
+      Maybe<ServiceWorkerDescriptor>(), aSecurityFlags, aContentPolicyType,
       result);
 }
 
