@@ -58,6 +58,10 @@ struct FileRequestFlushParams
 {
 };
 
+struct FileRequestGetFileParams
+{
+};
+
 union FileRequestParams
 {
   FileRequestGetMetadataParams;
@@ -65,6 +69,7 @@ union FileRequestParams
   FileRequestWriteParams;
   FileRequestTruncateParams;
   FileRequestFlushParams;
+  FileRequestGetFileParams;
 };
 
 protocol PBackgroundFileHandle

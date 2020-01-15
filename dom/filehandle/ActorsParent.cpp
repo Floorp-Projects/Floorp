@@ -16,6 +16,7 @@
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/PendingIPCBlobParent.h"
 #include "mozilla/dom/quota/MemoryOutputStream.h"
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -567,6 +568,20 @@ class FlushOp final : public NormalFileHandleOp {
   ~FlushOp() {}
 
   virtual nsresult DoFileWork(FileHandle* aFileHandle) override;
+
+  virtual void GetResponse(FileRequestResponse& aResponse) override;
+};
+
+class GetFileOp final : public GetMetadataOp {
+  friend class FileHandle;
+
+  PBackgroundParent* mBackgroundParent;
+
+ private:
+  // Only created by FileHandle.
+  GetFileOp(FileHandle* aFileHandle, const FileRequestParams& aParams);
+
+  ~GetFileOp() {}
 
   virtual void GetResponse(FileRequestResponse& aResponse) override;
 };
@@ -1456,6 +1471,10 @@ bool FileHandle::VerifyRequestParams(const FileRequestParams& aParams) const {
       break;
     }
 
+    case FileRequestParams::TFileRequestGetFileParams: {
+      break;
+    }
+
     default:
       MOZ_CRASH("Should never get here!");
   }
@@ -1610,6 +1629,10 @@ PBackgroundFileRequestParent* FileHandle::AllocPBackgroundFileRequestParent(
 
     case FileRequestParams::TFileRequestFlushParams:
       actor = new FlushOp(this, aParams);
+      break;
+
+    case FileRequestParams::TFileRequestGetFileParams:
+      actor = new GetFileOp(this, aParams);
       break;
 
     default:
@@ -2162,6 +2185,34 @@ nsresult FlushOp::DoFileWork(FileHandle* aFileHandle) {
 void FlushOp::GetResponse(FileRequestResponse& aResponse) {
   AssertIsOnOwningThread();
   aResponse = FileRequestFlushResponse();
+}
+
+GetFileOp::GetFileOp(FileHandle* aFileHandle, const FileRequestParams& aParams)
+    : GetMetadataOp(aFileHandle, FileRequestGetMetadataParams(true, true)),
+      mBackgroundParent(aFileHandle->GetBackgroundParent()) {
+  MOZ_ASSERT(aParams.type() == FileRequestParams::TFileRequestGetFileParams);
+  MOZ_ASSERT(mBackgroundParent);
+}
+
+void GetFileOp::GetResponse(FileRequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  RefPtr<BlobImpl> blobImpl = mFileHandle->GetMutableFile()->CreateBlobImpl();
+  MOZ_ASSERT(blobImpl);
+
+  PendingIPCBlobParent* actor =
+      PendingIPCBlobParent::Create(mBackgroundParent, blobImpl);
+  if (NS_WARN_IF(!actor)) {
+    // This can only fail if the child has crashed.
+    aResponse = NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
+    return;
+  }
+
+  FileRequestGetFileResponse response;
+  response.fileParent() = actor;
+  response.metadata() = mMetadata;
+
+  aResponse = response;
 }
 
 }  // namespace dom

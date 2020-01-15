@@ -26,6 +26,7 @@
 #include "mozilla/dom/PGamepadTestChannelParent.h"
 #include "mozilla/dom/MediaTransportParent.h"
 #include "mozilla/dom/MessagePortParent.h"
+#include "mozilla/dom/PendingIPCBlobParent.h"
 #include "mozilla/dom/ServiceWorkerActors.h"
 #include "mozilla/dom/ServiceWorkerManagerParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
@@ -474,6 +475,21 @@ BackgroundParentImpl::AllocPIdleSchedulerParent() {
   AssertIsOnBackgroundThread();
   RefPtr<IdleSchedulerParent> actor = new IdleSchedulerParent();
   return actor.forget();
+}
+
+mozilla::dom::PPendingIPCBlobParent*
+BackgroundParentImpl::AllocPPendingIPCBlobParent(const IPCBlob& aBlob) {
+  MOZ_CRASH("PPendingIPCBlobParent actors should be manually constructed!");
+}
+
+bool BackgroundParentImpl::DeallocPPendingIPCBlobParent(
+    mozilla::dom::PPendingIPCBlobParent* aActor) {
+  AssertIsInMainOrSocketProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  delete aActor;
+  return true;
 }
 
 mozilla::dom::PRemoteWorkerParent*

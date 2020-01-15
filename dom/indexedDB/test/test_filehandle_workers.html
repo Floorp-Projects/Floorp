@@ -71,6 +71,24 @@
     request.onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
 
+    request = mutableFile.getFile();
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    let file = event.target.result;
+
+    let worker2 = new Worker(url);
+    URL.revokeObjectURL(url);
+    try {
+      worker2.postMessage(file);
+      ok(false, "Should have thrown!");
+    }
+    catch (e) {
+      ok(e instanceof DOMException, "Got exception.");
+      is(e.name, "DataCloneError", "Good error.");
+      is(e.code, DOMException.DATA_CLONE_ERR, "Good error code.");
+    }
+
     let objectStore =
       db.transaction("Foo", "readwrite").objectStore("Foo");
 
@@ -108,10 +126,10 @@
 
     url = URL.createObjectURL(new Blob(["(", workerScript.toString(), ")()"]));
 
-    let worker2 = new Worker(url);
+    let worker3 = new Worker(url);
     URL.revokeObjectURL(url);
-    worker2.postMessage(name);
-    worker2.onmessage = grabEventAndContinueHandler;
+    worker3.postMessage(name);
+    worker3.onmessage = grabEventAndContinueHandler;
     event = yield undefined;
 
     is(event.data, "success", "Good response.");
@@ -119,6 +137,7 @@
     todo(false, "Terminate all workers at the end of the test to work around bug 1340941.");
     worker1.terminate();
     worker2.terminate();
+    worker3.terminate();
 
     finishTest();
   }

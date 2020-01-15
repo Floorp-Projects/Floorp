@@ -7,6 +7,7 @@
 #include "ActorsChild.h"
 
 #include "BackgroundChildImpl.h"
+#include "FileSnapshot.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
@@ -31,6 +32,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
+#include "mozilla/dom/PendingIPCBlobChild.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/Encoding.h"
@@ -1206,6 +1208,32 @@ class MOZ_STACK_CLASS FileHandleResultHelper final
     return NS_OK;
   }
 };
+
+MOZ_MUST_USE RefPtr<File> ConvertActorToFile(
+    IDBFileHandle* aFileHandle, const FileRequestGetFileResponse& aResponse) {
+  auto* const actor = static_cast<PendingIPCBlobChild*>(aResponse.fileChild());
+
+  IDBMutableFile* mutableFile = aFileHandle->GetMutableFile();
+  MOZ_ASSERT(mutableFile);
+
+  const FileRequestMetadata& metadata = aResponse.metadata();
+
+  const Maybe<uint64_t>& size = metadata.size();
+  MOZ_ASSERT(size.isSome());
+
+  const Maybe<int64_t>& lastModified = metadata.lastModified();
+  MOZ_ASSERT(lastModified.isSome());
+
+  const RefPtr<BlobImpl> blobImpl = actor->SetPendingInfoAndDeleteActor(
+      mutableFile->Name(), mutableFile->Type(), size.value(),
+      lastModified.value());
+  MOZ_ASSERT(blobImpl);
+
+  const RefPtr<BlobImpl> blobImplSnapshot =
+      new BlobImplSnapshot(blobImpl, static_cast<IDBFileHandle*>(aFileHandle));
+
+  return File::Create(mutableFile->GetOwnerGlobal(), blobImplSnapshot);
+}
 
 void DispatchFileHandleErrorEvent(IDBFileRequest* aFileRequest,
                                   nsresult aErrorCode,
@@ -3931,6 +3959,17 @@ void BackgroundFileRequestChild::HandleResponse(nsresult aResponse) {
   DispatchFileHandleErrorEvent(mFileRequest, aResponse, mFileHandle);
 }
 
+void BackgroundFileRequestChild::HandleResponse(
+    const FileRequestGetFileResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  RefPtr<File> file = ConvertActorToFile(mFileHandle, aResponse);
+
+  FileHandleResultHelper helper(mFileRequest, mFileHandle, file);
+
+  DispatchFileHandleSuccessEvent(&helper);
+}
+
 void BackgroundFileRequestChild::HandleResponse(const nsCString& aResponse) {
   AssertIsOnOwningThread();
 
@@ -3990,6 +4029,10 @@ mozilla::ipc::IPCResult BackgroundFileRequestChild::Recv__delete__(
     switch (aResponse.type()) {
       case FileRequestResponse::Tnsresult:
         HandleResponse(aResponse.get_nsresult());
+        break;
+
+      case FileRequestResponse::TFileRequestGetFileResponse:
+        HandleResponse(aResponse.get_FileRequestGetFileResponse());
         break;
 
       case FileRequestResponse::TFileRequestReadResponse:
