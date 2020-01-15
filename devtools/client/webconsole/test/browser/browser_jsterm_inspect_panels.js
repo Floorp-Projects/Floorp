@@ -21,6 +21,17 @@ async function testInspectingElement(hud) {
   execute(hud, "inspect(document.querySelector('p'))");
   await waitForSelectedElementInInspector(hud.toolbox, "p");
   ok(true, "inspected element is now selected in the inspector");
+
+  info(
+    "Test that inspect selects the node in the inspector in the split console as well"
+  );
+  const onSplitConsoleReady = hud.toolbox.once("split-console");
+  EventUtils.sendKey("ESCAPE", hud.toolbox.win);
+  await onSplitConsoleReady;
+
+  execute(hud, "inspect(document.querySelector('body'))");
+  await waitForSelectedElementInInspector(hud.toolbox, "body");
+  ok(true, "the inspected element is selected in the inspector");
 }
 
 async function testInspectingFunction(hud) {
