@@ -60,6 +60,7 @@
 #  include "prtime.h"
 
 #  include <algorithm>
+#  include <cmath>
 #  include <errno.h>
 #  include <fstream>
 #  include <ostream>
@@ -2420,35 +2421,31 @@ void profiler_init(void* aStackTop) {
 
     const char* startupDuration = getenv("MOZ_BASE_PROFILER_STARTUP_DURATION");
     if (startupDuration && startupDuration[0] != '\0') {
-      // TODO implement if needed
-      MOZ_CRASH("MOZ_BASE_PROFILER_STARTUP_DURATION unsupported");
-      // errno = 0;
-      // double durationVal = PR_strtod(startupDuration, nullptr);
-      // if (errno == 0 && durationVal >= 0.0) {
-      //   if (durationVal > 0.0) {
-      //     duration = Some(durationVal);
-      //   }
-      //   LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION = %f", durationVal);
-      // } else {
-      //   LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION not a valid float: %s",
-      //       startupDuration);
-      //   PrintUsageThenExit(1);
-      // }
+      errno = 0;
+      double durationVal = strtod(startupDuration, nullptr);
+      if (errno == 0 && durationVal >= 0.0 && durationVal < HUGE_VAL) {
+        if (durationVal > 0.0) {
+          duration = Some(durationVal);
+        }
+        LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION = %f", durationVal);
+      } else {
+        LOG("- MOZ_BASE_PROFILER_STARTUP_DURATION not a valid float: %s",
+            startupDuration);
+        PrintUsageThenExit(1);
+      }
     }
 
     const char* startupInterval = getenv("MOZ_BASE_PROFILER_STARTUP_INTERVAL");
     if (startupInterval && startupInterval[0] != '\0') {
-      // TODO implement if needed
-      MOZ_CRASH("MOZ_BASE_PROFILER_STARTUP_INTERVAL unsupported");
-      // errno = 0;
-      // interval = PR_strtod(startupInterval, nullptr);
-      // if (errno == 0 && interval > 0.0 && interval <= 1000.0) {
-      //   LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL = %f", interval);
-      // } else {
-      //   LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL not a valid float: %s",
-      //       startupInterval);
-      //   PrintUsageThenExit(1);
-      // }
+      errno = 0;
+      interval = strtod(startupInterval, nullptr);
+      if (errno == 0 && interval > 0.0 && interval <= 1000.0) {
+        LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL = %f", interval);
+      } else {
+        LOG("- MOZ_BASE_PROFILER_STARTUP_INTERVAL not a valid float: %s",
+            startupInterval);
+        PrintUsageThenExit(1);
+      }
     }
 
     features |= StartupExtraDefaultFeatures() & AvailableFeatures();
