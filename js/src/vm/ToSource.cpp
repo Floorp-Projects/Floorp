@@ -15,6 +15,7 @@
 #include "jsfriendapi.h"  // CheckRecursionLimit
 
 #include "builtin/Array.h"   // ArrayToSource
+#include "builtin/Boolean.h"  // BooleanToString
 #include "builtin/Object.h"  // ObjectToSource
 #include "gc/Allocator.h"    // CanGC
 #include "js/Symbol.h"       // SymbolCode, JS::WellKnownSymbolLimit
@@ -88,62 +89,94 @@ JSString* js::ValueToSource(JSContext* cx, HandleValue v) {
   }
   cx->check(v);
 
-  if (v.isUndefined()) {
-    return cx->names().void0;
-  }
-  if (v.isString()) {
-    return StringToSource(cx, v.toString());
-  }
-  if (v.isSymbol()) {
-    return SymbolToSource(cx, v.toSymbol());
-  }
-  if (v.isPrimitive()) {
-    /* Special case to preserve negative zero, _contra_ toString. */
-    if (v.isDouble() && IsNegativeZero(v.toDouble())) {
-      static const Latin1Char negativeZero[] = {'-', '0'};
+  switch (v.type()) {
+    case JS::ValueType::Undefined:
+      return cx->names().void0;
 
-      return NewStringCopyN<CanGC>(cx, negativeZero,
-                                   mozilla::ArrayLength(negativeZero));
+    case JS::ValueType::String:
+      return StringToSource(cx, v.toString());
+
+    case JS::ValueType::Symbol:
+      return SymbolToSource(cx, v.toSymbol());
+
+    case JS::ValueType::Null:
+      return cx->names().null;
+
+    case JS::ValueType::Boolean:
+      return BooleanToString(cx, v.toBoolean());
+
+    case JS::ValueType::Double:
+      /* Special case to preserve negative zero, _contra_ toString. */
+      if (IsNegativeZero(v.toDouble())) {
+        static const Latin1Char negativeZero[] = {'-', '0'};
+
+        return NewStringCopyN<CanGC>(cx, negativeZero,
+                                     mozilla::ArrayLength(negativeZero));
+      }
+      [[fallthrough]];
+    case JS::ValueType::Int32:
+      return ToString<CanGC>(cx, v);
+
+    case JS::ValueType::BigInt: {
+      RootedString str(cx, ToString<CanGC>(cx, v));
+      if (!str) {
+        return nullptr;
+      }
+
+      RootedString n(cx, cx->staticStrings().getUnit('n'));
+
+      return ConcatStrings<CanGC>(cx, str, n);
     }
-    return ToString<CanGC>(cx, v);
-  }
 
-  RootedValue fval(cx);
-  RootedObject obj(cx, &v.toObject());
-  if (!GetProperty(cx, obj, obj, cx->names().toSource, &fval)) {
-    return nullptr;
-  }
-  if (IsCallable(fval)) {
-    RootedValue v(cx);
-    if (!js::Call(cx, fval, obj, &v)) {
+    case JS::ValueType::Object: {
+      RootedValue fval(cx);
+      RootedObject obj(cx, &v.toObject());
+      if (!GetProperty(cx, obj, obj, cx->names().toSource, &fval)) {
+        return nullptr;
+      }
+      if (IsCallable(fval)) {
+        RootedValue v(cx);
+        if (!js::Call(cx, fval, obj, &v)) {
+          return nullptr;
+        }
+
+        return ToString<CanGC>(cx, v);
+      }
+
+      if (obj->is<JSFunction>()) {
+        RootedFunction fun(cx, &obj->as<JSFunction>());
+        return FunctionToString(cx, fun, true);
+      }
+
+      if (obj->is<ArrayObject>()) {
+        return ArrayToSource(cx, obj);
+      }
+
+      if (obj->is<ErrorObject>()) {
+        return ErrorToSource(cx, obj);
+      }
+
+      if (obj->is<RegExpObject>()) {
+        FixedInvokeArgs<0> args(cx);
+        RootedValue rval(cx);
+        if (!CallSelfHostedFunction(cx, cx->names().RegExpToString, v, args,
+                                    &rval)) {
+          return nullptr;
+        }
+        return ToString<CanGC>(cx, rval);
+      }
+
+      return ObjectToSource(cx, obj);
+    }
+
+    case JS::ValueType::PrivateGCThing:
+    case JS::ValueType::Magic:
+      MOZ_ASSERT_UNREACHABLE(
+          "internal value types shouldn't leak into places "
+          "wanting source representations");
       return nullptr;
-    }
-
-    return ToString<CanGC>(cx, v);
   }
 
-  if (obj->is<JSFunction>()) {
-    RootedFunction fun(cx, &obj->as<JSFunction>());
-    return FunctionToString(cx, fun, true);
-  }
-
-  if (obj->is<ArrayObject>()) {
-    return ArrayToSource(cx, obj);
-  }
-
-  if (obj->is<ErrorObject>()) {
-    return ErrorToSource(cx, obj);
-  }
-
-  if (obj->is<RegExpObject>()) {
-    FixedInvokeArgs<0> args(cx);
-    RootedValue rval(cx);
-    if (!CallSelfHostedFunction(cx, cx->names().RegExpToString, v, args,
-                                &rval)) {
-      return nullptr;
-    }
-    return ToString<CanGC>(cx, rval);
-  }
-
-  return ObjectToSource(cx, obj);
+  MOZ_ASSERT_UNREACHABLE("shouldn't see an unrecognized value type");
+  return nullptr;
 }
