@@ -10,6 +10,7 @@
     <item android:title="@string/private_browsing" android:checkable="true" android:id="@+id/action_pb"/>
     <item android:title="@string/remote_debugging" android:checkable="true" android:id="@+id/action_remote_debugging"/>
     <item android:title="@string/new_tab" android:id="@+id/action_new_tab"/>
+    <item android:title="@string/install_addon" android:id="@+id/install_addon"/>
     <item android:title="@string/close_tab" android:id="@+id/action_close_tab"/>
     <item android:title="@string/forward" android:id="@+id/action_forward"/>
     <item android:title="@string/reload" android:id="@+id/action_reload"/>
