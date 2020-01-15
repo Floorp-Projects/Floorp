@@ -4465,6 +4465,80 @@ void nsFlexContainerFrame::CreateOrClearFlexContainerInfo() {
   }
 }
 
+void nsFlexContainerFrame::CreateFlexLineAndFlexItemInfo(
+    ComputedFlexContainerInfo& aContainerInfo,
+    const mozilla::LinkedList<FlexLine>& aLines) {
+  for (const FlexLine* line = aLines.getFirst(); line; line = line->getNext()) {
+    ComputedFlexLineInfo* lineInfo = aContainerInfo.mLines.AppendElement();
+    // Most of the remaining lineInfo properties will be filled out at the
+    // end of this function (some will be provided by other functions),
+    // when we have real values. But we still add all the items here, so
+    // we can capture computed data for each item as we proceed.
+    for (const FlexItem* item = line->GetFirstItem(); item;
+         item = item->getNext()) {
+      nsIFrame* frame = item->Frame();
+
+      // The frame may be for an element, or it may be for an
+      // anonymous flex item, e.g. wrapping one or more text nodes.
+      // DevTools wants the content node for the actual child in
+      // the DOM tree, so we descend through anonymous boxes.
+      nsIFrame* targetFrame = GetFirstNonAnonBoxDescendant(frame);
+      nsIContent* content = targetFrame->GetContent();
+
+      // Skip over content that is only whitespace, which might
+      // have been broken off from a text node which is our real
+      // target.
+      while (content && content->TextIsOnlyWhitespace()) {
+        // If content is only whitespace, try the frame sibling.
+        targetFrame = targetFrame->GetNextSibling();
+        if (targetFrame) {
+          content = targetFrame->GetContent();
+        } else {
+          content = nullptr;
+        }
+      }
+
+      ComputedFlexItemInfo* itemInfo = lineInfo->mItems.AppendElement();
+
+      itemInfo->mNode = content;
+
+      // itemInfo->mMainBaseSize and mMainDeltaSize will be filled out
+      // in ResolveFlexibleLengths(). Other measurements will be captured
+      // at the end of this function.
+    }
+  }
+}
+
+void nsFlexContainerFrame::ComputeFlexDirections(
+    ComputedFlexContainerInfo& aContainerInfo,
+    const FlexboxAxisTracker& aAxisTracker) {
+  AxisOrientationType mainAxis = aAxisTracker.GetMainAxis();
+  AxisOrientationType crossAxis = aAxisTracker.GetCrossAxis();
+  if (aAxisTracker.AreAxesInternallyReversed()) {
+    mainAxis = GetReverseAxis(mainAxis);
+    crossAxis = GetReverseAxis(crossAxis);
+  }
+
+  auto ConvertAxisOrientationTypeToAPIEnum =
+      [](AxisOrientationType aAxisOrientation) {
+        switch (aAxisOrientation) {
+          case eAxis_LR:
+            return mozilla::dom::FlexPhysicalDirection::Horizontal_lr;
+          case eAxis_RL:
+            return mozilla::dom::FlexPhysicalDirection::Horizontal_rl;
+          case eAxis_TB:
+            return mozilla::dom::FlexPhysicalDirection::Vertical_tb;
+          default:
+            return mozilla::dom::FlexPhysicalDirection::Vertical_bt;
+        }
+      };
+
+  aContainerInfo.mMainAxisDirection =
+      ConvertAxisOrientationTypeToAPIEnum(mainAxis);
+  aContainerInfo.mCrossAxisDirection =
+      ConvertAxisOrientationTypeToAPIEnum(crossAxis);
+}
+
 nsFlexContainerFrame* nsFlexContainerFrame::GetFlexFrameWithComputedInfo(
     nsIFrame* aFrame) {
   // Prepare a lambda function that we may need to call multiple times.
@@ -4562,20 +4636,6 @@ bool nsFlexContainerFrame::IsUsedFlexBasisContent(
   return aFlexBasis.IsAuto() && aMainSize.IsAuto();
 }
 
-static mozilla::dom::FlexPhysicalDirection ConvertAxisOrientationTypeToAPIEnum(
-    AxisOrientationType aAxisOrientation) {
-  switch (aAxisOrientation) {
-    case eAxis_LR:
-      return mozilla::dom::FlexPhysicalDirection::Horizontal_lr;
-    case eAxis_RL:
-      return mozilla::dom::FlexPhysicalDirection::Horizontal_rl;
-    case eAxis_TB:
-      return mozilla::dom::FlexPhysicalDirection::Vertical_tb;
-    default:
-      return mozilla::dom::FlexPhysicalDirection::Vertical_bt;
-  }
-}
-
 void nsFlexContainerFrame::DoFlexLayout(
     nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
     const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
@@ -4618,59 +4678,8 @@ void nsFlexContainerFrame::DoFlexLayout(
       MOZ_ASSERT(containerInfo->mLines.IsEmpty(), "Shouldn't have lines yet.");
     }
 
-    // Set the axis physical directions.
-    AxisOrientationType mainAxis = aAxisTracker.GetMainAxis();
-    AxisOrientationType crossAxis = aAxisTracker.GetCrossAxis();
-    if (aAxisTracker.AreAxesInternallyReversed()) {
-      mainAxis = GetReverseAxis(mainAxis);
-      crossAxis = GetReverseAxis(crossAxis);
-    }
-
-    containerInfo->mMainAxisDirection =
-        ConvertAxisOrientationTypeToAPIEnum(mainAxis);
-    containerInfo->mCrossAxisDirection =
-        ConvertAxisOrientationTypeToAPIEnum(crossAxis);
-
-    for (const FlexLine* line = lines.getFirst(); line;
-         line = line->getNext()) {
-      ComputedFlexLineInfo* lineInfo = containerInfo->mLines.AppendElement();
-      // Most of the remaining lineInfo properties will be filled out at the
-      // end of this function (some will be provided by other functions),
-      // when we have real values. But we still add all the items here, so
-      // we can capture computed data for each item as we proceed.
-      for (const FlexItem* item = line->GetFirstItem(); item;
-           item = item->getNext()) {
-        nsIFrame* frame = item->Frame();
-
-        // The frame may be for an element, or it may be for an
-        // anonymous flex item, e.g. wrapping one or more text nodes.
-        // DevTools wants the content node for the actual child in
-        // the DOM tree, so we descend through anonymous boxes.
-        nsIFrame* targetFrame = GetFirstNonAnonBoxDescendant(frame);
-        nsIContent* content = targetFrame->GetContent();
-
-        // Skip over content that is only whitespace, which might
-        // have been broken off from a text node which is our real
-        // target.
-        while (content && content->TextIsOnlyWhitespace()) {
-          // If content is only whitespace, try the frame sibling.
-          targetFrame = targetFrame->GetNextSibling();
-          if (targetFrame) {
-            content = targetFrame->GetContent();
-          } else {
-            content = nullptr;
-          }
-        }
-
-        ComputedFlexItemInfo* itemInfo = lineInfo->mItems.AppendElement();
-
-        itemInfo->mNode = content;
-
-        // itemInfo->mMainBaseSize and mMainDeltaSize will be filled out
-        // in ResolveFlexibleLengths(). Other measurements will be captured
-        // at the end of this function.
-      }
-    }
+    CreateFlexLineAndFlexItemInfo(*containerInfo, lines);
+    ComputeFlexDirections(*containerInfo, aAxisTracker);
   }
 
   aContentBoxMainSize = ResolveFlexContainerMainSize(
