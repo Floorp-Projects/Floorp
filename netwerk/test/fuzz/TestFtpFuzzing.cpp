@@ -10,6 +10,7 @@
 #include "nsNetUtil.h"
 #include "NullPrincipal.h"
 #include "nsCycleCollector.h"
+#include "nsSandboxFlags.h"
 
 #include "nsFtpProtocolHandler.h"
 
@@ -67,8 +68,8 @@ static int FuzzingRunNetworkFtp(const uint8_t* data, size_t size) {
                 nsIRequest::LOAD_FRESH_CONNECTION |
                 nsIChannel::LOAD_INITIAL_DOCUMENT_URI;
     nsSecurityFlags secFlags;
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
-               nsILoadInfo::SEC_SANDBOXED;
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+    uint32_t sandboxFlags = SANDBOXED_ORIGIN;
     nsCOMPtr<nsIChannel> channel;
     rv = NS_NewChannel(getter_AddRefs(channel), url,
                        nsContentUtils::GetSystemPrincipal(), secFlags,
@@ -78,8 +79,8 @@ static int FuzzingRunNetworkFtp(const uint8_t* data, size_t size) {
                        nullptr,    // loadGroup
                        nullptr,    // aCallbacks
                        loadFlags,  // aLoadFlags
-                       nullptr     // aIoService
-    );
+                       nullptr,    // aIoService
+                       sandboxFlags);
 
     if (rv != NS_OK) {
       MOZ_CRASH("Call to NS_NewChannel failed.");

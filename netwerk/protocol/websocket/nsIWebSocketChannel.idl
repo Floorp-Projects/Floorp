@@ -102,7 +102,8 @@ interface nsIWebSocketChannel : nsISupports
                                             in nsIPrincipal aTriggeringPrincipal,
                                             in nsICookieSettings aCookieSettings,
                                             in unsigned long aSecurityFlags,
-                                            in unsigned long aContentPolicyType);
+                                            in unsigned long aContentPolicyType,
+                                            in unsigned long aSandboxFlags);
 
      /**
       * Similar to the previous one but without nsICookieSettings.
