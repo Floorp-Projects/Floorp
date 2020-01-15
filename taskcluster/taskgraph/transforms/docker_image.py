@@ -8,6 +8,7 @@ import os
 import re
 
 from collections import deque
+from six import text_type
 import taskgraph
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import _run_task_suffix
@@ -31,27 +32,27 @@ transforms = TransformSequence()
 
 docker_image_schema = Schema({
     # Name of the docker image.
-    Required('name'): basestring,
+    Required('name'): text_type,
 
     # Name of the parent docker image.
-    Optional('parent'): basestring,
+    Optional('parent'): text_type,
 
     # Treeherder symbol.
-    Required('symbol'): basestring,
+    Required('symbol'): text_type,
 
     # relative path (from config.path) to the file the docker image was defined
     # in.
-    Optional('job-from'): basestring,
+    Optional('job-from'): text_type,
 
     # Arguments to use for the Dockerfile.
-    Optional('args'): {basestring: basestring},
+    Optional('args'): {text_type: text_type},
 
     # Name of the docker image definition under taskcluster/docker, when
     # different from the docker image name.
-    Optional('definition'): basestring,
+    Optional('definition'): text_type,
 
     # List of package tasks this docker image depends on.
-    Optional('packages'): [basestring],
+    Optional('packages'): [text_type],
 
     Optional(
         "index",

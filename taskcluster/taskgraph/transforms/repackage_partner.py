@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 
+from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -37,13 +38,13 @@ PACKAGE_FORMATS['installer-stub']['args'].extend(["--package-name", "{package-na
 
 packaging_description_schema = schema.extend({
     # depname is used in taskref's to identify the taskID of the signed things
-    Required('depname', default='build'): basestring,
+    Required('depname', default='build'): text_type,
 
     # unique label to describe this repackaging task
-    Optional('label'): basestring,
+    Optional('label'): text_type,
 
     # Routes specific to this task, if defined
-    Optional('routes'): [basestring],
+    Optional('routes'): [text_type],
 
     # passed through directly to the job description
     Optional('extra'): task_description_schema['extra'],
@@ -52,16 +53,16 @@ packaging_description_schema = schema.extend({
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
 
-    Required('package-formats'): _by_platform([basestring]),
+    Required('package-formats'): _by_platform([text_type]),
 
     # All l10n jobs use mozharness
     Required('mozharness'): {
         # Config files passed to the mozharness script
-        Required('config'): _by_platform([basestring]),
+        Required('config'): _by_platform([text_type]),
 
         # Additional paths to look for mozharness configs in. These should be
         # relative to the base of the source checkout
-        Optional('config-paths'): [basestring],
+        Optional('config-paths'): [text_type],
 
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
