@@ -979,10 +979,6 @@ input[type=range]::-moz-range-thumb {
 
 input[type="number"] {
   -moz-appearance: number-input;
-  /* Has to revert some properties applied by the generic input rule. */
-  inline-size: 20ch; /* It'd be nice if this matched the default inline-size
-                        of <input type=text>, but that's not easy to achieve
-                        due to platform differences. */
 }
 
 input[type=number]::-moz-number-wrapper {
