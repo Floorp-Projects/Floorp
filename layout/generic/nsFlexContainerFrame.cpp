@@ -4470,8 +4470,8 @@ void nsFlexContainerFrame::CreateFlexLineAndFlexItemInfo(
     const mozilla::LinkedList<FlexLine>& aLines) {
   for (const FlexLine* line = aLines.getFirst(); line; line = line->getNext()) {
     ComputedFlexLineInfo* lineInfo = aContainerInfo.mLines.AppendElement();
-    // Most of the remaining lineInfo properties will be filled out at the
-    // end of this function (some will be provided by other functions),
+    // Most of the remaining lineInfo properties will be filled out in
+    // UpdateFlexLineAndItemInfo (some will be provided by other functions),
     // when we have real values. But we still add all the items here, so
     // we can capture computed data for each item as we proceed.
     for (const FlexItem* item = line->GetFirstItem(); item;
@@ -4503,8 +4503,8 @@ void nsFlexContainerFrame::CreateFlexLineAndFlexItemInfo(
       itemInfo->mNode = content;
 
       // itemInfo->mMainBaseSize and mMainDeltaSize will be filled out
-      // in ResolveFlexibleLengths(). Other measurements will be captured
-      // at the end of this function.
+      // in ResolveFlexibleLengths(). Other measurements will be captured in
+      // UpdateFlexLineAndItemInfo.
     }
   }
 }
@@ -4558,6 +4558,31 @@ void nsFlexContainerFrame::UpdateClampState(
               : (item->WasMaxClamped()
                      ? mozilla::dom::FlexItemClampState::Clamped_to_max
                      : mozilla::dom::FlexItemClampState::Unclamped);
+    }
+  }
+}
+
+void nsFlexContainerFrame::UpdateFlexLineAndItemInfo(
+    ComputedFlexContainerInfo& aContainerInfo,
+    const mozilla::LinkedList<FlexLine>& aLines) {
+  uint32_t lineIndex = 0;
+  for (const FlexLine* line = aLines.getFirst(); line;
+       line = line->getNext(), ++lineIndex) {
+    ComputedFlexLineInfo& lineInfo = aContainerInfo.mLines[lineIndex];
+
+    lineInfo.mCrossSize = line->GetLineCrossSize();
+    lineInfo.mFirstBaselineOffset = line->GetFirstBaselineOffset();
+    lineInfo.mLastBaselineOffset = line->GetLastBaselineOffset();
+
+    uint32_t itemIndex = 0;
+    for (const FlexItem* item = line->GetFirstItem(); item;
+         item = item->getNext(), ++itemIndex) {
+      ComputedFlexItemInfo& itemInfo = lineInfo.mItems[itemIndex];
+      itemInfo.mFrameRect = item->Frame()->GetRect();
+      itemInfo.mMainMinSize = item->GetMainMinSize();
+      itemInfo.mMainMaxSize = item->GetMainMaxSize();
+      itemInfo.mCrossMinSize = item->GetCrossMinSize();
+      itemInfo.mCrossMaxSize = item->GetCrossMaxSize();
     }
   }
 }
@@ -5092,26 +5117,7 @@ void nsFlexContainerFrame::DoFlexLayout(
 
   // Finally update our line and item measurements in our containerInfo.
   if (MOZ_UNLIKELY(containerInfo)) {
-    lineIndex = 0;
-    for (const FlexLine* line = lines.getFirst(); line;
-         line = line->getNext(), ++lineIndex) {
-      ComputedFlexLineInfo& lineInfo = containerInfo->mLines[lineIndex];
-
-      lineInfo.mCrossSize = line->GetLineCrossSize();
-      lineInfo.mFirstBaselineOffset = line->GetFirstBaselineOffset();
-      lineInfo.mLastBaselineOffset = line->GetLastBaselineOffset();
-
-      uint32_t itemIndex = 0;
-      for (const FlexItem* item = line->GetFirstItem(); item;
-           item = item->getNext(), ++itemIndex) {
-        ComputedFlexItemInfo& itemInfo = lineInfo.mItems[itemIndex];
-        itemInfo.mFrameRect = item->Frame()->GetRect();
-        itemInfo.mMainMinSize = item->GetMainMinSize();
-        itemInfo.mMainMaxSize = item->GetMainMaxSize();
-        itemInfo.mCrossMinSize = item->GetCrossMinSize();
-        itemInfo.mCrossMaxSize = item->GetCrossMaxSize();
-      }
-    }
+    UpdateFlexLineAndItemInfo(*containerInfo, lines);
   }
 }
 
