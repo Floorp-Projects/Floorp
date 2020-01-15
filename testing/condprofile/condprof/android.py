@@ -59,7 +59,15 @@ class AndroidDevice:
     def get_logcat(self):
         if not self.device:
             return None
-        return self.device.get_logcat()
+        # we don't want to have ADBCommand dump the command
+        # in the debug stream so we reduce its verbosity here
+        # temporarely
+        old_verbose = self.device._verbose
+        self.device._verbose = False
+        try:
+            return self.device.get_logcat()
+        finally:
+            self.device._verbose = old_verbose
 
     def prepare(self, profile, logfile):
         self._set_adb_logger(logfile)
@@ -142,7 +150,11 @@ class AndroidDevice:
 
     def stop_browser(self):
         LOG("Stopping %s" % self.app_name)
-        self.device.stop_application(self.app_name, root=True)
+        try:
+            self.device.stop_application(self.app_name, root=True)
+        except ADBError:
+            LOG("Could not stop the application using force-stop")
+
         time.sleep(5)
         if self.device.process_exist(self.app_name):
             LOG("%s still running, trying SIGKILL" % self.app_name)
@@ -189,7 +201,6 @@ class AndroidGeckodriver(Geckodriver):
         LOG("Running Marionette on port 2828")
         pargs = [
             self.binary,
-            "-vv",
             "--log",
             "trace",
             "--port",
@@ -218,22 +229,20 @@ class AndroidEnv(BaseEnv):
         return "%s-%s" % (self.device_name, app)
 
     def dump_logs(self):
+        LOG("Dumping Android logs")
         try:
             logcat = self.device.get_logcat()
-        # ValueError will cover all cases of Unicode encode/decode errors
-        except (ADBError, ValueError):
-            ERROR("logcat call failure")
-            return
-
-        if logcat:
-            # local path, not using posixpath
-            logfile = os.path.join(self.archive, "logcat.log")
-            LOG("Writing logcat at %s" % logfile)
-            with open(logfile, "wb") as f:
-                for line in logcat:
-                    f.write(line.encode("utf8") + b"\n")
-        else:
-            LOG("logcat came back empty")
+            if logcat:
+                # local path, not using posixpath
+                logfile = os.path.join(self.archive, "logcat.log")
+                LOG("Writing logcat at %s" % logfile)
+                with open(logfile, "wb") as f:
+                    for line in logcat:
+                        f.write(line.encode("utf8", errors="replace") + b"\n")
+            else:
+                LOG("logcat came back empty")
+        except Exception:
+            ERROR("Could not extract the logcat")
 
     @contextlib.contextmanager
     def get_browser(self):

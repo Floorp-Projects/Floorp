@@ -36,6 +36,9 @@ from condprof.customization import get_customization
 from condprof.metadata import Metadata
 
 
+START, INIT_GECKODRIVER, START_SESSION, START_SCENARIO = range(4)
+
+
 class ProfileCreator:
     def __init__(self, scenario, customization, archive, changelog, force_new, env):
         self.env = env
@@ -117,21 +120,33 @@ class ProfileCreator:
         self.env.prepare(logfile=self._log_filename("adb"))
         geckodriver_logs = self._log_filename("geckodriver")
         LOG("Writing geckodriver logs in %s" % geckodriver_logs)
+        step = START
         try:
             firefox_instance = Firefox(**self.env.get_browser_args(headless))
+            step = INIT_GECKODRIVER
             with open(geckodriver_logs, "w") as glog:
-                async with get_session(
-                    self.env.get_geckodriver(log_file=glog), firefox_instance
-                ) as session:
+                geckodriver = self.env.get_geckodriver(log_file=glog)
+                step = START_SESSION
+                async with get_session(geckodriver, firefox_instance) as session:
+                    step = START_SCENARIO
                     self.env.check_session(session)
                     LOG("Running the %s scenario" % scenario)
                     metadata.update(await scenario_func(session, options))
                     LOG("%s scenario done." % scenario)
-
         except Exception:
             ERROR("%s scenario broke!" % scenario)
+            if step == START:
+                LOG("Could not initialize the browser")
+            elif step == INIT_GECKODRIVER:
+                LOG("Could not initialize Geckodriver")
+            elif step == START_SESSION:
+                LOG("Could not start the session, check %s first" % geckodriver_logs)
+            else:
+                LOG("Could not run the scenario, probably a faulty scenario")
+            raise
+        finally:
+            self.env.stop_browser()
 
-        self.env.stop_browser()
         self.env.collect_profile()
 
         # writing metadata

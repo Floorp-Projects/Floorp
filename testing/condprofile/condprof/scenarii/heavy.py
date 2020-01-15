@@ -38,7 +38,10 @@ _build_url_list()
 async def heavy(session, options):
     metadata = {}
     max = options.get("max_urls", 150)
-
+    # see Bug 1608604 - on GV we get OOM killed if we do too much...
+    platform = options.get("platform", "")
+    if "gecko" in platform:
+        max = 30
     tabs = TabSwitcher(session, options)
     await tabs.create_windows()
     visited = 0
