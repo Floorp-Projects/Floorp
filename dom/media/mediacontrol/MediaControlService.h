@@ -37,16 +37,16 @@ class MediaControlService final : public nsIObserver {
   static RefPtr<MediaControlService> GetService();
 
   MediaController* GetOrCreateControllerById(uint64_t aId) const;
-  MediaController* GetControllerById(uint64_t aId) const;
+  MediaController* GetActiveControllerById(uint64_t aId) const;
 
   AudioFocusManager& GetAudioFocusManager() { return mAudioFocusManager; }
   MediaControlKeysEventSource* GetMediaControlKeysEventSource() {
     return mMediaControlKeysManager;
   }
 
-  void AddMediaController(MediaController* aController);
-  void RemoveMediaController(MediaController* aController);
-  uint64_t GetControllersNum() const;
+  void RegisterActiveMediaController(MediaController* aController);
+  void UnregisterActiveMediaController(MediaController* aController);
+  uint64_t GetActiveControllersNum() const;
 
   // The main controller is the controller which can receive the media control
   // key events and would show its metadata to virtual controller interface.

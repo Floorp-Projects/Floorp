@@ -53,7 +53,7 @@ void AudioFocusManager::HandleAudioCompetition(uint64_t aId) {
       LOG("Controller %" PRId64 " loses audio focus in audio competitition",
           controllerId);
       RefPtr<MediaController> controller =
-          mService->GetControllerById(controllerId);
+          mService->GetActiveControllerById(controllerId);
       MOZ_ASSERT(controller);
       controller->Stop();
     }

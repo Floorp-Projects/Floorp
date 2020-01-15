@@ -99,37 +99,40 @@ void MediaControlService::Shutdown() {
 
 MediaController* MediaControlService::GetOrCreateControllerById(
     uint64_t aId) const {
-  MediaController* controller = GetControllerById(aId);
+  MediaController* controller = GetActiveControllerById(aId);
   if (!controller) {
     controller = new MediaController(aId);
   }
   return controller;
 }
 
-MediaController* MediaControlService::GetControllerById(uint64_t aId) const {
+MediaController* MediaControlService::GetActiveControllerById(
+    uint64_t aId) const {
   MOZ_DIAGNOSTIC_ASSERT(mControllerManager);
   return mControllerManager->GetControllerById(aId);
 }
 
-void MediaControlService::AddMediaController(MediaController* aController) {
+void MediaControlService::RegisterActiveMediaController(
+    MediaController* aController) {
   MOZ_DIAGNOSTIC_ASSERT(mControllerManager,
-                        "Add controller before initializing service");
+                        "Register controller before initializing service");
   mControllerManager->AddController(aController);
-  LOG("Add media controller %" PRId64 ", currentNum=%" PRId64,
-      aController->Id(), GetControllersNum());
-  mMediaControllerAmountChangedEvent.Notify(GetControllersNum());
+  LOG("Register media controller %" PRId64 ", currentNum=%" PRId64,
+      aController->Id(), GetActiveControllersNum());
+  mMediaControllerAmountChangedEvent.Notify(GetActiveControllersNum());
 }
 
-void MediaControlService::RemoveMediaController(MediaController* aController) {
+void MediaControlService::UnregisterActiveMediaController(
+    MediaController* aController) {
   MOZ_DIAGNOSTIC_ASSERT(mControllerManager,
-                        "Remove controller before initializing service");
+                        "Unregister controller before initializing service");
   mControllerManager->RemoveController(aController);
-  LOG("Remove media controller %" PRId64 ", currentNum=%" PRId64,
-      aController->Id(), GetControllersNum());
-  mMediaControllerAmountChangedEvent.Notify(GetControllersNum());
+  LOG("Unregister media controller %" PRId64 ", currentNum=%" PRId64,
+      aController->Id(), GetActiveControllersNum());
+  mMediaControllerAmountChangedEvent.Notify(GetActiveControllersNum());
 }
 
-uint64_t MediaControlService::GetControllersNum() const {
+uint64_t MediaControlService::GetActiveControllersNum() const {
   MOZ_DIAGNOSTIC_ASSERT(mControllerManager);
   return mControllerManager->GetControllersNum();
 }

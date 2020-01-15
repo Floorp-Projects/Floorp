@@ -141,13 +141,13 @@ void MediaController::DecreasePlayingControlledMediaNum() {
 void MediaController::Activate() {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(service);
-  service->AddMediaController(this);
+  service->RegisterActiveMediaController(this);
 }
 
 void MediaController::Deactivate() {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   MOZ_ASSERT(service);
-  service->RemoveMediaController(this);
+  service->UnregisterActiveMediaController(this);
   service->GetAudioFocusManager().RevokeAudioFocus(Id());
 }
 

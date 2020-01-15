@@ -137,7 +137,7 @@ void ContentMediaController::NotifyAudibleStateChanged(
     // Currently this only happen when we disable e10s, otherwise all controlled
     // media would be run in the content process.
     RefPtr<MediaController> controller =
-        MediaControlService::GetService()->GetControllerById(bc->Id());
+        MediaControlService::GetService()->GetActiveControllerById(bc->Id());
     if (controller) {
       controller->NotifyMediaAudibleChanged(aAudible);
     }
