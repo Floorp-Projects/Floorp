@@ -33,10 +33,14 @@
           We inherited this entry (${applicationId}.App) from Fennec. We need to keep this as our
           main launcher to avoid launcher icons on the home screen disappearing for all our users
           on a Fennec build.
+
+          !!HERE BE DRAGONS!!
+          We need the targetActivity to be IntentReceiverActivity so that we can check if we have
+          a migration in progress. If not, the HomeActivity is invoked.
         -->
         <activity-alias
             android:name="${applicationId}.App"
-            android:targetActivity=".HomeActivity">
+            android:targetActivity=".IntentReceiverActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -96,7 +100,7 @@
             android:taskAffinity=""
             android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
 
-        <activity android:name=".IntentReceiverActivity">
+        <activity android:name=".IntentReceiverActivity" android:theme="@style/Theme.Transparent">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -160,6 +164,12 @@
                 android:name="com.android.systemui.action_assist_icon"
                 android:resource="@mipmap/ic_launcher" />
 
+        </activity>
+
+        <activity
+                android:name=".migration.MigrationProgressActivity"
+                android:launchMode="singleInstance"
+                android:exported="false">
         </activity>
 
         <activity android:name=".widget.VoiceSearchActivity" />

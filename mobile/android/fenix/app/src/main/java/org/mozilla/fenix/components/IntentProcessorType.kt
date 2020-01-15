@@ -7,7 +7,7 @@ package org.mozilla.fenix.components
 import android.content.Intent
 import mozilla.components.feature.intent.processing.IntentProcessor
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.MigrationProgressActivity
+import org.mozilla.fenix.migration.MigrationProgressActivity
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 
 enum class IntentProcessorType {

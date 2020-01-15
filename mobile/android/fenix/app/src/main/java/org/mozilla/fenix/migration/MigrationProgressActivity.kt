@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix
+package org.mozilla.fenix.migration
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -24,6 +24,9 @@ import mozilla.components.support.migration.Migration.Settings
 import mozilla.components.support.migration.MigrationResults
 import mozilla.components.support.migration.state.MigrationProgress
 import mozilla.components.support.migration.state.MigrationStore
+import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.IntentReceiverActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 
 class MigrationProgressActivity : AbstractMigrationProgressActivity() {
@@ -31,9 +34,9 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
     override val store: MigrationStore by lazy { components.migrationStore }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_migration)
         init()
-        super.onCreate(savedInstanceState)
     }
 
     fun init() {
@@ -57,16 +60,6 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
                 R.string.migration_updating_app_button_text,
                 getString(R.string.app_name)
             )
-        }
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) {
-            // Enables sticky immersive mode.
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_FULLSCREEN)
         }
     }
 

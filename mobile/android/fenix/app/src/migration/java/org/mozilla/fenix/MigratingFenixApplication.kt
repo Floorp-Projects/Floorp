@@ -5,10 +5,8 @@
 package org.mozilla.fenix
 
 import android.content.Context
-import android.content.Intent
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.migration.FennecMigrator
-import mozilla.components.support.migration.state.MigrationStore
 
 /**
  * An application class which knows how to migrate Fennec data.
@@ -28,13 +26,11 @@ class MigratingFenixApplication : FenixApplication() {
             .build()
     }
 
-    val migrationStore by lazy { MigrationStore() }
-
     val migrationPushSubscriber by lazy {
         MigrationPushSubscriber(
             this,
             components.backgroundServices.pushService,
-            migrationStore
+            components.migrationStore
         )
     }
 
@@ -47,11 +43,7 @@ class MigratingFenixApplication : FenixApplication() {
 
         // The rest of the migrations can happen now.
         migrationPushSubscriber.start()
-        migrator.startMigrationIfNeeded(migrationStore, MigrationService::class.java)
-
-        // Start migration UI
-        val intent = Intent(this, MigrationProgressActivity::class.java)
-        startActivity(intent)
+        migrator.startMigrationIfNeeded(components.migrationStore, MigrationService::class.java)
     }
 
     private fun migrateBlocking() {
@@ -70,8 +62,4 @@ class MigratingFenixApplication : FenixApplication() {
 
 fun Context.getMigratorFromApplication(): FennecMigrator {
     return (applicationContext as MigratingFenixApplication).migrator
-}
-
-fun Context.getMigrationStoreFromApplication(): MigrationStore {
-    return (applicationContext as MigratingFenixApplication).migrationStore
 }
