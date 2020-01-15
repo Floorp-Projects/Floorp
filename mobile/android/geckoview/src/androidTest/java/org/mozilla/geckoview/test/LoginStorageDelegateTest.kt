@@ -303,4 +303,124 @@ class LoginStorageDelegateTest : BaseSessionTest() {
 
         sessionRule.waitForResult(saveHandled)
     }
+
+    @Test
+    fun loginUpdateAccept() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                // Enable login management since it's disabled in automation.
+                "signon.rememberSignons" to true,
+                "signon.autofillForms.http" to true,
+                "signon.userInputRequiredToCapture.enabled" to false))
+
+        val runtime = sessionRule.runtime;
+        val register = { delegate: LoginStorage.Delegate ->
+            runtime.loginStorageDelegate = delegate
+        }
+        val unregister = { _: LoginStorage.Delegate ->
+            runtime.loginStorageDelegate = null
+        }
+
+        val saveHandled = GeckoResult<Void>()
+        val saveHandled2 = GeckoResult<Void>()
+
+        val user1 = "user1x"
+        val pass1 = "pass1x"
+        val pass2 = "pass1up"
+        val guid = "test-guid"
+        val savedLogins = mutableListOf<LoginEntry>()
+
+        sessionRule.addExternalDelegateUntilTestEnd(
+                LoginStorage.Delegate::class, register, unregister,
+                object : LoginStorage.Delegate {
+            @AssertCalled
+            override fun onLoginFetch(domain: String)
+                    : GeckoResult<Array<LoginEntry>>? {
+                assertThat("Domain should match", domain, equalTo("localhost"))
+
+                return GeckoResult.fromValue(savedLogins.toTypedArray())
+            }
+
+            @AssertCalled(count = 2)
+            override fun onLoginSave(login: LoginEntry) {
+                assertThat(
+                    "Username should match",
+                    login.username,
+                    equalTo(user1))
+
+                assertThat(
+                    "Password should match",
+                    login.password,
+                    equalTo(forEachCall(pass1, pass2)))
+
+                assertThat(
+                    "GUID should match",
+                    login.guid,
+                    equalTo(forEachCall(null, guid)))
+
+                val savedLogin = LoginEntry.Builder()
+                        .guid(guid)
+                        .origin(login.origin)
+                        .formActionOrigin(login.formActionOrigin)
+                        .username(login.username)
+                        .password(login.password)
+                        .build()
+
+                savedLogins.add(savedLogin)
+
+                if (sessionRule.currentCall.counter == 1) {
+                    saveHandled.complete(null)
+                } else if (sessionRule.currentCall.counter == 2) {
+                    saveHandled2.complete(null)
+                }
+            }
+        })
+
+        sessionRule.delegateUntilTestEnd(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 2)
+            override fun onLoginStoragePrompt(
+                    session: GeckoSession,
+                    prompt: LoginStoragePrompt)
+                    : GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Session should not be null", session, notNullValue())
+                assertThat(
+                    "Type should match",
+                    prompt.type,
+                    equalTo(LoginStoragePrompt.Type.SAVE))
+
+                val login = prompt.logins[0]
+
+                assertThat("Login should not be null", login, notNullValue())
+
+                assertThat(
+                    "Username should match",
+                    login.username,
+                    equalTo(user1))
+
+                assertThat(
+                    "Password should match",
+                    login.password,
+                    equalTo(forEachCall(pass1, pass2)))
+
+                return GeckoResult.fromValue(prompt.confirm(login))
+            }
+        })
+
+        // Assign login credentials.
+        mainSession.loadTestPath(FORMS3_HTML_PATH)
+        mainSession.waitForPageStop()
+        mainSession.evaluateJS("document.querySelector('#user1').value = '$user1'")
+        mainSession.evaluateJS("document.querySelector('#pass1').value = '$pass1'")
+        mainSession.evaluateJS("document.querySelector('#form1').submit()")
+
+        sessionRule.waitForResult(saveHandled)
+
+        // Update login credentials.
+        val session2 = sessionRule.createOpenSession()
+        session2.loadTestPath(FORMS3_HTML_PATH)
+        session2.waitForPageStop()
+        session2.evaluateJS("document.querySelector('#pass1').value = '$pass2'")
+        session2.evaluateJS("document.querySelector('#form1').submit()")
+
+        sessionRule.waitForResult(saveHandled2)
+    }
 }
