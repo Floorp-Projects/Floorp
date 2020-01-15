@@ -315,18 +315,14 @@ class AudioNodeEngine {
 
   /**
    * Produce the next block of audio samples, given input samples in the aInput
-   * array.  There is one input sample per active port in aInput, in order.
+   * array.  There is one input sample per port in aInput, in order.
    * This is the multi-input/output version of ProcessBlock.  Only one kind
-   * of ProcessBlock is called on each node, depending on whether the
-   * number of inputs and outputs are both 1 or not.
+   * of ProcessBlock is called on each node.  ProcessBlocksOnPorts() is called
+   * instead of ProcessBlock() if either the number of inputs or the number of
+   * outputs is greater than 1.
    *
-   * aInput is always guaranteed to not contain more input AudioChunks than the
-   * maximum number of inputs for the node.  It is the responsibility of the
-   * overrides of this function to make sure they will only add a maximum number
-   * of AudioChunks to aOutput as advertized by the AudioNode implementation.
-   * An engine may choose to produce fewer inputs than advertizes by the
-   * corresponding AudioNode, in which case it will be interpreted as a channel
-   * of silence.
+   * The numbers of AudioBlocks in aInput and aOutput are always guaranteed to
+   * match the numbers of inputs and outputs for the node.
    */
   virtual void ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                                     Span<const AudioBlock> aInput,
