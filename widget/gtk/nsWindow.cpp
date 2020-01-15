@@ -1333,7 +1333,6 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
   return GTK_WIDGET(parentGtkWindow);
 }
 
-#ifdef DEBUG
 static void NativeMoveResizeWaylandPopupCallback(
     GdkWindow* window, const GdkRectangle* flipped_rect,
     const GdkRectangle* final_rect, gboolean flipped_x, gboolean flipped_y,
@@ -1341,12 +1340,60 @@ static void NativeMoveResizeWaylandPopupCallback(
   LOG(("NativeMoveResizeWaylandPopupCallback [%p] flipped_x %d flipped_y %d\n",
        aWindow, flipped_x, flipped_y));
 
-  LOG(("  flipped_rect x: %d y: %d width: %d height: %d\n", flipped_rect->x,
+  LOG(("  flipped_rect x=%d y=%d width=%d height=%d\n", flipped_rect->x,
        flipped_rect->y, flipped_rect->width, flipped_rect->height));
-  LOG(("  final_rect x: %d y: %d width: %d height: %d\n", final_rect->x,
+  LOG(("  final_rect   x=%d y=%d width=%d height=%d\n", final_rect->x,
        final_rect->y, final_rect->width, final_rect->height));
+  nsWindow* wnd = get_window_for_gdk_window(window);
+
+  wnd->NativeMoveResizeWaylandPopupCB(final_rect, flipped_x, flipped_y);
 }
-#endif
+
+void nsWindow::NativeMoveResizeWaylandPopupCB(const GdkRectangle* aFinalSize,
+                                              bool aFlippedX, bool aFlippedY) {
+  LOG(("  orig mBounds x=%d y=%d width=%d height=%d\n", mBounds.x, mBounds.y,
+       mBounds.width, mBounds.height));
+
+  GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
+  if (!parentGtkWindow) {
+    NS_WARNING("Popup has no parent!");
+    return;
+  }
+
+  // The position of the menu in GTK is relative to it's parent window while
+  // in mBounds we have position relative to toplevel window. We need to check
+  // and update mBounds in the toplevel coordinates.
+  int x_parent, y_parent;
+  gdk_window_get_origin(gtk_widget_get_window(GTK_WIDGET(parentGtkWindow)),
+                        &x_parent, &y_parent);
+
+  LayoutDeviceIntRect newBounds(aFinalSize->x + x_parent,
+                                aFinalSize->y + y_parent, aFinalSize->width,
+                                aFinalSize->height);
+
+  newBounds.Scale(nsWindow::GdkScaleFactor());
+  LOG(("  new mBounds  x=%d y=%d width=%d height=%d\n", newBounds.x,
+       newBounds.y, newBounds.width, newBounds.height));
+
+  bool needsPositionUpdate =
+      (newBounds.x != mBounds.x || newBounds.y != mBounds.y);
+  bool needsSizeUpdate =
+      (newBounds.width != mBounds.width || newBounds.height != mBounds.height);
+
+  if (!needsPositionUpdate && !needsSizeUpdate) {
+    return;
+  }
+
+  if (needsPositionUpdate && needsSizeUpdate) {
+    Resize(newBounds.x, newBounds.y, newBounds.width, newBounds.height, true);
+    NotifyWindowMoved(newBounds.x, newBounds.y);
+  } else if (needsPositionUpdate) {
+    Move(newBounds.x, newBounds.y);
+    NotifyWindowMoved(newBounds.x, newBounds.y);
+  } else {
+    Resize(newBounds.width, newBounds.height, true);
+  }
+}
 
 void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
                                             GdkRectangle* aSize) {
@@ -1392,15 +1439,16 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
     rect.width = aSize->width;
     rect.height = aSize->height;
   }
+  LOG(("  x_parent    %d   y_parent    %d\n", x_parent, y_parent));
+  LOG(("  aPosition x %d   aPosition y %d\n", aPosition->x, aPosition->y));
+  LOG(("  rect.x      %d   rect.y      %d\n", rect.x, rect.y));
 
-#ifdef DEBUG
   if (!g_signal_handler_find(
           gdkWindow, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
           FuncToGpointer(NativeMoveResizeWaylandPopupCallback), this)) {
     g_signal_connect(gdkWindow, "moved-to-rect",
                      G_CALLBACK(NativeMoveResizeWaylandPopupCallback), this);
   }
-#endif
 
   GdkGravity rectAnchor = GDK_GRAVITY_NORTH_WEST;
   GdkGravity menuAnchor = GDK_GRAVITY_NORTH_WEST;
