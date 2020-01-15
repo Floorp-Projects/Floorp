@@ -4299,21 +4299,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   // Check to see if we need to create a computed info structure, to
   // be filled out for use by devtools.
-  if (HasAnyStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES)) {
-    // This state bit will never be cleared. That's acceptable because
-    // it's only set in a Chrome API invoked by devtools, and won't
-    // impact normal browsing.
-
-    // Re-use the ComputedFlexContainerInfo, if it exists.
-    ComputedFlexContainerInfo* info = GetProperty(FlexContainerInfo());
-    if (info) {
-      // We can reuse, as long as we clear out old data.
-      info->mLines.Clear();
-    } else {
-      info = new ComputedFlexContainerInfo();
-      SetProperty(FlexContainerInfo(), info);
-    }
-  }
+  CreateOrClearFlexContainerInfo();
 
   // If we're being fragmented into a constrained BSize, then subtract off
   // borderpadding BStart from that constrained BSize, to get the available
@@ -4457,6 +4443,26 @@ void nsFlexContainerFrame::CalculatePackingSpace(
   // ...but we need to subtract all of it right away, so that we won't
   // hand out any of it to intermediate packing spaces.
   *aPackingSpaceRemaining -= totalEdgePackingSpace;
+}
+
+void nsFlexContainerFrame::CreateOrClearFlexContainerInfo() {
+  if (!HasAnyStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES)) {
+    return;
+  }
+
+  // NS_STATE_FLEX_GENERATE_COMPUTED_VALUES will never be cleared. That's
+  // acceptable because it's only set in a Chrome API invoked by devtools, and
+  // won't impact normal browsing.
+
+  // Re-use the ComputedFlexContainerInfo, if it exists.
+  ComputedFlexContainerInfo* info = GetProperty(FlexContainerInfo());
+  if (info) {
+    // We can reuse, as long as we clear out old data.
+    info->mLines.Clear();
+  } else {
+    info = new ComputedFlexContainerInfo();
+    SetProperty(FlexContainerInfo(), info);
+  }
 }
 
 nsFlexContainerFrame* nsFlexContainerFrame::GetFlexFrameWithComputedInfo(
