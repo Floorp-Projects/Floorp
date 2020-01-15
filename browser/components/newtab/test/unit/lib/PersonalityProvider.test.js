@@ -406,6 +406,41 @@ describe("Personality Provider", () => {
       assert.deepEqual(instance.interestVector, { score: 10 });
     });
   });
+  describe("#dispatchRelevanceScoreDuration", () => {
+    it("should dispatch PERSONALIZATION_V2_ITEM_RELEVANCE_SCORE_DURATION only if initialized", () => {
+      let dispatch = globals.sandbox.stub();
+      instance.dispatch = dispatch;
+
+      instance.initialized = false;
+      instance.dispatchRelevanceScoreDuration(1000);
+
+      assert.notCalled(dispatch);
+
+      instance.initialized = true;
+      instance.dispatchRelevanceScoreDuration(1000);
+
+      assert.calledOnce(dispatch);
+
+      assert.equal(
+        dispatch.firstCall.args[0].data.event,
+        "PERSONALIZATION_V2_ITEM_RELEVANCE_SCORE_DURATION"
+      );
+    });
+  });
+  describe("#setup", () => {
+    it("should setup two sync attachments", () => {
+      sinon.spy(instance, "setupSyncAttachment");
+      instance.setup();
+      assert.calledTwice(instance.setupSyncAttachment);
+    });
+  });
+  describe("#teardown", () => {
+    it("should teardown two sync attachments", () => {
+      sinon.spy(instance, "teardownSyncAttachment");
+      instance.teardown();
+      assert.calledTwice(instance.teardownSyncAttachment);
+    });
+  });
   describe("#fetchHistory", () => {
     it("should return a history object for fetchHistory", async () => {
       const history = await instance.fetchHistory(["requiredColumn"], 1, 1);

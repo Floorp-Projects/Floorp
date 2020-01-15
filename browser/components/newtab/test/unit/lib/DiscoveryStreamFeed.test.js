@@ -971,6 +971,29 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#reset", () => {
+    it("should fire all teardown based functions", async () => {
+      sandbox.stub(global.Services.obs, "removeObserver").returns();
+
+      sandbox.stub(feed, "resetDataPrefs").returns();
+      sandbox.stub(feed, "resetCache").returns(Promise.resolve());
+      sandbox.stub(feed, "resetState").returns();
+
+      feed.affinityProvider = {
+        teardown: sandbox.stub().returns(),
+      };
+      feed.loaded = true;
+
+      await feed.reset();
+
+      assert.calledOnce(feed.resetDataPrefs);
+      assert.calledOnce(feed.resetCache);
+      assert.calledOnce(feed.resetState);
+      assert.calledOnce(feed.affinityProvider.teardown);
+      assert.calledOnce(global.Services.obs.removeObserver);
+    });
+  });
+
   describe("#resetCache", () => {
     it("should set .layout, .feeds .spocs and .affinities to {}", async () => {
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
@@ -2548,6 +2571,27 @@ describe("DiscoveryStreamFeed", () => {
       assert.deepEqual(filtered, [
         { item_score: 0.5, min_score: 0.6, score: 0.5 },
       ]);
+    });
+    it("should fire dispatchRelevanceScoreDuration if available", () => {
+      feed.affinityProvider = {
+        dispatchRelevanceScoreDuration: sandbox.stub().returns(),
+      };
+      feed.scoreItems([]);
+
+      assert.calledOnce(feed.affinityProvider.dispatchRelevanceScoreDuration);
+    });
+    it("should fire PERSONALIZATION_V1_ITEM_RELEVANCE_SCORE_DURATION", () => {
+      feed.affinityProvider = {};
+      sandbox.spy(feed.store, "dispatch");
+      feed.scoreItems([]);
+
+      assert.calledWith(
+        feed.store.dispatch,
+        ac.PerfEvent({
+          event: "PERSONALIZATION_V1_ITEM_RELEVANCE_SCORE_DURATION",
+          value: 0,
+        })
+      );
     });
   });
 
