@@ -15,19 +15,12 @@ $modal-scrollbar-z-index: 1100;
   left: 0;
   width: 100%;
   display: none;
+  z-index: $modal-scrollbar-z-index;
+  overflow: auto;
 
   &.active {
-    display: block;
-    position: absolute;
+    display: flex;
   }
-}
-
-.modal-scroll {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  z-index: $modal-scrollbar-z-index;
 }
 
 .modal-height {
@@ -40,14 +33,14 @@ $modal-scrollbar-z-index: 1100;
   min-width: min-content;
   width: 100%;
   max-width: 960px;
-  position: fixed;
-  top: 15%;
-  left: calc(50% - 480px); // halfway across minus half the width of the modal
+  position: relative;
+  margin: auto;
   background: var(--newtab-modal-color);
   box-shadow: 0 1px 15px 0 $black-30;
   border-radius: 4px;
   display: none;
   z-index: $modal-scrollbar-z-index;
+  overflow: auto;
 
   // modal takes over entire screen
   @media(max-width: 960px) {
@@ -56,16 +49,6 @@ $modal-scrollbar-z-index: 1100;
     left: 0;
     box-shadow: none;
     border-radius: 0;
-  }
-
-  // if modal is short enough, remove the top margin
-  @media(max-height: 730px) {
-    top: 0;
-  }
-
-  // if modal is short enough (but the window is still wide), reduce the top margin
-  @media(max-height: 730px) and (min-width: 1024px) {
-    top: 5%;
   }
 
   &.active {
