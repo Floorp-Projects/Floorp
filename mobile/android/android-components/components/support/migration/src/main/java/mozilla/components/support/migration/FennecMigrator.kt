@@ -546,16 +546,16 @@ class FennecMigrator private constructor(
                 }
             }
 
+            // Submit migration telemetry that we've gathered up to this point. We do this out of
+            // abundance of caution, in case we crash later.
+            Pings.migration.submit()
+
             // Save result of this migration immediately, so that we keep it even if we crash later
             // in the process and do not rerun this migration version.
             migrationStore.setOrUpdate(mapOf(versionedMigration.migration to migrationRun))
 
             results[versionedMigration.migration] = migrationRun
         }
-
-        // At this point, individual migrations have populated the MigrationResultPing, and we can
-        // ask Glean to send it.
-        Pings.migration.submit()
 
         results
     }
