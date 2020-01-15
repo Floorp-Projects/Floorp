@@ -761,21 +761,32 @@ class FennecMigrator private constructor(
 
         if (result is Result.Failure<FxaMigrationResult>) {
             val migrationFailureWrapper = result.throwables.first() as FxaMigrationException
-            val failure = migrationFailureWrapper.failure
-            // Note that 'failure' has been cleared from PII in 'FennecFxaMigration'.
-            MigrationFxa.failureReasonRust.set("$failure")
-            return when (failure) {
+            return when (val failure = migrationFailureWrapper.failure) {
                 is FxaMigrationResult.Failure.CorruptAccountState -> {
                     logger.error("Detected a corrupt account state: $failure")
+                    MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_CORRUPT_ACCOUNT_STATE.code)
                     result
                 }
                 is FxaMigrationResult.Failure.UnsupportedVersions -> {
                     logger.error("Detected unsupported versions: $failure")
+                    MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_UNSUPPORTED_VERSIONS.code)
+                    MigrationFxa.unsupportedAccountVersion.set("${failure.accountVersion}")
+                    MigrationFxa.unsupportedPickleVersion.set("${failure.pickleVersion}")
+                    MigrationFxa.unsupportedStateVersion.set("${failure.stateVersion}")
                     result
                 }
                 is FxaMigrationResult.Failure.FailedToSignIntoAuthenticatedAccount -> {
                     logger.error("Failed to sign-in into an authenticated account")
+                    MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_SIGN_IN_FAILED.code)
                     crashReporter.submitCaughtException(migrationFailureWrapper)
+                    result
+                }
+                is FxaMigrationResult.Failure.CustomServerConfigPresent -> {
+                    logger.error("Custom config present: token=${failure.customTokenServer}," +
+                        "idp=${failure.customIdpServer}")
+                    MigrationFxa.failureReason.add(FailureReasonTelemetryCodes.FXA_CUSTOM_SERVER.code)
+                    MigrationFxa.hasCustomIdpServer.set(failure.customIdpServer)
+                    MigrationFxa.hasCustomTokenServer.set(failure.customTokenServer)
                     result
                 }
             }

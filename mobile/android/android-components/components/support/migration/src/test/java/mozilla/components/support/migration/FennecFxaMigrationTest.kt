@@ -16,6 +16,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONException
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -140,6 +141,48 @@ class FennecFxaMigrationTest {
             assertEquals("252fsvj8932vj32movj97325hjfksdhfjstrg23yurt267r23", captor.value.authInfo.kSync)
             assertEquals("0b3ba79bfxdf32f3of32jowef7987f", captor.value.authInfo.kXCS)
             assertEquals("fjsdkfksf3e8f32f23f832fwf32jf89o327u2843gj23", captor.value.authInfo.sessionToken)
+        }
+    }
+
+    @Test
+    fun `custom token server`() = runBlocking {
+        val fxaPath = File(getTestPath("fxa"), "custom-sync-config-token.json")
+        val accountManager: FxaAccountManager = mock()
+
+        with(FennecFxaMigration.migrate(fxaPath, testContext, accountManager) as Result.Failure) {
+            val unwrapped = this.throwables.first() as FxaMigrationException
+            assertEquals(FxaMigrationResult.Failure.CustomServerConfigPresent::class, unwrapped.failure::class)
+            val unwrappedFailure = unwrapped.failure as FxaMigrationResult.Failure.CustomServerConfigPresent
+            assertFalse(unwrappedFailure.customIdpServer)
+            assertTrue(unwrappedFailure.customTokenServer)
+        }
+    }
+
+    @Test
+    fun `custom idp server`() = runBlocking {
+        val fxaPath = File(getTestPath("fxa"), "custom-sync-config-idp.json")
+        val accountManager: FxaAccountManager = mock()
+
+        with(FennecFxaMigration.migrate(fxaPath, testContext, accountManager) as Result.Failure) {
+            val unwrapped = this.throwables.first() as FxaMigrationException
+            assertEquals(FxaMigrationResult.Failure.CustomServerConfigPresent::class, unwrapped.failure::class)
+            val unwrappedFailure = unwrapped.failure as FxaMigrationResult.Failure.CustomServerConfigPresent
+            assertTrue(unwrappedFailure.customIdpServer)
+            assertFalse(unwrappedFailure.customTokenServer)
+        }
+    }
+
+    @Test
+    fun `custom idp and token servers`() = runBlocking {
+        val fxaPath = File(getTestPath("fxa"), "custom-sync-config-idp-token.json")
+        val accountManager: FxaAccountManager = mock()
+
+        with(FennecFxaMigration.migrate(fxaPath, testContext, accountManager) as Result.Failure) {
+            val unwrapped = this.throwables.first() as FxaMigrationException
+            assertEquals(FxaMigrationResult.Failure.CustomServerConfigPresent::class, unwrapped.failure::class)
+            val unwrappedFailure = unwrapped.failure as FxaMigrationResult.Failure.CustomServerConfigPresent
+            assertTrue(unwrappedFailure.customIdpServer)
+            assertTrue(unwrappedFailure.customTokenServer)
         }
     }
 
