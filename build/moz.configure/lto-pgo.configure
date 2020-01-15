@@ -136,10 +136,6 @@ def moz_pgo_rust(pgo, profile_use, profile_generate, c_compiler, rustc):
     if c_compiler.type == 'gcc':
         die('Cannot use cross-language PGO with GCC.')
 
-    # PGO is not stable prior to 1.37
-    if rustc.version < Version('1.37'):
-        die('Cannot use cross-language PGO with Rust version %s.' % rustc.version)
-
     return True
 
 set_config('MOZ_PGO_RUST', moz_pgo_rust)
