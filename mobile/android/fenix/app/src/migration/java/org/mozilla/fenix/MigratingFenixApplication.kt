@@ -23,6 +23,7 @@ class MigratingFenixApplication : FenixApplication() {
             )
             .migrateFxa(this.components.backgroundServices.accountManager)
             .migrateAddons(this.components.core.engine)
+            .migrateTelemetryIdentifiers()
             .build()
     }
 
