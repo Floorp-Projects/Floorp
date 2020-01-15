@@ -63,14 +63,15 @@ class LoadInfo final : public nsILoadInfo {
            const Maybe<mozilla::dom::ClientInfo>& aLoadingClientInfo =
                Maybe<mozilla::dom::ClientInfo>(),
            const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController =
-               Maybe<mozilla::dom::ServiceWorkerDescriptor>());
+               Maybe<mozilla::dom::ServiceWorkerDescriptor>(),
+           uint32_t aSandboxFlags = 0);
 
   // Constructor used for TYPE_DOCUMENT loads which have a different
   // loadingContext than other loads. This ContextForTopLevelLoad is
   // only used for content policy checks.
   LoadInfo(nsPIDOMWindowOuter* aOuterWindow, nsIPrincipal* aTriggeringPrincipal,
-           nsISupports* aContextForTopLevelLoad,
-           nsSecurityFlags aSecurityFlags);
+           nsISupports* aContextForTopLevelLoad, nsSecurityFlags aSecurityFlags,
+           uint32_t aSandboxFlags);
 
   // create an exact copy of the loadinfo
   already_AddRefed<nsILoadInfo> Clone() const;
@@ -133,7 +134,7 @@ class LoadInfo final : public nsILoadInfo {
            const Maybe<mozilla::dom::ClientInfo>& aReservedClientInfo,
            const Maybe<mozilla::dom::ClientInfo>& aInitialClientInfo,
            const Maybe<mozilla::dom::ServiceWorkerDescriptor>& aController,
-           nsSecurityFlags aSecurityFlags,
+           nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags,
            nsContentPolicyType aContentPolicyType, LoadTainting aTainting,
            bool aBlockAllMixedContent, bool aUpgradeInsecureRequests,
            bool aBrowserUpgradeInsecureRequests,
@@ -213,6 +214,7 @@ class LoadInfo final : public nsILoadInfo {
   nsWeakPtr mLoadingContext;
   nsWeakPtr mContextForTopLevelLoad;
   nsSecurityFlags mSecurityFlags;
+  uint32_t mSandboxFlags;
   nsContentPolicyType mInternalContentPolicyType;
   LoadTainting mTainting;
   bool mBlockAllMixedContent;

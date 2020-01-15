@@ -16,6 +16,7 @@
 #include "NullPrincipal.h"
 #include "nsCycleCollector.h"
 #include "RequestContextService.h"
+#include "nsSandboxFlags.h"
 
 #include "FuzzingInterface.h"
 #include "FuzzingStreamListener.h"
@@ -99,8 +100,8 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
                 nsIRequest::LOAD_FRESH_CONNECTION |
                 nsIChannel::LOAD_INITIAL_DOCUMENT_URI;
     nsSecurityFlags secFlags;
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
-               nsILoadInfo::SEC_SANDBOXED;
+    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+    uint32_t sandboxFlags = SANDBOXED_ORIGIN;
 
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsILoadInfo> loadInfo;
@@ -150,7 +151,8 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
           nsContentUtils::GetSystemPrincipal(),  // loading principal
           nsContentUtils::GetSystemPrincipal(),  // triggering principal
           nullptr,                               // Context
-          secFlags, nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST);
+          secFlags, nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
+          sandboxFlags);
 
       rv = pph->NewProxiedChannel(url, proxyInfo,
                                   0,        // aProxyResolveFlags
@@ -169,8 +171,8 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
                          nullptr,    // loadGroup
                          nullptr,    // aCallbacks
                          loadFlags,  // aLoadFlags
-                         nullptr     // aIoService
-      );
+                         nullptr,    // aIoService
+                         sandboxFlags);
 
       if (NS_FAILED(rv)) {
         MOZ_CRASH("Call to NS_NewChannel failed.");
