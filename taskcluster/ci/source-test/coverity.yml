@@ -22,7 +22,7 @@ job-defaults:
         tooltool-downloads: public
     fetches:
         toolchain:
-            - linux64-clang-7
+            - linux64-clang
             - linux64-rust
             - linux64-cbindgen
             - linux64-nasm
