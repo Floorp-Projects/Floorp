@@ -304,13 +304,15 @@ class LoginManagerParent extends JSWindowActorParent {
     { guid, showMasterPassword }
   ) {
     let recipes = [];
-    let formHost;
-    try {
-      formHost = new URL(formOrigin).host;
-      let recipeManager = await LoginManagerParent.recipeParentPromise;
-      recipes = recipeManager.getRecipesForHost(formHost);
-    } catch (ex) {
-      // Some schemes e.g. chrome aren't supported by URL
+    if (formOrigin) {
+      let formHost;
+      try {
+        formHost = new URL(formOrigin).host;
+        let recipeManager = await LoginManagerParent.recipeParentPromise;
+        recipes = recipeManager.getRecipesForHost(formHost);
+      } catch (ex) {
+        // Some schemes e.g. chrome aren't supported by URL
+      }
     }
 
     if (!showMasterPassword && !Services.logins.isLoggedIn) {
@@ -367,7 +369,6 @@ class LoginManagerParent extends JSWindowActorParent {
     if (guid) {
       logins = await Services.logins.searchLoginsAsync({
         guid,
-        origin: formOrigin,
       });
     } else {
       logins = await LoginManagerParent.searchAndDedupeLogins(formOrigin, {
@@ -621,7 +622,6 @@ class LoginManagerParent extends JSWindowActorParent {
     if (autoFilledLoginGuid) {
       let loginsForGuid = await Services.logins.searchLoginsAsync({
         guid: autoFilledLoginGuid,
-        origin,
       });
       if (
         loginsForGuid.length == 1 &&
@@ -842,7 +842,6 @@ class LoginManagerParent extends JSWindowActorParent {
       if (generatedPW.storageGUID) {
         let existingLogins = await Services.logins.searchLoginsAsync({
           guid: generatedPW.storageGUID,
-          origin: formOrigin,
         });
 
         if (existingLogins.length) {
