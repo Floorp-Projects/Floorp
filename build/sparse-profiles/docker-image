@@ -9,7 +9,6 @@ path:browser/config/version.txt
 
 # Result from `grep -hr %include taskcluster/docker | grep -v " taskcluster/" | sort -u`
 path:python/mozbuild/mozbuild/action/tooltool.py
-path:testing/config/tooltool-manifests/linux64/releng.manifest
 path:testing/mozharness/external_tools/performance-artifact-schema.json
 path:testing/mozharness/external_tools/robustcheckout.py
 path:tools/lint/spell/codespell_requirements.txt

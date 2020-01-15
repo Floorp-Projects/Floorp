@@ -1,9 +1,0 @@
-[
-  {
-    "size": 843008,
-    "visibility": "public",
-    "digest": "2105e384ffbf3459d91701207e879a676ab8e49ca1dc2b7bf1e7d695fb6245ba719285c9841429bbc6605ae4e710107621f788a7204ed681148115ccf64ac087",
-    "algorithm": "sha512",
-    "filename": "macosx64-minidump_stackwalk"
-  }
-]
