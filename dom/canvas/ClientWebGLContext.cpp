@@ -254,7 +254,8 @@ void ClientWebGLContext::Event_webglcontextrestored() {
   mLossStatus = webgl::LossStatus::Ready;
   mNextError = 0;
 
-  if (!CreateHostContext()) {
+  const uvec2 requestSize = {mCanvasElement->Width(), mCanvasElement->Height()};
+  if (!CreateHostContext(requestSize)) {
     mLossStatus = webgl::LossStatus::LostForever;
     return;
   }
@@ -637,25 +638,29 @@ void ClientWebGLContext::GetContextAttributes(
 // -----------------------
 
 NS_IMETHODIMP
-ClientWebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
+ClientWebGLContext::SetDimensions(const int32_t signedWidth,
+                                  const int32_t signedHeight) {
   const FuncScope funcScope(*this, "<SetDimensions>");
   WEBGL_BRIDGE_LOGI("[%p] SetDimensions: (%d, %d)", this, signedWidth,
                     signedHeight);
 
   MOZ_ASSERT(mInitialOptions);
 
-  const auto size = uvec2::From(signedWidth, signedHeight);
-  if (!size) {
-    EnqueueWarning(
-        "Canvas size is too large (seems like a negative value wrapped)");
-    return NS_ERROR_OUT_OF_MEMORY;
+  uvec2 size = {static_cast<uint32_t>(signedWidth),
+                static_cast<uint32_t>(signedHeight)};
+  if (!size.x) {
+    size.x = 1;
   }
-  if (*size == mRequestedSize) return NS_OK;
-  mRequestedSize = *size;
-  mDrawingBufferSize = {};
+  if (!size.y) {
+    size.y = 1;
+  }
 
   if (mNotLost) {
-    Run<RPROC(Resize)>(*size);
+    auto& state = State();
+    state.mDrawingBufferSize = {};
+
+    Run<RPROC(Resize)>(size);
+
     MarkCanvasDirty();
     return NS_OK;
   }
@@ -668,13 +673,13 @@ ClientWebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight) {
   // -
   // Context (re-)creation
 
-  if (!CreateHostContext()) {
+  if (!CreateHostContext(size)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
-bool ClientWebGLContext::CreateHostContext() {
+bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
   const auto pNotLost = std::make_shared<webgl::NotLostData>(*this);
   auto& notLost = *pNotLost;
 
@@ -688,7 +693,7 @@ bool ClientWebGLContext::CreateHostContext() {
     const auto& principal = GetCanvas()->NodePrincipal();
     const auto principalKey = principal->GetHashValue();
     const auto initDesc = webgl::InitContextDesc{
-        mIsWebGL2, resistFingerprinting, mRequestedSize, options, principalKey};
+        mIsWebGL2, resistFingerprinting, requestedSize, options, principalKey};
 
     // -
 
@@ -796,12 +801,15 @@ bool ClientWebGLContext::CreateHostContext() {
 
 // -------
 
-const uvec2& ClientWebGLContext::DrawingBufferSize() {
-  if (!mDrawingBufferSize) {
-    mDrawingBufferSize = Some(Run<RPROC(DrawingBufferSize)>());
+uvec2 ClientWebGLContext::DrawingBufferSize() {
+  if (IsContextLost()) return {};
+  auto& state = State();
+  auto& size = state.mDrawingBufferSize;
+  if (!size) {
+    size = Some(Run<RPROC(DrawingBufferSize)>());
   }
 
-  return *mDrawingBufferSize;
+  return *size;
 }
 
 void ClientWebGLContext::OnMemoryPressure() {
