@@ -30,9 +30,21 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build."""
 
     def filter(task, parameters):
-        return task.attributes.get("nightly", False)
+        return (
+            task.attributes.get("nightly", False) and
+            not _filter_fennec_nightly(task, parameters)
+        )
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
+
+def _filter_fennec_nightly(task, parameters):
+    return task.attributes.get("build-type", "") == "fennec-nightly"
+
+@_target_task("fennec-nightly")
+def target_tasks_fennec_nightly(full_task_graph, parameters, graph_config):
+    """Select the set of tasks required for a nightly build signed with the fennec key."""
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if _filter_fennec_nightly(t, parameters)]
 
 
 @_target_task('raptor')

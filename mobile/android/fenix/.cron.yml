@@ -12,6 +12,12 @@ jobs:
       when:
           - {hour: 6, minute: 0}
           - {hour: 18, minute: 0}
+    - name: fennec-nightly
+      job:
+          type: decision-task
+          treeherder-symbol: N-fennec
+          target-tasks-method: fennec-nightly
+      when: []  # Force hook only
     - name: raptor
       job:
           type: decision-task
