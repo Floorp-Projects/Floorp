@@ -7,6 +7,7 @@ package org.mozilla.fenix.share
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_SEND
+import android.content.Intent.EXTRA_SUBJECT
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.net.Uri
@@ -80,6 +81,7 @@ class DefaultShareController(
     override fun handleShareToApp(app: AppShareOption) {
         val intent = Intent(ACTION_SEND).apply {
             putExtra(EXTRA_TEXT, getShareText())
+            putExtra(EXTRA_SUBJECT, shareData.map { it.title }.joinToString(", "))
             type = "text/plain"
             flags = FLAG_ACTIVITY_NEW_TASK
             setClassName(app.packageName, app.activityName)
@@ -161,8 +163,8 @@ class DefaultShareController(
     }
 
     @VisibleForTesting
-    fun getShareText() = shareData.joinToString("\n") { data ->
-        listOfNotNull(data.url, data.text).joinToString(" ")
+    fun getShareText() = shareData.joinToString("\n\n") { data ->
+        listOfNotNull(data.title, data.url).joinToString(" ")
     }
 
     // Navigation between app fragments uses ShareTab as arguments. SendTabUseCases uses TabData.

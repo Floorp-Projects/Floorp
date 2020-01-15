@@ -57,7 +57,7 @@ class ShareControllerTest {
         TabData("title0", "url0"),
         TabData("title1", "url1")
     )
-    private val textToShare = "${shareData[0].url}\n${shareData[1].url}"
+    private val textToShare = "${shareData[0].title} ${shareData[0].url}\n\n${shareData[1].title} ${shareData[1].url}"
     private val sendTabUseCases = mockk<SendTabUseCases>(relaxed = true)
     private val snackbar = mockk<FenixSnackbar>(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
