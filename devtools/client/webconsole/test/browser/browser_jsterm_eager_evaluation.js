@@ -25,6 +25,14 @@ add_task(async function() {
   await pushPref(EAGER_EVALUATION_PREF, true);
   const hud = await openNewTabAndConsole(TEST_URI);
 
+  // Do an evaluation to populate $_
+  await executeAndWaitForMessage(
+    hud,
+    "'result: ' + (x + y)",
+    "result: 7",
+    ".result"
+  );
+
   setInputValue(hud, "x + y");
   await waitForEagerEvaluationResult(hud, "7");
 
@@ -72,6 +80,13 @@ add_task(async function() {
 
   setInputValue(hud, "Math.round(3.2)");
   await waitForEagerEvaluationResult(hud, "3");
+
+  info("Check that $_ wasn't polluted by eager evaluations");
+  setInputValue(hud, "$_");
+  await waitForEagerEvaluationResult(hud, `"result: 7"`);
+
+  setInputValue(hud, "'> ' + $_");
+  await waitForEagerEvaluationResult(hud, `"> result: 7"`);
 });
 
 // Test that the currently selected autocomplete result is eagerly evaluated.

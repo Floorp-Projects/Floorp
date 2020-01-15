@@ -1298,16 +1298,20 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
       }
     }
 
-    if (!awaitResult) {
-      this._lastConsoleInputEvaluation = result;
-    } else {
-      // If we evaluated a top-level await expression, we want to assign its result to the
-      // _lastConsoleInputEvaluation only when the promise resolves, and only if it
-      // resolves. If the promise rejects, we don't re-assign _lastConsoleInputEvaluation,
-      // it will keep its previous value.
-      awaitResult.then(res => {
-        this._lastConsoleInputEvaluation = this.makeDebuggeeValue(res);
-      });
+    // Don't update _lastConsoleInputEvaluation in eager evaluation, as it would interfere
+    // with the $_ command.
+    if (!request.eager) {
+      if (!awaitResult) {
+        this._lastConsoleInputEvaluation = result;
+      } else {
+        // If we evaluated a top-level await expression, we want to assign its result to the
+        // _lastConsoleInputEvaluation only when the promise resolves, and only if it
+        // resolves. If the promise rejects, we don't re-assign _lastConsoleInputEvaluation,
+        // it will keep its previous value.
+        awaitResult.then(res => {
+          this._lastConsoleInputEvaluation = this.makeDebuggeeValue(res);
+        });
+      }
     }
 
     return {
