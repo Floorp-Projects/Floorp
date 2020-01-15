@@ -4921,12 +4921,18 @@ static void SweepUniqueIds(GCParallelTask* task) {
   }
 }
 
+static bool IsShutdownGC(JS::GCReason reason) {
+  return reason == JS::GCReason::WORKER_SHUTDOWN ||
+         reason == JS::GCReason::SHUTDOWN_CC ||
+         reason == JS::GCReason::DESTROY_RUNTIME;
+}
+
 void GCRuntime::sweepFinalizationGroupsOnMainThread() {
   // This calls back into the browser which expects to be called from the main
   // thread.
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_FINALIZATION_GROUPS);
   for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-    sweepFinalizationGroups(zone);
+    sweepFinalizationGroups(zone, IsShutdownGC(initialReason));
   }
 }
 
@@ -6400,11 +6406,6 @@ AutoDisableBarriers::~AutoDisableBarriers() {
       zone->setNeedsIncrementalBarrier(true);
     }
   }
-}
-
-static bool IsShutdownGC(JS::GCReason reason) {
-  return reason == JS::GCReason::SHUTDOWN_CC ||
-         reason == JS::GCReason::DESTROY_RUNTIME;
 }
 
 static bool ShouldCleanUpEverything(JS::GCReason reason,
