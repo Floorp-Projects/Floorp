@@ -1698,6 +1698,15 @@ RefPtr<layers::SharedSurfaceTextureClient> WebGLContext::GetVRFrame() {
     if (!vrScreen) {
       auto caps = gl->Screen()->mCaps;
       vrScreen = gl::GLScreenBuffer::Create(gl, gfx::IntSize(1, 1), caps);
+      RefPtr<layers::ImageBridgeChild> imageBridge =
+          layers::ImageBridgeChild::GetSingleton();
+      if (imageBridge) {
+        layers::TextureFlags flags = layers::TextureFlags::ORIGIN_BOTTOM_LEFT;
+        UniquePtr<gl::SurfaceFactory> factory =
+            gl::GLScreenBuffer::CreateFactory(gl, caps, imageBridge.get(),
+                                              flags);
+        vrScreen->Morph(std::move(factory));
+      }
     }
     MOZ_ASSERT(vrScreen);
 
@@ -1807,7 +1816,8 @@ bool ClientWebGLContext::IsXRCompatible() const {
   return options.xrCompatible;
 }
 
-already_AddRefed<dom::Promise> ClientWebGLContext::MakeXRCompatible(ErrorResult& aRv) {
+already_AddRefed<dom::Promise> ClientWebGLContext::MakeXRCompatible(
+    ErrorResult& aRv) {
   const FuncScope funcScope(*this, "MakeXRCompatible");
   nsCOMPtr<nsIGlobalObject> global;
   // TODO: Bug 1596921
