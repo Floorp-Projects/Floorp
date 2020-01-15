@@ -789,9 +789,8 @@ bool WriteFormData(JSStructuredCloneWriter* aWriter, FormData* aFormData,
 JSObject* ReadWasmModule(JSContext* aCx, uint32_t aIndex,
                          StructuredCloneHolder* aHolder) {
   MOZ_ASSERT(aHolder);
-  MOZ_ASSERT(
-      aHolder->CloneScope() ==
-      StructuredCloneHolder::StructuredCloneScope::SameProcessDifferentThread);
+  MOZ_ASSERT(aHolder->CloneScope() ==
+             StructuredCloneHolder::StructuredCloneScope::SameProcess);
 #ifdef FUZZING
   if (aIndex >= aHolder->WasmModules().Length()) {
     return nullptr;
@@ -808,9 +807,8 @@ bool WriteWasmModule(JSStructuredCloneWriter* aWriter,
   MOZ_ASSERT(aWriter);
   MOZ_ASSERT(aWasmModule);
   MOZ_ASSERT(aHolder);
-  MOZ_ASSERT(
-      aHolder->CloneScope() ==
-      StructuredCloneHolder::StructuredCloneScope::SameProcessDifferentThread);
+  MOZ_ASSERT(aHolder->CloneScope() ==
+             StructuredCloneHolder::StructuredCloneScope::SameProcess);
 
   // We store the position of the wasmModule in the array as index.
   if (JS_WriteUint32Pair(aWriter, SCTAG_DOM_WASM,
@@ -886,8 +884,7 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
   }
 
   if (aTag == SCTAG_DOM_IMAGEBITMAP &&
-      mStructuredCloneScope ==
-          StructuredCloneScope::SameProcessDifferentThread) {
+      mStructuredCloneScope == StructuredCloneScope::SameProcess) {
     // Get the current global object.
     // This can be null.
     JS::RootedObject result(aCx);
@@ -904,8 +901,7 @@ JSObject* StructuredCloneHolder::CustomReadHandler(
   }
 
   if (aTag == SCTAG_DOM_WASM &&
-      mStructuredCloneScope ==
-          StructuredCloneScope::SameProcessDifferentThread) {
+      mStructuredCloneScope == StructuredCloneScope::SameProcess) {
     return ReadWasmModule(aCx, aIndex, this);
   }
 
@@ -966,8 +962,7 @@ bool StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   }
 
   // See if this is an ImageBitmap object.
-  if (mStructuredCloneScope ==
-      StructuredCloneScope::SameProcessDifferentThread) {
+  if (mStructuredCloneScope == StructuredCloneScope::SameProcess) {
     ImageBitmap* imageBitmap = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageBitmap, &obj, imageBitmap))) {
       return ImageBitmap::WriteStructuredClone(aWriter, GetSurfaces(),
@@ -984,8 +979,7 @@ bool StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   }
 
   // See if this is a BrowsingContext object.
-  if (mStructuredCloneScope ==
-          StructuredCloneScope::SameProcessDifferentThread ||
+  if (mStructuredCloneScope == StructuredCloneScope::SameProcess ||
       mStructuredCloneScope == StructuredCloneScope::DifferentProcess) {
     BrowsingContext* holder = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(BrowsingContext, &obj, holder))) {
@@ -1002,8 +996,7 @@ bool StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   }
 
   // See if this is a WasmModule.
-  if (mStructuredCloneScope ==
-          StructuredCloneScope::SameProcessDifferentThread &&
+  if (mStructuredCloneScope == StructuredCloneScope::SameProcess &&
       JS::IsWasmModuleObject(obj)) {
     RefPtr<JS::WasmModule> module = JS::GetWasmModule(obj);
     MOZ_ASSERT(module);
@@ -1058,8 +1051,7 @@ bool StructuredCloneHolder::CustomReadTransferHandler(
   }
 
   if (aTag == SCTAG_DOM_CANVAS &&
-      mStructuredCloneScope ==
-          StructuredCloneScope::SameProcessDifferentThread) {
+      mStructuredCloneScope == StructuredCloneScope::SameProcess) {
     MOZ_ASSERT(aContent);
     OffscreenCanvasCloneData* data =
         static_cast<OffscreenCanvasCloneData*>(aContent);
@@ -1078,8 +1070,7 @@ bool StructuredCloneHolder::CustomReadTransferHandler(
   }
 
   if (aTag == SCTAG_DOM_IMAGEBITMAP &&
-      mStructuredCloneScope ==
-          StructuredCloneScope::SameProcessDifferentThread) {
+      mStructuredCloneScope == StructuredCloneScope::SameProcess) {
     MOZ_ASSERT(aContent);
     ImageBitmapCloneData* data = static_cast<ImageBitmapCloneData*>(aContent);
     RefPtr<ImageBitmap> bitmap =
@@ -1131,8 +1122,7 @@ bool StructuredCloneHolder::CustomWriteTransferHandler(
       return true;
     }
 
-    if (mStructuredCloneScope ==
-        StructuredCloneScope::SameProcessDifferentThread) {
+    if (mStructuredCloneScope == StructuredCloneScope::SameProcess) {
       OffscreenCanvas* canvas = nullptr;
       rv = UNWRAP_OBJECT(OffscreenCanvas, &obj, canvas);
       if (NS_SUCCEEDED(rv)) {
@@ -1196,8 +1186,7 @@ void StructuredCloneHolder::CustomFreeTransferHandler(
   }
 
   if (aTag == SCTAG_DOM_CANVAS &&
-      mStructuredCloneScope ==
-          StructuredCloneScope::SameProcessDifferentThread) {
+      mStructuredCloneScope == StructuredCloneScope::SameProcess) {
     MOZ_ASSERT(aContent);
     OffscreenCanvasCloneData* data =
         static_cast<OffscreenCanvasCloneData*>(aContent);
@@ -1206,8 +1195,7 @@ void StructuredCloneHolder::CustomFreeTransferHandler(
   }
 
   if (aTag == SCTAG_DOM_IMAGEBITMAP &&
-      mStructuredCloneScope ==
-          StructuredCloneScope::SameProcessDifferentThread) {
+      mStructuredCloneScope == StructuredCloneScope::SameProcess) {
     MOZ_ASSERT(aContent);
     ImageBitmapCloneData* data = static_cast<ImageBitmapCloneData*>(aContent);
     delete data;
@@ -1230,8 +1218,7 @@ bool StructuredCloneHolder::CustomCanTransferHandler(
       return true;
     }
 
-    if (mStructuredCloneScope ==
-        StructuredCloneScope::SameProcessDifferentThread) {
+    if (mStructuredCloneScope == StructuredCloneScope::SameProcess) {
       OffscreenCanvas* canvas = nullptr;
       rv = UNWRAP_OBJECT(OffscreenCanvas, &obj, canvas);
       if (NS_SUCCEEDED(rv)) {
