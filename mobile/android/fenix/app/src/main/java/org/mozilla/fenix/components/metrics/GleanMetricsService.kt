@@ -497,8 +497,10 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         // can handle events being recorded before it's initialized.
         gleanInitializer = MainScope().launch {
             Glean.registerPings(Pings)
-            Glean.initialize(context,
-                Configuration(channel = BuildConfig.BUILD_TYPE,
+            Glean.initialize(
+                applicationContext = context,
+                uploadEnabled = true,
+                configuration = Configuration(channel = BuildConfig.BUILD_TYPE,
                     httpClient = ConceptFetchHttpUploader(
                         lazy(LazyThreadSafetyMode.NONE) { context.components.core.client }
                     )))
