@@ -18,7 +18,7 @@ class MigratingFenixApplication : FenixApplication() {
             .migrateHistory(this.components.core.historyStorage)
             .migrateBookmarks(this.components.core.bookmarksStorage)
             .migrateLogins(
-                this.components.core.passwordsStorage.store,
+                this.components.core.asyncPasswordsStorage,
                 this.components.core.passwordsEncryptionKey
             )
             .migrateFxa(this.components.backgroundServices.accountManager)
