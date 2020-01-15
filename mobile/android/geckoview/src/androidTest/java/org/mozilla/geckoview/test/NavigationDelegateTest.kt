@@ -1002,6 +1002,17 @@ class NavigationDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Test(expected = GeckoSessionTestRule.RejectedPromiseException::class)
+    fun onNewSession_rejectLocal() {
+        // Disable popup blocker.
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
+
+        sessionRule.session.evaluateJS("window.open('file:///data/local/tmp', '_blank')")
+    }
+
     @Test fun onNewSession_calledForTargetBlankLink() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
