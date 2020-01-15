@@ -22,6 +22,7 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.glean.Glean
 import mozilla.components.service.sync.logins.AsyncLoginsStorage
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.FennecMigrator.Builder
@@ -833,6 +834,19 @@ class FennecMigrator private constructor(
                 FennecMigratorException.MigrateSettingsException(e)
             )
             return Result.Failure(e)
+        }
+
+        if (
+            result is Result.Success<SettingsMigrationResult> &&
+            result.value is SettingsMigrationResult.Success.SettingsMigrated
+        ) {
+            logger.info("Preferences migrated, telemetry should be: " + result.value.telemetry)
+
+            // We let Glean immediately know about the updated telemetry value. We expect it to
+            // have been initialized with telemetry OFF earlier and so we may enable it here
+            // because further migration code will try to send telemetry pings too - and this
+            // will happen before we hand off to the app again to continue and enable telemetry.
+            Glean.setUploadEnabled(result.value.telemetry)
         }
 
         if (result is Result.Failure<SettingsMigrationResult>) {
