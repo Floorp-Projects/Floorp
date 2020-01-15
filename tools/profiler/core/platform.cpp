@@ -3890,30 +3890,12 @@ void GetProfilerEnvVarsForChildProcess(
   std::string filtersString;
   const Vector<std::string>& filters = ActivePS::Filters(lock);
   for (uint32_t i = 0; i < filters.length(); ++i) {
-    filtersString += filters[i];
-    if (i != filters.length() - 1) {
+    if (i != 0) {
       filtersString += ",";
     }
+    filtersString += filters[i];
   }
   aSetEnv("MOZ_PROFILER_STARTUP_FILTERS", filtersString.c_str());
-
-#ifdef MOZ_BASE_PROFILER
-  // Blindly copy MOZ_BASE_PROFILER_STARTUP* env-vars.
-  auto copyEnv = [&](const char* aName) {
-    const char* env = getenv(aName);
-    if (!env) {
-      return;
-    }
-    aSetEnv(aName, env);
-  };
-  copyEnv("MOZ_BASE_PROFILER_STARTUP");
-  copyEnv("MOZ_BASE_PROFILER_STARTUP_ENTRIES");
-  copyEnv("MOZ_BASE_PROFILER_STARTUP_DURATION");
-  copyEnv("MOZ_BASE_PROFILER_STARTUP_INTERVAL");
-  copyEnv("MOZ_BASE_PROFILER_STARTUP_FEATURES_BITFIELD");
-  copyEnv("MOZ_BASE_PROFILER_STARTUP_FEATURES");
-  copyEnv("MOZ_BASE_PROFILER_STARTUP_FILTERS");
-#endif
 }
 
 }  // namespace mozilla
@@ -4082,7 +4064,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   if (baseprofiler::profiler_is_active()) {
     // Note that we still hold the lock, so the sampler cannot run yet and
     // interact negatively with the still-active BaseProfiler sampler.
-    // Assume that Base Profiler is active because of MOZ_BASE_PROFILER_STARTUP.
+    // Assume that Base Profiler is active because of MOZ_PROFILER_STARTUP.
     // Capture the Base Profiler startup profile threads (if any).
     baseprofile = baseprofiler::profiler_get_profile(
         /* aSinceTime */ 0, /* aIsShuttingDown */ false,
