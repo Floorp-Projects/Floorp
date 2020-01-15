@@ -521,7 +521,6 @@ All `"activity_stream_session"` pings have the following basic shape. Some field
   "locale": "en-US",
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "session_duration": 4199,
-  "region": "US",
   "profile_creation_date": 14786,
   "user_prefs": 7
 }

@@ -65,6 +65,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ClientID.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+});
+
 XPCOMUtils.defineLazyServiceGetters(this, {
   gUUIDGenerator: ["@mozilla.org/uuid-generator;1", "nsIUUIDGenerator"],
   aboutNewTabService: [
@@ -100,6 +104,9 @@ const STRUCTURED_INGESTION_ENDPOINT_PREF =
 // They are defined in https://github.com/mozilla-services/mozilla-pipeline-schemas
 const STRUCTURED_INGESTION_NAMESPACE_AS = "activity-stream";
 const STRUCTURED_INGESTION_NAMESPACE_MS = "messaging-system";
+
+// Used as the missing value for timestamps in the session ping
+const TIMESTAMP_MISSING_VALUE = -1;
 
 this.TelemetryFeed = class TelemetryFeed {
   constructor(options) {
@@ -387,6 +394,18 @@ this.TelemetryFeed = class TelemetryFeed {
       session.session_duration = Math.round(
         perfService.absNow() - session.perf.visibility_event_rcvd_ts
       );
+
+      // Rounding all timestamps in perf to ease the data processing on the backend.
+      // NB: use `TIMESTAMP_MISSING_VALUE` if the value is missing.
+      session.perf.visibility_event_rcvd_ts = Math.round(
+        session.perf.visibility_event_rcvd_ts
+      );
+      session.perf.load_trigger_ts = Math.round(
+        session.perf.load_trigger_ts || TIMESTAMP_MISSING_VALUE
+      );
+      session.perf.topsites_first_painted_ts = Math.round(
+        session.perf.topsites_first_painted_ts || TIMESTAMP_MISSING_VALUE
+      );
     } else {
       // This session was never shown (i.e. the hidden preloaded newtab), there was no user session either.
       this.sessions.delete(portID);
@@ -554,6 +573,9 @@ this.TelemetryFeed = class TelemetryFeed {
       session_duration: session.session_duration,
       action: "activity_stream_session",
       perf: session.perf,
+      profile_creation_date:
+        TelemetryEnvironment.currentEnvironment.profile.resetDate ||
+        TelemetryEnvironment.currentEnvironment.profile.creationDate,
     });
   }
 
@@ -644,6 +666,9 @@ this.TelemetryFeed = class TelemetryFeed {
       case "activity_stream_user_event":
         this.sendEventPing(event_object);
         break;
+      case "activity_stream_session":
+        this.sendSessionPing(event_object);
+        break;
     }
   }
 
@@ -657,6 +682,17 @@ this.TelemetryFeed = class TelemetryFeed {
       ping,
       STRUCTURED_INGESTION_NAMESPACE_AS,
       "events",
+      1
+    );
+  }
+
+  async sendSessionPing(ping) {
+    delete ping.action;
+    ping.client_id = await this.telemetryClientId;
+    this.sendStructuredIngestionEvent(
+      ping,
+      STRUCTURED_INGESTION_NAMESPACE_AS,
+      "sessions",
       1
     );
   }
