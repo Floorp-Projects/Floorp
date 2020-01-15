@@ -28,10 +28,10 @@ import mozilla.components.support.ktx.android.view.onNextGlobalLayout
 /**
  * A popup menu composed of BrowserMenuItem objects.
  */
-class BrowserMenu internal constructor(
-    private val adapter: BrowserMenuAdapter
+open class BrowserMenu internal constructor(
+    internal val adapter: BrowserMenuAdapter
 ) {
-    private var currentPopup: PopupWindow? = null
+    protected var currentPopup: PopupWindow? = null
     private var menuList: RecyclerView? = null
 
     /**
@@ -41,7 +41,7 @@ class BrowserMenu internal constructor(
      *  the top of the menu is always visible.
      */
     @SuppressLint("InflateParams")
-    fun show(
+    open fun show(
         anchor: View,
         orientation: Orientation = DOWN,
         endOfMenuAlwaysVisible: Boolean = false,
@@ -61,7 +61,9 @@ class BrowserMenu internal constructor(
         menuList?.setAccessibilityDelegate(object : View.AccessibilityDelegate() {
             override fun onInitializeAccessibilityNodeInfo(host: View?, info: AccessibilityNodeInfo?) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
-                info?.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(adapter.interactiveCount, 0, false)
+                info?.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
+                    adapter.interactiveCount, 0, false
+                )
             }
         })
 

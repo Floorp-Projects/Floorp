@@ -25,4 +25,21 @@ data class BrowserAction(
     val badgeTextColor: Int?,
     val badgeBackgroundColor: Int?,
     val onClick: () -> Unit
-)
+) {
+    /**
+     * Returns a copy of this [BrowserAction] with the provided overrides applied e.g. for tab-specific overrides.
+     *
+     * @param override the action to use for overriding properties. Note that only the provided
+     * (non-null) properties of the override will be applied, all other properties will remain unchanged.
+     */
+    fun copyWithOverride(override: BrowserAction) =
+        BrowserAction(
+            title = override.title ?: title,
+            enabled = override.enabled ?: enabled,
+            badgeText = override.badgeText ?: badgeText,
+            badgeBackgroundColor = override.badgeBackgroundColor ?: badgeBackgroundColor,
+            badgeTextColor = override.badgeTextColor ?: badgeTextColor,
+            loadIcon = override.loadIcon ?: loadIcon,
+            onClick = override.onClick
+        )
+}

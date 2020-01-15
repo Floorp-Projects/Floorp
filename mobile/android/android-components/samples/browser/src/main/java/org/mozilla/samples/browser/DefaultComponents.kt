@@ -16,8 +16,8 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.engine.system.SystemEngine
 import mozilla.components.browser.icons.BrowserIcons
-import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuHighlight
+import mozilla.components.browser.menu.WebExtensionBrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuCheckbox
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
@@ -194,7 +194,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     // Menu
-    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
+    val menuBuilder by lazy { WebExtensionBrowserMenuBuilder(menuItems, store = store) }
 
     private val menuItems by lazy {
         val items = mutableListOf(
