@@ -832,8 +832,45 @@ nsresult nsHttpChannel::ContinueConnect() {
 }
 
 nsresult nsHttpChannel::DoConnect(HttpTransactionShell* aTransWithStickyConn) {
-  LOG(("nsHttpChannel::DoConnect [this=%p, aTransWithStickyConn=%p]\n", this,
-       aTransWithStickyConn));
+  LOG(("nsHttpChannel::DoConnect [this=%p]\n", this));
+
+  if (!mDNSBlockingPromise.IsEmpty()) {
+    LOG(("  waiting for DNS prefetch"));
+
+    // Transaction is passed only from auth retry for which we will definitely
+    // not block on DNS to alter the origin server name for IP; it has already
+    // been done.
+    MOZ_ASSERT(!aTransWithStickyConn);
+    MOZ_ASSERT(mDNSBlockingThenable);
+
+    nsCOMPtr<nsISerialEventTarget> target(do_GetMainThread());
+    RefPtr<nsHttpChannel> self(this);
+    mDNSBlockingThenable->Then(
+        target, __func__,
+        [self](const nsCOMPtr<nsIDNSRecord>& aRec) {
+          nsresult rv = self->DoConnectActual(nullptr);
+          if (NS_FAILED(rv)) {
+            self->CloseCacheEntry(false);
+            Unused << self->AsyncAbort(rv);
+          }
+        },
+        [self](nsresult err) {
+          self->CloseCacheEntry(false);
+          Unused << self->AsyncAbort(err);
+        });
+
+    // The connection will continue when the promise is resolved in
+    // OnLookupComplete.
+    return NS_OK;
+  }
+
+  return DoConnectActual(aTransWithStickyConn);
+}
+
+nsresult nsHttpChannel::DoConnectActual(
+    HttpTransactionShell* aTransWithStickyConn) {
+  LOG(("nsHttpChannel::DoConnectActual [this=%p, aTransWithStickyConn=%p]\n",
+       this, aTransWithStickyConn));
 
   nsresult rv = SetupTransaction();
   if (NS_FAILED(rv)) {
@@ -6606,6 +6643,26 @@ nsHttpChannel::GetOrCreateChannelClassifier() {
   return classifier.forget();
 }
 
+uint16_t nsHttpChannel::GetProxyDNSStrategy() {
+  // This function currently only supports returning DNS_PREFETCH_ORIGIN.
+  // Support for the rest of the DNS_* flags will be added later.
+
+  if (!mProxyInfo) {
+    return DNS_PREFETCH_ORIGIN;
+  }
+
+  nsAutoCString type;
+  mProxyInfo->GetType(type);
+
+  if (!StaticPrefs::network_proxy_socks_remote_dns()) {
+    if (type.EqualsLiteral("socks")) {
+      return DNS_PREFETCH_ORIGIN;
+    }
+  }
+
+  return 0;
+}
+
 // BeginConnect() SHOULD NOT call AsyncAbort(). AsyncAbort will be called by
 // functions that called BeginConnect if needed. Only AsyncOpenFinal,
 // MaybeResolveProxyAndBeginConnect and OnProxyAvailable ever call
@@ -6815,7 +6872,16 @@ nsresult nsHttpChannel::BeginConnect() {
     ReEvaluateReferrerAfterTrackingStatusIsKnown();
   }
 
-  MaybeStartDNSPrefetch();
+  rv = MaybeStartDNSPrefetch();
+  if (NS_FAILED(rv)) {
+    auto dnsStrategy = GetProxyDNSStrategy();
+    if (dnsStrategy & DNS_BLOCK_ON_ORIGIN_RESOLVE) {
+      // TODO: Should this be fatal?
+      return rv;
+    }
+    // Otherwise this shouldn't be fatal.
+    return NS_OK;
+  }
 
   rv = ContinueBeginConnectWithResult();
   if (NS_FAILED(rv)) {
@@ -6834,30 +6900,55 @@ nsresult nsHttpChannel::BeginConnect() {
   return NS_OK;
 }
 
-void nsHttpChannel::MaybeStartDNSPrefetch() {
-  if (!mConnectionInfo->UsingHttpProxy() &&
-      !(mLoadFlags & (LOAD_NO_NETWORK_IO | LOAD_ONLY_FROM_CACHE))) {
-    // Start a DNS lookup very early in case the real open is queued the DNS can
-    // happen in parallel. Do not do so in the presence of an HTTP proxy as
-    // all lookups other than for the proxy itself are done by the proxy.
-    // Also we don't do a lookup if the LOAD_NO_NETWORK_IO or
-    // LOAD_ONLY_FROM_CACHE flags are set.
-    //
-    // We keep the DNS prefetch object around so that we can retrieve
-    // timing information from it. There is no guarantee that we actually
-    // use the DNS prefetch data for the real connection, but as we keep
-    // this data around for 3 minutes by default, this should almost always
-    // be correct, and even when it isn't, the timing still represents _a_
-    // valid DNS lookup timing for the site, even if it is not _the_
-    // timing we used.
-    LOG(("nsHttpChannel::MaybeStartDNSPrefetch [this=%p] prefetching%s\n", this,
-         mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
+nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
+  // Start a DNS lookup very early in case the real open is queued the DNS can
+  // happen in parallel. Do not do so in the presence of an HTTP proxy as
+  // all lookups other than for the proxy itself are done by the proxy.
+  // Also we don't do a lookup if the LOAD_NO_NETWORK_IO or
+  // LOAD_ONLY_FROM_CACHE flags are set.
+  //
+  // We keep the DNS prefetch object around so that we can retrieve
+  // timing information from it. There is no guarantee that we actually
+  // use the DNS prefetch data for the real connection, but as we keep
+  // this data around for 3 minutes by default, this should almost always
+  // be correct, and even when it isn't, the timing still represents _a_
+  // valid DNS lookup timing for the site, even if it is not _the_
+  // timing we used.
+  if (mLoadFlags & (LOAD_NO_NETWORK_IO | LOAD_ONLY_FROM_CACHE)) {
+    return NS_OK;
+  }
+
+  auto dnsStrategy = GetProxyDNSStrategy();
+
+  LOG(
+      ("nsHttpChannel::MaybeStartDNSPrefetch [this=%p, strategy=%u] "
+       "prefetching%s\n",
+       this, dnsStrategy,
+       mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
+
+  if (dnsStrategy & DNS_PREFETCH_ORIGIN) {
     OriginAttributes originAttributes;
     NS_GetOriginAttributes(this, originAttributes);
+
     mDNSPrefetch = new nsDNSPrefetch(
         mURI, originAttributes, nsIRequest::GetTRRMode(), this, mTimingEnabled);
-    mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
+    nsresult rv = mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
+
+    if (dnsStrategy & DNS_BLOCK_ON_ORIGIN_RESOLVE) {
+      LOG(("  blocking on prefetching origin"));
+
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        LOG(("  lookup failed with 0x%08" PRIx32 ", aborting request",
+             static_cast<uint32_t>(rv)));
+        return rv;
+      }
+
+      // Resolved in OnLookupComplete.
+      mDNSBlockingThenable = mDNSBlockingPromise.Ensure(__func__);
+    }
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -7586,8 +7677,8 @@ nsresult nsHttpChannel::ProcessCrossOriginResourcePolicyHeader() {
     RefPtr<mozilla::dom::BrowsingContext> ctx;
     mLoadInfo->GetBrowsingContext(getter_AddRefs(ctx));
 
-    // Note that we treat invalid value as "cross-origin", which spec indicates.
-    // We might want to make that stricter.
+    // Note that we treat invalid value as "cross-origin", which spec
+    // indicates. We might want to make that stricter.
     if (content.IsEmpty() && ctx &&
         ctx->GetEmbedderPolicy() == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP) {
       content = NS_LITERAL_CSTRING("same-origin");
@@ -7666,8 +7757,9 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
          static_cast<int32_t>(mFirstResponseSource), request == mCachePump,
          request == mTransactionPump));
     if (mFirstResponseSource == RESPONSE_PENDING) {
-      // When the cache wins mFirstResponseSource is set to RESPONSE_FROM_CACHE
-      // earlier in ReadFromCache, so this must be a response from the network.
+      // When the cache wins mFirstResponseSource is set to
+      // RESPONSE_FROM_CACHE earlier in ReadFromCache, so this must be a
+      // response from the network.
       MOZ_ASSERT(request == mTransactionPump);
       LOG(("  First response from network\n"));
       {
@@ -7731,8 +7823,8 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
   // don't enter this block if we're reading from the cache...
   if (NS_SUCCEEDED(mStatus) && !mCachePump && mTransaction) {
     // mTransactionPump doesn't hit OnInputStreamReady and call this until
-    // all of the response headers have been acquired, so we can take ownership
-    // of them from the transaction.
+    // all of the response headers have been acquired, so we can take
+    // ownership of them from the transaction.
     mResponseHead = mTransaction->TakeResponseHead();
     // the response head may be null if the transaction was cancelled.  in
     // which case we just need to call OnStartRequest/OnStopRequest.
@@ -7916,7 +8008,8 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
   // allow content to be cached if it was loaded successfully (bug #482935)
   bool contentComplete = NS_SUCCEEDED(status);
 
-  // honor the cancelation status even if the underlying transaction completed.
+  // honor the cancelation status even if the underlying transaction
+  // completed.
   if (mCanceled || NS_FAILED(mStatus)) status = mStatus;
 
   if (mCachedContentIsPartial) {
@@ -8197,7 +8290,8 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     chanDisposition =
         static_cast<ChannelDisposition>(chanDisposition + kHttpsCanceled);
   } else if (mLoadInfo && mLoadInfo->GetBrowserWouldUpgradeInsecureRequests()) {
-    // HTTP content the browser would upgrade to HTTPS if upgrading was enabled
+    // HTTP content the browser would upgrade to HTTPS if upgrading was
+    // enabled
     upgradeKey = NS_LITERAL_CSTRING("disabledUpgrade");
   } else {
     // HTTP content that wouldn't upgrade
@@ -8258,8 +8352,9 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
   // perform any final cache operations before we close the cache entry.
   if (mCacheEntry && mRequestTimeInitialized) {
     bool writeAccess;
-    // New implementation just returns value of the !mCacheEntryIsReadOnly flag
-    // passed in. Old implementation checks on nsICache::ACCESS_WRITE flag.
+    // New implementation just returns value of the !mCacheEntryIsReadOnly
+    // flag passed in. Old implementation checks on nsICache::ACCESS_WRITE
+    // flag.
     mCacheEntry->HasWriteAccess(!mCacheEntryIsReadOnly, &writeAccess);
     if (writeAccess) {
       nsresult rv = FinalizeCacheEntry();
@@ -8601,10 +8696,10 @@ nsHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
     } else {
       nsCOMPtr<nsIParentChannel> parentChannel;
       NS_QueryNotificationCallbacks(this, parentChannel);
-      // If the event sink is |HttpChannelParent|, we have to send status events
-      // to it even if LOAD_BACKGROUND is set. |HttpChannelParent| needs to be
-      // aware of whether the status is |NS_NET_STATUS_RECEIVING_FROM| or
-      // |NS_NET_STATUS_READING|.
+      // If the event sink is |HttpChannelParent|, we have to send status
+      // events to it even if LOAD_BACKGROUND is set. |HttpChannelParent|
+      // needs to be aware of whether the status is
+      // |NS_NET_STATUS_RECEIVING_FROM| or |NS_NET_STATUS_READING|.
       // LOAD_BACKGROUND is checked again in |HttpChannelChild|, so the final
       // consumer won't get this event.
       if (SameCOMIdentity(parentChannel, mProgressSink)) {
@@ -9254,6 +9349,15 @@ nsHttpChannel::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
     }
   }
 
+  if (!mDNSBlockingPromise.IsEmpty()) {
+    if (NS_SUCCEEDED(status)) {
+      nsCOMPtr<nsIDNSRecord> record(rec);
+      mDNSBlockingPromise.Resolve(record, __func__);
+    } else {
+      mDNSBlockingPromise.Reject(status, __func__);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -9641,12 +9745,13 @@ nsHttpChannel::ResumeInternal() {
             // notification is already pending in the queue right now, because
             // AsyncRead doesn't (regardless if called after Suspend) respect
             // the suspend coutner and the right order would not be preserved.
-            // Hence, we do another dispatch round to actually Resume after the
-            // notification from the original pump.
+            // Hence, we do another dispatch round to actually Resume after
+            // the notification from the original pump.
             if (transactionPump != self->mTransactionPump &&
                 self->mTransactionPump) {
               LOG(
-                  ("nsHttpChannel::CallOnResume async-resuming new transaction "
+                  ("nsHttpChannel::CallOnResume async-resuming new "
+                   "transaction "
                    "pump %p, this=%p",
                    self->mTransactionPump.get(), self.get()));
 
