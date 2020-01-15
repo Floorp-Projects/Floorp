@@ -237,7 +237,7 @@ class SendRunnable final : public WorkerThreadProxySyncRunnable,
                const nsAString& aStringBody)
       : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy),
         StructuredCloneHolder(CloningSupported, TransferringNotSupported,
-                              StructuredCloneScope::SameProcessDifferentThread),
+                              StructuredCloneScope::SameProcess),
         mStringBody(aStringBody),
         mHasUploadListeners(false) {}
 

@@ -137,7 +137,7 @@ enum class StructuredCloneScope : uint32_t {
    * as part of the SCTAG_HEADER, and IndexedDB persists the representation to
    * disk.
    */
-  SameProcessDifferentThread = 1,
+  SameProcess = 1,
 
   /**
    * When writing, this means we're writing for an audience in a different
@@ -156,8 +156,8 @@ enum class StructuredCloneScope : uint32_t {
 
   /**
    * Handle a backwards-compatibility case with IndexedDB (bug 1434308): when
-   * reading, this means to treat legacy SameProcessDifferentThread data as if
-   * it were DifferentProcess.
+   * reading, this means to treat legacy SameProcess data as if it were
+   * DifferentProcess.
    *
    * Do not use this for writing; use DifferentProcess instead.
    */
