@@ -822,8 +822,6 @@ class BackgroundFileRequestChild final : public PBackgroundFileRequestChild {
 
   void HandleResponse(nsresult aResponse);
 
-  void HandleResponse(const FileRequestGetFileResponse& aResponse);
-
   void HandleResponse(const nsCString& aResponse);
 
   void HandleResponse(const FileRequestMetadata& aResponse);

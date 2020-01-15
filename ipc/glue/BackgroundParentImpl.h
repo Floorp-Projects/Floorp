@@ -142,12 +142,6 @@ class BackgroundParentImpl : public PBackgroundParent,
   virtual already_AddRefed<PIdleSchedulerParent> AllocPIdleSchedulerParent()
       override;
 
-  virtual PPendingIPCBlobParent* AllocPPendingIPCBlobParent(
-      const IPCBlob& aBlob) override;
-
-  virtual bool DeallocPPendingIPCBlobParent(
-      PPendingIPCBlobParent* aActor) override;
-
   virtual already_AddRefed<PIPCBlobInputStreamParent>
   AllocPIPCBlobInputStreamParent(const nsID& aID,
                                  const uint64_t& aSize) override;
