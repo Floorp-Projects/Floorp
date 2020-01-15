@@ -3494,7 +3494,6 @@ Toolbox.prototype = {
       objectActor && objectActor.getGrip ? objectActor.getGrip() : objectActor;
 
     if (
-      this.currentToolId != "inspector" &&
       objectGrip.preview &&
       objectGrip.preview.nodeType === domNodeConstants.ELEMENT_NODE
     ) {
