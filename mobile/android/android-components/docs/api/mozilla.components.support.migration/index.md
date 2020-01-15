@@ -6,13 +6,16 @@
 
 | Name | Summary |
 |---|---|
+| [AbstractMigrationProgressActivity](-abstract-migration-progress-activity/index.md) | `abstract class AbstractMigrationProgressActivity : AppCompatActivity, `[`MigrationStateListener`](-migration-state-listener/index.md)<br>An activity that notifies on migration progress. Should be used in tandem with [MigrationIntentProcessor](-migration-intent-processor/index.md). |
 | [AbstractMigrationService](-abstract-migration-service/index.md) | `abstract class AbstractMigrationService`<br>Abstract implementation of a background service running a configured [FennecMigrator](-fennec-migrator/index.md). |
 | [AddonMigrationResult](-addon-migration-result/index.md) | `sealed class AddonMigrationResult`<br>Result of an add-on migration. |
 | [FennecMigrator](-fennec-migrator/index.md) | `class FennecMigrator`<br>Entrypoint for Fennec data migration. See [Builder](-fennec-migrator/-builder/index.md) for public API. |
 | [FennecProfile](-fennec-profile/index.md) | `data class FennecProfile`<br>A profile of "Fennec" (Firefox for Android). |
 | [FxaMigrationResult](-fxa-migration-result/index.md) | `sealed class FxaMigrationResult`<br>Result of an FxA migration. |
 | [Migration](-migration/index.md) | `sealed class Migration`<br>Supported Fennec migrations and their current versions. |
+| [MigrationIntentProcessor](-migration-intent-processor/index.md) | `class MigrationIntentProcessor : `[`IntentProcessor`](../mozilla.components.feature.intent.processing/-intent-processor/index.md)<br>An [IntentProcessor](../mozilla.components.feature.intent.processing/-intent-processor/index.md) that checks if we're in a migration state. |
 | [MigrationRun](-migration-run/index.md) | `data class MigrationRun`<br>Results of running a single versioned migration. |
+| [MigrationStateListener](-migration-state-listener/index.md) | `interface MigrationStateListener`<br>Interface to be implemented by classes that want to observe the migration state changes. |
 | [Result](-result/index.md) | `sealed class Result<T>`<br>Class representing the result of a successful or failed migration action. |
 | [SettingsMigrationResult](-settings-migration-result/index.md) | `sealed class SettingsMigrationResult`<br>Result of Fennec settings migration. |
 | [TelemetryIdentifiersResult](-telemetry-identifiers-result/index.md) | `sealed class TelemetryIdentifiersResult`<br>Result of a telemetry identifier migration. |

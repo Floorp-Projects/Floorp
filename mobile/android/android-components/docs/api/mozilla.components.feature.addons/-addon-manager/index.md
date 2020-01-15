@@ -2,7 +2,7 @@
 
 # AddonManager
 
-`class AddonManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddonManager.kt#L25)
+`class AddonManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddonManager.kt#L26)
 
 Provides access to installed and recommended [Addon](../-addon/index.md)s and manages their states.
 
