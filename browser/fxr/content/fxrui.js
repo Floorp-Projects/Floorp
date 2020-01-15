@@ -141,6 +141,13 @@ function setupBrowser() {
     // WebExtensions, since this FxR UI doesn't participate in typical
     // startup activities
     Services.obs.notifyObservers(window, "extensions-late-startup");
+
+    // Load this script in the content process to start and allow scripts for
+    // WebExtensions that run in the content process
+    browser.messageManager.loadFrameScript(
+      "chrome://fxr/content/fxr-content.js",
+      true // allowDelayedLoad
+    );
   }
 }
 
