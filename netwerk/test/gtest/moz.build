@@ -14,7 +14,6 @@ UNIFIED_SOURCES += [
     'TestProtocolProxyService.cpp',
     'TestReadStreamToString.cpp',
     'TestServerTimingHeader.cpp',
-    'TestSocketTransportService.cpp',
     'TestStandardURL.cpp',
 ]
 

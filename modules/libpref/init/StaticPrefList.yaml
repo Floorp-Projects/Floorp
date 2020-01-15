@@ -7175,21 +7175,6 @@
   value: false
   mirror: always
 
-# Force remapping of remote port numbers to allow reaching local testing
-# servers or port forwarders listening on non-standard ports.  Note that
-# this is not changing the origin URL in the addressbar, only internally
-# the port number used.  This is intended to be used along with the
-# `network.dns.forceResolve` preference.
-#
-# The form is:
-#   "80,443,808-888=8080; 563=8081"
-# this will remap ports for HTTP, HTTPS and the range of 808-888 included
-# to use port 8080, and port 563 to go to 8081.
-- name: network.socket.forcePort
-  type: String
-  value: ""
-  mirror: never
-
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
