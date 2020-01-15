@@ -4539,29 +4539,6 @@ void nsFlexContainerFrame::ComputeFlexDirections(
       ConvertAxisOrientationTypeToAPIEnum(crossAxis);
 }
 
-void nsFlexContainerFrame::UpdateClampState(
-    ComputedFlexContainerInfo& aContainerInfo,
-    const mozilla::LinkedList<FlexLine>& aLines) {
-  uint32_t lineIndex = 0;
-  for (const FlexLine* line = aLines.getFirst(); line;
-       line = line->getNext(), ++lineIndex) {
-    ComputedFlexLineInfo* lineInfo = &aContainerInfo.mLines[lineIndex];
-
-    uint32_t itemIndex = 0;
-    for (const FlexItem* item = line->GetFirstItem(); item;
-         item = item->getNext(), ++itemIndex) {
-      ComputedFlexItemInfo* itemInfo = &lineInfo->mItems[itemIndex];
-
-      itemInfo->mClampState =
-          item->WasMinClamped()
-              ? mozilla::dom::FlexItemClampState::Clamped_to_min
-              : (item->WasMaxClamped()
-                     ? mozilla::dom::FlexItemClampState::Clamped_to_max
-                     : mozilla::dom::FlexItemClampState::Unclamped);
-    }
-  }
-}
-
 void nsFlexContainerFrame::UpdateFlexLineAndItemInfo(
     ComputedFlexContainerInfo& aContainerInfo,
     const mozilla::LinkedList<FlexLine>& aLines) {
@@ -4583,6 +4560,12 @@ void nsFlexContainerFrame::UpdateFlexLineAndItemInfo(
       itemInfo.mMainMaxSize = item->GetMainMaxSize();
       itemInfo.mCrossMinSize = item->GetCrossMinSize();
       itemInfo.mCrossMaxSize = item->GetCrossMaxSize();
+      itemInfo.mClampState =
+          item->WasMinClamped()
+              ? mozilla::dom::FlexItemClampState::Clamped_to_min
+              : (item->WasMaxClamped()
+                     ? mozilla::dom::FlexItemClampState::Clamped_to_max
+                     : mozilla::dom::FlexItemClampState::Unclamped);
     }
   }
 }
@@ -4740,11 +4723,6 @@ void nsFlexContainerFrame::DoFlexLayout(
     ComputedFlexLineInfo* lineInfo =
         containerInfo ? &containerInfo->mLines[lineIndex] : nullptr;
     line->ResolveFlexibleLengths(aContentBoxMainSize, lineInfo);
-  }
-
-  // If needed, capture the final clamp state from all the items.
-  if (MOZ_UNLIKELY(containerInfo)) {
-    UpdateClampState(*containerInfo, lines);
   }
 
   // Cross Size Determination - Flexbox spec section 9.4
