@@ -3089,7 +3089,6 @@ class ModalOverlayWrapper extends react__WEBPACK_IMPORTED_MODULE_0___default.a.P
     this.header = this.props.document.getElementById("header-asrouter-container");
 
     if (this.header) {
-      this.header.classList.add("modal-scroll");
       this.props.document.getElementById("root").classList.add("modal-height");
     }
   }
@@ -3099,7 +3098,6 @@ class ModalOverlayWrapper extends react__WEBPACK_IMPORTED_MODULE_0___default.a.P
     this.props.document.body.classList.remove("modal-open");
 
     if (this.header) {
-      this.header.classList.remove("modal-scroll");
       this.props.document.getElementById("root").classList.remove("modal-height");
     }
   }
@@ -3114,11 +3112,11 @@ class ModalOverlayWrapper extends react__WEBPACK_IMPORTED_MODULE_0___default.a.P
       className += ` ${props.innerClassName}`;
     }
 
-    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "modalOverlayOuter active",
       onKeyDown: this.onKeyDown,
       role: "presentation"
-    }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: className,
       "aria-labelledby": props.headerId,
       id: props.id,

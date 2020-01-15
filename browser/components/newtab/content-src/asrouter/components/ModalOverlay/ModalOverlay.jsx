@@ -26,7 +26,6 @@ export class ModalOverlayWrapper extends React.PureComponent {
     );
 
     if (this.header) {
-      this.header.classList.add("modal-scroll");
       this.props.document.getElementById("root").classList.add("modal-height");
     }
   }
@@ -36,7 +35,6 @@ export class ModalOverlayWrapper extends React.PureComponent {
     this.props.document.body.classList.remove("modal-open");
 
     if (this.header) {
-      this.header.classList.remove("modal-scroll");
       this.props.document
         .getElementById("root")
         .classList.remove("modal-height");
@@ -50,12 +48,11 @@ export class ModalOverlayWrapper extends React.PureComponent {
       className += ` ${props.innerClassName}`;
     }
     return (
-      <React.Fragment>
-        <div
-          className="modalOverlayOuter active"
-          onKeyDown={this.onKeyDown}
-          role="presentation"
-        />
+      <div
+        className="modalOverlayOuter active"
+        onKeyDown={this.onKeyDown}
+        role="presentation"
+      >
         <div
           className={className}
           aria-labelledby={props.headerId}
@@ -71,7 +68,7 @@ export class ModalOverlayWrapper extends React.PureComponent {
           )}
           {props.children}
         </div>
-      </React.Fragment>
+      </div>
     );
   }
 }
