@@ -429,10 +429,7 @@ dependencies {
     implementation Deps.mozilla_support_utils
     implementation Deps.mozilla_support_locale
 
-    // We only care about support-migration in builds that will be overwriting Fennec.
-    fennecProductionImplementation Deps.mozilla_support_migration
-    fennecBetaImplementation Deps.mozilla_support_migration
-    fennecNightlyImplementation Deps.mozilla_support_migration
+    implementation Deps.mozilla_support_migration
 
     implementation Deps.mozilla_ui_colors
     implementation Deps.mozilla_ui_icons

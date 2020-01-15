@@ -52,7 +52,8 @@ class IntentReceiverActivity : Activity() {
             )
         }
 
-        val intentProcessors = components.intentProcessors.externalAppIntentProcessors +
+        val intentProcessors = listOf(components.intentProcessors.migrationIntentProcessor) +
+                components.intentProcessors.externalAppIntentProcessors +
                 modeDependentProcessors +
                 NewTabShortcutIntentProcessor()
 

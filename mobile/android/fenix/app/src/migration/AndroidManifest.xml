@@ -13,6 +13,11 @@
         android:name="org.mozilla.fenix.MigratingFenixApplication"
         tools:replace="android:name">
         <service android:name="org.mozilla.fenix.MigrationService" />
+
+        <activity
+            android:name="org.mozilla.fenix.MigrationProgressActivity"
+            android:exported="false">
+        </activity>
     </application>
 </manifest>
 

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="20dp"
+        android:paddingTop="55dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="67dp">
+
+    <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/migration_firefox_logo"
+            android:layout_width="67dp"
+            android:layout_height="67dp"
+            android:contentDescription="@string/firefox_logo_description"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_firefox" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/migration_welcome_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:maxLines="2"
+            android:text="@string/migration_title"
+            android:textAppearance="@style/HeaderTextStyle"
+            android:fontFamily="sans-serif-medium"
+            android:textColor="@color/button_text_color"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toTopOf="@+id/migration_description"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/migration_firefox_logo"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Welcome to the all-new Firefox Preview" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/migration_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/migration_description"
+            android:textAppearance="@style/Header16TextStyle"
+            android:textColor="@color/text_scale_example_text_color"
+            android:fontFamily="sans-serif-light"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/migration_firefox_logo" />
+
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/migration_status_list"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/migration_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/migration_description"
+            tools:itemCount="5"
+            tools:listitem="@layout/migration_list_item" />
+
+    <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/migration_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:minWidth="200dp"
+            android:text="@string/migration_updating_app_button_text"
+            android:textAllCaps="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="Updating Firefox…" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

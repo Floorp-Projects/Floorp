@@ -1117,4 +1117,17 @@
     <string name="search_edit_custom_engine_success_message">Saved %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Deleted %s</string>
+
+    <!-- Description text for the Firefox brand logo -->
+    <string name="firefox_logo_description">Firefox logo</string>
+    <!-- Title text shown for the migration screen to the new browser -->
+    <string name="migration_title">Welcome to an all-new Firefox</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History) -->
+    <string name="migration_description">A completely redesigned browser awaits, with improved performance and features to help you do more online.\n\nPlease wait while we update Firefox with your</string>
+    <!-- Text on the disabled button while in progress -->
+    <string name="migration_updating_app_button_text">Updating %s…</string>
+    <!-- Text on the enabled button -->
+    <string name="migration_update_app_button">Start %s</string>
+    <!-- Accessibility description text for completed migration item (e.g. Bookmarks, History) -->
+    <string name="migration_icon_description">Migration status: %s</string>
 </resources>

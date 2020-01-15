@@ -7,10 +7,11 @@ package org.mozilla.fenix.components
 import android.content.Intent
 import mozilla.components.feature.intent.processing.IntentProcessor
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.MigrationProgressActivity
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 
 enum class IntentProcessorType {
-    EXTERNAL_APP, NEW_TAB, OTHER;
+    EXTERNAL_APP, NEW_TAB, MIGRATION, OTHER;
 
     /**
      * The destination activity based on this intent
@@ -19,6 +20,7 @@ enum class IntentProcessorType {
         get() = when (this) {
             EXTERNAL_APP -> ExternalAppBrowserActivity::class.java.name
             NEW_TAB, OTHER -> HomeActivity::class.java.name
+            MIGRATION -> MigrationProgressActivity::class.java.name
         }
 
     /**
@@ -27,7 +29,7 @@ enum class IntentProcessorType {
     fun shouldOpenToBrowser(intent: Intent): Boolean = when (this) {
         EXTERNAL_APP -> true
         NEW_TAB -> intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
-        OTHER -> false
+        MIGRATION, OTHER -> false
     }
 }
 
@@ -35,6 +37,7 @@ enum class IntentProcessorType {
  * Classifies the [IntentProcessorType] based on the [IntentProcessor] that handled the [Intent].
  */
 fun IntentProcessors.getType(processor: IntentProcessor?) = when {
+    migrationIntentProcessor == processor -> IntentProcessorType.MIGRATION
     externalAppIntentProcessors.contains(processor) ||
             customTabIntentProcessor == processor ||
             privateCustomTabIntentProcessor == processor -> IntentProcessorType.EXTERNAL_APP
