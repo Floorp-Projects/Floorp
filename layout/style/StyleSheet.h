@@ -373,6 +373,14 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
     return bool(mState & State::ModificationDisallowed);
   }
 
+  // True if the sheet was created through the Constructable StyleSheets API
+  bool IsConstructed() const { return !!mConstructorDocument; }
+
+  // Ture if the sheet's constructor document matches the given document
+  bool ConstructorDocumentMatches(dom::Document* document) const {
+    return mConstructorDocument == document;
+  }
+
   // WebIDL miscellaneous bits
   inline dom::ParentObject GetParentObject() const;
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
