@@ -2136,7 +2136,7 @@ void nsCSSFrameConstructor::SetRootElementFrameAndConstructCanvasAnonContent(
 }
 
 nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
-    Element* aDocElement, nsILayoutHistoryState* aFrameState) {
+    Element* aDocElement) {
   MOZ_ASSERT(GetRootFrame(),
              "No viewport?  Someone forgot to call ConstructRootFrame!");
   MOZ_ASSERT(!mDocElementContainingBlock,
@@ -2168,15 +2168,18 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
 
   SetUpDocElementContainingBlock(aDocElement);
 
+  // This has the side-effect of getting `mFrameTreeState` from our docshell.
+  //
+  // FIXME(emilio): There may be a more sensible time to do this.
+  if (!mFrameTreeState) {
+    mPresShell->CaptureHistoryState(getter_AddRefs(mFrameTreeState));
+  }
+
   NS_ASSERTION(mDocElementContainingBlock, "Should have parent by now");
   nsFrameConstructorState state(
       mPresShell,
       GetAbsoluteContainingBlock(mDocElementContainingBlock, FIXED_POS),
-      nullptr, nullptr, do_AddRef(aFrameState));
-
-  // XXXbz why, exactly?
-  if (!mTempFrameTreeState)
-    state.mPresShell->CaptureHistoryState(getter_AddRefs(mTempFrameTreeState));
+      nullptr, nullptr, do_AddRef(mFrameTreeState));
 
   RefPtr<ComputedStyle> computedStyle =
       ServoStyleSet::ResolveServoStyle(*aDocElement);
@@ -6336,7 +6339,7 @@ void nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aContent) {
   }
   MOZ_ASSERT(!aContent->GetPrimaryFrame(),
              "Text node has a frame and NS_CREATE_FRAME_IF_NON_WHITESPACE");
-  ContentInserted(aContent, nullptr, InsertionKind::Async);
+  ContentInserted(aContent, InsertionKind::Async);
 }
 
 #ifdef DEBUG
@@ -6462,8 +6465,7 @@ void nsCSSFrameConstructor::IssueSingleInsertNofications(
     MOZ_ASSERT(!child->GetPrimaryFrame());
 
     // Call ContentRangeInserted with this node.
-    ContentRangeInserted(child, child->GetNextSibling(), mTempFrameTreeState,
-                         aInsertionKind);
+    ContentRangeInserted(child, child->GetNextSibling(), aInsertionKind);
   }
 }
 
@@ -6882,10 +6884,8 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
 }
 
 void nsCSSFrameConstructor::ContentInserted(nsIContent* aChild,
-                                            nsILayoutHistoryState* aFrameState,
                                             InsertionKind aInsertionKind) {
-  ContentRangeInserted(aChild, aChild->GetNextSibling(), aFrameState,
-                       aInsertionKind);
+  ContentRangeInserted(aChild, aChild->GetNextSibling(), aInsertionKind);
 }
 
 // ContentRangeInserted handles creating frames for a range of nodes that
@@ -6906,9 +6906,9 @@ void nsCSSFrameConstructor::ContentInserted(nsIContent* aChild,
 // in the caption list, while skipping any nodes in the range being inserted
 // (because when we treat the caption frames the other nodes have had their
 // frames constructed but not yet inserted into the frame tree).
-void nsCSSFrameConstructor::ContentRangeInserted(
-    nsIContent* aStartChild, nsIContent* aEndChild,
-    nsILayoutHistoryState* aFrameState, InsertionKind aInsertionKind) {
+void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
+                                                 nsIContent* aEndChild,
+                                                 InsertionKind aInsertionKind) {
   MOZ_ASSERT(aInsertionKind == InsertionKind::Sync ||
              !RestyleManager()->IsInStyleRefresh());
 
@@ -6967,7 +6967,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(
     MOZ_ASSERT(!mRootElementFrame, "root element frame already created");
 
     // Create frames for the document element and its child elements
-    if (ConstructDocElementFrame(docElement, aFrameState)) {
+    if (ConstructDocElementFrame(docElement)) {
       InvalidateCanvasIfNeeded(mPresShell, aStartChild);
 #ifdef DEBUG
       if (gReallyNoisyContentUpdates) {
@@ -6977,13 +6977,6 @@ void nsCSSFrameConstructor::ContentRangeInserted(
         mRootElementFrame->List(stdout);
       }
 #endif
-    }
-
-    if (aFrameState) {
-      // Restore frame state for the root scroll frame if there is one
-      if (nsIFrame* rootScrollFrame = mPresShell->GetRootScrollFrame()) {
-        RestoreFrameStateFor(rootScrollFrame, aFrameState);
-      }
     }
 
 #ifdef ACCESSIBILITY
@@ -7090,7 +7083,8 @@ void nsCSSFrameConstructor::ContentRangeInserted(
   nsFrameConstructorState state(
       mPresShell, GetAbsoluteContainingBlock(insertion.mParentFrame, FIXED_POS),
       GetAbsoluteContainingBlock(insertion.mParentFrame, ABS_POS),
-      GetFloatContainingBlock(insertion.mParentFrame), do_AddRef(aFrameState));
+      GetFloatContainingBlock(insertion.mParentFrame),
+      do_AddRef(mFrameTreeState));
 
   // Recover state for the containing block - we need to know if
   // it has :first-letter or :first-line style applied to it. The
@@ -7476,8 +7470,8 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
   if (childFrame) {
     if (aFlags == REMOVE_FOR_RECONSTRUCTION) {
       // Before removing the frames associated with the content object,
-      // ask them to save their state onto a temporary state object.
-      CaptureStateForFramesOf(aChild, mTempFrameTreeState);
+      // ask them to save their state onto our state object.
+      CaptureStateForFramesOf(aChild, mFrameTreeState);
     }
 
     InvalidateCanvasIfNeeded(mPresShell, aChild);
@@ -8636,7 +8630,7 @@ void nsCSSFrameConstructor::RecreateFramesForContent(
       // ContentRemoved triggered reconstruction, then we don't need to do this
       // because the frames will already have been built.
       ContentRangeInserted(aContent, aContent->GetNextSibling(),
-                           mTempFrameTreeState, aInsertionKind);
+                           aInsertionKind);
     }
   }
 }

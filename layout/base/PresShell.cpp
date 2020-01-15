@@ -1739,7 +1739,7 @@ nsresult PresShell::Initialize() {
       // Have the style sheet processor construct frame for the root
       // content object down
       mFrameConstructor->ContentInserted(
-          root, nullptr, nsCSSFrameConstructor::InsertionKind::Sync);
+          root, nsCSSFrameConstructor::InsertionKind::Sync);
 
       // Something in mFrameConstructor->ContentInserted may have caused
       // Destroy() to get called, bug 337586.
@@ -4283,7 +4283,7 @@ void PresShell::ContentInserted(nsIContent* aChild) {
   mPresContext->RestyleManager()->ContentInserted(aChild);
 
   mFrameConstructor->ContentInserted(
-      aChild, nullptr, nsCSSFrameConstructor::InsertionKind::Async);
+      aChild, nsCSSFrameConstructor::InsertionKind::Async);
 }
 
 void PresShell::ContentRemoved(nsIContent* aChild,
