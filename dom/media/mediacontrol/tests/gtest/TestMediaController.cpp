@@ -40,16 +40,16 @@ TEST(MediaController, NotifyMediaStateChanged)
 TEST(MediaController, ActiveAndDeactiveController)
 {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
-  ASSERT_TRUE(service->GetControllersNum() == 0);
+  ASSERT_TRUE(service->GetActiveControllersNum() == 0);
 
   RefPtr<MediaController> controller1 =
       new MediaController(FIRST_CONTROLLER_ID);
 
   controller1->NotifyMediaStateChanged(ControlledMediaState::eStarted);
-  ASSERT_TRUE(service->GetControllersNum() == 1);
+  ASSERT_TRUE(service->GetActiveControllersNum() == 1);
 
   controller1->NotifyMediaStateChanged(ControlledMediaState::eStopped);
-  ASSERT_TRUE(service->GetControllersNum() == 0);
+  ASSERT_TRUE(service->GetActiveControllersNum() == 0);
 }
 
 TEST(MediaController, AudibleChanged)

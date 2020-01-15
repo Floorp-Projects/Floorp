@@ -14,51 +14,51 @@ using namespace mozilla::dom;
 TEST(MediaControlService, TestAddOrRemoveControllers)
 {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
-  ASSERT_TRUE(service->GetControllersNum() == 0);
+  ASSERT_TRUE(service->GetActiveControllersNum() == 0);
 
   RefPtr<MediaController> controller1 =
       new MediaController(FIRST_CONTROLLER_ID);
   RefPtr<MediaController> controller2 =
       new MediaController(SECOND_CONTROLLER_ID);
 
-  service->AddMediaController(controller1);
-  ASSERT_TRUE(service->GetControllersNum() == 1);
+  service->RegisterActiveMediaController(controller1);
+  ASSERT_TRUE(service->GetActiveControllersNum() == 1);
 
-  service->AddMediaController(controller2);
-  ASSERT_TRUE(service->GetControllersNum() == 2);
+  service->RegisterActiveMediaController(controller2);
+  ASSERT_TRUE(service->GetActiveControllersNum() == 2);
 
-  service->RemoveMediaController(controller1);
-  ASSERT_TRUE(service->GetControllersNum() == 1);
+  service->UnregisterActiveMediaController(controller1);
+  ASSERT_TRUE(service->GetActiveControllersNum() == 1);
 
-  service->RemoveMediaController(controller2);
-  ASSERT_TRUE(service->GetControllersNum() == 0);
+  service->UnregisterActiveMediaController(controller2);
+  ASSERT_TRUE(service->GetActiveControllersNum() == 0);
 }
 
 TEST(MediaControlService, TestMainController)
 {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
-  ASSERT_TRUE(service->GetControllersNum() == 0);
+  ASSERT_TRUE(service->GetActiveControllersNum() == 0);
 
   RefPtr<MediaController> controller1 =
       new MediaController(FIRST_CONTROLLER_ID);
-  service->AddMediaController(controller1);
+  service->RegisterActiveMediaController(controller1);
 
   RefPtr<MediaController> mainController = service->GetMainController();
   ASSERT_TRUE(mainController->Id() == FIRST_CONTROLLER_ID);
 
   RefPtr<MediaController> controller2 =
       new MediaController(SECOND_CONTROLLER_ID);
-  service->AddMediaController(controller2);
+  service->RegisterActiveMediaController(controller2);
 
   mainController = service->GetMainController();
   ASSERT_TRUE(mainController->Id() == SECOND_CONTROLLER_ID);
 
-  service->RemoveMediaController(controller2);
+  service->UnregisterActiveMediaController(controller2);
   mainController = service->GetMainController();
   ASSERT_TRUE(mainController->Id() == FIRST_CONTROLLER_ID);
 
-  service->RemoveMediaController(controller1);
+  service->UnregisterActiveMediaController(controller1);
   mainController = service->GetMainController();
-  ASSERT_TRUE(service->GetControllersNum() == 0);
+  ASSERT_TRUE(service->GetActiveControllersNum() == 0);
   ASSERT_TRUE(!mainController);
 }
