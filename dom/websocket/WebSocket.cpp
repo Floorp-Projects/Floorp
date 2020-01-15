@@ -1742,7 +1742,7 @@ nsresult WebSocketImpl::InitializeConnection(
   rv = wsChannel->InitLoadInfoNative(
       doc, doc ? doc->NodePrincipal() : aPrincipal, aPrincipal, aCookieSettings,
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-      nsIContentPolicy::TYPE_WEBSOCKET);
+      nsIContentPolicy::TYPE_WEBSOCKET, 0);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (!mRequestedProtocolList.IsEmpty()) {
