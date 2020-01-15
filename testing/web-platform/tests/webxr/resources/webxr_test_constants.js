@@ -136,6 +136,14 @@ const TRACKED_IMMERSIVE_DEVICE = {
     supportedFeatures: ALL_FEATURES
 };
 
+const IMMERSIVE_AR_DEVICE = {
+  supportsImmersive: true,
+  supportedModes: [ "inline", "immersive-ar"],
+  views: VALID_VIEWS,
+  viewerOrigin: IDENTITY_TRANSFORM,
+  supportedFeatures: ALL_FEATURES
+};
+
 const VALID_NON_IMMERSIVE_DEVICE = {
     supportsImmersive: false,
     supportedModes: ["inline"],
