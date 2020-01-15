@@ -373,3 +373,7 @@
   margin-bottom: 0 !important; /* Overrides .info-panel margin-bottom. */
   margin-inline-end: 32px;
 }
+
+#submitHealthReportBox {
+  display: -moz-inline-box;
+}
