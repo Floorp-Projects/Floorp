@@ -386,6 +386,17 @@ LoginManager.prototype = {
   },
 
   /**
+   * Record that the password of a saved login was used (e.g. submitted or copied).
+   */
+  recordPasswordUse(login) {
+    log.debug(
+      "Recording password use",
+      login.QueryInterface(Ci.nsILoginMetaInfo).guid
+    );
+    this._storage.recordPasswordUse(login);
+  },
+
+  /**
    * Get a dump of all stored logins. Used by the login manager UI.
    *
    * @return {nsILoginInfo[]} - If there are no logins, the array is empty.

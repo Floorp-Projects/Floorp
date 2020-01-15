@@ -350,7 +350,7 @@ class LoginManagerPrompter {
       ) {
         // We only want to touch the login's use count and last used time.
         log.debug("persistData: Touch matched login", loginToUpdate.guid);
-        this._updateLogin(loginToUpdate);
+        Services.logins.recordPasswordUse(loginToUpdate);
       } else {
         log.debug("persistData: Update matched login", loginToUpdate.guid);
         this._updateLogin(loginToUpdate, login);
@@ -668,21 +668,19 @@ class LoginManagerPrompter {
 
   /* ---------- Internal Methods ---------- */
 
-  static _updateLogin(login, aNewLogin = null) {
+  static _updateLogin(login, aNewLogin) {
     var now = Date.now();
     var propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag
     );
-    if (aNewLogin) {
-      propBag.setProperty("formActionOrigin", aNewLogin.formActionOrigin);
-      propBag.setProperty("origin", aNewLogin.origin);
-      propBag.setProperty("password", aNewLogin.password);
-      propBag.setProperty("username", aNewLogin.username);
-      // Explicitly set the password change time here (even though it would
-      // be changed automatically), to ensure that it's exactly the same
-      // value as timeLastUsed.
-      propBag.setProperty("timePasswordChanged", now);
-    }
+    propBag.setProperty("formActionOrigin", aNewLogin.formActionOrigin);
+    propBag.setProperty("origin", aNewLogin.origin);
+    propBag.setProperty("password", aNewLogin.password);
+    propBag.setProperty("username", aNewLogin.username);
+    // Explicitly set the password change time here (even though it would
+    // be changed automatically), to ensure that it's exactly the same
+    // value as timeLastUsed.
+    propBag.setProperty("timePasswordChanged", now);
     propBag.setProperty("timeLastUsed", now);
     propBag.setProperty("timesUsedIncrement", 1);
     Services.logins.modifyLogin(login, propBag);

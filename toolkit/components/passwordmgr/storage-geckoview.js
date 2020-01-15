@@ -78,6 +78,10 @@ class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  recordPasswordUse(login) {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   getAllLogins() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   }
