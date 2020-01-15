@@ -8,7 +8,7 @@
 #if ((defined(__clang__) ||                                         \
       (defined(__GNUC__) && defined(__GNUC_MINOR__) &&              \
        (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 8)))) && \
-     defined(IS_LITTLE_ENDIAN))
+     (defined(__ARM_NEON) || defined(__ARM_NEON__)))
 
 #ifndef __ARM_FEATURE_CRYPTO
 #error "Compiler option is invalid"

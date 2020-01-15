@@ -41,6 +41,11 @@ const FUZZ_IMAGE_32 = {
   path: "automation/taskcluster/docker-fuzz32"
 };
 
+const HACL_GEN_IMAGE = {
+  name: "hacl",
+  path: "automation/taskcluster/docker-hacl"
+};
+
 const SAW_IMAGE = {
   name: "saw",
   path: "automation/taskcluster/docker-saw"
@@ -1021,10 +1026,6 @@ function scheduleTests(task_build, task_cert, test_base) {
       NSS_DISABLE_SSSE3: "1"
     }, group: "Cipher"
   }));
-  queue.scheduleTask(merge(cert_base_long, {
-    name: "Cipher tests", symbol: "NoSSE4.1", tests: "cipher",
-    env: {NSS_DISABLE_SSE4_1: "1"}, group: "Cipher"
-  }));
   queue.scheduleTask(merge(cert_base, {
     name: "EC tests", symbol: "EC", tests: "ec"
   }));
@@ -1153,7 +1154,7 @@ async function scheduleTools() {
   queue.scheduleTask(merge(base, {
     symbol: "hacl",
     name: "hacl",
-    image: LINUX_BUILDS_IMAGE,
+    image: HACL_GEN_IMAGE,
     command: [
       "/bin/bash",
       "-c",
@@ -1199,22 +1200,18 @@ async function scheduleTools() {
     ]
   }));
 
-  // TODO: The ChaCha20 saw verification is currently disabled because the new
-  //       HACL 32-bit code can't be verified by saw right now to the best of
-  //       my knowledge.
-  //       Bug 1604130
-  // queue.scheduleTask(merge(base, {
-  //   parent: task_saw,
-  //   symbol: "ChaCha20",
-  //   group: "SAW",
-  //   name: "chacha20.saw",
-  //   image: SAW_IMAGE,
-  //   command: [
-  //     "/bin/bash",
-  //     "-c",
-  //     "bin/checkout.sh && nss/automation/taskcluster/scripts/run_saw.sh chacha20"
-  //   ]
-  // }));
+  queue.scheduleTask(merge(base, {
+    parent: task_saw,
+    symbol: "ChaCha20",
+    group: "SAW",
+    name: "chacha20.saw",
+    image: SAW_IMAGE,
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_saw.sh chacha20"
+    ]
+  }));
 
   queue.scheduleTask(merge(base, {
     parent: task_saw,
