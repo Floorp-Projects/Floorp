@@ -854,6 +854,13 @@ AccessibleCaretManager::CaretMode AccessibleCaretManager::GetCaretMode() const {
     return CaretMode::None;
   }
 
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  MOZ_ASSERT(fm);
+  if (fm->GetFocusedWindow() != mPresShell->GetDocument()->GetWindow()) {
+    // Hide carets if the window is not focused.
+    return CaretMode::None;
+  }
+
   if (selection->IsCollapsed()) {
     return CaretMode::Cursor;
   }
