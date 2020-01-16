@@ -47,6 +47,7 @@ def add_shippable_secrets(config, tasks):
                 ('digital_asset_links', '.digital_asset_links_token'),
                 ('leanplum', '.leanplum_token'),
                 ('sentry_dsn', '.sentry_token'),
+                ('mls', '.mls_token'),
             )])
         else:
             task["run"]["pre-gradlew"] = [[
@@ -55,6 +56,7 @@ def add_shippable_secrets(config, tasks):
                 ("--", ".adjust_token"),
                 ("", ".digital_asset_links_token"),
                 ("-:-", ".leanplum_token"),
+                ("", ".mls_token"),
                 ("https://fake@sentry.prod.mozaws.net/368", ".sentry_token"),
             )]
 

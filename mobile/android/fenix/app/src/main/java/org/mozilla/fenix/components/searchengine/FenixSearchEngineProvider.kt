@@ -17,7 +17,10 @@ import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
 import mozilla.components.browser.search.provider.SearchEngineList
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.filter.SearchEngineFilter
-import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
+import mozilla.components.service.location.MozillaLocationService
+import mozilla.components.service.location.search.RegionSearchLocalizationProvider
+import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import java.util.Locale
 
@@ -26,15 +29,25 @@ open class FenixSearchEngineProvider(
     private val context: Context
 ) : SearchEngineProvider, CoroutineScope by CoroutineScope(Job() + Dispatchers.IO) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+
+    private val localizationProvider =
+        RegionSearchLocalizationProvider(
+            MozillaLocationService(
+                context,
+                context.components.core.client,
+                BuildConfig.MLS_TOKEN
+            )
+        )
+
     open val baseSearchEngines = async {
-        AssetsSearchEngineProvider(LocaleSearchLocalizationProvider()).loadSearchEngines(context)
+        AssetsSearchEngineProvider(localizationProvider).loadSearchEngines(context)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     open val bundledSearchEngines = async {
         val defaultEngineIdentifiers = baseSearchEngines.await().list.map { it.identifier }.toSet()
         AssetsSearchEngineProvider(
-            LocaleSearchLocalizationProvider(),
+            localizationProvider,
             filters = listOf(object : SearchEngineFilter {
                 override fun filter(context: Context, searchEngine: SearchEngine): Boolean {
                     return BUNDLED_SEARCH_ENGINES.contains(searchEngine.identifier) &&

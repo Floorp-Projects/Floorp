@@ -356,6 +356,21 @@ android.applicationVariants.all { variant ->
         buildConfigField 'String', 'DIGITAL_ASSET_LINKS_TOKEN', 'null'
         println("X_X")
     }
+
+// -------------------------------------------------------------------------------------------------
+// MLS: Read token from local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+    print("MLS token: ")
+
+    try {
+        def token = new File("${rootDir}/.mls_token").text.trim()
+        buildConfigField 'String', 'MLS_TOKEN', '"' + token + '"'
+        println "(Added from .mls_token file)"
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'MLS_TOKEN', '""'
+        println("X_X")
+    }
 }
 
 androidExtensions {
@@ -429,6 +444,8 @@ dependencies {
     implementation Deps.mozilla_service_firefox_accounts
     implementation Deps.mozilla_service_glean
     implementation Deps.mozilla_service_experiments
+    implementation Deps.mozilla_service_location
+
 
     implementation Deps.mozilla_support_base
     implementation Deps.mozilla_support_ktx
