@@ -2522,8 +2522,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   using IsIntegerUnit = bool (*)(int32_t);
   MOZ_MUST_USE MOZ_ALWAYS_INLINE bool matchInteger(IsIntegerUnit isIntegerUnit,
                                                    int32_t* nextUnit);
-  MOZ_MUST_USE MOZ_ALWAYS_INLINE bool matchIntegerAfterFirstDigit(
-      IsIntegerUnit isIntegerUnit, int32_t* nextUnit);
 
   /**
    * Tokenize a decimal number that begins at |numStart| into the provided
