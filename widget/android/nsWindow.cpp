@@ -1805,8 +1805,7 @@ nsWindow* nsWindow::FindTopLevel() {
   return this;
 }
 
-void nsWindow::SetFocus(Raise) {
-  // FIXME: Shouldn't this account for the argument?
+void nsWindow::SetFocus(Raise, mozilla::dom::CallerType aCallerType) {
   FindTopLevel()->BringToFront();
 }
 

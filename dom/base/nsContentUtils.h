@@ -1580,7 +1580,8 @@ class nsContentUtils {
    * Helper to dispatch a "framefocusrequested" event to chrome, which will only
    * bring the window to the foreground and switch tabs if aCanRaise is true.
    */
-  static void RequestFrameFocus(Element& aFrameElement, bool aCanRaise);
+  static void RequestFrameFocus(Element& aFrameElement, bool aCanRaise,
+                                mozilla::dom::CallerType aCallerType);
 
   /**
    * This method creates and dispatches a trusted event.
