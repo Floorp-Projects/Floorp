@@ -404,7 +404,7 @@ class InternalRequest final {
   MOZ_INIT_OUTSIDE_CTOR bool mPreserveContentCodings;
   MOZ_INIT_OUTSIDE_CTOR bool mSameOriginDataURL;
   MOZ_INIT_OUTSIDE_CTOR bool mSkipServiceWorker;
-  MOZ_INIT_OUTSIDE_CTOR bool mSynchronous;
+  bool mSynchronous = false;
   MOZ_INIT_OUTSIDE_CTOR bool mUnsafeRequest;
   bool mUseURLCredentials = false;
   // This is only set when Request.overrideContentPolicyType() has been set.
