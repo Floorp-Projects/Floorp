@@ -171,6 +171,8 @@
       let shadowSelect = getAccessible("selectShadow").firstChild;
       gQueue.push(new changeSelectValue(shadowSelect, "VK_DOWN", "2"));
 
+      gQueue.push(new changeValue("number", "2"));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -269,5 +271,7 @@
     select.appendChild(option);
     shadow.appendChild(select);
   </script>
+
+  <input type="number" id="number" value="1">
 </body>
 </html>
