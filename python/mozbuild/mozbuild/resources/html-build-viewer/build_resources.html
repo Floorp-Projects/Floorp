@@ -209,6 +209,7 @@ function updateResourcesGraph() {
   var what = "cpu";
 
   renderResources("resource_graph", currentResources, what);
+  renderTimeline("tiers", currentResources);
   document.getElementById("wall_time").innerHTML = Math.round(currentResources.duration * 100) / 100;
   document.getElementById("start_date").innerHTML = currentResources.startDate.toISOString();
   document.getElementById("end_date").innerHTML = currentResources.endDate.toISOString();
@@ -358,14 +359,26 @@ function renderResources(id, resources, what) {
     .attr("class", "y axis")
     .call(yAxis)
     ;
+}
 
+function renderTimeline(id, resources) {
+  document.getElementById(id).innerHTML = "";
+
+  var margin = {top: 20, right: 20, bottom: 20, left: 50};
+  var width = window.innerWidth - 50 - margin.left - margin.right;
+  var height = 400 - margin.top - margin.bottom;
+
+  var x = d3.scale.linear()
+    .range([0, width])
+    .domain(d3.extent(resources.resources, function (d) { return d.start; }))
+    ;
   // Now we render a timeline of sorts of the tiers
   // There is a row of rectangles that visualize divisions between the
   // different items. We use the same x scale as the resource graph so times
   // line up properly.
   svg = d3.select("#" + id).append("svg")
     .attr("width", width + margin.left + margin.right)
-    .attr("height", 100 + margin.top + margin.bottom)
+    .attr("height", 100)
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
     ;
@@ -474,6 +487,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <select id="list" style="display: none"></select>
     <div id="resource_graph"></div>
+    <div id="tiers"></div>
     <div id="summary" style="padding-top: 20px">
       <table border="0">
         <tr><td>Wall Time (s)</td><td id="wall_time"></td></tr>
