@@ -117,7 +117,7 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
 
   const { dbgWindow, bindSelf } = getDbgWindow(options, dbg, webConsole);
   const helpers = getHelpers(dbgWindow, options, webConsole);
-  const { bindings, helperCache } = bindCommands(
+  let { bindings, helperCache } = bindCommands(
     isCommand(string),
     dbgWindow,
     bindSelf,
@@ -125,10 +125,21 @@ exports.evalWithDebugger = function(string, options = {}, webConsole) {
     helpers
   );
 
+  if (options.bindings) {
+    bindings = { ...(bindings || {}), ...options.bindings };
+  }
+
   // Ready to evaluate the string.
   helpers.evalInput = string;
-  const evalOptions =
-    typeof options.url === "string" ? { url: options.url } : null;
+  const evalOptions = {};
+
+  if (typeof options.url === "string") {
+    evalOptions.url = options.url;
+  }
+
+  if (typeof options.lineNumber === "number") {
+    evalOptions.lineNumber = options.lineNumber;
+  }
 
   updateConsoleInputEvaluation(dbg, dbgWindow, webConsole);
 
