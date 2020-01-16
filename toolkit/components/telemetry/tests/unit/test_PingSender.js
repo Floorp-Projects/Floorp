@@ -16,6 +16,38 @@ ChromeUtils.import("resource://gre/modules/TelemetryStorage.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Timer.jsm", this);
 
+function generateTestPingData() {
+  return {
+    type: "test-pingsender-type",
+    id: TelemetryUtils.generateUUID(),
+    creationDate: new Date().toISOString(),
+    version: 4,
+    payload: {
+      dummy: "stuff",
+    },
+  };
+}
+
+function testSendingPings(pingPaths) {
+  const url = "http://localhost:" + PingServer.port + "/submit/telemetry/";
+  const pings = pingPaths.map(path => {
+    return {
+      url,
+      path,
+    };
+  });
+  TelemetrySend.testRunPingSender(pings, (_, topic, __) => {
+    switch (topic) {
+      case "process-finished": // finished indicates an exit code of 0
+        Assert.ok(true, "Pingsender should be able to post to localhost");
+        break;
+      case "process-failed": // failed indicates an exit code != 0
+        Assert.ok(false, "Pingsender should be able to post to localhost");
+        break;
+    }
+  });
+}
+
 /**
  * Wait for a ping file to be deleted from the pending pings directory.
  */
@@ -49,15 +81,7 @@ add_task(async function setup() {
 
 add_task(async function test_pingSender() {
   // Generate a new ping and save it among the pending pings.
-  const data = {
-    type: "test-pingsender-type",
-    id: TelemetryUtils.generateUUID(),
-    creationDate: new Date(1485810000).toISOString(),
-    version: 4,
-    payload: {
-      dummy: "stuff",
-    },
-  };
+  const data = generateTestPingData();
   await TelemetryStorage.savePing(data, true);
 
   // Get the local path of the saved ping.
@@ -83,8 +107,8 @@ add_task(async function test_pingSender() {
   // Try to send the ping twice using the pingsender (we expect 404 both times).
   const errorUrl =
     "http://localhost:" + failingServer.identity.primaryPort + "/lookup_fail";
-  TelemetrySend.testRunPingSender(errorUrl, pingPath);
-  TelemetrySend.testRunPingSender(errorUrl, pingPath);
+  TelemetrySend.testRunPingSender([{ url: errorUrl, path: pingPath }]);
+  TelemetrySend.testRunPingSender([{ url: errorUrl, path: pingPath }]);
 
   // Wait until we hit the 404 server twice. After that, make sure that the ping
   // still exists locally.
@@ -95,25 +119,7 @@ add_task(async function test_pingSender() {
   );
 
   // Try to send it using the pingsender.
-  const url = "http://localhost:" + PingServer.port + "/submit/telemetry/";
-  TelemetrySend.testRunPingSender(url, pingPath, (_, topic, __) => {
-    switch (topic) {
-      case "process-finished": // finished indicates an exit code of 0
-        Assert.equal(
-          true,
-          true,
-          "Pingsender should be able to post to localhost"
-        );
-        break;
-      case "process-failed": // failed indicates an exit code != 0
-        Assert.equal(
-          true,
-          false,
-          "Pingsender should be able to post to localhost"
-        );
-        break;
-    }
-  });
+  testSendingPings([pingPath]);
 
   let req = await PingServer.promiseNextRequest();
   let ping = decodeRequestPayload(req);
@@ -160,8 +166,7 @@ add_task(async function test_pingSender() {
   ];
   for (let indx in bannedUris) {
     TelemetrySend.testRunPingSender(
-      bannedUris[indx],
-      pingPath,
+      [{ url: bannedUris[indx], path: pingPath }],
       (_, topic, __) => {
         switch (topic) {
           case "process-finished": // finished indicates an exit code of 0
@@ -188,6 +193,35 @@ add_task(async function test_pingSender() {
   // Shut down the failing server. We do this now, and not right after using it,
   // to make sure we're not interfering with the test.
   await new Promise(r => failingServer.stop(r));
+});
+
+add_task(async function test_pingSender_multiple_pings() {
+  // Generate two new pings and save them among the pending pings.
+  const data = [generateTestPingData(), generateTestPingData()];
+
+  for (const d of data) {
+    await TelemetryStorage.savePing(d, true);
+  }
+
+  // Get the local path of the saved pings.
+  const pingPaths = data.map(d =>
+    OS.Path.join(TelemetryStorage.pingDirectoryPath, d.id)
+  );
+
+  // Try to send them using the pingsender.
+  testSendingPings(pingPaths);
+
+  // Check the pings
+  for (const d of data) {
+    let req = await PingServer.promiseNextRequest();
+    let ping = decodeRequestPayload(req);
+    Assert.equal(ping.id, d.id, "Should have received the correct ping id.");
+  }
+
+  // Check that the PingSender removed the pending pings.
+  for (const d of data) {
+    await waitForPingDeletion(d.id);
+  }
 });
 
 add_task(async function cleanup() {
