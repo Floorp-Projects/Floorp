@@ -439,7 +439,7 @@ void ClientWebGLContext::BeginComposition() {
   if (!mNotLost) return;
   if (mNotLost->inProcess) {
     WEBGL_BRIDGE_LOGI("[%p] Presenting", this);
-    mNotLost->inProcess->Present();
+    Run<RPROC(Present)>();
   }
 }
 
