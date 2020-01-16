@@ -57,7 +57,8 @@
         -->
         <activity-alias
             android:name="org.mozilla.gecko.BrowserApp"
-            android:targetActivity=".IntentReceiverActivity">
+            android:targetActivity=".IntentReceiverActivity"
+            android:exported="true">
         </activity-alias>
 
         <activity
