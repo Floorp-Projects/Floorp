@@ -6819,74 +6819,58 @@ class LWasmStackArgI64 : public LInstructionHelper<0, INT64_PIECES, 0> {
   const LInt64Allocation arg() { return getInt64Operand(0); }
 };
 
-inline bool IsWasmCall(LNode::Opcode op) {
-  return (op == LNode::Opcode::WasmCall || op == LNode::Opcode::WasmCallVoid ||
-          op == LNode::Opcode::WasmCallI64);
-}
-
 class LWasmNullConstant : public LInstructionHelper<1, 0, 0> {
  public:
   LIR_HEADER(WasmNullConstant);
   explicit LWasmNullConstant() : LInstructionHelper(classOpcode) {}
 };
 
-template <size_t Defs>
-class LWasmCallBase : public LVariadicInstruction<Defs, 0> {
-  using Base = LVariadicInstruction<Defs, 0>;
-
+class LWasmCall : public LVariadicInstruction<0, 0> {
   bool needsBoundsCheck_;
 
  public:
-  LWasmCallBase(LNode::Opcode opcode, uint32_t numOperands,
-                bool needsBoundsCheck)
-      : Base(opcode, numOperands), needsBoundsCheck_(needsBoundsCheck) {
-    MOZ_ASSERT(IsWasmCall(opcode));
+  LIR_HEADER(WasmCall);
+
+  LWasmCall(uint32_t numOperands, bool needsBoundsCheck)
+      : LVariadicInstruction(classOpcode, numOperands),
+        needsBoundsCheck_(needsBoundsCheck) {
     this->setIsCall();
   }
 
-  MWasmCall* mir() const { return this->mir_->toWasmCall(); }
+  MWasmCall* mir() const { return mir_->toWasmCall(); }
 
   static bool isCallPreserved(AnyRegister reg) {
     // All MWasmCalls preserve the TLS register:
     //  - internal/indirect calls do by the internal wasm ABI
     //  - import calls do by explicitly saving/restoring at the callsite
     //  - builtin calls do because the TLS reg is non-volatile
-    // See also CodeGeneratorShared::emitWasmCallBase.
+    // See also CodeGeneratorShared::emitWasmCall.
     return !reg.isFloat() && reg.gpr() == WasmTlsReg;
   }
 
   bool needsBoundsCheck() const { return needsBoundsCheck_; }
 };
 
-class LWasmCall : public LWasmCallBase<1> {
+class LWasmRegisterResult : public LInstructionHelper<1, 0, 0> {
  public:
-  LIR_HEADER(WasmCall);
+  LIR_HEADER(WasmRegisterResult);
 
-  LWasmCall(uint32_t numOperands, bool needsBoundsCheck)
-      : LWasmCallBase(classOpcode, numOperands, needsBoundsCheck) {}
+  LWasmRegisterResult() : LInstructionHelper(classOpcode) {}
+
+  MWasmRegisterResult* mir() const { return mir_->toWasmRegisterResult(); }
 };
 
-class LWasmCallVoid : public LWasmCallBase<0> {
+class LWasmRegisterPairResult : public LInstructionHelper<2, 0, 0> {
  public:
-  LIR_HEADER(WasmCallVoid);
+  LIR_HEADER(WasmRegisterPairResult);
 
-  LWasmCallVoid(uint32_t numOperands, bool needsBoundsCheck)
-      : LWasmCallBase(classOpcode, numOperands, needsBoundsCheck) {}
-};
+  LWasmRegisterPairResult() : LInstructionHelper(classOpcode) {}
 
-class LWasmCallI64 : public LWasmCallBase<INT64_PIECES> {
- public:
-  LIR_HEADER(WasmCallI64);
-
-  LWasmCallI64(uint32_t numOperands, bool needsBoundsCheck)
-      : LWasmCallBase(classOpcode, numOperands, needsBoundsCheck) {}
+  MDefinition* mir() const { return mirRaw(); }
 };
 
 inline bool LNode::isCallPreserved(AnyRegister reg) const {
-  if (IsWasmCall(op())) {
-    return LWasmCallBase<0>::isCallPreserved(reg);
-  }
-  return false;
+  return isWasmCall() && LWasmCall::isCallPreserved(reg);
 }
 
 class LAssertRangeI : public LInstructionHelper<0, 1, 0> {
