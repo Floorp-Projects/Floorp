@@ -11954,6 +11954,50 @@ class MWasmStackArg : public MUnaryInstruction, public NoTypePolicy::Data {
   void incrementOffset(uint32_t inc) { spOffset_ += inc; }
 };
 
+template <typename Location>
+class MWasmResultBase : public MNullaryInstruction {
+  Location loc_;
+
+ protected:
+  MWasmResultBase(Opcode op, MIRType type, Location loc)
+      : MNullaryInstruction(op), loc_(loc) {
+    setResultType(type);
+    // Prevent reordering.  Although there's no problem eliding call result
+    // definitions, there's also no need, as they cause no codegen.
+    setGuard();
+  }
+
+ public:
+  Location loc() { return loc_; }
+};
+
+class MWasmRegisterResult : public MWasmResultBase<Register> {
+  MWasmRegisterResult(MIRType type, Register reg)
+      : MWasmResultBase(classOpcode, type, reg) {}
+
+ public:
+  INSTRUCTION_HEADER(WasmRegisterResult)
+  TRIVIAL_NEW_WRAPPERS
+};
+
+class MWasmFloatRegisterResult : public MWasmResultBase<FloatRegister> {
+  MWasmFloatRegisterResult(MIRType type, FloatRegister reg)
+      : MWasmResultBase(classOpcode, type, reg) {}
+
+ public:
+  INSTRUCTION_HEADER(WasmFloatRegisterResult)
+  TRIVIAL_NEW_WRAPPERS
+};
+
+class MWasmRegister64Result : public MWasmResultBase<Register64> {
+  explicit MWasmRegister64Result(Register64 reg)
+      : MWasmResultBase(classOpcode, MIRType::Int64, reg) {}
+
+ public:
+  INSTRUCTION_HEADER(WasmRegister64Result)
+  TRIVIAL_NEW_WRAPPERS
+};
+
 class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   wasm::CallSiteDesc desc_;
   wasm::CalleeDesc callee_;
@@ -11982,13 +12026,13 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
 
   static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
                         const wasm::CalleeDesc& callee, const Args& args,
-                        MIRType resultType, uint32_t stackArgAreaSizeUnaligned,
+                        uint32_t stackArgAreaSizeUnaligned,
                         MDefinition* tableIndex = nullptr);
 
   static MWasmCall* NewBuiltinInstanceMethodCall(
       TempAllocator& alloc, const wasm::CallSiteDesc& desc,
       const wasm::SymbolicAddress builtin, wasm::FailureMode failureMode,
-      const ABIArg& instanceArg, const Args& args, MIRType resultType,
+      const ABIArg& instanceArg, const Args& args,
       uint32_t stackArgAreaSizeUnaligned);
 
   size_t numArgs() const { return argRegs_.length(); }

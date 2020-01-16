@@ -76,7 +76,7 @@ class ClientHandle final : public ClientThing<ClientHandleChild> {
   // Focus the Client if possible.  If successful the promise will resolve with
   // a new ClientState snapshot after focus has completed.  If focusing fails
   // for any reason then the promise will reject.
-  RefPtr<ClientStatePromise> Focus();
+  RefPtr<ClientStatePromise> Focus(CallerType aCallerType);
 
   // Send a postMessage() call to the target Client.  Currently this only
   // supports sending from a ServiceWorker source and the MessageEvent is

@@ -31,7 +31,8 @@ class PluginWidgetParent : public PPluginWidgetParent {
   virtual mozilla::ipc::IPCResult RecvCreate(
       nsresult* aResult, uint64_t* aScrollCaptureId,
       uintptr_t* aPluginInstanceId) override;
-  virtual mozilla::ipc::IPCResult RecvSetFocus(const bool& aRaise) override;
+  virtual mozilla::ipc::IPCResult RecvSetFocus(
+      const bool& aRaise, const mozilla::dom::CallerType& aCallerType) override;
   virtual mozilla::ipc::IPCResult RecvGetNativePluginPort(
       uintptr_t* value) override;
   mozilla::ipc::IPCResult RecvSetNativeChildWindow(

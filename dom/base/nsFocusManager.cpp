@@ -30,6 +30,7 @@
 #include "mozilla/dom/Selection.h"
 #include "nsXULPopupManager.h"
 #include "nsMenuPopupFrame.h"
+#include "nsIScriptError.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
 #include "nsIObserverService.h"
@@ -39,6 +40,7 @@
 #include "nsHTMLDocument.h"
 #include "nsNetUtil.h"
 #include "nsRange.h"
+#include "nsFrameLoaderOwner.h"
 
 #include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/ContentEvents.h"
@@ -49,6 +51,7 @@
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -59,6 +62,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
+#include "mozilla/StaticPrefs_full_screen_api.h"
 #include <algorithm>
 
 #ifdef MOZ_XUL
@@ -67,10 +71,6 @@
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
-#endif
-
-#ifndef XP_MACOSX
-#  include "nsIScriptError.h"
 #endif
 
 using namespace mozilla;
@@ -351,21 +351,27 @@ nsFocusManager::GetActiveWindow(mozIDOMWindowProxy** aWindow) {
   return NS_OK;
 }
 
-void nsFocusManager::FocusWindow(nsPIDOMWindowOuter* aWindow) {
+void nsFocusManager::FocusWindow(nsPIDOMWindowOuter* aWindow,
+                                 CallerType aCallerType) {
   if (RefPtr<nsFocusManager> fm = sInstance) {
-    fm->SetFocusedWindow(aWindow);
+    fm->SetFocusedWindowWithCallerType(aWindow, aCallerType);
   }
 }
 
+NS_IMETHODIMP nsFocusManager::SetActiveWindow(mozIDOMWindowProxy* aWindow) {
+  return SetActiveWindowWithCallerType(aWindow, CallerType::System);
+}
+
 NS_IMETHODIMP
-nsFocusManager::SetActiveWindow(mozIDOMWindowProxy* aWindow) {
+nsFocusManager::SetActiveWindowWithCallerType(mozIDOMWindowProxy* aWindow,
+                                              CallerType aCallerType) {
   NS_ENSURE_STATE(aWindow);
 
   // only top-level windows can be made active
   nsCOMPtr<nsPIDOMWindowOuter> piWindow = nsPIDOMWindowOuter::From(aWindow);
   NS_ENSURE_TRUE(piWindow == piWindow->GetPrivateRoot(), NS_ERROR_INVALID_ARG);
 
-  RaiseWindow(piWindow);
+  RaiseWindow(piWindow, aCallerType);
   return NS_OK;
 }
 
@@ -375,8 +381,8 @@ nsFocusManager::GetFocusedWindow(mozIDOMWindowProxy** aFocusedWindow) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFocusManager::SetFocusedWindow(
-    mozIDOMWindowProxy* aWindowToFocus) {
+NS_IMETHODIMP nsFocusManager::SetFocusedWindowWithCallerType(
+    mozIDOMWindowProxy* aWindowToFocus, CallerType aCallerType) {
   LOGFOCUS(("<<SetFocusedWindow begin>>"));
 
   nsCOMPtr<nsPIDOMWindowOuter> windowToFocus =
@@ -401,11 +407,16 @@ NS_IMETHODIMP nsFocusManager::SetFocusedWindow(
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> rootWindow = windowToFocus->GetPrivateRoot();
-  if (rootWindow) RaiseWindow(rootWindow);
+  if (rootWindow) RaiseWindow(rootWindow, aCallerType);
 
   LOGFOCUS(("<<SetFocusedWindow end>>"));
 
   return NS_OK;
+}
+
+NS_IMETHODIMP nsFocusManager::SetFocusedWindow(
+    mozIDOMWindowProxy* aWindowToFocus) {
+  return SetFocusedWindowWithCallerType(aWindowToFocus, CallerType::System);
 }
 
 NS_IMETHODIMP
@@ -629,7 +640,7 @@ nsFocusManager::WindowRaised(mozIDOMWindowProxy* aWindow) {
     // of the child we want. We solve this by calling SetFocus to ensure that
     // what the focus manager thinks should be the current widget is actually
     // focused.
-    EnsureCurrentWidgetFocused();
+    EnsureCurrentWidgetFocused(CallerType::System);
     return NS_OK;
   }
 
@@ -844,7 +855,7 @@ nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus) {
     // Sometimes, an element in a window can be focused before the window is
     // visible, which would mean that the widget may not be properly focused.
     // When the window becomes visible, make sure the right widget is focused.
-    EnsureCurrentWidgetFocused();
+    EnsureCurrentWidgetFocused(CallerType::System);
   }
 
   return NS_OK;
@@ -1058,7 +1069,7 @@ void nsFocusManager::NotifyFocusStateChange(nsIContent* aContent,
 }
 
 // static
-void nsFocusManager::EnsureCurrentWidgetFocused() {
+void nsFocusManager::EnsureCurrentWidgetFocused(CallerType aCallerType) {
   if (!mFocusedWindow || sTestMode) return;
 
   // get the main child widget for the focused window and ensure that the
@@ -1080,7 +1091,7 @@ void nsFocusManager::EnsureCurrentWidgetFocused() {
   if (!widget) {
     return;
   }
-  widget->SetFocus(nsIWidget::Raise::No);
+  widget->SetFocus(nsIWidget::Raise::No, aCallerType);
 }
 
 void nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow,
@@ -1109,6 +1120,37 @@ void nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow,
         Unused << aBrowserParent->SendParentActivated(aActive);
         return CallState::Stop;
       });
+}
+
+// Retrieves innerWindowId of the window of the last focused element to
+// log a warning to the website console.
+void LogWarningFullscreenWindowRaise(Element* aElement) {
+  nsCOMPtr<nsFrameLoaderOwner> frameLoaderOwner(do_QueryInterface(aElement));
+  NS_ENSURE_TRUE_VOID(frameLoaderOwner);
+
+  RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+  NS_ENSURE_TRUE_VOID(frameLoaderOwner);
+
+  RefPtr<BrowsingContext> browsingContext = frameLoader->GetBrowsingContext();
+  NS_ENSURE_TRUE_VOID(browsingContext);
+
+  WindowGlobalParent* windowGlobalParent =
+      browsingContext->Canonical()->GetCurrentWindowGlobal();
+  NS_ENSURE_TRUE_VOID(windowGlobalParent);
+
+  // Log to console
+  nsAutoString localizedMsg;
+  nsTArray<nsString> params;
+  nsresult rv = nsContentUtils::FormatLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FullscreenExitWindowFocus", params,
+      localizedMsg);
+
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  Unused << nsContentUtils::ReportToConsoleByWindowID(
+      localizedMsg, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"),
+      windowGlobalParent->InnerWindowId(),
+      windowGlobalParent->GetDocumentURI());
 }
 
 void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
@@ -1199,6 +1241,20 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
     newRootWindow = root ? root->GetWindow() : nullptr;
 
     isElementInActiveWindow = (mActiveWindow && newRootWindow == mActiveWindow);
+  }
+
+  // Exit fullscreen if a website focuses another window
+  if (StaticPrefs::full_screen_api_exit_on_windowRaise() &&
+      !isElementInActiveWindow &&
+      aFlags & (FLAG_RAISE | FLAG_NONSYSTEMCALLER)) {
+    if (Document* doc = mActiveWindow ? mActiveWindow->GetDoc() : nullptr) {
+      if (doc->GetFullscreenElement()) {
+        if (XRE_IsParentProcess()) {
+          LogWarningFullscreenWindowRaise(mFocusedElement);
+        }
+        Document::AsyncExitFullscreen(doc);
+      }
+    }
   }
 
   // Exit fullscreen if we're focusing a windowed plugin on a non-MacOSX
@@ -1307,7 +1363,10 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
     if (allowFrameSwitch)
       newWindow->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);
 
-    if (aFlags & FLAG_RAISE) RaiseWindow(newRootWindow);
+    if (aFlags & FLAG_RAISE)
+      RaiseWindow(newRootWindow, aFlags & FLAG_NONSYSTEMCALLER
+                                     ? CallerType::NonSystem
+                                     : CallerType::System);
   }
 }
 
@@ -1607,7 +1666,7 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
             vm->GetRootWidget(getter_AddRefs(widget));
             if (widget) {
               // set focus to the top level window but don't raise it.
-              widget->SetFocus(nsIWidget::Raise::No);
+              widget->SetFocus(nsIWidget::Raise::No, CallerType::System);
             }
           }
         }
@@ -1800,7 +1859,10 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
     if (nsViewManager* vm = presShell->GetViewManager()) {
       nsCOMPtr<nsIWidget> widget;
       vm->GetRootWidget(getter_AddRefs(widget));
-      if (widget) widget->SetFocus(nsIWidget::Raise::No);
+      if (widget)
+        widget->SetFocus(nsIWidget::Raise::No, aFlags & FLAG_NONSYSTEMCALLER
+                                                   ? CallerType::NonSystem
+                                                   : CallerType::System);
     }
   }
 
@@ -1854,7 +1916,10 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
       // fired above when aIsNewDocument.
       if (presShell->GetDocument() == aElement->GetComposedDoc()) {
         if (aAdjustWidgets && objectFrameWidget && !sTestMode) {
-          objectFrameWidget->SetFocus(nsIWidget::Raise::No);
+          objectFrameWidget->SetFocus(nsIWidget::Raise::No,
+                                      aFlags & FLAG_NONSYSTEMCALLER
+                                          ? CallerType::NonSystem
+                                          : CallerType::System);
         }
 
         // if the object being focused is a remote browser, activate remote
@@ -1891,7 +1956,9 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
         nsCOMPtr<nsIWidget> widget;
         vm->GetRootWidget(getter_AddRefs(widget));
         if (widget) {
-          widget->SetFocus(nsIWidget::Raise::No);
+          widget->SetFocus(nsIWidget::Raise::No, aFlags & FLAG_NONSYSTEMCALLER
+                                                     ? CallerType::NonSystem
+                                                     : CallerType::System);
         }
       }
     }
@@ -2124,7 +2191,8 @@ void nsFocusManager::ScrollIntoView(PresShell* aPresShell, nsIContent* aContent,
   }
 }
 
-void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow) {
+void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow,
+                                 CallerType aCallerType) {
   // don't raise windows that are already raised or are in the process of
   // being lowered
   if (!aWindow || aWindow == mActiveWindow || aWindow == mWindowBeingLowered)
@@ -2169,7 +2237,7 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow) {
   if (nsViewManager* vm = presShell->GetViewManager()) {
     nsCOMPtr<nsIWidget> widget;
     vm->GetRootWidget(getter_AddRefs(widget));
-    if (widget) widget->SetFocus(nsIWidget::Raise::Yes);
+    if (widget) widget->SetFocus(nsIWidget::Raise::Yes, aCallerType);
   }
 #else
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin =
@@ -2177,7 +2245,7 @@ void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow) {
   if (treeOwnerAsWin) {
     nsCOMPtr<nsIWidget> widget;
     treeOwnerAsWin->GetMainWidget(getter_AddRefs(widget));
-    if (widget) widget->SetFocus(nsIWidget::Raise::Yes);
+    if (widget) widget->SetFocus(nsIWidget::Raise::Yes, aCallerType);
   }
 #endif
 }

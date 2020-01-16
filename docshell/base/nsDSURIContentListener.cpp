@@ -190,7 +190,7 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
     nsCOMPtr<nsPIDOMWindowOuter> domWindow =
         mDocShell ? mDocShell->GetWindow() : nullptr;
     NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
-    domWindow->Focus();
+    domWindow->Focus(mozilla::dom::CallerType::System);
   }
 
   return NS_OK;

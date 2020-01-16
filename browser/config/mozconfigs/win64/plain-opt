@@ -1,6 +1,7 @@
 TOOLTOOL_DIR=${topsrcdir}
 export MAKECAB=$TOOLTOOL_DIR/makecab.exe
 export LLVM_CONFIG="${MOZ_FETCHES_DIR}/clang/bin/llvm-config"
+export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms.exe"
 
 RUSTC="${MOZ_FETCHES_DIR}/rustc/bin/rustc"
 CARGO="${MOZ_FETCHES_DIR}/rustc/bin/cargo"

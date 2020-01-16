@@ -516,7 +516,7 @@ html #webconsole-notificationbox {
 }
 
 .eager-evaluation-result .objectBox {
-  height: 15px;
+  height: 18px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

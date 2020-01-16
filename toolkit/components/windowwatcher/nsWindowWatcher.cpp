@@ -61,6 +61,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -1307,6 +1308,11 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
       newChrome->ShowAsModal();
     }
+  }
+  // If a website opens a popup exit DOM fullscreen
+  if (StaticPrefs::full_screen_api_exit_on_windowOpen() && windowIsNew &&
+      aCalledFromJS && !hasChromeParent && !isCallerChrome && parentWindow) {
+    Document::AsyncExitFullscreen(parentWindow->GetDoc());
   }
 
   if (aForceNoOpener && windowIsNew) {

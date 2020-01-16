@@ -4483,27 +4483,47 @@ void LIRGenerator::visitWasmStackArg(MWasmStackArg* ins) {
   }
 }
 
-template <typename LClass>
-LInstruction* LIRGenerator::lowerWasmCall(MWasmCall* ins,
-                                          bool needsBoundsCheck) {
-  auto* lir = allocateVariadic<LClass>(ins->numOperands(), needsBoundsCheck);
-  if (!lir) {
-    abort(AbortReason::Alloc, "OOM: LIRGenerator::lowerWasmCall");
-    return nullptr;
-  }
+void LIRGenerator::visitWasmRegisterResult(MWasmRegisterResult* ins) {
+  auto* lir = new (alloc()) LWasmRegisterResult();
+  uint32_t vreg = getVirtualRegister();
+  auto type = LDefinition::TypeFrom(ins->type());
+  lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ins->loc())));
+  ins->setVirtualRegister(vreg);
+  add(lir, ins);
+}
 
-  for (unsigned i = 0; i < ins->numArgs(); i++) {
-    lir->setOperand(
-        i, useFixedAtStart(ins->getOperand(i), ins->registerForArg(i)));
-  }
+void LIRGenerator::visitWasmFloatRegisterResult(MWasmFloatRegisterResult* ins) {
+  auto* lir = new (alloc()) LWasmRegisterResult();
+  uint32_t vreg = getVirtualRegister();
+  auto type = LDefinition::TypeFrom(ins->type());
+  lir->setDef(0, LDefinition(vreg, type, LFloatReg(ins->loc())));
+  ins->setVirtualRegister(vreg);
+  add(lir, ins);
+}
 
-  if (ins->callee().isTable()) {
-    MDefinition* index = ins->getOperand(ins->numArgs());
-    lir->setOperand(ins->numArgs(),
-                    useFixedAtStart(index, WasmTableCallIndexReg));
-  }
+void LIRGenerator::visitWasmRegister64Result(MWasmRegister64Result* ins) {
+  MOZ_ASSERT(ins->type() == MIRType::Int64);
+  uint32_t vreg = getVirtualRegister();
 
-  return lir;
+#if defined(JS_NUNBOX32)
+  auto* lir = new (alloc()) LWasmRegisterPairResult();
+  lir->setDef(INT64LOW_INDEX,
+              LDefinition(vreg + INT64LOW_INDEX, LDefinition::GENERAL,
+                          LGeneralReg(ins->loc().low)));
+  lir->setDef(INT64HIGH_INDEX,
+              LDefinition(vreg + INT64HIGH_INDEX, LDefinition::GENERAL,
+                          LGeneralReg(ins->loc().high)));
+  getVirtualRegister();
+#elif defined(JS_PUNBOX64)
+  auto* lir = new (alloc()) LWasmRegisterResult();
+  lir->setDef(
+      0, LDefinition(vreg, LDefinition::GENERAL, LGeneralReg(ins->loc().reg)));
+#else
+#  error expected either JS_NUNBOX32 or JS_PUNBOX64
+#endif
+
+  ins->setVirtualRegister(vreg);
+  add(lir, ins);
 }
 
 void LIRGenerator::visitWasmCall(MWasmCall* ins) {
@@ -4520,23 +4540,24 @@ void LIRGenerator::visitWasmCall(MWasmCall* ins) {
     }
   }
 
-  LInstruction* lir;
-  if (ins->type() == MIRType::Int64) {
-    lir = lowerWasmCall<LWasmCallI64>(ins, needsBoundsCheck);
-  } else if (ins->type() == MIRType::None) {
-    lir = lowerWasmCall<LWasmCallVoid>(ins, needsBoundsCheck);
-  } else {
-    lir = lowerWasmCall<LWasmCall>(ins, needsBoundsCheck);
-  }
+  auto* lir = allocateVariadic<LWasmCall>(ins->numOperands(), needsBoundsCheck);
   if (!lir) {
+    abort(AbortReason::Alloc, "OOM: LIRGenerator::lowerWasmCall");
     return;
   }
 
-  if (ins->type() == MIRType::None) {
-    add(lir, ins);
-  } else {
-    defineReturn(lir, ins);
+  for (unsigned i = 0; i < ins->numArgs(); i++) {
+    lir->setOperand(
+        i, useFixedAtStart(ins->getOperand(i), ins->registerForArg(i)));
   }
+
+  if (ins->callee().isTable()) {
+    MDefinition* index = ins->getOperand(ins->numArgs());
+    lir->setOperand(ins->numArgs(),
+                    useFixedAtStart(index, WasmTableCallIndexReg));
+  }
+
+  add(lir, ins);
 
   assignWasmSafepoint(lir, ins);
 }

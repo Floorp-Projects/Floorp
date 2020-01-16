@@ -117,13 +117,13 @@ IPCResult BrowserBridgeChild::RecvSetLayersId(
 }
 
 mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
-    const bool& aCanRaise) {
+    const bool& aCanRaise, const CallerType aCallerType) {
   // Adapted from BrowserParent
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
   if (!owner) {
     return IPC_OK();
   }
-  nsContentUtils::RequestFrameFocus(*owner, aCanRaise);
+  nsContentUtils::RequestFrameFocus(*owner, aCanRaise, aCallerType);
   return IPC_OK();
 }
 

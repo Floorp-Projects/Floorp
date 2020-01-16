@@ -69,7 +69,7 @@ class Client final : public nsISupports, public nsWrapperCache {
 
   bool Focused() const;
 
-  already_AddRefed<Promise> Focus(ErrorResult& aRv);
+  already_AddRefed<Promise> Focus(CallerType aCallerType, ErrorResult& aRv);
 
   already_AddRefed<Promise> Navigate(const nsAString& aURL, ErrorResult& aRv);
 
