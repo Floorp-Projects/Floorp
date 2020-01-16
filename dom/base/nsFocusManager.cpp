@@ -59,6 +59,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
+#include "mozilla/StaticPrefs_full_screen_api.h"
 #include <algorithm>
 
 #ifdef MOZ_XUL
@@ -1213,8 +1214,8 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
   }
 
   // Exit fullscreen if a website focuses another window
-  if (!isElementInActiveWindow &&
-      aFlags & (FLAG_RAISE | FLAG_NONSYSTEMCALLER)) {
+  if (StaticPrefs::full_screen_api_exit_on_windowRaise() &&
+      !isElementInActiveWindow && aFlags & (FLAG_RAISE | FLAG_NONSYSTEMCALLER)) {
     if (Document* doc = mActiveWindow ? mActiveWindow->GetDoc() : nullptr) {
       if (doc->GetFullscreenElement()) {
         Document::AsyncExitFullscreen(doc);
