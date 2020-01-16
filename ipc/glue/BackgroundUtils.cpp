@@ -277,18 +277,8 @@ nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
 
   nsresult rv;
   if (aPrincipal->GetIsNullPrincipal()) {
-    nsCOMPtr<nsIURI> uri;
-    rv = aPrincipal->GetURI(getter_AddRefs(uri));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    if (NS_WARN_IF(!uri)) {
-      return NS_ERROR_FAILURE;
-    }
-
     nsAutoCString spec;
-    rv = uri->GetSpec(spec);
+    rv = aPrincipal->GetAsciiSpec(spec);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -325,20 +315,8 @@ nsresult PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  // must be a content principal
-
-  nsCOMPtr<nsIURI> uri;
-  rv = aPrincipal->GetURI(getter_AddRefs(uri));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (NS_WARN_IF(!uri)) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsAutoCString spec;
-  rv = uri->GetSpec(spec);
+  rv = aPrincipal->GetAsciiSpec(spec);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
