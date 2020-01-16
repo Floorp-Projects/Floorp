@@ -390,7 +390,7 @@ class BrowsingContext : public nsISupports,
                 ErrorResult& aError);
   void Close(CallerType aCallerType, ErrorResult& aError);
   bool GetClosed(ErrorResult&) { return mClosed; }
-  void Focus(ErrorResult& aError);
+  void Focus(CallerType aCallerType, ErrorResult& aError);
   void Blur(ErrorResult& aError);
   WindowProxyHolder GetFrames(ErrorResult& aError);
   int32_t Length() const { return mChildren.Length(); }

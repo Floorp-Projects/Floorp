@@ -633,7 +633,7 @@ void nsChildView::Enable(bool aState) {}
 
 bool nsChildView::IsEnabled() const { return true; }
 
-void nsChildView::SetFocus(Raise) {
+void nsChildView::SetFocus(Raise, mozilla::dom::CallerType aCallerType) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   NSWindow* window = [mView window];
