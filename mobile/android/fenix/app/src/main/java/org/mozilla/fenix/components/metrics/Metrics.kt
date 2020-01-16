@@ -301,10 +301,10 @@ sealed class Event {
             get() = mapOf(Events.performedSearchKeys.source to eventSource.sourceLabel)
     }
 
-    // Track only built-in engine selection. Do not track user-added engines!
-    data class SearchShortcutSelected(val engine: String) : Event() {
+    data class SearchShortcutSelected(val engine: SearchEngine, val isCustom: Boolean) : Event() {
+        private val engineName = if (isCustom) "custom" else engine.name
         override val extras: Map<SearchShortcuts.selectedKeys, String>?
-            get() = mapOf(SearchShortcuts.selectedKeys.engine to engine)
+            get() = mapOf(SearchShortcuts.selectedKeys.engine to engineName)
     }
 
     class ContextMenuItemTapped private constructor(val item: String) : Event() {

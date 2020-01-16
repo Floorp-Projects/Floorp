@@ -192,7 +192,7 @@ class DefaultSearchControllerTest {
         controller.handleSearchShortcutEngineSelected(searchEngine)
 
         verify { store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine)) }
-        verify { metrics.track(Event.SearchShortcutSelected(searchEngine.name)) }
+        verify { metrics.track(Event.SearchShortcutSelected(searchEngine, false)) }
     }
 
     @Test

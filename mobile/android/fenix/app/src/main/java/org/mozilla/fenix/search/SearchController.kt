@@ -18,6 +18,7 @@ import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPo
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.NONE
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.SUGGESTION
 import org.mozilla.fenix.components.metrics.MetricsUtils
+import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -127,7 +128,8 @@ class DefaultSearchController(
 
     override fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine) {
         store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine))
-        context.metrics.track(Event.SearchShortcutSelected(searchEngine.name))
+        val isCustom = CustomSearchEngineStore.isCustomSearchEngine(context, searchEngine.identifier)
+        context.metrics.track(Event.SearchShortcutSelected(searchEngine, isCustom))
     }
 
     override fun handleSearchShortcutsButtonClicked() {
