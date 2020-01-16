@@ -26,16 +26,21 @@ class WebURLFinder {
         if (string == null) {
             throw IllegalArgumentException("string must not be null")
         }
-
         this.candidates = candidateWebURLs(string)
     }
 
-    /* package-private */ internal constructor(strings: List<String>?) {
+    /* package-private */ internal constructor(string: String?, explicitUnicode: Boolean) {
+        if (string == null) {
+            throw IllegalArgumentException("strings must not be null")
+        }
+        this.candidates = candidateWebURLs(string, explicitUnicode)
+    }
+
+    /* package-private */ internal constructor(strings: List<String>?, explicitUnicode: Boolean) {
         if (strings == null) {
             throw IllegalArgumentException("strings must not be null")
         }
-
-        this.candidates = candidateWebURLs(strings)
+        this.candidates = candidateWebURLs(strings, explicitUnicode)
     }
 
     /**
@@ -307,30 +312,65 @@ class WebURLFinder {
             WORD_BOUNDARY +
             ")")
 
-        /**
-         * Regular expression pattern to match IRIs. If a string starts with http(s):// the expression
-         * tries to match the URL structure with a relaxed rule for TLDs. If the string does not start
-         * with http(s):// the TLDs are expected to be one of the known TLDs.
-         */
-        private val autolinkWebUrl = Pattern.compile(
-            "($WEB_URL_WITH_PROTOCOL|$WEB_URL_WITHOUT_PROTOCOL)"
-        )
+        private const val autolinkWebUrlPattern = "\\w+(://[/]*|:|\\.)\\w+\\S*"
 
-        internal val fuzzyUrlRegex = (
-                "^" +
-                "\\s*" +
-                "($WEB_URL_WITH_PROTOCOL|$WEB_URL_WITHOUT_PROTOCOL)" +
-                "\\s*" +
-                "$"
-            ).toRegex(RegexOption.IGNORE_CASE)
+        private val autolinkWebUrl by lazy {
+            // Be lenient about what is potentially a URL in a text string. Anything that contains
+            // a :, ://, or . and has no internal spaces is potentially a URL.
+            //
+            // Use java.util.regex because it is always unicode aware on Android.
+            // https://developer.android.com/reference/java/util/regex/Pattern.html
+            //
+            // Use both the \w+ and \S* after the punctuation because they seem to match slightly
+            // different things. The \S matches any non-whitespace character (e.g., '~') and \w
+            // matches only word characters. In other words, the regex is requiring that there be a
+            // non-symbol character somewhere after the ., : or :// and before any other character
+            // or the end of the string. For example, match
+            // mozilla.com/~userdir
+            // and not
+            // mozilla./~ or mozilla:/
+            // Without the [/]* after the :// in the alternation of the characters required to be a
+            // valid URL,
+            // file:///home/user/myfile.html
+            // is considered a search term; it is clearly a URL.
+            //
+            // This is almost identical to the regular expression known as URLStringUtils.isURLLenient
+            // but does not have the (padding and the) anchoring at either end because this regular
+            // expression is used to find multiple matches in a single string.
+            Pattern.compile(autolinkWebUrlPattern, 0)
+        }
 
-        internal val fuzzyUrlNonWebRegex = (
-            "^" +
-                "\\s*" +
-                "($WEB_URL_WITH_PROTOCOL|$WEB_URL_WITHOUT_PROTOCOL|$UNSUPPORTED_URL_WITH_PROTOCOL)" +
-                "\\s*" +
-                "$"
-            ).toRegex(RegexOption.IGNORE_CASE)
+        private val autolinkWebUrlExplicitUnicode by lazy {
+            // To run tests on a non-Android device (like a computer), Pattern.compile
+            // requires a flag to enable unicode support. Set a value like flags here with a local
+            // copy of UNICODE_CHARACTER_CLASS. Use a local copy because that constant is not
+            // available on Android platforms < 24 (Fenix targets 21). At runtime this is not an issue
+            // because, again, Android REs are always unicode compliant.
+            // NB: The value has to go through an intermediate variable; otherwise, the linter will
+            // complain that this value is not one of the predefined enums that are allowed.
+            @Suppress("MagicNumber")
+            val UNICODE_CHARACTER_CLASS: Int = 0x100
+            var regexFlags = UNICODE_CHARACTER_CLASS
+            Pattern.compile(autolinkWebUrlPattern, regexFlags)
+        }
+
+        internal val fuzzyUrlRegex by lazy {
+            ("^" +
+                    "\\s*" +
+                    "($WEB_URL_WITH_PROTOCOL|$WEB_URL_WITHOUT_PROTOCOL)" +
+                    "\\s*" +
+                    "$"
+                    ).toRegex(RegexOption.IGNORE_CASE)
+        }
+
+        internal val fuzzyUrlNonWebRegex by lazy {
+            ("^" +
+                    "\\s*" +
+                    "($WEB_URL_WITH_PROTOCOL|$WEB_URL_WITHOUT_PROTOCOL|$UNSUPPORTED_URL_WITH_PROTOCOL)" +
+                    "\\s*" +
+                    "$"
+                    ).toRegex(RegexOption.IGNORE_CASE)
+        }
 
         /**
          * Check if string is a Web URL.
@@ -353,7 +393,7 @@ class WebURLFinder {
             return !(URLUtil.isFileUrl(string) || URLUtil.isJavaScriptUrl(string))
         }
 
-        private fun candidateWebURLs(strings: Collection<String?>): List<String> {
+        private fun candidateWebURLs(strings: Collection<String?>, explicitUnicode: Boolean = false): List<String> {
             val candidates = mutableListOf<String>()
 
             // no functional transformation lambdas (ie. flatMapNotNull) since it would turn an
@@ -363,14 +403,18 @@ class WebURLFinder {
                     continue
                 }
 
-                candidates.addAll(candidateWebURLs(string))
+                candidates.addAll(candidateWebURLs(string, explicitUnicode))
             }
 
             return candidates
         }
 
-        private fun candidateWebURLs(string: String): List<String> {
-            val matcher = autolinkWebUrl.matcher(string)
+        private fun candidateWebURLs(string: String, explicitUnicode: Boolean = false): List<String> {
+            val matcher = when {
+                explicitUnicode -> autolinkWebUrlExplicitUnicode.matcher(string)
+                else -> autolinkWebUrl.matcher(string)
+            }
+
             val matches = LinkedList<String>()
 
             while (matcher.find()) {
