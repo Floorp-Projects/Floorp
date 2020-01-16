@@ -11,7 +11,6 @@ const {
   getOrientation,
 } = require("devtools/client/responsive/utils/orientation");
 const Constants = require("devtools/client/responsive/constants");
-const { TargetList } = require("devtools/shared/resources/target-list");
 
 loader.lazyRequireGetter(
   this,
@@ -109,8 +108,6 @@ class ResponsiveUI {
     this.onResizeStart = this.onResizeStart.bind(this);
     this.onResizeStop = this.onResizeStop.bind(this);
 
-    this.onTargetAvailable = this.onTargetAvailable.bind(this);
-
     // Promise resovled when the UI init has completed.
     this.inited = this.init();
 
@@ -131,10 +128,6 @@ class ResponsiveUI {
     }
 
     return this._isBrowserUIEnabled;
-  }
-
-  get currentTarget() {
-    return this.targetList.targetFront;
   }
 
   /**
@@ -223,8 +216,12 @@ class ResponsiveUI {
     debug("Wait until RDP server connect");
     await this.connectToServer();
 
-    // Restore the previous UI state.
-    await this.restoreUIState();
+    // Restore the previous state of RDM.
+    await this.restoreState();
+
+    if (this.isBrowserUIEnabled) {
+      await this.responsiveFront.setDocumentInRDMPane(true);
+    }
 
     if (!this.isBrowserUIEnabled) {
       // Force the newly created Zoom actor to cache its 1.0 zoom level. This
@@ -323,11 +320,6 @@ class ResponsiveUI {
       return false;
     }
     this.destroying = true;
-
-    this.targetList.unwatchTargets(
-      [this.targetList.TYPES.FRAME],
-      this.onTargetAvailable
-    );
 
     // If our tab is about to be closed, there's not enough time to exit
     // gracefully, but that shouldn't be a problem since the tab will go away.
@@ -436,13 +428,8 @@ class ResponsiveUI {
     DebuggerServer.registerAllActors();
     this.client = new DebuggerClient(DebuggerServer.connectPipe());
     await this.client.connect();
-
     const targetFront = await this.client.mainRoot.getTab();
-    this.targetList = new TargetList(this.client.mainRoot, targetFront);
-    await this.targetList.watchTargets(
-      [this.targetList.TYPES.FRAME],
-      this.onTargetAvailable
-    );
+    this.responsiveFront = await targetFront.getFront("responsive");
   }
 
   /**
@@ -485,8 +472,6 @@ class ResponsiveUI {
         }
         break;
       case "BeforeTabRemotenessChange":
-        this.onRemotenessChange(event);
-        break;
       case "TabClose":
       case "unload":
         this.manager.closeIfNeeded(browserWindow, tab, {
@@ -734,7 +719,8 @@ class ResponsiveUI {
   }
 
   async onScreenshot() {
-    const captureScreenshotSupported = await this.currentTarget.actorHasMethod(
+    const targetFront = await this.client.mainRoot.getTab();
+    const captureScreenshotSupported = await targetFront.actorHasMethod(
       "responsive",
       "captureScreenshot"
     );
@@ -758,17 +744,10 @@ class ResponsiveUI {
     );
   }
 
-  async hasDeviceState() {
-    const deviceState = await asyncStorage.getItem(
-      "devtools.responsive.deviceState"
-    );
-    return !!deviceState;
-  }
-
   /**
-   * Restores the previous UI state.
+   * Restores the previous state of RDM.
    */
-  async restoreUIState() {
+  async restoreState() {
     // Restore UI alignment.
     if (this.isBrowserUIEnabled) {
       const leftAlignmentEnabled = Services.prefs.getBoolPref(
@@ -779,38 +758,10 @@ class ResponsiveUI {
       this.updateUIAlignment(leftAlignmentEnabled);
     }
 
-    const hasDeviceState = await this.hasDeviceState();
-    if (hasDeviceState) {
-      // Return if there is a device state to restore, this will be done when the
-      // device list is loaded after the post-init.
-      return;
-    }
-
-    const height = Services.prefs.getIntPref(
-      "devtools.responsive.viewport.height",
-      0
+    const deviceState = await asyncStorage.getItem(
+      "devtools.responsive.deviceState"
     );
-    const width = Services.prefs.getIntPref(
-      "devtools.responsive.viewport.width",
-      0
-    );
-    this.updateViewportSize(width, height);
-  }
-
-  /**
-   * Restores the previous actor state.
-   */
-  async restoreActorState() {
-    if (this.isBrowserUIEnabled) {
-      // It's possible the target will switch to a page loaded in the parent-process
-      // (i.e: about:robots). When this happens, the values set on the BrowsingContext
-      // by RDM are not preserved. So we need to set setDocumentInRDMPane = true whenever
-      // there is a target switch.
-      await this.responsiveFront.setDocumentInRDMPane(true);
-    }
-
-    const hasDeviceState = await this.hasDeviceState();
-    if (hasDeviceState) {
+    if (deviceState) {
       // Return if there is a device state to restore, this will be done when the
       // device list is loaded after the post-init.
       return;
@@ -837,15 +788,16 @@ class ResponsiveUI {
       0
     );
 
+    let reloadNeeded = false;
     const { type, angle } = this.getInitialViewportOrientation({
       width,
       height,
     });
 
+    this.updateViewportSize(width, height);
     await this.updateDPPX(pixelRatio);
     await this.updateScreenOrientation(type, angle);
 
-    let reloadNeeded = false;
     if (touchSimulationEnabled) {
       reloadNeeded |=
         (await this.updateTouchSimulation(touchSimulationEnabled)) &&
@@ -961,7 +913,8 @@ class ResponsiveUI {
    *        reloaded/navigated to, so we should not be simulating "orientationchange".
    */
   async updateScreenOrientation(type, angle, isViewportRotated = false) {
-    const simulateOrientationChangeSupported = await this.currentTarget.actorHasMethod(
+    const targetFront = await this.client.mainRoot.getTab();
+    const simulateOrientationChangeSupported = await targetFront.actorHasMethod(
       "responsive",
       "simulateScreenOrientationChange"
     );
@@ -1077,30 +1030,6 @@ class ResponsiveUI {
     }
 
     return this.browserWindow;
-  }
-
-  async onTargetAvailable({ targetFront }) {
-    this.responsiveFront = await targetFront.getFront("responsive");
-    await this.restoreActorState();
-  }
-
-  async onRemotenessChange(event) {
-    const isTargetSwitchingEnabled = Services.prefs.getBoolPref(
-      "devtools.target-switching.enabled",
-      false
-    );
-
-    // We should ignore the remoteness events in case of old RDM
-    // as it is firing fake remoteness events.
-    if (isTargetSwitchingEnabled && this.isBrowserUIEnabled) {
-      const newTarget = await this.client.mainRoot.getTab();
-      await this.targetList.switchToTarget(newTarget);
-    } else {
-      const { browserWindow, tab } = this;
-      this.manager.closeIfNeeded(browserWindow, tab, {
-        reason: event.type,
-      });
-    }
   }
 }
 
