@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui
 
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
 import okhttp3.mockwebserver.MockWebServer
@@ -319,8 +320,11 @@ class BookmarksTest {
         }.openThreeDotMenu {
         }.openBookmarks {
             createFolder("1")
+            getInstrumentation().waitForIdleSync()
             createFolder("2")
+            getInstrumentation().waitForIdleSync()
             createFolder("3")
+            getInstrumentation().waitForIdleSync()
         }.openThreeDotMenu("1") {
         }.clickDelete {
         }.openThreeDotMenu("2") {
