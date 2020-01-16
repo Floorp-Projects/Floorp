@@ -29,6 +29,10 @@ exclude: true
 - Added ['WebRequestError#certificate'][74.6], which is the server certificate used in the
   failed request, if any.
   ([bug 1508730]({{bugzilla}}1508730))
+- ⚠️ Updated [`ContentBlockingController`][74.7] to use new representation for content blocking
+  exceptions and to add better support for removing exceptions. This deprecates [`ExceptionList`][74.8]
+  and [`restoreExceptionList`][74.9] with the intent to remove them in 76.
+  ([bug 1587552]({{bugzilla}}1587552))
 
 [74.1]: {{javadoc_uri}}/WebExtensionController.html#enable-org.mozilla.geckoview.WebExtension-int-
 [74.2]: {{javadoc_uri}}/WebExtensionController.html#disable-org.mozilla.geckoview.WebExtension-int-
@@ -36,6 +40,9 @@ exclude: true
 [74.4]: {{javadoc_uri}}/WebResponse.html#isSecure
 [74.5]: {{javadoc_uri}}/WebResponse.html#certificate
 [74.6]: {{javadoc_uri}}/WebRequestError.html#certificate
+[74.7]: {{javadoc_uri}}/ContentBlockingController.html
+[74.8]: {{javadoc_uri}}/ContentBlockingController.ExceptionList.html
+[74.9]: {{javadoc_uri}}/ContentBlockingController.html#restoreExceptionList-org.mozilla.geckoview.ContentBlockingController.ExceptionList-
 
 ## v73
 - Added [`WebExtensionController.install`][73.1] and [`uninstall`][73.2] to
@@ -546,4 +553,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 34255117d007cf40a19b289285f00206f55ea792
+[api-version]: e89f3bb79d0c5cc936812de4c2d8f4d30923afb9
