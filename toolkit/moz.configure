@@ -1233,6 +1233,25 @@ def unsigned_addon_scopes(scopes):
 set_config('MOZ_UNSIGNED_APP_SCOPE', unsigned_addon_scopes.app)
 set_config('MOZ_UNSIGNED_SYSTEM_SCOPE', unsigned_addon_scopes.system)
 
+# Addon sideloading
+# ==============================================================
+
+@depends(update_channel)
+def addon_sideload_allowed_default(update_channel):
+    if update_channel == 'esr':
+        return True
+
+option('--allow-addon-sideload', default=addon_sideload_allowed_default,
+       help='Addon sideloading is allowed')
+
+@depends('--allow-addon-sideload')
+def addon_sideload_allowed(value):
+    allowed = bool(value)
+    if allowed:
+        return True
+
+set_config('MOZ_ALLOW_ADDON_SIDELOAD', addon_sideload_allowed)
+
 # Launcher process (Windows only)
 # ==============================================================
 
