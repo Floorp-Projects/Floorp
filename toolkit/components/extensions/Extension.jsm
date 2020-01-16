@@ -1934,7 +1934,10 @@ class Extension extends ExtensionData {
       content_security_policy &&
       typeof content_security_policy === "object"
     ) {
-      return content_security_policy.content_scripts;
+      return (
+        content_security_policy.content_scripts ||
+        content_security_policy.isolated_world
+      );
     }
   }
 
