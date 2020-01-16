@@ -113,23 +113,28 @@ class GeckoViewContentBlocking extends GeckoViewModule {
 
     const channel = aRequest.QueryInterface(Ci.nsIChannel);
     const uri = channel.URI && channel.URI.spec;
-    const classChannel = aRequest.QueryInterface(Ci.nsIClassifiedChannel);
 
     if (!uri) {
       return;
     }
 
-    debug`onContentBlockingEvent matchedList: ${classChannel.matchedList}`;
-    debug`onContentBlockingEvent matchedTrackingLists: ${
-      classChannel.matchedTrackingLists
-    }`;
+    const classChannel = aRequest.QueryInterface(Ci.nsIClassifiedChannel);
+    const blockedList = classChannel.matchedList || null;
+    let loadedLists = [];
+
+    if (aRequest instanceof Ci.nsIHttpChannel) {
+      loadedLists = classChannel.matchedTrackingLists || [];
+    }
+
+    debug`onContentBlockingEvent matchedList: ${blockedList}`;
+    debug`onContentBlockingEvent matchedTrackingLists: ${loadedLists}`;
 
     const message = {
       type: "GeckoView:ContentBlockingEvent",
       uri: uri,
       category: aEvent,
-      blockedList: classChannel.matchedList || null,
-      loadedLists: classChannel.matchedTrackingLists,
+      blockedList,
+      loadedLists,
     };
 
     this.eventDispatcher.sendRequest(message);
