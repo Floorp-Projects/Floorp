@@ -403,7 +403,7 @@ class InternalRequest final {
   nsCString mFragment;
   MOZ_INIT_OUTSIDE_CTOR bool mPreserveContentCodings;
   MOZ_INIT_OUTSIDE_CTOR bool mSameOriginDataURL;
-  MOZ_INIT_OUTSIDE_CTOR bool mSkipServiceWorker;
+  bool mSkipServiceWorker = false;
   bool mSynchronous = false;
   bool mUnsafeRequest = false;
   bool mUseURLCredentials = false;
