@@ -2412,6 +2412,18 @@ template <typename Unit, class AnyCharsAccess>
 MOZ_MUST_USE MOZ_ALWAYS_INLINE bool
 TokenStreamSpecific<Unit, AnyCharsAccess>::matchInteger(
     IsIntegerUnit isIntegerUnit, int32_t* nextUnit) {
+  int32_t unit = getCodeUnit();
+  if (!isIntegerUnit(unit)) {
+    *nextUnit = unit;
+    return true;
+  }
+  return matchIntegerAfterFirstDigit(isIntegerUnit, nextUnit);
+}
+
+template <typename Unit, class AnyCharsAccess>
+MOZ_MUST_USE MOZ_ALWAYS_INLINE bool
+TokenStreamSpecific<Unit, AnyCharsAccess>::matchIntegerAfterFirstDigit(
+    IsIntegerUnit isIntegerUnit, int32_t* nextUnit) {
   int32_t unit;
   while (true) {
     unit = getCodeUnit();
@@ -2446,7 +2458,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
 
   // Consume integral component digits.
   if (IsAsciiDigit(unit)) {
-    if (!matchInteger(IsAsciiDigit, &unit)) {
+    if (!matchIntegerAfterFirstDigit(IsAsciiDigit, &unit)) {
       return false;
     }
   }
@@ -2492,7 +2504,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
       }
 
       // Consume exponential digits.
-      if (!matchInteger(IsAsciiDigit, &unit)) {
+      if (!matchIntegerAfterFirstDigit(IsAsciiDigit, &unit)) {
         return false;
       }
     }
@@ -2893,7 +2905,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0x'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        if (!matchInteger(IsAsciiHexDigit, &unit)) {
+        if (!matchIntegerAfterFirstDigit(IsAsciiHexDigit, &unit)) {
           return badToken();
         }
       } else if (unit == 'b' || unit == 'B') {
@@ -2909,7 +2921,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0b'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        if (!matchInteger(IsAsciiBinary, &unit)) {
+        if (!matchIntegerAfterFirstDigit(IsAsciiBinary, &unit)) {
           return badToken();
         }
       } else if (unit == 'o' || unit == 'O') {
@@ -2925,7 +2937,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0o'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        if (!matchInteger(IsAsciiOctal, &unit)) {
+        if (!matchIntegerAfterFirstDigit(IsAsciiOctal, &unit)) {
           return badToken();
         }
       } else if (IsAsciiDigit(unit)) {
