@@ -776,6 +776,13 @@ nsresult nsSocketTransport::Init(const nsTArray<nsCString>& types,
     mPort = port;
   }
 
+  // A subtle check we don't enter this method more than once for the socket
+  // transport lifetime.  Disable on TSan builds to prevent race checking, we
+  // don't want an atomic here for perf reasons!
+#ifndef MOZ_TSAN
+  MOZ_ASSERT(!mPortRemappingApplied);
+#endif  // !MOZ_TSAN
+
   if (proxyInfo) {
     mHttpsProxy = proxyInfo->IsHTTPS();
   }
@@ -2171,6 +2178,17 @@ void nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status,
   switch (type) {
     case MSG_ENSURE_CONNECT:
       SOCKET_LOG(("  MSG_ENSURE_CONNECT\n"));
+
+      // Apply port remapping here so that we do it on the socket thread and
+      // before we process the resolved DNS name or create the socket the first
+      // time.
+      if (!mPortRemappingApplied) {
+        mPortRemappingApplied = true;
+
+        mSocketTransportService->ApplyPortRemap(&mPort);
+        mSocketTransportService->ApplyPortRemap(&mOriginPort);
+      }
+
       //
       // ensure that we have created a socket, attached it, and have a
       // connection.

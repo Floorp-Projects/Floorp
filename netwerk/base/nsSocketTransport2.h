@@ -487,6 +487,10 @@ class nsSocketTransport final : public nsASocketHandler,
   // will creat a UDP socket and SecInfo(QuicSocketControl). The protocol
   // handler will be created by nsHttpconnectionMgr.
   bool mUsingQuic;
+
+  // Whether the port remapping has already been applied.  We definitely want to
+  // prevent duplicate calls in case of chaining remapping.
+  bool mPortRemappingApplied = false;
 };
 
 }  // namespace net
