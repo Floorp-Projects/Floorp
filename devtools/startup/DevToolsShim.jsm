@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
 const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
 const DEVTOOLS_POLICY_DISABLED_PREF = "devtools.policy.disabled";
 
-this.EXPORTED_SYMBOLS = ["DevToolsShim"];
+const EXPORTED_SYMBOLS = ["DevToolsShim"];
 
 function removeItem(array, callback) {
   const index = array.findIndex(callback);
@@ -47,7 +47,7 @@ function removeItem(array, callback) {
  * as DevTools are enabled, the DevToolsShim will forward all the requests received until
  * then to the real DevTools instance.
  */
-this.DevToolsShim = {
+const DevToolsShim = {
   _gDevTools: null,
   listeners: [],
 
@@ -317,7 +317,7 @@ const webExtensionsMethods = [
 ];
 
 for (const method of webExtensionsMethods) {
-  this.DevToolsShim[method] = function() {
+  DevToolsShim[method] = function() {
     if (!this.isEnabled()) {
       throw new Error(
         "Could not call a DevToolsShim webextension method ('" +

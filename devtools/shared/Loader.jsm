@@ -16,7 +16,7 @@ var { requireRawId } = ChromeUtils.import(
   "resource://devtools/shared/loader-plugin-raw.jsm"
 );
 
-this.EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "DevToolsLoader",
   "require",
   "loader",
@@ -45,7 +45,7 @@ var gNextLoaderID = 0;
  *        compartment. The debugger actor has to be running in a distinct
  *        compartment than the context it is debugging.
  */
-this.DevToolsLoader = function DevToolsLoader({
+function DevToolsLoader({
   invisibleToDebugger = false,
   freshCompartment = false,
 } = {}) {
@@ -147,7 +147,7 @@ this.DevToolsLoader = function DevToolsLoader({
     );
     this.loader.requireHook = ReplayInspector.wrapRequireHook(oldHook);
   }
-};
+}
 
 DevToolsLoader.prototype = {
   destroy: function(reason = "shutdown") {
@@ -165,7 +165,7 @@ DevToolsLoader.prototype = {
 };
 
 // Export the standard instance of DevToolsLoader used by the tools.
-this.loader = new DevToolsLoader({
+var loader = new DevToolsLoader({
   /**
    * Sets whether the compartments loaded by this instance should be invisible
    * to the debugger.  Invisibility is needed for loaders that support debugging
@@ -178,4 +178,4 @@ this.loader = new DevToolsLoader({
   invisibleToDebugger: Services.appinfo.name !== "Firefox",
 });
 
-this.require = this.loader.require;
+var require = loader.require;

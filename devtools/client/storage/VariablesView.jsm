@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
-this.EXPORTED_SYMBOLS = ["VariablesView", "escapeHTML"];
+const EXPORTED_SYMBOLS = ["VariablesView", "escapeHTML"];
 
 /**
  * A tree view for inspecting scopes, objects and properties.
@@ -56,7 +56,7 @@ this.EXPORTED_SYMBOLS = ["VariablesView", "escapeHTML"];
  *        An object contaning initialization options for this view.
  *        e.g. { lazyEmpty: true, searchEnabled: true ... }
  */
-this.VariablesView = function VariablesView(aParentNode, aFlags = {}) {
+function VariablesView(aParentNode, aFlags = {}) {
   this._store = []; // Can't use a Map because Scope names needn't be unique.
   this._itemsByElement = new WeakMap();
   this._prevHierarchy = new Map();
@@ -82,7 +82,7 @@ this.VariablesView = function VariablesView(aParentNode, aFlags = {}) {
   }
 
   EventEmitter.decorate(this);
-};
+}
 
 VariablesView.prototype = {
   /**
