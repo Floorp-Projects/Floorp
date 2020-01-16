@@ -28,9 +28,8 @@ class MigratingFenixApplication : FenixApplication() {
     }
 
     val migrationPushSubscriber by lazy {
-        MigrationPushSubscriber(
-            this,
-            components.backgroundServices.pushService,
+        MigrationPushRenewer(
+            components.backgroundServices.push,
             components.migrationStore
         )
     }

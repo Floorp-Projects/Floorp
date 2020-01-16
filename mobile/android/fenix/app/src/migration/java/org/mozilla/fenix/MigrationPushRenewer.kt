@@ -4,33 +4,34 @@
 
 package org.mozilla.fenix
 
-import android.content.Context
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
-import mozilla.components.concept.push.PushService
+import mozilla.components.concept.push.PushProcessor
 import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.migration.state.MigrationProgress
 import mozilla.components.support.migration.state.MigrationStore
 
 /**
- * Migration-aware subscriber that disables the push service during an active migration
- * and re-enables when complete.
+ * Force-renews push subscription after migration was complete.
  */
-class MigrationPushSubscriber(
-    private val context: Context,
-    private val service: PushService,
+class MigrationPushRenewer(
+    private val service: PushProcessor?,
     private val store: MigrationStore
 ) {
     @UseExperimental(ExperimentalCoroutinesApi::class)
     fun start() {
-        // Stop the service if it is already started.
-        service.stop()
-
         // Observe for migration completed.
         store.flowScoped { flow ->
             flow.collect { state ->
+                Logger("MigrationPushRenewer").debug("Migration state: ${state.progress}")
                 if (state.progress == MigrationProgress.COMPLETED) {
-                    service.start(context)
+                    Logger("MigrationPushRenewer").debug("Renewing registration....")
+
+                    // This should force a recreation of firebase device token, re-registration with
+                    // the autopush service, and subsequent update of the FxA device record with
+                    // new push subscription information.
+                    service?.renewRegistration()
                 }
             }
         }
