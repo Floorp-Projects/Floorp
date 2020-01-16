@@ -142,12 +142,6 @@ var NativeManifests = {
           );
           return null;
         }
-        if (type !== "storage" && context.envType !== "addon_parent") {
-          Cu.reportError(
-            `Native manifest at ${path} is not available to non-extension contexts`
-          );
-          return;
-        }
 
         return manifest;
       })
