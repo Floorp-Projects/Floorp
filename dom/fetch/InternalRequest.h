@@ -401,7 +401,6 @@ class InternalRequest final {
   nsString mIntegrity;
   bool mMozErrors = false;
   nsCString mFragment;
-  MOZ_INIT_OUTSIDE_CTOR bool mAuthenticationFlag;
   MOZ_INIT_OUTSIDE_CTOR bool mPreserveContentCodings;
   MOZ_INIT_OUTSIDE_CTOR bool mSameOriginDataURL;
   MOZ_INIT_OUTSIDE_CTOR bool mSkipServiceWorker;

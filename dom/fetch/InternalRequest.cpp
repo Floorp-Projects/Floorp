@@ -94,7 +94,6 @@ InternalRequest::InternalRequest(const nsACString& aURL,
       mResponseTainting(LoadTainting::Basic),
       mCacheMode(RequestCache::Default),
       mRedirectMode(RequestRedirect::Follow),
-      mAuthenticationFlag(false),
       mPreserveContentCodings(false)
       // FIXME(nsm): This should be false by default, but will lead to the
       // algorithm never loading data: URLs right now. See Bug 1018872 about
@@ -128,7 +127,6 @@ InternalRequest::InternalRequest(
       mCacheMode(aCacheMode),
       mRedirectMode(aRequestRedirect),
       mIntegrity(aIntegrity),
-      mAuthenticationFlag(false),
       mPreserveContentCodings(false)
       // FIXME See the above comment in the default constructor.
       ,
@@ -156,7 +154,6 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
       mIntegrity(aOther.mIntegrity),
       mMozErrors(aOther.mMozErrors),
       mFragment(aOther.mFragment),
-      mAuthenticationFlag(aOther.mAuthenticationFlag),
       mPreserveContentCodings(aOther.mPreserveContentCodings),
       mSameOriginDataURL(aOther.mSameOriginDataURL),
       mSkipServiceWorker(aOther.mSkipServiceWorker),
