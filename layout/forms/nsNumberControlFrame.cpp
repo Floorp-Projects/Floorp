@@ -62,8 +62,8 @@ already_AddRefed<Element> nsNumberControlFrame::MakeAnonymousElement(
 
   if (aPseudoType == PseudoStyleType::mozNumberSpinDown ||
       aPseudoType == PseudoStyleType::mozNumberSpinUp) {
-    resultElement->SetAttr(kNameSpaceID_None, nsGkAtoms::role,
-                           NS_LITERAL_STRING("button"), false);
+    resultElement->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,
+                           NS_LITERAL_STRING("true"), false);
   }
 
   if (aParent) {
