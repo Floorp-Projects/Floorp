@@ -1310,8 +1310,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     }
   }
   // If a website opens a popup exit DOM fullscreen
-  if (StaticPrefs::full_screen_api_exit_on_windowOpen() && windowIsNew && aCalledFromJS && !hasChromeParent && !isCallerChrome &&
-      parentWindow) {
+  if (StaticPrefs::full_screen_api_exit_on_windowOpen() && windowIsNew &&
+      aCalledFromJS && !hasChromeParent && !isCallerChrome && parentWindow) {
     Document::AsyncExitFullscreen(parentWindow->GetDoc());
   }
 
