@@ -23,6 +23,11 @@ add_task(async function() {
     1,
     "Related tab (relatedToCurrent) inherits current tab's usercontextid"
   );
+  is(
+    relatedTab.linkedBrowser.contentPrincipal.userContextId,
+    1,
+    "Related tab's browser actually inherits the current tab's usercontextid"
+  );
   BrowserTestUtils.removeTab(relatedTab);
 
   gBrowser.selectedTab = tab;
@@ -34,6 +39,11 @@ add_task(async function() {
     relatedTab.getAttribute("usercontextid"),
     2,
     "Related tab (relatedToCurrent) with overridden usercontextid"
+  );
+  is(
+    relatedTab.linkedBrowser.contentPrincipal.userContextId,
+    2,
+    "Related tab's browser actually gets overridden usercontextid"
   );
   BrowserTestUtils.removeTab(relatedTab);
 
@@ -51,6 +61,11 @@ add_task(async function() {
     1,
     "Related tab (referrer) inherits current tab's usercontextid"
   );
+  is(
+    relatedTab.linkedBrowser.contentPrincipal.userContextId,
+    1,
+    "Related tab's browser (referrer) actually inherits the current tab's usercontextid"
+  );
   BrowserTestUtils.removeTab(relatedTab);
 
   gBrowser.selectedTab = tab;
@@ -67,6 +82,11 @@ add_task(async function() {
     relatedTab.getAttribute("usercontextid"),
     2,
     "Related tab (referrer) with overridden usercontextid"
+  );
+  is(
+    relatedTab.linkedBrowser.contentPrincipal.userContextId,
+    2,
+    "Related tab's browser (referrer) actually gets overridden usercontextid"
   );
   BrowserTestUtils.removeTab(relatedTab);
 
