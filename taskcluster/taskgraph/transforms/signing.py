@@ -7,7 +7,6 @@ Transform the signing task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -30,23 +29,23 @@ signing_description_schema = schema.extend({
         Required('taskId'): taskref_or_string,
 
         # type of signing task (for CoT)
-        Required('taskType'): text_type,
+        Required('taskType'): basestring,
 
         # Paths to the artifacts to sign
-        Required('paths'): [text_type],
+        Required('paths'): [basestring],
 
         # Signing formats to use on each of the paths
-        Required('formats'): [text_type],
+        Required('formats'): [basestring],
     }],
 
     # depname is used in taskref's to identify the taskID of the unsigned things
-    Required('depname'): text_type,
+    Required('depname'): basestring,
 
     # attributes for this task
-    Optional('attributes'): {text_type: object},
+    Optional('attributes'): {basestring: object},
 
     # unique label to describe this signing task, defaults to {dep.label}-signing
-    Optional('label'): text_type,
+    Optional('label'): basestring,
 
     # treeherder is allowed here to override any defaults we use for signing.  See
     # taskcluster/taskgraph/transforms/task.py for the schema details, and the
@@ -54,14 +53,14 @@ signing_description_schema = schema.extend({
     Optional('treeherder'): task_description_schema['treeherder'],
 
     # Routes specific to this task, if defined
-    Optional('routes'): [text_type],
+    Optional('routes'): [basestring],
 
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
 
     # Optional control for how long a task may run (aka maxRunTime)
     Optional('max-run-time'): int,
-    Optional('extra'): {text_type: object},
+    Optional('extra'): {basestring: object},
 
     # Max number of partner repacks per chunk
     Optional('repacks-per-chunk'): int,

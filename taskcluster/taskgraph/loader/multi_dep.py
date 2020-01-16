@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
-from six import text_type
 
 from voluptuous import Required
 
@@ -18,7 +17,7 @@ schema = Schema({
     Required(
         'dependent-tasks',
         'dictionary of dependent tasks, keyed by kind',
-    ): {text_type: Task},
+    ): {basestring: Task},
 })
 
 
@@ -179,7 +178,7 @@ def get_primary_dep(config, dep_tasks):
 
     """
     primary_dependencies = config.get('primary-dependency')
-    if isinstance(primary_dependencies, text_type):
+    if isinstance(primary_dependencies, basestring):
         primary_dependencies = [primary_dependencies]
     if not primary_dependencies:
         assert len(dep_tasks) == 1, "Must define a primary-dependency!"

@@ -9,7 +9,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 
-from six import text_type
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
@@ -21,14 +20,14 @@ from voluptuous import Optional, Required
 
 push_apk_description_schema = Schema({
     Required('dependent-tasks'): object,
-    Required('name'): text_type,
+    Required('name'): basestring,
     Required('label'): task_description_schema['label'],
     Required('description'): task_description_schema['description'],
     Required('job-from'): task_description_schema['job-from'],
     Required('attributes'): task_description_schema['attributes'],
     Required('treeherder'): task_description_schema['treeherder'],
     Required('run-on-projects'): task_description_schema['run-on-projects'],
-    Required('worker-type'): optionally_keyed_by('release-level', text_type),
+    Required('worker-type'): optionally_keyed_by('release-level', basestring),
     Required('worker'): object,
     Required('scopes'): None,
     Required('shipping-phase'): task_description_schema['shipping-phase'],

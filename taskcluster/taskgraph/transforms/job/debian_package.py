@@ -9,7 +9,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import re
-from six import text_type
 
 from taskgraph.util.schema import Schema
 from voluptuous import Any, Optional, Required
@@ -26,19 +25,19 @@ DSC_PACKAGE_RE = re.compile('.*(?=_)')
 SOURCE_PACKAGE_RE = re.compile('.*(?=[-_]\d)')
 
 source_definition = {
-    Required('url'): text_type,
-    Required('sha256'): text_type,
+    Required('url'): basestring,
+    Required('sha256'): basestring,
 }
 
 run_schema = Schema({
     Required('using'): 'debian-package',
     # Debian distribution
-    Required('dist'): text_type,
+    Required('dist'): basestring,
 
     # Date of the snapshot (from snapshot.debian.org) to use, in the format
     # YYYYMMDDTHHMMSSZ. The same date is used for the base docker-image name
     # (only the YYYYMMDD part).
-    Required('snapshot'): text_type,
+    Required('snapshot'): basestring,
 
     # URL/SHA256 of a source file to build, which can either be a source
     # control (.dsc), or a tarball.
@@ -47,19 +46,19 @@ run_schema = Schema({
     # Package name. Normally derived from the source control or tarball file
     # name. Use in case the name doesn't match DSC_PACKAGE_RE or
     # SOURCE_PACKAGE_RE.
-    Optional('name'): text_type,
+    Optional('name'): basestring,
 
     # Patch to apply to the extracted source.
-    Optional('patch'): text_type,
+    Optional('patch'): basestring,
 
     # Command to run before dpkg-buildpackage.
-    Optional('pre-build-command'): text_type,
+    Optional('pre-build-command'): basestring,
 
     # Architecture to build the package for.
-    Optional('arch'): text_type,
+    Optional('arch'): basestring,
 
     # List of package tasks to get build dependencies from.
-    Optional('packages'): [text_type],
+    Optional('packages'): [basestring],
 
     # What resolver to use to install build dependencies. The default
     # (apt-get) is good in most cases, but in subtle cases involving
@@ -68,7 +67,7 @@ run_schema = Schema({
     Optional('resolver'): Any('apt-get', 'aptitude'),
 
     # Base work directory used to set up the task.
-    Required('workdir'): text_type,
+    Required('workdir'): basestring,
 })
 
 
