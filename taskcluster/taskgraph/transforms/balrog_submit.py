@@ -7,7 +7,6 @@ Transform the per-locale balrog task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -24,7 +23,7 @@ from voluptuous import Optional
 
 balrog_description_schema = schema.extend({
     # unique label to describe this balrog task, defaults to balrog-{dep.label}
-    Optional('label'): text_type,
+    Optional('label'): basestring,
 
 
     Optional(

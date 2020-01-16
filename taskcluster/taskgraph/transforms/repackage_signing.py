@@ -9,7 +9,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -20,8 +19,8 @@ from taskgraph.transforms.task import task_description_schema
 from voluptuous import Required, Optional
 
 repackage_signing_description_schema = schema.extend({
-    Required('depname', default='repackage'): text_type,
-    Optional('label'): text_type,
+    Required('depname', default='repackage'): basestring,
+    Optional('label'): basestring,
     Optional('treeherder'): task_description_schema['treeherder'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
     Optional('shipping-phase'): task_description_schema['shipping-phase'],

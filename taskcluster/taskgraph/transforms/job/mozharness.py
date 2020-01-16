@@ -11,8 +11,6 @@ way, and certainly anything using mozharness should use this approach.
 from __future__ import absolute_import, print_function, unicode_literals
 import json
 
-import six
-from six import text_type
 from textwrap import dedent
 
 from taskgraph.util.schema import Schema
@@ -39,16 +37,16 @@ mozharness_run_schema = Schema({
 
     # the mozharness script used to run this task, relative to the testing/
     # directory and using forward slashes even on Windows
-    Required('script'): text_type,
+    Required('script'): basestring,
 
     # Additional paths to look for mozharness configs in. These should be
     # relative to the base of the source checkout
-    Optional('config-paths'): [text_type],
+    Optional('config-paths'): [basestring],
 
     # the config files required for the task, relative to
     # testing/mozharness/configs or one of the paths specified in
     # `config-paths` and using forward slashes even on Windows
-    Required('config'): [text_type],
+    Required('config'): [basestring],
 
     # any additional actions to pass to the mozharness command
     Optional('actions'): [Match(
@@ -63,14 +61,14 @@ mozharness_run_schema = Schema({
     )],
 
     # --custom-build-variant-cfg value
-    Optional('custom-build-variant-cfg'): text_type,
+    Optional('custom-build-variant-cfg'): basestring,
 
     # Extra configuration options to pass to mozharness.
     Optional('extra-config'): dict,
 
     # Extra metadata to use toward the workspace caching.
     # Only supported on docker-worker
-    Optional('extra-workspace-cache-key'): text_type,
+    Optional('extra-workspace-cache-key'): basestring,
 
     # If not false, tooltool downloads will be enabled via relengAPIProxy
     # for either just public files, or all files.  Not supported on Windows
@@ -85,7 +83,7 @@ mozharness_run_schema = Schema({
     # this will enable any worker features required and set the task's scopes
     # appropriately.  `true` here means ['*'], all secrets.  Not supported on
     # Windows
-    Required('secrets'): Any(bool, [text_type]),
+    Required('secrets'): Any(bool, [basestring]),
 
     # If true, taskcluster proxy will be enabled; note that it may also be enabled
     # automatically e.g., for secrets support.  Not supported on Windows.
@@ -99,7 +97,7 @@ mozharness_run_schema = Schema({
     Required('keep-artifacts'): bool,
 
     # If specified, use the in-tree job script specified.
-    Optional('job-script'): text_type,
+    Optional('job-script'): basestring,
 
     Required('requires-signed-builds'): bool,
 
@@ -119,7 +117,7 @@ mozharness_run_schema = Schema({
     Required('comm-checkout'): bool,
 
     # Base work directory used to set up the task.
-    Required('workdir'): text_type,
+    Required('workdir'): basestring,
 })
 
 
@@ -192,8 +190,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         env['MH_CUSTOM_BUILD_VARIANT_CFG'] = run.pop('custom-build-variant-cfg')
 
     if 'extra-config' in run:
-        env['EXTRA_MOZHARNESS_CONFIG'] = six.ensure_text(
-            json.dumps(run.pop('extra-config')))
+        env['EXTRA_MOZHARNESS_CONFIG'] = json.dumps(run.pop('extra-config'))
 
     if 'job-script' in run:
         env['JOB_SCRIPT'] = run['job-script']
@@ -279,8 +276,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         env.update({'MOZ_SIMPLE_PACKAGE_NAME': 'target'})
 
     if 'extra-config' in run:
-        env['EXTRA_MOZHARNESS_CONFIG'] = six.ensure_text(
-            json.dumps(run.pop('extra-config')))
+        env['EXTRA_MOZHARNESS_CONFIG'] = json.dumps(run.pop('extra-config'))
 
     # The windows generic worker uses batch files to pass environment variables
     # to commands.  Setting a variable to empty in a batch file unsets, so if

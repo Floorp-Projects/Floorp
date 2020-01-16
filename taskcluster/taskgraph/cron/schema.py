@@ -7,8 +7,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
-
 from voluptuous import Any, Required, All, Optional
 from taskgraph.util.schema import (
     optionally_keyed_by,
@@ -25,7 +23,7 @@ def even_15_minutes(minutes):
 cron_yml_schema = Schema({
     'jobs': [{
         # Name of the crontask (must be unique)
-        Required('name'): text_type,
+        Required('name'): basestring,
 
         # what to run
 
@@ -34,10 +32,10 @@ cron_yml_schema = Schema({
             Required('type'): 'decision-task',
 
             # Treeherder symbol for the cron task
-            Required('treeherder-symbol'): text_type,
+            Required('treeherder-symbol'): basestring,
 
             # --target-tasks-method './mach taskgraph decision' argument
-            Required('target-tasks-method'): text_type,
+            Required('target-tasks-method'): basestring,
 
             Optional(
                 'optimize-target-tasks',
@@ -53,7 +51,7 @@ cron_yml_schema = Schema({
             Optional(
                 'rebuild-kinds',
                 description='Kinds that should not be re-used from the on-push graph.',
-            ): [text_type],
+            ): [basestring],
         },
 
         # when to run it
@@ -62,7 +60,7 @@ cron_yml_schema = Schema({
         # run on all projects for which cron tasks are set up.  This works just like the
         # `run_on_projects` attribute, where strings like "release" and "integration" are
         # expanded to cover multiple repositories.  (taskcluster/docs/attributes.rst)
-        'run-on-projects': [text_type],
+        'run-on-projects': [basestring],
 
         # Array of times at which this task should run.  These *must* be a
         # multiple of 15 minutes, the minimum scheduling interval.  This field
