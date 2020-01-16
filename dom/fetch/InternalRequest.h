@@ -407,7 +407,7 @@ class InternalRequest final {
   MOZ_INIT_OUTSIDE_CTOR bool mSkipServiceWorker;
   MOZ_INIT_OUTSIDE_CTOR bool mSynchronous;
   MOZ_INIT_OUTSIDE_CTOR bool mUnsafeRequest;
-  MOZ_INIT_OUTSIDE_CTOR bool mUseURLCredentials;
+  bool mUseURLCredentials = false;
   // This is only set when Request.overrideContentPolicyType() has been set.
   // It is illegal to pass such a Request object to a fetch() method unless
   // if the caller has chrome privileges.
