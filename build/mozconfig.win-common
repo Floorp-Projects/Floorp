@@ -4,6 +4,7 @@
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 export MAKECAB=$TOOLTOOL_DIR/makecab.exe
+export DUMP_SYMS="${MOZ_FETCHES_DIR}/dump_syms/dump_syms.exe"
 
 if [ -z "$USE_ARTIFACT" ]; then
     if [ -n "$TASKCLUSTER_PGO_PROFILE_USE" ]; then
