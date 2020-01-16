@@ -788,12 +788,10 @@ var E10SUtils = {
       return false;
     }
 
-    // If we are performing HTTP response process selection, and are loading an
-    // HTTP URI, we can start the load in the current process, and then perform
-    // the switch later-on using the RedirectProcessChooser mechanism.
-    //
-    // We should never be sending a POST request from the parent process to a
-    // http(s) uri, so make sure we switch if we're currently in that process.
+    // If we are using DocumentChannel or remote subframes (fission), and
+    // are loading a HTTP URI, we can start the load in the current
+    // process, and then perform the switch later-on using the
+    // RedirectProcessChooser mechanism.
     if (
       Services.appinfo.remoteType != NOT_REMOTE &&
       (useRemoteSubframes || documentChannel) &&
