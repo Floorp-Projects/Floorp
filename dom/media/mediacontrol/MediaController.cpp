@@ -30,7 +30,7 @@ MediaController::MediaController(uint64_t aContextId)
 
 MediaController::~MediaController() {
   LOG("Destroy controller %" PRId64, Id());
-  MOZ_DIAGNOSTIC_ASSERT(!mControlledMediaNum);
+  MOZ_DIAGNOSTIC_ASSERT(!mIsRegisteredToService);
 };
 
 void MediaController::Play() {
@@ -146,15 +146,21 @@ void MediaController::DecreasePlayingControlledMediaNum() {
 // TODO : Use watchable to moniter mControlledMediaNum
 void MediaController::Activate() {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
-  MOZ_ASSERT(service);
-  service->RegisterActiveMediaController(this);
+  if (service && !mIsRegisteredToService) {
+    mIsRegisteredToService = service->RegisterActiveMediaController(this);
+    MOZ_ASSERT(mIsRegisteredToService, "Fail to register controller!");
+  }
 }
 
 void MediaController::Deactivate() {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
-  MOZ_ASSERT(service);
-  service->UnregisterActiveMediaController(this);
-  service->GetAudioFocusManager().RevokeAudioFocus(Id());
+  if (service) {
+    service->GetAudioFocusManager().RevokeAudioFocus(Id());
+    if (mIsRegisteredToService) {
+      mIsRegisteredToService = !service->UnregisterActiveMediaController(this);
+      MOZ_ASSERT(!mIsRegisteredToService, "Fail to unregister controller!");
+    }
+  }
 }
 
 void MediaController::SetPlayState(PlaybackState aState) {

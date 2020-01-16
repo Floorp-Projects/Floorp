@@ -41,8 +41,11 @@ class MediaControlService final : public nsIObserver {
     return mMediaControlKeysManager;
   }
 
-  void RegisterActiveMediaController(MediaController* aController);
-  void UnregisterActiveMediaController(MediaController* aController);
+  // Use these functions to register/unresgister controller to/from the active
+  // controller list in the service. Return true if the controller is registered
+  // or unregistered sucessfully.
+  bool RegisterActiveMediaController(MediaController* aController);
+  bool UnregisterActiveMediaController(MediaController* aController);
   uint64_t GetActiveControllersNum() const;
 
   // The main controller is the controller which can receive the media control
@@ -83,8 +86,8 @@ class MediaControlService final : public nsIObserver {
     explicit ControllerManager(MediaControlService* aService);
     ~ControllerManager() = default;
 
-    void AddController(MediaController* aController);
-    void RemoveController(MediaController* aController);
+    bool AddController(MediaController* aController);
+    bool RemoveController(MediaController* aController);
 
     void Shutdown();
 
