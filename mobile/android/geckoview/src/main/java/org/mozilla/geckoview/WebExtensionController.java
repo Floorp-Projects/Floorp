@@ -49,6 +49,16 @@ public class WebExtensionController {
 
     private static class ExtensionStore {
         final private Map<String, WebExtension> mData = new HashMap<>();
+        private Observer mObserver;
+
+        interface Observer {
+            /***
+             * This event is fired every time a new extension object is created by the store.
+             *
+             * @param extension the newly-created extension object
+             */
+            void onNewExtension(final WebExtension extension);
+        }
 
         public GeckoResult<WebExtension> get(final String id) {
             final WebExtension extension = mData.get(id);
@@ -63,11 +73,16 @@ public class WebExtensionController {
 
                 return result.then(ext -> {
                     mData.put(ext.id, ext);
+                    mObserver.onNewExtension(ext);
                     return GeckoResult.fromValue(ext);
                 });
             }
 
             return GeckoResult.fromValue(extension);
+        }
+
+        public void setObserver(final Observer observer) {
+            mObserver = observer;
         }
 
         public void remove(final String id) {
@@ -93,7 +108,8 @@ public class WebExtensionController {
 
     // Avoids exposing listeners to the API
     private class Internals implements BundleEventListener,
-            WebExtension.Port.Observer {
+            WebExtension.Port.Observer,
+            ExtensionStore.Observer {
         @Override
         // BundleEventListener
         public void handleMessage(final String event, final GeckoBundle message,
@@ -121,6 +137,11 @@ public class WebExtensionController {
             }
 
             mPendingPortMessages.remove(port.id);
+        }
+
+        @Override
+        public void onNewExtension(final WebExtension extension) {
+            extension.setDelegateController(new DelegateController(extension));
         }
     }
 
@@ -549,6 +570,7 @@ public class WebExtensionController {
         mListener = new WebExtension.Listener(runtime);
         mPendingPortMessages = new MultiMap<>();
         mPendingMessages = new MultiMap<>();
+        mExtensions.setObserver(mInternals);
     }
 
     /* package */ void registerWebExtension(final WebExtension webExtension) {
