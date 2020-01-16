@@ -70,6 +70,8 @@
     <string name="mozac_feature_addons_installed_section">Ibded</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">Yelha</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) addons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">Ur ttwasefrak ara</string>
     <!-- Displays a page with all the details of an addon. -->
     <string name="mozac_feature_addons_details">Talqayt</string>
     <!-- Displays a page with all the permissions of an addon. -->
@@ -96,6 +98,10 @@
     <string name="mozac_feature_addons_updater_notification_allow_button">Sireg</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an addons needs new permissions. Indicates the user denies the new permissions and prevent the addon from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">Gdel</string>
+    <!-- The tile of the notification, this will be shown to the user when an addons needs new permissions, to be updated. %1$s is the name of the addons-->
+    <string name="mozac_feature_addons_updater_notification_title">%1$s isεa lqem amaynut</string>
+    <!-- The content of the notification, this will be shown when an addons needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d ttwasrant tisirag timaynutin</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an addon. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Ileqman n uzegrir</string>
     <!-- This is the caption for the addon installation progress overlay -->
