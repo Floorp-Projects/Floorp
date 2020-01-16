@@ -57,7 +57,7 @@ sealed class HomeFragmentAction : Action {
         HomeFragmentAction()
     data class CollectionExpanded(val collection: TabCollection, val expand: Boolean) : HomeFragmentAction()
     data class CollectionsChange(val collections: List<TabCollection>) : HomeFragmentAction()
-    data class ModeChange(val mode: Mode) : HomeFragmentAction()
+    data class ModeChange(val mode: Mode, val tabs: List<Tab> = emptyList()) : HomeFragmentAction()
     data class TabsChange(val tabs: List<Tab>) : HomeFragmentAction()
 }
 
@@ -83,7 +83,7 @@ private fun homeFragmentStateReducer(
             state.copy(expandedCollections = newExpandedCollection)
         }
         is HomeFragmentAction.CollectionsChange -> state.copy(collections = action.collections)
-        is HomeFragmentAction.ModeChange -> state.copy(mode = action.mode, tabs = emptyList())
+        is HomeFragmentAction.ModeChange -> state.copy(mode = action.mode, tabs = action.tabs)
         is HomeFragmentAction.TabsChange -> state.copy(tabs = action.tabs)
     }
 }
