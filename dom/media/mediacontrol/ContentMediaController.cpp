@@ -7,6 +7,7 @@
 #include "MediaControlUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/StaticPtr.h"
 #include "nsDataHashtable.h"
@@ -110,9 +111,10 @@ void ContentMediaController::NotifyMediaStateChanged(
   } else {
     // Currently this only happen when we disable e10s, otherwise all controlled
     // media would be run in the content process.
-    RefPtr<MediaController> controller =
-        MediaControlService::GetService()->GetOrCreateControllerById(bc->Id());
-    controller->NotifyMediaStateChanged(aState);
+    if (RefPtr<MediaController> controller =
+            bc->Canonical()->GetMediaController()) {
+      controller->NotifyMediaStateChanged(aState);
+    }
   }
 }
 
@@ -136,9 +138,8 @@ void ContentMediaController::NotifyAudibleStateChanged(
   } else {
     // Currently this only happen when we disable e10s, otherwise all controlled
     // media would be run in the content process.
-    RefPtr<MediaController> controller =
-        MediaControlService::GetService()->GetActiveControllerById(bc->Id());
-    if (controller) {
+    if (RefPtr<MediaController> controller =
+            bc->Canonical()->GetMediaController()) {
       controller->NotifyMediaAudibleChanged(aAudible);
     }
   }

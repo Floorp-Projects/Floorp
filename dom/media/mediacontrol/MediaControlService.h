@@ -36,9 +36,6 @@ class MediaControlService final : public nsIObserver {
 
   static RefPtr<MediaControlService> GetService();
 
-  MediaController* GetOrCreateControllerById(uint64_t aId) const;
-  MediaController* GetActiveControllerById(uint64_t aId) const;
-
   AudioFocusManager& GetAudioFocusManager() { return mAudioFocusManager; }
   MediaControlKeysEventSource* GetMediaControlKeysEventSource() {
     return mMediaControlKeysManager;
@@ -101,9 +98,7 @@ class MediaControlService final : public nsIObserver {
    private:
     void UpdateMainController(MediaController* aController);
 
-    // This hash table holds strong references to all controllers.
-    nsDataHashtable<nsUint64HashKey, RefPtr<MediaController>> mControllers;
-    nsTArray<uint64_t> mControllerHistory;
+    nsTArray<RefPtr<MediaController>> mControllers;
     RefPtr<MediaController> mMainController;
 
     // These member are use to listen main controller's play state changes and

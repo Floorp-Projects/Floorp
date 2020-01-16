@@ -6,7 +6,7 @@
 
 #include "MediaControlUtils.h"
 #include "MediaControlService.h"
-
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_media.h"
 
@@ -52,10 +52,14 @@ void AudioFocusManager::HandleAudioCompetition(uint64_t aId) {
     if (controllerId != aId) {
       LOG("Controller %" PRId64 " loses audio focus in audio competitition",
           controllerId);
-      RefPtr<MediaController> controller =
-          mService->GetActiveControllerById(controllerId);
-      MOZ_ASSERT(controller);
-      controller->Stop();
+      RefPtr<CanonicalBrowsingContext> context =
+          CanonicalBrowsingContext::Get(controllerId);
+      if (!context) {
+        continue;
+      }
+      if (RefPtr<MediaController> controller = context->GetMediaController()) {
+        controller->Stop();
+      }
     }
   }
 

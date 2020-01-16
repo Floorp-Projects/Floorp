@@ -69,10 +69,16 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
 
 void MediaController::Shutdown() {
   SetPlayState(PlaybackState::eStopped);
+  // The media controller would be removed from the service when we receive a
+  // notification from the content process about all controlled media has been
+  // stoppped. However, if controlled media is stopped after detaching
+  // browsing context, then sending the notification from the content process
+  // would fail so that we are not able to notify the chrome process to remove
+  // the corresponding controller. Therefore, we should manually remove the
+  // controller from the service.
+  Deactivate();
   mControlledMediaNum = 0;
-  RefPtr<MediaControlService> service = MediaControlService::GetService();
-  MOZ_ASSERT(service);
-  service->GetAudioFocusManager().RevokeAudioFocus(Id());
+  mPlayingControlledMediaNum = 0;
 }
 
 void MediaController::NotifyMediaStateChanged(ControlledMediaState aState) {
