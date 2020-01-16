@@ -7982,7 +7982,7 @@
 
 - name: webgl.default-low-power
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: webgl.default-no-alpha
