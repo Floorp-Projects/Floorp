@@ -111,3 +111,44 @@ add_task(async function test_invalid_csp() {
   await extension.unload();
   ExtensionTestUtils.failOnSchemaWarnings(true);
 });
+
+add_task(async function test_isolated_world() {
+  const test_policy = "script-src 'self'; object-src 'none'; img-src 'none'";
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_security_policy: {
+        isolated_world: test_policy,
+      },
+    },
+  });
+  await extension.startup();
+  let policy = WebExtensionPolicy.getByID(extension.id);
+  equal(
+    policy.contentScriptCSP,
+    test_policy,
+    "csp is is correct when using isolated_world."
+  );
+  await extension.unload();
+});
+
+// If both isolated_world and content_scripts is provided, content_scripts is used.
+add_task(async function test_isolated_world_overridden() {
+  const test_policy =
+    "script-src 'self'; object-src 'none'; img-src https://xpcshell.test.custom.csp";
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_security_policy: {
+        content_scripts: test_policy,
+        isolated_world: "script-src 'self'; object-src 'none'; img-src 'none'",
+      },
+    },
+  });
+  await extension.startup();
+  let policy = WebExtensionPolicy.getByID(extension.id);
+  equal(
+    policy.contentScriptCSP,
+    test_policy,
+    "csp is is correct when using isolated_world and content_scripts."
+  );
+  await extension.unload();
+});
