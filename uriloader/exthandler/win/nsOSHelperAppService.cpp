@@ -447,25 +447,21 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   RefPtr<nsMIMEInfoWin> mi;
 
   // We should have *something* to go on here.
-  if (fileExtension.IsEmpty() && !haveMeaningfulMimeType) {
+  nsAutoString extensionFromMimeType;
+  if (haveMeaningfulMimeType) {
+    GetExtensionFromWindowsMimeDatabase(aMIMEType, extensionFromMimeType);
+  }
+  if (fileExtension.IsEmpty() && extensionFromMimeType.IsEmpty()) {
+    // Without an extension from the mimetype or the file, we can't
+    // do anything here.
     mi = new nsMIMEInfoWin(flatType.get());
+    if (!aFileExt.IsEmpty()) {
+      mi->AppendExtension(aFileExt);
+    }
     mi.forget(aMIMEInfo);
     return NS_OK;
   }
 
-  nsAutoString extensionFromMimeType;
-  if (haveMeaningfulMimeType) {
-    GetExtensionFromWindowsMimeDatabase(aMIMEType, extensionFromMimeType);
-    if (extensionFromMimeType.IsEmpty()) {
-      // We can't verify the mime type and file extension make sense.
-      mi = new nsMIMEInfoWin(flatType.get());
-      if (!aFileExt.IsEmpty()) {
-        mi->AppendExtension(aFileExt);
-      }
-      mi.forget(aMIMEInfo);
-      return NS_OK;
-    }
-  }
   // Either fileExtension or extensionFromMimeType must now be non-empty.
 
   *aFound = true;
@@ -476,7 +472,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   // mime type's default file extension instead.
   bool usedMimeTypeExtensionForLookup = false;
   if (fileExtension.IsEmpty() ||
-      (haveMeaningfulMimeType &&
+      (!extensionFromMimeType.IsEmpty() &&
        !typeFromExtEquals(fileExtension.get(), flatType.get()))) {
     usedMimeTypeExtensionForLookup = true;
     fileExtension = extensionFromMimeType;

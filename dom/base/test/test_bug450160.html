@@ -20,40 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450160
 /** Test for Bug 450160 **/
 
 
-function testHTMLDocuments(ids, isXHTML) {
-  for (var i = 0; i < ids.length; ++i) {
-    var docType1 =
-      document.implementation.createDocumentType(isXHTML ? "html" : "HTML",
-                                                 ids[i],
-                                                 null);
-    ok(docType1, "No doctype?");
-    ok(docType1.ownerDocument, "docType should have ownerDocument!");
-    var doc1 = document.implementation.createDocument(null, null, docType1);
-    is(docType1.ownerDocument, doc1, "docType should have ownerDocument!");
-    ok(!doc1.documentElement, "Document shouldn't have document element!");
-    is(doc1.body, null, "Shouldn't have .body!");
-    ok(doc1 instanceof HTMLDocument,
-       "Document should be an HTML document!");
-
-    var docType2 =
-      document.implementation.createDocumentType(isXHTML ? "html" : "HTML",
-                                                 ids[i],
-                                                 null);
-    var doc2 = document.implementation.createDocument(
-      "http://www.w3.org/1999/xhtml", "html", docType2);
-    is(docType2.ownerDocument, doc2, "docType should have ownerDocument!");
-    ok(doc2.documentElement, "Document should have document element!");
-    is(doc2.documentElement.localName, "html", "Wrong document element!");
-    is(doc2.body, null, "Shouldn't have .body!");
-    doc2.documentElement.appendChild(doc2.createElement("body"));
-    is(doc2.body, doc2.documentElement.firstChild, "Should have .body!");
-    if (isXHTML) {
-      doc2.body.appendChild(doc2.createElementNS("http://www.w3.org/1999/xhtml", "form"));
-    } else {
-      doc2.body.appendChild(doc2.createElement("form"));
-    }
-    is(doc2.forms.length, 1, "Form wasn't added .forms");
-  }
+function testHTMLDocument() {
+  var doc = document.implementation.createHTMLDocument();
+  ok(!!doc.documentElement, "Document should have document element!");
+  ok(!!doc.body, "Should have .body!");
+  ok(doc instanceof HTMLDocument,
+     "Document should be an HTML document!");
 }
 
 function testSVGDocument() {
@@ -117,21 +89,7 @@ function testNullDocTypeDocument() {
   is(doc2.documentElement.localName, "FooBar", "Wrong localName!");
 }
 
-var htmlPublicIDs = 
-  [ "-//W3C//DTD HTML 4.01//EN",
-    "-//W3C//DTD HTML 4.01 Transitional//EN",
-    "-//W3C//DTD HTML 4.01 Frameset//EN",
-    "-//W3C//DTD HTML 4.0//EN",
-    "-//W3C//DTD HTML 4.0 Transitional//EN",
-    "-//W3C//DTD HTML 4.0 Frameset//EN" ];
-
-var xhtmlPublicIDs =
- [ "-//W3C//DTD XHTML 1.0 Strict//EN",
-   "-//W3C//DTD XHTML 1.0 Transitional//EN",
-   "-//W3C//DTD XHTML 1.0 Frameset//EN" ];
-
-testHTMLDocuments(htmlPublicIDs, false);
-testHTMLDocuments(xhtmlPublicIDs, true);
+testHTMLDocument();
 testSVGDocument();
 testFooBarDocument();
 testNullDocTypeDocument();

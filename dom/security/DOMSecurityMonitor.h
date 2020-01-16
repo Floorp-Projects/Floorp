@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_DOMSecurityMonitor_h
 #define mozilla_dom_DOMSecurityMonitor_h
 
+class nsIChannel;
 class nsIPrincipal;
 
 class DOMSecurityMonitor final {
@@ -22,6 +23,15 @@ class DOMSecurityMonitor final {
    */
   static void AuditParsingOfHTMLXMLFragments(nsIPrincipal* aPrincipal,
                                              const nsAString& aFragment);
+
+  /* The use of javascript: URIs in system privileged contexts or
+   * also about: pages is considered unsafe and discouraged.
+   *
+   * If the auditor detects a javascript: URI in a privileged
+   * context it will CRASH using a strong assertion.
+   *
+   */
+  static void AuditUseOfJavaScriptURI(nsIChannel* aChannel);
 
  private:
   DOMSecurityMonitor() = default;

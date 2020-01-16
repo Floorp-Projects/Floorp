@@ -238,7 +238,7 @@ function terminalInputChanged(expression) {
     let mapped;
     ({ expression, mapped } = await getMappedExpression(hud, expression));
 
-    const { frameActor, webConsoleFront } = webConsoleUI.getFrameActor();
+    const { frameActor, webConsoleFront } = await webConsoleUI.getFrameActor();
 
     const response = await client.evaluateJSAsync(expression, {
       frameActor,

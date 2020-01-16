@@ -511,7 +511,6 @@ module.exports = {
       "dom/base/test/chrome/test_bug683852.xhtml",
       "dom/base/test/chrome/test_bug780529.xhtml",
       "dom/base/test/chrome/test_bug800386.xhtml",
-      "dom/base/test/chrome/test_bug814638.xhtml",
       "dom/base/test/chrome/test_bug884693.xhtml",
       "dom/base/test/chrome/test_document-element-inserted.xhtml",
       "dom/base/test/chrome/test_domparsing.xhtml",

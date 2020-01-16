@@ -41,6 +41,7 @@
 #include "nsSandboxFlags.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/dom/DOMSecurityMonitor.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "nsContentSecurityManager.h"
@@ -172,6 +173,10 @@ nsresult nsJSThunk::EvaluateScript(
   }
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   loadInfo->SetResultPrincipalURI(docURI);
+
+#ifdef DEBUG
+  DOMSecurityMonitor::AuditUseOfJavaScriptURI(aChannel);
+#endif
 
   // Get principal of code for execution
   nsCOMPtr<nsISupports> owner;

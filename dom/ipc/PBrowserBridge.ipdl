@@ -19,6 +19,7 @@ using mozilla::dom::EffectsInfo from "mozilla/dom/TabMessageUtils.h";
 using mozilla::ScrollAxis from "mozilla/PresShellForwards.h";
 using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
 using struct nsRect from "nsRect.h";
+using CallerType from "mozilla/dom/BindingDeclarations.h";
 
 namespace mozilla {
 namespace dom {
@@ -41,7 +42,7 @@ child:
    * browser's frame. If canRaise is true, the window can be raised if
    * it is inactive.
    */
-  async RequestFocus(bool canRaise);
+  async RequestFocus(bool canRaise, CallerType aCallerType);
 
   /**
    * When IPC parent / Web child sends this message, the IPC child / Web parent
