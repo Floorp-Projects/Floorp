@@ -34,7 +34,7 @@ let SpecChaCha20 n = do {
 };
 
 print "Proving equality for a single block...";
-time (llvm_verify m "Hacl_Chacha20_chacha20" [] (SpecChaCha20 64));
+time (llvm_verify m "Hacl_Chacha20_chacha20_encrypt" [] (SpecChaCha20 64));
 
 print "Proving equality for multiple blocks...";
-time (llvm_verify m "Hacl_Chacha20_chacha20" [] (SpecChaCha20 256));
+time (llvm_verify m "Hacl_Chacha20_chacha20_encrypt" [] (SpecChaCha20 256));

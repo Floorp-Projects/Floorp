@@ -99,7 +99,8 @@ RNG_GenerateGlobalRandomBytes(void *dest, size_t len)
 
     memset(dest, 0, len);
     memcpy(dest, globalBytes, PR_MIN(len, GLOBAL_BYTES_SIZE));
-    Hacl_Chacha20_chacha20(dest, (uint8_t *)dest, len, (uint8_t *)key, nonce, 0);
+    Hacl_Chacha20_chacha20_encrypt(len, (uint8_t *)dest, (uint8_t *)dest,
+                                   (uint8_t *)key, nonce, 0);
     ChaCha20Poly1305_DestroyContext(cx, PR_TRUE);
 
     PZ_Unlock(rng_lock);

@@ -21,29 +21,40 @@
  * SOFTWARE.
  */
 
+#include "libintvector.h"
 #include "kremlin/internal/types.h"
 #include "kremlin/lowstar_endianness.h"
 #include <string.h>
 #include <stdbool.h>
 
-#ifndef __Hacl_Poly1305_32_H
-#define __Hacl_Poly1305_32_H
+#ifndef __Hacl_Chacha20Poly1305_128_H
+#define __Hacl_Chacha20Poly1305_128_H
 
 #include "Hacl_Kremlib.h"
+#include "Hacl_Chacha20_Vec128.h"
+#include "Hacl_Poly1305_128.h"
 
-extern uint32_t Hacl_Poly1305_32_blocklen;
+void
+Hacl_Chacha20Poly1305_128_aead_encrypt(
+    uint8_t *k,
+    uint8_t *n1,
+    uint32_t aadlen,
+    uint8_t *aad,
+    uint32_t mlen,
+    uint8_t *m,
+    uint8_t *cipher,
+    uint8_t *mac);
 
-typedef uint64_t *Hacl_Poly1305_32_poly1305_ctx;
+uint32_t
+Hacl_Chacha20Poly1305_128_aead_decrypt(
+    uint8_t *k,
+    uint8_t *n1,
+    uint32_t aadlen,
+    uint8_t *aad,
+    uint32_t mlen,
+    uint8_t *m,
+    uint8_t *cipher,
+    uint8_t *mac);
 
-void Hacl_Poly1305_32_poly1305_init(uint64_t *ctx, uint8_t *key);
-
-void Hacl_Poly1305_32_poly1305_update1(uint64_t *ctx, uint8_t *text);
-
-void Hacl_Poly1305_32_poly1305_update(uint64_t *ctx, uint32_t len, uint8_t *text);
-
-void Hacl_Poly1305_32_poly1305_finish(uint8_t *tag, uint8_t *key, uint64_t *ctx);
-
-void Hacl_Poly1305_32_poly1305_mac(uint8_t *tag, uint32_t len, uint8_t *text, uint8_t *key);
-
-#define __Hacl_Poly1305_32_H_DEFINED
+#define __Hacl_Chacha20Poly1305_128_H_DEFINED
 #endif

@@ -26,24 +26,16 @@
 #include <string.h>
 #include <stdbool.h>
 
-#ifndef __Hacl_Poly1305_32_H
-#define __Hacl_Poly1305_32_H
+#ifndef __Hacl_Curve25519_51_H
+#define __Hacl_Curve25519_51_H
 
 #include "Hacl_Kremlib.h"
 
-extern uint32_t Hacl_Poly1305_32_blocklen;
+void Hacl_Curve25519_51_scalarmult(uint8_t *out, uint8_t *priv, uint8_t *pub);
 
-typedef uint64_t *Hacl_Poly1305_32_poly1305_ctx;
+void Hacl_Curve25519_51_secret_to_public(uint8_t *pub, uint8_t *priv);
 
-void Hacl_Poly1305_32_poly1305_init(uint64_t *ctx, uint8_t *key);
+bool Hacl_Curve25519_51_ecdh(uint8_t *out, uint8_t *priv, uint8_t *pub);
 
-void Hacl_Poly1305_32_poly1305_update1(uint64_t *ctx, uint8_t *text);
-
-void Hacl_Poly1305_32_poly1305_update(uint64_t *ctx, uint32_t len, uint8_t *text);
-
-void Hacl_Poly1305_32_poly1305_finish(uint8_t *tag, uint8_t *key, uint64_t *ctx);
-
-void Hacl_Poly1305_32_poly1305_mac(uint8_t *tag, uint32_t len, uint8_t *text, uint8_t *key);
-
-#define __Hacl_Poly1305_32_H_DEFINED
+#define __Hacl_Curve25519_51_H_DEFINED
 #endif
