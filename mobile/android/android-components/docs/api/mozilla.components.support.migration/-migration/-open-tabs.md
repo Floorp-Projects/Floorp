@@ -2,7 +2,7 @@
 
 # OpenTabs
 
-`object OpenTabs : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L71)
+`object OpenTabs : `[`Migration`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L72)
 
 Migrates open tabs.
 

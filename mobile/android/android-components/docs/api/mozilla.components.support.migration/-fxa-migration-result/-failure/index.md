@@ -11,6 +11,7 @@ Failure variants of an FxA migration.
 | Name | Summary |
 |---|---|
 | [CorruptAccountState](-corrupt-account-state/index.md) | `data class CorruptAccountState : `[`Failure`](./index.md)<br>Failed to process Fennec's auth state due to an exception [e](-corrupt-account-state/e.md). |
+| [CustomServerConfigPresent](-custom-server-config-present/index.md) | `data class CustomServerConfigPresent : `[`Failure`](./index.md)<br>Encountered a Fennec with customized token/idp server endpoints. |
 | [FailedToSignIntoAuthenticatedAccount](-failed-to-sign-into-authenticated-account/index.md) | `data class FailedToSignIntoAuthenticatedAccount : `[`Failure`](./index.md)<br>Failed to sign in into an authenticated account. Currently, this could be either due to network failures, invalid credentials, or server-side issues. |
 | [UnsupportedVersions](-unsupported-versions/index.md) | `data class UnsupportedVersions : `[`Failure`](./index.md)<br>Encountered an unsupported version of Fennec's auth state. |
 
@@ -19,5 +20,6 @@ Failure variants of an FxA migration.
 | Name | Summary |
 |---|---|
 | [CorruptAccountState](-corrupt-account-state/index.md) | `data class CorruptAccountState : `[`Failure`](./index.md)<br>Failed to process Fennec's auth state due to an exception [e](-corrupt-account-state/e.md). |
+| [CustomServerConfigPresent](-custom-server-config-present/index.md) | `data class CustomServerConfigPresent : `[`Failure`](./index.md)<br>Encountered a Fennec with customized token/idp server endpoints. |
 | [FailedToSignIntoAuthenticatedAccount](-failed-to-sign-into-authenticated-account/index.md) | `data class FailedToSignIntoAuthenticatedAccount : `[`Failure`](./index.md)<br>Failed to sign in into an authenticated account. Currently, this could be either due to network failures, invalid credentials, or server-side issues. |
 | [UnsupportedVersions](-unsupported-versions/index.md) | `data class UnsupportedVersions : `[`Failure`](./index.md)<br>Encountered an unsupported version of Fennec's auth state. |
