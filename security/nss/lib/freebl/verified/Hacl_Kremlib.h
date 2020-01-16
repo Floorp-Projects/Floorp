@@ -26,24 +26,26 @@
 #include <string.h>
 #include <stdbool.h>
 
-#ifndef __Hacl_Poly1305_32_H
-#define __Hacl_Poly1305_32_H
+#ifndef __Hacl_Kremlib_H
+#define __Hacl_Kremlib_H
 
-#include "Hacl_Kremlib.h"
+inline static uint8_t FStar_UInt8_eq_mask(uint8_t a, uint8_t b);
 
-extern uint32_t Hacl_Poly1305_32_blocklen;
+inline static uint64_t FStar_UInt64_eq_mask(uint64_t a, uint64_t b);
 
-typedef uint64_t *Hacl_Poly1305_32_poly1305_ctx;
+inline static uint64_t FStar_UInt64_gte_mask(uint64_t a, uint64_t b);
 
-void Hacl_Poly1305_32_poly1305_init(uint64_t *ctx, uint8_t *key);
+inline static FStar_UInt128_uint128
+FStar_UInt128_add(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b);
 
-void Hacl_Poly1305_32_poly1305_update1(uint64_t *ctx, uint8_t *text);
+inline static FStar_UInt128_uint128
+FStar_UInt128_shift_right(FStar_UInt128_uint128 a, uint32_t s);
 
-void Hacl_Poly1305_32_poly1305_update(uint64_t *ctx, uint32_t len, uint8_t *text);
+inline static FStar_UInt128_uint128 FStar_UInt128_uint64_to_uint128(uint64_t a);
 
-void Hacl_Poly1305_32_poly1305_finish(uint8_t *tag, uint8_t *key, uint64_t *ctx);
+inline static uint64_t FStar_UInt128_uint128_to_uint64(FStar_UInt128_uint128 a);
 
-void Hacl_Poly1305_32_poly1305_mac(uint8_t *tag, uint32_t len, uint8_t *text, uint8_t *key);
+inline static FStar_UInt128_uint128 FStar_UInt128_mul_wide(uint64_t x, uint64_t y);
 
-#define __Hacl_Poly1305_32_H_DEFINED
+#define __Hacl_Kremlib_H_DEFINED
 #endif
