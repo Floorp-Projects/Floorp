@@ -640,7 +640,8 @@ option('--enable-forkserver', env='MOZ_ENABLE_FORKSERVER', help='Enable fork ser
 @depends('--enable-forkserver', target)
 def forkserver_flag(value, target):
     if target.os == 'Android' or \
-       (target.os == 'GNU' and target.kernel == 'Linux'):
+       (target.os == 'GNU' and target.kernel == 'Linux') or \
+       target.os == 'FreeBSD':
         return bool(value)
     pass
 
