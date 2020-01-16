@@ -322,6 +322,7 @@ TouchSimulator.prototype = {
 
   sendTouchEvent(evt, target, name) {
     const win = target.ownerGlobal;
+    const document = target.ownerDocument;
     const content = this.getContent(target);
     if (!content) {
       return;
@@ -342,14 +343,14 @@ TouchSimulator.prototype = {
       force: 1,
     });
 
-    let touches = [point];
+    let touches = document.createTouchList(point);
     let targetTouches = touches;
     let changedTouches = touches;
 
     if (name === "touchend" || name === "touchcancel") {
       // "touchend" and "touchcancel" events should not have the removed touch
       // neither in touches nor in targetTouches
-      touches = targetTouches = changedTouches = [];
+      touches = targetTouches = changedTouches = document.createTouchList();
     }
 
     // Initialize TouchEvent and dispatch.
@@ -357,9 +358,6 @@ TouchSimulator.prototype = {
       touches,
       targetTouches,
       changedTouches,
-      bubbles: true,
-      cancelable: true,
-      view: win,
     });
     target.dispatchEvent(touchEvent);
   },
