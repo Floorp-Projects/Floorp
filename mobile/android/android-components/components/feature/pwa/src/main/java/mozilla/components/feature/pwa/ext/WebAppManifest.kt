@@ -21,8 +21,11 @@ private const val MIN_INSTALLABLE_ICON_SIZE = 192
 
 /**
  * Checks if the web app manifest can be used to create a shortcut icon.
+ *
+ * Websites have an installable icon if the manifest contains an icon of at least 192x192.
+ * @see [installableManifest]
  */
-fun WebAppManifest.isInstallable() = icons.any { icon ->
+fun WebAppManifest.hasLargeIcons() = icons.any { icon ->
     (Purpose.ANY in icon.purpose || Purpose.MASKABLE in icon.purpose) &&
         icon.sizes.any { size ->
             size.minLength >= MIN_INSTALLABLE_ICON_SIZE

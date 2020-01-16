@@ -75,6 +75,7 @@ class WebAppShortcutManagerTest {
         val manifest = WebAppManifest(
             name = "Demo",
             startUrl = "https://example.com",
+            display = WebAppManifest.DisplayMode.STANDALONE,
             icons = listOf(WebAppManifest.Icon(
                 src = "https://example.com/icon.png",
                 sizes = listOf(Size(192, 192))
@@ -95,31 +96,12 @@ class WebAppShortcutManagerTest {
     }
 
     @Test
-    fun `requestPinShortcut won't pin if null shortcut is built`() = runBlockingTest {
-        setSdkInt(Build.VERSION_CODES.O)
-        val manifest = WebAppManifest(
-            name = "Demo",
-            startUrl = "https://example.com",
-            icons = listOf(WebAppManifest.Icon(
-                src = "https://example.com/icon.png",
-                sizes = listOf(Size(192, 192))
-            ))
-        )
-        val session = buildInstallableSession(manifest)
-        `when`(shortcutManager.isRequestPinShortcutSupported).thenReturn(true)
-        doReturn(null).`when`(manager).buildWebAppShortcut(context, manifest)
-
-        manager.requestPinShortcut(context, session)
-        verify(manager).buildWebAppShortcut(context, manifest)
-        verify(shortcutManager, never()).requestPinShortcut(any(), any())
-    }
-
-    @Test
     fun `requestPinShortcut won't make a PWA icon if the session is not installable`() = runBlockingTest {
         setSdkInt(Build.VERSION_CODES.O)
         val manifest = WebAppManifest(
             name = "Demo",
             startUrl = "https://example.com",
+            display = WebAppManifest.DisplayMode.STANDALONE,
             icons = emptyList() // no icons
         )
         val session = buildInstallableSession(manifest)
@@ -138,6 +120,7 @@ class WebAppShortcutManagerTest {
         val manifest = WebAppManifest(
             name = "Demo",
             startUrl = "https://example.com",
+            display = WebAppManifest.DisplayMode.STANDALONE,
             icons = listOf(WebAppManifest.Icon(
                 src = "https://example.com/icon.png",
                 sizes = listOf(Size(192, 192))
@@ -165,6 +148,21 @@ class WebAppShortcutManagerTest {
         manager.requestPinShortcut(context, session)
         verify(manager).buildBasicShortcut(context, session)
         verify(shortcutManager).requestPinShortcut(any(), any())
+    }
+
+    @Test
+    fun `buildBasicShortcut uses manifest short name as label by default`() = runBlockingTest {
+        setSdkInt(Build.VERSION_CODES.O)
+        val session = Session("https://mozilla.org")
+        session.title = "Internet for people, not profit — Mozilla"
+        session.webAppManifest = WebAppManifest(
+            name = "Mozilla",
+            shortName = "Moz",
+            startUrl = "https://mozilla.org"
+        )
+        val shortcut = manager.buildBasicShortcut(context, session)
+
+        assertEquals("Moz", shortcut.shortLabel)
     }
 
     @Test
@@ -309,6 +307,7 @@ class WebAppShortcutManagerTest {
     private fun buildInstallableSession(manifest: WebAppManifest): Session {
         val session: Session = mock()
         `when`(session.webAppManifest).thenReturn(manifest)
+        `when`(session.url).thenReturn(manifest.startUrl)
         `when`(session.securityInfo).thenReturn(Session.SecurityInfo(secure = true))
         return session
     }

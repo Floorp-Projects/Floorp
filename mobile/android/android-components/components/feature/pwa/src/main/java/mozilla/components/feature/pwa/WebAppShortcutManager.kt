@@ -36,7 +36,7 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PWA_LAUNCHER
 import mozilla.components.feature.pwa.ext.installableManifest
-import mozilla.components.feature.pwa.ext.isInstallable
+import mozilla.components.feature.pwa.ext.hasLargeIcons
 
 private val pwaIconMemoryCache = IconMemoryCache()
 
@@ -126,7 +126,7 @@ class WebAppShortcutManager(
             .setShortLabel(shortLabel.ifBlank { fallbackLabel })
             .setIntent(shortcutIntent)
 
-        val icon = if (manifest != null && manifest.isInstallable()) {
+        val icon = if (manifest != null && manifest.hasLargeIcons()) {
             buildIconFromManifest(manifest)
         } else {
             session.icon?.let { IconCompat.createWithBitmap(it) }
