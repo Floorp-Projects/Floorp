@@ -282,19 +282,6 @@ add_task(async function test_no_allowed_extensions() {
   );
 });
 
-add_task(async function test_invalid_context_envType() {
-  let manifest = Object.assign({}, templateManifest);
-  await writeManifest(USER_TEST_JSON, manifest);
-  for (let type of ["stdio", "pkcs11"]) {
-    let badContext = { ...context, type, envType: "content_parent" };
-    let result = await lookupApplication("test", badContext);
-    equal(result, null, `lookupApplication ignores bad envType for "${type}"`);
-  }
-  // type=storage is allowed to be accessed from content_parent, which is
-  // covered by the test task "test_storage_managed_from_content_script"
-  // in ./test_ext_storage_managed.js.
-});
-
 const GLOBAL_TEST_JSON = OS.Path.join(globalDir.path, TYPE_SLUG, "test.json");
 let globalManifest = Object.assign({}, templateManifest);
 globalManifest.description = "This manifest is from the systemwide directory";

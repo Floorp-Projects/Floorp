@@ -15,10 +15,13 @@ const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
 
+const {
+  ExtensionUtils: { ExtensionError },
+} = ChromeUtils.import("resource://gre/modules/ExtensionUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
-  ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
   NativeManifests: "resource://gre/modules/NativeManifests.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -79,9 +82,7 @@ var NativeApp = class extends EventEmitter {
         // Report a generic error to not leak information about whether a native
         // application is installed to addons that do not have the right permission.
         if (!hostInfo) {
-          throw new context.cloneScope.Error(
-            `No such native application ${application}`
-          );
+          throw new ExtensionError(`No such native application ${application}`);
         }
 
         let command = hostInfo.manifest.path;
@@ -118,34 +119,22 @@ var NativeApp = class extends EventEmitter {
 
   /**
    * Open a connection to a native messaging host.
-   *
-   * @param {BaseContext} context The context associated with the port.
-   * @param {nsIMessageSender} messageManager The message manager used to send
-   *     and receive messages from the port's creator.
    * @param {number} portId A unique internal ID that identifies the port.
-   * @param {object} sender The object describing the creator of the connection
-   *     request.
-   * @param {string} application The name of the native messaging host.
+   * @param {NativeMessenger} port Parent NativeMessenger used to send messages.
+   * @returns {ParentPort}
    */
-  static onConnectNative(context, messageManager, portId, sender, application) {
-    let app = new NativeApp(context, application);
-    let port = new ExtensionChild.Port(
-      context,
-      messageManager,
-      [Services.mm],
-      "",
-      portId,
-      sender,
-      sender
-    );
-    app.once("disconnect", (what, err) => port.disconnect(err));
-
-    /* eslint-disable mozilla/balanced-listeners */
-    app.on("message", (what, msg) => port.postMessage(msg));
-    /* eslint-enable mozilla/balanced-listeners */
-
-    port.registerOnMessage(holder => app.send(holder));
-    port.registerOnDisconnect(msg => app.close());
+  onConnect(portId, port) {
+    // eslint-disable-next-line
+    this.on("message", (_, message) => {
+      port.sendPortMessage(portId, new StructuredCloneHolder(message));
+    });
+    this.once("disconnect", (_, error) => {
+      port.sendPortDisconnect(portId, error && new ClonedErrorHolder(error));
+    });
+    return {
+      onPortMessage: holder => this.send(holder),
+      onPortDisconnect: () => this.close(),
+    };
   }
 
   /**
@@ -157,7 +146,7 @@ var NativeApp = class extends EventEmitter {
     message = context.jsonStringify(message);
     let buffer = new TextEncoder().encode(message).buffer;
     if (buffer.byteLength > NativeApp.maxWrite) {
-      throw new context.cloneScope.Error("Write too big");
+      throw new context.Error("Write too big");
     }
     return buffer;
   }
@@ -178,7 +167,7 @@ var NativeApp = class extends EventEmitter {
       .readUint32()
       .then(len => {
         if (len > NativeApp.maxRead) {
-          throw new this.context.cloneScope.Error(
+          throw new ExtensionError(
             `Native application tried to send a message of ${len} bytes, which exceeds the limit of ${
               NativeApp.maxRead
             } bytes.`
@@ -257,9 +246,7 @@ var NativeApp = class extends EventEmitter {
 
   send(holder) {
     if (this._isDisconnected) {
-      throw new this.context.cloneScope.Error(
-        "Attempt to postMessage on disconnected port"
-      );
+      throw new ExtensionError("Attempt to postMessage on disconnected port");
     }
     let msg = holder.deserialize(global);
     if (Cu.getClassName(msg, true) != "ArrayBuffer") {
@@ -273,7 +260,7 @@ var NativeApp = class extends EventEmitter {
     let buffer = msg;
 
     if (buffer.byteLength > NativeApp.maxWrite) {
-      throw new this.context.cloneScope.Error("Write too big");
+      throw new ExtensionError("Write too big");
     }
 
     this.sendQueue.push(buffer);
@@ -282,9 +269,9 @@ var NativeApp = class extends EventEmitter {
     }
   }
 
-  // Shut down the native application and also signal to the extension
+  // Shut down the native application and (by default) signal to the extension
   // that the connect has been disconnected.
-  _cleanup(err) {
+  _cleanup(err, fromExtension = false) {
     this.context.forgetOnClose(this);
 
     let doCleanup = () => {
@@ -326,18 +313,18 @@ var NativeApp = class extends EventEmitter {
       this.startupPromise.then(doCleanup);
     }
 
-    if (!this.sentDisconnect) {
-      this.sentDisconnect = true;
+    if (!this.sentDisconnect && !fromExtension) {
       if (err && err.errorCode == Subprocess.ERROR_END_OF_FILE) {
         err = null;
       }
       this.emit("disconnect", err);
     }
+    this.sentDisconnect = true;
   }
 
-  // Called from Context when the extension is shut down.
+  // Called when the Context or Port is closed.
   close() {
-    this._cleanup();
+    this._cleanup(null, true);
   }
 
   sendMessage(holder) {
