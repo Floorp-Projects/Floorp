@@ -275,11 +275,9 @@ class nsPrintJob final : public nsIObserver,
   // member-data.
   RefPtr<nsPrintData> mPrt;
 
-  // The nsPrintData for our last print preview (replaced every time the
-  // user changes settings in the print preview window).
-  // Note: Our new print preview nsPrintData is stored in mPtr until we move it
-  // to mPrtPreview once we've finish creating the print preview.
+  // Print Preview
   RefPtr<nsPrintData> mPrtPreview;
+  RefPtr<nsPrintData> mOldPrtPreview;
 
   nsPagePrintTimer* mPagePrintTimer = nullptr;
 
