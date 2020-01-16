@@ -19,10 +19,13 @@ permalink: /changelog/
     * `browser-engine-gecko-nightly`: GeckoView 74.0
 
 * **service-glean**
-  * Glean was updated to v24.0.0:
+  * Glean was updated to v24.1.0:
     * **Breaking Change** An `enableUpload` parameter has been added to the `initialize()`
       function. This removes the requirement to call `setUploadEnabled()` prior to calling
       the `initialize()` function.
+    * A new metric `glean.error.preinit_tasks_overflow` was added to report when
+      the preinit task queue overruns, leading to data loss. See [bug
+      1609482](https://bugzilla.mozilla.org/show_bug.cgi?id=1609482)
     * The metrics ping scheduler will now only send metrics pings while the
       application is running. The application will no longer "wake up" at 4am
       using the Work Manager.
