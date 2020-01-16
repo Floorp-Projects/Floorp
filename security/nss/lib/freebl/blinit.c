@@ -28,6 +28,8 @@ static PRBool aesni_support_ = PR_FALSE;
 static PRBool clmul_support_ = PR_FALSE;
 static PRBool avx_support_ = PR_FALSE;
 static PRBool ssse3_support_ = PR_FALSE;
+static PRBool sse4_1_support_ = PR_FALSE;
+static PRBool sse4_2_support_ = PR_FALSE;
 static PRBool arm_neon_support_ = PR_FALSE;
 static PRBool arm_aes_support_ = PR_FALSE;
 static PRBool arm_sha1_support_ = PR_FALSE;
@@ -74,6 +76,8 @@ check_xcr0_ymm()
 #define ECX_OSXSAVE (1 << 27)
 #define ECX_AVX (1 << 28)
 #define ECX_SSSE3 (1 << 9)
+#define ECX_SSE4_1 (1 << 19)
+#define ECX_SSE4_2 (1 << 20)
 #define AVX_BITS (ECX_XSAVE | ECX_OSXSAVE | ECX_AVX)
 
 void
@@ -84,6 +88,8 @@ CheckX86CPUSupport()
     char *disable_pclmul = PR_GetEnvSecure("NSS_DISABLE_PCLMUL");
     char *disable_avx = PR_GetEnvSecure("NSS_DISABLE_AVX");
     char *disable_ssse3 = PR_GetEnvSecure("NSS_DISABLE_SSSE3");
+    char *disable_sse4_1 = PR_GetEnvSecure("NSS_DISABLE_SSE4_1");
+    char *disable_sse4_2 = PR_GetEnvSecure("NSS_DISABLE_SSE4_2");
     freebl_cpuid(1, &eax, &ebx, &ecx, &edx);
     aesni_support_ = (PRBool)((ecx & ECX_AESNI) != 0 && disable_hw_aes == NULL);
     clmul_support_ = (PRBool)((ecx & ECX_CLMUL) != 0 && disable_pclmul == NULL);
@@ -93,6 +99,10 @@ CheckX86CPUSupport()
                    disable_avx == NULL;
     ssse3_support_ = (PRBool)((ecx & ECX_SSSE3) != 0 &&
                               disable_ssse3 == NULL);
+    sse4_1_support_ = (PRBool)((ecx & ECX_SSE4_1) != 0 &&
+                               disable_sse4_1 == NULL);
+    sse4_2_support_ = (PRBool)((ecx & ECX_SSE4_2) != 0 &&
+                               disable_sse4_2 == NULL);
 }
 #endif /* NSS_X86_OR_X64 */
 
@@ -123,6 +133,8 @@ static unsigned long (*getauxval)(unsigned long) = NULL;
 /* clang-format on */
 
 #if defined(__aarch64__)
+
+#if defined(__linux__)
 // Defines from hwcap.h in Linux kernel - ARM64
 #ifndef HWCAP_AES
 #define HWCAP_AES (1 << 3)
@@ -136,30 +148,54 @@ static unsigned long (*getauxval)(unsigned long) = NULL;
 #ifndef HWCAP_SHA2
 #define HWCAP_SHA2 (1 << 6)
 #endif
+#endif /* defined(__linux__) */
+
+#if defined(__FreeBSD__)
+#include <stdint.h>
+#include <machine/armreg.h>
+// Support for older version of armreg.h
+#ifndef ID_AA64ISAR0_AES_VAL
+#define ID_AA64ISAR0_AES_VAL ID_AA64ISAR0_AES
+#endif
+#ifndef ID_AA64ISAR0_SHA1_VAL
+#define ID_AA64ISAR0_SHA1_VAL ID_AA64ISAR0_SHA1
+#endif
+#ifndef ID_AA64ISAR0_SHA2_VAL
+#define ID_AA64ISAR0_SHA2_VAL ID_AA64ISAR0_SHA2
+#endif
+#endif /* defined(__FreeBSD__) */
 
 void
 CheckARMSupport()
 {
-    char *disable_arm_neon = PR_GetEnvSecure("NSS_DISABLE_ARM_NEON");
-    char *disable_hw_aes = PR_GetEnvSecure("NSS_DISABLE_HW_AES");
-    char *disable_pmull = PR_GetEnvSecure("NSS_DISABLE_PMULL");
 #if defined(_WIN64)
     BOOL arm_crypto_support = IsProcessorFeaturePresent(PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE);
-    arm_aes_support_ = arm_crypto_support && disable_hw_aes == NULL;
-    arm_pmull_support_ = arm_crypto_support && disable_pmull == NULL;
+    arm_aes_support_ = arm_crypto_support;
+    arm_pmull_support_ = arm_crypto_support;
     arm_sha1_support_ = arm_crypto_support;
     arm_sha2_support_ = arm_crypto_support;
-#else
+#elif defined(__linux__)
     if (getauxval) {
         long hwcaps = getauxval(AT_HWCAP);
-        arm_aes_support_ = hwcaps & HWCAP_AES && disable_hw_aes == NULL;
-        arm_pmull_support_ = hwcaps & HWCAP_PMULL && disable_pmull == NULL;
-        arm_sha1_support_ = hwcaps & HWCAP_SHA1;
-        arm_sha2_support_ = hwcaps & HWCAP_SHA2;
+        arm_aes_support_ = (hwcaps & HWCAP_AES) == HWCAP_AES;
+        arm_pmull_support_ = (hwcaps & HWCAP_PMULL) == HWCAP_PMULL;
+        arm_sha1_support_ = (hwcaps & HWCAP_SHA1) == HWCAP_SHA1;
+        arm_sha2_support_ = (hwcaps & HWCAP_SHA2) == HWCAP_SHA2;
+    }
+#elif defined(__FreeBSD__)
+    /* qemu-user does not support register access from userspace */
+    if (PR_GetEnvSecure("QEMU_EMULATING") == NULL) {
+        uint64_t isar0 = READ_SPECIALREG(id_aa64isar0_el1);
+        arm_aes_support_ = ID_AA64ISAR0_AES_VAL(isar0) >= ID_AA64ISAR0_AES_BASE;
+        arm_pmull_support_ = ID_AA64ISAR0_AES_VAL(isar0) >= ID_AA64ISAR0_AES_PMULL;
+        arm_sha1_support_ = ID_AA64ISAR0_SHA1_VAL(isar0) >= ID_AA64ISAR0_SHA1_BASE;
+        arm_sha2_support_ = ID_AA64ISAR0_SHA2_VAL(isar0) >= ID_AA64ISAR0_SHA2_BASE;
     }
 #endif
     /* aarch64 must support NEON. */
-    arm_neon_support_ = disable_arm_neon == NULL;
+    arm_neon_support_ = PR_GetEnvSecure("NSS_DISABLE_ARM_NEON") == NULL;
+    arm_aes_support_ &= PR_GetEnvSecure("NSS_DISABLE_HW_AES") == NULL;
+    arm_pmull_support_ &= PR_GetEnvSecure("NSS_DISABLE_PMULL") == NULL;
 }
 #endif /* defined(__aarch64__) */
 
@@ -335,6 +371,16 @@ PRBool
 ssse3_support()
 {
     return ssse3_support_;
+}
+PRBool
+sse4_1_support()
+{
+    return sse4_1_support_;
+}
+PRBool
+sse4_2_support()
+{
+    return sse4_2_support_;
 }
 PRBool
 arm_neon_support()

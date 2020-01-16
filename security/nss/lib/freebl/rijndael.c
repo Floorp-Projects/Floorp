@@ -20,8 +20,7 @@
 #include "gcm.h"
 #include "mpi.h"
 
-#if (!defined(IS_LITTLE_ENDIAN) && !defined(NSS_X86_OR_X64)) || \
-    (defined(__arm__) && !defined(__ARM_NEON) && !defined(__ARM_NEON__))
+#if !defined(IS_LITTLE_ENDIAN) && !defined(NSS_X86_OR_X64)
 // not test yet on big endian platform of arm
 #undef USE_HW_AES
 #endif
