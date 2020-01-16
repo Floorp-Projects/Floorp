@@ -656,11 +656,11 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           unsigned long long pcULL = (unsigned long long)(uintptr_t)pc;
           SprintfLiteral(buf, "%#llx", pcULL);
 
-          // If the "MOZ_PROFILER_SYMBOLICATE" env-var is set, we add a local
-          // symbolication description to the PC address. This is off by
+          // If the "MOZ_BASE_PROFILER_SYMBOLICATE" env-var is set, we add a
+          // local symbolication description to the PC address. This is off by
           // default, and mainly intended for local development.
           static const bool preSymbolicate = []() {
-            const char* symbolicate = getenv("MOZ_PROFILER_SYMBOLICATE");
+            const char* symbolicate = getenv("MOZ_BASE_PROFILER_SYMBOLICATE");
             return symbolicate && symbolicate[0] != '\0';
           }();
           if (preSymbolicate) {
