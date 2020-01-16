@@ -74,7 +74,7 @@ body {
 %endif
 }
 
-:root[customize-entered] {
+:root[customizing] {
   min-width: -moz-fit-content;
 }
 
