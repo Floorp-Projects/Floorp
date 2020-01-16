@@ -7,7 +7,6 @@ Transform the beetmover-push-to-release task into a task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import (
     Schema,
@@ -22,16 +21,16 @@ from voluptuous import Required, Optional
 
 
 beetmover_push_to_release_description_schema = Schema({
-    Required('name'): text_type,
-    Required('product'): text_type,
-    Required('treeherder-platform'): text_type,
-    Optional('attributes'): {text_type: object},
+    Required('name'): basestring,
+    Required('product'): basestring,
+    Required('treeherder-platform'): basestring,
+    Optional('attributes'): {basestring: object},
     Optional('job-from'): task_description_schema['job-from'],
-    Optional('run'): {text_type: object},
+    Optional('run'): {basestring: object},
     Optional('run-on-projects'): task_description_schema['run-on-projects'],
-    Optional('dependencies'): {text_type: taskref_or_string},
-    Optional('index'): {text_type: text_type},
-    Optional('routes'): [text_type],
+    Optional('dependencies'): {basestring: taskref_or_string},
+    Optional('index'): {basestring: basestring},
+    Optional('routes'): [basestring],
     Required('shipping-phase'): task_description_schema['shipping-phase'],
     Required('shipping-product'): task_description_schema['shipping-product'],
     Optional('extra'): task_description_schema['extra'],

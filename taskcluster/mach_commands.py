@@ -11,7 +11,6 @@ import argparse
 import json
 import logging
 import os
-from six import text_type
 import sys
 import traceback
 import re
@@ -127,39 +126,51 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('taskgraph', 'decision',
                 description="Run the decision task")
-    @CommandArgument('--root', '-r', type=text_type,
+    @CommandArgument('--root', '-r',
                      help="root of the taskgraph definition relative to topsrcdir")
-    @CommandArgument('--base-repository', type=text_type, required=True,
+    @CommandArgument('--base-repository',
+                     required=True,
                      help='URL for "base" repository to clone')
-    @CommandArgument('--head-repository', type=text_type, required=True,
+    @CommandArgument('--head-repository',
+                     required=True,
                      help='URL for "head" repository to fetch revision from')
-    @CommandArgument('--head-ref', type=text_type, required=True,
+    @CommandArgument('--head-ref',
+                     required=True,
                      help='Reference (this is same as rev usually for hg)')
-    @CommandArgument('--head-rev', type=text_type, required=True,
+    @CommandArgument('--head-rev',
+                     required=True,
                      help='Commit revision to use from head repository')
-    @CommandArgument('--comm-base-repository', type=text_type, required=False,
+    @CommandArgument('--comm-base-repository',
+                     required=False,
                      help='URL for "base" comm-* repository to clone')
-    @CommandArgument('--comm-head-repository', type=text_type, required=False,
+    @CommandArgument('--comm-head-repository',
+                     required=False,
                      help='URL for "head" comm-* repository to fetch revision from')
-    @CommandArgument('--comm-head-ref', type=text_type, required=False,
+    @CommandArgument('--comm-head-ref',
+                     required=False,
                      help='comm-* Reference (this is same as rev usually for hg)')
-    @CommandArgument('--comm-head-rev', type=text_type, required=False,
+    @CommandArgument('--comm-head-rev',
+                     required=False,
                      help='Commit revision to use from head comm-* repository')
-    @CommandArgument(
-        '--project', type=text_type, required=True,
-        help='Project to use for creating task graph. Example: --project=try')
-    @CommandArgument('--pushlog-id', type=text_type, dest='pushlog_id',
-                     required=True, default='0')
+    @CommandArgument('--project',
+                     required=True,
+                     help='Project to use for creating task graph. Example: --project=try')
+    @CommandArgument('--pushlog-id',
+                     dest='pushlog_id',
+                     required=True,
+                     default=0)
     @CommandArgument('--pushdate',
                      dest='pushdate',
                      required=True,
                      type=int,
                      default=0)
-    @CommandArgument('--owner', type=text_type, required=True,
+    @CommandArgument('--owner',
+                     required=True,
                      help='email address of who owns this graph')
-    @CommandArgument('--level', type=text_type, required=True,
+    @CommandArgument('--level',
+                     required=True,
                      help='SCM level of this repository')
-    @CommandArgument('--target-tasks-method', type=text_type,
+    @CommandArgument('--target-tasks-method',
                      help='method for selecting the target tasks to generate')
     @CommandArgument('--optimize-target-tasks',
                      type=lambda flag: bool(strtobool(flag)),
@@ -167,10 +178,11 @@ class MachCommands(MachCommandBase):
                      help='If specified, this indicates whether the target '
                           'tasks are eligible for optimization. Otherwise, '
                           'the default for the project is used.')
-    @CommandArgument('--try-task-config-file', type=text_type,
+    @CommandArgument('--try-task-config-file',
                      help='path to try task configuration file')
-    @CommandArgument('--tasks-for', type=text_type, required=True,
-                     help='the tasks_for value used to generate this task')
+    @CommandArgument('--tasks-for',
+                     help='the tasks_for value used to generate this task',
+                     required=True)
     @CommandArgument('--include-push-tasks',
                      action='store_true',
                      help='Whether tasks from the on-push graph should be re-used '

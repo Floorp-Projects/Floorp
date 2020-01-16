@@ -7,7 +7,6 @@ Transform the release-snap-push kind into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
@@ -16,15 +15,15 @@ from taskgraph.util.scriptworker import add_scope_prefix
 from voluptuous import Optional, Required
 
 push_snap_description_schema = Schema({
-    Required('name'): text_type,
+    Required('name'): basestring,
     Required('job-from'): task_description_schema['job-from'],
     Required('dependencies'): task_description_schema['dependencies'],
     Required('description'): task_description_schema['description'],
     Required('treeherder'): task_description_schema['treeherder'],
     Required('run-on-projects'): task_description_schema['run-on-projects'],
-    Required('worker-type'): optionally_keyed_by('release-level', text_type),
+    Required('worker-type'): optionally_keyed_by('release-level', basestring),
     Required('worker'): object,
-    Optional('scopes'): [text_type],
+    Optional('scopes'): [basestring],
     Required('shipping-phase'): task_description_schema['shipping-phase'],
     Required('shipping-product'): task_description_schema['shipping-product'],
     Optional('extra'): task_description_schema['extra'],

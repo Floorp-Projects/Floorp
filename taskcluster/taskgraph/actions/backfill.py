@@ -8,7 +8,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import logging
-import six
 
 import requests
 from requests.exceptions import HTTPError
@@ -145,10 +144,9 @@ def backfill_action(parameters, graph_config, input, task_group_id, task_id):
                         verify_args.append('--gpu-required')
 
                     if 'testPath' in input:
-                        task.task['payload']['env']['MOZHARNESS_TEST_PATHS'] = six.ensure_text(
-                            json.dumps({
-                                task.task['extra']['suite']['flavor']: [input['testPath']]
-                            }))
+                        task.task['payload']['env']['MOZHARNESS_TEST_PATHS'] = json.dumps({
+                            task.task['extra']['suite']['flavor']: [input['testPath']]
+                        })
 
                     cmd_parts = task.task['payload']['command']
                     keep_args = ['--installer-url', '--download-symbols', '--test-packages-url']

@@ -10,7 +10,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from mozbuild.shellutil import quote as shell_quote
 from mozpack import path
 
-from six import text_type
 from taskgraph.util.schema import Schema
 from voluptuous import Optional, Required, Any
 
@@ -34,10 +33,10 @@ toolchain_run_schema = Schema({
     # The script (in taskcluster/scripts/misc) to run.
     # Python scripts are invoked with `mach python` so vendored libraries
     # are available.
-    Required('script'): text_type,
+    Required('script'): basestring,
 
     # Arguments to pass to the script.
-    Optional('arguments'): [text_type],
+    Optional('arguments'): [basestring],
 
     # If not false, tooltool downloads will be enabled via relengAPIProxy
     # for either just public files, or all files.  Not supported on Windows
@@ -52,21 +51,21 @@ toolchain_run_schema = Schema({
     # "toolchain-build", i.e., to
     # `build/sparse-profiles/toolchain-build`.  If `None`, instructs
     # `run-task` to not use a sparse profile at all.
-    Required('sparse-profile'): Any(text_type, None),
+    Required('sparse-profile'): Any(basestring, None),
 
     # Paths/patterns pointing to files that influence the outcome of a
     # toolchain build.
-    Optional('resources'): [text_type],
+    Optional('resources'): [basestring],
 
     # Path to the artifact produced by the toolchain job
-    Required('toolchain-artifact'): text_type,
+    Required('toolchain-artifact'): basestring,
 
     # An alias that can be used instead of the real toolchain job name in
     # the toolchains list for build jobs.
-    Optional('toolchain-alias'): text_type,
+    Optional('toolchain-alias'): basestring,
 
     # Base work directory used to set up the task.
-    Required('workdir'): text_type,
+    Required('workdir'): basestring,
 })
 
 
