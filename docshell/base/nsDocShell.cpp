@@ -8994,10 +8994,9 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   }
 
   // Check if the webbrowser chrome wants the load to proceed; this can be
-  // used to cancel attempts to load URIs in the wrong process. use
-  // GetPendingRedirectedChannel() to avoid revisiting a redirect decision.
+  // used to cancel attempts to load URIs in the wrong process.
   nsCOMPtr<nsIWebBrowserChrome3> browserChrome3 = do_GetInterface(mTreeOwner);
-  if (browserChrome3 && !aLoadState->GetPendingRedirectedChannel()) {
+  if (browserChrome3) {
     bool shouldLoad;
     rv = browserChrome3->ShouldLoadURI(
         this, aLoadState->URI(), aLoadState->GetReferrerInfo(),
@@ -9374,9 +9373,7 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
   return NS_OK;
 }
 
-// Changes here should also be made in
-// E10SUtils.documentChannelPermittedForURI().
-static bool URIUsesDocChannel(nsIURI* aURI) {
+static bool SchemeUsesDocChannel(nsIURI* aURI) {
   if (SchemeIsJavascript(aURI) || NS_IsAboutBlank(aURI)) {
     return false;
   }
@@ -9985,7 +9982,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   bool canUseDocumentChannel =
       aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC)
           ? (sandboxFlags & SANDBOXED_ORIGIN)
-          : URIUsesDocChannel(aLoadState->URI());
+          : SchemeUsesDocChannel(aLoadState->URI());
 
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
       canUseDocumentChannel) {
