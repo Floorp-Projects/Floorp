@@ -35,6 +35,8 @@ inactive-css-not-display-block-on-floated = The <strong>display</strong> value h
 
 inactive-css-property-is-impossible-to-override-in-visited = It’s impossible to override <strong>{ $property }</strong> due to <strong>:visited</strong> restriction.
 
+inactive-css-position-property-on-unpositioned-box = <strong>{ $property }</strong> has no effect on this element since it’s not a positioned element.
+
 ## In the Rule View when a CSS property cannot be successfully applied we display
 ## an icon. When this icon is hovered this message is displayed to explain how
 ## the problem can be solved.
@@ -60,3 +62,5 @@ inactive-css-non-replaced-inline-or-table-row-or-row-group-fix = Try adding <str
 inactive-css-non-replaced-inline-or-table-column-or-column-group-fix = Try adding <strong>display:inline-block</strong>. { learn-more }
 
 inactive-css-not-display-block-on-floated-fix = Try removing <strong>float</strong> or adding <strong>display:block</strong>. { learn-more }
+
+inactive-css-position-property-on-unpositioned-box-fix = Try setting its <strong>position</strong> property to something else than <strong>static</strong>. { learn-more }
