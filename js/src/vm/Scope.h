@@ -25,6 +25,10 @@
 
 namespace js {
 
+namespace frontend {
+class ScopeCreationData;
+};
+
 class BaseScopeData;
 class ModuleObject;
 class AbstractScope;
@@ -239,7 +243,7 @@ class WrappedPtrOperations<Scope*, Wrapper> {
 //
 class Scope : public js::gc::TenuredCell {
   friend class GCMarker;
-  friend class ScopeCreationData;
+  friend class frontend::ScopeCreationData;
 
   // The enclosing scope or nullptr.
   const GCPtrScope enclosing_;
@@ -393,7 +397,7 @@ class LexicalScope : public Scope {
   friend class Scope;
   friend class BindingIter;
   friend class GCMarker;
-  friend class ScopeCreationData;
+  friend class frontend::ScopeCreationData;
 
  public:
   // Data is public because it is created by the frontend. See
@@ -621,7 +625,7 @@ class VarScope : public Scope {
   friend class GCMarker;
   friend class BindingIter;
   friend class Scope;
-  friend class ScopeCreationData;
+  friend class frontend::ScopeCreationData;
 
  public:
   // Data is public because it is created by the
@@ -796,7 +800,7 @@ class EvalScope : public Scope {
   friend class Scope;
   friend class BindingIter;
   friend class GCMarker;
-  friend class ScopeCreationData;
+  friend class frontend::ScopeCreationData;
 
  public:
   // Data is public because it is created by the frontend. See
@@ -883,7 +887,7 @@ class ModuleScope : public Scope {
   friend class BindingIter;
   friend class Scope;
   friend class AbstractScope;
-  friend class ScopeCreationData;
+  friend class frontend::ScopeCreationData;
   static const ScopeKind classScopeKind_ = ScopeKind::Module;
 
  public:
