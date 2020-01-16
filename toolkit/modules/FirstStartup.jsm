@@ -35,7 +35,7 @@ var FirstStartup = {
   SUCCESS: 3,
   UNSUPPORTED: 4,
 
-  _state: this.NOT_STARTED,
+  _state: 0, // NOT_STARTED,
   /**
    * Initialize and run first-startup services. This will always run synchronously
    * and spin the event loop until either all required services have
