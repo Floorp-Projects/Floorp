@@ -394,6 +394,10 @@ void BrowsingContext::Detach(bool aFromIPC) {
     mIsPopupSpam = false;
   }
 
+  if (XRE_IsParentProcess()) {
+    Canonical()->CanonicalDiscard();
+  }
+
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);

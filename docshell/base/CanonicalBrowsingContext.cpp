@@ -9,6 +9,8 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
+#include "mozilla/dom/MediaController.h"
+#include "mozilla/dom/MediaControlService.h"
 #include "mozilla/dom/PlaybackController.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/NullPrincipal.h"
@@ -179,6 +181,13 @@ void CanonicalBrowsingContext::Unlink() {
   CanonicalBrowsingContext* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowGlobals, mCurrentWindowGlobal,
                                   mSessionHistory);
+}
+
+void CanonicalBrowsingContext::CanonicalDiscard() {
+  if (mTabMediaController) {
+    mTabMediaController->Shutdown();
+    mTabMediaController = nullptr;
+  }
 }
 
 void CanonicalBrowsingContext::NotifyStartDelayedAutoplayMedia() {
@@ -538,6 +547,23 @@ already_AddRefed<Promise> CanonicalBrowsingContext::ChangeFrameRemoteness(
           },
           [promise](nsresult aRv) { promise->MaybeReject(aRv); });
   return promise.forget();
+}
+
+MediaController* CanonicalBrowsingContext::GetMediaController() {
+  // We would only create one media controller per tab, so accessing the
+  // controller via the top-level browsing context.
+  if (GetParent()) {
+    return Cast(Top())->GetMediaController();
+  }
+
+  MOZ_ASSERT(!GetParent(),
+             "Must access the controller from the top-level browsing context!");
+  // Only content browsing context can create media controller, we won't create
+  // controller for chrome document, such as the browser UI.
+  if (!mTabMediaController && !IsDiscarded() && IsContent()) {
+    mTabMediaController = new MediaController(Id());
+  }
+  return mTabMediaController;
 }
 
 }  // namespace dom

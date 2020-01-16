@@ -20,8 +20,9 @@
 namespace mozilla {
 namespace dom {
 
-class WindowGlobalParent;
 class BrowserParent;
+class MediaController;
+class WindowGlobalParent;
 
 // CanonicalBrowsingContext is a BrowsingContext living in the parent
 // process, with whatever extra data that a BrowsingContext in the
@@ -102,9 +103,17 @@ class CanonicalBrowsingContext final : public BrowsingContext {
                                                   uint64_t aPendingSwitchId,
                                                   ErrorResult& aRv);
 
+  // Return a media controller from the top-level browsing context that can
+  // control all media belonging to this browsing context tree. Return nullptr
+  // if the top-level browsing context has been discarded.
+  MediaController* GetMediaController();
+
  protected:
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   void Unlink();
+
+  // Called when the browsing context is being discarded.
+  void CanonicalDiscard();
 
   using Type = BrowsingContext::Type;
   CanonicalBrowsingContext(BrowsingContext* aParent,
@@ -155,6 +164,11 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   RefPtr<PendingRemotenessChange> mPendingRemotenessChange;
 
   nsCOMPtr<nsISHistory> mSessionHistory;
+
+  // Tab media controller is used to control all media existing in the same
+  // browsing context tree, so it would only exist in the top level browsing
+  // context.
+  RefPtr<MediaController> mTabMediaController;
 };
 
 }  // namespace dom

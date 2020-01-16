@@ -97,21 +97,6 @@ void MediaControlService::Shutdown() {
   mMediaControlKeysManager->RemoveListener(mMediaKeysHandler.get());
 }
 
-MediaController* MediaControlService::GetOrCreateControllerById(
-    uint64_t aId) const {
-  MediaController* controller = GetActiveControllerById(aId);
-  if (!controller) {
-    controller = new MediaController(aId);
-  }
-  return controller;
-}
-
-MediaController* MediaControlService::GetActiveControllerById(
-    uint64_t aId) const {
-  MOZ_DIAGNOSTIC_ASSERT(mControllerManager);
-  return mControllerManager->GetControllerById(aId);
-}
-
 void MediaControlService::RegisterActiveMediaController(
     MediaController* aController) {
   MOZ_DIAGNOSTIC_ASSERT(mControllerManager,
@@ -160,34 +145,23 @@ MediaControlService::ControllerManager::ControllerManager(
 void MediaControlService::ControllerManager::AddController(
     MediaController* aController) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
-  MOZ_DIAGNOSTIC_ASSERT(!mControllers.GetValue(aController->Id()),
+  MOZ_DIAGNOSTIC_ASSERT(!mControllers.Contains(aController),
                         "Controller has been added already!");
-  MOZ_DIAGNOSTIC_ASSERT(mControllers.Count() == mControllerHistory.Length());
-  mControllers.Put(aController->Id(), aController);
-  mControllerHistory.AppendElement(aController->Id());
+  mControllers.AppendElement(aController);
   UpdateMainController(aController);
 }
 
 void MediaControlService::ControllerManager::RemoveController(
     MediaController* aController) {
   MOZ_DIAGNOSTIC_ASSERT(aController);
-  MOZ_DIAGNOSTIC_ASSERT(mControllers.GetValue(aController->Id()),
+  MOZ_DIAGNOSTIC_ASSERT(mControllers.Contains(aController),
                         "Controller does not exist!");
-  MOZ_DIAGNOSTIC_ASSERT(mControllers.Count() == mControllerHistory.Length());
-  mControllers.Remove(aController->Id());
-  mControllerHistory.RemoveElement(aController->Id());
-  if (mControllerHistory.IsEmpty()) {
-    UpdateMainController(nullptr);
-  } else {
-    UpdateMainController(
-        mControllers.Get(mControllerHistory.LastElement()).get());
-  }
+  mControllers.RemoveElement(aController);
+  UpdateMainController(
+      mControllers.IsEmpty() ? nullptr : mControllers.LastElement().get());
 }
 
 void MediaControlService::ControllerManager::Shutdown() {
-  for (auto iter = mControllers.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Data()->Shutdown();
-  }
   mControllers.Clear();
   mPlayStateChangedListener.DisconnectIfExists();
 }
@@ -226,13 +200,8 @@ MediaController* MediaControlService::ControllerManager::GetMainController()
   return mMainController.get();
 }
 
-MediaController* MediaControlService::ControllerManager::GetControllerById(
-    uint64_t aId) const {
-  return mControllers.Get(aId).get();
-}
-
 uint64_t MediaControlService::ControllerManager::GetControllersNum() const {
-  return mControllers.Count();
+  return mControllers.Length();
 }
 
 }  // namespace dom
