@@ -110,11 +110,11 @@ Event Value
     ``topsites``. To know whether the user actually picked a top site, check
     check that ``numChars`` == 0. If ``numChars`` > 0, the user initially opened
     top sites, but then they started typing and confirmed a different result.
-    ``returned``. The user abandoned a search, for example by switching to
+  - ``returned``: The user abandoned a search, for example by switching to
     another tab/window, or focusing something else, then came back to it
     and continued. We consider a search continued if the user kept at least the
     first char of the original search string.
-    ``restarted``. The user abandoned a search, for example by switching to
+  - ``restarted``: The user abandoned a search, for example by switching to
     another tab/window, or focusing something else, then came back to it,
     cleared it and then typed a new string.
 
