@@ -253,6 +253,14 @@ class InactivePropertyHelper {
         numFixProps: 1,
         learnMoreURL: VISITED_MDN_LINK,
       },
+      // top, right, bottom, left and z-index properties used on non positioned boxes.
+      {
+        invalidProperties: ["top", "right", "bottom", "left", "z-index"],
+        when: () => !this.isPositioned,
+        fixId: "inactive-css-position-property-on-unpositioned-box-fix",
+        msgId: "inactive-css-position-property-on-unpositioned-box",
+        numFixProps: 1,
+      },
     ];
   }
 
@@ -633,6 +641,19 @@ class InactivePropertyHelper {
    */
   get isAbsolutelyPositioned() {
     return this.checkComputedStyle("position", ["absolute", "fixed"]);
+  }
+
+  /**
+   * Check if the current node is positioned (i.e. its position property has a value other
+   * than static).
+   */
+  get isPositioned() {
+    return this.checkComputedStyle("position", [
+      "relative",
+      "absolute",
+      "fixed",
+      "sticky",
+    ]);
   }
 
   /**
