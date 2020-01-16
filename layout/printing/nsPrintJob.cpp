@@ -571,6 +571,7 @@ void nsPrintJob::Destroy() {
 
 #ifdef NS_PRINT_PREVIEW
   mPrtPreview = nullptr;
+  mOldPrtPreview = nullptr;
 #endif
   mDocViewerPrint = nullptr;
 }
@@ -744,6 +745,10 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     nsCOMPtr<nsIPrintingPromptService> pps(
         do_QueryInterface(aWebProgressListener));
     mProgressDialogIsShown = pps != nullptr;
+
+    if (mIsDoingPrintPreview) {
+      mOldPrtPreview = std::move(mPrtPreview);
+    }
   } else {
     mProgressDialogIsShown = false;
   }
@@ -768,11 +773,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
 
   if (aIsPrintPreview) {
-    // Our new print preview nsPrintData is stored in mPtr until we move it
-    // to mPrtPreview once we've finish creating the print preview. We must
-    // clear mPtrPreview so that code will use mPtr until that happens.
-    mPrtPreview = nullptr;
-
     mIsCreatingPrintPreview = true;
     SetIsPrintPreview(true);
     nsCOMPtr<nsIContentViewer> viewer = do_QueryInterface(mDocViewerPrint);
@@ -2992,6 +2992,10 @@ nsresult nsPrintJob::FinishPrintPreview() {
 
   // At this point we are done preparing everything
   // before it is to be created
+
+  if (mIsDoingPrintPreview && mOldPrtPreview) {
+    mOldPrtPreview = nullptr;
+  }
 
   printData->OnEndPrinting();
   // XXX If mPrt becomes nullptr or different instance here, what should we
