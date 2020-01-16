@@ -103,9 +103,6 @@ class WebRenderBridgeParent final
     return mCompositorBridge;
   }
 
-  void UpdateQualitySettings();
-  void UpdateDebugFlags();
-
   mozilla::ipc::IPCResult RecvEnsureConnected(
       TextureFactoryIdentifier* aTextureFactoryIdentifier,
       MaybeIdNamespace* aMaybeIdNamespace) override;
