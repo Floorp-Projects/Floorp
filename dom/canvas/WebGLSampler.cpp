@@ -26,7 +26,7 @@ WebGLSampler::~WebGLSampler() {
 static bool ValidateSamplerParameterParams(WebGLContext* webgl, GLenum pname,
                                            const FloatOrInt& param) {
   const auto& paramInt = param.i;
-  bool pnameValid = true;
+
   switch (pname) {
     case LOCAL_GL_TEXTURE_MIN_FILTER:
       switch (paramInt) {
@@ -100,22 +100,9 @@ static bool ValidateSamplerParameterParams(WebGLContext* webgl, GLenum pname,
       }
       break;
 
-    case LOCAL_GL_TEXTURE_MAX_ANISOTROPY:
-      if (webgl->IsExtensionEnabled(
-              WebGLExtensionID::EXT_texture_filter_anisotropic)) {
-        return true;
-      }
-      pnameValid = false;
-      break;
-
     default:
-      pnameValid = false;
-      break;
-  }
-
-  if (!pnameValid) {
-    webgl->ErrorInvalidEnumInfo("pname", pname);
-    return false;
+      webgl->ErrorInvalidEnumInfo("pname", pname);
+      return false;
   }
 
   webgl->ErrorInvalidEnumInfo("param", paramInt);
