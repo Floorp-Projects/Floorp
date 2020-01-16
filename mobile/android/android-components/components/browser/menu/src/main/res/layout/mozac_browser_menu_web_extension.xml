@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/mozac_browser_menu_item_toolbar_height"
+    android:paddingEnd="16dp"
+    android:paddingStart="16dp"
+    android:gravity="center_vertical">
+
+    <ImageView
+        android:id="@+id/action_image"
+        android:layout_width="24dp"
+        android:layout_height="27dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:src="@drawable/mozac_browser_menu_notification_icon"/>
+
+    <TextView
+        android:id="@+id/action_label"
+        style="@style/Mozac.Browser.Menu.Item.Text"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/mozac_browser_menu_item_container_layout_height"
+        android:gravity="center_vertical"
+        android:textAlignment="viewStart"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
+        tools:ignore="RtlCompat"
+        tools:text="uBlock Origin" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/badge_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:visibility="gone"
+        tools:text="18" />
+
+</LinearLayout>

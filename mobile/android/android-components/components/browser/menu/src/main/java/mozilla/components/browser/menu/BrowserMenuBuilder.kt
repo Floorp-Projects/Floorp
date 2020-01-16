@@ -14,12 +14,15 @@ import android.content.Context
  * @param endOfMenuAlwaysVisible when is set to true makes sure the bottom of the menu is always visible otherwise,
  *  the top of the menu is always visible.
  */
-class BrowserMenuBuilder(
+open class BrowserMenuBuilder(
     val items: List<BrowserMenuItem>,
     val extras: Map<String, Any> = emptyMap(),
     val endOfMenuAlwaysVisible: Boolean = false
 ) {
-    fun build(context: Context): BrowserMenu {
+    /**
+     * Builds and returns a browser menu with [items]
+     */
+    open fun build(context: Context): BrowserMenu {
         val adapter = BrowserMenuAdapter(context, items)
         return BrowserMenu(adapter)
     }
