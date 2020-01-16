@@ -278,6 +278,20 @@ this.AppConstants = Object.freeze({
     return result;
   },
 
+  MOZ_ALLOW_ADDON_SIDELOAD:
+#ifdef MOZ_ALLOW_ADDON_SIDELOAD
+  true,
+#else
+  false,
+#endif
+
+  MOZ_ALLOW_LEGACY_EXTENSIONS:
+#ifdef MOZ_ALLOW_LEGACY_EXTENSIONS
+  true,
+#else
+  false,
+#endif
+
   MENUBAR_CAN_AUTOHIDE:
 #ifdef MENUBAR_CAN_AUTOHIDE
   true,
