@@ -11,6 +11,7 @@
 #include "mozilla/Telemetry.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "nsITimedChannel.h"
 
@@ -616,17 +617,11 @@ bool PerformanceTiming::IsTopLevelContentDocument() const {
   if (!document) {
     return false;
   }
-  nsCOMPtr<nsIDocShell> docShell = document->GetDocShell();
-  if (!docShell) {
-    return false;
+
+  if (BrowsingContext* bc = document->GetBrowsingContext()) {
+    return bc->IsTopContent();
   }
-  nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  Unused << docShell->GetInProcessSameTypeRootTreeItem(
-      getter_AddRefs(rootItem));
-  if (rootItem.get() != static_cast<nsIDocShellTreeItem*>(docShell.get())) {
-    return false;
-  }
-  return rootItem->ItemType() == nsIDocShellTreeItem::typeContent;
+  return false;
 }
 
 nsTArray<nsCOMPtr<nsIServerTiming>> PerformanceTimingData::GetServerTiming() {
