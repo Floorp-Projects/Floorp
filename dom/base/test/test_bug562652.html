@@ -23,10 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=562652
 
 var testCount = 0;
 function createHTMLDoc() {
-  var dtd = document.implementation.createDocumentType("HTML", "-//W3C//DTD HTML 4.01//EN", null);
-  var d = document.implementation.createDocument(null, null, dtd);
-  d.appendChild(d.createElement("html"));
-  d.documentElement.appendChild(d.createElement("body"));
+  var d = document.implementation.createHTMLDocument();
   d.body.setAttribute("id", "testtarget");
   return d;
 }
