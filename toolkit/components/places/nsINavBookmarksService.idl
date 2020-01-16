@@ -21,12 +21,6 @@ interface nsINavBookmarkObserver : nsISupports
    */
   readonly attribute boolean skipTags;
 
-  /*
-   * This observer should not be called for descendants when the parent is removed.
-   * For example when revmoing a folder containing bookmarks.
-   */
-  readonly attribute boolean skipDescendantsOnItemRemoval;
-
   /**
    * Notifies that a batch transaction has started.
    * Other notifications will be sent during the batch, but the observer is
@@ -41,40 +35,6 @@ interface nsINavBookmarkObserver : nsISupports
    * Notifies that a batch transaction has ended.
    */
   void onEndUpdateBatch();
-
-  /**
-   * Notifies that an item was removed.  Called after the actual remove took
-   * place.
-   * When an item is removed, all the items following it in the same folder
-   * will have their index shifted down, but no additional notifications will
-   * be sent.
-   *
-   * @param aItemId
-   *        The id of the item that was removed.
-   * @param aParentId
-   *        The id of the folder from which the item was removed.
-   * @param aIndex
-   *        The bookmark's index in the folder.
-   * @param aItemType
-   *        The type of the item to be removed (see TYPE_* constants below).
-   * @param aURI
-   *        The URI of the added item if it was TYPE_BOOKMARK, null otherwise.
-   * @param aGuid
-   *        The unique ID associated with the item.
-   * @param aParentGuid
-   *        The unique ID associated with the item's parent.
-   * @param aSource
-   *        A change source constant from nsINavBookmarksService::SOURCE_*,
-   *        passed to the method that notifies the observer.
-   */
-  void onItemRemoved(in long long aItemId,
-                     in long long aParentId,
-                     in long aIndex,
-                     in unsigned short aItemType,
-                     in nsIURI aURI,
-                     in ACString aGuid,
-                     in ACString aParentGuid,
-                     in unsigned short aSource);
 
   /**
    * Notifies that an item's information has changed.  This will be called
@@ -359,6 +319,7 @@ interface nsINavBookmarksService : nsISupports
    *         The change source, forwarded to all bookmark observers. Defaults
    *         to SOURCE_DEFAULT.
    */
+  [can_run_script]
   void removeItem(in long long aItemId, [optional] in unsigned short aSource);
 
   /**
