@@ -112,8 +112,10 @@ inline void DocAccessible::NotifyOfLoad(uint32_t aLoadEventType) {
 }
 
 inline void DocAccessible::MaybeNotifyOfValueChange(Accessible* aAccessible) {
-  if (aAccessible->IsCombobox() || aAccessible->Role() == roles::ENTRY)
+  if (aAccessible->IsCombobox() || aAccessible->Role() == roles::ENTRY ||
+      aAccessible->Role() == roles::SPINBUTTON) {
     FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE, aAccessible);
+  }
 }
 
 inline Accessible* DocAccessible::GetAccessibleEvenIfNotInMapOrContainer(
