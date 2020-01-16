@@ -31,7 +31,7 @@ add_task(async function test_removeFolderTransaction_reinsert() {
   let listener = events => {
     for (let event of events) {
       notifications.push([
-        "bookmark-added",
+        event.type,
         event.id,
         event.parentId,
         event.guid,
@@ -41,15 +41,18 @@ add_task(async function test_removeFolderTransaction_reinsert() {
   };
   let observer = {
     __proto__: NavBookmarkObserver.prototype,
-    onItemRemoved(itemId, parentId, index, type, uri, guid, parentGuid) {
-      notifications.push(["onItemRemoved", itemId, parentId, guid, parentGuid]);
-    },
   };
   PlacesUtils.bookmarks.addObserver(observer);
-  PlacesUtils.observers.addListener(["bookmark-added"], listener);
+  PlacesUtils.observers.addListener(
+    ["bookmark-added", "bookmark-removed"],
+    listener
+  );
   PlacesUtils.registerShutdownFunction(function() {
     PlacesUtils.bookmarks.removeObserver(observer);
-    PlacesUtils.observers.removeListener(["bookmark-added"], listener);
+    PlacesUtils.observers.removeListener(
+      ["bookmark-added", "bookmark-removed"],
+      listener
+    );
   });
 
   let transaction = PlacesTransactions.Remove({ guid: folder.guid });
@@ -62,10 +65,10 @@ add_task(async function test_removeFolderTransaction_reinsert() {
 
   checkNotifications(
     [
-      ["onItemRemoved", tbId, folderId, tb.guid, folder.guid],
-      ["onItemRemoved", fxId, folderId, fx.guid, folder.guid],
+      ["bookmark-removed", tbId, folderId, tb.guid, folder.guid],
+      ["bookmark-removed", fxId, folderId, fx.guid, folder.guid],
       [
-        "onItemRemoved",
+        "bookmark-removed",
         folderId,
         PlacesUtils.bookmarksMenuFolderId,
         folder.guid,
@@ -100,10 +103,10 @@ add_task(async function test_removeFolderTransaction_reinsert() {
 
   checkNotifications(
     [
-      ["onItemRemoved", tbId, folderId, tb.guid, folder.guid],
-      ["onItemRemoved", fxId, folderId, fx.guid, folder.guid],
+      ["bookmark-removed", tbId, folderId, tb.guid, folder.guid],
+      ["bookmark-removed", fxId, folderId, fx.guid, folder.guid],
       [
-        "onItemRemoved",
+        "bookmark-removed",
         folderId,
         PlacesUtils.bookmarksMenuFolderId,
         folder.guid,

@@ -37,6 +37,9 @@ class PlacesEvent : public nsWrapperCache {
   virtual const PlacesBookmarkAddition* AsPlacesBookmarkAddition() const {
     return nullptr;
   }
+  virtual const PlacesBookmarkRemoved* AsPlacesBookmarkRemoved() const {
+    return nullptr;
+  }
 
  protected:
   virtual ~PlacesEvent() = default;

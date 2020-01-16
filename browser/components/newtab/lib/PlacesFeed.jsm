@@ -95,34 +95,6 @@ class BookmarksObserver extends Observer {
     this.skipTags = true;
   }
 
-  /**
-   * onItemRemoved - Called when a bookmark is removed
-   *
-   * @param  {str} id
-   * @param  {str} folderId
-   * @param  {int} index
-   * @param  {int} type       Indicates if the bookmark is an actual bookmark,
-   *                          a folder, or a separator.
-   * @param  {str} uri
-   * @param  {str} guid      The unique id of the bookmark
-   */
-  // eslint-disable-next-line max-params
-  onItemRemoved(id, folderId, index, type, uri, guid, parentGuid, source) {
-    if (
-      type === PlacesUtils.bookmarks.TYPE_BOOKMARK &&
-      source !== PlacesUtils.bookmarks.SOURCES.IMPORT &&
-      source !== PlacesUtils.bookmarks.SOURCES.RESTORE &&
-      source !== PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP &&
-      source !== PlacesUtils.bookmarks.SOURCES.SYNC
-    ) {
-      this.dispatch({ type: at.PLACES_LINKS_CHANGED });
-      this.dispatch({
-        type: at.PLACES_BOOKMARK_REMOVED,
-        data: { url: uri.spec, bookmarkGuid: guid },
-      });
-    }
-  }
-
   // Empty functions to make xpconnect happy
   onBeginUpdateBatch() {}
 
@@ -155,31 +127,52 @@ class PlacesObserver extends Observer {
       title,
       url,
       isTagging,
+      type,
     } of events) {
-      // Skips items that are not bookmarks (like folders), about:* pages or
-      // default bookmarks, added when the profile is created.
-      if (
-        isTagging ||
-        itemType !== PlacesUtils.bookmarks.TYPE_BOOKMARK ||
-        source === PlacesUtils.bookmarks.SOURCES.IMPORT ||
-        source === PlacesUtils.bookmarks.SOURCES.RESTORE ||
-        source === PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP ||
-        source === PlacesUtils.bookmarks.SOURCES.SYNC ||
-        (!url.startsWith("http://") && !url.startsWith("https://"))
-      ) {
-        return;
-      }
+      switch (type) {
+        case "bookmark-added":
+          // Skips items that are not bookmarks (like folders), about:* pages or
+          // default bookmarks, added when the profile is created.
+          if (
+            isTagging ||
+            itemType !== PlacesUtils.bookmarks.TYPE_BOOKMARK ||
+            source === PlacesUtils.bookmarks.SOURCES.IMPORT ||
+            source === PlacesUtils.bookmarks.SOURCES.RESTORE ||
+            source === PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP ||
+            source === PlacesUtils.bookmarks.SOURCES.SYNC ||
+            (!url.startsWith("http://") && !url.startsWith("https://"))
+          ) {
+            return;
+          }
 
-      this.dispatch({ type: at.PLACES_LINKS_CHANGED });
-      this.dispatch({
-        type: at.PLACES_BOOKMARK_ADDED,
-        data: {
-          bookmarkGuid: guid,
-          bookmarkTitle: title,
-          dateAdded: dateAdded * 1000,
-          url,
-        },
-      });
+          this.dispatch({ type: at.PLACES_LINKS_CHANGED });
+          this.dispatch({
+            type: at.PLACES_BOOKMARK_ADDED,
+            data: {
+              bookmarkGuid: guid,
+              bookmarkTitle: title,
+              dateAdded: dateAdded * 1000,
+              url,
+            },
+          });
+          break;
+        case "bookmark-removed":
+          if (
+            isTagging ||
+            (itemType === PlacesUtils.bookmarks.TYPE_BOOKMARK &&
+              source !== PlacesUtils.bookmarks.SOURCES.IMPORT &&
+              source !== PlacesUtils.bookmarks.SOURCES.RESTORE &&
+              source !== PlacesUtils.bookmarks.SOURCES.RESTORE_ON_STARTUP &&
+              source !== PlacesUtils.bookmarks.SOURCES.SYNC)
+          ) {
+            this.dispatch({ type: at.PLACES_LINKS_CHANGED });
+            this.dispatch({
+              type: at.PLACES_BOOKMARK_REMOVED,
+              data: { url, bookmarkGuid: guid },
+            });
+          }
+          break;
+      }
     }
   }
 }
@@ -202,7 +195,7 @@ class PlacesFeed {
       .getService(Ci.nsINavBookmarksService)
       .addObserver(this.bookmarksObserver, true);
     PlacesUtils.observers.addListener(
-      ["bookmark-added"],
+      ["bookmark-added", "bookmark-removed"],
       this.placesObserver.handlePlacesEvent
     );
 
@@ -246,7 +239,7 @@ class PlacesFeed {
     PlacesUtils.history.removeObserver(this.historyObserver);
     PlacesUtils.bookmarks.removeObserver(this.bookmarksObserver);
     PlacesUtils.observers.removeListener(
-      ["bookmark-added"],
+      ["bookmark-added", "bookmark-removed"],
       this.placesObserver.handlePlacesEvent
     );
     Services.obs.removeObserver(this, LINK_BLOCKED_EVENT);

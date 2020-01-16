@@ -434,19 +434,6 @@ add_task(async function test_apply_then_revert() {
 
   observer.check([
     {
-      name: "onItemRemoved",
-      params: {
-        itemId: localIdForD,
-        parentId: PlacesUtils.bookmarksMenuFolderId,
-        index: 1,
-        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-        urlHref: "http://example.com/d",
-        guid: "bookmarkDDDD",
-        parentGuid: PlacesUtils.bookmarks.menuGuid,
-        source: PlacesUtils.bookmarks.SOURCES.SYNC,
-      },
-    },
-    {
       name: "onItemChanged",
       params: {
         itemId: localItemIds.get("bookmarkEEEE"),
@@ -458,6 +445,19 @@ add_task(async function test_apply_then_revert() {
         guid: "bookmarkEEEE",
         parentGuid: PlacesUtils.bookmarks.menuGuid,
         oldValue: "bookmarkEEE1",
+        source: PlacesUtils.bookmarks.SOURCES.SYNC,
+      },
+    },
+    {
+      name: "bookmark-removed",
+      params: {
+        itemId: localIdForD,
+        parentId: PlacesUtils.bookmarksMenuFolderId,
+        index: 1,
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        urlHref: "http://example.com/d",
+        guid: "bookmarkDDDD",
+        parentGuid: PlacesUtils.bookmarks.menuGuid,
         source: PlacesUtils.bookmarks.SOURCES.SYNC,
       },
     },
