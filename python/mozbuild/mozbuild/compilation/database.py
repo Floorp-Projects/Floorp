@@ -7,6 +7,7 @@
 from __future__ import absolute_import, print_function
 
 import os
+from shlex import split as shell_split
 import types
 
 from mozbuild.backend.common import CommonBackend
@@ -102,13 +103,7 @@ class CompileDBBackend(CommonBackend):
             variables.update(self._local_flags[directory])
             c = []
             for a in cmd:
-                a = expand_variables(a, variables).split()
-                if not a:
-                    continue
-                if isinstance(a, types.StringTypes):
-                    c.append(a)
-                else:
-                    c.extend(a)
+                c.extend(shell_split(expand_variables(a, variables)))
             per_source_flags = self._per_source_flags.get(filename)
             if per_source_flags is not None:
                 c.extend(per_source_flags)
