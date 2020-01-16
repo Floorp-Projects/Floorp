@@ -5,10 +5,14 @@
 package org.mozilla.fenix.settings.logins
 
 import android.os.Bundle
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.RadioButtonPreference
+import org.mozilla.fenix.settings.SharedPreferenceUpdater
 
 class SaveLoginSettingFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -24,13 +28,39 @@ class SaveLoginSettingFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindSave(): RadioButtonPreference {
-        val keyStrict = getString(R.string.pref_key_save_logins)
-        return requireNotNull(findPreference(keyStrict))
+        val keySave = getString(R.string.pref_key_save_logins)
+        val preferenceSave = findPreference<RadioButtonPreference>(keySave)
+        preferenceSave?.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                if (newValue == true) {
+                    context?.metrics?.track(
+                        Event.SaveLoginsSettingChanged(
+                            Event.SaveLoginsSettingChanged.Setting.ASK_TO_SAVE
+                        )
+                    )
+                }
+                return super.onPreferenceChange(preference, newValue)
+            }
+        }
+        return requireNotNull(preferenceSave)
     }
 
     private fun bindNeverSave(): RadioButtonPreference {
-        val keyStandard = getString(R.string.pref_key_never_save_logins)
-        return requireNotNull(findPreference(keyStandard))
+        val keyNeverSave = getString(R.string.pref_key_never_save_logins)
+        val preferenceNeverSave = findPreference<RadioButtonPreference>(keyNeverSave)
+        preferenceNeverSave?.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+            override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                if (newValue == true) {
+                    context?.metrics?.track(
+                        Event.SaveLoginsSettingChanged(
+                            Event.SaveLoginsSettingChanged.Setting.NEVER_SAVE
+                        )
+                    )
+                }
+                return super.onPreferenceChange(preference, newValue)
+            }
+        }
+        return requireNotNull(preferenceNeverSave)
     }
 
     private fun setupRadioGroups(

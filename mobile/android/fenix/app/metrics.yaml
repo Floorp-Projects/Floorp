@@ -114,7 +114,7 @@ events:
         description: "The preference key for the boolean (true/false) preference the user toggled. We currently track:
           show_search_suggestions, remote_debugging, telemetry, tracking_protection, search_bookmarks,
           search_browsing_history, show_clipboard_suggestions, show_search_shortcuts, open_links_in_a_private_tab (bug in implementation https://github.com/mozilla-mobile/fenix/issues/7384),
-          pref_key_sync_logins, pref_key_sync_bookmarks, pref_key_sync_history
+          pref_key_sync_logins, pref_key_sync_bookmarks, pref_key_sync_history,
           and pref_key_show_search_suggestions_in_private"
       enabled:
         description: "Whether or not the preference is *now* enabled"
@@ -1534,6 +1534,20 @@ logins:
       - https://github.com/mozilla-mobile/fenix/issues/5586
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/6352
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-09-01"
+  save_logins_setting_changed:
+    type: event
+    description: >
+      A user changed their setting for asking to save logins
+    extra_keys:
+      setting:
+        description: "The new setting for saving logins the user selected. Either `ask_to_save` or `never_save`"
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/5586
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/7767
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-09-01"

@@ -26,6 +26,7 @@ import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Library
+import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
@@ -187,6 +188,13 @@ sealed class Event {
         enum class Setting { STRICT, STANDARD }
         override val extras: Map<TrackingProtection.etpSettingChangedKeys, String>?
             get() = hashMapOf(TrackingProtection.etpSettingChangedKeys.etpSetting to setting.name)
+    }
+
+    data class SaveLoginsSettingChanged(val setting: Setting) : Event() {
+        enum class Setting { NEVER_SAVE, ASK_TO_SAVE }
+
+        override val extras: Map<Logins.saveLoginsSettingChangedKeys, String>?
+            get() = hashMapOf(Logins.saveLoginsSettingChangedKeys.setting to setting.name)
     }
 
     data class OpenedApp(val source: Source) : Event() {
