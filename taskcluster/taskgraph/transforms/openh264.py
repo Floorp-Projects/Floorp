@@ -5,7 +5,7 @@
 This transform is used to help populate mozharness options for openh264 jobs
 """
 
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import
 
 from taskgraph.transforms.base import TransformSequence
 

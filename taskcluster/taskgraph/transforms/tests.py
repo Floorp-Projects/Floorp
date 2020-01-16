@@ -21,7 +21,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
 import logging
-from six import text_type
 
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
 from moztest.resolve import TEST_SUITES
@@ -215,42 +214,42 @@ transforms = TransformSequence()
 # *****WARNING*****
 test_description_schema = Schema({
     # description of the suite, for the task metadata
-    'description': text_type,
+    'description': basestring,
 
     # test suite category and name
     Optional('suite'): Any(
-        text_type,
-        {Optional('category'): text_type, Optional('name'): text_type},
+        basestring,
+        {Optional('category'): basestring, Optional('name'): basestring},
     ),
 
     # base work directory used to set up the task.
     Optional('workdir'): optionally_keyed_by(
         'test-platform',
-        Any(text_type, 'default')),
+        Any(basestring, 'default')),
 
     # the name by which this test suite is addressed in try syntax; defaults to
     # the test-name.  This will translate to the `unittest_try_name` or
     # `talos_try_name` attribute.
-    Optional('try-name'): text_type,
+    Optional('try-name'): basestring,
 
     # additional tags to mark up this type of test
-    Optional('tags'): {text_type: object},
+    Optional('tags'): {basestring: object},
 
     # the symbol, or group(symbol), under which this task should appear in
     # treeherder.
-    'treeherder-symbol': text_type,
+    'treeherder-symbol': basestring,
 
     # the value to place in task.extra.treeherder.machine.platform; ideally
     # this is the same as build-platform, and that is the default, but in
     # practice it's not always a match.
-    Optional('treeherder-machine-platform'): text_type,
+    Optional('treeherder-machine-platform'): basestring,
 
     # attributes to appear in the resulting task (later transforms will add the
     # common attributes)
-    Optional('attributes'): {text_type: object},
+    Optional('attributes'): {basestring: object},
 
     # relative path (from config.path) to the file task was defined in
-    Optional('job-from'): text_type,
+    Optional('job-from'): basestring,
 
     # The `run_on_projects` attribute, defaulting to "all".  This dictates the
     # projects on which this task should be included in the target task set.
@@ -261,14 +260,14 @@ test_description_schema = Schema({
     # that are built.
     Optional('run-on-projects'): optionally_keyed_by(
         'test-platform',
-        Any([text_type], 'built-projects')),
+        Any([basestring], 'built-projects')),
 
     # Same as `run-on-projects` except it only applies to Fission tasks. Fission
     # tasks will ignore `run_on_projects` and non-Fission tasks will ignore
     # `fission-run-on-projects`.
     Optional('fission-run-on-projects'): optionally_keyed_by(
         'test-platform',
-        Any([text_type], 'built-projects')),
+        Any([basestring], 'built-projects')),
 
     # the sheriffing tier for this task (default: set based on test platform)
     Optional('tier'): optionally_keyed_by(
@@ -290,7 +289,7 @@ test_description_schema = Schema({
 
     # the time (with unit) after which this task is deleted; default depends on
     # the branch (see below)
-    Optional('expires-after'): text_type,
+    Optional('expires-after'): basestring,
 
     # The different configurations that should be run against this task, defined
     # in the TEST_VARIANTS object.
@@ -338,11 +337,11 @@ test_description_schema = Schema({
         'test-platform',
         Any(
             # a raw Docker image path (repo/image:tag)
-            text_type,
+            basestring,
             # an in-tree generated docker image (from `taskcluster/docker/<name>`)
-            {'in-tree': text_type},
+            {'in-tree': basestring},
             # an indexed docker image
-            {'indexed': text_type},
+            {'indexed': basestring},
         )
     ),
 
@@ -367,29 +366,29 @@ test_description_schema = Schema({
         # the mozharness script used to run this task
         Required('script'): optionally_keyed_by(
             'test-platform',
-            text_type),
+            basestring),
 
         # the config files required for the task
         Required('config'): optionally_keyed_by(
             'test-platform',
-            [text_type]),
+            [basestring]),
 
         # mochitest flavor for mochitest runs
-        Optional('mochitest-flavor'): text_type,
+        Optional('mochitest-flavor'): basestring,
 
         # any additional actions to pass to the mozharness command
-        Optional('actions'): [text_type],
+        Optional('actions'): [basestring],
 
         # additional command-line options for mozharness, beyond those
         # automatically added
         Required('extra-options'): optionally_keyed_by(
             'test-platform',
-            [text_type]),
+            [basestring]),
 
         # the artifact name (including path) to test on the build task; this is
         # generally set in a per-kind transformation
-        Optional('build-artifact-name'): text_type,
-        Optional('installer-url'): text_type,
+        Optional('build-artifact-name'): basestring,
+        Optional('installer-url'): basestring,
 
         # If not false, tooltool downloads will be enabled via relengAPIProxy
         # for either just public files, or all files.  Not supported on Windows
@@ -424,7 +423,7 @@ test_description_schema = Schema({
     },
 
     # The set of test manifests to run.
-    Optional('test-manifests'): [text_type],
+    Optional('test-manifests'): [basestring],
 
     # The current chunk (if chunking is enabled).
     Optional('this-chunk'): int,
@@ -433,7 +432,7 @@ test_description_schema = Schema({
     # added automatically
     Optional('os-groups'): optionally_keyed_by(
         'test-platform',
-        [text_type]),
+        [basestring]),
 
     Optional('run-as-administrator'): optionally_keyed_by(
         'test-platform',
@@ -442,37 +441,37 @@ test_description_schema = Schema({
     # -- values supplied by the task-generation infrastructure
 
     # the platform of the build this task is testing
-    'build-platform': text_type,
+    'build-platform': basestring,
 
     # the label of the build task generating the materials to test
-    'build-label': text_type,
+    'build-label': basestring,
 
     # the label of the signing task generating the materials to test.
     # Signed builds are used in xpcshell tests on Windows, for instance.
-    Optional('build-signing-label'): text_type,
+    Optional('build-signing-label'): basestring,
 
     # the build's attributes
-    'build-attributes': {text_type: object},
+    'build-attributes': {basestring: object},
 
     # the platform on which the tests will run
-    'test-platform': text_type,
+    'test-platform': basestring,
 
     # limit the test-platforms (as defined in test-platforms.yml)
     # that the test will run on
     Optional('limit-platforms'): optionally_keyed_by(
         'app',
-        [text_type]
+        [basestring]
     ),
 
     # the name of the test (the key in tests.yml)
-    'test-name': text_type,
+    'test-name': basestring,
 
     # the product name, defaults to firefox
-    Optional('product'): text_type,
+    Optional('product'): basestring,
 
     # conditional files to determine when these tests should be run
     Exclusive(Optional('when'), 'optimization'): {
-        Optional('files-changed'): [text_type],
+        Optional('files-changed'): [basestring],
     },
 
     # Optimization to perform on this task during the optimization phase.
@@ -481,11 +480,11 @@ test_description_schema = Schema({
 
     # The SCHEDULES component for this task; this defaults to the suite
     # (not including the flavor) but can be overridden here.
-    Exclusive(Optional('schedules-component'), 'optimization'): text_type,
+    Exclusive(Optional('schedules-component'), 'optimization'): basestring,
 
     Optional('worker-type'): optionally_keyed_by(
         'test-platform',
-        Any(text_type, None),
+        Any(basestring, None),
     ),
 
     Optional(
@@ -499,12 +498,12 @@ test_description_schema = Schema({
     # or target.zip (Windows).
     Optional('target'): optionally_keyed_by(
         'test-platform',
-        Any(text_type, None, {'index': text_type, 'name': text_type}),
+        Any(basestring, None, {'index': basestring, 'name': basestring}),
     ),
 
     # A list of artifacts to install from 'fetch' tasks.
     Optional('fetches'): {
-        text_type: optionally_keyed_by('test-platform', [text_type])
+        basestring: optionally_keyed_by('test-platform', [basestring])
     },
 }, required=True)
 
@@ -636,7 +635,7 @@ def handle_suite_category(config, tests):
     for test in tests:
         test.setdefault('suite', {})
 
-        if isinstance(test['suite'], text_type):
+        if isinstance(test['suite'], basestring):
             test['suite'] = {'name': test['suite']}
 
         suite = test['suite'].setdefault('name', test['test-name'])
