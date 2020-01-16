@@ -23,10 +23,9 @@ void AudioFocusManager::RequestAudioFocus(MediaController* aController) {
   if (mOwningFocusControllers.Contains(aController)) {
     return;
   }
-
+  ClearFocusControllersIfNeeded();
   LOG("Controller %" PRId64 " grants audio focus", aController->Id());
   mOwningFocusControllers.AppendElement(aController);
-  HandleAudioCompetition(aController);
 }
 
 void AudioFocusManager::RevokeAudioFocus(MediaController* aController) {
@@ -34,12 +33,11 @@ void AudioFocusManager::RevokeAudioFocus(MediaController* aController) {
   if (!mOwningFocusControllers.Contains(aController)) {
     return;
   }
-
   LOG("Controller %" PRId64 " loses audio focus", aController->Id());
   mOwningFocusControllers.RemoveElement(aController);
 }
 
-void AudioFocusManager::HandleAudioCompetition(MediaController* aController) {
+void AudioFocusManager::ClearFocusControllersIfNeeded() {
   // Enable audio focus management will start the audio competition which is
   // only allowing one controller playing at a time.
   if (!StaticPrefs::media_audioFocus_management()) {
@@ -47,15 +45,11 @@ void AudioFocusManager::HandleAudioCompetition(MediaController* aController) {
   }
 
   for (auto& controller : mOwningFocusControllers) {
-    if (controller != aController) {
-      LOG("Controller %" PRId64 " loses audio focus in audio competitition",
-          controller->Id());
-      controller->Stop();
-    }
+    LOG("Controller %" PRId64 " loses audio focus in audio competitition",
+        controller->Id());
+    controller->Stop();
   }
-
   mOwningFocusControllers.Clear();
-  mOwningFocusControllers.AppendElement(aController);
 }
 
 uint32_t AudioFocusManager::GetAudioFocusNums() const {

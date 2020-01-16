@@ -35,7 +35,7 @@ class AudioFocusManager {
 
  private:
   friend class MediaControlService;
-  void HandleAudioCompetition(MediaController* aController);
+  void ClearFocusControllersIfNeeded();
 
   nsTArray<RefPtr<MediaController>> mOwningFocusControllers;
 };
