@@ -1308,6 +1308,11 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       newChrome->ShowAsModal();
     }
   }
+  // If a website opens a popup exit DOM fullscreen
+  if (windowIsNew && aCalledFromJS && !hasChromeParent && !isCallerChrome &&
+      parentWindow) {
+    Document::AsyncExitFullscreen(parentWindow->GetDoc());
+  }
 
   if (aForceNoOpener && windowIsNew) {
     NS_RELEASE(*aResult);
