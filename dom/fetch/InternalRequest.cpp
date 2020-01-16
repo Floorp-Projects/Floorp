@@ -37,7 +37,6 @@ already_AddRefed<InternalRequest> InternalRequest::GetRequestConstructorCopy(
   // The "client" is not stored in our implementation. Fetch API users should
   // use the appropriate window/document/principal and other Gecko security
   // mechanisms as appropriate.
-  copy->mPreserveContentCodings = true;
   copy->mReferrer = mReferrer;
   copy->mReferrerPolicy = mReferrerPolicy;
   copy->mEnvironmentReferrerPolicy = mEnvironmentReferrerPolicy;
@@ -91,8 +90,7 @@ InternalRequest::InternalRequest(const nsACString& aURL,
       mMode(RequestMode::No_cors),
       mCredentialsMode(RequestCredentials::Omit),
       mCacheMode(RequestCache::Default),
-      mRedirectMode(RequestRedirect::Follow),
-      mPreserveContentCodings(false) {
+      mRedirectMode(RequestRedirect::Follow) {
   MOZ_ASSERT(!aURL.IsEmpty());
   AddURL(aURL, aFragment);
 }
@@ -114,8 +112,7 @@ InternalRequest::InternalRequest(
       mCredentialsMode(aRequestCredentials),
       mCacheMode(aCacheMode),
       mRedirectMode(aRequestRedirect),
-      mIntegrity(aIntegrity),
-      mPreserveContentCodings(false) {
+      mIntegrity(aIntegrity) {
   MOZ_ASSERT(!aURL.IsEmpty());
   AddURL(aURL, aFragment);
 }
@@ -136,7 +133,6 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
       mIntegrity(aOther.mIntegrity),
       mMozErrors(aOther.mMozErrors),
       mFragment(aOther.mFragment),
-      mPreserveContentCodings(aOther.mPreserveContentCodings),
       mSkipServiceWorker(aOther.mSkipServiceWorker),
       mSynchronous(aOther.mSynchronous),
       mUnsafeRequest(aOther.mUnsafeRequest),
