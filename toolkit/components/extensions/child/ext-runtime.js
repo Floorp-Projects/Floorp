@@ -115,29 +115,12 @@ this.runtime = class extends ExtensionAPI {
           );
         },
 
-        connectNative(application) {
-          let recipient = {
-            childId: context.childManager.id,
-            toNativeApp: application,
-          };
-
-          return context.messenger.connectNative(
-            context.messageManager,
-            "",
-            recipient
-          );
+        connectNative(nativeApp) {
+          return context.messenger.nm.connectNative(nativeApp);
         },
 
-        sendNativeMessage(application, message) {
-          let recipient = {
-            childId: context.childManager.id,
-            toNativeApp: application,
-          };
-          return context.messenger.sendNativeMessage(
-            context.messageManager,
-            message,
-            recipient
-          );
+        sendNativeMessage(nativeApp, message) {
+          return context.messenger.nm.sendNativeMessage(nativeApp, message);
         },
 
         get lastError() {
@@ -150,7 +133,7 @@ this.runtime = class extends ExtensionAPI {
 
         id: extension.id,
 
-        getURL: function(url) {
+        getURL(url) {
           return extension.baseURI.resolve(url);
         },
       },

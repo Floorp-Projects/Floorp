@@ -328,6 +328,66 @@ class ExtensionPortProxy {
   }
 }
 
+// Handles NativeMessaging and GeckoView, similar to ProxyMessenger below.
+const NativeMessenger = {
+  /**
+   * @typedef {object} ParentPort
+   * @prop {function(StructuredCloneHolder)} onPortMessage
+   * @prop {function()} onPortDisconnect
+   */
+  /** @type Map<number, ParentPort> */
+  ports: new Map(),
+
+  init() {
+    this.conduit = new BroadcastConduit(NativeMessenger, {
+      id: "NativeMessenger",
+      recv: ["NativeMessage", "NativeConnect", "PortMessage"],
+      send: ["PortMessage", "PortDisconnect"],
+    });
+  },
+
+  openNative(nativeApp, sender) {
+    let context = ParentAPIManager.getContextById(sender.childId);
+    if (context.extension.hasPermission("geckoViewAddons")) {
+      return new GeckoViewConnection(sender, nativeApp);
+    } else if (sender.verified) {
+      return new NativeApp(context, nativeApp);
+    }
+    throw new Error(`Native messaging not allowed: ${JSON.stringify(sender)}`);
+  },
+
+  recvNativeMessage({ nativeApp, holder }, { sender }) {
+    return this.openNative(nativeApp, sender).sendMessage(holder);
+  },
+
+  recvNativeConnect({ nativeApp, portId }, { sender }) {
+    let port = this.openNative(nativeApp, sender).onConnect(portId, this);
+    this.conduit.reportOnClosed(portId);
+    this.ports.set(portId, port);
+  },
+
+  recvConduitClosed(sender) {
+    let app = this.ports.get(sender.id);
+    if (this.ports.delete(sender.id)) {
+      app.onPortDisconnect();
+    }
+  },
+
+  recvPortMessage({ holder }, { sender }) {
+    this.ports.get(sender.id).onPortMessage(holder);
+  },
+
+  sendPortMessage(portId, holder) {
+    this.conduit.sendPortMessage(portId, { holder });
+  },
+
+  sendPortDisconnect(portId, error) {
+    this.conduit.sendPortDisconnect(portId, { error });
+    this.ports.delete(portId);
+  },
+};
+NativeMessenger.init();
+
 // Subscribes to messages related to the extension messaging API and forwards it
 // to the relevant message manager. The "sender" field for the `onMessage` and
 // `onConnect` events are updated if needed.
@@ -431,57 +491,6 @@ ProxyMessenger = {
     data,
     responseType,
   }) {
-    if (recipient.toNativeApp) {
-      let { childId, toNativeApp } = recipient;
-      let context = ParentAPIManager.getContextById(childId);
-
-      if (
-        context.parentMessageManager !== target.messageManager ||
-        (sender.envType === "addon_child" &&
-          context.envType !== "addon_parent") ||
-        (sender.envType === "content_child" &&
-          context.envType !== "content_parent") ||
-        context.extension.id !== sender.extensionId
-      ) {
-        throw new Error("Got message for an unexpected messageManager.");
-      }
-
-      if (
-        AppConstants.platform === "android" &&
-        context.extension.hasPermission("geckoViewAddons")
-      ) {
-        let connection = new GeckoViewConnection(
-          context,
-          sender,
-          target,
-          toNativeApp
-        );
-        if (messageName == "Extension:Message") {
-          return connection.sendMessage(data);
-        } else if (messageName == "Extension:Connect") {
-          return connection.onConnect(data.portId);
-        }
-        return;
-      }
-
-      if (messageName == "Extension:Message") {
-        return new NativeApp(context, toNativeApp).sendMessage(data);
-      }
-      if (messageName == "Extension:Connect") {
-        NativeApp.onConnectNative(
-          context,
-          target.messageManager,
-          data.portId,
-          sender,
-          toNativeApp
-        );
-        return true;
-      }
-      // "Extension:Port:Disconnect" and "Extension:Port:PostMessage" for
-      // native messages are handled by NativeApp or GeckoViewConnection.
-      return;
-    }
-
     const noHandlerError = {
       result: MessageChannel.RESULT_NO_HANDLER,
       message: "No matching message handler for the given recipient.",
