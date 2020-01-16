@@ -717,6 +717,15 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       );
 
       this.domainAffinitiesLastUpdated = affinities._timestamp;
+
+      this.store.dispatch(
+        ac.BroadcastToContent({
+          type: at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED,
+          data: {
+            lastUpdated: this.domainAffinitiesLastUpdated,
+          },
+        })
+      );
     }
   }
 
@@ -741,6 +750,15 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
     const affinities = this.affinityProvider.getAffinities();
     this.domainAffinitiesLastUpdated = Date.now();
+
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED,
+        data: {
+          lastUpdated: this.domainAffinitiesLastUpdated,
+        },
+      })
+    );
     affinities._timestamp = this.domainAffinitiesLastUpdated;
     this.cache.set("affinities", affinities);
   }
@@ -1036,7 +1054,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   /**
-   * @typedef {Object} RefreshAllOptions
+   * @typedef {Object} RefreshAll
    * @property {boolean} updateOpenTabs - Sends updates to open tabs immediately if true,
    *                                      updates in background if false
    * @property {boolean} isStartup - When the function is called at browser startup
@@ -1045,13 +1063,17 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
    * @param {RefreshAllOptions} options
    */
   async refreshAll(options = {}) {
+    this.loadAffinityScoresCache();
+    await this.refreshContent(options);
+  }
+
+  async refreshContent(options = {}) {
     const { updateOpenTabs, isStartup } = options;
     const storiesEnabled = this.store.getState().Prefs.values[PREF_TOPSTORIES];
     const dispatch = updateOpenTabs
       ? action => this.store.dispatch(ac.BroadcastToContent(action))
       : this.store.dispatch;
 
-    this.loadAffinityScoresCache();
     await this.loadLayout(dispatch, isStartup);
     if (storiesEnabled) {
       await Promise.all([
@@ -1244,6 +1266,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     this.store.dispatch(
       ac.BroadcastToContent({ type: at.DISCOVERY_STREAM_LAYOUT_RESET })
     );
+    this.domainAffinitiesLastUpdated = null;
     this.loaded = false;
     this.layoutRequestTime = undefined;
     this.spocsRequestTime = undefined;
