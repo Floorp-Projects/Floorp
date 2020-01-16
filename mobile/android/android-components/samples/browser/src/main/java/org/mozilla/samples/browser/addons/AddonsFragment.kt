@@ -54,6 +54,12 @@ class AddonsFragment : Fragment(), View.OnClickListener {
 
     override fun onStart() {
         super.onStart()
+
+        this@AddonsFragment.view?.let { view ->
+            bindRecyclerView(view)
+        }
+        addonProgressOverlay.visibility = View.GONE
+
         findPreviousDialogFragment()?.let { dialog ->
             dialog.onPositiveButtonClicked = onPositiveButtonClicked
         }
