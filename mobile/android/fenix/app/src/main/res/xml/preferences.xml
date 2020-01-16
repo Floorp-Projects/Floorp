@@ -103,7 +103,9 @@
 
     <PreferenceCategory
         android:title="@string/preferences_category_advanced"
-        app:iconSpaceReserved="false">
+        app:iconSpaceReserved="false"
+        android:key="@string/pref_key_advanced"
+        app:isPreferenceVisible="false">
         <androidx.preference.Preference
             android:icon="@drawable/ic_language"
             android:key="@string/pref_key_language"

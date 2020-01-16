@@ -53,4 +53,9 @@ object FeatureFlags {
      * Disables FxA Application Services Pairing feature
      */
     const val asFeatureFxAPairingDisabled = false
+
+    /**
+     * Enables the new language picker
+     */
+    val fenixLanguagePicker = Config.channel.isNightlyOrDebug
 }
