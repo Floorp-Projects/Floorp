@@ -7,10 +7,8 @@
 /**
  * Test simple requests using the protocol helpers.
  */
-var protocol = require("devtools/shared/protocol");
-var { types, Arg, RetVal } = protocol;
-
-var EventEmitter = require("devtools/shared/event-emitter");
+const protocol = require("devtools/shared/protocol");
+const { types, Arg, RetVal } = protocol;
 
 function simpleHello() {
   return {
@@ -93,48 +91,48 @@ const childSpec = protocol.generateActorSpec({
 
 var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   // Actors returned by this actor should be owned by the root actor.
-  marshallPool: function() {
+  marshallPool() {
     return this.parent();
   },
 
-  toString: function() {
+  toString() {
     return "[ChildActor " + this.childID + "]";
   },
 
-  initialize: function(conn, id) {
+  initialize(conn, id) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.childID = id;
   },
 
-  destroy: function() {
+  destroy() {
     protocol.Actor.prototype.destroy.call(this);
     this.destroyed = true;
   },
 
-  form: function() {
+  form() {
     return {
       actor: this.actorID,
       childID: this.childID,
     };
   },
 
-  echo: function(str) {
+  echo(str) {
     return str;
   },
 
-  getDetail1: function() {
+  getDetail1() {
     return this;
   },
 
-  getDetail2: function() {
+  getDetail2() {
     return this;
   },
 
-  getIDDetail: function() {
+  getIDDetail() {
     return this;
   },
 
-  getIntArray: function(inputArray) {
+  getIntArray(inputArray) {
     // Test that protocol.js converts an iterator to an array.
     const f = function*() {
       for (const i of inputArray) {
@@ -144,20 +142,20 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
     return f();
   },
 
-  getSibling: function(id) {
+  getSibling(id) {
     return this.parent().getChild(id);
   },
 
-  emitEvents: function() {
-    EventEmitter.emit(this, "event1", 1, 2, 3);
-    EventEmitter.emit(this, "event2", 4, 5, 6);
-    EventEmitter.emit(this, "named-event", 1, 2, 3);
-    EventEmitter.emit(this, "object-event", this);
-    EventEmitter.emit(this, "array-object-event", [this]);
+  emitEvents() {
+    this.emit("event1", 1, 2, 3);
+    this.emit("event2", 4, 5, 6);
+    this.emit("named-event", 1, 2, 3);
+    this.emit("object-event", this);
+    this.emit("array-object-event", [this]);
     return "correct response";
   },
 
-  release: function() {},
+  release() {},
 });
 
 class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
@@ -236,13 +234,13 @@ const rootSpec = protocol.generateActorSpec({
   },
 });
 
-var rootActor = null;
-var RootActor = protocol.ActorClassWithSpec(rootSpec, {
-  toString: function() {
+let rootActor = null;
+const RootActor = protocol.ActorClassWithSpec(rootSpec, {
+  toString() {
     return "[root actor]";
   },
 
-  initialize: function(conn) {
+  initialize(conn) {
     rootActor = this;
     this.actorID = "root";
     this._children = {};
@@ -251,7 +249,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   sayHello: simpleHello,
 
-  getChild: function(id) {
+  getChild(id) {
     if (id in this._children) {
       return this._children[id];
     }
@@ -260,11 +258,11 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return child;
   },
 
-  getChildren: function(ids) {
+  getChildren(ids) {
     return ids.map(id => this.getChild(id));
   },
 
-  getChildren2: function(ids) {
+  getChildren2(ids) {
     const f = function*() {
       for (const c of ids) {
         yield c;
@@ -273,7 +271,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return f();
   },
 
-  getManyChildren: function() {
+  getManyChildren() {
     return {
       // note that this isn't in the specialization array.
       foo: "bar",
@@ -283,7 +281,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 
   // This should remind you of a pause actor.
-  getTemporaryChild: function(id) {
+  getTemporaryChild(id) {
     if (!this._temporaryHolder) {
       this._temporaryHolder = new protocol.Actor(this.conn);
       this.manage(this._temporaryHolder);
@@ -291,7 +289,7 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
     return new ChildActor(this.conn, id);
   },
 
-  clearTemporaryChildren: function(id) {
+  clearTemporaryChildren(id) {
     if (!this._temporaryHolder) {
       return;
     }
@@ -331,7 +329,16 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
   }
 }
 
-function run_test() {
+let rootFront, childFront;
+function expectRootChildren(size) {
+  Assert.equal(rootActor._poolMap.size, size);
+  Assert.equal(rootFront._poolMap.size, size + 1);
+  if (childFront) {
+    Assert.equal(childFront._poolMap.size, 0);
+  }
+}
+
+add_task(async function() {
   DebuggerServer.createRootActor = conn => {
     return RootActor(conn);
   };
@@ -339,333 +346,298 @@ function run_test() {
 
   const trace = connectPipeTracing();
   const client = new DebuggerClient(trace);
-  client.connect().then(([applicationType, traits]) => {
-    trace.expectReceive({
-      from: "<actorid>",
-      applicationType: "xpcshell-tests",
-      traits: [],
-    });
-    Assert.equal(applicationType, "xpcshell-tests");
-
-    const rootFront = new RootFront(client);
-    let childFront = null;
-
-    const expectRootChildren = size => {
-      Assert.equal(rootActor._poolMap.size, size);
-      Assert.equal(rootFront._poolMap.size, size + 1);
-      if (childFront) {
-        Assert.equal(childFront._poolMap.size, 0);
-      }
-    };
-
-    rootFront
-      .getChild("child1")
-      .then(ret => {
-        trace.expectSend({ type: "getChild", str: "child1", to: "<actorid>" });
-        trace.expectReceive({ actor: "<actorid>", from: "<actorid>" });
-
-        childFront = ret;
-        Assert.ok(childFront instanceof ChildFront);
-        Assert.equal(childFront.childID, "child1");
-        expectRootChildren(1);
-      })
-      .then(() => {
-        // Request the child again, make sure the same is returned.
-        return rootFront.getChild("child1");
-      })
-      .then(ret => {
-        trace.expectSend({ type: "getChild", str: "child1", to: "<actorid>" });
-        trace.expectReceive({ actor: "<actorid>", from: "<actorid>" });
-
-        expectRootChildren(1);
-        Assert.ok(ret === childFront);
-      })
-      .then(() => {
-        return childFront.echo("hello");
-      })
-      .then(ret => {
-        trace.expectSend({ type: "echo", str: "hello", to: "<actorid>" });
-        trace.expectReceive({ str: "hello", from: "<actorid>" });
-
-        Assert.equal(ret, "hello");
-      })
-      .then(() => {
-        return childFront.getDetail1();
-      })
-      .then(ret => {
-        trace.expectSend({ type: "getDetail1", to: "<actorid>" });
-        trace.expectReceive({ child: childFront.actorID, from: "<actorid>" });
-        Assert.ok(ret === childFront);
-      })
-      .then(() => {
-        return childFront.getDetail2();
-      })
-      .then(ret => {
-        trace.expectSend({ type: "getDetail2", to: "<actorid>" });
-        trace.expectReceive({ child: childFront.actorID, from: "<actorid>" });
-        Assert.ok(ret === childFront);
-      })
-      .then(() => {
-        return childFront.getIDDetail();
-      })
-      .then(ret => {
-        trace.expectSend({ type: "getIDDetail", to: "<actorid>" });
-        trace.expectReceive({
-          idDetail: childFront.actorID,
-          from: "<actorid>",
-        });
-        Assert.ok(ret === childFront);
-      })
-      .then(() => {
-        return childFront.getSibling("siblingID");
-      })
-      .then(ret => {
-        trace.expectSend({
-          type: "getSibling",
-          id: "siblingID",
-          to: "<actorid>",
-        });
-        trace.expectReceive({
-          sibling: { actor: "<actorid>", childID: "siblingID" },
-          from: "<actorid>",
-        });
-
-        expectRootChildren(2);
-      })
-      .then(ret => {
-        return rootFront.getTemporaryChild("temp1").then(temp1 => {
-          trace.expectSend({
-            type: "getTemporaryChild",
-            id: "temp1",
-            to: "<actorid>",
-          });
-          trace.expectReceive({
-            child: { actor: "<actorid>", childID: "temp1" },
-            from: "<actorid>",
-          });
-
-          // At this point we expect two direct children, plus the temporary holder
-          // which should hold 1 itself.
-          Assert.equal(rootActor._temporaryHolder.__poolMap.size, 1);
-          Assert.equal(rootFront._temporaryHolder.__poolMap.size, 1);
-
-          expectRootChildren(3);
-          return rootFront.getTemporaryChild("temp2").then(temp2 => {
-            trace.expectSend({
-              type: "getTemporaryChild",
-              id: "temp2",
-              to: "<actorid>",
-            });
-            trace.expectReceive({
-              child: { actor: "<actorid>", childID: "temp2" },
-              from: "<actorid>",
-            });
-
-            // Same amount of direct children, and an extra in the temporary holder.
-            expectRootChildren(3);
-            Assert.equal(rootActor._temporaryHolder.__poolMap.size, 2);
-            Assert.equal(rootFront._temporaryHolder.__poolMap.size, 2);
-
-            // Get the children of the temporary holder...
-            const checkActors = rootActor._temporaryHolder.__poolMap.values();
-
-            // Now release the temporary holders and expect them to drop again.
-            return rootFront.clearTemporaryChildren().then(() => {
-              trace.expectSend({
-                type: "clearTemporaryChildren",
-                to: "<actorid>",
-              });
-              trace.expectReceive({ from: "<actorid>" });
-
-              expectRootChildren(2);
-              Assert.ok(!rootActor._temporaryHolder);
-              Assert.ok(!rootFront._temporaryHolder);
-              for (const checkActor of checkActors) {
-                Assert.ok(checkActor.destroyed);
-                Assert.ok(checkActor.destroyed);
-              }
-            });
-          });
-        });
-      })
-      .then(ret => {
-        return rootFront.getChildren(["child1", "child2"]);
-      })
-      .then(ret => {
-        trace.expectSend({
-          type: "getChildren",
-          ids: ["child1", "child2"],
-          to: "<actorid>",
-        });
-        trace.expectReceive({
-          children: [
-            { actor: "<actorid>", childID: "child1" },
-            { actor: "<actorid>", childID: "child2" },
-          ],
-          from: "<actorid>",
-        });
-
-        expectRootChildren(3);
-        Assert.ok(ret[0] === childFront);
-        Assert.ok(ret[1] !== childFront);
-        Assert.ok(ret[1] instanceof ChildFront);
-
-        // On both children, listen to events.  We're only
-        // going to trigger events on the first child, so an event
-        // triggered on the second should cause immediate failures.
-
-        const set = new Set([
-          "event1",
-          "event2",
-          "named-event",
-          "object-event",
-          "array-object-event",
-        ]);
-
-        childFront.on("event1", (a, b, c) => {
-          Assert.equal(a, 1);
-          Assert.equal(b, 2);
-          Assert.equal(c, 3);
-          // Verify that the pre-event handler was called.
-          Assert.equal(childFront.event1arg3, 3);
-          set.delete("event1");
-        });
-        childFront.on("event2", (a, b, c) => {
-          Assert.equal(a, 4);
-          Assert.equal(b, 5);
-          Assert.equal(c, 6);
-          // Verify that the async pre-event handler was called,
-          // setting the property before this handler was called.
-          Assert.equal(childFront.event2arg3, 6);
-          // And check that the sync preEvent with the same name is also
-          // executed
-          Assert.equal(childFront.event2arg2, 5);
-          set.delete("event2");
-        });
-        childFront.on("named-event", (a, b, c) => {
-          Assert.equal(a, 1);
-          Assert.equal(b, 2);
-          Assert.equal(c, 3);
-          set.delete("named-event");
-        });
-        childFront.on("object-event", obj => {
-          Assert.ok(obj === childFront);
-          set.delete("object-event");
-        });
-        childFront.on("array-object-event", array => {
-          Assert.ok(array[0] === childFront);
-          set.delete("array-object-event");
-        });
-
-        const fail = function() {
-          do_throw("Unexpected event");
-        };
-        ret[1].on("event1", fail);
-        ret[1].on("event2", fail);
-        ret[1].on("named-event", fail);
-        ret[1].on("object-event", fail);
-        ret[1].on("array-object-event", fail);
-
-        return childFront.emitEvents().then(() => {
-          trace.expectSend({ type: "emitEvents", to: "<actorid>" });
-          trace.expectReceive({
-            type: "event1",
-            a: 1,
-            b: 2,
-            c: 3,
-            from: "<actorid>",
-          });
-          trace.expectReceive({
-            type: "event2",
-            a: 4,
-            b: 5,
-            c: 6,
-            from: "<actorid>",
-          });
-          trace.expectReceive({
-            type: "namedEvent",
-            a: 1,
-            b: 2,
-            c: 3,
-            from: "<actorid>",
-          });
-          trace.expectReceive({
-            type: "objectEvent",
-            detail: childFront.actorID,
-            from: "<actorid>",
-          });
-          trace.expectReceive({
-            type: "arrayObjectEvent",
-            detail: [childFront.actorID],
-            from: "<actorid>",
-          });
-          trace.expectReceive({ value: "correct response", from: "<actorid>" });
-
-          Assert.equal(set.size, 0);
-        });
-      })
-      .then(ret => {
-        return rootFront.getManyChildren();
-      })
-      .then(ret => {
-        trace.expectSend({ type: "getManyChildren", to: "<actorid>" });
-        trace.expectReceive({
-          foo: "bar",
-          child5: { actor: "<actorid>", childID: "child5" },
-          more: [
-            { actor: "<actorid>", childID: "child6" },
-            { actor: "<actorid>", childID: "child7" },
-          ],
-          from: "<actorid>",
-        });
-
-        // Check all the crazy stuff we did in getManyChildren
-        Assert.equal(ret.foo, "bar");
-        Assert.equal(ret.child5.childID, "child5");
-        Assert.equal(ret.more[0].childID, "child6");
-        Assert.equal(ret.more[1].childID, "child7");
-      })
-      .then(() => {
-        // Test accepting a generator.
-        const f = function*() {
-          for (const i of [1, 2, 3, 4, 5]) {
-            yield i;
-          }
-        };
-        return childFront.getIntArray(f());
-      })
-      .then(ret => {
-        Assert.equal(ret.length, 5);
-        const expected = [2, 4, 6, 8, 10];
-        for (let i = 0; i < 5; ++i) {
-          Assert.equal(ret[i], expected[i]);
-        }
-      })
-      .then(() => {
-        return rootFront.getChildren(["child1", "child2"]);
-      })
-      .then(ids => {
-        const f = function*() {
-          for (const id of ids) {
-            yield id;
-          }
-        };
-        return rootFront.getChildren2(f());
-      })
-      .then(ret => {
-        Assert.equal(ret.length, 2);
-        Assert.ok(ret[0] === childFront);
-        Assert.ok(ret[1] !== childFront);
-        Assert.ok(ret[1] instanceof ChildFront);
-      })
-      .then(() => {
-        client.close().then(() => {
-          do_test_finished();
-        });
-      })
-      .catch(err => {
-        do_report_unexpected_exception(err, "Failure executing test");
-      });
+  const [applicationType] = await client.connect();
+  trace.expectReceive({
+    from: "<actorid>",
+    applicationType: "xpcshell-tests",
+    traits: [],
   });
-  do_test_pending();
+  Assert.equal(applicationType, "xpcshell-tests");
+
+  rootFront = new RootFront(client);
+
+  await testSimpleChildren(trace);
+  await testDetail(trace);
+  await testSibling(trace);
+  await testTemporary(trace);
+  await testEvents(trace);
+  await testManyChildren(trace);
+  await testGenerator(trace);
+
+  await client.close();
+});
+
+async function testSimpleChildren(trace) {
+  childFront = await rootFront.getChild("child1");
+  trace.expectSend({ type: "getChild", str: "child1", to: "<actorid>" });
+  trace.expectReceive({ actor: "<actorid>", from: "<actorid>" });
+
+  Assert.ok(childFront instanceof ChildFront);
+  Assert.equal(childFront.childID, "child1");
+  expectRootChildren(1);
+
+  // Request the child again, make sure the same is returned.
+  let ret = await rootFront.getChild("child1");
+  trace.expectSend({ type: "getChild", str: "child1", to: "<actorid>" });
+  trace.expectReceive({ actor: "<actorid>", from: "<actorid>" });
+
+  expectRootChildren(1);
+  Assert.ok(ret === childFront);
+
+  ret = await childFront.echo("hello");
+  trace.expectSend({ type: "echo", str: "hello", to: "<actorid>" });
+  trace.expectReceive({ str: "hello", from: "<actorid>" });
+
+  Assert.equal(ret, "hello");
+}
+
+async function testDetail(trace) {
+  let ret = await childFront.getDetail1();
+  trace.expectSend({ type: "getDetail1", to: "<actorid>" });
+  trace.expectReceive({ child: childFront.actorID, from: "<actorid>" });
+  Assert.ok(ret === childFront);
+
+  ret = await childFront.getDetail2();
+  trace.expectSend({ type: "getDetail2", to: "<actorid>" });
+  trace.expectReceive({ child: childFront.actorID, from: "<actorid>" });
+  Assert.ok(ret === childFront);
+
+  ret = await childFront.getIDDetail();
+  trace.expectSend({ type: "getIDDetail", to: "<actorid>" });
+  trace.expectReceive({
+    idDetail: childFront.actorID,
+    from: "<actorid>",
+  });
+  Assert.ok(ret === childFront);
+}
+
+async function testSibling(trace) {
+  await childFront.getSibling("siblingID");
+  trace.expectSend({
+    type: "getSibling",
+    id: "siblingID",
+    to: "<actorid>",
+  });
+  trace.expectReceive({
+    sibling: { actor: "<actorid>", childID: "siblingID" },
+    from: "<actorid>",
+  });
+
+  expectRootChildren(2);
+}
+
+async function testTemporary(trace) {
+  await rootFront.getTemporaryChild("temp1");
+  trace.expectSend({
+    type: "getTemporaryChild",
+    id: "temp1",
+    to: "<actorid>",
+  });
+  trace.expectReceive({
+    child: { actor: "<actorid>", childID: "temp1" },
+    from: "<actorid>",
+  });
+
+  // At this point we expect two direct children, plus the temporary holder
+  // which should hold 1 itself.
+  Assert.equal(rootActor._temporaryHolder.__poolMap.size, 1);
+  Assert.equal(rootFront._temporaryHolder.__poolMap.size, 1);
+
+  expectRootChildren(3);
+
+  await rootFront.getTemporaryChild("temp2");
+  trace.expectSend({
+    type: "getTemporaryChild",
+    id: "temp2",
+    to: "<actorid>",
+  });
+  trace.expectReceive({
+    child: { actor: "<actorid>", childID: "temp2" },
+    from: "<actorid>",
+  });
+
+  // Same amount of direct children, and an extra in the temporary holder.
+  expectRootChildren(3);
+  Assert.equal(rootActor._temporaryHolder.__poolMap.size, 2);
+  Assert.equal(rootFront._temporaryHolder.__poolMap.size, 2);
+
+  // Get the children of the temporary holder...
+  const checkActors = rootActor._temporaryHolder.__poolMap.values();
+
+  // Now release the temporary holders and expect them to drop again.
+  await rootFront.clearTemporaryChildren();
+  trace.expectSend({
+    type: "clearTemporaryChildren",
+    to: "<actorid>",
+  });
+  trace.expectReceive({ from: "<actorid>" });
+
+  expectRootChildren(2);
+  Assert.ok(!rootActor._temporaryHolder);
+  Assert.ok(!rootFront._temporaryHolder);
+  for (const checkActor of checkActors) {
+    Assert.ok(checkActor.destroyed);
+    Assert.ok(checkActor.destroyed);
+  }
+}
+
+async function testEvents(trace) {
+  const ret = await rootFront.getChildren(["child1", "child2"]);
+  trace.expectSend({
+    type: "getChildren",
+    ids: ["child1", "child2"],
+    to: "<actorid>",
+  });
+  trace.expectReceive({
+    children: [
+      { actor: "<actorid>", childID: "child1" },
+      { actor: "<actorid>", childID: "child2" },
+    ],
+    from: "<actorid>",
+  });
+
+  expectRootChildren(3);
+  Assert.ok(ret[0] === childFront);
+  Assert.ok(ret[1] !== childFront);
+  Assert.ok(ret[1] instanceof ChildFront);
+
+  // On both children, listen to events.  We're only
+  // going to trigger events on the first child, so an event
+  // triggered on the second should cause immediate failures.
+
+  const set = new Set([
+    "event1",
+    "event2",
+    "named-event",
+    "object-event",
+    "array-object-event",
+  ]);
+
+  childFront.on("event1", (a, b, c) => {
+    Assert.equal(a, 1);
+    Assert.equal(b, 2);
+    Assert.equal(c, 3);
+    // Verify that the pre-event handler was called.
+    Assert.equal(childFront.event1arg3, 3);
+    set.delete("event1");
+  });
+  childFront.on("event2", (a, b, c) => {
+    Assert.equal(a, 4);
+    Assert.equal(b, 5);
+    Assert.equal(c, 6);
+    // Verify that the async pre-event handler was called,
+    // setting the property before this handler was called.
+    Assert.equal(childFront.event2arg3, 6);
+    // And check that the sync preEvent with the same name is also
+    // executed
+    Assert.equal(childFront.event2arg2, 5);
+    set.delete("event2");
+  });
+  childFront.on("named-event", (a, b, c) => {
+    Assert.equal(a, 1);
+    Assert.equal(b, 2);
+    Assert.equal(c, 3);
+    set.delete("named-event");
+  });
+  childFront.on("object-event", obj => {
+    Assert.ok(obj === childFront);
+    set.delete("object-event");
+  });
+  childFront.on("array-object-event", array => {
+    Assert.ok(array[0] === childFront);
+    set.delete("array-object-event");
+  });
+
+  const fail = function() {
+    do_throw("Unexpected event");
+  };
+  ret[1].on("event1", fail);
+  ret[1].on("event2", fail);
+  ret[1].on("named-event", fail);
+  ret[1].on("object-event", fail);
+  ret[1].on("array-object-event", fail);
+
+  await childFront.emitEvents();
+  trace.expectSend({ type: "emitEvents", to: "<actorid>" });
+  trace.expectReceive({
+    type: "event1",
+    a: 1,
+    b: 2,
+    c: 3,
+    from: "<actorid>",
+  });
+  trace.expectReceive({
+    type: "event2",
+    a: 4,
+    b: 5,
+    c: 6,
+    from: "<actorid>",
+  });
+  trace.expectReceive({
+    type: "namedEvent",
+    a: 1,
+    b: 2,
+    c: 3,
+    from: "<actorid>",
+  });
+  trace.expectReceive({
+    type: "objectEvent",
+    detail: childFront.actorID,
+    from: "<actorid>",
+  });
+  trace.expectReceive({
+    type: "arrayObjectEvent",
+    detail: [childFront.actorID],
+    from: "<actorid>",
+  });
+  trace.expectReceive({ value: "correct response", from: "<actorid>" });
+
+  Assert.equal(set.size, 0);
+}
+
+async function testManyChildren(trace) {
+  const ret = await rootFront.getManyChildren();
+  trace.expectSend({ type: "getManyChildren", to: "<actorid>" });
+  trace.expectReceive({
+    foo: "bar",
+    child5: { actor: "<actorid>", childID: "child5" },
+    more: [
+      { actor: "<actorid>", childID: "child6" },
+      { actor: "<actorid>", childID: "child7" },
+    ],
+    from: "<actorid>",
+  });
+
+  // Check all the crazy stuff we did in getManyChildren
+  Assert.equal(ret.foo, "bar");
+  Assert.equal(ret.child5.childID, "child5");
+  Assert.equal(ret.more[0].childID, "child6");
+  Assert.equal(ret.more[1].childID, "child7");
+}
+
+async function testGenerator(trace) {
+  // Test accepting a generator.
+  const f = function*() {
+    for (const i of [1, 2, 3, 4, 5]) {
+      yield i;
+    }
+  };
+  let ret = await childFront.getIntArray(f());
+  Assert.equal(ret.length, 5);
+  const expected = [2, 4, 6, 8, 10];
+  for (let i = 0; i < 5; ++i) {
+    Assert.equal(ret[i], expected[i]);
+  }
+
+  const ids = await rootFront.getChildren(["child1", "child2"]);
+  const f2 = function*() {
+    for (const id of ids) {
+      yield id;
+    }
+  };
+  ret = await rootFront.getChildren2(f2());
+  Assert.equal(ret.length, 2);
+  Assert.ok(ret[0] === childFront);
+  Assert.ok(ret[1] !== childFront);
+  Assert.ok(ret[1] instanceof ChildFront);
 }
