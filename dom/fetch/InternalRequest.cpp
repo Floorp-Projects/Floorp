@@ -99,8 +99,7 @@ InternalRequest::InternalRequest(const nsACString& aURL,
       // how certain contexts will override it to set it to true. Fetch
       // specification does not handle this yet.
       ,
-      mSameOriginDataURL(true),
-      mSkipServiceWorker(false) {
+      mSameOriginDataURL(true) {
   MOZ_ASSERT(!aURL.IsEmpty());
   AddURL(aURL, aFragment);
 }
@@ -126,8 +125,7 @@ InternalRequest::InternalRequest(
       mPreserveContentCodings(false)
       // FIXME See the above comment in the default constructor.
       ,
-      mSameOriginDataURL(true),
-      mSkipServiceWorker(false) {
+      mSameOriginDataURL(true) {
   MOZ_ASSERT(!aURL.IsEmpty());
   AddURL(aURL, aFragment);
 }
