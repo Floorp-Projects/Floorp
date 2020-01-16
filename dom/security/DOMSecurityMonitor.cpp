@@ -7,6 +7,8 @@
 #include "DOMSecurityMonitor.h"
 #include "nsContentUtils.h"
 
+#include "nsIChannel.h"
+#include "nsILoadInfo.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 
@@ -101,4 +103,28 @@ void DOMSecurityMonitor::AuditParsingOfHTMLXMLFragments(
           uriSpec.get(), NS_ConvertUTF16toUTF8(filename).get(), lineNum,
           columnNum, NS_ConvertUTF16toUTF8(aFragment).get());
   MOZ_ASSERT(false);
+}
+
+/* static */
+void DOMSecurityMonitor::AuditUseOfJavaScriptURI(nsIChannel* aChannel) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  nsCOMPtr<nsIPrincipal> loadingPrincipal = loadInfo->LoadingPrincipal();
+
+  // We only ever have no loadingPrincipal in case of a new top-level load.
+  // The purpose of this assertion is to make sure we do not allow loading
+  // javascript: URIs in system privileged contexts. Hence there is nothing
+  // to do here in case there is no loadingPrincipal.
+  if (!loadingPrincipal) {
+    return;
+  }
+
+  // if the javascript: URI is not loaded by a system privileged context
+  // or an about: page, there there is nothing to do here.
+  if (!loadingPrincipal->IsSystemPrincipal() &&
+      !loadingPrincipal->SchemeIs("about")) {
+    return;
+  }
+
+  MOZ_ASSERT(false,
+             "Do not use javascript: URIs in chrome code or in about: pages");
 }
