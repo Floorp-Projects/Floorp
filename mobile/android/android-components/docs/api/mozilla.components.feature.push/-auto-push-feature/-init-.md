@@ -8,7 +8,7 @@
         socketProtocol = config.protocol,
         serviceType = config.serviceType,
         databasePath = File(context.filesDir, DB_NAME).canonicalPath
-    ))`
+    ), crashReporter: `[`CrashReporter`](../../mozilla.components.lib.crash/-crash-reporter/index.md)`? = null)`
 
 A implementation of a [PushProcessor](../../mozilla.components.concept.push/-push-processor/index.md) that should live as a singleton by being installed
 in the Application's onCreate. It receives messages from a service and forwards them

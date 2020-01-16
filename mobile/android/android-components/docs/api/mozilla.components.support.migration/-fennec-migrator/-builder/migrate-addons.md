@@ -2,7 +2,7 @@
 
 # migrateAddons
 
-`fun migrateAddons(engine: `[`Engine`](../../../mozilla.components.concept.engine/-engine/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Settings.currentVersion): `[`Builder`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L335)
+`fun migrateAddons(engine: `[`Engine`](../../../mozilla.components.concept.engine/-engine/index.md)`, version: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Migration.Settings.currentVersion): `[`Builder`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L336)
 
 Enables Add-on migration.
 

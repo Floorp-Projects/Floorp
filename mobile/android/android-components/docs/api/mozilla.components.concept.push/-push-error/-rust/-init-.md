@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`Rust(desc: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`
+`Rust(cause: `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)`)`
