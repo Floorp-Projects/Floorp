@@ -450,13 +450,7 @@ android-hw-g5-7-0-arm7-api-16/pgo:
 android-hw-p2-8-0-arm7-api-16/pgo:
     build-platform: android-api-16-pgo/opt
     test-sets:
-        - android-hw-arm7-browsertime
         - android-hw-arm7-pgo-unittests
-        - android-hw-arm7-raptor
-        - android-hw-arm7-raptor-power
-        - android-hw-arm7-raptor-cpu-memory
-        - android-hw-arm7-raptor-cpu-memory-power
-        - raptor-fetch-geckoview
 
 android-hw-p2-8-0-arm7-api-16/opt:
     build-platform: android-api-16/opt
