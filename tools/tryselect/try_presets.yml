@@ -18,7 +18,7 @@ debugger-tests:
         - "'mozlint-eslint"
         - "!asan 'devtools !shippable | 'linux32 | 'macosx64"
         - "!android !asan 'linux32 | 'macosx64 | !shippable 'mochitest-chrome"
-        - "!asan !shippable 'linux64/ 'xpcshell"
+        - "!asan !shippable 'linux '64/ 'xpcshell"
         - "!qr !macosx !shippable 'damp"
 
 devtools:
@@ -28,9 +28,11 @@ devtools:
     query:
         - "'node-debugger | 'node-devtools"
         - "'mozlint-eslint"
-        - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'linux64/ | 'windows10-64/ | 'macosx1014-64"
-        - "'linux64/opt-mochitest-devtools-chrome-fis-e10s"
-        - "'xpcshell-e10s 'linux64/"
+        - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'windows10-64/ | 'macosx1014-64"
+        # Linux is being named "linux1804" and may change over time, so use a more flexible search
+        - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'linux '64/"
+        - "'linux '64/opt-mochitest-devtools-chrome-fis-e10s"
+        - "'xpcshell-e10s 'linux '64/"
 
 devtools-linux:
     selector: fuzzy
@@ -39,8 +41,8 @@ devtools-linux:
     query:
         - "'node-debugger | 'node-devtools"
         - "'mozlint-eslint"
-        - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'linux64/"
-        - "'xpcshell-e10s 'linux64/"
+        - "'mochitest-devtools-chrome-e10s | 'mochitest-chrome-1proc 'linux '64/"
+        - "'xpcshell-e10s 'linux '64/"
 
 perf:
     selector: fuzzy
