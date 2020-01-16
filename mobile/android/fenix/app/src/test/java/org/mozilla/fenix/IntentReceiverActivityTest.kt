@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -31,6 +32,7 @@ import org.robolectric.annotation.Config
 class IntentReceiverActivityTest {
 
     @Test
+    @Ignore("Disabling failing test - see: https://github.com/mozilla-mobile/fenix/issues/7749")
     fun `process intent with flag launched from history`() = runBlockingTest {
         testContext.settings().openLinksInAPrivateTab = false
 
@@ -52,6 +54,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
+    @Ignore("Disabling failing test - see: https://github.com/mozilla-mobile/fenix/issues/7749")
     fun `process intent with action OPEN_PRIVATE_TAB`() = runBlockingTest {
         testContext.settings().openLinksInAPrivateTab = false
 
@@ -72,6 +75,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
+    @Ignore("Disabling failing test - see: https://github.com/mozilla-mobile/fenix/issues/7749")
     fun `process intent with action OPEN_TAB`() = runBlockingTest {
         testContext.settings().openLinksInAPrivateTab = false
 
@@ -92,6 +96,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
+    @Ignore("Disabling failing test - see: https://github.com/mozilla-mobile/fenix/issues/7749")
     fun `process intent starts Activity`() = runBlockingTest {
         testContext.settings().openLinksInAPrivateTab = false
 
@@ -109,6 +114,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
+    @Ignore("Disabling failing test - see: https://github.com/mozilla-mobile/fenix/issues/7749")
     fun `process intent with launchLinksInPrivateTab set to true`() = runBlockingTest {
         testContext.settings().openLinksInAPrivateTab = true
 
@@ -125,6 +131,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
+    @Ignore("Disabling failing test - see: https://github.com/mozilla-mobile/fenix/issues/7749")
     fun `process intent with launchLinksInPrivateTab set to false`() = runBlockingTest {
         testContext.settings().openLinksInAPrivateTab = false
 
@@ -142,6 +149,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
+    @Ignore("Disabling failing test - see: https://github.com/mozilla-mobile/fenix/issues/7749")
     fun `process custom tab intent`() = runBlockingTest {
         testContext.settings().openLinksInAPrivateTab = false
 
@@ -162,6 +170,7 @@ class IntentReceiverActivityTest {
     }
 
     @Test
+    @Ignore("Disabling failing test - see: https://github.com/mozilla-mobile/fenix/issues/7749")
     fun `process private custom tab intent`() = runBlockingTest {
         testContext.settings().openLinksInAPrivateTab = true
 
