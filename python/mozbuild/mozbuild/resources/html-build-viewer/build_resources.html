@@ -21,6 +21,12 @@ svg {
   shape-rendering: crispEdges;
 }
 
+.grid {
+  stroke: gray;
+  stroke-dasharray: 3, 2;
+  opacity: 0.4;
+}
+
 .area {
   fill: steelblue;
 }
@@ -354,8 +360,19 @@ function renderResources(id, resources, height, fields_attr, data_attr, layers) 
     ;
 
   svg.append("g")
+    .attr("class", "x grid")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis.tickSize(-height, 0, 0).tickFormat(""))
+    ;
+
+  svg.append("g")
     .attr("class", "y axis")
     .call(yAxis)
+    ;
+
+  svg.append("g")
+    .attr("class", "y grid")
+    .call(yAxis.tickSize(-width, 0, 0).tickFormat(""))
     ;
 }
 
