@@ -71,6 +71,9 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
             setBackgroundColor(ContextCompat.getColor(context, R.color.button_text_color))
             setTextColor(ContextCompat.getColor(context, R.color.white_color))
         }
+        store.state.results?.let {
+            statusAdapter.submitList(it.toItemList())
+        }
     }
 
     override fun onMigrationStateChanged(progress: MigrationProgress, results: MigrationResults) {
