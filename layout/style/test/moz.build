@@ -21,8 +21,6 @@
 
 DIRS += ['gtest']
 
-HAS_MISC_RULE = True
-
 HostSimplePrograms([
     'host_ListCSSProperties',
 ])
