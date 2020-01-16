@@ -395,7 +395,7 @@ class InternalRequest final {
   ReferrerPolicy mEnvironmentReferrerPolicy;
   RequestMode mMode;
   RequestCredentials mCredentialsMode;
-  MOZ_INIT_OUTSIDE_CTOR LoadTainting mResponseTainting;
+  LoadTainting mResponseTainting = LoadTainting::Basic;
   RequestCache mCacheMode;
   RequestRedirect mRedirectMode;
   nsString mIntegrity;
