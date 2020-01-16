@@ -24,7 +24,6 @@ private const val NOTIFICATION_TAG = "mozac.support.migration.notification"
 private const val NOTIFICATION_CHANNEL_ID = "mozac.support.migration.generic"
 
 private const val TEMPORARY_NOTIFICATION_CHANNEL_NAME = "Migration"
-private val temporaryNotificationIcon = R.drawable.mozac_lib_crash_notification
 
 /**
  * Abstract implementation of a background service running a configured [FennecMigrator].
@@ -81,7 +80,7 @@ abstract class AbstractMigrationService : Service() {
         val channel = ensureChannelExists()
 
         val builder = NotificationCompat.Builder(this, channel)
-            .setSmallIcon(temporaryNotificationIcon)
+            .setSmallIcon(R.drawable.mozac_support_migration_notification_icon)
             .setContentTitle(getString(R.string.mozac_support_migration_ongoing_notification_title))
             .setContentText(getString(R.string.mozac_support_migration_ongoing_notification_text))
             .setPriority(NotificationCompat.PRIORITY_LOW)
