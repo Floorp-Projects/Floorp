@@ -7,7 +7,7 @@
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
-this.EXPORTED_SYMBOLS = ["SplitView"];
+const EXPORTED_SYMBOLS = ["SplitView"];
 
 /* this must be kept in sync with CSS (ie. splitview.css) */
 const LANDSCAPE_MEDIA_QUERY = "(min-width: 701px)";
@@ -27,7 +27,7 @@ var bindings = new WeakMap();
  * @param DOMElement aRoot
  * @see appendItem
  */
-this.SplitView = function SplitView(aRoot) {
+function SplitView(aRoot) {
   this._root = aRoot;
   this._controller = aRoot.querySelector(".splitview-controller");
   this._nav = aRoot.querySelector(".splitview-nav");
@@ -88,7 +88,7 @@ this.SplitView = function SplitView(aRoot) {
       return false;
     }
   });
-};
+}
 
 SplitView.prototype = {
   /**
