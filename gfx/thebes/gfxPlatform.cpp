@@ -608,10 +608,6 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);
 }
 
-static void WebRenderQualityPrefChangeCallback(const char* aPref, void*) {
-  gfxPlatform::GetPlatform()->UpdateAllowSacrificingSubpixelAA();
-}
-
 #if defined(USE_SKIA)
 static uint32_t GetSkiaGlyphCacheSize() {
   // Only increase font cache size on non-android to save memory.
@@ -2522,15 +2518,6 @@ void gfxPlatform::UpdateCanUseHardwareVideoDecoding() {
   }
 }
 
-void gfxPlatform::UpdateAllowSacrificingSubpixelAA() {
-  int64_t kMaxPixels = 1920 * 1200;  // WUXGA
-  bool allowSacrificingSubpixelAA =
-      mScreenPixels > kMaxPixels &&
-      !StaticPrefs::
-          gfx_webrender_quality_force_disable_sacrificing_subpixel_aa();
-  gfxVars::SetAllowSacrificingSubpixelAA(allowSacrificingSubpixelAA);
-}
-
 void gfxPlatform::InitAcceleration() {
   if (sLayersAccelerationPrefsInitialized) {
     return;
@@ -3285,12 +3272,6 @@ void gfxPlatform::InitWebRenderConfig() {
     if (XRE_IsParentProcess()) {
       Preferences::RegisterPrefixCallbackAndCall(
           WebRenderDebugPrefChangeCallback, WR_DEBUG_PREF);
-      Preferences::RegisterCallback(
-          WebRenderQualityPrefChangeCallback,
-          nsDependentCString(
-              StaticPrefs::
-                  GetPrefName_gfx_webrender_quality_force_disable_sacrificing_subpixel_aa()));
-      UpdateAllowSacrificingSubpixelAA();
     }
   }
 #if defined(MOZ_WIDGET_GTK)

@@ -16,7 +16,6 @@
 #include "mozilla/Range.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/APZUpdater.h"
@@ -359,9 +358,6 @@ WebRenderBridgeParent::WebRenderBridgeParent(
     MOZ_ASSERT(api);
     mApis[api->GetRenderRoot()] = api;
   }
-
-  UpdateDebugFlags();
-  UpdateQualitySettings();
 }
 
 WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
@@ -1730,26 +1726,6 @@ void WebRenderBridgeParent::FlushFramePresentation() {
   // following the same codepath that WebRender takes to render and composite
   // a frame.
   mApis[wr::RenderRoot::Default]->WaitFlushed();
-}
-
-void WebRenderBridgeParent::UpdateQualitySettings() {
-  for (auto& api : mApis) {
-    if (!api) {
-      continue;
-    }
-    wr::TransactionBuilder txn;
-    txn.UpdateQualitySettings(gfxVars::AllowSacrificingSubpixelAA());
-    api->SendTransaction(txn);
-  }
-}
-
-void WebRenderBridgeParent::UpdateDebugFlags() {
-  for (auto& api : mApis) {
-    if (!api) {
-      continue;
-    }
-    api->UpdateDebugFlags(gfxVars::WebRenderDebugFlags());
-  }
 }
 
 #if defined(MOZ_WIDGET_ANDROID)

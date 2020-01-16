@@ -134,7 +134,6 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   APZThreadUtils::SetControllerThread(MessageLoop::current());
   apz::InitializeGlobalState();
   LayerTreeOwnerTracker::Initialize();
-  CompositorBridgeParent::InitializeStatics();
   mozilla::ipc::SetThisProcessName("GPU Process");
 #ifdef XP_WIN
   wmf::MFStartup();

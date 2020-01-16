@@ -179,8 +179,6 @@ class TransactionBuilder final {
 
   void DeleteFontInstance(wr::FontInstanceKey aKey);
 
-  void UpdateQualitySettings(bool aAllowSacrificingSubpixelAA);
-
   void Notify(wr::Checkpoint aWhen, UniquePtr<NotificationHandler> aHandler);
 
   void Clear();
@@ -310,6 +308,7 @@ class WebRenderAPI final {
   bool mUseDComp;
   bool mUseTripleBuffering;
   layers::SyncHandle mSyncHandle;
+  wr::DebugFlags mDebugFlags;
   wr::RenderRoot mRenderRoot;
 
   // We maintain alive the root api to know when to shut the render backend
