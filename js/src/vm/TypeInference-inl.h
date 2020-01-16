@@ -659,17 +659,16 @@ MOZ_ALWAYS_INLINE void AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
   }
 }
 
+void AddMagicTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
+                            JSWhyMagic type);
+
 MOZ_ALWAYS_INLINE void AddTypePropertyId(JSContext* cx, JSObject* obj, jsid id,
                                          const Value& value) {
-  // Some magic values can be used with environment objects but are never
-  // exposed directly to script.
   if (MOZ_UNLIKELY(value.isMagic())) {
-    MOZ_ASSERT(value.whyMagic() == JS_UNINITIALIZED_LEXICAL ||
-               value.whyMagic() == JS_OPTIMIZED_OUT);
-    MOZ_ASSERT(obj->is<EnvironmentObject>());
-    return;
+    AddMagicTypePropertyId(cx, obj, id, value.whyMagic());
+  } else {
+    AddTypePropertyId(cx, obj, id, TypeSet::GetValueType(value));
   }
-  return AddTypePropertyId(cx, obj, id, TypeSet::GetValueType(value));
 }
 
 inline void MarkObjectGroupFlags(JSContext* cx, JSObject* obj,
@@ -1235,6 +1234,12 @@ inline void HeapTypeSet::setNonConstantProperty(
   }
 
   flags |= TYPE_FLAG_NON_CONSTANT_PROPERTY;
+  newPropertyState(sweep, cx);
+}
+
+inline void HeapTypeSet::markLexicalBindingExists(
+    const AutoSweepObjectGroup& sweep, JSContext* cx) {
+  checkMagic();
   newPropertyState(sweep, cx);
 }
 
