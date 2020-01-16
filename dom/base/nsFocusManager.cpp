@@ -30,6 +30,7 @@
 #include "mozilla/dom/Selection.h"
 #include "nsXULPopupManager.h"
 #include "nsMenuPopupFrame.h"
+#include "nsIScriptError.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
 #include "nsIObserverService.h"
@@ -39,6 +40,7 @@
 #include "nsHTMLDocument.h"
 #include "nsNetUtil.h"
 #include "nsRange.h"
+#include "nsFrameLoaderOwner.h"
 
 #include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/ContentEvents.h"
@@ -49,6 +51,7 @@
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -68,10 +71,6 @@
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
-#endif
-
-#ifndef XP_MACOSX
-#  include "nsIScriptError.h"
 #endif
 
 using namespace mozilla;
@@ -1123,6 +1122,37 @@ void nsFocusManager::ActivateOrDeactivate(nsPIDOMWindowOuter* aWindow,
       });
 }
 
+// Retrieves innerWindowId of the window of the last focused element to
+// log a warning to the website console.
+void LogWarningFullscreenWindowRaise(Element* aElement) {
+  nsCOMPtr<nsFrameLoaderOwner> frameLoaderOwner(do_QueryInterface(aElement));
+  NS_ENSURE_TRUE_VOID(frameLoaderOwner);
+
+  RefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+  NS_ENSURE_TRUE_VOID(frameLoaderOwner);
+
+  RefPtr<BrowsingContext> browsingContext = frameLoader->GetBrowsingContext();
+  NS_ENSURE_TRUE_VOID(browsingContext);
+
+  WindowGlobalParent* windowGlobalParent =
+      browsingContext->Canonical()->GetCurrentWindowGlobal();
+  NS_ENSURE_TRUE_VOID(windowGlobalParent);
+
+  // Log to console
+  nsAutoString localizedMsg;
+  nsTArray<nsString> params;
+  nsresult rv = nsContentUtils::FormatLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FullscreenExitWindowFocus", params,
+      localizedMsg);
+
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  Unused << nsContentUtils::ReportToConsoleByWindowID(
+      localizedMsg, nsIScriptError::warningFlag, NS_LITERAL_CSTRING("DOM"),
+      windowGlobalParent->InnerWindowId(),
+      windowGlobalParent->GetDocumentURI());
+}
+
 void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
                                    bool aFocusChanged, bool aAdjustWidget) {
   // if the element is not focusable, just return and leave the focus as is
@@ -1215,9 +1245,13 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
 
   // Exit fullscreen if a website focuses another window
   if (StaticPrefs::full_screen_api_exit_on_windowRaise() &&
-      !isElementInActiveWindow && aFlags & (FLAG_RAISE | FLAG_NONSYSTEMCALLER)) {
+      !isElementInActiveWindow &&
+      aFlags & (FLAG_RAISE | FLAG_NONSYSTEMCALLER)) {
     if (Document* doc = mActiveWindow ? mActiveWindow->GetDoc() : nullptr) {
       if (doc->GetFullscreenElement()) {
+        if (XRE_IsParentProcess()) {
+          LogWarningFullscreenWindowRaise(mFocusedElement);
+        }
         Document::AsyncExitFullscreen(doc);
       }
     }
