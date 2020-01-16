@@ -48,87 +48,77 @@
         android:background="@color/bottom_bar_shadow"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottom_bar"/>
+        app:layout_constraintBottom_toTopOf="@id/bottom_bar" />
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     <View
         android:id="@+id/bottom_bar"
         android:layout_width="0dp"
         android:layout_height="56dp"
-=======
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/bottom_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
->>>>>>> 52d4338e... For #7423: remove unnecessary CoordinatorLayout in fragment_home.
         android:background="?bottomBarBackground"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <org.mozilla.fenix.home.SearchView
+        android:id="@+id/toolbar_wrapper"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="0dp"
+        android:background="@drawable/home_search_background_normal"
+        android:clickable="true"
+        android:contentDescription="@string/search_hint"
+        android:focusable="true"
+        android:transitionName="toolbar_wrapper_transition"
+        app:layout_constraintBottom_toBottomOf="@id/bottom_bar"
+        app:layout_constraintEnd_toStartOf="@+id/add_tab_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="@id/bottom_bar">
 
-        <org.mozilla.fenix.home.SearchView
-            android:id="@+id/toolbar_wrapper"
-            android:transitionName="toolbar_wrapper_transition"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="0dp"
+        <ImageView
+            android:id="@+id/search_engine_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="start|center_vertical"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="@drawable/home_search_background_normal"
-            android:clickable="true"
-            android:contentDescription="@string/search_hint"
-            android:focusable="true"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/add_tab_button"
-            app:layout_constraintStart_toStartOf="parent">
+            android:clickable="false"
+            android:focusable="false"
+            android:importantForAccessibility="no" />
 
-            <ImageView
-                android:id="@+id/search_engine_icon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="8dp"
-                android:layout_gravity="start|center_vertical"
-                android:clickable="false"
-                android:focusable="false"
-                android:importantForAccessibility="no" />
+        <TextView
+            android:id="@+id/toolbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|center_vertical"
+            android:layout_marginStart="44dp"
+            android:clickable="false"
+            android:ellipsize="end"
+            android:focusable="false"
+            android:importantForAccessibility="no"
+            android:lines="1"
+            android:text="@string/search_hint"
+            android:textColor="?primaryText"
+            android:textSize="15sp" />
+    </org.mozilla.fenix.home.SearchView>
 
-            <TextView
-                android:id="@+id/toolbar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="start|center_vertical"
-                android:layout_marginStart="44dp"
-                android:clickable="false"
-                android:focusable="false"
-                android:lines="1"
-                android:ellipsize="end"
-                android:importantForAccessibility="no"
-                android:text="@string/search_hint"
-                android:textColor="?primaryText"
-                android:textSize="15sp" />
-        </org.mozilla.fenix.home.SearchView>
-
-        <ImageButton
-            android:id="@+id/add_tab_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/add_tab"
-            app:srcCompat="@drawable/ic_new"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/menuButton"
-            app:layout_constraintStart_toEndOf="@id/toolbar_wrapper"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <mozilla.components.browser.menu.view.MenuButton
-            android:id="@+id/menuButton"
-            android:layout_width="36dp"
-            android:layout_height="48dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+    <ImageButton
+        android:id="@+id/add_tab_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/add_tab"
+        app:srcCompat="@drawable/ic_new"
+        app:layout_constraintTop_toTopOf="@id/bottom_bar"
+        app:layout_constraintBottom_toBottomOf="@id/bottom_bar"
+        app:layout_constraintEnd_toStartOf="@+id/menuButton"
+        app:layout_constraintStart_toEndOf="@id/toolbar_wrapper"/>
+    
+    <mozilla.components.browser.menu.view.MenuButton
+        android:id="@+id/menuButton"
+        android:layout_width="36dp"
+        android:layout_height="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/bottom_bar"
+        app:layout_constraintBottom_toBottomOf="@id/bottom_bar"/>
 
 </androidx.constraintlayout.motion.widget.MotionLayout>
