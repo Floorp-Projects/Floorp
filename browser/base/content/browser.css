@@ -788,7 +788,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
 toolbarspring {
   -moz-box-flex: 1;
-  min-width: 1px;
   max-width: 112px;
 }
 
