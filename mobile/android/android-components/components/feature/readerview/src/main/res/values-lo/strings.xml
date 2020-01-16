@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Sans serif</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">ຟັອນ Sans Serif</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">Serif</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">ຟັອນ Serif</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">ຂະໜາດຟັອນຫຼຸດລົງ</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">ຂະໜາດຟັອນເພີ່ມຂື້ນ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">ມືດ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">ຊຸດສີມືດດຳ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">ສີນ້ຳຕານດຳ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">ຊຸດສີນ້ຳຕານດຳ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">ແຈ້ງ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ຊຸດສີແຈ້ງສະຫວ່າງ</string>
+</resources>

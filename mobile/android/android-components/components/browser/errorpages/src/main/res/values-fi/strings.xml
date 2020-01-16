@@ -39,6 +39,14 @@
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Yhdistäminen ei onnistu</string>
 
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Sivusto saattaa olla väliaikaisesti pois käytöstä tai ruuhkautunut. Yritä uudelleen hetken kuluttua.</li>
+        <li>Jos et voi avata mitään sivuja, tarkista laitteen data- ja wifi-yhteyksien tila.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Odottamaton vastaus palvelimelta</string>
 
@@ -90,8 +98,19 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Virheellinen osoite</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Annettu osoite ei ole tunnistettavassa muodossa. Tarkista osoitepalkin sisältö virheiden varalta ja yritä uudelleen.</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Osoite ei ole kelvollinen</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Verkko-osoitteet ovat yleensä muodossa <strong>http://www.example.com/</strong></li>
+        <li>Varmista että käytät vinoviivoja (esim. <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Tuntematon yhteyskäytäntö</string>
@@ -117,12 +136,31 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Haittaohjelmia sisältävä sivusto</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Sivu osoitteessa %1$s on ilmoitettu hyökkäyssivustoksi, ja on siksi estetty pohjautuen asettamiisi tietoturva-asetuksiin.</p>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Ei-toivottua sisältöä tarjoava sivusto</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Sivun osoitteessa %1$s on ilmoitettu tarjoavan ei-haluttuja ohjelmistoja, ja on siksi estetty pohjautuen asettamiisi tietoturva-asetuksiin.</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">Vahingollinen sivusto</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Sivu osoitteessa %1$s on ilmoitettu mahdollisesti haitalliseksi sivustoksi, ja on siksi estetty pohjautuen asettamiisi tietoturva-asetuksiin.</p>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Harhaanjohtava sivusto</string>
-    </resources>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Sivu osoitteessa %1$s on ilmoitettu harhaanjohtavaksi sivustoksi, ja on siksi estetty pohjautuen asettamiisi tietoturva-asetuksiin.</p>
+    ]]></string>
+</resources>

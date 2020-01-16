@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- The version on an addon. -->
     <string name="mozac_feature_addons_version">ເວີຊັນ</string>
     <!-- The authors of an addon. -->
@@ -44,6 +44,11 @@
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Add-ons</string>
+    <!-- The label of the allow button, this will be shown to the user when an addons needs new permissions, with the button the user will indicate that wants to accept the new permissions and update the addon-->
+    <string name="mozac_feature_addons_updater_notification_allow_button">ອະນຸຍາດ</string>
+    <!-- The label of the deny button on a notification, this will be shown to the user when an addons needs new permissions. Indicates the user denies the new permissions and prevent the addon from be updated-->
+    <string name="mozac_feature_addons_updater_notification_deny_button">ປະຕິເສດ</string>
     <!-- This is the caption for the addon installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">ກຳລັງດາວໂຫລດ ແລະ ກວດສອບ add-on…</string>
+
 </resources>
