@@ -158,7 +158,6 @@ The following metrics are added to the ping:
 | tracking_protection.panel_settings |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user opened tracking protection settings from the panel.  |[1](https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188)||2020-03-01 |
 | user_specified_search_engines.custom_engine_added |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user added a new custom search engine  |[1](https://github.com/mozilla-mobile/fenix/pull/6918)||2020-03-01 |
 | user_specified_search_engines.custom_engine_deleted |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user deleted a custom search engine  |[1](https://github.com/mozilla-mobile/fenix/pull/6918)||2020-03-01 |
-| user_specified_search_engines.search_with_custom_engine |[event](https://mozilla.github.io/glean/book/user/metrics/event.html) |A user performed a search with a custom search engine  |[1](https://github.com/mozilla-mobile/fenix/pull/6918)||2020-03-01 |
 
 ## metrics
 This is a built-in ping that is assembled out of the box by the Glean SDK.

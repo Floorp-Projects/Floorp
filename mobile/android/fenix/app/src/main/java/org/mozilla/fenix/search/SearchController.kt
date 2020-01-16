@@ -18,7 +18,6 @@ import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPo
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.NONE
 import org.mozilla.fenix.components.metrics.Event.PerformedSearch.SearchAccessPoint.SUGGESTION
 import org.mozilla.fenix.components.metrics.MetricsUtils
-import org.mozilla.fenix.components.searchengine.CustomSearchEngineStore
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -72,13 +71,6 @@ class DefaultSearchController(
             }
 
             event?.let { context.metrics.track(it) }
-            if (CustomSearchEngineStore.isCustomSearchEngine(
-                    context,
-                    store.state.searchEngineSource.searchEngine.identifier
-                )
-            ) {
-                context.components.analytics.metrics.track(Event.SearchWithCustomEngine)
-            }
         }
     }
 
@@ -107,13 +99,6 @@ class DefaultSearchController(
         )
 
         context.metrics.track(Event.EnteredUrl(false))
-        if (CustomSearchEngineStore.isCustomSearchEngine(
-                context,
-                store.state.searchEngineSource.searchEngine.identifier
-            )
-        ) {
-            context.components.analytics.metrics.track(Event.SearchWithCustomEngine)
-        }
     }
 
     override fun handleSearchTermsTapped(searchTerms: String) {
@@ -138,14 +123,6 @@ class DefaultSearchController(
             )
         }
         event?.let { context.metrics.track(it) }
-
-        if (CustomSearchEngineStore.isCustomSearchEngine(
-                context,
-                store.state.searchEngineSource.searchEngine.identifier
-            )
-        ) {
-            context.components.analytics.metrics.track(Event.SearchWithCustomEngine)
-        }
     }
 
     override fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine) {

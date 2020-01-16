@@ -139,7 +139,6 @@ sealed class Event {
     object ViewLoginPassword : Event()
     object CustomEngineAdded : Event()
     object CustomEngineDeleted : Event()
-    object SearchWithCustomEngine : Event()
     object PrivateBrowsingShowSearchSuggestions : Event()
 
     // Interaction events with extras

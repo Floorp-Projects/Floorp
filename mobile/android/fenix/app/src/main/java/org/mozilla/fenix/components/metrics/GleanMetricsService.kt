@@ -459,9 +459,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.CustomEngineDeleted -> EventWrapper<NoExtraKeys>(
             { UserSpecifiedSearchEngines.customEngineDeleted.record(it) }
         )
-        is Event.SearchWithCustomEngine -> EventWrapper<NoExtraKeys>(
-            { UserSpecifiedSearchEngines.searchWithCustomEngine.record(it) }
-        )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null
         is Event.OpenedBookmark -> null

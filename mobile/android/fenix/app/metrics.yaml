@@ -1684,17 +1684,6 @@ user_specified_search_engines:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
-  search_with_custom_engine:
-    type: event
-    description: >
-      A user performed a search with a custom search engine
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/5586
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/6918
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2020-03-01"
 
 search_suggestions:
   enable_in_private:
