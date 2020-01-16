@@ -710,17 +710,9 @@
 
       obj = {
         role: ROLE_SPINBUTTON,
-        interfaces: [ nsIAccessibleValue ],
+        interfaces: [ nsIAccessibleValue, nsIAccessibleText, nsIAccessibleEditableText ],
         children: [
           { role: ROLE_TEXT_LEAF },
-          {
-            role: ROLE_PUSHBUTTON,
-            actions: "press",
-          },
-          {
-            role: ROLE_PUSHBUTTON,
-            actions: "press",
-          },
         ],
       };
       testElm("input_number", obj);
