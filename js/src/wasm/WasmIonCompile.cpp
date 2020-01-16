@@ -1021,34 +1021,106 @@ class FunctionCompiler {
 
   // Wrappers for creating various kinds of calls.
 
+  bool collectUnaryCallResult(MIRType type, MDefinition** result) {
+    MInstruction* def;
+    switch (type) {
+      case MIRType::Int32:
+        def = MWasmRegisterResult::New(alloc(), MIRType::Int32, ReturnReg);
+        break;
+      case MIRType::Int64:
+        def = MWasmRegister64Result::New(alloc(), ReturnReg64);
+        break;
+      case MIRType::Float32:
+        def = MWasmFloatRegisterResult::New(alloc(), type, ReturnFloat32Reg);
+        break;
+      case MIRType::Double:
+        def = MWasmFloatRegisterResult::New(alloc(), type, ReturnDoubleReg);
+        break;
+      case MIRType::RefOrNull:
+        def = MWasmRegisterResult::New(alloc(), MIRType::RefOrNull, ReturnReg);
+        break;
+      default:
+        MOZ_CRASH("unexpected MIRType result for builtin call");
+    }
+
+    if (!def) {
+      return false;
+    }
+
+    curBlock_->add(def);
+    *result = def;
+
+    return true;
+  }
+
+  bool collectCallResults(const ResultType& type, DefVector* results) {
+    if (!results->reserve(type.length())) {
+      return false;
+    }
+
+    for (ABIResultIter i(type); !i.done(); i.next()) {
+      MOZ_ASSERT(i.index() == 0, "multiple values to be implemented");
+      const ABIResult& result = i.cur();
+      MOZ_ASSERT(result.inRegister(), "stack results to be implemented");
+      MInstruction* def;
+      switch (result.type().kind()) {
+        case wasm::ValType::I32:
+          def = MWasmRegisterResult::New(alloc(), MIRType::Int32, result.gpr());
+          break;
+        case wasm::ValType::I64:
+          def = MWasmRegister64Result::New(alloc(), result.gpr64());
+          break;
+        case wasm::ValType::F32:
+          def = MWasmFloatRegisterResult::New(alloc(), MIRType::Float32,
+                                              result.fpr());
+          break;
+        case wasm::ValType::F64:
+          def = MWasmFloatRegisterResult::New(alloc(), MIRType::Double,
+                                              result.fpr());
+          break;
+        case wasm::ValType::Ref:
+          def = MWasmRegisterResult::New(alloc(), MIRType::RefOrNull,
+                                         result.gpr());
+          break;
+      }
+      if (!def) {
+        return false;
+      }
+      curBlock_->add(def);
+      results->infallibleAppend(def);
+    }
+
+    MOZ_ASSERT(results->length() == type.length());
+
+    return true;
+  }
+
   bool callDirect(const FuncType& funcType, uint32_t funcIndex,
                   uint32_t lineOrBytecode, const CallCompileState& call,
-                  MDefinition** def) {
+                  DefVector* results) {
     if (inDeadCode()) {
-      *def = nullptr;
       return true;
     }
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Func);
-    MIRType ret = ToMIRType(funcType.ret());
+    ResultType resultType = ResultType::Vector(funcType.results());
     auto callee = CalleeDesc::function(funcIndex);
     ArgTypeVector args(funcType);
-    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret,
+    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
                                StackArgAreaSizeUnaligned(args));
     if (!ins) {
       return false;
     }
 
     curBlock_->add(ins);
-    *def = ins;
-    return true;
+
+    return collectCallResults(resultType, results);
   }
 
   bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
                     MDefinition* index, uint32_t lineOrBytecode,
-                    const CallCompileState& call, MDefinition** def) {
+                    const CallCompileState& call, DefVector* results) {
     if (inDeadCode()) {
-      *def = nullptr;
       return true;
     }
 
@@ -1078,39 +1150,38 @@ class FunctionCompiler {
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
     ArgTypeVector args(funcType);
+    ResultType resultType = ResultType::Vector(funcType.results());
     auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                               ToMIRType(funcType.ret()),
                                StackArgAreaSizeUnaligned(args), index);
     if (!ins) {
       return false;
     }
 
     curBlock_->add(ins);
-    *def = ins;
-    return true;
+
+    return collectCallResults(resultType, results);
   }
 
   bool callImport(unsigned globalDataOffset, uint32_t lineOrBytecode,
                   const CallCompileState& call, const FuncType& funcType,
-                  MDefinition** def) {
+                  DefVector* results) {
     if (inDeadCode()) {
-      *def = nullptr;
       return true;
     }
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
     auto callee = CalleeDesc::import(globalDataOffset);
     ArgTypeVector args(funcType);
+    ResultType resultType = ResultType::Vector(funcType.results());
     auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                               ToMIRType(funcType.ret()),
                                StackArgAreaSizeUnaligned(args));
     if (!ins) {
       return false;
     }
 
     curBlock_->add(ins);
-    *def = ins;
-    return true;
+
+    return collectCallResults(resultType, results);
   }
 
   bool builtinCall(const SymbolicAddressSignature& builtin,
@@ -1125,16 +1196,15 @@ class FunctionCompiler {
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto callee = CalleeDesc::builtin(builtin.identity);
-    auto* ins =
-        MWasmCall::New(alloc(), desc, callee, call.regArgs_, builtin.retType,
-                       StackArgAreaSizeUnaligned(builtin));
+    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
+                               StackArgAreaSizeUnaligned(builtin));
     if (!ins) {
       return false;
     }
 
     curBlock_->add(ins);
-    *def = ins;
-    return true;
+
+    return collectUnaryCallResult(builtin.retType, def);
   }
 
   bool builtinInstanceMethodCall(const SymbolicAddressSignature& builtin,
@@ -1152,16 +1222,14 @@ class FunctionCompiler {
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto* ins = MWasmCall::NewBuiltinInstanceMethodCall(
         alloc(), desc, builtin.identity, builtin.failureMode, call.instanceArg_,
-        call.regArgs_, builtin.retType, StackArgAreaSizeUnaligned(builtin));
+        call.regArgs_, StackArgAreaSizeUnaligned(builtin));
     if (!ins) {
       return false;
     }
 
     curBlock_->add(ins);
-    if (def) {
-      *def = ins;
-    }
-    return true;
+
+    return def ? collectUnaryCallResult(builtin.retType, def) : true;
   }
 
   /*********************************************** Control flow generation */
@@ -2034,23 +2102,20 @@ static bool EmitCall(FunctionCompiler& f, bool asmJSFuncDef) {
     return false;
   }
 
-  MDefinition* def;
+  DefVector results;
   if (f.env().funcIsImport(funcIndex)) {
     uint32_t globalDataOffset = f.env().funcImportGlobalDataOffsets[funcIndex];
-    if (!f.callImport(globalDataOffset, lineOrBytecode, call, funcType, &def)) {
+    if (!f.callImport(globalDataOffset, lineOrBytecode, call, funcType,
+                      &results)) {
       return false;
     }
   } else {
-    if (!f.callDirect(funcType, funcIndex, lineOrBytecode, call, &def)) {
+    if (!f.callDirect(funcType, funcIndex, lineOrBytecode, call, &results)) {
       return false;
     }
   }
 
-  if (funcType.results().length() == 0) {
-    return true;
-  }
-
-  f.iter().setResult(def);
+  f.iter().setResults(results.length(), results);
   return true;
 }
 
@@ -2084,17 +2149,13 @@ static bool EmitCallIndirect(FunctionCompiler& f, bool oldStyle) {
     return false;
   }
 
-  MDefinition* def;
+  DefVector results;
   if (!f.callIndirect(funcTypeIndex, tableIndex, callee, lineOrBytecode, call,
-                      &def)) {
+                      &results)) {
     return false;
   }
 
-  if (funcType.results().length() == 0) {
-    return true;
-  }
-
-  f.iter().setResult(def);
+  f.iter().setResults(results.length(), results);
   return true;
 }
 
