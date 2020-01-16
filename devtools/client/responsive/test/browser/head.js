@@ -577,7 +577,7 @@ function testViewportDeviceMenuLabel(ui, expectedDeviceName) {
 }
 
 async function toggleTouchSimulation(ui) {
-  const { document } = ui.getBrowserWindow();
+  const { document } = ui.toolWindow;
   const touchButton = document.getElementById("touch-simulation-button");
   const changed = once(ui, "touch-simulation-changed");
   const loaded = waitForViewportLoad(ui);
