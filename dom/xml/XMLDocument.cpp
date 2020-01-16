@@ -69,6 +69,8 @@ nsresult NS_NewDOMDocument(Document** aInstancePtrResult,
   } else if (aFlavor == DocumentFlavorHTML) {
     rv = NS_NewHTMLDocument(getter_AddRefs(d));
     isHTML = true;
+  } else if (aFlavor == DocumentFlavorXML) {
+    rv = NS_NewXMLDocument(getter_AddRefs(d));
   } else if (aFlavor == DocumentFlavorPlain) {
     rv = NS_NewXMLDocument(getter_AddRefs(d), aLoadedAsData, true);
   } else if (aDoctype) {
