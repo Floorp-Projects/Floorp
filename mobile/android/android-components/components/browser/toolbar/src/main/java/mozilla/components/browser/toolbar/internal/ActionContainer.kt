@@ -54,6 +54,13 @@ internal class ActionContainer @JvmOverloads constructor(
         actions.add(wrapper)
     }
 
+    fun removeAction(action: Toolbar.Action) {
+        actions.find { it.actual == action }?.let {
+            actions.remove(it)
+            removeView(it.view)
+        }
+    }
+
     fun invalidateActions() {
         TransitionManager.beginDelayedTransition(this)
 

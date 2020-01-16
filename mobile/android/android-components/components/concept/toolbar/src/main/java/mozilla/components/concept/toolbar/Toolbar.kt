@@ -101,6 +101,14 @@ interface Toolbar {
     fun addBrowserAction(action: Action)
 
     /**
+     * Removes a previously added action (see [addBrowserAction]). If the the provided
+     * actions was never added, this method has no effect.
+     *
+     * @param action the action to remove.
+     */
+    fun removeBrowserAction(action: Action)
+
+    /**
      * Declare that the actions (navigation actions, browser actions, page actions) have changed and
      * should be updated if needed.
      */

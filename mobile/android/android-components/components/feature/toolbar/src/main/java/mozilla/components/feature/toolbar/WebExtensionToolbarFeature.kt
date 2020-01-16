@@ -33,7 +33,9 @@ class WebExtensionToolbarFeature(
     private val toolbar: Toolbar,
     private var store: BrowserStore
 ) : LifecycleAwareFeature {
-    // This maps web extension id to [WebExtensionToolbarAction]
+    // This maps web extension ids to [WebExtensionToolbarAction]s for efficient
+    // updates of global and tab-specific browser/page actions within the same
+    // lifecycle.
     @VisibleForTesting
     internal val webExtensionBrowserActions = HashMap<String, WebExtensionToolbarAction>()
 
@@ -55,8 +57,18 @@ class WebExtensionToolbarFeature(
      * Starts observing for the state of web extensions changes
      */
     override fun start() {
-        iconJobDispatcher = iconHandler.asCoroutineDispatcher("WebExtensionIconDispatcher")
+        // The feature could start with an existing view and toolbar so
+        // we have to check if any stale browser actions (from  uninstalled
+        // extensions) are being displayed and remove them.
+        webExtensionBrowserActions
+            .filterKeys { !store.state.extensions.containsKey(it) }
+            .forEach { (extensionId, action) ->
+                toolbar.removeBrowserAction(action)
+                toolbar.invalidateActions()
+                webExtensionBrowserActions.remove(extensionId)
+            }
 
+        iconJobDispatcher = iconHandler.asCoroutineDispatcher("WebExtensionIconDispatcher")
         scope = store.flowScoped { flow ->
             flow.ifAnyChanged { arrayOf(it.selectedTab, it.extensions) }
                 .collect { state ->

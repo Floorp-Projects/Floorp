@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.WebExtensionState
@@ -19,6 +20,7 @@ import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
@@ -71,10 +73,9 @@ class WebExtensionToolbarFeatureTest {
         verify(store).observeManually(any())
         verify(webExtToolbarFeature).renderWebExtensionActions(any(), any())
 
-        val delegateCaptor = argumentCaptor<WebExtensionToolbarAction>()
-
-        verify(toolbar).addBrowserAction(delegateCaptor.capture())
-        assertEquals("overridden_title", delegateCaptor.value.browserAction.title)
+        val actionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        verify(toolbar).addBrowserAction(actionCaptor.capture())
+        assertEquals("overridden_title", actionCaptor.value.browserAction.title)
     }
 
     @Test
@@ -99,9 +100,9 @@ class WebExtensionToolbarFeatureTest {
 
         verify(store).observeManually(any())
         verify(webExtToolbarFeature, times(1)).renderWebExtensionActions(any(), any())
-        val delegateCaptor = argumentCaptor<WebExtensionToolbarAction>()
-        verify(toolbar, times(1)).addBrowserAction(delegateCaptor.capture())
-        assertEquals("enabled", delegateCaptor.value.browserAction.title)
+        val actionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        verify(toolbar, times(1)).addBrowserAction(actionCaptor.capture())
+        assertEquals("enabled", actionCaptor.value.browserAction.title)
     }
 
     @Test
@@ -134,7 +135,7 @@ class WebExtensionToolbarFeatureTest {
         val browserState = BrowserState(extensions = browserExtensions)
         webExtToolbarFeature.renderWebExtensionActions(browserState, mock())
 
-        assertTrue(webExtToolbarFeature.webExtensionBrowserActions.size == 1)
+        assertEquals(1, webExtToolbarFeature.webExtensionBrowserActions.size)
         val ext1 = webExtToolbarFeature.webExtensionBrowserActions["1"]
         assertTrue(ext1?.browserAction?.enabled!!)
         assertEquals("badgeText", ext1.browserAction.badgeText!!)
@@ -153,7 +154,7 @@ class WebExtensionToolbarFeatureTest {
         )
         webExtToolbarFeature.renderWebExtensionActions(browserState, tabSessionState)
 
-        assertTrue(webExtToolbarFeature.webExtensionBrowserActions.size == 1)
+        assertEquals(1, webExtToolbarFeature.webExtensionBrowserActions.size)
         val updatedExt1 = webExtToolbarFeature.webExtensionBrowserActions["1"]
         assertFalse(updatedExt1?.browserAction?.enabled!!)
         assertEquals("updatedText", updatedExt1.browserAction.badgeText!!)
@@ -161,6 +162,38 @@ class WebExtensionToolbarFeatureTest {
         assertEquals(loadIcon, updatedExt1.browserAction.loadIcon!!)
         assertEquals(Color.RED, updatedExt1.browserAction.badgeTextColor!!)
         assertEquals(Color.GREEN, updatedExt1.browserAction.badgeBackgroundColor!!)
+    }
+
+    @Test
+    fun `stale browser actions are remove when feature is restarted`() {
+        val browserExtensions = HashMap<String, WebExtensionState>()
+        val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
+        val browserAction = BrowserAction(
+            title = "title",
+            loadIcon = loadIcon,
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE
+        ) {}
+        browserExtensions["1"] = WebExtensionState(id = "1", browserAction = browserAction)
+
+        val browserState = BrowserState(extensions = browserExtensions)
+        val store = BrowserStore(browserState)
+        val toolbar: Toolbar = mock()
+        val webExtToolbarFeature = getWebExtensionToolbarFeature(toolbar, store)
+
+        webExtToolbarFeature.renderWebExtensionActions(browserState, mock())
+        assertEquals(1, webExtToolbarFeature.webExtensionBrowserActions.size)
+
+        store.dispatch(WebExtensionAction.UninstallWebExtensionAction("1")).joinBlocking()
+
+        webExtToolbarFeature.start()
+        assertEquals(0, webExtToolbarFeature.webExtensionBrowserActions.size)
+
+        val actionCaptor = argumentCaptor<WebExtensionToolbarAction>()
+        verify(toolbar).removeBrowserAction(actionCaptor.capture())
+        assertEquals(browserAction, actionCaptor.value.browserAction)
     }
 
     private fun getWebExtensionToolbarFeature(
