@@ -2500,6 +2500,11 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#updateDomainAffinityScores", () => {
+    it("should call updateDomainAffinityScores on idle daily", async () => {
+      sandbox.stub(feed, "updateDomainAffinityScores").returns();
+      feed.observe(null, "idle-daily");
+      assert.calledOnce(feed.updateDomainAffinityScores);
+    });
     it("should update affinity provider on idle daily", async () => {
       feed._prefCache.config = {
         personalized: true,
@@ -2571,6 +2576,8 @@ describe("DiscoveryStreamFeed", () => {
           value: 0,
         })
       );
+
+      assert.calledOnce(feed.store.dispatch);
     });
   });
 
