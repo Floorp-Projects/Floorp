@@ -11,6 +11,7 @@ const {
   getOrientation,
 } = require("devtools/client/responsive/utils/orientation");
 const Constants = require("devtools/client/responsive/constants");
+const { TargetList } = require("devtools/shared/resources/target-list");
 
 loader.lazyRequireGetter(
   this,
@@ -128,6 +129,10 @@ class ResponsiveUI {
     }
 
     return this._isBrowserUIEnabled;
+  }
+
+  get currentTarget() {
+    return this.targetList.targetFront;
   }
 
   /**
@@ -428,7 +433,9 @@ class ResponsiveUI {
     DebuggerServer.registerAllActors();
     this.client = new DebuggerClient(DebuggerServer.connectPipe());
     await this.client.connect();
+
     const targetFront = await this.client.mainRoot.getTab();
+    this.targetList = new TargetList(this.client.mainRoot, targetFront);
     this.responsiveFront = await targetFront.getFront("responsive");
   }
 
@@ -719,8 +726,7 @@ class ResponsiveUI {
   }
 
   async onScreenshot() {
-    const targetFront = await this.client.mainRoot.getTab();
-    const captureScreenshotSupported = await targetFront.actorHasMethod(
+    const captureScreenshotSupported = await this.currentTarget.actorHasMethod(
       "responsive",
       "captureScreenshot"
     );
@@ -913,8 +919,7 @@ class ResponsiveUI {
    *        reloaded/navigated to, so we should not be simulating "orientationchange".
    */
   async updateScreenOrientation(type, angle, isViewportRotated = false) {
-    const targetFront = await this.client.mainRoot.getTab();
-    const simulateOrientationChangeSupported = await targetFront.actorHasMethod(
+    const simulateOrientationChangeSupported = await this.currentTarget.actorHasMethod(
       "responsive",
       "simulateScreenOrientationChange"
     );
