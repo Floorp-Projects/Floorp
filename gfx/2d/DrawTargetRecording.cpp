@@ -58,8 +58,12 @@ class SourceSurfaceRecording : public SourceSurface {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceRecording, override)
 
   SourceSurfaceRecording(IntSize aSize, SurfaceFormat aFormat,
-                         DrawEventRecorderPrivate* aRecorder)
-      : mSize(aSize), mFormat(aFormat), mRecorder(aRecorder) {
+                         DrawEventRecorderPrivate* aRecorder,
+                         SourceSurface* aOriginalSurface = nullptr)
+      : mSize(aSize),
+        mFormat(aFormat),
+        mRecorder(aRecorder),
+        mOriginalSurface(aOriginalSurface) {
     mRecorder->AddStoredObject(this);
   }
 
@@ -73,12 +77,20 @@ class SourceSurfaceRecording : public SourceSurface {
   IntSize GetSize() const override { return mSize; }
   SurfaceFormat GetFormat() const override { return mFormat; }
   already_AddRefed<DataSourceSurface> GetDataSurface() override {
+    if (mOriginalSurface) {
+      return mOriginalSurface->GetDataSurface();
+    }
+
     return nullptr;
   }
 
   IntSize mSize;
   SurfaceFormat mFormat;
   RefPtr<DrawEventRecorderPrivate> mRecorder;
+  // If a SourceSurfaceRecording is returned from an OptimizeSourceSurface call
+  // we need GetDataSurface to work, so we hold the original surface we
+  // optimized to return its GetDataSurface.
+  RefPtr<SourceSurface> mOriginalSurface;
 };
 
 class DataSourceSurfaceRecording : public DataSourceSurface {
@@ -516,7 +528,7 @@ already_AddRefed<SourceSurface> DrawTargetRecording::OptimizeSourceSurface(
   EnsureSurfaceStoredRecording(mRecorder, aSurface, "OptimizeSourceSurface");
 
   RefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(
-      aSurface->GetSize(), aSurface->GetFormat(), mRecorder);
+      aSurface->GetSize(), aSurface->GetFormat(), mRecorder, aSurface);
 
   mRecorder->RecordEvent(
       RecordedOptimizeSourceSurface(aSurface, this, retSurf));
