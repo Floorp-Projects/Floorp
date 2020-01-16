@@ -2925,49 +2925,42 @@ var GuidHelper = {
   },
 
   ensureObservingRemovedItems() {
-    if (!("observer" in this)) {
-      /**
-       * This observers serves two purposes:
-       * (1) Invalidate cached id<->GUID paris on when items are removed.
-       * (2) Cache GUIDs given us free of charge by onItemAdded/onItemRemoved.
-       *      So, for exmaple, when the NewBookmark needs the new GUID, we already
-       *      have it cached.
-       */
-      let listener = events => {
-        for (let event of events) {
-          this.updateCache(event.id, event.guid);
-          this.updateCache(event.parentId, event.parentGuid);
-        }
-      };
-      this.observer = {
-        onItemRemoved: (
-          aItemId,
-          aParentId,
-          aIndex,
-          aItemTyep,
-          aURI,
-          aGuid,
-          aParentGuid
-        ) => {
-          this.guidsForIds.delete(aItemId);
-          this.idsForGuids.delete(aGuid);
-          this.updateCache(aParentId, aParentGuid);
-        },
-
-        QueryInterface: ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]),
-
-        onBeginUpdateBatch() {},
-        onEndUpdateBatch() {},
-        onItemChanged() {},
-        onItemVisited() {},
-        onItemMoved() {},
-      };
-      PlacesUtils.bookmarks.addObserver(this.observer);
-      PlacesUtils.observers.addListener(["bookmark-added"], listener);
-      PlacesUtils.registerShutdownFunction(() => {
-        PlacesUtils.bookmarks.removeObserver(this.observer);
-        PlacesUtils.observers.removeListener(["bookmark-added"], listener);
-      });
+    if (this.addListeners) {
+      return;
     }
+    /**
+     * This observers serves two purposes:
+     * (1) Invalidate cached id<->GUID paris on when items are removed.
+     * (2) Cache GUIDs given us free of charge by onItemAdded/onItemRemoved.
+     *      So, for exmaple, when the NewBookmark needs the new GUID, we already
+     *      have it cached.
+     */
+    let listener = events => {
+      for (let event of events) {
+        switch (event.type) {
+          case "bookmark-added":
+            this.updateCache(event.id, event.guid);
+            this.updateCache(event.parentId, event.parentGuid);
+            break;
+          case "bookmark-removed":
+            this.guidsForIds.delete(event.id);
+            this.idsForGuids.delete(event.guid);
+            this.updateCache(event.parentId, event.parentGuid);
+            break;
+        }
+      }
+    };
+
+    this.addListeners = true;
+    PlacesUtils.observers.addListener(
+      ["bookmark-added", "bookmark-removed"],
+      listener
+    );
+    PlacesUtils.registerShutdownFunction(() => {
+      PlacesUtils.observers.removeListener(
+        ["bookmark-added", "bookmark-removed"],
+        listener
+      );
+    });
   },
 };

@@ -437,21 +437,20 @@ add_task(async function remove_bookmark() {
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
 
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-removed"]);
   await PlacesUtils.bookmarks.remove(bm.guid);
   observer.check([
     {
-      name: "onItemRemoved",
-      arguments: [
-        itemId,
-        parentId,
-        bm.index,
-        bm.type,
-        bm.url,
-        bm.guid,
-        bm.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: itemId,
+      parentId,
+      index: bm.index,
+      url: bm.url,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      isTagging: false,
     },
   ]);
 });
@@ -472,34 +471,32 @@ add_task(async function remove_multiple_bookmarks() {
   let itemId2 = await PlacesUtils.promiseItemId(bm2.guid);
   let parentId2 = await PlacesUtils.promiseItemId(bm2.parentGuid);
 
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-removed"]);
   await PlacesUtils.bookmarks.remove([bm1, bm2]);
   observer.check([
     {
-      name: "onItemRemoved",
-      arguments: [
-        itemId1,
-        parentId1,
-        bm1.index,
-        bm1.type,
-        bm1.url,
-        bm1.guid,
-        bm1.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: itemId1,
+      parentId: parentId1,
+      index: bm1.index,
+      url: bm1.url,
+      guid: bm1.guid,
+      parentGuid: bm1.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      isTagging: false,
     },
     {
-      name: "onItemRemoved",
-      arguments: [
-        itemId2,
-        parentId2,
-        bm2.index - 1,
-        bm2.type,
-        bm2.url,
-        bm2.guid,
-        bm2.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: itemId2,
+      parentId: parentId2,
+      index: bm2.index - 1,
+      url: bm2.url,
+      guid: bm2.guid,
+      parentGuid: bm2.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      isTagging: false,
     },
   ]);
 });
@@ -512,21 +509,20 @@ add_task(async function remove_folder() {
   let itemId = await PlacesUtils.promiseItemId(bm.guid);
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
 
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-removed"]);
   await PlacesUtils.bookmarks.remove(bm.guid);
   observer.check([
     {
-      name: "onItemRemoved",
-      arguments: [
-        itemId,
-        parentId,
-        bm.index,
-        bm.type,
-        null,
-        bm.guid,
-        bm.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: itemId,
+      parentId,
+      index: bm.index,
+      url: null,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+      isTagging: false,
     },
   ]);
 });
@@ -553,23 +549,25 @@ add_task(async function remove_bookmark_tag_notification() {
   let tagId = await PlacesUtils.promiseItemId(tag.guid);
   let tagParentId = await PlacesUtils.promiseItemId(tag.parentGuid);
 
+  let placesObserver = expectPlacesObserverNotifications(["bookmark-removed"]);
   let observer = expectNotifications();
   await PlacesUtils.bookmarks.remove(tag.guid);
 
-  observer.check([
+  placesObserver.check([
     {
-      name: "onItemRemoved",
-      arguments: [
-        tagId,
-        tagParentId,
-        tag.index,
-        tag.type,
-        tag.url,
-        tag.guid,
-        tag.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: tagId,
+      parentId: tagParentId,
+      index: tag.index,
+      url: tag.url,
+      guid: tag.guid,
+      parentGuid: tag.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      isTagging: true,
     },
+  ]);
+  observer.check([
     {
       name: "onItemChanged",
       arguments: [
@@ -617,61 +615,57 @@ add_task(async function remove_folder_notification() {
   });
   let bm2ItemId = await PlacesUtils.promiseItemId(bm2.guid);
 
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-removed"]);
   await PlacesUtils.bookmarks.remove(folder1.guid);
 
   observer.check([
     {
-      name: "onItemRemoved",
-      arguments: [
-        bm2ItemId,
-        folder2Id,
-        bm2.index,
-        bm2.type,
-        bm2.url,
-        bm2.guid,
-        bm2.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: bm2ItemId,
+      parentId: folder2Id,
+      index: bm2.index,
+      url: bm2.url,
+      guid: bm2.guid,
+      parentGuid: bm2.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      isTagging: false,
     },
     {
-      name: "onItemRemoved",
-      arguments: [
-        folder2Id,
-        folder1Id,
-        folder2.index,
-        folder2.type,
-        null,
-        folder2.guid,
-        folder2.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: folder2Id,
+      parentId: folder1Id,
+      index: folder2.index,
+      url: null,
+      guid: folder2.guid,
+      parentGuid: folder2.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+      isTagging: false,
     },
     {
-      name: "onItemRemoved",
-      arguments: [
-        bmItemId,
-        folder1Id,
-        bm.index,
-        bm.type,
-        bm.url,
-        bm.guid,
-        bm.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: bmItemId,
+      parentId: folder1Id,
+      index: bm.index,
+      url: bm.url,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      isTagging: false,
     },
     {
-      name: "onItemRemoved",
-      arguments: [
-        folder1Id,
-        folder1ParentId,
-        folder1.index,
-        folder1.type,
-        null,
-        folder1.guid,
-        folder1.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: folder1Id,
+      parentId: folder1ParentId,
+      index: folder1.index,
+      url: null,
+      guid: folder1.guid,
+      parentGuid: folder1.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+      isTagging: false,
     },
   ]);
 });
@@ -718,75 +712,70 @@ add_task(async function eraseEverything_notification() {
   let menuBmId = await PlacesUtils.promiseItemId(menuBm.guid);
   let menuBmParentId = await PlacesUtils.promiseItemId(menuBm.parentGuid);
 
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-removed"]);
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Bookmarks should always be notified before their parents.
   observer.check([
     {
-      name: "onItemRemoved",
-      arguments: [
-        itemId,
-        parentId,
-        bm.index,
-        bm.type,
-        bm.url,
-        bm.guid,
-        bm.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: itemId,
+      parentId,
+      index: bm.index,
+      url: bm.url,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      isTagging: false,
     },
     {
-      name: "onItemRemoved",
-      arguments: [
-        folder2Id,
-        folder2ParentId,
-        folder2.index,
-        folder2.type,
-        null,
-        folder2.guid,
-        folder2.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: folder2Id,
+      parentId: folder2ParentId,
+      index: folder2.index,
+      url: null,
+      guid: folder2.guid,
+      parentGuid: folder2.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+      isTagging: false,
     },
     {
-      name: "onItemRemoved",
-      arguments: [
-        folder1Id,
-        folder1ParentId,
-        folder1.index,
-        folder1.type,
-        null,
-        folder1.guid,
-        folder1.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: folder1Id,
+      parentId: folder1ParentId,
+      index: folder1.index,
+      url: null,
+      guid: folder1.guid,
+      parentGuid: folder1.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+      isTagging: false,
     },
     {
-      name: "onItemRemoved",
-      arguments: [
-        menuBmId,
-        menuBmParentId,
-        menuBm.index,
-        menuBm.type,
-        menuBm.url,
-        menuBm.guid,
-        menuBm.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: menuBmId,
+      parentId: menuBmParentId,
+      index: menuBm.index,
+      url: menuBm.url,
+      guid: menuBm.guid,
+      parentGuid: menuBm.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      isTagging: false,
     },
     {
-      name: "onItemRemoved",
-      arguments: [
-        toolbarBmId,
-        toolbarBmParentId,
-        toolbarBm.index,
-        toolbarBm.type,
-        toolbarBm.url,
-        toolbarBm.guid,
-        toolbarBm.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: toolbarBmId,
+      parentId: toolbarBmParentId,
+      index: toolbarBm.index,
+      url: toolbarBm.url,
+      guid: toolbarBm.guid,
+      parentGuid: toolbarBm.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      isTagging: false,
     },
   ]);
 });
@@ -820,49 +809,46 @@ add_task(async function eraseEverything_reparented_notification() {
   bm = await PlacesUtils.bookmarks.update(bm);
   let parentId = await PlacesUtils.promiseItemId(bm.parentGuid);
 
-  let observer = expectNotifications();
+  let observer = expectPlacesObserverNotifications(["bookmark-removed"]);
   await PlacesUtils.bookmarks.eraseEverything();
 
   // Bookmarks should always be notified before their parents.
   observer.check([
     {
-      name: "onItemRemoved",
-      arguments: [
-        itemId,
-        parentId,
-        bm.index,
-        bm.type,
-        bm.url,
-        bm.guid,
-        bm.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: itemId,
+      parentId,
+      index: bm.index,
+      url: bm.url,
+      guid: bm.guid,
+      parentGuid: bm.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      isTagging: false,
     },
     {
-      name: "onItemRemoved",
-      arguments: [
-        folder2Id,
-        folder2ParentId,
-        folder2.index,
-        folder2.type,
-        null,
-        folder2.guid,
-        folder2.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: folder2Id,
+      parentId: folder2ParentId,
+      index: folder2.index,
+      url: null,
+      guid: folder2.guid,
+      parentGuid: folder2.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+      isTagging: false,
     },
     {
-      name: "onItemRemoved",
-      arguments: [
-        folder1Id,
-        folder1ParentId,
-        folder1.index,
-        folder1.type,
-        null,
-        folder1.guid,
-        folder1.parentGuid,
-        Ci.nsINavBookmarksService.SOURCE_DEFAULT,
-      ],
+      type: "bookmark-removed",
+      id: folder1Id,
+      parentId: folder1ParentId,
+      index: folder1.index,
+      url: null,
+      guid: folder1.guid,
+      parentGuid: folder1.parentGuid,
+      source: Ci.nsINavBookmarksService.SOURCE_DEFAULT,
+      itemType: PlacesUtils.bookmarks.TYPE_FOLDER,
+      isTagging: false,
     },
   ]);
 });

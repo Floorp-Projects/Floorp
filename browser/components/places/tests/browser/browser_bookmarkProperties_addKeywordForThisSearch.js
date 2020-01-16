@@ -6,8 +6,9 @@ const TEST_URL =
 function closeHandler(dialogWin) {
   let savedItemId = dialogWin.gEditItemOverlay.itemId;
   return PlacesTestUtils.waitForNotification(
-    "onItemRemoved",
-    itemId => itemId === savedItemId
+    "bookmark-removed",
+    events => events.some(event => event.id === savedItemId),
+    "places"
   );
 }
 
