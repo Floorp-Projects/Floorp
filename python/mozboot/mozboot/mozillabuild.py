@@ -136,6 +136,11 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         self.install_toolchain_artifact(
             state_dir, checkout_root, node_artifact)
 
+    def ensure_dump_syms_packages(self, state_dir, checkout_root):
+        from mozboot import dump_syms
+
+        self.install_toolchain_artifact(state_dir, checkout_root, dump_syms.WIN64_DUMP_SYMS)
+
     def _update_package_manager(self):
         pass
 
