@@ -5,9 +5,9 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Match"];
+const EXPORTED_SYMBOLS = ["Match"];
 
-this.Match = (function() {
+const Match = (function() {
   function Pattern(template) {
     // act like a constructor even as a function
     if (!(this instanceof Pattern)) {
