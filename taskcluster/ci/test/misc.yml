@@ -81,13 +81,18 @@ test-verify:
             by-test-platform:
                 linux.*:
                     - linux64-node
+                    - linux64-minidump-stackwalk
                 macosx.*:
                     - macosx64-node
+                    - macosx64-minidump-stackwalk
                 win.*64.*:
                     - win64-node
+                    - win32-minidump-stackwalk
                 win.*32.*:
                     - win32-node
-                android-em-7.*: []
+                    - win32-minidump-stackwalk
+                android-em-7.*:
+                    - linux64-minidump-stackwalk
 
 test-verify-gpu:
     description: "Extra verification of tests modified on this push on gpu instances"
@@ -168,15 +173,21 @@ test-coverage:
             by-test-platform:
                 linux.*:
                     - linux64-node
+                    - linux64-minidump-stackwalk
                 macosx.*:
                     - macosx64-node
+                    - macosx64-minidump-stackwalk
                 win.*aarch64.*:
                     - win32-node
+                    - win32-minidump-stackwalk
                 win.*-64.*:
                     - win64-node
+                    - win32-minidump-stackwalk
                 win.*32.*:
                     - win32-node
-                android-em-7.*: []
+                    - win32-minidump-stackwalk
+                android-em-7.*:
+                    - linux64-minidump-stackwalk
 
 test-coverage-gpu:
     description: "Per-test coverage for tests that require gpu instances"
