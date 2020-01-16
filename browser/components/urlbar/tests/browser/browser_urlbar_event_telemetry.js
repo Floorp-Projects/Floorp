@@ -639,7 +639,9 @@ const tests = [
 
   async function() {
     info("Retained result: type, blur, focus, confirm.");
-
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.update1", true]],
+    });
     await promiseAutocompleteResultPopup("search", window, true);
     await UrlbarTestUtils.promisePopupClose(window, () => {
       gURLBar.blur();
@@ -651,6 +653,7 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     EventUtils.synthesizeKey("VK_RETURN");
     await promise;
+    await SpecialPowers.popPrefEnv();
     return [
       {
         category: "urlbar",
@@ -700,7 +703,9 @@ const tests = [
 
   async function() {
     info("Retained result: type, blur, focus, backspace, type, confirm.");
-
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.update1", true]],
+    });
     await promiseAutocompleteResultPopup("search", window, true);
     await UrlbarTestUtils.promisePopupClose(window, () => {
       gURLBar.blur();
@@ -715,6 +720,7 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     EventUtils.synthesizeKey("VK_RETURN");
     await promise;
+    await SpecialPowers.popPrefEnv();
     return [
       {
         category: "urlbar",
@@ -743,7 +749,9 @@ const tests = [
 
   async function() {
     info("Retained result: type, blur, focus, type (overwrite), confirm.");
-
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.update1", true]],
+    });
     await promiseAutocompleteResultPopup("search", window, true);
     await UrlbarTestUtils.promisePopupClose(window, () => {
       gURLBar.blur();
@@ -756,6 +764,7 @@ const tests = [
     let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     EventUtils.synthesizeKey("VK_RETURN");
     await promise;
+    await SpecialPowers.popPrefEnv();
     return [
       {
         category: "urlbar",
