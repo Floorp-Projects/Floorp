@@ -161,10 +161,11 @@ void PluginWidgetProxy::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
   }
 }
 
-void PluginWidgetProxy::SetFocus(Raise aRaise) {
+void PluginWidgetProxy::SetFocus(Raise aRaise,
+                                 mozilla::dom::CallerType aCallerType) {
   if (mActor) {
     PWLOG("PluginWidgetProxy::SetFocus(%d)\n", aRaise == Raise::Yes);
-    mActor->SendSetFocus(aRaise == Raise::Yes);
+    mActor->SendSetFocus(aRaise == Raise::Yes, aCallerType);
   }
 }
 

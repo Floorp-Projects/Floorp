@@ -126,7 +126,8 @@ bool Client::Focused() const {
   return mData->state().get_IPCClientWindowState().focused();
 }
 
-already_AddRefed<Promise> Client::Focus(ErrorResult& aRv) {
+already_AddRefed<Promise> Client::Focus(CallerType aCallerType,
+                                        ErrorResult& aRv) {
   MOZ_ASSERT(!NS_IsMainThread());
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
@@ -149,7 +150,7 @@ already_AddRefed<Promise> Client::Focus(ErrorResult& aRv) {
   auto holder =
       MakeRefPtr<DOMMozPromiseRequestHolder<ClientStatePromise>>(mGlobal);
 
-  mHandle->Focus()
+  mHandle->Focus(aCallerType)
       ->Then(
           mGlobal->EventTargetFor(TaskCategory::Other), __func__,
           [ipcClientInfo, holder, outerPromise](const ClientState& aResult) {

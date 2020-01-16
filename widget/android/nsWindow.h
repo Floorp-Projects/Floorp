@@ -251,7 +251,7 @@ class nsWindow final : public nsBaseWidget {
   virtual void Enable(bool aState) override;
   virtual bool IsEnabled() const override;
   virtual void Invalidate(const LayoutDeviceIntRect& aRect) override;
-  virtual void SetFocus(Raise) override;
+  virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
   virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,

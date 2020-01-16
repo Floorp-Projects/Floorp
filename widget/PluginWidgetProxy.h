@@ -43,7 +43,7 @@ class PluginWidgetProxy final : public PuppetWidget {
          const LayoutDeviceIntRect& aRect,
          nsWidgetInitData* aInitData = nullptr) override;
   virtual void Destroy() override;
-  virtual void SetFocus(Raise) override;
+  virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
   virtual void SetParent(nsIWidget* aNewParent) override;
 
   virtual nsIWidget* GetParent(void) override;
