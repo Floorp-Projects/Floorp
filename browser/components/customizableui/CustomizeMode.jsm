@@ -497,11 +497,7 @@ CustomizeMode.prototype = {
       this.document.documentElement.removeAttribute("customizing");
 
       if (this.browser.selectedTab == gTab) {
-        if (gTab.linkedBrowser.currentURI.spec == "about:blank") {
-          closeGlobalTab();
-        } else {
-          unregisterGlobalTab();
-        }
+        closeGlobalTab();
       }
 
       let customizer = document.getElementById("customization-container");
