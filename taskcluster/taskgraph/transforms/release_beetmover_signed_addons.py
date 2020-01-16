@@ -7,7 +7,6 @@ Transform the beetmover task into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.loader.single_dep import schema
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.beetmover import craft_release_properties
@@ -32,25 +31,25 @@ transforms = TransformSequence()
 
 beetmover_description_schema = schema.extend({
     # depname is used in taskref's to identify the taskID of the unsigned things
-    Required('depname', default='build'): text_type,
+    Required('depname', default='build'): basestring,
 
     # attributes is used for enabling artifact-map by declarative artifacts
-    Required('attributes'): {text_type: object},
+    Required('attributes'): {basestring: object},
 
     # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
-    Optional('label'): text_type,
+    Optional('label'): basestring,
 
     # treeherder is allowed here to override any defaults we use for beetmover.  See
     # taskcluster/taskgraph/transforms/task.py for the schema details, and the
     # below transforms for defaults of various values.
     Optional('treeherder'): task_description_schema['treeherder'],
 
-    Required('description'): text_type,
-    Required('worker-type'): optionally_keyed_by('release-level', text_type),
+    Required('description'): basestring,
+    Required('worker-type'): optionally_keyed_by('release-level', basestring),
     Required('run-on-projects'): [],
 
     # locale is passed only for l10n beetmoving
-    Optional('locale'): text_type,
+    Optional('locale'): basestring,
     Optional('shipping-phase'): task_description_schema['shipping-phase'],
     Optional('shipping-product'): task_description_schema['shipping-product'],
 })

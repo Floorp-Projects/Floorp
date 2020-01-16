@@ -7,7 +7,6 @@ Support for running spidermonkey jobs via dedicated scripts
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.util.schema import Schema
 from voluptuous import Required, Any, Optional
 
@@ -25,11 +24,11 @@ sm_run_schema = Schema({
                            'spidermonkey-rust-bindings'),
 
     # SPIDERMONKEY_VARIANT and SPIDERMONKEY_PLATFORM
-    Required('spidermonkey-variant'): text_type,
-    Optional('spidermonkey-platform'): text_type,
+    Required('spidermonkey-variant'): basestring,
+    Optional('spidermonkey-platform'): basestring,
 
     # Base work directory used to set up the task.
-    Required('workdir'): text_type,
+    Required('workdir'): basestring,
 
     Required('tooltool-downloads'): Any(
         False,

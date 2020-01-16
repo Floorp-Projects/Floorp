@@ -7,7 +7,6 @@ import logging
 import os
 import copy
 import attr
-from six import text_type
 
 from . import filter_tasks
 from .graph import Graph
@@ -36,8 +35,8 @@ class KindNotFound(Exception):
 @attr.s(frozen=True)
 class Kind(object):
 
-    name = attr.ib(type=text_type)
-    path = attr.ib(type=text_type)
+    name = attr.ib(type=basestring)
+    path = attr.ib(type=basestring)
     config = attr.ib(type=dict)
     graph_config = attr.ib(type=GraphConfig)
 

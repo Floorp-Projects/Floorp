@@ -8,7 +8,6 @@ defined in kind.yml
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.util.schema import (
@@ -22,19 +21,19 @@ from voluptuous import (
 )
 
 index_or_string = Any(
-    text_type,
-    {Required('index-search'): text_type},
+    basestring,
+    {Required('index-search'): basestring},
 )
 
 diff_description_schema = Schema({
     # Name of the diff task.
-    Required('name'): text_type,
+    Required('name'): basestring,
 
     # Treeherder symbol.
-    Required('symbol'): text_type,
+    Required('symbol'): basestring,
 
     # relative path (from config.path) to the file the task was defined in.
-    Optional('job-from'): text_type,
+    Optional('job-from'): basestring,
 
     # Original and new builds to compare.
     Required('original'): index_or_string,
@@ -42,10 +41,10 @@ diff_description_schema = Schema({
 
     # Arguments to pass to diffoscope, used for job-defaults in
     # taskcluster/ci/diffoscope/kind.yml
-    Optional('args'): text_type,
+    Optional('args'): basestring,
 
     # Extra arguments to pass to diffoscope, that can be set per job.
-    Optional('extra-args'): text_type,
+    Optional('extra-args'): basestring,
 
     # Fail the task when differences are detected.
     Optional('fail-on-diff'): bool,
@@ -56,7 +55,7 @@ diff_description_schema = Schema({
     Optional('unpack'): bool,
 
     # Commands to run before performing the diff.
-    Optional('pre-diff-commands'): [text_type],
+    Optional('pre-diff-commands'): [basestring],
 
     # Only run the task on a set of projects/branches.
     Optional('run-on-projects'): task_description_schema['run-on-projects'],
@@ -78,7 +77,7 @@ def fill_template(config, tasks):
         previous_artifact = None
         for k in ('original', 'new'):
             value = task[k]
-            if isinstance(value, text_type):
+            if isinstance(value, basestring):
                 deps[k] = value
                 dep_name = k
                 os_hint = value

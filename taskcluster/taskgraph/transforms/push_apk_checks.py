@@ -7,7 +7,6 @@ Transform the push-apk-checks kind into an actual task description.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.task import task_description_schema
 from taskgraph.transforms.push_apk import (
@@ -24,15 +23,15 @@ from voluptuous import Required
 transforms = TransformSequence()
 transforms.add_validate(Schema({
     Required('dependent-tasks'): object,
-    Required('name'): text_type,
+    Required('name'): basestring,
     Required('label'): task_description_schema['label'],
     Required('description'): task_description_schema['description'],
     Required('job-from'): task_description_schema['job-from'],
     Required('attributes'): task_description_schema['attributes'],
     Required('treeherder'): task_description_schema['treeherder'],
-    Required('package-name'): optionally_keyed_by('project', text_type),
+    Required('package-name'): optionally_keyed_by('project', basestring),
     Required('run-on-projects'): task_description_schema['run-on-projects'],
-    Required('worker-type'): text_type,
+    Required('worker-type'): basestring,
     Required('worker'): object,
     Required('shipping-phase'): task_description_schema['shipping-phase'],
     Required('shipping-product'): task_description_schema['shipping-product'],
