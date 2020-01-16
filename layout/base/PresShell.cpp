@@ -6459,8 +6459,7 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
 
   mPresShell->RecordMouseLocation(aGUIEvent);
 
-  if (MaybeHandleEventWithAccessibleCaret(aFrameForPresShell, aGUIEvent,
-                                          aEventStatus)) {
+  if (MaybeHandleEventWithAccessibleCaret(aGUIEvent, aEventStatus)) {
     // Probably handled by AccessibleCaretEventHub.
     return NS_OK;
   }
@@ -6871,8 +6870,7 @@ bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
 }
 
 bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
-    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
-    nsEventStatus* aEventStatus) {
+    WidgetGUIEvent* aGUIEvent, nsEventStatus* aEventStatus) {
   MOZ_ASSERT(aGUIEvent);
   MOZ_ASSERT(aEventStatus);
 
@@ -6888,37 +6886,8 @@ bool PresShell::EventHandler::MaybeHandleEventWithAccessibleCaret(
     return false;
   }
 
-  // First, try the event hub at the event point to handle a long press to
-  // select a word in an unfocused window.
-  do {
-    EventTargetData eventTargetData(nullptr);
-    if (!ComputeEventTargetFrameAndPresShellAtEventPoint(
-            aFrameForPresShell, aGUIEvent, &eventTargetData)) {
-      break;
-    }
-
-    if (!eventTargetData.mPresShell) {
-      break;
-    }
-
-    RefPtr<AccessibleCaretEventHub> eventHub =
-        eventTargetData.mPresShell->GetAccessibleCaretEventHub();
-    if (!eventHub) {
-      break;
-    }
-
-    *aEventStatus = eventHub->HandleEvent(aGUIEvent);
-    if (*aEventStatus != nsEventStatus_eConsumeNoDefault) {
-      break;
-    }
-
-    // If the event is consumed, cancel APZC panning by setting
-    // mMultipleActionsPrevented.
-    aGUIEvent->mFlags.mMultipleActionsPrevented = true;
-    return true;
-  } while (false);
-
-  // Then, we target the event to the event hub at the focused window.
+  // We have to target the focus window because regardless of where the
+  // touch goes, we want to access the copy paste manager.
   nsCOMPtr<nsPIDOMWindowOuter> window = GetFocusedDOMWindowInOurWindow();
   if (!window) {
     return false;
