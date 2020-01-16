@@ -40,6 +40,7 @@ import java.io.InputStream;
 import java.lang.Boolean;
 import java.lang.CharSequence;
 import java.lang.Class;
+import java.lang.Deprecated;
 import java.lang.Exception;
 import java.lang.Float;
 import java.lang.Integer;
@@ -296,8 +297,16 @@ package org.mozilla.geckoview {
     method @UiThread public void clearExceptionList();
     method @UiThread @NonNull public GeckoResult<List<ContentBlockingController.LogEntry>> getLog(@NonNull GeckoSession);
     method @UiThread public void removeException(@NonNull GeckoSession);
-    method @UiThread public void restoreExceptionList(@NonNull ContentBlockingController.ExceptionList);
-    method @UiThread @NonNull public GeckoResult<ContentBlockingController.ExceptionList> saveExceptionList();
+    method @AnyThread public void removeException(@NonNull ContentBlockingController.ContentBlockingException);
+    method @Deprecated @UiThread public void restoreExceptionList(@NonNull ContentBlockingController.ExceptionList);
+    method @AnyThread public void restoreExceptionList(@NonNull List<ContentBlockingController.ContentBlockingException>);
+    method @UiThread @NonNull public GeckoResult<List<ContentBlockingController.ContentBlockingException>> saveExceptionList();
+  }
+
+  @AnyThread public static class ContentBlockingController.ContentBlockingException {
+    method @NonNull public static ContentBlockingController.ContentBlockingException fromJson(@NonNull JSONObject);
+    method @NonNull public JSONObject toJson();
+    field @NonNull public final String uri;
   }
 
   public static class ContentBlockingController.Event {
@@ -323,7 +332,7 @@ package org.mozilla.geckoview {
     field public static final int LOADED_SOCIALTRACKING_CONTENT = 131072;
   }
 
-  @AnyThread public class ContentBlockingController.ExceptionList {
+  @Deprecated @AnyThread public class ContentBlockingController.ExceptionList {
     ctor public ExceptionList(@NonNull String);
     ctor public ExceptionList(@NonNull JSONObject);
     method @NonNull public String[] getUris();
