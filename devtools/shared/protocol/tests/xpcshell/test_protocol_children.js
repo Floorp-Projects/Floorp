@@ -21,6 +21,8 @@ function simpleHello() {
 // Predeclaring the actor type so that it can be used in the
 // implementation of the child actor.
 types.addActorType("childActor");
+types.addActorType("otherChildActor");
+types.addPolymorphicType("polytype", ["childActor", "otherChildActor"]);
 
 const childSpec = protocol.generateActorSpec({
   typeName: "childActor",
@@ -200,6 +202,15 @@ class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
 }
 protocol.registerFront(ChildFront);
 
+const otherChildSpec = protocol.generateActorSpec({
+  typeName: "otherChildActor",
+  methods: {},
+  events: {},
+});
+const OtherChildActor = protocol.ActorClassWithSpec(otherChildSpec, {});
+class OtherChildFront extends protocol.FrontClassWithSpec(otherChildSpec) {}
+protocol.registerFront(OtherChildFront);
+
 types.addDictType("manyChildrenDict", {
   child5: "childActor",
   more: "array:childActor",
@@ -229,6 +240,17 @@ const rootSpec = protocol.generateActorSpec({
     getTemporaryChild: {
       request: { id: Arg(0) },
       response: { child: RetVal("temp:childActor") },
+    },
+    getPolymorphism: {
+      request: { id: Arg(0, "number") },
+      response: { child: RetVal("polytype") },
+    },
+    requestPolymorphism: {
+      request: {
+        id: Arg(0, "number"),
+        actor: Arg(1, "polytype"),
+      },
+      response: { child: RetVal("polytype") },
     },
     clearTemporaryChildren: {},
   },
@@ -295,6 +317,24 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
     }
     this._temporaryHolder.destroy();
     delete this._temporaryHolder;
+  },
+
+  getPolymorphism: function(id) {
+    if (id == 0) {
+      return new ChildActor(this.conn, id);
+    } else if (id == 1) {
+      return new OtherChildActor(this.conn);
+    }
+    throw new Error("Unexpected id");
+  },
+
+  requestPolymorphism: function(id, actor) {
+    if (id == 0 && actor instanceof ChildActor) {
+      return actor;
+    } else if (id == 1 && actor instanceof OtherChildActor) {
+      return actor;
+    }
+    throw new Error("Unexpected id or actor");
   },
 });
 
@@ -363,6 +403,7 @@ add_task(async function() {
   await testEvents(trace);
   await testManyChildren(trace);
   await testGenerator(trace);
+  await testPolymorphism(trace);
 
   await client.close();
 });
@@ -640,4 +681,34 @@ async function testGenerator(trace) {
   Assert.ok(ret[0] === childFront);
   Assert.ok(ret[1] !== childFront);
   Assert.ok(ret[1] instanceof ChildFront);
+}
+
+async function testPolymorphism(trace) {
+  // Check polymorphic types returned by an actor
+  const firstChild = await rootFront.getPolymorphism(0);
+  Assert.ok(firstChild instanceof ChildFront);
+
+  // Check polymorphic types passed to a front
+  const sameFirstChild = await rootFront.requestPolymorphism(0, firstChild);
+  Assert.ok(sameFirstChild instanceof ChildFront);
+  Assert.equal(sameFirstChild, firstChild);
+
+  // Same with the second possible type
+  const secondChild = await rootFront.getPolymorphism(1);
+  Assert.ok(secondChild instanceof OtherChildFront);
+
+  const sameSecondChild = await rootFront.requestPolymorphism(1, secondChild);
+  Assert.ok(sameSecondChild instanceof OtherChildFront);
+  Assert.equal(sameSecondChild, secondChild);
+
+  // Check that any other type is rejected
+  Assert.throws(() => {
+    rootFront.requestPolymorphism(0, null);
+  }, /Was expecting one of these actors 'childActor,otherChildActor' but instead got an empty value/);
+  Assert.throws(() => {
+    rootFront.requestPolymorphism(0, 42);
+  }, /Was expecting one of these actors 'childActor,otherChildActor' but instead got value: '42'/);
+  Assert.throws(() => {
+    rootFront.requestPolymorphism(0, rootFront);
+  }, /Was expecting one of these actors 'childActor,otherChildActor' but instead got an actor of type: 'root'/);
 }
