@@ -69,6 +69,23 @@ async function testVal(aExpected, overflowSide = "") {
       scheme && isOverflowed && overflowSide == "left" ? "visible" : "hidden",
       "Check the scheme box visibility"
     );
+
+    info("Focus, change scroll position and blur, to ensure proper restore");
+    gURLBar.focus();
+    EventUtils.synthesizeKey("KEY_End");
+    gURLBar.blur();
+    await window.promiseDocumentFlushed(() => {});
+    // The attribute doesn't always change, so we can't use waitForAttribute.
+    await TestUtils.waitForCondition(
+      () => gURLBar.getAttribute("textoverflow") === overflowSide
+    );
+
+    Assert.equal(side, overflowSide, "Check the overflow side");
+    Assert.equal(
+      getComputedStyle(gURLBar.valueFormatter.scheme).visibility,
+      scheme && isOverflowed && overflowSide == "left" ? "visible" : "hidden",
+      "Check the scheme box visibility"
+    );
   }
 }
 
