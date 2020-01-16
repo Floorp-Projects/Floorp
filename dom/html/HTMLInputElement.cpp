@@ -2932,7 +2932,7 @@ void HTMLInputElement::Blur(ErrorResult& aError) {
 }
 
 void HTMLInputElement::Focus(const FocusOptions& aOptions,
-                             ErrorResult& aError) {
+                            CallerType aCallerType, ErrorResult& aError) {
   if ((mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) &&
       !IsExperimentalMobileType(mType)) {
     if (Element* dateTimeBoxElement = GetDateTimeBoxElement()) {
@@ -2944,7 +2944,7 @@ void HTMLInputElement::Focus(const FocusOptions& aOptions,
     }
   }
 
-  nsGenericHTMLElement::Focus(aOptions, aError);
+  nsGenericHTMLElement::Focus(aOptions, aCallerType, aError);
 }
 
 #if !defined(ANDROID) && !defined(XP_MACOSX)
@@ -3798,7 +3798,8 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
                     FocusOptions options;
                     ErrorResult error;
 
-                    selectedRadioButton->Focus(options, error);
+                    selectedRadioButton->Focus(options, CallerType::System,
+                                               error);
                     rv = error.StealNSResult();
                     if (NS_SUCCEEDED(rv)) {
                       rv = DispatchSimulatedClick(selectedRadioButton,

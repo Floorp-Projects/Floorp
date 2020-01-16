@@ -38,6 +38,10 @@
 #define START_TIMEOUT_SEC 5
 #define START_SLEEP_MSEC 100
 
+// When MOZ_DBUS_REMOTE is set both X11 and Wayland backends
+// use only DBus remote.
+#define DBUS_REMOTE_ENV "MOZ_DBUS_REMOTE"
+
 using namespace mozilla;
 
 extern int gArgc;
@@ -101,11 +105,11 @@ RemoteResult nsRemoteService::StartClient(const char* aDesktopStartupID) {
   bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
 
 #  if defined(MOZ_ENABLE_DBUS)
-  if (!useX11Remote) {
+  if (!useX11Remote || getenv(DBUS_REMOTE_ENV)) {
     client = new nsDBusRemoteClient();
   }
 #  endif
-  if (useX11Remote) {
+  if (!client && useX11Remote) {
     client = new nsXRemoteClient();
   }
 #elif defined(XP_WIN)
@@ -150,11 +154,11 @@ void nsRemoteService::StartupServer() {
   bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
 
 #  if defined(MOZ_ENABLE_DBUS)
-  if (!useX11Remote) {
+  if (!useX11Remote || getenv(DBUS_REMOTE_ENV)) {
     mRemoteServer = MakeUnique<nsDBusRemoteServer>();
   }
 #  endif
-  if (useX11Remote) {
+  if (!mRemoteServer && useX11Remote) {
     mRemoteServer = MakeUnique<nsGTKRemoteServer>();
   }
 #elif defined(XP_WIN)

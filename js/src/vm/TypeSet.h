@@ -726,6 +726,11 @@ class HeapTypeSet : public ConstraintTypeSet {
   // Mark this type set as being non-constant.
   inline void setNonConstantProperty(const AutoSweepObjectGroup& sweep,
                                      JSContext* cx);
+
+  // Trigger freeze constraints for this property because a lexical binding was
+  // added to the global lexical environment.
+  inline void markLexicalBindingExists(const AutoSweepObjectGroup& sweep,
+                                       JSContext* cx);
 };
 
 enum class DOMObjectKind : uint8_t { Proxy, Native, Unknown };

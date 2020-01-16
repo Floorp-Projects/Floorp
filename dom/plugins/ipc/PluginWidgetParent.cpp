@@ -138,10 +138,12 @@ void PluginWidgetParent::ParentDestroy() {
   PWLOG("PluginWidgetParent::ParentDestroy()\n");
 }
 
-mozilla::ipc::IPCResult PluginWidgetParent::RecvSetFocus(const bool& aRaise) {
+mozilla::ipc::IPCResult PluginWidgetParent::RecvSetFocus(
+    const bool& aRaise, const mozilla::dom::CallerType& aCallerType) {
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetParent::RecvSetFocus(%d)\n", aRaise);
-  mWidget->SetFocus(aRaise ? nsIWidget::Raise::Yes : nsIWidget::Raise::No);
+  mWidget->SetFocus(aRaise ? nsIWidget::Raise::Yes : nsIWidget::Raise::No,
+                    aCallerType);
   return IPC_OK();
 }
 

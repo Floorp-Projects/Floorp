@@ -135,8 +135,6 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   // If the X-Frame-Options value is SAMEORIGIN, then the top frame in the
   // parent chain must be from the same origin as this document.
   bool checkSameOrigin = aPolicy.LowerCaseEqualsLiteral("sameorigin");
-  nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
-  nsCOMPtr<nsIURI> topUri;
 
   while (ctx) {
     nsCOMPtr<nsIPrincipal> principal;
@@ -150,11 +148,9 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
         // window.open inherits the principal and hence the URI of the
         // opening context needed for same origin checks.
         principal = window->DocumentPrincipal();
-        principal->GetURI(getter_AddRefs(topUri));
       }
     } else if (nsPIDOMWindowOuter* windowOuter = ctx->GetDOMWindow()) {
       principal = nsGlobalWindowOuter::Cast(windowOuter)->GetPrincipal();
-      principal->GetURI(getter_AddRefs(topUri));
     }
 
     if (principal && principal->IsSystemPrincipal()) {
@@ -164,10 +160,11 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
     if (checkSameOrigin) {
       bool isPrivateWin =
           principal && principal->OriginAttributesRef().mPrivateBrowsingId > 0;
-      nsresult rv = ssm->CheckSameOriginURI(uri, topUri, true, isPrivateWin);
+      bool isSameOrigin = false;
+      principal->IsSameOrigin(uri, isPrivateWin, &isSameOrigin);
       // one of the ancestors is not same origin as this document
-      if (NS_FAILED(rv)) {
-        ReportError("XFOSameOrigin", topUri, uri, aPolicy, innerWindowID);
+      if (!isSameOrigin) {
+        ReportError("XFOSameOrigin", ctx, uri, aPolicy, innerWindowID);
         return false;
       }
     }

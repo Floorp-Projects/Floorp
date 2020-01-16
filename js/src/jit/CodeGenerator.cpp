@@ -7403,8 +7403,12 @@ void CodeGenerator::visitGetNextEntryForIterator(
   }
 }
 
-template <size_t Defs>
-void CodeGenerator::emitWasmCallBase(LWasmCallBase<Defs>* lir) {
+// The point of these is to inform Ion of where these values already are; they
+// don't generate code.
+void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {}
+void CodeGenerator::visitWasmRegisterPairResult(LWasmRegisterPairResult* lir) {}
+
+void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   MWasmCall* mir = lir->mir();
   bool needsBoundsCheck = lir->needsBoundsCheck();
 
@@ -7475,16 +7479,6 @@ void CodeGenerator::emitWasmCallBase(LWasmCallBase<Defs>* lir) {
   } else {
     MOZ_ASSERT(!switchRealm);
   }
-}
-
-void CodeGenerator::visitWasmCall(LWasmCall* ins) { emitWasmCallBase(ins); }
-
-void CodeGenerator::visitWasmCallVoid(LWasmCallVoid* ins) {
-  emitWasmCallBase(ins);
-}
-
-void CodeGenerator::visitWasmCallI64(LWasmCallI64* ins) {
-  emitWasmCallBase(ins);
 }
 
 void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {

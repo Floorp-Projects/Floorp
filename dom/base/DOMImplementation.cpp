@@ -88,7 +88,7 @@ nsresult DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   rv = NS_NewDOMDocument(getter_AddRefs(doc), aNamespaceURI, aQualifiedName,
                          aDoctype, mDocumentURI, mBaseURI,
                          mOwner->NodePrincipal(), true, scriptHandlingObject,
-                         DocumentFlavorLegacyGuess);
+                         DocumentFlavorXML);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // When DOMImplementation's createDocument method is invoked with

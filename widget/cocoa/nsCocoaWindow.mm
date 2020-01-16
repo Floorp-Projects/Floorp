@@ -1875,11 +1875,11 @@ void nsCocoaWindow::SetMenuBar(nsMenuBarX* aMenuBar) {
     mMenuBar->Paint();
 }
 
-void nsCocoaWindow::SetFocus(Raise aRaise) {
+void nsCocoaWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
   if (!mWindow) return;
 
   if (mPopupContentView) {
-    return mPopupContentView->SetFocus(aRaise);
+    return mPopupContentView->SetFocus(aRaise, aCallerType);
   }
 
   if (aRaise == Raise::Yes && ([mWindow isVisible] || [mWindow isMiniaturized])) {

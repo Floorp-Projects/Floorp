@@ -544,7 +544,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   virtual bool GetFullScreen() = 0;
 
-  virtual nsresult Focus() = 0;
+  virtual nsresult Focus(mozilla::dom::CallerType aCallerType) = 0;
   virtual nsresult Close() = 0;
 
   mozilla::dom::DocGroup* GetDocGroup() const;
@@ -1033,7 +1033,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   virtual bool GetFullScreen() = 0;
   virtual nsresult SetFullScreen(bool aFullscreen) = 0;
 
-  virtual nsresult Focus() = 0;
+  virtual nsresult Focus(mozilla::dom::CallerType aCallerType) = 0;
   virtual nsresult Close() = 0;
 
   virtual nsresult MoveBy(int32_t aXDif, int32_t aYDif) = 0;

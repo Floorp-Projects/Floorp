@@ -3149,6 +3149,16 @@
   value: true
   mirror: always
 
+- name: full-screen-api.exit-on.windowOpen
+  type: bool
+  value: true
+  mirror: always
+
+- name: full-screen-api.exit-on.windowRaise
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "fuzzing.". It's important that these can only be
 # checked in fuzzing builds (when FUZZING is defined), otherwise you could
