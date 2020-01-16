@@ -166,12 +166,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         val historyNameKey = getPreferenceKey(R.string.pref_key_sync_history)
         findPreference<CheckBoxPreference>(historyNameKey)?.apply {
             setOnPreferenceChangeListener { _, newValue ->
-                requireComponents.analytics.metrics.track(Event.PreferenceToggled(
-                    preferenceKey = historyNameKey,
-                    enabled = newValue as Boolean,
-                    context = context
-                ))
-                SyncEnginesStorage(context).setStatus(SyncEngine.History, newValue)
+                SyncEnginesStorage(context).setStatus(SyncEngine.History, newValue as Boolean)
                 @Suppress("DeferredResultUnused")
                 context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
                 true
@@ -181,12 +176,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         val bookmarksNameKey = getPreferenceKey(R.string.pref_key_sync_bookmarks)
         findPreference<CheckBoxPreference>(bookmarksNameKey)?.apply {
             setOnPreferenceChangeListener { _, newValue ->
-                requireComponents.analytics.metrics.track(Event.PreferenceToggled(
-                    preferenceKey = bookmarksNameKey,
-                    enabled = newValue as Boolean,
-                    context = context
-                ))
-                SyncEnginesStorage(context).setStatus(SyncEngine.Bookmarks, newValue)
+                SyncEnginesStorage(context).setStatus(SyncEngine.Bookmarks, newValue as Boolean)
                 @Suppress("DeferredResultUnused")
                 context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
                 true
@@ -327,6 +317,17 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
+    private fun setEnginesDisabledWhileSyncing(isSyncing: Boolean) {
+        listOf(
+            R.string.pref_key_sync_bookmarks,
+            R.string.pref_key_sync_history,
+            R.string.pref_key_sync_logins
+        )
+            .map { getPreferenceKey(it) }
+            .map { findPreference<CheckBoxPreference>(it) }
+            .forEach { it?.isEnabled = !isSyncing }
+    }
+
     private val syncStatusObserver = object : SyncStatusObserver {
         override fun onStarted() {
             lifecycleScope.launch {
@@ -334,6 +335,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 view?.announceForAccessibility(getString(R.string.sync_syncing_in_progress))
                 pref?.title = getString(R.string.sync_syncing_in_progress)
                 pref?.isEnabled = false
+                setEnginesDisabledWhileSyncing(true)
             }
         }
 
@@ -350,6 +352,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 }
                 // Make sure out sync engine checkboxes are up-to-date.
                 updateSyncEngineStates()
+                setEnginesDisabledWhileSyncing(false)
             }
         }
 
@@ -359,6 +362,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                 val pref = findPreference<Preference>(getPreferenceKey(R.string.pref_key_sync_now))
                 pref?.let {
                     pref.title = getString(R.string.preferences_sync_now)
+                    // We want to only enable the sync button, and not the checkboxes here
                     pref.isEnabled = true
 
                     val failedTime = getLastSynced(requireContext())

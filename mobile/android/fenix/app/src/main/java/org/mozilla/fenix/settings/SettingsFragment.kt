@@ -72,7 +72,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             lifecycleScope.launch {
                 updateAccountUIState(
                     context = context,
-                    profile = profile ?: context.components.backgroundServices.accountManager.accountProfile()
+                    profile = profile
+                        ?: context.components.backgroundServices.accountManager.accountProfile()
                 )
             }
         }
@@ -107,7 +108,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 try {
                     context?.let { context ->
                         context.components.analytics.metrics.track(
-                            Event.PreferenceToggled(key, sharedPreferences.getBoolean(key, false), context)
+                            Event.PreferenceToggled(
+                                key,
+                                sharedPreferences.getBoolean(key, false),
+                                context
+                            )
                         )
                     }
                 } catch (e: IllegalArgumentException) {
@@ -185,7 +190,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>(getPreferenceKey(pref_key_passwords))?.apply {
             isVisible = FeatureFlags.logins
         }
-
         findPreference<PreferenceCategory>(getPreferenceKey(R.string.pref_key_advanced))?.apply {
             isVisible = FeatureFlags.fenixLanguagePicker
         }
