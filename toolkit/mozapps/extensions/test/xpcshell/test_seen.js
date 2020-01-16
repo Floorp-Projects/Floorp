@@ -2,6 +2,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// Make Cu.isInAutomation true.
+Services.prefs.setBoolPref(
+  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
+  true
+);
+
 const ID = "addon@tests.mozilla.org";
 
 let profileDir = gProfD.clone();
@@ -68,6 +74,10 @@ add_task(async function() {
     "extensions.startupScanScopes"
   );
   Services.prefs.setIntPref("extensions.startupScanScopes", 0);
+  Services.prefs.setIntPref(
+    "extensions.sideloadScopes",
+    AddonManager.SCOPE_ALL
+  );
 
   let systemParentDir = gTmpD.clone();
   systemParentDir.append("systemwide-extensions");
@@ -105,6 +115,7 @@ add_task(async function() {
     "extensions.startupScanScopes",
     savedStartupScanScopes
   );
+  Services.prefs.clearUserPref("extensions.sideloadScopes");
 });
 
 // Sideloading an add-on in the profile should mark it as unseen and it should
