@@ -520,28 +520,6 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
         self.assertNotEqual(self.to_unix_line_ending(sel.selected_content), '')
 
-    def test_select_word_inside_an_unfocused_iframe(self):
-        '''Bug 1306634: Test we can long press to select a word in an unfocused iframe.'''
-        self.open_test_html(self._iframe_html)
-
-        el = self.marionette.find_element(By.ID, self._input_id)
-        sel = SelectionManager(el)
-
-        # First, we select the first word in the input of the parent document.
-        el_first_word = sel.content.split()[0]  # first world is "ABC"
-        self.long_press_on_word(el, 0)
-        self.assertEqual(el_first_word, sel.selected_content)
-
-        # Then, we long press on the center of the iframe. It should select a
-        # word inside of the document, not the placehoder in the parent
-        # document.
-        iframe = self.marionette.find_element(By.ID, 'frame')
-        self.long_press_on_location(iframe)
-        self.marionette.switch_to_frame(iframe)
-        body = self.marionette.find_element(By.ID, 'bd')
-        sel = SelectionManager(body)
-        self.assertNotEqual('', sel.selected_content)
-
     def test_carets_initialized_in_display_none(self):
         '''Test AccessibleCaretEventHub is properly initialized on a <html> with
         display: none.
