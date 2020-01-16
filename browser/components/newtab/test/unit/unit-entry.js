@@ -379,6 +379,7 @@ const TEST_GLOBAL = {
       return Promise.resolve(id);
     },
   },
+  FX_MONITOR_OAUTH_CLIENT_ID: "fake_client_id",
   TelemetryEnvironment: {
     setExperimentActive() {},
   },
