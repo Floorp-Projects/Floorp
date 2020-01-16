@@ -8,11 +8,9 @@ Do transforms specific to l10n kind
 from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
-import io
 import json
 
 from mozbuild.chunkify import chunkify
-from six import text_type
 from taskgraph.loader.multi_dep import schema
 from taskgraph.transforms.base import (
     TransformSequence,
@@ -40,34 +38,34 @@ def _by_platform(arg):
 
 l10n_description_schema = schema.extend({
     # Name for this job, inferred from the dependent job before validation
-    Required('name'): text_type,
+    Required('name'): basestring,
 
     # build-platform, inferred from dependent job before validation
-    Required('build-platform'): text_type,
+    Required('build-platform'): basestring,
 
     # max run time of the task
     Required('run-time'): _by_platform(int),
 
     # Locales not to repack for
-    Required('ignore-locales'): _by_platform([text_type]),
+    Required('ignore-locales'): _by_platform([basestring]),
 
     # All l10n jobs use mozharness
     Required('mozharness'): {
         # Script to invoke for mozharness
-        Required('script'): _by_platform(text_type),
+        Required('script'): _by_platform(basestring),
 
         # Config files passed to the mozharness script
-        Required('config'): _by_platform([text_type]),
+        Required('config'): _by_platform([basestring]),
 
         # Additional paths to look for mozharness configs in. These should be
         # relative to the base of the source checkout
-        Optional('config-paths'): [text_type],
+        Optional('config-paths'): [basestring],
 
         # Options to pass to the mozharness script
-        Optional('options'): _by_platform([text_type]),
+        Optional('options'): _by_platform([basestring]),
 
         # Action commands to provide to mozharness script
-        Required('actions'): _by_platform([text_type]),
+        Required('actions'): _by_platform([basestring]),
 
         # if true, perform a checkout of a comm-central based branch inside the
         # gecko checkout
@@ -76,24 +74,24 @@ l10n_description_schema = schema.extend({
     # Items for the taskcluster index
     Optional('index'): {
         # Product to identify as in the taskcluster index
-        Required('product'): _by_platform(text_type),
+        Required('product'): _by_platform(basestring),
 
         # Job name to identify as in the taskcluster index
-        Required('job-name'): _by_platform(text_type),
+        Required('job-name'): _by_platform(basestring),
 
         # Type of index
-        Optional('type'): _by_platform(text_type),
+        Optional('type'): _by_platform(basestring),
     },
     # Description of the localized task
-    Required('description'): _by_platform(text_type),
+    Required('description'): _by_platform(basestring),
 
     Optional('run-on-projects'): job_description_schema['run-on-projects'],
 
     # worker-type to utilize
-    Required('worker-type'): _by_platform(text_type),
+    Required('worker-type'): _by_platform(basestring),
 
     # File which contains the used locales
-    Required('locales-file'): _by_platform(text_type),
+    Required('locales-file'): _by_platform(basestring),
 
     # Tooltool visibility required for task.
     Required('tooltool'): _by_platform(Any('internal', 'public')),
@@ -102,12 +100,12 @@ l10n_description_schema = schema.extend({
     # -- generally desktop-build or android-build -- for now.
     Required('docker-image', default=None): _by_platform(Any(
         # an in-tree generated docker image (from `taskcluster/docker/<name>`)
-        {'in-tree': text_type},
+        {'in-tree': basestring},
         None,
     )),
 
     Optional('fetches'): {
-        text_type: _by_platform([text_type]),
+        basestring: _by_platform([basestring]),
     },
 
     # The set of secret names to which the task has access; these are prefixed
@@ -115,33 +113,33 @@ l10n_description_schema = schema.extend({
     # this will enable any worker features required and set the task's scopes
     # appropriately.  `true` here means ['*'], all secrets.  Not supported on
     # Windows
-    Required('secrets', default=False): _by_platform(Any(bool, [text_type])),
+    Required('secrets', default=False): _by_platform(Any(bool, [basestring])),
 
     # Information for treeherder
     Required('treeherder'): {
         # Platform to display the task on in treeherder
-        Required('platform'): _by_platform(text_type),
+        Required('platform'): _by_platform(basestring),
 
         # Symbol to use
-        Required('symbol'): text_type,
+        Required('symbol'): basestring,
 
         # Tier this task is
         Required('tier'): _by_platform(int),
     },
 
     # Extra environment values to pass to the worker
-    Optional('env'): _by_platform({text_type: taskref_or_string}),
+    Optional('env'): _by_platform({basestring: taskref_or_string}),
 
     # Max number locales per chunk
     Optional('locales-per-chunk'): _by_platform(int),
 
     # Task deps to chain this task with, added in transforms from primary-dependency
     # if this is a nightly
-    Optional('dependencies'): {text_type: text_type},
+    Optional('dependencies'): {basestring: basestring},
 
     # Run the task when the listed files change (if present).
     Optional('when'): {
-        'files-changed': [text_type]
+        'files-changed': [basestring]
     },
 
     # passed through directly to the job description
@@ -161,12 +159,13 @@ def parse_locales_file(locales_file, platform=None):
     """
     locales = []
 
-    with io.open(locales_file, mode='r') as f:
+    with open(locales_file, mode='r') as f:
         if locales_file.endswith('json'):
             all_locales = json.load(f)
             # XXX Only single locales are fetched
             locales = {
-                locale: data['revision'] for locale, data in all_locales.items()
+                locale: data['revision']
+                for locale, data in all_locales.items()
                 if platform is None or platform in data['platforms']
             }
         else:
@@ -265,7 +264,7 @@ def handle_artifact_prefix(config, jobs):
     for job in jobs:
         artifact_prefix = get_artifact_prefix(job)
         for k1, v1 in job.get('env', {}).iteritems():
-            if isinstance(v1, text_type):
+            if isinstance(v1, basestring):
                 job['env'][k1] = v1.format(
                     artifact_prefix=artifact_prefix
                 )

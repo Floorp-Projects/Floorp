@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from six import text_type
 import unittest
 from mozunit import main
 from taskgraph.util.schema import (
@@ -15,7 +14,7 @@ from taskgraph.util.schema import (
 
 schema = Schema({
     'x': int,
-    'y': text_type,
+    'y': basestring,
 })
 
 
