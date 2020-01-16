@@ -90,6 +90,10 @@ exports.FX_OAUTH_CLIENT_ID = "5882386c6d801776";
 exports.SCOPE_PROFILE = "profile";
 exports.SCOPE_OLD_SYNC = "https://identity.mozilla.com/apps/oldsync";
 
+// OAuth metadata for other Firefox-related services that we might need to know about
+// in order to provide an enhanced user experience.
+exports.FX_MONITOR_OAUTH_CLIENT_ID = "802d56ef2a9af9fa";
+
 // UI Requests.
 exports.UI_REQUEST_SIGN_IN_FLOW = "signInFlow";
 exports.UI_REQUEST_REFRESH_AUTH = "refreshAuthentication";
