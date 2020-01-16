@@ -101,8 +101,7 @@ InternalRequest::InternalRequest(const nsACString& aURL,
       // specification does not handle this yet.
       ,
       mSameOriginDataURL(true),
-      mSkipServiceWorker(false),
-      mUnsafeRequest(false) {
+      mSkipServiceWorker(false) {
   MOZ_ASSERT(!aURL.IsEmpty());
   AddURL(aURL, aFragment);
 }
@@ -130,8 +129,7 @@ InternalRequest::InternalRequest(
       // FIXME See the above comment in the default constructor.
       ,
       mSameOriginDataURL(true),
-      mSkipServiceWorker(false),
-      mUnsafeRequest(false) {
+      mSkipServiceWorker(false) {
   MOZ_ASSERT(!aURL.IsEmpty());
   AddURL(aURL, aFragment);
 }
