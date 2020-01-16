@@ -252,8 +252,8 @@ static constexpr PowerOfTwo32 BASE_PROFILER_DEFAULT_STARTUP_ENTRIES =
 #  define BASE_PROFILER_DEFAULT_DURATION 20
 #  define BASE_PROFILER_DEFAULT_INTERVAL 1
 
-// Initialize the profiler. If MOZ_PROFILER_STARTUP is set the profiler will
-// also be started. This call must happen before any other profiler calls
+// Initialize the profiler. If MOZ_BASE_PROFILER_STARTUP is set the profiler
+// will also be started. This call must happen before any other profiler calls
 // (except profiler_start(), which will call profiler_init() if it hasn't
 // already run).
 MFBT_API void profiler_init(void* stackTop);
@@ -1015,7 +1015,7 @@ class MOZ_RAII AutoProfilerTracing {
   const Maybe<uint64_t> mInnerWindowID;
 };
 
-// Get the MOZ_PROFILER_STARTUP* environment variables that should be
+// Get the MOZ_BASE_PROFILER_STARTUP* environment variables that should be
 // supplied to a child process that is about to be launched, in order
 // to make that child process start with the same profiler settings as
 // in the current process.  The given function is invoked once for
