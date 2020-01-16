@@ -13,6 +13,7 @@ import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PROTECTED
+import androidx.appcompat.app.ActionBar
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination
@@ -20,6 +21,7 @@ import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
+import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
@@ -73,6 +75,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
     private val hotStartMonitor = HotStartPerformanceMonitor()
 
+    private var isToolbarInflated = false
+
     private val navHost by lazy {
         supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
     }
@@ -94,7 +98,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         setupThemeAndBrowsingMode(getModeFromIntentOrLastKnown(intent))
         setContentView(R.layout.activity_home)
         Performance.instrumentColdStartupToHomescreenTime(this)
-        setupToolbarAndNavigation()
+
+        externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
 
         if (intent.getBooleanExtra(EXTRA_FINISH_ONBOARDING, false)) {
             FenixOnboarding(this).finish()
@@ -220,17 +225,29 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
         themeManager.applyStatusBarTheme(this)
     }
 
-    private fun setupToolbarAndNavigation() {
+    /**
+     * Returns the [supportActionBar], inflating it if necessary.
+     * Everyone should call this instead of supportActionBar.
+     */
+    fun getSupportActionBarAndInflateIfNecessary(): ActionBar {
         // Add ids to this that we don't want to have a toolbar back button
-        val appBarConfiguration = AppBarConfiguration.Builder().build()
-        val navigationToolbar = findViewById<Toolbar>(R.id.navigationToolbar)
-        setSupportActionBar(navigationToolbar)
-        NavigationUI.setupWithNavController(navigationToolbar, navHost.navController, appBarConfiguration)
-        navigationToolbar.setNavigationOnClickListener {
-            onBackPressed()
-        }
+        if (!isToolbarInflated) {
+            val navigationToolbar = navigationToolbarStub.inflate() as Toolbar
 
-        externalSourceIntentProcessors.any { it.process(intent, navHost.navController, this.intent) }
+            setSupportActionBar(navigationToolbar)
+
+            NavigationUI.setupWithNavController(
+                navigationToolbar,
+                navHost.navController,
+                AppBarConfiguration.Builder().build()
+            )
+            navigationToolbar.setNavigationOnClickListener {
+                onBackPressed()
+            }
+
+            isToolbarInflated = true
+        }
+        return supportActionBar!!
     }
 
     protected open fun getIntentSessionId(intent: SafeIntent): String? = null

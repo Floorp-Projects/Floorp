@@ -10,16 +10,12 @@
     android:id="@+id/rootContainer"
     tools:context=".HomeActivity">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/navigationToolbar"
+    <ViewStub
+        android:id="@+id/navigationToolbarStub"
+        android:inflatedId="@id/navigationToolbar"
+        android:layout="@layout/navigation_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        app:titleMarginStart="16dp"
-        app:titleMarginEnd="16dp"
-        app:titleTextAppearance="@style/ToolbarTitleTextStyle"
-        android:background="?above"
-        android:elevation="8dp">
-    </androidx.appcompat.widget.Toolbar>
+        android:layout_height="56dp" />
 
     <fragment
         android:id="@+id/container"

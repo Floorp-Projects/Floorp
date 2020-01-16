@@ -12,6 +12,8 @@ import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigator
 import androidx.navigation.fragment.NavHostFragment.findNavController
+import kotlinx.android.synthetic.main.fragment_home.*
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.Components
 
 /**
@@ -40,7 +42,7 @@ fun Fragment.getPreferenceKey(@StringRes resourceId: Int): String = getString(re
  */
 fun Fragment.showToolbar(title: String) {
     (requireActivity() as AppCompatActivity).title = title
-    (requireActivity() as AppCompatActivity).supportActionBar?.show()
+    (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().show()
 }
 
 /**

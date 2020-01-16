@@ -28,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import mozilla.components.browser.search.SearchEngine
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -118,7 +119,7 @@ class AddSearchEngineFragment : Fragment(), CompoundButton.OnCheckedChangeListen
     override fun onResume() {
         super.onResume()
         (activity as AppCompatActivity).title = getString(R.string.search_engine_add_custom_search_engine_title)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        (activity as HomeActivity).getSupportActionBarAndInflateIfNecessary().show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
