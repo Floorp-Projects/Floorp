@@ -453,12 +453,10 @@ class PeerConnectionImpl final
   // Called to retreive the list of parsing errors.
   const std::vector<std::string>& GetSdpParseErrors();
 
-  // Sets the RTC Signaling State
-  void SetSignalingState_m(mozilla::dom::RTCSignalingState aSignalingState,
-                           bool rollback = false);
+  // Gets the RTC Signaling State of the JSEP session
+  dom::RTCSignalingState GetSignalingState() const;
 
-  // Updates the RTC signaling state based on the JsepSession state
-  void UpdateSignalingState(bool rollback = false);
+  void OnOfferAnswerComplete(bool rollback);
 
   bool IsClosed() const;
   // called when DTLS connects; we only need this once
