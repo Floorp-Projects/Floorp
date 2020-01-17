@@ -100,7 +100,6 @@ jobs:
             release-type: beta
         include-release-version: true
         include-shippable-secrets: true
-        filter-incomplete-translations: true
         run:
             geckoview-engine: geckoBeta
             gradle-build-type: fenixBeta
@@ -113,7 +112,6 @@ jobs:
             release-type: production
         include-release-version: true
         include-shippable-secrets: true
-        filter-incomplete-translations: true
         run:
             geckoview-engine: geckoBeta
             gradle-build-type: fenixProduction
@@ -139,7 +137,6 @@ jobs:
             nightly: true
         include-release-version: true
         include-shippable-secrets: true
-        filter-incomplete-translations: true
         run:
             geckoview-engine: geckoBeta
             gradle-build-type: fennecBeta
@@ -153,7 +150,6 @@ jobs:
             nightly: true
         include-release-version: true
         include-shippable-secrets: true
-        filter-incomplete-translations: true
         run:
             geckoview-engine: geckoBeta
             gradle-build-type: fennecProduction
