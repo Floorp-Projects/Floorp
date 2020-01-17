@@ -143,7 +143,7 @@ void SourceBuffer::SetAppendWindowStart(double aAppendWindowStart,
   }
   if (aAppendWindowStart < 0 ||
       aAppendWindowStart >= mCurrentAttributes.GetAppendWindowEnd()) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    aRv.ThrowTypeError(u"Invalid appendWindowStart value");
     return;
   }
   mCurrentAttributes.SetAppendWindowStart(aAppendWindowStart);
@@ -160,7 +160,7 @@ void SourceBuffer::SetAppendWindowEnd(double aAppendWindowEnd,
   }
   if (IsNaN(aAppendWindowEnd) ||
       aAppendWindowEnd <= mCurrentAttributes.GetAppendWindowStart()) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    aRv.ThrowTypeError(u"Invalid appendWindowEnd value");
     return;
   }
   mCurrentAttributes.SetAppendWindowEnd(aAppendWindowEnd);
