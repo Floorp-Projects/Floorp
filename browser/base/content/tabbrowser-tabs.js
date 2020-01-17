@@ -807,6 +807,11 @@
         return;
       }
 
+      // Check if tab detaching is enabled
+      if (!Services.prefs.getBoolPref("browser.tabs.allowTabDetach")) {
+        return;
+      }
+
       // Disable detach within the browser toolbox
       var eX = event.screenX;
       var eY = event.screenY;
