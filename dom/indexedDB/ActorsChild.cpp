@@ -777,7 +777,7 @@ void DispatchSuccessEvent(ResultHelper* aResultHelper,
       transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
     } else {
       // To handle upgrade transaction.
-      transaction->Run();
+      transaction->CommitIfNotStarted();
     }
   }
 }

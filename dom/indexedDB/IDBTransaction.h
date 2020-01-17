@@ -108,8 +108,6 @@ class IDBTransaction final
   FlippedOnce<false> mStarted;
   const Mode mMode;
 
-  bool mCreating;    ///< Set between successful creation until the transaction
-                     ///< has run on the event-loop.
   bool mRegistered;  ///< Whether mDatabase->RegisterTransaction() has been
                      ///< called (which may not be the case if construction was
                      ///< incomplete).
@@ -315,6 +313,8 @@ class IDBTransaction final
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction, DOMEventTargetHelper)
+
+  void CommitIfNotStarted();
 
   // nsWrapperCache
   JSObject* WrapObject(JSContext* aCx,
