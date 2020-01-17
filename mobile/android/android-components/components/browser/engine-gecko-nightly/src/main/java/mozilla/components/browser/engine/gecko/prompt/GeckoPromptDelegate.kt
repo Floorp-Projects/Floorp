@@ -82,6 +82,9 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val onConfirmSave: (Login) -> Unit = { login ->
             geckoResult.complete(prompt.confirm(login.toLoginEntry()))
         }
+        val onDismiss: () -> Unit = {
+            geckoResult.complete(prompt.dismiss())
+        }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
@@ -89,7 +92,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     hint = prompt.hint,
                     logins = prompt.logins.map { it.toLogin() },
                     onConfirm = onConfirmSave,
-                    onDismiss = { prompt.dismiss() }
+                    onDismiss = onDismiss
                 )
             )
         }

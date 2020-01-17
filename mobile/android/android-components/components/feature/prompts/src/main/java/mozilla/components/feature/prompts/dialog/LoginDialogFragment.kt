@@ -65,6 +65,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return BottomSheetDialog(requireContext(), this.theme).apply {
+            setCancelable(true)
             setOnShowListener {
                 val bottomSheet =
                     findViewById<View>(MaterialR.id.design_bottom_sheet) as FrameLayout
@@ -94,7 +95,7 @@ internal class LoginDialogFragment : PromptDialogFragment() {
         }
 
         view.findViewById<Button>(R.id.save_cancel).setOnClickListener {
-            feature?.onCancel(sessionId)
+            dialog?.dismiss()
         }
         update()
     }
@@ -102,19 +103,19 @@ internal class LoginDialogFragment : PromptDialogFragment() {
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
         feature?.onCancel(sessionId)
-        dismiss()
     }
 
     private fun onPositiveClickAction() {
-        feature?.onConfirm(sessionId, Login(
-            guid = guid,
-            origin = origin,
-            formActionOrigin = formActionOrigin,
-            httpRealm = httpRealm,
-            username = username,
-            password = password
-        ))
-        dismiss()
+        feature?.onConfirm(
+            sessionId, Login(
+                guid = guid,
+                origin = origin,
+                formActionOrigin = formActionOrigin,
+                httpRealm = httpRealm,
+                username = username,
+                password = password
+            )
+        )
     }
 
     private fun inflateRootView(container: ViewGroup? = null): View {
