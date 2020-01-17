@@ -118,10 +118,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // results.
   ["restyleSearches", false],
 
-  // If true, we show new users and those about to start an organic search a tip
-  // encouraging them to use the Urlbar.
-  ["searchTips", false],
-
   // The number of times the user has been shown a search tip.
   ["searchTips.shownCount", 0],
 
@@ -159,6 +155,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // If true, we strip https:// instead of http:// from URLs in the results view.
   ["update1.view.stripHttps", false],
+
+  // If true, we show new users and those about to start an organic search a tip
+  // encouraging them to use the Urlbar.
+  ["update1.searchTips", false],
 
   // Whether the urlbar displays a permanent search button in design update 2.
   ["update2.searchButton", false],
