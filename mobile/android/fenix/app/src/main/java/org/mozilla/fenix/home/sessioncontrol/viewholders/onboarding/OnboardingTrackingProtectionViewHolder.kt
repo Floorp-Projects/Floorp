@@ -18,7 +18,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
         val appName = view.context.getString(R.string.app_name)
         view.description_text.text = view.context.getString(
-            R.string.onboarding_tracking_protection_description,
+            R.string.onboarding_tracking_protection_description1,
             appName
         )
 
