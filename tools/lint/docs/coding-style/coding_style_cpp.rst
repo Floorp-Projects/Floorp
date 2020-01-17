@@ -26,7 +26,7 @@ Formatting is done automatically via clang-format, and controlled via in-tree
 configuration files. See :ref:`Formatting C++ Code With clang-format`
 for more information.
 
-Unix-style linebreaks (``\\n``), not Windows-style (``\\r\\n``). You can
+Unix-style linebreaks (``\n``), not Windows-style (``\r\n``). You can
 convert patches, with DOS newlines to Unix via the ``dos2unix`` utility,
 or your favorite text editor.
 
@@ -34,7 +34,7 @@ Mode line
 ~~~~~~~~~
 
 Files should have Emacs and vim mode line comments as the first two
-lines of the file, which should set indent-tabs-mode to nil. For new
+lines of the file, which should set ``indent-tabs-mode`` to ``nil``. For new
 files, use the following, specifying two-space indentation:
 
 .. code-block:: cpp
@@ -45,7 +45,7 @@ files, use the following, specifying two-space indentation:
     * License, v. 2.0. If a copy of the MPL was not distributed with this
     * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-Be sure to use the correct "Mode" in the first line, don't use "C++" in
+Be sure to use the correct ``Mode`` in the first line, don't use ``C++`` in
 JavaScript files.
 
 
@@ -113,34 +113,34 @@ See :ref:`Formatting C++ Code With clang-format` to reformat these changes.
 C++ namespaces
 ~~~~~~~~~~~~~~
 
-Mozilla project C++ declarations should be in the "``mozilla``"
+Mozilla project C++ declarations should be in the ``mozilla``
 namespace. Modules should avoid adding nested namespaces under
-"``mozilla``", unless they are meant to contain names which have a high
+``mozilla``, unless they are meant to contain names which have a high
 probability of colliding with other names in the code base. For example,
 ``Point``, ``Path``, etc. Such symbols can be put under
-module-specific namespaces, under "``mozilla``", with short
-all-lowercase names. Other global namespaces besides "``mozilla``" are
+module-specific namespaces, under ``mozilla``, with short
+all-lowercase names. Other global namespaces besides ``mozilla`` are
 not allowed.
 
-No "using" statements are allowed in header files, except inside class
+No ``using`` statements are allowed in header files, except inside class
 definitions or functions. (We don't want to pollute the global scope of
 compilation units that use the header file.)
 
 ``using namespace ...;`` is only allowed in ``.cpp`` files after all
 ``#include``\ s. Prefer to wrap code in ``namespace ... { ... };``
-instead. if possible. ``using namespace ...;``\ should always specify
+instead, if possible. ``using namespace ...;``\ should always specify
 the fully qualified namespace. That is, to use ``Foo::Bar`` do not
-write ``using namespace Foo;``\ ``using namespace Bar;``, write
+write ``using namespace Foo; using namespace Bar;``, write
 ``using namespace Foo::Bar;``
 
 
 Anonymous namespaces
 ~~~~~~~~~~~~~~~~~~~~
 
-We prefer using "static", instead of anonymous C++ namespaces. This may
+We prefer using ``static``, instead of anonymous C++ namespaces. This may
 change once there is better debugger support (especially on Windows) for
 placing breakpoints, etc. on code in anonymous namespaces. You may still
-use anonymous namespaces for things that can't be hidden with 'static',
+use anonymous namespaces for things that can't be hidden with ``static``,
 such as types, or certain objects which need to be passed to template
 functions.
 
@@ -202,7 +202,7 @@ C++ classes
 Define classes using the style given above.
 
 Existing classes in the global namespace are named with a short prefix
-(For example, "ns") as a pseudo-namespace.
+(For example, ``ns``) as a pseudo-namespace.
 
 
 Methods and functions
@@ -272,7 +272,7 @@ Variable prefixes
    -  s=static member (e.g. ``sPrefChecked``)
    -  m=member (e.g. ``mLength``)
    -  e=enum variants (e.g. ``enum Foo { eBar, eBaz }``). Enum classes
-      should use \`CamelCase\` instead (e.g.
+      should use ``CamelCase`` instead (e.g.
       ``enum class Foo { Bar, Baz }``).
 
 
@@ -290,16 +290,16 @@ Global functions/macros/etc
 Error Variables
 ^^^^^^^^^^^^^^^
 
--  local nsresult result codes should be \`rv`. \`rv\` should not be
+-  local nsresult result codes should be named ``rv``. `rv` should not be
    used for bool or other result types.
--  local bool result codes should be \`ok\`
+-  local bool result codes should be named `ok`
 
 
 C/C++ practices
 ---------------
 
 -  **Have you checked for compiler warnings?** Warnings often point to
-   real bugs. `Many of them <https://searchfox.org/mozilla-central/source/build/moz.configure/warnings.configure>`__ 
+   real bugs. `Many of them <https://searchfox.org/mozilla-central/source/build/moz.configure/warnings.configure>`__
    are enabled by default in the build system.
 -  In C++ code, use ``nullptr`` for pointers. In C code, using ``NULL``
    or ``0`` is allowed.
@@ -307,7 +307,7 @@ C/C++ practices
    instead.
 -  For checking if a ``std`` container has no items, don't use
    ``size()``, instead use ``empty()``.
--  When testing a pointer, use ``(``\ ``!myPtr``\ ``)`` or ``(myPtr)``;
+-  When testing a pointer, use ``(!myPtr)`` or ``(myPtr)``;
    don't use ``myPtr != nullptr`` or ``myPtr == nullptr``.
 -  Do not compare ``x == true`` or ``x == false``. Use ``(x)`` or
    ``(!x)`` instead. ``x == true``, is certainly different from if
@@ -360,7 +360,7 @@ COM, pointers and strings
    examples. The general rule, is that the very act of typing
    ``NS_RELEASE`` should be a signal to you to question your code:
    "Should I be using ``nsCOMPtr`` here?". Generally the only valid use
-   of ``NS_RELEASE``, are when you are storing refcounted pointers in a
+   of ``NS_RELEASE`` is when you are storing refcounted pointers in a
    long-lived datastructure.
 -  Declare new XPCOM interfaces using `XPIDL <https://developer.mozilla.org/docs/Mozilla/Tech/XPIDL>`__, so they
    will be scriptable.
@@ -368,21 +368,21 @@ COM, pointers and strings
    `nsWeakPtr <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Weak_reference>`__ for weak references.
 -  String arguments to functions should be declared as ``nsAString``.
 -  Use ``EmptyString()`` and ``EmptyCString()`` instead of
-   ``NS_LITERAL_STRING("")`` or ``nsAutoString empty``;.
+   ``NS_LITERAL_STRING("")`` or ``nsAutoString empty;``.
 -  Use ``str.IsEmpty()`` instead of ``str.Length() == 0``.
 -  Use ``str.Truncate()`` instead of ``str.SetLength(0)`` or
    ``str.Assign(EmptyString())``.
 -  Don't use ``QueryInterface`` directly. Use ``CallQueryInterface`` or
    ``do_QueryInterface`` instead.
--  ``nsresult`` should be declared as ``rv``. Not res, not result, not
-   foo.
+-  ``nsresult`` should be declared as ``rv``. Not ``res``, not ``result``, not
+   ``foo``.
 -  For constant strings, use ``NS_LITERAL_STRING("...")`` instead of
    ``NS_ConvertASCIItoUCS2("...")``, ``AssignWithConversion("...")``,
    ``EqualsWithConversion("...")``, or ``nsAutoString()``
 -  To compare a string with a literal, use ``.EqualsLiteral("...")``.
 -  Use `Contract
    IDs <news://news.mozilla.org/3994AE3E.D96EF810@netscape.com>`__,
-   instead of CIDs with do_CreateInstance/do_GetService.
+   instead of CIDs with ``do_CreateInstance``/``do_GetService``.
 -  Use pointers, instead of references for function out parameters, even
    for primitive types.
 
@@ -470,7 +470,7 @@ never fail. Why?
    your call in the first place.
 
 Also, when you make a new function which is failable (i.e. it will
-return a nsresult or a bool that may indicate an error), you should
+return a ``nsresult`` or a ``bool`` that may indicate an error), you should
 explicitly mark the return value should always be checked. For example:
 
 ::
@@ -485,8 +485,8 @@ explicitly mark the return value should always be checked. For example:
 
 There are some exceptions:
 
--  Predicates or getters, which return bool or nsresult.
--  IPC method implementation (For example, bool RecvSomeMessage()).
+-  Predicates or getters, which return ``bool`` or ``nsresult``.
+-  IPC method implementation (For example, ``bool RecvSomeMessage()``).
 -  Most callers will check the output parameter, see below.
 
 .. code-block:: cpp
@@ -495,10 +495,10 @@ There are some exceptions:
    SomeMap::GetValue(const nsString& key, nsString& value);
 
 If most callers need to check the output value first, then adding
-MOZ_MUST_USE might be too verbose. In this case, change the return value
+``MOZ_MUST_USE`` might be too verbose. In this case, change the return value
 to void might be a reasonable choice.
 
-There is also a static analysis attribute MOZ_MUST_USE_TYPE, which can
+There is also a static analysis attribute ``MOZ_MUST_USE_TYPE``, which can
 be added to class declarations, to ensure that those declarations are
 always used when they are returned.
 
@@ -506,12 +506,12 @@ always used when they are returned.
 Use the NS_WARN_IF macro when errors are unexpected.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The NS_WARN_IF macro can be used to issue a console warning, in debug
+The ``NS_WARN_IF`` macro can be used to issue a console warning, in debug
 builds if the condition fails. This should only be used when the failure
 is unexpected and cannot be caused by normal web content.
 
 If you are writing code which wants to issue warnings when methods fail,
-please either use NS_WARNING directly, or use the new NS_WARN_IF macro.
+please either use ``NS_WARNING`` directly, or use the new ``NS_WARN_IF`` macro.
 
 .. code-block:: cpp
 
@@ -525,7 +525,7 @@ please either use NS_WARNING directly, or use the new NS_WARN_IF macro.
 
 Previously, the ``NS_ENSURE_*`` macros were used for this purpose, but
 those macros hide return statements, and should not be used in new code.
-(This coding style rule isn't generally agreed, so use of NS_ENSURE_*
+(This coding style rule isn't generally agreed, so use of ``NS_ENSURE_*``
 can be valid.)
 
 
@@ -688,8 +688,8 @@ without freeing the value. Consider this code:
      ..
      WarnUser(GetStringValue());
 
-In the above example, WarnUser will get the string allocated from
-``resultString.ToNewCString(),`` and throw away the pointer. The
+In the above example, ``WarnUser`` will get the string allocated from
+``resultString.ToNewCString()`` and throw away the pointer. The
 resulting value is never freed. Instead, either use the string classes,
 to make sure your string is automatically freed when it goes out of
 scope, or make sure that your string is freed.
@@ -731,8 +731,8 @@ Use MOZ_UTF16() or NS_LITERAL_STRING() to avoid runtime string conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is very common to need to assign the value of a literal string, such
-as "Some String", into a unicode buffer. Instead of using ``nsString``'s
-``AssignLiteral`` and ``AppendLiteral``, use ``NS_LITERAL_STRING(),``
+as ``"Some String"``, into a unicode buffer. Instead of using ``nsString``'s
+``AssignLiteral`` and ``AppendLiteral``, use ``NS_LITERAL_STRING()``
 instead. On most platforms, this will force the compiler to compile in a
 raw unicode string, and assign it directly.
 
@@ -771,12 +771,12 @@ Correct:
 Usage of PR_(MAX|MIN|ABS|ROUNDUP) macro calls
 ---------------------------------------------
 
-Use the standard-library functions (std::max), instead of
-PR_(MAX|MIN|ABS|ROUNDUP).
+Use the standard-library functions (``std::max``), instead of
+``PR_(MAX|MIN|ABS|ROUNDUP)``.
 
-Use mozilla::Abs instead of PR_ABS. All PR_ABS calls in C++ code have
-been replaced with mozilla::Abs calls, in `bug
+Use ``mozilla::Abs`` instead of ``PR_ABS``. All ``PR_ABS`` calls in C++ code have
+been replaced with ``mozilla::Abs`` calls, in `bug
 847480 <https://bugzilla.mozilla.org/show_bug.cgi?id=847480>`__. All new
-code in Firefox/core/toolkit needs to ``#include "nsAlgorithm.h",`` and
-use the NS_foo variants instead of PR_foo, or
+code in ``Firefox/core/toolkit`` needs to ``#include "nsAlgorithm.h"`` and
+use the ``NS_foo`` variants instead of ``PR_foo``, or
 ``#include "mozilla/MathAlgorithms.h"`` for ``mozilla::Abs``.
