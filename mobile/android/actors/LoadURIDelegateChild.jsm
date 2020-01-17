@@ -29,6 +29,13 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
         debug`webextension-view-type: ${viewType}`;
         return false;
       }
+      const debugTarget = browser.getAttribute(
+        "webextension-addon-debug-target"
+      );
+      if (debugTarget) {
+        debug`webextension-addon-debug-target: ${debugTarget}`;
+        return false;
+      }
     }
 
     return this.docShell.itemType == this.docShell.typeContent;
