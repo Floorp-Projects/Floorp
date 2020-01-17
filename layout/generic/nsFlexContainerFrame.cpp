@@ -649,7 +649,7 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
 
   // Getters for margin:
   // ===================
-  const nsMargin& GetMargin() const { return mMargin; }
+  const nsMargin& GetPhysicalMargin() const { return mMargin; }
 
   // Returns the margin component for a given mozilla::Side
   nscoord GetMarginComponentForSide(mozilla::Side aSide) const {
@@ -2124,8 +2124,8 @@ nscoord FlexItem::GetBaselineOffsetFromOuterCrossEdge(
       kAxisOrientationToSidesMap[crossAxis][aEdge];
   mozilla::Side itemBlockStartSide = mWM.PhysicalSide(eLogicalSideBStart);
 
-  nscoord marginBStartToBaseline =
-      ResolvedAscent(aUseFirstLineBaseline) + mMargin.Side(itemBlockStartSide);
+  nscoord marginBStartToBaseline = ResolvedAscent(aUseFirstLineBaseline) +
+                                   GetPhysicalMargin().Side(itemBlockStartSide);
 
   return (physSideMeasuringFrom == itemBlockStartSide)
              ? marginBStartToBaseline
@@ -4198,13 +4198,13 @@ void FlexLine::PositionItemsInMainAxis(uint8_t aJustifyContent,
 
     // Advance our position tracker to child's upper-left content-box corner,
     // and use that as its position in the main axis.
-    mainAxisPosnTracker.EnterMargin(item->GetMargin());
+    mainAxisPosnTracker.EnterMargin(item->GetPhysicalMargin());
     mainAxisPosnTracker.EnterChildFrame(itemMainBorderBoxSize);
 
     item->SetMainPosition(mainAxisPosnTracker.GetPosition());
 
     mainAxisPosnTracker.ExitChildFrame(itemMainBorderBoxSize);
-    mainAxisPosnTracker.ExitMargin(item->GetMargin());
+    mainAxisPosnTracker.ExitMargin(item->GetPhysicalMargin());
     mainAxisPosnTracker.TraversePackingSpace();
     if (item->getNext()) {
       mainAxisPosnTracker.TraverseGap(mMainGapSize);
@@ -4297,7 +4297,7 @@ void FlexLine::PositionItemsInCrossAxis(
     nscoord itemCrossBorderBoxSize =
         item->GetCrossSize() + item->GetBorderPaddingSizeInCrossAxis();
     lineCrossAxisPosnTracker.EnterAlignPackingSpace(*this, *item, aAxisTracker);
-    lineCrossAxisPosnTracker.EnterMargin(item->GetMargin());
+    lineCrossAxisPosnTracker.EnterMargin(item->GetPhysicalMargin());
     lineCrossAxisPosnTracker.EnterChildFrame(itemCrossBorderBoxSize);
 
     item->SetCrossPosition(aLineStartPosition +
@@ -5037,7 +5037,7 @@ void nsFlexContainerFrame::DoFlexLayout(
         nsMargin* propValue =
             item->Frame()->GetProperty(nsIFrame::UsedMarginProperty());
         if (propValue) {
-          *propValue = item->GetMargin();
+          *propValue = item->GetPhysicalMargin();
         }
       }
 
