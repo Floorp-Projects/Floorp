@@ -129,9 +129,9 @@ class TestProvider extends UrlbarProvider {
     Assert.ok(context, "context is passed-in");
     return true;
   }
-  isRestricting(context) {
+  getPriority(context) {
     Assert.ok(context, "context is passed-in");
-    return false;
+    return 0;
   }
   async startQuery(context, add) {
     Assert.ok(context, "context is passed-in");
