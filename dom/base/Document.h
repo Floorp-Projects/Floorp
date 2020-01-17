@@ -5330,6 +5330,9 @@ class Document : public nsINode,
   // Pres shell resolution saved before entering fullscreen mode.
   float mSavedResolution;
 
+  // Pres shell resolution saved before creating a MobileViewportManager.
+  float mSavedResolutionBeforeMVM;
+
   bool mPendingInitialTranslation;
 
   nsCOMPtr<nsICookieSettings> mCookieSettings;
@@ -5366,6 +5369,11 @@ class Document : public nsINode,
       mL10nProtoElements;
 
   void TraceProtos(JSTracer* aTrc);
+
+  float GetSavedResolutionBeforeMVM() { return mSavedResolutionBeforeMVM; }
+  void SetSavedResolutionBeforeMVM(float aResolution) {
+    mSavedResolutionBeforeMVM = aResolution;
+  }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Document, NS_IDOCUMENT_IID)
