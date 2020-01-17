@@ -6288,6 +6288,7 @@ class TransactionBase {
   FlippedOnce<false> mCommitOrAbortReceived;
   FlippedOnce<false> mCommittedOrAborted;
   FlippedOnce<false> mForceAborted;
+  bool mHasFailedRequest = false;
 
  public:
   void AssertIsOnConnectionThread() const {
@@ -6378,7 +6379,7 @@ class TransactionBase {
 
   void NoteActiveRequest();
 
-  void NoteFinishedRequest();
+  void NoteFinishedRequest(nsresult aResultCode);
 
   void Invalidate();
 
@@ -6402,7 +6403,7 @@ class TransactionBase {
 
   bool RecvAbort(nsresult aResultCode);
 
-  void MaybeCommitOrAbort() {
+  void MaybeCommitOrAbort(const nsresult aResultCode) {
     AssertIsOnBackgroundThread();
 
     // If we've already committed or aborted then there's nothing else to do.
@@ -6421,6 +6422,13 @@ class TransactionBase {
     // abort.
     if (!mCommitOrAbortReceived && !mForceAborted) {
       return;
+    }
+
+    // Note failed request, but ignore requests that failed before we were
+    // committing (cf. https://w3c.github.io/IndexedDB/#async-execute-request
+    // step 5.3 vs. 5.4).
+    if (NS_FAILED(aResultCode)) {
+      mHasFailedRequest = true;
     }
 
     CommitOrAbort();
@@ -6462,7 +6470,10 @@ class TransactionBase::CommitOp final : public DatabaseOperationBase,
   friend class TransactionBase;
 
   RefPtr<TransactionBase> mTransaction;
-  nsresult mResultCode;
+  nsresult mResultCode;  ///< TODO: There is also a mResultCode in
+                         ///< DatabaseOperationBase. Is there a reason not to
+                         ///< use that? At least a more specific name should be
+                         ///< given to this one.
 
  private:
   CommitOp(TransactionBase* aTransaction, nsresult aResultCode);
@@ -14066,7 +14077,7 @@ void TransactionBase::Abort(nsresult aResultCode, bool aForce) {
     mForceAborted.EnsureFlipped();
   }
 
-  MaybeCommitOrAbort();
+  MaybeCommitOrAbort(mResultCode);
 }
 
 bool TransactionBase::RecvCommit() {
@@ -14079,7 +14090,7 @@ bool TransactionBase::RecvCommit() {
 
   mCommitOrAbortReceived.Flip();
 
-  MaybeCommitOrAbort();
+  MaybeCommitOrAbort(NS_OK);
   return true;
 }
 
@@ -14626,13 +14637,13 @@ void TransactionBase::NoteActiveRequest() {
   mActiveRequestCount++;
 }
 
-void TransactionBase::NoteFinishedRequest() {
+void TransactionBase::NoteFinishedRequest(const nsresult aResultCode) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mActiveRequestCount);
 
   mActiveRequestCount--;
 
-  MaybeCommitOrAbort();
+  MaybeCommitOrAbort(aResultCode);
 }
 
 void TransactionBase::Invalidate() {
@@ -14908,7 +14919,7 @@ void NormalTransaction::ActorDestroy(ActorDestroyReason aWhy) {
 
     mForceAborted.EnsureFlipped();
 
-    MaybeCommitOrAbort();
+    MaybeCommitOrAbort(mResultCode);
   }
 }
 
@@ -15168,7 +15179,7 @@ void VersionChangeTransaction::ActorDestroy(ActorDestroyReason aWhy) {
 
     mForceAborted.EnsureFlipped();
 
-    MaybeCommitOrAbort();
+    MaybeCommitOrAbort(mResultCode);
   }
 }
 
@@ -22720,7 +22731,7 @@ void TransactionDatabaseOperationBase::SendPreprocessInfoOrResults(
     mWaitingForContinue = true;
   } else {
     if (mLoggingSerialNumber) {
-      (*mTransaction)->NoteFinishedRequest();
+      (*mTransaction)->NoteFinishedRequest(ResultCode());
     }
 
     Cleanup();
@@ -22902,6 +22913,10 @@ NS_IMETHODIMP
 TransactionBase::CommitOp::Run() {
   MOZ_ASSERT(mTransaction);
   mTransaction->AssertIsOnConnectionThread();
+
+  if (NS_SUCCEEDED(mResultCode) && mTransaction->mHasFailedRequest) {
+    mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
+  }
 
   AUTO_PROFILER_LABEL("TransactionBase::CommitOp::Run", DOM);
 
