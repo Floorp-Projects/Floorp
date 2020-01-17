@@ -363,7 +363,7 @@ void RemoteWorkerManager::LaunchNewContentProcess(
             /* aFrameElement = */ nullptr,
             /* aRemoteType = */ NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE))
             ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                   [isServiceWorker, &principalInfo](
+                   [isServiceWorker, principalInfo](
                        const ContentParent::LaunchPromise::ResolveOrRejectValue&
                            aResult) {
                      if (!isServiceWorker) {
