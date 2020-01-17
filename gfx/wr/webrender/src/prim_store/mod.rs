@@ -27,7 +27,7 @@ use crate::image::{Repetition};
 use crate::intern;
 use crate::internal_types::PlaneSplitAnchor;
 use malloc_size_of::MallocSizeOf;
-use crate::picture::{PictureCompositeMode, PicturePrimitive, ClusterFlags, TileCacheLogger};
+use crate::picture::{PictureCompositeMode, PicturePrimitive, ClusterFlags};
 use crate::picture::{PrimitiveList, RecordedDirtyRegion, SurfaceIndex, RetainedTiles, RasterConfig};
 use crate::prim_store::backdrop::BackdropDataHandle;
 use crate::prim_store::borders::{ImageBorderDataHandle, NormalBorderDataHandle};
@@ -2656,7 +2656,6 @@ impl PrimitiveStore {
         plane_split_anchor: PlaneSplitAnchor,
         data_stores: &mut DataStores,
         scratch: &mut PrimitiveScratchBuffer,
-        tile_cache_log: &mut TileCacheLogger,
     ) -> bool {
         // If we have dependencies, we need to prepare them first, in order
         // to know the actual rect of this primitive.
@@ -2682,7 +2681,6 @@ impl PrimitiveStore {
                         frame_state,
                         frame_context,
                         scratch,
-                        tile_cache_log,
                     ) {
                         Some(info) => Some(info),
                         None => {
@@ -2726,7 +2724,6 @@ impl PrimitiveStore {
                     frame_state,
                     data_stores,
                     scratch,
-                    tile_cache_log,
                 );
 
                 // Restore the dependencies (borrow check dance)
@@ -2792,7 +2789,6 @@ impl PrimitiveStore {
         frame_state: &mut FrameBuildingState,
         data_stores: &mut DataStores,
         scratch: &mut PrimitiveScratchBuffer,
-        tile_cache_log: &mut TileCacheLogger,
     ) {
         for (cluster_index, cluster) in prim_list.clusters.iter_mut().enumerate() {
             pic_state.map_local_to_pic.set_target_spatial_node(
@@ -2838,7 +2834,6 @@ impl PrimitiveStore {
                     plane_split_anchor,
                     data_stores,
                     scratch,
-                    tile_cache_log,
                 ) {
                     frame_state.profile_counters.visible_primitives.inc();
                 }
