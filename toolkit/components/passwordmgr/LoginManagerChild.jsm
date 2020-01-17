@@ -375,7 +375,7 @@ let gAutoCompleteListener = {
       return;
     }
 
-    let loginManager = window.windowGlobalChild.getActor("LoginManager");
+    let loginManager = window.getWindowGlobalChild().getActor("LoginManager");
     let hostname = eventTarget.ownerDocument.documentURIObject.host;
     loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
       hostname,
@@ -424,7 +424,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   }
 
   static forWindow(window) {
-    let windowGlobal = window.windowGlobalChild;
+    let windowGlobal = window.getWindowGlobalChild();
     if (windowGlobal) {
       return windowGlobal.getActor("LoginManager");
     }
@@ -665,13 +665,11 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     // Get the highest accessible docshell and attach the progress listener to that.
+    let browsingContext = window.getWindowGlobalChild().browsingContext;
     let docShell;
-    for (
-      let browsingContext = BrowsingContext.getFromWindow(window);
-      browsingContext && browsingContext.docShell;
-      browsingContext = browsingContext.parent
-    ) {
+    while (browsingContext && browsingContext.docShell) {
       docShell = browsingContext.docShell;
+      browsingContext = browsingContext.parent;
     }
 
     try {
@@ -1597,7 +1595,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     let autoFilledLogin = docState.fillsByRootElement.get(form.rootElement);
-    let browsingContextId = win.windowGlobalChild.browsingContext.id;
+    let browsingContextId = win.getWindowGlobalChild().browsingContext.id;
 
     let detail = {
       origin,

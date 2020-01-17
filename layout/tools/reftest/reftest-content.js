@@ -514,7 +514,7 @@ const STATE_COMPLETED = 5;
 function FlushRendering(aFlushMode) {
     let browsingContext = content.docShell.browsingContext;
     let ignoreThrottledAnimations = (aFlushMode === FlushMode.IGNORE_THROTTLED_ANIMATIONS);
-    let promise = content.windowGlobalChild.getActor("ReftestFission").sendQuery("FlushRendering", {browsingContext, ignoreThrottledAnimations});
+    let promise = content.getWindowGlobalChild().getActor("ReftestFission").sendQuery("FlushRendering", {browsingContext, ignoreThrottledAnimations});
     return promise.then(function(result) {
         for (let errorString of result.errorStrings) {
             LogError(errorString);
@@ -1382,7 +1382,7 @@ function SynchronizeForSnapshot(flags)
     }
 
     let browsingContext = content.docShell.browsingContext;
-    let promise = content.windowGlobalChild.getActor("ReftestFission").sendQuery("UpdateLayerTree", {browsingContext});
+    let promise = content.getWindowGlobalChild().getActor("ReftestFission").sendQuery("UpdateLayerTree", {browsingContext});
     return promise.then(function (result) {
         for (let errorString of result) {
             LogError(errorString);
