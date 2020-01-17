@@ -13,6 +13,7 @@ add_task(async function testUserInterference() {
   });
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
 
+  let tab = BrowserTestUtils.addTab(gBrowser, EXAMPLE_URL);
   let panel = await promise;
   is(
     Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
@@ -40,6 +41,8 @@ add_task(async function testUserInterference() {
     "UIOk",
     "Doorhanger decision saved."
   );
+
+  BrowserTestUtils.removeTab(tab);
 
   await ensureTRRMode(2);
   checkHeuristicsTelemetry("enable_doh", "startup");

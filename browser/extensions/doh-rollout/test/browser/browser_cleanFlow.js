@@ -13,6 +13,7 @@ add_task(async function testCleanFlow() {
   });
   is(Preferences.get(prefs.DOH_SELF_ENABLED_PREF), true, "Breadcrumb saved.");
 
+  let tab = BrowserTestUtils.addTab(gBrowser, EXAMPLE_URL);
   let panel = await promise;
   is(
     Preferences.get(prefs.DOH_DOORHANGER_SHOWN_PREF),
@@ -47,6 +48,8 @@ add_task(async function testCleanFlow() {
     true,
     "Breadcrumb not cleared."
   );
+
+  BrowserTestUtils.removeTab(tab);
 
   // Change the environment to failing and simulate a network change.
   setFailingHeuristics();
