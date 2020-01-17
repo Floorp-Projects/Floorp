@@ -86,6 +86,7 @@ def test_filterpaths(test):
     (['subdir1/b.py', 'subdir1/subdir3'], ['subdir1/b.py', 'subdir1/subdir3']),
     (['subdir1/b.py', 'subdir1/b.js'], ['subdir1/b.py', 'subdir1/b.js']),
     (['subdir1/subdir3'], ['subdir1/subdir3']),
+    (['foo', 'foobar', ], ['foo', 'foobar']),
 ])
 def test_collapse(paths, expected):
     os.chdir(root)
