@@ -472,10 +472,10 @@ CustomizeMode.prototype = {
     AddonManager.removeAddonListener(this);
     CustomizableUI.removeListener(this);
 
-    this.document.removeEventListener("keypress", this);
-
     let window = this.window;
     let document = this.document;
+
+    document.removeEventListener("keypress", this);
 
     this.togglePong(false);
 
@@ -486,29 +486,29 @@ CustomizeMode.prototype = {
 
     this._transitioning = true;
 
+    this._depopulatePalette();
+
+    // We need to set this._customizing to false and remove the `customizing`
+    // attribute before removing the tab or else
+    // XULBrowserWindow.onLocationChange might think that we're still in
+    // customization mode and need to exit it for a second time.
+    this._customizing = false;
+    document.documentElement.removeAttribute("customizing");
+
+    if (this.browser.selectedTab == gTab) {
+      closeGlobalTab();
+    }
+
+    let customizer = document.getElementById("customization-container");
+    let browser = document.getElementById("browser");
+    customizer.hidden = true;
+    browser.collapsed = false;
+
+    window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
+
+    this._teardownPaletteDragging();
+
     (async () => {
-      await this.depopulatePalette();
-
-      // We need to set this._customizing to false and remove the `customizing`
-      // attribute before removing the tab or else
-      // XULBrowserWindow.onLocationChange might think that we're still in
-      // customization mode and need to exit it for a second time.
-      this._customizing = false;
-      this.document.documentElement.removeAttribute("customizing");
-
-      if (this.browser.selectedTab == gTab) {
-        closeGlobalTab();
-      }
-
-      let customizer = document.getElementById("customization-container");
-      let browser = document.getElementById("browser");
-      customizer.hidden = true;
-      browser.collapsed = false;
-
-      window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
-
-      this._teardownPaletteDragging();
-
       await this._unwrapToolbarItems();
 
       // And drop all area references.
@@ -849,33 +849,29 @@ CustomizeMode.prototype = {
     return wrapper;
   },
 
-  depopulatePalette() {
-    return (async () => {
-      this.visiblePalette.hidden = true;
-      let paletteChild = this.visiblePalette.firstElementChild;
-      let nextChild;
-      while (paletteChild) {
-        nextChild = paletteChild.nextElementSibling;
-        let itemId = paletteChild.firstElementChild.id;
-        if (CustomizableUI.isSpecialWidget(itemId)) {
-          this.visiblePalette.removeChild(paletteChild);
-        } else {
-          // XXXunf Currently this doesn't destroy the (now unused) node in the
-          //       API provider case. It would be good to do so, but we need to
-          //       keep strong refs to it in CustomizableUI (can't iterate of
-          //       WeakMaps), and there's the question of what behavior
-          //       wrappers should have if consumers keep hold of them.
-          let unwrappedPaletteItem = await this.deferredUnwrapToolbarItem(
-            paletteChild
-          );
-          this._stowedPalette.appendChild(unwrappedPaletteItem);
-        }
-
-        paletteChild = nextChild;
+  _depopulatePalette() {
+    this.visiblePalette.hidden = true;
+    let paletteChild = this.visiblePalette.firstElementChild;
+    let nextChild;
+    while (paletteChild) {
+      nextChild = paletteChild.nextElementSibling;
+      let itemId = paletteChild.firstElementChild.id;
+      if (CustomizableUI.isSpecialWidget(itemId)) {
+        this.visiblePalette.removeChild(paletteChild);
+      } else {
+        // XXXunf Currently this doesn't destroy the (now unused) node in the
+        //       API provider case. It would be good to do so, but we need to
+        //       keep strong refs to it in CustomizableUI (can't iterate of
+        //       WeakMaps), and there's the question of what behavior
+        //       wrappers should have if consumers keep hold of them.
+        let unwrappedPaletteItem = this.unwrapToolbarItem(paletteChild);
+        this._stowedPalette.appendChild(unwrappedPaletteItem);
       }
-      this.visiblePalette.hidden = false;
-      this.window.gNavToolbox.palette = this._stowedPalette;
-    })().catch(log.error);
+
+      paletteChild = nextChild;
+    }
+    this.visiblePalette.hidden = false;
+    this.window.gNavToolbox.palette = this._stowedPalette;
   },
 
   isCustomizableItem(aNode) {
@@ -1200,7 +1196,7 @@ CustomizeMode.prototype = {
     let btn = this.$("customization-reset-button");
     btn.disabled = true;
     return (async () => {
-      await this.depopulatePalette();
+      this._depopulatePalette();
       await this._unwrapToolbarItems();
 
       CustomizableUI.reset();
@@ -1223,7 +1219,7 @@ CustomizeMode.prototype = {
     this.resetting = true;
 
     return (async () => {
-      await this.depopulatePalette();
+      this._depopulatePalette();
       await this._unwrapToolbarItems();
 
       CustomizableUI.undoReset();
