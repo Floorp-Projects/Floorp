@@ -976,17 +976,16 @@ ContentParent::GetNewOrUsedBrowserProcessAsync(Element* aFrameElement,
   // cleanup manually in the `OnReject`.
   PreallocatedProcessManager::AddBlocker(p);
 
-  nsAutoString remoteType(aRemoteType);
   return launchPromise->Then(
       GetCurrentThreadSerialEventTarget(), __func__,
       // on resolve
-      [p, recordReplayState, remoteType,
+      [p, recordReplayState,
        launchPromise](const RefPtr<ContentParent>& subProcess) {
         if (recordReplayState == eNotRecordingOrReplaying) {
           // We cannot reuse `contentParents` as it may have been
           // overwritten or otherwise altered by another process launch.
           nsTArray<ContentParent*>& contentParents =
-              GetOrCreatePool(remoteType);
+              GetOrCreatePool(p->GetRemoteType());
           contentParents.AppendElement(p);
         }
 
