@@ -6188,7 +6188,14 @@ nsHttpChannel::Cancel(nsresult status) {
   // We should never have a pump open while a CORS preflight is in progress.
   MOZ_ASSERT_IF(mPreflightChannel, !mCachePump);
 #ifdef DEBUG
-  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(status)) {
+  // We want to perform this check only when the chanel is being cancelled the
+  // first time with a URL classifier blocking error code.  If mStatus is
+  // already set to such an error code then Cancel() may be called for some
+  // other reason, for example because we've received notification about our
+  // parent process side channel being canceled, in which case we cannot expect
+  // that CancelByURLClassifier() would have handled this case.
+  if (UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(status) &&
+      !UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(mStatus)) {
     MOZ_CRASH_UNSAFE_PRINTF("Blocking classifier error %" PRIx32
                             " need to be handled by CancelByURLClassifier()",
                             static_cast<uint32_t>(status));
