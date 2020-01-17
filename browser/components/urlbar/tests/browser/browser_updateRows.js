@@ -255,6 +255,9 @@ class TestProvider extends UrlbarProvider {
   isActive(context) {
     return true;
   }
+  isRestricting(context) {
+    return false;
+  }
   async startQuery(context, addCallback) {
     for (const result of this._results) {
       addCallback(this, result);

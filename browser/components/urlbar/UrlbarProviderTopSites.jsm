@@ -71,13 +71,14 @@ class ProviderTopSites extends UrlbarProvider {
   }
 
   /**
-   * Gets the provider's priority.
+   * Whether this provider wants to restrict results to just itself.
+   * Other providers won't be invoked, unless this provider doesn't
+   * support the current query.
    * @param {UrlbarQueryContext} queryContext The query context object
-   * @returns {number} The provider's priority for the given query.
+   * @returns {boolean} Whether this provider wants to restrict results.
    */
-  getPriority(queryContext) {
-    // Top sites are prioritized over other built-in providers.
-    return 1;
+  isRestricting(queryContext) {
+    return true;
   }
 
   /**

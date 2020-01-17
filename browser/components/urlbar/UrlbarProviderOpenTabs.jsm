@@ -111,6 +111,17 @@ class ProviderOpenTabs extends UrlbarProvider {
   }
 
   /**
+   * Whether this provider wants to restrict results to just itself.
+   * Other providers won't be invoked, unless this provider doesn't
+   * support the current query.
+   * @param {UrlbarQueryContext} queryContext The query context object
+   * @returns {boolean} Whether this provider wants to restrict results.
+   */
+  isRestricting(queryContext) {
+    return false;
+  }
+
+  /**
    * Registers a tab as open.
    * @param {string} url Address of the tab
    * @param {integer} userContextId Containers user context id
