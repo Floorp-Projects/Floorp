@@ -221,3 +221,5 @@ pub use crate::screen_capture::{AsyncScreenshotHandle, RecordedFrameHandle};
 pub use crate::shade::{Shaders, WrShaders};
 pub use api as webrender_api;
 pub use webrender_build::shader::ProgramSourceDigest;
+pub use crate::picture::{TileDescriptor, TileId, InvalidationReason, PrimitiveCompareResult};
+pub use crate::picture::{TileNode, TileNodeKind, TileSerializer, TileCacheInstanceSerializer, TileOffset};
