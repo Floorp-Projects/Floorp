@@ -1350,6 +1350,9 @@ already_AddRefed<mozilla::layers::Layer> nsDisplayRemote::BuildLayer(
       visibleRect = GetBuildingRect();
     }
     visibleRect -= ToReferenceFrame();
+    nsRect contentRect = Frame()->GetContentRectRelativeToSelf();
+    visibleRect.IntersectRect(visibleRect, contentRect);
+    visibleRect -= contentRect.TopLeft();
 
     // Generate an effects update notifying the browser it is visible
     aBuilder->AddEffectUpdate(remoteBrowser,
@@ -1418,6 +1421,9 @@ bool nsDisplayRemote::CreateWebRenderCommands(
     // Adjust mItemVisibleRect, which is relative to the reference frame, to be
     // relative to this frame
     nsRect visibleRect = GetBuildingRect() - ToReferenceFrame();
+    nsRect contentRect = Frame()->GetContentRectRelativeToSelf();
+    visibleRect.IntersectRect(visibleRect, contentRect);
+    visibleRect -= contentRect.TopLeft();
 
     // Generate an effects update notifying the browser it is visible
     // TODO - Gather scaling factors
@@ -1435,9 +1441,10 @@ bool nsDisplayRemote::CreateWebRenderCommands(
 
   mOffset = GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
 
+  nsRect contentRect = mFrame->GetContentRectRelativeToSelf();
+  contentRect.MoveTo(0, 0);
   LayoutDeviceRect rect = LayoutDeviceRect::FromAppUnits(
-      mFrame->GetContentRectRelativeToSelf(),
-      mFrame->PresContext()->AppUnitsPerDevPixel());
+      contentRect, mFrame->PresContext()->AppUnitsPerDevPixel());
   rect += mOffset;
 
   aBuilder.PushIFrame(mozilla::wr::ToLayoutRect(rect), !BackfaceIsHidden(),
