@@ -29,8 +29,8 @@ class RendererRecordedFrame final : public layers::RecordedFrame {
                                             gfx::DataSourceSurface::WRITE);
 
       if (!wr_renderer_map_recorded_frame(mRenderer, mHandle, map.GetData(),
-                                          mSize.width * mSize.height * 4,
-                                          mSize.width * 4)) {
+                                          map.GetStride() * mSize.height,
+                                          map.GetStride())) {
         return nullptr;
       }
     }
