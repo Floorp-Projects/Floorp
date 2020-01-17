@@ -14,10 +14,13 @@ add_task(
     const threadActor =
       rootActor._parameters.tabList._targetActors[0].threadActor;
 
-    let lastMessage;
+    let lastMessage, lastExpression;
     threadActor._parent._consoleActor = {
       onConsoleAPICall(message) {
         lastMessage = message;
+      },
+      evaluateJS(expression) {
+        lastExpression = expression;
       },
     };
 
@@ -39,8 +42,15 @@ add_task(
 
     // Execute the rest of the code.
     await threadFront.resume();
-    Assert.equal(lastMessage.level, "logPointError");
-    Assert.equal(lastMessage.arguments[0], "c is not defined");
+
+    // NOTE: logpoints evaluated in a worker have a lastExpression
+    if (lastMessage) {
+      Assert.equal(lastMessage.level, "logPointError");
+      Assert.equal(lastMessage.arguments[0], "c is not defined");
+    } else {
+      Assert.equal(lastExpression.text, "console.log(...[c])");
+      Assert.equal(lastExpression.lineNumber, 3);
+    }
   })
 );
 
