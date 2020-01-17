@@ -398,7 +398,6 @@ class nsFlexContainerFrame final : public nsContainerFrame {
                            nsReflowStatus& aStatus);
 
   void SizeItemInCrossAxis(nsPresContext* aPresContext,
-                           const FlexboxAxisTracker& aAxisTracker,
                            ReflowInput& aChildReflowInput, FlexItem& aItem);
 
   /**
