@@ -7,6 +7,7 @@ package mozilla.components.browser.errorpages
 import android.content.Context
 import androidx.annotation.RawRes
 import androidx.annotation.StringRes
+import mozilla.components.support.ktx.android.content.appName
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -51,7 +52,7 @@ object ErrorPages {
                             context.getString(R.string.mozac_browser_errorpages_security_bad_cert_advanced))
                     .replace("%badCertTechInfo%",
                             context.getString(R.string.mozac_browser_errorpages_security_bad_cert_techInfo,
-                                    uri.toString()))
+                                    context.appName, uri.toString()))
                     .replace("%badCertGoBack%",
                             context.getString(R.string.mozac_browser_errorpages_security_bad_cert_back))
                     .replace("%badCertAcceptTemporary%",

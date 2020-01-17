@@ -33,6 +33,8 @@ android {
 dependencies {
     implementation Dependencies.androidx_annotation
 
+    implementation project(':support-ktx')
+
     implementation Dependencies.kotlin_stdlib
 
     testImplementation project(':support-test')

@@ -68,7 +68,8 @@ class ErrorPagesTest {
             assertFalse(errorPage.contains("%badCertGoBack%"))
             assertFalse(errorPage.contains("%badCertAcceptTemporary%"))
             verify(context, times(7)).getString(anyInt())
-            verify(context, times(2)).getString(anyInt(), nullable(String::class.java))
+            verify(context, times(1)).getString(anyInt(), nullable(String::class.java))
+            verify(context, times(1)).getString(anyInt(), nullable(String::class.java), nullable(String::class.java))
         } else {
             verify(context, times(4)).getString(anyInt())
             verify(context, times(1)).getString(anyInt(), nullable(String::class.java))
