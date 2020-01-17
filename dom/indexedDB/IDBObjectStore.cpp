@@ -1498,7 +1498,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
     return nullptr;
   }
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -1522,7 +1522,7 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
     return nullptr;
   }
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -1692,7 +1692,7 @@ RefPtr<IDBRequest> IDBObjectStore::GetAllInternal(
     return nullptr;
   }
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -1808,7 +1808,7 @@ RefPtr<IDBRequest> IDBObjectStore::Clear(JSContext* aCx, ErrorResult& aRv) {
     return nullptr;
   }
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -2013,7 +2013,7 @@ RefPtr<IDBRequest> IDBObjectStore::GetInternal(bool aKeyOnly, JSContext* aCx,
     return nullptr;
   }
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -2071,7 +2071,7 @@ RefPtr<IDBRequest> IDBObjectStore::DeleteInternal(JSContext* aCx,
     return nullptr;
   }
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -2129,8 +2129,7 @@ RefPtr<IDBIndex> IDBObjectStore::CreateIndex(
   }
 
   IDBTransaction* const transaction = IDBTransaction::GetCurrent();
-  if (!transaction || transaction != mTransaction ||
-      !transaction->CanAcceptRequests()) {
+  if (!transaction || transaction != mTransaction || !transaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -2235,8 +2234,7 @@ void IDBObjectStore::DeleteIndex(const nsAString& aName, ErrorResult& aRv) {
   }
 
   IDBTransaction* transaction = IDBTransaction::GetCurrent();
-  if (!transaction || transaction != mTransaction ||
-      !transaction->CanAcceptRequests()) {
+  if (!transaction || transaction != mTransaction || !transaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
@@ -2302,7 +2300,7 @@ RefPtr<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
     return nullptr;
   }
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -2354,7 +2352,7 @@ RefPtr<IDBRequest> IDBObjectStore::OpenCursorInternal(
     return nullptr;
   }
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -2506,8 +2504,7 @@ void IDBObjectStore::SetName(const nsAString& aName, ErrorResult& aRv) {
   }
 
   IDBTransaction* transaction = IDBTransaction::GetCurrent();
-  if (!transaction || transaction != mTransaction ||
-      !transaction->CanAcceptRequests()) {
+  if (!transaction || transaction != mTransaction || !transaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }

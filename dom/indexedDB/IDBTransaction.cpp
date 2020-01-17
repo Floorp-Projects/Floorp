@@ -427,12 +427,6 @@ void IDBTransaction::MaybeNoteInactiveTransaction() {
   }
 }
 
-bool IDBTransaction::CanAcceptRequests() const {
-  AssertIsOnOwningThread();
-
-  return mReadyState == ReadyState::Active;
-}
-
 IDBTransaction::AutoRestoreState<IDBTransaction::ReadyState::Inactive,
                                  IDBTransaction::ReadyState::Active>
 IDBTransaction::TemporarilyTransitionToActive() {
@@ -463,7 +457,7 @@ RefPtr<IDBObjectStore> IDBTransaction::CreateObjectStore(
   MOZ_ASSERT(aSpec.metadata().id());
   MOZ_ASSERT(Mode::VersionChange == mMode);
   MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
-  MOZ_ASSERT(CanAcceptRequests());
+  MOZ_ASSERT(IsActive());
 
 #ifdef DEBUG
   {
@@ -497,7 +491,7 @@ void IDBTransaction::DeleteObjectStore(const int64_t aObjectStoreId) {
   MOZ_ASSERT(aObjectStoreId);
   MOZ_ASSERT(Mode::VersionChange == mMode);
   MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
-  MOZ_ASSERT(CanAcceptRequests());
+  MOZ_ASSERT(IsActive());
 
   MOZ_ALWAYS_TRUE(
       mBackgroundActor.mVersionChangeBackgroundActor->SendDeleteObjectStore(
@@ -526,7 +520,7 @@ void IDBTransaction::RenameObjectStore(const int64_t aObjectStoreId,
   MOZ_ASSERT(aObjectStoreId);
   MOZ_ASSERT(Mode::VersionChange == mMode);
   MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
-  MOZ_ASSERT(CanAcceptRequests());
+  MOZ_ASSERT(IsActive());
 
   MOZ_ALWAYS_TRUE(
       mBackgroundActor.mVersionChangeBackgroundActor->SendRenameObjectStore(
@@ -540,7 +534,7 @@ void IDBTransaction::CreateIndex(IDBObjectStore* const aObjectStore,
   MOZ_ASSERT(aMetadata.id());
   MOZ_ASSERT(Mode::VersionChange == mMode);
   MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
-  MOZ_ASSERT(CanAcceptRequests());
+  MOZ_ASSERT(IsActive());
 
   MOZ_ALWAYS_TRUE(
       mBackgroundActor.mVersionChangeBackgroundActor->SendCreateIndex(
@@ -554,7 +548,7 @@ void IDBTransaction::DeleteIndex(IDBObjectStore* const aObjectStore,
   MOZ_ASSERT(aIndexId);
   MOZ_ASSERT(Mode::VersionChange == mMode);
   MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
-  MOZ_ASSERT(CanAcceptRequests());
+  MOZ_ASSERT(IsActive());
 
   MOZ_ALWAYS_TRUE(
       mBackgroundActor.mVersionChangeBackgroundActor->SendDeleteIndex(
@@ -569,7 +563,7 @@ void IDBTransaction::RenameIndex(IDBObjectStore* const aObjectStore,
   MOZ_ASSERT(aIndexId);
   MOZ_ASSERT(Mode::VersionChange == mMode);
   MOZ_ASSERT(mBackgroundActor.mVersionChangeBackgroundActor);
-  MOZ_ASSERT(CanAcceptRequests());
+  MOZ_ASSERT(IsActive());
 
   MOZ_ALWAYS_TRUE(
       mBackgroundActor.mVersionChangeBackgroundActor->SendRenameIndex(
@@ -602,7 +596,7 @@ void IDBTransaction::AbortInternal(const nsresult aAbortCode,
     // time-consuming(O(m*n)) and mIndexes/mDeletedIndexes won't be used anymore
     // in IDBObjectStore::(Create|Delete)Index() and IDBObjectStore::Index() in
     // which all the executions are returned earlier by
-    // !transaction->CanAcceptRequests().
+    // !transaction->IsActive().
 
     const nsTArray<ObjectStoreSpec>& specArray =
         mDatabase->Spec()->objectStores();
