@@ -12,6 +12,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Preferences.jsm"
 );
 
+SpecialPowers.pushPrefEnv({
+  set: [["security.notification_enable_delay", 0]],
+});
+
 const ADDON_ID = "doh-rollout@mozilla.org";
 
 const prefs = {
@@ -51,56 +55,6 @@ const fakeFailingHeuristics = JSON.stringify({
   policy: "disable_doh",
 });
 
-async function setup() {
-  SpecialPowers.pushPrefEnv({
-    set: [["security.notification_enable_delay", 0]],
-  });
-  let oldCanRecord = Services.telemetry.canRecordExtended;
-  Services.telemetry.canRecordExtended = true;
-  Services.telemetry.clearEvents();
-
-  registerCleanupFunction(async () => {
-    Services.telemetry.canRecordExtended = oldCanRecord;
-    Services.telemetry.clearEvents();
-    await resetPrefsAndRestartAddon();
-  });
-}
-
-function checkHeuristicsTelemetry(decision, evaluateReason) {
-  let events = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
-  ).dynamic;
-  events = events.filter(
-    e => e[1] == "doh" && e[2] == "evaluate" && e[3] == "heuristics"
-  );
-  is(events.length, 1, "Found the expected heuristics event.");
-  is(events[0][4], decision, "The event records the expected decision");
-  if (evaluateReason) {
-    is(events[0][5].evaluateReason, evaluateReason, "Got the expected reason.");
-  }
-
-  // After checking the event, clear all telemetry. Since we check for a single
-  // event above, this ensures all heuristics events are intentional and tested.
-  // TODO: Test events other than heuristics. Those tests would also work the
-  // same way, so as to test one event at a time, and this clearEvents() call
-  // will continue to exist as-is.
-  Services.telemetry.clearEvents();
-}
-
-function ensureNoHeuristicsTelemetry() {
-  let events = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
-  ).dynamic;
-  if (!events) {
-    ok(true, "Found no heuristics events.");
-    return;
-  }
-  events = events.filter(
-    e => e[1] == "doh" && e[2] == "evaluate" && e[3] == "heuristics"
-  );
-  is(events.length, 0, "Found no heuristics events.");
-}
-
 function setPassingHeuristics() {
   Preferences.set(prefs.MOCK_HEURISTICS_PREF, fakePassingHeuristics);
 }
@@ -137,12 +91,7 @@ async function waitForDoorhanger() {
 }
 
 function simulateNetworkChange() {
-  // The networkStatus API does not actually propagate the link status we supply
-  // here, but rather sends the link status from the NetworkLinkService.
-  // This means there's no point sending a down and then an up - the extension
-  // will just receive "up" twice.
-  // TODO: Implement a mock NetworkLinkService and use it to also simulate
-  // network down events.
+  Services.obs.notifyObservers(null, "network:link-status-changed", "down");
   Services.obs.notifyObservers(null, "network:link-status-changed", "up");
 }
 
