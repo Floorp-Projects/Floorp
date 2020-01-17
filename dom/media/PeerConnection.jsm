@@ -945,6 +945,16 @@ class RTCPeerConnection {
     this._syncTransceivers();
     let origin = Cu.getWebIDLCallerPrincipal().origin;
     return this._chain(async () => {
+      switch (this.signalingState) {
+        case "stable":
+        case "have-local-offer":
+          break;
+        default:
+          throw new this._win.DOMException(
+            `Cannot create offer in ${this.signalingState}`,
+            "InvalidStateError"
+          );
+      }
       let haveAssertion;
       if (this._localIdp.enabled) {
         haveAssertion = this._getIdentityAssertion(origin);
@@ -980,15 +990,9 @@ class RTCPeerConnection {
       // We give up line-numbers in errors by doing this here, but do all
       // state-checks inside the chain, to support the legacy feature that
       // callers don't have to wait for setRemoteDescription to finish.
-      if (!this.remoteDescription) {
+      if (this.signalingState != "have-remote-offer") {
         throw new this._win.DOMException(
-          "setRemoteDescription not called",
-          "InvalidStateError"
-        );
-      }
-      if (this.remoteDescription.type != "offer") {
-        throw new this._win.DOMException(
-          "No outstanding offer",
+          `Cannot create offer in ${this.signalingState}`,
           "InvalidStateError"
         );
       }
