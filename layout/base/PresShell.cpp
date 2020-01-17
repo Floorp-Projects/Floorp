@@ -10507,6 +10507,10 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
 
   if (needMVM) {
     if (mPresContext->IsRootContentDocumentCrossProcess()) {
+      // Store the resolution so we can restore to this resolution when
+      // the MVM is destroyed.
+      mDocument->SetSavedResolutionBeforeMVM(mResolution.valueOr(1.0f));
+
       mMVMContext = new GeckoMVMContext(mDocument, this);
       mMobileViewportManager = new MobileViewportManager(mMVMContext);
 
@@ -10520,20 +10524,17 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
 
   MOZ_ASSERT(mMobileViewportManager,
              "Shouldn't reach this without a MobileViewportManager.");
-  // Before we get rid of our MVM, ask it to update the viewport while
-  // forcing resolution, which will undo any scaling it might have imposed.
-  // To do this correctly, we need to first null out mMobileViewportManager,
-  // because during reflow we will check PresShell::GetIsViewportOverriden(),
-  // which uses that value as a signifier.
-  RefPtr<MobileViewportManager> oldMVM;
-  mMobileViewportManager.swap(oldMVM);
 
-  oldMVM->RequestReflow(true);
+  mMobileViewportManager->Destroy();
+  mMobileViewportManager = nullptr;
+  mMVMContext = nullptr;
+
   ResetVisualViewportSize();
 
-  oldMVM->Destroy();
-  oldMVM = nullptr;
-  mMVMContext = nullptr;
+  // After we clear out the MVM and the MVMContext, also reset the
+  // resolution to its pre-MVM value.
+  SetResolutionAndScaleTo(mDocument->GetSavedResolutionBeforeMVM(),
+                          ResolutionChangeOrigin::MainThreadRestore);
 
   if (aAfterInitialization) {
     // Force a reflow to our correct size by going back to the docShell

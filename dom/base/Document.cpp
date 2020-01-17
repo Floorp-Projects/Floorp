@@ -1364,6 +1364,7 @@ Document::Document(const char* aContentType)
       mIgnoreOpensDuringUnloadCounter(0),
       mDocLWTheme(Doc_Theme_Uninitialized),
       mSavedResolution(1.0f),
+      mSavedResolutionBeforeMVM(1.0f),
       mPendingInitialTranslation(false),
       mGeneration(0),
       mCachedTabSizeGeneration(0),
