@@ -6,6 +6,7 @@
 
 #include "DOMSVGTransformList.h"
 
+#include "mozAutoDocUpdate.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGTransformListBinding.h"
@@ -78,18 +79,20 @@ JSObject* DOMSVGTransformList::WrapObject(JSContext* cx,
 // Helper class: AutoChangeTransformListNotifier
 // Stack-based helper class to pair calls to WillChangeTransformList and
 // DidChangeTransformList.
-class MOZ_RAII AutoChangeTransformListNotifier {
+class MOZ_RAII AutoChangeTransformListNotifier : public mozAutoDocUpdate {
  public:
   explicit AutoChangeTransformListNotifier(
       DOMSVGTransformList* aTransformList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mTransformList(aTransformList) {
+      : mozAutoDocUpdate(aTransformList->Element()->GetComposedDoc(), true),
+        mTransformList(aTransformList) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mTransformList, "Expecting non-null transformList");
-    mEmptyOrOldValue = mTransformList->Element()->WillChangeTransformList();
+    mEmptyOrOldValue =
+        mTransformList->Element()->WillChangeTransformList(*this);
   }
 
   ~AutoChangeTransformListNotifier() {
-    mTransformList->Element()->DidChangeTransformList(mEmptyOrOldValue);
+    mTransformList->Element()->DidChangeTransformList(mEmptyOrOldValue, *this);
     if (mTransformList->IsAnimating()) {
       mTransformList->Element()->AnimationNeedsResample();
     }

@@ -6,6 +6,7 @@
 
 #include "DOMSVGStringList.h"
 
+#include "mozAutoDocUpdate.h"
 #include "mozilla/dom/SVGStringListBinding.h"
 #include "mozilla/dom/SVGTests.h"
 #include "nsCOMPtr.h"
@@ -40,21 +41,23 @@ NS_INTERFACE_MAP_END
 // Helper class: AutoChangeStringListNotifier
 // Stack-based helper class to pair calls to WillChangeStringListList and
 // DidChangeStringListList.
-class MOZ_RAII AutoChangeStringListNotifier {
+class MOZ_RAII AutoChangeStringListNotifier : public mozAutoDocUpdate {
  public:
   explicit AutoChangeStringListNotifier(
       DOMSVGStringList* aStringList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mStringList(aStringList) {
+      : mozAutoDocUpdate(aStringList->mElement->GetComposedDoc(), true),
+        mStringList(aStringList) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mStringList, "Expecting non-null stringList");
     mEmptyOrOldValue = mStringList->mElement->WillChangeStringList(
-        mStringList->mIsConditionalProcessingAttribute, mStringList->mAttrEnum);
+        mStringList->mIsConditionalProcessingAttribute, mStringList->mAttrEnum,
+        *this);
   }
 
   ~AutoChangeStringListNotifier() {
     mStringList->mElement->DidChangeStringList(
         mStringList->mIsConditionalProcessingAttribute, mStringList->mAttrEnum,
-        mEmptyOrOldValue);
+        mEmptyOrOldValue, *this);
   }
 
  private:

@@ -9,6 +9,7 @@
 #include "DOMSVGAnimatedNumberList.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGElement.h"
+#include "mozAutoDocUpdate.h"
 #include "nsError.h"
 #include "nsContentUtils.h"  // for NS_ENSURE_FINITE
 #include "mozilla/dom/SVGNumberBinding.h"
@@ -54,22 +55,23 @@ NS_INTERFACE_MAP_END
 // Helper class: AutoChangeNumberNotifier
 // Stack-based helper class to pair calls to WillChangeNumberList and
 // DidChangeNumberList.
-class MOZ_RAII AutoChangeNumberNotifier {
+class MOZ_RAII AutoChangeNumberNotifier : public mozAutoDocUpdate {
  public:
   explicit AutoChangeNumberNotifier(
       DOMSVGNumber* aNumber MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mNumber(aNumber) {
+      : mozAutoDocUpdate(aNumber->Element()->GetComposedDoc(), true),
+        mNumber(aNumber) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mNumber, "Expecting non-null number");
     MOZ_ASSERT(mNumber->HasOwner(),
                "Expecting list to have an owner for notification");
     mEmptyOrOldValue =
-        mNumber->Element()->WillChangeNumberList(mNumber->mAttrEnum);
+        mNumber->Element()->WillChangeNumberList(mNumber->mAttrEnum, *this);
   }
 
   ~AutoChangeNumberNotifier() {
     mNumber->Element()->DidChangeNumberList(mNumber->mAttrEnum,
-                                            mEmptyOrOldValue);
+                                            mEmptyOrOldValue, *this);
     // Null check mNumber->mList, since DidChangeNumberList can run script,
     // potentially removing mNumber from its list.
     if (mNumber->mList && mNumber->mList->IsAnimating()) {

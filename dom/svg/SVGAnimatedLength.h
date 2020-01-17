@@ -19,6 +19,7 @@
 #include "nsError.h"
 #include "nsMathUtils.h"
 
+class mozAutoDocUpdate;
 class nsIFrame;
 
 namespace mozilla {
@@ -182,7 +183,8 @@ class SVGAnimatedLength {
   // perform unit conversion and are therefore infallible.
   nsresult SetBaseValue(float aValue, SVGElement* aSVGElement, bool aDoSetAttr);
   void SetBaseValueInSpecifiedUnits(float aValue, SVGElement* aSVGElement,
-                                    bool aDoSetAttr);
+                                    bool aDoSetAttr,
+                                    const mozAutoDocUpdate& aProofOfUpdate);
   nsresult SetAnimValue(float aValue, SVGElement* aSVGElement);
   void SetAnimValueInSpecifiedUnits(float aValue, SVGElement* aSVGElement);
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType,

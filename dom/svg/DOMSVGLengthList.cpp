@@ -8,6 +8,7 @@
 
 #include "SVGElement.h"
 #include "DOMSVGLength.h"
+#include "mozAutoDocUpdate.h"
 #include "nsError.h"
 #include "SVGAnimatedLengthList.h"
 #include "nsCOMPtr.h"
@@ -78,20 +79,21 @@ JSObject* DOMSVGLengthList::WrapObject(JSContext* cx,
 // Helper class: AutoChangeLengthListNotifier
 // Stack-based helper class to pair calls to WillChangeLengthList and
 // DidChangeLengthList.
-class MOZ_RAII AutoChangeLengthListNotifier {
+class MOZ_RAII AutoChangeLengthListNotifier : public mozAutoDocUpdate {
  public:
   explicit AutoChangeLengthListNotifier(
       DOMSVGLengthList* aLengthList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mLengthList(aLengthList) {
+      : mozAutoDocUpdate(aLengthList->Element()->GetComposedDoc(), true),
+        mLengthList(aLengthList) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mLengthList, "Expecting non-null lengthList");
-    mEmptyOrOldValue =
-        mLengthList->Element()->WillChangeLengthList(mLengthList->AttrEnum());
+    mEmptyOrOldValue = mLengthList->Element()->WillChangeLengthList(
+        mLengthList->AttrEnum(), *this);
   }
 
   ~AutoChangeLengthListNotifier() {
     mLengthList->Element()->DidChangeLengthList(mLengthList->AttrEnum(),
-                                                mEmptyOrOldValue);
+                                                mEmptyOrOldValue, *this);
     if (mLengthList->IsAnimating()) {
       mLengthList->Element()->AnimationNeedsResample();
     }

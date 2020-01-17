@@ -2363,7 +2363,8 @@ nsresult TextEditor::SetUnmaskRangeInternal(uint32_t aStart, uint32_t aLength,
       return NS_ERROR_NOT_INITIALIZED;
     }
     // Notify nsTextFrame of masking range change.
-    if (PresShell* presShell = document->GetObservingPresShell()) {
+    if (RefPtr<PresShell> presShell = document->GetObservingPresShell()) {
+      nsAutoScriptBlocker blockRunningScript;
       uint32_t valueLength = text->Length();
       CharacterDataChangeInfo changeInfo = {false, 0, valueLength, valueLength,
                                             nullptr};

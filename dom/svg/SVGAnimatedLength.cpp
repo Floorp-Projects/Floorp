@@ -6,7 +6,9 @@
 
 #include "SVGAnimatedLength.h"
 
+#include "mozAutoDocUpdate.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/dom/SVGViewportElement.h"
 #include "DOMSVGAnimatedLength.h"
@@ -250,16 +252,16 @@ float SVGAnimatedLength::GetPixelsPerUnit(const UserSpaceMetrics& aMetrics,
   }
 }
 
-void SVGAnimatedLength::SetBaseValueInSpecifiedUnits(float aValue,
-                                                     SVGElement* aSVGElement,
-                                                     bool aDoSetAttr) {
+void SVGAnimatedLength::SetBaseValueInSpecifiedUnits(
+    float aValue, SVGElement* aSVGElement, bool aDoSetAttr,
+    const mozAutoDocUpdate& aProofOfUpdate) {
   if (mIsBaseSet && mBaseVal == aValue) {
     return;
   }
 
   nsAttrValue emptyOrOldValue;
   if (aDoSetAttr) {
-    emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
+    emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum, aProofOfUpdate);
   }
   mBaseVal = aValue;
   mIsBaseSet = true;
@@ -269,7 +271,7 @@ void SVGAnimatedLength::SetBaseValueInSpecifiedUnits(float aValue,
     aSVGElement->AnimationNeedsResample();
   }
   if (aDoSetAttr) {
-    aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
+    aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue, aProofOfUpdate);
   }
 }
 
@@ -296,14 +298,17 @@ nsresult SVGAnimatedLength::ConvertToSpecifiedUnits(uint16_t unitType,
   // on the document, we still need to send out notifications in case we have
   // mutation listeners, since the actual string value of the attribute will
   // change.
-  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
+  mozAutoDocUpdate updateBatch(aSVGElement->GetComposedDoc(), true);
+  nsAttrValue emptyOrOldValue =
+      aSVGElement->WillChangeLength(mAttrEnum, updateBatch);
 
   mSpecifiedUnitType = uint8_t(unitType);
   // Setting aDoSetAttr to false here will ensure we don't call
   // Will/DidChangeAngle a second time (and dispatch duplicate notifications).
-  SetBaseValueInSpecifiedUnits(valueInSpecifiedUnits, aSVGElement, false);
+  SetBaseValueInSpecifiedUnits(valueInSpecifiedUnits, aSVGElement, false,
+                               updateBatch);
 
-  aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
+  aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue, updateBatch);
 
   return NS_OK;
 }
@@ -320,7 +325,9 @@ nsresult SVGAnimatedLength::NewValueSpecifiedUnits(uint16_t aUnitType,
     return NS_OK;
   }
 
-  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
+  mozAutoDocUpdate updateBatch(aSVGElement->GetComposedDoc(), true);
+  nsAttrValue emptyOrOldValue =
+      aSVGElement->WillChangeLength(mAttrEnum, updateBatch);
   mBaseVal = aValueInSpecifiedUnits;
   mIsBaseSet = true;
   mSpecifiedUnitType = uint8_t(aUnitType);
@@ -329,7 +336,7 @@ nsresult SVGAnimatedLength::NewValueSpecifiedUnits(uint16_t aUnitType,
   } else {
     aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
+  aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue, updateBatch);
   return NS_OK;
 }
 
@@ -360,9 +367,12 @@ nsresult SVGAnimatedLength::SetBaseValueString(const nsAString& aValueAsString,
     return NS_OK;
   }
 
+  Maybe<mozAutoDocUpdate> updateBatch;
   nsAttrValue emptyOrOldValue;
   if (aDoSetAttr) {
-    emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
+    updateBatch.emplace(aSVGElement->GetComposedDoc(), true);
+    emptyOrOldValue =
+        aSVGElement->WillChangeLength(mAttrEnum, updateBatch.ref());
   }
   mBaseVal = value;
   mIsBaseSet = true;
@@ -374,7 +384,7 @@ nsresult SVGAnimatedLength::SetBaseValueString(const nsAString& aValueAsString,
   }
 
   if (aDoSetAttr) {
-    aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
+    aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue, updateBatch.ref());
   }
   return NS_OK;
 }
@@ -399,7 +409,9 @@ nsresult SVGAnimatedLength::SetBaseValue(float aValue, SVGElement* aSVGElement,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  SetBaseValueInSpecifiedUnits(valueInSpecifiedUnits, aSVGElement, aDoSetAttr);
+  mozAutoDocUpdate updateBatch(aSVGElement->GetComposedDoc(), true);
+  SetBaseValueInSpecifiedUnits(valueInSpecifiedUnits, aSVGElement, aDoSetAttr,
+                               updateBatch);
   return NS_OK;
 }
 
