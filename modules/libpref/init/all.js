@@ -2288,6 +2288,10 @@ pref("security.notification_enable_delay", 500);
   // to skip the assertion that HTML fragments (e.g. innerHTML) can
   // not be used within chrome code or about: pages.
   pref("domsecurity.skip_html_fragment_assertion", false);
+  // For testing purposes only; Flipping this pref to true allows
+  // to skip the assertion that remote scripts can not be loaded
+  // in system privileged contexts.
+  pref("domsecurity.skip_remote_script_assertion_in_system_priv_context", false);
 #endif
 
 #ifdef EARLY_BETA_OR_EARLIER
