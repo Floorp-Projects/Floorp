@@ -690,7 +690,7 @@ void DispatchErrorEvent(IDBRequest* aRequest, nsresult aErrorCode,
   }
 
   MOZ_ASSERT(!transaction || transaction->IsActive() ||
-             transaction->IsAborted());
+             transaction->IsAborted() || transaction->WasExplicitlyCommitted());
 
   if (transaction && transaction->IsActive()) {
     transaction->TransitionToInactive();
@@ -758,7 +758,7 @@ void DispatchSuccessEvent(ResultHelper* aResultHelper,
                                IDB_LOG_STRINGIFY(aEvent, kSuccessEventType));
   }
 
-  MOZ_ASSERT_IF(transaction,
+  MOZ_ASSERT_IF(transaction && !transaction->WasExplicitlyCommitted(),
                 transaction->IsActive() && !transaction->IsAborted());
 
   IgnoredErrorResult rv;
