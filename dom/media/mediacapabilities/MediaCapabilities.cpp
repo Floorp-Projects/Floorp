@@ -534,8 +534,11 @@ Maybe<MediaContainerType> MediaCapabilities::CheckAudioConfiguration(
 }
 
 bool MediaCapabilities::CheckTypeForMediaSource(const nsAString& aType) {
-  return NS_SUCCEEDED(MediaSource::IsTypeSupported(
-      aType, nullptr /* DecoderDoctorDiagnostics */));
+  IgnoredErrorResult rv;
+  MediaSource::IsTypeSupported(aType, nullptr /* DecoderDoctorDiagnostics */,
+                               rv);
+
+  return !rv.Failed();
 }
 
 bool MediaCapabilities::CheckTypeForFile(const nsAString& aType) {

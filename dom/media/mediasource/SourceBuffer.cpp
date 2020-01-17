@@ -364,16 +364,17 @@ void SourceBuffer::ChangeType(const nsAString& aType, ErrorResult& aRv) {
   //    the parent media source , then throw a NotSupportedError exception and
   //    abort these steps.
   DecoderDoctorDiagnostics diagnostics;
-  nsresult rv = MediaSource::IsTypeSupported(aType, &diagnostics);
+  MediaSource::IsTypeSupported(aType, &diagnostics, aRv);
+  bool supported = !aRv.Failed();
   diagnostics.StoreFormatDiagnostics(
       mMediaSource->GetOwner() ? mMediaSource->GetOwner()->GetExtantDoc()
                                : nullptr,
-      aType, NS_SUCCEEDED(rv), __func__);
+      aType, supported, __func__);
   MSE_API("ChangeType(aType=%s)%s", NS_ConvertUTF16toUTF8(aType).get(),
-          rv == NS_OK ? "" : " [not supported]");
-  if (NS_FAILED(rv)) {
-    DDLOG(DDLogCategory::API, "ChangeType", rv);
-    aRv.Throw(rv);
+          supported ? "" : " [not supported]");
+  if (!supported) {
+    DDLOG(DDLogCategory::API, "ChangeType",
+          static_cast<nsresult>(aRv.ErrorCodeAsInt()));
     return;
   }
 
