@@ -66,6 +66,7 @@ nsresult nsStyledElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
 
 void nsStyledElement::InlineStyleDeclarationWillChange(
     MutationClosureData& aData) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(OwnerDoc()->UpdateNestingLevel() > 0,
              "Should be inside document update!");
   bool modification = false;

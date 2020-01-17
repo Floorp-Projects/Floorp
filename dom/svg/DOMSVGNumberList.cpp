@@ -8,6 +8,7 @@
 
 #include "SVGElement.h"
 #include "DOMSVGNumber.h"
+#include "mozAutoDocUpdate.h"
 #include "nsError.h"
 #include "SVGAnimatedNumberList.h"
 #include "mozilla/dom/SVGNumberListBinding.h"
@@ -78,20 +79,21 @@ JSObject* DOMSVGNumberList::WrapObject(JSContext* cx,
 // Helper class: AutoChangeNumberListNotifier
 // Stack-based helper class to pair calls to WillChangeNumberList and
 // DidChangeNumberList.
-class MOZ_RAII AutoChangeNumberListNotifier {
+class MOZ_RAII AutoChangeNumberListNotifier : public mozAutoDocUpdate {
  public:
   explicit AutoChangeNumberListNotifier(
       DOMSVGNumberList* aNumberList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mNumberList(aNumberList) {
+      : mozAutoDocUpdate(aNumberList->Element()->GetComposedDoc(), true),
+        mNumberList(aNumberList) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mNumberList, "Expecting non-null numberList");
-    mEmptyOrOldValue =
-        mNumberList->Element()->WillChangeNumberList(mNumberList->AttrEnum());
+    mEmptyOrOldValue = mNumberList->Element()->WillChangeNumberList(
+        mNumberList->AttrEnum(), *this);
   }
 
   ~AutoChangeNumberListNotifier() {
     mNumberList->Element()->DidChangeNumberList(mNumberList->AttrEnum(),
-                                                mEmptyOrOldValue);
+                                                mEmptyOrOldValue, *this);
     if (mNumberList->IsAnimating()) {
       mNumberList->Element()->AnimationNeedsResample();
     }

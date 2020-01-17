@@ -7,11 +7,13 @@
 #include "SVGAnimatedOrient.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/dom/SVGMarkerElement.h"
 #include "DOMSVGAnimatedAngle.h"
 #include "DOMSVGAngle.h"
+#include "mozAutoDocUpdate.h"
 #include "nsContentUtils.h"
 #include "nsTextFormatter.h"
 #include "SVGAttrTearoffTable.h"
@@ -42,7 +44,7 @@ static SVGAttrTearoffTable<SVGAnimatedOrient, DOMSVGAngle>
 //----------------------------------------------------------------------
 // Helper class: AutoChangeOrientNotifier
 // Stack-based helper class to pair calls to WillChangeOrient and
-// DidChangeOrient.
+// DidChangeOrient with mozAutoDocUpdate.
 class MOZ_RAII AutoChangeOrientNotifier {
  public:
   explicit AutoChangeOrientNotifier(
@@ -52,14 +54,15 @@ class MOZ_RAII AutoChangeOrientNotifier {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mOrient, "Expecting non-null orient");
     if (mSVGElement && mDoSetAttr) {
-      mEmptyOrOldValue = mSVGElement->WillChangeOrient();
+      mUpdateBatch.emplace(mSVGElement->GetComposedDoc(), true);
+      mEmptyOrOldValue = mSVGElement->WillChangeOrient(mUpdateBatch.ref());
     }
   }
 
   ~AutoChangeOrientNotifier() {
     if (mSVGElement) {
       if (mDoSetAttr) {
-        mSVGElement->DidChangeOrient(mEmptyOrOldValue);
+        mSVGElement->DidChangeOrient(mEmptyOrOldValue, mUpdateBatch.ref());
       }
       if (mOrient->mIsAnimated) {
         mSVGElement->AnimationNeedsResample();
@@ -68,6 +71,7 @@ class MOZ_RAII AutoChangeOrientNotifier {
   }
 
  private:
+  Maybe<mozAutoDocUpdate> mUpdateBatch;
   SVGAnimatedOrient* const mOrient;
   SVGElement* const mSVGElement;
   nsAttrValue mEmptyOrOldValue;

@@ -12,6 +12,7 @@
 #include "nsError.h"
 #include "SVGAnimatedPointList.h"
 #include "SVGAttrTearoffTable.h"
+#include "mozAutoDocUpdate.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGPointListBinding.h"
 #include <algorithm>
@@ -70,18 +71,19 @@ NS_INTERFACE_MAP_END
 // Helper class: AutoChangePointListNotifier
 // Stack-based helper class to pair calls to WillChangePointList and
 // DidChangePointList.
-class MOZ_RAII AutoChangePointListNotifier {
+class MOZ_RAII AutoChangePointListNotifier : public mozAutoDocUpdate {
  public:
   explicit AutoChangePointListNotifier(
       DOMSVGPointList* aPointList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mPointList(aPointList) {
+      : mozAutoDocUpdate(aPointList->Element()->GetComposedDoc(), true),
+        mPointList(aPointList) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mPointList, "Expecting non-null pointList");
-    mEmptyOrOldValue = mPointList->Element()->WillChangePointList();
+    mEmptyOrOldValue = mPointList->Element()->WillChangePointList(*this);
   }
 
   ~AutoChangePointListNotifier() {
-    mPointList->Element()->DidChangePointList(mEmptyOrOldValue);
+    mPointList->Element()->DidChangePointList(mEmptyOrOldValue, *this);
     if (mPointList->AttrIsAnimating()) {
       mPointList->Element()->AnimationNeedsResample();
     }
