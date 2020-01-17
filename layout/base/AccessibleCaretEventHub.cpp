@@ -425,6 +425,8 @@ nsEventStatus AccessibleCaretEventHub::HandleEvent(WidgetEvent* aEvent) {
       break;
 
     default:
+      MOZ_ASSERT_UNREACHABLE(
+          "PresShell should've filtered unwanted event classes!");
       break;
   }
 
