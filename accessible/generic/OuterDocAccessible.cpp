@@ -65,7 +65,11 @@ void OuterDocAccessible::SendEmbedderAccessible(
   DocAccessibleChild* ipcDoc = mDoc->IPCDoc();
   if (ipcDoc) {
     uint64_t id = reinterpret_cast<uintptr_t>(UniqueID());
+#if defined(XP_WIN)
+    ipcDoc->SetEmbedderOnBridge(aBridge, id);
+#else
     aBridge->SendSetEmbedderAccessible(ipcDoc, id);
+#endif
   }
 }
 
