@@ -760,60 +760,29 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
 }
 
 /* static */
-nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
+nsresult nsContentSecurityManager::CheckSystemPrincipalLoads(
     nsIChannel* aChannel) {
-  // Check and assert that we never allow remote documents/scripts (http:,
-  // https:, ...) to load in system privileged contexts.
+  // Assert that we never use the SystemPrincipal to load remote documents
+  // i.e., HTTP, HTTPS, FTP URLs
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
-  // nothing to do here if we are not loading a resource into a
-  // system prvileged context.
+  // bail out, if we're not loading with a SystemPrincipal
   if (!loadInfo->LoadingPrincipal() ||
       !loadInfo->LoadingPrincipal()->IsSystemPrincipal()) {
     return NS_OK;
   }
-
+  nsContentPolicyType contentPolicyType =
+      loadInfo->GetExternalContentPolicyType();
+  if ((contentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) &&
+      (contentPolicyType != nsIContentPolicy::TYPE_SUBDOCUMENT)) {
+    return NS_OK;
+  }
   nsCOMPtr<nsIURI> finalURI;
   NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalURI));
-
-  // nothing to do here if we are not loading a resource using http:, https:,
-  // etc.
+  // bail out, if URL isn't pointing to remote resource
   if (!nsContentUtils::SchemeIs(finalURI, "http") &&
       !nsContentUtils::SchemeIs(finalURI, "https") &&
       !nsContentUtils::SchemeIs(finalURI, "ftp")) {
-    return NS_OK;
-  }
-
-  nsContentPolicyType contentPolicyType =
-      loadInfo->GetExternalContentPolicyType();
-
-  // We distinguish between 2 cases:
-  // a) remote scripts
-  //    which should never be loaded into system privileged contexts
-  // b) remote documents/frames
-  //    which generally should also never be loaded into system
-  //    privileged contexts but with some exceptions, like e.g. the
-  //    discoverURL.
-  if (contentPolicyType == nsIContentPolicy::TYPE_SCRIPT) {
-    if (Preferences::GetBool("domsecurity.skip_remote_script_assertion_in_"
-                             "system_priv_context")) {
-      return NS_OK;
-    }
-    nsAutoCString scriptSpec;
-    finalURI->GetSpec(scriptSpec);
-    MOZ_LOG(
-        sCSMLog, LogLevel::Warning,
-        ("Do not load remote scripts into system privileged contexts, url: %s",
-         scriptSpec.get()));
-    MOZ_ASSERT(false,
-               "Do not load remote scripts into system privileged contexts");
-    // Bug 1607673: Do not only assert but cancel the channel and
-    // return NS_ERROR_CONTENT_BLOCKED.
-    return NS_OK;
-  }
-
-  if ((contentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) &&
-      (contentPolicyType != nsIContentPolicy::TYPE_SUBDOCUMENT)) {
     return NS_OK;
   }
 
@@ -861,6 +830,10 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
 #endif
   nsAutoCString requestedURL;
   finalURI->GetAsciiSpec(requestedURL);
+  MOZ_LOG(
+      sCSMLog, LogLevel::Verbose,
+      ("SystemPrincipal must not load remote documents. URL: %s", requestedURL)
+          .get());
   if (xpc::AreNonLocalConnectionsDisabled()) {
     bool disallowSystemPrincipalRemoteDocuments = Preferences::GetBool(
         "security.disallow_non_local_systemprincipal_in_tests");
@@ -873,10 +846,6 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
     // but other mochitest are exempt from this
     return NS_OK;
   }
-  MOZ_LOG(
-      sCSMLog, LogLevel::Warning,
-      ("SystemPrincipal must not load remote documents. URL: %s", requestedURL)
-          .get());
   MOZ_ASSERT(false, "SystemPrincipal must not load remote documents.");
   aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
   return NS_ERROR_CONTENT_BLOCKED;
@@ -908,7 +877,7 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
     DebugDoContentSecurityCheck(aChannel, loadInfo);
   }
 
-  nsresult rv = CheckAllowLoadInSystemPrivilegedContext(aChannel);
+  nsresult rv = CheckSystemPrincipalLoads(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if dealing with a redirected channel then we have already installed
