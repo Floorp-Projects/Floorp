@@ -620,7 +620,9 @@ void WebRenderAPI::WaitFlushed() {
 }
 
 void WebRenderAPI::Capture() {
-  uint8_t bits = 3;                 // TODO: get from JavaScript
+  // see CaptureBits
+  // SCENE | FRAME | TILE_CACHE
+  uint8_t bits = 7;                 // TODO: get from JavaScript
   const char* path = "wr-capture";  // TODO: get from JavaScript
   wr_api_capture(mDocHandle, path, bits);
 }
