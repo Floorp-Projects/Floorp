@@ -250,9 +250,6 @@ services/common/kinto-offline-client.js
 # Webpack-bundled library
 services/fxaccounts/FxAccountsPairingChannel.js
 
-# Uses `#filter substitution`
-services/sync/modules/constants.js
-
 # Servo is imported.
 servo/
 
