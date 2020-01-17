@@ -7,6 +7,7 @@
  */
 
 add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
   let engine = await addTestSuggestionsEngine();
   let oldDefaultEngine = await Services.search.getDefault();
   Services.search.setDefault(engine);
