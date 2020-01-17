@@ -129,8 +129,8 @@ class TipProvider extends UrlbarProvider {
   isActive(context) {
     return true;
   }
-  getPriority(context) {
-    return 1;
+  isRestricting(context) {
+    return true;
   }
   async startQuery(context, addCallback) {
     context.preselected = true;

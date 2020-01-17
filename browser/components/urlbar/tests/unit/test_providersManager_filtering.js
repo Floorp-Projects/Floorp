@@ -162,6 +162,9 @@ add_task(async function test_filter_isActive() {
       info("Acceptable sources: " + context.sources);
       return context.sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS);
     }
+    isRestricting(context) {
+      return false;
+    }
     async startQuery(context, add) {
       Assert.ok(false, "Provider should no be invoked");
       for (const match of badMatches) {
@@ -208,6 +211,9 @@ add_task(async function test_filter_queryContext() {
     }
     isActive(context) {
       return true;
+    }
+    isRestricting(context) {
+      return false;
     }
     async startQuery(context, add) {
       Assert.ok(false, "Provider should no be invoked");
@@ -311,6 +317,9 @@ add_task(async function test_nofilter_restrict() {
       Assert.equal(context.sources.length, 1, "Check acceptable sources");
       return true;
     }
+    isRestricting(context) {
+      return false;
+    }
     async startQuery(context, add) {
       Assert.ok(true, "expected provider was invoked");
       for (let match of matches) {
@@ -355,19 +364,13 @@ add_task(async function test_nofilter_restrict() {
   UrlbarProvidersManager.unregisterProvider(provider);
 });
 
-add_task(async function test_filter_priority() {
+add_task(async function test_filter_isRestricting() {
   /**
-   * A test provider.
+   * A test provider that should be invoked and is restricting.
    */
   class TestProvider extends UrlbarProvider {
-    constructor(priority, shouldBeInvoked, namePart = "") {
-      super();
-      this._priority = priority;
-      this._name = `Provider-${priority}` + namePart;
-      this._shouldBeInvoked = shouldBeInvoked;
-    }
     get name() {
-      return this._name;
+      return "GoodProvider";
     }
     get type() {
       return UrlbarUtils.PROVIDER_TYPE.PROFILE;
@@ -375,51 +378,47 @@ add_task(async function test_filter_priority() {
     isActive(context) {
       return true;
     }
-    getPriority(context) {
-      return this._priority;
+    isRestricting(context) {
+      return true;
     }
     async startQuery(context, add) {
-      Assert.ok(this._shouldBeInvoked, `${this.name} was invoked`);
+      Assert.ok(true, "expected provider was invoked");
     }
     cancelQuery(context) {}
     pickResult(result) {}
   }
+  UrlbarProvidersManager.registerProvider(new TestProvider());
 
-  // Test all possible orderings of the providers to make sure the logic that
-  // finds the highest priority providers is correct.
-  let providerPerms = permute([
-    new TestProvider(0, false),
-    new TestProvider(1, false),
-    new TestProvider(2, true, "a"),
-    new TestProvider(2, true, "b"),
-  ]);
-  for (let providers of providerPerms) {
-    for (let provider of providers) {
-      UrlbarProvidersManager.registerProvider(provider);
+  /**
+   * A test provider that should not be invoked because the other one is restricting.
+   */
+  class NoInvokeProvider extends UrlbarProvider {
+    get name() {
+      return "BadProvider";
     }
-    let providerNames = providers.map(p => p.name);
-    let context = createContext(undefined, { providers: providerNames });
-    let controller = UrlbarTestUtils.newMockController();
-    await controller.startQuery(context, controller);
-    for (let name of providerNames) {
-      UrlbarProvidersManager.unregisterProvider({ name });
+    get type() {
+      return UrlbarUtils.PROVIDER_TYPE.PROFILE;
     }
+    isActive(context) {
+      return true;
+    }
+    isRestricting(context) {
+      return false;
+    }
+    async startQuery(context, add) {
+      Assert.ok(false, "Provider should no be invoked");
+    }
+    cancelQuery(context) {}
+    pickResult(result) {}
   }
+  UrlbarProvidersManager.registerProvider(new NoInvokeProvider());
+
+  let context = createContext(undefined, {
+    providers: ["GoodProvider", "BadProvider"],
+  });
+  let controller = UrlbarTestUtils.newMockController();
+
+  await controller.startQuery(context, controller);
+  UrlbarProvidersManager.unregisterProvider({ name: "GoodProvider" });
+  UrlbarProvidersManager.unregisterProvider({ name: "BadProvider" });
 });
-
-function permute(objects) {
-  if (objects.length <= 1) {
-    return [objects];
-  }
-  let perms = [];
-  for (let i = 0; i < objects.length; i++) {
-    let otherObjects = objects.slice();
-    otherObjects.splice(i, 1);
-    let otherPerms = permute(otherObjects);
-    for (let perm of otherPerms) {
-      perm.unshift(objects[i]);
-    }
-    perms = perms.concat(otherPerms);
-  }
-  return perms;
-}
