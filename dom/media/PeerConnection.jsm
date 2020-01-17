@@ -1279,9 +1279,8 @@ class RTCPeerConnection {
       cand.sdpMid == null &&
       cand.sdpMLineIndex == null
     ) {
-      throw new this._win.DOMException(
-        "Cannot add a candidate without specifying either sdpMid or sdpMLineIndex",
-        "TypeError"
+      throw new this._win.TypeError(
+        "Cannot add a candidate without specifying either sdpMid or sdpMLineIndex"
       );
     }
     return this._auto(onSucc, onErr, () => this._addIceCandidate(cand));
@@ -1868,9 +1867,8 @@ class RTCPeerConnection {
       const byteCounter = new TextEncoder("utf-8");
 
       if (byteCounter.encode(protocol).length > 65535) {
-        throw new this._win.DOMException(
-          "protocol cannot be longer than 65535 bytes",
-          "TypeError"
+        throw new this._win.TypeError(
+          "protocol cannot be longer than 65535 bytes"
         );
       }
     }
@@ -1878,9 +1876,8 @@ class RTCPeerConnection {
     if (label.length > 32767) {
       const byteCounter = new TextEncoder("utf-8");
       if (byteCounter.encode(label).length > 65535) {
-        throw new this._win.DOMException(
-          "label cannot be longer than 65535 bytes",
-          "TypeError"
+        throw new this._win.TypeError(
+          "label cannot be longer than 65535 bytes"
         );
       }
     }
@@ -1888,19 +1885,15 @@ class RTCPeerConnection {
     if (!negotiated) {
       id = null;
     } else if (id === null) {
-      throw new this._win.DOMException(
-        "id is required when negotiated is true",
-        "TypeError"
-      );
+      throw new this._win.TypeError("id is required when negotiated is true");
     }
     if (maxPacketLifeTime !== undefined && maxRetransmits !== undefined) {
-      throw new this._win.DOMException(
-        "Both maxPacketLifeTime and maxRetransmits cannot be provided",
-        "TypeError"
+      throw new this._win.TypeError(
+        "Both maxPacketLifeTime and maxRetransmits cannot be provided"
       );
     }
     if (id == 65535) {
-      throw new this._win.DOMException("id cannot be 65535", "TypeError");
+      throw new this._win.TypeError("id cannot be 65535");
     }
     // Must determine the type where we still know if entries are undefined.
     let type;
@@ -2213,10 +2206,7 @@ class RTCRtpSender {
   async _replaceTrack(withTrack) {
     let pc = this._pc;
     if (withTrack && withTrack.kind != this._transceiver.getKind()) {
-      throw new pc._win.DOMException(
-        "Cannot replaceTrack with a different kind!",
-        "TypeError"
-      );
+      throw new pc._win.TypeError("Cannot replaceTrack with a different kind!");
     }
 
     pc._checkClosed();
@@ -2273,10 +2263,10 @@ class RTCRtpSender {
           );
         }
         if (!rid && parameters.encodings.length > 1) {
-          throw new this._pc._win.DOMException("Missing rid", "TypeError");
+          throw new this._pc._win.TypeError("Missing rid");
         }
         if (uniqueRids[rid]) {
-          throw new this._pc._win.DOMException("Duplicate rid", "TypeError");
+          throw new this._pc._win.TypeError("Duplicate rid");
         }
         uniqueRids[rid] = true;
         return uniqueRids;
