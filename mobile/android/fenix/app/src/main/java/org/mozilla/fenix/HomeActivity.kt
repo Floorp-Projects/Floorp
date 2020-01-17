@@ -53,6 +53,7 @@ import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.perf.HotStartPerformanceMonitor
+import org.mozilla.fenix.perf.Performance
 import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.settings.DefaultBrowserSettingsFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
@@ -92,6 +93,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity() {
 
         setupThemeAndBrowsingMode(getModeFromIntentOrLastKnown(intent))
         setContentView(R.layout.activity_home)
+        Performance.instrumentColdStartupToHomescreenTime(this)
         setupToolbarAndNavigation()
 
         if (intent.getBooleanExtra(EXTRA_FINISH_ONBOARDING, false)) {
