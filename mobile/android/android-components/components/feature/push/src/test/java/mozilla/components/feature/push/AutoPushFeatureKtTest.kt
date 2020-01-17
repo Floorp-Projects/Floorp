@@ -11,6 +11,7 @@ import mozilla.appservices.push.CommunicationError
 import mozilla.appservices.push.CommunicationServerError
 import mozilla.appservices.push.CryptoError
 import mozilla.appservices.push.KeyInfo
+import mozilla.appservices.push.RecordNotFoundError
 import mozilla.appservices.push.SubscriptionInfo
 import mozilla.appservices.push.SubscriptionResponse
 import org.junit.Assert.assertEquals
@@ -61,6 +62,11 @@ class AutoPushFeatureKtTest {
 
         CoroutineScope(coroutineContext).launchAndTry(
             { throw CommunicationError("should not fail test") },
+            { assert(true) }
+        )
+
+        CoroutineScope(coroutineContext).launchAndTry(
+            { throw RecordNotFoundError("should not fail test") },
             { assert(true) }
         )
     }
