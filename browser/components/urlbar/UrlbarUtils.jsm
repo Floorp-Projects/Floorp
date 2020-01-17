@@ -661,17 +661,15 @@ class UrlbarProvider {
   }
 
   /**
-   * Gets the provider's priority.  Priorities are numeric values starting at
-   * zero and increasing in value.  Smaller values are lower priorities, and
-   * larger values are higher priorities.  For a given query, `startQuery` is
-   * called on only the active and highest-priority providers.
+   * Whether this provider wants to restrict results to just itself.
+   * Other providers won't be invoked, unless this provider doesn't
+   * support the current query.
    * @param {UrlbarQueryContext} queryContext The query context object
-   * @returns {number} The provider's priority for the given query.
+   * @returns {boolean} Whether this provider wants to restrict results.
    * @abstract
    */
-  getPriority(queryContext) {
-    // By default, all providers share the lowest priority.
-    return 0;
+  isRestricting(queryContext) {
+    throw new Error("Trying to access the base class, must be overridden");
   }
 
   /**
