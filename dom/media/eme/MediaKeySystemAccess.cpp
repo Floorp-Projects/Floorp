@@ -411,12 +411,14 @@ static bool CanDecryptAndDecode(
       continue;
     }
 
-    if (aContainerSupport.Decrypts(codec) &&
-        NS_SUCCEEDED(
-            MediaSource::IsTypeSupported(aContentType, aDiagnostics))) {
-      // GMP can decrypt and is allowed to return compressed samples to
-      // Gecko to decode, and Gecko has a decoder.
-      continue;
+    if (aContainerSupport.Decrypts(codec)) {
+      IgnoredErrorResult rv;
+      MediaSource::IsTypeSupported(aContentType, aDiagnostics, rv);
+      if (!rv.Failed()) {
+        // GMP can decrypt and is allowed to return compressed samples to
+        // Gecko to decode, and Gecko has a decoder.
+        continue;
+      }
     }
 
     // Neither the GMP nor Gecko can both decrypt and decode. We don't
