@@ -15,7 +15,6 @@
 
 common-tests:
     - marionette
-    - mochitest
     - mochitest-browser-chrome
     - mochitest-chrome
 
@@ -315,7 +314,6 @@ awsy:
 
 linux-common-tests:
     - marionette
-    - mochitest
     - mochitest-browser-chrome
     - mochitest-chrome
 
@@ -329,6 +327,7 @@ linux1804-tests:
     - gtest
     - jsreftest
     - jittest
+    - mochitest
     - mochitest-a11y
     - mochitest-devtools-chrome
     - mochitest-gpu
@@ -353,6 +352,7 @@ linux1804-qr-tests:
     - gtest
     - jittest
     - jsreftest
+    - mochitest
     - mochitest-a11y
     - mochitest-gpu
     - mochitest-media
@@ -372,6 +372,7 @@ linux1804-ccov-tests:
     - gtest
     - jittest
     - jsreftest
+    - mochitest
     - mochitest-a11y
     - mochitest-devtools-chrome
     - mochitest-gpu
@@ -391,7 +392,6 @@ linux1804-ccov-tests:
     - xpcshell
 
 linux-qr-tests:
-    - mochitest
     - mochitest-chrome
 
 linux-qr-smoketests:
