@@ -93,10 +93,14 @@ def collapse(paths, base=None, dotfiles=False):
 
     if not base:
         paths = list(map(mozpath.abspath, paths))
-        base = mozpath.commonprefix(paths)
+        base = mozpath.commonprefix(paths).rstrip('/')
 
-        if not os.path.isdir(base):
-            base = os.path.dirname(base)
+        # Make sure `commonprefix` factors in sibling directories that have the
+        # same prefix in their basenames.
+        parent = mozpath.dirname(base)
+        same_prefix = [p for p in os.listdir(parent) if p.startswith(mozpath.basename(base))]
+        if not os.path.isdir(base) or len(same_prefix) > 1:
+            base = parent
 
     if base in paths:
         return [base]
