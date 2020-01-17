@@ -2523,7 +2523,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
 
   spellChecker->GetDictionaryList(&xpcomInit.dictionaries());
 
-  LocaleService::GetInstance()->GetAppLocalesAsLangTags(xpcomInit.appLocales());
+  LocaleService::GetInstance()->GetAppLocalesAsBCP47(xpcomInit.appLocales());
   LocaleService::GetInstance()->GetRequestedLocales(
       xpcomInit.requestedLocales());
 
