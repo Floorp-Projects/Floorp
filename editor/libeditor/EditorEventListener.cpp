@@ -728,11 +728,14 @@ nsresult EditorEventListener::DragOver(DragEvent* aDragEvent) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> parent = aDragEvent->GetRangeParent();
-  nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
-  NS_ENSURE_TRUE(dropParent, NS_ERROR_FAILURE);
+  int32_t dropOffset = -1;
+  nsCOMPtr<nsIContent> dropParentContent =
+      aDragEvent->GetRangeParentContentAndOffset(&dropOffset);
+  if (NS_WARN_IF(!dropParentContent)) {
+    return NS_ERROR_FAILURE;
+  }
 
-  if (dropParent->IsEditable() && CanDrop(aDragEvent)) {
+  if (dropParentContent->IsEditable() && CanDrop(aDragEvent)) {
     aDragEvent->PreventDefault();  // consumed
 
     // If we handle the dragged item, we need should adjust drop effect here
@@ -756,10 +759,8 @@ nsresult EditorEventListener::DragOver(DragEvent* aDragEvent) {
       return NS_OK;
     }
 
-    int32_t offset = aDragEvent->RangeOffset();
-
     mCaret->SetVisible(true);
-    mCaret->SetCaretPosition(dropParent, offset);
+    mCaret->SetCaretPosition(dropParentContent, dropOffset);
 
     return NS_OK;
   }
@@ -818,8 +819,7 @@ nsresult EditorEventListener::Drop(DragEvent* aDragEvent) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> dropParentNode = aDragEvent->GetRangeParent();
-  nsIContent* dropParentContent = nsIContent::FromNodeOrNull(dropParentNode);
+  nsCOMPtr<nsIContent> dropParentContent = aDragEvent->GetRangeParentContent();
   if (NS_WARN_IF(!dropParentContent)) {
     return NS_ERROR_FAILURE;
   }
@@ -911,12 +911,12 @@ bool EditorEventListener::CanDrop(DragEvent* aEvent) {
     return true;
   }
 
-  nsCOMPtr<nsINode> parent = aEvent->GetRangeParent();
-  if (!parent) {
+  int32_t dropOffset = -1;
+  nsCOMPtr<nsIContent> dropParentContent =
+      aEvent->GetRangeParentContentAndOffset(&dropOffset);
+  if (!dropParentContent) {
     return false;
   }
-
-  int32_t offset = aEvent->RangeOffset();
 
   uint32_t rangeCount = selection->RangeCount();
   for (uint32_t i = 0; i < rangeCount; i++) {
@@ -927,7 +927,7 @@ bool EditorEventListener::CanDrop(DragEvent* aEvent) {
     }
 
     IgnoredErrorResult rv;
-    bool inRange = range->IsPointInRange(*parent, offset, rv);
+    bool inRange = range->IsPointInRange(*dropParentContent, dropOffset, rv);
     if (!rv.Failed() && inRange) {
       // Okay, now you can bail, we are over the orginal selection
       return false;
