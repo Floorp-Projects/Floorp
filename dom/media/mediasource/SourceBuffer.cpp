@@ -336,7 +336,7 @@ void SourceBuffer::ChangeType(const nsAString& aType, ErrorResult& aRv) {
   // 1. If type is an empty string then throw a TypeError exception and abort
   //    these steps.
   if (aType.IsEmpty()) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+    aRv.ThrowTypeError(u"Type must not be empty");
     return;
   }
 
