@@ -116,12 +116,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.FindInPageClosed -> EventWrapper<NoExtraKeys>(
             { FindInPage.closed.record(it) }
         )
-        is Event.FindInPageNext -> EventWrapper<NoExtraKeys>(
-            { FindInPage.nextResult.record(it) }
-        )
-        is Event.FindInPagePrevious -> EventWrapper<NoExtraKeys>(
-            { FindInPage.previousResult.record(it) }
-        )
         is Event.FindInPageSearchCommitted -> EventWrapper<NoExtraKeys>(
             { FindInPage.searchedPage.record(it) }
         )
@@ -365,9 +359,8 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.PrivateBrowsingStaticShortcutPrivateTab -> EventWrapper<NoExtraKeys>(
             { PrivateBrowsingShortcut.staticShortcutPriv.record(it) }
         )
-        is Event.WhatsNewTapped -> EventWrapper(
-            { Events.whatsNewTapped.record(it) },
-            { Events.whatsNewTappedKeys.valueOf(it) }
+        is Event.WhatsNewTapped -> EventWrapper<NoExtraKeys>(
+            { Events.whatsNewTapped.record(it) }
         )
         is Event.TabMediaPlay -> EventWrapper<NoExtraKeys>(
             { Tab.mediaPlay.record(it) }

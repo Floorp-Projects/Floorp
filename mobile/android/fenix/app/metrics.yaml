@@ -23,7 +23,7 @@ events:
     notification_emails:
     - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   search_bar_tapped:
     type: event
     description: >
@@ -37,7 +37,7 @@ events:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   entered_url:
     type: event
     description: >
@@ -51,7 +51,7 @@ events:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   performed_search:
     type: event
     description: >
@@ -71,7 +71,7 @@ events:
     - https://github.com/mozilla-mobile/fenix/pull/1677
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   browser_menu_action:
     type: event
     description: >
@@ -91,7 +91,7 @@ events:
     - https://github.com/mozilla-mobile/fenix/pull/6310
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   total_uri_count:
     type: counter
     description: >
@@ -104,7 +104,7 @@ events:
     - https://github.com/mozilla-mobile/fenix/pull/1785
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   preference_toggled:
     type: event
     description: >
@@ -135,21 +135,18 @@ events:
     - https://github.com/mozilla-mobile/fenix/pull/6746
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   whats_new_tapped:
     type: event
     description: >
         A user opened the "what's new" page button
-    extra_keys:
-      source:
-        description: "The location from which the user selected the what's new button. Either 'about' or 'home'"
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/5021
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5090
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   opened_link:
     type: event
     description: >
@@ -163,7 +160,7 @@ events:
       - https://github.com/mozilla-mobile/fenix/pull/5975
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 search_shortcuts:
   selected:
@@ -179,7 +176,7 @@ search_shortcuts:
       - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 toolbar_settings:
   changed_position:
@@ -195,7 +192,7 @@ toolbar_settings:
       - https://github.com/mozilla-mobile/fenix/pull/6608
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 crash_reporter:
   opened:
@@ -208,7 +205,7 @@ crash_reporter:
     - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   closed:
     type: event
     description: >
@@ -222,7 +219,7 @@ crash_reporter:
     - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 context_menu:
   item_tapped:
@@ -243,7 +240,7 @@ context_menu:
     - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 find_in_page:
   opened:
@@ -256,7 +253,7 @@ find_in_page:
     - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   closed:
     type: event
     description: >
@@ -267,29 +264,7 @@ find_in_page:
     - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
-  next_result:
-    type: event
-    description: >
-      A user clicked the "next result" button
-    bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1036
-    data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
-    notification_emails:
-    - fenix-core@mozilla.com
-    expires: "2020-03-01"
-  previous_result:
-    type: event
-    description: >
-      A user clicked the "previous result" button
-    bugs:
-    - https://github.com/mozilla-mobile/fenix/issues/1036
-    data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
-    notification_emails:
-    - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   searched_page:
     type: event
     description: >
@@ -300,7 +275,7 @@ find_in_page:
     - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 metrics:
   default_browser:
@@ -316,7 +291,7 @@ metrics:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   search_count:
     type: labeled_counter
     description: >
@@ -339,7 +314,7 @@ metrics:
     - https://github.com/mozilla-mobile/fenix/pull/7310
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   mozilla_products:
     type: string_list
     lifetime: application
@@ -356,7 +331,7 @@ metrics:
     - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   default_moz_browser:
     type: string
     lifetime: application
@@ -371,7 +346,7 @@ metrics:
     - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   adjust_campaign:
     type: string
     lifetime: application
@@ -386,7 +361,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/pull/5579
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   total_uri_count:
     type: string
     lifetime: application
@@ -400,7 +375,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/pull/6003
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   toolbar_position:
     type: string
     lifetime: application
@@ -414,7 +389,7 @@ metrics:
       - https://github.com/mozilla-mobile/fenix/pull/6608
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 
 search.default_engine:
@@ -435,7 +410,7 @@ search.default_engine:
     - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   name:
     type: string
     lifetime: application
@@ -453,7 +428,7 @@ search.default_engine:
     - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   submission_url:
     type: string
     lifetime: application
@@ -472,7 +447,7 @@ search.default_engine:
     - https://github.com/mozilla-mobile/fenix/pull/5216
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 bookmarks_management:
   open_in_new_tab:
@@ -485,7 +460,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   open_in_new_tabs:
     type: event
     description: >
@@ -496,7 +471,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   open_in_private_tab:
     type: event
     description: >
@@ -507,7 +482,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   open_in_private_tabs:
     type: event
     description: >
@@ -518,7 +493,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   edited:
     type: event
     description: >
@@ -529,7 +504,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   moved:
     type: event
     description: >
@@ -540,7 +515,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   removed:
     type: event
     description: >
@@ -551,7 +526,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   multi_removed:
     type: event
     description: >
@@ -562,7 +537,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   shared:
     type: event
     description: >
@@ -573,7 +548,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   copied:
     type: event
     description: >
@@ -584,7 +559,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   folder_add:
     type: event
     description: >
@@ -595,7 +570,7 @@ bookmarks_management:
     - https://github.com/mozilla-mobile/fenix/pull/1708
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   folder_remove:
     type: event
     description: >
@@ -606,7 +581,7 @@ bookmarks_management:
       - https://github.com/mozilla-mobile/fenix/pull/3724
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 custom_tab:
   closed:
@@ -619,7 +594,7 @@ custom_tab:
     - https://github.com/mozilla-mobile/fenix/pull/1697
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   action_button:
     type: event
     description: >
@@ -630,7 +605,7 @@ custom_tab:
     - https://github.com/mozilla-mobile/fenix/pull/1697
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   menu:
     type: event
     description: >
@@ -641,7 +616,7 @@ custom_tab:
     - https://github.com/mozilla-mobile/fenix/pull/1697
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 activation:
   identifier:
@@ -659,8 +634,7 @@ activation:
     - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
-
+    expires: "2020-09-01"
   activation_id:
     type: uuid
     lifetime: user
@@ -675,7 +649,7 @@ activation:
     - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 qr_scanner:
   opened:
@@ -688,7 +662,7 @@ qr_scanner:
     - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   prompt_displayed:
     type: event
     description: >
@@ -699,7 +673,7 @@ qr_scanner:
     - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   navigation_allowed:
     type: event
     description: >
@@ -710,7 +684,7 @@ qr_scanner:
     - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   navigation_denied:
     type: event
     description: >
@@ -721,7 +695,7 @@ qr_scanner:
     - https://github.com/mozilla-mobile/fenix/pull/2524#issuecomment-492739967
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 library:
   opened:
@@ -734,7 +708,7 @@ library:
     - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   closed:
     type: event
     description: >
@@ -745,7 +719,7 @@ library:
     - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   selected_item:
     type: event
     description: >
@@ -759,7 +733,7 @@ library:
     - https://github.com/mozilla-mobile/fenix/pull/2538#issuecomment-492830242
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 error_page:
   visited_error:
@@ -775,7 +749,7 @@ error_page:
     - https://github.com/mozilla-mobile/fenix/pull/2491#issuecomment-492414486
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 sync_auth:
   opened:
@@ -788,7 +762,7 @@ sync_auth:
     - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   closed:
     type: event
     description: >
@@ -799,7 +773,7 @@ sync_auth:
     - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   sign_in:
     type: event
     description: >
@@ -810,7 +784,7 @@ sync_auth:
     - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   sign_out:
     type: event
     description: >
@@ -821,7 +795,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   sign_up:
     type: event
     description: >
@@ -832,7 +806,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   paired:
     type: event
     description: >
@@ -843,7 +817,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   auto_login:
     type: event
     description: >
@@ -854,7 +828,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   recovered:
     type: event
     description: >
@@ -865,7 +839,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   other_external:
     type: event
     description: >
@@ -876,7 +850,7 @@ sync_auth:
       - https://github.com/mozilla-mobile/fenix/pull/4931#issuecomment-529740300
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   scan_pairing:
     type: event
     description: >
@@ -887,7 +861,7 @@ sync_auth:
     - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 sync_account:
   opened:
@@ -900,7 +874,7 @@ sync_account:
     - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   closed:
     type: event
     description: >
@@ -911,7 +885,7 @@ sync_account:
     - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   sync_now:
     type: event
     description: >
@@ -922,7 +896,7 @@ sync_account:
     - https://github.com/mozilla-mobile/fenix/pull/2745#issuecomment-494918532
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   send_tab:
     type: event
     description: >
@@ -933,7 +907,7 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/pull/5106
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   sign_in_to_send_tab:
     type: event
     description: >
@@ -944,7 +918,7 @@ sync_account:
       - https://github.com/mozilla-mobile/fenix/pull/5106
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 history:
   opened:
@@ -957,7 +931,7 @@ history:
       - https://github.com/mozilla-mobile/fenix/pull/3940
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   removed:
     type: event
     description: >
@@ -968,7 +942,7 @@ history:
       - https://github.com/mozilla-mobile/fenix/pull/3940
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   removed_all:
     type: event
     description: >
@@ -979,7 +953,7 @@ history:
       - https://github.com/mozilla-mobile/fenix/pull/3940
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   shared:
     type: event
     description: >
@@ -990,7 +964,7 @@ history:
       - https://github.com/mozilla-mobile/fenix/pull/3940
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   opened_item:
     type: event
     description: >
@@ -1001,7 +975,7 @@ history:
       - https://github.com/mozilla-mobile/fenix/pull/3940
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 reader_mode:
   available:
@@ -1014,7 +988,7 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/pull/3941
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   opened:
     type: event
     description: >
@@ -1025,7 +999,7 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/pull/3941
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   closed:
     type: event
     description: >
@@ -1036,7 +1010,7 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/pull/4328
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   appearance:
     type: event
     description: >
@@ -1047,7 +1021,7 @@ reader_mode:
       - https://github.com/mozilla-mobile/fenix/pull/3941
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 collections:
   renamed:
@@ -1060,7 +1034,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/3935
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   tab_restored:
     type: event
     description: >
@@ -1071,7 +1045,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/3935
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   all_tabs_restored:
     type: event
     description: >
@@ -1082,7 +1056,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/3935
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   tab_removed:
     type: event
     description: >
@@ -1093,7 +1067,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/3935
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   shared:
     type: event
     description: >
@@ -1104,7 +1078,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/3935
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   removed:
     type: event
     description: >
@@ -1115,7 +1089,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/3935
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   saved:
     type: event
     description: >
@@ -1131,7 +1105,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/3935
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   tabs_added:
     type: event
     description: >
@@ -1147,7 +1121,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/3935
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   tab_select_opened:
     type: event
     description: >
@@ -1158,7 +1132,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/3935
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   add_tab_button:
     type: event
     description: >
@@ -1169,7 +1143,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/4358
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   long_press:
     type: event
     description: >
@@ -1180,7 +1154,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/4358
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   save_button:
     type: event
     description: >
@@ -1192,7 +1166,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/4358
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
     extra_keys:
       from_screen:
         description: >
@@ -1208,7 +1182,7 @@ collections:
       - https://github.com/mozilla-mobile/fenix/pull/4539
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 search_widget:
   new_tab_button:
@@ -1222,7 +1196,7 @@ search_widget:
       - https://github.com/mozilla-mobile/fenix/pull/4714
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   voice_button:
     type: event
     description: >
@@ -1233,7 +1207,7 @@ search_widget:
       - https://github.com/mozilla-mobile/fenix/pull/4714
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 private_browsing_mode:
   garbage_icon:
@@ -1247,7 +1221,7 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/pull/4968
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   snackbar_undo:
     type: event
     description: >
@@ -1259,7 +1233,7 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/pull/4968
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   notification_tapped:
     type: event
     description: >
@@ -1270,7 +1244,7 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/pull/4968
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   notification_open:
     type: event
     description: >
@@ -1281,7 +1255,7 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/pull/4968
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   notification_delete:
     type: event
     description: >
@@ -1292,7 +1266,7 @@ private_browsing_mode:
       - https://github.com/mozilla-mobile/fenix/pull/4968
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 tracking_protection:
   exception_added:
@@ -1305,7 +1279,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   panel_settings:
     type: event
     description: >
@@ -1316,7 +1290,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   etp_shield:
     type: event
     description: >
@@ -1327,7 +1301,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   etp_tracker_list:
     type: event
     description: >
@@ -1338,7 +1312,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   etp_settings:
     type: event
     description: >
@@ -1349,7 +1323,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   etp_setting_changed:
     type: event
     description: >
@@ -1363,7 +1337,7 @@ tracking_protection:
       - https://github.com/mozilla-mobile/fenix/pull/5414#issuecomment-532847188
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 private_browsing_shortcut:
   create_shortcut:
@@ -1376,7 +1350,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/pull/5194
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   cfr_add_shortcut:
     type: event
     description: >
@@ -1387,7 +1361,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/pull/5194
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   cfr_cancel:
     type: event
     description: >
@@ -1398,7 +1372,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/pull/5194
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   pinned_shortcut_priv:
     type: event
     description: >
@@ -1409,7 +1383,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/pull/5194
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   static_shortcut_tab:
     type: event
     description: >
@@ -1420,7 +1394,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/pull/5194
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   static_shortcut_priv:
     type: event
     description: >
@@ -1431,7 +1405,7 @@ private_browsing_shortcut:
       - https://github.com/mozilla-mobile/fenix/pull/5194
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 tab:
   media_play:
@@ -1444,10 +1418,9 @@ tab:
       - https://github.com/mozilla-mobile/fenix/pull/5266
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
     no_lint:
       - COMMON_PREFIX
-
   media_pause:
     type: event
     description: >
@@ -1458,7 +1431,7 @@ tab:
       - https://github.com/mozilla-mobile/fenix/pull/5266
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 media_notification:
   play:
@@ -1471,7 +1444,7 @@ media_notification:
       - https://github.com/mozilla-mobile/fenix/pull/5520
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   pause:
     type: event
     description: >
@@ -1482,7 +1455,7 @@ media_notification:
       - https://github.com/mozilla-mobile/fenix/pull/5520
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 media_state:
   play:
@@ -1495,7 +1468,7 @@ media_state:
       - https://github.com/mozilla-mobile/fenix/pull/6463
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   pause:
     type: event
     description: >
@@ -1506,7 +1479,7 @@ media_state:
       - https://github.com/mozilla-mobile/fenix/pull/6463
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   stop:
     type: event
     description: >
@@ -1517,7 +1490,7 @@ media_state:
       - https://github.com/mozilla-mobile/fenix/pull/6463
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 logins:
   open_logins:
@@ -1530,7 +1503,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/pull/6352
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   open_individual_login:
     type: event
     description: >
@@ -1541,7 +1514,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/pull/6352
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   copy_login:
     type: event
     description: >
@@ -1552,7 +1525,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/pull/6352
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   view_password_login:
     type: event
     description: >
@@ -1563,24 +1536,7 @@ logins:
       - https://github.com/mozilla-mobile/fenix/pull/6352
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
-
-experiments.metrics:
-  active_experiment:
-    type: string
-    description: >
-      Records the branch name of the active experiment, if the client is enrolled in the
-      `fenix-test-2019-08-05` experiment. This is intended to validate that the service-experiments
-      library properly matches clients to experiments and can take action based on a multi-branched
-      experiment. This is done by recording the experiment branch name in this string metric which
-      allows the experiment to be transparent and unobtrusive to the user.
-    bugs:
-      - https://bugzilla.mozilla.org/1543986
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1543986#c4
-    notification_emails:
-      - mcooper@mozilla.com
-    expires: 2019-11-01
+    expires: "2020-09-01"
 
 download_notification:
   resume:
@@ -1593,7 +1549,7 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/pull/6554
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   pause:
     type: event
     description: >
@@ -1604,7 +1560,7 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/pull/6554
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   cancel:
     type: event
     description: >
@@ -1615,7 +1571,7 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/pull/6554
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   try_again:
     type: event
     description: >
@@ -1626,7 +1582,7 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/pull/6554
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   open:
     type: event
     description: >
@@ -1637,7 +1593,7 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/pull/6554
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   in_app_open:
     type: event
     description: >
@@ -1648,7 +1604,7 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/pull/6554
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   in_app_try_again:
     type: event
     description: >
@@ -1659,7 +1615,7 @@ download_notification:
       - https://github.com/mozilla-mobile/fenix/pull/6554
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 user_specified_search_engines:
   custom_engine_added:
@@ -1672,7 +1628,7 @@ user_specified_search_engines:
       - https://github.com/mozilla-mobile/fenix/pull/6918
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
   custom_engine_deleted:
     type: event
     description: >
@@ -1683,7 +1639,7 @@ user_specified_search_engines:
       - https://github.com/mozilla-mobile/fenix/pull/6918
     notification_emails:
       - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"
 
 search_suggestions:
   enable_in_private:
@@ -1696,4 +1652,4 @@ search_suggestions:
       - https://github.com/mozilla-mobile/fenix/pull/6746
     notification_emails:
      - fenix-core@mozilla.com
-    expires: "2020-03-01"
+    expires: "2020-09-01"

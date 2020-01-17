@@ -536,7 +536,7 @@ class HomeFragment : Fragment() {
                     invokePendingDeleteJobs()
                     hideOnboardingIfNeeded()
                     WhatsNew.userViewedWhatsNew(context)
-                    context.metrics.track(Event.WhatsNewTapped(Event.WhatsNewTapped.Source.HOME))
+                    context.metrics.track(Event.WhatsNewTapped)
                     (activity as HomeActivity).openToBrowserAndLoad(
                         searchTermOrURL = SupportUtils.getWhatsNewUrl(context),
                         newTab = true,

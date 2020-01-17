@@ -151,7 +151,7 @@ class AboutFragment : Fragment(), AboutPageListener {
             is AboutItem.ExternalLink -> {
                 if (item.type == WHATS_NEW) {
                     WhatsNew.userViewedWhatsNew(requireContext())
-                    requireComponents.analytics.metrics.track(Event.WhatsNewTapped(Event.WhatsNewTapped.Source.ABOUT))
+                    requireComponents.analytics.metrics.track(Event.WhatsNewTapped)
                 }
 
                 openLinkInCustomTab(item.url)

@@ -100,8 +100,6 @@ sealed class Event {
     object SearchWidgetVoiceSearchPressed : Event()
     object FindInPageOpened : Event()
     object FindInPageClosed : Event()
-    object FindInPageNext : Event()
-    object FindInPagePrevious : Event()
     object FindInPageSearchCommitted : Event()
     object PrivateBrowsingGarbageIconTapped : Event()
     object PrivateBrowsingSnackbarUndoTapped : Event()
@@ -140,6 +138,7 @@ sealed class Event {
     object CustomEngineAdded : Event()
     object CustomEngineDeleted : Event()
     object PrivateBrowsingShowSearchSuggestions : Event()
+    object WhatsNewTapped : Event()
 
     // Interaction events with extras
 
@@ -194,12 +193,6 @@ sealed class Event {
         enum class Source { APP_ICON, LINK, CUSTOM_TAB }
         override val extras: Map<Events.appOpenedKeys, String>?
             get() = hashMapOf(Events.appOpenedKeys.source to source.name)
-    }
-
-    data class WhatsNewTapped(val source: Source) : Event() {
-        enum class Source { ABOUT, HOME }
-        override val extras: Map<Events.whatsNewTappedKeys, String>?
-            get() = hashMapOf(Events.whatsNewTappedKeys.source to source.name)
     }
 
     data class CollectionSaveButtonPressed(val fromScreen: String) : Event() {
@@ -351,8 +344,6 @@ sealed class Event {
 }
 
 private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
-    Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.PREVIOUS -> Event.FindInPagePrevious
-    Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.NEXT -> Event.FindInPageNext
     Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.CLOSE -> Event.FindInPageClosed
     Component.FEATURE_FINDINPAGE to FindInPageFacts.Items.INPUT -> Event.FindInPageSearchCommitted
     Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {

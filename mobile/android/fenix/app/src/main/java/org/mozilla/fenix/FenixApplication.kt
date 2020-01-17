@@ -31,7 +31,6 @@ import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
 import mozilla.components.support.locale.LocaleAwareApplication
 import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
-import org.mozilla.fenix.GleanMetrics.ExperimentsMetrics
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.session.NotificationSessionObserver
@@ -120,16 +119,6 @@ open class FenixApplication : LocaleAwareApplication() {
             if (!megazordSetup.isCompleted) {
                 runBlocking { megazordSetup.await(); }
             }
-        }
-
-        // When the `fenix-test-2019-08-05` experiment is active, record its branch in Glean
-        // telemetry. This will be used to validate that the experiment system correctly enrolls
-        // clients and segments them into branches. Note that this will not take effect the first
-        // time the application has launched, since there won't be enough time for the experiments
-        // library to get a list of experiments. It will take effect the second time the
-        // application is launched.
-        Experiments.withExperiment("fenix-test-2019-08-05") { branchName ->
-            ExperimentsMetrics.activeExperiment.set(branchName)
         }
 
         setupLeakCanary()
