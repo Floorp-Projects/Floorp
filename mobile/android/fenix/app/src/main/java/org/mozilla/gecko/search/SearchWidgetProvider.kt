@@ -20,6 +20,7 @@ import androidx.annotation.Dimension.DP
 import androidx.appcompat.widget.AppCompatDrawableManager
 import androidx.core.graphics.drawable.toBitmap
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
@@ -104,7 +105,7 @@ class SearchWidgetProvider : AppWidgetProvider() {
     }
 
     private fun createTextSearchIntent(context: Context): PendingIntent {
-        return Intent(context, HomeActivity::class.java)
+        return Intent(context, IntentReceiverActivity::class.java)
             .let { intent ->
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 intent.putExtra(HomeActivity.OPEN_TO_SEARCH, StartSearchIntentProcessor.SEARCH_WIDGET)
