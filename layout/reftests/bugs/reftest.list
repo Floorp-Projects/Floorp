@@ -293,7 +293,7 @@ fuzzy-if(skiaContent,0-1,0-5) == 255820-1.html 255820-1-ref.html
 == 260406-1.html 260406-1-ref.html
 == chrome://reftest/content/bugs/261826-1.xhtml chrome://reftest/content/bugs/261826-1-ref.xhtml
 == 262151-1.html 262151-1-ref.html
-fuzzy-if(skiaContent,0-1,0-5) fails-if(webrender&&browserIsFission) == 262998-1.html 262998-1-ref.html
+fuzzy-if(skiaContent,0-1,0-5) == 262998-1.html 262998-1-ref.html
 == 267353-1.html 267353-1-ref.html
 == 269908-1.html 269908-1-ref.html
 == 269908-2.html 269908-2-ref.html
@@ -1743,7 +1743,7 @@ fuzzy-if(asyncPan,0-190,0-510) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-
 == 827799-1.html about:blank
 == 829958.html 829958-ref.html
 fuzzy-if(webrender&&gtkWidget,0-2,0-152400) == 836844-1.html 836844-1-ref.html
-fails-if(browserIsFission) == 841192-1.html 841192-1-ref.html
+== 841192-1.html 841192-1-ref.html
 == 844178.html 844178-ref.html
 fuzzy-if(OSX,0-1,0-364) fuzzy-if(skiaContent,0-1,0-320) == 846144-1.html 846144-1-ref.html
 == 847850-1.html 847850-1-ref.html
