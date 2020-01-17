@@ -1071,8 +1071,8 @@ class TipTestProvider extends UrlbarProvider {
   isActive(context) {
     return true;
   }
-  isRestricting(context) {
-    return true;
+  getPriority(context) {
+    return 1;
   }
   async startQuery(context, addCallback) {
     this._context = context;

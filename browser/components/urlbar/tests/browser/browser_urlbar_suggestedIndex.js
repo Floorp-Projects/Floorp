@@ -128,9 +128,6 @@ class TestProvider extends UrlbarProvider {
   isActive(context) {
     return true;
   }
-  isRestricting(context) {
-    return false;
-  }
   async startQuery(context, addCallback) {
     this._context = context;
     for (const match of this._matches) {
