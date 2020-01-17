@@ -14,10 +14,13 @@ add_task(
     const threadActor =
       rootActor._parameters.tabList._targetActors[0].threadActor;
 
-    let lastMessage;
+    let lastMessage, lastExpression;
     threadActor._parent._consoleActor = {
       onConsoleAPICall(message) {
         lastMessage = message;
+      },
+      evaluateJS(expression) {
+        lastExpression = expression;
       },
     };
 
@@ -40,8 +43,15 @@ add_task(
 
     // Execute the rest of the code.
     await threadFront.resume();
-    Assert.equal(lastMessage.level, "logPoint");
-    Assert.equal(lastMessage.arguments[0], "three");
+
+    // NOTE: logpoints evaluated in a worker have a lastExpression
+    if (lastMessage) {
+      Assert.equal(lastMessage.level, "logPoint");
+      Assert.equal(lastMessage.arguments[0], "three");
+    } else {
+      Assert.equal(lastExpression.text, "console.log(...[a])");
+      Assert.equal(lastExpression.lineNumber, 3);
+    }
   })
 );
 

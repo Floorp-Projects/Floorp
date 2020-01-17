@@ -117,6 +117,10 @@ this.addEventListener("message", function(event) {
       const consoleActor = new WebConsoleActor(connection, parent);
       pool.addActor(consoleActor);
 
+      // needed so the thread actor can communicate with the console
+      // when evaluating logpoints.
+      parent._consoleActor = consoleActor;
+
       // Step 5: Send a response packet to the parent to notify
       // it that a connection has been established.
       postMessage(

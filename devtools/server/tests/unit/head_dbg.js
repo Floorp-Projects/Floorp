@@ -545,9 +545,9 @@ const assert = Assert.ok.bind(Assert);
  * @param Function predicate
  * @returns Promise
  */
-function waitForEvent(threadFront, type, predicate) {
+function waitForEvent(front, type, predicate) {
   if (!predicate) {
-    return threadFront.once(type);
+    return front.once(type);
   }
 
   return new Promise(function(resolve) {
@@ -555,10 +555,10 @@ function waitForEvent(threadFront, type, predicate) {
       if (!predicate(packet)) {
         return;
       }
-      threadFront.off(type, listener);
+      front.off(type, listener);
       resolve(packet);
     }
-    threadFront.on(type, listener);
+    front.on(type, listener);
   });
 }
 

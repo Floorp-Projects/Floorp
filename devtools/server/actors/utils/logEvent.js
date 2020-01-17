@@ -26,6 +26,19 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
     frame
   );
   const displayName = formatDisplayName(frame);
+
+  // TODO remove this branch when (#1592584) lands (#1609540)
+  if (isWorker) {
+    threadActor._parent._consoleActor.evaluateJS({
+      text: `console.log(...${expression})`,
+      bindings: { displayName, ...bindings },
+      url: sourceActor.url,
+      lineNumber: line,
+    });
+
+    return undefined;
+  }
+
   const completion = frame.evalWithBindings(expression, {
     displayName,
     ...bindings,
@@ -55,6 +68,7 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
   };
 
   threadActor._parent._consoleActor.onConsoleAPICall(message);
+  return undefined;
 }
 
 module.exports.logEvent = logEvent;
