@@ -172,24 +172,28 @@
     <key id="key_closeWindow" key="&closeCmd.key;" command="cmd_closeWindow" modifiers="accel,shift" reserved="true"/>
     <key id="key_toggleMute" key="&toggleMuteCmd.key;" command="cmd_toggleMute" modifiers="control"/>
     <key id="key_undo"
-         key="&undoCmd.key;"
+         data-l10n-id="text-action-undo-shortcut"
          modifiers="accel"/>
+    <key id="key_redo"
 #ifdef XP_UNIX
-    <key id="key_redo" key="&undoCmd.key;" modifiers="accel,shift"/>
+         data-l10n-id="text-action-undo-shortcut"
+         modifiers="accel,shift"
 #else
-    <key id="key_redo" key="&redoCmd.key;" modifiers="accel"/>
+         data-l10n-id="text-action-redo-shortcut"
+         modifiers="accel"
 #endif
+         />
     <key id="key_cut"
-         key="&cutCmd.key;"
+         data-l10n-id="text-action-cut-shortcut"
          modifiers="accel"/>
     <key id="key_copy"
-         key="&copyCmd.key;"
+         data-l10n-id="text-action-copy-shortcut"
          modifiers="accel"/>
     <key id="key_paste"
-         key="&pasteCmd.key;"
+         data-l10n-id="text-action-paste-shortcut"
          modifiers="accel"/>
     <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
-    <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
+    <key id="key_selectAll" data-l10n-id="text-action-select-all-shortcut" modifiers="accel"/>
 
     <key keycode="VK_BACK" command="cmd_handleBackspace" reserved="false"/>
     <key keycode="VK_BACK" command="cmd_handleShiftBackspace" modifiers="shift" reserved="false"/>
