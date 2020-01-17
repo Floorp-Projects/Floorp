@@ -159,6 +159,8 @@ class AppLinksUseCasesTest {
 
         assertTrue(redirect.hasExternalApp())
         assertTrue(redirect.isInstallable())
+        assert(redirect.marketplaceIntent!!.flags and Intent.FLAG_ACTIVITY_NEW_TASK
+            == Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
     @Test
