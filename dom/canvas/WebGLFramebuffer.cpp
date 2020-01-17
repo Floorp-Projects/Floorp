@@ -1103,6 +1103,16 @@ void WebGLFramebuffer::DrawBuffers(const std::vector<GLenum>& buffers) {
   RefreshDrawBuffers();  // Calls glDrawBuffers.
 }
 
+bool WebGLFramebuffer::IsDrawBufferEnabled(const uint32_t slotId) const {
+  const auto attachEnum = LOCAL_GL_COLOR_ATTACHMENT0 + slotId;
+  for (const auto& cur : mColorDrawBuffers) {
+    if (cur->mAttachmentPoint == attachEnum) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void WebGLFramebuffer::ReadBuffer(GLenum attachPoint) {
   const auto& maybeAttach = GetColorAttachPoint(attachPoint);
   if (!maybeAttach) {

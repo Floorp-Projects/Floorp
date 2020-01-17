@@ -234,6 +234,7 @@ class WebGLFramebuffer final : public WebGLContextBoundObject,
 #undef GETTER
 
   const auto& ColorAttachment0() const { return mColorAttachments[0]; }
+  bool IsDrawBufferEnabled(uint32_t slotId) const;
 
   ////////////////
   // Invalidation
