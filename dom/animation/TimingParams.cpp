@@ -48,7 +48,8 @@ TimingParams TimingParams::FromOptionsType(const OptionsType& aOptions,
       result.mDuration.emplace(
           StickyTimeDuration::FromMilliseconds(durationInMs));
     } else {
-      aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+      nsPrintfCString error("Duration value %f is less than 0", durationInMs);
+      aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(error));
       return result;
     }
     result.Update();
