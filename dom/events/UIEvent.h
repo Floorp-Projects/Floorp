@@ -70,11 +70,28 @@ class UIEvent : public Event {
     return 0;
   }
 
-  MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<nsINode> GetRangeParent();
+  /**
+   * GetRangeParent() should be used only by JS.  C++ callers should use
+   * GetRangeParentContent() or GetRangeParentContentAndOffset() instead.
+   */
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<nsINode> GetRangeParent() {
+    return GetRangeParentContent();
+  }
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<nsIContent> GetRangeParentContent() {
+    return GetRangeParentContentAndOffset(nullptr);
+  }
+  /**
+   * aOffset is optional (i.e., can be nullptr), but when you call this with
+   * nullptr, you should use GetRangeParentContent() instead.
+   */
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<nsIContent>
+  GetRangeParentContentAndOffset(int32_t* aOffset);
 
-  MOZ_CAN_RUN_SCRIPT
-  int32_t RangeOffset() const;
+  /**
+   * If you also need to compute range parent in C++ code, you should use
+   * GetRangeParentContentAndOffset() instead.
+   */
+  MOZ_CAN_RUN_SCRIPT int32_t RangeOffset() const;
 
  protected:
   ~UIEvent() {}

@@ -543,9 +543,6 @@ class RecursiveMakeBackend(MakeBackend):
         elif isinstance(obj, VariablePassthru):
             # Sorted so output is consistent and we don't bump mtimes.
             for k, v in sorted(obj.variables.items()):
-                if k == 'HAS_MISC_RULE':
-                    self._no_skip['misc'].add(backend_file.relobjdir)
-                    continue
                 if isinstance(v, list):
                     for item in v:
                         backend_file.write(

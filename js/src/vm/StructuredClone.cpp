@@ -428,8 +428,8 @@ struct JSStructuredCloneReader {
   SCInput& in;
 
   // The widest scope that the caller will accept, where
-  // SameProcessSameThread is the widest (it can store anything it wants) and
-  // DifferentProcess is the narrowest (it cannot contain pointers and must
+  // SameProcess is the widest (it can store anything it wants)
+  // and DifferentProcess is the narrowest (it cannot contain pointers and must
   // be valid cross-process.)
   JS::StructuredCloneScope allowedScope;
 
@@ -1267,7 +1267,7 @@ bool JSStructuredCloneWriter::writeSharedArrayBuffer(HandleObject obj) {
   // cross-process.  The cloneDataPolicy should have guarded against this;
   // since it did not then throw, with a very explicit message.
 
-  if (output().scope() > JS::StructuredCloneScope::SameProcessDifferentThread) {
+  if (output().scope() > JS::StructuredCloneScope::SameProcess) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_SHMEM_POLICY);
     return false;
@@ -2655,7 +2655,13 @@ bool JSStructuredCloneReader::readHeader() {
     storedScope = JS::StructuredCloneScope::DifferentProcessForIndexedDB;
   }
 
-  if (storedScope < JS::StructuredCloneScope::SameProcessSameThread ||
+  // Backward compatibility with old structured clone buffers. Value '0' was
+  // used for SameProcessSameThread scope.
+  if ((int)storedScope == 0) {
+    storedScope = JS::StructuredCloneScope::SameProcess;
+  }
+
+  if (storedScope < JS::StructuredCloneScope::SameProcess ||
       storedScope > JS::StructuredCloneScope::DifferentProcessForIndexedDB) {
     JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA,
@@ -3084,8 +3090,8 @@ JS_PUBLIC_API bool JS_StructuredClone(
 
   const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
 
-  JSAutoStructuredCloneBuffer buf(
-      JS::StructuredCloneScope::SameProcessSameThread, callbacks, closure);
+  JSAutoStructuredCloneBuffer buf(JS::StructuredCloneScope::SameProcess,
+                                  callbacks, closure);
   {
     if (value.isObject()) {
       RootedObject obj(cx, &value.toObject());

@@ -1,5 +1,8 @@
 "use strict";
 
+// Disable extra warnings "Reference to undefined property".
+options("strict"); // eslint-disable-line
+
 /* exported createHttpServer, cleanupDir, clearCache, promiseConsoleOutput,
             promiseQuotaManagerServiceReset, promiseQuotaManagerServiceClear,
             runWithPrefs, testEnv, withHandlingUserInput */

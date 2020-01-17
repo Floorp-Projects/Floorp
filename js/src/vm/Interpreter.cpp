@@ -1652,20 +1652,12 @@ void js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
 static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
                                                               RunState& state) {
 /*
- * Define macros for an interpreter loop. Opcode dispatch may be either by a
- * switch statement or by indirect goto (aka a threaded interpreter), depending
- * on compiler support.
- *
- * Threaded interpretation appears to be well-supported by GCC 3 and higher.
- * IBM's C compiler when run with the right options (e.g., -qlanglvl=extended)
- * also supports threading. Ditto the SunPro C compiler.
+ * Define macros for an interpreter loop. Opcode dispatch is done by
+ * indirect goto (aka a threaded interpreter), which is technically
+ * non-standard but is supported by all of our supported compilers.
  */
-#if (defined(__GNUC__) || (__IBMC__ >= 700 && defined __IBM_COMPUTED_GOTO) || \
-     __SUNPRO_C >= 0x570)
-// Non-standard but faster indirect-goto-based dispatch.
 #  define INTERPRETER_LOOP()
 #  define CASE(OP) label_##OP:
-#  define PSEUDO_CASE(NAME) CASE(NAME)
 #  define DEFAULT() \
   label_default:
 #  define DISPATCH_TO(OP) goto* addresses[(OP)]
@@ -1684,23 +1676,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           FOR_EACH_TRAILING_UNUSED_OPCODE(TRAILING_LABEL)
 #  undef TRAILING_LABEL
   };
-#else
-// Portable switch-based dispatch.
-#  define INTERPRETER_LOOP() \
-  the_switch:                \
-    switch (switchOp)
-#  define CASE(OP) case jsbytecode(JSOp::OP):
-#  define PSEUDO_CASE(NAME) case NAME:
-#  define DEFAULT() default:
-#  define DISPATCH_TO(OP) \
-    JS_BEGIN_MACRO        \
-      switchOp = (OP);    \
-      goto the_switch;    \
-    JS_END_MACRO
-
-  // This variable is effectively a parameter to the_switch.
-  jsbytecode switchOp;
-#endif
 
   /*
    * Increment REGS.pc by N, load the opcode at that position,
@@ -1860,7 +1835,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
   ADVANCE_AND_DISPATCH(0);
 
   INTERPRETER_LOOP() {
-    PSEUDO_CASE(EnableInterruptsPseudoOpcode) {
+    CASE(EnableInterruptsPseudoOpcode) {
       bool moreInterrupts = false;
       jsbytecode op = *REGS.pc;
 

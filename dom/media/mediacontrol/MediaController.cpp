@@ -30,7 +30,7 @@ MediaController::MediaController(uint64_t aContextId)
 
 MediaController::~MediaController() {
   LOG("Destroy controller %" PRId64, Id());
-  MOZ_DIAGNOSTIC_ASSERT(!mControlledMediaNum);
+  MOZ_DIAGNOSTIC_ASSERT(!mIsRegisteredToService);
 };
 
 void MediaController::Play() {
@@ -69,10 +69,16 @@ void MediaController::UpdateMediaControlKeysEventToContentMediaIfNeeded(
 
 void MediaController::Shutdown() {
   SetPlayState(PlaybackState::eStopped);
+  // The media controller would be removed from the service when we receive a
+  // notification from the content process about all controlled media has been
+  // stoppped. However, if controlled media is stopped after detaching
+  // browsing context, then sending the notification from the content process
+  // would fail so that we are not able to notify the chrome process to remove
+  // the corresponding controller. Therefore, we should manually remove the
+  // controller from the service.
+  Deactivate();
   mControlledMediaNum = 0;
-  RefPtr<MediaControlService> service = MediaControlService::GetService();
-  MOZ_ASSERT(service);
-  service->GetAudioFocusManager().RevokeAudioFocus(Id());
+  mPlayingControlledMediaNum = 0;
 }
 
 void MediaController::NotifyMediaStateChanged(ControlledMediaState aState) {
@@ -89,10 +95,12 @@ void MediaController::NotifyMediaStateChanged(ControlledMediaState aState) {
 
 void MediaController::NotifyMediaAudibleChanged(bool aAudible) {
   mAudible = aAudible;
+  RefPtr<MediaControlService> service = MediaControlService::GetService();
+  MOZ_ASSERT(service);
   if (mAudible) {
-    RefPtr<MediaControlService> service = MediaControlService::GetService();
-    MOZ_ASSERT(service);
-    service->GetAudioFocusManager().RequestAudioFocus(Id());
+    service->GetAudioFocusManager().RequestAudioFocus(this);
+  } else {
+    service->GetAudioFocusManager().RevokeAudioFocus(this);
   }
 }
 
@@ -140,15 +148,21 @@ void MediaController::DecreasePlayingControlledMediaNum() {
 // TODO : Use watchable to moniter mControlledMediaNum
 void MediaController::Activate() {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
-  MOZ_ASSERT(service);
-  service->AddMediaController(this);
+  if (service && !mIsRegisteredToService) {
+    mIsRegisteredToService = service->RegisterActiveMediaController(this);
+    MOZ_ASSERT(mIsRegisteredToService, "Fail to register controller!");
+  }
 }
 
 void MediaController::Deactivate() {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
-  MOZ_ASSERT(service);
-  service->RemoveMediaController(this);
-  service->GetAudioFocusManager().RevokeAudioFocus(Id());
+  if (service) {
+    service->GetAudioFocusManager().RevokeAudioFocus(this);
+    if (mIsRegisteredToService) {
+      mIsRegisteredToService = !service->UnregisterActiveMediaController(this);
+      MOZ_ASSERT(!mIsRegisteredToService, "Fail to unregister controller!");
+    }
+  }
 }
 
 void MediaController::SetPlayState(PlaybackState aState) {

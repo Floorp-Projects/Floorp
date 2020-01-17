@@ -10,35 +10,15 @@ const {
 const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 add_task(async function() {
   const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
-  await testShowDOMProperties();
   await testDuplicateNode();
   await testDeleteNode();
   await testDeleteTextNode();
   await testDeleteRootNode();
   await testScrollIntoView();
-  async function testShowDOMProperties() {
-    info("Testing 'Show DOM Properties' menu item.");
-    const allMenuItems = openContextMenuAndGetAllItems(inspector);
-    const showDOMPropertiesNode = allMenuItems.find(
-      item => item.id === "node-menu-showdomproperties"
-    );
-    ok(showDOMPropertiesNode, "the popup menu has a show dom properties item");
+  // This needs to be last as the webconsole `inspect` command impact the selected node in
+  // the inspector.
+  await testShowDOMProperties();
 
-    const consoleOpened = toolbox.once("webconsole-ready");
-
-    info("Triggering 'Show DOM Properties' and waiting for inspector open");
-    showDOMPropertiesNode.click();
-    await consoleOpened;
-
-    const webconsoleUI = toolbox.getPanel("webconsole").hud.ui;
-    const messagesAdded = webconsoleUI.once("new-messages");
-    await messagesAdded;
-    info("Checking if 'inspect($0)' was evaluated");
-
-    const state = webconsoleUI.wrapper.getStore().getState();
-    ok(getHistoryEntries(state)[0] === "inspect($0)");
-    await toolbox.toggleSplitConsole();
-  }
   async function testDuplicateNode() {
     info("Testing 'Duplicate Node' menu item for normal elements.");
 
@@ -138,6 +118,30 @@ add_task(async function() {
       await testActor.eval("!!document.documentElement"),
       "Document element still alive."
     );
+  }
+
+  async function testShowDOMProperties() {
+    info("Testing 'Show DOM Properties' menu item.");
+    const allMenuItems = openContextMenuAndGetAllItems(inspector);
+    const showDOMPropertiesNode = allMenuItems.find(
+      item => item.id === "node-menu-showdomproperties"
+    );
+    ok(showDOMPropertiesNode, "the popup menu has a show dom properties item");
+
+    const consoleOpened = toolbox.once("webconsole-ready");
+
+    info("Triggering 'Show DOM Properties' and waiting for inspector open");
+    showDOMPropertiesNode.click();
+    await consoleOpened;
+
+    const webconsoleUI = toolbox.getPanel("webconsole").hud.ui;
+    const messagesAdded = webconsoleUI.once("new-messages");
+    await messagesAdded;
+    info("Checking if 'inspect($0)' was evaluated");
+
+    const state = webconsoleUI.wrapper.getStore().getState();
+    ok(getHistoryEntries(state)[0] === "inspect($0)");
+    await toolbox.toggleSplitConsole();
   }
 
   function testScrollIntoView() {

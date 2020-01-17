@@ -40,7 +40,6 @@ class ChildDevToolsPanel extends ExtensionCommon.EventEmitter {
     this._panelContext = null;
 
     this.conduit = context.openConduit(this, {
-      id: this.id,
       recv: ["PanelHidden", "PanelShown"],
     });
   }
@@ -147,7 +146,6 @@ class ChildDevToolsInspectorSidebar extends ExtensionCommon.EventEmitter {
     this.id = id;
 
     this.conduit = context.openConduit(this, {
-      id: this.id,
       recv: ["InspectorSidebarHidden", "InspectorSidebarShown"],
     });
   }

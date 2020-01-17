@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["StyleEditorUI"];
+const EXPORTED_SYMBOLS = ["StyleEditorUI"];
 
 const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
@@ -117,7 +117,6 @@ function StyleEditorUI(toolbox, panelDoc, cssProperties) {
   );
   this._sourceMapPrefObserver.on(PREF_ORIG_SOURCES, this._onNewDocument);
 }
-this.StyleEditorUI = StyleEditorUI;
 
 StyleEditorUI.prototype = {
   get currentTarget() {

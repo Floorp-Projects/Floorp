@@ -3,7 +3,7 @@
 
     function boom()
     {
-      document.documentElement.style.MozColumnCount = '15';
+      document.documentElement.style.columnCount = '15';
     }
     window.onload = function() { setTimeout(boom, 20); };
     

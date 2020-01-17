@@ -54,6 +54,12 @@ const GeckoViewContentBlockingController = {
         break;
       }
 
+      case "ContentBlocking:RemoveExceptionByPrincipal": {
+        const principal = E10SUtils.deserializePrincipal(aData.principal);
+        ContentBlockingAllowList.removeByPrincipal(principal);
+        break;
+      }
+
       case "ContentBlocking:CheckException": {
         const sessionWindow = Services.ww.getWindowByName(
           aData.sessionId,

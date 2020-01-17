@@ -94,6 +94,7 @@ class MediaController final {
 
   uint64_t mBrowsingContextId;
   bool mAudible = false;
+  bool mIsRegisteredToService = false;
   int64_t mControlledMediaNum = 0;
   int64_t mPlayingControlledMediaNum = 0;
 

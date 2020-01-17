@@ -15,8 +15,7 @@ namespace dom {
 SerializedStackHolder::SerializedStackHolder()
     : mHolder(StructuredCloneHolder::CloningSupported,
               StructuredCloneHolder::TransferringNotSupported,
-              StructuredCloneHolder::StructuredCloneScope::
-                  SameProcessDifferentThread) {}
+              StructuredCloneHolder::StructuredCloneScope::SameProcess) {}
 
 void SerializedStackHolder::WriteStack(JSContext* aCx,
                                        JS::HandleObject aStack) {

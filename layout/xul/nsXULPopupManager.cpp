@@ -166,7 +166,7 @@ nsXULPopupManager::Observe(nsISupports* aSubject, const char* aTopic,
       mKeyListener->RemoveEventListener(NS_LITERAL_STRING("keyup"), this, true);
       mKeyListener = nullptr;
     }
-    mRangeParent = nullptr;
+    mRangeParentContent = nullptr;
     // mOpeningPopup is cleared explicitly soon after using it.
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
@@ -556,10 +556,6 @@ nsMenuChainItem* nsXULPopupManager::GetTopVisibleMenu() {
   return nullptr;
 }
 
-nsINode* nsXULPopupManager::GetMouseLocationParent() { return mRangeParent; }
-
-int32_t nsXULPopupManager::MouseLocationOffset() { return mRangeOffset; }
-
 void nsXULPopupManager::InitTriggerEvent(Event* aEvent, nsIContent* aPopup,
                                          nsIContent** aTriggerContent) {
   mCachedMousePoint = LayoutDeviceIntPoint(0, 0);
@@ -577,8 +573,9 @@ void nsXULPopupManager::InitTriggerEvent(Event* aEvent, nsIContent* aPopup,
 
   RefPtr<UIEvent> uiEvent = aEvent ? aEvent->AsUIEvent() : nullptr;
   if (uiEvent) {
-    mRangeParent = uiEvent->GetRangeParent();
-    mRangeOffset = uiEvent->RangeOffset();
+    mRangeOffset = -1;
+    mRangeParentContent =
+        uiEvent->GetRangeParentContentAndOffset(&mRangeOffset);
 
     // get the event coordinates relative to the root frame of the document
     // containing the popup.
@@ -628,7 +625,7 @@ void nsXULPopupManager::InitTriggerEvent(Event* aEvent, nsIContent* aPopup,
       }
     }
   } else {
-    mRangeParent = nullptr;
+    mRangeParentContent = nullptr;
     mRangeOffset = 0;
   }
 }
@@ -1355,7 +1352,7 @@ void nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   }
 
   // clear these as they are no longer valid
-  mRangeParent = nullptr;
+  mRangeParentContent = nullptr;
   mRangeOffset = 0;
 
   // get the frame again in case it went away

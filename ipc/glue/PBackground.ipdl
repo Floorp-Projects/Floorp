@@ -26,7 +26,6 @@ include protocol PHttpBackgroundChannel;
 include protocol PIdleScheduler;
 include protocol PIPCBlobInputStream;
 include protocol PMediaTransport;
-include protocol PPendingIPCBlob;
 include protocol PRemoteWorker;
 include protocol PRemoteWorkerController;
 include protocol PRemoteWorkerService;
@@ -95,7 +94,6 @@ sync protocol PBackground
   manages PIdleScheduler;
   manages PIPCBlobInputStream;
   manages PMediaTransport;
-  manages PPendingIPCBlob;
   manages PRemoteWorker;
   manages PRemoteWorkerController;
   manages PRemoteWorkerService;
@@ -242,8 +240,6 @@ child:
   async PCacheStreamControl();
 
   async PParentToChildStream();
-
-  async PPendingIPCBlob(IPCBlob blob);
 
   async PRemoteWorker(RemoteWorkerData data);
 
