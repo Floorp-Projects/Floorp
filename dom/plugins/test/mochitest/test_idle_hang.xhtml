@@ -7,7 +7,8 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <title>Plugin Idle Hang Test</title>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
-  <script type="application/javascript" src="hang_test.js" />
+  <script type="application/javascript"
+          src="http://mochi.test:8888/chrome/dom/plugins/test/mochitest/hang_test.js" />
   <script type="application/javascript" src="plugin-utils.js"></script>
   <script type="application/javascript">
     getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
