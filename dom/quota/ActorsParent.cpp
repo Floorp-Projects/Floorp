@@ -4463,8 +4463,6 @@ nsresult QuotaManager::LoadQuota() {
   }
 
   const auto now = TimeStamp::Now();
-  Telemetry::AccumulateTimeDelta(Telemetry::QM_REPOSITORIES_INITIALIZATION_TIME,
-                                 startTime, now);
   Telemetry::AccumulateTimeDelta(
       Telemetry::QM_REPOSITORIES_INITIALIZATION_TIME_V2, startTime, now);
 
