@@ -61,6 +61,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/mozac_feature_prompt_username_hint"
+            android:imeOptions="actionDone"
+            android:singleLine="true"
             android:textColor="?android:textColorPrimary"
             android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>
@@ -85,7 +87,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/mozac_feature_prompt_password_hint"
+            android:imeOptions="actionDone"
             android:inputType="textPassword"
+            android:singleLine="true"
             android:textColor="?android:textColorPrimary"
             android:textSize="15sp" />
 
