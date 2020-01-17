@@ -102,7 +102,7 @@ class AboutFragment : Fragment(), AboutPageListener {
             AboutPageItem.Item(
                 AboutItem.ExternalLink(
                     WHATS_NEW,
-                    SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.WHATS_NEW)
+                    SupportUtils.getWhatsNewUrl(context)
                 ), getString(R.string.about_whats_new, getString(R.string.app_name))
             ),
             AboutPageItem.Item(
