@@ -186,6 +186,12 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY newPrivateWindow.label     "New Private Window">
 
 <!ENTITY editMenu.label         "Edit">
+<!ENTITY undoCmd.key            "Z">
+<!ENTITY redoCmd.key            "Y">
+<!ENTITY cutCmd.key             "X">
+<!ENTITY copyCmd.key            "C">
+<!ENTITY pasteCmd.key           "V">
+<!ENTITY selectAllCmd.key         "A">
 <!ENTITY preferencesCmd2.label       "Options">
 <!ENTITY preferencesCmdUnix.label       "Preferences">
 <!ENTITY logins.label                           "Logins and Passwords">
