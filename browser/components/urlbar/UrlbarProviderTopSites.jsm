@@ -40,6 +40,12 @@ class ProviderTopSites extends UrlbarProvider {
     // Maps the running queries by queryContext.
     this.queries = new Map();
   }
+
+  get PRIORITY() {
+    // Top sites are prioritized over the UnifiedComplete provider.
+    return 1;
+  }
+
   /**
    * Unique name for the provider, used by the context to filter on providers.
    * Not using a unique name will cause the newest registration to win.
@@ -71,14 +77,12 @@ class ProviderTopSites extends UrlbarProvider {
   }
 
   /**
-   * Whether this provider wants to restrict results to just itself.
-   * Other providers won't be invoked, unless this provider doesn't
-   * support the current query.
+   * Gets the provider's priority.
    * @param {UrlbarQueryContext} queryContext The query context object
-   * @returns {boolean} Whether this provider wants to restrict results.
+   * @returns {number} The provider's priority for the given query.
    */
-  isRestricting(queryContext) {
-    return true;
+  getPriority(queryContext) {
+    return this.PRIORITY;
   }
 
   /**
