@@ -1071,7 +1071,7 @@ nsresult ServiceWorkerManager::SendPushEvent(
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetRegistration(serviceWorker->Principal(), aScope);
-  MOZ_DIAGNOSTIC_ASSERT(registration);
+  MOZ_RELEASE_ASSERT(registration);
 
   return serviceWorker->WorkerPrivate()->SendPushEvent(aMessageId, aData,
                                                        registration);
@@ -1698,9 +1698,8 @@ void ServiceWorkerManager::AddScopeAndRegistration(
 
   MOZ_ASSERT(!scopeKey.IsEmpty());
 
-  const auto& data =
-      swm->mRegistrationInfos.LookupForAdd(scopeKey).OrInsert(
-          []() { return new RegistrationDataPerPrincipal(); });
+  const auto& data = swm->mRegistrationInfos.LookupForAdd(scopeKey).OrInsert(
+      []() { return new RegistrationDataPerPrincipal(); });
 
   for (uint32_t i = 0; i < data->mOrderedScopes.Length(); ++i) {
     const nsCString& current = data->mOrderedScopes[i];
