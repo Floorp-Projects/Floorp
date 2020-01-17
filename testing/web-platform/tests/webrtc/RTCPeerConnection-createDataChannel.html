@@ -61,7 +61,7 @@ test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
   assert_equals(pc.createDataChannel.length, 1);
-  assert_throws(new TypeError(), () => pc.createDataChannel());
+  assert_throws_js(TypeError, () => pc.createDataChannel());
 }, 'createDataChannel with no argument should throw TypeError');
 /*
   6.2.  createDataChannel
@@ -257,11 +257,11 @@ test(t => {
 test(t => {
   const pc = new RTCPeerConnection;
   t.add_cleanup(() => pc.close());
-  assert_throws(new TypeError(), () => pc.createDataChannel('', {
+  assert_throws_js(TypeError, () => pc.createDataChannel('', {
     maxPacketLifeTime: 0,
     maxRetransmits: 0
   }));
-  assert_throws(new TypeError(), () => pc.createDataChannel('', {
+  assert_throws_js(TypeError, () => pc.createDataChannel('', {
     maxPacketLifeTime: 42,
     maxRetransmits: 42
   }));
@@ -313,7 +313,7 @@ for (const id of [-1, 65536]) {
   test((t) => {
     const pc = new RTCPeerConnection();
     t.add_cleanup(() => pc.close());
-    assert_throws(new TypeError(), () => pc.createDataChannel('', { id }));
+    assert_throws_js(TypeError, () => pc.createDataChannel('', { id }));
   }, `createDataChannel with id ${id} and negotiated not set should throw TypeError`);
 }
 for (const id of [-1, 65535, 65536]) {
@@ -321,7 +321,7 @@ for (const id of [-1, 65535, 65536]) {
     const pc = new RTCPeerConnection();
     t.add_cleanup(() => pc.close());
 
-    assert_throws(new TypeError(), () => pc.createDataChannel('',
+    assert_throws_js(TypeError, () => pc.createDataChannel('',
         { 'negotiated': true, 'id': id }));
   }, `createDataChannel with id ${id} should throw TypeError`);
 }
@@ -351,9 +351,9 @@ test(t => {
 test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     pc.createDataChannel('l'.repeat(65536)));
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     pc.createDataChannel('l'.repeat(65536), {
       negotiated: true,
       id: 42
@@ -363,9 +363,9 @@ test(t => {
 test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     pc.createDataChannel('\u00b5'.repeat(32768)));
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     pc.createDataChannel('\u00b5'.repeat(32768), {
       negotiated: true,
       id: 42
@@ -397,11 +397,11 @@ test(t => {
 test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     pc.createDataChannel('', {
       protocol: 'p'.repeat(65536)
     }));
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     pc.createDataChannel('', {
       protocol: 'p'.repeat(65536),
       negotiated: true,
@@ -412,11 +412,11 @@ test(t => {
 test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     pc.createDataChannel('', {
       protocol: '\u00b6'.repeat(32768)
     }));
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     pc.createDataChannel('', {
       protocol: '\u00b6'.repeat(32768),
       negotiated: true,
@@ -470,7 +470,7 @@ test(t => {
 test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     pc.createDataChannel('test', {
       negotiated: true
     }));
@@ -479,7 +479,7 @@ test(t => {
 test(t => {
   const pc = new RTCPeerConnection();
   t.add_cleanup(() => pc.close());
-  assert_throws(new TypeError(), () =>
+  assert_throws_js(TypeError, () =>
     pc.createDataChannel('test', {
       negotiated: true,
       id: null
