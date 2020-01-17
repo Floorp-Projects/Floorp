@@ -304,9 +304,16 @@ void SourceBuffer::PrepareRemove(double aStart, double aEnd, ErrorResult& aRv) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  if (IsNaN(mMediaSource->Duration()) || aStart < 0 ||
-      aStart > mMediaSource->Duration() || aEnd <= aStart || IsNaN(aEnd)) {
-    aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+  if (IsNaN(mMediaSource->Duration())) {
+    aRv.ThrowTypeError(u"Duration is NaN");
+    return;
+  }
+  if (aStart < 0 || aStart > mMediaSource->Duration()) {
+    aRv.ThrowTypeError(u"Invalid start value");
+    return;
+  }
+  if (aEnd <= aStart || IsNaN(aEnd)) {
+    aRv.ThrowTypeError(u"Invalid end value");
     return;
   }
   if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
