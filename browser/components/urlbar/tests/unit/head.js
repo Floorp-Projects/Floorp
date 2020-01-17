@@ -36,6 +36,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+AddonTestUtils.init(this, false);
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "42",
+  "42"
+);
+
 /**
  * @param {string} searchString The search string to insert into the context.
  * @param {object} properties Overrides for the default values.
@@ -215,7 +226,7 @@ async function addTestEngine(basename, httpServer = undefined) {
  *        search string.  If not given, a default function is used.
  * @returns {nsISearchEngine} The new engine.
  */
-function addTestSuggestionsEngine(suggestionsFn = null) {
+async function addTestSuggestionsEngine(suggestionsFn = null) {
   // This port number should match the number in engine-suggestions.xml.
   let server = makeTestServer(9000);
   server.registerPathHandler("/suggest", (req, resp) => {
