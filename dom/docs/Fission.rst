@@ -449,9 +449,6 @@ Minimal Example Actors
   // resource://testing-common/TestParent.jsm
   var EXPORTED_SYMBOLS = ["TestParent"];
   class TestParent extends JSWindowActorParent {
-    constructor() {
-      super();
-    }
     ...
   }
 
@@ -460,9 +457,6 @@ Minimal Example Actors
   // resource://testing-common/TestChild.jsm
   var EXPORTED_SYMBOLS = ["TestChild"];
   class TestChild extends JSWindowActorChild {
-    constructor() {
-      super();
-    }
     ...
   }
 
@@ -475,7 +469,7 @@ Minimal Example Actors
   let parentActor = this.browser.browsingContext.currentWindowGlobal.getActor("Test");
 
   // get child side actor
-  let childActor = content.window.getWindowGlobalChild().getActor("Test");
+  let childActor = content.windowGlobalChild.getActor("Test");
 
 .. _Electrolysis Project: https://wiki.mozilla.org/Electrolysis
 .. _IPC Actors: https://developer.mozilla.org/en-US/docs/Mozilla/IPDL/Tutorial
