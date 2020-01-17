@@ -6,7 +6,9 @@
 
 #include "SVGAnimatedPreserveAspectRatio.h"
 
+#include "mozAutoDocUpdate.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/dom/SVGAnimatedPreserveAspectRatioBinding.h"
@@ -87,9 +89,12 @@ nsresult SVGAnimatedPreserveAspectRatio::SetBaseValueString(
     return res;
   }
 
+  Maybe<mozAutoDocUpdate> updateBatch;
   nsAttrValue emptyOrOldValue;
   if (aDoSetAttr) {
-    emptyOrOldValue = aSVGElement->WillChangePreserveAspectRatio();
+    updateBatch.emplace(aSVGElement->GetComposedDoc(), true);
+    emptyOrOldValue =
+        aSVGElement->WillChangePreserveAspectRatio(updateBatch.ref());
   }
 
   mBaseVal = val;
@@ -99,7 +104,8 @@ nsresult SVGAnimatedPreserveAspectRatio::SetBaseValueString(
     mAnimVal = mBaseVal;
   }
   if (aDoSetAttr) {
-    aSVGElement->DidChangePreserveAspectRatio(emptyOrOldValue);
+    aSVGElement->DidChangePreserveAspectRatio(emptyOrOldValue,
+                                              updateBatch.ref());
   }
   if (mIsAnimated) {
     aSVGElement->AnimationNeedsResample();
@@ -118,14 +124,16 @@ void SVGAnimatedPreserveAspectRatio::SetBaseValue(
     return;
   }
 
-  nsAttrValue emptyOrOldValue = aSVGElement->WillChangePreserveAspectRatio();
+  mozAutoDocUpdate updateBatch(aSVGElement->GetComposedDoc(), true);
+  nsAttrValue emptyOrOldValue =
+      aSVGElement->WillChangePreserveAspectRatio(updateBatch);
   mBaseVal = aValue;
   mIsBaseSet = true;
 
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
-  aSVGElement->DidChangePreserveAspectRatio(emptyOrOldValue);
+  aSVGElement->DidChangePreserveAspectRatio(emptyOrOldValue, updateBatch);
   if (mIsAnimated) {
     aSVGElement->AnimationNeedsResample();
   }

@@ -8,6 +8,7 @@
 #include "DOMSVGPathSegList.h"
 #include "SVGAnimatedPathSegList.h"
 #include "SVGElement.h"
+#include "mozAutoDocUpdate.h"
 #include "nsError.h"
 
 // See the architecture comment in DOMSVGPathSegList.h.
@@ -47,20 +48,21 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGPathSeg, Release)
 // Helper class: AutoChangePathSegNotifier
 // Stack-based helper class to pair calls to WillChangePathSegList
 // and DidChangePathSegList.
-class MOZ_RAII AutoChangePathSegNotifier {
+class MOZ_RAII AutoChangePathSegNotifier : public mozAutoDocUpdate {
  public:
   explicit AutoChangePathSegNotifier(
       DOMSVGPathSeg* aPathSeg MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mPathSeg(aPathSeg) {
+      : mozAutoDocUpdate(aPathSeg->Element()->GetComposedDoc(), true),
+        mPathSeg(aPathSeg) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mPathSeg, "Expecting non-null pathSeg");
     MOZ_ASSERT(mPathSeg->HasOwner(),
                "Expecting list to have an owner for notification");
-    mEmptyOrOldValue = mPathSeg->Element()->WillChangePathSegList();
+    mEmptyOrOldValue = mPathSeg->Element()->WillChangePathSegList(*this);
   }
 
   ~AutoChangePathSegNotifier() {
-    mPathSeg->Element()->DidChangePathSegList(mEmptyOrOldValue);
+    mPathSeg->Element()->DidChangePathSegList(mEmptyOrOldValue, *this);
     // Null check mPathSeg->mList, since DidChangePathSegList can run script,
     // potentially removing mPathSeg from its list.
     if (mPathSeg->mList && mPathSeg->mList->AttrIsAnimating()) {

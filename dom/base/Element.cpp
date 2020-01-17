@@ -2175,15 +2175,15 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
     return OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
   }
 
-  if (aNotify) {
-    MutationObservers::NotifyAttributeWillChange(this, aNamespaceID, aName,
-                                                 modType);
-  }
-
   // Hold a script blocker while calling ParseAttribute since that can call
   // out to id-observers
   Document* document = GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, aNotify);
+
+  if (aNotify) {
+    MutationObservers::NotifyAttributeWillChange(this, aNamespaceID, aName,
+                                                 modType);
+  }
 
   nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2222,6 +2222,9 @@ nsresult Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
     return OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
   }
 
+  Document* document = GetComposedDoc();
+  mozAutoDocUpdate updateBatch(document, aNotify);
+
   if (aNotify) {
     MutationObservers::NotifyAttributeWillChange(this, aNamespaceID, aName,
                                                  modType);
@@ -2232,8 +2235,6 @@ nsresult Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
 
   PreIdMaybeChange(aNamespaceID, aName, &value);
 
-  Document* document = GetComposedDoc();
-  mozAutoDocUpdate updateBatch(document, aNotify);
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix,
                           oldValueSet ? &oldValue : nullptr, aParsedValue,
                           nullptr, modType, hasListeners, aNotify,

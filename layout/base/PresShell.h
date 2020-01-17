@@ -337,7 +337,7 @@ class PresShell final : public nsStubDocumentObserver,
    * is guaranteed to survive through arbitrary script execution.
    * Calling Initialize can execute arbitrary script.
    */
-  nsresult Initialize();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult Initialize();
 
   /**
    * Reflow the frame model into a new width and height.  The
@@ -477,7 +477,7 @@ class PresShell final : public nsStubDocumentObserver,
 
   void CancelAllPendingReflows();
 
-  void NotifyCounterStylesAreDirty();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void NotifyCounterStylesAreDirty();
 
   bool FrameIsAncestorOfDirtyRoot(nsIFrame* aFrame) const;
 
@@ -1754,7 +1754,7 @@ class PresShell final : public nsStubDocumentObserver,
   friend class ::nsAutoCauseReflowNotifier;
 
   void WillCauseReflow();
-  void DidCauseReflow();
+  MOZ_CAN_RUN_SCRIPT void DidCauseReflow();
 
   void CancelPostedReflowCallbacks();
   void FlushPendingScrollAnchorAdjustments();

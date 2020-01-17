@@ -1265,7 +1265,8 @@ const DeclarationBlock* SVGElement::GetContentDeclarationBlock() const {
  * of the above for us. For such types there is no matching WillChangeXXX
  * method, only DidChangeXXX which calls SetParsedAttr.
  */
-nsAttrValue SVGElement::WillChangeValue(nsAtom* aName) {
+nsAttrValue SVGElement::WillChangeValue(
+    nsAtom* aName, const mozAutoDocUpdate& aProofOfUpdate) {
   // We need an empty attr value:
   //   a) to pass to BeforeSetAttr when GetParsedAttr returns nullptr
   //   b) to store the old value in the case we have mutation listeners
@@ -1324,7 +1325,8 @@ nsAttrValue SVGElement::WillChangeValue(nsAtom* aName) {
  */
 void SVGElement::DidChangeValue(nsAtom* aName,
                                 const nsAttrValue& aEmptyOrOldValue,
-                                nsAttrValue& aNewValue) {
+                                nsAttrValue& aNewValue,
+                                const mozAutoDocUpdate& aProofOfUpdate) {
   bool hasListeners = nsContentUtils::HasMutationListeners(
       this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED, this);
   uint8_t modType =
@@ -1332,16 +1334,14 @@ void SVGElement::DidChangeValue(nsAtom* aName,
           ? static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION)
           : static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
 
-  Document* document = GetComposedDoc();
-  mozAutoDocUpdate updateBatch(document, kNotifyDocumentObservers);
   // XXX Really, the fourth argument to SetAttrAndNotify should be null if
   // aEmptyOrOldValue does not represent the actual previous value of the
   // attribute, but currently SVG elements do not even use the old attribute
   // value in |AfterSetAttr|, so this should be ok.
   SetAttrAndNotify(kNameSpaceID_None, aName, nullptr, &aEmptyOrOldValue,
                    aNewValue, nullptr, modType, hasListeners,
-                   kNotifyDocumentObservers, kCallAfterSetAttr, document,
-                   updateBatch);
+                   kNotifyDocumentObservers, kCallAfterSetAttr,
+                   GetComposedDoc(), aProofOfUpdate);
 }
 
 void SVGElement::MaybeSerializeAttrBeforeRemoval(nsAtom* aName, bool aNotify) {
@@ -1407,12 +1407,15 @@ void SVGElement::SetLength(nsAtom* aName, const SVGAnimatedLength& aLength) {
   MOZ_ASSERT(false, "no length found to set");
 }
 
-nsAttrValue SVGElement::WillChangeLength(uint8_t aAttrEnum) {
-  return WillChangeValue(GetLengthInfo().mLengthInfo[aAttrEnum].mName);
+nsAttrValue SVGElement::WillChangeLength(
+    uint8_t aAttrEnum, const mozAutoDocUpdate& aProofOfUpdate) {
+  return WillChangeValue(GetLengthInfo().mLengthInfo[aAttrEnum].mName,
+                         aProofOfUpdate);
 }
 
 void SVGElement::DidChangeLength(uint8_t aAttrEnum,
-                                 const nsAttrValue& aEmptyOrOldValue) {
+                                 const nsAttrValue& aEmptyOrOldValue,
+                                 const mozAutoDocUpdate& aProofOfUpdate) {
   LengthAttributesInfo info = GetLengthInfo();
 
   NS_ASSERTION(info.mLengthCount > 0,
@@ -1422,7 +1425,8 @@ void SVGElement::DidChangeLength(uint8_t aAttrEnum,
   nsAttrValue newValue;
   newValue.SetTo(info.mLengths[aAttrEnum], nullptr);
 
-  DidChangeValue(info.mLengthInfo[aAttrEnum].mName, aEmptyOrOldValue, newValue);
+  DidChangeValue(info.mLengthInfo[aAttrEnum].mName, aEmptyOrOldValue, newValue,
+                 aProofOfUpdate);
 }
 
 void SVGElement::DidAnimateLength(uint8_t aAttrEnum) {
@@ -1499,12 +1503,15 @@ void SVGElement::LengthListAttributesInfo::Reset(uint8_t aAttrEnum) {
   // caller notifies
 }
 
-nsAttrValue SVGElement::WillChangeLengthList(uint8_t aAttrEnum) {
-  return WillChangeValue(GetLengthListInfo().mLengthListInfo[aAttrEnum].mName);
+nsAttrValue SVGElement::WillChangeLengthList(
+    uint8_t aAttrEnum, const mozAutoDocUpdate& aProofOfUpdate) {
+  return WillChangeValue(GetLengthListInfo().mLengthListInfo[aAttrEnum].mName,
+                         aProofOfUpdate);
 }
 
 void SVGElement::DidChangeLengthList(uint8_t aAttrEnum,
-                                     const nsAttrValue& aEmptyOrOldValue) {
+                                     const nsAttrValue& aEmptyOrOldValue,
+                                     const mozAutoDocUpdate& aProofOfUpdate) {
   LengthListAttributesInfo info = GetLengthListInfo();
 
   NS_ASSERTION(info.mLengthListCount > 0,
@@ -1515,7 +1522,7 @@ void SVGElement::DidChangeLengthList(uint8_t aAttrEnum,
   newValue.SetTo(info.mLengthLists[aAttrEnum].GetBaseValue(), nullptr);
 
   DidChangeValue(info.mLengthListInfo[aAttrEnum].mName, aEmptyOrOldValue,
-                 newValue);
+                 newValue, aProofOfUpdate);
 }
 
 void SVGElement::DidAnimateLengthList(uint8_t aAttrEnum) {
@@ -1571,12 +1578,15 @@ void SVGElement::NumberListAttributesInfo::Reset(uint8_t aAttrEnum) {
   // caller notifies
 }
 
-nsAttrValue SVGElement::WillChangeNumberList(uint8_t aAttrEnum) {
-  return WillChangeValue(GetNumberListInfo().mNumberListInfo[aAttrEnum].mName);
+nsAttrValue SVGElement::WillChangeNumberList(
+    uint8_t aAttrEnum, const mozAutoDocUpdate& aProofOfUpdate) {
+  return WillChangeValue(GetNumberListInfo().mNumberListInfo[aAttrEnum].mName,
+                         aProofOfUpdate);
 }
 
 void SVGElement::DidChangeNumberList(uint8_t aAttrEnum,
-                                     const nsAttrValue& aEmptyOrOldValue) {
+                                     const nsAttrValue& aEmptyOrOldValue,
+                                     const mozAutoDocUpdate& aProofOfUpdate) {
   NumberListAttributesInfo info = GetNumberListInfo();
 
   MOZ_ASSERT(info.mNumberListCount > 0,
@@ -1587,7 +1597,7 @@ void SVGElement::DidChangeNumberList(uint8_t aAttrEnum,
   newValue.SetTo(info.mNumberLists[aAttrEnum].GetBaseValue(), nullptr);
 
   DidChangeValue(info.mNumberListInfo[aAttrEnum].mName, aEmptyOrOldValue,
-                 newValue);
+                 newValue, aProofOfUpdate);
 }
 
 void SVGElement::DidAnimateNumberList(uint8_t aAttrEnum) {
@@ -1623,18 +1633,21 @@ SVGAnimatedNumberList* SVGElement::GetAnimatedNumberList(nsAtom* aAttrName) {
   return nullptr;
 }
 
-nsAttrValue SVGElement::WillChangePointList() {
+nsAttrValue SVGElement::WillChangePointList(
+    const mozAutoDocUpdate& aProofOfUpdate) {
   MOZ_ASSERT(GetPointListAttrName(), "Changing non-existent point list?");
-  return WillChangeValue(GetPointListAttrName());
+  return WillChangeValue(GetPointListAttrName(), aProofOfUpdate);
 }
 
-void SVGElement::DidChangePointList(const nsAttrValue& aEmptyOrOldValue) {
+void SVGElement::DidChangePointList(const nsAttrValue& aEmptyOrOldValue,
+                                    const mozAutoDocUpdate& aProofOfUpdate) {
   MOZ_ASSERT(GetPointListAttrName(), "Changing non-existent point list?");
 
   nsAttrValue newValue;
   newValue.SetTo(GetAnimatedPointList()->GetBaseValue(), nullptr);
 
-  DidChangeValue(GetPointListAttrName(), aEmptyOrOldValue, newValue);
+  DidChangeValue(GetPointListAttrName(), aEmptyOrOldValue, newValue,
+                 aProofOfUpdate);
 }
 
 void SVGElement::DidAnimatePointList() {
@@ -1650,18 +1663,21 @@ void SVGElement::DidAnimatePointList() {
   }
 }
 
-nsAttrValue SVGElement::WillChangePathSegList() {
+nsAttrValue SVGElement::WillChangePathSegList(
+    const mozAutoDocUpdate& aProofOfUpdate) {
   MOZ_ASSERT(GetPathDataAttrName(), "Changing non-existent path seg list?");
-  return WillChangeValue(GetPathDataAttrName());
+  return WillChangeValue(GetPathDataAttrName(), aProofOfUpdate);
 }
 
-void SVGElement::DidChangePathSegList(const nsAttrValue& aEmptyOrOldValue) {
+void SVGElement::DidChangePathSegList(const nsAttrValue& aEmptyOrOldValue,
+                                      const mozAutoDocUpdate& aProofOfUpdate) {
   MOZ_ASSERT(GetPathDataAttrName(), "Changing non-existent path seg list?");
 
   nsAttrValue newValue;
   newValue.SetTo(GetAnimPathSegList()->GetBaseValue(), nullptr);
 
-  DidChangeValue(GetPathDataAttrName(), aEmptyOrOldValue, newValue);
+  DidChangeValue(GetPathDataAttrName(), aEmptyOrOldValue, newValue,
+                 aProofOfUpdate);
 }
 
 void SVGElement::DidAnimatePathSegList() {
@@ -1740,7 +1756,9 @@ void SVGElement::NumberPairAttributesInfo::Reset(uint8_t aAttrEnum) {
 }
 
 nsAttrValue SVGElement::WillChangeNumberPair(uint8_t aAttrEnum) {
-  return WillChangeValue(GetNumberPairInfo().mNumberPairInfo[aAttrEnum].mName);
+  mozAutoDocUpdate updateBatch(GetComposedDoc(), kDontNotifyDocumentObservers);
+  return WillChangeValue(GetNumberPairInfo().mNumberPairInfo[aAttrEnum].mName,
+                         updateBatch);
 }
 
 void SVGElement::DidChangeNumberPair(uint8_t aAttrEnum,
@@ -1754,8 +1772,9 @@ void SVGElement::DidChangeNumberPair(uint8_t aAttrEnum,
   nsAttrValue newValue;
   newValue.SetTo(info.mNumberPairs[aAttrEnum], nullptr);
 
+  mozAutoDocUpdate updateBatch(GetComposedDoc(), kNotifyDocumentObservers);
   DidChangeValue(info.mNumberPairInfo[aAttrEnum].mName, aEmptyOrOldValue,
-                 newValue);
+                 newValue, updateBatch);
 }
 
 void SVGElement::DidAnimateNumberPair(uint8_t aAttrEnum) {
@@ -1831,13 +1850,15 @@ void SVGElement::IntegerPairAttributesInfo::Reset(uint8_t aAttrEnum) {
                                 mIntegerPairInfo[aAttrEnum].mDefaultValue2);
 }
 
-nsAttrValue SVGElement::WillChangeIntegerPair(uint8_t aAttrEnum) {
-  return WillChangeValue(
-      GetIntegerPairInfo().mIntegerPairInfo[aAttrEnum].mName);
+nsAttrValue SVGElement::WillChangeIntegerPair(
+    uint8_t aAttrEnum, const mozAutoDocUpdate& aProofOfUpdate) {
+  return WillChangeValue(GetIntegerPairInfo().mIntegerPairInfo[aAttrEnum].mName,
+                         aProofOfUpdate);
 }
 
 void SVGElement::DidChangeIntegerPair(uint8_t aAttrEnum,
-                                      const nsAttrValue& aEmptyOrOldValue) {
+                                      const nsAttrValue& aEmptyOrOldValue,
+                                      const mozAutoDocUpdate& aProofOfUpdate) {
   IntegerPairAttributesInfo info = GetIntegerPairInfo();
 
   NS_ASSERTION(info.mIntegerPairCount > 0,
@@ -1848,7 +1869,7 @@ void SVGElement::DidChangeIntegerPair(uint8_t aAttrEnum,
   newValue.SetTo(info.mIntegerPairs[aAttrEnum], nullptr);
 
   DidChangeValue(info.mIntegerPairInfo[aAttrEnum].mName, aEmptyOrOldValue,
-                 newValue);
+                 newValue, aProofOfUpdate);
 }
 
 void SVGElement::DidAnimateIntegerPair(uint8_t aAttrEnum) {
@@ -1930,11 +1951,13 @@ void SVGElement::DidAnimateEnum(uint8_t aAttrEnum) {
 
 SVGAnimatedOrient* SVGElement::GetAnimatedOrient() { return nullptr; }
 
-nsAttrValue SVGElement::WillChangeOrient() {
-  return WillChangeValue(nsGkAtoms::orient);
+nsAttrValue SVGElement::WillChangeOrient(
+    const mozAutoDocUpdate& aProofOfUpdate) {
+  return WillChangeValue(nsGkAtoms::orient, aProofOfUpdate);
 }
 
-void SVGElement::DidChangeOrient(const nsAttrValue& aEmptyOrOldValue) {
+void SVGElement::DidChangeOrient(const nsAttrValue& aEmptyOrOldValue,
+                                 const mozAutoDocUpdate& aProofOfUpdate) {
   SVGAnimatedOrient* orient = GetAnimatedOrient();
 
   NS_ASSERTION(orient, "DidChangeOrient on element with no orient attrib");
@@ -1942,7 +1965,7 @@ void SVGElement::DidChangeOrient(const nsAttrValue& aEmptyOrOldValue) {
   nsAttrValue newValue;
   newValue.SetTo(*orient, nullptr);
 
-  DidChangeValue(nsGkAtoms::orient, aEmptyOrOldValue, newValue);
+  DidChangeValue(nsGkAtoms::orient, aEmptyOrOldValue, newValue, aProofOfUpdate);
 }
 
 void SVGElement::DidAnimateOrient() {
@@ -1956,11 +1979,13 @@ void SVGElement::DidAnimateOrient() {
 
 SVGAnimatedViewBox* SVGElement::GetAnimatedViewBox() { return nullptr; }
 
-nsAttrValue SVGElement::WillChangeViewBox() {
-  return WillChangeValue(nsGkAtoms::viewBox);
+nsAttrValue SVGElement::WillChangeViewBox(
+    const mozAutoDocUpdate& aProofOfUpdate) {
+  return WillChangeValue(nsGkAtoms::viewBox, aProofOfUpdate);
 }
 
-void SVGElement::DidChangeViewBox(const nsAttrValue& aEmptyOrOldValue) {
+void SVGElement::DidChangeViewBox(const nsAttrValue& aEmptyOrOldValue,
+                                  const mozAutoDocUpdate& aProofOfUpdate) {
   SVGAnimatedViewBox* viewBox = GetAnimatedViewBox();
 
   NS_ASSERTION(viewBox, "DidChangeViewBox on element with no viewBox attrib");
@@ -1968,7 +1993,8 @@ void SVGElement::DidChangeViewBox(const nsAttrValue& aEmptyOrOldValue) {
   nsAttrValue newValue;
   newValue.SetTo(*viewBox, nullptr);
 
-  DidChangeValue(nsGkAtoms::viewBox, aEmptyOrOldValue, newValue);
+  DidChangeValue(nsGkAtoms::viewBox, aEmptyOrOldValue, newValue,
+                 aProofOfUpdate);
 }
 
 void SVGElement::DidAnimateViewBox() {
@@ -1984,12 +2010,14 @@ SVGAnimatedPreserveAspectRatio* SVGElement::GetAnimatedPreserveAspectRatio() {
   return nullptr;
 }
 
-nsAttrValue SVGElement::WillChangePreserveAspectRatio() {
-  return WillChangeValue(nsGkAtoms::preserveAspectRatio);
+nsAttrValue SVGElement::WillChangePreserveAspectRatio(
+    const mozAutoDocUpdate& aProofOfUpdate) {
+  return WillChangeValue(nsGkAtoms::preserveAspectRatio, aProofOfUpdate);
 }
 
 void SVGElement::DidChangePreserveAspectRatio(
-    const nsAttrValue& aEmptyOrOldValue) {
+    const nsAttrValue& aEmptyOrOldValue,
+    const mozAutoDocUpdate& aProofOfUpdate) {
   SVGAnimatedPreserveAspectRatio* preserveAspectRatio =
       GetAnimatedPreserveAspectRatio();
 
@@ -2000,7 +2028,8 @@ void SVGElement::DidChangePreserveAspectRatio(
   nsAttrValue newValue;
   newValue.SetTo(*preserveAspectRatio, nullptr);
 
-  DidChangeValue(nsGkAtoms::preserveAspectRatio, aEmptyOrOldValue, newValue);
+  DidChangeValue(nsGkAtoms::preserveAspectRatio, aEmptyOrOldValue, newValue,
+                 aProofOfUpdate);
 }
 
 void SVGElement::DidAnimatePreserveAspectRatio() {
@@ -2012,11 +2041,14 @@ void SVGElement::DidAnimatePreserveAspectRatio() {
   }
 }
 
-nsAttrValue SVGElement::WillChangeTransformList() {
-  return WillChangeValue(GetTransformListAttrName());
+nsAttrValue SVGElement::WillChangeTransformList(
+    const mozAutoDocUpdate& aProofOfUpdate) {
+  return WillChangeValue(GetTransformListAttrName(), aProofOfUpdate);
 }
 
-void SVGElement::DidChangeTransformList(const nsAttrValue& aEmptyOrOldValue) {
+void SVGElement::DidChangeTransformList(
+    const nsAttrValue& aEmptyOrOldValue,
+    const mozAutoDocUpdate& aProofOfUpdate) {
   MOZ_ASSERT(GetTransformListAttrName(),
              "Changing non-existent transform list?");
 
@@ -2026,7 +2058,8 @@ void SVGElement::DidChangeTransformList(const nsAttrValue& aEmptyOrOldValue) {
   newValue.SetTo(GetAnimatedTransformList(DO_ALLOCATE)->GetBaseValue(),
                  nullptr);
 
-  DidChangeValue(GetTransformListAttrName(), aEmptyOrOldValue, newValue);
+  DidChangeValue(GetTransformListAttrName(), aEmptyOrOldValue, newValue,
+                 aProofOfUpdate);
 }
 
 void SVGElement::DidAnimateTransformList(int32_t aModType) {
@@ -2104,7 +2137,8 @@ SVGElement::StringListAttributesInfo SVGElement::GetStringListInfo() {
 }
 
 nsAttrValue SVGElement::WillChangeStringList(
-    bool aIsConditionalProcessingAttribute, uint8_t aAttrEnum) {
+    bool aIsConditionalProcessingAttribute, uint8_t aAttrEnum,
+    const mozAutoDocUpdate& aProofOfUpdate) {
   nsStaticAtom* name;
   if (aIsConditionalProcessingAttribute) {
     nsCOMPtr<SVGTests> tests(do_QueryInterface(this));
@@ -2112,12 +2146,13 @@ nsAttrValue SVGElement::WillChangeStringList(
   } else {
     name = GetStringListInfo().mStringListInfo[aAttrEnum].mName;
   }
-  return WillChangeValue(name);
+  return WillChangeValue(name, aProofOfUpdate);
 }
 
 void SVGElement::DidChangeStringList(bool aIsConditionalProcessingAttribute,
                                      uint8_t aAttrEnum,
-                                     const nsAttrValue& aEmptyOrOldValue) {
+                                     const nsAttrValue& aEmptyOrOldValue,
+                                     const mozAutoDocUpdate& aProofOfUpdate) {
   nsStaticAtom* name;
   nsAttrValue newValue;
   nsCOMPtr<SVGTests> tests;
@@ -2137,7 +2172,7 @@ void SVGElement::DidChangeStringList(bool aIsConditionalProcessingAttribute,
     newValue.SetTo(info.mStringLists[aAttrEnum], nullptr);
   }
 
-  DidChangeValue(name, aEmptyOrOldValue, newValue);
+  DidChangeValue(name, aEmptyOrOldValue, newValue, aProofOfUpdate);
 
   if (aIsConditionalProcessingAttribute) {
     tests->MaybeInvalidate();

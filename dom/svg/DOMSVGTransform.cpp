@@ -6,10 +6,12 @@
 
 #include "DOMSVGTransform.h"
 
+#include "mozAutoDocUpdate.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGTransformBinding.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Maybe.h"
 #include "nsError.h"
 #include "SVGAnimatedTransformList.h"
 #include "SVGAttrTearoffTable.h"
@@ -76,13 +78,16 @@ class MOZ_RAII AutoChangeTransformNotifier {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mTransform, "Expecting non-null transform");
     if (mTransform->HasOwner()) {
-      mEmptyOrOldValue = mTransform->Element()->WillChangeTransformList();
+      mUpdateBatch.emplace(mTransform->Element()->GetComposedDoc(), true);
+      mEmptyOrOldValue =
+          mTransform->Element()->WillChangeTransformList(mUpdateBatch.ref());
     }
   }
 
   ~AutoChangeTransformNotifier() {
     if (mTransform->HasOwner()) {
-      mTransform->Element()->DidChangeTransformList(mEmptyOrOldValue);
+      mTransform->Element()->DidChangeTransformList(mEmptyOrOldValue,
+                                                    mUpdateBatch.ref());
       // Null check mTransform->mList, since DidChangeTransformList can run
       // script, potentially removing mTransform from its list.
       if (mTransform->mList && mTransform->mList->IsAnimating()) {
@@ -92,6 +97,7 @@ class MOZ_RAII AutoChangeTransformNotifier {
   }
 
  private:
+  Maybe<mozAutoDocUpdate> mUpdateBatch;
   DOMSVGTransform* const mTransform;
   nsAttrValue mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER

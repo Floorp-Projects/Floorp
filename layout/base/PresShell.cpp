@@ -450,15 +450,16 @@ struct nsCallbackEventRequest {
 
 class nsAutoCauseReflowNotifier {
  public:
-  explicit nsAutoCauseReflowNotifier(PresShell* aPresShell)
+  MOZ_CAN_RUN_SCRIPT explicit nsAutoCauseReflowNotifier(PresShell* aPresShell)
       : mPresShell(aPresShell) {
     mPresShell->WillCauseReflow();
   }
-  ~nsAutoCauseReflowNotifier() {
+  MOZ_CAN_RUN_SCRIPT ~nsAutoCauseReflowNotifier() {
     // This check should not be needed. Currently the only place that seem
     // to need it is the code that deals with bug 337586.
     if (!mPresShell->mHaveShutDown) {
-      mPresShell->DidCauseReflow();
+      RefPtr<PresShell> presShell(mPresShell);
+      presShell->DidCauseReflow();
     } else {
       nsContentUtils::RemoveScriptBlocker();
     }
@@ -1740,17 +1741,11 @@ nsresult PresShell::Initialize() {
       // content object down
       mFrameConstructor->ContentInserted(
           root, nsCSSFrameConstructor::InsertionKind::Sync);
-
-      // Something in mFrameConstructor->ContentInserted may have caused
-      // Destroy() to get called, bug 337586.
-      NS_ENSURE_STATE(!mHaveShutDown);
     }
-
-    // nsAutoCauseReflowNotifier (which sets up a script blocker) going out of
-    // scope may have killed us too
-    NS_ENSURE_STATE(!mHaveShutDown);
-
-    // XBLConstructorRunner might destroy us.
+    // Something in mFrameConstructor->ContentInserted may have caused
+    // Destroy() to get called, bug 337586.  Or, nsAutoCauseReflowNotifier
+    // (which sets up a script blocker) going out of scope may have killed us
+    // too
     NS_ENSURE_STATE(!mHaveShutDown);
   }
 
@@ -1969,6 +1964,9 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
       DoReflow(rootFrame, true, nullptr);
     }
   }
+
+  // Now, we may have been destroyed by the destructor of
+  // `nsAutoCauseReflowNotifier`.
 
   DidDoReflow(true);
 
@@ -4172,8 +4170,9 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   }
 }
 
-void PresShell::CharacterDataChanged(nsIContent* aContent,
-                                     const CharacterDataChangeInfo& aInfo) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::CharacterDataChanged(
+    nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected CharacterDataChanged");
   MOZ_ASSERT(aContent->OwnerDoc() == mDocument, "Unexpected document");
 
@@ -4211,8 +4210,10 @@ void PresShell::DocumentStatesChanged(EventStates aStateMask) {
   }
 }
 
-void PresShell::AttributeWillChange(Element* aElement, int32_t aNameSpaceID,
-                                    nsAtom* aAttribute, int32_t aModType) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::AttributeWillChange(
+    Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
+    int32_t aModType) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected AttributeWillChange");
   MOZ_ASSERT(aElement->OwnerDoc() == mDocument, "Unexpected document");
 
@@ -4226,9 +4227,10 @@ void PresShell::AttributeWillChange(Element* aElement, int32_t aNameSpaceID,
   }
 }
 
-void PresShell::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
-                                 nsAtom* aAttribute, int32_t aModType,
-                                 const nsAttrValue* aOldValue) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::AttributeChanged(
+    Element* aElement, int32_t aNameSpaceID, nsAtom* aAttribute,
+    int32_t aModType, const nsAttrValue* aOldValue) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected AttributeChanged");
   MOZ_ASSERT(aElement->OwnerDoc() == mDocument, "Unexpected document");
 
@@ -4242,7 +4244,9 @@ void PresShell::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   }
 }
 
-void PresShell::ContentAppended(nsIContent* aFirstNewContent) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentAppended(
+    nsIContent* aFirstNewContent) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentAppended");
   MOZ_ASSERT(aFirstNewContent->OwnerDoc() == mDocument, "Unexpected document");
 
@@ -4267,7 +4271,9 @@ void PresShell::ContentAppended(nsIContent* aFirstNewContent) {
       aFirstNewContent, nsCSSFrameConstructor::InsertionKind::Async);
 }
 
-void PresShell::ContentInserted(nsIContent* aChild) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentInserted(
+    nsIContent* aChild) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentInserted");
   MOZ_ASSERT(aChild->OwnerDoc() == mDocument, "Unexpected document");
 
@@ -4286,8 +4292,9 @@ void PresShell::ContentInserted(nsIContent* aChild) {
       aChild, nsCSSFrameConstructor::InsertionKind::Async);
 }
 
-void PresShell::ContentRemoved(nsIContent* aChild,
-                               nsIContent* aPreviousSibling) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ContentRemoved(
+    nsIContent* aChild, nsIContent* aPreviousSibling) {
+  MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript());
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected ContentRemoved");
   MOZ_ASSERT(aChild->OwnerDoc() == mDocument, "Unexpected document");
   nsINode* container = aChild->GetParentNode();
@@ -4329,6 +4336,11 @@ void PresShell::ContentRemoved(nsIContent* aChild,
 }
 
 void PresShell::NotifyCounterStylesAreDirty() {
+  // TODO: Looks like that nsFrameConstructor::NotifyCounterStylesAreDirty()
+  //       does not run script.  If so, we don't need to block script with
+  //       nsAutoCauseReflowNotifier here.  Instead, there should be methods
+  //       and stack only class which manages only mChangeNestCount for
+  //       avoiding unnecessary `MOZ_CAN_RUN_SCRIPT` marking.
   nsAutoCauseReflowNotifier reflowNotifier(this);
   mFrameConstructor->NotifyCounterStylesAreDirty();
 }

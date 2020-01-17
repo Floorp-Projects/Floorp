@@ -8,6 +8,7 @@
 
 #include "DOMSVGPointList.h"
 #include "gfx2DGlue.h"
+#include "mozAutoDocUpdate.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "SVGPoint.h"
@@ -25,20 +26,21 @@ namespace dom {
 // Helper class: AutoChangePointNotifier
 // Stack-based helper class to pair calls to WillChangePointList and
 // DidChangePointList.
-class MOZ_RAII AutoChangePointNotifier {
+class MOZ_RAII AutoChangePointNotifier : public mozAutoDocUpdate {
  public:
   explicit AutoChangePointNotifier(
       DOMSVGPoint* aPoint MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mPoint(aPoint) {
+      : mozAutoDocUpdate(aPoint->Element()->GetComposedDoc(), true),
+        mPoint(aPoint) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(mPoint, "Expecting non-null point");
     MOZ_ASSERT(mPoint->HasOwner(),
                "Expecting list to have an owner for notification");
-    mEmptyOrOldValue = mPoint->Element()->WillChangePointList();
+    mEmptyOrOldValue = mPoint->Element()->WillChangePointList(*this);
   }
 
   ~AutoChangePointNotifier() {
-    mPoint->Element()->DidChangePointList(mEmptyOrOldValue);
+    mPoint->Element()->DidChangePointList(mEmptyOrOldValue, *this);
     // Null check mPoint->mList, since DidChangePointList can run script,
     // potentially removing mPoint from its list.
     if (mPoint->mList && mPoint->mList->AttrIsAnimating()) {
