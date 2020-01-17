@@ -63,6 +63,13 @@ add_task(async function file_access_from_extension_page_not_allowed() {
         "block request to file from background page despite file permission"
       );
 
+      // Regression test for bug 1420296 .
+      await browser.test.assertRejects(
+        fetch(FILE_DUMMY_URL, { mode: "same-origin" }),
+        /NetworkError when attempting to fetch resource/,
+        "block request to file from background page despite 'same-origin' mode"
+      );
+
       browser.test.sendMessage("done");
     },
   });
