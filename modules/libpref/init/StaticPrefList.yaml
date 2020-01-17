@@ -986,11 +986,7 @@
 # (or base domain) of the loaded resource.
 - name: browser.tabs.remote.useCORP
   type: bool
-#if !defined(ANDROID)
   value: true
-#else
-  value: false # Blocked by DocumentChannel, see Bug 1589982.
-#endif
   mirror: always
 
 # The percentage of the screen that needs to be scrolled before toolbar
