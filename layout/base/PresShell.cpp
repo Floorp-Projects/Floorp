@@ -3612,8 +3612,8 @@ void PresShell::ScheduleViewManagerFlush(PaintType aType) {
 }
 
 void PresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent) {
-  AUTO_PROFILER_TRACING_DOCSHELL("Paint", "DispatchSynthMouseMove", GRAPHICS,
-                                 mPresContext->GetDocShell());
+  AUTO_PROFILER_TRACING_MARKER_DOCSHELL("Paint", "DispatchSynthMouseMove",
+                                        GRAPHICS, mPresContext->GetDocShell());
   nsEventStatus status = nsEventStatus_eIgnore;
   nsView* targetView = nsView::GetViewFor(aEvent->mWidget);
   if (!targetView) return;

@@ -5590,7 +5590,7 @@ void nsCSSFrameConstructor::ConstructFramesFromItem(
 
   const auto* disp = computedStyle->StyleDisplay();
   MOZ_ASSERT(!disp->IsAbsolutelyPositionedStyle() ||
-             disp->DisplayInside() != StyleDisplayInside::MozBox,
+                 disp->DisplayInside() != StyleDisplayInside::MozBox,
              "This may be a frame that was previously blockified "
              "but isn't any longer! It probably needs explicit "
              "'display:block' to preserve behavior");
@@ -8243,9 +8243,10 @@ static nsIFrame* FindPreviousNonWhitespaceSibling(nsIFrame* aFrame) {
 
 bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
     nsIFrame* aFrame) {
-#define TRACE(reason)                                                          \
-  PROFILER_TRACING("Layout", "MaybeRecreateContainerForFrameRemoval: " reason, \
-                   LAYOUT, TRACING_EVENT)
+#define TRACE(reason)                                                       \
+  PROFILER_TRACING_MARKER("Layout",                                         \
+                          "MaybeRecreateContainerForFrameRemoval: " reason, \
+                          LAYOUT, TRACING_EVENT)
   MOZ_ASSERT(aFrame, "Must have a frame");
   MOZ_ASSERT(aFrame->GetParent(), "Frame shouldn't be root");
   MOZ_ASSERT(aFrame == aFrame->FirstContinuation(),
@@ -10821,9 +10822,9 @@ bool nsCSSFrameConstructor::MaybeRecreateForColumnSpan(
     // some of them have column-span:all descendants. Sadly, there's no way to
     // detect this by checking FrameConstructionItems in WipeContainingBlock().
     // Otherwise, we would have already wiped the multi-column containing block.
-    PROFILER_TRACING("Layout",
-                     "Reframe multi-column after constructing frame list",
-                     LAYOUT, TRACING_EVENT);
+    PROFILER_TRACING_MARKER(
+        "Layout", "Reframe multi-column after constructing frame list", LAYOUT,
+        TRACING_EVENT);
 
     // aFrameList can contain placeholder frames. In order to destroy their
     // associated out-of-flow frames properly, we need to manually flush all the
@@ -11148,9 +11149,9 @@ static bool IsSafeToAppendToIBSplitInline(nsIFrame* aParentFrame,
 }
 
 bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame) {
-#define TRACE(reason)                                                \
-  PROFILER_TRACING("Layout", "WipeInsertionParent: " reason, LAYOUT, \
-                   TRACING_EVENT)
+#define TRACE(reason)                                                       \
+  PROFILER_TRACING_MARKER("Layout", "WipeInsertionParent: " reason, LAYOUT, \
+                          TRACING_EVENT)
 
   const LayoutFrameType frameType = aFrame->Type();
 
@@ -11210,9 +11211,9 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
     nsFrameConstructorState& aState, nsIFrame* aContainingBlock,
     nsIFrame* aFrame, FrameConstructionItemList& aItems, bool aIsAppend,
     nsIFrame* aPrevSibling) {
-#define TRACE(reason)                                                \
-  PROFILER_TRACING("Layout", "WipeContainingBlock: " reason, LAYOUT, \
-                   TRACING_EVENT)
+#define TRACE(reason)                                                       \
+  PROFILER_TRACING_MARKER("Layout", "WipeContainingBlock: " reason, LAYOUT, \
+                          TRACING_EVENT)
 
   if (aItems.IsEmpty()) {
     return false;

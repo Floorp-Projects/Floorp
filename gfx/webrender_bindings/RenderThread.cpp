@@ -454,7 +454,7 @@ void RenderThread::UpdateAndRender(
     const Maybe<gfx::IntSize>& aReadbackSize,
     const Maybe<wr::ImageFormat>& aReadbackFormat,
     const Maybe<Range<uint8_t>>& aReadbackBuffer, bool aHadSlowFrame) {
-  AUTO_PROFILER_TRACING("Paint", "Composite", GRAPHICS);
+  AUTO_PROFILER_TRACING_MARKER("Paint", "Composite", GRAPHICS);
   MOZ_ASSERT(IsInRenderThread());
   MOZ_ASSERT(aRender || aReadbackBuffer.isNothing());
 

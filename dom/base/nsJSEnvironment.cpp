@@ -1206,7 +1206,7 @@ static inline js::SliceBudget BudgetFromDuration(TimeDuration duration) {
 
 static void FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless,
                                 TimeStamp aDeadline) {
-  AUTO_PROFILER_TRACING(
+  AUTO_PROFILER_TRACING_MARKER(
       "CC", aDeadline.IsNull() ? "ForgetSkippable" : "IdleForgetSkippable",
       GCCC);
   TimeStamp startTimeStamp = TimeStamp::Now();
@@ -1542,8 +1542,8 @@ void nsJSContext::RunCycleCollectorSlice(TimeStamp aDeadline) {
     return;
   }
 
-  AUTO_PROFILER_TRACING("CC", aDeadline.IsNull() ? "CCSlice" : "IdleCCSlice",
-                        GCCC);
+  AUTO_PROFILER_TRACING_MARKER(
+      "CC", aDeadline.IsNull() ? "CCSlice" : "IdleCCSlice", GCCC);
 
   AUTO_PROFILER_LABEL("nsJSContext::RunCycleCollectorSlice", GCCC);
 
