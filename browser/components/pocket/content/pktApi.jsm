@@ -263,7 +263,7 @@ var pktApi = (function() {
 
     var url = baseAPIUrl + options.path;
     var data = options.data || {};
-    data.locale_lang = Services.locale.appLocaleAsLangTag;
+    data.locale_lang = Services.locale.appLocaleAsBCP47;
     data.consumer_key = oAuthConsumerKey;
 
     var request = new XMLHttpRequest();
@@ -379,7 +379,7 @@ var pktApi = (function() {
         // Define variant for ho2
         if (data.flags) {
           var showHo2 =
-            Services.locale.appLocaleAsLangTag === "en-US"
+            Services.locale.appLocaleAsBCP47 === "en-US"
               ? data.flags.show_ffx_mobile_prompt
               : "control";
           setSetting("test.ho2", showHo2);

@@ -878,7 +878,7 @@ describe("ASRouter", () => {
     });
     it("should download the attachment if RemoteSettings returns some messages", async () => {
       sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
       sandbox
         .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")
@@ -897,7 +897,7 @@ describe("ASRouter", () => {
     });
     it("should dispatch undesired event if the ms-language-packs returns no messages", async () => {
       sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
       sandbox
         .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")
@@ -3508,7 +3508,7 @@ describe("ASRouter", () => {
       const getter = sandbox.stub();
       getter.onFirstCall().returns("en-US");
       getter.onSecondCall().returns("fr");
-      sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(getter);
+      sandbox.stub(global.Services.locale, "appLocaleAsBCP47").get(getter);
       const provider = {
         id: "cfr",
         enabled: true,
@@ -3540,7 +3540,7 @@ describe("ASRouter", () => {
       const getter = sandbox.stub();
       getter.onFirstCall().returns("en-US");
       getter.onSecondCall().returns("fr");
-      sandbox.stub(global.Services.locale, "appLocaleAsLangTag").get(getter);
+      sandbox.stub(global.Services.locale, "appLocaleAsBCP47").get(getter);
       const provider = {
         id: "localProvider",
         enabled: true,

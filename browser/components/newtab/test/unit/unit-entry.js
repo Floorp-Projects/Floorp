@@ -227,7 +227,7 @@ const TEST_GLOBAL = {
       get: () => ({ parent: { parent: { path: "appPath" } } }),
     },
     locale: {
-      get appLocaleAsLangTag() {
+      get appLocaleAsBCP47() {
         return "en-US";
       },
       negotiateLanguages() {},

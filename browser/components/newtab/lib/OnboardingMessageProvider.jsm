@@ -230,7 +230,7 @@ const ONBOARDING_MESSAGES = () => [
       primary_button: {
         label: { string_id: "onboarding-tracking-protection-button2" },
         action:
-          Services.locale.appLocaleAsLangTag.substr(0, 2) === "en"
+          Services.locale.appLocaleAsBCP47.substr(0, 2) === "en"
             ? {
                 type: "OPEN_URL",
                 data: {

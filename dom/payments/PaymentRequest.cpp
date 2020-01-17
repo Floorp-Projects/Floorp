@@ -81,7 +81,7 @@ bool PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj) {
     return false;
   }
   nsAutoCString locale;
-  LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
+  LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
   mozilla::intl::Locale loc = mozilla::intl::Locale(locale);
   if (!(loc.GetLanguage() == "en" && loc.GetRegion() == "US")) {
     return false;

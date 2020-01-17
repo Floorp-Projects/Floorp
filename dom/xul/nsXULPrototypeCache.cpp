@@ -377,7 +377,7 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
   rv = aURI->GetHost(package);
   if (NS_FAILED(rv)) return rv;
   nsAutoCString locale;
-  LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
+  LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
 
   nsAutoCString fileChromePath, fileLocale;
 

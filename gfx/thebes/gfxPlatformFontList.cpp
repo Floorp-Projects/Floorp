@@ -1663,7 +1663,7 @@ void gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[],
 
     // Try using app's locale
     nsAutoCString localeStr;
-    LocaleService::GetInstance()->GetAppLocaleAsLangTag(localeStr);
+    LocaleService::GetInstance()->GetAppLocaleAsBCP47(localeStr);
 
     {
       Locale locale(localeStr);

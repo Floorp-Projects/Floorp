@@ -171,12 +171,12 @@ add_task(async function check_other_error_handling() {
 // ASRouterTargeting.Environment
 add_task(async function check_locale() {
   ok(
-    Services.locale.appLocaleAsLangTag,
-    "Services.locale.appLocaleAsLangTag exists"
+    Services.locale.appLocaleAsBCP47,
+    "Services.locale.appLocaleAsBCP47 exists"
   );
   const message = {
     id: "foo",
-    targeting: `locale == "${Services.locale.appLocaleAsLangTag}"`,
+    targeting: `locale == "${Services.locale.appLocaleAsBCP47}"`,
   };
   is(
     await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
@@ -185,13 +185,13 @@ add_task(async function check_locale() {
   );
 });
 add_task(async function check_localeLanguageCode() {
-  const currentLanguageCode = Services.locale.appLocaleAsLangTag.substr(0, 2);
+  const currentLanguageCode = Services.locale.appLocaleAsBCP47.substr(0, 2);
   is(
     Services.locale.negotiateLanguages(
       [currentLanguageCode],
-      [Services.locale.appLocaleAsLangTag]
+      [Services.locale.appLocaleAsBCP47]
     )[0],
-    Services.locale.appLocaleAsLangTag,
+    Services.locale.appLocaleAsBCP47,
     "currentLanguageCode should resolve to the current locale (e.g en => en-US)"
   );
   const message = {
