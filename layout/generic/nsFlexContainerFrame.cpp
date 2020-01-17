@@ -515,16 +515,12 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   }
 
   // Convenience methods to compute the main & cross size of our *margin-box*.
-  // The caller is responsible for telling us the right axis, so that we can
-  // pull out the appropriate components of our margin/border/padding structs.
-  // FIXME(TYLin): The AxisOrientationType argument can be removed after
-  // converting mMargin to LogicalMargin.
-  nscoord GetOuterMainSize(AxisOrientationType aMainAxis) const {
-    return mMainSize + GetMarginBorderPaddingSizeInMainAxis(aMainAxis);
+  nscoord GetOuterMainSize() const {
+    return mMainSize + GetMarginBorderPaddingSizeInMainAxis();
   }
 
-  nscoord GetOuterCrossSize(AxisOrientationType aCrossAxis) const {
-    return mCrossSize + GetMarginBorderPaddingSizeInCrossAxis(aCrossAxis);
+  nscoord GetOuterCrossSize() const {
+    return mCrossSize + GetMarginBorderPaddingSizeInCrossAxis();
   }
 
   // Returns the distance between this FlexItem's baseline and the cross-start
@@ -683,14 +679,10 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   // =========================================
   // Returns the total space occupied by this item's margins, borders and
   // padding in the given axis
-  // FIXME(TYLin): The AxisOrientationType argument can be removed after
-  // converting mMargin to LogicalMargin.
-  nscoord GetMarginBorderPaddingSizeInMainAxis(
-      AxisOrientationType aAxis) const {
+  nscoord GetMarginBorderPaddingSizeInMainAxis() const {
     return GetMarginSizeInMainAxis() + GetBorderPaddingSizeInMainAxis();
   }
-  nscoord GetMarginBorderPaddingSizeInCrossAxis(
-      AxisOrientationType aAxis) const {
+  nscoord GetMarginBorderPaddingSizeInCrossAxis() const {
     return GetMarginSizeInCrossAxis() + GetBorderPaddingSizeInCrossAxis();
   }
 
@@ -2137,7 +2129,7 @@ nscoord FlexItem::GetBaselineOffsetFromOuterCrossEdge(
 
   return (physSideMeasuringFrom == itemBlockStartSide)
              ? marginBStartToBaseline
-             : GetOuterCrossSize(crossAxis) - marginBStartToBaseline;
+             : GetOuterCrossSize() - marginBStartToBaseline;
 }
 
 bool FlexItem::IsCrossSizeAuto() const {
@@ -3004,7 +2996,7 @@ MainAxisPositionTracker::MainAxisPositionTracker(
   // with the *actual* amount of packing space.
   for (const FlexItem* item = aLine->GetFirstItem(); item;
        item = item->getNext()) {
-    mPackingSpaceRemaining -= item->GetOuterMainSize(mPhysicalAxis);
+    mPackingSpaceRemaining -= item->GetOuterMainSize();
     mNumAutoMarginsInMainAxis += item->GetNumAutoMarginsInAxis(mPhysicalAxis);
   }
 
@@ -3362,8 +3354,7 @@ void FlexLine::ComputeCrossSizeAndBaseline(
   nscoord crossEndToFurthestLastBaseline = nscoord_MIN;
   nscoord largestOuterCrossSize = 0;
   for (const FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-    nscoord curOuterCrossSize =
-        item->GetOuterCrossSize(aAxisTracker.GetPhysicalCrossAxis());
+    nscoord curOuterCrossSize = item->GetOuterCrossSize();
 
     if ((item->GetAlignSelf() == NS_STYLE_ALIGN_BASELINE ||
          item->GetAlignSelf() == NS_STYLE_ALIGN_LAST_BASELINE) &&
@@ -3470,7 +3461,7 @@ void FlexItem::ResolveStretchedCrossSize(
   // Reserve space for margins & border & padding, and then use whatever
   // remains as our item's cross-size (clamped to its min/max range).
   nscoord stretchedSize =
-      aLineCrossSize - GetMarginBorderPaddingSizeInCrossAxis(crossAxis);
+      aLineCrossSize - GetMarginBorderPaddingSizeInCrossAxis();
 
   stretchedSize = NS_CSS_MINMAX(stretchedSize, mCrossMinSize, mCrossMaxSize);
 
@@ -3501,7 +3492,7 @@ void SingleLineCrossAxisPositionTracker::ResolveAutoMarginsInCrossAxis(
   // Subtract the space that our item is already occupying, to see how much
   // space (if any) is available for its auto margins.
   nscoord spaceForAutoMargins =
-      aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mPhysicalAxis);
+      aLine.GetLineCrossSize() - aItem.GetOuterCrossSize();
 
   if (spaceForAutoMargins <= 0) {
     return;  // No available space  --> nothing to do
@@ -3582,7 +3573,7 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
   // 'align-self' falls back to 'flex-start' if it is 'center'/'flex-end' and we
   // have cross axis overflow
   // XXX we should really be falling back to 'start' as of bug 1472843
-  if (aLine.GetLineCrossSize() < aItem.GetOuterCrossSize(mPhysicalAxis) &&
+  if (aLine.GetLineCrossSize() < aItem.GetOuterCrossSize() &&
       (aItem.GetAlignSelfFlags() & NS_STYLE_ALIGN_SAFE)) {
     alignSelf = NS_STYLE_ALIGN_FLEX_START;
   }
@@ -3592,14 +3583,11 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
       // No space to skip over -- we're done.
       break;
     case NS_STYLE_ALIGN_FLEX_END:
-      mPosition +=
-          aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mPhysicalAxis);
+      mPosition += aLine.GetLineCrossSize() - aItem.GetOuterCrossSize();
       break;
     case NS_STYLE_ALIGN_CENTER:
       // Note: If cross-size is odd, the "after" space will get the extra unit.
-      mPosition +=
-          (aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mPhysicalAxis)) /
-          2;
+      mPosition += (aLine.GetLineCrossSize() - aItem.GetOuterCrossSize()) / 2;
       break;
     case NS_STYLE_ALIGN_BASELINE:
     case NS_STYLE_ALIGN_LAST_BASELINE: {
@@ -3629,8 +3617,7 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
 
       if (aAxisTracker.AreAxesInternallyReversed() == useFirst) {
         // Advance to align item w/ line's flex-end edge (as in FLEX_END case):
-        mPosition +=
-            aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mPhysicalAxis);
+        mPosition += aLine.GetLineCrossSize() - aItem.GetOuterCrossSize();
         // ...and step *back* by the baseline adjustment:
         mPosition -= baselineDiff;
       } else {
@@ -3979,8 +3966,7 @@ void nsFlexContainerFrame::GenerateFlexLines(
     }
 
     nscoord itemInnerHypotheticalMainSize = item->GetMainSize();
-    nscoord itemOuterHypotheticalMainSize =
-        item->GetOuterMainSize(aAxisTracker.GetPhysicalMainAxis());
+    nscoord itemOuterHypotheticalMainSize = item->GetOuterMainSize();
 
     // Check if we need to wrap |item| to a new line
     // (i.e. check if its outer hypothetical main size pushes our line over
