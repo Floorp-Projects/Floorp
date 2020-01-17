@@ -751,6 +751,10 @@ class BaseBootstrapper(object):
 
         Invoke rustup from the given path to update the rust install."""
         subprocess.check_call([rustup, 'update'])
+        # This installs rustfmt when not already installed, or nothing
+        # otherwise, while the update above would have taken care of upgrading
+        # it.
+        subprocess.check_call([rustup, 'component', 'add', 'rustfmt'])
 
     def install_rust(self):
         """Download and run the rustup installer."""
@@ -774,7 +778,8 @@ class BaseBootstrapper(object):
             print('Running rustup-init...')
             subprocess.check_call([rustup_init, '-y',
                                    '--default-toolchain', 'stable',
-                                   '--default-host', platform, ])
+                                   '--default-host', platform,
+                                   '--component', 'rustfmt'])
             cargo_home, cargo_bin = self.cargo_home()
             self.print_rust_path_advice(RUST_INSTALL_COMPLETE,
                                         cargo_home, cargo_bin)
