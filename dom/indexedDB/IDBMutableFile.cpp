@@ -181,22 +181,6 @@ RefPtr<IDBFileHandle> IDBMutableFile::Open(FileMode aMode,
   return fileHandle;
 }
 
-RefPtr<DOMRequest> IDBMutableFile::GetFile(ErrorResult& aError) {
-  RefPtr<IDBFileHandle> fileHandle = Open(FileMode::Readonly, aError);
-  if (NS_WARN_IF(aError.Failed())) {
-    return nullptr;
-  }
-
-  FileRequestGetFileParams params;
-
-  auto request =
-      IDBFileRequest::Create(fileHandle, /* aWrapAsDOMRequest */ true);
-
-  fileHandle->StartRequest(request, params);
-
-  return request;
-}
-
 NS_IMPL_ADDREF_INHERITED(IDBMutableFile, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(IDBMutableFile, DOMEventTargetHelper)
 

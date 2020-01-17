@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["StyleSheetEditor"];
+const EXPORTED_SYMBOLS = ["StyleSheetEditor"];
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const Editor = require("devtools/client/shared/sourceeditor/editor");
@@ -139,7 +139,6 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
   this.savedFile = file;
   this.linkCSSFile();
 }
-this.StyleSheetEditor = StyleSheetEditor;
 
 StyleSheetEditor.prototype = {
   /**

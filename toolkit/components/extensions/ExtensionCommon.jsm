@@ -499,6 +499,7 @@ class BaseContext {
   openConduit(subject, address) {
     let wgc = this.contentWindow.getWindowGlobalChild();
     let conduit = wgc.getActor("Conduits").openConduit(subject, {
+      id: subject.id || getUniqueId(),
       extensionId: this.extension.id,
       envType: this.envType,
       ...address,

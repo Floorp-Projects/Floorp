@@ -62,6 +62,7 @@ const {
 } = ExtensionUtils;
 
 const {
+  defineLazyGetter,
   EventEmitter,
   EventManager,
   LocalAPIImplementation,
@@ -431,11 +432,92 @@ class Port {
   }
 }
 
-class NativePort extends Port {
-  postMessage(data) {
-    data = NativeApp.encodeMessage(this.context, data);
+// Simple single-event emitter-like helper, exposes the EventManager api.
+class SimpleEventAPI extends EventManager {
+  constructor(context, name) {
+    super({ context, name });
+    this.fires = new Set();
+    this.register = fire => {
+      this.fires.add(fire);
+      return () => this.fires.delete(fire);
+    };
+  }
+  emit(...args) {
+    return [...this.fires].map(fire => fire.asyncWithoutClone(...args));
+  }
+}
 
-    return super.postMessage(data);
+function holdMessage(sender, data) {
+  if (AppConstants.platform !== "android") {
+    data = NativeApp.encodeMessage(sender.context, data);
+  }
+  return new StructuredCloneHolder(data);
+}
+
+class NativePort {
+  constructor(context, name, portId) {
+    this.id = portId;
+    this.context = context;
+    this.conduit = context.openConduit(this, {
+      recv: ["PortMessage", "PortDisconnect"],
+      send: ["PortMessage"],
+    });
+
+    this.onMessage = new SimpleEventAPI(context, "Port.onMessage");
+    this.onDisconnect = new SimpleEventAPI(context, "Port.onDisconnect");
+
+    let api = {
+      name,
+      error: null,
+      onMessage: this.onMessage.api(),
+      onDisconnect: this.onDisconnect.api(),
+      postMessage: this.sendPortMessage.bind(this),
+      disconnect: () => this.conduit.close(),
+    };
+    this.api = Cu.cloneInto(api, context.cloneScope, { cloneFunctions: true });
+  }
+
+  recvPortMessage({ holder }) {
+    this.onMessage.emit(holder.deserialize(this.api), this.api);
+  }
+
+  recvPortDisconnect({ error }) {
+    this.api.error = error && this.context.normalizeError(error);
+    this.onDisconnect.emit(this.api);
+    this.conduit.close();
+  }
+
+  sendPortMessage(json) {
+    if (this.conduit.actor) {
+      return this.conduit.sendPortMessage({ holder: holdMessage(this, json) });
+    }
+    throw new this.context.Error("Attempt to postMessage on disconnected port");
+  }
+}
+
+// Handles native messaging for a context, similar to the Messenger below.
+class NativeMessenger {
+  constructor(context, sender) {
+    this.context = context;
+    this.conduit = context.openConduit(this, {
+      url: sender.url,
+      frameId: sender.frameId,
+      childId: context.childManager.id,
+      query: ["NativeMessage", "NativeConnect"],
+    });
+  }
+
+  sendNativeMessage(nativeApp, json) {
+    let holder = holdMessage(this, json);
+    return this.conduit.queryNativeMessage({ nativeApp, holder });
+  }
+
+  connectNative(nativeApp) {
+    let port = new NativePort(this.context, nativeApp, getUniqueId());
+    this.conduit
+      .queryNativeConnect({ nativeApp, portId: port.id })
+      .catch(error => port.recvPortDisconnect({ error }));
+    return port.api;
   }
 }
 
@@ -509,16 +591,6 @@ class Messenger {
     holder = null;
 
     return this.context.wrapPromise(promise, responseCallback);
-  }
-
-  sendNativeMessage(messageManager, msg, recipient, responseCallback) {
-    if (
-      AppConstants.platform !== "android" ||
-      !this.context.extension.hasPermission("geckoViewAddons")
-    ) {
-      msg = NativeApp.encodeMessage(this.context, msg);
-    }
-    return this.sendMessage(messageManager, msg, recipient, responseCallback);
   }
 
   _onMessage(name, filter) {
@@ -674,38 +746,6 @@ class Messenger {
     return this._connect(messageManager, port, recipient);
   }
 
-  connectNative(messageManager, name, recipient) {
-    let portId = getUniqueId();
-
-    let port;
-    if (
-      AppConstants.platform === "android" &&
-      this.context.extension.hasPermission("geckoViewAddons")
-    ) {
-      port = new Port(
-        this.context,
-        messageManager,
-        this.messageManagers,
-        name,
-        portId,
-        null,
-        recipient
-      );
-    } else {
-      port = new NativePort(
-        this.context,
-        messageManager,
-        this.messageManagers,
-        name,
-        portId,
-        null,
-        recipient
-      );
-    }
-
-    return this._connect(messageManager, port, recipient);
-  }
-
   _onConnect(name, filter) {
     return new EventManager({
       context: this.context,
@@ -794,6 +834,10 @@ class Messenger {
     return this._onConnect(name, sender => sender.id !== this.sender.id);
   }
 }
+
+defineLazyGetter(Messenger.prototype, "nm", function() {
+  return new NativeMessenger(this.context, this.sender);
+});
 
 // For test use only.
 var ExtensionManager = {
@@ -974,7 +1018,6 @@ class BrowserExtensionContent extends EventEmitter {
 
   emit(event, ...args) {
     Services.cpmm.sendAsyncMessage(this.MESSAGE_EMIT_EVENT, { event, args });
-
     super.emit(event, ...args);
   }
 
@@ -1174,7 +1217,6 @@ class ChildAPIManager {
     this.id = `${context.extension.id}.${context.contextId}`;
 
     this.conduit = context.openConduit(this, {
-      id: this.id,
       send: ["CreateProxyContext", "APICall", "AddListener", "RemoveListener"],
       recv: ["CallResult", "RunListener"],
     });

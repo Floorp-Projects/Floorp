@@ -36,17 +36,17 @@ class MediaControlService final : public nsIObserver {
 
   static RefPtr<MediaControlService> GetService();
 
-  MediaController* GetOrCreateControllerById(uint64_t aId) const;
-  MediaController* GetControllerById(uint64_t aId) const;
-
   AudioFocusManager& GetAudioFocusManager() { return mAudioFocusManager; }
   MediaControlKeysEventSource* GetMediaControlKeysEventSource() {
     return mMediaControlKeysManager;
   }
 
-  void AddMediaController(MediaController* aController);
-  void RemoveMediaController(MediaController* aController);
-  uint64_t GetControllersNum() const;
+  // Use these functions to register/unresgister controller to/from the active
+  // controller list in the service. Return true if the controller is registered
+  // or unregistered sucessfully.
+  bool RegisterActiveMediaController(MediaController* aController);
+  bool UnregisterActiveMediaController(MediaController* aController);
+  uint64_t GetActiveControllersNum() const;
 
   // The main controller is the controller which can receive the media control
   // key events and would show its metadata to virtual controller interface.
@@ -86,8 +86,8 @@ class MediaControlService final : public nsIObserver {
     explicit ControllerManager(MediaControlService* aService);
     ~ControllerManager() = default;
 
-    void AddController(MediaController* aController);
-    void RemoveController(MediaController* aController);
+    bool AddController(MediaController* aController);
+    bool RemoveController(MediaController* aController);
 
     void Shutdown();
 
@@ -101,9 +101,7 @@ class MediaControlService final : public nsIObserver {
    private:
     void UpdateMainController(MediaController* aController);
 
-    // This hash table holds strong references to all controllers.
-    nsDataHashtable<nsUint64HashKey, RefPtr<MediaController>> mControllers;
-    nsTArray<uint64_t> mControllerHistory;
+    nsTArray<RefPtr<MediaController>> mControllers;
     RefPtr<MediaController> mMainController;
 
     // These member are use to listen main controller's play state changes and

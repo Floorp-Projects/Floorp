@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
-  ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.jsm",
 });
 
@@ -100,25 +99,20 @@ class ExtensionActionHelper {
   }
 }
 
-class EmbedderPort extends ExtensionChild.Port {
-  constructor(...args) {
-    super(...args);
+class EmbedderPort {
+  constructor(portId, messenger) {
+    this.id = portId;
+    this.messenger = messenger;
     EventDispatcher.instance.registerListener(this, [
       "GeckoView:WebExtension:PortMessageFromApp",
       "GeckoView:WebExtension:PortDisconnect",
     ]);
   }
-  handleDisconnection() {
-    super.handleDisconnection();
+  close() {
     EventDispatcher.instance.unregisterListener(this, [
       "GeckoView:WebExtension:PortMessageFromApp",
       "GeckoView:WebExtension:PortDisconnect",
     ]);
-  }
-  close() {
-    // Notify listeners that this port is being closed because the context is
-    // gone.
-    this.disconnectByOtherEnd();
   }
   onEvent(aEvent, aData, aCallback) {
     debug`onEvent ${aEvent} ${aData}`;
@@ -129,12 +123,14 @@ class EmbedderPort extends ExtensionChild.Port {
 
     switch (aEvent) {
       case "GeckoView:WebExtension:PortMessageFromApp": {
-        this.postMessage(aData.message);
+        const holder = new StructuredCloneHolder(aData.message);
+        this.messenger.sendPortMessage(this.id, holder);
         break;
       }
 
       case "GeckoView:WebExtension:PortDisconnect": {
-        this.disconnect();
+        this.messenger.sendPortDisconnect(this.id);
+        this.close();
         break;
       }
     }
@@ -142,29 +138,24 @@ class EmbedderPort extends ExtensionChild.Port {
 }
 
 class GeckoViewConnection {
-  constructor(context, sender, target, nativeApp) {
-    this.context = context;
+  constructor(sender, nativeApp) {
     this.sender = sender;
-    this.target = target;
     this.nativeApp = nativeApp;
-    this.allowContentMessaging = GeckoViewWebExtension.extensionScopes.get(
-      sender.extensionId
-    ).allowContentMessaging;
-  }
-
-  _getMessageManager(aTarget) {
-    if (aTarget.frameLoader) {
-      return aTarget.frameLoader.messageManager;
+    const scope = GeckoViewWebExtension.extensionScopes.get(sender.extensionId);
+    this.allowContentMessaging = scope.allowContentMessaging;
+    if (!this.allowContentMessaging && !sender.verified) {
+      throw new Error(`Unexpected messaging sender: ${JSON.stringify(sender)}`);
     }
-    return aTarget;
   }
 
   get dispatcher() {
+    const target = this.sender.actor.browsingContext.top.embedderElement;
+
     if (this.sender.envType === "addon_child") {
       // If this is a WebExtension Page we will have a GeckoSession associated
       // to it and thus a dispatcher.
       const dispatcher = GeckoViewUtils.getDispatcherForWindow(
-        this.target.ownerGlobal
+        target.ownerGlobal
       );
       if (dispatcher) {
         return dispatcher;
@@ -180,7 +171,7 @@ class GeckoViewConnection {
       // If this message came from a content script, send the message to
       // the corresponding tab messenger so that GeckoSession can pick it
       // up.
-      return GeckoViewUtils.getDispatcherForWindow(this.target.ownerGlobal);
+      return GeckoViewUtils.getDispatcherForWindow(target.ownerGlobal);
     }
 
     throw new Error(`Uknown sender envType: ${this.sender.envType}`);
@@ -205,37 +196,32 @@ class GeckoViewConnection {
     });
   }
 
-  onConnect(portId) {
-    const port = new EmbedderPort(
-      this.context,
-      this.target.messageManager,
-      [Services.mm],
-      "",
-      portId,
-      this.sender,
-      this.sender
-    );
-    port.registerOnMessage(holder =>
+  onConnect(portId, messenger) {
+    const port = new EmbedderPort(portId, messenger);
+
+    port.onPortMessage = holder =>
       this._sendMessage({
         type: "GeckoView:WebExtension:PortMessage",
         portId: port.id,
         data: holder.deserialize({}),
-      })
-    );
+      });
 
-    port.registerOnDisconnect(msg =>
+    port.onPortDisconnect = () => {
       EventDispatcher.instance.sendRequest({
         type: "GeckoView:WebExtension:Disconnect",
         sender: this.sender,
         portId: port.id,
-      })
-    );
+      });
+      port.close();
+    };
 
-    return this._sendMessage({
+    this._sendMessage({
       type: "GeckoView:WebExtension:Connect",
       data: {},
       portId: port.id,
     });
+
+    return port;
   }
 }
 

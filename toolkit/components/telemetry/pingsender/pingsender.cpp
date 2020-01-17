@@ -9,6 +9,8 @@
 #include <fstream>
 #include <iomanip>
 #include <string>
+#include <vector>
+
 #include <zlib.h>
 
 #include "pingsender.h"
@@ -16,6 +18,7 @@
 using std::ifstream;
 using std::ios;
 using std::string;
+using std::vector;
 
 namespace PingSender {
 
@@ -54,36 +57,6 @@ std::string GenerateDateHeader() {
   strftime(buffer, sizeof(buffer), "Date: %a, %d %b %Y %H:%M:%S GMT",
            std::gmtime(&t));
   return string(buffer);
-}
-
-/**
- * Read the ping contents from the specified file
- */
-static std::string ReadPing(const string& aPingPath) {
-  string ping;
-  ifstream file;
-
-  file.open(aPingPath.c_str(), ios::in | ios::binary);
-
-  if (!file.is_open()) {
-    PINGSENDER_LOG("ERROR: Could not open ping file\n");
-    return "";
-  }
-
-  do {
-    char buff[4096];
-
-    file.read(buff, sizeof(buff));
-
-    if (file.bad()) {
-      PINGSENDER_LOG("ERROR: Could not read ping contents\n");
-      return "";
-    }
-
-    ping.append(buff, file.gcount());
-  } while (!file.eof());
-
-  return ping;
 }
 
 std::string GzipCompress(const std::string& rawData) {
@@ -153,33 +126,25 @@ std::string GzipCompress(const std::string& rawData) {
   return gzipData;
 }
 
-}  // namespace PingSender
+class Ping {
+ public:
+  Ping(const string& aUrl, const string& aPath) : mUrl(aUrl), mPath(aPath) {}
+  bool Send() const;
+  bool Delete() const;
 
-using namespace PingSender;
+ private:
+  string Read() const;
 
-int main(int argc, char* argv[]) {
-  string url;
-  string pingPath;
+  const string mUrl;
+  const string mPath;
+};
 
-  if (argc == 3) {
-    url = argv[1];
-    pingPath = argv[2];
-  } else {
-    PINGSENDER_LOG(
-        "Usage: pingsender URL PATH\n"
-        "Send the payload stored in PATH to the specified URL using "
-        "an HTTP POST message\n"
-        "then delete the file after a successful send.\n");
-    return EXIT_FAILURE;
-  }
-
-  ChangeCurrentWorkingDirectory(pingPath);
-
-  string ping(ReadPing(pingPath));
+bool Ping::Send() const {
+  string ping(Read());
 
   if (ping.empty()) {
     PINGSENDER_LOG("ERROR: Ping payload is empty\n");
-    return EXIT_FAILURE;
+    return false;
   }
 
   // Compress the ping using gzip.
@@ -190,17 +155,79 @@ int main(int argc, char* argv[]) {
   // it compressed.
   if (gzipPing.empty()) {
     PINGSENDER_LOG("ERROR: Ping compression failed\n");
+    return false;
+  }
+
+  if (!Post(mUrl, gzipPing)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool Ping::Delete() const {
+  return !mPath.empty() && !std::remove(mPath.c_str());
+}
+
+string Ping::Read() const {
+  string ping;
+  ifstream file;
+
+  file.open(mPath.c_str(), ios::in | ios::binary);
+
+  if (!file.is_open()) {
+    PINGSENDER_LOG("ERROR: Could not open ping file\n");
+    return "";
+  }
+
+  do {
+    char buff[4096];
+
+    file.read(buff, sizeof(buff));
+
+    if (file.bad()) {
+      PINGSENDER_LOG("ERROR: Could not read ping contents\n");
+      return "";
+    }
+
+    ping.append(buff, file.gcount());
+  } while (!file.eof());
+
+  return ping;
+}
+
+}  // namespace PingSender
+
+using namespace PingSender;
+
+int main(int argc, char* argv[]) {
+  vector<Ping> pings;
+
+  if ((argc >= 3) && ((argc - 1) % 2 == 0)) {
+    for (int i = 1; i < argc; i += 2) {
+      Ping ping(argv[i], argv[i + 1]);
+      pings.push_back(ping);
+    }
+  } else {
+    PINGSENDER_LOG(
+        "Usage: pingsender URL1 PATH1 URL2 PATH2 ...\n"
+        "Send the payloads stored in PATH<n> to the specified URL<n> using an "
+        "HTTP POST\nmessage for each payload then delete the file after a "
+        "successful send.\n");
     return EXIT_FAILURE;
   }
 
-  if (!Post(url, gzipPing)) {
-    return EXIT_FAILURE;
-  }
+  ChangeCurrentWorkingDirectory(argv[2]);
 
-  // If the ping was successfully sent, delete the file.
-  if (!pingPath.empty() && std::remove(pingPath.c_str())) {
-    // We failed to remove the pending ping file.
-    return EXIT_FAILURE;
+  for (const auto& ping : pings) {
+    if (!ping.Send()) {
+      return EXIT_FAILURE;
+    }
+
+    if (!ping.Delete()) {
+      PINGSENDER_LOG("ERROR: Could not delete the ping file\n");
+      return EXIT_FAILURE;
+    }
   }
 
   return EXIT_SUCCESS;

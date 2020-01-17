@@ -260,9 +260,9 @@ a.hidden,
 }
 
 #private-window-message {
-  border: 1px solid #D7D7DB;
+  border: 1px solid var(--in-content-border-color);
   grid-area: 1 / 2 / 1 / 7;
-  background-color: #F9F9FA;
+  background-color: var(--in-content-box-background-odd);
   padding: 13px 45px;
   font-size: 13px;
   margin-bottom: 25px;

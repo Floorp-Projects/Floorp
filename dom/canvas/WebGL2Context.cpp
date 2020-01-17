@@ -44,8 +44,6 @@ static const gl::GLFeature kRequiredFeatures[] = {
     gl::GLFeature::occlusion_query2,
     gl::GLFeature::packed_depth_stencil,
     gl::GLFeature::query_objects,
-    gl::GLFeature::renderbuffer_color_float,
-    gl::GLFeature::renderbuffer_color_half_float,
     gl::GLFeature::sRGB,
     gl::GLFeature::sampler_objects,
     gl::GLFeature::standard_derivatives,

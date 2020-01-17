@@ -21,6 +21,12 @@ svg {
   shape-rendering: crispEdges;
 }
 
+.grid {
+  stroke: gray;
+  stroke-dasharray: 3, 2;
+  opacity: 0.4;
+}
+
 .area {
   fill: steelblue;
 }
@@ -128,6 +134,7 @@ function BuildResources(data) {
     this.resources.push(entry);
   }.bind(this));
 
+  this.virt_fields = virt_fields;
   this.cpu_times_fields = [];
 
   // Filter out CPU fields that have no values.
@@ -204,11 +211,20 @@ BuildResources.prototype = Object.freeze({
 });
 
 function updateResourcesGraph() {
-  //var selected = document.getElementById("resourceType");
-  //var what = selected[selected.selectedIndex].value;
-  var what = "cpu";
-
-  renderResources("resource_graph", currentResources, what);
+  renderResources("cpu_graph", currentResources, 400, "cpu_times_fields", "cpu_times_percents", [
+    ["nice", "#0d9fff"],
+    ["irq", "#ff0d9f"],
+    ["softirq", "#ff0d9f"],
+    ["steal", "#000000"],
+    ["guest", "#000000"],
+    ["guest_nice", "#000000"],
+    ["system", "#f69a5c"],
+    ["iowait", "#ff0d25"],
+    ["user", "#5cb9f6"],
+    ["idle", "#e1e1e1"],
+  ]);
+  renderResources("mem_graph", currentResources, 200, "virt_fields", "virt", [["percent", "#5cb9f6"]]);
+  renderTimeline("tiers", currentResources);
   document.getElementById("wall_time").innerHTML = Math.round(currentResources.duration * 100) / 100;
   document.getElementById("start_date").innerHTML = currentResources.startDate.toISOString();
   document.getElementById("end_date").innerHTML = currentResources.endDate.toISOString();
@@ -231,12 +247,12 @@ function renderKey(key) {
   });
 }
 
-function renderResources(id, resources, what) {
+function renderResources(id, resources, height, fields_attr, data_attr, layers) {
   document.getElementById(id).innerHTML = "";
 
   var margin = {top: 20, right: 20, bottom: 20, left: 50};
   var width = window.innerWidth - 50 - margin.left - margin.right;
-  var height = 400 - margin.top - margin.bottom;
+  var height = height - margin.top - margin.bottom;
 
   var x = d3.scale.linear()
     .range([0, width])
@@ -269,19 +285,8 @@ function renderResources(id, resources, what) {
 
   // Manually control the layer order because we want it consistent and want
   // to inject some sanity.
-  var layers = [
-    ["nice", "#0d9fff"],
-    ["irq", "#ff0d9f"],
-    ["softirq", "#ff0d9f"],
-    ["steal", "#000000"],
-    ["guest", "#000000"],
-    ["guest_nice", "#000000"],
-    ["system", "#f69a5c"],
-    ["iowait", "#ff0d25"],
-    ["user", "#5cb9f6"],
-    ["idle", "#e1e1e1"],
-  ].filter(function (l) {
-    return resources.cpu_times_fields.indexOf(l[0]) != -1;
+  var layers = layers.filter(function (l) {
+    return resources[fields_attr].indexOf(l[0]) != -1;
   });
 
   // Draw a legend.
@@ -330,7 +335,7 @@ function renderResources(id, resources, what) {
       values: resources.resources.map(function (d) {
         return {
           start: d.start,
-          y: d.cpu_times_percents[layer[0]] / 100,
+          y: d[data_attr][layer[0]] / 100,
         };
       }),
     };
@@ -355,17 +360,40 @@ function renderResources(id, resources, what) {
     ;
 
   svg.append("g")
+    .attr("class", "x grid")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis.tickSize(-height, 0, 0).tickFormat(""))
+    ;
+
+  svg.append("g")
     .attr("class", "y axis")
     .call(yAxis)
     ;
 
+  svg.append("g")
+    .attr("class", "y grid")
+    .call(yAxis.tickSize(-width, 0, 0).tickFormat(""))
+    ;
+}
+
+function renderTimeline(id, resources) {
+  document.getElementById(id).innerHTML = "";
+
+  var margin = {top: 20, right: 20, bottom: 20, left: 50};
+  var width = window.innerWidth - 50 - margin.left - margin.right;
+  var height = 400 - margin.top - margin.bottom;
+
+  var x = d3.scale.linear()
+    .range([0, width])
+    .domain(d3.extent(resources.resources, function (d) { return d.start; }))
+    ;
   // Now we render a timeline of sorts of the tiers
   // There is a row of rectangles that visualize divisions between the
   // different items. We use the same x scale as the resource graph so times
   // line up properly.
   svg = d3.select("#" + id).append("svg")
     .attr("width", width + margin.left + margin.right)
-    .attr("height", 100 + margin.top + margin.bottom)
+    .attr("height", 100)
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
     ;
@@ -462,18 +490,12 @@ document.addEventListener("DOMContentLoaded", function() {
       </table>
     </div>
 
-    <!--
-    <select id="resourceType" onchange="updateResourcesGraph();">
-      <option value="cpu">CPU</option>
-      <option value="io_count">Disk I/O Count</option>
-      <option value="io_bytes">Disk I/O Bytes</option>
-      <option value="io_time">Disk I/O Time</option>
-      <option value="virt">Memory</option>
-    </select>
-    -->
-
     <select id="list" style="display: none"></select>
-    <div id="resource_graph"></div>
+    <h4>CPU</h4>
+    <div id="cpu_graph"></div>
+    <h4>Memory</h4>
+    <div id="mem_graph"></div>
+    <div id="tiers"></div>
     <div id="summary" style="padding-top: 20px">
       <table border="0">
         <tr><td>Wall Time (s)</td><td id="wall_time"></td></tr>

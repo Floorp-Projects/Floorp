@@ -11,6 +11,7 @@
 namespace mozilla {
 namespace dom {
 
+class MediaController;
 class MediaControlService;
 
 /**
@@ -24,21 +25,19 @@ class MediaControlService;
  */
 class AudioFocusManager {
  public:
-  void RequestAudioFocus(uint64_t aId);
-  void RevokeAudioFocus(uint64_t aId);
+  void RequestAudioFocus(MediaController* aController);
+  void RevokeAudioFocus(MediaController* aController);
 
-  explicit AudioFocusManager(MediaControlService* aService);
+  explicit AudioFocusManager() = default;
   ~AudioFocusManager() = default;
 
   uint32_t GetAudioFocusNums() const;
 
  private:
   friend class MediaControlService;
-  void Shutdown();
-  void HandleAudioCompetition(uint64_t aId);
+  void ClearFocusControllersIfNeeded();
 
-  RefPtr<MediaControlService> mService;
-  nsTArray<uint64_t> mOwningFocusControllers;
+  nsTArray<RefPtr<MediaController>> mOwningFocusControllers;
 };
 
 }  // namespace dom

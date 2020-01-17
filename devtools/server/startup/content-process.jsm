@@ -14,7 +14,7 @@
  */
 
 /* exported init */
-this.EXPORTED_SYMBOLS = ["init"];
+const EXPORTED_SYMBOLS = ["init"];
 
 let gLoader;
 

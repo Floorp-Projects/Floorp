@@ -88,7 +88,7 @@ function part1()
           "border-left-color applies");
     isnot(cs1.borderBottomColor, cs2.borderBottomColor,
           "border-top-color applies");
-    isnot(cs1.MozColumnRuleColor, cs2.MozColumnRuleColor,
+    isnot(cs1.columnRuleColor, cs2.columnRuleColor,
           "column-rule-color applies");
     isnot(cs1.textShadow, cs2.textShadow,
           "text-shadow applies");
@@ -101,7 +101,7 @@ function part1()
        "border-left-color applies");
     is(cs1.borderBottomColor, cs3.borderBottomColor, 
        "border-top-color applies");
-    is(cs1.MozColumnRuleColor, cs3.MozColumnRuleColor,
+    is(cs1.columnRuleColor, cs3.columnRuleColor,
        "column-rule-color applies");
     is(cs1.textShadow, cs3.textShadow,
        "text-shadow applies");
@@ -157,7 +157,7 @@ function part2()
        "border-inline-end-color is blocked");
     is(cs1.borderBottomColor, cs2.borderBottomColor,
        "border-bottom-color is blocked");
-    is(cs1.MozColumnRuleColor, cs2.MozColumnRuleColor,
+    is(cs1.columnRuleColor, cs2.columnRuleColor,
        "column-rule-color is blocked");
     is(cs1.textShadow, cs2.textShadow,
        "text-shadow is blocked");
