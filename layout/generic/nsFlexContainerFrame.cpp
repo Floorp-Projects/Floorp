@@ -543,10 +543,12 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
 
   // Returns the distance between this FlexItem's baseline and the cross-start
   // edge of its margin-box. Used in baseline alignment.
-  // (This function needs to be told which edge we're measuring the baseline
-  // from, so that it can look up the appropriate components from mMargin.)
+  //
+  // (This function needs to be told which physical start side we're measuring
+  // the baseline from, so that it can look up the appropriate components from
+  // margin.)
   nscoord GetBaselineOffsetFromOuterCrossEdge(
-      AxisEdgeType aEdge, const FlexboxAxisTracker& aAxisTracker,
+      mozilla::Side aStartSide, const FlexboxAxisTracker& aAxisTracker,
       bool aUseFirstLineBaseline) const;
 
   float GetShareOfWeightSoFar() const { return mShareOfWeightSoFar; }
@@ -2131,7 +2133,7 @@ void FlexItem::CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
 }
 
 nscoord FlexItem::GetBaselineOffsetFromOuterCrossEdge(
-    AxisEdgeType aEdge, const FlexboxAxisTracker& aAxisTracker,
+    mozilla::Side aStartSide, const FlexboxAxisTracker& aAxisTracker,
     bool aUseFirstLineBaseline) const {
   // NOTE:
   //  * We only use baselines for aligning in the flex container's cross axis.
@@ -2144,15 +2146,12 @@ nscoord FlexItem::GetBaselineOffsetFromOuterCrossEdge(
              "Only expecting to be doing baseline computations when the "
              "cross axis is the block axis");
 
-  AxisOrientationType crossAxis = aAxisTracker.GetPhysicalCrossAxis();
-  mozilla::Side physSideMeasuringFrom =
-      kAxisOrientationToSidesMap[crossAxis][aEdge];
   mozilla::Side itemBlockStartSide = mWM.PhysicalSide(eLogicalSideBStart);
 
   nscoord marginBStartToBaseline = ResolvedAscent(aUseFirstLineBaseline) +
                                    GetPhysicalMargin().Side(itemBlockStartSide);
 
-  return (physSideMeasuringFrom == itemBlockStartSide)
+  return (aStartSide == itemBlockStartSide)
              ? marginBStartToBaseline
              : GetOuterCrossSize() - marginBStartToBaseline;
 }
@@ -3411,7 +3410,7 @@ void FlexLine::ComputeCrossSizeAndBaseline(
       //   crossEndToBaseline.
 
       nscoord crossStartToBaseline = item->GetBaselineOffsetFromOuterCrossEdge(
-          eAxisEdge_Start, aAxisTracker, useFirst);
+          aAxisTracker.CrossAxisPhysicalStartSide(), aAxisTracker, useFirst);
       nscoord crossEndToBaseline = curOuterCrossSize - crossStartToBaseline;
 
       // Now, update our "largest" values for these (across all the flex items
@@ -3612,16 +3611,17 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
       const bool useFirst = (alignSelf == NS_STYLE_ALIGN_BASELINE);
 
       // Normally, baseline-aligned items are collectively aligned with the
-      // line's cross-start edge; however, if our cross axis is (internally)
-      // reversed, we instead align them with the cross-end edge.
-      // A similar logic holds for last baseline-aligned items, but in reverse.
-      AxisEdgeType baselineAlignEdge =
+      // line's physical cross-start side; however, if our cross axis is
+      // (internally) reversed, we instead align them with the physical
+      // cross-end side. A similar logic holds for last baseline-aligned items,
+      // but in reverse.
+      const mozilla::Side baselineAlignStartSide =
           aAxisTracker.AreAxesInternallyReversed() == useFirst
-              ? eAxisEdge_End
-              : eAxisEdge_Start;
+              ? aAxisTracker.CrossAxisPhysicalEndSide()
+              : aAxisTracker.CrossAxisPhysicalStartSide();
 
       nscoord itemBaselineOffset = aItem.GetBaselineOffsetFromOuterCrossEdge(
-          baselineAlignEdge, aAxisTracker, useFirst);
+          baselineAlignStartSide, aAxisTracker, useFirst);
 
       nscoord lineBaselineOffset = useFirst ? aLine.GetFirstBaselineOffset()
                                             : aLine.GetLastBaselineOffset();
