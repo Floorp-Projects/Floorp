@@ -454,8 +454,7 @@ ScreenOrientation::GetLockOrientationPermission(bool aCheckSandbox) const {
   }
 
   // Chrome can always lock the screen orientation.
-  nsIDocShell* docShell = owner->GetDocShell();
-  if (docShell && docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
+  if (owner->GetBrowsingContext()->IsChrome()) {
     return LOCK_ALLOWED;
   }
 
