@@ -374,8 +374,21 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             raise Exception("failed to get ro.product.cpu.abi from device")
         self.env["MOZ_ANDROID_CPU_ABI"] = abi
 
+        self.setupSocketConnections()
+
         if self.options['setup']:
             self.pushWrapper()
+
+    def setupSocketConnections(self):
+        # make node host ports visible to device
+        if self.moz_http2_port:
+            port = "tcp:{}".format(self.moz_http2_port)
+            self.device.create_socket_connection(ADBDevice.SOCKET_DIRECTON_REVERSE, port, port)
+            self.log.info("reversed connection for port " + port)
+        if self.moznode_exec_port:
+            port = "tcp:{}".format(self.moznode_exec_port)
+            self.device.create_socket_connection(ADBDevice.SOCKET_DIRECTON_REVERSE, port, port)
+            self.log.info("reversed connection for port " + port)
 
     def setAppRoot(self):
         # Determine the application root directory associated with the package
