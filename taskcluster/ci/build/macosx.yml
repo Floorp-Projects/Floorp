@@ -387,23 +387,23 @@ macosx64-ccov/opt:
             - linux64-nasm
             - linux64-node
 
-macosx64-gcp/debug:
+macosx64-aws/debug:
     description: "MacOS X x64 Cross-compile - built on GCP"
     index:
         product: firefox
-        job-name: macosx64-gcp-debug
+        job-name: macosx64-aws-debug
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: osx-cross/debug
         symbol: Bg
         tier: 3
-    worker-type: b-linux-gcp
+    worker-type: b-linux-aws
     worker:
         max-run-time: 3600
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: gcp
+            PERFHERDER_EXTRA_OPTIONS: aws
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -430,23 +430,23 @@ macosx64-gcp/debug:
             - linux64-nasm
             - linux64-node
 
-macosx64-gcp/opt:
+macosx64-aws/opt:
     description: "MacOS X x64 Cross-compile - built on GCP"
     index:
         product: firefox
-        job-name: macosx64-gcp-opt
+        job-name: macosx64-aws-opt
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: osx-cross/opt
         symbol: Bg
         tier: 3
-    worker-type: b-linux-gcp
+    worker-type: b-linux-aws
     worker:
         max-run-time: 7200
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: gcp
+            PERFHERDER_EXTRA_OPTIONS: aws
     run:
         using: mozharness
         actions: [get-secrets, build]
