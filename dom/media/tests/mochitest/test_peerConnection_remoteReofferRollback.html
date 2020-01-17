@@ -16,15 +16,6 @@
     test = new PeerConnectionTest(options);
     addRenegotiation(test.chain,
       [
-        function PC_LOCAL_ADD_SECOND_STREAM(test) {
-          test.setMediaConstraints([{audio: true}, {audio: true}],
-                                   [{audio: true}]);
-          return test.pcLocal.getAllUserMediaAndAddStreams([{audio: true}]);
-        },
-      ]
-    );
-    test.chain.replaceAfter('PC_REMOTE_SET_REMOTE_DESCRIPTION',
-      [
         function PC_LOCAL_SETUP_ICE_HANDLER(test) {
           test.pcLocal.setupIceCandidateHandler(test);
           if (test.testOptions.steeplechase) {
@@ -34,6 +25,15 @@
           }
         },
 
+        function PC_LOCAL_ADD_SECOND_STREAM(test) {
+          test.setMediaConstraints([{audio: true}, {audio: true}],
+                                   [{audio: true}]);
+          return test.pcLocal.getAllUserMediaAndAddStreams([{audio: true}]);
+        },
+      ]
+    );
+    test.chain.replaceAfter('PC_REMOTE_SET_REMOTE_DESCRIPTION',
+      [
         function PC_REMOTE_ROLLBACK(test) {
           return test.setRemoteDescription(test.pcRemote, { type: "rollback" },
                                            STABLE);
