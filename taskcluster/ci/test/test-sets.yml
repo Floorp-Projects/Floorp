@@ -13,6 +13,8 @@
 #
 # Test names given here reference tests.yml.
 
+### Feature-specific test groups
+
 common-tests:
     - marionette
     - mochitest-browser-chrome
@@ -34,9 +36,6 @@ web-platform-tests-1604:
 
 web-platform-tests-wdspec-headless:
     - web-platform-tests-wdspec-headless
-
-opt-only-tests:
-    - mochitest-valgrind
 
 talos:
     - talos-bcv
@@ -309,8 +308,32 @@ awsy:
     - awsy-base-dmd
     - awsy-tp6
 
-##
-# Limited test sets for specific platforms
+ccov-code-coverage-tests:
+    - test-coverage
+    - test-coverage-wpt
+
+marionette-gpu-tests:
+    - marionette-gpu
+
+mochitest-headless:
+    - mochitest-plain-headless
+
+mochitest-valgrind:
+    - mochitest-valgrind
+
+marionette-headless:
+    - marionette-headless
+
+desktop-screenshot-capture:
+    - browser-screenshots
+
+
+### Specific platform test sets
+
+# Linux
+
+linux32-tests:
+    - web-platform-tests
 
 linux-common-tests:
     - marionette
@@ -401,6 +424,8 @@ linux-qr-smoketests:
 linux-talos-flex:
     - talos-flex
 
+# Windows
+
 windows-qr-tests:
     - crashtest
     - mochitest
@@ -411,10 +436,6 @@ windows-qr-tests:
     - mochitest-webgl2-core
     - mochitest-webgpu
     - reftest
-
-ccov-code-coverage-tests:
-    - test-coverage
-    - test-coverage-wpt
 
 windows-reftest-gpu:
     - reftest-gpu
@@ -510,8 +531,7 @@ windows-talos:
     - talos-realworld-webextensions
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
 
-marionette-gpu-tests:
-    - marionette-gpu
+# macOS
 
 macosx1014-64-tests:
     - cppunit
@@ -569,11 +589,7 @@ macosx64-talos:
     # - talos-tabswitch # Bug 1453007 times out
     # - talos-h1 # too long to unpack profile- Bug 1442893
 
-linux32-tests:
-    - web-platform-tests
-
-desktop-screenshot-capture:
-    - browser-screenshots
+# Android
 
 android-x86_64-tests:
     - cppunit
@@ -596,15 +612,6 @@ android-x86_64-tests:
 android-x86_64-qr-tests:
     - crashtest
     - reftest
-
-devtools-tests:
-    - mochitest-devtools-chrome
-
-mochitest-headless:
-    - mochitest-plain-headless
-
-marionette-headless:
-    - marionette-headless
 
 android-hw-aarch64-opt-unittests:
     - mochitest-media
