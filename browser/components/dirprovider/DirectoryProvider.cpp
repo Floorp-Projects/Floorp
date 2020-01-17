@@ -92,7 +92,7 @@ static void AppendDistroSearchDirs(nsIProperties* aDirSvc,
 
     // we didn't have a defaultLocale, use the user agent locale
     nsAutoCString locale;
-    LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
+    LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
 
     nsCOMPtr<nsIFile> curLocalePlugins;
     rv = localePlugins->Clone(getter_AddRefs(curLocalePlugins));

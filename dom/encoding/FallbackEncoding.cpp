@@ -82,7 +82,7 @@ NotNull<const Encoding*> FallbackEncoding::Get() {
   }
 
   nsAutoCString locale;
-  LocaleService::GetInstance()->GetAppLocaleAsLangTag(locale);
+  LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
 
   // Let's lower case the string just in case unofficial language packs
   // don't stick to conventions.

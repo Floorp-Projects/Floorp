@@ -245,7 +245,7 @@ class MozTranslationNotification extends MozElements.Notification {
           ],
         };
 
-        let locale = Services.locale.appLocaleAsLangTag;
+        let locale = Services.locale.appLocaleAsBCP47;
         if (!(locale in localizedStrings)) {
           locale = "en";
         }

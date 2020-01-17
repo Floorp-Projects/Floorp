@@ -730,7 +730,7 @@ var pktUI = (function() {
   }
 
   function getUILocale() {
-    return Services.locale.appLocaleAsLangTag;
+    return Services.locale.appLocaleAsBCP47;
   }
 
   /**

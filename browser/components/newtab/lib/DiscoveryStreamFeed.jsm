@@ -81,7 +81,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
     // Persistent cache for remote endpoint data.
     this.cache = new PersistentCache(CACHE_KEY, true);
-    this.locale = Services.locale.appLocaleAsLangTag;
+    this.locale = Services.locale.appLocaleAsBCP47;
     this._impressionId = this.getOrCreateImpressionId();
     // Internal in-memory cache for parsing json prefs.
     this._prefCache = {};

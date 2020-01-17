@@ -344,12 +344,12 @@ function getSortedMessages(messages, options = {}) {
 
 const TargetingGetters = {
   get locale() {
-    return Services.locale.appLocaleAsLangTag;
+    return Services.locale.appLocaleAsBCP47;
   },
   get localeLanguageCode() {
     return (
-      Services.locale.appLocaleAsLangTag &&
-      Services.locale.appLocaleAsLangTag.substr(0, 2)
+      Services.locale.appLocaleAsBCP47 &&
+      Services.locale.appLocaleAsBCP47.substr(0, 2)
     );
   },
   get browserSettings() {

@@ -242,7 +242,7 @@ const AbuseReporter = {
       return null;
     }
 
-    const locale = Services.locale.appLocaleAsLangTag;
+    const locale = Services.locale.appLocaleAsBCP47;
 
     // Get a string value from a translated value
     // (https://addons-server.readthedocs.io/en/latest/topics/api/overview.html#api-overview-translations)
@@ -359,7 +359,7 @@ const AbuseReporter = {
 
     data.app = Services.appinfo.name.toLowerCase();
     data.appversion = Services.appinfo.version;
-    data.lang = Services.locale.appLocaleAsLangTag;
+    data.lang = Services.locale.appLocaleAsBCP47;
     data.operating_system = AppConstants.platform;
     data.operating_system_version = Services.sysinfo.getProperty("version");
 
