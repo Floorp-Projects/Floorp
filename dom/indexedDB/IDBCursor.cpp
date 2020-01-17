@@ -142,7 +142,7 @@ template <IDBCursor::Type CursorType>
 bool IDBTypedCursor<CursorType>::IsSourceDeleted() const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mTransaction);
-  MOZ_ASSERT(mTransaction->CanAcceptRequests());
+  MOZ_ASSERT(mTransaction->IsActive());
 
   const auto* const sourceObjectStore = [this]() -> const IDBObjectStore* {
     if constexpr (IsObjectStoreCursor) {
@@ -330,7 +330,7 @@ void IDBTypedCursor<CursorType>::Continue(JSContext* const aCx,
                                           ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
@@ -423,7 +423,7 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
     JS::Handle<JS::Value> aPrimaryKey, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
@@ -538,7 +538,7 @@ void IDBTypedCursor<CursorType>::Advance(const uint32_t aCount,
     return;
   }
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
@@ -581,7 +581,7 @@ RefPtr<IDBRequest> IDBTypedCursor<CursorType>::Update(
     JSContext* const aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -691,7 +691,7 @@ RefPtr<IDBRequest> IDBTypedCursor<CursorType>::Delete(JSContext* const aCx,
                                                       ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (!mTransaction->CanAcceptRequests()) {
+  if (!mTransaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }

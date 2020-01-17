@@ -166,8 +166,6 @@ class IDBTransaction final
 
   void RefreshSpec(bool aMayDelete);
 
-  bool CanAcceptRequests() const;
-
   bool IsCommittingOrFinished() const {
     AssertIsOnOwningThread();
 

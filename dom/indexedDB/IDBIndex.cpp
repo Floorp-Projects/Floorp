@@ -182,7 +182,7 @@ void IDBIndex::SetName(const nsAString& aName, ErrorResult& aRv) {
     return;
   }
 
-  if (!transaction->CanAcceptRequests()) {
+  if (!transaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
@@ -314,7 +314,7 @@ RefPtr<IDBRequest> IDBIndex::GetInternal(bool aKeyOnly, JSContext* aCx,
   }
 
   IDBTransaction* transaction = mObjectStore->Transaction();
-  if (!transaction->CanAcceptRequests()) {
+  if (!transaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -390,7 +390,7 @@ RefPtr<IDBRequest> IDBIndex::GetAllInternal(bool aKeysOnly, JSContext* aCx,
   }
 
   IDBTransaction* transaction = mObjectStore->Transaction();
-  if (!transaction->CanAcceptRequests()) {
+  if (!transaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -466,7 +466,7 @@ RefPtr<IDBRequest> IDBIndex::OpenCursorInternal(bool aKeysOnly, JSContext* aCx,
   }
 
   IDBTransaction* transaction = mObjectStore->Transaction();
-  if (!transaction->CanAcceptRequests()) {
+  if (!transaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -548,7 +548,7 @@ RefPtr<IDBRequest> IDBIndex::Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
   }
 
   IDBTransaction* const transaction = mObjectStore->Transaction();
-  if (!transaction->CanAcceptRequests()) {
+  if (!transaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }

@@ -361,7 +361,7 @@ RefPtr<IDBObjectStore> IDBDatabase::CreateObjectStore(
     return nullptr;
   }
 
-  if (!transaction->CanAcceptRequests()) {
+  if (!transaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
   }
@@ -434,7 +434,7 @@ void IDBDatabase::DeleteObjectStore(const nsAString& aName, ErrorResult& aRv) {
     return;
   }
 
-  if (!transaction->CanAcceptRequests()) {
+  if (!transaction->IsActive()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return;
   }
