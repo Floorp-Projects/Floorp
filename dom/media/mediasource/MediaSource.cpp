@@ -88,20 +88,23 @@ static bool IsWebMForced(DecoderDoctorDiagnostics* aDiagnostics) {
 namespace dom {
 
 /* static */
-nsresult MediaSource::IsTypeSupported(const nsAString& aType,
-                                      DecoderDoctorDiagnostics* aDiagnostics) {
+void MediaSource::IsTypeSupported(const nsAString& aType,
+                                  DecoderDoctorDiagnostics* aDiagnostics,
+                                  ErrorResult& aRv) {
   if (aType.IsEmpty()) {
-    return NS_ERROR_DOM_TYPE_ERR;
+    return aRv.ThrowTypeError(u"Empty type");
   }
 
   Maybe<MediaContainerType> containerType = MakeMediaContainerType(aType);
   if (!containerType) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                                 "Unknown type");
   }
 
   if (DecoderTraits::CanHandleContainerType(*containerType, aDiagnostics) ==
       CANPLAY_NO) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                                 "Can't play type");
   }
 
   // Now we know that this media type could be played.
@@ -110,9 +113,12 @@ nsresult MediaSource::IsTypeSupported(const nsAString& aType,
   if (mimeType == MEDIAMIMETYPE("video/mp4") ||
       mimeType == MEDIAMIMETYPE("audio/mp4")) {
     if (!StaticPrefs::media_mediasource_mp4_enabled()) {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      // Don't leak information about the fact that it's pref-disabled; just act
+      // like we can't play it.  Or should this throw "Unknown type"?
+      return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                                   "Can't play type");
     }
-    return NS_OK;
+    return;
   }
   if (mimeType == MEDIAMIMETYPE("video/webm")) {
     if (!(StaticPrefs::media_mediasource_webm_enabled() ||
@@ -125,19 +131,26 @@ nsresult MediaSource::IsTypeSupported(const nsAString& aType,
                containerType->ExtendedType().Codecs().AsString())) ||
 #endif
           IsWebMForced(aDiagnostics))) {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      // Don't leak information about the fact that it's pref-disabled; just act
+      // like we can't play it.  Or should this throw "Unknown type"?
+      return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                                   "Can't play type");
     }
-    return NS_OK;
+    return;
   }
   if (mimeType == MEDIAMIMETYPE("audio/webm")) {
     if (!(StaticPrefs::media_mediasource_webm_enabled() ||
           StaticPrefs::media_mediasource_webm_audio_enabled())) {
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      // Don't leak information about the fact that it's pref-disabled; just act
+      // like we can't play it.  Or should this throw "Unknown type"?
+      return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                                   "Can't play type");
     }
-    return NS_OK;
+    return;
   }
 
-  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  return aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                               "Type not supported in MediaSource");
 }
 
 /* static */
@@ -215,14 +228,14 @@ already_AddRefed<SourceBuffer> MediaSource::AddSourceBuffer(
     const nsAString& aType, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
   DecoderDoctorDiagnostics diagnostics;
-  nsresult rv = IsTypeSupported(aType, &diagnostics);
+  IsTypeSupported(aType, &diagnostics, aRv);
+  bool supported = !aRv.Failed();
   diagnostics.StoreFormatDiagnostics(
-      GetOwner() ? GetOwner()->GetExtantDoc() : nullptr, aType,
-      NS_SUCCEEDED(rv), __func__);
+      GetOwner() ? GetOwner()->GetExtantDoc() : nullptr, aType, supported,
+      __func__);
   MSE_API("AddSourceBuffer(aType=%s)%s", NS_ConvertUTF16toUTF8(aType).get(),
-          rv == NS_OK ? "" : " [not supported]");
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+          supported ? "" : " [not supported]");
+  if (!supported) {
     return nullptr;
   }
   if (mSourceBuffers->Length() >= MAX_SOURCE_BUFFERS) {
@@ -365,16 +378,18 @@ bool MediaSource::IsTypeSupported(const GlobalObject& aOwner,
                                   const nsAString& aType) {
   MOZ_ASSERT(NS_IsMainThread());
   DecoderDoctorDiagnostics diagnostics;
-  nsresult rv = IsTypeSupported(aType, &diagnostics);
+  IgnoredErrorResult rv;
+  IsTypeSupported(aType, &diagnostics, rv);
+  bool supported = !rv.Failed();
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aOwner.GetAsSupports());
   diagnostics.StoreFormatDiagnostics(window ? window->GetExtantDoc() : nullptr,
-                                     aType, NS_SUCCEEDED(rv), __func__);
+                                     aType, supported, __func__);
   MOZ_LOG(GetMediaSourceAPILog(), mozilla::LogLevel::Debug,
           ("MediaSource::%s: IsTypeSupported(aType=%s) %s", __func__,
            NS_ConvertUTF16toUTF8(aType).get(),
-           rv == NS_OK ? "OK" : "[not supported]"));
-  return NS_SUCCEEDED(rv);
+           supported ? "OK" : "[not supported]"));
+  return supported;
 }
 
 void MediaSource::SetLiveSeekableRange(double aStart, double aEnd,
