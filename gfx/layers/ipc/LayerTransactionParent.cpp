@@ -153,7 +153,7 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvUpdate(
     }
   });
 
-  AUTO_PROFILER_TRACING("Paint", "LayerTransaction", GRAPHICS);
+  AUTO_PROFILER_TRACING_MARKER("Paint", "LayerTransaction", GRAPHICS);
   AUTO_PROFILER_LABEL("LayerTransactionParent::RecvUpdate", GRAPHICS);
   PerfStats::AutoMetricRecording<PerfStats::Metric::LayerTransactions>
       autoRecording;

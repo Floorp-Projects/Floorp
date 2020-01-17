@@ -580,7 +580,7 @@ void VRDisplay::GetLayers(nsTArray<VRLayer>& result) {
 }
 
 void VRDisplay::SubmitFrame() {
-  AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplay", OTHER);
+  AUTO_PROFILER_TRACING_MARKER("VR", "SubmitFrameAtVRDisplay", OTHER);
 
   if (mClient && !mClient->IsPresentationGenerationCurrent()) {
     mPresentation = nullptr;

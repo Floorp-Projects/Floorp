@@ -310,7 +310,7 @@ bool ClientLayerManager::EndTransactionInternal(
   }
 
   PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Rasterization);
-  AUTO_PROFILER_TRACING("Paint", "Rasterize", GRAPHICS);
+  AUTO_PROFILER_TRACING_MARKER("Paint", "Rasterize", GRAPHICS);
   PerfStats::AutoMetricRecording<PerfStats::Metric::Rasterizing> autoRecording;
 
   Maybe<TimeStamp> startTime;
@@ -696,7 +696,7 @@ void ClientLayerManager::StopFrameTimeRecording(
 }
 
 void ClientLayerManager::ForwardTransaction(bool aScheduleComposite) {
-  AUTO_PROFILER_TRACING("Paint", "ForwardTransaction", GRAPHICS);
+  AUTO_PROFILER_TRACING_MARKER("Paint", "ForwardTransaction", GRAPHICS);
   TimeStamp start = TimeStamp::Now();
 
   GetCompositorBridgeChild()->EndCanvasTransaction();
