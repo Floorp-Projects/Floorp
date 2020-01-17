@@ -5,6 +5,14 @@
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
+/* Scroll-anchoring shouldn't work in any editable and scrollable elements when
+   user inserts something.
+*/
+*|*:-moz-read-write:focus,
+*|*:root:-moz-read-write {
+  overflow-anchor: none;
+}
+
 *|*::-moz-canvas {
   cursor: text;
 }
