@@ -219,6 +219,7 @@ abstract class AbstractFetchDownloadService : Service() {
      * Android rate limits notifications being sent, so we must send them on a delay so that
      * notifications are not dropped
      */
+    @Suppress("ComplexMethod")
     private fun updateDownloadNotification() {
         for (download in downloadJobs.values) {
             if (download.notifiedStopped) { continue }
@@ -245,13 +246,15 @@ abstract class AbstractFetchDownloadService : Service() {
                     DownloadNotification.createDownloadFailedNotification(context, download.state)
                 }
 
-                DownloadJobStatus.CANCELLED -> { return }
+                DownloadJobStatus.CANCELLED -> { null }
             }
 
-            NotificationManagerCompat.from(context).notify(
-                download.foregroundServiceId,
-                notification
-            )
+            notification?.let {
+                NotificationManagerCompat.from(context).notify(
+                    download.foregroundServiceId,
+                    it
+                )
+            }
 
             if (getDownloadJobStatus(download) != DownloadJobStatus.ACTIVE) {
                 sendDownloadStopped(download.state.id)

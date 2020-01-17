@@ -55,6 +55,7 @@ import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.initMocks
 import org.robolectric.Shadows.shadowOf
@@ -730,5 +731,54 @@ class AbstractFetchDownloadServiceTest {
 
         // Assert that all currently shown notifications are gone.
         assertEquals(0, shadowNotificationService.size())
+    }
+
+    @Test
+    fun `cancelled download does not prevent other notifications`() = runBlocking {
+        val cancelledDownload = DownloadState("https://example.com/file.txt", "file.txt")
+        val response = Response(
+            "https://example.com/file.txt",
+            200,
+            MutableHeaders(),
+            Response.Body(mock())
+        )
+
+        doReturn(response).`when`(client).fetch(Request("https://example.com/file.txt"))
+        val cancelledDownloadIntent = Intent("ACTION_DOWNLOAD").apply {
+            putDownloadExtra(cancelledDownload)
+        }
+
+        service.onStartCommand(cancelledDownloadIntent, 0, 0)
+        service.downloadJobs.values.forEach { it.job?.join() }
+
+        val providedDownload = argumentCaptor<DownloadState>()
+
+        verify(service).performDownload(providedDownload.capture())
+        service.downloadJobs[providedDownload.value.id]?.job?.join()
+
+        val cancelledDownloadJobState = service.downloadJobs[providedDownload.value.id]!!
+
+        service.setDownloadJobStatus(cancelledDownloadJobState, CANCELLED)
+        assertEquals(CANCELLED, service.getDownloadJobStatus(cancelledDownloadJobState))
+        testDispatcher.advanceTimeBy(750)
+        assertEquals(0, shadowNotificationService.size())
+
+        val download = DownloadState("https://example.com/file.txt", "file.txt")
+        val downloadIntent = Intent("ACTION_DOWNLOAD").apply {
+            putDownloadExtra(download)
+        }
+
+        // Start another download to ensure its notifications are presented
+        service.onStartCommand(downloadIntent, 0, 0)
+        service.downloadJobs.values.forEach { it.job?.join() }
+        verify(service, times(2)).performDownload(providedDownload.capture())
+        service.downloadJobs[providedDownload.value.id]?.job?.join()
+
+        val downloadJobState = service.downloadJobs[providedDownload.value.id]!!
+
+        service.setDownloadJobStatus(downloadJobState, COMPLETED)
+        assertEquals(COMPLETED, service.getDownloadJobStatus(downloadJobState))
+        testDispatcher.advanceTimeBy(750)
+        assertEquals(1, shadowNotificationService.size())
     }
 }
