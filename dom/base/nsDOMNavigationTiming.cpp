@@ -367,7 +367,7 @@ void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
                            int(elapsedLongTask.ToMilliseconds()), spec.get());
 
     PROFILER_ADD_MARKER_WITH_PAYLOAD(
-        "TTFI", DOM, TextMarkerPayload,
+        "TimeToFirstInteractive (TTFI)", DOM, TextMarkerPayload,
         (marker, mNavigationStart, mTTFI,
          profiler_get_inner_window_id_from_docshell(mDocShell)));
   }
