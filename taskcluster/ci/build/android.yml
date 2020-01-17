@@ -371,21 +371,21 @@ android-x86_64/debug:
             - linux64-sccache
 
 
-android-api-16-gcp/debug:
+android-api-16-aws/debug:
     description: "Android 4.0 api-16+ Debug - built on GCP"
     index:
-        job-name: android-api-16-gcp-debug
+        job-name: android-api-16-aws-debug
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: android-4-0-armv7-api16/debug
         symbol: Bg
         tier: 3
-    worker-type: b-linux-gcp
+    worker-type: b-linux-aws
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: gcp
+            PERFHERDER_EXTRA_OPTIONS: aws
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -396,21 +396,21 @@ android-api-16-gcp/debug:
             - linux64-sccache
 
 
-android-x86-gcp/opt:
+android-x86-aws/opt:
     description: "Android 4.2 x86 Opt - built on GCP"
     index:
-        job-name: android-x86-gcp-opt
+        job-name: android-x86-aws-opt
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: android-4-2-x86/opt
         symbol: Bg
         tier: 3
-    worker-type: b-linux-gcp
+    worker-type: b-linux-aws
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: gcp
+            PERFHERDER_EXTRA_OPTIONS: aws
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -420,21 +420,21 @@ android-x86-gcp/opt:
             - linux64-clang
             - linux64-sccache
 
-android-api-16-gcp/opt:
+android-api-16-aws/opt:
     description: "Android 4.0 api-16+ Opt - built on GCP"
     index:
-        job-name: android-api-16-gcp-opt
+        job-name: android-api-16-aws-opt
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: android-4-0-armv7-api16/opt
         symbol: Bg
         tier: 3
-    worker-type: b-linux-gcp
+    worker-type: b-linux-aws
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: gcp
+            PERFHERDER_EXTRA_OPTIONS: aws
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -444,21 +444,21 @@ android-api-16-gcp/opt:
             - linux64-clang
             - linux64-sccache
 
-android-aarch64-gcp/opt:
+android-aarch64-aws/opt:
     description: "Android 5.0 AArch64 Opt - built on GCP"
     index:
-        job-name: android-aarch64-gcp-opt
+        job-name: android-aarch64-aws-opt
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: android-5-0-aarch64/opt
         symbol: Bg
         tier: 3
-    worker-type: b-linux-gcp
+    worker-type: b-linux-aws
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: gcp
+            PERFHERDER_EXTRA_OPTIONS: aws
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -468,21 +468,21 @@ android-aarch64-gcp/opt:
             - linux64-clang
             - linux64-sccache
 
-android-aarch64-gcp/debug:
+android-aarch64-aws/debug:
     description: "Android 5.0 AArch64 Debug - built on GCP"
     index:
-        job-name: android-aarch64-gcp-debug
+        job-name: android-aarch64-aws-debug
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: android-5-0-aarch64/debug
         symbol: Bg
         tier: 3
-    worker-type: b-linux-gcp
+    worker-type: b-linux-aws
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: gcp
+            PERFHERDER_EXTRA_OPTIONS: aws
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -492,21 +492,21 @@ android-aarch64-gcp/debug:
             - linux64-clang
             - linux64-sccache
 
-android-x86_64-gcp/opt:
+android-x86_64-aws/opt:
     description: "Android 5.0 x86-64 Opt - built on GCP"
     index:
-        job-name: android-x86_64-gcp-opt
+        job-name: android-x86_64-aws-opt
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: android-5-0-x86_64/opt
         symbol: Bg
         tier: 3
-    worker-type: b-linux-gcp
+    worker-type: b-linux-aws
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: gcp
+            PERFHERDER_EXTRA_OPTIONS: aws
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
@@ -516,21 +516,21 @@ android-x86_64-gcp/opt:
             - linux64-clang
             - linux64-sccache
 
-android-x86_64-gcp/debug:
+android-x86_64-aws/debug:
     description: "Android 5.0 x86-64 Debug - built on GCP"
     index:
-        job-name: android-x86_64-gcp-debug
+        job-name: android-x86_64-aws-debug
     attributes:
         enable-full-crashsymbols: true
     treeherder:
         platform: android-5-0-x86_64/debug
         symbol: Bg
         tier: 3
-    worker-type: b-linux-gcp
+    worker-type: b-linux-aws
     worker:
         env:
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: gcp
+            PERFHERDER_EXTRA_OPTIONS: aws
     run:
         actions: [get-secrets, build]
         config: ["builds/releng_base_android_64_builds.py"]
