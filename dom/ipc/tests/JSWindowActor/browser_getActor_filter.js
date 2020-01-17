@@ -17,7 +17,7 @@ declTest("getActor with mismatch", {
     );
 
     await SpecialPowers.spawn(browser, [], async function() {
-      let child = content.getWindowGlobalChild();
+      let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
 
       Assert.throws(
@@ -38,7 +38,7 @@ declTest("getActor with matches", {
     ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
 
     await SpecialPowers.spawn(browser, [], async function() {
-      let child = content.getWindowGlobalChild();
+      let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       ok(child.getActor("Test"), "JSWindowActorChild should have value.");
     });
@@ -59,7 +59,7 @@ declTest("getActor with iframe matches", {
 
       is(content.frames.length, 1, "There should be an iframe.");
       await content.SpecialPowers.spawn(frame, [], () => {
-        let child = content.getWindowGlobalChild();
+        let child = content.windowGlobalChild;
         Assert.ok(
           child.getActor("Test"),
           "JSWindowActorChild should have value."
@@ -83,7 +83,7 @@ declTest("getActor with iframe mismatch", {
 
       is(content.frames.length, 1, "There should be an iframe.");
       await content.SpecialPowers.spawn(frame, [], () => {
-        let child = content.getWindowGlobalChild();
+        let child = content.windowGlobalChild;
         Assert.throws(
           () => child.getActor("Test"),
           /NS_ERROR_NOT_AVAILABLE/,
@@ -102,7 +102,7 @@ declTest("getActor with remoteType match", {
     ok(parent.getActor("Test"), "JSWindowActorParent should have value.");
 
     await SpecialPowers.spawn(browser, [], async function() {
-      let child = content.getWindowGlobalChild();
+      let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       ok(child.getActor("Test"), "JSWindowActorChild should have value.");
     });
@@ -115,7 +115,7 @@ declTest("getActor with iframe remoteType match", {
 
   async test(browser) {
     await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
-      let child = content.getWindowGlobalChild();
+      let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       ok(child.getActor("Test"), "JSWindowActorChild should have value.");
 
@@ -127,7 +127,7 @@ declTest("getActor with iframe remoteType match", {
 
       is(content.frames.length, 1, "There should be an iframe.");
       await content.SpecialPowers.spawn(frame, [], () => {
-        child = content.getWindowGlobalChild();
+        child = content.windowGlobalChild;
         Assert.ok(
           child.getActor("Test"),
           "JSWindowActorChild should have value."
@@ -150,7 +150,7 @@ declTest("getActor with remoteType mismatch", {
     );
 
     await SpecialPowers.spawn(browser, [], async function() {
-      let child = content.getWindowGlobalChild();
+      let child = content.windowGlobalChild;
       ok(child, "WindowGlobalChild should have value.");
       Assert.throws(
         () => child.getActor("Test"),
@@ -170,7 +170,7 @@ declTest("getActor without allFrames", {
       let frame = content.document.createElement("iframe");
       content.document.body.appendChild(frame);
       is(content.frames.length, 1, "There should be an iframe.");
-      let child = frame.contentWindow.getWindowGlobalChild();
+      let child = frame.contentWindow.windowGlobalChild;
       Assert.throws(
         () => child.getActor("Test"),
         /NS_ERROR_NOT_AVAILABLE/,
@@ -189,7 +189,7 @@ declTest("getActor with allFrames", {
       let frame = content.document.createElement("iframe");
       content.document.body.appendChild(frame);
       is(content.frames.length, 1, "There should be an iframe.");
-      let child = frame.contentWindow.getWindowGlobalChild();
+      let child = frame.contentWindow.windowGlobalChild;
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
     });
