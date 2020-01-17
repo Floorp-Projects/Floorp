@@ -562,7 +562,7 @@ function looksLikeUrl(str, ignoreAlphanumericHosts = false) {
     !REGEXP_SPACES.test(str) &&
     (["/", "@", ":", "["].some(c => str.includes(c)) ||
       (ignoreAlphanumericHosts
-        ? /^([\[\]A-Z0-9.-]+\.){3,}[^.]+$/i.test(str)
+        ? /^([\[\]A-Z0-9-]+\.){3,}[^.]+$/i.test(str)
         : str.includes(".")))
   );
 }
