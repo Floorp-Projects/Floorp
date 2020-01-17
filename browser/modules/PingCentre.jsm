@@ -256,7 +256,7 @@ class PingCentre {
     let experiments = TelemetryEnvironment.getActiveExperiments();
     let experimentsString = this._createExperimentsString(experiments, filter);
 
-    let locale = data.locale || Services.locale.appLocaleAsLangTag;
+    let locale = data.locale || Services.locale.appLocaleAsBCP47;
     const payload = Object.assign(
       {
         locale,

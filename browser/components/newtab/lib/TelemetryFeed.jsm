@@ -485,7 +485,7 @@ this.TelemetryFeed = class TelemetryFeed {
   createPing(portID) {
     const ping = {
       addon_version: Services.appinfo.appBuildID,
-      locale: Services.locale.appLocaleAsLangTag,
+      locale: Services.locale.appLocaleAsBCP47,
       user_prefs: this.userPreferences,
     };
 
@@ -565,7 +565,7 @@ this.TelemetryFeed = class TelemetryFeed {
     let event = {
       ...action.data,
       addon_version: Services.appinfo.appBuildID,
-      locale: Services.locale.appLocaleAsLangTag,
+      locale: Services.locale.appLocaleAsBCP47,
     };
     if (event.event_context && typeof event.event_context === "object") {
       event.event_context = JSON.stringify(event.event_context);

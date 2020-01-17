@@ -177,7 +177,7 @@ async function assertBaseReportData({ reportData, addon }) {
   equal(reportData.appversion, APPVERSION, "Got expected 'appversion'");
   equal(
     reportData.lang,
-    Services.locale.appLocaleAsLangTag,
+    Services.locale.appLocaleAsBCP47,
     "Got expected 'lang'"
   );
   equal(
@@ -822,7 +822,7 @@ add_task(async function test_query_amo_details() {
 
   // Test on the default en-US locale.
   Services.prefs.setCharPref(PREF_REQUIRED_LOCALE, "en-US");
-  let locale = Services.locale.appLocaleAsLangTag;
+  let locale = Services.locale.appLocaleAsBCP47;
   equal(locale, "en-US", "Got the expected app locale set");
 
   let expectedReport = {
@@ -838,7 +838,7 @@ add_task(async function test_query_amo_details() {
 
   // Test with a non-default locale also available in the AMO details.
   Services.prefs.setCharPref(PREF_REQUIRED_LOCALE, "it-IT");
-  locale = Services.locale.appLocaleAsLangTag;
+  locale = Services.locale.appLocaleAsBCP47;
   equal(locale, "it-IT", "Got the expected app locale set");
 
   expectedReport = {
@@ -849,7 +849,7 @@ add_task(async function test_query_amo_details() {
 
   // Test with a non-default locale not available in the AMO details.
   Services.prefs.setCharPref(PREF_REQUIRED_LOCALE, "fr-FR");
-  locale = Services.locale.appLocaleAsLangTag;
+  locale = Services.locale.appLocaleAsBCP47;
   equal(locale, "fr-FR", "Got the expected app locale set");
 
   expectedReport = {

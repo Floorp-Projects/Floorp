@@ -107,7 +107,7 @@ HandlerService.prototype = {
 
     try {
       prefsDefaultHandlersVersion = Number(prefsDefaultHandlersVersion.data);
-      let locale = Services.locale.appLocaleAsLangTag;
+      let locale = Services.locale.appLocaleAsBCP47;
 
       let defaultHandlersVersion =
         this._store.data.defaultHandlersVersion[locale] || 0;

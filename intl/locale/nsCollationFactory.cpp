@@ -14,7 +14,7 @@ NS_IMPL_ISUPPORTS(nsCollationFactory, nsICollationFactory)
 
 nsresult nsCollationFactory::CreateCollation(nsICollation** instancePtr) {
   nsAutoCString appLocale;
-  mozilla::intl::LocaleService::GetInstance()->GetAppLocaleAsLangTag(appLocale);
+  mozilla::intl::LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocale);
 
   return CreateCollationForLocale(appLocale, instancePtr);
 }

@@ -4427,7 +4427,7 @@ nsresult XREMain::XRE_mainRun() {
   OverrideDefaultLocaleIfNeeded();
 
   nsCString userAgentLocale;
-  LocaleService::GetInstance()->GetAppLocaleAsLangTag(userAgentLocale);
+  LocaleService::GetInstance()->GetAppLocaleAsBCP47(userAgentLocale);
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::useragent_locale, userAgentLocale);
 

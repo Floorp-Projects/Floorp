@@ -6,7 +6,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   var formatter = Services.urlFormatter;
-  var locale = Services.locale.appLocaleAsLangTag;
+  var locale = Services.locale.appLocaleAsBCP47;
   var OSVersion =
     Services.sysinfo.getProperty("name") +
     " " +

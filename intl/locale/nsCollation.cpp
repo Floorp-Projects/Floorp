@@ -115,7 +115,7 @@ nsCollation::Initialize(const nsACString& locale) {
     mLocale = locale;
   } else {
     status = U_ZERO_ERROR;
-    mozilla::LocaleService::GetInstance()->GetAppLocaleAsLangTag(mLocale);
+    mozilla::LocaleService::GetInstance()->GetAppLocaleAsBCP47(mLocale);
     collator = ucol_open(mLocale.get(), &status);
     if (NS_WARN_IF(U_FAILURE(status))) {
       return NS_ERROR_UNEXPECTED;

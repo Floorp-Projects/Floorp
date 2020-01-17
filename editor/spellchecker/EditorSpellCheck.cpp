@@ -903,7 +903,7 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
   // Priority 4:
   // As next fallback, try the current locale.
   nsAutoCString utf8DictName;
-  LocaleService::GetInstance()->GetAppLocaleAsLangTag(utf8DictName);
+  LocaleService::GetInstance()->GetAppLocaleAsBCP47(utf8DictName);
 
   CopyUTF8toUTF16(utf8DictName, dictName);
 #ifdef DEBUG_DICT

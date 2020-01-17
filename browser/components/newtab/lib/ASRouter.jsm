@@ -276,7 +276,7 @@ const MessageLoaderUtils = {
             options.dispatchToAS
           );
         } else if (RS_PROVIDERS_WITH_L10N.includes(provider.id)) {
-          const locale = Services.locale.appLocaleAsLangTag;
+          const locale = Services.locale.appLocaleAsBCP47;
           const recordId = `${RS_FLUENT_RECORD_PREFIX}-${locale}`;
           const kinto = new KintoHttpClient(
             Services.prefs.getStringPref(RS_SERVER_PREF)
@@ -526,7 +526,7 @@ class _ASRouter {
       messages: [],
       groups: [],
       errors: [],
-      localeInUse: Services.locale.appLocaleAsLangTag,
+      localeInUse: Services.locale.appLocaleAsBCP47,
     };
     this._triggerHandler = this._triggerHandler.bind(this);
     this._localProviders = localProviders;
@@ -839,7 +839,7 @@ class _ASRouter {
 
   async _maybeUpdateL10nAttachment() {
     const { localeInUse } = this.state.localeInUse;
-    const newLocale = Services.locale.appLocaleAsLangTag;
+    const newLocale = Services.locale.appLocaleAsBCP47;
     if (newLocale !== localeInUse) {
       const providers = [...this.state.providers];
       let needsUpdate = false;

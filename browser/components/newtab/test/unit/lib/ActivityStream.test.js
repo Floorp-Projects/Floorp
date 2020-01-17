@@ -204,7 +204,7 @@ describe("ActivityStream", () => {
       sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
       sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
 
       as._updateDynamicPrefs();
@@ -217,7 +217,7 @@ describe("ActivityStream", () => {
       sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("CA");
       sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-CA");
 
       as._updateDynamicPrefs();
@@ -230,7 +230,7 @@ describe("ActivityStream", () => {
       sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("DE");
       sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "de-DE");
 
       as._updateDynamicPrefs();
@@ -258,7 +258,7 @@ describe("ActivityStream", () => {
       sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
       sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "no-LOCALE");
 
       as._updateDynamicPrefs();
@@ -269,7 +269,7 @@ describe("ActivityStream", () => {
       sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
       sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
 
       as._updateDynamicPrefs();
@@ -285,7 +285,7 @@ describe("ActivityStream", () => {
         .onSecondCall()
         .returns("NOGEO");
       sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
 
       as._updateDynamicPrefs();
@@ -320,7 +320,7 @@ describe("ActivityStream", () => {
     it("should set true with expected geo and locale", () => {
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
       sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
 
       as._updateDynamicPrefs();
@@ -332,7 +332,7 @@ describe("ActivityStream", () => {
       as._defaultPrefs.set("feeds.section.topstories", false);
       sandbox.stub(global.Services.prefs, "getStringPref").returns("US");
       sandbox
-        .stub(global.Services.locale, "appLocaleAsLangTag")
+        .stub(global.Services.locale, "appLocaleAsBCP47")
         .get(() => "en-US");
 
       as._updateDynamicPrefs();

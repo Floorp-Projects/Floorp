@@ -39,7 +39,7 @@ class AppInfo(BaseLib):
               try {
                 return Components.classes["@mozilla.org/intl/localeservice;1"]
                                  .getService(Components.interfaces.mozILocaleService)
-                                 .getAppLocaleAsLangTag();
+                                 .getAppLocaleAsBCP47();
               } catch (e) {
                 return Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                                  .getService(Components.interfaces.nsIXULChromeRegistry)
