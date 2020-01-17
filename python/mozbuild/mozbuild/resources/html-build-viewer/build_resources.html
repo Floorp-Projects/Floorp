@@ -210,8 +210,12 @@ BuildResources.prototype = Object.freeze({
   },
 });
 
+function format_percent(d, i) {
+  return d + "%";
+}
+
 function updateResourcesGraph() {
-  renderResources("cpu_graph", currentResources, 400, "cpu_times_fields", "cpu_times_percents", [
+  renderResources("cpu_graph", currentResources, 400, "cpu_times_fields", "cpu_times_percents", 100, format_percent, [
     ["nice", "#0d9fff"],
     ["irq", "#ff0d9f"],
     ["softirq", "#ff0d9f"],
@@ -223,7 +227,20 @@ function updateResourcesGraph() {
     ["user", "#5cb9f6"],
     ["idle", "#e1e1e1"],
   ]);
-  renderResources("mem_graph", currentResources, 200, "virt_fields", "virt", [["percent", "#5cb9f6"]]);
+  // On macos, there doesn't seem to be a combination of values that sums up to
+  // the total, so just use the percentage. Only macos has a "wired" value.
+  if ('wired' in currentResources.resources[0].virt) {
+    renderResources("mem_graph", currentResources, 200, "virt_fields", "virt", 100, format_percent, [
+      ["percent", "#5cb9f6"],
+    ]);
+  } else {
+    renderResources("mem_graph", currentResources, 200, "virt_fields", "virt", currentResources.resources[0].virt['total'], d3.format("s"), [
+      ["used", "#5cb9f6"],
+      ["buffers", "#f65c5c"],
+      ["cached", "#f69a5c"],
+      ["free", "#e1e1e1"],
+    ]);
+  }
   renderTimeline("tiers", currentResources);
   document.getElementById("wall_time").innerHTML = Math.round(currentResources.duration * 100) / 100;
   document.getElementById("start_date").innerHTML = currentResources.startDate.toISOString();
@@ -247,7 +264,7 @@ function renderKey(key) {
   });
 }
 
-function renderResources(id, resources, height, fields_attr, data_attr, layers) {
+function renderResources(id, resources, height, fields_attr, data_attr, max_value, tick_format, layers) {
   document.getElementById(id).innerHTML = "";
 
   var margin = {top: 20, right: 20, bottom: 20, left: 50};
@@ -260,7 +277,7 @@ function renderResources(id, resources, height, fields_attr, data_attr, layers) 
     ;
   var y = d3.scale.linear()
     .range([height, 0])
-    .domain([0, 1])
+    .domain([0, max_value])
     ;
 
   var xAxis = d3.svg.axis()
@@ -270,7 +287,7 @@ function renderResources(id, resources, height, fields_attr, data_attr, layers) 
   var yAxis = d3.svg.axis()
     .scale(y)
     .orient("left")
-    .tickFormat(d3.format(".0%"))
+    .tickFormat(tick_format)
     ;
 
   var area = d3.svg.area()
@@ -335,7 +352,7 @@ function renderResources(id, resources, height, fields_attr, data_attr, layers) 
       values: resources.resources.map(function (d) {
         return {
           start: d.start,
-          y: d[data_attr][layer[0]] / 100,
+          y: d[data_attr][layer[0]],
         };
       }),
     };
