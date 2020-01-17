@@ -81,6 +81,9 @@ permalink: /changelog/
   * Added `MigrationIntentProcessor` for handling incoming intents when migration is in progress.
   * Added `AbstractMigrationProgressActivity` as a base activity to block user interactions during migration.
 
+* **browser-menu**
+  * Added `MenuButton` to let the browser menu be used outside of `BrowserToolbar`.
+
 # 27.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v26.0.0...v27.0.0)

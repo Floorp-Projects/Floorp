@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?android:selectableItemBackgroundBorderless"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/highlight"
+        app:srcCompat="@drawable/mozac_menu_indicator"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:scaleType="center"
+        android:contentDescription="@string/mozac_browser_menu_highlighted"
+        android:visibility="gone" />
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icon"
+        app:srcCompat="@drawable/mozac_ic_menu"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:scaleType="center"
+        android:contentDescription="@string/mozac_browser_menu_button" />
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/notification_dot"
+        app:srcCompat="@drawable/mozac_menu_notification"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:scaleType="center"
+        android:contentDescription="@string/mozac_browser_menu_highlighted"
+        android:visibility="gone" />
+
+</merge>

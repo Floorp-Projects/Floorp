@@ -16,6 +16,8 @@ import android.widget.ProgressBar
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -23,8 +25,6 @@ import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.internal.ActionContainer
 import mozilla.components.concept.toolbar.Toolbar
-import androidx.constraintlayout.widget.ConstraintSet
-import androidx.constraintlayout.widget.ConstraintLayout
 
 /**
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls ("display mode").
@@ -141,7 +141,7 @@ class DisplayToolbar internal constructor(
         background = rootView.findViewById(R.id.mozac_browser_toolbar_background),
         separator = rootView.findViewById(R.id.mozac_browser_toolbar_separator),
         emptyIndicator = rootView.findViewById(R.id.mozac_browser_toolbar_empty_indicator),
-        menu = rootView.findViewById(R.id.mozac_browser_toolbar_menu),
+        menu = MenuButton(rootView.findViewById(R.id.mozac_browser_toolbar_menu)),
         securityIndicator = rootView.findViewById(R.id.mozac_browser_toolbar_security_indicator),
         trackingProtectionIndicator = rootView.findViewById(
             R.id.mozac_browser_toolbar_tracking_protection_indicator

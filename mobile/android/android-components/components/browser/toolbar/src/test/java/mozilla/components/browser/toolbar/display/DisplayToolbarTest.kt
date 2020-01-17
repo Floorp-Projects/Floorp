@@ -173,7 +173,7 @@ class DisplayToolbarTest {
         val menuView = displayToolbar.views.menu
 
         assertNotNull(menuView)
-        assertTrue(menuView.visibility == View.GONE)
+        assertEquals(View.GONE, menuView.impl.visibility)
     }
 
     @Test
@@ -184,15 +184,15 @@ class DisplayToolbarTest {
 
         assertNotNull(menuView)
 
-        assertTrue(menuView.visibility == View.GONE)
+        assertEquals(View.GONE, menuView.impl.visibility)
 
         displayToolbar.menuBuilder = BrowserMenuBuilder(emptyList())
 
-        assertTrue(menuView.visibility == View.VISIBLE)
+        assertEquals(View.VISIBLE, menuView.impl.visibility)
 
         displayToolbar.menuBuilder = null
 
-        assertTrue(menuView.visibility == View.GONE)
+        assertEquals(View.GONE, menuView.impl.visibility)
     }
 
     @Test
@@ -214,12 +214,12 @@ class DisplayToolbarTest {
         displayToolbar.menuBuilder = menuBuilder
 
         verify(menuBuilder, never()).build(testContext)
-        verify(menu, never()).show(menuView)
+        verify(menu, never()).show(menuView.impl)
 
-        menuView.performClick()
+        menuView.impl.performClick()
 
         verify(menuBuilder).build(testContext)
-        verify(menu).show(eq(menuView), any(), anyBoolean(), any())
+        verify(menu).show(eq(menuView.impl), any(), anyBoolean(), any())
         verify(menu, never()).invalidate()
 
         displayToolbar.invalidateActions()
@@ -590,7 +590,7 @@ class DisplayToolbarTest {
 
             assertEquals(0, facts.size)
 
-            menuView.performClick()
+            menuView.impl.performClick()
 
             assertEquals(1, facts.size)
 
@@ -657,12 +657,15 @@ class DisplayToolbarTest {
 
     @Test
     fun `Backgrounding the app dismisses menu if already open`() {
+        var wasDismissed = false
         val (_, displayToolbar) = createDisplayToolbar()
         val menuView = displayToolbar.views.menu
+        menuView.impl.onDismiss = { wasDismissed = true }
+        menuView.menuBuilder = BrowserMenuBuilder(emptyList())
+        menuView.impl.performClick()
 
-        menuView.menu = mock()
         displayToolbar.onStop()
 
-        verify(menuView.menu)?.dismiss()
+        assertTrue(wasDismissed)
     }
 }
