@@ -28,9 +28,11 @@ const enforceNoTemporaryAddon = extensionId => {
 const managedStorage = new WeakMap();
 
 const lookupManagedStorage = async (extensionId, context) => {
-  let extensionPolicy = Services.policies.getExtensionPolicy(extensionId);
-  if (extensionPolicy) {
-    return ExtensionStorage._serializableMap(extensionPolicy);
+  if (Services.policies) {
+    let extensionPolicy = Services.policies.getExtensionPolicy(extensionId);
+    if (extensionPolicy) {
+      return ExtensionStorage._serializableMap(extensionPolicy);
+    }
   }
   let info = await NativeManifests.lookupManifest(
     "storage",
