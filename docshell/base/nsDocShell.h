@@ -512,16 +512,6 @@ class nsDocShell final : public nsDocLoader,
       bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags, nsresult& rv,
       nsIChannel** aChannel);
 
-  // Applies configuration options to both real channels, and DocumentChannel.
-  // This should only be for generic options that need to be applied to both
-  // the DocumentChannelChild, as well as the real channel in the parent
-  // process, and should be rare.
-  static nsresult ConfigureChannel(nsIChannel* aChannel,
-                                   nsDocShellLoadState* aLoadState,
-                                   const nsString* aInitiatorType,
-                                   uint32_t aLoadType, uint32_t aCacheKey,
-                                   bool aHasNonEmptySandboxingFlags);
-
   // Notify consumers of a search being loaded through the observer service:
   static void MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
                                               const nsString& aKeyword);

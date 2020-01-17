@@ -9411,9 +9411,8 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     return false;
   }
 
-  nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
-      do_QueryInterface(channel);
-  if (appCacheChannel) {
+  if (nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
+          do_QueryInterface(channel)) {
     // Any document load should not inherit application cache.
     appCacheChannel->SetInheritApplicationCache(false);
 
@@ -9523,56 +9522,20 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     }
   }
 
-  channel.forget(aChannel);
-  return true;
-}
-
-/* static */ nsresult nsDocShell::ConfigureChannel(
-    nsIChannel* aChannel, nsDocShellLoadState* aLoadState,
-    const nsString* aInitiatorType, uint32_t aLoadType, uint32_t aCacheKey,
-    bool aHasNonEmptySandboxingFlags) {
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
-
-  nsCOMPtr<nsIURI> rpURI;
-  loadInfo->GetResultPrincipalURI(getter_AddRefs(rpURI));
-  Maybe<nsCOMPtr<nsIURI>> originalResultPrincipalURI;
-  aLoadState->GetMaybeResultPrincipalURI(originalResultPrincipalURI);
-  if (originalResultPrincipalURI &&
-      (!aLoadState->KeepResultPrincipalURIIfSet() || !rpURI)) {
-    // Unconditionally override, we want the replay to be equal to what has
-    // been captured.
-    loadInfo->SetResultPrincipalURI(originalResultPrincipalURI.ref());
-  }
-
-  nsresult rv = NS_OK;
-  if (aLoadState->OriginalURI() && aLoadState->LoadReplace()) {
-    // The LOAD_REPLACE flag and its handling here will be removed as part
-    // of bug 1319110.  For now preserve its restoration here to not break
-    // any code expecting it being set specially on redirected channels.
-    // If the flag has originally been set to change result of
-    // NS_GetFinalChannelURI it won't have any effect and also won't cause
-    // any harm.
-    uint32_t loadFlags;
-    rv = aChannel->GetLoadFlags(&loadFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    aChannel->SetLoadFlags(loadFlags | nsIChannel::LOAD_REPLACE);
-  }
-
-  nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(aChannel));
+  nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(channel));
 
   // figure out if we need to set the post data stream on the channel...
   if (aLoadState->PostDataStream()) {
-    nsCOMPtr<nsIFormPOSTActionChannel> postChannel(do_QueryInterface(aChannel));
-    if (postChannel) {
+    if (nsCOMPtr<nsIFormPOSTActionChannel> postChannel =
+            do_QueryInterface(channel)) {
       // XXX it's a bit of a hack to rewind the postdata stream here but
       // it has to be done in case the post data is being reused multiple
       // times.
       nsCOMPtr<nsISeekableStream> postDataSeekable =
           do_QueryInterface(aLoadState->PostDataStream());
       if (postDataSeekable) {
-        rv = postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-        NS_ENSURE_SUCCESS(rv, rv);
+        aRv = postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+        NS_ENSURE_SUCCESS(aRv, false);
       }
 
       // we really need to have a content type associated with this stream!!
@@ -9590,9 +9553,9 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
           aLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
         cacheChannel->SetCacheKey(aCacheKey);
         uint32_t loadFlags;
-        if (NS_SUCCEEDED(aChannel->GetLoadFlags(&loadFlags))) {
-          aChannel->SetLoadFlags(loadFlags |
-                                 nsICachingChannel::LOAD_ONLY_FROM_CACHE);
+        if (NS_SUCCEEDED(channel->GetLoadFlags(&loadFlags))) {
+          channel->SetLoadFlags(loadFlags |
+                                nsICachingChannel::LOAD_ONLY_FROM_CACHE);
         }
       } else if (aLoadType == LOAD_RELOAD_NORMAL) {
         cacheChannel->SetCacheKey(aCacheKey);
@@ -9615,15 +9578,12 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     }
   }
 
-  nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(aChannel);
-  if (scriptChannel) {
+  if (nsCOMPtr<nsIScriptChannel> scriptChannel = do_QueryInterface(channel)) {
     // Allow execution against our context if the principals match
     scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
   }
 
-  // TODO: What should we do with this?
-  nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(aChannel));
-  if (timedChannel) {
+  if (nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(channel)) {
     timedChannel->SetTimingEnabled(true);
 
     if (aInitiatorType) {
@@ -9631,56 +9591,14 @@ static bool SchemeUsesDocChannel(nsIURI* aURI) {
     }
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
-  if (csp) {
-    // Navigational requests that are same origin need to be upgraded in case
-    // upgrade-insecure-requests is present.
-    bool upgradeInsecureRequests = false;
-    csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
-    if (upgradeInsecureRequests) {
-      // only upgrade if the navigation is same origin
-      nsCOMPtr<nsIPrincipal> resultPrincipal;
-      rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
-          aChannel, getter_AddRefs(resultPrincipal));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
-                                       resultPrincipal)) {
-        static_cast<LoadInfo*>(loadInfo.get())->SetUpgradeInsecureRequests();
-      }
-    }
-
-    // For document loads we store the CSP that potentially needs to
-    // be inherited by the new document, e.g. in case we are loading
-    // an opaque origin like a data: URI. The actual inheritance
-    // check happens within Document::InitCSP().
-    // Please create an actual copy of the CSP (do not share the same
-    // reference) otherwise a Meta CSP of an opaque origin will
-    // incorrectly be propagated to the embedding document.
-    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
-    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
-    static_cast<LoadInfo*>(loadInfo.get())->SetCSPToInherit(cspToInherit);
-
-    // Check CSP navigate-to
-    bool allowsNavigateTo = false;
-    rv = csp->GetAllowsNavigateTo(aLoadState->URI(), loadInfo,
-                                  false, /* aWasRedirected */
-                                  false, /* aEnforceWhitelist */
-                                  &allowsNavigateTo);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!allowsNavigateTo) {
-      return NS_ERROR_CSP_NAVIGATE_TO_VIOLATION;
-    }
-  }
-
   if (aHasNonEmptySandboxingFlags) {
-    nsCOMPtr<nsIHttpChannelInternal> httpChannel(do_QueryInterface(aChannel));
-    if (httpChannel) {
-      httpChannel->SetHasNonEmptySandboxingFlag(true);
+    if (httpChannelInternal) {
+      httpChannelInternal->SetHasNonEmptySandboxingFlag(true);
     }
   }
 
-  return rv;
+  channel.forget(aChannel);
+  return true;
 }
 
 nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
@@ -10004,9 +9922,71 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     NS_ADDREF(*aRequest = channel);
   }
 
-  rv = ConfigureChannel(channel, aLoadState, initiatorType, mLoadType, cacheKey,
-                        mBrowsingContext->GetSandboxFlags());
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIURI> rpURI;
+  loadInfo->GetResultPrincipalURI(getter_AddRefs(rpURI));
+  Maybe<nsCOMPtr<nsIURI>> originalResultPrincipalURI;
+  aLoadState->GetMaybeResultPrincipalURI(originalResultPrincipalURI);
+  if (originalResultPrincipalURI &&
+      (!aLoadState->KeepResultPrincipalURIIfSet() || !rpURI)) {
+    // Unconditionally override, we want the replay to be equal to what has
+    // been captured.
+    loadInfo->SetResultPrincipalURI(originalResultPrincipalURI.ref());
+  }
+
+  if (aLoadState->OriginalURI() && aLoadState->LoadReplace()) {
+    // The LOAD_REPLACE flag and its handling here will be removed as part
+    // of bug 1319110.  For now preserve its restoration here to not break
+    // any code expecting it being set specially on redirected channels.
+    // If the flag has originally been set to change result of
+    // NS_GetFinalChannelURI it won't have any effect and also won't cause
+    // any harm.
+    uint32_t loadFlags;
+    rv = channel->GetLoadFlags(&loadFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    channel->SetLoadFlags(loadFlags | nsIChannel::LOAD_REPLACE);
+  }
+
+  nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
+  if (csp) {
+    // Navigational requests that are same origin need to be upgraded in case
+    // upgrade-insecure-requests is present.
+    bool upgradeInsecureRequests = false;
+    csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
+    if (upgradeInsecureRequests) {
+      // only upgrade if the navigation is same origin
+      nsCOMPtr<nsIPrincipal> resultPrincipal;
+      rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+          channel, getter_AddRefs(resultPrincipal));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
+                                       resultPrincipal)) {
+        static_cast<LoadInfo*>(loadInfo.get())->SetUpgradeInsecureRequests();
+      }
+    }
+
+    // For document loads we store the CSP that potentially needs to
+    // be inherited by the new document, e.g. in case we are loading
+    // an opaque origin like a data: URI. The actual inheritance
+    // check happens within Document::InitCSP().
+    // Please create an actual copy of the CSP (do not share the same
+    // reference) otherwise a Meta CSP of an opaque origin will
+    // incorrectly be propagated to the embedding document.
+    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
+    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
+    static_cast<LoadInfo*>(loadInfo.get())->SetCSPToInherit(cspToInherit);
+
+    // Check CSP navigate-to
+    bool allowsNavigateTo = false;
+    rv = csp->GetAllowsNavigateTo(aLoadState->URI(), loadInfo,
+                                  false, /* aWasRedirected */
+                                  false, /* aEnforceWhitelist */
+                                  &allowsNavigateTo);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!allowsNavigateTo) {
+      return NS_ERROR_CSP_NAVIGATE_TO_VIOLATION;
+    }
+  }
 
   const nsACString& typeHint = aLoadState->TypeHint();
   if (!typeHint.IsVoid()) {
