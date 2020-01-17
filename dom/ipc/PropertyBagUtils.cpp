@@ -109,7 +109,7 @@ void IPDLParamTraits<nsIVariant*>::Write(Message* aMsg, IProtocol* aActor,
       free(iid);
       nsCOMPtr<nsIURI> uri = do_QueryInterface(value);
       if (value && !uri) {
-        NS_WARNING("we only accept nsIURI interface type, patch welcome");
+        // We only accept nsIURI interface type, patch welcome.
         variant.type() = nsIDataType::VTYPE_EMPTY;
       }
       variant.data() = uri;
