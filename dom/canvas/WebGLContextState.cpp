@@ -80,13 +80,17 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
 
     } else if (pname >= LOCAL_GL_DRAW_BUFFER0 &&
                pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + MaxValidDrawBuffers())) {
-      GLint ret = LOCAL_GL_NONE;
+      const auto slotId = pname - LOCAL_GL_DRAW_BUFFER0;
+      GLenum ret = LOCAL_GL_NONE;
       if (!mBoundDrawFramebuffer) {
-        if (pname == LOCAL_GL_DRAW_BUFFER0) {
+        if (slotId == 0) {
           ret = mDefaultFB_DrawBuffer0;
         }
       } else {
-        gl->fGetIntegerv(pname, &ret);
+        const auto& fb = *mBoundDrawFramebuffer;
+        if (fb.IsDrawBufferEnabled(slotId)) {
+          ret = LOCAL_GL_COLOR_ATTACHMENT0 + slotId;
+        }
       }
       return Some(ret);
     }
