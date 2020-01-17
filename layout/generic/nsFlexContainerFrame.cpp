@@ -838,10 +838,15 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
     mMargin.Side(aSide, mCBWM) = aLength;
   }
 
-  void ResolveStretchedCrossSize(nscoord aLineCrossSize,
-                                 const FlexboxAxisTracker& aAxisTracker);
+  void ResolveStretchedCrossSize(nscoord aLineCrossSize);
 
-  uint32_t GetNumAutoMarginsInAxis(AxisOrientationType aAxis) const;
+  uint32_t GetNumAutoMarginsInMainAxis() const {
+    return GetNumAutoMarginsInAxis(MainAxis());
+  };
+
+  uint32_t GetNumAutoMarginsInCrossAxis() const {
+    return GetNumAutoMarginsInAxis(CrossAxis());
+  };
 
   // Once the main size has been resolved, should we bother doing layout to
   // establish the cross size?
@@ -856,6 +861,8 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   // Helper called by the constructor, to set mNeedsMinSizeAutoResolution:
   void CheckForMinSizeAuto(const ReflowInput& aFlexItemReflowInput,
                            const FlexboxAxisTracker& aAxisTracker);
+
+  uint32_t GetNumAutoMarginsInAxis(LogicalAxis aAxis) const;
 
   // Values that we already know in constructor (and are hence mostly 'const'):
   // The flex item's frame.
@@ -1642,7 +1649,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
         containerCrossSize != NS_UNCONSTRAINEDSIZE) {
       // Container's cross size is "definite", so we can resolve the item's
       // stretched cross size using that.
-      aFlexItem.ResolveStretchedCrossSize(containerCrossSize, aAxisTracker);
+      aFlexItem.ResolveStretchedCrossSize(containerCrossSize);
     }
   }
 
@@ -2141,12 +2148,12 @@ bool FlexItem::IsCrossSizeAuto() const {
                                  : stylePos->BSize(mWM).IsAuto();
 }
 
-uint32_t FlexItem::GetNumAutoMarginsInAxis(AxisOrientationType aAxis) const {
+uint32_t FlexItem::GetNumAutoMarginsInAxis(LogicalAxis aAxis) const {
   uint32_t numAutoMargins = 0;
   const auto& styleMargin = mFrame->StyleMargin()->mMargin;
-  for (uint32_t i = 0; i < eNumAxisEdges; i++) {
-    mozilla::Side side = kAxisOrientationToSidesMap[aAxis][i];
-    if (styleMargin.Get(side).IsAuto()) {
+  for (const auto edge : {eLogicalEdgeStart, eLogicalEdgeEnd}) {
+    const auto side = MakeLogicalSide(aAxis, edge);
+    if (styleMargin.Get(mCBWM, side).IsAuto()) {
       numAutoMargins++;
     }
   }
@@ -2997,7 +3004,7 @@ MainAxisPositionTracker::MainAxisPositionTracker(
   for (const FlexItem* item = aLine->GetFirstItem(); item;
        item = item->getNext()) {
     mPackingSpaceRemaining -= item->GetOuterMainSize();
-    mNumAutoMarginsInMainAxis += item->GetNumAutoMarginsInAxis(mPhysicalAxis);
+    mNumAutoMarginsInMainAxis += item->GetNumAutoMarginsInMainAxis();
   }
 
   // Subtract space required for row/col gap from the remaining packing space
@@ -3358,8 +3365,7 @@ void FlexLine::ComputeCrossSizeAndBaseline(
 
     if ((item->GetAlignSelf() == NS_STYLE_ALIGN_BASELINE ||
          item->GetAlignSelf() == NS_STYLE_ALIGN_LAST_BASELINE) &&
-        item->GetNumAutoMarginsInAxis(aAxisTracker.GetPhysicalCrossAxis()) ==
-            0) {
+        item->GetNumAutoMarginsInCrossAxis() == 0) {
       const bool useFirst = (item->GetAlignSelf() == NS_STYLE_ALIGN_BASELINE);
       // FIXME: Once we support "writing-mode", we'll have to do baseline
       // alignment in vertical flex containers here (w/ horizontal cross-axes).
@@ -3441,14 +3447,12 @@ void FlexLine::ComputeCrossSizeAndBaseline(
       largestOuterCrossSize);
 }
 
-void FlexItem::ResolveStretchedCrossSize(
-    nscoord aLineCrossSize, const FlexboxAxisTracker& aAxisTracker) {
-  AxisOrientationType crossAxis = aAxisTracker.GetPhysicalCrossAxis();
+void FlexItem::ResolveStretchedCrossSize(nscoord aLineCrossSize) {
   // We stretch IFF we are align-self:stretch, have no auto margins in
   // cross axis, and have cross-axis size property == "auto". If any of those
   // conditions don't hold up, we won't stretch.
   if (mAlignSelf != NS_STYLE_ALIGN_STRETCH ||
-      GetNumAutoMarginsInAxis(crossAxis) != 0 || !IsCrossSizeAuto()) {
+      GetNumAutoMarginsInCrossAxis() != 0 || !IsCrossSizeAuto()) {
     return;
   }
 
@@ -3498,7 +3502,7 @@ void SingleLineCrossAxisPositionTracker::ResolveAutoMarginsInCrossAxis(
     return;  // No available space  --> nothing to do
   }
 
-  uint32_t numAutoMargins = aItem.GetNumAutoMarginsInAxis(mPhysicalAxis);
+  uint32_t numAutoMargins = aItem.GetNumAutoMarginsInCrossAxis();
   if (numAutoMargins == 0) {
     return;  // No auto margins --> nothing to do.
   }
@@ -3527,7 +3531,7 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
     const FlexboxAxisTracker& aAxisTracker) {
   // We don't do align-self alignment on items that have auto margins
   // in the cross axis.
-  if (aItem.GetNumAutoMarginsInAxis(mPhysicalAxis)) {
+  if (aItem.GetNumAutoMarginsInCrossAxis()) {
     return;
   }
 
@@ -4292,7 +4296,7 @@ void FlexLine::PositionItemsInCrossAxis(
   for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
     // First, stretch the item's cross size (if appropriate), and resolve any
     // auto margins in this axis.
-    item->ResolveStretchedCrossSize(mLineCrossSize, aAxisTracker);
+    item->ResolveStretchedCrossSize(mLineCrossSize);
     lineCrossAxisPosnTracker.ResolveAutoMarginsInCrossAxis(*this, *item);
 
     // Compute the cross-axis position of this item
