@@ -82,7 +82,7 @@ class FennecBookmarkShortcutsIntentProcessorTest {
             assertThat(fennecShortcutsIntent.getSessionId()).isEqualTo(expectedSession.id)
         }
         verifyAll {
-            sessionManager.add(expectedSession)
+            sessionManager.add(expectedSession, true)
             loadUrlUseCase(testUrl, expectedSession, EngineSession.LoadUrlFlags.external())
         }
     }
