@@ -102,7 +102,7 @@ function closeGlobalTab() {
   if (win.gBrowser.browsers.length == 1) {
     win.BrowserOpenTab();
   }
-  win.gBrowser.removeTab(gTab);
+  win.gBrowser.removeTab(gTab, { animate: true });
   gTab = null;
 }
 
