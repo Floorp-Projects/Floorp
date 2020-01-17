@@ -31,6 +31,7 @@ linux1804-64/opt:
         - desktop-screenshot-capture
         - linux1804-tests
         - mochitest-headless
+        - mochitest-valgrind
         - web-platform-tests-1804
 
 linux1804-64/debug:
@@ -47,6 +48,7 @@ linux1804-64-shippable/opt:
         - linux1804-tests
         - marionette-headless
         - mochitest-headless
+        - mochitest-valgrind
         - web-platform-tests-1804
         - web-platform-tests-wdspec-headless
 
@@ -55,6 +57,7 @@ linux1804-64-devedition/opt:
     test-sets:
         - desktop-screenshot-capture
         - linux1804-tests
+        - mochitest-valgrind
         - web-platform-tests-1804
 
 linux1804-64-asan/opt:
@@ -107,7 +110,6 @@ linux64/opt:
     test-sets:
         - linux-common-tests
         - web-platform-tests-1604
-        - opt-only-tests
         - talos
         - linux-talos-flex
         - raptor-firefox
@@ -119,7 +121,6 @@ linux64-shippable/opt:
     test-sets:
         - linux-common-tests
         - web-platform-tests-1604
-        - opt-only-tests
         - talos
         - linux-talos-flex
         - raptor-chrome
@@ -137,7 +138,6 @@ linux64-devedition/opt:
     test-sets:
         - linux-common-tests
         - web-platform-tests-1604
-        - opt-only-tests
 
 # TODO: use 'asan' label here, instead of -asan/opt
 linux64-asan/opt:
