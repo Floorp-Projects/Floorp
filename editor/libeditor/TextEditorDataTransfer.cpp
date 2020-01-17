@@ -210,8 +210,10 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
 
   // We have to figure out whether to delete and relocate caret only once
   // Parent and offset are under the mouse cursor.
-  EditorDOMPoint droppedAt(aDropEvent->GetRangeParent(),
-                           aDropEvent->RangeOffset());
+  int32_t dropOffset = -1;
+  nsCOMPtr<nsIContent> dropParentContent =
+      aDropEvent->GetRangeParentContentAndOffset(&dropOffset);
+  EditorDOMPoint droppedAt(dropParentContent, dropOffset);
   if (NS_WARN_IF(!droppedAt.IsSet()) ||
       NS_WARN_IF(!droppedAt.GetContainerAsContent())) {
     return NS_ERROR_FAILURE;

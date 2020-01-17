@@ -414,8 +414,8 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // the rangeOffset of the event supplied to ShowPopup or ShowPopupAtScreen.
   // This is used by the implementation of Document::GetPopupRangeParent
   // and Document::GetPopupRangeOffset.
-  nsINode* GetMouseLocationParent();
-  int32_t MouseLocationOffset();
+  nsIContent* GetMouseLocationParent() const { return mRangeParentContent; }
+  int32_t MouseLocationOffset() const { return mRangeOffset; }
 
   /**
    * Open a <menu> given its content node. If aSelectFirstItem is
@@ -795,7 +795,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   nsCOMPtr<nsIWidget> mWidget;
 
   // range parent and offset set in SetTriggerEvent
-  nsCOMPtr<nsINode> mRangeParent;
+  nsCOMPtr<nsIContent> mRangeParentContent;
   int32_t mRangeOffset;
   // Device pixels relative to the showing popup's presshell's
   // root prescontext's root frame.
