@@ -2238,18 +2238,14 @@ class MOZ_STACK_CLASS PositionTracker {
 
   // Advances our position across the start edge of the given margin, in the
   // axis we're tracking.
-  void EnterMargin(const nsMargin& aMargin) {
-    mozilla::Side side =
-        kAxisOrientationToSidesMap[mPhysicalAxis][eAxisEdge_Start];
-    mPosition += aMargin.Side(side);
+  void EnterMargin(const LogicalMargin& aMargin) {
+    mPosition += aMargin.Side(StartSide(), mWM);
   }
 
   // Advances our position across the end edge of the given margin, in the axis
   // we're tracking.
-  void ExitMargin(const nsMargin& aMargin) {
-    mozilla::Side side =
-        kAxisOrientationToSidesMap[mPhysicalAxis][eAxisEdge_End];
-    mPosition += aMargin.Side(side);
+  void ExitMargin(const LogicalMargin& aMargin) {
+    mPosition += aMargin.Side(EndSide(), mWM);
   }
 
   // Advances our current position from the start side of a child frame's
@@ -2366,8 +2362,8 @@ class MOZ_STACK_CLASS CrossAxisPositionTracker : public PositionTracker {
   // = delete, to be sure (at compile time) that no client code can invoke
   // them. (Unlike the other PositionTracker derived classes, this class here
   // deals with FlexLines, not with individual FlexItems or frames.)
-  void EnterMargin(const nsMargin& aMargin) = delete;
-  void ExitMargin(const nsMargin& aMargin) = delete;
+  void EnterMargin(const LogicalMargin& aMargin) = delete;
+  void ExitMargin(const LogicalMargin& aMargin) = delete;
   void EnterChildFrame(nscoord aChildFrameSize) = delete;
   void ExitChildFrame(nscoord aChildFrameSize) = delete;
 
@@ -4204,13 +4200,13 @@ void FlexLine::PositionItemsInMainAxis(uint8_t aJustifyContent,
 
     // Advance our position tracker to child's upper-left content-box corner,
     // and use that as its position in the main axis.
-    mainAxisPosnTracker.EnterMargin(item->GetPhysicalMargin());
+    mainAxisPosnTracker.EnterMargin(item->GetMargin());
     mainAxisPosnTracker.EnterChildFrame(itemMainBorderBoxSize);
 
     item->SetMainPosition(mainAxisPosnTracker.GetPosition());
 
     mainAxisPosnTracker.ExitChildFrame(itemMainBorderBoxSize);
-    mainAxisPosnTracker.ExitMargin(item->GetPhysicalMargin());
+    mainAxisPosnTracker.ExitMargin(item->GetMargin());
     mainAxisPosnTracker.TraversePackingSpace();
     if (item->getNext()) {
       mainAxisPosnTracker.TraverseGap(mMainGapSize);
@@ -4303,7 +4299,7 @@ void FlexLine::PositionItemsInCrossAxis(
     nscoord itemCrossBorderBoxSize =
         item->GetCrossSize() + item->GetBorderPaddingSizeInCrossAxis();
     lineCrossAxisPosnTracker.EnterAlignPackingSpace(*this, *item, aAxisTracker);
-    lineCrossAxisPosnTracker.EnterMargin(item->GetPhysicalMargin());
+    lineCrossAxisPosnTracker.EnterMargin(item->GetMargin());
     lineCrossAxisPosnTracker.EnterChildFrame(itemCrossBorderBoxSize);
 
     item->SetCrossPosition(aLineStartPosition +
