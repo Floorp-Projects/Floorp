@@ -273,7 +273,7 @@ void WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 void WebRenderLayerManager::EndTransactionWithoutLayer(
     nsDisplayList* aDisplayList, nsDisplayListBuilder* aDisplayListBuilder,
     WrFiltersHolder&& aFilters, WebRenderBackgroundData* aBackground) {
-  AUTO_PROFILER_TRACING("Paint", "RenderLayers", GRAPHICS);
+  AUTO_PROFILER_TRACING_MARKER("Paint", "RenderLayers", GRAPHICS);
 
   // Since we don't do repeat transactions right now, just set the time
   mAnimationReadyTime = TimeStamp::Now();
@@ -407,7 +407,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   GetCompositorBridgeChild()->EndCanvasTransaction();
 
   {
-    AUTO_PROFILER_TRACING("Paint", "ForwardDPTransaction", GRAPHICS);
+    AUTO_PROFILER_TRACING_MARKER("Paint", "ForwardDPTransaction", GRAPHICS);
     nsTArray<RenderRootDisplayListData> renderRootDLs;
     for (auto renderRoot : wr::kRenderRoots) {
       if (builder.GetSendSubBuilderDisplayList(renderRoot)) {

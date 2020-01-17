@@ -946,7 +946,7 @@ void CompositorBridgeParent::SetShadowProperties(Layer* aLayer) {
 
 void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
                                                const gfx::IntRect* aRect) {
-  AUTO_PROFILER_TRACING("Paint", "Composite", GRAPHICS);
+  AUTO_PROFILER_TRACING_MARKER("Paint", "Composite", GRAPHICS);
   AUTO_PROFILER_LABEL("CompositorBridgeParent::CompositeToTarget", GRAPHICS);
   PerfStats::AutoMetricRecording<PerfStats::Metric::Compositing> autoRecording;
 

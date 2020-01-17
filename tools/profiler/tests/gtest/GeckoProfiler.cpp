@@ -589,17 +589,17 @@ TEST(GeckoProfiler, Markers)
   profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
-  profiler_tracing("A", "tracing event", JS::ProfilingCategoryPair::OTHER,
-                   TRACING_EVENT);
-  PROFILER_TRACING("A", "tracing start", OTHER, TRACING_INTERVAL_START);
-  PROFILER_TRACING("A", "tracing end", OTHER, TRACING_INTERVAL_END);
+  profiler_tracing_marker("A", "tracing event",
+                          JS::ProfilingCategoryPair::OTHER, TRACING_EVENT);
+  PROFILER_TRACING_MARKER("A", "tracing start", OTHER, TRACING_INTERVAL_START);
+  PROFILER_TRACING_MARKER("A", "tracing end", OTHER, TRACING_INTERVAL_END);
 
   UniqueProfilerBacktrace bt = profiler_get_backtrace();
-  profiler_tracing("B", "tracing event with stack",
-                   JS::ProfilingCategoryPair::OTHER, TRACING_EVENT,
-                   std::move(bt));
+  profiler_tracing_marker("B", "tracing event with stack",
+                          JS::ProfilingCategoryPair::OTHER, TRACING_EVENT,
+                          std::move(bt));
 
-  { AUTO_PROFILER_TRACING("C", "auto tracing", OTHER); }
+  { AUTO_PROFILER_TRACING_MARKER("C", "auto tracing", OTHER); }
 
   PROFILER_ADD_MARKER("M1", OTHER);
   PROFILER_ADD_MARKER_WITH_PAYLOAD("M2", OTHER, TracingMarkerPayload,

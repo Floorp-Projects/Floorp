@@ -68,8 +68,10 @@
 #  define BASE_PROFILER_ADD_MARKER_WITH_PAYLOAD( \
       markerName, categoryPair, PayloadType, parenthesizedPayloadArgs)
 
-#  define BASE_PROFILER_TRACING(categoryString, markerName, categoryPair, kind)
-#  define AUTO_BASE_PROFILER_TRACING(categoryString, markerName, categoryPair)
+#  define BASE_PROFILER_TRACING_MARKER(categoryString, markerName, \
+                                       categoryPair, kind)
+#  define AUTO_BASE_PROFILER_TRACING_MARKER(categoryString, markerName, \
+                                            categoryPair)
 #  define AUTO_BASE_PROFILER_TEXT_MARKER_CAUSE(markerName, text, categoryPair, \
                                                cause)
 
@@ -749,27 +751,28 @@ enum TracingKind {
 // Adds a tracing marker to the profile. A no-op if the profiler is inactive or
 // in privacy mode.
 
-#  define BASE_PROFILER_TRACING(categoryString, markerName, categoryPair, \
-                                kind)                                     \
-    ::mozilla::baseprofiler::profiler_tracing(                            \
-        categoryString, markerName,                                       \
+#  define BASE_PROFILER_TRACING_MARKER(categoryString, markerName, \
+                                       categoryPair, kind)         \
+    ::mozilla::baseprofiler::profiler_tracing_marker(              \
+        categoryString, markerName,                                \
         ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair, kind)
 
-MFBT_API void profiler_tracing(
+MFBT_API void profiler_tracing_marker(
     const char* aCategoryString, const char* aMarkerName,
     ProfilingCategoryPair aCategoryPair, TracingKind aKind,
     const Maybe<uint64_t>& aInnerWindowID = Nothing());
-MFBT_API void profiler_tracing(
+MFBT_API void profiler_tracing_marker(
     const char* aCategoryString, const char* aMarkerName,
     ProfilingCategoryPair aCategoryPair, TracingKind aKind,
     UniqueProfilerBacktrace aCause,
     const Maybe<uint64_t>& aInnerWindowID = Nothing());
 
 // Adds a START/END pair of tracing markers.
-#  define AUTO_BASE_PROFILER_TRACING(categoryString, markerName, categoryPair) \
-    ::mozilla::baseprofiler::AutoProfilerTracing BASE_PROFILER_RAII(           \
-        categoryString, markerName,                                            \
-        ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair,          \
+#  define AUTO_BASE_PROFILER_TRACING_MARKER(categoryString, markerName, \
+                                            categoryPair)               \
+    ::mozilla::baseprofiler::AutoProfilerTracing BASE_PROFILER_RAII(    \
+        categoryString, markerName,                                     \
+        ::mozilla::baseprofiler::ProfilingCategoryPair::categoryPair,   \
         Nothing())
 
 // Add a text marker. Text markers are similar to tracing markers, with the
@@ -984,8 +987,8 @@ class MOZ_RAII AutoProfilerTracing {
         mCategoryPair(aCategoryPair),
         mInnerWindowID(aInnerWindowID) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_tracing(mCategoryString, mMarkerName, aCategoryPair,
-                     TRACING_INTERVAL_START, mInnerWindowID);
+    profiler_tracing_marker(mCategoryString, mMarkerName, aCategoryPair,
+                            TRACING_INTERVAL_START, mInnerWindowID);
   }
 
   AutoProfilerTracing(
@@ -997,14 +1000,14 @@ class MOZ_RAII AutoProfilerTracing {
         mCategoryPair(aCategoryPair),
         mInnerWindowID(aInnerWindowID) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_tracing(mCategoryString, mMarkerName, aCategoryPair,
-                     TRACING_INTERVAL_START, std::move(aBacktrace),
-                     mInnerWindowID);
+    profiler_tracing_marker(mCategoryString, mMarkerName, aCategoryPair,
+                            TRACING_INTERVAL_START, std::move(aBacktrace),
+                            mInnerWindowID);
   }
 
   ~AutoProfilerTracing() {
-    profiler_tracing(mCategoryString, mMarkerName, mCategoryPair,
-                     TRACING_INTERVAL_END, mInnerWindowID);
+    profiler_tracing_marker(mCategoryString, mMarkerName, mCategoryPair,
+                            TRACING_INTERVAL_END, mInnerWindowID);
   }
 
  protected:

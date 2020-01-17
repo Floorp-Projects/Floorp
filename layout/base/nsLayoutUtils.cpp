@@ -3914,7 +3914,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 
   {
     AUTO_PROFILER_LABEL_CATEGORY_PAIR(GRAPHICS_DisplayListBuilding);
-    AUTO_PROFILER_TRACING("Paint", "DisplayList", GRAPHICS);
+    AUTO_PROFILER_TRACING_MARKER("Paint", "DisplayList", GRAPHICS);
     PerfStats::AutoMetricRecording<PerfStats::Metric::DisplayListBuilding>
         autoRecording;
 
@@ -4208,7 +4208,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   builder->Check();
 
   {
-    AUTO_PROFILER_TRACING("Paint", "DisplayListResources", GRAPHICS);
+    AUTO_PROFILER_TRACING_MARKER("Paint", "DisplayListResources", GRAPHICS);
 
     builder->EndFrame();
 

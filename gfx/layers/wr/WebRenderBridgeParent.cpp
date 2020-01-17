@@ -58,15 +58,17 @@ bool is_in_render_thread() {
 
 void gecko_profiler_start_marker(const char* name) {
 #ifdef MOZ_GECKO_PROFILER
-  profiler_tracing("WebRender", name, JS::ProfilingCategoryPair::GRAPHICS,
-                   TRACING_INTERVAL_START);
+  profiler_tracing_marker("WebRender", name,
+                          JS::ProfilingCategoryPair::GRAPHICS,
+                          TRACING_INTERVAL_START);
 #endif
 }
 
 void gecko_profiler_end_marker(const char* name) {
 #ifdef MOZ_GECKO_PROFILER
-  profiler_tracing("WebRender", name, JS::ProfilingCategoryPair::GRAPHICS,
-                   TRACING_INTERVAL_END);
+  profiler_tracing_marker("WebRender", name,
+                          JS::ProfilingCategoryPair::GRAPHICS,
+                          TRACING_INTERVAL_END);
 #endif
 }
 
@@ -1284,7 +1286,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aTxnURL);
   }
 
-  AUTO_PROFILER_TRACING("Paint", "SetDisplayList", GRAPHICS);
+  AUTO_PROFILER_TRACING_MARKER("Paint", "SetDisplayList", GRAPHICS);
   UpdateFwdTransactionId(aFwdTransactionId);
 
   // This ensures that destroy operations are always processed. It is not safe
@@ -1490,7 +1492,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aTxnURL);
   }
 
-  AUTO_PROFILER_TRACING("Paint", "EmptyTransaction", GRAPHICS);
+  AUTO_PROFILER_TRACING_MARKER("Paint", "EmptyTransaction", GRAPHICS);
   UpdateFwdTransactionId(aFwdTransactionId);
 
   // This ensures that destroy operations are always processed. It is not safe
@@ -2289,7 +2291,7 @@ void WebRenderBridgeParent::CompositeToTarget(VsyncId aId,
   MOZ_ASSERT(aTarget == nullptr);
   MOZ_ASSERT(aRect == nullptr);
 
-  AUTO_PROFILER_TRACING("Paint", "CompositeToTarget", GRAPHICS);
+  AUTO_PROFILER_TRACING_MARKER("Paint", "CompositeToTarget", GRAPHICS);
   if (mPaused || !mReceivedDisplayList) {
     mPreviousFrameTimeStamp = TimeStamp();
     return;

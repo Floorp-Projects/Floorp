@@ -3366,9 +3366,11 @@ void profiler_add_marker_for_thread(int aThreadId,
       static_cast<uint32_t>(aCategoryPair), aPayload, delta.ToMilliseconds());
 }
 
-void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
-                      ProfilingCategoryPair aCategoryPair, TracingKind aKind,
-                      const Maybe<uint64_t>& aInnerWindowID) {
+void profiler_tracing_marker(const char* aCategoryString,
+                             const char* aMarkerName,
+                             ProfilingCategoryPair aCategoryPair,
+                             TracingKind aKind,
+                             const Maybe<uint64_t>& aInnerWindowID) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   VTUNE_TRACING(aMarkerName, aKind);
@@ -3384,10 +3386,11 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
       TracingMarkerPayload(aCategoryString, aKind, aInnerWindowID));
 }
 
-void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
-                      ProfilingCategoryPair aCategoryPair, TracingKind aKind,
-                      UniqueProfilerBacktrace aCause,
-                      const Maybe<uint64_t>& aInnerWindowID) {
+void profiler_tracing_marker(const char* aCategoryString,
+                             const char* aMarkerName,
+                             ProfilingCategoryPair aCategoryPair,
+                             TracingKind aKind, UniqueProfilerBacktrace aCause,
+                             const Maybe<uint64_t>& aInnerWindowID) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   VTUNE_TRACING(aMarkerName, aKind);
