@@ -254,8 +254,8 @@ class TestProvider extends UrlbarProvider {
   isActive(context) {
     return true;
   }
-  isRestricting(context) {
-    return this._isRestricting;
+  getPriority(context) {
+    return this._isRestricting ? 1 : 0;
   }
   async startQuery(context, addCallback) {
     Assert.ok(true, "Tip provider was invoked");

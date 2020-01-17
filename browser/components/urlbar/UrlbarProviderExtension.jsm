@@ -108,17 +108,18 @@ class UrlbarProviderExtension extends UrlbarProvider {
   }
 
   /**
-   * Whether this provider wants to restrict results to just itself.  Other
-   * providers won't be invoked, unless this provider doesn't support the
-   * current query.
+   * Gets the provider's priority.
    *
    * @param {UrlbarQueryContext} context
    *   The query context object.
-   * @returns {boolean}
-   *   Whether this provider wants to restrict results.
+   * @returns {number}
+   *   The provider's priority for the given query.
    */
-  isRestricting(context) {
-    return this.behavior == "restricting";
+  getPriority(context) {
+    // We give restricting extension providers a very high priority so that they
+    // normally override all built-in providers, but not Infinity so that we can
+    // still override them if necessary.
+    return this.behavior == "restricting" ? 999 : 0;
   }
 
   /**

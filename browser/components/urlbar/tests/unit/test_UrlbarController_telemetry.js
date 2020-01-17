@@ -38,9 +38,6 @@ class DelayedProvider extends UrlbarProvider {
   isActive(context) {
     return true;
   }
-  isRestricting(context) {
-    return false;
-  }
   async startQuery(context, add) {
     Assert.ok(context, "context is passed-in");
     Assert.equal(typeof add, "function", "add is a callback");
