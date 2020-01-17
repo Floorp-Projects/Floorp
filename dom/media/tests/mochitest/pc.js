@@ -151,12 +151,6 @@ PeerConnectionTest.prototype.closePC = function() {
     }
 
     var promise = Promise.all([
-      new Promise(resolve => {
-        pc.onsignalingstatechange = e => {
-          is(e.target.signalingState, "closed", "signalingState is closed");
-          resolve();
-        };
-      }),
       Promise.all(
         pc._pc
           .getReceivers()
