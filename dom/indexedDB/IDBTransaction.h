@@ -113,10 +113,11 @@ class IDBTransaction final
                      ///< incomplete).
   FlippedOnce<false> mAbortedByScript;
   bool mNotedActiveTransaction;
+  FlippedOnce<false> mSentCommitOrAbort;
 
 #ifdef DEBUG
-  FlippedOnce<false> mSentCommitOrAbort;
   FlippedOnce<false> mFiredCompleteOrAbort;
+  FlippedOnce<false> mWasExplicitlyCommitted;
 #endif
 
  public:
@@ -202,6 +203,10 @@ class IDBTransaction final
     AssertIsOnOwningThread();
     return NS_FAILED(mAbortCode);
   }
+
+#ifdef DEBUG
+  bool WasExplicitlyCommitted() const { return mWasExplicitlyCommitted; }
+#endif
 
   template <ReadyState OriginalState, ReadyState TemporaryState>
   class AutoRestoreState {
@@ -357,7 +362,7 @@ class IDBTransaction final
 
   void AbortInternal(nsresult aAbortCode, RefPtr<DOMException> aError);
 
-  void SendCommit();
+  void SendCommit(bool aAutoCommit);
 
   void SendAbort(nsresult aResultCode);
 

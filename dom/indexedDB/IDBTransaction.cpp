@@ -340,30 +340,31 @@ void IDBTransaction::OnNewRequest() {
 void IDBTransaction::OnRequestFinished(
     const bool aRequestCompletedSuccessfully) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mReadyState == ReadyState::Inactive ||
-             mReadyState == ReadyState::Finished);
+  MOZ_ASSERT(mReadyState != ReadyState::Active);
   MOZ_ASSERT_IF(mReadyState == ReadyState::Finished, !NS_SUCCEEDED(mAbortCode));
   MOZ_ASSERT(mPendingRequestCount);
 
   --mPendingRequestCount;
 
   if (!mPendingRequestCount) {
+    if (mSentCommitOrAbort) {
+      return;
+    }
+
     if (mReadyState == ReadyState::Inactive) {
       mReadyState = ReadyState::Committing;
     }
 
     if (aRequestCompletedSuccessfully) {
       if (NS_SUCCEEDED(mAbortCode)) {
-        SendCommit();
+        SendCommit(true);
       } else {
         SendAbort(mAbortCode);
       }
     } else {
       // Don't try to send any more messages to the parent if the request actor
       // was killed.
-#ifdef DEBUG
       mSentCommitOrAbort.Flip();
-#endif
       IDB_LOG_MARK_CHILD_TRANSACTION(
           "Request actor was killed, transaction will be aborted",
           "IDBTransaction abort", LoggingSerialNumber());
@@ -371,25 +372,23 @@ void IDBTransaction::OnRequestFinished(
   }
 }
 
-void IDBTransaction::SendCommit() {
+void IDBTransaction::SendCommit(const bool aAutoCommit) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(NS_SUCCEEDED(mAbortCode));
   MOZ_ASSERT(IsCommittingOrFinished());
-  MOZ_ASSERT(!mPendingRequestCount);
 
   // Don't do this in the macro because we always need to increment the serial
   // number to keep in sync with the parent.
   const uint64_t requestSerialNumber = IDBRequest::NextSerialNumber();
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-      "All requests complete, committing transaction", "IDBTransaction commit",
-      LoggingSerialNumber(), requestSerialNumber);
+      "Committing transaction (%s)", "IDBTransaction commit (%s)",
+      LoggingSerialNumber(), requestSerialNumber,
+      aAutoCommit ? "automatically" : "explicitly");
 
   DoWithTransactionChild([](auto& actor) { actor.SendCommit(); });
 
-#ifdef DEBUG
   mSentCommitOrAbort.Flip();
-#endif
 }
 
 void IDBTransaction::SendAbort(const nsresult aResultCode) {
@@ -408,9 +407,7 @@ void IDBTransaction::SendAbort(const nsresult aResultCode) {
   DoWithTransactionChild(
       [aResultCode](auto& actor) { actor.SendAbort(aResultCode); });
 
-#ifdef DEBUG
   mSentCommitOrAbort.Flip();
-#endif
 }
 
 void IDBTransaction::NoteActiveTransaction() {
@@ -704,13 +701,26 @@ void IDBTransaction::Abort(ErrorResult& aRv) {
 void IDBTransaction::Commit(ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  if (IsCommittingOrFinished()) {
-    aRv = NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+  if (mReadyState != ReadyState::Active || !mNotedActiveTransaction) {
+    aRv = NS_ERROR_DOM_INVALID_STATE_ERR;
     return;
   }
 
-  // TODO
-  aRv = NS_ERROR_NOT_IMPLEMENTED;
+  MOZ_ASSERT(!mSentCommitOrAbort);
+
+  MOZ_ASSERT(mReadyState == ReadyState::Active);
+  mReadyState = ReadyState::Committing;
+  if (NS_WARN_IF(NS_FAILED(mAbortCode))) {
+    SendAbort(mAbortCode);
+    aRv = mAbortCode;
+    return;
+  }
+
+#ifdef DEBUG
+  mWasExplicitlyCommitted.Flip();
+#endif
+
+  SendCommit(false);
 }
 
 void IDBTransaction::FireCompleteOrAbortEvents(const nsresult aResult) {
@@ -968,6 +978,10 @@ IDBTransaction::Run() {
     return NS_OK;
   }
 
+  if (ReadyState::Committing == mReadyState) {
+    MOZ_ASSERT(mSentCommitOrAbort);
+    return NS_OK;
+  }
   // We're back at the event loop, no longer newborn, so
   // return to Inactive state:
   // https://w3c.github.io/IndexedDB/#cleanup-indexed-database-transactions.
@@ -989,7 +1003,7 @@ void IDBTransaction::CommitIfNotStarted() {
     MOZ_ASSERT(!mPendingRequestCount);
     mReadyState = ReadyState::Finished;
 
-    SendCommit();
+    SendCommit(true);
   }
 }
 
