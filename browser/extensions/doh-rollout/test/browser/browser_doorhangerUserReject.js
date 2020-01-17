@@ -1,7 +1,5 @@
 "use strict";
 
-add_task(setup);
-
 add_task(async function testDoorhangerUserReject() {
   // Set up a passing environment and enable DoH.
   setPassingHeuristics();
@@ -21,7 +19,6 @@ add_task(async function testDoorhangerUserReject() {
   );
 
   await ensureTRRMode(2);
-  checkHeuristicsTelemetry("enable_doh", "startup");
 
   // Click the doorhanger's "reject" button.
   let button = panel.querySelector(".popup-notification-secondary-button");
@@ -50,21 +47,20 @@ add_task(async function testDoorhangerUserReject() {
   );
 
   await ensureTRRMode(5);
-  checkHeuristicsTelemetry("disable_doh", "doorhangerDecline");
 
   // Simulate a network change.
   simulateNetworkChange();
   await ensureNoTRRModeChange(5);
-  ensureNoHeuristicsTelemetry();
 
   // Restart the add-on for good measure.
   await restartAddon();
   await ensureNoTRRModeChange(5);
-  ensureNoHeuristicsTelemetry();
 
   // Set failing environment and trigger another network change.
   setFailingHeuristics();
   simulateNetworkChange();
   await ensureNoTRRModeChange(5);
-  ensureNoHeuristicsTelemetry();
+
+  // Clean up.
+  await resetPrefsAndRestartAddon();
 });
