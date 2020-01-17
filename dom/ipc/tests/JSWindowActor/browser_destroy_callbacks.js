@@ -13,7 +13,7 @@ declTest("destroy actor by iframe remove", {
       content.document.body.appendChild(frame);
       await ContentTaskUtils.waitForEvent(frame, "load");
       is(content.window.frames.length, 1, "There should be an iframe.");
-      let child = frame.contentWindow.windowGlobalChild;
+      let child = frame.contentWindow.window.getWindowGlobalChild();
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
 
@@ -67,7 +67,7 @@ declTest("destroy actor by page navigates", {
     await SpecialPowers.spawn(browser, [TEST_URL], async function(url) {
       let frame = content.document.querySelector("iframe");
       frame.contentWindow.location = url;
-      let child = frame.contentWindow.windowGlobalChild;
+      let child = frame.contentWindow.window.getWindowGlobalChild();
       let actorChild = child.getActor("Test");
       ok(actorChild, "JSWindowActorChild should have value.");
 
