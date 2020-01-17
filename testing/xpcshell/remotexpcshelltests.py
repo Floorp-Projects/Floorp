@@ -245,6 +245,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         # Add Android version (SDK level) to mozinfo so that manifest entries
         # can be conditional on android_version.
         mozinfo.info['android_version'] = str(self.device.version)
+        mozinfo.info['is_emulator'] = self.device._device_serial.startswith('emulator-')
 
         self.localBin = options['localBin']
         self.pathMapping = []

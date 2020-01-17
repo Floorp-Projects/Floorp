@@ -104,6 +104,7 @@ module.exports = {
     ChromeWorker: false,
     Clipboard: false,
     ClipboardEvent: false,
+    ClonedErrorHolder: false,
     CloseEvent: false,
     CommandEvent: false,
     Comment: false,

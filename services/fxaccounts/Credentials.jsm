@@ -32,14 +32,13 @@ const HKDF_LENGTH = 32;
 // "CONFIG", "DEBUG", "TRACE" or "ALL". We will be logging error messages by
 // default.
 const PREF_LOG_LEVEL = "identity.fxaccounts.loglevel";
+let LOG_LEVEL = Log.Level.Error;
 try {
-  this.LOG_LEVEL =
+  LOG_LEVEL =
     Services.prefs.getPrefType(PREF_LOG_LEVEL) ==
       Ci.nsIPrefBranch.PREF_STRING &&
     Services.prefs.getCharPref(PREF_LOG_LEVEL);
-} catch (e) {
-  this.LOG_LEVEL = Log.Level.Error;
-}
+} catch (e) {}
 
 var log = Log.repository.getLogger("Identity.FxAccounts");
 log.level = LOG_LEVEL;

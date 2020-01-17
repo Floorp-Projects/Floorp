@@ -7,7 +7,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [
+const EXPORTED_SYMBOLS = [
   "getString",
   "assert",
   "log",

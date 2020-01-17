@@ -101,6 +101,14 @@ const ContentBlockingAllowList = {
   },
 
   /**
+   * Remove the given principal from the Content Blocking allow list if present.
+   */
+  removeByPrincipal(principal) {
+    Services.perms.removeFromPrincipal(principal, "trackingprotection");
+    Services.perms.removeFromPrincipal(principal, "trackingprotection-pb");
+  },
+
+  /**
    * Returns true if the current browser has loaded a document that is on the
    * Content Blocking allow list.
    */

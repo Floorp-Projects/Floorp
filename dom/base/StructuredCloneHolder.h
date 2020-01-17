@@ -38,8 +38,8 @@ class StructuredCloneHolderBase {
  public:
   typedef JS::StructuredCloneScope StructuredCloneScope;
 
-  StructuredCloneHolderBase(StructuredCloneScope aScope =
-                                StructuredCloneScope::SameProcessSameThread);
+  StructuredCloneHolderBase(
+      StructuredCloneScope aScope = StructuredCloneScope::SameProcess);
   virtual ~StructuredCloneHolderBase();
 
   // Note, it is unsafe to std::move() a StructuredCloneHolderBase since a raw

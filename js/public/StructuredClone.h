@@ -120,20 +120,6 @@ enum class StructuredCloneScope : uint32_t {
   /**
    * The most restrictive scope, with greatest efficiency and features.
    *
-   * When writing, this means we're writing for an audience in the same
-   * process and same thread. The caller promises that the serialized data
-   * will **not** be shipped off to a different thread/process or stored in a
-   * database. It's OK to produce serialized data that contains pointers.  In
-   * Rust terms, the serialized data will be treated as `!Send`.
-   *
-   * When reading, this means: Accept transferred objects and buffers
-   * (pointers). The caller promises that the serialized data was written
-   * using this API (otherwise, the serialized data may contain bogus
-   * pointers, leading to undefined behavior).
-   */
-  SameProcessSameThread,
-
-  /**
    * When writing, this means: The caller promises that the serialized data
    * will **not** be shipped off to a different process or stored in a
    * database. However, it may be shipped to another thread. It's OK to
@@ -141,10 +127,17 @@ enum class StructuredCloneScope : uint32_t {
    * send across threads, such as array buffers. In Rust terms, the
    * serialized data will be treated as `Send` but not `Copy`.
    *
-   * When reading, this means the same thing as SameProcessSameThread;
-   * the distinction only matters when writing.
+   * When reading, this means: Accept transferred objects and buffers
+   * (pointers). The caller promises that the serialized data was written
+   * using this API (otherwise, the serialized data may contain bogus
+   * pointers, leading to undefined behavior).
+   *
+   * Starts from 1 because there used to be a SameProcessSameThread enum value
+   * of 0 and these values are encoded into the structured serialization format
+   * as part of the SCTAG_HEADER, and IndexedDB persists the representation to
+   * disk.
    */
-  SameProcessDifferentThread,
+  SameProcess = 1,
 
   /**
    * When writing, this means we're writing for an audience in a different
@@ -163,8 +156,8 @@ enum class StructuredCloneScope : uint32_t {
 
   /**
    * Handle a backwards-compatibility case with IndexedDB (bug 1434308): when
-   * reading, this means to treat legacy SameProcessSameThread data as if it
-   * were DifferentProcess.
+   * reading, this means to treat legacy SameProcess data as if it were
+   * DifferentProcess.
    *
    * Do not use this for writing; use DifferentProcess instead.
    */

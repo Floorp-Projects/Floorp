@@ -11,7 +11,7 @@ const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
-this.EXPORTED_SYMBOLS = ["AbstractTreeItem"];
+const EXPORTED_SYMBOLS = ["AbstractTreeItem"];
 
 /**
  * A very generic and low-level tree view implementation. It is not intended
@@ -123,7 +123,6 @@ function AbstractTreeItem({ parent, level }) {
     EventEmitter.decorate(this);
   }
 }
-this.AbstractTreeItem = AbstractTreeItem;
 
 AbstractTreeItem.prototype = {
   _containerNode: null,

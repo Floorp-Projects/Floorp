@@ -16,31 +16,42 @@ var faultyURL = "http://www.some-nonexistent-domain-27489274c892748217cn2384.com
 var w = null;
 var phase = 0;
 var gotWrongPageOnTryAgainClick = false;
+// Token that represents which page we currently have loaded.
+var token = 0;
 
 function delay(msec) {
   return new Promise(resolve => setTimeout(resolve, msec));
 }
 
+async function assignToken(tokenToAssign) {
+  await SpecialPowers.spawn(w, [tokenToAssign],
+                            newToken => { this.content.token = newToken });
+}
+
 async function pollForPage(win) {
-  // Start with polling after a delay, we might mistakenly take the current page
-  // as an expected one.
-  await delay(1000);
-
-  for (let i = 0; i < 200; i++) {
-    await delay(100);
-
+  while (true) {
     try {
-      win.document.title;
-    } catch (ex) {
-      return true;
+      var pageToken = await SpecialPowers.spawn(w, [], 
+                                                () => this.content.token);
+
+      if (pageToken != token) {
+        ++token;
+        assignToken(token);
+        break;
+      }
+    } catch (e) {
+      // Something went wrong; just keep waiting.
     }
+
+    await delay(100);
   }
-  return false;
 }
 
 async function windowLoaded() {
   switch (phase) {
     case 0:
+      assignToken(token);
+
       /* 2. We have succeededfully loaded a page, now go to a faulty URL */
       window.setTimeout(function() {
         w.location.href = faultyURL;
@@ -48,13 +59,16 @@ async function windowLoaded() {
 
       phase = 1;
 
-      ok(await pollForPage(w), "Waiting for error page succeeded");
+      await pollForPage(w);
+      is(await SpecialPowers.spawn(w, [], () => this.content.location.href),
+         faultyURL,
+         "Is on an error page initially");
 
       /* 3. now, while we are on the error page, try to reload it, actually
          click the "Try Again" button */
       SpecialPowers.spawn(w, [], () => this.content.location.reload());
 
-      ok(await pollForPage(w), "Waiting for error page succeeded");
+      await pollForPage(w);
 
       /* 4-finish, check we are still on the error page */
       is(await SpecialPowers.spawn(w, [], () => this.content.location.href),

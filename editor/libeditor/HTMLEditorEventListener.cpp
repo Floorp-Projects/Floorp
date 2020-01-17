@@ -286,10 +286,12 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
     NS_ENSURE_TRUE(selection, NS_OK);
 
     // Get location of mouse within target node
-    nsCOMPtr<nsINode> parent = aMouseEvent->GetRangeParent();
-    NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
-
-    int32_t offset = aMouseEvent->RangeOffset();
+    int32_t offset = -1;
+    nsCOMPtr<nsIContent> parentContent =
+        aMouseEvent->GetRangeParentContentAndOffset(&offset);
+    if (NS_WARN_IF(!parentContent)) {
+      return NS_ERROR_FAILURE;
+    }
 
     // Detect if mouse point is within current selection for context click
     bool nodeIsInSelection = false;
@@ -305,7 +307,7 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
 
         IgnoredErrorResult err;
         nodeIsInSelection =
-            range->IsPointInRange(*parent, offset, err) && !err.Failed();
+            range->IsPointInRange(*parentContent, offset, err) && !err.Failed();
 
         // Done when we find a range that we are in
         if (nodeIsInSelection) {
@@ -318,7 +320,7 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
       if (!element) {
         if (isContextClick) {
           // Set the selection to the point under the mouse cursor:
-          selection->Collapse(parent, offset);
+          selection->Collapse(parentContent, offset);
         } else {
           // Get enclosing link if in text so we can select the link
           Element* linkElement =
@@ -332,7 +334,7 @@ nsresult HTMLEditorEventListener::MouseDown(MouseEvent* aMouseEvent) {
       //   and not the entire body, or table-related elements
       if (element) {
         if (isContextClick && !HTMLEditUtils::IsImage(node)) {
-          selection->Collapse(parent, offset);
+          selection->Collapse(parentContent, offset);
         } else {
           htmlEditor->SelectElement(element);
         }

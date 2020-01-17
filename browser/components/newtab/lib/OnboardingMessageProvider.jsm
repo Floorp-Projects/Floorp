@@ -13,8 +13,10 @@ ChromeUtils.defineModuleGetter(
   "AddonRepository",
   "resource://gre/modules/addons/AddonRepository.jsm"
 );
+const { FX_MONITOR_OAUTH_CLIENT_ID } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const FX_MONITOR_CLIENT_ID = "802d56ef2a9af9fa";
 
 const L10N = new Localization([
   "branding/brand.ftl",
@@ -290,7 +292,7 @@ const ONBOARDING_MESSAGES = () => [
     },
     // Use service oauth client_id to identify 'Firefox Monitor' service attached to Firefox Account
     // https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution
-    targeting: `trailheadTriplet in ['supercharge', 'static'] || ('dynamic' in trailheadTriplet && !("${FX_MONITOR_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))`,
+    targeting: `trailheadTriplet in ['supercharge', 'static'] || ('dynamic' in trailheadTriplet && !("${FX_MONITOR_OAUTH_CLIENT_ID}" in attachedFxAOAuthClients|mapToProperty('id')))`,
     trigger: { id: "showOnboarding" },
   },
   {

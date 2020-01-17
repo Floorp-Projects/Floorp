@@ -12,7 +12,6 @@
 #include "ContentParent.h"
 #include "ProcessUtils.h"
 #include "BrowserParent.h"
-#include "mozilla/dom/MediaControlService.h"
 
 #include "chrome/common/process_watcher.h"
 
@@ -56,6 +55,7 @@
 #include "mozilla/dom/GeolocationBinding.h"
 #include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/LocalStorageCommon.h"
+#include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
@@ -6037,11 +6037,10 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaStateChanged(
   if (!aContext || aContext->IsDiscarded()) {
     return IPC_OK();
   }
-  RefPtr<MediaControlService> service = MediaControlService::GetService();
-  MOZ_ASSERT(!aContext->GetParent(), "Should be top level browsing context!");
-  RefPtr<MediaController> controller =
-      service->GetOrCreateControllerById(aContext->Id());
-  controller->NotifyMediaStateChanged(aState);
+  if (RefPtr<MediaController> controller =
+          aContext->Canonical()->GetMediaController()) {
+    controller->NotifyMediaStateChanged(aState);
+  }
   return IPC_OK();
 }
 
@@ -6050,11 +6049,8 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyMediaAudibleChanged(
   if (!aContext || aContext->IsDiscarded()) {
     return IPC_OK();
   }
-  RefPtr<MediaControlService> service = MediaControlService::GetService();
-  MOZ_ASSERT(!aContext->GetParent(), "Should be top level browsing context!");
-  RefPtr<MediaController> controller =
-      service->GetControllerById(aContext->Id());
-  if (controller) {
+  if (RefPtr<MediaController> controller =
+          aContext->Canonical()->GetMediaController()) {
     controller->NotifyMediaAudibleChanged(aAudible);
   }
   return IPC_OK();

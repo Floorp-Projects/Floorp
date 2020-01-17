@@ -93,6 +93,8 @@ linux1804-64-ccov/opt:
     test-sets:
         - awsy
         - linux1804-ccov-tests
+        - web-platform-tests-1804
+        - ccov-code-coverage-tests
 
 linux64/debug:
     build-platform: linux64/debug
@@ -174,11 +176,9 @@ linux64-qr/debug:
 linux64-ccov/opt:
     build-platform: linux64-ccov/opt
     test-sets:
-        # These test sets will be slowly reduced in size/scope as suites are migrated.
         - common-tests
-        - web-platform-tests
+        - web-platform-tests-1604
         - talos
-        - ccov-code-coverage-tests
 
 ##
 # Windows platforms (matching /windows.*/)
