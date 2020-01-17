@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   setTimeout: "resource://gre/modules/Timer.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -95,6 +96,12 @@ class ProviderSearchTips extends UrlbarProvider {
     this._l10n = new Localization(["browser/browser.ftl"]);
   }
 
+  get PRIORITY() {
+    // Search tips are prioritized over the UnifiedComplete and top sites
+    // providers.
+    return UrlbarProviderTopSites.PRIORITY + 1;
+  }
+
   /**
    * Unique name for the provider, used by the context to filter on providers.
    * Not using a unique name will cause the newest registration to win.
@@ -122,15 +129,12 @@ class ProviderSearchTips extends UrlbarProvider {
   }
 
   /**
-   * Whether this provider wants to restrict results to just itself.
-   * Other providers won't be invoked, unless this provider doesn't
-   * support the current query.
+   * Gets the provider's priority.
    * @param {UrlbarQueryContext} queryContext The query context object
-   * @returns {boolean} Whether this provider wants to restrict results.
-   * @abstract
+   * @returns {number} The provider's priority for the given query.
    */
-  isRestricting(queryContext) {
-    return true;
+  getPriority(queryContext) {
+    return this.PRIORITY;
   }
 
   /**
