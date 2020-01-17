@@ -37,6 +37,7 @@ toolbarbutton[disabled="true"] {
 .toolbarbutton-badge {
   box-sizing: border-box;
   overflow: hidden;
+  white-space: nowrap;
   background-color: #d90000;
   font-size: 9px;
   padding: 1px 2px;
