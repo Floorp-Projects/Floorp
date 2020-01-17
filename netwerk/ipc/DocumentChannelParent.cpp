@@ -55,6 +55,10 @@ bool DocumentChannelParent::Init(BrowserParent* aBrowser,
 RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
 DocumentChannelParent::RedirectToRealChannel(uint32_t aRedirectFlags,
                                              uint32_t aLoadFlags) {
+  if (!CanSend()) {
+    return PDocumentChannelParent::RedirectToRealChannelPromise::
+        CreateAndReject(ResponseRejectReason::ChannelClosed, __func__);
+  }
   RedirectToRealChannelArgs args;
   mParent->SerializeRedirectData(args, false, aRedirectFlags, aLoadFlags);
   return SendRedirectToRealChannel(args);
