@@ -104,7 +104,6 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
       mLineNo(aLineNo),
       mColumn(aColumn),
       mMode(aMode),
-      mCreating(false),
       mRegistered(false),
       mNotedActiveTransaction(false) {
   MOZ_ASSERT(aDatabase);
@@ -133,7 +132,7 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
 IDBTransaction::~IDBTransaction() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mPendingRequestCount);
-  MOZ_ASSERT(!mCreating);
+  MOZ_ASSERT(mReadyState == ReadyState::Finished);
   MOZ_ASSERT(!mNotedActiveTransaction);
   MOZ_ASSERT(mSentCommitOrAbort);
   MOZ_ASSERT_IF(HasTransactionChild(), mFiredCompleteOrAbort);
@@ -239,8 +238,6 @@ RefPtr<IDBTransaction> IDBTransaction::Create(
 
   nsCOMPtr<nsIRunnable> runnable = do_QueryObject(transaction);
   nsContentUtils::AddPendingIDBTransaction(runnable.forget());
-
-  transaction->mCreating = true;
 
   aDatabase->RegisterTransaction(transaction);
   transaction->mRegistered = true;
@@ -436,14 +433,7 @@ void IDBTransaction::MaybeNoteInactiveTransaction() {
 bool IDBTransaction::CanAcceptRequests() const {
   AssertIsOnOwningThread();
 
-  // If we haven't started anything then we can accept requests.
-  // If we've already started then we need to check to see if we still have the
-  // mCreating flag set. If we do (i.e. we haven't returned to the event loop
-  // from the time we were created) then we can accept requests. Otherwise check
-  // the currently running transaction to see if it's the same. We only allow
-  // other requests to be made if this transaction is currently running.
-  return mReadyState == ReadyState::Active &&
-         (!mStarted || mCreating || GetCurrent() == this);
+  return mReadyState == ReadyState::Active;
 }
 
 IDBTransaction::AutoRestoreState<IDBTransaction::ReadyState::Inactive,
@@ -969,21 +959,38 @@ NS_IMETHODIMP
 IDBTransaction::Run() {
   AssertIsOnOwningThread();
 
-  // We're back at the event loop, no longer newborn.
-  mCreating = false;
+  // TODO: Instead of checking for Finished and Committing states here, we could
+  // remove the transaction from the pending IDB transactions list on
+  // abort/commit.
 
-  MOZ_ASSERT_IF(mReadyState == ReadyState::Finished, IsAborted());
+  if (ReadyState::Finished == mReadyState) {
+    MOZ_ASSERT(IsAborted());
+    return NS_OK;
+  }
+
+  // We're back at the event loop, no longer newborn, so
+  // return to Inactive state:
+  // https://w3c.github.io/IndexedDB/#cleanup-indexed-database-transactions.
+  MOZ_ASSERT(ReadyState::Active == mReadyState);
+  mReadyState = ReadyState::Inactive;
+
+  CommitIfNotStarted();
+
+  return NS_OK;
+}
+
+void IDBTransaction::CommitIfNotStarted() {
+  AssertIsOnOwningThread();
+
+  MOZ_ASSERT(ReadyState::Inactive == mReadyState);
 
   // Maybe commit if there were no requests generated.
-  if (!mStarted && mReadyState != ReadyState::Finished) {
-    MOZ_ASSERT(mReadyState == ReadyState::Inactive ||
-               mReadyState == ReadyState::Active);
+  if (!mStarted) {
+    MOZ_ASSERT(!mPendingRequestCount);
     mReadyState = ReadyState::Finished;
 
     SendCommit();
   }
-
-  return NS_OK;
 }
 
 }  // namespace dom
