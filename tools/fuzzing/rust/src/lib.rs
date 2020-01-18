@@ -110,19 +110,16 @@ pub extern "C" fn fuzz_rkv_val_write(raw_data: *const u8, size: libc::size_t) ->
 }
 
 lazy_static! {
-    static ref KEYS_VALUES: (Vec<String>, Vec<String>) = {
+    static ref STATIC_DATA: Vec<String> = {
         let sizes = vec![4, 16, 128, 512, 1024];
-        let mut keys = Vec::new();
-        let mut values = Vec::new();
+        let mut data = Vec::new();
 
         for (i, s) in sizes.into_iter().enumerate() {
-            let bytes1 = iter::repeat('a' as u8 + i as u8).take(s).collect();
-            let bytes2 = iter::repeat('A' as u8 + i as u8).take(s).collect();
-            keys.push(String::from_utf8(bytes1).unwrap());
-            values.push(String::from_utf8(bytes2).unwrap());
+            let bytes = iter::repeat('a' as u8 + i as u8).take(s).collect();
+            data.push(String::from_utf8(bytes).unwrap());
         }
 
-        (keys, values)
+        data
     };
 }
 
@@ -152,17 +149,11 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
         }
     };
 
-    fn get_key<'a>(fuzz: &mut Vec<u8>) -> Option<&'a String> {
+    fn get_static_data<'a>(fuzz: &mut Vec<u8>) -> Option<&'a String> {
         fuzz.pop().map(|byte| {
-            let (keys, _) = &*KEYS_VALUES;
-            keys.get(byte as usize % keys.len()).unwrap()
-        })
-    };
-
-    fn get_value<'a>(fuzz: &mut Vec<u8>) -> Option<&'a String> {
-        fuzz.pop().map(|byte| {
-            let (_, values) = &*KEYS_VALUES;
-            values.get(byte as usize % values.len()).unwrap()
+            let data = &*STATIC_DATA;
+            let n = byte as usize;
+            data.get(n % data.len()).unwrap()
         })
     };
 
@@ -191,11 +182,11 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
     loop {
         match fuzz.pop().map(|byte| byte % 4) {
             Some(0) => {
-                let key = match get_key(&mut fuzz) {
+                let key = match get_static_data(&mut fuzz) {
                     Some(value) => value,
                     None => break
                 };
-                let value = match get_value(&mut fuzz) {
+                let value = match get_static_data(&mut fuzz) {
                     Some(value) => value,
                     None => break
                 };
@@ -204,7 +195,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
                 maybe_commit(&mut fuzz, writer).unwrap();
             }
             Some(1) => {
-                let key = match get_key(&mut fuzz) {
+                let key = match get_static_data(&mut fuzz) {
                     Some(value) => value,
                     None => break
                 };
@@ -213,7 +204,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
                 maybe_abort(&mut fuzz, reader).unwrap();
             }
             Some(2) => {
-                let key = match get_key(&mut fuzz) {
+                let key = match get_static_data(&mut fuzz) {
                     Some(value) => value,
                     None => break
                 };
