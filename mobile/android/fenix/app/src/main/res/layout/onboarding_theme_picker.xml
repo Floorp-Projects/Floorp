@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:text="@string/onboarding_theme_picker_description"
+        android:text="@string/onboarding_theme_picker_description1"
         android:textAppearance="@style/Body14TextStyle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/header_text" />

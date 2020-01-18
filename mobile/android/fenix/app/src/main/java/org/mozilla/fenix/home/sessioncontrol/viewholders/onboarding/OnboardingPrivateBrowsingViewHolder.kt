@@ -30,7 +30,7 @@ class OnboardingPrivateBrowsingViewHolder(view: View) : RecyclerView.ViewHolder(
             view.description_text.lineHeight
         )
 
-        val text = SpannableString(view.context.getString(R.string.onboarding_private_browsing_description)).apply {
+        val text = SpannableString(view.context.getString(R.string.onboarding_private_browsing_description1)).apply {
             val spanStartIndex = indexOf(IMAGE_PLACEHOLDER)
             setSpan(
                     inlineIcon,
