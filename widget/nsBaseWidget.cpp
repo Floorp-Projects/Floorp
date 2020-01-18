@@ -130,7 +130,8 @@ uint64_t AutoObserverNotifier::sObserverId = 0;
 // milliseconds.
 const uint32_t kAsyncDragDropTimeout = 1000;
 
-namespace mozilla::widget {
+namespace mozilla {
+namespace widget {
 
 void IMENotification::SelectionChangeDataBase::SetWritingMode(
     const WritingMode& aWritingMode) {
@@ -141,7 +142,8 @@ WritingMode IMENotification::SelectionChangeDataBase::GetWritingMode() const {
   return WritingMode(mWritingMode);
 }
 
-}  // namespace mozilla::widget
+}  // namespace widget
+}  // namespace mozilla
 
 NS_IMPL_ISUPPORTS(nsBaseWidget, nsIWidget, nsISupportsWeakReference)
 
@@ -2242,7 +2244,8 @@ already_AddRefed<nsIBidiKeyboard> nsIWidget::CreateBidiKeyboardInner() {
 }
 #endif
 
-namespace mozilla::widget {
+namespace mozilla {
+namespace widget {
 
 const char* ToChar(InputContext::Origin aOrigin) {
   switch (aOrigin) {
@@ -3036,7 +3039,8 @@ void IMENotification::TextChangeDataBase::Test() {
 
 #endif  // #ifdef DEBUG
 
-}  // namespace mozilla::widget
+}  // namespace widget
+}  // namespace mozilla
 
 #ifdef DEBUG
 //////////////////////////////////////////////////////////////

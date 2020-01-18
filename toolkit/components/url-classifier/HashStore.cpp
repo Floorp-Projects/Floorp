@@ -101,7 +101,8 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
 
-namespace mozilla::safebrowsing {
+namespace mozilla {
+namespace safebrowsing {
 
 const uint32_t STORE_MAGIC = 0x1231af3b;
 const uint32_t CURRENT_VERSION = 4;
@@ -1177,4 +1178,5 @@ ChunkSet& HashStore::SubChunks() {
   return mSubChunks;
 }
 
-}  // namespace mozilla::safebrowsing
+}  // namespace safebrowsing
+}  // namespace mozilla

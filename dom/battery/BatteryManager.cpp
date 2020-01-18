@@ -25,7 +25,9 @@
   NS_LITERAL_STRING("dischargingtimechange")
 #define CHARGINGTIMECHANGE_EVENT_NAME NS_LITERAL_STRING("chargingtimechange")
 
-namespace mozilla::dom::battery {
+namespace mozilla {
+namespace dom {
+namespace battery {
 
 BatteryManager::BatteryManager(nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow),
@@ -181,4 +183,6 @@ void BatteryManager::Notify(const hal::BatteryInformation& aBatteryInfo) {
   }
 }
 
-}  // namespace mozilla::dom::battery
+}  // namespace battery
+}  // namespace dom
+}  // namespace mozilla

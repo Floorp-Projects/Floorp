@@ -8,7 +8,8 @@
 #include "core/TelemetryCommon.h"
 #include "js/Array.h"  // JS::NewArrayObject
 
-namespace mozilla::Telemetry {
+namespace mozilla {
+namespace Telemetry {
 
 TelemetryIOInterposeObserver::TelemetryIOInterposeObserver(nsIFile* aXreDir)
     : mCurStage(STAGE_STARTUP) {
@@ -175,4 +176,5 @@ size_t TelemetryIOInterposeObserver::SizeOfExcludingThis(
   return size;
 }
 
-}  // namespace mozilla::Telemetry
+}  // namespace Telemetry
+}  // namespace mozilla

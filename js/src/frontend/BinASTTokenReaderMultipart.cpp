@@ -20,7 +20,8 @@
 
 #include "js/Result.h"
 
-namespace js::frontend {
+namespace js {
+namespace frontend {
 
 // The magic header, at the start of every binjs file.
 const char MAGIC_HEADER[] = "BINJS";
@@ -473,4 +474,6 @@ JS::Result<Ok> BinASTTokenReaderMultipart::AutoTaggedTuple::done() {
   return Ok();
 }
 
-}  // namespace js::frontend
+}  // namespace frontend
+
+}  // namespace js

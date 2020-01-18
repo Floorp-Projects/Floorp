@@ -19,7 +19,8 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 PuppetSession::PuppetSession() : VRSession() {}
 
@@ -115,4 +116,5 @@ void PuppetSession::StopAllHaptics() {
   VRPuppetCommandBuffer::Get().StopAllHaptics();
 }
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla

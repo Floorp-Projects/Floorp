@@ -141,7 +141,8 @@ namespace mozilla {
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc,
                                           PR_Close);
 
-namespace dom::indexedDB {
+namespace dom {
+namespace indexedDB {
 
 using namespace mozilla::dom::quota;
 using namespace mozilla::ipc;
@@ -27675,7 +27676,8 @@ nsresult FileHelper::SyncCopy(nsIInputStream* aInputStream,
   return rv;
 }
 
-}  // namespace dom::indexedDB
+}  // namespace indexedDB
+}  // namespace dom
 }  // namespace mozilla
 
 #undef IDB_MOBILE

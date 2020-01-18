@@ -8,7 +8,8 @@
 #include "prthread.h"
 #include "mozilla/ClearOnShutdown.h"
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 static StaticRefPtr<VRPuppetCommandBuffer> sVRPuppetCommandBufferSingleton;
 
@@ -507,4 +508,5 @@ void VRPuppetCommandBuffer::EncodeStruct(nsTArray<uint64_t>& aBuffer,
   purgeBuffer();
 }
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla

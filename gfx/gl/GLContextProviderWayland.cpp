@@ -10,7 +10,8 @@
 
 #include "GLContextProvider.h"
 
-namespace mozilla::gl {
+namespace mozilla {
+namespace gl {
 
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
@@ -80,4 +81,5 @@ void GLContextProviderWayland::Shutdown() {
   }
 }
 
-}  // namespace mozilla::gl
+} /* namespace gl */
+} /* namespace mozilla */

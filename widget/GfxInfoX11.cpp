@@ -27,7 +27,8 @@
 bool fire_glxtest_process();
 #endif
 
-namespace mozilla::widget {
+namespace mozilla {
+namespace widget {
 
 #ifdef DEBUG
 NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
@@ -683,4 +684,5 @@ NS_IMETHODIMP GfxInfo::FireTestProcess() {
 
 #endif
 
-}  // namespace mozilla::widget
+}  // end namespace widget
+}  // end namespace mozilla

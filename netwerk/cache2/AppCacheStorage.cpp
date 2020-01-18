@@ -19,7 +19,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 AppCacheStorage::AppCacheStorage(nsILoadContextInfo* aInfo,
                                  nsIApplicationCache* aAppCache)
@@ -167,4 +168,5 @@ NS_IMETHODIMP AppCacheStorage::GetCacheIndexEntryAttrs(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

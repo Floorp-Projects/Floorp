@@ -9,7 +9,8 @@
 #include "gfxPlatform.h"
 #include "mozilla/gfx/Logging.h"
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 /* static */
 already_AddRefed<PrintTargetThebes> PrintTargetThebes::CreateOrNull(
@@ -95,4 +96,5 @@ nsresult PrintTargetThebes::EndPage() {
 
 void PrintTargetThebes::Finish() { return mGfxSurface->Finish(); }
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla

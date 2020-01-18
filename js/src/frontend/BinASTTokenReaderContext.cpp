@@ -26,7 +26,8 @@
 #include "vm/JSAtom.h"               // AtomizeWTF8Chars
 #include "vm/JSScript.h"             // ScriptSource
 
-namespace js::frontend {
+namespace js {
+namespace frontend {
 
 #ifdef BINAST_CX_MAGIC_HEADER  // Context 0.1 doesn't implement the planned
                                // magic header.
@@ -3268,4 +3269,6 @@ mozilla::detail::IntegerRange<size_t> HuffmanLookup::suffixes(
   return mozilla::IntegerRange<size_t>(first, last + 1);
 }
 
-}  // namespace js::frontend
+}  // namespace frontend
+
+}  // namespace js
