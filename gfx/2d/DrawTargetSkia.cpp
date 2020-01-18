@@ -42,8 +42,7 @@
 #  include "ScaledFontDWrite.h"
 #endif
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 class GradientStopsSkia : public GradientStops {
  public:
@@ -1885,5 +1884,4 @@ void DrawTargetSkia::MarkChanged() {
   }
 }
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx

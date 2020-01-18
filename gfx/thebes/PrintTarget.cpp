@@ -23,8 +23,7 @@
 // RFC: https://tools.ietf.org/html/rfc2911#section-4.1.2
 #define IPP_JOB_NAME_LIMIT_LENGTH 255
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 PrintTarget::PrintTarget(cairo_surface_t* aCairoSurface, const IntSize& aSize)
     : mCairoSurface(aCairoSurface),
@@ -202,5 +201,4 @@ void PrintTarget::RegisterPageDoneCallback(PageDoneCallback&& aCallback) {
 
 void PrintTarget::UnregisterPageDoneCallback() { mPageDoneCallback = nullptr; }
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx

@@ -10,8 +10,7 @@
 #include "nsNativeCharsetUtils.h"
 #include "xpc_make_class.h"
 
-namespace mozilla {
-namespace reflect {
+namespace mozilla::reflect {
 
 NS_IMPL_ISUPPORTS(Module, nsIXPCScriptable)
 
@@ -35,5 +34,4 @@ Module::Call(nsIXPConnectWrappedNative* wrapper, JSContext* cx, JSObject* obj,
   return NS_OK;
 }
 
-}  // namespace reflect
-}  // namespace mozilla
+}  // namespace mozilla::reflect

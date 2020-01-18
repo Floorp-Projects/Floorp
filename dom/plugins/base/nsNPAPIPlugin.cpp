@@ -456,9 +456,7 @@ void PopException() {
 // Static callbacks that get routed back through the new C++ API
 //
 
-namespace mozilla {
-namespace plugins {
-namespace parent {
+namespace mozilla::plugins::parent {
 
 NPError _geturl(NPP npp, const char* relativeURL, const char* target) {
   if (!NS_IsMainThread()) {
@@ -1883,6 +1881,4 @@ void _setcurrentasyncsurface(NPP instance, NPAsyncSurface* surface,
   inst->SetCurrentAsyncSurface(surface, changed);
 }
 
-} /* namespace parent */
-} /* namespace plugins */
-} /* namespace mozilla */
+}  // namespace mozilla::plugins::parent

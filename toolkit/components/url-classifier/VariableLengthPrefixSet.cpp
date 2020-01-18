@@ -24,8 +24,7 @@ static mozilla::LazyLogModule gUrlClassifierPrefixSetLog(
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(gUrlClassifierPrefixSetLog, mozilla::LogLevel::Debug)
 
-namespace mozilla {
-namespace safebrowsing {
+namespace mozilla::safebrowsing {
 
 #define PREFIX_SIZE_FIXED 4
 
@@ -492,5 +491,4 @@ size_t VariableLengthPrefixSet::SizeOfIncludingThis(
   return n;
 }
 
-}  // namespace safebrowsing
-}  // namespace mozilla
+}  // namespace mozilla::safebrowsing

@@ -13,8 +13,7 @@
 #include "nsTextFragmentImpl.h"
 #include <algorithm>
 
-namespace mozilla {
-namespace SSE2 {
+namespace mozilla::SSE2 {
 
 static inline bool is_zero(__m128i x) {
   return _mm_movemask_epi8(_mm_cmpeq_epi8(x, _mm_setzero_si128())) == 0xffff;
@@ -64,5 +63,4 @@ int32_t FirstNon8Bit(const char16_t* str, const char16_t* end) {
   return -1;
 }
 
-}  // namespace SSE2
-}  // namespace mozilla
+}  // namespace mozilla::SSE2

@@ -33,8 +33,7 @@
 using JS::RegExpFlag;
 using JS::RegExpFlags;
 
-namespace js {
-namespace frontend {
+namespace js::frontend {
 
 // Compare a bunch of `uint8_t` values (as returned by the tokenizer_) with
 // a string literal (and ONLY a string literal).
@@ -5036,5 +5035,4 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalStatement(
 template class BinASTParser<BinASTTokenReaderContext>;
 template class BinASTParser<BinASTTokenReaderMultipart>;
 
-}  // namespace frontend
-}  // namespace js
+}  // namespace js::frontend
