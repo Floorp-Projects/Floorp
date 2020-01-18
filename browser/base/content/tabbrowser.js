@@ -2640,7 +2640,7 @@
         userContextId = openerTab.getAttribute("usercontextid") || 0;
       }
 
-      this.setTabAttributes(t, {
+      this._setTabAttributes(t, {
         animate,
         noInitialLabel,
         aURI,
@@ -2656,8 +2656,8 @@
       try {
         if (!batchInsertingTabs) {
           // When we are not restoring a session, we need to know
-          // where in the tab container to place the tab.
-          this.updateTabPosition(t, {
+          // insert the tab into the tab container in the correct position
+          this._insertTabAtIndex(t, {
             index,
             ownerTab,
             openerTab,
@@ -2786,7 +2786,7 @@
 
       if (!batchInsertingTabs) {
         // Fire a TabOpen event
-        this._fireOpenTab(t, eventDetail);
+        this._fireTabOpen(t, eventDetail);
 
         if (
           !usingPreloadedContent &&
@@ -2952,7 +2952,7 @@
             tab.setAttribute("pinned", "true");
             this._invalidateCachedTabs();
             // Then ensure all the tab open/pinning information is sent.
-            this._fireOpenTab(tab, {});
+            this._fireTabOpen(tab, {});
             this._notifyPinnedStatus(tab);
             // Once we're done adding all tabs, _updateTabBarForPinnedTabs
             // needs calling:
@@ -3007,7 +3007,7 @@
         // tabs. If tabToSelect is a tab, we didn't reuse the selected tab.
         for (let tab of tabs) {
           if (!tab.pinned && (tabToSelect || !tab.selected)) {
-            this._fireOpenTab(tab, {});
+            this._fireTabOpen(tab, {});
           }
         }
       }
@@ -3109,7 +3109,7 @@
       return reallyClose;
     },
 
-    setTabAttributes(
+    _setTabAttributes(
       tab,
       {
         animate,
@@ -3165,7 +3165,7 @@
     /**
      * This determines where the tab should be inserted within the tabContainer
      */
-    updateTabPosition(
+    _insertTabAtIndex(
       tab,
       { index, ownerTab, openerTab, pinned, bulkOrderedOpen } = {}
     ) {
@@ -3237,12 +3237,11 @@
     },
 
     /**
-     * Opens tab by firing a TabOpen event.
+     * Dispatch a new tab event. This should be called when things are in a
+     * consistent state, such that listeners of this event can again open
+     * or close tabs.
      */
-    _fireOpenTab(tab, eventDetail) {
-      // Dispatch a new tab notification.  We do this once we're
-      // entirely done, so that things are in a consistent state
-      // even if the event listener opens or closes tabs.
+    _fireTabOpen(tab, eventDetail) {
       delete tab.initializingTab;
       let evt = new CustomEvent("TabOpen", {
         bubbles: true,
