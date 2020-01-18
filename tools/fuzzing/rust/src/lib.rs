@@ -5,6 +5,7 @@
 #[macro_use]
 extern crate lazy_static;
 extern crate libc;
+extern crate lmdb;
 extern crate rkv;
 extern crate tempfile;
 
@@ -25,6 +26,11 @@ fn eat_lmdb_err<T>(value: Result<T, rkv::StoreError>) -> Result<Option<T>, rkv::
             Err(err)
         },
     }
+}
+
+fn panic_with_err(err: rkv::StoreError) {
+    println!("Got error: {}", err);
+    Result::Err(err).unwrap()
 }
 
 #[no_mangle]
@@ -125,36 +131,124 @@ lazy_static! {
 
 #[no_mangle]
 pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> libc::c_int {
-    let mut fuzz = unsafe { std::slice::from_raw_parts(raw_data as *const u8, size as usize).to_vec() };
+    let data = unsafe { std::slice::from_raw_parts(raw_data as *const u8, size as usize) };
+    let mut fuzz = data.iter().copied();
 
-    fn maybe_do(fuzz: &mut Vec<u8>, f: impl FnOnce(&mut Vec<u8>) -> ()) -> Option<()> {
-        match fuzz.pop().map(|byte| byte % 2) {
+    fn maybe_do<I: Iterator<Item = u8>>(fuzz: &mut I, f: impl FnOnce(&mut I) -> ()) -> Option<()> {
+        match fuzz.next().map(|byte| byte % 2) {
             Some(0) => Some(f(fuzz)),
             _ => None
         }
     }
 
-    fn maybe_abort(fuzz: &mut Vec<u8>, read: rkv::Reader) -> Result<(), rkv::StoreError>  {
-        match fuzz.pop().map(|byte| byte % 2) {
+    fn maybe_abort<I: Iterator<Item = u8>>(fuzz: &mut I, read: rkv::Reader) -> Result<(), rkv::StoreError>  {
+        match fuzz.next().map(|byte| byte % 2) {
             Some(0) => Ok(read.abort()),
             _ => Ok(())
         }
     };
 
-    fn maybe_commit(fuzz: &mut Vec<u8>, write: rkv::Writer) -> Result<(), rkv::StoreError>  {
-        match fuzz.pop().map(|byte| byte % 3) {
+    fn maybe_commit<I: Iterator<Item = u8>>(fuzz: &mut I, write: rkv::Writer) -> Result<(), rkv::StoreError>  {
+        match fuzz.next().map(|byte| byte % 3) {
             Some(0) => write.commit(),
             Some(1) => Ok(write.abort()),
             _ => Ok(())
         }
     };
 
-    fn get_static_data<'a>(fuzz: &mut Vec<u8>) -> Option<&'a String> {
-        fuzz.pop().map(|byte| {
+    fn get_static_data<'a, I: Iterator<Item = u8>>(fuzz: &mut I) -> Option<&'a String> {
+        fuzz.next().map(|byte| {
             let data = &*STATIC_DATA;
             let n = byte as usize;
             data.get(n % data.len()).unwrap()
         })
+    };
+
+    fn get_fuzz_data<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, max_len: usize) -> Option<Vec<u8>> {
+        fuzz.next().map(|byte| {
+            let n = byte as usize;
+            fuzz.clone().take((n * n) % max_len).collect()
+        })
+    };
+
+    fn get_any_data<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, max_len: usize) -> Option<Vec<u8>> {
+        match fuzz.next().map(|byte| byte % 2) {
+            Some(0) => get_static_data(fuzz).map(|v| v.clone().into_bytes()),
+            Some(1) => get_fuzz_data(fuzz, max_len),
+            _ => None
+        }
+    };
+
+    fn store_put<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, env: &rkv::Rkv, store: &rkv::SingleStore) {
+        let key = match get_any_data(fuzz, 1024) {
+            Some(key) => key,
+            None => return
+        };
+        let value = match get_any_data(fuzz, std::usize::MAX) {
+            Some(value) => value,
+            None => return
+        };
+
+        let mut writer = env.write().unwrap();
+        let mut full = false;
+
+        match store.put(&mut writer, key, &rkv::Value::Blob(&value)) {
+            Ok(_) => {},
+            Err(rkv::StoreError::LmdbError(lmdb::Error::BadValSize)) => {},
+            Err(rkv::StoreError::LmdbError(lmdb::Error::MapFull)) => full = true,
+            Err(err) => panic_with_err(err)
+        };
+
+        if full {
+            writer.abort();
+            store_resize(fuzz, env);
+        } else {
+            maybe_commit(fuzz, writer).unwrap();
+        }
+    }
+
+    fn store_get<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, env: &rkv::Rkv, store: &rkv::SingleStore) {
+        let key = match get_any_data(fuzz, 1024) {
+            Some(key) => key,
+            None => return
+        };
+
+        let mut reader = match env.read() {
+            Ok(reader) => reader,
+            Err(rkv::StoreError::LmdbError(lmdb::Error::ReadersFull)) => return,
+            Err(err) => return panic_with_err(err)
+        };
+
+        match store.get(&mut reader, key) {
+            Ok(_) => {},
+            Err(rkv::StoreError::LmdbError(lmdb::Error::BadValSize)) => {},
+            Err(err) => panic_with_err(err)
+        };
+
+        maybe_abort(fuzz, reader).unwrap();
+    }
+
+    fn store_delete<I: Iterator<Item = u8> + Clone>(fuzz: &mut I, env: &rkv::Rkv, store: &rkv::SingleStore) {
+        let key = match get_any_data(fuzz, 1024) {
+            Some(key) => key,
+            None => return
+        };
+
+        let mut writer = env.write().unwrap();
+
+        match store.delete(&mut writer, key) {
+            Ok(_) => {},
+            Err(rkv::StoreError::LmdbError(lmdb::Error::BadValSize)) => {},
+            Err(rkv::StoreError::LmdbError(lmdb::Error::NotFound)) => {},
+            Err(err) => panic_with_err(err)
+        };
+
+        maybe_commit(fuzz, writer).unwrap();
+    }
+
+    fn store_resize<I: Iterator<Item = u8>>(fuzz: &mut I, env: &rkv::Rkv) {
+        let n = fuzz.next().unwrap_or(1) as usize;
+        env.set_map_size(1_048_576 * (n % 100)).unwrap() // 1,048,576 bytes, i.e. 1MiB.
     };
 
     let root = Builder::new().prefix("fuzz_rkv_calls").tempdir().unwrap();
@@ -164,15 +258,15 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
     builder.set_max_dbs(1); // need at least one db
 
     maybe_do(&mut fuzz, |fuzz| {
-        let n = fuzz.pop().unwrap_or(126) as u32; // default
+        let n = fuzz.next().unwrap_or(126) as u32; // default
         builder.set_max_readers(1 + n);
     });
     maybe_do(&mut fuzz, |fuzz| {
-        let n = fuzz.pop().unwrap_or(0) as u32;
+        let n = fuzz.next().unwrap_or(0) as u32;
         builder.set_max_dbs(1 + n);
     });
     maybe_do(&mut fuzz, |fuzz| {
-        let n = fuzz.pop().unwrap_or(1) as usize;
+        let n = fuzz.next().unwrap_or(1) as usize;
         builder.set_map_size(1_048_576 * (n % 100)); // 1,048,576 bytes, i.e. 1MiB.
     });
 
@@ -180,48 +274,12 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
     let store = env.open_single("test", rkv::StoreOptions::create()).unwrap();
 
     loop {
-        match fuzz.pop().map(|byte| byte % 4) {
-            Some(0) => {
-                let key = match get_static_data(&mut fuzz) {
-                    Some(value) => value,
-                    None => break
-                };
-                let value = match get_static_data(&mut fuzz) {
-                    Some(value) => value,
-                    None => break
-                };
-                let mut writer = env.write().unwrap();
-                eat_lmdb_err(store.put(&mut writer, key, &rkv::Value::Str(value))).unwrap();
-                maybe_commit(&mut fuzz, writer).unwrap();
-            }
-            Some(1) => {
-                let key = match get_static_data(&mut fuzz) {
-                    Some(value) => value,
-                    None => break
-                };
-                let mut reader = env.read().unwrap();
-                eat_lmdb_err(store.get(&mut reader, key)).unwrap();
-                maybe_abort(&mut fuzz, reader).unwrap();
-            }
-            Some(2) => {
-                let key = match get_static_data(&mut fuzz) {
-                    Some(value) => value,
-                    None => break
-                };
-                let mut writer = env.write().unwrap();
-                eat_lmdb_err(store.delete(&mut writer, key)).unwrap();
-                maybe_commit(&mut fuzz, writer).unwrap();
-            }
-            Some(3) => {
-                // Any attempt to set a size smaller than the space already
-                // consumed by the environment will be silently changed to the
-                // current size of the used space.
-                let n = fuzz.pop().unwrap_or(1) as usize;
-                builder.set_map_size(1_048_576 * (n % 100)); // 1,048,576 bytes, i.e. 1MiB.
-            }
-            _ => {
-                break
-            }
+        match fuzz.next().map(|byte| byte % 4) {
+            Some(0) => store_put(&mut fuzz, &env, &store),
+            Some(1) => store_get(&mut fuzz, &env, &store),
+            Some(2) => store_delete(&mut fuzz, &env, &store),
+            Some(3) => store_resize(&mut fuzz, &env),
+            _ => break
         }
     }
 

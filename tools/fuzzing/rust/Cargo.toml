@@ -11,3 +11,7 @@ lazy_static = "1.4.0"
 [dependencies.rkv]
 version = "0.10.2"
 features = ["with-fuzzer-no-link"]
+
+[dependencies.lmdb-rkv]
+version = "0.12.3"
+features = ["with-fuzzer-no-link"]
