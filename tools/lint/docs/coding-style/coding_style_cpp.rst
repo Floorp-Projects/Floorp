@@ -299,9 +299,10 @@ Global functions/macros/etc
 Error Variables
 ^^^^^^^^^^^^^^^
 
--  local nsresult result codes should be named ``rv``. `rv` should not be
+-  Local variables that are assigned ``nsresult`` result codes should be named ``rv``
+   (i.e., e.g., not ``res``, not ``result``, not ``foo``). `rv` should not be
    used for bool or other result types.
--  local bool result codes should be named `ok`
+-  Local variables that are assigned ``bool`` result codes should be named `ok`.
 
 
 C/C++ practices
@@ -372,8 +373,6 @@ COM and pointers
    `nsWeakPtr <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Weak_reference>`__ for weak references.
 -  Don't use ``QueryInterface`` directly. Use ``CallQueryInterface`` or
    ``do_QueryInterface`` instead.
--  ``nsresult`` should be declared as ``rv``. Not ``res``, not ``result``, not
-   ``foo``.
 -  Use `Contract
    IDs <news://news.mozilla.org/3994AE3E.D96EF810@netscape.com>`__,
    instead of CIDs with ``do_CreateInstance``/``do_GetService``.
