@@ -51,8 +51,7 @@ const uint32_t kVRHapticUpdateInterval = 5;
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 namespace {
 
@@ -2364,5 +2363,4 @@ void OpenVRSession::UpdateTelemetry(VRSystemState& aSystemState) {
   aSystemState.displayState.droppedFrameCount = stats.m_nNumReprojectedFrames;
 }
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx

@@ -6,8 +6,7 @@
 
 #include "WindowSurfaceX11SHM.h"
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
 WindowSurfaceX11SHM::WindowSurfaceX11SHM(Display* aDisplay, Drawable aWindow,
                                          Visual* aVisual, unsigned int aDepth) {
@@ -25,5 +24,4 @@ void WindowSurfaceX11SHM::Commit(const LayoutDeviceIntRegion& aInvalidRegion) {
   mBackImage->Put(aInvalidRegion);
 }
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget

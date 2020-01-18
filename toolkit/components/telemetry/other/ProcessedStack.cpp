@@ -26,8 +26,7 @@ static bool CompareByIndex(const StackFrame& a, const StackFrame& b) {
 
 }  // namespace
 
-namespace mozilla {
-namespace Telemetry {
+namespace mozilla::Telemetry {
 
 const size_t kMaxChromeStackDepth = 50;
 
@@ -186,5 +185,4 @@ ProcessedStack BatchProcessedStackGenerator::GetStackAndModules(
 #endif
 }
 
-}  // namespace Telemetry
-}  // namespace mozilla
+}  // namespace mozilla::Telemetry

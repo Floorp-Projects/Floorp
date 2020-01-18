@@ -34,8 +34,7 @@
 #  include "SharedSurfaceGLX.h"
 #endif
 
-namespace mozilla {
-namespace gl {
+namespace mozilla::gl {
 
 using gfx::SurfaceFormat;
 
@@ -770,5 +769,4 @@ void ReadBuffer::SetReadBuffer(GLenum userMode) const {
   mGL->fReadBuffer(internalMode);
 }
 
-} /* namespace gl */
-} /* namespace mozilla */
+}  // namespace mozilla::gl
