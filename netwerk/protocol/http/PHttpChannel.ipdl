@@ -21,6 +21,7 @@ using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using mozilla::net::NetAddr from "mozilla/net/DNS.h";
 using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
 using nsIHttpChannel::FlashPluginState from "mozilla/net/NeckoMessageUtils.h";
+using nsILoadInfo::CrossOriginOpenerPolicy from "nsILoadInfo.h";
 
 namespace mozilla {
 namespace net {
@@ -130,7 +131,8 @@ child:
                        ResourceTimingStructArgs timing,
                        bool                allRedirectsSameOrigin,
                        uint32_t?           multiPartId,
-                       bool                isLastPartOfMultiPart);
+                       bool                isLastPartOfMultiPart,
+                       CrossOriginOpenerPolicy policy);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message

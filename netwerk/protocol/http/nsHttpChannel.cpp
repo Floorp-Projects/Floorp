@@ -304,7 +304,6 @@ nsHttpChannel::nsHttpChannel()
       mOfflineCacheLastModifiedTime(0),
       mSuspendTotalTime(0),
       mRedirectType(0),
-      mComputedCrossOriginOpenerPolicy(nsILoadInfo::OPENER_POLICY_NULL),
       mCacheOpenWithPriority(false),
       mCacheQueueSizeWhenOpen(0),
       mCachedContentIsValid(false),
@@ -7398,20 +7397,9 @@ nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetCrossOriginOpenerPolicy(
+nsHttpChannel::GetCachedCrossOriginOpenerPolicy(
     nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
-  MOZ_ASSERT(aPolicy);
-  if (!aPolicy) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  // If this method is called before OnStartRequest (ie. before we call
-  // ComputeCrossOriginOpenerPolicy) or if we were unable to compute the
-  // policy we'll throw an error.
-  if (!mOnStartRequestCalled) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  *aPolicy = mComputedCrossOriginOpenerPolicy;
-  return NS_OK;
+  return HttpBaseChannel::GetCrossOriginOpenerPolicy(aPolicy);
 }
 
 // See https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e

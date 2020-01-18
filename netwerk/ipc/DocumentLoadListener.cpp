@@ -1238,7 +1238,7 @@ DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
 }
 
 NS_IMETHODIMP
-DocumentLoadListener::GetCrossOriginOpenerPolicy(
+DocumentLoadListener::GetCachedCrossOriginOpenerPolicy(
     nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
   MOZ_ASSERT(aPolicy);
   if (!aPolicy) {
