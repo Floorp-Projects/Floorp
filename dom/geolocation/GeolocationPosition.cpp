@@ -142,8 +142,7 @@ nsGeoPosition::GetCoords(nsIDOMGeoPositionCoords** aCoords) {
   return NS_OK;
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GeolocationPosition, mParent,
                                       mCoordinates)
@@ -186,5 +185,4 @@ uint64_t GeolocationPosition::Timestamp() const {
   return rv;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

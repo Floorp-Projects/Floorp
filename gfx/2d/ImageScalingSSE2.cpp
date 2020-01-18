@@ -134,8 +134,7 @@ MOZ_ALWAYS_INLINE uint32_t Avg2(uint32_t a, uint32_t b) {
   return ((sum & mask) >> 1) + carry;
 }
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 void ImageHalfScaler::HalfImage2D_SSE2(uint8_t* aSource, int32_t aSourceStride,
                                        const IntSize& aSourceSize,
@@ -331,5 +330,4 @@ void ImageHalfScaler::HalfImageHorizontal_SSE2(uint8_t* aSource,
   }
 }
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx

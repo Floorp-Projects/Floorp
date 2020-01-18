@@ -18,9 +18,7 @@
 #include "TelemetryProcessData.h"
 #include "Telemetry.h"
 
-namespace mozilla {
-namespace Telemetry {
-namespace Common {
+namespace mozilla::Telemetry::Common {
 
 bool IsExpiredVersion(const char* aExpiration) {
   MOZ_ASSERT(aExpiration);
@@ -199,6 +197,4 @@ SupportedProduct GetCurrentProduct() {
 #endif
 }
 
-}  // namespace Common
-}  // namespace Telemetry
-}  // namespace mozilla
+}  // namespace mozilla::Telemetry::Common

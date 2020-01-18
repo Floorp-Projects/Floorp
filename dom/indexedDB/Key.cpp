@@ -27,9 +27,7 @@
 #include "unicode/ucol.h"
 #include "xpcpublic.h"
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+namespace mozilla::dom::indexedDB {
 
 /*
  Here's how we encode keys:
@@ -887,6 +885,4 @@ nsresult Key::SetFromSource(T* aSource, uint32_t aIndex) {
   return NS_OK;
 }
 
-}  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::indexedDB
