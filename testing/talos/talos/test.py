@@ -1010,3 +1010,28 @@ class about_preferences_basic(PageloaderTest):
     unit = 'ms'
     lower_is_better = True
     fnbpaint = True
+
+
+@register_test()
+class about_newtab_with_snippets(PageloaderTest):
+    """
+    Load about ActivityStream (about:home and about:newtab) with snippets enabled
+    """
+    tpmanifest = '${talos}/tests/about-newtab/about_newtab.manifest'
+    tpcycles = 25
+    tppagecycles = 1
+    responsiveness = True
+    gecko_profile_interval = 1
+    gecko_profile_entries = 2000000
+    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
+    unit = 'ms'
+    lower_is_better = True
+    fnbpaint = True
+    preferences = {
+            # ensure that snippets are turned on and load the json messages
+            'browser.newtabpage.activity-stream.asrouter.providers.snippets':\
+            '{"id":"snippets","enabled":true,"type":"json","location":\
+            "http://fakedomain/tests/about-newtab/snippets.json",\
+            "updateCycleInMs":14400000}',
+            'browser.newtabpage.activity-stream.feeds.snippets': True
+            }
