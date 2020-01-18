@@ -194,7 +194,7 @@ Methods and functions
 C/C++
 ^^^^^
 
-In C/C++, method names should be capitalized and use camelCase.
+In C/C++, method names should use ``UpperCamelCase``.
 
 Getters that never fail, and never return null, are named ``Foo()``,
 while all other getters use ``GetFoo()``. Getters can return an object
