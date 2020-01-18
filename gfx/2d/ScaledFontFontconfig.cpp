@@ -21,8 +21,7 @@
 #include FT_LCD_FILTER_H
 #include FT_MULTIPLE_MASTERS_H
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 ScaledFontFontconfig::ScaledFontFontconfig(
     RefPtr<SharedFTFace>&& aFace, FcPattern* aPattern,
@@ -521,5 +520,4 @@ already_AddRefed<UnscaledFont> UnscaledFontFontconfig::CreateFromFontDescriptor(
   return unscaledFont.forget();
 }
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx

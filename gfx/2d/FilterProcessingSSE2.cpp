@@ -13,8 +13,7 @@ static_assert(
     false, "If this file is built, FilterProcessing.h should know about it!");
 #endif
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 void FilterProcessing::ExtractAlpha_SSE2(const IntSize& size,
                                          uint8_t* sourceData,
@@ -124,5 +123,4 @@ FilterProcessing::ApplyArithmeticCombine_SSE2(DataSourceSurface* aInput1,
       aInput1, aInput2, aK1, aK2, aK3, aK4);
 }
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx

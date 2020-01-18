@@ -11,8 +11,7 @@
 #include "HelpersSkia.h"
 #include "PathHelpers.h"
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 PathBuilderSkia::PathBuilderSkia(const Matrix& aTransform, const SkPath& aPath,
                                  FillRule aFillRule)
@@ -203,5 +202,4 @@ void PathSkia::StreamToSink(PathSink* aSink) const {
   }
 }
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx

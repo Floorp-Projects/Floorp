@@ -14,8 +14,7 @@
 #include "gfxPlatform.h"
 #include "gfxXlibSurface.h"
 
-namespace mozilla {
-namespace layers {
+namespace mozilla::layers {
 
 using namespace mozilla::gfx;
 
@@ -101,5 +100,4 @@ already_AddRefed<gfx::DataSourceSurface> X11TextureHost::GetAsSurface() {
   return surf->GetDataSurface();
 }
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers

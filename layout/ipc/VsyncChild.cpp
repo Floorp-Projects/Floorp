@@ -10,8 +10,7 @@
 #include "mozilla/VsyncDispatcher.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace layout {
+namespace mozilla::layout {
 
 VsyncChild::VsyncChild()
     : mObservingVsync(false),
@@ -91,5 +90,4 @@ mozilla::ipc::IPCResult VsyncChild::RecvVsyncRate(const float& aVsyncRate) {
   return IPC_OK();
 }
 
-}  // namespace layout
-}  // namespace mozilla
+}  // namespace mozilla::layout

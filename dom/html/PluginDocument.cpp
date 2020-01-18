@@ -19,8 +19,7 @@
 #include "nsObjectLoadingContent.h"
 #include "GeckoProfiler.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PluginDocument final : public MediaDocument, public nsIPluginDocument {
  public:
@@ -258,8 +257,7 @@ PluginDocument::Print() {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 nsresult NS_NewPluginDocument(mozilla::dom::Document** aResult) {
   auto* doc = new mozilla::dom::PluginDocument();

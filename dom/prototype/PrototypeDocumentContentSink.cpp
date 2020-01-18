@@ -77,8 +77,7 @@ nsresult NS_NewPrototypeDocumentContentSink(nsIContentSink** aResult,
   return NS_OK;
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 PrototypeDocumentContentSink::PrototypeDocumentContentSink()
     : mNextSrcLoadWaiter(nullptr),
@@ -1080,5 +1079,4 @@ nsresult PrototypeDocumentContentSink::AddAttributes(
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
