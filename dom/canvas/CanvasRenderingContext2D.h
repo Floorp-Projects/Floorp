@@ -878,12 +878,10 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   /**
    * Implementation of the fillText, strokeText, and measure functions with
    * the operation abstracted to a flag.
-   * Returns a TextMetrics object _only_ if the operation is measure;
-   * drawing operations (fill or stroke) always return nullptr.
    */
-  TextMetrics* DrawOrMeasureText(const nsAString& aText, float aX, float aY,
-                                 const Optional<double>& aMaxWidth,
-                                 TextDrawOperation aOp, ErrorResult& aError);
+  nsresult DrawOrMeasureText(const nsAString& aText, float aX, float aY,
+                             const Optional<double>& aMaxWidth,
+                             TextDrawOperation aOp, float* aWidth);
 
   // A clip or a transform, recorded and restored in order.
   struct ClipState {
