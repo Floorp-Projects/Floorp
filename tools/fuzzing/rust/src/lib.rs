@@ -168,7 +168,7 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
         builder.set_max_readers(1 + n);
     });
     maybe_do(&mut fuzz, |fuzz| {
-        let n = fuzz.pop().unwrap_or(1) as u32;
+        let n = fuzz.pop().unwrap_or(0) as u32;
         builder.set_max_dbs(1 + n);
     });
     maybe_do(&mut fuzz, |fuzz| {
