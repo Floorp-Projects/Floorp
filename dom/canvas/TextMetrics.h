@@ -14,56 +14,13 @@ namespace dom {
 
 class TextMetrics final : public NonRefcountedDOMObject {
  public:
-  explicit TextMetrics(double aWidth, double aActualBoundingBoxLeft,
-                       double aActualBoundingBoxRight,
-                       double aFontBoundingBoxAscent,
-                       double aFontBoundingBoxDescent,
-                       double aActualBoundingBoxAscent,
-                       double aActualBoundingBoxDescent, double aEmHeightAscent,
-                       double aEmHeightDescent, double aHangingBaseline,
-                       double aAlphabeticBaseline, double aIdeographicBaseline)
-      : width(aWidth),
-        actualBoundingBoxLeft(aActualBoundingBoxLeft),
-        actualBoundingBoxRight(aActualBoundingBoxRight),
-        fontBoundingBoxAscent(aFontBoundingBoxAscent),
-        fontBoundingBoxDescent(aFontBoundingBoxDescent),
-        actualBoundingBoxAscent(aActualBoundingBoxAscent),
-        actualBoundingBoxDescent(aActualBoundingBoxDescent),
-        emHeightAscent(aEmHeightAscent),
-        emHeightDescent(aEmHeightDescent),
-        hangingBaseline(aHangingBaseline),
-        alphabeticBaseline(aAlphabeticBaseline),
-        ideographicBaseline(aIdeographicBaseline) {
+  explicit TextMetrics(float aValue) : width(aValue) {
     MOZ_COUNT_CTOR(TextMetrics);
   }
 
   ~TextMetrics() { MOZ_COUNT_DTOR(TextMetrics); }
 
-  double Width() const { return width; }
-
-  double ActualBoundingBoxLeft() const { return actualBoundingBoxLeft; }
-
-  double ActualBoundingBoxRight() const { return actualBoundingBoxRight; }
-
-  // y-direction
-
-  double FontBoundingBoxAscent() const { return fontBoundingBoxAscent; }
-
-  double FontBoundingBoxDescent() const { return fontBoundingBoxDescent; }
-
-  double ActualBoundingBoxAscent() const { return actualBoundingBoxAscent; }
-
-  double ActualBoundingBoxDescent() const { return actualBoundingBoxDescent; }
-
-  double EmHeightAscent() const { return emHeightAscent; }
-
-  double EmHeightDescent() const { return emHeightDescent; }
-
-  double HangingBaseline() const { return hangingBaseline; }
-
-  double AlphabeticBaseline() const { return alphabeticBaseline; }
-
-  double IdeographicBaseline() const { return ideographicBaseline; }
+  float Width() const { return width; }
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector) {
@@ -71,18 +28,7 @@ class TextMetrics final : public NonRefcountedDOMObject {
   }
 
  private:
-  double width;
-  double actualBoundingBoxLeft;
-  double actualBoundingBoxRight;
-  double fontBoundingBoxAscent;
-  double fontBoundingBoxDescent;
-  double actualBoundingBoxAscent;
-  double actualBoundingBoxDescent;
-  double emHeightAscent;
-  double emHeightDescent;
-  double hangingBaseline;
-  double alphabeticBaseline;
-  double ideographicBaseline;
+  float width;
 };
 
 }  // namespace dom
