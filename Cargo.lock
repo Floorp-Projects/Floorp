@@ -2348,7 +2348,7 @@ dependencies = [
 
 [[package]]
 name = "mp4parse"
-version = "0.11.3"
+version = "0.11.4"
 dependencies = [
  "bitreader 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2367,7 +2367,7 @@ version = "0.11.2"
 dependencies = [
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "mp4parse 0.11.3",
+ "mp4parse 0.11.4",
  "num-traits 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
