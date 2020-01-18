@@ -1522,6 +1522,10 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   bool allRedirectsSameOrigin = false;
   chan->GetAllRedirectsSameOrigin(&allRedirectsSameOrigin);
 
+  nsILoadInfo::CrossOriginOpenerPolicy openerPolicy =
+      nsILoadInfo::OPENER_POLICY_NULL;
+  chan->GetCrossOriginOpenerPolicy(&openerPolicy);
+
   rv = NS_OK;
   if (mIPCClosed ||
       !SendOnStartRequest(
@@ -1533,7 +1537,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
           chan->GetPeerAddr(), redirectCount, cacheKey, altDataType, altDataLen,
           deliveringAltData, applyConversion, isResolvedByTRR,
           GetTimingAttributes(mChannel), allRedirectsSameOrigin, multiPartID,
-          isLastPartOfMultiPart)) {
+          isLastPartOfMultiPart, openerPolicy)) {
     rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();

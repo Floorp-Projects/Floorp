@@ -158,6 +158,7 @@ HttpBaseChannel::HttpBaseChannel()
     : mReportCollector(new ConsoleReportCollector()),
       mHttpHandler(gHttpHandler),
       mChannelCreationTime(0),
+      mComputedCrossOriginOpenerPolicy(nsILoadInfo::OPENER_POLICY_NULL),
       mStartPos(UINT64_MAX),
       mTransferSize(0),
       mRequestSize(0),
@@ -4582,6 +4583,23 @@ NS_IMETHODIMP HttpBaseChannel::ComputeCrossOriginOpenerPolicy(
 
   *aOutPolicy = CreateCrossOriginOpenerPolicy(sameness, unsafeAllowOutgoing,
                                               embedderPolicy);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetCrossOriginOpenerPolicy(
+    nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
+  MOZ_ASSERT(aPolicy);
+  if (!aPolicy) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  // If this method is called before OnStartRequest (ie. before we call
+  // ComputeCrossOriginOpenerPolicy) or if we were unable to compute the
+  // policy we'll throw an error.
+  if (!mOnStartRequestCalled) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aPolicy = mComputedCrossOriginOpenerPolicy;
   return NS_OK;
 }
 

@@ -661,5 +661,11 @@ NS_IMETHODIMP ClassifierDummyChannel::ComputeCrossOriginOpenerPolicy(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+ClassifierDummyChannel::GetCrossOriginOpenerPolicy(
+    nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla

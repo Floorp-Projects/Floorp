@@ -383,7 +383,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
     const bool& aApplyConversion, const bool& aIsResolvedByTRR,
     const ResourceTimingStructArgs& aTiming,
     const bool& aAllRedirectsSameOrigin, const Maybe<uint32_t>& aMultiPartID,
-    const bool& aIsLastPartOfMultiPart) {
+    const bool& aIsLastPartOfMultiPart,
+    const nsILoadInfo::CrossOriginOpenerPolicy& aOpenerPolicy) {
   AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStartRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -405,7 +406,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
        aCacheExpirationTime, aCachedCharset, aSecurityInfoSerialization,
        aSelfAddr, aPeerAddr, aCacheKey, aAltDataType, aAltDataLen,
        aDeliveringAltData, aApplyConversion, aIsResolvedByTRR, aTiming,
-       aAllRedirectsSameOrigin, aMultiPartID, aIsLastPartOfMultiPart]() {
+       aAllRedirectsSameOrigin, aMultiPartID, aIsLastPartOfMultiPart,
+       aOpenerPolicy]() {
         self->OnStartRequest(
             aChannelStatus, aResponseHead, aUseResponseHead, aRequestHeaders,
             aLoadInfoForwarder, aIsFromCache, aIsRacing, aCacheEntryAvailable,
@@ -413,7 +415,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
             aCachedCharset, aSecurityInfoSerialization, aSelfAddr, aPeerAddr,
             aCacheKey, aAltDataType, aAltDataLen, aDeliveringAltData,
             aApplyConversion, aIsResolvedByTRR, aTiming,
-            aAllRedirectsSameOrigin, aMultiPartID, aIsLastPartOfMultiPart);
+            aAllRedirectsSameOrigin, aMultiPartID, aIsLastPartOfMultiPart,
+            aOpenerPolicy);
       }));
 
   {
@@ -467,7 +470,8 @@ void HttpChannelChild::OnStartRequest(
     const bool& aDeliveringAltData, const bool& aApplyConversion,
     const bool& aIsResolvedByTRR, const ResourceTimingStructArgs& aTiming,
     const bool& aAllRedirectsSameOrigin, const Maybe<uint32_t>& aMultiPartID,
-    const bool& aIsLastPartOfMultiPart) {
+    const bool& aIsLastPartOfMultiPart,
+    const nsILoadInfo::CrossOriginOpenerPolicy& aOpenerPolicy) {
   LOG(("HttpChannelChild::OnStartRequest [this=%p]\n", this));
 
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -486,6 +490,8 @@ void HttpChannelChild::OnStartRequest(
   if (mOnStartRequestCalled && mIPCActorDeleted) {
     return;
   }
+
+  mComputedCrossOriginOpenerPolicy = aOpenerPolicy;
 
   if (!mCanceled && NS_SUCCEEDED(mStatus)) {
     mStatus = aChannelStatus;

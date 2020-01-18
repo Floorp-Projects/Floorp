@@ -386,7 +386,15 @@ interface nsIHttpChannelInternal : nsISupports
     void setIPv6Disabled();
 
     /**
-     * Get the Cross-Origin-Opener-Policy of the top-level document channel.
+     * Returns a cached CrossOriginOpenerPolicy that is computed just before we
+     * determine if there is a policy mismatch.
+     * @throws NS_ERROR_NOT_AVAILABLE if it has not been computed yet
+     */
+    readonly attribute nsILoadInfo_CrossOriginOpenerPolicy crossOriginOpenerPolicy;
+
+    /**
+     * Called during onStartRequest to compute the cross-origin-opener-policy
+     * for a given channel.
      */
     [noscript]
     nsILoadInfo_CrossOriginOpenerPolicy computeCrossOriginOpenerPolicy(
