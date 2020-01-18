@@ -135,7 +135,11 @@ function testBlob(file, contents, testName) {
 function testSlice(file, size, type, contents, fileType, range) {
   is(file.type, type, fileType + " file is correct type");
   is(file.size, size, fileType + " file is correct size");
-  ok(file instanceof File, fileType + " file is a File");
+  if (fileType == "fileFile") {
+    ok(file instanceof File, fileType + " file is a File");
+  } else if (fileType == "memFile") {
+    ok(!(file instanceof File), fileType + " file is not a File");
+  }
   ok(file instanceof Blob, fileType + " file is also a Blob");
 
   let slice = file.slice(0, size);
@@ -375,5 +379,17 @@ function createFile(data, name) {
     SpecialPowers.createFiles([{ name, data }], files => {
       resolve(files[0]);
     });
+  });
+}
+
+function toBlobPromise(canvas) {
+  function BlobListener(callback, file) {
+    var reader = new FileReader();
+    reader.onload = () => callback(file);
+    reader.readAsDataURL(file);
+  }
+
+  return new Promise(resolve => {
+    canvas.toBlob(BlobListener.bind(undefined, resolve));
   });
 }
