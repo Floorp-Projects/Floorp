@@ -62,11 +62,38 @@ typedef struct {
 } Mp4parseFragmentInfo;
 
 typedef struct {
+  /*
+   * The byte offset in the file where the indexed sample begins.
+   */
   uint64_t start_offset;
+  /*
+   * The byte offset in the file where the indexed sample ends. This is
+   * equivalent to `start_offset` + the length in bytes of the indexed
+   * sample. Typically this will be the `start_offset` of the next sample
+   * in the file.
+   */
   uint64_t end_offset;
+  /*
+   * The time in microseconds when the indexed sample should be displayed.
+   * Analogous to the concept of presentation time stamp (pts).
+   */
   int64_t start_composition;
+  /*
+   * The time in microseconds when the indexed sample should stop being
+   * displayed. Typically this would be the `start_composition` time of the
+   * next sample if samples were ordered by composition time.
+   */
   int64_t end_composition;
+  /*
+   * The time in microseconds that the indexed sample should be decoded at.
+   * Analogous to the concept of decode time stamp (dts).
+   */
   int64_t start_decode;
+  /*
+   * Set if the indexed sample is a sync sample. The meaning of sync is
+   * somewhat codec specific, but essentially amounts to if the sample is a
+   * key frame.
+   */
   bool sync;
 } Mp4parseIndice;
 
@@ -139,14 +166,37 @@ typedef struct {
 
 /*
  * Free an `Mp4parseParser*` allocated by `mp4parse_new()`.
+ *
+ * # Safety
+ *
+ * This function is unsafe because it creates a box from a raw pointer.
+ * Callers should ensure that the parser pointer points to a valid
+ * `Mp4parseParser` created by `mp4parse_new`.
  */
 void mp4parse_free(Mp4parseParser *parser);
 
 /*
  * Fill the supplied `Mp4parseFragmentInfo` with metadata from fragmented file.
+ *
+ * # Safety
+ *
+ * This function is unsafe because it dereferences the the parser and
+ * info raw pointers passed to it. Callers should ensure the parser
+ * pointer points to a valid `Mp4parseParser` and that the info pointer points
+ * to a valid `Mp4parseFragmentInfo`.
  */
 Mp4parseStatus mp4parse_get_fragment_info(Mp4parseParser *parser, Mp4parseFragmentInfo *info);
 
+/*
+ * Fill the supplied `Mp4parseByteData` with index information from `track`.
+ *
+ * # Safety
+ *
+ * This function is unsafe because it dereferences the the parser and indices
+ * raw pointers passed to it. Callers should ensure the parser pointer points
+ * to a valid `Mp4parseParser` and that the indices pointer points to a valid
+ * `Mp4parseByteData`.
+ */
 Mp4parseStatus mp4parse_get_indice_table(Mp4parseParser *parser,
                                          uint32_t track_id,
                                          Mp4parseByteData *indices);
@@ -159,11 +209,25 @@ Mp4parseStatus mp4parse_get_indice_table(Mp4parseParser *parser,
  * - system id (16 byte uuid)
  * - pssh box size (32-bit native endian)
  * - pssh box content (including header)
+ *
+ * # Safety
+ *
+ * This function is unsafe because it dereferences the the parser and
+ * info raw pointers passed to it. Callers should ensure the parser
+ * pointer points to a valid `Mp4parseParser` and that the fragmented pointer
+ * points to a valid `Mp4parsePsshInfo`.
  */
 Mp4parseStatus mp4parse_get_pssh_info(Mp4parseParser *parser, Mp4parsePsshInfo *info);
 
 /*
  * Fill the supplied `Mp4parseTrackAudioInfo` with metadata for `track`.
+ *
+ * # Safety
+ *
+ * This function is unsafe because it dereferences the the parser and info raw
+ * pointers passed to it. Callers should ensure the parser pointer points to a
+ * valid `Mp4parseParser` and that the info pointer points to a valid
+ * `Mp4parseTrackAudioInfo`.
  */
 Mp4parseStatus mp4parse_get_track_audio_info(Mp4parseParser *parser,
                                              uint32_t track_index,
@@ -171,11 +235,25 @@ Mp4parseStatus mp4parse_get_track_audio_info(Mp4parseParser *parser,
 
 /*
  * Return the number of tracks parsed by previous `mp4parse_read()` call.
+ *
+ * # Safety
+ *
+ * This function is unsafe because it dereferences both the parser and count
+ * raw pointers passed into it. Callers should ensure the parser pointer
+ * points to a valid `Mp4parseParser`, and that the count pointer points an
+ * appropriate memory location to have a `u32` written to.
  */
 Mp4parseStatus mp4parse_get_track_count(const Mp4parseParser *parser, uint32_t *count);
 
 /*
  * Fill the supplied `Mp4parseTrackInfo` with metadata for `track`.
+ *
+ * # Safety
+ *
+ * This function is unsafe because it dereferences the the parser and info raw
+ * pointers passed to it. Callers should ensure the parser pointer points to a
+ * valid `Mp4parseParser` and that the info pointer points to a valid
+ * `Mp4parseTrackInfo`.
  */
 Mp4parseStatus mp4parse_get_track_info(Mp4parseParser *parser,
                                        uint32_t track_index,
@@ -183,13 +261,28 @@ Mp4parseStatus mp4parse_get_track_info(Mp4parseParser *parser,
 
 /*
  * Fill the supplied `Mp4parseTrackVideoInfo` with metadata for `track`.
+ *
+ * # Safety
+ *
+ * This function is unsafe because it dereferences the the parser and info raw
+ * pointers passed to it. Callers should ensure the parser pointer points to a
+ * valid `Mp4parseParser` and that the info pointer points to a valid
+ * `Mp4parseTrackVideoInfo`.
  */
 Mp4parseStatus mp4parse_get_track_video_info(Mp4parseParser *parser,
                                              uint32_t track_index,
                                              Mp4parseTrackVideoInfo *info);
 
 /*
- * A fragmented file needs mvex table and contains no data in stts, stsc, and stco boxes.
+ * Determine if an mp4 file is fragmented. A fragmented file needs mvex table
+ * and contains no data in stts, stsc, and stco boxes.
+ *
+ * # Safety
+ *
+ * This function is unsafe because it dereferences the the parser and
+ * fragmented raw pointers passed to it. Callers should ensure the parser
+ * pointer points to a valid `Mp4parseParser` and that the fragmented pointer
+ * points to an appropriate memory location to have a `u8` written to.
  */
 Mp4parseStatus mp4parse_is_fragmented(Mp4parseParser *parser,
                                       uint32_t track_id,
@@ -197,11 +290,25 @@ Mp4parseStatus mp4parse_is_fragmented(Mp4parseParser *parser,
 
 /*
  * Allocate an `Mp4parseParser*` to read from the supplied `Mp4parseIo`.
+ *
+ * # Safety
+ *
+ * This function is unsafe because it dereferences the io pointer given to it.
+ * The caller should ensure that the `Mp4ParseIo` struct passed in is a valid
+ * pointer. The caller should also ensure the members of io are valid: the
+ * `read` function should be sanely implemented, and the `userdata` pointer
+ * should be valid.
  */
 Mp4parseParser *mp4parse_new(const Mp4parseIo *io);
 
 /*
  * Run the `Mp4parseParser*` allocated by `mp4parse_new()` until EOF or error.
+ *
+ * # Safety
+ *
+ * This function is unsafe because it dereferences the raw parser pointer
+ * passed to it. Callers should ensure that the parser pointer points to a
+ * valid `Mp4parseParser`.
  */
 Mp4parseStatus mp4parse_read(Mp4parseParser *parser);
 

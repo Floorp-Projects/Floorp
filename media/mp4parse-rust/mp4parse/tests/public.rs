@@ -9,12 +9,12 @@ extern crate mp4parse as mp4;
 use std::io::{Cursor, Read};
 use std::fs::File;
 
-static MINI_MP4: &'static str = "tests/minimal.mp4";
-static MINI_MP4_WITH_METADATA: &'static str = "tests/metadata.mp4";
-static MINI_MP4_WITH_METADATA_STD_GENRE: &'static str = "tests/metadata_gnre.mp4";
+static MINI_MP4: &str = "tests/minimal.mp4";
+static MINI_MP4_WITH_METADATA: &str = "tests/metadata.mp4";
+static MINI_MP4_WITH_METADATA_STD_GENRE: &str = "tests/metadata_gnre.mp4";
 
-static AUDIO_EME_CENC_MP4: &'static str = "tests/bipbop-cenc-audioinit.mp4";
-static VIDEO_EME_CENC_MP4: &'static str = "tests/bipbop_480wp_1001kbps-cenc-video-key1-init.mp4";
+static AUDIO_EME_CENC_MP4: &str = "tests/bipbop-cenc-audioinit.mp4";
+static VIDEO_EME_CENC_MP4: &str = "tests/bipbop_480wp_1001kbps-cenc-video-key1-init.mp4";
 // The cbcs files were created via shaka-packager from Firefox's test suite's bipbop.mp4 using:
 // packager-win.exe
 // in=bipbop.mp4,stream=audio,init_segment=bipbop_cbcs_audio_init.mp4,segment_template=bipbop_cbcs_audio_$Number$.m4s
@@ -24,12 +24,13 @@ static VIDEO_EME_CENC_MP4: &'static str = "tests/bipbop_480wp_1001kbps-cenc-vide
 // --iv 11223344556677889900112233445566
 // --generate_static_mpd --mpd_output bipbop_cbcs.mpd
 // note: only the init files are needed for these tests
-static AUDIO_EME_CBCS_MP4: &'static str = "tests/bipbop_cbcs_audio_init.mp4";
-static VIDEO_EME_CBCS_MP4: &'static str = "tests/bipbop_cbcs_video_init.mp4";
-static VIDEO_AV1_MP4: &'static str = "tests/tiny_av1.mp4";
+static AUDIO_EME_CBCS_MP4: &str = "tests/bipbop_cbcs_audio_init.mp4";
+static VIDEO_EME_CBCS_MP4: &str = "tests/bipbop_cbcs_video_init.mp4";
+static VIDEO_AV1_MP4: &str = "tests/tiny_av1.mp4";
 
 // Adapted from https://github.com/GuillaumeGomez/audio-video-metadata/blob/9dff40f565af71d5502e03a2e78ae63df95cfd40/src/metadata.rs#L53
 #[test]
+#[allow(clippy::cognitive_complexity)] // TODO: Consider simplifying this
 fn public_api() {
     let mut fd = File::open(MINI_MP4).expect("Unknown file");
     let mut buf = Vec::new();
@@ -52,8 +53,8 @@ fn public_api() {
                 let tkhd = track.tkhd.unwrap();
                 assert_eq!(tkhd.disabled, false);
                 assert_eq!(tkhd.duration, 40);
-                assert_eq!(tkhd.width, 20971520);
-                assert_eq!(tkhd.height, 15728640);
+                assert_eq!(tkhd.width, 20_971_520);
+                assert_eq!(tkhd.height, 15_728_640);
 
                 // track.stsd part
                 let stsd = track.stsd.expect("expected an stsd");
@@ -71,7 +72,7 @@ fn public_api() {
                     mp4::VideoCodecSpecific::VPxConfig(ref vpx) => {
                         // We don't enter in here, we just check if fields are public.
                         assert!(vpx.bit_depth > 0);
-                        assert!(vpx.color_space > 0);
+                        assert!(vpx.colour_primaries > 0);
                         assert!(vpx.chroma_subsampling > 0);
                         assert!(!vpx.codec_init.is_empty());
                         "VPx"
@@ -144,6 +145,7 @@ fn public_api() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)] // TODO: Consider simplifying this
 fn public_metadata() {
     let mut fd = File::open(MINI_MP4_WITH_METADATA).expect("Unknown file");
     let mut buf = Vec::new();
@@ -202,10 +204,11 @@ fn public_metadata() {
     bytes[0] = cover[0];
     bytes[1] = cover[1];
     bytes[2] = cover[2];
-    assert_eq!(u32::from_le_bytes(bytes), 0xffd8ff);
+    assert_eq!(u32::from_le_bytes(bytes), 0x00ff_d8ff);
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)] // TODO: Consider simplifying this
 fn public_metadata_gnre() {
     let mut fd = File::open(MINI_MP4_WITH_METADATA_STD_GENRE).expect("Unknown file");
     let mut buf = Vec::new();
@@ -264,7 +267,7 @@ fn public_metadata_gnre() {
     bytes[0] = cover[0];
     bytes[1] = cover[1];
     bytes[2] = cover[2];
-    assert_eq!(u32::from_le_bytes(bytes), 0xffd8ff);
+    assert_eq!(u32::from_le_bytes(bytes), 0x00ff_d8ff);
 }
 
 #[test]
@@ -293,7 +296,7 @@ fn public_audio_tenc() {
                 if let Some(ref schm) = p.scheme_type {
                     assert_eq!(schm.scheme_type.value, "cenc");
                 } else {
-                    assert!(false, "Expected scheme type info");
+                    panic!("Expected scheme type info");
                 }
                 if let Some(ref tenc) = p.tenc {
                     assert!(tenc.is_encrypted > 0);
@@ -303,11 +306,11 @@ fn public_audio_tenc() {
                     assert_eq!(tenc.skip_byte_block_count, None);
                     assert_eq!(tenc.constant_iv, None);
                 } else {
-                    assert!(false, "Invalid test condition");
+                    panic!("Invalid test condition");
                 }
             },
             _=> {
-                assert!(false, "Invalid test condition");
+                panic!("Invalid test condition");
             },
         }
     }
@@ -352,7 +355,7 @@ fn public_video_cenc() {
                 if let Some(ref schm) = p.scheme_type {
                     assert_eq!(schm.scheme_type.value, "cenc");
                 } else {
-                    assert!(false, "Expected scheme type info");
+                    panic!("Expected scheme type info");
                 }
                 if let Some(ref tenc) = p.tenc {
                     assert!(tenc.is_encrypted > 0);
@@ -362,11 +365,11 @@ fn public_video_cenc() {
                     assert_eq!(tenc.skip_byte_block_count, None);
                     assert_eq!(tenc.constant_iv, None);
                 } else {
-                    assert!(false, "Invalid test condition");
+                    panic!("Invalid test condition");
                 }
             },
             _=> {
-                assert!(false, "Invalid test condition");
+                panic!("Invalid test condition");
             }
         }
     }
@@ -424,7 +427,7 @@ fn publicaudio_cbcs() {
                         if let Some(ref schm) = p.scheme_type {
                             assert_eq!(schm.scheme_type.value, "cbcs");
                         } else {
-                            assert!(false, "Expected scheme type info");
+                            panic!("Expected scheme type info");
                         }
                         if let Some(ref tenc) = p.tenc {
                             assert!(tenc.is_encrypted > 0);
@@ -437,7 +440,7 @@ fn publicaudio_cbcs() {
                             assert_eq!(tenc.skip_byte_block_count, Some(0));
                             assert_eq!(tenc.constant_iv, Some(default_iv.clone()));
                         } else {
-                            assert!(false, "Invalid test condition");
+                            panic!("Invalid test condition");
                         }
                     }
                 },
@@ -461,6 +464,7 @@ fn publicaudio_cbcs() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)] // TODO: Consider simplifying this
 fn public_video_cbcs() {
     let system_id =
         vec![0x10, 0x77, 0xef, 0xec, 0xc0, 0xb2, 0x4d, 0x02,
@@ -505,7 +509,7 @@ fn public_video_cbcs() {
                         if let Some(ref schm) = p.scheme_type {
                             assert_eq!(schm.scheme_type.value, "cbcs");
                         } else {
-                            assert!(false, "Expected scheme type info");
+                            panic!("Expected scheme type info");
                         }
                         if let Some(ref tenc) = p.tenc {
                             assert!(tenc.is_encrypted > 0);
@@ -515,7 +519,7 @@ fn public_video_cbcs() {
                             assert_eq!(tenc.skip_byte_block_count, Some(9));
                             assert_eq!(tenc.constant_iv, Some(default_iv.clone()));
                         } else {
-                            assert!(false, "Invalid test condition");
+                            panic!("Invalid test condition");
                         }
                     }
                 },
@@ -539,6 +543,7 @@ fn public_video_cbcs() {
 }
 
 #[test]
+#[allow(clippy::cognitive_complexity)] // TODO: Consider simplifying this
 fn public_video_av1() {
     let mut fd = File::open(VIDEO_AV1_MP4).expect("Unknown file");
     let mut buf = Vec::new();
@@ -558,8 +563,8 @@ fn public_video_av1() {
         let tkhd = track.tkhd.unwrap();
         assert_eq!(tkhd.disabled, false);
         assert_eq!(tkhd.duration, 42);
-        assert_eq!(tkhd.width, 4194304);
-        assert_eq!(tkhd.height, 4194304);
+        assert_eq!(tkhd.width, 4_194_304);
+        assert_eq!(tkhd.height, 4_194_304);
 
         // track.stsd part
         let stsd = track.stsd.expect("expected an stsd");
@@ -585,7 +590,7 @@ fn public_video_av1() {
                 assert_eq!(av1c.initial_presentation_delay_present, false);
                 assert_eq!(av1c.initial_presentation_delay_minus_one, 0);
             },
-            _ => assert!(false, "Invalid test condition"),
+            _ => panic!("Invalid test condition"),
         }
     }
 }

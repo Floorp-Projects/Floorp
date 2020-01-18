@@ -22,6 +22,7 @@ enum BoxSize {
     Auto,
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)] // TODO: Consider reworking to a copy
 fn make_box<F>(size: BoxSize, name: &[u8; 4], func: F) -> Cursor<Vec<u8>>
     where F: Fn(Section) -> Section
 {
@@ -48,12 +49,12 @@ fn make_box<F>(size: BoxSize, name: &[u8; 4], func: F) -> Cursor<Vec<u8>>
     match size {
         BoxSize::Short(size) => {
             if size > 0 {
-                assert_eq!(size as u64, section.size())
+                assert_eq!(u64::from(size), section.size())
             }
         }
         BoxSize::Long(size) => assert_eq!(size, section.size()),
         BoxSize::Auto => {
-            assert!(section.size() <= u32::max_value() as u64,
+            assert!(section.size() <= u64::from(u32::max_value()),
                     "Tried to use a long box with BoxSize::Auto");
             box_size.set_const(section.size());
         }
@@ -74,6 +75,7 @@ fn make_uuid_box<F>(size: BoxSize, uuid: &[u8; 16], func: F) -> Cursor<Vec<u8>>
     })
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)] // TODO: Consider reworking to a copy
 fn make_fullbox<F>(size: BoxSize, name: &[u8; 4], version: u8, func: F) -> Cursor<Vec<u8>>
     where F: Fn(Section) -> Section
 {
@@ -89,7 +91,7 @@ fn make_fullbox<F>(size: BoxSize, name: &[u8; 4], version: u8, func: F) -> Curso
 fn read_box_header_short() {
     let mut stream = make_box(BoxSize::Short(8), b"test", |s| s);
     let header = super::read_box_header(&mut stream).unwrap();
-    assert_eq!(header.name, BoxType::UnknownBox(0x74657374)); // "test"
+    assert_eq!(header.name, BoxType::UnknownBox(0x7465_7374)); // "test"
     assert_eq!(header.size, 8);
     assert!(header.uuid.is_none());
 }
@@ -98,7 +100,7 @@ fn read_box_header_short() {
 fn read_box_header_long() {
     let mut stream = make_box(BoxSize::Long(16), b"test", |s| s);
     let header = super::read_box_header(&mut stream).unwrap();
-    assert_eq!(header.name, BoxType::UnknownBox(0x74657374)); // "test"
+    assert_eq!(header.name, BoxType::UnknownBox(0x7465_7374)); // "test"
     assert_eq!(header.size, 16);
     assert!(header.uuid.is_none());
 }
@@ -438,6 +440,7 @@ fn read_vpcc_version_0() {
 
 // TODO: it'd be better to find a real sample here.
 #[test]
+#[allow(clippy::inconsistent_digit_grouping)] // Allow odd grouping for test readability.
 fn read_vpcc_version_1() {
     let data_length = 12u16;
     let mut stream = make_fullbox(BoxSize::Auto, b"vpcC", 1, |s| {
@@ -459,8 +462,8 @@ fn read_vpcc_version_1() {
         Ok(vpcc) => {
             assert_eq!(vpcc.bit_depth, 8);
             assert_eq!(vpcc.chroma_subsampling, 3);
-            assert_eq!(vpcc.video_full_range, false);
-            assert_eq!(vpcc.matrix.unwrap(), 1);
+            assert_eq!(vpcc.video_full_range_flag, false);
+            assert_eq!(vpcc.matrix_coefficients.unwrap(), 1);
         },
         _ => panic!("vpcc parsing error"),
     }
@@ -570,19 +573,16 @@ enum FlacBlockLength {
     Incorrect(usize),
 }
 
-fn make_dfla(block_type: FlacBlockType, last: bool, data: &Vec<u8>,
+fn make_dfla(block_type: FlacBlockType, last: bool, data: &[u8],
              data_length: FlacBlockLength) -> Cursor<Vec<u8>> {
     assert!(data.len() < 1<<24);
     make_fullbox(BoxSize::Auto, b"dfLa", 0, |s| {
-        let flag = match last {
-            true => 1,
-            false => 0,
-        };
+        let flag = if last { 1 } else { 0 };
         let size = match data_length {
-            FlacBlockLength::Correct => (data.len() as u32) & 0xffffff,
+            FlacBlockLength::Correct => (data.len() as u32) & 0x00ff_ffff,
             FlacBlockLength::Incorrect(size) => {
                 assert!(size < 1<<24);
-                (size as u32) & 0xffffff
+                (size as u32) & 0x00ff_ffff
             }
         };
         let block_type = (block_type as u32) & 0x7f;
@@ -714,7 +714,7 @@ fn read_alac() {
          .B16(0) // reserved
          .B32(44100 << 16) // Sample rate
          .append_bytes(&make_fullbox(BoxSize::Auto, b"alac", 0, |s| {
-             s.append_bytes(&vec![0xfa; 24])
+             s.append_bytes(&[0xfa; 24])
          }).into_inner())
     });
     let mut iter = super::BoxIter::new(&mut stream);
@@ -734,7 +734,7 @@ fn avcc_limit() {
          .append_repeated(0, 14)
          .append_repeated(0, 32)
          .append_repeated(0, 4)
-         .B32(0xffffffff)
+         .B32(0xffff_ffff)
          .append_bytes(b"avcC")
          .append_repeated(0, 100)
     });
@@ -759,7 +759,7 @@ fn esds_limit() {
          .B16(0)
          .B16(0)
          .B32(48000 << 16)
-         .B32(0xffffffff)
+         .B32(0xffff_ffff)
          .append_bytes(b"esds")
          .append_repeated(0, 100)
     });
@@ -817,7 +817,7 @@ fn make_elst() -> Cursor<Vec<u8>> {
         s.B32(1)
         // first entry
          .B64(1234) // duration
-         .B64(0xffffffffffffffff) // time
+         .B64(0xffff_ffff_ffff_ffff) // time
          .B16(12) // rate integer
          .B16(34) // rate fraction
     })
@@ -892,7 +892,7 @@ fn skip_padding_in_stsd() {
          .append_repeated(0, 14)
          .append_repeated(0, 32)
          .append_repeated(0, 4)
-         .B32(0xffffffff)
+         .B32(0xffff_ffff)
          .append_bytes(b"avcC")
          .append_repeated(0, 100)
     }).into_inner();
@@ -947,7 +947,7 @@ fn read_qt_wave_atom() {
     match sample_entry {
         super::SampleEntry::Audio(sample_entry) =>
           assert_eq!(sample_entry.codec_type, super::CodecType::MP3),
-        _ => assert!(false, "fail to read audio sample enctry"),
+        _ => panic!("fail to read audio sample enctry"),
     }
 }
 
@@ -1154,7 +1154,7 @@ fn read_f4v_stsd() {
     match sample_entry {
         super::SampleEntry::Audio(sample_entry) =>
           assert_eq!(sample_entry.codec_type, super::CodecType::MP3),
-        _ => assert!(false, "fail to read audio sample enctry"),
+        _ => panic!("fail to read audio sample enctry"),
     }
 }
 
@@ -1327,6 +1327,7 @@ fn read_stsd_lpcm() {
     let sample_entry = super::read_audio_sample_entry(&mut stream).unwrap();
 
     match sample_entry {
+        #[allow(clippy::float_cmp)] // The float comparison below is valid and intended.
         super::SampleEntry::Audio(a) => {
             assert_eq!(a.codec_type, super::CodecType::LPCM);
             assert_eq!(a.samplerate, 96000.0);
