@@ -15,7 +15,8 @@
 #  include "mozilla/layers/TextureHostOGL.h"
 #endif
 
-namespace mozilla::layers {
+namespace mozilla {
+namespace layers {
 
 WebRenderTextureHost::WebRenderTextureHost(
     const SurfaceDescriptor& aDesc, TextureFlags aFlags, TextureHost* aTexture,
@@ -229,4 +230,5 @@ bool WebRenderTextureHost::NeedsYFlip() const {
   return yFlip;
 }
 
-}  // namespace mozilla::layers
+}  // namespace layers
+}  // namespace mozilla

@@ -70,7 +70,8 @@ mozilla::LazyLogModule gStorageLog("mozStorage");
     } while (0)
 #endif
 
-namespace mozilla::storage {
+namespace mozilla {
+namespace storage {
 
 using mozilla::dom::quota::QuotaObject;
 
@@ -2278,4 +2279,5 @@ Connection::GetQuotaObjects(QuotaObject** aDatabaseQuotaObject,
   return NS_OK;
 }
 
-}  // namespace mozilla::storage
+}  // namespace storage
+}  // namespace mozilla

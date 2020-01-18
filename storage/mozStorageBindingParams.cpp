@@ -15,7 +15,8 @@
 #include "mozStorageBindingParamsArray.h"
 #include "Variant.h"
 
-namespace mozilla::storage {
+namespace mozilla {
+namespace storage {
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Local Helper Objects
@@ -431,4 +432,5 @@ BindingParams::BindAdoptedBlobByIndex(uint32_t aIndex, uint8_t* aValue,
   return BindByIndex(aIndex, value);
 }
 
-}  // namespace mozilla::storage
+}  // namespace storage
+}  // namespace mozilla

@@ -9,7 +9,8 @@
 #include "frontend/BinAST-macros.h"
 #include "js/Result.h"
 
-namespace js::frontend {
+namespace js {
+namespace frontend {
 
 template <typename T>
 using ErrorResult = mozilla::GenericErrorResult<T>;
@@ -104,4 +105,5 @@ JS::Result<uint8_t> BinASTTokenReaderBase::readByte() {
   return *current_++;
 }
 
-}  // namespace js::frontend
+}  // namespace frontend
+}  // namespace js

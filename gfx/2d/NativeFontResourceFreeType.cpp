@@ -8,7 +8,8 @@
 #include "UnscaledFontFreeType.h"
 #include "Logging.h"
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 NativeFontResourceFreeType::NativeFontResourceFreeType(
     UniquePtr<uint8_t[]>&& aFontData, uint32_t aDataLength,
@@ -89,4 +90,5 @@ NativeFontResourceFontconfig::Create(uint8_t* aFontData, uint32_t aDataLength,
 }
 #endif
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla

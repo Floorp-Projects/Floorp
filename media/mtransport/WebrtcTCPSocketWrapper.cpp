@@ -15,7 +15,8 @@
 
 #include "nr_socket_proxy_config.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 using std::shared_ptr;
 
@@ -121,4 +122,5 @@ void WebrtcTCPSocketWrapper::OnConnected(const nsCString& aProxyType) {
       &WebrtcTCPSocketCallback::OnConnected, aProxyType)));
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

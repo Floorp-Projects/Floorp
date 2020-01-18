@@ -202,7 +202,8 @@ void mozilla_UnlockFTLibrary(FT_Library aFTLibrary) {
 }
 #endif
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 #ifdef MOZ_ENABLE_FREETYPE
 FT_Library Factory::mFTLibrary = nullptr;
@@ -1377,4 +1378,5 @@ void LogWStr(const wchar_t* aWStr, std::stringstream& aOut) {
 }
 #endif
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla

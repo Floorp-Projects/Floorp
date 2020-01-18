@@ -9,7 +9,8 @@
 #include "mozilla/CycleCollectedJSContext.h"  // for nsAutoMicroTask
 #include "Geolocation.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GeolocationPositionError, mParent)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(GeolocationPositionError, AddRef)
@@ -63,4 +64,5 @@ void GeolocationPositionError::NotifyCallback(
   }
 }
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla

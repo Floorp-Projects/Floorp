@@ -132,7 +132,8 @@
 
 using mozilla::dom::Promise;
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 LazyLogModule gHttpLog("nsHttp");
 
@@ -293,7 +294,8 @@ nsHttpHandler::nsHttpHandler()
       mNextChannelId(1),
       mLastActiveTabLoadOptimizationLock(
           "nsHttpConnectionMgr::LastActiveTabLoadOptimization"),
-      mSpdyBlacklistLock("nsHttpHandler::SpdyBlacklist"),
+      mSpdyBlacklistLock(
+          "nsHttpHandler::SpdyBlacklist"),
       mThroughCaptivePortal(false) {
   LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
@@ -2723,4 +2725,5 @@ nsresult nsHttpHandler::CancelTransaction(HttpTransactionShell* trans,
   return mConnMgr->CancelTransaction(trans, reason);
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

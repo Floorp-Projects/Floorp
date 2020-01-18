@@ -15,7 +15,8 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 InlineTranslator::InlineTranslator() : mFontContext(nullptr) {}
 
@@ -109,4 +110,5 @@ already_AddRefed<DrawTarget> InlineTranslator::CreateDrawTarget(
   return drawTarget.forget();
 }
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla

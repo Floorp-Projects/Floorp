@@ -74,7 +74,8 @@
 //
 // They should be treated lazily (whenever we open a subscope), like bindings.
 
-namespace js::frontend {
+namespace js {
+namespace frontend {
 
 using UsedNamePtr = UsedNameTracker::UsedNameMap::Ptr;
 
@@ -810,4 +811,5 @@ BinASTParserPerTokenizer<Tok>::asFinalParser() const {
 template class BinASTParserPerTokenizer<BinASTTokenReaderContext>;
 template class BinASTParserPerTokenizer<BinASTTokenReaderMultipart>;
 
-}  // namespace js::frontend
+}  // namespace frontend
+}  // namespace js

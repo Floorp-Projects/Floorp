@@ -35,7 +35,8 @@
 /* a shorter name that better explains what it does */
 #define EINTR_RETRY(x) MOZ_TEMP_FAILURE_RETRY(x)
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 // period during which to absorb subsequent network change events, in
 // milliseconds
@@ -1798,4 +1799,5 @@ void NetlinkService::GetIsLinkUp(bool* aIsUp) {
   *aIsUp = mLinkUp;
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

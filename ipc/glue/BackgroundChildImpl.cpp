@@ -80,7 +80,8 @@ class TestChild final : public mozilla::ipc::PBackgroundTestChild {
 
 }  // namespace
 
-namespace mozilla::ipc {
+namespace mozilla {
+namespace ipc {
 
 using mozilla::dom::UDPSocketChild;
 using mozilla::net::PUDPSocketChild;
@@ -756,7 +757,8 @@ PFileDescriptorSetChild* BackgroundChildImpl::SendPFileDescriptorSetConstructor(
   return PBackgroundChild::SendPFileDescriptorSetConstructor(aFD);
 }
 
-}  // namespace mozilla::ipc
+}  // namespace ipc
+}  // namespace mozilla
 
 mozilla::ipc::IPCResult TestChild::Recv__delete__(const nsCString& aTestArg) {
   MOZ_RELEASE_ASSERT(aTestArg == mTestArg,

@@ -10,7 +10,8 @@
 #include "mozilla/gfx/Logging.h"
 #include "ScopedGLHelpers.h"
 
-namespace mozilla::wr {
+namespace mozilla {
+namespace wr {
 
 RenderWaylandDMABUFTextureHostOGL::RenderWaylandDMABUFTextureHostOGL(
     WaylandDMABufSurface* aSurface)
@@ -90,4 +91,5 @@ void RenderWaylandDMABUFTextureHostOGL::DeleteTextureHandle() {
   }
 }
 
-}  // namespace mozilla::wr
+}  // namespace wr
+}  // namespace mozilla

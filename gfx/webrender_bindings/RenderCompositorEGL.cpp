@@ -26,7 +26,8 @@
 #  include <android/native_window_jni.h>
 #endif
 
-namespace mozilla::wr {
+namespace mozilla {
+namespace wr {
 
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
@@ -119,7 +120,7 @@ bool RenderCompositorEGL::Resume() {
   EGLNativeWindowType window = mWidget->AsAndroid()->GetEGLNativeWindow();
   JNIEnv* const env = jni::GetEnvForThread();
   ANativeWindow* const nativeWindow =
-      ANativeWindow_fromSurface(env, reinterpret_cast<jobject>(window));
+    ANativeWindow_fromSurface(env, reinterpret_cast<jobject>(window));
   const int32_t width = ANativeWindow_getWidth(nativeWindow);
   const int32_t height = ANativeWindow_getHeight(nativeWindow);
   mEGLSurfaceSize = LayoutDeviceIntSize(width, height);
@@ -175,4 +176,5 @@ LayoutDeviceIntSize RenderCompositorEGL::GetBufferSize() {
 #endif
 }
 
-}  // namespace mozilla::wr
+}  // namespace wr
+}  // namespace mozilla

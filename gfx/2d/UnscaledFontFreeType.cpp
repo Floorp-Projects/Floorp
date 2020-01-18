@@ -20,7 +20,8 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 bool UnscaledFontFreeType::GetFontFileData(FontFileDataOutput aDataCallback,
                                            void* aBaton) {
@@ -190,4 +191,5 @@ void UnscaledFontFreeType::ApplyVariationsToFace(
   }
 }
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla

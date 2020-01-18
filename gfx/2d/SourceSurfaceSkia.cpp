@@ -12,7 +12,8 @@
 #include "skia/include/core/SkData.h"
 #include "mozilla/CheckedInt.h"
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 SourceSurfaceSkia::SourceSurfaceSkia()
     : mFormat(SurfaceFormat::UNKNOWN),
@@ -170,4 +171,5 @@ void SourceSurfaceSkia::DrawTargetWillChange() {
   }
 }
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla
