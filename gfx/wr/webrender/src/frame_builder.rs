@@ -15,6 +15,7 @@ use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, SavedTargetIndex};
 use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex, RecordedDirtyRegion};
 use crate::picture::{RetainedTiles, TileCacheInstance, DirtyRegion, SurfaceRenderTasks, SubpixelMode};
+use crate::picture::{TileCacheLogger};
 use crate::prim_store::{SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
 use crate::prim_store::{DeferredResolve, PrimitiveVisibilityMask};
 use crate::profiler::{FrameProfileCounters, TextureCacheProfileCounters, ResourceProfileCounters};
@@ -240,6 +241,7 @@ impl FrameBuilder {
         debug_flags: DebugFlags,
         texture_cache_profile: &mut TextureCacheProfileCounters,
         composite_state: &mut CompositeState,
+        tile_cache_logger: &mut TileCacheLogger,
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
@@ -411,8 +413,11 @@ impl FrameBuilder {
                 &mut frame_state,
                 &frame_context,
                 scratch,
+                tile_cache_logger
             )
             .unwrap();
+
+        tile_cache_logger.advance();
 
         {
             profile_marker!("PreparePrims");
@@ -425,6 +430,7 @@ impl FrameBuilder {
                 &mut frame_state,
                 data_stores,
                 scratch,
+                tile_cache_logger,
             );
         }
 
@@ -465,6 +471,7 @@ impl FrameBuilder {
         scratch: &mut PrimitiveScratchBuffer,
         render_task_counters: &mut RenderTaskGraphCounters,
         debug_flags: DebugFlags,
+        tile_cache_logger: &mut TileCacheLogger,
     ) -> Frame {
         profile_scope!("build");
         profile_marker!("BuildFrame");
@@ -534,6 +541,7 @@ impl FrameBuilder {
             debug_flags,
             &mut resource_profile.texture_cache,
             &mut composite_state,
+            tile_cache_logger,
         );
 
         let mut passes;
