@@ -73,7 +73,8 @@
 #  include "mozilla/SandboxTestingChild.h"
 #endif
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 using namespace ipc;
 using namespace layers;
@@ -586,4 +587,5 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   XRE_ShutdownChildProcess();
 }
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla

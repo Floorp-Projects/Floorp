@@ -11,7 +11,8 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "GLContextEGL.h"
 
-namespace mozilla::layers {
+namespace mozilla {
+namespace layers {
 
 WaylandDMABUFTextureHostOGL::WaylandDMABUFTextureHostOGL(
     TextureFlags aFlags, const SurfaceDescriptor& aDesc)
@@ -134,4 +135,5 @@ void WaylandDMABUFTextureHostOGL::PushDisplayItems(
                      !(mFlags & TextureFlags::NON_PREMULTIPLIED));
 }
 
-}  // namespace mozilla::layers
+}  // namespace layers
+}  // namespace mozilla

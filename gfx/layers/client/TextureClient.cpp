@@ -70,7 +70,8 @@
     } while (0)
 #endif
 
-namespace mozilla::layers {
+namespace mozilla {
+namespace layers {
 
 using namespace mozilla::ipc;
 using namespace mozilla::gl;
@@ -1906,4 +1907,5 @@ bool MappedYCbCrChannelData::CopyInto(MappedYCbCrChannelData& aDst) {
   return true;
 }
 
-}  // namespace mozilla::layers
+}  // namespace layers
+}  // namespace mozilla

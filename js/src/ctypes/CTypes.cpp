@@ -64,7 +64,8 @@ using mozilla::IsAsciiDigit;
 using JS::AutoCheckCannotGC;
 using JS::AutoStableStringChars;
 
-namespace js::ctypes {
+namespace js {
+namespace ctypes {
 
 static bool HasUnpairedSurrogate(const char16_t* chars, size_t nchars,
                                  char16_t* unpaired) {
@@ -2318,7 +2319,8 @@ static bool GetObjectProperty(JSContext* cx, HandleObject obj,
   return true;
 }
 
-}  // namespace js::ctypes
+} /* namespace ctypes */
+} /* namespace js */
 
 using namespace js;
 using namespace js::ctypes;

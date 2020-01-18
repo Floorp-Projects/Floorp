@@ -19,7 +19,8 @@
 
 static mozilla::LazyLogModule sScreenLog("WidgetScreen");
 
-namespace mozilla::widget {
+namespace mozilla {
+namespace widget {
 
 NS_IMPL_ISUPPORTS(ScreenManager, nsIScreenManager)
 
@@ -242,4 +243,5 @@ ScreenManager::GetTotalScreenPixels(int64_t* aTotalScreenPixels) {
   return NS_OK;
 }
 
-}  // namespace mozilla::widget
+}  // namespace widget
+}  // namespace mozilla

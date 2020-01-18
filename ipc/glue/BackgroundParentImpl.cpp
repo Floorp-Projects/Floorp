@@ -112,7 +112,8 @@ class TestParent final : public mozilla::ipc::PBackgroundTestParent {
 
 }  // namespace
 
-namespace mozilla::ipc {
+namespace mozilla {
+namespace ipc {
 
 using mozilla::dom::BroadcastChannelParent;
 using mozilla::dom::ContentParent;
@@ -1304,7 +1305,8 @@ BackgroundParentImpl::SendPFileDescriptorSetConstructor(
   return PBackgroundParent::SendPFileDescriptorSetConstructor(aFD);
 }
 
-}  // namespace mozilla::ipc
+}  // namespace ipc
+}  // namespace mozilla
 
 void TestParent::ActorDestroy(ActorDestroyReason aWhy) {
   mozilla::ipc::AssertIsInMainOrSocketProcess();

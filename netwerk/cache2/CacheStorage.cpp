@@ -19,7 +19,8 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 
-namespace mozilla::net {
+namespace mozilla {
+namespace net {
 
 NS_IMPL_ISUPPORTS(CacheStorage, nsICacheStorage)
 
@@ -250,4 +251,5 @@ nsresult CacheStorage::ChooseApplicationCache(nsIURI* aURI,
   return NS_OK;
 }
 
-}  // namespace mozilla::net
+}  // namespace net
+}  // namespace mozilla

@@ -7,7 +7,8 @@
 #include "JobScheduler.h"
 #include "mozilla/gfx/Logging.h"
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 void* ThreadCallback(void* threadData);
 
@@ -152,4 +153,5 @@ void EventObject::Wait() {
   mCond.Wait(&mMutex);
 }
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla

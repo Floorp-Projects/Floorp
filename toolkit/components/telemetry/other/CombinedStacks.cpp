@@ -10,7 +10,8 @@
 #include "js/Array.h"  // JS::NewArrayObject
 #include "mozilla/HangAnnotations.h"
 
-namespace mozilla::Telemetry {
+namespace mozilla {
+namespace Telemetry {
 
 // The maximum number of chrome hangs stacks that we're keeping.
 const size_t kMaxChromeStacksKept = 50;
@@ -224,4 +225,5 @@ JSObject* CreateJSStackObject(JSContext* cx, const CombinedStacks& stacks) {
   return ret;
 }
 
-}  // namespace mozilla::Telemetry
+}  // namespace Telemetry
+}  // namespace mozilla

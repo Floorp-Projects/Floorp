@@ -8,7 +8,8 @@
 
 #include <emmintrin.h>
 
-namespace mozilla::gfx {
+namespace mozilla {
+namespace gfx {
 
 // Load 1-3 pixels into a 4 pixel vector.
 static MOZ_ALWAYS_INLINE __m128i LoadRemainder_SSE2(const uint8_t* aSrc,
@@ -371,4 +372,5 @@ template void Swizzle_SSE2<true, false>(const uint8_t*, int32_t, uint8_t*,
 template void Swizzle_SSE2<true, true>(const uint8_t*, int32_t, uint8_t*,
                                        int32_t, IntSize);
 
-}  // namespace mozilla::gfx
+}  // namespace gfx
+}  // namespace mozilla

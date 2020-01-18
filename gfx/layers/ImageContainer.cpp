@@ -40,7 +40,8 @@
 #  include "mozilla/layers/D3D11YCbCrImage.h"
 #endif
 
-namespace mozilla::layers {
+namespace mozilla {
+namespace layers {
 
 using namespace mozilla::gfx;
 using namespace mozilla::ipc;
@@ -799,4 +800,5 @@ ImageContainer::ProducerID ImageContainer::AllocateProducerID() {
   return ++sProducerID;
 }
 
-}  // namespace mozilla::layers
+}  // namespace layers
+}  // namespace mozilla

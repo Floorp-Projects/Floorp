@@ -8,7 +8,8 @@
 #include "mozilla/widget/WaylandDMABufSurface.h"
 #include "gfxPlatform.h"
 
-namespace mozilla::layers {
+namespace mozilla {
+namespace layers {
 
 using namespace gfx;
 
@@ -102,4 +103,5 @@ bool WaylandDMABUFTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface) {
   return true;
 }
 
-}  // namespace mozilla::layers
+}  // namespace layers
+}  // namespace mozilla

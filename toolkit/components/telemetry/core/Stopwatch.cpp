@@ -49,7 +49,8 @@ static void LogError(JSContext* aCx, const nsCString& aMessage) {
   }
 }
 
-namespace mozilla::telemetry {
+namespace mozilla {
+namespace telemetry {
 
 class Timer final {
  public:
@@ -427,4 +428,5 @@ void Stopwatch::SetTestModeEnabled(const dom::GlobalObject& aGlobal,
   Timers::Singleton().SuppressErrors() = aTesting;
 }
 
-}  // namespace mozilla::telemetry
+}  // namespace telemetry
+}  // namespace mozilla

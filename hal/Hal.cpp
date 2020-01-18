@@ -51,7 +51,8 @@ using namespace mozilla::dom;
     }                                              \
   } while (0)
 
-namespace mozilla::hal {
+namespace mozilla {
+namespace hal {
 
 static bool sInitialized = false;
 
@@ -479,4 +480,5 @@ void Shutdown() {
   sInitialized = false;
 }
 
-}  // namespace mozilla::hal
+}  // namespace hal
+}  // namespace mozilla

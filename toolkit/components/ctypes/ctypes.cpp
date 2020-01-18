@@ -14,7 +14,8 @@
 #include "nsZipArchive.h"
 #include "xpc_make_class.h"
 
-namespace mozilla::ctypes {
+namespace mozilla {
+namespace ctypes {
 
 static char* UnicodeToNative(JSContext* cx, const char16_t* source,
                              size_t slen) {
@@ -97,4 +98,5 @@ Module::Call(nsIXPConnectWrappedNative* wrapper, JSContext* cx, JSObject* obj,
   return NS_OK;
 }
 
-}  // namespace mozilla::ctypes
+}  // namespace ctypes
+}  // namespace mozilla

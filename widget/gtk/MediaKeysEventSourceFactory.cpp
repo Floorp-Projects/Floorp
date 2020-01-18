@@ -4,11 +4,13 @@
 
 #include "MediaKeysEventSourceFactory.h"
 
-namespace mozilla::widget {
+namespace mozilla {
+namespace widget {
 
 mozilla::dom::MediaControlKeysEventSource* CreateMediaControlKeysEventSource() {
   // TODO : will implement this in bug 1353652.
   return nullptr;
 }
 
-}  // namespace mozilla::widget
+}  // namespace widget
+}  // namespace mozilla
