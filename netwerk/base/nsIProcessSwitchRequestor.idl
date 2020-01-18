@@ -46,7 +46,7 @@ interface nsIProcessSwitchRequestor : nsISupports
   /**
    * Returns a cached CrossOriginOpenerPolicy that is computed just before we
    * determine if there is a policy mismatch.
-   * @throws NS_ERROR_NOT_AVAILABLE if it has not been computed yet
+   * @throws NS_ERROR_NOT_AVAILABLE if called before onStartRequest
    */
-  [must_use] readonly attribute nsILoadInfo_CrossOriginOpenerPolicy crossOriginOpenerPolicy;
+  [must_use, binaryname(CachedCrossOriginOpenerPolicy)] readonly attribute nsILoadInfo_CrossOriginOpenerPolicy crossOriginOpenerPolicy;
 };
