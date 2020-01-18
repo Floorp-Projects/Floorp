@@ -31,10 +31,21 @@ async function assignToken(tokenToAssign) {
 async function pollForPage(win) {
   while (true) {
     try {
-      var pageToken = await SpecialPowers.spawn(w, [], 
-                                                () => this.content.token);
+      // When we do our navigation, there may be an interstitial about:blank
+      // page if the navigation involves a process switch.  That about:blank
+      // will exist between the new process's docshell being created and the
+      // actual page that's being loaded loading (which can happen async from
+      // the docshell creation).  We want to avoid treating the initial
+      // about:blank as a new page.
+      //
+      // We could conceivably expose Document::IsInitialDocument() as a
+      // ChromeOnly thing and use it here, but let's just filter out all
+      // about:blank, since we don't expect any in this test.
+      var haveNewPage = await SpecialPowers.spawn(w, [token],
+        currentToken => this.content.token != currentToken &&
+                        this.content.location.href != "about:blank");
 
-      if (pageToken != token) {
+      if (haveNewPage) {
         ++token;
         assignToken(token);
         break;
