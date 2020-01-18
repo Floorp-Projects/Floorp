@@ -4,7 +4,7 @@
 set -e
 
 # Default version.
-VER="201556d3215310115521eb3a17a9f4ea9c460016"
+VER="3e0f34a2eb53c6d892b5061f76c8290e5d39e920"
 
 # Accept version or commit from the command line.
 if test -n "$1"; then
