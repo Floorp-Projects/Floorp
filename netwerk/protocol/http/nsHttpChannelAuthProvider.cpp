@@ -37,8 +37,7 @@
 #include "nsIProxiedChannel.h"
 #include "nsIProxyInfo.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 #define SUBRESOURCE_AUTH_DIALOG_DISALLOW_ALL 0
 #define SUBRESOURCE_AUTH_DIALOG_DISALLOW_CROSS_ORIGIN 1
@@ -1664,5 +1663,4 @@ NS_IMPL_ISUPPORTS(nsHttpChannelAuthProvider, nsICancelable,
                   nsIHttpChannelAuthProvider, nsIAuthPromptCallback,
                   nsIHttpAuthenticatorCallback)
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

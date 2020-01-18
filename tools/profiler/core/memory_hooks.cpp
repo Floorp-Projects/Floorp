@@ -61,8 +61,7 @@ static ProfilerCounterTotal* sCounter;
 // memory hook that might try to access the value after or during deletion.
 static mozilla::FastBernoulliTrial* gBernoulli;
 
-namespace mozilla {
-namespace profiler {
+namespace mozilla::profiler {
 
 //---------------------------------------------------------------------------
 // Utilities
@@ -448,8 +447,7 @@ static void FreeCallback(void* aPtr) {
   }
 }
 
-}  // namespace profiler
-}  // namespace mozilla
+}  // namespace mozilla::profiler
 
 //---------------------------------------------------------------------------
 // malloc/free interception
@@ -556,8 +554,7 @@ void replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge) {
 
 void profiler_replace_remove() {}
 
-namespace mozilla {
-namespace profiler {
+namespace mozilla::profiler {
 //---------------------------------------------------------------------------
 // Initialization
 //---------------------------------------------------------------------------
@@ -619,5 +616,4 @@ void disable_native_allocations() {
   }
 }
 
-}  // namespace profiler
-}  // namespace mozilla
+}  // namespace mozilla::profiler

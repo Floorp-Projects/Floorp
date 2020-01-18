@@ -17,8 +17,7 @@
 
 #include "NetworkInfoServiceImpl.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 static nsresult ListInterfaceAddresses(int aFd, const char* aIface,
                                        AddrMapType& aAddrMap);
@@ -94,5 +93,4 @@ static nsresult ListInterfaceAddresses(int aFd, const char* aInterface,
   return NS_OK;
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net

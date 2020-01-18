@@ -10,8 +10,7 @@
 #include "mozilla/dom/GeolocationPositionBinding.h"
 #include "mozilla/dom/GeolocationCoordinatesBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GeolocationCoordinates, mPosition)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GeolocationCoordinates)
@@ -65,5 +64,4 @@ GENERATE_COORDS_WRAPPED_GETTER_NULLABLE(Speed)
 #undef GENERATE_COORDS_WRAPPED_GETTER
 #undef GENERATE_COORDS_WRAPPED_GETTER_NULLABLE
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

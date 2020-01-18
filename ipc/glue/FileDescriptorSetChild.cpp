@@ -6,8 +6,7 @@
 
 #include "FileDescriptorSetChild.h"
 
-namespace mozilla {
-namespace ipc {
+namespace mozilla::ipc {
 
 FileDescriptorSetChild::FileDescriptorSetChild(
     const FileDescriptor& aFileDescriptor) {
@@ -30,5 +29,4 @@ mozilla::ipc::IPCResult FileDescriptorSetChild::RecvAddFileDescriptor(
   return IPC_OK();
 }
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc

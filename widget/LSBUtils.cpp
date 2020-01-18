@@ -10,9 +10,7 @@
 #include "base/process_util.h"
 #include "mozilla/FileUtils.h"
 
-namespace mozilla {
-namespace widget {
-namespace lsb {
+namespace mozilla::widget::lsb {
 
 static const char* gLsbReleasePath = "/usr/bin/lsb_release";
 
@@ -66,6 +64,4 @@ bool GetLSBRelease(nsACString& aDistributor, nsACString& aDescription,
   return true;
 }
 
-}  // namespace lsb
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget::lsb

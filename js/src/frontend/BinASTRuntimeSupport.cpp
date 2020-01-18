@@ -12,8 +12,7 @@
 #include "js/Utility.h"     // js_malloc
 #include "vm/StringType.h"  // JSAtom
 
-namespace js {
-namespace frontend {
+namespace js::frontend {
 
 BinASTSourceMetadata::~BinASTSourceMetadata() {
   if (isMultipart()) {
@@ -111,6 +110,4 @@ void BinASTSourceMetadataContext::release() {
   }
 }
 
-}  // namespace frontend
-
-}  // namespace js
+}  // namespace js::frontend
