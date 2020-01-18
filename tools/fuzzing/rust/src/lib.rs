@@ -14,6 +14,8 @@ use std::fs::File;
 use std::io::Write;
 use std::iter;
 use std::path::Path;
+use std::sync::Arc;
+use std::thread;
 use tempfile::Builder;
 
 fn eat_lmdb_err<T>(value: Result<T, rkv::StoreError>) -> Result<Option<T>, rkv::StoreError> {
@@ -273,14 +275,36 @@ pub extern "C" fn fuzz_rkv_calls(raw_data: *const u8, size: libc::size_t) -> lib
     let env = rkv::Rkv::from_env(root.path(), builder).unwrap();
     let store = env.open_single("test", rkv::StoreOptions::create()).unwrap();
 
-    loop {
-        match fuzz.next().map(|byte| byte % 4) {
-            Some(0) => store_put(&mut fuzz, &env, &store),
-            Some(1) => store_get(&mut fuzz, &env, &store),
-            Some(2) => store_delete(&mut fuzz, &env, &store),
-            Some(3) => store_resize(&mut fuzz, &env),
-            _ => break
-        }
+    let shared_env = Arc::new(env);
+    let shared_store = Arc::new(store);
+
+    let use_threads = fuzz.next().map(|byte| byte % 10 == 0).unwrap_or(false);
+    let max_threads = if use_threads { 16 } else { 1 };
+    let num_threads = fuzz.next().unwrap_or(0) as usize % max_threads + 1;
+    let chunk_size = fuzz.len() / num_threads;
+
+    let threads = (0..num_threads).map(|_| {
+        let env = shared_env.clone();
+        let store = shared_store.clone();
+
+        let chunk: Vec<_> = fuzz.by_ref().take(chunk_size).collect();
+        let mut fuzz = chunk.into_iter();
+
+        thread::spawn(move || {
+            loop {
+                match fuzz.next().map(|byte| byte % 4) {
+                    Some(0) => store_put(&mut fuzz, &env, &store),
+                    Some(1) => store_get(&mut fuzz, &env, &store),
+                    Some(2) => store_delete(&mut fuzz, &env, &store),
+                    Some(3) => store_resize(&mut fuzz, &env),
+                    _ => break
+                }
+            }
+        })
+    });
+
+    for handle in threads {
+        handle.join().unwrap()
     }
 
     0
