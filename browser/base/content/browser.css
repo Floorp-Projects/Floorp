@@ -239,8 +239,7 @@ panelview[mainview] > .panel-header {
 }
 
 .tabbrowser-tab[tab-grouping],
-.tabbrowser-tab[tabdrop-samewindow],
-#tabbrowser-tabs[movingtab] > .tabbrowser-tab[fadein]:not([selected]):not([multiselected]) {
+.tabbrowser-tab[tabdrop-samewindow] {
   transition: transform 200ms var(--animation-easing-function);
 }
 
