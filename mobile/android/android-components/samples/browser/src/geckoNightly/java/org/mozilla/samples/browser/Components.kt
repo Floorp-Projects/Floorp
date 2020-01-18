@@ -5,8 +5,8 @@ package org.mozilla.samples.browser
 
 import android.content.Context
 import mozilla.components.browser.engine.gecko.GeckoEngine
-import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
+import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.webcompat.WebCompatFeature
 import mozilla.components.support.base.log.Log

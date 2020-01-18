@@ -8,6 +8,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.widget.FrameLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -65,6 +66,7 @@ class EngineViewTest {
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun render(session: EngineSession) {}
         override fun release() {}
+        override var selectionActionDelegate: SelectionActionDelegate? = null
     }
 
     // Class it not actually a View!
@@ -74,5 +76,6 @@ class EngineViewTest {
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun render(session: EngineSession) {}
         override fun release() {}
+        override var selectionActionDelegate: SelectionActionDelegate? = null
     }
 }

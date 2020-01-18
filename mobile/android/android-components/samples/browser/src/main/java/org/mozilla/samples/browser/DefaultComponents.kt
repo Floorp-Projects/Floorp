@@ -33,8 +33,8 @@ import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
-import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.AddonManager
+import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.DefaultAddonUpdater
 import mozilla.components.feature.app.links.AppLinksInterceptor
