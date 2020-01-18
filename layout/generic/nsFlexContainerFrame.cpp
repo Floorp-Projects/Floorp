@@ -649,20 +649,23 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
 
   // Getters for margin:
   // ===================
-  const nsMargin& GetPhysicalMargin() const { return mMargin; }
+  LogicalMargin GetMargin() const { return mMargin; }
+  nsMargin GetPhysicalMargin() const {
+    return mMargin.GetPhysicalMargin(mCBWM);
+  }
 
-  // Returns the margin component for a given mozilla::Side
-  nscoord GetMarginComponentForSide(mozilla::Side aSide) const {
-    return mMargin.Side(aSide);
+  // Returns the margin component for a given LogicalSide in flex container's
+  // writing-mode.
+  nscoord GetMarginComponentForSide(LogicalSide aSide) const {
+    return mMargin.Side(aSide, mCBWM);
   }
 
   // Returns the total space occupied by this item's margins in the given axis
-  nscoord GetMarginSizeInAxis(AxisOrientationType aAxis) const {
-    mozilla::Side startSide =
-        kAxisOrientationToSidesMap[aAxis][eAxisEdge_Start];
-    mozilla::Side endSide = kAxisOrientationToSidesMap[aAxis][eAxisEdge_End];
-    return GetMarginComponentForSide(startSide) +
-           GetMarginComponentForSide(endSide);
+  nscoord GetMarginSizeInMainAxis() const {
+    return mMargin.StartEnd(MainAxis(), mCBWM);
+  }
+  nscoord GetMarginSizeInCrossAxis() const {
+    return mMargin.StartEnd(CrossAxis(), mCBWM);
   }
 
   // Getters for border/padding
@@ -684,11 +687,11 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   // converting mMargin to LogicalMargin.
   nscoord GetMarginBorderPaddingSizeInMainAxis(
       AxisOrientationType aAxis) const {
-    return GetMarginSizeInAxis(aAxis) + GetBorderPaddingSizeInMainAxis();
+    return GetMarginSizeInMainAxis() + GetBorderPaddingSizeInMainAxis();
   }
   nscoord GetMarginBorderPaddingSizeInCrossAxis(
       AxisOrientationType aAxis) const {
-    return GetMarginSizeInAxis(aAxis) + GetBorderPaddingSizeInCrossAxis();
+    return GetMarginSizeInCrossAxis() + GetBorderPaddingSizeInCrossAxis();
   }
 
   // Setters
@@ -838,9 +841,9 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
   }
 
   // Setter for margin components (for resolving "auto" margins)
-  void SetMarginComponentForSide(mozilla::Side aSide, nscoord aLength) {
+  void SetMarginComponentForSide(LogicalSide aSide, nscoord aLength) {
     MOZ_ASSERT(mIsFrozen, "main size should be resolved before this");
-    mMargin.Side(aSide) = aLength;
+    mMargin.Side(aSide, mCBWM) = aLength;
   }
 
   void ResolveStretchedCrossSize(nscoord aLineCrossSize,
@@ -880,8 +883,10 @@ class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem> {
 
   // Stored in flex container's writing mode.
   const LogicalMargin mBorderPadding;
-  // Non-const because we need to resolve auto margins.
-  nsMargin mMargin;
+
+  // Stored in flex container's writing mode. Non-const because we need to
+  // resolve auto margins.
+  LogicalMargin mMargin;
 
   // These are non-const so that we can lazily update them with the item's
   // intrinsic size (obtained via a "measuring" reflow), when necessary.
@@ -1925,7 +1930,8 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
       mBorderPadding(
           aFlexItemReflowInput.ComputedLogicalBorderPadding().ConvertTo(mCBWM,
                                                                         mWM)),
-      mMargin(aFlexItemReflowInput.ComputedPhysicalMargin()),
+      mMargin(
+          aFlexItemReflowInput.ComputedLogicalMargin().ConvertTo(mCBWM, mWM)),
       mMainMinSize(aMainMinSize),
       mMainMaxSize(aMainMaxSize),
       mCrossMinSize(aCrossMinSize),
@@ -2025,15 +2031,16 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
   CheckForMinSizeAuto(aFlexItemReflowInput, aAxisTracker);
 
   const nsStyleMargin* styleMargin = aFlexItemReflowInput.mStyleMargin;
-  mHasAnyAutoMargin =
-      styleMargin->HasInlineAxisAuto(mWM) || styleMargin->HasBlockAxisAuto(mWM);
+  mHasAnyAutoMargin = styleMargin->HasInlineAxisAuto(mCBWM) ||
+                      styleMargin->HasBlockAxisAuto(mCBWM);
 
   // Assert that any "auto" margin components are set to 0.
   // (We'll resolve them later; until then, we want to treat them as 0-sized.)
 #ifdef DEBUG
   {
-    NS_FOR_CSS_SIDES(side) {
-      if (styleMargin->mMargin.Get(side).IsAuto()) {
+    for (const auto side : {eLogicalSideBStart, eLogicalSideBEnd,
+                            eLogicalSideIStart, eLogicalSideIEnd}) {
+      if (styleMargin->mMargin.Get(mCBWM, side).IsAuto()) {
         MOZ_ASSERT(GetMarginComponentForSide(side) == 0,
                    "Someone else tried to resolve our auto margin");
       }
@@ -2066,6 +2073,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
       mWM(aContainerWM),
       mCBWM(aContainerWM),
       mBorderPadding(mCBWM),
+      mMargin(mCBWM),
       mCrossSize(aCrossSize),
       // Struts don't do layout, so its WM doesn't matter at this point. So, we
       // just share container's WM for simplicity:
@@ -2218,6 +2226,16 @@ class MOZ_STACK_CLASS PositionTracker {
   inline nscoord GetPosition() const { return mPosition; }
   inline LogicalAxis GetAxis() const { return mAxis; }
   inline AxisOrientationType GetPhysicalAxis() const { return mPhysicalAxis; }
+
+  inline LogicalSide StartSide() {
+    return MakeLogicalSide(
+        mAxis, mIsAxisReversed ? eLogicalEdgeEnd : eLogicalEdgeStart);
+  }
+
+  inline LogicalSide EndSide() {
+    return MakeLogicalSide(
+        mAxis, mIsAxisReversed ? eLogicalEdgeStart : eLogicalEdgeEnd);
+  }
 
   // Advances our position across the start edge of the given margin, in the
   // axis we're tracking.
@@ -3098,9 +3116,8 @@ MainAxisPositionTracker::MainAxisPositionTracker(
 void MainAxisPositionTracker::ResolveAutoMarginsInMainAxis(FlexItem& aItem) {
   if (mNumAutoMarginsInMainAxis) {
     const auto& styleMargin = aItem.Frame()->StyleMargin()->mMargin;
-    for (uint32_t i = 0; i < eNumAxisEdges; i++) {
-      mozilla::Side side = kAxisOrientationToSidesMap[mPhysicalAxis][i];
-      if (styleMargin.Get(side).IsAuto()) {
+    for (const auto side : {StartSide(), EndSide()}) {
+      if (styleMargin.Get(mWM, side).IsAuto()) {
         // NOTE: This integer math will skew the distribution of remainder
         // app-units towards the end, which is fine.
         nscoord curAutoMarginSize =
@@ -3498,9 +3515,8 @@ void SingleLineCrossAxisPositionTracker::ResolveAutoMarginsInCrossAxis(
   // OK, we have at least one auto margin and we have some available space.
   // Give each auto margin a share of the space.
   const auto& styleMargin = aItem.Frame()->StyleMargin()->mMargin;
-  for (uint32_t i = 0; i < eNumAxisEdges; i++) {
-    mozilla::Side side = kAxisOrientationToSidesMap[mPhysicalAxis][i];
-    if (styleMargin.Get(side).IsAuto()) {
+  for (const auto side : {StartSide(), EndSide()}) {
+    if (styleMargin.Get(mWM, side).IsAuto()) {
       MOZ_ASSERT(aItem.GetMarginComponentForSide(side) == 0,
                  "Expecting auto margins to have value '0' before we "
                  "update them");
