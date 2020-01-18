@@ -9,8 +9,7 @@
 #include <immintrin.h>
 #include <tmmintrin.h>
 
-namespace mozilla {
-namespace gfx {
+namespace mozilla::gfx {
 
 template <bool aSwapRB>
 void UnpackRowRGB24_SSSE3(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength);
@@ -81,5 +80,4 @@ void UnpackRowRGB24_AVX2(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength) {
 template void UnpackRowRGB24_AVX2<false>(const uint8_t*, uint8_t*, int32_t);
 template void UnpackRowRGB24_AVX2<true>(const uint8_t*, uint8_t*, int32_t);
 
-}  // namespace gfx
-}  // namespace mozilla
+}  // namespace mozilla::gfx

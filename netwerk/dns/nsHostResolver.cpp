@@ -82,8 +82,7 @@ static_assert(
 
 //----------------------------------------------------------------------------
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 LazyLogModule gHostResolverLog("nsHostResolver");
 #define LOG(args) \
   MOZ_LOG(mozilla::net::gHostResolverLog, mozilla::LogLevel::Debug, args)
@@ -91,8 +90,7 @@ LazyLogModule gHostResolverLog("nsHostResolver");
   MOZ_LOG(mozilla::net::gHostResolverLog, mozilla::LogLevel::Error, args)
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(mozilla::net::gHostResolverLog, mozilla::LogLevel::Debug)
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 //----------------------------------------------------------------------------
 

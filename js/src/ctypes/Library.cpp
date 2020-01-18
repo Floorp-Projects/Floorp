@@ -17,8 +17,7 @@
 
 using JS::AutoStableStringChars;
 
-namespace js {
-namespace ctypes {
+namespace js::ctypes {
 
 /*******************************************************************************
 ** JSAPI function prototypes
@@ -403,5 +402,4 @@ bool Library::Declare(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-}  // namespace ctypes
-}  // namespace js
+}  // namespace js::ctypes

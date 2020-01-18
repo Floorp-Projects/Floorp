@@ -22,8 +22,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace layers {
+namespace mozilla::layers {
 
 X11TextureData::X11TextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                bool aClientDeallocation, bool aIsCrossProcess,
@@ -137,5 +136,4 @@ X11TextureData* X11TextureData::Create(gfx::IntSize aSize,
   return texture;
 }
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers
