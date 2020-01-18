@@ -226,6 +226,8 @@ typedef gfx::ScaleFactors2D<ParentLayerPixel, ParentLayerPixel>
 
 typedef gfx::Matrix4x4Typed<LayoutDevicePixel, LayoutDevicePixel>
     LayoutDeviceToLayoutDeviceMatrix4x4;
+typedef gfx::Matrix4x4Typed<LayoutDevicePixel, ParentLayerPixel>
+    LayoutDeviceToParentLayerMatrix4x4;
 typedef gfx::Matrix4x4Typed<LayerPixel, ParentLayerPixel>
     LayerToParentLayerMatrix4x4;
 typedef gfx::Matrix4x4Typed<LayerPixel, ScreenPixel> LayerToScreenMatrix4x4;
