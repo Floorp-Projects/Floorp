@@ -358,24 +358,38 @@ interface TextMetrics {
   // x-direction
   readonly attribute double width; // advance width
 
-  /*
-   * NOT IMPLEMENTED YET
-
+  // [experimental] actualBoundingBox* attributes
+  [Pref="dom.textMetrics.actualBoundingBox.enabled"]
   readonly attribute double actualBoundingBoxLeft;
+  [Pref="dom.textMetrics.actualBoundingBox.enabled"]
   readonly attribute double actualBoundingBoxRight;
 
   // y-direction
+  // [experimental] fontBoundingBox* attributes
+  [Pref="dom.textMetrics.fontBoundingBox.enabled"]
   readonly attribute double fontBoundingBoxAscent;
+  [Pref="dom.textMetrics.fontBoundingBox.enabled"]
   readonly attribute double fontBoundingBoxDescent;
-  readonly attribute double actualBoundingBoxAscent;
-  readonly attribute double actualBoundingBoxDescent;
-  readonly attribute double emHeightAscent;
-  readonly attribute double emHeightDescent;
-  readonly attribute double hangingBaseline;
-  readonly attribute double alphabeticBaseline;
-  readonly attribute double ideographicBaseline;
-  */
 
+  // [experimental] actualBoundingBox* attributes
+  [Pref="dom.textMetrics.actualBoundingBox.enabled"]
+  readonly attribute double actualBoundingBoxAscent;
+  [Pref="dom.textMetrics.actualBoundingBox.enabled"]
+  readonly attribute double actualBoundingBoxDescent;
+
+  // [experimental] emHeight* attributes
+  [Pref="dom.textMetrics.emHeight.enabled"]
+  readonly attribute double emHeightAscent;
+  [Pref="dom.textMetrics.emHeight.enabled"]
+  readonly attribute double emHeightDescent;
+
+  // [experimental] *Baseline attributes
+  [Pref="dom.textMetrics.baselines.enabled"]
+  readonly attribute double hangingBaseline;
+  [Pref="dom.textMetrics.baselines.enabled"]
+  readonly attribute double alphabeticBaseline;
+  [Pref="dom.textMetrics.baselines.enabled"]
+  readonly attribute double ideographicBaseline;
 };
 
 [Pref="canvas.path.enabled",

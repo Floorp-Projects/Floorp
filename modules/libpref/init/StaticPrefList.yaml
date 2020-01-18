@@ -2392,6 +2392,26 @@
   value: false
   mirror: always
 
+- name: dom.textMetrics.actualBoundingBox.enabled
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.textMetrics.baselines.enabled
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.textMetrics.emHeight.enabled
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.textMetrics.fontBoundingBox.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Time (in ms) that it takes to regenerate 1ms.
 - name: dom.timeout.background_budget_regeneration_rate
   type: int32_t
