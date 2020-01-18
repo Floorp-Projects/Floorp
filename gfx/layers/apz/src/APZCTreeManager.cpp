@@ -705,8 +705,11 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
       continue;
     }
 
+    const AsyncTransformComponents asyncTransformComponents = apzc->GetZoomAnimationId() ?
+        AsyncTransformComponents{AsyncTransformComponent::eLayout} : LayoutAndVisual;
     ParentLayerPoint layerTranslation =
-        apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing)
+        apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
+                                       asyncTransformComponents)
             .mTranslation;
     LayoutDeviceToParentLayerScale zoom;
     if (Maybe<uint64_t> zoomAnimationId = apzc->GetZoomAnimationId()) {
@@ -714,8 +717,15 @@ void APZCTreeManager::SampleForWebRender(wr::TransactionWrapper& aTxn,
       MOZ_ASSERT(apzc->IsRootContent());
       zoom = apzc->GetCurrentPinchZoomScale(
           AsyncPanZoomController::eForCompositing);
+
+      AsyncTransform asyncVisualTransform =
+          apzc->GetCurrentAsyncTransform(AsyncPanZoomController::eForCompositing,
+                                         AsyncTransformComponents{AsyncTransformComponent::eVisual});
+
       transforms.AppendElement(wr::ToWrTransformProperty(
-          *zoomAnimationId, Matrix4x4::Scaling(zoom.scale, zoom.scale, 1.0f)));
+          *zoomAnimationId,
+          LayoutDeviceToParentLayerMatrix4x4::Scaling(zoom.scale, zoom.scale, 1.0f) *
+          AsyncTransformComponentMatrix::Translation(asyncVisualTransform.mTranslation)));
 
       aTxn.UpdateIsTransformAsyncZooming(*zoomAnimationId,
                                          apzc->IsAsyncZooming());
