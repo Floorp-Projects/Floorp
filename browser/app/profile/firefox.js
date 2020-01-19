@@ -1647,7 +1647,6 @@ pref("privacy.usercontext.about_newtab_segregation.enabled", true);
 pref("privacy.userContext.extension", "");
 
 // Start the browser in e10s mode
-pref("browser.tabs.remote.autostart", true);
 pref("browser.tabs.remote.desktopbehavior", true);
 
 // Run media transport in a separate process?
