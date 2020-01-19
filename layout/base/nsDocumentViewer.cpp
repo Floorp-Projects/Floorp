@@ -3510,7 +3510,7 @@ NS_IMETHODIMP
 nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
                                mozIDOMWindowProxy* aChildDOMWin,
                                nsIWebProgressListener* aWebProgressListener) {
-#  if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
+#  ifdef NS_PRINT_PREVIEW
   MOZ_ASSERT(IsInitializedForPrintPreview(),
              "For print preview nsIWebBrowserPrint must be from "
              "docshell.initOrReusePrintPreviewViewer!");
@@ -3581,7 +3581,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   return rv;
 #  else
   return NS_ERROR_FAILURE;
-#  endif
+#  endif  // NS_PRINT_PREVIEW
 }
 
 //----------------------------------------------------------------------
@@ -3707,11 +3707,7 @@ nsDocumentViewer::GetCurrentPrintSettings(
 
 NS_IMETHODIMP
 nsDocumentViewer::GetDocumentName(nsAString& aDocName) {
-#  ifdef NS_PRINTING
   return mPrintJob->GetDocumentName(aDocName);
-#  else
-  return NS_ERROR_FAILURE;
-#  endif
 }
 
 NS_IMETHODIMP
@@ -3720,7 +3716,7 @@ nsDocumentViewer::Cancel() {
   return mPrintJob->Cancel();
 }
 
-#  if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
+#  ifdef NS_PRINT_PREVIEW
 // Reset ESM focus for all descendent doc shells.
 static void ResetFocusState(nsIDocShell* aDocShell) {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -3740,7 +3736,7 @@ static void ResetFocusState(nsIDocShell* aDocShell) {
     }
   }
 }
-#  endif  // NS_PRINTING && NS_PRINT_PREVIEW
+#  endif  // NS_PRINT_PREVIEW
 
 NS_IMETHODIMP
 nsDocumentViewer::ExitPrintPreview() {
@@ -3757,7 +3753,7 @@ nsDocumentViewer::ExitPrintPreview() {
     return NS_OK;
   }
 
-#  if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
+#  ifdef NS_PRINT_PREVIEW
   mPrintJob->TurnScriptingOn(true);
   mPrintJob->Destroy();
   mPrintJob = nullptr;
@@ -3775,48 +3771,36 @@ nsDocumentViewer::ExitPrintPreview() {
   SetFullZoom(mPageZoom);
   SetOverrideDPPX(mOverrideDPPX);
   Show();
-#  endif  // NS_PRINTING && NS_PRINT_PREVIEW
+#  endif  // NS_PRINT_PREVIEW
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::GetPrintPreviewNumPages(int32_t* aPrintPreviewNumPages) {
-#  ifdef NS_PRINTING
   NS_ENSURE_ARG_POINTER(aPrintPreviewNumPages);
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
   *aPrintPreviewNumPages = mPrintJob->GetPrintPreviewNumPages();
   return *aPrintPreviewNumPages > 0 ? NS_OK : NS_ERROR_FAILURE;
-#  else
-  return NS_ERROR_FAILURE;
-#  endif
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::GetIsIFrameSelected(bool* aIsIFrameSelected) {
-#  ifdef NS_PRINTING
   *aIsIFrameSelected = false;
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
   *aIsIFrameSelected = mPrintJob->IsIFrameSelected();
   return NS_OK;
-#  else
-  return NS_ERROR_FAILURE;
-#  endif
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::GetIsRangeSelection(bool* aIsRangeSelection) {
-#  ifdef NS_PRINTING
   *aIsRangeSelection = false;
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
   *aIsRangeSelection = mPrintJob->IsRangeSelection();
   return NS_OK;
-#  else
-  return NS_ERROR_FAILURE;
-#  endif
 }
 
 //----------------------------------------------------------------------------------
