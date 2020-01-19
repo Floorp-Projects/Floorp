@@ -541,6 +541,7 @@ impl Document {
         resource_profile: &mut ResourceProfileCounters,
         debug_flags: DebugFlags,
         tile_cache_logger: &mut TileCacheLogger,
+        config: FrameBuilderConfig,
     ) -> RenderedDocument {
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
         let pan = self.view.pan.to_f32() / accumulated_scale_factor;
@@ -568,6 +569,7 @@ impl Document {
                 &mut self.render_task_counters,
                 debug_flags,
                 tile_cache_logger,
+                config,
             );
             self.hit_tester = Some(self.scene.create_hit_tester(&self.data_stores.clip));
             frame
@@ -1142,6 +1144,11 @@ impl RenderBackend {
                         // We don't want to forward this message to the renderer.
                         return RenderBackendStatus::Continue;
                     }
+                    DebugCommand::SetPictureTileSize(tile_size) => {
+                        self.frame_config.tile_size_override = tile_size;
+
+                        return RenderBackendStatus::Continue;
+                    }
                     DebugCommand::FetchDocuments => {
                         // Ask SceneBuilderThread to send JSON presentation of the documents,
                         // that will be forwarded to Renderer.
@@ -1534,6 +1541,7 @@ impl RenderBackend {
                     &mut profile_counters.resources,
                     self.debug_flags,
                     &mut self.tile_cache_logger,
+                    self.frame_config,
                 );
 
                 debug!("generated frame for document {:?} with {} passes",
@@ -1712,6 +1720,7 @@ impl RenderBackend {
                     &mut profile_counters.resources,
                     self.debug_flags,
                     &mut self.tile_cache_logger,
+                    self.frame_config,
                 );
                 // After we rendered the frames, there are pending updates to both
                 // GPU cache and resources. Instead of serializing them, we are going to make sure

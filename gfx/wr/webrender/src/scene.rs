@@ -258,6 +258,7 @@ impl BuiltScene {
                 batch_lookback_count: 0,
                 background_color: None,
                 compositor_kind: CompositorKind::default(),
+                tile_size_override: None,
             },
         }
     }

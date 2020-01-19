@@ -278,13 +278,38 @@ pub const TILE_SIZE_SCROLLBAR_VERTICAL: DeviceIntSize = DeviceIntSize {
     _unit: marker::PhantomData,
 };
 
+const TILE_SIZE_FOR_TESTS: [DeviceIntSize; 6] = [
+    DeviceIntSize {
+        width: 128,
+        height: 128,
+        _unit: marker::PhantomData,
+    },
+    DeviceIntSize {
+        width: 256,
+        height: 256,
+        _unit: marker::PhantomData,
+    },
+    DeviceIntSize {
+        width: 512,
+        height: 512,
+        _unit: marker::PhantomData,
+    },
+    TILE_SIZE_DEFAULT,
+    TILE_SIZE_SCROLLBAR_VERTICAL,
+    TILE_SIZE_SCROLLBAR_HORIZONTAL,
+];
+
 // Return the list of tile sizes for the renderer to allocate texture arrays for.
-pub fn tile_cache_sizes() -> &'static [DeviceIntSize] {
-    &[
-        TILE_SIZE_DEFAULT,
-        TILE_SIZE_SCROLLBAR_HORIZONTAL,
-        TILE_SIZE_SCROLLBAR_VERTICAL,
-    ]
+pub fn tile_cache_sizes(testing: bool) -> &'static [DeviceIntSize] {
+    if testing {
+        &TILE_SIZE_FOR_TESTS
+    } else {
+        &[
+            TILE_SIZE_DEFAULT,
+            TILE_SIZE_SCROLLBAR_HORIZONTAL,
+            TILE_SIZE_SCROLLBAR_VERTICAL,
+        ]
+    }
 }
 
 /// The maximum size per axis of a surface,
@@ -1654,6 +1679,9 @@ pub struct TileCacheInstance {
     pub device_position: DevicePoint,
     /// True if the entire picture cache surface is opaque.
     is_opaque: bool,
+    /// The currently considered tile size override. Used to check if we should
+    /// re-evaluate tile size, even if the frame timer hasn't expired.
+    tile_size_override: Option<DeviceIntSize>,
 }
 
 impl TileCacheInstance {
@@ -1704,6 +1732,7 @@ impl TileCacheInstance {
             native_surface_id: None,
             device_position: DevicePoint::zero(),
             is_opaque: true,
+            tile_size_override: None,
         }
     }
 
@@ -1861,22 +1890,28 @@ impl TileCacheInstance {
         // Only evaluate what tile size to use fairly infrequently, so that we don't end
         // up constantly invalidating and reallocating tiles if the picture rect size is
         // changing near a threshold value.
-        if self.frames_until_size_eval == 0 {
+        if self.frames_until_size_eval == 0 ||
+           self.tile_size_override != frame_context.config.tile_size_override {
             const TILE_SIZE_TINY: f32 = 32.0;
 
             // Work out what size tile is appropriate for this picture cache.
-            let desired_tile_size;
-
-            // There's no need to check the other dimension. If we encounter a picture
-            // that is small on one dimension, it's a reasonable choice to use a scrollbar
-            // sized tile configuration regardless of the other dimension.
-            if pic_rect.size.width <= TILE_SIZE_TINY {
-                desired_tile_size = TILE_SIZE_SCROLLBAR_VERTICAL;
-            } else if pic_rect.size.height <= TILE_SIZE_TINY {
-                desired_tile_size = TILE_SIZE_SCROLLBAR_HORIZONTAL;
-            } else {
-                desired_tile_size = TILE_SIZE_DEFAULT;
-            }
+            let desired_tile_size = match frame_context.config.tile_size_override {
+                Some(tile_size_override) => {
+                    tile_size_override
+                }
+                None => {
+                    // There's no need to check the other dimension. If we encounter a picture
+                    // that is small on one dimension, it's a reasonable choice to use a scrollbar
+                    // sized tile configuration regardless of the other dimension.
+                    if pic_rect.size.width <= TILE_SIZE_TINY {
+                        TILE_SIZE_SCROLLBAR_VERTICAL
+                    } else if pic_rect.size.height <= TILE_SIZE_TINY {
+                        TILE_SIZE_SCROLLBAR_HORIZONTAL
+                    } else {
+                        TILE_SIZE_DEFAULT
+                    }
+                }
+            };
 
             // If the desired tile size has changed, then invalidate and drop any
             // existing tiles.
@@ -1893,6 +1928,7 @@ impl TileCacheInstance {
             // Reset counter until next evaluating the desired tile size. This is an
             // arbitrary value.
             self.frames_until_size_eval = 120;
+            self.tile_size_override = frame_context.config.tile_size_override;
         }
 
         // Map an arbitrary point in picture space to world space, to work out
