@@ -42,7 +42,10 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGViewElement)
 void SVGViewElement::SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv) {
   if (aZoomAndPan == SVG_ZOOMANDPAN_DISABLE ||
       aZoomAndPan == SVG_ZOOMANDPAN_MAGNIFY) {
-    mEnumAttributes[ZOOMANDPAN].SetBaseValue(aZoomAndPan, this);
+    ErrorResult nestedRv;
+    mEnumAttributes[ZOOMANDPAN].SetBaseValue(aZoomAndPan, this, nestedRv);
+    MOZ_ASSERT(!nestedRv.Failed(),
+               "We already validated our aZoomAndPan value!");
     return;
   }
 
