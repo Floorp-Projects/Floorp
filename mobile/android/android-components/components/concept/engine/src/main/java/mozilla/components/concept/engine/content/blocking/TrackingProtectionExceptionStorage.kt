@@ -17,7 +17,7 @@ interface TrackingProtectionExceptionStorage {
      * it provides a list of all the domains that are on the exception list, if there are none
      * domains in the exception list, an empty list will be provided.
      */
-    fun fetchAll(onResult: (List<String>) -> Unit)
+    fun fetchAll(onResult: (List<TrackingProtectionException>) -> Unit)
 
     /**
      * Adds a new [session] to the exception list.
@@ -30,6 +30,12 @@ interface TrackingProtectionExceptionStorage {
      * @param session The [session] that will be removed from the exception list.
      */
     fun remove(session: EngineSession)
+
+    /**
+     * Removes a [exception] from the exception list.
+     * @param exception The [TrackingProtectionException] that will be removed from the exception list.
+     */
+    fun remove(exception: TrackingProtectionException)
 
     /**
      * Indicates if a given [session] is in the exception list.

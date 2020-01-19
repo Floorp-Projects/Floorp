@@ -10,10 +10,15 @@ import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.browser.engine.gecko.content.blocking.GeckoTrackingProtectionException
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.support.ktx.util.readAndDeserialize
 import mozilla.components.support.ktx.util.writeString
+import org.json.JSONArray
+import org.json.JSONObject
+import org.mozilla.geckoview.ContentBlockingController.ContentBlockingException
 import org.mozilla.geckoview.GeckoRuntime
 import java.io.File
 
@@ -39,7 +44,11 @@ internal class TrackingProtectionExceptionFileStorage(
             synchronized(fileLock) {
                 getFile(context).readAndDeserialize { json ->
                     if (json.isNotEmpty()) {
-                        val exceptionList = runtime.contentBlockingController.ExceptionList(json)
+                        val jsonArray = JSONArray(json)
+                        val exceptionList = (0 until jsonArray.length()).map { index ->
+                            val jsonObject = jsonArray.getJSONObject(index)
+                            ContentBlockingException.fromJson(jsonObject)
+                        }
                         runtime.contentBlockingController.restoreExceptionList(exceptionList)
                     }
                 }
@@ -58,13 +67,11 @@ internal class TrackingProtectionExceptionFileStorage(
         }
     }
 
-    override fun fetchAll(onResult: (List<String>) -> Unit) {
+    override fun fetchAll(onResult: (List<TrackingProtectionException>) -> Unit) {
         runtime.contentBlockingController.saveExceptionList().accept { exceptionList ->
             val exceptions = if (exceptionList != null) {
-                val uris = exceptionList.uris.map { uri ->
-                    uri
-                }
-                uris
+                val exceptions = exceptionList.map { it.toTrackingProtectionException() }
+                exceptions
             } else {
                 emptyList()
             }
@@ -87,6 +94,12 @@ internal class TrackingProtectionExceptionFileStorage(
         geckoEngineSession.notifyObservers {
             onExcludedOnTrackingProtectionChange(false)
         }
+        persist()
+    }
+
+    override fun remove(exception: TrackingProtectionException) {
+        val geckoException = (exception as GeckoTrackingProtectionException)
+        runtime.contentBlockingController.removeException(geckoException.toContentBlockingException())
         persist()
     }
 
@@ -115,7 +128,10 @@ internal class TrackingProtectionExceptionFileStorage(
                 scope.launch {
                     synchronized(fileLock) {
                         getFile(context).writeString {
-                            exceptionList.toJson().toString()
+                            val jsonList = exceptionList.map { item ->
+                                item.toJson()
+                            }
+                            JSONArray(jsonList).toString()
                         }
                     }
                 }
@@ -133,4 +149,18 @@ internal class TrackingProtectionExceptionFileStorage(
             }
         }
     }
+}
+
+private fun ContentBlockingException.toTrackingProtectionException(): GeckoTrackingProtectionException {
+    val json = toJson()
+    val principal = json.getString("principal")
+    val uri = json.getString("uri")
+    return GeckoTrackingProtectionException(uri, principal)
+}
+
+private fun GeckoTrackingProtectionException.toContentBlockingException(): ContentBlockingException {
+    val json = JSONObject()
+    json.put("principal", principal)
+    json.put("uri", url)
+    return ContentBlockingException.fromJson(json)
 }
