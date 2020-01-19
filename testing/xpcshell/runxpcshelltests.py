@@ -835,8 +835,6 @@ class XPCShellTests(object):
         self.log = log
         self.harness_timeout = HARNESS_TIMEOUT
         self.nodeProc = {}
-        self.moz_http2_port = None
-        self.moznode_exec_port = None
 
     def getTestManifest(self, manifest):
         if isinstance(manifest, TestManifest):
@@ -1034,11 +1032,6 @@ class XPCShellTests(object):
         else:
             self.env["MOZ_WEBRENDER"] = "0"
 
-        if self.moz_http2_port:
-            self.env["MOZHTTP2_PORT"] = self.moz_http2_port
-        if self.moznode_exec_port:
-            self.env["MOZNODE_EXEC_PORT"] = self.moznode_exec_port
-
     def buildEnvironment(self):
         """
           Create and returns a dictionary of self.env to include all the appropriate env
@@ -1158,8 +1151,8 @@ class XPCShellTests(object):
                     searchObj = re.search(r'HTTP2 server listening on ports ([0-9]+),([0-9]+)',
                                           msg, 0)
                     if searchObj:
-                        self.moz_http2_port = searchObj.group(1)
-                        self.moznode_exec_port = searchObj.group(2)
+                        self.env["MOZHTTP2_PORT"] = searchObj.group(1)
+                        self.env["MOZNODE_EXEC_PORT"] = searchObj.group(2)
             except OSError as e:
                 # This occurs if the subprocess couldn't be started
                 self.log.error('Could not run %s server: %s' % (name, str(e)))
@@ -1348,10 +1341,6 @@ class XPCShellTests(object):
             self.stack_fixer_function = get_stack_fixer_function(self.utility_path,
                                                                  self.symbolsPath)
 
-        # We have to do this before we run tests that depend on having the node
-        # http/2 server.
-        self.trySetupNode()
-
         # buildEnvironment() needs mozInfo, so we call it after mozInfo is initialized.
         self.buildEnvironment()
 
@@ -1362,6 +1351,10 @@ class XPCShellTests(object):
         appDirKey = None
         if "appname" in self.mozInfo:
             appDirKey = self.mozInfo["appname"] + "-appdir"
+
+        # We have to do this before we run tests that depend on having the node
+        # http/2 server.
+        self.trySetupNode()
 
         pStdout, pStderr = self.getPipes()
 
