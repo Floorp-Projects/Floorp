@@ -130,25 +130,43 @@ add_task(async function test_sideloads_changed() {
   await promiseShutdownManager();
 });
 
+// Remove one just to test the startup changes
 add_task(async function test_sideloads_removed() {
-  // Side-delete all the extensions then test that we get the
-  // startup changes for the legacy sideloads and the one "profile" addon.
-  for (let [name, dir] of Object.entries(scopeDirectories)) {
-    let id = getID(name);
-    await OS.File.remove(OS.Path.join(dir.path, `${id}.xpi`));
-
-    id = getID(`legacy-${name}`);
-    await OS.File.remove(OS.Path.join(dir.path, `${id}.xpi`));
-  }
+  let id = getID(`legacy-profile`);
+  let file = AddonTestUtils.getFileForAddon(profileDir, id);
+  file.remove(false);
+  Assert.ok(!file.exists());
 
   await promiseStartupManager();
 
   check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
-  check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, [
-    getID("profile"),
-    ...legacyIDs,
-  ]);
+  check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, [id]);
+
+  await promiseShutdownManager();
+});
+
+add_task(async function test_sideload_uninstall() {
+  await promiseStartupManager();
+  let addons = await AddonManager.getAddonsByTypes(["extension"]);
+  Assert.equal(addons.length, 3, "addons installed");
+  for (let addon of addons) {
+    let file = AddonTestUtils.getFileForAddon(
+      scopeToDir.get(addon.scope),
+      addon.id
+    );
+    await addon.uninstall();
+    // Addon file should still exist in non-profile directories.
+    Assert.notEqual(
+      addon.scope == AddonManager.SCOPE_PROFILE,
+      file.exists(),
+      `file remains after uninstall for non-profile sideloads, scope ${
+        addon.scope
+      }`
+    );
+  }
+  addons = await AddonManager.getAddonsByTypes(["extension"]);
+  Assert.equal(addons.length, 0, "addons left");
 
   await promiseShutdownManager();
 });
