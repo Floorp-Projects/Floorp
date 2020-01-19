@@ -2185,6 +2185,7 @@ impl Renderer {
             batch_lookback_count: options.batch_lookback_count,
             background_color: options.clear_color,
             compositor_kind,
+            tile_size_override: None,
         };
         info!("WR {:?}", config);
 
@@ -2292,7 +2293,7 @@ impl Renderer {
                 max_texture_size,
                 max_texture_layers,
                 if config.global_enable_picture_caching {
-                    tile_cache_sizes()
+                    tile_cache_sizes(config.testing)
                 } else {
                     &[]
                 },
@@ -2845,7 +2846,8 @@ impl Renderer {
     fn handle_debug_command(&mut self, command: DebugCommand) {
         match command {
             DebugCommand::EnableDualSourceBlending(_) |
-            DebugCommand::SetTransactionLogging(_) => {
+            DebugCommand::SetTransactionLogging(_) |
+            DebugCommand::SetPictureTileSize(_) => {
                 panic!("Should be handled by render backend");
             }
             DebugCommand::FetchDocuments |
