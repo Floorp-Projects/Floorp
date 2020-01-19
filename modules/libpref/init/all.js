@@ -2746,8 +2746,8 @@ pref("dom.ipc.processCount.webLargeAllocation", 10);
 // Enable the Large-Allocation header
 pref("dom.largeAllocationHeader.enabled", true);
 
-// Enable e10s for Gecko by default.
-pref("browser.tabs.remote.autostart", true);
+// Disable e10s for Gecko by default. This is overridden in firefox.js.
+pref("browser.tabs.remote.autostart", false);
 
 // Disable fission for Gecko by default. Lock it on release and beta because
 // it is not ready for use and can leak URIs to telemetry until bug 1561653 is
