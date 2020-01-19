@@ -537,7 +537,9 @@ def set_defaults(config, tests):
             # loopback-video is always true for Android, but false for other
             # platform phyla
             test['loopback-video'] = True
-        test['mozharness']['set-moz-node-path'] = True
+        else:
+            # all non-android tests want to run the bits that require node
+            test['mozharness']['set-moz-node-path'] = True
 
         # software-gl-layers is only meaningful on linux unittests, where it defaults to True
         if test['test-platform'].startswith('linux') and test['suite'] not in ['talos', 'raptor']:
