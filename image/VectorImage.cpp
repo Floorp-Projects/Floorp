@@ -1131,12 +1131,15 @@ already_AddRefed<SourceSurface> VectorImage::CreateSurface(
   NotNull<RefPtr<ISurfaceProvider>> provider =
       MakeNotNull<SimpleSurfaceProvider*>(ImageKey(this), surfaceKey, frame);
 
-  if (SurfaceCache::Insert(provider) == InsertOutcome::SUCCESS &&
-      aParams.size != aParams.drawSize) {
-    // We created a new surface that wasn't the size we requested, which means
-    // we entered factor-of-2 mode. We should purge any surfaces we no longer
-    // need rather than waiting for the cache to expire them.
-    SurfaceCache::PruneImage(ImageKey(this));
+  if (SurfaceCache::Insert(provider) == InsertOutcome::SUCCESS) {
+    if (aParams.size != aParams.drawSize) {
+      // We created a new surface that wasn't the size we requested, which means
+      // we entered factor-of-2 mode. We should purge any surfaces we no longer
+      // need rather than waiting for the cache to expire them.
+      SurfaceCache::PruneImage(ImageKey(this));
+    }
+  } else {
+    aWillCache = false;
   }
 
   return surface.forget();
