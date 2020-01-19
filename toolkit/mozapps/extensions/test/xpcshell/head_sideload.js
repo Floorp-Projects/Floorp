@@ -56,6 +56,13 @@ const scopeDirectories = {
   profile: profileDir,
 };
 
+const scopeToDir = new Map([
+  [AddonManager.SCOPE_SYSTEM, globalDir],
+  [AddonManager.SCOPE_USER, userDir],
+  [AddonManager.SCOPE_APPLICATION, addonAppDir],
+  [AddonManager.SCOPE_PROFILE, profileDir],
+]);
+
 async function createWebExtension(id, version, dir) {
   let xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
