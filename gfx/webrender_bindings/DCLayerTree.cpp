@@ -241,6 +241,7 @@ void DCLayerTree::Unbind() {
   RefPtr<IDCompositionSurface> surface = mCurrentSurface.ref();
   surface->EndDraw();
 
+  DestroyEGLSurface();
   mCurrentSurface = Nothing();
 }
 
