@@ -4,6 +4,7 @@ $dokka.location:mozilla.components.browser.engine.gecko$await(org.mozilla.geckov
 $dokka.location:mozilla.components.browser.engine.gecko$launchGeckoResult(kotlinx.coroutines.CoroutineScope, kotlin.coroutines.CoroutineContext, kotlinx.coroutines.CoroutineStart, kotlin.SuspendFunction1((kotlinx.coroutines.CoroutineScope, mozilla.components.browser.engine.gecko.launchGeckoResult.T)))mozilla.components.browser.engine.gecko/kotlinx.coroutines.-coroutine-scope/launch-gecko-result.md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reverse(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reverse.md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reversible(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reversible.md
+$dokka.location:mozilla.components.browser.menu.ext$getHighlight(kotlin.collections.List((mozilla.components.browser.menu.BrowserMenuItem)))mozilla.components.browser.menu.ext/kotlin.collections.-list/get-highlight.md
 $dokka.location:mozilla.components.concept.fetch$toMutableHeaders(kotlin.collections.List((mozilla.components.concept.fetch.Header)))mozilla.components.concept.fetch/kotlin.collections.-list/to-mutable-headers.md
 $dokka.location:mozilla.components.feature.addons.ui$translate(kotlin.collections.Map((kotlin.String, )))mozilla.components.feature.addons.ui/kotlin.collections.-map/translate.md
 $dokka.location:mozilla.components.feature.downloads$toMegabyteString(kotlin.Long)mozilla.components.feature.downloads/kotlin.-long/to-megabyte-string.md
@@ -102,7 +103,9 @@ mozilla.components.browser.icons.preparer
 mozilla.components.browser.icons.processor
 mozilla.components.browser.icons.utils
 mozilla.components.browser.menu
+mozilla.components.browser.menu.ext
 mozilla.components.browser.menu.item
+mozilla.components.browser.menu.view
 mozilla.components.browser.search
 mozilla.components.browser.search.provider
 mozilla.components.browser.search.provider.filter

@@ -2,7 +2,7 @@
 
 # BrowserMenuBuilder
 
-`class BrowserMenuBuilder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuBuilder.kt#L17)
+`open class BrowserMenuBuilder` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenuBuilder.kt#L17)
 
 Helper class for building browser menus.
 
@@ -33,10 +33,16 @@ the top of the menu is always visible.
 
 | Name | Summary |
 |---|---|
-| [build](build.md) | `fun build(context: <ERROR CLASS>): `[`BrowserMenu`](../-browser-menu/index.md) |
+| [build](build.md) | `open fun build(context: <ERROR CLASS>): `[`BrowserMenu`](../-browser-menu/index.md)<br>Builds and returns a browser menu with [items](items.md) |
 
 ### Extension Functions
 
 | Name | Summary |
 |---|---|
 | [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
+### Inheritors
+
+| Name | Summary |
+|---|---|
+| [WebExtensionBrowserMenuBuilder](../-web-extension-browser-menu-builder/index.md) | `class WebExtensionBrowserMenuBuilder : `[`BrowserMenuBuilder`](./index.md)<br>Browser menu builder with web extension support. It allows [WebExtensionBrowserMenu](../-web-extension-browser-menu/index.md) to add web extension browser actions. |
