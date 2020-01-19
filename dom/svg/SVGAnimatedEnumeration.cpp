@@ -70,8 +70,9 @@ nsAtom* SVGAnimatedEnumeration::GetBaseValueAtom(SVGElement* aSVGElement) {
   return nsGkAtoms::_empty;
 }
 
-nsresult SVGAnimatedEnumeration::SetBaseValue(uint16_t aValue,
-                                              SVGElement* aSVGElement) {
+void SVGAnimatedEnumeration::SetBaseValue(uint16_t aValue,
+                                          SVGElement* aSVGElement,
+                                          ErrorResult& aRv) {
   const SVGEnumMapping* mapping = GetMapping(aSVGElement);
 
   while (mapping && mapping->mKey) {
@@ -86,11 +87,11 @@ nsresult SVGAnimatedEnumeration::SetBaseValue(uint16_t aValue,
         }
         aSVGElement->DidChangeEnum(mAttrEnum);
       }
-      return NS_OK;
+      return;
     }
     mapping++;
   }
-  return NS_ERROR_DOM_TYPE_ERR;
+  return aRv.ThrowTypeError(u"Invalid SVGAnimatedEnumeration base value");
 }
 
 void SVGAnimatedEnumeration::SetAnimValue(uint16_t aValue,
