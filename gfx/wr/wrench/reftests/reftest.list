@@ -15,3 +15,4 @@ include snap/reftest.list
 include split/reftest.list
 include text/reftest.list
 include transforms/reftest.list
+include tiles/reftest.list

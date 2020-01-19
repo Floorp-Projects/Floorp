@@ -977,6 +977,8 @@ pub enum DebugCommand {
     SimulateLongLowPrioritySceneBuild(u32),
     /// Logs transactions to a file for debugging purposes
     SetTransactionLogging(bool),
+    /// Set an override tile size to use for picture caches
+    SetPictureTileSize(Option<DeviceIntSize>),
 }
 
 /// Message sent by the `RenderApi` to the render backend thread.

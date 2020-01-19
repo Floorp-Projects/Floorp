@@ -65,6 +65,7 @@ pub struct FrameBuilderConfig {
     pub batch_lookback_count: usize,
     pub background_color: Option<ColorF>,
     pub compositor_kind: CompositorKind,
+    pub tile_size_override: Option<DeviceIntSize>,
 }
 
 /// A set of common / global resources that are retained between
@@ -117,7 +118,7 @@ pub struct FrameVisibilityContext<'a> {
     pub surfaces: &'a [SurfaceInfo],
     pub debug_flags: DebugFlags,
     pub scene_properties: &'a SceneProperties,
-    pub config: &'a FrameBuilderConfig,
+    pub config: FrameBuilderConfig,
 }
 
 pub struct FrameVisibilityState<'a> {
@@ -242,6 +243,7 @@ impl FrameBuilder {
         texture_cache_profile: &mut TextureCacheProfileCounters,
         composite_state: &mut CompositeState,
         tile_cache_logger: &mut TileCacheLogger,
+        config: FrameBuilderConfig,
     ) -> Option<RenderTaskId> {
         profile_scope!("cull");
 
@@ -327,7 +329,7 @@ impl FrameBuilder {
                 surfaces,
                 debug_flags,
                 scene_properties,
-                config: &scene.config,
+                config,
             };
 
             let mut visibility_state = FrameVisibilityState {
@@ -472,6 +474,7 @@ impl FrameBuilder {
         render_task_counters: &mut RenderTaskGraphCounters,
         debug_flags: DebugFlags,
         tile_cache_logger: &mut TileCacheLogger,
+        config: FrameBuilderConfig,
     ) -> Frame {
         profile_scope!("build");
         profile_marker!("BuildFrame");
@@ -542,6 +545,7 @@ impl FrameBuilder {
             &mut resource_profile.texture_cache,
             &mut composite_state,
             tile_cache_logger,
+            config,
         );
 
         let mut passes;
