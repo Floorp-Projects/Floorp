@@ -1,9 +1,9 @@
 // |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
-// - src/dstr-assignment/array-elem-put-obj-literal-optchain-prop-ref-init.case
-// - src/dstr-assignment/syntax/for-in.template
+// - src/dstr-assignment/array-elem-put-obj-literal-optchain-prop-ref.case
+// - src/dstr-assignment/syntax/for-of.template
 /*---
-description: It is a Syntax Error if LeftHandSideExpression of an DestructuringAssignmentTarget is neither an ObjectLiteral nor an ArrayLiteral and AssignmentTargetType(LeftHandSideExpression) is not simple Using Object (For..in statement)
+description: It is a Syntax Error if LeftHandSideExpression of an DestructuringAssignmentTarget is neither an ObjectLiteral nor an ArrayLiteral and AssignmentTargetType(LeftHandSideExpression) is not simple Using Object (For..of statement)
 esid: sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
 features: [optional-chaining, destructuring-binding]
 flags: [generated]
@@ -43,11 +43,11 @@ info: |
     OptionalChain:
       ?. [ Expression ]
       ?. IdentifierName
-      ?. Arguments 
+      ?. Arguments
       ?. TemplateLiteral
       OptionalChain [ Expression ]
       OptionalChain .IdentifierName
-      OptionalChain Arguments 
+      OptionalChain Arguments
       OptionalChain TemplateLiteral
 
     DestructuringAssignmentTarget : LeftHandSideExpression
@@ -66,4 +66,4 @@ for ([{
   set y(val) {
     throw new Test262Error('The property should not be accessed.');
   }
-}?.y = 42] in [[23]]) ;
+}?.y] of [[23]]) ;

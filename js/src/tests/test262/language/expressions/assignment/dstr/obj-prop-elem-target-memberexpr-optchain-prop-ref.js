@@ -1,9 +1,9 @@
 // |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
-// - src/dstr-assignment/array-elem-put-obj-literal-optchain-prop-ref-init.case
+// - src/dstr-assignment/obj-prop-elem-target-memberexpr-optchain-prop-ref.case
 // - src/dstr-assignment/syntax/assignment-expr.template
 /*---
-description: It is a Syntax Error if LeftHandSideExpression of an DestructuringAssignmentTarget is neither an ObjectLiteral nor an ArrayLiteral and AssignmentTargetType(LeftHandSideExpression) is not simple Using Object (AssignmentExpression)
+description: It is a Syntax Error if LeftHandSideExpression of an DestructuringAssignmentTarget is neither an ObjectLiteral nor an ArrayLiteral and AssignmentTargetType(LeftHandSideExpression) is not simple Using Object (MemberExpression OptionalChain .IdentifierName) (AssignmentExpression)
 esid: sec-variable-statement-runtime-semantics-evaluation
 features: [optional-chaining, destructuring-binding]
 flags: [generated]
@@ -34,11 +34,11 @@ info: |
     OptionalChain:
       ?. [ Expression ]
       ?. IdentifierName
-      ?. Arguments 
+      ?. Arguments
       ?. TemplateLiteral
       OptionalChain [ Expression ]
       OptionalChain .IdentifierName
-      OptionalChain Arguments 
+      OptionalChain Arguments
       OptionalChain TemplateLiteral
 
     DestructuringAssignmentTarget : LeftHandSideExpression
@@ -52,9 +52,6 @@ info: |
 
 ---*/
 $DONOTEVALUATE();
+var y = {};
 
-0, [{
-  set y(val) {
-    throw new Test262Error('The property should not be accessed.');
-  }
-}?.y = 42] = [23];
+0, { x: y?.z } = { x: 23 };
