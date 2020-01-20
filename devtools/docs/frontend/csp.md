@@ -50,7 +50,7 @@ If you absolutely have to use an unsupported scheme, you can turn off CSPs for t
 
 ```
 await pushPref("security.csp.enable", false);
-await pushPref("csp.skip_about_page_has_csp_assert", true);
+await pushPref("dom.security.skip_about_page_has_csp_assert", true);
 ```
 
 The `pushPref` helper will ensure the preferences come back to their initial value at the end of the test.
