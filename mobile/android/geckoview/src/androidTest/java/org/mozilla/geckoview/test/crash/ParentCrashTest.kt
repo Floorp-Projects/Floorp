@@ -15,6 +15,7 @@ import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Assume
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,6 +42,7 @@ class ParentCrashTest {
         assertThat("messenger should not be null", binder, notNullValue())
     }
 
+    @Ignore // Bug 1607537 disabled due to frequent timeouts
     @Test
     @UiThreadTest
     fun crashParent() {
