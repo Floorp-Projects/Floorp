@@ -687,7 +687,7 @@ void CacheFileContextEvictor::EvictEntries() {
 
       nsAutoCString urlOrigin;
       url->Origin(urlOrigin);
-      if (urlOrigin.Equals(NS_ConvertUTF16toUTF8(mEntries[0]->mOrigin))) {
+      if (!urlOrigin.Equals(NS_ConvertUTF16toUTF8(mEntries[0]->mOrigin))) {
         LOG(
             ("CacheFileContextEvictor::EvictEntries() - Skipping entry since "
              "origin "
