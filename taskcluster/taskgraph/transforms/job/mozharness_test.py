@@ -110,40 +110,9 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'MOZILLA_BUILD_URL': {'task-reference': installer_url},
         'NEED_PULSEAUDIO': 'true',
         'NEED_WINDOW_MANAGER': 'true',
-        'NEED_COMPIZ': 'true',
         'ENABLE_E10S': str(bool(test.get('e10s'))).lower(),
         'WORKING_DIR': '/builds/worker',
     })
-
-    # remninder to remove this conditional and remove NEED_COMPIZ from tree
-    # once test are migrated over to Ubuntu 18.04/ubuntu1804.
-    if test['docker-image'] == 'ubuntu1804-test':
-        env.update({
-            'NEED_COMPIZ': 'false'
-        })
-    else:
-        # on Ubuntu1604, require compiz unless proven otherwise.
-        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1552563
-        # if using regex this list can be shortened greatly.
-        suites_not_need_compiz = [
-            'mochitest-webgl1-core',
-            'mochitest-webgl1-ext',
-            'mochitest-plain-gpu',
-            'mochitest-browser-chrome-screenshots',
-            'gtest',
-            'cppunittest',
-            'jsreftest',
-            'crashtest',
-            'reftest',
-            'reftest-no-accel',
-            'web-platform-tests',
-            'web-platform-tests-reftests',
-            'xpcshell'
-        ]
-        if job['run']['test']['suite'] in suites_not_need_compiz or (
-                job['run']['test']['suite'] == 'mochitest-plain' and
-                job['run']['test']['try-name'] == 'mochitest-plain-headless'):
-            env['NEED_COMPIZ'] = 'false'
 
     if mozharness.get('mochitest-flavor'):
         env['MOCHITEST_FLAVOR'] = mozharness['mochitest-flavor']
