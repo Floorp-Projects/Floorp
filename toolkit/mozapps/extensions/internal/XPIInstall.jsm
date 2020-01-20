@@ -3262,6 +3262,8 @@ class DirectoryInstaller {
       return;
     }
 
+    let trashDir = this.getTrashDir();
+
     if (file.leafName != aId) {
       logger.debug(
         `uninstallAddon: flushing jar cache ${file.path} for addon ${aId}`
@@ -3269,30 +3271,20 @@ class DirectoryInstaller {
       flushJarCache(file);
     }
 
-    // In case this is a foreignInstall we do not want to remove the file if it is
-    // not in a profile directory, but we do want to remove the linked file if
-    // it is one.
-    let doFileRemoval =
-      this.location.scope & AddonManager.SCOPE_PROFILE ||
-      this.location.isLinkedAddon(aId);
+    let transaction = new SafeInstallOperation();
 
-    if (doFileRemoval) {
-      let trashDir = this.getTrashDir();
-      let transaction = new SafeInstallOperation();
-
+    try {
+      transaction.moveUnder(file, trashDir);
+    } finally {
+      // It isn't ideal if this cleanup fails, but it is probably better than
+      // rolling back the uninstall at this point
       try {
-        transaction.moveUnder(file, trashDir);
-      } finally {
-        // It isn't ideal if this cleanup fails, but it is probably better than
-        // rolling back the uninstall at this point
-        try {
-          recursiveRemove(trashDir);
-        } catch (e) {
-          logger.warn(
-            `Failed to remove trash directory when uninstalling ${aId}`,
-            e
-          );
-        }
+        recursiveRemove(trashDir);
+      } catch (e) {
+        logger.warn(
+          `Failed to remove trash directory when uninstalling ${aId}`,
+          e
+        );
       }
     }
 
@@ -4411,17 +4403,11 @@ var XPIInstall = {
         `Cannot uninstall addon ${aAddon.id} because it is not installed`
       );
     }
-    let { location } = aAddon;
 
-    // We now allow uninstall of legacy sideloaded extensions
-    let isLegacySideload =
-      aAddon.foreignInstall &&
-      !(location.scope & AddonSettings.SCOPES_SIDELOAD);
-
-    if (location.locked && !isLegacySideload) {
+    if (aAddon.location.locked) {
       throw new Error(
         `Cannot uninstall addon ${aAddon.id} ` +
-          `from locked install location ${location.name}`
+          `from locked install location ${aAddon.location.name}`
       );
     }
 
@@ -4442,7 +4428,7 @@ var XPIInstall = {
       // that an uninstall is necessary on next startup. Temporary add-ons are
       // automatically uninstalled on shutdown anyway so there is no need to
       // do this for them.
-      if (!aAddon.location.isTemporary && aAddon.location.installer) {
+      if (!aAddon.location.isTemporary) {
         let stage = getFile(
           aAddon.id,
           aAddon.location.installer.getStagingDir()
@@ -4501,9 +4487,8 @@ var XPIInstall = {
 
       let uninstall = () => {
         XPIStates.disableAddon(aAddon.id);
-        if (aAddon.location.installer) {
-          aAddon.location.installer.uninstallAddon(aAddon.id);
-        }
+
+        aAddon.location.installer.uninstallAddon(aAddon.id);
         XPIDatabase.removeAddonMetadata(aAddon);
         aAddon.location.removeAddon(aAddon.id);
         AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
@@ -4558,7 +4543,7 @@ var XPIInstall = {
       throw new Error("Add-on is not marked to be uninstalled");
     }
 
-    if (!aAddon.location.isTemporary && aAddon.location.installer) {
+    if (!aAddon.location.isTemporary) {
       aAddon.location.installer.cleanStagingDir([aAddon.id]);
     }
 
