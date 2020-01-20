@@ -9,7 +9,7 @@ load 570451.png
 # Bug 1390704 - Skip on debug because it triggers a quadratic behavior that makes it take
 # so much time that it can trip on the reftest timeout of 5 minutes.
 skip-if(Android||isDebugBuild) load 694165-1.xhtml
-pref(canvas.mozgetasfile.enabled,true) load 681190.html
+load 681190.html
 load 732319-1.html
 load 844403-1.html
 load 856616.gif

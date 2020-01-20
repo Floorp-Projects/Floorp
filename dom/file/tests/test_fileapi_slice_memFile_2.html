@@ -21,12 +21,7 @@ SimpleTest.requestLongerTimeout(4);
 createCanvasURL()
 .then(data => {
   let cx = $("canvas").getContext('2d');
-  return Promise.all([toBlobPromise(cx.canvas),
-                      Promise.resolve(data)]);
-})
-
-.then(args => {
-  let [memFile, data] = args;
+  let memFile = cx.canvas.mozGetAsFile("image/png");
   return testSlice(memFile, data.length, "image/png", data, "memFile", RANGE_2);
 })
 
