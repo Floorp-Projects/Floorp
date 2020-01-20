@@ -920,7 +920,8 @@
               !this.hidden && document.activeElement == this._findField,
             hasQuickFindTimeout: !!this._quickFindTimeout,
           },
-          "FindBar"
+          "FindBar",
+          "all"
         );
       }
     }

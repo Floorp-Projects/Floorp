@@ -6,6 +6,8 @@ const TEST_PAGE_URI = "data:text/html;charset=utf-8,The letter s.";
 // it does not allow 'data:' URI to be loaded in the parent process.
 const E10S_PARENT_TEST_PAGE_URI =
   getRootDirectory(gTestPath) + "file_empty.html";
+const TEST_PAGE_URI_WITHIFRAME =
+  "https://example.com/browser/toolkit/content/tests/browser/file_findinframe.html";
 
 /**
  * Makes sure that the findbar hotkeys (' and /) event listeners
@@ -296,6 +298,55 @@ add_task(async function test_open_and_close_keys() {
   ok(scrollPosition > 0, "Scrolled ok to " + scrollPosition);
 
   BrowserTestUtils.removeTab(tab);
+});
+
+// This test loads an editable area within an iframe and then
+// performs a search. Focusing the editable area should still
+// allow keyboard events to be received.
+add_task(async function test_hotkey_insubframe() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    TEST_PAGE_URI_WITHIFRAME
+  );
+
+  await gFindBarPromise;
+  let findBar = gFindBar;
+
+  // Focus the editable area within the frame.
+  let browser = gBrowser.selectedBrowser;
+  let frameBC = browser.browsingContext.getChildren()[0];
+  await SpecialPowers.spawn(frameBC, [], async () => {
+    content.document.body.focus();
+    content.document.defaultView.focus();
+  });
+
+  // Start a find and wait for the findbar to open.
+  let findBarOpenPromise = BrowserTestUtils.waitForEvent(
+    gBrowser,
+    "findbaropen"
+  );
+  EventUtils.synthesizeKey("f", { accelKey: true });
+  await findBarOpenPromise;
+
+  // Opening the findbar would have focused the find textbox.
+  // Focus the editable area again.
+  let cursorPos = await SpecialPowers.spawn(frameBC, [], async () => {
+    content.document.body.focus();
+    content.document.defaultView.focus();
+    return content.getSelection().anchorOffset;
+  });
+  is(cursorPos, 0, "initial cursor position");
+
+  // Try moving the caret.
+  await BrowserTestUtils.synthesizeKey("KEY_ArrowRight", {}, frameBC);
+
+  cursorPos = await SpecialPowers.spawn(frameBC, [], async () => {
+    return content.getSelection().anchorOffset;
+  });
+  is(cursorPos, 1, "cursor moved");
+
+  await closeFindbarAndWait(findBar);
+  gBrowser.removeTab(tab);
 });
 
 async function promiseFindFinished(searchText, highlightOn) {
