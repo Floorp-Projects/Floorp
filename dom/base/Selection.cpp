@@ -710,21 +710,12 @@ static nsresult CompareToRangeEnd(const nsINode* aCompareNode,
   return NS_OK;
 }
 
-// Selection::FindInsertionPoint
-//
-//    Binary searches the given sorted array of ranges for the insertion point
-//    for the given node/offset. The given comparator is used, and the index
-//    where the point should appear in the array is placed in *aInsertionPoint.
-//
-//    If there is an item in the array equal to the input point, we will return
-//    the index of this item.
-
 nsresult Selection::FindInsertionPoint(
     const nsTArray<RangeData>* aElementArray, const nsINode* aPointNode,
     int32_t aPointOffset,
     nsresult (*aComparator)(const nsINode*, int32_t, const nsRange*, int32_t*),
-    int32_t* aPoint) {
-  *aPoint = 0;
+    int32_t* aInsertionPoint) {
+  *aInsertionPoint = 0;
   int32_t beginSearch = 0;
   int32_t endSearch = aElementArray->Length();  // one beyond what to check
 
@@ -749,7 +740,7 @@ nsresult Selection::FindInsertionPoint(
     } while (endSearch - beginSearch > 0);
   }
 
-  *aPoint = beginSearch;
+  *aInsertionPoint = beginSearch;
   return NS_OK;
 }
 
