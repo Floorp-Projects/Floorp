@@ -1,0 +1,59 @@
+diff --git a/src/targets.rs b/src/targets.rs
+index 6ae570e..3aa1044 100644
+--- a/src/targets.rs
++++ b/src/targets.rs
+@@ -1,6 +1,7 @@
+ // This file defines all the identifier enums and target-aware logic.
+ 
+ use crate::triple::{Endianness, PointerWidth, Triple};
++use alloc::string::String;
+ use core::fmt;
+ use core::str::FromStr;
+ 
+@@ -292,7 +293,7 @@ impl Aarch64Architecture {
+ 
+ /// The "vendor" field, which in practice is little more than an arbitrary
+ /// modifier.
+-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
++#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+ #[allow(missing_docs)]
+ pub enum Vendor {
+     Unknown,
+@@ -306,6 +307,7 @@ pub enum Vendor {
+     Sun,
+     Uwp,
+     Wrs,
++    Custom(String),
+ }
+ 
+ /// The "operating system" field, which sometimes implies an environment, and
+@@ -717,6 +719,7 @@ impl fmt::Display for Vendor {
+             Vendor::Sun => "sun",
+             Vendor::Uwp => "uwp",
+             Vendor::Wrs => "wrs",
++            Vendor::Custom(ref name) => name,
+         };
+         f.write_str(s)
+     }
+@@ -738,7 +741,20 @@ impl FromStr for Vendor {
+             "sun" => Vendor::Sun,
+             "uwp" => Vendor::Uwp,
+             "wrs" => Vendor::Wrs,
+-            _ => return Err(()),
++            custom => {
++                use alloc::borrow::ToOwned;
++                if Architecture::from_str(custom).is_ok()
++                    || OperatingSystem::from_str(custom).is_ok()
++                    || Environment::from_str(custom).is_ok()
++                    || BinaryFormat::from_str(custom).is_ok()
++                {
++                    return Err(());
++                }
++                if custom.find(|c: char| !c.is_ascii_alphanumeric() && c != '_' && c != '.').is_some() {
++                    return Err(());
++                }
++                Vendor::Custom(custom.to_owned())
++            }
+         })
+     }
+ }
