@@ -2277,6 +2277,24 @@ pref("security.directory",              "");
 pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
+#if defined(DEBUG)
+  // For testing purposes only: Flipping this pref to true allows
+  // to skip the assertion that every about page ships with a CSP.
+  pref("csp.skip_about_page_has_csp_assert", false);
+  // For testing purposes only: Flipping this pref to true allows
+  // to skip the allowlist for about: pages and do not ship with a
+  // CSP and NS_ASSERT right away.
+  pref("csp.skip_about_page_csp_allowlist_and_assert", false);
+  // For testing purposes only: Flipping this pref to true allows
+  // to skip the assertion that HTML fragments (e.g. innerHTML) can
+  // not be used within chrome code or about: pages.
+  pref("domsecurity.skip_html_fragment_assertion", false);
+  // For testing purposes only; Flipping this pref to true allows
+  // to skip the assertion that remote scripts can not be loaded
+  // in system privileged contexts.
+  pref("domsecurity.skip_remote_script_assertion_in_system_priv_context", false);
+#endif
+
 #ifdef EARLY_BETA_OR_EARLIER
   // Disallow web documents loaded with the SystemPrincipal
   pref("security.disallow_non_local_systemprincipal_in_tests", false);

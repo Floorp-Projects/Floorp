@@ -127,7 +127,7 @@ add_task(async function startup() {
       min: 0,
       max: 50,
     },
-    "dom.security.skip_about_page_has_csp_assert": {
+    "csp.skip_about_page_has_csp_assert": {
       // This is accessed in debug only.
     },
   };
