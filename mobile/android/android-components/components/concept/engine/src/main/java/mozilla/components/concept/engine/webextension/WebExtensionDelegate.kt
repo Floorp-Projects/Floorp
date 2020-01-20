@@ -11,6 +11,7 @@ import mozilla.components.concept.engine.EngineSession
  * extensions e.g. an extension was installed, or an extension wants to open
  * a new tab.
  */
+@Suppress("TooManyFunctions")
 interface WebExtensionDelegate {
 
     /**
@@ -64,27 +65,37 @@ interface WebExtensionDelegate {
 
     /**
      * Invoked when a web extension defines a browser action. To listen for session-specific
-     * overrides of [BrowserAction]s and other action-specific events (e.g. opening a popup)
+     * overrides of [Action]s and other action-specific events (e.g. opening a popup)
      * see [WebExtension.registerActionHandler].
      *
      * @param webExtension The [WebExtension] defining the browser action.
-     * @param action the defined [BrowserAction].
+     * @param action the defined browser [Action].
      */
-    fun onBrowserActionDefined(webExtension: WebExtension, action: BrowserAction) = Unit
+    fun onBrowserActionDefined(webExtension: WebExtension, action: Action) = Unit
 
     /**
-     * Invoked when a browser action wants to toggle a popup view.
+     * Invoked when a web extension defines a page action. To listen for session-specific
+     * overrides of [Action]s and other action-specific events (e.g. opening a popup)
+     * see [WebExtension.registerActionHandler].
+     *
+     * @param webExtension The [WebExtension] defining the browser action.
+     * @param action the defined page [Action].
+     */
+    fun onPageActionDefined(webExtension: WebExtension, action: Action) = Unit
+
+    /**
+     * Invoked when a browser or page action wants to toggle a popup view.
      *
      * @param webExtension The [WebExtension] that wants to display the popup.
      * @param engineSession The [EngineSession] to use for displaying the popup.
-     * @param action the [BrowserAction] that defines the popup.
+     * @param action the [Action] that defines the popup.
      * @return the [EngineSession] used to display the popup, or null if no popup
      * was displayed.
      */
-    fun onToggleBrowserActionPopup(
+    fun onToggleActionPopup(
         webExtension: WebExtension,
         engineSession: EngineSession,
-        action: BrowserAction
+        action: Action
     ): EngineSession? = null
 
     /**

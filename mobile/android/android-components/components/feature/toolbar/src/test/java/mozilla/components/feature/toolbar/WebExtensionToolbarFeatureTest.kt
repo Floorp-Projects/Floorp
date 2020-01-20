@@ -16,7 +16,8 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.webextension.BrowserAction
+import mozilla.components.concept.engine.webextension.Action
+import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -32,8 +33,6 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-
-typealias WebExtensionBrowserAction = BrowserAction
 
 class WebExtensionToolbarFeatureTest {
     private val testDispatcher = TestCoroutineDispatcher()
@@ -110,7 +109,7 @@ class WebExtensionToolbarFeatureTest {
         val webExtToolbarFeature = getWebExtensionToolbarFeature()
 
         val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = loadIcon,
             enabled = true,
@@ -119,7 +118,7 @@ class WebExtensionToolbarFeatureTest {
             badgeBackgroundColor = Color.BLUE
         ) {}
 
-        val browserActionOverride = BrowserAction(
+        val browserActionOverride = Action(
             title = "updatedTitle",
             loadIcon = null,
             enabled = false,
@@ -168,7 +167,7 @@ class WebExtensionToolbarFeatureTest {
     fun `stale browser actions are remove when feature is restarted`() {
         val browserExtensions = HashMap<String, WebExtensionState>()
         val loadIcon: (suspend (Int) -> Bitmap?)? = { mock() }
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = loadIcon,
             enabled = true,

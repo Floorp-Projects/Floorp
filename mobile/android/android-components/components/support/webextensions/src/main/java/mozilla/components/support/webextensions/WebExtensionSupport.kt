@@ -16,8 +16,8 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
-import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.lib.state.ext.flowScoped
@@ -60,8 +60,12 @@ object WebExtensionSupport {
         private val sessionId: String
     ) : ActionHandler {
 
-        override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: BrowserAction) {
+        override fun onBrowserAction(extension: WebExtension, session: EngineSession?, action: Action) {
             store.dispatch(WebExtensionAction.UpdateTabBrowserAction(sessionId, extension.id, action))
+        }
+
+        override fun onPageAction(extension: WebExtension, session: EngineSession?, action: Action) {
+            store.dispatch(WebExtensionAction.UpdateTabPageAction(sessionId, extension.id, action))
         }
     }
 
@@ -123,14 +127,18 @@ object WebExtensionSupport {
                 }
             }
 
-            override fun onBrowserActionDefined(webExtension: WebExtension, action: BrowserAction) {
+            override fun onBrowserActionDefined(webExtension: WebExtension, action: Action) {
                 store.dispatch(WebExtensionAction.UpdateBrowserAction(webExtension.id, action))
             }
 
-            override fun onToggleBrowserActionPopup(
+            override fun onPageActionDefined(webExtension: WebExtension, action: Action) {
+                store.dispatch(WebExtensionAction.UpdatePageAction(webExtension.id, action))
+            }
+
+            override fun onToggleActionPopup(
                 webExtension: WebExtension,
                 engineSession: EngineSession,
-                action: BrowserAction
+                action: Action
             ): EngineSession? {
                 val popupSessionId = store.state.extensions[webExtension.id]?.browserActionPopupSession
                 return if (popupSessionId != null && store.state.tabs.find { it.id == popupSessionId } != null) {
@@ -143,7 +151,7 @@ object WebExtensionSupport {
                     null
                 } else {
                     val sessionId = openTab(store, onNewTabOverride, webExtension, engineSession, "")
-                    store.dispatch(WebExtensionAction.UpdateBrowserActionPopupSession(webExtension.id, sessionId))
+                    store.dispatch(WebExtensionAction.UpdatePopupSessionAction(webExtension.id, sessionId))
                     engineSession
                 }
             }
@@ -235,7 +243,7 @@ object WebExtensionSupport {
      */
     fun markExtensionAsUpdated(store: BrowserStore, updatedExtension: WebExtension) {
         installedExtensions[updatedExtension.id] = updatedExtension
-        store.dispatch(WebExtensionAction.UpdateWebExtension(updatedExtension.toState()))
+        store.dispatch(WebExtensionAction.UpdateWebExtensionAction(updatedExtension.toState()))
 
         // Register action handler for all existing engine sessions on the new extension
         store.state.tabs.forEach { tab ->

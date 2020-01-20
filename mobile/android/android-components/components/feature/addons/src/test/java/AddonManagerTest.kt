@@ -188,7 +188,7 @@ class AddonManagerTest {
         }
 
         val actionHandlerCaptor = argumentCaptor<ActionHandler>()
-        val actionCaptor = argumentCaptor<WebExtensionAction.UpdateWebExtension>()
+        val actionCaptor = argumentCaptor<WebExtensionAction.UpdateWebExtensionAction>()
 
         // Verifying we returned the right status
         verify(engine).updateWebExtension(any(), onSuccessCaptor.capture(), any())

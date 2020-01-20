@@ -14,7 +14,7 @@ import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.R
 import mozilla.components.browser.menu.WebExtensionBrowserMenu
-import mozilla.components.concept.engine.webextension.BrowserAction
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -60,7 +60,7 @@ class WebExtensionBrowserMenuItemTest {
         whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
         whenever(view.context).thenReturn(mock())
 
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = { icon },
             enabled = false,
@@ -88,7 +88,7 @@ class WebExtensionBrowserMenuItemTest {
         whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
         whenever(view.context).thenReturn(mock())
 
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = { icon },
             enabled = true,
@@ -123,7 +123,7 @@ class WebExtensionBrowserMenuItemTest {
         whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
         whenever(view.context).thenReturn(mock())
 
-        val browserAction = BrowserAction(
+        val browserAction = Action(
                 title = "title",
                 loadIcon = { throw IllegalArgumentException() },
                 enabled = true,
@@ -153,7 +153,7 @@ class WebExtensionBrowserMenuItemTest {
         whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
         whenever(view.context).thenReturn(mock())
 
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = { icon },
             enabled = true,
@@ -189,7 +189,7 @@ class WebExtensionBrowserMenuItemTest {
         whenever(view.findViewById<TextView>(R.id.action_label)).thenReturn(labelView)
         whenever(view.context).thenReturn(mock())
 
-        val browserAction = BrowserAction(
+        val browserAction = Action(
             title = "title",
             loadIcon = { icon },
             enabled = true,
@@ -207,7 +207,7 @@ class WebExtensionBrowserMenuItemTest {
         verify(labelView).setText("title")
         verify(badgeView).setText("badgeText")
 
-        val browserActionOverride = BrowserAction(
+        val browserActionOverride = Action(
                 title = "override",
                 loadIcon = { icon },
                 enabled = true,

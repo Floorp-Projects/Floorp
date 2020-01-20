@@ -7,7 +7,7 @@ package mozilla.components.concept.engine.webextension
 import android.graphics.Bitmap
 
 /**
- * Value type that represents the state of a browser action within a [WebExtension].
+ * Value type that represents the state of a browser or page action within a [WebExtension].
  *
  * @property title The title of the browser action to be visible in the user interface.
  * @property enabled Indicates if the browser action should be enabled or disabled.
@@ -17,7 +17,7 @@ import android.graphics.Bitmap
  * @property badgeBackgroundColor The browser action's badge background color.
  * @property onClick A callback to be executed when this browser action is clicked.
  */
-data class BrowserAction(
+data class Action(
     val title: String?,
     val enabled: Boolean?,
     val loadIcon: (suspend (Int) -> Bitmap?)?,
@@ -27,13 +27,15 @@ data class BrowserAction(
     val onClick: () -> Unit
 ) {
     /**
-     * Returns a copy of this [BrowserAction] with the provided overrides applied e.g. for tab-specific overrides.
+     * Returns a copy of this [Action] with the provided override applied e.g. for tab-specific overrides.
      *
      * @param override the action to use for overriding properties. Note that only the provided
-     * (non-null) properties of the override will be applied, all other properties will remain unchanged.
+     * (non-null) properties of the override will be applied, all other properties will remain
+     * unchanged. An extension can send a tab-specific action and only include the properties
+     * it wants to override for the tab.
      */
-    fun copyWithOverride(override: BrowserAction) =
-        BrowserAction(
+    fun copyWithOverride(override: Action) =
+        Action(
             title = override.title ?: title,
             enabled = override.enabled ?: enabled,
             badgeText = override.badgeText ?: badgeText,
@@ -43,3 +45,6 @@ data class BrowserAction(
             onClick = override.onClick
         )
 }
+
+typealias WebExtensionBrowserAction = Action
+typealias WebExtensionPageAction = Action

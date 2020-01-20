@@ -19,7 +19,7 @@ import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.webextension.ActionHandler
-import mozilla.components.concept.engine.webextension.BrowserAction
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
@@ -772,14 +772,50 @@ class GeckoEngineTest {
         val actionHandlerCaptor = argumentCaptor<ActionHandler>()
         verify(extension).registerActionHandler(actionHandlerCaptor.capture())
 
-        val browserAction: BrowserAction = mock()
+        val browserAction: Action = mock()
         actionHandlerCaptor.value.onBrowserAction(extension, null, browserAction)
         verify(webExtensionsDelegate).onBrowserActionDefined(eq(extension), eq(browserAction))
-        assertNull(actionHandlerCaptor.value.onToggleBrowserActionPopup(extension, browserAction))
-        verify(webExtensionsDelegate).onToggleBrowserActionPopup(eq(extension), any(), eq(browserAction))
+        assertNull(actionHandlerCaptor.value.onToggleActionPopup(extension, browserAction))
+        verify(webExtensionsDelegate).onToggleActionPopup(eq(extension), any(), eq(browserAction))
 
-        whenever(webExtensionsDelegate.onToggleBrowserActionPopup(any(), any(), any())).thenReturn(mock())
-        assertNotNull(actionHandlerCaptor.value.onToggleBrowserActionPopup(extension, browserAction))
+        whenever(webExtensionsDelegate.onToggleActionPopup(any(), any(), any())).thenReturn(mock())
+        assertNotNull(actionHandlerCaptor.value.onToggleActionPopup(extension, browserAction))
+    }
+
+    @Test
+    fun `web extension delegate notified of page actions from built-in extensions`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val result = GeckoResult<Void>()
+        whenever(runtime.registerWebExtension(any())).thenReturn(result)
+
+        val extension = spy(mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension(
+            "test-webext",
+            "resource://android/assets/extensions/test",
+            runtime.webExtensionController,
+            true,
+            true
+        ))
+        engine.installWebExtension(extension)
+        result.complete(null)
+
+        val actionHandlerCaptor = argumentCaptor<ActionHandler>()
+        verify(extension).registerActionHandler(actionHandlerCaptor.capture())
+
+        val pageAction: Action = mock()
+        actionHandlerCaptor.value.onPageAction(extension, null, pageAction)
+        verify(webExtensionsDelegate).onPageActionDefined(eq(extension), eq(pageAction))
+        assertNull(actionHandlerCaptor.value.onToggleActionPopup(extension, pageAction))
+        verify(webExtensionsDelegate).onToggleActionPopup(eq(extension), any(), eq(pageAction))
+
+        whenever(webExtensionsDelegate.onToggleActionPopup(any(), any(), any())).thenReturn(mock())
+        assertNotNull(actionHandlerCaptor.value.onToggleActionPopup(extension, pageAction))
     }
 
     @Test
@@ -815,12 +851,53 @@ class GeckoEngineTest {
         actionDelegateCaptor.value.onBrowserAction(extension, null, browserAction)
 
         val extensionCaptor = argumentCaptor<WebExtension>()
-        val actionCaptor = argumentCaptor<BrowserAction>()
+        val actionCaptor = argumentCaptor<Action>()
         verify(webExtensionsDelegate).onBrowserActionDefined(extensionCaptor.capture(), actionCaptor.capture())
         assertEquals(extId, extensionCaptor.value.id)
 
         actionCaptor.value.onClick()
         verify(browserAction).click()
+    }
+
+    @Test
+    fun `web extension delegate notified of page actions from external extensions`() {
+        val runtime = mock<GeckoRuntime>()
+        val extId = "test-webext"
+        val extUrl = "https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi"
+
+        val extensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val result = GeckoResult<GeckoWebExtension>()
+        whenever(extensionController.install(any())).thenReturn(result)
+        engine.installWebExtension(extId, extUrl)
+        val extension = spy(
+            GeckoWebExtension(
+                extUrl,
+                extId,
+                org.mozilla.geckoview.WebExtension.Flags.NONE,
+                runtime.webExtensionController
+            )
+        )
+        result.complete(extension)
+
+        val actionDelegateCaptor = argumentCaptor<org.mozilla.geckoview.WebExtension.ActionDelegate>()
+        verify(extension).setActionDelegate(actionDelegateCaptor.capture())
+
+        val pageAction: org.mozilla.geckoview.WebExtension.Action = mock()
+        actionDelegateCaptor.value.onPageAction(extension, null, pageAction)
+
+        val extensionCaptor = argumentCaptor<WebExtension>()
+        val actionCaptor = argumentCaptor<Action>()
+        verify(webExtensionsDelegate).onPageActionDefined(extensionCaptor.capture(), actionCaptor.capture())
+        assertEquals(extId, extensionCaptor.value.id)
+
+        actionCaptor.value.onClick()
+        verify(pageAction).click()
     }
 
     @Test

@@ -42,7 +42,12 @@ internal object WebExtensionReducer {
                     it.copy(browserAction = action.browserAction)
                 }
             }
-            is WebExtensionAction.UpdateBrowserActionPopupSession -> {
+            is WebExtensionAction.UpdatePageAction -> {
+                state.updateWebExtensionState(action.extensionId) {
+                    it.copy(pageAction = action.pageAction)
+                }
+            }
+            is WebExtensionAction.UpdatePopupSessionAction -> {
                 state.updateWebExtensionState(action.extensionId) {
                     it.copy(browserActionPopupSession = action.popupSessionId)
                 }
@@ -52,7 +57,12 @@ internal object WebExtensionReducer {
                     it.copy(browserAction = action.browserAction)
                 }
             }
-            is WebExtensionAction.UpdateWebExtension -> {
+            is WebExtensionAction.UpdateTabPageAction -> {
+                state.updateWebExtensionTabState(action.sessionId, action.extensionId) {
+                    it.copy(pageAction = action.pageAction)
+                }
+            }
+            is WebExtensionAction.UpdateWebExtensionAction -> {
                 state.updateWebExtensionState(action.updatedExtension.id) { action.updatedExtension }
             }
         }

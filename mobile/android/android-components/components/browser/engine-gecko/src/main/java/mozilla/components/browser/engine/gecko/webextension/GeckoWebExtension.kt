@@ -9,7 +9,7 @@ import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.webextension.ActionHandler
-import mozilla.components.concept.engine.webextension.BrowserAction
+import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.MessageHandler
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.Port
@@ -172,14 +172,23 @@ class GeckoWebExtension(
                 session: GeckoSession?,
                 action: GeckoNativeWebExtensionAction
             ) {
-                actionHandler.onBrowserAction(this@GeckoWebExtension, null, action.toBrowserAction())
+                actionHandler.onBrowserAction(this@GeckoWebExtension, null, action.convert())
+            }
+
+            override fun onPageAction(
+                ext: GeckoNativeWebExtension,
+                // Session will always be null here for the global default delegate
+                session: GeckoSession?,
+                action: GeckoNativeWebExtensionAction
+            ) {
+                actionHandler.onPageAction(this@GeckoWebExtension, null, action.convert())
             }
 
             override fun onTogglePopup(
                 ext: GeckoNativeWebExtension,
                 action: GeckoNativeWebExtensionAction
             ): GeckoResult<GeckoSession>? {
-                val session = actionHandler.onToggleBrowserActionPopup(this@GeckoWebExtension, action.toBrowserAction())
+                val session = actionHandler.onToggleActionPopup(this@GeckoWebExtension, action.convert())
                 return session?.let { GeckoResult.fromValue((session as GeckoEngineSession).geckoSession) }
             }
         }
@@ -204,7 +213,15 @@ class GeckoWebExtension(
                 geckoSession: GeckoSession?,
                 action: GeckoNativeWebExtensionAction
             ) {
-                actionHandler.onBrowserAction(this@GeckoWebExtension, session, action.toBrowserAction())
+                actionHandler.onBrowserAction(this@GeckoWebExtension, session, action.convert())
+            }
+
+            override fun onPageAction(
+                ext: GeckoNativeWebExtension,
+                geckoSession: GeckoSession?,
+                action: GeckoNativeWebExtensionAction
+            ) {
+                actionHandler.onPageAction(this@GeckoWebExtension, session, action.convert())
             }
         }
 
@@ -254,14 +271,14 @@ private fun createWebExtensionFlags(allowContentMessaging: Boolean): Long {
     }
 }
 
-private fun GeckoNativeWebExtensionAction.toBrowserAction(): BrowserAction {
+private fun GeckoNativeWebExtensionAction.convert(): Action {
     val loadIcon: (suspend (Int) -> Bitmap?)? = icon?.let {
         { size -> icon?.get(size)?.await() }
     }
 
     val onClick = { click() }
 
-    return BrowserAction(
+    return Action(
         title,
         enabled,
         loadIcon,
