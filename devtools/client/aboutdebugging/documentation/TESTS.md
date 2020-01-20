@@ -2,7 +2,7 @@
 
 ## Tests overview
 
-Tests are located in `devtools/client/aboutdebugging/test`. There are two subfolders, `browser` and `xpcshell`. `browser` contains our [browser mochitests](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest). Most of our tests are browser mochitests. `xpcshell` contains our [xpc-shell unit tests](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests). At the moment of writing we only have one.
+Tests are located in `devtools/client/aboutdebugging/test`. There are two subfolders, `browser` and `unit`. `browser` contains our [browser mochitests](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Mochitest). Most of our tests are browser mochitests. `unit` contains our [xpc-shell unit tests](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Writing_xpcshell-based_unit_tests). At the moment of writing we only have one.
 
 ## Test coverage
 

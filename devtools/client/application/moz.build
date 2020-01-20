@@ -17,5 +17,5 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    'test/xpcshell/xpcshell.ini'
+    'test/unit/xpcshell.ini'
 ]

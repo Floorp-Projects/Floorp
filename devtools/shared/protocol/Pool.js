@@ -72,7 +72,7 @@ class Pool extends EventEmitter {
     } else {
       // If the actor is already registerd in a pool, remove it without destroying it.
       // This happens for example when an addon is reloaded. To see this behavior, take a
-      // look at devtools/server/tests/xpcshell/test_addon_reload.js
+      // look at devtools/server/tests/unit/test_addon_reload.js
 
       // TODO: not all actors have been moved to protocol.js, so they do not all have
       // a parent field. Remove the check for the parent once the conversion is finished

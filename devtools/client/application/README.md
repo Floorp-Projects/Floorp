@@ -28,7 +28,7 @@ The application panel lives in the `devtools/client/application` directory. Insi
 └── test
     ├── browser -> mochitests (e2e/integration)
     ├── node -> Jest unit tests
-    └── xpcshell -> xpcshell unit tests
+    └── unit -> xpcshell unit tests
 ```
 
 ### Panel registration
@@ -159,7 +159,7 @@ Besides the usual DevTools test helpers, the Application panel adds some other h
 
 ### Unit tests with xpcshell
 
-We are using xpcshell unit tests for the **Redux reducers** in `devtools/client/application/test/xpcshell`.
+We are using xpcshell unit tests for the **Redux reducers** in `devtools/client/application/test/unit`.
 
 Other unit tests that don't need Enzyme or other npm modules should be added here too.
 

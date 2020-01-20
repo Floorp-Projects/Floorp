@@ -218,7 +218,7 @@ are updated in the UI.
 Unit tests for React components are in `devtools/client/memory/test/chrome/*`.
 
 Unit tests for actions, reducers, and state changes are in
-`devtools/client/memory/test/xpcshell/*`.
+`devtools/client/memory/test/unit/*`.
 
 Holistic integration tests for the frontend and the whole memory tool are in
 `devtools/client/memory/test/browser/*`.
