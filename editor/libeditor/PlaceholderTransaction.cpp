@@ -8,7 +8,7 @@
 #include "CompositionTransaction.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsGkAtoms.h"
 #include "nsQueryObject.h"
 

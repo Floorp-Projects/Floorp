@@ -19,7 +19,7 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Span.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 

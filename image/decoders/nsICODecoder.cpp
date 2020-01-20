@@ -11,7 +11,7 @@
 #include <stdlib.h>
 
 #include "mozilla/EndianUtils.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #include "mozilla/gfx/Swizzle.h"
 

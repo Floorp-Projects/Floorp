@@ -14,7 +14,7 @@
 #include "ScopedGLHelpers.h"
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 namespace mozilla {
 namespace gl {

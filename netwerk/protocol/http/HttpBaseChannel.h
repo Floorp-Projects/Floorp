@@ -43,7 +43,7 @@
 #include "nsISecurityConsoleMessage.h"
 #include "nsCOMArray.h"
 #include "mozilla/net/ChannelEventQueue.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Tuple.h"
 #include "nsIThrottledInputChannel.h"
 #include "nsTArray.h"

@@ -9,7 +9,7 @@
 
 #include <base/task.h>
 
-#include "mozilla/Move.h"
+#include <utility>
 
 /*
  * This is based on the ScopedRunnableMethodFactory from

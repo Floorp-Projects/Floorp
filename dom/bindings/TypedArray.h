@@ -13,7 +13,7 @@
 #include "js/GCAPI.h"       // JS::AutoCheckCannotGC
 #include "js/RootingAPI.h"  // JS::Rooted
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/SpiderMonkeyInterface.h"
 #include "nsWrapperCache.h"

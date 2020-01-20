@@ -8,7 +8,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/net/DNS.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"

@@ -6,7 +6,7 @@
 
 #include "SVGAnimatedLengthList.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/SMILValue.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"

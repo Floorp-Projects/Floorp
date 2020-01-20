@@ -9,7 +9,7 @@
 #include "nsCOMArray.h"
 #include "nsChromeRegistry.h"
 #include "nsTArray.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsClassHashtable.h"
 
 namespace mozilla {

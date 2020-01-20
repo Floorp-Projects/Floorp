@@ -11,7 +11,7 @@
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Result.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/HangTypes.h"
 #include "mozilla/HangAnnotations.h"
 #include "nsTArray.h"

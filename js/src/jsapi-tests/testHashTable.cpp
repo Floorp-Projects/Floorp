@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/HashFunctions.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #include "ds/OrderedHashTable.h"
 #include "js/HashTable.h"

@@ -16,7 +16,7 @@
 #include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Types.h"
 #include "nscore.h"
 

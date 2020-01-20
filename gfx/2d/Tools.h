@@ -9,7 +9,7 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MemoryReporting.h"  // for MallocSizeOf
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/TypeTraits.h"
 #include "Types.h"
 #include "Point.h"

@@ -8,7 +8,7 @@
 #define js_UbiNodeCensus_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #include <algorithm>
 

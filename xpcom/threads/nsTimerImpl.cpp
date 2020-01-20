@@ -13,7 +13,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Mutex.h"
 #include "mozilla/ResultExtensions.h"
 #ifdef MOZ_TASK_TRACER

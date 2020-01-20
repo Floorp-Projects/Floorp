@@ -28,7 +28,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/LoadInfo.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BodyUtil.h"
 #include "mozilla/dom/Client.h"

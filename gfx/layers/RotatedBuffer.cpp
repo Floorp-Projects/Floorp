@@ -23,7 +23,7 @@
 #include "mozilla/gfx/Types.h"      // for ExtendMode::ExtendMode::CLAMP, etc
 #include "mozilla/layers/ShadowLayers.h"   // for ShadowableLayer
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
-#include "mozilla/Move.h"                  // for Move
+#include <utility>                         // for Move
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/gfx/Point.h"  // for IntSize
 #include "gfx2DGlue.h"

@@ -10,7 +10,7 @@
 #include "jsapi.h"
 #include "js/StructuredClone.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsTArray.h"

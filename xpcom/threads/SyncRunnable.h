@@ -10,7 +10,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 namespace mozilla {
 

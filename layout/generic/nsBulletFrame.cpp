@@ -19,7 +19,7 @@
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/PresShell.h"
 #include "nsCOMPtr.h"
 #include "nsCSSFrameConstructor.h"

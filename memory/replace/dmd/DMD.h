@@ -11,7 +11,7 @@
 #include <stdarg.h>
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 

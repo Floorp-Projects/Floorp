@@ -12,7 +12,7 @@
 #include "WidevineUtils.h"
 #include "GMPLog.h"
 #include "mozilla/HelperMacros.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #ifdef XP_WIN
 #  include "WinUtils.h"

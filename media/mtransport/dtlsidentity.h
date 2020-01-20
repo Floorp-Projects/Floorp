@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "m_cpp_utils.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 #include "ScopedNSSTypes.h"

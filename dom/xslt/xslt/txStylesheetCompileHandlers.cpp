@@ -5,7 +5,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #include "txStylesheetCompiler.h"
 #include "txStylesheetCompileHandlers.h"

@@ -7,7 +7,7 @@
 #include "mozilla/ShmemPool.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 mozilla::LazyLogModule sShmemPoolLog("ShmemPool");
 

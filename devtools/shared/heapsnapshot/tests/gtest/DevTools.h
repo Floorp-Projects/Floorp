@@ -16,7 +16,7 @@
 #include "mozilla/devtools/HeapSnapshot.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/CycleCollectedJSContext.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "js/Principals.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"

@@ -8,7 +8,7 @@
 
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/TextEditor.h"
 
 #include "nsGkAtoms.h"

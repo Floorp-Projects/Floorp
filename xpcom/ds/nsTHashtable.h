@@ -16,7 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/fallible.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"

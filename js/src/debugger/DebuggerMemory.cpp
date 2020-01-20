@@ -7,7 +7,7 @@
 #include "debugger/DebuggerMemory.h"
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Vector.h"
 
 #include <stdlib.h>

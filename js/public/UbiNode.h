@@ -13,7 +13,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/RangedPtr.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Variant.h"

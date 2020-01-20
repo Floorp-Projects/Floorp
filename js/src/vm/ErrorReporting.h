@@ -7,7 +7,7 @@
 #ifndef vm_ErrorReporting_h
 #define vm_ErrorReporting_h
 
-#include "mozilla/Move.h"
+#include <utility>
 
 #include <stdarg.h>
 

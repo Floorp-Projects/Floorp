@@ -6,7 +6,7 @@
 
 #include "SVGAnimatedPathSegList.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/SMILValue.h"
 #include "mozilla/dom/SVGElement.h"
 #include "DOMSVGPathSegList.h"

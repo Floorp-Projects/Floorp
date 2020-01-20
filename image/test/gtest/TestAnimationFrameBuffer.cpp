@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "AnimationFrameBuffer.h"
 
 using namespace mozilla;

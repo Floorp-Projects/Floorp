@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Pair.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"

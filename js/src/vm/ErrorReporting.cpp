@@ -6,7 +6,7 @@
 
 #include "vm/ErrorReporting.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 
 #include <stdarg.h>
 

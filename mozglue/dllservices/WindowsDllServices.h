@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Authenticode.h"
 #include "mozilla/LoaderAPIInterfaces.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mozalloc.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"

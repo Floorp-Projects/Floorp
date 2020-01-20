@@ -9,7 +9,7 @@
 
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/gfx/Polygon.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 

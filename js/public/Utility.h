@@ -11,7 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
 

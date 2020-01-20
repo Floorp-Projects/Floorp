@@ -13,7 +13,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Point.h"  // for IntSize
-#include "mozilla/Move.h"
+#include <utility>
 #include "ISurfaceProvider.h"
 
 namespace mozilla {

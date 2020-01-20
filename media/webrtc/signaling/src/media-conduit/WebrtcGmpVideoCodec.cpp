@@ -13,7 +13,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/SyncRunnable.h"
 #include "nsServiceManagerUtils.h"
 #include "runnable_utils.h"

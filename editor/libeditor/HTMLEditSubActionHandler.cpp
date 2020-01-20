@@ -16,7 +16,7 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mozalloc.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"

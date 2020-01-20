@@ -6,7 +6,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/PodOperations.h"
 #include "mozilla/Sprintf.h"
 

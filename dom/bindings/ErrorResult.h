@@ -34,7 +34,7 @@
 #include "nsString.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsTArray.h"
 #include "nsISupportsImpl.h"
 

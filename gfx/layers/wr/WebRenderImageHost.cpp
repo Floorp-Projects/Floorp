@@ -7,7 +7,7 @@
 #include "WebRenderImageHost.h"
 
 #include "LayersLogging.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/ScopeExit.h"
 #include "mozilla/layers/Compositor.h"                // for Compositor
 #include "mozilla/layers/CompositorVsyncScheduler.h"  // for CompositorVsyncScheduler

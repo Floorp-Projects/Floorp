@@ -7,7 +7,7 @@
 #include "SVGAnimatedClass.h"
 
 #include "mozilla/dom/SVGElement.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/SMILValue.h"
 #include "DOMSVGAnimatedString.h"
 #include "SMILStringType.h"

@@ -35,7 +35,7 @@
 #include "mozilla/Unused.h"
 #include "nsIXPConnect.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Telemetry.h"
 
 namespace mozilla {

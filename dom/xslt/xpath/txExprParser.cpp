@@ -9,7 +9,7 @@
  * @see ExprLexer
  **/
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "txExprParser.h"
 #include "txExprLexer.h"
 #include "txExpr.h"

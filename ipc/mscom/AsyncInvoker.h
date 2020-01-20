@@ -11,7 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mscom/Aggregation.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/Mutex.h"

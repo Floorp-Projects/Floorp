@@ -13,7 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/RefCountType.h"
 #include "mozilla/TypeTraits.h"
 

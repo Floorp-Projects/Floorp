@@ -8,7 +8,7 @@
 #define mozilla_mscom_MainThreadHandoff_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mscom/Interceptor.h"
 #include "mozilla/mscom/MainThreadInvoker.h"
 #include "mozilla/mscom/Utils.h"

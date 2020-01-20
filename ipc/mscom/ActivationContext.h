@@ -8,7 +8,7 @@
 #define mozilla_mscom_ActivationContext_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Result.h"
 
 #if defined(MOZILLA_INTERNAL_API)

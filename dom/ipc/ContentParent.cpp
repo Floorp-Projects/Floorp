@@ -101,7 +101,7 @@
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/media/MediaParent.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/CookieServiceParent.h"
 #include "mozilla/net/PCookieServiceParent.h"

@@ -46,7 +46,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsBoxLayoutState.h"
 #include "mozilla/dom/Touch.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
 #include "nsPlaceholderFrame.h"

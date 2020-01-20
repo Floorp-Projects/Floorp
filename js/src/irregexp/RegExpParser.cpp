@@ -32,7 +32,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Range.h"
 
 #include "frontend/TokenStream.h"

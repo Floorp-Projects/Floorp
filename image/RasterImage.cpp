@@ -36,7 +36,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SizeOfState.h"
 #include "mozilla/StaticPrefs_image.h"

@@ -5,7 +5,7 @@
 
 #include "txToplevelItems.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "txStylesheet.h"
 #include "txInstructions.h"
 #include "txXSLTPatterns.h"

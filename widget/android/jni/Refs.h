@@ -9,7 +9,7 @@
 
 #include <jni.h>
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/jni/Utils.h"
 
 #include "nsError.h"  // for nsresult

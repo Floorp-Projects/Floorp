@@ -10,7 +10,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 namespace IPC {
 
