@@ -385,7 +385,7 @@ mochitest-webgl1-ext:
         by-test-platform:
             windows10-aarch64.*: 2
             default: default
-    max-run-time: 1800
+    max-run-time: 2700
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
     mozharness:
