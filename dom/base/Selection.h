@@ -736,6 +736,8 @@ class Selection final : public nsSupportsWeakReference,
 
    * If there is an item in the array equal to the input point (aPointNode,
    * aPointOffset), we will return the index of this item.
+   *
+   * @param aInsertionPoint can be in [0, `aElementArray->Length()`].
    */
   static nsresult FindInsertionPoint(
       const nsTArray<RangeData>* aElementArray, const nsINode* aPointNode,
