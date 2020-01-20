@@ -2207,7 +2207,9 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   // for our BrowsingContext if it isn't already.
   WindowGlobalChild* wgc = mInnerWindow->GetWindowGlobalChild();
   wgc->SetDocumentURI(aDocument->GetDocumentURI());
-  wgc->SendBecomeCurrentWindowGlobal();
+
+  RefPtr<BrowsingContext> bc = GetBrowsingContext();
+  bc->SetCurrentInnerWindowId(mInnerWindow->WindowID());
 
   // We no longer need the old inner window.  Start its destruction if
   // its not being reused and clear our reference.

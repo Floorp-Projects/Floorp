@@ -185,7 +185,7 @@ class FieldStorage {
 // which, when called with the name of the macro, will call that macro once for
 // each field in the synced context.
 #define MOZ_DECL_SYNCED_CONTEXT(clazz, eachfield)                            \
- private:                                                                    \
+ protected:                                                                  \
   friend class ::mozilla::dom::syncedcontext::Transaction<clazz>;            \
   enum FieldIndexes { eachfield(MOZ_DECL_SYNCED_CONTEXT_FIELD_INDEX) };      \
   using FieldStorage =                                                       \

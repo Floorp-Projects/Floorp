@@ -78,6 +78,7 @@ EXPORTS.mozilla.dom += [
     'ChildProcessChannelListener.h',
     'SyncedContext.h',
     'SyncedContextInlines.h',
+    'WindowContext.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -99,6 +100,7 @@ UNIFIED_SOURCES += [
     'nsRefreshTimer.cpp',
     'nsWebNavigationInfo.cpp',
     'SerializedLoadContext.cpp',
+    'WindowContext.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
