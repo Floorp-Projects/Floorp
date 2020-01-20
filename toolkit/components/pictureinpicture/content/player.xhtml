@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE system [
-  <!ENTITY % videocontrolsDTD
-    SYSTEM "chrome://global/locale/videocontrols.dtd">
-  %videocontrolsDTD;
-]>
+<!DOCTYPE html>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -31,12 +27,10 @@
         <button id="unpip" class="control-item" tabindex="2"></button>
         <div class="gap"></div>
         <button id="playpause" class="control-item" tabindex="1" autofocus="true"
-                playlabel="&playButton.playLabel;"
-                pauselabel="&playButton.pauseLabel;"/>
+                data-l10n-id="pictureinpicture-pause"/>
         <div class="gap" hidden="true"></div>
         <button id="audio" class="control-item" hidden="true" tabindex="1"
-                mutelabel="&muteButton.muteLabel;"
-                unmutelabel="&muteButton.unmuteLabel;"/>
+                data-l10n-id="pictureinpicture-mute"/>
       </div>
     </div>
   </body>
