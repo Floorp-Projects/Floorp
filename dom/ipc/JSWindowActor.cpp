@@ -13,11 +13,8 @@
 #include "mozilla/dom/MessageManagerBinding.h"
 #include "mozilla/dom/PWindowGlobal.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/WindowGlobalActor.h"
 #include "js/Promise.h"
 #include "xpcprivate.h"
-
-static mozilla::LazyLogModule gJSWindowActorLog("JSWindowActor");
 
 namespace mozilla {
 namespace dom {
@@ -47,56 +44,11 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(JSWindowActor)
 
 JSWindowActor::JSWindowActor() : mNextQueryId(0) {}
 
-void JSWindowActor::LogMessage(const char* aCallerName,
-                               const JSWindowActorMessageMeta* aMetadata) {
-  if (!MOZ_UNLIKELY(MOZ_LOG_TEST(gJSWindowActorLog, LogLevel::Debug))) {
-    return;
-  }
-
-  nsCString str;
-  str.AppendPrintf("%s, this=%p", aCallerName, this);
-
-  if (WindowGlobalActor* manager = GetManager()) {
-    const char* side =
-        manager->GetSide() == JSWindowActor::Type::Parent ? "Parent" : "Child";
-    str.AppendPrintf(", name=%s%s", NS_ConvertUTF16toUTF8(Name()).get(), side);
-    str.AppendPrintf(", inProcess=%d", manager->IsInProcess());
-  }
-
-  if (aMetadata) {
-    const nsString& messageName = aMetadata->messageName();
-    str.AppendPrintf(", messageName=\"%s\"",
-                     NS_ConvertUTF16toUTF8(messageName).get());
-
-    str.Append(", kind=");
-    switch (aMetadata->kind()) {
-      case JSWindowActorMessageKind::Message:
-        str.Append("Message");
-        break;
-      case JSWindowActorMessageKind::Query:
-        str.Append("Query");
-        break;
-      case JSWindowActorMessageKind::QueryResolve:
-        str.Append("QueryResolve");
-        break;
-      case JSWindowActorMessageKind::QueryReject:
-        str.Append("QueryReject");
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("invalid JSWindowActorMessageKind value!");
-    }
-  }
-
-  MOZ_LOG(gJSWindowActorLog, LogLevel::Debug, ("%s", str.get()));
-}
-
 void JSWindowActor::StartDestroy() {
-  LogMessage("StartDestroy");
   InvokeCallback(CallbackFunction::WillDestroy);
 }
 
 void JSWindowActor::AfterDestroy() {
-  LogMessage("AfterDestroy");
   InvokeCallback(CallbackFunction::DidDestroy);
   // Clear out & reject mPendingQueries
   RejectPendingQueries();
@@ -270,8 +222,6 @@ already_AddRefed<Promise> JSWindowActor::SendQuery(
 void JSWindowActor::ReceiveRawMessage(const JSWindowActorMessageMeta& aMetadata,
                                       ipc::StructuredCloneData&& aData,
                                       ipc::StructuredCloneData&& aStack) {
-  LogMessage("ReceiveRawMessage", &aMetadata);
-
   AutoEntryScript aes(GetParentObject(), "JSWindowActor message handler");
   JSContext* cx = aes.cx();
 
