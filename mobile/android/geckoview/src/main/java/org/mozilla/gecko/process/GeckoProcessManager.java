@@ -316,6 +316,17 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
 
     @WrapForJNI
+    private static void markAsDead(final String type) {
+        XPCOMEventTarget.assertOnLauncherThread();
+        final ChildConnection conn = INSTANCE.mConnections.get(type);
+        if (conn == null) {
+            return;
+        }
+
+        conn.unbind();
+    }
+
+    @WrapForJNI
     private static GeckoResult<Integer> start(final String type,
                                               final String[] args,
                                               final int prefsFd,
