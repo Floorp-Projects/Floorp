@@ -191,7 +191,7 @@ nsresult nsScrollbarFrame::GetXULMargin(nsMargin& aMargin) {
   if (NS_SUCCEEDED(rv) && !IsXULHorizontal()) {
     nsIScrollbarMediator* scrollFrame = GetScrollbarMediator();
     if (scrollFrame && !scrollFrame->IsScrollbarOnRight()) {
-      Swap(aMargin.left, aMargin.right);
+      std::swap(aMargin.left, aMargin.right);
     }
   }
 

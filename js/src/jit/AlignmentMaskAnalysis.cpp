@@ -45,7 +45,7 @@ static void AnalyzeAsmHeapAddress(MDefinition* ptr, MIRGraph& graph) {
   MDefinition* lhs = ptr->toBitAnd()->getOperand(0);
   MDefinition* rhs = ptr->toBitAnd()->getOperand(1);
   if (lhs->isConstant()) {
-    mozilla::Swap(lhs, rhs);
+    std::swap(lhs, rhs);
   }
   if (!lhs->isAdd() || !rhs->isConstant()) {
     return;
@@ -54,7 +54,7 @@ static void AnalyzeAsmHeapAddress(MDefinition* ptr, MIRGraph& graph) {
   MDefinition* op0 = lhs->toAdd()->getOperand(0);
   MDefinition* op1 = lhs->toAdd()->getOperand(1);
   if (op0->isConstant()) {
-    mozilla::Swap(op0, op1);
+    std::swap(op0, op1);
   }
   if (!op1->isConstant()) {
     return;

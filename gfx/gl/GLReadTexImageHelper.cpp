@@ -220,7 +220,7 @@ void SwapRAndBComponents(DataSourceSurface* surf) {
     const uint8_t* rowEnd = row + rowBytes;
 
     while (row != rowEnd) {
-      Swap(row[0], row[2]);
+      std::swap(row[0], row[2]);
       row += 4;
     }
 

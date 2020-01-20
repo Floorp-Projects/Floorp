@@ -55,7 +55,7 @@ SMILValue SMILCSSProperty::GetBaseValue() const {
     // In any case, just return a dummy value (initialized with the right
     // type, so as not to indicate failure).
     SMILValue tmpVal(&SMILCSSValueType::sSingleton);
-    Swap(baseValue, tmpVal);
+    std::swap(baseValue, tmpVal);
     return baseValue;
   }
 

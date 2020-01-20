@@ -2481,7 +2481,7 @@ void nsHttpTransaction::SetHttpTrailers(nsCString& aTrailers) {
   }
 
   MutexAutoLock lock(*nsHttp::GetLock());
-  Swap(mForTakeResponseTrailers, httpTrailers);
+  std::swap(mForTakeResponseTrailers, httpTrailers);
 }
 
 bool nsHttpTransaction::IsWebsocketUpgrade() {

@@ -195,14 +195,6 @@ namespace mozilla {
  *      C(tmp, 0); // OK: tmp not a bit-field
  */
 
-/** Swap |aX| and |aY| using move-construction if possible. */
-template <typename T>
-inline void Swap(T& aX, T& aY) {
-  T tmp(std::move(aX));
-  aX = std::move(aY);
-  aY = std::move(tmp);
-}
-
 }  // namespace mozilla
 
 #endif /* mozilla_Move_h */
