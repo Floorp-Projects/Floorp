@@ -28,7 +28,6 @@ const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   Dictionary: "resource://gre/modules/Extension.jsm",
@@ -1440,12 +1439,6 @@ var XPIStates = {
 
         let xpiState = loc.get(id);
         if (!xpiState) {
-          // If the location is not supported for sideloading, skip new
-          // addons.  We handle this here so changes for existing sideloads
-          // will function.
-          if (!loc.isSystem && !(loc.scope & AddonSettings.SCOPES_SIDELOAD)) {
-            continue;
-          }
           logger.debug("New add-on ${id} in ${loc}", { id, loc: loc.name });
 
           changed = true;
