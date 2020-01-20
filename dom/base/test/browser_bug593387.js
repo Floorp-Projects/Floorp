@@ -12,7 +12,7 @@ add_task(async function test() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["security.csp.enable", false],
-      ["dom.security.skip_about_page_has_csp_assert", true],
+      ["csp.skip_about_page_has_csp_assert", true],
     ],
   });
 
