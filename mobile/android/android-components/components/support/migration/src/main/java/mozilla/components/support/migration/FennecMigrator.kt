@@ -413,7 +413,9 @@ class FennecMigrator private constructor(
      *
      * @return A deferred [MigrationResults], describing which migrations were performed and if they succeeded.
      */
-    fun migrateAsync(): Deferred<MigrationResults> = synchronized(migrationLock) {
+    fun migrateAsync(
+        store: MigrationStore
+    ): Deferred<MigrationResults> = synchronized(migrationLock) {
         val migrationsToRun = getMigrationsToRun()
 
         // Short-circuit if there's nothing to do.
@@ -424,7 +426,7 @@ class FennecMigrator private constructor(
             return result
         }
 
-        return runMigrationsAsync(migrationsToRun)
+        return runMigrationsAsync(store, migrationsToRun)
     }
 
     /**
@@ -488,13 +490,14 @@ class FennecMigrator private constructor(
 
     @Suppress("ComplexMethod")
     private fun runMigrationsAsync(
+        store: MigrationStore,
         migrations: List<VersionedMigration>
     ): Deferred<MigrationResults> = CoroutineScope(coroutineContext).async {
 
         // Note that we're depending on coroutineContext to be backed by a single-threaded executor, in order to ensure
         // non-overlapping execution of our migrations.
 
-        val migrationStore = MigrationResultsStore(context)
+        val resultStore = MigrationResultsStore(context)
         val results = mutableMapOf<Migration, MigrationRun>()
 
         migrations.forEach { versionedMigration ->
@@ -550,9 +553,15 @@ class FennecMigrator private constructor(
             // abundance of caution, in case we crash later.
             Pings.migration.submit()
 
+            // Notify MigrationStore about result.
+            store.dispatch(MigrationAction.MigrationRunResult(
+                versionedMigration.migration,
+                migrationRun
+            ))
+
             // Save result of this migration immediately, so that we keep it even if we crash later
             // in the process and do not rerun this migration version.
-            migrationStore.setOrUpdate(mapOf(versionedMigration.migration to migrationRun))
+            resultStore.setOrUpdate(mapOf(versionedMigration.migration to migrationRun))
 
             results[versionedMigration.migration] = migrationRun
         }

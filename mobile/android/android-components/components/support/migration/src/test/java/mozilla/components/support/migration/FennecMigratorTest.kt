@@ -51,12 +51,12 @@ class FennecMigratorTest {
             .build()
 
         // Can do this once.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertTrue(this.isEmpty())
         }
 
         // Can do this all day long!
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertTrue(this.isEmpty())
         }
     }
@@ -143,7 +143,7 @@ class FennecMigratorTest {
         assertTrue(bookmarksStore.searchBookmarks("mozilla").isEmpty())
 
         // Can run once.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(2, this.size)
 
             assertTrue(this.containsKey(Migration.History))
@@ -164,7 +164,7 @@ class FennecMigratorTest {
         assertEquals(4, bookmarksStore.searchBookmarks("mozilla").size)
 
         // Do not run again for the same version.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertTrue(this.isEmpty())
         }
 
@@ -187,7 +187,7 @@ class FennecMigratorTest {
             .migrateOpenTabs(sessionManager)
             .build()
 
-        with(expandedMigrator.migrateAsync().await()) {
+        with(expandedMigrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.OpenTabs))
 
@@ -200,7 +200,7 @@ class FennecMigratorTest {
         }
 
         // Running this migrator again does nothing.
-        with(expandedMigrator.migrateAsync().await()) {
+        with(expandedMigrator.migrateAsync(mock()).await()) {
             assertTrue(this.isEmpty())
         }
     }
@@ -215,14 +215,14 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.History))
             assertFalse(this.getValue(Migration.History).success)
         }
 
         // Doesn't auto-rerun failed migration.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertTrue(this.isEmpty())
         }
     }
@@ -246,14 +246,14 @@ class FennecMigratorTest {
             ))
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.History))
             assertFalse(this.getValue(Migration.History).success)
         }
 
         // Doesn't auto-rerun failed migration.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertTrue(this.isEmpty())
         }
     }
@@ -270,7 +270,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(2, this.size)
             assertTrue(this.containsKey(Migration.History))
             assertTrue(this.containsKey(Migration.Bookmarks))
@@ -279,7 +279,7 @@ class FennecMigratorTest {
         }
 
         // Doesn't auto-rerun failed migration.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertTrue(this.isEmpty())
         }
     }
@@ -306,7 +306,7 @@ class FennecMigratorTest {
             ))
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(2, this.size)
             assertTrue(this.containsKey(Migration.History))
             assertTrue(this.containsKey(Migration.Bookmarks))
@@ -315,7 +315,7 @@ class FennecMigratorTest {
         }
 
         // Doesn't auto-rerun failed migration.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertTrue(this.isEmpty())
         }
     }
@@ -342,7 +342,7 @@ class FennecMigratorTest {
             ))
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(2, this.size)
             assertTrue(this.containsKey(Migration.History))
             assertTrue(this.containsKey(Migration.Bookmarks))
@@ -351,7 +351,7 @@ class FennecMigratorTest {
         }
 
         // Doesn't auto-rerun failed migration.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertTrue(this.isEmpty())
         }
     }
@@ -364,7 +364,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.OpenTabs))
             assertFalse(this.getValue(Migration.OpenTabs).success)
@@ -380,7 +380,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.FxA))
             assertFalse(this.getValue(Migration.FxA).success)
@@ -398,7 +398,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.FxA))
             assertFalse(this.getValue(Migration.FxA).success)
@@ -416,7 +416,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.FxA))
             assertFalse(this.getValue(Migration.FxA).success)
@@ -434,7 +434,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.FxA))
             assertTrue(this.getValue(Migration.FxA).success)
@@ -443,7 +443,7 @@ class FennecMigratorTest {
         verifyZeroInteractions(accountManager)
 
         // Does not run FxA migration again.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(0, this.size)
         }
 
@@ -460,7 +460,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.FxA))
             assertTrue(this.getValue(Migration.FxA).success)
@@ -469,7 +469,7 @@ class FennecMigratorTest {
         verifyZeroInteractions(accountManager)
 
         // Does not run FxA migration again.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(0, this.size)
         }
 
@@ -487,7 +487,7 @@ class FennecMigratorTest {
 
         `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(CompletableDeferred(true))
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.FxA))
             assertTrue(this.getValue(Migration.FxA).success)
@@ -505,7 +505,7 @@ class FennecMigratorTest {
 
         // Does not run FxA migration again.
         reset(accountManager)
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(0, this.size)
         }
 
@@ -524,7 +524,7 @@ class FennecMigratorTest {
         // For now, we don't treat sign-in failure any different from success. E.g. it's a one-shot attempt.
         `when`(accountManager.signInWithShareableAccountAsync(any(), eq(false))).thenReturn(CompletableDeferred(false))
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.FxA))
             assertFalse(this.getValue(Migration.FxA).success)
@@ -542,7 +542,7 @@ class FennecMigratorTest {
 
         // Does not run FxA migration again.
         reset(accountManager)
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(0, this.size)
         }
 
@@ -562,7 +562,7 @@ class FennecMigratorTest {
             .setSignonsDbName("signons.sqlite")
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Logins))
             assertTrue(this.getValue(Migration.Logins).success)
@@ -626,7 +626,7 @@ class FennecMigratorTest {
         // Expect MP presence to be detected, and migration to succeed. But, not actual records are imported.
         // We actually _can_ migrate with a set MP, but that's currently exposed over the FennecMigrator interface.
         // See FennecLoginsMigration for details.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Logins))
             assertTrue(this.getValue(Migration.Logins).success)
@@ -656,7 +656,7 @@ class FennecMigratorTest {
             .build()
 
         // Empty key4db means we can't decrypt records, or even check for MP status.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Logins))
             assertFalse(this.getValue(Migration.Logins).success)
@@ -687,7 +687,7 @@ class FennecMigratorTest {
 
         // Empty nss table in key4db means we can't decrypt records, but we still check the master password.
         // It's detected, and migration aborted.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Logins))
             assertTrue(this.getValue(Migration.Logins).success)
@@ -715,7 +715,7 @@ class FennecMigratorTest {
 
         // Empty nss table in key4db means we can't decrypt records, but we still check the master password.
         // It's detected, and migration aborted.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Logins))
             assertFalse(this.getValue(Migration.Logins).success)
@@ -739,7 +739,7 @@ class FennecMigratorTest {
             .build()
 
         // MP is checked first, so we don't even get to check signons version.
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Logins))
             assertTrue(this.getValue(Migration.Logins).success)
@@ -762,7 +762,7 @@ class FennecMigratorTest {
             .setSignonsDbName("signons-v5.sqlite")
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Logins))
             assertFalse(this.getValue(Migration.Logins).success)
@@ -781,7 +781,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Settings))
             assertTrue(this.getValue(Migration.Settings).success)
@@ -802,7 +802,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Settings))
             assertFalse(this.getValue(Migration.Settings).success)
@@ -828,7 +828,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Addons))
             assertTrue(this.getValue(Migration.Addons).success)
@@ -858,7 +858,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Addons))
             assertTrue(this.getValue(Migration.Addons).success)
@@ -880,7 +880,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Addons))
             assertFalse(this.getValue(Migration.Addons).success)
@@ -929,7 +929,7 @@ class FennecMigratorTest {
             .setCoroutineContext(this.coroutineContext)
             .build()
 
-        with(migrator.migrateAsync().await()) {
+        with(migrator.migrateAsync(mock()).await()) {
             assertEquals(1, this.size)
             assertTrue(this.containsKey(Migration.Addons))
             assertFalse(this.getValue(Migration.Addons).success)

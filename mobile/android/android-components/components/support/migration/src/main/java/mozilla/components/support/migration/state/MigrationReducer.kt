@@ -16,9 +16,12 @@ internal object MigrationReducer {
             is MigrationAction.Clear -> state.copy(
                 progress = MigrationProgress.NONE
             )
-            is MigrationAction.Result -> state.copy(
-                results = action.results
-            )
+            is MigrationAction.MigrationRunResult -> {
+                val results = state.results?.toMutableMap() ?: mutableMapOf()
+                results.put(action.migration, action.run)
+
+                state.copy(results = results)
+            }
         }
     }
 }

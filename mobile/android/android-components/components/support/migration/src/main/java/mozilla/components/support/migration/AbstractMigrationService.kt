@@ -47,8 +47,7 @@ abstract class AbstractMigrationService : Service() {
 
         scope.launch {
             try {
-                val results = migrate()
-                store.dispatch(MigrationAction.Result(results))
+                migrate()
             } finally {
                 logger.debug("Stopping migration service")
                 shutdown()
@@ -59,7 +58,7 @@ abstract class AbstractMigrationService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private suspend fun migrate(): MigrationResults {
-        val results = migrator.migrateAsync().await()
+        val results = migrator.migrateAsync(store).await()
 
         logger.debug("Migration completed:")
 

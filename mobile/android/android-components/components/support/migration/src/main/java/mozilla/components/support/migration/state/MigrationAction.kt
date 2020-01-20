@@ -5,7 +5,8 @@
 package mozilla.components.support.migration.state
 
 import mozilla.components.lib.state.Action
-import mozilla.components.support.migration.MigrationResults
+import mozilla.components.support.migration.Migration
+import mozilla.components.support.migration.MigrationRun
 
 /**
  * Actions supported by the [MigrationStore].
@@ -27,7 +28,10 @@ sealed class MigrationAction : Action {
     object Clear : MigrationAction()
 
     /**
-     * Set the [MigrationResults] of a completed migration.
+     * Set the result of a migration run.
      */
-    data class Result(val results: MigrationResults) : MigrationAction()
+    data class MigrationRunResult(
+        val migration: Migration,
+        val run: MigrationRun
+    ) : MigrationAction()
 }
