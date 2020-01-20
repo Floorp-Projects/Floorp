@@ -306,6 +306,18 @@ AST_MATCHER(QualType, isSmartPtrToRefCounted) {
   return D && hasCustomAttribute<moz_is_smartptr_to_refcounted>(D);
 }
 
+AST_MATCHER(ClassTemplateSpecializationDecl, isSmartPtrToRefCountedDecl) {
+  auto *D = dyn_cast_or_null<CXXRecordDecl>(Node.getSpecializedTemplate()->getTemplatedDecl());
+  if (!D) {
+    return false;
+  }
+
+  D = D->getCanonicalDecl();
+
+  return D && hasCustomAttribute<moz_is_smartptr_to_refcounted>(D);
+}
+
+
 AST_MATCHER(CXXRecordDecl, hasBaseClasses) {
   const CXXRecordDecl *Decl = Node.getCanonicalDecl();
 
