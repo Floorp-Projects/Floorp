@@ -5192,8 +5192,13 @@ void nsGlobalWindowInner::Resume() {
   // in Suspend() and ensures all children have the correct mSuspendDepth.
   CallOnInProcessChildren(&nsGlobalWindowInner::Resume);
 
-  MOZ_ASSERT(mSuspendDepth != 0);
+  if (mSuspendDepth == 0) {
+    // Ignore if the window is not suspended.
+    return;
+  }
+
   mSuspendDepth -= 1;
+
   if (mSuspendDepth != 0) {
     return;
   }
