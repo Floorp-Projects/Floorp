@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "wasmparser"
-version = "0.39.2"
+version = "0.47.0"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
 exclude = ["fuzz/**/*", "tests/**/*", "testsuite/**/*"]
 description = "A simple event-driven library for parsing WebAssembly binary files.\n"
@@ -24,19 +24,13 @@ repository = "https://github.com/yurydelendik/wasmparser.rs"
 [[bench]]
 name = "benchmark"
 harness = false
-[dependencies.hashbrown]
-version = "0.5.0"
-optional = true
 [dev-dependencies.criterion]
 version = "0.2"
 
-[dev-dependencies.wabt]
-version = "0.9.2"
+[dev-dependencies.wast]
+version = "5.0.0"
 
 [features]
-core = ["hashbrown"]
-default = ["std"]
 deterministic = []
-std = []
 [badges.travis-ci]
 repository = "yurydelendik/wasmparser.rs"

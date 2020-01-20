@@ -29,6 +29,7 @@ pub use self::data_section::Data;
 pub use self::data_section::DataKind;
 pub use self::data_section::DataSectionReader;
 pub use self::element_section::Element;
+pub use self::element_section::ElementItem;
 pub use self::element_section::ElementItems;
 pub use self::element_section::ElementItemsReader;
 pub use self::element_section::ElementKind;
