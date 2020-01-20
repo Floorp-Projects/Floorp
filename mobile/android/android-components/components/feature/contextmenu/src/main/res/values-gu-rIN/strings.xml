@@ -4,6 +4,8 @@
     <string name="mozac_feature_contextmenu_open_link_in_new_tab">નવા ટેબમાં લિંક ખોલો</string>
     <!-- Text for context menu item to open the link in a private tab. -->
     <string name="mozac_feature_contextmenu_open_link_in_private_tab">ખાનગી ટેબમાં લિંક ખોલો</string>
+    <!-- Text for context menu item to open the image in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">નવા ટેબમાં છબી ખોલો</string>
     <!-- Text for context menu item to share the link with an other app. -->
     <string name="mozac_feature_contextmenu_share_link">લિંક શેર કરો</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
