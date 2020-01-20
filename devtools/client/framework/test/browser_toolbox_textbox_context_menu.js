@@ -20,7 +20,7 @@ add_task(async function checkMenuEntryStates() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["security.csp.enable", false],
-      ["csp.skip_about_page_has_csp_assert", true],
+      ["dom.security.skip_about_page_has_csp_assert", true],
     ],
   });
 
@@ -72,7 +72,7 @@ add_task(async function automaticallyBindTexbox() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["security.csp.enable", false],
-      ["csp.skip_about_page_has_csp_assert", true],
+      ["dom.security.skip_about_page_has_csp_assert", true],
     ],
   });
 

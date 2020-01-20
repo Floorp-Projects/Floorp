@@ -36,7 +36,7 @@ SpecialPowers.pushPrefEnv(
   {"set": [["urlclassifier.trackingTable", "moztest-track-simple"],
            ["privacy.trackingprotection.enabled", true],
            ["channelclassifier.allowlist_example", true],
-           ["domsecurity.skip_remote_script_assertion_in_system_priv_context", true]]},
+           ["dom.security.skip_remote_script_assertion_in_system_priv_context", true]]},
   test);
 
 function test() {
