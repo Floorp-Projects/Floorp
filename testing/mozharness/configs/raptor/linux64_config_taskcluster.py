@@ -4,6 +4,9 @@ import sys
 PYTHON = sys.executable
 VENV_PATH = '%s/build/venv' % os.getcwd()
 
+TOOLTOOL_MANIFEST_PATH = "config/tooltool-manifests/linux64/releng.manifest"
+MINIDUMP_STACKWALK_PATH = "linux64-minidump_stackwalk"
+
 exes = {
     'python': PYTHON,
 }
@@ -24,5 +27,7 @@ config = {
         "install",
         "run-tests",
     ],
+    "minidump_stackwalk_path": MINIDUMP_STACKWALK_PATH,
+    "minidump_tooltool_manifest_path": TOOLTOOL_MANIFEST_PATH,
     "tooltool_cache": "/builds/worker/tooltool-cache",
 }

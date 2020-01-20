@@ -22,9 +22,13 @@ VALGRIND_SUPP_CROSS_ARCH = os.path.join(VALGRIND_SUPP_DIR,
 VALGRIND_SUPP_ARCH = None
 
 if platform.architecture()[0] == "64bit":
+    TOOLTOOL_MANIFEST_PATH = "config/tooltool-manifests/linux64/releng.manifest"
+    MINIDUMP_STACKWALK_PATH = "linux64-minidump_stackwalk"
     VALGRIND_SUPP_ARCH = os.path.join(VALGRIND_SUPP_DIR,
                                       "x86_64-pc-linux-gnu.sup")
 else:
+    TOOLTOOL_MANIFEST_PATH = "config/tooltool-manifests/linux32/releng.manifest"
+    MINIDUMP_STACKWALK_PATH = "linux32-minidump_stackwalk"
     VALGRIND_SUPP_ARCH = os.path.join(VALGRIND_SUPP_DIR,
                                       "i386-pc-linux-gnu.sup")
     NODEJS_TOOLTOOL_MANIFEST_PATH = "config/tooltool-manifests/linux32/nodejs.manifest"
@@ -242,6 +246,8 @@ config = {
                              "cppunittest": [],
                              "jittest": [],
                              },
+    "minidump_stackwalk_path": MINIDUMP_STACKWALK_PATH,
+    "minidump_tooltool_manifest_path": TOOLTOOL_MANIFEST_PATH,
     "tooltool_cache": "/builds/worker/tooltool-cache",
     "nodejs_path": NODEJS_PATH,
     # "log_format": "%(levelname)8s - %(message)s",

@@ -22,4 +22,6 @@ config = {
         "run-tests",
     ],
     "tooltool_cache": os.path.join('Y:\\', 'tooltool-cache'),
+    "minidump_stackwalk_path": "win32-minidump_stackwalk.exe",
+    "minidump_tooltool_manifest_path": "config/tooltool-manifests/win32/releng.manifest"
 }
