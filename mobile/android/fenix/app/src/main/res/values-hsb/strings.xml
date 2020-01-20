@@ -1,0 +1,1132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Priwatny Firefox Preview</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_3">Firefox Preview (Priwatny)</string>
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Dalše nastajenja</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Priwatny modus zmóžnić</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Priwatny modus znjemóžnić</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Pytać abo adresu zapodać</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_open_tabs_header_2">Žane wočinjene rajtarki</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Waše wočinjene rajtarko so tu wočinja.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">Sće w priwatnym posedźenju</string>
+
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">
+         %1$s wašu pytansku a přehladowansku historjiu wuprózdni, hdyž nałoženje wopušćiće abo wšě priwatne rajtarki začiniće. Přez to so wosnadnja, před druhimi, kotřiž tutón grat wužiwaja, schować,
+        štož online činiće, hačrunjež to was za websydła abo wašeho poskićowarja internetneje słužby njeanonymizuje.
+    </string>
+    <string name="private_browsing_common_myths">
+       Časte myty wo priwatnym modusu
+    </string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Posedźenje zhašeć</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Přidajće skrótšenku, zo byšće priwatne rajtarki ze swojeje startoweje wobrazowki wočinił.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Skrótšenku přidać</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Ně, dźakuju so</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Nowy rajtark</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Nowy priwatny rajtark</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Wočinjene rajtarki</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Wróćo</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Doprědka</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Aktualizować</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Zastajić</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Zapołožkam přidać</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Zapołožku wobdźěłać</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Pomoc</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Nowe funkcije a změny</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Nastajenja</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_your_library">Waša biblioteka</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Desktopowe sydło</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Startowej wobrazowce přidać</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Instalować</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Na stronje pytać</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Priwatny rajtark</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">Nowy rajtark</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection">Do zběrki składować</string>
+    <!-- Browser menu button that opens a dialog to report issues with the current site -->
+    <string name="browser_menu_report_issue">Sydłowy problem zdźělić</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Dźělić</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Dźělić z…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">W %1$s wočinić</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">SPĚCHOWANY WOT %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Spěchowany wot %1$s</string>
+    <!-- Browser menu button to put the the current page in reader mode -->
+    <string name="browser_menu_read">Čitanski napohlad</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">W nałoženju wočinić</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Zwonkowny napohlad</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Wubrana rěč</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Pytać</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Gratowu rěč wužiwać</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Rěč pytać</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Skenować</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">Skrótšenki</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Nastajenja pytawy</string>
+    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">Pytać z</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with_2">Nětko pytać z:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Wotkaz z mjezyskłada zasadźić</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Dowolić</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Njedowolić</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Pytanske namjety w priwatnych posedźenjach dowolić?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s wšitko dźěli, štož w adresowym polu ze swojej pytawu zapodaće.</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Dalše informacije</string>
+
+    <!-- Search Widget -->
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Pytać</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Web přepytać</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Nastajenja</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Zakładne nastajenja</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Wo</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Standardna pytawa</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Pytać</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Adresowe polo</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Pomoc</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Na Google Play pohódnoćić</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Komentar pósłać</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Wo %1$s</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Waše prawa</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Hesła</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">Kreditne karty a adresy</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Jako standardny wobhladowak nastajić</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Rozšěrjene</string>
+
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Priwatnosć</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Sydłowe prawa</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Wotkazy w priwatnym rajtarku wočinić</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Skrótšenku za priwatny modus přidać</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Bjezbarjernosć</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Konto</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Přizjewić</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Symbolowa lajsta</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Drasta</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">Synchronizujće zapołožki, historiju a wjace ze swojim kontom Firefox</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Konto Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Zaso zwjazać, zo by ze synchronizaciju pokročowało</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Rěč</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Datowe wuběry</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Zběranje datow</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Zdźělenka priwatnosće</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Wuwiwarske nastroje</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Zdalene pytanje zmylkow přez USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Pytanske skrótšenki pokazać</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Pytanske namjety pokazać</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">W priwatnych posedźenjach pokazać</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Namjety z mjezyskłada pokazać</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Přehladowanska historija pytanja</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Zapołožki přepytać</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Kontowe nastajenja</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Wotkazy w nałoženjach wočinić</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Nětko synchronizować</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Wubjerće, štož ma so synchronizować</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Historija</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Zapołožki</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Přizjewjenja</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Wotzjewić</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Gratowe mjeno</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Gratowe mjeno njesmě falować.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Synchronizuje so…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Synchronizacija njeje so poradźiła. Posledni wuspěch: %s</string>
+
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Synchronizacija njeje so poradźiła. Poslednja synchronizacija: žana</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Poslednja synchronizacija: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Poslednja synchronizacija: žana</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name">%s na %s %s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Přijate rajtarki</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Zdźělenki za rajtarki su so z druhich gratow Firefox přijali.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Rajtark přijaty</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Rajtarki přijate</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Rajtark z %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Slědowanski škit</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Slědowanski škit</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Wobsah a skripty blokować, kotrež wam online slěduja</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Wuwzaća</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Slědowanski škit je znjemóžnjeny za tute sydła</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Za wšě sydła zmóžnić</string>
+
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Wuwzaća wam zmóžnjeja, skědowanski škit za wubrane sydła znjemóžnić.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Dalše informacije</string>
+
+    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
+    <string name="preferences_tracking_protection_turned_off_globally">Globalnje znjemóžnjeny, dźiće do nastajenjow, zo by jón zmóžnił.</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetrija</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Wužiće a techniske daty</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Dźěli wukon, wužiće, hardware a přiměrjenja wašeho wobhladowaka z Mozilla, zo by nam pomhała, %1$s; polěpšić</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Eksperimenty</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Dowoluje Mozilla, eksperimentelne funkcije instalować a daty wo nich zběrać</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Rozprawjak spadow</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Słužba stejnišća Mozilla</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Statusowa rozprawa %s</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Synchronizaciju zmóžnić</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Porowanski kod w desktopowym Firefox skenować</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Přizjewić</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Přizjewće so, zo byšće zaso zwjazał</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Konto wotstronić</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions"><![CDATA[Wopytajće <b>firefox.com/pair</b> w Firefox na swokim ličaku, zo byšće swój QR-kod dóstał.]]></string>
+
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Kameru wočinić</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Přetorhnyć</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Horjeka</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Deleka</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Swětły</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Ćmowy</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Po zalutowanskich nastajenjach baterije</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Na gratowu drastu dźiwać</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">Posedźenja</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">Fota wobrazowki</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Sćehnjenja</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Zapołožki</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Desktopowe zapołožki</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Meni zapołožkow</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Lajsta zapołožkow</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Druhe zapołožki</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Historija</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Čitanska lisćina</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Pytać</string>
+    <!-- Library Page Title -->
+    <string name="library_title">Biblioteka</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Nastajenja</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Menijowy zapisk historije </string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Začinić</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Wočinjene rajtarki</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Priwatne posedźenje</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Priwatne rajtarki</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Rajtark přidać</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Rajtark začinić</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Rajtark %s začinić</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Meni wočinjenych rajtarkow</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Wšě rajtarki začinić</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Rajtarki dźělić</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection">Do zběrki składować</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Rajtarkowy meni</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Rajtark dźělić</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Zhašeć</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Składować</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Dźělić</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Wobraz aktualneho posedźenja</string>
+
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Do zběrki składować</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Zběrku zhašeć</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Zběrku přemjenować</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Rajtarki wočinić</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Historiju zhašeć</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">Chceće woprawdźe swoju historiju wuprózdnić?</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Wuprózdnić</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Zhašeć</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">Wubrane: %1$d</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Zapiski za zhašenje: %1$d</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Zańdźene 24 hodźin</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Zańdźene 7 dnjow</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Zańdźene 30 dnjow</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Starše</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Tu žana historija njeje</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Bohužel %1$s njemóže tutu stronu začitać.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Móžeće spytać, slědowacy rajtark wobnowić abo začinić.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Mozilla spadowu rozprawu pósłać</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Rajtark začinić</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Rajtark wobnowić</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Posedźenske nastajenja</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Posedźenje dźělić</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Meni zapołožkow</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Zapołožku wobdźěłać</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Rjadowak wubrać</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Rjadowak přidać</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Zapołožka je so wutworiła.</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Zapołožka je so składowała!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">WOBDŹĚŁAĆ</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Wobdźěłać</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Wubrać</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Kopěrować</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Dźělić</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">W nowym rajtarku wočinić</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">W priwatnym rajtarku wočinić</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Zhašeć</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">Wubrane: %1$d</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Zapołožku wobdźěłać</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Rjadowak wobdźěłać</string>
+
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Přizjewće so, zo byšće synchronizowane zapołožki widźał</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">RJADOWAK</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">MJENO</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Rjadowak přidać</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Rjadowak wubrać</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Dyrbi titul měć</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Njepłaćiwy URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Tu žane zapołožki njejsu</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">%1$s zhašany</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">Wubrane zapołožki zhašeć</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">COFNYĆ</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Prawa</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">K nastajenjam</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Spěšne nastajenja</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Doporučene</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Sydłowe prawa rjadować</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Prawa zhašeć</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Prawo zhašeć</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Prawa na wšěch sydłach zhašeć</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Awtomatiske wothrawanje</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kamera</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikrofon</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Stejnišćo</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Zdźělenka</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Wo dowolnosć so prašeć</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Zablokowane</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Dowolene</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Přez Android zablokowane</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Wuwzaća</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Zapinjeny</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Wupinjeny</string>
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Widejo a awdio zablokowanej</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Widejo a awdio dowolenej</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Zapinjeny</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Wupinjeny</string>
+
+    <!-- Collections -->
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="collections_description">Zběrajće wěcy, kotrež su wam wažne. Zo byšće započał, składujće wočinjene rajtarki do noweje zběrki.</string>
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Zběrki</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Meni zběrkow</string>
+    <!-- No Open Tabs Message Header -->
+    <string name="no_collections_header">Žane zběrki</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_collections_description">Waše zběrki so tu wočinja.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Rajtarki wubrać</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Zběrku wubrać</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Zběrku pomjenować</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Nowu zběrku přidać</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Wšě wubrać</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Wšě wotwolić</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Rajtarki wubrać, kotrež maja so składować</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">Wubrane rajtarki: %d</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d rajtark wubrany</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Rajtarki su składowane!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Rajtark je składowany!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Začinić</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Składować</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Zběrka %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Słać a dźělić</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Dźělić</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Dźělić</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Wotkaz dźělić</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Na grat pósłać</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Pola Sync přizjewić</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Na wšě graty pósłać</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Zaso ze Sync zwjazać</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Offline</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Dalši grat zwjazać</string>
+
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Zo byšće rajtark pósłał, přizjewće so pola Firefox na znajmjeńša jednym dalšim graće.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Sym zrozumił</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Njeda so z tutym nałoženjom dźělić</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Na grat pósłać</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Žane graty zwjazane</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Wjace wo słanju rajtarkow zhonić…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Dalši grat zwjazać…</string>
+
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">Priwatne posedźenje</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Priwatne rajtarki zhašeć</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Priwatne rajtarki začinić</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Wočinić</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Zhašeć a wočinić</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Spěchowany wot</string>
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Zběrka je so zhašała</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Zběrka je so přemjenowała</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Rajtark je so zhašał</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Rajtarki su so zhašeli</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Rajtark je začinjeny</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Rajtarki su začinjene</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Priwatny rajtark je so začinił</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Priwatne rajtarki su so začinili</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Priwatne rajtarki su so zhašeli</string>
+    <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
+    <string name="snackbar_deleted_undo">COFNYĆ</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Cofnyć</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Wobkrućić</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">%1$s dowolić %2$s wočinić</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">DOWOLIĆ</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">WOTPOKAZAĆ</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Chceće woprawdźe %1$s zhašeć?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Zhašeć</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string name="tab_collection_dialog_negative">Přetorhnyć</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Połna wobrazowka so pokazuje</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">URL je kopěrowany</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text">Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern. Franz jagt im komplett verwahrlosten Taxi quer durch Bayern.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Powjetšće abo pomjeńšće tekst na websydłach</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Pismowa wulkosć</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size">Awtomatiske přiměrjenje wulkosće pisma</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Wulkosć pisma budźe wašim nastajenjam Android wotpowědować. Znjemóžńće tu rjadowanje wulkosće pisma.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Přehladowanske daty zhašeć</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title">Wočinjene rajtarki</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">Rajtarki: %d</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Přehladowanska historija a sydłowe daty</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">Adresy: %d</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Historija</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">Strony: %d</string>
+    <!-- Title for the collections item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_collections_title">Zběrki</string>
+    <!-- Subtitle for the collections item in Delete browsing data, parameter will be replaced with the
+        number of collections that will be deleted -->
+    <string name="preferences_delete_browsing_data_collections_subtitle">Zběrki: %d</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Placki</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Wotzjewiće so wot najwjace sydłow</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Pufrowane wobrazy a dataje</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Wuswobodźa składowanski rum</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Sydłowe prawa</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Přehladowanske daty zhašeć</string>
+
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Přehladowanske daty při kónčenju zhašeć</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Zhaša přehladowanske daty awtomatisce, hdyž „Skónčić“ z hłowneho menija wuběraće</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Zhaša přehladowanske daty awtomatisce, hdyž „Skónčić“ z hłowneho menija wuběraće</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">Přehladowanska historija</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Skónčić</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">To wšě waše přehladowanske daty zhaša.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s wubrane přehladowanske daty zhaša.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Přetorhnyć</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Zhašeć</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Přehladowanske daty su so zhašeli</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Přehladowanske daty so hašeja…</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Witajće k %s!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">Maće hižo konto?</string>
+
+    <!-- text for the Firefox Preview feature section header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_feature_section_header">%s zeznać</string>
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Wubjerće swoju drastu</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description">Wupruwujće ćmowu drastu: lutuje wašu bateriju a šonuje waše woči.</string>
+    <!-- text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">Wućehńće najlěpše z %s.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Sće jako %s w druhim wobhladowaku Firefox na tutym telefonje přizjewił. Chceće so z tutym kontom přizjewić?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Haj, přizjewić</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Přizjewja so…</string>
+    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
+    <string name="onboarding_firefox_account_sign_in">Pola Firefox přizjewić</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Wotzjewjeny wostać</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Synchronizacija je zmóžnjena</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Přizjewjenje njeje so poradźiło</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Škitajće so</string>
+    <!-- text for the tracking protection card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_tracking_protection_description">%s wabjenske přesćěhowaki blokuje, kotrež wam po webje slěduja.
+    </string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Priwatnje přehladować</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description">Hdyž symbol %s widźiće, je priwatny modus jenož dótk zdaleny.
+   </string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Waša priwatnosć</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">Sym %s wuwili, zo bychmy wam kontrolu wo tym dali, što online
+        dźěliće a što z nami.
+    </string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Čitajće naš zdźělenku priwatnosće</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Přehladowanje započeć</string>
+
+    <!-- Onboarding theme -->
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Awtomatiski</string>
+
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Přiměrja so wašim gratowym nastajenjam</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Ćmowa drasta</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Swětła drasta</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Rajtarki wotpósłane!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Rajtark wotpósłany!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Słanje móžne njeje</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">ZNOWA SPYTAĆ</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Kod skenować</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Wočińće Firefox na swojim ličaku a dźiće k <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Hotowy za skenowanje</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Přizjewće so ze swojej kameru</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">E-mejl město toho wužiwać</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox přestanje z wašim kontom synchronizować, ale njezhaša přehladowanske daty na tutym graće.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Zwisk dźělić</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Přetorhnyć</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Standardne rjadowaki njedadźa so wobdźěłać</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Škitne nastajenja</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Polěpšeny slědowanski škit</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Přehladujće bjez toho, zo by wam slědowało</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Wobchowajće swoje daty za sebje. %s was před wjele z najhusćišich přesćěhowakow škita, kotrež slěduja, štož online činiće.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Dalše informacije</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">Standard</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Standard (doporučeny)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">Wuwaženy za škit a wukon.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Strony so normalnje začitaja, ale blokuje so mjenje přesćěhowakow.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Što so přez standardny slědowanski škit blokuje?</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Striktny</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Striktny (standard)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Sylniši slědowanski škit a spěšniši wukon, ale někotre sydła snano porjadnje njefunguja.</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Striktny (doporučeny)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">Mócniši škit, ale móže zawinować, zo někotre sydła abo wobsa hižo njefunguja.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Što so přez striktny slědowanski škit blokuje?</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">Zablokowany</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Dowoleny</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Přesćěhowaki socialnych medijow</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Wobmjezuje móžnosće socialnych syćow, wašej přehladowanskej aktiwiće po webje slědować.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Slědowace placki mjez sydłami</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Blokuje placki, kotrež wabjenske syće a analyzowe předewzaća wužiwaja, zo bychu waše přehladowanske daty na wjele websydłach zestajili.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Kryptokopaki</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Wobara złowólnym skriptam přistup k wašemu gratej a kopanje digitalnych měnow.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Porstowe wotćišće</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Zadźěwa hromadźenju jasnje identifikujomnych datow wo wašim graće, kotrež dadźa so za slědowanske zaměry wužiwać.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Slědowacy wobsah</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Zadźěwa začitanju wabjenja, widejow a druheho wobsaha, kotrež slědowanski kod wobsahuja. Móže někotrym funkcijam websydłow wadźić.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message_2">%s přesćěhowaki na tutym sydle blokuje, hdyž tarč je wioletna. Podótkńće so toho, zo byšće widźał, što so blokuje.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Škit je zmóžnjeny za tute sydło</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Škit je znjemóžnjeny za tute sydło</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Polěpšeny slědowanski škit je znjemóžnjeny za tute sydła</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Waše prawa</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Biblioteki wotewrjeneho žórła, kotrež wužiwamy</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Nowe funkcije a změny w %s</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS-biblioteki</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Pomoc</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Zdźělenka priwatnosće</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Waše prawa</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Licencne informacije</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Biblioteki, kotrež wužiwamy</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 rajtark</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">Rajtarki: %d</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Kopěrować</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Zasadźić a započeć</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Zasadźić</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL kopěrowany do mjezyskłada</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Startowej wobrazowce přidać</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Přetorhnyć</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Přidać</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Mjeno skrótšenki</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Přizjewjenja a hesła</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Přizjewjenja a hesła składować</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Před składowanjom so prašeć</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Ženje njeskładować</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Awtomatisce wupjelnić</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Přizjewjenja synchronizować</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Zapinjeny</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Wupinjeny</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Znowa zwjazać</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Pola Sync přizjewić</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Składowane přizjewjenja</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Wuwzaća</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Přizjewjenja a hesła, kotrež so njeskładuja, so tu pokazaja.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Přizjewjenja a hesła so za tute sydła njeskładuja.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Přizjewjenja pytać</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Alfabetisce</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Njedawno wužite</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Sydło</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Wužiwarske mjeno</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Hesło</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Zapodajće swój PIN znowa</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Za zwobraznjenje wašich składowanych přizjewjenjow wotewrěć</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Tutón zwisk wěsty njeje. Přizjewjenja, kotrež so tu zapodawaja, móhli wohrožene być.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Dalše informacije</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Chceće, zo %s tute přizjewjenje składuje?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Składować</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Njeskładować</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Hesło je so do mjezyskłada kopěrowało</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Wužiwarske mjeno je so mjezyskłada kopěrowało</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Sydło je so do mjezyskłada kopěrowało</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Hesło kopěrować</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Wužiwarske mjeno kopěrować</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Sydło kopěrować</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Hesło pokazać</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Hesło schować</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Za zwobraznjenje wašich składowanych přizjewjenjow wotewrěć</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Zawěsćće swoje přizjewjenja a hesła</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Nastajće gratowy zawrjenski muster, PIN abo hesło, zo byšće přistupej k swojim składowanym přizjewjenjam a hesłam zadźěwał, jeli něchtó druhi waš grat ma.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Pozdźišo</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Nětko konfigurować</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Wotewriće swój grat</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Skalowanje na wšěch websydłach</string>
+
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Zmóžńće to, zo byšće roz- a zaćahowanje z dwěmaj porstomaj dowolił, samo na websydłach, kotreý tutej gesće zadźěwaja.</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Pytawu přidać</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Pytawu wobdźěłać</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Přidać</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Składować</string>
+
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Wobdźěłać</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Zhašeć</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Druhe</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Mjeno</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Pytanski wuraz, kotryž ma so wužiwać</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example">Naprašowanje z „%s“ wuměnić. Přikład: \nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Dalše informacije</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Mjeno pytawy zapodać</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">Pytawa z mjenom „%s“ hižo eksistuje.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Pytanski wuraz zapodać</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Přepruwujće, hač pytanski wuraz přikładowemu formatej wotpowěduje</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Zmylk při zwjazowanju z „%s“</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">Pytawa %s je wutworjena</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">Pytawa %s je składowana</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">Pytawa %s je zhašana</string>
+</resources>

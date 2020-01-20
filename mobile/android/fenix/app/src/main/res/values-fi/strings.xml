@@ -24,6 +24,13 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Olet yksityisessä istunnossa</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">
+         %1$s tyhjentää haku- ja selaushistoriasi, kun suljetut sovelluksen tai kaikki yksityiset välilehdet. Vaikka tämä ei tee sinusta anonyymia verkkosivustojen tai internetpalveluntarjoajan suuntaan,
+         se helpottaa verkossa tekemiesi asioiden piilottamisen muilta tätä laitetta käyttäviltä.
+
+    </string>
     <string name="private_browsing_common_myths">
        Yleiset myytit yksityisestä selaamisesta
     </string>
@@ -812,6 +819,10 @@
     <!-- text for the firefox account onboarding card header
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_firefox_account_header">Ota kaikki irti %sista.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">Olet kirjautunut tilillä %s toiseen Firefox-selaimeen tällä puhelimessa. Haluatko kirjautua sisään tällä tilillä?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Kyllä, kirjaa minut sisään</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -838,6 +849,11 @@
    </string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Yksityisyytesi</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description">%s on suunniteltu antamaan sinulle päätösvalta sen suhteen,
+     mitä jaat verkossa ja mitä jaat kanssamme.
+    </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lue yksityisyyskäytäntömme</string>
 
@@ -1078,6 +1094,9 @@
     <string name="logins_biometric_prompt_message_pin">Avaa laitteen lukitus</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Lähennä kaikilla sivustoilla</string>
+
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Ota käyttöön salliaksesi nipistämisen ja zoomauksen, jopa niillä sivustoilla mitkä eivät tuet tätä elettä.</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Lisää hakukone</string>
