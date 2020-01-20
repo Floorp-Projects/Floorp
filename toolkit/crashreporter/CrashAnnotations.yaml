@@ -600,12 +600,6 @@ LowCommitSpaceEvents:
   type: integer
   ping: true
 
-MainThreadRunnableName:
-  description: >
-    Name of the currently executing nsIRunnable on the main thread.
-  type: string
-  ping: true
-
 MarshalActCtxManifestPath:
   description: >
     Proxy stream marshalling current activation context manifest path.

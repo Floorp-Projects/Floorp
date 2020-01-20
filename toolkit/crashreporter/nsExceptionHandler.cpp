@@ -27,7 +27,6 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 
 #include "nsThreadUtils.h"
-#include "nsThread.h"
 #include "jsfriendapi.h"
 #include "ThreadAnnotation.h"
 #include "private/pprio.h"
@@ -134,7 +133,6 @@ typedef std::wstring xpstring;
 #  define CONVERT_XP_CHAR_TO_UTF16(x) x
 #  define XP_STRLEN(x) wcslen(x)
 #  define my_strlen strlen
-#  define my_memchr memchr
 #  define CRASH_REPORTER_FILENAME "crashreporter.exe"
 #  define XP_PATH_SEPARATOR L"\\"
 #  define XP_PATH_SEPARATOR_CHAR L'\\'
@@ -165,7 +163,6 @@ typedef std::string xpstring;
 #    define XP_TTOA(time, buffer) sprintf(buffer, "%ld", time)
 #    define XP_STOA(size, buffer) sprintf(buffer, "%zu", (size_t)size)
 #    define my_strlen strlen
-#    define my_memchr memchr
 #    define sys_close close
 #    define sys_fork fork
 #    define sys_open open
@@ -1279,28 +1276,6 @@ static bool LaunchCrashHandlerService(XP_CHAR* aProgramPath,
 
 #endif
 
-static void WriteMainThreadRunnableName(AnnotationWriter& aWriter) {
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-  // Only try to collect this information if the main thread is crashing.
-  if (!NS_IsMainThread()) {
-    return;
-  }
-
-  // NOTE: Use `my_memchr` over `strlen` to ensure we don't run off the end of
-  // the buffer if it contains no null bytes. This is used instead of `strnlen`,
-  // as breakpad's linux support library doesn't export a `my_strnlen` function.
-  const char* buf = nsThread::sMainThreadRunnableName.begin();
-  size_t len = nsThread::kRunnableNameBufSize;
-  if (void* end = my_memchr(buf, '\0', len)) {
-    len = static_cast<const char*>(end) - buf;
-  }
-
-  if (len > 0) {
-    aWriter.Write(Annotation::MainThreadRunnableName, buf, len);
-  }
-#endif
-}
-
 static void WriteMozCrashReason(AnnotationWriter& aWriter) {
   if (gMozCrashReason != nullptr) {
     aWriter.Write(Annotation::MozCrashReason, gMozCrashReason);
@@ -1368,8 +1343,6 @@ static void WriteAnnotationsForMainProcessCrash(PlatformWriter& pw,
 #endif  // XP_WIN
 
   WriteMozCrashReason(writer);
-
-  WriteMainThreadRunnableName(writer);
 
   char oomAllocationSizeBuffer[32] = "";
   if (gOOMAllocationSize) {
@@ -1671,8 +1644,6 @@ static void PrepareChildExceptionTimeAnnotations(
   }
 
   WriteMozCrashReason(writer);
-
-  WriteMainThreadRunnableName(writer);
 
 #ifdef MOZ_PHC
   WritePHCAddrInfo(writer, addrInfo);
