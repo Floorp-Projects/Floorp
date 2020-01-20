@@ -70,7 +70,8 @@
 #  define AUTO_PROFILER_TRACING_MARKER(categoryString, markerName, categoryPair)
 #  define AUTO_PROFILER_TRACING_MARKER_DOCSHELL(categoryString, markerName, \
                                                 categoryPair, docShell)
-#  define AUTO_PROFILER_TEXT_MARKER_CAUSE(markerName, text, categoryPair, cause)
+#  define AUTO_PROFILER_TEXT_MARKER_CAUSE(markerName, text, categoryPair, \
+                                          innerWindowID, cause)
 #  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL(markerName, text, categoryPair, \
                                              docShell)
 #  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL_CAUSE( \
@@ -933,10 +934,10 @@ class MOZ_RAII AutoProfilerTextMarker {
 };
 
 #  define AUTO_PROFILER_TEXT_MARKER_CAUSE(markerName, text, categoryPair, \
-                                          cause)                          \
+                                          innerWindowID, cause)           \
     AutoProfilerTextMarker PROFILER_RAII(                                 \
         markerName, text, JS::ProfilingCategoryPair::categoryPair,        \
-        mozilla::Nothing(), cause)
+        innerWindowID, cause)
 
 #  define AUTO_PROFILER_TEXT_MARKER_DOCSHELL(markerName, text, categoryPair, \
                                              docShell)                       \
