@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import mozilla.appservices.push.CommunicationError
 import mozilla.appservices.push.CommunicationServerError
+import mozilla.appservices.push.RecordNotFoundError
 import mozilla.appservices.push.SubscriptionResponse
 import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.EncryptedPushMessage
@@ -358,7 +359,7 @@ internal fun CoroutineScope.launchAndTry(
         try {
             block()
         } catch (e: RustPushError) {
-            if (e !is CommunicationServerError && e !is CommunicationError) {
+            if (e !is CommunicationServerError && e !is CommunicationError && e !is RecordNotFoundError) {
                 throw e
             }
 
