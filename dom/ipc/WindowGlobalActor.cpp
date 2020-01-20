@@ -115,6 +115,13 @@ void WindowGlobalActor::ConstructActor(const nsAString& aName,
     return;
   }
 
+  if (NS_WARN_IF(!ctor.isObject())) {
+    nsPrintfCString message("Could not find actor constructor '%s'",
+                            NS_ConvertUTF16toUTF8(ctorName).get());
+    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_FOUND_ERR, message);
+    return;
+  }
+
   // Invoke the constructor loaded from the module.
   if (!JS::Construct(cx, ctor, JS::HandleValueArray::empty(), aActor)) {
     aRv.NoteJSContextException(cx);
