@@ -62,6 +62,7 @@ struct Nullable;
 template <typename T>
 class Sequence;
 class StructuredCloneHolder;
+class WindowContext;
 struct WindowPostMessageOptions;
 class WindowProxyHolder;
 
@@ -245,7 +246,6 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   bool IsTopContent() const { return IsContent() && !GetParent(); }
 
   bool IsContentSubframe() const { return IsContent() && GetParent(); }
-
   uint64_t Id() const { return mBrowsingContextId; }
 
   BrowsingContext* GetParent() const {
@@ -289,11 +289,19 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
     }
   }
 
+  uint32_t SandboxFlags() { return GetSandboxFlags(); }
+
   void GetChildren(Children& aChildren);
 
-  BrowsingContextGroup* Group() { return mGroup; }
+  void GetWindowContexts(nsTArray<RefPtr<WindowContext>>& aWindows);
 
-  uint32_t SandboxFlags() { return GetSandboxFlags(); }
+  void RegisterWindowContext(WindowContext* aWindow);
+  void UnregisterWindowContext(WindowContext* aWindow);
+  WindowContext* GetCurrentWindowContext() const {
+    return mCurrentWindowContext;
+  }
+
+  BrowsingContextGroup* Group() { return mGroup; }
 
   bool InRDMPane() const { return GetInRDMPane(); }
 
@@ -384,6 +392,9 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BrowsingContext)
 
   const Children& GetChildren() { return mChildren; }
+  const nsTArray<RefPtr<WindowContext>>& GetWindowContexts() {
+    return mWindowContexts;
+  }
 
   // Perform a pre-order walk of this BrowsingContext subtree.
   void PreOrderWalk(const std::function<void(BrowsingContext*)>& aCallback) {
@@ -503,6 +514,8 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
 
   friend class ::nsOuterWindowProxy;
   friend class ::nsGlobalWindowOuter;
+  friend class WindowContext;
+
   // Update the window proxy object that corresponds to this browsing context.
   // This should be called from the window proxy object's objectMoved hook, if
   // the object mWindowProxy points to was moved by the JS GC.
@@ -605,6 +618,9 @@ class BrowsingContext : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIDocShell> mDocShell;
 
   RefPtr<Element> mEmbedderElement;
+
+  nsTArray<RefPtr<WindowContext>> mWindowContexts;
+  RefPtr<WindowContext> mCurrentWindowContext;
 
   // This is not a strong reference, but using a JS::Heap for that should be
   // fine. The JSObject stored in here should be a proxy with a

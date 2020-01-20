@@ -495,6 +495,31 @@ void BrowsingContext::GetChildren(Children& aChildren) {
   MOZ_ALWAYS_TRUE(aChildren.AppendElements(mChildren));
 }
 
+void BrowsingContext::GetWindowContexts(
+    nsTArray<RefPtr<WindowContext>>& aWindows) {
+  aWindows.AppendElements(mWindowContexts);
+}
+
+void BrowsingContext::RegisterWindowContext(WindowContext* aWindow) {
+  MOZ_ASSERT(!mWindowContexts.Contains(aWindow),
+             "WindowContext already registered!");
+  mWindowContexts.AppendElement(aWindow);
+}
+
+void BrowsingContext::UnregisterWindowContext(WindowContext* aWindow) {
+  MOZ_ASSERT(mWindowContexts.Contains(aWindow),
+             "WindowContext not registered!");
+  mWindowContexts.RemoveElement(aWindow);
+
+  // Our current window global should be in our mWindowGlobals set. If it's not
+  // anymore, clear that reference.
+  // FIXME: There are probably situations where this is wrong. We should
+  // double-check.
+  if (aWindow == mCurrentWindowContext) {
+    mCurrentWindowContext = nullptr;
+  }
+}
+
 // FindWithName follows the rules for choosing a browsing context,
 // with the exception of sandboxing for iframes. The implementation
 // for arbitrarily choosing between two browsing contexts with the
@@ -828,19 +853,15 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent, mGroup,
-                                  mEmbedderElement, mSessionStorageManager)
-  if (XRE_IsParentProcess()) {
-    CanonicalBrowsingContext::Cast(tmp)->Unlink();
-  }
+                                  mEmbedderElement, mWindowContexts,
+                                  mCurrentWindowContext, mSessionStorageManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent, mGroup,
-                                    mEmbedderElement, mSessionStorageManager)
-  if (XRE_IsParentProcess()) {
-    CanonicalBrowsingContext::Cast(tmp)->Traverse(cb);
-  }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
+      mDocShell, mChildren, mParent, mGroup, mEmbedderElement, mWindowContexts,
+      mCurrentWindowContext, mSessionStorageManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 class RemoteLocationProxy
@@ -1302,6 +1323,41 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_EmbedderInnerWindowId>,
   }
 
   return true;
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_CurrentInnerWindowId>,
+                             const uint64_t& aValue, ContentParent* aSource) {
+  // Generally allow clearing this. We may want to be more precise about this
+  // check in the future.
+  if (aValue == 0) {
+    return true;
+  }
+
+  if (aSource) {
+    MOZ_ASSERT(XRE_IsParentProcess());
+
+    // If in the parent process, double-check ownership and WindowGlobalParent
+    // as well.
+    RefPtr<WindowGlobalParent> wgp =
+        WindowGlobalParent::GetByInnerWindowId(aValue);
+    if (NS_WARN_IF(!wgp) || NS_WARN_IF(wgp->BrowsingContext() != this)) {
+      return false;
+    }
+
+    // Double-check ownership if we aren't the setter.
+    if (!Canonical()->IsOwnedByProcess(aSource->ChildID()) &&
+        aSource->ChildID() != Canonical()->GetInFlightProcessId()) {
+      return false;
+    }
+  }
+
+  // We must have access to the specified context.
+  RefPtr<WindowContext> window = WindowContext::GetById(aValue);
+  return window && window->GetBrowsingContext() == this;
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_CurrentInnerWindowId>) {
+  mCurrentWindowContext = WindowContext::GetById(GetCurrentInnerWindowId());
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_IsPopupSpam>, const bool& aValue,

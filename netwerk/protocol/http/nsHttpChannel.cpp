@@ -7596,7 +7596,7 @@ nsresult nsHttpChannel::ProcessCrossOriginEmbedderPolicyHeader() {
     mLoadInfo->GetFrameBrowsingContext(getter_AddRefs(frameCtx));
   }
 
-  if (frameCtx) {
+  if (frameCtx && !frameCtx->IsDiscarded()) {
     frameCtx->SetEmbedderPolicy(resultPolicy);
   }
 
