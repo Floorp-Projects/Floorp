@@ -343,6 +343,22 @@ class Page extends ContentProcessDomain {
     };
   }
 
+  _getIndexForHistoryEntryId(id) {
+    const sessionHistory = this.docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsISHistory);
+
+    for (let index = 0; index < sessionHistory.count; index++) {
+      const entry = sessionHistory.getEntryAtIndex(index);
+
+      if (entry.ID == id) {
+        return index;
+      }
+    }
+
+    return null;
+  }
+
   _getScrollbarSize() {
     const scrollbarHeight = {};
     const scrollbarWidth = {};
