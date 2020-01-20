@@ -183,7 +183,7 @@ class PageAction {
     this._clearScheduledStateChanges();
     this.urlbarinput.removeAttribute("cfr-recommendation-state");
     this.container.removeEventListener("click", this._showPopupOnClick);
-    this.urlbarinput.removeEventListener("focus", this._collapse);
+    this.urlbar.removeEventListener("focus", this._collapse);
     if (this.currentNotification) {
       this.window.PopupNotifications.remove(this.currentNotification);
       this.currentNotification = null;
@@ -256,12 +256,13 @@ class PageAction {
         );
         this._autoFocus = false;
       }
-    } else if (["dismissed", "removed"].includes(state)) {
-      this._collapse();
+    } else if (state === "removed") {
       if (this.currentNotification) {
         this.window.PopupNotifications.remove(this.currentNotification);
         this.currentNotification = null;
       }
+    } else if (state === "dismissed") {
+      this._collapse();
     }
   }
 
