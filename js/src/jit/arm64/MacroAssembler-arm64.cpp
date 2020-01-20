@@ -1185,7 +1185,7 @@ void MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input_,
 void MacroAssembler::wasmTruncateDoubleToUInt64(
     FloatRegister input_, Register64 output_, bool isSaturating,
     Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble) {
-  MOZ_ASSERT(tempDouble == InvalidFloatReg);
+  MOZ_ASSERT(tempDouble.isInvalid());
 
   ARMRegister output(output_.reg, 64);
   ARMFPRegister input(input_, 64);
@@ -1201,7 +1201,7 @@ void MacroAssembler::wasmTruncateDoubleToUInt64(
 void MacroAssembler::wasmTruncateFloat32ToUInt64(
     FloatRegister input_, Register64 output_, bool isSaturating,
     Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble) {
-  MOZ_ASSERT(tempDouble == InvalidFloatReg);
+  MOZ_ASSERT(tempDouble.isInvalid());
 
   ARMRegister output(output_.reg, 64);
   ARMFPRegister input(input_, 32);
@@ -1217,7 +1217,7 @@ void MacroAssembler::wasmTruncateFloat32ToUInt64(
 void MacroAssembler::wasmTruncateDoubleToInt64(
     FloatRegister input_, Register64 output_, bool isSaturating,
     Label* oolEntry, Label* oolRejoin, FloatRegister tempDouble) {
-  MOZ_ASSERT(tempDouble == InvalidFloatReg);
+  MOZ_ASSERT(tempDouble.isInvalid());
 
   ARMRegister output(output_.reg, 64);
   ARMFPRegister input(input_, 64);
