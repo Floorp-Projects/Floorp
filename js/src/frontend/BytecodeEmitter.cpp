@@ -7167,6 +7167,53 @@ bool BytecodeEmitter::emitPipeline(ListNode* node) {
   return true;
 }
 
+ParseNode* BytecodeEmitter::getCoordNode(ParseNode* callNode,
+                                         ParseNode* calleeNode, JSOp op,
+                                         ListNode* argsList) {
+  ParseNode* coordNode = callNode;
+  if (op == JSOp::Call || op == JSOp::SpreadCall || op == JSOp::FunCall ||
+      op == JSOp::FunApply) {
+    // Default to using the location of the `(` itself.
+    // obj[expr]() // expression
+    //          ^  // column coord
+    coordNode = argsList;
+
+    switch (calleeNode->getKind()) {
+      case ParseNodeKind::DotExpr:
+        // Use the position of a property access identifier.
+        //
+        // obj().aprop() // expression
+        //       ^       // column coord
+        //
+        // Note: Because of the constant folding logic in FoldElement,
+        // this case also applies for constant string properties.
+        //
+        // obj()['aprop']() // expression
+        //       ^          // column coord
+        coordNode = &calleeNode->as<PropertyAccess>().key();
+        break;
+      case ParseNodeKind::Name: {
+        // Use the start of callee name unless it is at a separator
+        // or has no args.
+        //
+        // 2 + obj()   // expression
+        //     ^       // column coord
+        //
+        if (argsList->empty() ||
+            !bytecodeSection().atSeparator(calleeNode->pn_pos.begin)) {
+          // Use the start of callee names.
+          coordNode = calleeNode;
+        }
+        break;
+      }
+
+      default:
+        break;
+    }
+  }
+  return coordNode;
+}
+
 bool BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall,
                                     bool isSpread, CallOrNewEmitter& cone) {
   uint32_t argc = argsList->count();
@@ -7280,47 +7327,8 @@ bool BytecodeEmitter::emitCallOrNew(
     return false;
   }
 
-  ParseNode* coordNode = callNode;
-  if (op == JSOp::Call || op == JSOp::SpreadCall || op == JSOp::FunCall ||
-      op == JSOp::FunApply) {
-    // Default to using the location of the `(` itself.
-    // obj[expr]() // expression
-    //          ^  // column coord
-    coordNode = argsList;
+  ParseNode* coordNode = getCoordNode(callNode, calleeNode, op, argsList);
 
-    switch (calleeNode->getKind()) {
-      case ParseNodeKind::DotExpr:
-        // Use the position of a property access identifier.
-        //
-        // obj().aprop() // expression
-        //       ^       // column coord
-        //
-        // Note: Because of the constant folding logic in FoldElement,
-        // this case also applies for constant string properties.
-        //
-        // obj()['aprop']() // expression
-        //       ^          // column coord
-        coordNode = &calleeNode->as<PropertyAccess>().key();
-        break;
-      case ParseNodeKind::Name: {
-        // Use the start of callee name unless it is at a separator
-        // or has no args.
-        //
-        // 2 + obj()   // expression
-        //     ^       // column coord
-        //
-        if (argsList->empty() ||
-            !bytecodeSection().atSeparator(calleeNode->pn_pos.begin)) {
-          // Use the start of callee names.
-          coordNode = calleeNode;
-        }
-        break;
-      }
-
-      default:
-        break;
-    }
-  }
   if (!cone.emitEnd(argc, Some(coordNode->pn_pos.begin))) {
     //              [stack] RVAL
     return false;

@@ -725,6 +725,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   bool isRestParameter(ParseNode* expr);
 
+  MOZ_MUST_USE ParseNode* getCoordNode(ParseNode* callNode,
+                                       ParseNode* calleeNode, JSOp op,
+                                       ListNode* argsList);
+
   MOZ_MUST_USE bool emitArguments(ListNode* argsList, bool isCall,
                                   bool isSpread, CallOrNewEmitter& cone);
   MOZ_MUST_USE bool emitCallOrNew(
