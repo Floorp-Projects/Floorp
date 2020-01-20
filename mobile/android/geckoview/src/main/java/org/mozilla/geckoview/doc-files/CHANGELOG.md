@@ -33,6 +33,7 @@ exclude: true
   exceptions and to add better support for removing exceptions. This deprecates [`ExceptionList`][74.8]
   and [`restoreExceptionList`][74.9] with the intent to remove them in 76.
   ([bug 1587552]({{bugzilla}}1587552))
+- Added [`GeckoSession.ContentDelegate.onMetaViewportFitChange`][74.10]. This exposes `viewport-fit` value that is CSS Round Display Level 1. ([bug 1574307]({{bugzilla}}1574307))
 
 [74.1]: {{javadoc_uri}}/WebExtensionController.html#enable-org.mozilla.geckoview.WebExtension-int-
 [74.2]: {{javadoc_uri}}/WebExtensionController.html#disable-org.mozilla.geckoview.WebExtension-int-
@@ -43,6 +44,7 @@ exclude: true
 [74.7]: {{javadoc_uri}}/ContentBlockingController.html
 [74.8]: {{javadoc_uri}}/ContentBlockingController.ExceptionList.html
 [74.9]: {{javadoc_uri}}/ContentBlockingController.html#restoreExceptionList-org.mozilla.geckoview.ContentBlockingController.ExceptionList-
+[74.10]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onMetaViewportFitChange-org.mozilla.geckoview.GeckoSession-java.lang.String-
 
 ## v73
 - Added [`WebExtensionController.install`][73.1] and [`uninstall`][73.2] to
@@ -553,4 +555,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: e89f3bb79d0c5cc936812de4c2d8f4d30923afb9
+[api-version]: 5342560e4c467a1f3d363748ebb20a077d2e8385
