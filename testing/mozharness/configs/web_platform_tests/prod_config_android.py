@@ -22,6 +22,7 @@ config = {
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
     "log_tbpl_level": "info",
     "log_raw_level": "info",
+    "minidump_stackwalk_path": "linux64-minidump_stackwalk",
     "per_test_category": "web-platform",
     "tooltool_cache": os.environ.get("TOOLTOOL_CACHE"),
 }

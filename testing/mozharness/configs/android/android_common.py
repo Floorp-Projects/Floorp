@@ -48,6 +48,7 @@ config = {
     # "log_format": "%(levelname)8s - %(message)s",
     "log_tbpl_level": "info",
     "log_raw_level": "info",
+    "minidump_stackwalk_path": "linux64-minidump_stackwalk",
     # To take device screenshots at timed intervals (each time in seconds, relative
     # to the start of the run-tests step) specify screenshot_times. For example, to
     # take 4 screenshots at one minute intervals you could specify:
