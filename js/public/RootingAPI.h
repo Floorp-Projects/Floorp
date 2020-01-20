@@ -11,10 +11,10 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
-#include <utility>
 #include "mozilla/TypeTraits.h"
 
 #include <type_traits>
+#include <utility>
 
 #include "jspubtd.h"
 

@@ -12,7 +12,6 @@
 #include "mozilla/GuardObjects.h"      // for MOZ_GUARD_OBJECT_NOTIFIER_PARAM
 #include "mozilla/HashTable.h"         // for HashSet<>::Range, HashMapEntry
 #include "mozilla/Maybe.h"             // for Maybe, Nothing, Some
-#include <utility>                     // for std::move
 #include "mozilla/RecordReplay.h"      // for IsMiddleman
 #include "mozilla/ScopeExit.h"         // for MakeScopeExit, ScopeExit
 #include "mozilla/ThreadLocal.h"       // for ThreadLocal
@@ -27,6 +26,7 @@
 #include <stddef.h>    // for size_t
 #include <stdint.h>    // for uint32_t, uint64_t, int32_t
 #include <string.h>    // for strlen, strcmp
+#include <utility>     // for std::move
 
 #include "jsapi.h"        // for CallArgs, CallArgsFromVp
 #include "jsfriendapi.h"  // for GetErrorMessage
