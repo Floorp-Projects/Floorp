@@ -58,6 +58,15 @@ void ForwardedInputTrack::RemoveInput(MediaInputPort* aPort) {
   TRACK_LOG(LogLevel::Debug,
             ("ForwardedInputTrack %p removing input %p", this, aPort));
   MOZ_ASSERT(aPort == mInputPort);
+
+  for (const auto& listener : mOwnedDirectListeners) {
+    MediaTrack* source = mInputPort->GetSource();
+    TRACK_LOG(LogLevel::Debug,
+              ("ForwardedInputTrack %p removing direct listener "
+               "%p. Forwarding to input track %p.",
+               this, listener.get(), aPort->GetSource()));
+    source->RemoveDirectListenerImpl(listener);
+  }
   mInputPort = nullptr;
   ProcessedMediaTrack::RemoveInput(aPort);
 }
