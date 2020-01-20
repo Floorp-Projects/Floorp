@@ -213,6 +213,7 @@ class SVGUseElement;
 class Touch;
 class TouchList;
 class TreeWalker;
+enum class ViewportFitType : uint8_t;
 class XPathEvaluator;
 class XPathExpression;
 class XPathNSResolver;
@@ -5166,6 +5167,10 @@ class Document : public nsINode,
   };
 
   ViewportType mViewportType;
+
+  // viewport-fit described by
+  // https://drafts.csswg.org/css-round-display/#viewport-fit-descriptor
+  ViewportFitType mViewportFit;
 
   PLDHashTable* mSubDocuments;
 
