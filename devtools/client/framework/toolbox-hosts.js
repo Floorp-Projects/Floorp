@@ -33,7 +33,7 @@ const MIN_PAGE_SIZE = 25;
  * sidebar or a separate window). Any host object should implement the
  * following functions:
  *
- * create() - create the UI and emit a 'ready' event when the UI is ready to use
+ * create() - create the UI
  * destroy() - destroy the host's UI
  */
 
@@ -81,8 +81,6 @@ BottomHost.prototype = {
     this._browserContainer.appendChild(this.frame);
 
     focusTab(this.hostTab);
-    this.emit("ready", this.frame);
-
     return this.frame;
   },
 
@@ -168,8 +166,6 @@ class SidebarHost {
     }
 
     focusTab(this.hostTab);
-    this.emit("ready", this.frame);
-
     return this.frame;
   }
 
@@ -345,8 +341,6 @@ BrowserToolboxHost.prototype = {
     );
 
     this.doc.body.appendChild(this.frame);
-
-    this.emit("ready", this.frame);
 
     return this.frame;
   },
