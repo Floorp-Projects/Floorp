@@ -30,6 +30,23 @@ Unix-style linebreaks (``\n``), not Windows-style (``\r\n``). You can
 convert patches, with DOS newlines to Unix via the ``dos2unix`` utility,
 or your favorite text editor.
 
+Static analysis
+---------------
+
+Several of the rules in the Google C++ coding styles and the additions mentioned below
+can be checked via clang-tidy (some rules are from the upstream clang-tidy, some are
+provided via a mozilla-specific plugin). Some of these checks also allow fixes to
+be automatically applied.
+
+``mach static-analysis`` provides a convenient way to run these checks. For example,
+for the check called ``google-readability-braces-around-statements``, you can run:
+
+.. code-block:: shell
+
+   ./mach static-analysis check --checks="-*,google-readability-braces-around-statements" --fix <file>
+
+It may be necessary to reformat the files after automatically applying fixes, see
+:ref:`Formatting C++ Code With clang-format`.
 
 Additional rules
 ----------------
@@ -82,14 +99,9 @@ Examples:
 ``else`` should only ever be followed by ``{`` or ``if``; i.e., other
 control keywords are not allowed and should be placed inside braces.
 
-``mach static-analysis`` provides a convenient way to ensure that braces
-are used properly within control structures.
-
-.. code-block:: shell
-
-   ./mach static-analysis check --checks="-*, google-readability-braces-around-statements" --fix <file>
-
-See :ref:`Formatting C++ Code With clang-format` to reformat these changes.
+.. note:
+   For this rule, clang-tidy provides the ``google-readability-braces-around-statements``
+   check with autofixes.
 
 
 C++ namespaces
@@ -104,9 +116,14 @@ module-specific namespaces, under ``mozilla``, with short
 all-lowercase names. Other global namespaces besides ``mozilla`` are
 not allowed.
 
-No ``using`` statements are allowed in header files, except inside class
+No ``using`` directives are allowed in header files, except inside class
 definitions or functions. (We don't want to pollute the global scope of
 compilation units that use the header file.)
+
+.. note:
+   For parts of this rule, clang-tidy provides the ``google-global-names-in-headers``
+   check. It only detects ``using namespace`` directives in the global namespace.
+
 
 ``using namespace ...;`` is only allowed in ``.cpp`` files after all
 ``#include``\ s. Prefer to wrap code in ``namespace ... { ... };``
@@ -183,6 +200,13 @@ C++ classes
 
 Define classes using the style given above.
 
+.. note:
+   For the rule on ``= default``, clang-tidy provides the ``modernize-use-default``
+   check with autofixes.
+
+   For the rule on explicit constructors and conversion operators, clang-tidy
+   provides the ``mozilla-implicit-constructor`` check.
+
 Existing classes in the global namespace are named with a short prefix
 (For example, ``ns``) as a pseudo-namespace.
 
@@ -219,6 +243,9 @@ but can NOT be further overridden in the derived classes. This should
 help the person reading the code fully understand what the declaration
 is doing, without needing to further examine base classes.
 
+.. note:
+   For the rule on ``virtual/override/final``, clang-tidy provides the
+   ``modernize-use-override`` check with autofixes.
 
 
 Operators
@@ -285,6 +312,11 @@ C/C++ practices
    are enabled by default in the build system.
 -  In C++ code, use ``nullptr`` for pointers. In C code, using ``NULL``
    or ``0`` is allowed.
+
+.. note:
+   For the C++ rule, clang-tidy provides the ``modernize-use-nullptr`` check
+   with autofixes.
+
 -  Don't use ``PRBool`` and ``PRPackedBool`` in C++, use ``bool``
    instead.
 -  For checking if a ``std`` container has no items, don't use
