@@ -331,6 +331,7 @@ restart:
     case ParseNodeKind::DeleteNameExpr:
     case ParseNodeKind::DeletePropExpr:
     case ParseNodeKind::DeleteElemExpr:
+    case ParseNodeKind::DeleteOptionalChainExpr:
     case ParseNodeKind::DeleteExpr:
     case ParseNodeKind::PosExpr:
     case ParseNodeKind::NegExpr:
