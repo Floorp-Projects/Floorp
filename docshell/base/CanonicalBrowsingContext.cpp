@@ -34,8 +34,10 @@ CanonicalBrowsingContext::CanonicalBrowsingContext(BrowsingContext* aParent,
                                                    BrowsingContextGroup* aGroup,
                                                    uint64_t aBrowsingContextId,
                                                    uint64_t aProcessId,
-                                                   BrowsingContext::Type aType)
-    : BrowsingContext(aParent, aGroup, aBrowsingContextId, aType),
+                                                   BrowsingContext::Type aType,
+                                                   FieldTuple&& aFields)
+    : BrowsingContext(aParent, aGroup, aBrowsingContextId, aType,
+                      std::move(aFields)),
       mProcessId(aProcessId) {
   // You are only ever allowed to create CanonicalBrowsingContexts in the
   // parent process.
