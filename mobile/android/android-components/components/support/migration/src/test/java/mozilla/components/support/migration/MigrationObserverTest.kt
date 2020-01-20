@@ -41,7 +41,7 @@ class MigrationObserverTest {
 
         observer.start()
 
-        verify(listener).onMigrationCompleted()
+        verify(listener).onMigrationCompleted(any())
 
         store.dispatch(MigrationAction.Started).joinBlocking()
         testDispatcher.advanceUntilIdle()
