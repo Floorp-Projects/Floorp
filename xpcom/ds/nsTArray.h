@@ -264,12 +264,20 @@ struct nsTArray_SafeElementAtSmartPtrHelper {
   typedef size_t index_type;
 
   elem_type SafeElementAt(index_type aIndex) {
-    return static_cast<Derived*>(this)->SafeElementAt(aIndex, nullptr);
+    auto* derived = static_cast<Derived*>(this);
+    if (aIndex < derived->Length()) {
+      return derived->Elements()[aIndex];
+    }
+    return nullptr;
   }
 
   // XXX: Probably should return const_elem_type, but callsites must be fixed.
   elem_type SafeElementAt(index_type aIndex) const {
-    return static_cast<const Derived*>(this)->SafeElementAt(aIndex, nullptr);
+    auto* derived = static_cast<const Derived*>(this);
+    if (aIndex < derived->Length()) {
+      return derived->Elements()[aIndex];
+    }
+    return nullptr;
   }
 };
 
@@ -290,26 +298,8 @@ class OwningNonNull;
 }  // namespace mozilla
 
 template <class E, class Derived>
-struct nsTArray_SafeElementAtHelper<mozilla::OwningNonNull<E>, Derived> {
-  typedef E* elem_type;
-  typedef const E* const_elem_type;
-  typedef size_t index_type;
-
-  elem_type SafeElementAt(index_type aIndex) {
-    if (aIndex < static_cast<Derived*>(this)->Length()) {
-      return static_cast<Derived*>(this)->ElementAt(aIndex);
-    }
-    return nullptr;
-  }
-
-  // XXX: Probably should return const_elem_type, but callsites must be fixed.
-  elem_type SafeElementAt(index_type aIndex) const {
-    if (aIndex < static_cast<const Derived*>(this)->Length()) {
-      return static_cast<const Derived*>(this)->ElementAt(aIndex);
-    }
-    return nullptr;
-  }
-};
+struct nsTArray_SafeElementAtHelper<mozilla::OwningNonNull<E>, Derived>
+    : public nsTArray_SafeElementAtSmartPtrHelper<E, Derived> {};
 
 // Servo bindings.
 extern "C" void Gecko_EnsureTArrayCapacity(void* aArray, size_t aCapacity,
