@@ -1656,6 +1656,16 @@ void ContentParent::RemoveFromList() {
 void ContentParent::MarkAsDead() {
   RemoveFromList();
   mLifecycleState = LifecycleState::DEAD;
+#ifdef MOZ_WIDGET_ANDROID
+  nsCOMPtr<nsIEventTarget> launcherThread(GetIPCLauncher());
+  MOZ_ASSERT(launcherThread);
+
+  launcherThread->Dispatch(
+      NS_NewRunnableFunction("ContentParent::MarkAsDead", []() {
+        java::GeckoProcessManager::MarkAsDead(
+            XRE_GeckoProcessTypeToString(GeckoProcessType_Content));
+      }));
+#endif
 }
 
 void ContentParent::OnChannelError() {

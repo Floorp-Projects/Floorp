@@ -487,10 +487,7 @@ bool nsFileControlFrame::DnDListener::IsValidDropData(
   }
 
   // We only support dropping files onto a file upload control
-  nsTArray<nsString> types;
-  aDataTransfer->GetTypes(types, CallerType::System);
-
-  return types.Contains(NS_LITERAL_STRING("Files"));
+  return aDataTransfer->HasFile();
 }
 
 bool nsFileControlFrame::DnDListener::CanDropTheseFiles(

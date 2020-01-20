@@ -2170,10 +2170,12 @@ MachineState MachineState::FromBailout(RegisterDump::GPRArray& regs,
   }
 #elif defined(JS_CODEGEN_ARM64)
   for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
-    machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Single),
-                                &fpregs[i]);
-    machine.setRegisterLocation(FloatRegister(i, FloatRegisters::Double),
-                                &fpregs[i]);
+    machine.setRegisterLocation(
+        FloatRegister(FloatRegisters::Encoding(i), FloatRegisters::Single),
+        &fpregs[i]);
+    machine.setRegisterLocation(
+        FloatRegister(FloatRegisters::Encoding(i), FloatRegisters::Double),
+        &fpregs[i]);
   }
 
 #elif defined(JS_CODEGEN_NONE)
