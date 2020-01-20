@@ -413,6 +413,59 @@ DataTransferItem* DataTransferItemList::AppendNewItem(uint32_t aIndex,
   return item;
 }
 
+void DataTransferItemList::GetTypes(nsTArray<nsString>& aTypes,
+                                    CallerType aCallerType) const {
+  MOZ_ASSERT(aTypes.IsEmpty());
+
+  bool foundFile = false;
+  for (const RefPtr<DataTransferItem>& item : mItems) {
+    MOZ_ASSERT(item);
+
+    // XXX Why don't we check the caller type with item's permission only
+    //     for "Files"?
+    if (!foundFile) {
+      foundFile = item->Kind() == DataTransferItem::KIND_FILE;
+    }
+
+    if (item->ChromeOnly() && aCallerType != CallerType::System) {
+      continue;
+    }
+
+    // NOTE: The reason why we get the internal type here is because we want
+    // kFileMime to appear in the types list for backwards compatibility
+    // reasons.
+    nsAutoString type;
+    item->GetInternalType(type);
+    if (item->Kind() != DataTransferItem::KIND_FILE ||
+        type.EqualsASCII(kFileMime)) {
+      aTypes.AppendElement(type);
+    }
+  }
+
+  if (foundFile) {
+    aTypes.AppendElement(NS_LITERAL_STRING("Files"));
+  }
+}
+
+bool DataTransferItemList::HasType(const nsAString& aType) const {
+  MOZ_ASSERT(!aType.EqualsASCII("Files"), "Use HasFile instead");
+  for (const RefPtr<DataTransferItem>& item : mItems) {
+    if (item->IsInternalType(aType)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool DataTransferItemList::HasFile() const {
+  for (const RefPtr<DataTransferItem>& item : mItems) {
+    if (item->Kind() == DataTransferItem::KIND_FILE) {
+      return true;
+    }
+  }
+  return false;
+}
+
 const nsTArray<RefPtr<DataTransferItem>>* DataTransferItemList::MozItemsAt(
     uint32_t aIndex)  // -- INDEXED
 {

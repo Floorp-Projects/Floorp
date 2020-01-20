@@ -80,6 +80,10 @@ class DataTransferItemList final : public nsISupports, public nsWrapperCache {
   // permissions or read-only status (for internal use only).
   void ClearAllItems();
 
+  void GetTypes(nsTArray<nsString>& aTypes, CallerType aCallerType) const;
+  bool HasType(const nsAString& aType) const;
+  bool HasFile() const;
+
  private:
   void ClearDataHelper(DataTransferItem* aItem, uint32_t aIndexHint,
                        uint32_t aMozOffsetHint, nsIPrincipal& aSubjectPrincipal,
