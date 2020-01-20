@@ -140,33 +140,39 @@
     // Copied from toolkit/content/widgets/browser-custom-element.js.
     // Send an asynchronous message to the remote child via an actor.
     // Note: use this only for messages through an actor. For old-style
-    // messages, use the message manager. If 'all' is true, then send
-    // a message to all descendant processes.
-    sendMessageToActor(messageName, args, actorName, all) {
+    // messages, use the message manager.
+    // The value of the scope argument determines which browsing contexts
+    // are sent to:
+    //   'all' - send to actors associated with all descendant child frames.
+    //   'roots' - send only to actors associated with process roots.
+    //   undefined/'' - send only to the top-level actor and not any descendants.
+    sendMessageToActor(messageName, args, actorName, scope) {
       if (!this.frameLoader) {
         return;
       }
 
-      let windowGlobal = this.browsingContext.currentWindowGlobal;
-      if (!windowGlobal) {
-        return;
-      }
-
-      function sendToChildren(browsingContext, checkRoot) {
+      function sendToChildren(browsingContext, childScope) {
         let windowGlobal = browsingContext.currentWindowGlobal;
-        if (windowGlobal && (!checkRoot || windowGlobal.isProcessRoot)) {
+        // If 'roots' is set, only send if windowGlobal.isProcessRoot is true.
+        if (
+          windowGlobal &&
+          (childScope != "roots" || windowGlobal.isProcessRoot)
+        ) {
           windowGlobal.getActor(actorName).sendAsyncMessage(messageName, args);
         }
 
-        if (all) {
+        // Iterate as long as scope in assigned. Note that we use the original
+        // passed in scope, not childScope here.
+        if (scope) {
           let contexts = browsingContext.getChildren();
           for (let context of contexts) {
-            sendToChildren(context, true);
+            sendToChildren(context, scope);
           }
         }
       }
 
-      sendToChildren(this.browsingContext, false);
+      // Pass no second argument to always send to the top-level browsing context.
+      sendToChildren(this.browsingContext);
     }
 
     get outerWindowID() {
