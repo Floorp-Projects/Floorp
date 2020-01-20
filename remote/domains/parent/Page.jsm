@@ -260,6 +260,29 @@ class Page extends Domain {
   }
 
   /**
+   * Navigates current page to the given history entry.
+   *
+   * @param {Object} options
+   * @param {number} options.entryId
+   *    Unique id of the entry to navigate to.
+   */
+  async navigateToHistoryEntry(options = {}) {
+    const { entryId } = options;
+
+    const index = await this.executeInChild(
+      "_getIndexForHistoryEntryId",
+      entryId
+    );
+
+    if (index == null) {
+      throw new Error("No entry with passed id");
+    }
+
+    const { window } = this.session.target;
+    window.gBrowser.gotoIndex(index);
+  }
+
+  /**
    * Print page as PDF.
    *
    * @param {Object} options
