@@ -67,6 +67,7 @@ class DataTransferItem final : public nsISupports, public nsWrapperCache {
   }
 
   void GetInternalType(nsAString& aType) const { aType = mType; }
+  bool IsInternalType(const nsAString& aType) const { return aType == mType; }
 
   void GetType(nsAString& aType);
 
