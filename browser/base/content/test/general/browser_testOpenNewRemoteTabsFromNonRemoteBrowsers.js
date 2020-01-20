@@ -41,7 +41,7 @@ registerCleanupFunction(() => {
  */
 add_task(async function test_new_tab() {
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.skip_html_fragment_assertion", true]],
+    set: [["domsecurity.skip_html_fragment_assertion", true]],
   });
 
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow({
@@ -89,7 +89,7 @@ add_task(async function test_new_tab() {
  */
 add_task(async function test_new_window() {
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.skip_html_fragment_assertion", true]],
+    set: [["domsecurity.skip_html_fragment_assertion", true]],
   });
 
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow(

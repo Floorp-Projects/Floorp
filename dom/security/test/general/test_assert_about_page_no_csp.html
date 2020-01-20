@@ -12,7 +12,7 @@
   // Test Setup: The test overrules the allowlist of about: pages that are allowed to load
   // without a CSP and makes sure to hit the assertion within AssertAboutPageHasCSP().
 
-  SpecialPowers.setBoolPref("dom.security.skip_about_page_csp_allowlist_and_assert", true);
+  SpecialPowers.setBoolPref("csp.skip_about_page_csp_allowlist_and_assert", true);
 
   SimpleTest.waitForExplicitFinish();
   SimpleTest.expectAssertions(0, 1);
@@ -22,7 +22,7 @@
   myFrame.src = "about:blank";
   // booom :-)
 
-  SpecialPowers.setBoolPref("dom.security.skip_about_page_csp_allowlist_and_assert", false);
+  SpecialPowers.setBoolPref("csp.skip_about_page_csp_allowlist_and_assert", false);
   SimpleTest.finish();
 </script>
 </pre>
