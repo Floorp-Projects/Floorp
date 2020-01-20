@@ -302,10 +302,10 @@ class VRegister : public CPURegister {
     // VIXL_ASSERT(IsPowerOf2(lanes_) && (lanes_ <= 16));
   }
   constexpr VRegister(js::jit::FloatRegister r)
-      : CPURegister(r.code_, r.size() * 8, kVRegister), lanes_(1) {
+      : CPURegister(r.encoding(), r.size() * 8, kVRegister), lanes_(1) {
   }
   constexpr VRegister(js::jit::FloatRegister r, unsigned size)
-      : CPURegister(r.code_, size, kVRegister), lanes_(1) {
+      : CPURegister(r.encoding(), size, kVRegister), lanes_(1) {
   }
   VRegister(unsigned code, VectorFormat format)
       : CPURegister(code, RegisterSizeInBitsFromFormat(format), kVRegister),
