@@ -38,7 +38,7 @@ interface HTMLCanvasElement : HTMLElement {
 partial interface HTMLCanvasElement {
   [Pure, SetterThrows]
            attribute boolean mozOpaque;
-  [Throws, NeedsSubjectPrincipal]
+  [Throws, NeedsSubjectPrincipal, Pref="canvas.mozgetasfile.enabled"]
   File mozGetAsFile(DOMString name, optional DOMString? type = null);
   // A Mozilla-only extension to get a canvas context backed by double-buffered
   // shared memory. Only privileged callers can call this.
