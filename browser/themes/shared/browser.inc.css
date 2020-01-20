@@ -206,6 +206,10 @@ menupopup::part(drop-indicator) {
 
 #widget-overflow .webextension-popup-browser {
   background: #fff;
+
+  /* height set via JS can be lower than the stack min-height,
+     ensure the browser takes up at least that min-height */
+  min-height: 100%;
 }
 
 #addon-progress-notification-progressmeter {
