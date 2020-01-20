@@ -277,6 +277,10 @@ let Player = {
   set isPlaying(isPlaying) {
     this._isPlaying = isPlaying;
     this.controls.classList.toggle("playing", isPlaying);
+    const playButton = document.getElementById("playpause");
+    let attrName = isPlaying ? "pauselabel" : "playlabel";
+    let accessibleLabel = playButton.getAttribute(attrName);
+    playButton.setAttribute("aria-label", accessibleLabel);
   },
 
   _isMuted: false,
@@ -296,6 +300,10 @@ let Player = {
   set isMuted(isMuted) {
     this._isMuted = isMuted;
     this.controls.classList.toggle("muted", isMuted);
+    const audioButton = document.getElementById("audio");
+    let attrName = isMuted ? "unmutelabel" : "mutelabel";
+    let accessibleLabel = audioButton.getAttribute(attrName);
+    audioButton.setAttribute("aria-label", accessibleLabel);
   },
 
   recordEvent(type, args) {
