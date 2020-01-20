@@ -77,6 +77,8 @@ EXPORTS.mozilla.dom += [
     'BrowsingContextGroup.h',
     'CanonicalBrowsingContext.h',
     'ChildProcessChannelListener.h',
+    'SyncedContext.h',
+    'SyncedContextInlines.h',
 ]
 
 UNIFIED_SOURCES += [
