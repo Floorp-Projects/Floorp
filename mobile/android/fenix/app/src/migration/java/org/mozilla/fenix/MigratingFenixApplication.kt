@@ -55,7 +55,7 @@ class MigratingFenixApplication : FenixApplication() {
             .build()
 
         runBlocking {
-            migrator.migrateAsync().await()
+            migrator.migrateAsync(components.migrationStore).await()
         }
     }
 }
