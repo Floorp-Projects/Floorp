@@ -824,11 +824,16 @@ void Selection::UserSelectRangesToAdd(nsRange* aItem,
   }
 }
 
-nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
+nsresult Selection::AddRangesForSelectableNodes(nsRange* aRange,
                                                 int32_t* aOutIndex,
                                                 bool aNoStartSelect) {
-  if (!aItem) return NS_ERROR_NULL_POINTER;
-  if (!aItem->IsPositioned()) return NS_ERROR_UNEXPECTED;
+  if (!aRange) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (!aRange->IsPositioned()) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   NS_ASSERTION(aOutIndex, "aOutIndex can't be null");
 
@@ -848,7 +853,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
       // clone of the original range passed in. We do this seperately, because
       // the selectstart event could have caused the world to change, and
       // required ranges to be re-generated
-      RefPtr<nsRange> scratchRange = aItem->CloneRange();
+      RefPtr<nsRange> scratchRange = aRange->CloneRange();
       UserSelectRangesToAdd(scratchRange, rangesToAdd);
       bool newRangesNonEmpty =
           rangesToAdd.Length() > 1 ||
@@ -866,7 +871,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
         // pref, disabled by default.
         // See https://github.com/w3c/selection-api/issues/53.
         bool dispatchEvent = true;
-        nsCOMPtr<nsINode> target = aItem->GetStartContainer();
+        nsCOMPtr<nsINode> target = aRange->GetStartContainer();
         if (nsFrameSelection::sSelectionEventsOnTextControlsEnabled) {
           // Get the first element which isn't in a native anonymous subtree
           while (target && target->IsInNativeAnonymousSubtree()) {
@@ -892,7 +897,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
           // As we just dispatched an event to the DOM, something could have
           // changed under our feet. Re-generate the rangesToAdd array, and
           // ensure that the range we are about to add is still valid.
-          if (!aItem->IsPositioned()) {
+          if (!aRange->IsPositioned()) {
             return NS_ERROR_UNEXPECTED;
           }
         }
@@ -903,7 +908,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
     }
 
     // Generate the ranges to add
-    UserSelectRangesToAdd(aItem, rangesToAdd);
+    UserSelectRangesToAdd(aRange, rangesToAdd);
     size_t newAnchorFocusIndex =
         GetDirection() == eDirPrevious ? 0 : rangesToAdd.Length() - 1;
     for (size_t i = 0; i < rangesToAdd.Length(); ++i) {
@@ -919,7 +924,7 @@ nsresult Selection::AddRangesForSelectableNodes(nsRange* aItem,
     }
     return NS_OK;
   }
-  return MaybeAddRangeAndTruncateOverlaps(aItem, aOutIndex);
+  return MaybeAddRangeAndTruncateOverlaps(aRange, aOutIndex);
 }
 
 nsresult Selection::MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
