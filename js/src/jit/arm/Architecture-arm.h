@@ -386,11 +386,8 @@ class VFPRegister {
   bool isUInt() const { return kind == UInt; }
   bool equiv(const VFPRegister& other) const { return other.kind == kind; }
   size_t size() const { return (kind == Double) ? 8 : 4; }
-  bool isInvalid() const { return _isInvalid; }
-  bool isMissing() const {
-    MOZ_ASSERT(!_isInvalid);
-    return _isMissing;
-  }
+  bool isInvalid() const;
+  bool isMissing() const;
 
   VFPRegister doubleOverlay(unsigned int which = 0) const;
   VFPRegister singleOverlay(unsigned int which = 0) const;
