@@ -325,8 +325,14 @@ C/C++ practices
 -  When testing a pointer, use ``(!myPtr)`` or ``(myPtr)``;
    don't use ``myPtr != nullptr`` or ``myPtr == nullptr``.
 -  Do not compare ``x == true`` or ``x == false``. Use ``(x)`` or
-   ``(!x)`` instead. ``x == true``, is certainly different from if
-   ``(x)``!
+   ``(!x)`` instead. ``if (x == true)`` may have semantics different from
+   ``if (x)``!
+
+.. note:
+   clang-tidy provides the ``readability-simplify-boolean-expr`` check
+   with autofixes that checks for these and some other boolean expressions
+   that can be simplified.
+
 -  In general, initialize variables with ``nsFoo aFoo = bFoo,`` and not
    ``nsFoo aFoo(bFoo)``.
 
