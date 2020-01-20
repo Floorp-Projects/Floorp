@@ -109,7 +109,7 @@ class BrowsingContextTargetFront extends TargetMixin(
       this.configureOptions.javascriptEnabled = response.javascriptEnabled;
       this.traits = response.traits || {};
 
-      // xpcshell tests from devtools/server/tests/xpcshell/ are implementing
+      // xpcshell tests from devtools/server/tests/unit/ are implementing
       // fake BrowsingContextTargetActor which do not expose any console actor.
       if (this.targetForm.consoleActor) {
         await this.attachConsole();
