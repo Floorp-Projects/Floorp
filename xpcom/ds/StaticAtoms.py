@@ -1245,6 +1245,7 @@ STATIC_ATOMS = [
     Atom("audio", "audio"),
     Atom("video", "video"),
     Atom("viewport", "viewport"),
+    Atom("viewport_fit", "viewport-fit"),
     Atom("viewport_height", "viewport-height"),
     Atom("viewport_initial_scale", "viewport-initial-scale"),
     Atom("viewport_maximum_scale", "viewport-maximum-scale"),
