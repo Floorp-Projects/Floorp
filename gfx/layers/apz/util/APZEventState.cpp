@@ -15,7 +15,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"

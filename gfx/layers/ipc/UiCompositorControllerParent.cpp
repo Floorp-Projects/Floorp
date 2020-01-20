@@ -16,7 +16,7 @@
 #include "mozilla/layers/UiCompositorControllerMessageTypes.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/gfx/Types.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Unused.h"
 
 #include "FrameMetrics.h"

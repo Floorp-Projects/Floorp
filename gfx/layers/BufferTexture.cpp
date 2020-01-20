@@ -6,7 +6,7 @@
 
 #include "BufferTexture.h"
 #include "libyuv.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/fallible.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"

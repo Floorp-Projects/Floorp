@@ -23,7 +23,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/TypeTraits.h"
 
 #include "nsDebug.h"  // for |NS_ASSERTION|

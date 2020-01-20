@@ -14,7 +14,7 @@
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/WebCryptoTask.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Sprintf.h"
 #include "mtransport/dtlsidentity.h"
 

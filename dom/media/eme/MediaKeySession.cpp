@@ -15,7 +15,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/EMEUtils.h"
 #include "mozilla/Encoding.h"
 #include "GMPUtils.h"

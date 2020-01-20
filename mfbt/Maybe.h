@@ -13,7 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryChecking.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/Poison.h"
 #include "mozilla/TypeTraits.h"

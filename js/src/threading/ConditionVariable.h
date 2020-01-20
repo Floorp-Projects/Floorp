@@ -8,7 +8,7 @@
 #define threading_ConditionVariable_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/PlatformConditionVariable.h"
 #include "mozilla/TimeStamp.h"
 

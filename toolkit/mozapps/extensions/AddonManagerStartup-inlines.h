@@ -11,7 +11,7 @@
 #include "nsJSUtils.h"
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 namespace mozilla {
 

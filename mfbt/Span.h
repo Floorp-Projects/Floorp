@@ -26,7 +26,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/IntegerTypeTraits.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 

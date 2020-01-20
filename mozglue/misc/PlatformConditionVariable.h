@@ -8,7 +8,7 @@
 #define mozilla_ConditionVariable_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/PlatformMutex.h"
 #include "mozilla/TimeStamp.h"
 

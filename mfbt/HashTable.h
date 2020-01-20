@@ -83,7 +83,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Opaque.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PodOperations.h"

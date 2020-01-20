@@ -8,7 +8,7 @@
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"

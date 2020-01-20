@@ -23,7 +23,7 @@
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 #include "prio.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #define MOZ_PERSONAL_DICT_NAME "persdict.dat"
 

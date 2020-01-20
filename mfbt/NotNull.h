@@ -63,7 +63,7 @@
 // for the last one, where the handle type is |void|. See below.
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include <stddef.h>
 
 namespace mozilla {

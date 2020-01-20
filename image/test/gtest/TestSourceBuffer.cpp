@@ -8,7 +8,7 @@
 #include <cstdint>
 
 #include "Common.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsIInputStream.h"
 #include "SourceBuffer.h"
 #include "SurfaceCache.h"

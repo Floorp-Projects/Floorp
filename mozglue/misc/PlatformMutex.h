@@ -9,7 +9,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/RecordReplay.h"
 
 #if !defined(XP_WIN)

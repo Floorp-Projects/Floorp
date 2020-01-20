@@ -67,7 +67,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/RefPtr.h"
 
 #ifdef __cplusplus

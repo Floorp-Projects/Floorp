@@ -13,7 +13,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "Module.h"

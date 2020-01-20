@@ -11,7 +11,7 @@
 #include "mozilla/devtools/CoreDump.pb.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Vector.h"
 
 // `Deserialized{Node,Edge}` translate protobuf messages from our core dump

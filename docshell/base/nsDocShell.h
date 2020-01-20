@@ -11,7 +11,7 @@
 #include "mozilla/HalScreenConfiguration.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"

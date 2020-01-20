@@ -17,7 +17,7 @@
 #endif
 
 #include "base64.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Sprintf.h"
 #include "nspr.h"
 #include "nss.h"

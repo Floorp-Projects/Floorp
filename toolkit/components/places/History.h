@@ -9,7 +9,7 @@
 
 #include "mozilla/BaseHistory.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Mutex.h"
 #include "mozIAsyncHistory.h"
 #include "Database.h"

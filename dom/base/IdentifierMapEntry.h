@@ -14,7 +14,7 @@
 #include "PLDHashTable.h"
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/dom/TreeOrderedArray.h"
 
 #include "nsAutoPtr.h"

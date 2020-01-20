@@ -18,7 +18,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/KeyEventHandler.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"

@@ -9,7 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/NativeNt.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Vector.h"

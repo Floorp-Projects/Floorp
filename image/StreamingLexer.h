@@ -18,7 +18,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 #include "SourceBuffer.h"

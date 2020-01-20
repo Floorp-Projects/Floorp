@@ -9,7 +9,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/Mutex.h"

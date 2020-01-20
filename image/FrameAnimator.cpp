@@ -5,7 +5,7 @@
 
 #include "FrameAnimator.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/CheckedInt.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "imgIContainer.h"

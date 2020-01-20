@@ -13,7 +13,7 @@
 #include "mozilla/dom/PresentationRequestBinding.h"
 #include "mozilla/dom/PresentationConnectionAvailableEvent.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsContentSecurityManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGlobalWindow.h"

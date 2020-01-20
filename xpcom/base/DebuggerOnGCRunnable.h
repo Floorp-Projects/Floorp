@@ -9,7 +9,7 @@
 
 #include "nsThreadUtils.h"
 #include "js/GCAPI.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {

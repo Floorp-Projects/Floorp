@@ -14,7 +14,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_image.h"

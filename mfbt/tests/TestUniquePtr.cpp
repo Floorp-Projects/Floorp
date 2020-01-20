@@ -6,7 +6,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Compiler.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"

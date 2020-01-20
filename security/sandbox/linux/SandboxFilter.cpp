@@ -13,7 +13,7 @@
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
 #include "SandboxOpenedFiles.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/PodOperations.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"

@@ -46,7 +46,7 @@
 
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/LayerAnimationInfo.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Tools.h"

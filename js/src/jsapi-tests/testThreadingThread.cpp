@@ -7,7 +7,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/IntegerRange.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Vector.h"
 
 #include "js/AllocPolicy.h"

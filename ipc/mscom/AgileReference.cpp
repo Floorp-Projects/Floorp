@@ -9,7 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mscom/Utils.h"
 
 #if defined(MOZILLA_INTERNAL_API)

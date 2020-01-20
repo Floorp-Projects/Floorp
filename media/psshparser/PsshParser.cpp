@@ -18,7 +18,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include <memory.h>
 #include <algorithm>
 #include <assert.h>

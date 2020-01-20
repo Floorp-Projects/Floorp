@@ -8,7 +8,7 @@
 #define threading_ExclusiveData_h
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/OperatorNewExtensions.h"
 
 #include "threading/ConditionVariable.h"

@@ -9,7 +9,7 @@
 #include "mozilla/Assertions.h"   // for AssertionConditionType
 #include "mozilla/HashTable.h"    // for HashMapEntry
 #include "mozilla/Maybe.h"        // for Maybe
-#include "mozilla/Move.h"         // for std::move
+#include <utility>                // for std::move
 #include "mozilla/Range.h"        // for Range
 #include "mozilla/RangedPtr.h"    // for RangedPtr
 #include "mozilla/Result.h"       // for Result

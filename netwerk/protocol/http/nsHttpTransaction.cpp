@@ -24,7 +24,7 @@
 #include "nsIPipe.h"
 #include "nsCRT.h"
 #include "mozilla/Tokenizer.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "TCPFastOpenLayer.h"
 
 #include "nsISeekableStream.h"

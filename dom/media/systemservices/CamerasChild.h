@@ -7,7 +7,7 @@
 #ifndef mozilla_CamerasChild_h
 #define mozilla_CamerasChild_h
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Pair.h"
 #include "mozilla/camera/PCamerasChild.h"
 #include "mozilla/camera/PCamerasParent.h"

@@ -6,7 +6,7 @@
 
 #include "SandboxOpenedFiles.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "SandboxLogging.h"
 
 #include <errno.h>

@@ -8,7 +8,7 @@
 #define mozilla_mscom_MainThreadInvoker_h
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"

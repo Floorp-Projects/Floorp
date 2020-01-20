@@ -11,7 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/glue/WindowsDllServices.h"
 #include "mozilla/JSONWriter.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mscom/ProcessRuntime.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"

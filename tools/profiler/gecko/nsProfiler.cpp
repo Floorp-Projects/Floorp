@@ -17,7 +17,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Services.h"
 #include "mozilla/SystemGroup.h"
 #include "nsIFileStreams.h"

@@ -10,7 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "AnimationParams.h"
 #include "gfxDrawable.h"
 #include "MainThreadUtils.h"

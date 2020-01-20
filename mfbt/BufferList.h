@@ -11,7 +11,7 @@
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Types.h"
 #include "mozilla/TypeTraits.h"

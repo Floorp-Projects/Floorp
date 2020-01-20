@@ -15,7 +15,7 @@
 #include "mozilla/interceptor/VMSharingPolicies.h"
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/NativeNt.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TypedEnumBits.h"

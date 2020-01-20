@@ -13,7 +13,7 @@
 #include <windows.h>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 namespace sandbox {
 class TargetServices;

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/XPathEvaluator.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "mozilla/dom/XPathExpression.h"

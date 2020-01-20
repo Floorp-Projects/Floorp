@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/dom/BaseBlobImpl.h"
 
 namespace mozilla {

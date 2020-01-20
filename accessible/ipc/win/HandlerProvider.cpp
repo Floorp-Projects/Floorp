@@ -18,7 +18,7 @@
 #include "mozilla/a11y/AccessibleWrap.h"
 #include "mozilla/a11y/HandlerDataCleanup.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mscom/AgileReference.h"
 #include "mozilla/mscom/FastMarshaler.h"
 #include "mozilla/mscom/Interceptor.h"

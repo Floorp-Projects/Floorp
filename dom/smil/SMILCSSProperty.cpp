@@ -9,7 +9,7 @@
 #include "SMILCSSProperty.h"
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/ServoBindings.h"
 #include "mozilla/SMILCSSValueType.h"
 #include "mozilla/SMILValue.h"

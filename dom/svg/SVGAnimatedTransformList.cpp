@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/SVGAnimationElement.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/SMILValue.h"
 #include "mozilla/SVGContentUtils.h"
 #include "nsCharSeparatedTokenizer.h"

@@ -7,7 +7,7 @@
 #include "base/logging.h"
 #include "base/string_util.h"
 #include "nsXPCOM.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 namespace mozilla {
 

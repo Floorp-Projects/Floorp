@@ -24,7 +24,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/StyleSheet.h"
 #include "mozilla/UniquePtr.h"
 

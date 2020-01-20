@@ -12,7 +12,7 @@
 #include "txXSLTPatterns.h"
 #include "txNamespaceMap.h"
 #include "mozilla/HashFunctions.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 using namespace mozilla;
 

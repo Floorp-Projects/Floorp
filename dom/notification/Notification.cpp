@@ -11,7 +11,7 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/JSONWriter.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"

@@ -10,7 +10,7 @@
 #define mozilla_Saturate_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/TypeTraits.h"
 
 #include <limits>

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AnimationFrameBuffer.h"
-#include "mozilla/Move.h"  // for Move
+#include <utility>  // for Move
 
 namespace mozilla {
 namespace image {

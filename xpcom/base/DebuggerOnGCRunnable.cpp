@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/CycleCollectedJSContext.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/SystemGroup.h"
 #include "js/Debug.h"
 

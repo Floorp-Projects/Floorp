@@ -19,7 +19,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/HoldDropJSObjects.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"

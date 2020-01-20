@@ -7,7 +7,7 @@
 #ifndef gc_FindSCCs_h
 #define gc_FindSCCs_h
 
-#include "mozilla/Move.h"
+#include <utility>
 
 #include <algorithm>
 

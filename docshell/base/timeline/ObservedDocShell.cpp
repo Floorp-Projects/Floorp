@@ -9,7 +9,7 @@
 #include "AbstractTimelineMarker.h"
 #include "LayerTimelineMarker.h"
 #include "MainThreadUtils.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/AutoRestore.h"
 
 namespace mozilla {

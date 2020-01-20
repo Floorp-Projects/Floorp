@@ -9,7 +9,7 @@
 
 #include <algorithm>
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "Point.h"
 #include "Rect.h"
 

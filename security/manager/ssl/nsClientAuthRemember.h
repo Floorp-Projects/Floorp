@@ -8,7 +8,7 @@
 #define __NSCLIENTAUTHREMEMBER_H__
 
 #include "mozilla/HashFunctions.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/ReentrantMonitor.h"
 #include "nsTHashtable.h"
 #include "nsIObserver.h"
