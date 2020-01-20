@@ -150,6 +150,7 @@ class Http3Session final : public nsAHttpTransaction,
   bool mCleanShutdown;
   bool mGoawayReceived;
   bool mShouldClose;
+  bool mIsClosedByNeqo;
   nsresult mError;
   bool mBeforeConnectedError;
   uint64_t mCurrentForegroundTabOuterContentWindowId;

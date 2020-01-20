@@ -43,6 +43,10 @@ class NeqoHttp3Conn final {
 
   uint64_t ProcessOutput() { return neqo_http3conn_process_output(this); }
 
+  void ProcessTimer() { neqo_http3conn_process_timer(this); }
+
+  bool HasDataToSend() { return neqo_http3conn_has_data_to_send(this); }
+
   nsresult GetDataToSend(nsTArray<uint8_t>& aData) {
     aData.TruncateLength(0);
     return neqo_http3conn_get_data_to_send(this, &aData);
