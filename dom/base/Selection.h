@@ -768,7 +768,11 @@ class Selection final : public nsSupportsWeakReference,
                                     nsTArray<RefPtr<nsRange>>& rangesToAdd);
 
   /**
-   * Preserves the sorting of mRanges.
+   * Preserves the sorting and disjunctiveness of mRanges.
+   *
+   * @param aOutIndex will point to the index of the added range, or if aRange
+   *                  is already contained, to the one containing it. Hence
+   *                  it'll always be in [0, mRanges.Length()).
    */
   nsresult MaybeAddRangeAndTruncateOverlaps(nsRange* aRange,
                                             int32_t* aOutIndex);
