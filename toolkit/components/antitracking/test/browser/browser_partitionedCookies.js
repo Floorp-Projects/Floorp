@@ -87,12 +87,12 @@ PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
 
   // getDataCallback
   async win => {
-    return win.document.cookie;
+    return win.document.cookie.replace("=true", "");
   },
 
   // addDataCallback
   async (win, value) => {
-    win.document.cookie = value;
+    win.document.cookie = value + "=true";
     return true;
   },
 
