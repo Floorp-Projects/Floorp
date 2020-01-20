@@ -729,12 +729,21 @@ class Selection final : public nsSupportsWeakReference,
   nsresult MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
                                   int32_t* aOutIndex);
 
+  /**
+   * Binary searches the given sorted array of ranges for the insertion point
+   * for the given node/offset. The given comparator is used, and the index
+   * where the point should appear in the array is placed in *aInsertionPoint.
+
+   * If there is an item in the array equal to the input point (aPointNode,
+   * aPointOffset), we will return the index of this item.
+   */
   static nsresult FindInsertionPoint(
       const nsTArray<RangeData>* aElementArray, const nsINode* aPointNode,
       int32_t aPointOffset,
       nsresult (*aComparator)(const nsINode*, int32_t, const nsRange*,
                               int32_t*),
-      int32_t* aPoint);
+      int32_t* aInsertionPoint);
+
   bool EqualsRangeAtPoint(const nsINode* aBeginNode, int32_t aBeginOffset,
                           const nsINode* aEndNode, int32_t aEndOffset,
                           int32_t aRangeIndex) const;
