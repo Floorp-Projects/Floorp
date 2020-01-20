@@ -1592,7 +1592,7 @@ function LoadInOtherProcess(browser, loadOptions, historyIndex = -1) {
 
 // Called when a docshell has attempted to load a page in an incorrect process.
 // This function is responsible for loading the page in the correct process.
-function RedirectLoad({ target: browser, data }) {
+function RedirectLoad(browser, data) {
   if (browser.getAttribute("preloadedState") === "consumed") {
     browser.removeAttribute("preloadedState");
     data.loadOptions.newFrameloader = true;
@@ -1804,8 +1804,6 @@ var gBrowserInit = {
 
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/tab-content.js", true, true);
-
-    window.messageManager.addMessageListener("Browser:LoadURI", RedirectLoad);
 
     if (!gMultiProcessBrowser) {
       // There is a Content:Click message manually sent from content.
@@ -2489,10 +2487,6 @@ var gBrowserInit = {
         gKeywordURIFixup
       );
       Services.obs.removeObserver(gKeywordURIFixupObs, "keyword-uri-fixup");
-      window.messageManager.removeMessageListener(
-        "Browser:LoadURI",
-        RedirectLoad
-      );
 
       if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
         MenuTouchModeObserver.uninit();
