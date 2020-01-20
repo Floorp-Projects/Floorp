@@ -124,11 +124,17 @@ class Registers {
     wzr = 31,
     xzr = 31,
     sp = 31,  // Special: both stack pointer and a zero register.
-    invalid_reg
   };
   typedef uint8_t Code;
   typedef uint32_t Encoding;
   typedef uint32_t SetType;
+
+  // If SP is used as the base register for a memory load or store, then the
+  // value of the stack pointer prior to adding any offset must be quadword (16
+  // byte) aligned, or else a stack aligment exception will be generated.
+  static const Code StackPointer = sp;
+
+  static const Code Invalid = 0xFF;
 
   union RegisterContent {
     uintptr_t r;
@@ -145,27 +151,21 @@ class Registers {
     return 31 - mozilla::CountLeadingZeroes32(x);
   }
 
-  static const char* GetName(Code code) {
+  static const char* GetName(uint32_t code) {
     static const char* const Names[] = {
-        "x0",  "x1",  "x2",  "x3",  "x4",  "x5",     "x6",  "x7",  "x8",
-        "x9",  "x10", "x11", "x12", "x13", "x14",    "x15", "x16", "x17",
-        "x18", "x19", "x20", "x21", "x22", "x23",    "x24", "x25", "x26",
-        "x27", "x28", "x29", "lr",  "sp",  "invalid"};
+        "x0",  "x1",  "x2",  "x3",  "x4",  "x5",  "x6",  "x7",
+        "x8",  "x9",  "x10", "x11", "x12", "x13", "x14", "x15",
+        "x16", "x17", "x18", "x19", "x20", "x21", "x22", "x23",
+        "x24", "x25", "x26", "x27", "x28", "x29", "lr",  "sp"};
+    static_assert(Total == sizeof(Names) / sizeof(Names[0]),
+                  "Table is the correct size");
+    if (code >= Total) {
+      return "invalid";
+    }
     return Names[code];
-  }
-  static const char* GetName(uint32_t i) {
-    MOZ_ASSERT(i < Total);
-    return GetName(Code(i));
   }
 
   static Code FromName(const char* name);
-
-  // If SP is used as the base register for a memory load or store, then the
-  // value of the stack pointer prior to adding any offset must be quadword (16
-  // byte) aligned, or else a stack aligment exception will be generated.
-  static const Code StackPointer = sp;
-
-  static const Code Invalid = invalid_reg;
 
   static const uint32_t Total = 32;
   static const uint32_t TotalPhys = 32;
@@ -319,38 +319,55 @@ class FloatRegisters {
     s31 = 31,
     d31 = 31,
     v31 = 31,  // Scratch register.
-    invalid_fpreg
   };
+
+  // Eight bits: (invalid << 7) | (kind << 5) | encoding
   typedef uint8_t Code;
   typedef FPRegisterID Encoding;
   typedef uint64_t SetType;
 
-  static const char* GetName(Code code) {
-    static const char* const Names[] = {
-        "d0",  "d1",  "d2",  "d3",  "d4",  "d5",     "d6",  "d7",  "d8",
-        "d9",  "d10", "d11", "d12", "d13", "d14",    "d15", "d16", "d17",
-        "d18", "d19", "d20", "d21", "d22", "d23",    "d24", "d25", "d26",
-        "d27", "d28", "d29", "d30", "d31", "invalid"};
-    return Names[code];
-  }
+  enum Kind : uint8_t { Double, Single, NumTypes };
 
-  static const char* GetName(uint32_t i) {
-    MOZ_ASSERT(i < TotalPhys);
-    return GetName(Code(i));
+  static constexpr Code Invalid = 0x80;
+
+  static const char* GetName(uint32_t code) {
+    // Doubles precede singles, see `Kind` enum above.
+    static const char* const Names[] = {
+        "d0",  "d1",  "d2",  "d3",  "d4",  "d5",  "d6",  "d7",  "d8",  "d9",
+        "d10", "d11", "d12", "d13", "d14", "d15", "d16", "d17", "d18", "d19",
+        "d20", "d21", "d22", "d23", "d24", "d25", "d26", "d27", "d28", "d29",
+        "d30", "d31", "s0",  "s1",  "s2",  "s3",  "s4",  "s5",  "s6",  "s7",
+        "s8",  "s9",  "s10", "s11", "s12", "s13", "s14", "s15", "s16", "s17",
+        "s18", "s19", "s20", "s21", "s22", "s23", "s24", "s25", "s26", "s27",
+        "s28", "s29", "s30", "s31"};
+    static_assert(Total == sizeof(Names) / sizeof(Names[0]),
+                  "Table is the correct size");
+    if (code >= Total) {
+      return "invalid";
+    }
+    return Names[code];
   }
 
   static Code FromName(const char* name);
 
-  static const Code Invalid = invalid_fpreg;
-
-  static const uint32_t Total = 64;
   static const uint32_t TotalPhys = 32;
-  static const SetType AllMask = 0xFFFFFFFFFFFFFFFFULL;
-  static const SetType NoneMask = 0x0ULL;
-  static const SetType AllPhysMask = 0xFFFFFFFFULL;
-  static const SetType SpreadCoefficient = 0x100000001ULL;
-
+  static const uint32_t Total = TotalPhys * NumTypes;
   static const uint32_t Allocatable = 31;  // Without d31, the scratch register.
+
+  static_assert(sizeof(SetType) * 8 >= Total,
+                "SetType should be large enough to enumerate all registers.");
+
+  static const SetType SpreadSingle = SetType(1)
+                                      << (uint32_t(Single) * TotalPhys);
+  static const SetType SpreadDouble = SetType(1)
+                                      << (uint32_t(Double) * TotalPhys);
+  static const SetType Spread = SpreadSingle | SpreadDouble;
+
+  static const SetType AllPhysMask = (SetType(1) << TotalPhys) - 1;
+  static const SetType AllMask = AllPhysMask * Spread;
+  static const SetType AllDoubleMask = AllPhysMask * SpreadDouble;
+  static const SetType AllSingleMask = AllPhysMask * SpreadSingle;
+  static const SetType NoneMask = SetType(0);
 
   // d31 is the ScratchFloatReg.
   static const SetType NonVolatileMask =
@@ -366,24 +383,36 @@ class FloatRegisters {
               (1 << FloatRegisters::d26) | (1 << FloatRegisters::d27) |
               (1 << FloatRegisters::d28) | (1 << FloatRegisters::d29) |
               (1 << FloatRegisters::d30)) *
-      SpreadCoefficient;
+      Spread;
 
   static const SetType VolatileMask = AllMask & ~NonVolatileMask;
-  static const SetType AllDoubleMask = AllPhysMask << TotalPhys;
-  static const SetType AllSingleMask = AllPhysMask;
 
   static const SetType WrapperMask = VolatileMask;
 
   // d31 is the ScratchFloatReg.
   static const SetType NonAllocatableMask =
-      (SetType(1) << FloatRegisters::d31) * SpreadCoefficient;
+      (SetType(1) << FloatRegisters::d31) * Spread;
 
   static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
   union RegisterContent {
     float s;
     double d;
   };
-  enum Kind : uint8_t { Double, Single };
+
+  static constexpr Encoding encoding(Code c) {
+    // assert(c < Total);
+    return Encoding(c & 31);
+  }
+
+  static constexpr Kind kind(Code c) {
+    // assert(c < Total && ((c >> 5) & 3) < NumTypes);
+    return Kind((c >> 5) & 3);
+  }
+
+  static constexpr Code fromParts(uint32_t encoding, uint32_t kind,
+                                  uint32_t invalid) {
+    return Code((invalid << 7) | (kind << 5) | encoding);
+  }
 };
 
 // In bytes: slots needed for potential memory->memory move spills.
@@ -416,21 +445,6 @@ struct FloatRegister {
   typedef Codes::Encoding Encoding;
   typedef Codes::SetType SetType;
 
-  union RegisterContent {
-    float s;
-    double d;
-  };
-
-  constexpr FloatRegister(uint32_t code, FloatRegisters::Kind k)
-      : code_(FloatRegisters::Code(code & 31)), k_(k) {}
-
-  explicit constexpr FloatRegister(uint32_t code)
-      : code_(FloatRegisters::Code(code & 31)),
-        k_(FloatRegisters::Kind(code >> 5)) {}
-
-  constexpr FloatRegister()
-      : code_(FloatRegisters::Code(-1)), k_(FloatRegisters::Double) {}
-
   static uint32_t SetSize(SetType x) {
     static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
     x |= x >> FloatRegisters::TotalPhys;
@@ -438,78 +452,121 @@ struct FloatRegister {
     return mozilla::CountPopulation32(x);
   }
 
+  static uint32_t FirstBit(SetType x) {
+    static_assert(sizeof(SetType) == 8, "SetType");
+    return mozilla::CountTrailingZeroes64(x);
+  }
+  static uint32_t LastBit(SetType x) {
+    static_assert(sizeof(SetType) == 8, "SetType");
+    return 63 - mozilla::CountLeadingZeroes64(x);
+  }
+
+ private:
+  // These fields only hold valid values: an invalid register is always
+  // represented as a valid encoding and kind with the invalid_ bit set.
+  uint8_t encoding_;  // 32 encodings
+  uint8_t kind_;      // Double, Single; more later
+  bool invalid_;
+
+  typedef Codes::Kind Kind;
+
+ public:
+  constexpr FloatRegister(Encoding encoding, Kind kind)
+      : encoding_(encoding), kind_(kind), invalid_(false) {
+    // assert(uint32_t(encoding) < Codes::TotalPhys);
+  }
+
+  constexpr FloatRegister()
+      : encoding_(0), kind_(FloatRegisters::Double), invalid_(true) {}
+
   static FloatRegister FromCode(uint32_t i) {
-    MOZ_ASSERT(i < FloatRegisters::Total);
-    FloatRegister r(i);
-    return r;
+    MOZ_ASSERT(i < Codes::Total);
+    return FloatRegister(FloatRegisters::encoding(i), FloatRegisters::kind(i));
   }
-  Code code() const {
-    MOZ_ASSERT((uint32_t)code_ < FloatRegisters::Total);
-    return Code(code_ | (k_ << 5));
+
+  bool isSingle() const {
+    MOZ_ASSERT(!invalid_);
+    return kind_ == FloatRegisters::Single;
   }
-  Encoding encoding() const { return Encoding(code_); }
+  bool isDouble() const {
+    MOZ_ASSERT(!invalid_);
+    return kind_ == FloatRegisters::Double;
+  }
+  bool isSimd128() const {
+    MOZ_ASSERT(!invalid_);
+    return false;
+  }
+  bool isInvalid() const { return invalid_; }
+
+  FloatRegister asSingle() const {
+    MOZ_ASSERT(!invalid_);
+    return FloatRegister(Encoding(encoding_), FloatRegisters::Single);
+  }
+  FloatRegister asDouble() const {
+    MOZ_ASSERT(!invalid_);
+    return FloatRegister(Encoding(encoding_), FloatRegisters::Double);
+  }
+  FloatRegister asSimd128() const { MOZ_CRASH(); }
+
+  constexpr uint32_t size() const {
+    MOZ_ASSERT(!invalid_);
+    if (kind_ == FloatRegisters::Double) {
+      return sizeof(double);
+    }
+    MOZ_ASSERT(kind_ == FloatRegisters::Single);
+    return sizeof(float);
+  }
+
+  constexpr Code code() const {
+    // assert(!invalid_);
+    return Codes::fromParts(encoding_, kind_, invalid_);
+  }
+
+  constexpr Encoding encoding() const {
+    MOZ_ASSERT(!invalid_);
+    return Encoding(encoding_);
+  }
 
   const char* name() const { return FloatRegisters::GetName(code()); }
   bool volatile_() const {
+    MOZ_ASSERT(!invalid_);
     return !!((SetType(1) << code()) & FloatRegisters::VolatileMask);
   }
   constexpr bool operator!=(FloatRegister other) const {
-    return other.code_ != code_ || other.k_ != k_;
+    return code() != other.code();
   }
   constexpr bool operator==(FloatRegister other) const {
-    return other.code_ == code_ && other.k_ == k_;
+    return code() == other.code();
   }
-  bool aliases(FloatRegister other) const { return other.code_ == code_; }
-  uint32_t numAliased() const { return 2; }
-  static FloatRegisters::Kind otherkind(FloatRegisters::Kind k) {
-    if (k == FloatRegisters::Double) {
-      return FloatRegisters::Single;
-    }
-    return FloatRegisters::Double;
-  }
-  FloatRegister aliased(uint32_t aliasIdx) {
-    if (aliasIdx == 0) {
-      return *this;
-    }
-    return FloatRegister(code_, otherkind(k_));
+
+  bool aliases(FloatRegister other) const {
+    return other.encoding_ == encoding_;
   }
   // This function mostly exists for the ARM backend.  It is to ensure that two
   // floating point registers' types are equivalent.  e.g. S0 is not equivalent
   // to D16, since S0 holds a float32, and D16 holds a Double.
   // Since all floating point registers on x86 and x64 are equivalent, it is
   // reasonable for this function to do the same.
-  bool equiv(FloatRegister other) const { return k_ == other.k_; }
-  constexpr uint32_t size() const {
-    return k_ == FloatRegisters::Double ? sizeof(double) : sizeof(float);
+  bool equiv(FloatRegister other) const {
+    MOZ_ASSERT(!invalid_);
+    return kind_ == other.kind_;
   }
+
+  uint32_t numAliased() const { return Codes::NumTypes; }
   uint32_t numAlignedAliased() { return numAliased(); }
+
+  FloatRegister aliased(uint32_t aliasIdx) {
+    MOZ_ASSERT(!invalid_);
+    MOZ_ASSERT(aliasIdx < numAliased());
+    return FloatRegister(Encoding(encoding_),
+                         Kind((aliasIdx + kind_) % numAliased()));
+  }
   FloatRegister alignedAliased(uint32_t aliasIdx) {
     MOZ_ASSERT(aliasIdx < numAliased());
     return aliased(aliasIdx);
   }
   SetType alignedOrDominatedAliasedSet() const {
-    return Codes::SpreadCoefficient << code_;
-  }
-
-  bool isSingle() const { return k_ == FloatRegisters::Single; }
-  bool isDouble() const { return k_ == FloatRegisters::Double; }
-  bool isSimd128() const { return false; }
-
-  FloatRegister asSingle() const {
-    return FloatRegister(code_, FloatRegisters::Single);
-  }
-  FloatRegister asDouble() const {
-    return FloatRegister(code_, FloatRegisters::Double);
-  }
-  FloatRegister asSimd128() const { MOZ_CRASH(); }
-
-  static uint32_t FirstBit(SetType x) {
-    JS_STATIC_ASSERT(sizeof(SetType) == 8);
-    return mozilla::CountTrailingZeroes64(x);
-  }
-  static uint32_t LastBit(SetType x) {
-    JS_STATIC_ASSERT(sizeof(SetType) == 8);
-    return 63 - mozilla::CountLeadingZeroes64(x);
+    return Codes::Spread << encoding_;
   }
 
   static constexpr RegTypeName DefaultType = RegTypeName::Float64;
@@ -527,13 +584,8 @@ struct FloatRegister {
 
   static TypedRegisterSet<FloatRegister> ReduceSetForPush(
       const TypedRegisterSet<FloatRegister>& s);
-  static uint32_t GetSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
   static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
   uint32_t getRegisterDumpOffsetInBytes();
-
- public:
-  Code code_;
-  FloatRegisters::Kind k_;
 };
 
 template <>
