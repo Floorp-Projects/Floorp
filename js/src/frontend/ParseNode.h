@@ -71,6 +71,10 @@ class BigIntBox;
   F(PropertyNameExpr, NameNode)                                  \
   F(DotExpr, PropertyAccess)                                     \
   F(ElemExpr, PropertyByValue)                                   \
+  F(OptionalDotExpr, OptionalPropertyAccess)                     \
+  F(OptionalChain, UnaryNode)                                    \
+  F(OptionalElemExpr, OptionalPropertyByValue)                   \
+  F(OptionalCallExpr, BinaryNode)                                \
   F(ArrayExpr, ListNode)                                         \
   F(Elision, NullaryNode)                                        \
   F(StatementList, ListNode)                                     \
@@ -114,6 +118,7 @@ class BigIntBox;
   F(DeleteNameExpr, UnaryNode)                                   \
   F(DeletePropExpr, UnaryNode)                                   \
   F(DeleteElemExpr, UnaryNode)                                   \
+  F(DeleteOptionalChainExpr, UnaryNode)                          \
   F(DeleteExpr, UnaryNode)                                       \
   F(TryStmt, TernaryNode)                                        \
   F(Catch, BinaryNode)                                           \
@@ -446,7 +451,25 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *          * DeleteNameExpr: Name expr
  *          * DeletePropExpr: Dot expr
  *          * DeleteElemExpr: Elem expr
+ *          * DeleteOptionalChainExpr: Member expr
  *          * DeleteExpr: Member expr
+ * DeleteOptionalChainExpr (UnaryNode)
+ *   kid: expression that's evaluated, then the overall delete evaluates to
+ *        true; If constant folding occurs, Elem expr may become Dot expr.
+ *        OptionalElemExpr does not get folded into OptionalDot.
+ * OptionalChain (UnaryNode)
+ *   kid: expression that is evaluated. Contains optional nodes such as
+ *        OptionalElemExpr, OptionalDotExpr, and OptionalCall, which
+ *        shortcircuit and return Undefined without evaluating the rest of the
+ *        expression of the node is nullish. Also can contain nodes such as
+ *        DotExpr, ElemExpr, NameExpr CallExpr, etc. These are evaluated
+ *        normally.
+ *          * OptionalDotExpr: Dot expr with jump
+ *          * OptionalElemExpr: Elem expr with jump
+ *          * OptionalCallExpr: Call expr with jump
+ *          * DotExpr: Dot expr without jump
+ *          * ElemExpr: Elem expr without jump
+ *          * CallExpr: Call expr without jump
  * PropertyNameExpr (NameNode)
  *   atom: property name being accessed
  * DotExpr (PropertyAccess)
@@ -547,6 +570,10 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
   MACRO(ForNode, ForNodeType, asFor)                                         \
   MACRO(PropertyAccess, PropertyAccessType, asPropertyAccess)                \
   MACRO(PropertyByValue, PropertyByValueType, asPropertyByValue)             \
+  MACRO(OptionalPropertyAccess, OptionalPropertyAccessType,                  \
+        asOptionalPropertyAccess)                                            \
+  MACRO(OptionalPropertyByValue, OptionalPropertyByValueType,                \
+        OptionalasPropertyByValue)                                           \
   MACRO(SwitchStatement, SwitchStatementType, asSwitchStatement)             \
                                                                              \
   MACRO(FunctionNode, FunctionNodeType, asFunction)                          \
@@ -557,6 +584,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
   MACRO(ListNode, ListNodeType, asList)                                      \
   MACRO(CallSiteNode, CallSiteNodeType, asCallSite)                          \
   MACRO(CallNode, CallNodeType, asCallNode)                                  \
+  MACRO(CallNode, OptionalCallNodeType, asOptionalCallNode)                  \
                                                                              \
   MACRO(LoopControlStatement, LoopControlStatementType,                      \
         asLoopControlStatement)                                              \
@@ -1880,27 +1908,29 @@ class RegExpLiteral : public ParseNode {
   RegExpIndex index() { return data_.as<RegExpIndex>(); }
 };
 
-class PropertyAccess : public BinaryNode {
+class PropertyAccessBase : public BinaryNode {
  public:
   /*
    * PropertyAccess nodes can have any expression/'super' as left-hand
    * side, but the name must be a ParseNodeKind::PropertyName node.
    */
-  PropertyAccess(ParseNode* lhs, NameNode* name, uint32_t begin, uint32_t end)
-      : BinaryNode(ParseNodeKind::DotExpr, TokenPos(begin, end), lhs, name) {
+  PropertyAccessBase(ParseNodeKind kind, ParseNode* lhs, NameNode* name,
+                     uint32_t begin, uint32_t end)
+      : BinaryNode(kind, TokenPos(begin, end), lhs, name) {
     MOZ_ASSERT(lhs);
     MOZ_ASSERT(name);
   }
 
+  ParseNode& expression() const { return *left(); }
+
   static bool test(const ParseNode& node) {
-    bool match = node.isKind(ParseNodeKind::DotExpr);
+    bool match = node.isKind(ParseNodeKind::DotExpr) ||
+                 node.isKind(ParseNodeKind::OptionalDotExpr);
     MOZ_ASSERT_IF(match, node.is<BinaryNode>());
     MOZ_ASSERT_IF(match, node.as<BinaryNode>().right()->isKind(
                              ParseNodeKind::PropertyNameExpr));
     return match;
   }
-
-  ParseNode& expression() const { return *left(); }
 
   NameNode& key() const { return right()->as<NameNode>(); }
 
@@ -1921,15 +1951,47 @@ class PropertyAccess : public BinaryNode {
   }
 };
 
-class PropertyByValue : public BinaryNode {
+class PropertyAccess : public PropertyAccessBase {
  public:
-  PropertyByValue(ParseNode* lhs, ParseNode* propExpr, uint32_t begin,
-                  uint32_t end)
-      : BinaryNode(ParseNodeKind::ElemExpr, TokenPos(begin, end), lhs,
-                   propExpr) {}
+  PropertyAccess(ParseNode* lhs, NameNode* name, uint32_t begin, uint32_t end)
+      : PropertyAccessBase(ParseNodeKind::DotExpr, lhs, name, begin, end) {
+    MOZ_ASSERT(lhs);
+    MOZ_ASSERT(name);
+  }
 
   static bool test(const ParseNode& node) {
-    bool match = node.isKind(ParseNodeKind::ElemExpr);
+    bool match = node.isKind(ParseNodeKind::DotExpr);
+    MOZ_ASSERT_IF(match, node.is<PropertyAccessBase>());
+    return match;
+  }
+};
+
+class OptionalPropertyAccess : public PropertyAccessBase {
+ public:
+  OptionalPropertyAccess(ParseNode* lhs, NameNode* name, uint32_t begin,
+                         uint32_t end)
+      : PropertyAccessBase(ParseNodeKind::OptionalDotExpr, lhs, name, begin,
+                           end) {
+    MOZ_ASSERT(lhs);
+    MOZ_ASSERT(name);
+  }
+
+  static bool test(const ParseNode& node) {
+    bool match = node.isKind(ParseNodeKind::OptionalDotExpr);
+    MOZ_ASSERT_IF(match, node.is<PropertyAccessBase>());
+    return match;
+  }
+};
+
+class PropertyByValueBase : public BinaryNode {
+ public:
+  PropertyByValueBase(ParseNodeKind kind, ParseNode* lhs, ParseNode* propExpr,
+                      uint32_t begin, uint32_t end)
+      : BinaryNode(kind, TokenPos(begin, end), lhs, propExpr) {}
+
+  static bool test(const ParseNode& node) {
+    bool match = node.isKind(ParseNodeKind::ElemExpr) ||
+                 node.isKind(ParseNodeKind::OptionalElemExpr);
     MOZ_ASSERT_IF(match, node.is<BinaryNode>());
     return match;
   }
@@ -1939,6 +2001,34 @@ class PropertyByValue : public BinaryNode {
   ParseNode& key() const { return *right(); }
 
   bool isSuper() const { return left()->isKind(ParseNodeKind::SuperBase); }
+};
+
+class PropertyByValue : public PropertyByValueBase {
+ public:
+  PropertyByValue(ParseNode* lhs, ParseNode* propExpr, uint32_t begin,
+                  uint32_t end)
+      : PropertyByValueBase(ParseNodeKind::ElemExpr, lhs, propExpr, begin,
+                            end) {}
+
+  static bool test(const ParseNode& node) {
+    bool match = node.isKind(ParseNodeKind::ElemExpr);
+    MOZ_ASSERT_IF(match, node.is<PropertyByValueBase>());
+    return match;
+  }
+};
+
+class OptionalPropertyByValue : public PropertyByValueBase {
+ public:
+  OptionalPropertyByValue(ParseNode* lhs, ParseNode* propExpr, uint32_t begin,
+                          uint32_t end)
+      : PropertyByValueBase(ParseNodeKind::OptionalElemExpr, lhs, propExpr,
+                            begin, end) {}
+
+  static bool test(const ParseNode& node) {
+    bool match = node.isKind(ParseNodeKind::OptionalElemExpr);
+    MOZ_ASSERT_IF(match, node.is<PropertyByValueBase>());
+    return match;
+  }
 };
 
 /*
@@ -1989,6 +2079,7 @@ class CallNode : public BinaryNode {
   static bool test(const ParseNode& node) {
     bool match = node.isKind(ParseNodeKind::CallExpr) ||
                  node.isKind(ParseNodeKind::SuperCallExpr) ||
+                 node.isKind(ParseNodeKind::OptionalCallExpr) ||
                  node.isKind(ParseNodeKind::TaggedTemplateExpr) ||
                  node.isKind(ParseNodeKind::CallImportExpr) ||
                  node.isKind(ParseNodeKind::NewExpr);
