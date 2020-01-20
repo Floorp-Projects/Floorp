@@ -31,20 +31,31 @@ function test2(canvas)
   var jpegfile = canvas.mozGetAsFile("bar.jpg", "image/jpeg");
   is(jpegfile.type, "image/jpeg",
      "When a valid type is specified that should be returned");
-  compareAsync(jpegfile, canvas, "image/jpeg", SimpleTest.finish);
+  compareAsync(jpegfile, canvas, "image/jpeg", parent.SimpleTest.finish);
   is(jpegfile.name, "bar.jpg", "File name should be what we passed in");
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(function () {
+addLoadEvent(async function () {
+  if (location.search == "?framed") {
+    is = parent.is;
 
-var canvas = document.getElementById('c');
-var ctx = canvas.getContext('2d');
-ctx.drawImage(document.getElementById('yellow75.png'), 0, 0);
+    var canvas = document.getElementById('c');
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(document.getElementById('yellow75.png'), 0, 0);
 
-test1(canvas);
-
+    test1(canvas);
+  } else {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["canvas.mozgetasfile.enabled", true],
+      ],
+    });
+    let iframe = document.querySelector("iframe");
+    iframe.src = "test_mozGetAsFile.html?framed";
+  }
 });
 </script>
 <img src="image_yellow75.png" id="yellow75.png" class="resource">
+<iframe></iframe>
 
