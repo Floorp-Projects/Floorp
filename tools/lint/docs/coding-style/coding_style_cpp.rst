@@ -313,16 +313,6 @@ C/C++ practices
 -  Use ``char32_t`` as the return type or argument type of a method that
    returns or takes as argument a single Unicode scalar value. (Don't
    use UTF-32 strings, though.)
--  Don't use functions from ``ctype.h`` (``isdigit()``, ``isalpha()``,
-   etc.) or from ``strings.h`` (``strcasecmp()``, ``strncasecmp()``).
-   These are locale-sensitive, which makes them inappropriate for
-   processing protocol text. At the same time, they are too limited to
-   work properly for processing natural-language text. Use the
-   alternatives in ``mozilla/TextUtils.h`` and in ``nsUnicharUtils.h``
-   in place of ``ctype.h``. In place of ``strings.h``, prefer the
-   ``nsStringComparator`` facilities for comparing strings or if you
-   have to work with zero-terminated strings, use ``nsCRT.h`` for
-   ASCII-case-insensitive comparison.
 -  Forward-declare classes in your header files, instead of including
    them, whenever possible. For example, if you have an interface with a
    ``void DoSomething(nsIContent* aContent)`` function, forward-declare
@@ -334,8 +324,8 @@ C/C++ practices
 
 
 
-COM, pointers and strings
--------------------------
+COM and pointers
+----------------
 
 -  Use ``nsCOMPtr<>``
    If you don't know how to use it, start looking in the code for
@@ -348,20 +338,10 @@ COM, pointers and strings
    will be scriptable.
 -  Use `nsCOMPtr <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Reference/Glue_classes/nsCOMPtr>`__ for strong references, and
    `nsWeakPtr <https://developer.mozilla.org/docs/Mozilla/Tech/XPCOM/Weak_reference>`__ for weak references.
--  String arguments to functions should be declared as ``nsAString``.
--  Use ``EmptyString()`` and ``EmptyCString()`` instead of
-   ``NS_LITERAL_STRING("")`` or ``nsAutoString empty;``.
--  Use ``str.IsEmpty()`` instead of ``str.Length() == 0``.
--  Use ``str.Truncate()`` instead of ``str.SetLength(0)`` or
-   ``str.Assign(EmptyString())``.
 -  Don't use ``QueryInterface`` directly. Use ``CallQueryInterface`` or
    ``do_QueryInterface`` instead.
 -  ``nsresult`` should be declared as ``rv``. Not ``res``, not ``result``, not
    ``foo``.
--  For constant strings, use ``NS_LITERAL_STRING("...")`` instead of
-   ``NS_ConvertASCIItoUCS2("...")``, ``AssignWithConversion("...")``,
-   ``EqualsWithConversion("...")``, or ``nsAutoString()``
--  To compare a string with a literal, use ``.EqualsLiteral("...")``.
 -  Use `Contract
    IDs <news://news.mozilla.org/3994AE3E.D96EF810@netscape.com>`__,
    instead of CIDs with ``do_CreateInstance``/``do_GetService``.
@@ -619,8 +599,29 @@ found.
    // continue normally whether or not the service exists.
 
 
-C++ strings
------------
+Strings
+-------
+
+-  String arguments to functions should be declared as ``nsAString``.
+-  Use ``EmptyString()`` and ``EmptyCString()`` instead of
+   ``NS_LITERAL_STRING("")`` or ``nsAutoString empty;``.
+-  Use ``str.IsEmpty()`` instead of ``str.Length() == 0``.
+-  Use ``str.Truncate()`` instead of ``str.SetLength(0)`` or
+   ``str.Assign(EmptyString())``.
+-  For constant strings, use ``NS_LITERAL_STRING("...")`` instead of
+   ``NS_ConvertASCIItoUCS2("...")``, ``AssignWithConversion("...")``,
+   ``EqualsWithConversion("...")``, or ``nsAutoString()``
+-  To compare a string with a literal, use ``.EqualsLiteral("...")``.
+-  Don't use functions from ``ctype.h`` (``isdigit()``, ``isalpha()``,
+   etc.) or from ``strings.h`` (``strcasecmp()``, ``strncasecmp()``).
+   These are locale-sensitive, which makes them inappropriate for
+   processing protocol text. At the same time, they are too limited to
+   work properly for processing natural-language text. Use the
+   alternatives in ``mozilla/TextUtils.h`` and in ``nsUnicharUtils.h``
+   in place of ``ctype.h``. In place of ``strings.h``, prefer the
+   ``nsStringComparator`` facilities for comparing strings or if you
+   have to work with zero-terminated strings, use ``nsCRT.h`` for
+   ASCII-case-insensitive comparison.
 
 
 Use the ``Auto`` form of strings for local values
