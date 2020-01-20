@@ -455,7 +455,6 @@ MessageManagerTunnel.prototype = {
 
   INNER_TO_OUTER_MESSAGES: [
     // Messages sent to browser.js
-    "Browser:LoadURI",
     "PageStyle:StyleSheets",
     // Messages sent to browser.js
     "DOMTitleChanged",
