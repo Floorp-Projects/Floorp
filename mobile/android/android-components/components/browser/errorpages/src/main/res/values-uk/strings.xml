@@ -212,4 +212,63 @@
       </ul>
     ]]></string>
 
-    </resources>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Доступ до файлу було заборонено</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Він міг бути вилучений, переміщений або заборонено доступ до файлу.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Проксі-сервер відмовляється приймати з’єднання</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Браузер налаштований на використання проксі-сервера, але проксі відхилив з’єднання.</p>
+      <ul>
+        <li>Перевірте правильність налаштувань конфігурації проксі та спробуйте знову.</li>
+        <li>Перевірте, чи дозволяє сервіс проксі з’єднання з цієї мережі.</li>
+        <li>Все ще є проблеми? Проконсультуйтесь зі своїм системним адміністратором чи інтернет-провайдером.</li>
+      </ul>
+]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Проксі-сервер не знайдено</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Браузер налаштований для використання сервера проксі, але проксі не вдалося знайти.</p>
+      <ul>
+        <li>Перевірте правильність конфігурації проксі та спробуйте знову.</li>
+        <li>Перевірте, чи комп’ютер підключений до активної мережі.</li>
+        <li>Все ще є проблеми? Проконсультуйтесь зі своїм системним адміністратором чи Інтернет-провайдером для отримання допомоги.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Зловмисний сайт</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Сайт %1$s відомий як зловмисний, і тому був заблокований згідно з вашими налаштуваннями безпеки.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Небажаний сайт</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Сайт %1$s відомий як такий, що розповсюджує небажане програмне забезпечення, і тому був заблокований згідно з вашими налаштуваннями безпеки.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Небезпечний сайт</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Сайт %1$s відомий, як потенційно небезпечний, і був заблокований згідно з вашими налаштуваннями безпеки.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Шахрайський сайт</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Сайт %1$s відомий, як шахрайський, і був заблокований згідно з вашими налаштуваннями безпеки.</p>
+    ]]></string>
+</resources>

@@ -104,6 +104,8 @@
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d ttwasrant tisirag timaynutin</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an addon. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Ileqman n uzegrir</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption">Tatiknulujit n izegrar Firefox tettnerni. Izegrar-agi seqdacen frameworks ur nettwasefrak ra akked Firefox 75 &amp; ugar.</string>
     <!-- This is the caption for the addon installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">Azdam akked usenqed n uzegrir…</string>
 

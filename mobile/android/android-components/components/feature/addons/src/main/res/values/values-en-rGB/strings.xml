@@ -103,7 +103,7 @@
     <!-- The content of the notification, this will be shown when an addons needs new permissions, to be updated. %1$d is the amount of new permissions-->
     <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d new permissions are required</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an addon. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_updater_notification_channel">Addon updates</string>
+    <string name="mozac_feature_addons_updater_notification_channel">Add-on updates</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption">Firefox add-on technology is modernising. These add-ons use frameworks that are not compatible with Firefox 75 &amp; beyond.</string>
     <!-- This is the caption for the addon installation progress overlay -->

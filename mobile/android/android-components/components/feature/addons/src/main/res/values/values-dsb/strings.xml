@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">Nastajenja priwatnosći cytaś a změniś</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">Mějśo pśistup k swójim datam za wšykne websedła</string>
+    <!-- Description for tabs add-on permission. -->
+    <string name="mozac_feature_addons_permissions_tabs_description">Mějśo pśistup k rejtarkam wobglědowaka</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Njewobgranicowanu licbu klientowych datow składowaś</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Mějśo pśistup na aktiwitu wobglědowaka za nawigaciju</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">Cytańske znamjenja cytaś a změniś</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Nastajenja wobglědowaka cytaś a změniś</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">Aktualnu pśeglědowańsku historiju, cookieje a pśisłušne daty wulašowaś</string>
+    <!-- Description for clipboard_read permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Daty z mjazywótkłada zasajźiś</string>
+    <!-- Description for clipboard_write permission. -->
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Daty do mjazywótkłada kopěrowaś</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">Ześěgniśo dataje a cytajśo a změńśo ześěgnjeńsku historiju swójogo wobglědowaka</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">Dataje wócyniś, kótarež su se ześěgnuli na wašom rěźe</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">Tekst wšych wócynjonych rejtarkow cytaś</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">Pśistup k wašomu stojnišćoju</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">Mějśo pśistup k pśeglědowańskej historiji</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">Wužywanje rozšyrjenjow wobglědowaś a drastwy zastojaś</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">Wuměńśo powěsći z drugimi nałoženjami ako toś to</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">Powěźeńki na was pokazaś</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">Kryptografiske awtentificěrowańske słužby wobstaraś</string>
+    </resources>
