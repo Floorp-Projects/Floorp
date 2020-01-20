@@ -113,6 +113,7 @@ struct FloatRegister {
   bool isSingle() const { MOZ_CRASH(); }
   bool isDouble() const { MOZ_CRASH(); }
   bool isSimd128() const { MOZ_CRASH(); }
+  bool isInvalid() const { MOZ_CRASH(); }
   FloatRegister asSingle() const { MOZ_CRASH(); }
   FloatRegister asDouble() const { MOZ_CRASH(); }
   FloatRegister asSimd128() const { MOZ_CRASH(); }
