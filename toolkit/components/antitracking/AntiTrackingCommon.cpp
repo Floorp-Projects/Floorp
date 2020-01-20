@@ -2134,6 +2134,11 @@ void AntiTrackingCommon::NotifyBlockingDecision(nsPIDOMWindowInner* aWindow,
 
 /* static */
 void AntiTrackingCommon::StoreUserInteractionFor(nsIPrincipal* aPrincipal) {
+  if (!aPrincipal) {
+    // The content process may have sent us garbage data.
+    return;
+  }
+
   if (XRE_IsParentProcess()) {
     nsCOMPtr<nsIURI> uri;
     Unused << aPrincipal->GetURI(getter_AddRefs(uri));
