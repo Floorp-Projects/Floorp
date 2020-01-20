@@ -176,6 +176,10 @@ projects:
     path: components/browser/menu
     description: 'A customizable menu for browsers.'
     publish: true
+  browser-menu2:
+    path: components/browser/menu2
+    description: 'An immutable customizable menu for browsers.'
+    publish: true
   browser-search:
     path: components/browser/search
     description: 'Search plugins and companion code to load, parse and use them.'
