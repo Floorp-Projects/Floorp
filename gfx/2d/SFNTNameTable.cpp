@@ -8,7 +8,7 @@
 
 #include "BigEndianInts.h"
 #include "Logging.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #if defined(XP_MACOSX)
 #  include <CoreFoundation/CoreFoundation.h>

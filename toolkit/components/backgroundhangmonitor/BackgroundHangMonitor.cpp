@@ -9,7 +9,7 @@
 #include "mozilla/CPUUsageWatcher.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"

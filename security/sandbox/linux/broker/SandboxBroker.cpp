@@ -25,7 +25,7 @@
 #include "base/string_util.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/NullPtr.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/ipc/FileDescriptor.h"

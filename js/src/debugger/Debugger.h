@@ -13,7 +13,7 @@
 #include "mozilla/HashTable.h"         // for HashSet, DefaultHasher (ptr only)
 #include "mozilla/LinkedList.h"        // for LinkedList (ptr only)
 #include "mozilla/Maybe.h"             // for Maybe, Nothing
-#include "mozilla/Move.h"              // for std::move
+#include <utility>                     // for std::move
 #include "mozilla/Range.h"             // for Range
 #include "mozilla/Result.h"            // for Result
 #include "mozilla/TimeStamp.h"         // for TimeStamp

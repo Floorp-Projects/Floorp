@@ -19,7 +19,7 @@
 #endif
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/PodOperations.h"
 #include "mozilla/Services.h"
 #include "mozilla/TimeStamp.h"

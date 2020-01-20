@@ -63,7 +63,7 @@
 #include "nsIConsoleService.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/net/PartiallySeekableInputStream.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/InputStreamLengthHelper.h"

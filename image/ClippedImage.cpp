@@ -14,7 +14,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/RefPtr.h"
 #include "mozilla/Pair.h"
 #include "mozilla/Tuple.h"

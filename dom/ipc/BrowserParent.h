@@ -22,7 +22,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layout/RemoteLayerTreeOwner.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"

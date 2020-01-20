@@ -8,7 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #include <stdlib.h>
 

@@ -12,7 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Pair.h"
 #include "mozilla/TypeTraits.h"
 

@@ -8,7 +8,7 @@
 #define MOZILLA_GFX_POLYGON_H
 
 #include "Matrix.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsTArray.h"
 #include "Point.h"
 #include "Triangle.h"

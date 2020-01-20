@@ -9,7 +9,7 @@
 
 #include "mozilla/ArrayView.h"
 #include "mozilla/gfx/Rect.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsRegion.h"
 #include "pixman.h"
 

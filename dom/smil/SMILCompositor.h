@@ -7,7 +7,7 @@
 #ifndef mozilla_SMILCompositor_h
 #define mozilla_SMILCompositor_h
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/UniquePtr.h"
 #include "mozilla/SMILAnimationFunction.h"
 #include "mozilla/SMILCompositorTable.h"

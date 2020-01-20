@@ -12,7 +12,7 @@
 
 #include "nsThreadUtils.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/RefPtr.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"

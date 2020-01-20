@@ -16,7 +16,7 @@
 #  include "GeckoTaskTracerImpl.h"
 #endif
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsISupportsImpl.h"
 
 #ifdef MOZ_TASK_TRACER

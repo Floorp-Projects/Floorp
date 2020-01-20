@@ -6,7 +6,7 @@
 
 #include "SVGAnimatedString.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/SMILValue.h"
 #include "SMILStringType.h"
 #include "SVGAttrTearoffTable.h"

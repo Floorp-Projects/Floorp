@@ -82,7 +82,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 namespace mozilla {
 

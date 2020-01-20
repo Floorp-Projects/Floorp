@@ -16,7 +16,7 @@
 #include "nsDebug.h"
 #include "logging.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"

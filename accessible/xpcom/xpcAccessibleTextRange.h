@@ -10,7 +10,7 @@
 #include "nsIAccessibleTextRange.h"
 #include "TextRange.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {

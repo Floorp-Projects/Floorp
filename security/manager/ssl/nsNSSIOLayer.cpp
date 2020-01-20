@@ -20,7 +20,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "nsArray.h"

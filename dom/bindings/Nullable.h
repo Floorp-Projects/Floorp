@@ -9,7 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "nsTArrayForwardDeclare.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Maybe.h"
 
 #include <ostream>

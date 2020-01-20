@@ -19,7 +19,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryChecking.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"

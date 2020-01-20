@@ -14,7 +14,7 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Mutex.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"

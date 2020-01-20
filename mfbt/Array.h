@@ -11,7 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/ReverseIterator.h"
 
 #include <ostream>

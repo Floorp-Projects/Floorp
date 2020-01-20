@@ -8,7 +8,7 @@
 #define mozilla_SMILTimedElement_h
 
 #include "mozilla/EventForwards.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/SMILMilestone.h"
 #include "mozilla/SMILInstanceTime.h"
 #include "mozilla/SMILInterval.h"

@@ -68,7 +68,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Sprintf.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "nsRefPtrHashtable.h"

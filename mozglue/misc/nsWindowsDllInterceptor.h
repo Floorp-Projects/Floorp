@@ -13,7 +13,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/NativeNt.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"

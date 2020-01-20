@@ -14,7 +14,7 @@
 
 #include "AccessibleEventId.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {

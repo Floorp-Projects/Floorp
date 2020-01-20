@@ -8,7 +8,7 @@
 #define jit_shared_CodeGenerator_shared_h
 
 #include "mozilla/Alignment.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/TypeTraits.h"
 
 #include "jit/JitcodeMap.h"

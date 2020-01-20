@@ -6,7 +6,7 @@
 #include "ImageCacheKey.h"
 
 #include "mozilla/HashFunctions.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"

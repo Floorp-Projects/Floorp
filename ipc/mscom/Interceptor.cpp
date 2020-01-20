@@ -6,7 +6,7 @@
 
 #define INITGUID
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mscom/DispatchForwarder.h"
 #include "mozilla/mscom/FastMarshaler.h"
 #include "mozilla/mscom/Interceptor.h"

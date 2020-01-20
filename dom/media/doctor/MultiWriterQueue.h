@@ -9,7 +9,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Mutex.h"
 #include "prthread.h"
 #include "RollingNumber.h"

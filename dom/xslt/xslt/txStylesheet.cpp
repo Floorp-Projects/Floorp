@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #include "txStylesheet.h"
 #include "txExpr.h"

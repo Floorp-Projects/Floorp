@@ -32,7 +32,7 @@
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/ServoBindings.h"
 #include "VsyncSource.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsSize.h"
 #include "VsyncSource.h"
 

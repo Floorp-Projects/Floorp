@@ -5,7 +5,7 @@
 
 #include "txUnknownHandler.h"
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "txExecutionState.h"
 #include "txStringUtils.h"
 #include "txStylesheet.h"

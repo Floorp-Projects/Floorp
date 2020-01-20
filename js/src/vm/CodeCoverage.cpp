@@ -8,7 +8,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #include <stdio.h>
 #ifdef XP_WIN

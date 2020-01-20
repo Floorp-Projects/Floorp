@@ -11,7 +11,7 @@
 #include "mozilla/a11y/Platform.h"
 #include "mozilla/a11y/HandlerProvider.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mscom/MainThreadHandoff.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/Preferences.h"

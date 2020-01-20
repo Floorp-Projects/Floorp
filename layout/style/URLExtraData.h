@@ -10,7 +10,7 @@
 #define mozilla_URLExtraData_h
 
 #include "mozilla/dom/URL.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UserAgentStyleSheetID.h"
 #include "ReferrerInfo.h"

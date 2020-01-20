@@ -18,7 +18,7 @@
 #include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/HTMLFormControlsCollection.h"
 #include "mozilla/dom/HTMLFormElementBinding.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsGkAtoms.h"
 #include "nsHTMLDocument.h"
 #include "nsStyleConsts.h"

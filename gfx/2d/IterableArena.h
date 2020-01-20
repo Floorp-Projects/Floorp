@@ -7,7 +7,7 @@
 #ifndef MOZILLA_GFX_ITERABLEARENA_H_
 #define MOZILLA_GFX_ITERABLEARENA_H_
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Assertions.h"
 #include "mozilla/gfx/Logging.h"
 

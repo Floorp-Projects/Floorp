@@ -8,7 +8,7 @@
 #define mozilla_DynamicallyLinkedFunctionPtr_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #include <windows.h>
 

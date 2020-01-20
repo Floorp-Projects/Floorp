@@ -25,7 +25,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Preferences.h"
 #include "mozilla/SandboxReporter.h"
 #include "mozilla/SandboxSettings.h"

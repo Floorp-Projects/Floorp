@@ -6,7 +6,7 @@
 #include "FilteredContentIterator.h"
 
 #include "mozilla/ContentIterator.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/mozalloc.h"
 #include "mozilla/dom/AbstractRange.h"
 

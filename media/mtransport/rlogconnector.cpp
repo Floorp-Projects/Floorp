@@ -15,7 +15,7 @@
 #include <string>
 #include "logging.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"  // Pinch hitting for <utility> and std::move
+#include <utility>  // Pinch hitting for <utility> and std::move
 #include "mozilla/Mutex.h"
 #include "mozilla/Sprintf.h"
 #include <vector>

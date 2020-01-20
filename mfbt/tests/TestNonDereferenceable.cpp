@@ -7,7 +7,7 @@
 #include "mozilla/NonDereferenceable.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 using mozilla::NonDereferenceable;
 

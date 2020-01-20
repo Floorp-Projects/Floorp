@@ -13,7 +13,7 @@
 #define mozilla_MaybeOneOf_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TemplateLib.h"
 

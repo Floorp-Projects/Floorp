@@ -22,7 +22,7 @@
 #include "mozilla/layers/UiCompositorControllerMessageTypes.h"
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Unused.h"
 

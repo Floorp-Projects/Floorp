@@ -21,7 +21,7 @@
 #include "imgITools.h"
 #include "mozilla/storage.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 
 #include "FaviconHelpers.h"
 

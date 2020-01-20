@@ -28,7 +28,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/JSObjectHolder.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/File.h"

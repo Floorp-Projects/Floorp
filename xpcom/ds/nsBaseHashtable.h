@@ -8,7 +8,7 @@
 #define nsBaseHashtable_h__
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsTHashtable.h"
 #include "nsDebug.h"
 

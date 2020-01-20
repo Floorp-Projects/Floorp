@@ -21,7 +21,7 @@
 #include "nsMIMEInputStream.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIIPCSerializableInputStream.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Mutex.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 

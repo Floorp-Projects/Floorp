@@ -7,7 +7,7 @@
 #ifndef mozilla_mscom_Interceptor_h
 #define mozilla_mscom_Interceptor_h
 
-#include "mozilla/Move.h"
+#include <utility>
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
 #include "mozilla/mscom/IHandlerProvider.h"

@@ -8,7 +8,7 @@
 #define nsDOMMutationObserver_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
+#include <utility>
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptContext.h"
