@@ -39,6 +39,8 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     });
 
     this.timeoutsSuspended = false;
+    this.lastViewportFit = "";
+    this.triggerViewportFitChange = null;
 
     this.messageManager.addMessageListener(
       "GeckoView:DOMFullscreenEntered",
@@ -80,6 +82,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     addEventListener("contextmenu", this, { capture: true });
     addEventListener("DOMContentLoaded", this, false);
     addEventListener("MozFirstContentfulPaint", this, false);
+    addEventListener("DOMMetaViewportFitChanged", this, false);
   }
 
   onDisable() {
@@ -94,6 +97,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     removeEventListener("contextmenu", this, { capture: true });
     removeEventListener("DOMContentLoaded", this);
     removeEventListener("MozFirstContentfulPaint", this);
+    removeEventListener("DOMMetaViewportFitChanged", this);
   }
 
   toPixels(aLength, aType) {
@@ -122,6 +126,24 @@ class GeckoViewContentChild extends GeckoViewChildModule {
       return content.windowUtils.SCROLL_MODE_INSTANT;
     }
     return content.windowUtils.SCROLL_MODE_SMOOTH;
+  }
+
+  notifyParentOfViewportFit() {
+    if (this.triggerViewportFitChange) {
+      content.cancelIdleCallback(this.triggerViewportFitChange);
+    }
+    this.triggerViewportFitChange = content.requestIdleCallback(() => {
+      this.triggerViewportFitChange = null;
+      let viewportFit = content.windowUtils.getViewportFitInfo();
+      if (this.lastViewportFit === viewportFit) {
+        return;
+      }
+      this.lastViewportFit = viewportFit;
+      this.eventDispatcher.sendRequest({
+        type: "GeckoView:DOMMetaViewportFit",
+        viewportfit: viewportFit,
+      });
+    });
   }
 
   receiveMessage(aMsg) {
@@ -271,6 +293,11 @@ class GeckoViewContentChild extends GeckoViewChildModule {
             content.windowUtils.resumeTimeouts();
             this.timeoutsSuspended = false;
           }
+          if (aMsg.data.active) {
+            // Send current viewport-fit to parent.
+            this.lastViewportFit = "";
+            this.notifyParentOfViewportFit();
+          }
         }
         if (content && aMsg.data.suspendMedia) {
           content.windowUtils.mediaSuspend = aMsg.data.active
@@ -380,6 +407,11 @@ class GeckoViewContentChild extends GeckoViewChildModule {
       case "MozDOMFullscreen:Exit":
         sendAsyncMessage("GeckoView:DOMFullscreenExit");
         break;
+      case "DOMMetaViewportFitChanged":
+        if (aEvent.originalTarget.ownerGlobal == content) {
+          this.notifyParentOfViewportFit();
+        }
+        break;
       case "DOMTitleChanged":
         this.eventDispatcher.sendRequest({
           type: "GeckoView:DOMTitleChanged",
@@ -408,6 +440,11 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         }
         break;
       case "DOMContentLoaded": {
+        if (aEvent.originalTarget.ownerGlobal == content) {
+          // If loaded content doesn't have viewport-fit, parent still
+          // uses old value of previous content.
+          this.notifyParentOfViewportFit();
+        }
         content.requestIdleCallback(async () => {
           const manifest = await ManifestObtainer.contentObtainManifest(
             content
