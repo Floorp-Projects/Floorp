@@ -74,7 +74,6 @@ Structure:
           TotalVirtualMemory: <size>, // Windows-only, virtual memory in use expressed in bytes
           UptimeTS: <duration>, // Seconds since Firefox was started, this can have a fractional component
           User32BeforeBlocklist: "1", // Windows-only, present only if user32.dll was loaded before the DLL blocklist has been initialized
-          MainThreadRunnableName: <name>, // Optional, Nightly-only, name of the currently executing nsIRunnable on the main thread
         },
         hasCrashEnvironment: bool
       }
