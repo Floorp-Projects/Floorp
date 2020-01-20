@@ -28,22 +28,22 @@ Registers::Code Registers::FromName(const char* name) {
   }
 
   for (uint32_t i = 0; i < Total; i++) {
-    if (strcmp(GetName(i), name) == 0) {
+    if (strcmp(GetName(Code(i)), name) == 0) {
       return Code(i);
     }
   }
 
-  return Invalid;
+  return invalid_reg;
 }
 
 FloatRegisters::Code FloatRegisters::FromName(const char* name) {
   for (size_t i = 0; i < Total; i++) {
-    if (strcmp(GetName(i), name) == 0) {
+    if (strcmp(GetName(Code(i)), name) == 0) {
       return Code(i);
     }
   }
 
-  return Invalid;
+  return invalid_fpreg;
 }
 
 FloatRegisterSet FloatRegister::ReduceSetForPush(const FloatRegisterSet& s) {
@@ -52,6 +52,10 @@ FloatRegisterSet FloatRegister::ReduceSetForPush(const FloatRegisterSet& s) {
     ret.addUnchecked(FromCode((*iter).encoding()));
   }
   return ret.set();
+}
+
+uint32_t FloatRegister::GetSizeInBytes(const FloatRegisterSet& s) {
+  return s.size() * sizeof(double);
 }
 
 uint32_t FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s) {

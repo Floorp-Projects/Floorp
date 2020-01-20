@@ -217,10 +217,10 @@ static const Register RabaldrScratchI32 = Register::FromCode(15);
 // passing in any ABI we use.  Argregs tend to be low-numbered; register 30
 // should be safe.
 
-static constexpr FloatRegister RabaldrScratchF32{FloatRegisters::s30,
-                                                 FloatRegisters::Single};
-static constexpr FloatRegister RabaldrScratchF64{FloatRegisters::d30,
-                                                 FloatRegisters::Double};
+static constexpr FloatRegister RabaldrScratchF32 =
+    FloatRegister(30, FloatRegisters::Single);
+static constexpr FloatRegister RabaldrScratchF64 =
+    FloatRegister(30, FloatRegisters::Double);
 
 static_assert(RabaldrScratchF32 != ScratchFloat32Reg, "Too busy");
 static_assert(RabaldrScratchF64 != ScratchDoubleReg, "Too busy");
@@ -299,50 +299,42 @@ struct RegTypeOf<MIRType::Double> {
 
 struct RegI32 : public Register {
   RegI32() : Register(Register::Invalid()) {}
-  explicit RegI32(Register reg) : Register(reg) {
-    MOZ_ASSERT(reg != Invalid());
-  }
-  bool isInvalid() const { return *this == Invalid(); }
-  bool isValid() const { return !isInvalid(); }
-  static RegI32 Invalid() { return RegI32(); }
+  explicit RegI32(Register reg) : Register(reg) {}
+  bool isValid() const { return *this != Invalid(); }
+  bool isInvalid() const { return !isValid(); }
+  static RegI32 Invalid() { return RegI32(Register::Invalid()); }
 };
 
 struct RegI64 : public Register64 {
   RegI64() : Register64(Register64::Invalid()) {}
-  explicit RegI64(Register64 reg) : Register64(reg) {
-    MOZ_ASSERT(reg != Invalid());
-  }
-  bool isInvalid() const { return *this == Invalid(); }
-  bool isValid() const { return !isInvalid(); }
-  static RegI64 Invalid() { return RegI64(); }
+  explicit RegI64(Register64 reg) : Register64(reg) {}
+  bool isValid() const { return *this != Invalid(); }
+  bool isInvalid() const { return !isValid(); }
+  static RegI64 Invalid() { return RegI64(Register64::Invalid()); }
 };
 
 struct RegPtr : public Register {
   RegPtr() : Register(Register::Invalid()) {}
-  explicit RegPtr(Register reg) : Register(reg) {
-    MOZ_ASSERT(reg != Invalid());
-  }
-  bool isInvalid() const { return *this == Invalid(); }
-  bool isValid() const { return !isInvalid(); }
-  static RegPtr Invalid() { return RegPtr(); }
+  explicit RegPtr(Register reg) : Register(reg) {}
+  bool isValid() const { return *this != Invalid(); }
+  bool isInvalid() const { return !isValid(); }
+  static RegPtr Invalid() { return RegPtr(Register::Invalid()); }
 };
 
 struct RegF32 : public FloatRegister {
   RegF32() : FloatRegister() {}
-  explicit RegF32(FloatRegister reg) : FloatRegister(reg) {
-    MOZ_ASSERT(isSingle());
-  }
-  bool isValid() const { return !isInvalid(); }
-  static RegF32 Invalid() { return RegF32(); }
+  explicit RegF32(FloatRegister reg) : FloatRegister(reg) {}
+  bool isValid() const { return *this != Invalid(); }
+  bool isInvalid() const { return !isValid(); }
+  static RegF32 Invalid() { return RegF32(InvalidFloatReg); }
 };
 
 struct RegF64 : public FloatRegister {
   RegF64() : FloatRegister() {}
-  explicit RegF64(FloatRegister reg) : FloatRegister(reg) {
-    MOZ_ASSERT(isDouble());
-  }
-  bool isValid() const { return !isInvalid(); }
-  static RegF64 Invalid() { return RegF64(); }
+  explicit RegF64(FloatRegister reg) : FloatRegister(reg) {}
+  bool isValid() const { return *this != Invalid(); }
+  bool isInvalid() const { return !isValid(); }
+  static RegF64 Invalid() { return RegF64(InvalidFloatReg); }
 };
 
 struct AnyReg {

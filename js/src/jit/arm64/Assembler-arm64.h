@@ -55,8 +55,9 @@ struct ScratchFloat32Scope : public AutoFloatRegisterScope {
       : AutoFloatRegisterScope(masm, ScratchFloat32Reg) {}
 };
 
-static constexpr Register InvalidReg{Registers::Invalid};
-static constexpr FloatRegister InvalidFloatReg = {};
+static constexpr Register InvalidReg{Registers::invalid_reg};
+static constexpr FloatRegister InvalidFloatReg = {FloatRegisters::invalid_fpreg,
+                                                  FloatRegisters::Single};
 
 static constexpr Register OsrFrameReg{Registers::x3};
 static constexpr Register CallTempReg0{Registers::x9};
