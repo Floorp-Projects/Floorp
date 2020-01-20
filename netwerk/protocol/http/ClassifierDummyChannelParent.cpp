@@ -39,7 +39,7 @@ void ClassifierDummyChannelParent::Init(
   bool willCallback = NS_SUCCEEDED(AsyncUrlChannelClassifier::CheckChannel(
       channel, [self = std::move(self), channel]() {
         if (self->mIPCActive) {
-          Unused << Send__delete__(self, channel->ClassificationFlags());
+          Unused << Send__delete__(self, channel->GetClassificationFlags());
         }
       }));
 
