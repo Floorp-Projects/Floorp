@@ -9,10 +9,11 @@
 #ifndef mozilla_UniquePtr_h
 #define mozilla_UniquePtr_h
 
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
-#include <utility>
 #include "mozilla/Pair.h"
 #include "mozilla/TypeTraits.h"
 

@@ -16,8 +16,9 @@
 #  include <unistd.h>
 #endif
 
-#include "base64.h"
 #include <utility>
+
+#include "base64.h"
 #include "mozilla/Sprintf.h"
 #include "nspr.h"
 #include "nss.h"

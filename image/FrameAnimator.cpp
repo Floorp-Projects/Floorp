@@ -6,11 +6,12 @@
 #include "FrameAnimator.h"
 
 #include <utility>
-#include "mozilla/CheckedInt.h"
-#include "mozilla/StaticPrefs_image.h"
-#include "imgIContainer.h"
+
 #include "LookupResult.h"
 #include "RasterImage.h"
+#include "imgIContainer.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/StaticPrefs_image.h"
 
 namespace mozilla {
 

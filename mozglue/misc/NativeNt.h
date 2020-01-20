@@ -13,13 +13,13 @@
 #include <winternl.h>
 
 #include <algorithm>
+#include <utility>
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
-#include <utility>
 #include "mozilla/Span.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 

@@ -24,18 +24,17 @@
 
 #include <stdint.h>
 
-#include "nsDebug.h"
+#include <utility>
 
+#include "AnimationParams.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
-#include <utility>
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
 #include "mozilla/gfx/2D.h"
-
-#include "AnimationParams.h"
+#include "nsDebug.h"
 
 namespace mozilla {
 namespace image {

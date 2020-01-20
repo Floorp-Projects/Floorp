@@ -9,14 +9,16 @@
  * @see ExprLexer
  **/
 
-#include <utility>
 #include "txExprParser.h"
-#include "txExprLexer.h"
-#include "txExpr.h"
-#include "txStack.h"
-#include "nsGkAtoms.h"
+
+#include <utility>
+
 #include "nsError.h"
+#include "nsGkAtoms.h"
+#include "txExpr.h"
+#include "txExprLexer.h"
 #include "txIXPathContext.h"
+#include "txStack.h"
 #include "txStringUtils.h"
 #include "txXPathNode.h"
 #include "txXPathOptimizer.h"

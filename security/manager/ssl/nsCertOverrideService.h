@@ -7,8 +7,9 @@
 #ifndef nsCertOverrideService_h
 #define nsCertOverrideService_h
 
-#include "mozilla/HashFunctions.h"
 #include <utility>
+
+#include "mozilla/HashFunctions.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsICertOverrideService.h"

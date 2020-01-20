@@ -5,30 +5,33 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RotatedBuffer.h"
-#include <sys/types.h>              // for int32_t
-#include <algorithm>                // for max
-#include "BasicImplData.h"          // for BasicImplData
-#include "BasicLayersImpl.h"        // for ToData
-#include "GeckoProfiler.h"          // for AUTO_PROFILER_LABEL
-#include "Layers.h"                 // for PaintedLayer, Layer, etc
-#include "gfxPlatform.h"            // for gfxPlatform
-#include "gfxUtils.h"               // for gfxUtils
-#include "mozilla/ArrayUtils.h"     // for ArrayLength
+
+#include <sys/types.h>  // for int32_t
+
+#include <algorithm>  // for max
+#include <utility>    // for Move
+
+#include "BasicImplData.h"    // for BasicImplData
+#include "BasicLayersImpl.h"  // for ToData
+#include "GeckoProfiler.h"    // for AUTO_PROFILER_LABEL
+#include "Layers.h"           // for PaintedLayer, Layer, etc
+#include "PaintThread.h"
+#include "gfx2DGlue.h"
+#include "gfxPlatform.h"         // for gfxPlatform
+#include "gfxUtils.h"            // for gfxUtils
+#include "mozilla/ArrayUtils.h"  // for ArrayLength
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/gfx/BasePoint.h"  // for BasePoint
 #include "mozilla/gfx/BaseRect.h"   // for BaseRect
 #include "mozilla/gfx/BaseSize.h"   // for BaseSize
 #include "mozilla/gfx/Matrix.h"     // for Matrix
 #include "mozilla/gfx/Point.h"      // for Point, IntPoint
+#include "mozilla/gfx/Point.h"      // for IntSize
 #include "mozilla/gfx/Rect.h"       // for Rect, IntRect
 #include "mozilla/gfx/Types.h"      // for ExtendMode::ExtendMode::CLAMP, etc
 #include "mozilla/layers/ShadowLayers.h"   // for ShadowableLayer
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
-#include <utility>                         // for Move
-#include "mozilla/StaticPrefs_layers.h"
-#include "mozilla/gfx/Point.h"  // for IntSize
-#include "gfx2DGlue.h"
-#include "nsLayoutUtils.h"  // for invalidation debugging
-#include "PaintThread.h"
+#include "nsLayoutUtils.h"                 // for invalidation debugging
 
 namespace mozilla {
 

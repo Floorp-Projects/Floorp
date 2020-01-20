@@ -10,8 +10,8 @@
 #include <jni.h>
 
 #include <utility>
-#include "mozilla/jni/Utils.h"
 
+#include "mozilla/jni/Utils.h"
 #include "nsError.h"  // for nsresult
 #include "nsString.h"
 #include "nsTArray.h"

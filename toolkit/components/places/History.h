@@ -7,23 +7,23 @@
 #ifndef mozilla_places_History_h_
 #define mozilla_places_History_h_
 
+#include <utility>
+
+#include "Database.h"
+#include "mozIAsyncHistory.h"
+#include "mozIStorageConnection.h"
 #include "mozilla/BaseHistory.h"
 #include "mozilla/MemoryReporting.h"
-#include <utility>
 #include "mozilla/Mutex.h"
-#include "mozIAsyncHistory.h"
-#include "Database.h"
-
 #include "mozilla/dom/Link.h"
 #include "mozilla/dom/PContentChild.h"
 #include "nsDataHashtable.h"
-#include "nsTHashtable.h"
-#include "nsString.h"
-#include "nsURIHashKey.h"
-#include "nsTObserverArray.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
-#include "mozIStorageConnection.h"
+#include "nsString.h"
+#include "nsTHashtable.h"
+#include "nsTObserverArray.h"
+#include "nsURIHashKey.h"
 
 namespace mozilla {
 namespace places {

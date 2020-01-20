@@ -7,11 +7,12 @@
 #include "SVGAnimatedLengthList.h"
 
 #include <utility>
+
+#include "DOMSVGAnimatedLengthList.h"
+#include "SVGLengthListSMILType.h"
 #include "mozilla/SMILValue.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
-#include "DOMSVGAnimatedLengthList.h"
-#include "SVGLengthListSMILType.h"
 
 namespace mozilla {
 

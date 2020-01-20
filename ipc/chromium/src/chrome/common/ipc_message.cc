@@ -17,6 +17,7 @@
 #endif
 
 #include <utility>
+
 #include "nsISupportsImpl.h"
 
 #ifdef MOZ_TASK_TRACER

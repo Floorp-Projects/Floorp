@@ -7,9 +7,10 @@
 #ifndef nsProxyRelease_h__
 #define nsProxyRelease_h__
 
+#include <utility>
+
 #include "MainThreadUtils.h"
 #include "mozilla/Likely.h"
-#include <utility>
 #include "mozilla/SystemGroup.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"

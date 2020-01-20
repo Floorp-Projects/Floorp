@@ -5,12 +5,13 @@
 #ifndef nsURIHashKey_h__
 #define nsURIHashKey_h__
 
-#include "PLDHashTable.h"
-#include "nsCOMPtr.h"
-#include "nsIURI.h"
-#include "nsHashKeys.h"
 #include <utility>
+
+#include "PLDHashTable.h"
 #include "mozilla/Unused.h"
+#include "nsCOMPtr.h"
+#include "nsHashKeys.h"
+#include "nsIURI.h"
 
 /**
  * Hashtable key class to use with nsTHashtable/nsBaseHashtable

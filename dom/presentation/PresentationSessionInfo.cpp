@@ -4,17 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "PresentationSessionInfo.h"
+
+#include <utility>
+
+#include "PresentationLog.h"
+#include "PresentationService.h"
+#include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
-#include "mozilla/dom/BrowserParent.h"
-#include "mozilla/Logging.h"
-#include <utility>
-#include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindow.h"
-#include "nsIDocShell.h"
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
+#include "nsGlobalWindow.h"
+#include "nsIDocShell.h"
 #include "nsIMutableArray.h"
 #include "nsINetAddr.h"
 #include "nsISocketTransport.h"
@@ -23,9 +28,6 @@
 #include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "PresentationLog.h"
-#include "PresentationService.h"
-#include "PresentationSessionInfo.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "nsIPresentationNetworkHelper.h"

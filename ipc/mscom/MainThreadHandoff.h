@@ -7,12 +7,13 @@
 #ifndef mozilla_mscom_MainThreadHandoff_h
 #define mozilla_mscom_MainThreadHandoff_h
 
-#include "mozilla/Assertions.h"
 #include <utility>
+
+#include "mozilla/Assertions.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/mscom/Interceptor.h"
 #include "mozilla/mscom/MainThreadInvoker.h"
 #include "mozilla/mscom/Utils.h"
-#include "mozilla/Mutex.h"
 #include "nsTArray.h"
 
 namespace mozilla {

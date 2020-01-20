@@ -7,10 +7,11 @@
 #ifndef nsBaseHashtable_h__
 #define nsBaseHashtable_h__
 
-#include "mozilla/MemoryReporting.h"
 #include <utility>
-#include "nsTHashtable.h"
+
+#include "mozilla/MemoryReporting.h"
 #include "nsDebug.h"
+#include "nsTHashtable.h"
 
 template <class KeyClass, class DataType, class UserDataType, class Converter>
 class nsBaseHashtable;  // forward declaration

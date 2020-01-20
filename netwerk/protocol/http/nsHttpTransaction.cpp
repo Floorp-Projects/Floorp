@@ -5,51 +5,49 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // HttpLog.h should generally be included first
+#include "nsHttpTransaction.h"
+
+#include <algorithm>
+#include <utility>
+
 #include "HttpLog.h"
-
+#include "NSSErrorsService.h"
+#include "TCPFastOpenLayer.h"
+#include "TunnelUtils.h"
 #include "base/basictypes.h"
-
+#include "mozilla/Tokenizer.h"
+#include "nsCRT.h"
+#include "nsComponentManagerUtils.h"  // do_CreateInstance
 #include "nsHttpBasicAuth.h"
 #include "nsHttpChunkedDecoder.h"
 #include "nsHttpDigestAuth.h"
 #include "nsHttpHandler.h"
-#include "nsHttpNegotiateAuth.h"
 #include "nsHttpNTLMAuth.h"
+#include "nsHttpNegotiateAuth.h"
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
-#include "nsHttpTransaction.h"
-#include "nsTransportUtils.h"
-#include "nsNetCID.h"
-#include "nsNetUtil.h"
-#include "nsIPipe.h"
-#include "nsCRT.h"
-#include "mozilla/Tokenizer.h"
-#include <utility>
-#include "TCPFastOpenLayer.h"
-
-#include "nsISeekableStream.h"
-#include "nsMultiplexInputStream.h"
-#include "nsStringStream.h"
-
-#include "nsComponentManagerUtils.h"  // do_CreateInstance
-#include "nsIHttpActivityObserver.h"
-#include "nsSocketTransportService2.h"
 #include "nsICancelable.h"
 #include "nsIClassOfService.h"
 #include "nsIEventTarget.h"
+#include "nsIHttpActivityObserver.h"
+#include "nsIHttpAuthenticator.h"
 #include "nsIHttpChannelInternal.h"
-#include "nsIMultiplexInputStream.h"
 #include "nsIInputStream.h"
+#include "nsIMultiplexInputStream.h"
+#include "nsIOService.h"
+#include "nsIPipe.h"
+#include "nsIRequestContext.h"
+#include "nsISeekableStream.h"
 #include "nsIThrottledInputChannel.h"
 #include "nsITransport.h"
-#include "nsIOService.h"
-#include "nsIRequestContext.h"
-#include "nsIHttpAuthenticator.h"
+#include "nsMultiplexInputStream.h"
+#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsQueryObject.h"
-#include "NSSErrorsService.h"
-#include "TunnelUtils.h"
+#include "nsSocketTransportService2.h"
+#include "nsStringStream.h"
+#include "nsTransportUtils.h"
 #include "sslerr.h"
-#include <algorithm>
 
 //-----------------------------------------------------------------------------
 

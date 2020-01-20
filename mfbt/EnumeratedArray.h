@@ -9,8 +9,9 @@
 #ifndef mozilla_EnumeratedArray_h
 #define mozilla_EnumeratedArray_h
 
-#include "mozilla/Array.h"
 #include <utility>
+
+#include "mozilla/Array.h"
 
 namespace mozilla {
 

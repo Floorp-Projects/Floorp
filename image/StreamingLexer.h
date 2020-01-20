@@ -15,13 +15,14 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <utility>
+
+#include "SourceBuffer.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
-#include <utility>
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
-#include "SourceBuffer.h"
 
 namespace mozilla {
 namespace image {

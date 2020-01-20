@@ -7,13 +7,20 @@
 #ifndef mozilla_layers_LayersMessageUtils
 #define mozilla_layers_LayersMessageUtils
 
+#include <stdint.h>
+
+#include <utility>
+
 #include "FrameMetrics.h"
+#include "VsyncSource.h"
 #include "base/process_util.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "gfxTelemetry.h"
 #include "ipc/IPCMessageUtils.h"
 #include "ipc/nsGUIEventIPC.h"
 #include "mozilla/GfxMessageUtils.h"
+#include "mozilla/MotionPathUtils.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZTypes.h"
@@ -29,14 +36,7 @@
 #include "mozilla/layers/RefCountedShmem.h"
 #include "mozilla/layers/RepaintRequest.h"
 #include "mozilla/layers/WebRenderMessageUtils.h"
-#include "mozilla/MotionPathUtils.h"
-#include "mozilla/ServoBindings.h"
-#include "VsyncSource.h"
-#include <utility>
 #include "nsSize.h"
-#include "VsyncSource.h"
-
-#include <stdint.h>
 
 #ifdef _MSC_VER
 #  pragma warning(disable : 4800)

@@ -7,9 +7,10 @@
 #include "SVGAnimatedString.h"
 
 #include <utility>
-#include "mozilla/SMILValue.h"
+
 #include "SMILStringType.h"
 #include "SVGAttrTearoffTable.h"
+#include "mozilla/SMILValue.h"
 
 using namespace mozilla::dom;
 

@@ -6,10 +6,11 @@
 #include "txUnknownHandler.h"
 
 #include <utility>
+
+#include "nsGkAtoms.h"
 #include "txExecutionState.h"
 #include "txStringUtils.h"
 #include "txStylesheet.h"
-#include "nsGkAtoms.h"
 
 txUnknownHandler::txUnknownHandler(txExecutionState* aEs)
     : mEs(aEs), mFlushed(false) {

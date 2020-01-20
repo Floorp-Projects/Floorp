@@ -7,20 +7,23 @@
 
 #include "mozilla/ipc/MessageChannel.h"
 
+#include <math.h>
+
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/ipc/ProcessChild.h"
-#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/Logging.h"
-#include <utility>
 #include "mozilla/Mutex.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "nsAppRunner.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
@@ -29,7 +32,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsISupportsImpl.h"
 #include "nsPrintfCString.h"
-#include <math.h>
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"

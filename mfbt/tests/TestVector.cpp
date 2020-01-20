@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <utility>
+
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
