@@ -10,6 +10,36 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+function assertHistoryEntries(history, expectedData, expectedIndex) {
+  const { currentIndex, entries } = history;
+
+  is(currentIndex, expectedIndex, "Got expected current index");
+  is(
+    entries.length,
+    expectedData.length,
+    "Found expected count of history entries"
+  );
+
+  entries.forEach((entry, index) => {
+    ok(!!entry.id, "History entry has an id set");
+    is(
+      entry.url,
+      expectedData[index].url,
+      "History entry has the correct URL set"
+    );
+    is(
+      entry.userTypedURL,
+      expectedData[index].userTypedURL,
+      "History entry has the correct user typed URL set"
+    );
+    is(
+      entry.title,
+      expectedData[index].title,
+      "History entry has the correct title set"
+    );
+  });
+}
+
 async function getContentSize() {
   return SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
     const docEl = content.document.documentElement;
@@ -32,4 +62,19 @@ async function getViewportSize() {
       height: content.innerHeight,
     };
   });
+}
+
+function generateHistoryData(count) {
+  const data = [];
+
+  for (let index = 0; index < count; index++) {
+    const url = toDataURL(`<head><title>Test ${index + 1}</title></head>`);
+    data.push({
+      url,
+      userTypedURL: url,
+      title: `Test ${index + 1}`,
+    });
+  }
+
+  return data;
 }
