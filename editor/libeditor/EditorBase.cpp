@@ -5466,7 +5466,7 @@ EditorBase::AutoEditActionDataSetter::AutoEditActionDataSetter(
       mData(VoidString()),
       mTopLevelEditSubAction(EditSubAction::eNone),
       mAborted(false),
-      mHasTriedToDispatchedBeforeInputEvent(false),
+      mHasTriedToDispatchBeforeInputEvent(false),
       mBeforeInputEventCanceled(false) {
   // If we're nested edit action, copies necessary data from the parent.
   if (mParentData) {
@@ -5521,7 +5521,7 @@ EditorBase::AutoEditActionDataSetter::~AutoEditActionDataSetter() {
 
 void EditorBase::AutoEditActionDataSetter::SetColorData(
     const nsAString& aData) {
-  MOZ_ASSERT(!mHasTriedToDispatchedBeforeInputEvent,
+  MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),
              "It's too late to set data since this may have already dispatched "
              "a beforeinput event");
 
@@ -5562,7 +5562,7 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
     DataTransfer* aDataTransfer) {
   MOZ_ASSERT(aDataTransfer);
   MOZ_ASSERT(aDataTransfer->IsReadOnly());
-  MOZ_ASSERT(!mHasTriedToDispatchedBeforeInputEvent,
+  MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),
              "It's too late to set dataTransfer since this may have already "
              "dispatched a beforeinput event");
 
@@ -5572,7 +5572,7 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
 void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
     nsITransferable* aTransferable) {
   MOZ_ASSERT(aTransferable);
-  MOZ_ASSERT(!mHasTriedToDispatchedBeforeInputEvent,
+  MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),
              "It's too late to set dataTransfer since this may have already "
              "dispatched a beforeinput event");
 
@@ -5584,7 +5584,7 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
 
 void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
     const nsAString& aString) {
-  MOZ_ASSERT(!mHasTriedToDispatchedBeforeInputEvent,
+  MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),
              "It's too late to set dataTransfer since this may have already "
              "dispatched a beforeinput event");
   Document* document = mEditorBase.GetDocument();
@@ -5595,7 +5595,7 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransfer(
 
 void EditorBase::AutoEditActionDataSetter::InitializeDataTransferWithClipboard(
     SettingDataTransfer aSettingDataTransfer, int32_t aClipboardType) {
-  MOZ_ASSERT(!mHasTriedToDispatchedBeforeInputEvent,
+  MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),
              "It's too late to set dataTransfer since this may have already "
              "dispatched a beforeinput event");
 
@@ -5614,12 +5614,12 @@ void EditorBase::AutoEditActionDataSetter::InitializeDataTransferWithClipboard(
 }
 
 nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent() {
-  MOZ_ASSERT(!mHasTriedToDispatchedBeforeInputEvent,
+  MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),
              "We've already handled beforeinput event");
   MOZ_ASSERT(CanHandle());
   MOZ_ASSERT(NeedsToDispatchBeforeInputEvent());
 
-  mHasTriedToDispatchedBeforeInputEvent = true;
+  mHasTriedToDispatchBeforeInputEvent = true;
 
   if (!StaticPrefs::dom_input_events_beforeinput_enabled()) {
     return NS_OK;

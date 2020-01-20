@@ -780,7 +780,7 @@ class EditorBase : public nsIEditor,
     ~AutoEditActionDataSetter();
 
     void UpdateEditAction(EditAction aEditAction) {
-      MOZ_ASSERT(!mHasTriedToDispatchedBeforeInputEvent,
+      MOZ_ASSERT(!mHasTriedToDispatchBeforeInputEvent,
                  "It's too late to update EditAction since this may have "
                  "already dispatched a beforeinput event");
       mEditAction = aEditAction;
@@ -812,7 +812,7 @@ class EditorBase : public nsIEditor,
     /**
      * MaybeDispatchBeforeInputEvent() considers whether this instance needs to
      * dispatch "beforeinput" event or not.  Then,
-     * mHasTriedToDispatchedBeforeInputEvent is set to true.
+     * mHasTriedToDispatchBeforeInputEvent is set to true.
      *
      * @return          If this method actually dispatches "beforeinput" event
      *                  and it's canceled, returns
@@ -821,13 +821,35 @@ class EditorBase : public nsIEditor,
     MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MaybeDispatchBeforeInputEvent();
 
     /**
+     * MarkAsBeforeInputHasBeenDispatched() should be called only when updating
+     * the DOM occurs asynchronously from user input (e.g., inserting blob
+     * object which is loaded asynchronously) and `beforeinput` has already
+     * been dispatched (always should be so).
+     */
+    void MarkAsBeforeInputHasBeenDispatched() {
+      MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent());
+      MOZ_ASSERT(mEditAction == EditAction::ePaste ||
+                 mEditAction == EditAction::ePasteAsQuotation ||
+                 mEditAction == EditAction::eDrop);
+      mHasTriedToDispatchBeforeInputEvent = true;
+    }
+
+    /**
      * NeedsToDispatchBeforeInputEvent() returns true if the edit action
      * requires to handle "beforeinput" event but not yet dispatched it nor
      * considered as not dispatched it.
      */
     bool NeedsToDispatchBeforeInputEvent() const {
-      return !mHasTriedToDispatchedBeforeInputEvent &&
+      return !HasTriedToDispatchBeforeInputEvent() &&
              NeedsBeforeInputEventHandling(mEditAction);
+    }
+
+    /**
+     * HasTriedToDispatchBeforeInputEvent() returns true if the instance's
+     * MaybeDispatchBeforeInputEvent() has already been called.
+     */
+    bool HasTriedToDispatchBeforeInputEvent() const {
+      return mHasTriedToDispatchBeforeInputEvent;
     }
 
     bool IsCanceled() const { return mBeforeInputEventCanceled; }
@@ -852,7 +874,7 @@ class EditorBase : public nsIEditor,
     }
 
     void SetData(const nsAString& aData) {
-      MOZ_ASSERT(!mHasTriedToDispatchedBeforeInputEvent,
+      MOZ_ASSERT(!mHasTriedToDispatchBeforeInputEvent,
                  "It's too late to set data since this may have already "
                  "dispatched a beforeinput event");
       mData = aData;
@@ -1094,7 +1116,7 @@ class EditorBase : public nsIEditor,
     // Set to true when this handles "beforeinput" event dispatching.  Note
     // that even if "beforeinput" event shouldn't be dispatched for this,
     // instance, this is set to true when it's considered.
-    bool mHasTriedToDispatchedBeforeInputEvent;
+    bool mHasTriedToDispatchBeforeInputEvent;
     // Set to true if "beforeinput" event was dispatched and it's canceled.
     bool mBeforeInputEventCanceled;
 
@@ -1131,6 +1153,16 @@ class EditorBase : public nsIEditor,
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult MaybeDispatchBeforeInputEvent() {
     MOZ_ASSERT(mEditActionData);
     return mEditActionData->MaybeDispatchBeforeInputEvent();
+  }
+
+  void MarkAsBeforeInputHasBeenDispatched() {
+    MOZ_ASSERT(mEditActionData);
+    return mEditActionData->MarkAsBeforeInputHasBeenDispatched();
+  }
+
+  bool HasTriedToDispatchBeforeInputEvent() const {
+    return mEditActionData &&
+           mEditActionData->HasTriedToDispatchBeforeInputEvent();
   }
 
   bool IsEditActionDataAvailable() const {
