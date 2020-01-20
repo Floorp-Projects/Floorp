@@ -2762,10 +2762,7 @@ static bool CpuNow(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static bool ClearKeptObjects(JSContext* cx, unsigned argc, Value* vp) {
-  for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
-    zone->clearKeptObjects();
-  }
-
+  JS::ClearKeptObjects(cx);
   return true;
 }
 
