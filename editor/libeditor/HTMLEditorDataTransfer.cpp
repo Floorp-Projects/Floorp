@@ -977,15 +977,21 @@ HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
                                    bool aDoDeleteSelection)
     : mBlob(aBlob),
       mHTMLEditor(aHTMLEditor),
+      // "beforeinput" event should've been dispatched before we read blob,
+      // but anyway, we need to clone dataTransfer for "input" event.
+      mDataTransfer(mHTMLEditor->GetInputEventDataTransfer()),
       mSourceDoc(aSourceDoc),
       mPointToInsert(aPointToInsert),
       mEditAction(aHTMLEditor->GetEditAction()),
       mIsSafe(aIsSafe),
-      mDoDeleteSelection(aDoDeleteSelection) {
+      mDoDeleteSelection(aDoDeleteSelection),
+      mNeedsToDispatchBeforeInputEvent(
+          !mHTMLEditor->HasTriedToDispatchBeforeInputEvent()) {
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(mHTMLEditor);
   MOZ_ASSERT(mHTMLEditor->IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSet());
+  MOZ_ASSERT(mDataTransfer);
 
   // Take only offset here since it's our traditional behavior.
   AutoEditorDOMPointChildInvalidator storeOnlyWithOffset(mPointToInsert);
@@ -993,17 +999,31 @@ HTMLEditor::BlobReader::BlobReader(BlobImpl* aBlob, HTMLEditor* aHTMLEditor,
 
 nsresult HTMLEditor::BlobReader::OnResult(const nsACString& aResult) {
   AutoEditActionDataSetter editActionData(*mHTMLEditor, mEditAction);
-  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  editActionData.InitializeDataTransfer(mDataTransfer);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return EditorBase::ToGenericNSResult(NS_ERROR_FAILURE);
+  }
+
+  if (NS_WARN_IF(mNeedsToDispatchBeforeInputEvent)) {
+    nsresult rv = editActionData.MaybeDispatchBeforeInputEvent();
+    if (rv == NS_ERROR_EDITOR_ACTION_CANCELED || NS_WARN_IF(NS_FAILED(rv))) {
+      return EditorBase::ToGenericNSResult(rv);
+    }
+  } else {
+    editActionData.MarkAsBeforeInputHasBeenDispatched();
   }
 
   nsString blobType;
   mBlob->GetType(blobType);
 
+  // TODO: This does not work well.
+  // * If the data is not an image file, this inserts <img> element with odd
+  //   data URI (bug 1610220).
+  // * If the data is valid image file data, an <img> file is inserted with
+  //   data URI, but it's not loaded (bug 1610219).
   NS_ConvertUTF16toUTF8 type(blobType);
   nsAutoString stuffToPaste;
-  rv = ImgFromData(type, aResult, stuffToPaste);
+  nsresult rv = ImgFromData(type, aResult, stuffToPaste);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
