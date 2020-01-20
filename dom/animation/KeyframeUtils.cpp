@@ -6,33 +6,34 @@
 
 #include "mozilla/KeyframeUtils.h"
 
+#include <algorithm>  // For std::stable_sort, std::min
+#include <utility>
+
+#include "js/ForOfIterator.h"  // For JS::ForOfIterator
+#include "jsapi.h"             // For most JSAPI
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ErrorResult.h"
-#include <utility>
 #include "mozilla/RangedArray.h"
-#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoBindingTypes.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/ServoCSSParser.h"
-#include "mozilla/StyleAnimationValue.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h"  // For FastBaseKeyframe etc.
 #include "mozilla/dom/Document.h"  // For Document::AreWebAnimationsImplicitKeyframesEnabled
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/KeyframeEffect.h"  // For PropertyValuesPair etc.
+#include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/Nullable.h"
-#include "jsapi.h"             // For most JSAPI
-#include "js/ForOfIterator.h"  // For JS::ForOfIterator
-#include "nsClassHashtable.h"
-#include "nsContentUtils.h"  // For GetContextForContent
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h"  // For PseudoStyleType
+#include "nsClassHashtable.h"
+#include "nsContentUtils.h"  // For GetContextForContent
 #include "nsIScriptError.h"
 #include "nsPresContextInlines.h"
 #include "nsTArray.h"
-#include <algorithm>  // For std::stable_sort, std::min
 
 using mozilla::dom::Nullable;
 

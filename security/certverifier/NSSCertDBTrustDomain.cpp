@@ -17,13 +17,18 @@
 #ifdef MOZ_NEW_CERT_STORAGE
 #  include "cert_storage/src/cert_storage.h"
 #endif
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
-#include <utility>
 #include "mozilla/PodOperations.h"
 #include "mozilla/Services.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
+#include "mozpkix/Result.h"
+#include "mozpkix/pkix.h"
+#include "mozpkix/pkixnss.h"
+#include "mozpkix/pkixutil.h"
 #include "nsCRTGlue.h"
 #include "nsIObserverService.h"
 #include "nsNSSCertHelper.h"
@@ -34,17 +39,13 @@
 #include "nsThreadUtils.h"
 #include "nss.h"
 #include "pk11pub.h"
-#include "mozpkix/Result.h"
-#include "mozpkix/pkix.h"
-#include "mozpkix/pkixnss.h"
-#include "mozpkix/pkixutil.h"
 #include "prerror.h"
 #include "secerr.h"
 
 #include "TrustOverrideUtils.h"
+#include "TrustOverride-AppleGoogleDigiCertData.inc"
 #include "TrustOverride-StartComAndWoSignData.inc"
 #include "TrustOverride-SymantecData.inc"
-#include "TrustOverride-AppleGoogleDigiCertData.inc"
 
 using namespace mozilla;
 using namespace mozilla::pkix;

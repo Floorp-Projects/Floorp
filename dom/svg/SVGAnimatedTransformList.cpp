@@ -6,15 +6,16 @@
 
 #include "SVGAnimatedTransformList.h"
 
-#include "mozilla/dom/MutationEventBinding.h"
-#include "mozilla/dom/SVGAnimationElement.h"
 #include <utility>
-#include "mozilla/SMILValue.h"
-#include "mozilla/SVGContentUtils.h"
-#include "nsCharSeparatedTokenizer.h"
+
 #include "DOMSVGAnimatedTransformList.h"
 #include "SVGTransform.h"
 #include "SVGTransformListSMILType.h"
+#include "mozilla/SMILValue.h"
+#include "mozilla/SVGContentUtils.h"
+#include "mozilla/dom/MutationEventBinding.h"
+#include "mozilla/dom/SVGAnimationElement.h"
+#include "nsCharSeparatedTokenizer.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGTransform_Binding;

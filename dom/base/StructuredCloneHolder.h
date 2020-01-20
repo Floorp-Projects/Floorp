@@ -7,10 +7,11 @@
 #ifndef mozilla_dom_StructuredCloneHolder_h
 #define mozilla_dom_StructuredCloneHolder_h
 
-#include "jsapi.h"
-#include "js/StructuredClone.h"
-#include "mozilla/MemoryReporting.h"
 #include <utility>
+
+#include "js/StructuredClone.h"
+#include "jsapi.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsTArray.h"

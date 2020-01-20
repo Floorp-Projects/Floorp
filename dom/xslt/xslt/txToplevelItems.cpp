@@ -6,8 +6,9 @@
 #include "txToplevelItems.h"
 
 #include <utility>
-#include "txStylesheet.h"
+
 #include "txInstructions.h"
+#include "txStylesheet.h"
 #include "txXSLTPatterns.h"
 
 TX_IMPL_GETTYPE(txAttributeSetItem, txToplevelItem::attributeSet)

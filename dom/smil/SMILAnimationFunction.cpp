@@ -6,24 +6,26 @@
 
 #include "SMILAnimationFunction.h"
 
-#include "mozilla/dom/SVGAnimationElement.h"
-#include "mozilla/DebugOnly.h"
+#include <math.h>
+
+#include <algorithm>
 #include <utility>
+
+#include "mozilla/DebugOnly.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/SMILCSSValueType.h"
 #include "mozilla/SMILNullType.h"
 #include "mozilla/SMILParserUtils.h"
 #include "mozilla/SMILTimedElement.h"
+#include "mozilla/dom/SVGAnimationElement.h"
 #include "nsAttrValueInlines.h"
-#include "nsGkAtoms.h"
-#include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsIContent.h"
+#include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsGkAtoms.h"
+#include "nsIContent.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
-#include <math.h>
-#include <algorithm>
 
 using namespace mozilla::dom;
 

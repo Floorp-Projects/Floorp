@@ -6,12 +6,12 @@
 #ifndef AddonManagerStartup_inlines_h
 #define AddonManagerStartup_inlines_h
 
-#include "jsapi.h"
-#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
-#include "nsJSUtils.h"
-
-#include "mozilla/Maybe.h"
 #include <utility>
+
+#include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
+#include "jsapi.h"
+#include "mozilla/Maybe.h"
+#include "nsJSUtils.h"
 
 namespace mozilla {
 

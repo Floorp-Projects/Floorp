@@ -74,6 +74,8 @@
 #ifndef mozilla_HashTable_h
 #define mozilla_HashTable_h
 
+#include <utility>
+
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -83,7 +85,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
-#include <utility>
 #include "mozilla/Opaque.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PodOperations.h"

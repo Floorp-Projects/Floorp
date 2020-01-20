@@ -10,18 +10,18 @@
 #ifndef nsTHashtable_h__
 #define nsTHashtable_h__
 
+#include <new>
+#include <utility>
+
 #include "PLDHashTable.h"
-#include "nsPointerHashKeys.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/fallible.h"
 #include "mozilla/MemoryReporting.h"
-#include <utility>
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TypeTraits.h"
-
-#include <new>
+#include "mozilla/fallible.h"
+#include "nsPointerHashKeys.h"
 
 /**
  * a base class for templated hashtables.

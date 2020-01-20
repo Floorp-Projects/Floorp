@@ -6,15 +6,15 @@
 
 #include "GLReadTexImageHelper.h"
 
-#include "gfx2DGlue.h"
-#include "gfxColor.h"
-#include "gfxTypes.h"
+#include <utility>
+
 #include "GLContext.h"
 #include "OGLShaderProgram.h"
 #include "ScopedGLHelpers.h"
-
+#include "gfx2DGlue.h"
+#include "gfxColor.h"
+#include "gfxTypes.h"
 #include "mozilla/gfx/2D.h"
-#include <utility>
 
 namespace mozilla {
 namespace gl {

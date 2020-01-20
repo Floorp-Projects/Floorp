@@ -7,18 +7,19 @@
 #ifndef mozilla_mscom_AsyncInvoker_h
 #define mozilla_mscom_AsyncInvoker_h
 
+#include <objidl.h>
+#include <windows.h>
+
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
-#include <utility>
+#include "mozilla/Mutex.h"
 #include "mozilla/mscom/Aggregation.h"
 #include "mozilla/mscom/Utils.h"
-#include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
-
-#include <objidl.h>
-#include <windows.h>
 
 namespace mozilla {
 namespace mscom {

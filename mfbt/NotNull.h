@@ -62,9 +62,11 @@
 // NotNull is an alternative that can be used in any of the above cases except
 // for the last one, where the handle type is |void|. See below.
 
-#include "mozilla/Assertions.h"
-#include <utility>
 #include <stddef.h>
+
+#include <utility>
+
+#include "mozilla/Assertions.h"
 
 namespace mozilla {
 

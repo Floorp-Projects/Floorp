@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <utility>
 #include "mozilla/mscom/DispatchForwarder.h"
-#include "mozilla/mscom/MainThreadInvoker.h"
 
 #include <oleauto.h>
+
+#include <utility>
+
+#include "mozilla/mscom/MainThreadInvoker.h"
 
 namespace mozilla {
 namespace mscom {

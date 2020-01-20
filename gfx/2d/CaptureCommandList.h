@@ -7,13 +7,13 @@
 #ifndef mozilla_gfx_2d_CaptureCommandList_h
 #define mozilla_gfx_2d_CaptureCommandList_h
 
-#include <utility>
-#include "mozilla/PodOperations.h"
-#include <vector>
 #include <limits>
+#include <utility>
+#include <vector>
 
 #include "DrawCommand.h"
 #include "Logging.h"
+#include "mozilla/PodOperations.h"
 
 // Command object is stored into record with header containing size and
 // redundant size of whole record. Some platforms may require Command

@@ -7,9 +7,10 @@
 #ifndef mozilla_PlatformMutex_h
 #define mozilla_PlatformMutex_h
 
+#include <utility>
+
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include <utility>
 #include "mozilla/RecordReplay.h"
 
 #if !defined(XP_WIN)

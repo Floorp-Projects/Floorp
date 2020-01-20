@@ -19,7 +19,6 @@
 #include "mozilla/Variant.h"
 
 #include <utility>
-#include <utility>
 
 #include "frontend/BCEParserHandle.h"
 #include "frontend/Parser.h"

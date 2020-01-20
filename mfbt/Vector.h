@@ -9,6 +9,9 @@
 #ifndef mozilla_Vector_h
 #define mozilla_Vector_h
 
+#include <new>  // for placement new
+#include <utility>
+
 #include "mozilla/Alignment.h"
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/ArrayUtils.h"  // for PointerRangeSize
@@ -16,14 +19,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
-#include <utility>
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/ReentrancyGuard.h"
+#include "mozilla/Span.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/Span.h"
-
-#include <new>  // for placement new
 
 namespace mozilla {
 

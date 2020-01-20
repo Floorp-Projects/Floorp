@@ -9,16 +9,16 @@
 #ifndef mozilla_URLExtraData_h
 #define mozilla_URLExtraData_h
 
-#include "mozilla/dom/URL.h"
 #include <utility>
+
+#include "ReferrerInfo.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UserAgentStyleSheetID.h"
-#include "ReferrerInfo.h"
-
+#include "mozilla/dom/URL.h"
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
-#include "nsIURI.h"
 #include "nsIReferrerInfo.h"
+#include "nsIURI.h"
 
 namespace mozilla {
 

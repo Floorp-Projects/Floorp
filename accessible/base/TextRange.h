@@ -8,6 +8,7 @@
 #define mozilla_a11y_TextRange_h__
 
 #include <utility>
+
 #include "nsCaseTreatment.h"
 #include "nsRect.h"
 #include "nsTArray.h"

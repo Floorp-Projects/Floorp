@@ -9,15 +9,15 @@
 #ifndef mozilla_RefCounted_h
 #define mozilla_RefCounted_h
 
+#include <atomic>
+#include <utility>
+
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
-#include <utility>
 #include "mozilla/RefCountType.h"
 #include "mozilla/TypeTraits.h"
-
-#include <atomic>
 
 #if defined(MOZILLA_INTERNAL_API)
 #  include "nsXPCOM.h"

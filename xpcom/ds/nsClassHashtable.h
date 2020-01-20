@@ -8,6 +8,7 @@
 #define nsClassHashtable_h__
 
 #include <utility>
+
 #include "mozilla/UniquePtr.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"

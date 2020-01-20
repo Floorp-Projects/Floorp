@@ -3,16 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "txExecutionState.h"
+#include <utility>
+
+#include "mozilla/HashFunctions.h"
 #include "nsGkAtoms.h"
+#include "nsReadableUtils.h"
+#include "txExecutionState.h"
+#include "txKey.h"
+#include "txNamespaceMap.h"
 #include "txSingleNodeContext.h"
 #include "txXSLTFunctions.h"
-#include "nsReadableUtils.h"
-#include "txKey.h"
 #include "txXSLTPatterns.h"
-#include "txNamespaceMap.h"
-#include "mozilla/HashFunctions.h"
-#include <utility>
 
 using namespace mozilla;
 

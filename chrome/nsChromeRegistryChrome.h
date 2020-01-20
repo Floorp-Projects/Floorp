@@ -6,11 +6,12 @@
 #ifndef nsChromeRegistryChrome_h
 #define nsChromeRegistryChrome_h
 
+#include <utility>
+
 #include "nsCOMArray.h"
 #include "nsChromeRegistry.h"
-#include "nsTArray.h"
-#include <utility>
 #include "nsClassHashtable.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace dom {

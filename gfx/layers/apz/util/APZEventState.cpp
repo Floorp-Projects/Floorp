@@ -6,20 +6,24 @@
 
 #include "APZEventState.h"
 
-#include "ActiveElementManager.h"
-#include "APZCCallbackHelper.h"
-
-#include "LayersLogging.h"
-#include "mozilla/BasicEvents.h"
-#include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/dom/BrowserChild.h"
-#include "mozilla/dom/TabGroup.h"
-#include "mozilla/IntegerPrintfMacros.h"
 #include <utility>
+
+#include "APZCCallbackHelper.h"
+#include "ActiveElementManager.h"
+#include "LayersLogging.h"
+#include "TouchManager.h"
+#include "mozilla/BasicEvents.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/MouseEventBinding.h"
+#include "mozilla/dom/TabGroup.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "mozilla/widget/nsAutoRollup.h"
 #include "nsCOMPtr.h"
 #include "nsDocShell.h"
 #include "nsIDOMWindowUtils.h"
@@ -31,14 +35,6 @@
 #include "nsIWidget.h"
 #include "nsLayoutUtils.h"
 #include "nsQueryFrame.h"
-#include "TouchManager.h"
-#include "nsLayoutUtils.h"
-#include "nsIScrollableFrame.h"
-#include "nsIScrollbarMediator.h"
-#include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_ui.h"
-#include "mozilla/TouchEvents.h"
-#include "mozilla/widget/nsAutoRollup.h"
 
 #define APZES_LOG(...)
 // #define APZES_LOG(...) printf_stderr("APZES: " __VA_ARGS__)

@@ -7,6 +7,7 @@
 #include "nsNSSIOLayer.h"
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 #include "NSSCertDBTrustDomain.h"
@@ -20,9 +21,10 @@
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
-#include <utility>
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozpkix/pkixnss.h"
+#include "mozpkix/pkixtypes.h"
 #include "nsArray.h"
 #include "nsArrayUtils.h"
 #include "nsCRT.h"
@@ -37,16 +39,14 @@
 #include "nsNSSHelper.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
-#include "mozpkix/pkixnss.h"
-#include "mozpkix/pkixtypes.h"
 #include "prmem.h"
 #include "prnetdb.h"
 #include "secder.h"
 #include "secerr.h"
 #include "ssl.h"
 #include "sslerr.h"
-#include "sslproto.h"
 #include "sslexp.h"
+#include "sslproto.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;

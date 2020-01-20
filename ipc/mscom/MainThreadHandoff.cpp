@@ -6,19 +6,20 @@
 
 #include "mozilla/mscom/MainThreadHandoff.h"
 
+#include <utility>
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include <utility>
+#include "mozilla/ThreadLocal.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 #include "mozilla/mscom/AgileReference.h"
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/ThreadLocal.h"
-#include "mozilla/Unused.h"
-#include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
+#include "nsThreadUtils.h"
 
 using mozilla::DebugOnly;
 using mozilla::mscom::AgileReference;

@@ -9,18 +9,18 @@
 #  include "apz/src/APZCTreeManager.h"
 #  include "mozilla/layers/AsyncCompositionManager.h"
 #endif
+#include <utility>
+
+#include "FrameMetrics.h"
+#include "SynchronousTask.h"
+#include "mozilla/Unused.h"
+#include "mozilla/gfx/Types.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/UiCompositorControllerMessageTypes.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
-#include "mozilla/gfx/Types.h"
-#include <utility>
-#include "mozilla/Unused.h"
-
-#include "FrameMetrics.h"
-#include "SynchronousTask.h"
 
 namespace mozilla {
 namespace layers {

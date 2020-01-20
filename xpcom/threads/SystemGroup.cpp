@@ -6,8 +6,9 @@
 
 #include "SystemGroup.h"
 
-#include "mozilla/AbstractThread.h"
 #include <utility>
+
+#include "mozilla/AbstractThread.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 

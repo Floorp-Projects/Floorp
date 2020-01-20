@@ -6,10 +6,11 @@
 
 #include "ObservedDocShell.h"
 
+#include <utility>
+
 #include "AbstractTimelineMarker.h"
 #include "LayerTimelineMarker.h"
 #include "MainThreadUtils.h"
-#include <utility>
 #include "mozilla/AutoRestore.h"
 
 namespace mozilla {

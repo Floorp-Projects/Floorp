@@ -7,13 +7,13 @@
 #ifndef MOZILLA_GFX_POLYGON_H
 #define MOZILLA_GFX_POLYGON_H
 
-#include "Matrix.h"
+#include <initializer_list>
 #include <utility>
-#include "nsTArray.h"
+
+#include "Matrix.h"
 #include "Point.h"
 #include "Triangle.h"
-
-#include <initializer_list>
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace gfx {

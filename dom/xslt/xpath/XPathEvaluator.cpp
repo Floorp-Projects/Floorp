@@ -4,24 +4,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/XPathEvaluator.h"
+
 #include <utility>
-#include "nsCOMPtr.h"
-#include "nsAtom.h"
-#include "mozilla/dom/XPathExpression.h"
+
 #include "XPathResult.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/XPathEvaluatorBinding.h"
+#include "mozilla/dom/XPathExpression.h"
+#include "mozilla/dom/XPathNSResolverBinding.h"
+#include "nsAtom.h"
+#include "nsCOMPtr.h"
 #include "nsContentCID.h"
+#include "nsContentUtils.h"
+#include "nsDOMString.h"
+#include "nsError.h"
+#include "nsNameSpaceManager.h"
 #include "txExpr.h"
 #include "txExprParser.h"
-#include "nsError.h"
-#include "txURIUtils.h"
-#include "mozilla/dom/Document.h"
-#include "nsDOMString.h"
-#include "nsNameSpaceManager.h"
-#include "nsContentUtils.h"
 #include "txIXPathContext.h"
-#include "mozilla/dom/XPathEvaluatorBinding.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/XPathNSResolverBinding.h"
+#include "txURIUtils.h"
 
 namespace mozilla {
 namespace dom {

@@ -9,6 +9,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/EndianUtils.h"
 #include "nsIIconURI.h"
+#include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsString.h"

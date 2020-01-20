@@ -7,7 +7,14 @@
 #ifndef nsTArray_h__
 #define nsTArray_h__
 
-#include "nsTArrayForwardDeclare.h"
+#include <string.h>
+
+#include <functional>
+#include <initializer_list>
+#include <new>
+#include <ostream>
+#include <utility>
+
 #include "mozilla/Alignment.h"
 #include "mozilla/ArrayIterator.h"
 #include "mozilla/Assertions.h"
@@ -15,29 +22,22 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DbgMacro.h"
-#include "mozilla/fallible.h"
 #include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
-#include <utility>
-#include "mozilla/mozalloc.h"
 #include "mozilla/ReverseIterator.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Span.h"
-
-#include <string.h>
-
-#include "nsCycleCollectionNoteChild.h"
+#include "mozilla/TypeTraits.h"
+#include "mozilla/fallible.h"
+#include "mozilla/mozalloc.h"
 #include "nsAlgorithm.h"
-#include "nscore.h"
-#include "nsQuickSort.h"
+#include "nsCycleCollectionNoteChild.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
+#include "nsQuickSort.h"
 #include "nsRegionFwd.h"
-#include <functional>
-#include <initializer_list>
-#include <new>
-#include <ostream>
+#include "nsTArrayForwardDeclare.h"
+#include "nscore.h"
 
 namespace JS {
 template <class T>

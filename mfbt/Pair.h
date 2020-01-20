@@ -9,8 +9,9 @@
 #ifndef mozilla_Pair_h
 #define mozilla_Pair_h
 
-#include "mozilla/Attributes.h"
 #include <utility>
+
+#include "mozilla/Attributes.h"
 #include "mozilla/TypeTraits.h"
 
 namespace mozilla {
