@@ -8,8 +8,9 @@
 
 #include "mozilla/Assertions.h"  // for AssertionConditionType
 #include "mozilla/HashTable.h"   // for HashMapEntry, HashTable<>::Ptr, HashMap
-#include <utility>               // for std::move
 #include "mozilla/UniquePtr.h"   // for UniquePtr
+
+#include <utility>  // for std::move
 
 #include "jsapi.h"
 

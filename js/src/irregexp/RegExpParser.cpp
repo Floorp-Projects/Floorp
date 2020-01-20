@@ -32,8 +32,9 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
-#include <utility>
 #include "mozilla/Range.h"
+
+#include <utility>
 
 #include "frontend/TokenStream.h"
 #include "gc/GC.h"

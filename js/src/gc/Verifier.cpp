@@ -6,11 +6,11 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include <utility>
 #include "mozilla/PodOperations.h"
 #include "mozilla/Sprintf.h"
 
 #include <algorithm>
+#include <utility>
 
 #ifdef MOZ_VALGRIND
 #  include <valgrind/memcheck.h>

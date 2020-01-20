@@ -11,15 +11,14 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
-#include <utility>
 #include "mozilla/TemplateLib.h"
 #include "mozilla/UniquePtr.h"
 
 #include <stdlib.h>
 #include <string.h>
+#include <utility>
 
 #include "jstypes.h"
-
 #include "mozmemory.h"
 
 /* The public JS engine namespace. */

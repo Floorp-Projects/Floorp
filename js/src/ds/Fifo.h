@@ -7,9 +7,8 @@
 #ifndef js_Fifo_h
 #define js_Fifo_h
 
-#include <utility>
-
 #include <algorithm>
+#include <utility>
 
 #include "js/Vector.h"
 

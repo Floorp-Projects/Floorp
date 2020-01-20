@@ -7,9 +7,8 @@
 #ifndef gc_FindSCCs_h
 #define gc_FindSCCs_h
 
-#include <utility>
-
 #include <algorithm>
+#include <utility>
 
 #include "jsfriendapi.h"
 

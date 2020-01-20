@@ -10,9 +10,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BufferList.h"
 #include "mozilla/MemoryReporting.h"
-#include <utility>
 
 #include <stdint.h>
+#include <utility>
 
 #include "jstypes.h"
 

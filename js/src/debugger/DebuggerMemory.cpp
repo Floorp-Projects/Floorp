@@ -7,10 +7,10 @@
 #include "debugger/DebuggerMemory.h"
 
 #include "mozilla/Maybe.h"
-#include <utility>
 #include "mozilla/Vector.h"
 
 #include <stdlib.h>
+#include <utility>
 
 #include "builtin/MapObject.h"
 #include "debugger/Debugger.h"
