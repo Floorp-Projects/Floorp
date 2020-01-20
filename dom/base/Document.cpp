@@ -9875,6 +9875,11 @@ void Document::AddMetaViewportElement(HTMLMetaElement* aElement,
   mMetaViewports.AppendElement(MetaViewportElementAndData{aElement, aData});
   // Trigger recomputation of the nsViewportInfo the next time it's queried.
   mViewportType = Unknown;
+
+  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+      this, NS_LITERAL_STRING("DOMMetaViewportFitChanged"), CanBubble::eYes,
+      ChromeOnlyDispatch::eYes);
+  asyncDispatcher->RunDOMEventWhenSafe();
 }
 
 void Document::RemoveMetaViewportElement(HTMLMetaElement* aElement) {
@@ -9883,6 +9888,11 @@ void Document::RemoveMetaViewportElement(HTMLMetaElement* aElement) {
       mMetaViewports.RemoveElement(viewport);
       // Trigger recomputation of the nsViewportInfo the next time it's queried.
       mViewportType = Unknown;
+
+      RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+          this, NS_LITERAL_STRING("DOMMetaViewportFitChanged"), CanBubble::eYes,
+          ChromeOnlyDispatch::eYes);
+      asyncDispatcher->RunDOMEventWhenSafe();
       return;
     }
   }
