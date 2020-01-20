@@ -59,7 +59,7 @@ let TestAboutPage = {
  */
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [["csp.skip_about_page_has_csp_assert", true]],
+    set: [["dom.security.skip_about_page_has_csp_assert", true]],
   });
 
   TestAboutPage.register();
