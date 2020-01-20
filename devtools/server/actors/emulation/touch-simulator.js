@@ -7,6 +7,11 @@
 const { Services } = require("resource://gre/modules/Services.jsm");
 
 loader.lazyRequireGetter(this, "InspectorUtils", "InspectorUtils");
+loader.lazyRequireGetter(
+  this,
+  "PICKER_TYPES",
+  "devtools/shared/picker-constants"
+);
 
 var systemAppOrigin = (function() {
   let systemOrigin = "_";
@@ -33,6 +38,7 @@ const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
 function TouchSimulator(simulatorTarget) {
   this.simulatorTarget = simulatorTarget;
+  this._currentPickerMap = new Map();
 }
 
 /**
@@ -67,6 +73,7 @@ TouchSimulator.prototype = {
       // event dispatched manually within content documents
       this.simulatorTarget.addEventListener(evt, this, true, false);
     });
+
     this.enabled = true;
   },
 
@@ -81,21 +88,37 @@ TouchSimulator.prototype = {
     this.enabled = false;
   },
 
+  _isPicking() {
+    const types = Object.values(PICKER_TYPES);
+    return types.some(type => this._currentPickerMap.get(type));
+  },
+
   /**
-   * Set the current element picker state value.
-   * True means the element picker is currently active and we should not be emulating
-   * touch events.
-   * False means the element picker is not active and it is ok to emulate touch events.
+   * Set the state value for one of DevTools pickers (either eyedropper or
+   * element picker).
+   * If any content picker is currently active, we should not be emulating
+   * touch events. Otherwise it is ok to emulate touch events.
+   * In theory only one picker can ever be active at a time, but tracking the
+   * different pickers independantly avoids race issues in the client code.
+   *
    * @param {Boolean} state
+   *        True if the picker is currently active, false otherwise.
+   * @param {String} pickerType
+   *        One of PICKER_TYPES.
    */
-  setElementPickerState(state) {
-    this._isPicking = state;
+  setElementPickerState(state, pickerType) {
+    if (!Object.values(PICKER_TYPES).includes(pickerType)) {
+      throw new Error(
+        "Unsupported type in setElementPickerState: " + pickerType
+      );
+    }
+    this._currentPickerMap.set(pickerType, state);
   },
 
   // eslint-disable-next-line complexity
   handleEvent(evt) {
     // Bail out if devtools is in pick mode in the same tab.
-    if (this._isPicking) {
+    if (this._isPicking()) {
       return;
     }
 

@@ -65,6 +65,11 @@ loader.lazyRequireGetter(
   "saveScreenshot",
   "devtools/shared/screenshot/save"
 );
+loader.lazyRequireGetter(
+  this,
+  "PICKER_TYPES",
+  "devtools/shared/picker-constants"
+);
 
 // This import to chrome code is forbidden according to the inspector specific
 // eslintrc. TODO: Fix in Bug 1591091.
@@ -1808,14 +1813,14 @@ Inspector.prototype = {
   },
 
   startEyeDropperListeners: function() {
-    this.toolbox.tellRDMAboutPickerState(true);
+    this.toolbox.tellRDMAboutPickerState(true, PICKER_TYPES.EYEDROPPER);
     this.inspectorFront.once("color-pick-canceled", this.onEyeDropperDone);
     this.inspectorFront.once("color-picked", this.onEyeDropperDone);
     this.walker.once("new-root", this.onEyeDropperDone);
   },
 
   stopEyeDropperListeners: function() {
-    this.toolbox.tellRDMAboutPickerState(false);
+    this.toolbox.tellRDMAboutPickerState(false, PICKER_TYPES.EYEDROPPER);
     this.inspectorFront.off("color-pick-canceled", this.onEyeDropperDone);
     this.inspectorFront.off("color-picked", this.onEyeDropperDone);
     this.walker.off("new-root", this.onEyeDropperDone);
