@@ -191,6 +191,9 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult Extend(nsINode* aContainer, int32_t aOffset);
 
+  /**
+   * See mRanges.
+   */
   nsRange* GetRangeAt(int32_t aIndex) const;
 
   // Get the anchor-to-focus range if we don't care which end is
