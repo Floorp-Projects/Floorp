@@ -526,7 +526,7 @@ bool ArmDebugger::getValue(const char* desc, int32_t* value) {
 
 bool ArmDebugger::getVFPDoubleValue(const char* desc, double* value) {
   FloatRegister reg = FloatRegister::FromCode(FloatRegister::FromName(desc));
-  if (reg == InvalidFloatReg) {
+  if (reg.isInvalid()) {
     return false;
   }
 
