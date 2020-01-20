@@ -514,6 +514,26 @@ bool operator!=(const UniquePtr<T, D>& aX, const UniquePtr<U, E>& aY) {
 }
 
 template <typename T, class D>
+bool operator==(const UniquePtr<T, D>& aX, const T* aY) {
+  return aX.get() == aY;
+}
+
+template <typename T, class D>
+bool operator==(const T* aY, const UniquePtr<T, D>& aX) {
+  return aY == aX.get();
+}
+
+template <typename T, class D>
+bool operator!=(const UniquePtr<T, D>& aX, const T* aY) {
+  return aX.get() != aY;
+}
+
+template <typename T, class D>
+bool operator!=(const T* aY, const UniquePtr<T, D>& aX) {
+  return aY != aX.get();
+}
+
+template <typename T, class D>
 bool operator==(const UniquePtr<T, D>& aX, decltype(nullptr)) {
   return !aX;
 }
