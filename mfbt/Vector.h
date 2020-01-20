@@ -919,7 +919,7 @@ MOZ_ALWAYS_INLINE void Vector<T, N, AP>::reverse() {
   size_t len = mLength;
   size_t mid = len / 2;
   for (size_t i = 0; i < mid; i++) {
-    Swap(elems[i], elems[len - i - 1]);
+    std::swap(elems[i], elems[len - i - 1]);
   }
 }
 
@@ -1506,15 +1506,15 @@ inline void Vector<T, N, AP>::swap(Vector& aOther) {
     mBegin = aOther.mBegin;
     aOther.mBegin = aOther.inlineStorage();
   } else if (!usingInlineStorage() && !aOther.usingInlineStorage()) {
-    Swap(mBegin, aOther.mBegin);
+    std::swap(mBegin, aOther.mBegin);
   } else {
     // This case is a no-op, since we'd set both to use their inline storage.
   }
 
-  Swap(mLength, aOther.mLength);
-  Swap(mTail.mCapacity, aOther.mTail.mCapacity);
+  std::swap(mLength, aOther.mLength);
+  std::swap(mTail.mCapacity, aOther.mTail.mCapacity);
 #ifdef DEBUG
-  Swap(mTail.mReserved, aOther.mTail.mReserved);
+  std::swap(mTail.mReserved, aOther.mTail.mReserved);
 #endif
 }
 

@@ -2298,7 +2298,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
               nscoord ascent = fm->MaxAscent();
               nscoord descent = fm->MaxDescent();
               if (lineWM.IsLineInverted()) {
-                Swap(ascent, descent);
+                std::swap(ascent, descent);
               }
               blockStart = -ascent;
               blockEnd = descent;

@@ -1308,7 +1308,7 @@ void Notification::ShowInternal() {
   // Transfer ownership to local scope so we can either release it at the end
   // of this function or transfer it to the observer.
   UniquePtr<NotificationRef> ownership;
-  mozilla::Swap(ownership, mTempRef);
+  std::swap(ownership, mTempRef);
   MOZ_ASSERT(ownership->GetNotification() == this);
 
   nsresult rv = PersistNotification();
@@ -1847,7 +1847,7 @@ void Notification::CloseInternal() {
   // of this function. This is relevant when the call is from
   // NotificationTask::Run().
   UniquePtr<NotificationRef> ownership;
-  mozilla::Swap(ownership, mTempRef);
+  std::swap(ownership, mTempRef);
 
   SetAlertName();
   UnpersistNotification();

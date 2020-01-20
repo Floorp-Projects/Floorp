@@ -144,7 +144,7 @@ SMILValue SVGAnimatedNumberList::SMILAnimatedNumberList::GetBaseValue() const {
   nsresult rv = nlai->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     nlai->SetInfo(mElement);
-    Swap(val, tmp);
+    std::swap(val, tmp);
   }
   return val;
 }

@@ -238,7 +238,7 @@ void OffThreadPromiseRuntimeState::shutdown(JSContext* cx) {
     DispatchableFifo dispatchQueue;
     {
       LockGuard<Mutex> lock(mutex_);
-      mozilla::Swap(dispatchQueue, internalDispatchQueue_);
+      std::swap(dispatchQueue, internalDispatchQueue_);
       MOZ_ASSERT(internalDispatchQueue_.empty());
       internalDispatchQueueClosed_ = true;
     }

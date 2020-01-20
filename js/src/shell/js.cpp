@@ -4168,7 +4168,7 @@ static void KillWatchdog(JSContext* cx) {
 
   {
     LockGuard<Mutex> guard(sc->watchdogLock);
-    Swap(sc->watchdogThread, thread);
+    std::swap(sc->watchdogThread, thread);
     if (thread) {
       // The watchdog thread becoming Nothing is its signal to exit.
       sc->watchdogWakeup.notify_one();

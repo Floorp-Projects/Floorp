@@ -17,7 +17,6 @@
 using mozilla::DefaultDelete;
 using mozilla::IsSame;
 using mozilla::MakeUnique;
-using mozilla::Swap;
 using mozilla::UniqueFreePtr;
 using mozilla::UniquePtr;
 using mozilla::Vector;
@@ -103,7 +102,7 @@ static bool TestDefaultFreeGuts() {
   CHECK(n1.get() == nullptr);
   CHECK(n2.get() == p1);
 
-  Swap(n1, n2);
+  std::swap(n1, n2);
   CHECK(n1.get() == p1);
   CHECK(n2.get() == nullptr);
 
@@ -438,7 +437,7 @@ static bool TestArray() {
   CHECK(n1.get() == nullptr);
   CHECK(n2.get() == p1);
 
-  Swap(n1, n2);
+  std::swap(n1, n2);
   CHECK(n1.get() == p1);
   CHECK(n2.get() == nullptr);
 

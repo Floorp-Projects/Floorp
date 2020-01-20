@@ -83,12 +83,12 @@ void DottedCornerFinder::DetermineType(Float aBorderRadiusX,
   bool swapped = false;
   if (mR0 < mRn) {
     // Always draw from wider side to thinner side.
-    Swap(mC0, mCn);
-    Swap(mR0, mRn);
-    Swap(mInnerBezier.mPoints[0], mInnerBezier.mPoints[3]);
-    Swap(mInnerBezier.mPoints[1], mInnerBezier.mPoints[2]);
-    Swap(mOuterBezier.mPoints[0], mOuterBezier.mPoints[3]);
-    Swap(mOuterBezier.mPoints[1], mOuterBezier.mPoints[2]);
+    std::swap(mC0, mCn);
+    std::swap(mR0, mRn);
+    std::swap(mInnerBezier.mPoints[0], mInnerBezier.mPoints[3]);
+    std::swap(mInnerBezier.mPoints[1], mInnerBezier.mPoints[2]);
+    std::swap(mOuterBezier.mPoints[0], mOuterBezier.mPoints[3]);
+    std::swap(mOuterBezier.mPoints[1], mOuterBezier.mPoints[2]);
     mNormalSign = -mNormalSign;
     swapped = true;
   }
@@ -130,8 +130,8 @@ void DottedCornerFinder::DetermineType(Float aBorderRadiusX,
     Size cornerSize(centerCurveWidth, centerCurveHeight);
     GetBezierPointsForCorner(&mCenterBezier, mCorner, cornerPoint, cornerSize);
     if (swapped) {
-      Swap(mCenterBezier.mPoints[0], mCenterBezier.mPoints[3]);
-      Swap(mCenterBezier.mPoints[1], mCenterBezier.mPoints[2]);
+      std::swap(mCenterBezier.mPoints[0], mCenterBezier.mPoints[3]);
+      std::swap(mCenterBezier.mPoints[1], mCenterBezier.mPoints[2]);
     }
   }
 

@@ -41,7 +41,6 @@ using mozilla::IsNegativeZero;
 using mozilla::NegativeInfinity;
 using mozilla::NumberEqualsInt32;
 using mozilla::PositiveInfinity;
-using mozilla::Swap;
 
 // [SMDOC] IonMonkey Range Analysis
 //
@@ -911,13 +910,13 @@ Range* Range::xor_(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
   if (lhsUpper < 0) {
     lhsLower = ~lhsLower;
     lhsUpper = ~lhsUpper;
-    Swap(lhsLower, lhsUpper);
+    std::swap(lhsLower, lhsUpper);
     invertAfter = !invertAfter;
   }
   if (rhsUpper < 0) {
     rhsLower = ~rhsLower;
     rhsUpper = ~rhsUpper;
-    Swap(rhsLower, rhsUpper);
+    std::swap(rhsLower, rhsUpper);
     invertAfter = !invertAfter;
   }
 
@@ -951,7 +950,7 @@ Range* Range::xor_(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
   if (invertAfter) {
     lower = ~lower;
     upper = ~upper;
-    Swap(lower, upper);
+    std::swap(lower, upper);
   }
 
   return Range::NewInt32Range(alloc, lower, upper);

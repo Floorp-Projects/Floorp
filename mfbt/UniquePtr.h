@@ -107,7 +107,7 @@ struct PointerType {
  *   S* p = g3.get(); // g3 still owns |p|
  *   assert(g3->x == 5); // operator-> works (if .get() != nullptr)
  *   assert((*g3).x == 5); // also operator* (again, if not cleared)
- *   Swap(g3, g4); // g4 now owns the S, g3 cleared
+ *   std::swap(g3, g4); // g4 now owns the S, g3 cleared
  *   g3.swap(g4);  // g3 now owns the S, g4 cleared
  *   UniquePtr<S> g5(std::move(g3)); // g5 owns the S, g3 cleared
  *   g5.reset(); // deletes the S, g5 cleared
@@ -502,11 +502,6 @@ class DefaultDelete<T[]> {
   void operator()(U* aPtr) const = delete;
 };
 
-template <typename T, class D>
-void Swap(UniquePtr<T, D>& aX, UniquePtr<T, D>& aY) {
-  aX.swap(aY);
-}
-
 template <typename T, class D, typename U, class E>
 bool operator==(const UniquePtr<T, D>& aX, const UniquePtr<U, E>& aY) {
   return aX.get() == aY.get();
@@ -647,5 +642,14 @@ typename detail::UniqueSelector<T>::SingleObject WrapUnique(T* aPtr) {
 }
 
 }  // namespace mozilla
+
+namespace std {
+
+template <typename T, class D>
+void swap(mozilla::UniquePtr<T, D>& aX, mozilla::UniquePtr<T, D>& aY) {
+  aX.swap(aY);
+}
+
+}  // namespace std
 
 #endif /* mozilla_UniquePtr_h */

@@ -122,7 +122,7 @@ bool nsInlineFrame::IsSelfEmpty() {
       // When direction=rtl, we need to consider logical rather than visual
       // start and end, so swap the flags.
       if (wm.IsBidiRTL()) {
-        Swap(haveStart, haveEnd);
+        std::swap(haveStart, haveEnd);
       }
       // For ib-split frames, ignore things we know we'll skip in GetSkipSides.
       // XXXbz should we be doing this for non-ib-split frames too, in a more

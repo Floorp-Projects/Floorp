@@ -212,7 +212,7 @@ CanvasClientSharedSurface::~CanvasClientSharedSurface() { ClearSurfaces(); }
 // For formats compatible with R8G8B8A8.
 static inline void SwapRB_R8G8B8A8(uint8_t* pixel) {
   // [RR, GG, BB, AA]
-  Swap(pixel[0], pixel[2]);
+  std::swap(pixel[0], pixel[2]);
 }
 
 class TexClientFactory {

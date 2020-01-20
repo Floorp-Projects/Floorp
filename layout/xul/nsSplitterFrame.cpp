@@ -643,8 +643,8 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
     Reverse(mChildInfosAfter, mChildInfosAfterCount);
 
     // Now swap the two arrays.
-    Swap(mChildInfosBeforeCount, mChildInfosAfterCount);
-    Swap(mChildInfosBefore, mChildInfosAfter);
+    std::swap(mChildInfosBeforeCount, mChildInfosAfterCount);
+    std::swap(mChildInfosBefore, mChildInfosAfter);
   }
 
   // if resizebefore is not Farthest, reverse the list because the first child

@@ -152,9 +152,9 @@ struct AlignedArray final {
   }
 
   void Swap(AlignedArray<T, alignment>& aOther) {
-    mozilla::Swap(mPtr, aOther.mPtr);
-    mozilla::Swap(mStorage, aOther.mStorage);
-    mozilla::Swap(mCount, aOther.mCount);
+    std::swap(mPtr, aOther.mPtr);
+    std::swap(mStorage, aOther.mStorage);
+    std::swap(mCount, aOther.mCount);
   }
 
   size_t HeapSizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
