@@ -36,12 +36,13 @@ class WebAppUseCasesTest {
     @Test
     fun `isInstallable returns true if currentSession has a manifest`() {
         val manifest = WebAppManifest(
-                name = "Demo",
-                startUrl = "https://example.com",
-                icons = listOf(WebAppManifest.Icon(
-                        src = "https://example.com/icon.png",
-                        sizes = listOf(Size(192, 192))
-                ))
+            name = "Demo",
+            startUrl = "https://example.com",
+            display = WebAppManifest.DisplayMode.STANDALONE,
+            icons = listOf(WebAppManifest.Icon(
+                    src = "https://example.com/icon.png",
+                    sizes = listOf(Size(192, 192))
+            ))
         )
 
         val session: Session = mock()
@@ -64,6 +65,7 @@ class WebAppUseCasesTest {
         val manifest = WebAppManifest(
             name = "Demo",
             startUrl = "https://example.com",
+            display = WebAppManifest.DisplayMode.STANDALONE,
             icons = listOf(WebAppManifest.Icon(
                 src = "https://example.com/icon.png",
                 sizes = listOf(Size(192, 192))

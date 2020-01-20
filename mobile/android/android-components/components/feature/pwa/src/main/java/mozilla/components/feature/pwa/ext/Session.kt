@@ -6,9 +6,7 @@ package mozilla.components.feature.pwa.ext
 
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifest
-import mozilla.components.concept.engine.manifest.WebAppManifest.Icon.Purpose
-
-private const val MIN_INSTALLABLE_ICON_SIZE = 192
+import mozilla.components.concept.engine.manifest.WebAppManifest.DisplayMode.BROWSER
 
 /**
  * Checks if the current session represents an installable web app.
@@ -17,17 +15,14 @@ private const val MIN_INSTALLABLE_ICON_SIZE = 192
  * Websites are installable if:
  * - The site is served over HTTPS
  * - The site has a valid manifest with a name or short_name
+ * - The manifest display mode is standalone, fullscreen, or minimal-ui
  * - The icons array in the manifest contains an icon of at least 192x192
  */
 fun Session.installableManifest(): WebAppManifest? {
-    if (!securityInfo.secure) return null
     val manifest = webAppManifest ?: return null
-
-    val installable = manifest.icons.any { icon ->
-        (Purpose.ANY in icon.purpose || Purpose.MASKABLE in icon.purpose) &&
-            icon.sizes.any { size ->
-                size.minLength >= MIN_INSTALLABLE_ICON_SIZE
-            }
+    return if (securityInfo.secure && manifest.display != BROWSER && manifest.hasLargeIcons()) {
+        manifest
+    } else {
+        null
     }
-    return if (installable) manifest else null
 }

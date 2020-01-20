@@ -14,7 +14,11 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class SessionKtTest {
-    private val demoManifest = WebAppManifest(name = "Demo", startUrl = "https://mozilla.com")
+    private val demoManifest = WebAppManifest(
+        name = "Demo",
+        startUrl = "https://mozilla.com",
+        display = WebAppManifest.DisplayMode.STANDALONE
+    )
     private val demoIcon = WebAppManifest.Icon(src = "https://mozilla.com/example.png")
 
     @Test
