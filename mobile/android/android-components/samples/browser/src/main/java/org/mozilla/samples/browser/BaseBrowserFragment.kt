@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
+import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.DownloadsFeature
@@ -123,14 +124,23 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler {
 
         val scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
 
+        val contextMenuCandidateAppLinksUseCases = AppLinksUseCases(
+            requireContext(),
+            { true }
+        )
+
+        val contextMenuCandidates = ContextMenuCandidate.defaultCandidates(
+            requireContext(),
+            components.tabsUseCases,
+            components.contextMenuUseCases,
+            layout) +
+            ContextMenuCandidate.createOpenInExternalAppCandidate(
+                requireContext(), contextMenuCandidateAppLinksUseCases)
+
         val contextMenuFeature = ContextMenuFeature(
             fragmentManager = requireFragmentManager(),
             store = components.store,
-            candidates = ContextMenuCandidate.defaultCandidates(
-                requireContext(),
-                components.tabsUseCases,
-                components.contextMenuUseCases,
-                layout),
+            candidates = contextMenuCandidates,
             engineView = layout.engineView,
             useCases = components.contextMenuUseCases)
 

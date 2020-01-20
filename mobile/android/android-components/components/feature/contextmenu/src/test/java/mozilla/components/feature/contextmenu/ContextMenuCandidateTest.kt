@@ -16,8 +16,12 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.feature.app.links.AppLinkRedirect
+import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
+import mozilla.components.support.test.not
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -31,6 +35,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -58,7 +63,7 @@ class ContextMenuCandidateTest {
         val tabsUseCases = TabsUseCases(sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
-                testContext, tabsUseCases, parentView, snackbarDelegate)
+            testContext, tabsUseCases, parentView, snackbarDelegate)
 
         assertTrue(openInNewTab.showFor(
             createTab("https://www.mozilla.org"),
@@ -115,7 +120,7 @@ class ContextMenuCandidateTest {
         val parentView = CoordinatorLayout(testContext)
 
         val openInNewTab = ContextMenuCandidate.createOpenInNewTabCandidate(
-                testContext, tabsUseCases, parentView, snackbarDelegate)
+            testContext, tabsUseCases, parentView, snackbarDelegate)
 
         assertEquals(1, store.state.tabs.size)
         assertFalse(snackbarDelegate.hasShownSnackbar)
@@ -160,7 +165,7 @@ class ContextMenuCandidateTest {
         val tabsUseCases = TabsUseCases(sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-                testContext, tabsUseCases, parentView, snackbarDelegate)
+            testContext, tabsUseCases, parentView, snackbarDelegate)
 
         assertTrue(openInPrivateTab.showFor(
             createTab("https://www.mozilla.org"),
@@ -193,7 +198,7 @@ class ContextMenuCandidateTest {
         val tabsUseCases = TabsUseCases(sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-                testContext, tabsUseCases, parentView, snackbarDelegate)
+            testContext, tabsUseCases, parentView, snackbarDelegate)
 
         assertEquals(1, store.state.tabs.size)
         assertFalse(snackbarDelegate.hasShownSnackbar)
@@ -216,7 +221,7 @@ class ContextMenuCandidateTest {
         val tabsUseCases = TabsUseCases(sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-                testContext, tabsUseCases, parentView, snackbarDelegate)
+            testContext, tabsUseCases, parentView, snackbarDelegate)
 
         assertEquals(1, store.state.tabs.size)
         assertFalse(snackbarDelegate.hasShownSnackbar)
@@ -239,7 +244,7 @@ class ContextMenuCandidateTest {
         val tabsUseCases = TabsUseCases(sessionManager)
         val parentView = CoordinatorLayout(testContext)
         val openInPrivateTab = ContextMenuCandidate.createOpenInPrivateTabCandidate(
-                testContext, tabsUseCases, parentView, snackbarDelegate)
+            testContext, tabsUseCases, parentView, snackbarDelegate)
 
         assertEquals(1, store.state.tabs.size)
         openInPrivateTab.action.invoke(
@@ -521,6 +526,67 @@ class ContextMenuCandidateTest {
             "https://firefox.com",
             clipboardManager.primaryClip!!.getItemAt(0).text
         )
+    }
+
+    @Test
+    fun `Candidate "Open in external app"`() {
+        val getAppLinkRedirectMock: AppLinksUseCases.GetAppLinkRedirect = mock()
+
+        doReturn(
+            AppLinkRedirect(mock(), null, null)
+        ).`when`(getAppLinkRedirectMock).invoke(eq("https://www.example.com"))
+
+        doReturn(
+            AppLinkRedirect(null, null, mock())
+        ).`when`(getAppLinkRedirectMock).invoke(eq("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end"))
+
+        doReturn(
+            AppLinkRedirect(null, null, null)
+        ).`when`(getAppLinkRedirectMock).invoke(eq("https://www.otherexample.com"))
+
+        // This mock exists only to verify that it was called
+        val openAppLinkRedirectMock: AppLinksUseCases.OpenAppLinkRedirect = mock()
+
+        val appLinksUseCasesMock: AppLinksUseCases = mock()
+        doReturn(getAppLinkRedirectMock).`when`(appLinksUseCasesMock).appLinkRedirectIncludeInstall
+        doReturn(openAppLinkRedirectMock).`when`(appLinksUseCasesMock).openAppLink
+
+        val openLinkInExternalApp = ContextMenuCandidate.createOpenInExternalAppCandidate(
+            testContext, appLinksUseCasesMock
+        )
+
+        // showFor
+
+        assertTrue(openLinkInExternalApp.showFor(
+            mock(),
+            HitResult.UNKNOWN("https://www.example.com")
+        ))
+
+        assertTrue(openLinkInExternalApp.showFor(
+            mock(),
+            HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end")
+        ))
+
+        assertFalse(openLinkInExternalApp.showFor(
+            mock(),
+            HitResult.UNKNOWN("https://www.otherexample.com")
+        ))
+
+        // action
+
+        openLinkInExternalApp.action.invoke(
+            mock(),
+            HitResult.UNKNOWN("https://www.example.com"))
+
+        openLinkInExternalApp.action.invoke(
+            mock(),
+            HitResult.UNKNOWN("intent:www.example.com#Intent;scheme=https;package=org.mozilla.fenix;end"))
+
+        openLinkInExternalApp.action.invoke(
+            mock(),
+            HitResult.UNKNOWN("https://www.otherexample.com"))
+
+        verify(openAppLinkRedirectMock, times(2)).invoke(any(), any())
     }
 }
 

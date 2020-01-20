@@ -30,6 +30,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 dependencies {
     implementation project(':concept-engine')
     implementation project(':feature-tabs')
+    implementation project(':feature-app-links')
     implementation project(':browser-state')
     implementation project(':support-utils')
     implementation project(':support-ktx')
