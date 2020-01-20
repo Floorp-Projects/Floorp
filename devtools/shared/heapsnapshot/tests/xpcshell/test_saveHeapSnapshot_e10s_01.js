@@ -5,5 +5,5 @@
 // Test saving a heap snapshot in the sandboxed e10s child process.
 
 function run_test() {
-  run_test_in_child("../unit/test_SaveHeapSnapshot.js");
+  run_test_in_child("test_SaveHeapSnapshot.js");
 }

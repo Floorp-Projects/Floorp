@@ -12,7 +12,7 @@ DIRS += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    'test/unit/xpcshell.ini'
+    'test/xpcshell/xpcshell.ini'
 ]
 
 BROWSER_CHROME_MANIFESTS += [
