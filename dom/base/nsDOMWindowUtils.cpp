@@ -406,6 +406,22 @@ nsDOMWindowUtils::GetViewportInfo(uint32_t aDisplayWidth,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetViewportFitInfo(nsAString& aViewportFit) {
+  Document* doc = GetDocument();
+  NS_ENSURE_STATE(doc);
+
+  ViewportMetaData metaData = doc->GetViewportMetaData();
+  if (metaData.mViewportFit.EqualsLiteral("contain")) {
+    aViewportFit.AssignLiteral("contain");
+  } else if (metaData.mViewportFit.EqualsLiteral("cover")) {
+    aViewportFit.AssignLiteral("cover");
+  } else {
+    aViewportFit.AssignLiteral("auto");
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                                            float aWidthPx, float aHeightPx,
                                            Element* aElement,
