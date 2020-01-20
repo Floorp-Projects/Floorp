@@ -14,6 +14,9 @@ import mozilla.components.support.migration.state.MigrationStore
 
 /**
  * An activity that notifies on migration progress. Should be used in tandem with [MigrationIntentProcessor].
+ *
+ * Implementation notes: this abstraction exists to ensure that migration apps do not allow the user to
+ * invoke [AppCompatActivity.onBackPressed].
  */
 abstract class AbstractMigrationProgressActivity : AppCompatActivity(), MigrationStateListener {
 
@@ -53,7 +56,7 @@ interface MigrationStateListener {
     /**
      * Invoked when the migration is complete.
      */
-    fun onMigrationCompleted()
+    fun onMigrationCompleted(results: MigrationResults)
 }
 
 internal class MigrationObserver(
@@ -65,10 +68,12 @@ internal class MigrationObserver(
     fun start() {
         scope = store.flowScoped { flow ->
             flow.collect { state ->
+                val results = state.results.orEmpty()
+
                 if (state.progress == MigrationProgress.MIGRATING) {
-                    listener.onMigrationStateChanged(state.progress, state.results.orEmpty())
+                    listener.onMigrationStateChanged(state.progress, results)
                 } else {
-                    listener.onMigrationCompleted()
+                    listener.onMigrationCompleted(results)
                 }
             }
         }
