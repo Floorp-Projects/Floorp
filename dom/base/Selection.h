@@ -730,6 +730,11 @@ class Selection final : public nsSupportsWeakReference,
   nsresult GetTableCellLocationFromRange(nsRange* aRange,
                                          TableSelection* aSelectionType,
                                          int32_t* aRow, int32_t* aCol);
+
+  /**
+   * @param aOutIndex points to the index of the range in mRanges. If
+   *                  aDidAddRange is true, it is in [0, mRanges.Length()).
+   */
   nsresult MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
                                   int32_t* aOutIndex);
 
