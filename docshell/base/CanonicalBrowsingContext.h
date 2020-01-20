@@ -119,7 +119,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   CanonicalBrowsingContext(BrowsingContext* aParent,
                            BrowsingContextGroup* aGroup,
                            uint64_t aBrowsingContextId, uint64_t aProcessId,
-                           Type aType);
+                           Type aType, FieldTuple&& aFields);
 
  private:
   friend class BrowsingContext;
