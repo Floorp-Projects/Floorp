@@ -3146,7 +3146,23 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         break;
 
       case '?':
-        simpleKind = matchCodeUnit('?') ? TokenKind::Coalesce : TokenKind::Hook;
+        if (matchCodeUnit('.')) {
+          unit = getCodeUnit();
+          if (IsAsciiDigit(unit)) {
+            // if the code unit is followed by a number, for example it has the
+            // following form `<...> ?.5 <..> then it should be treated as a
+            // ternary rather than as an optional chain
+            simpleKind = TokenKind::Hook;
+            ungetCodeUnit(unit);
+            ungetCodeUnit('.');
+          } else {
+            ungetCodeUnit(unit);
+            simpleKind = TokenKind::OptionalChain;
+          }
+        } else {
+          simpleKind =
+              matchCodeUnit('?') ? TokenKind::Coalesce : TokenKind::Hook;
+        }
         break;
 
       case '!':
