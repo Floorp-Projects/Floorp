@@ -63,7 +63,7 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
         }
     }
 
-    override fun onMigrationCompleted() {
+    override fun onMigrationCompleted(results: MigrationResults) {
         // Enable clicking the finish button
         migration_button.apply {
             isEnabled = true
@@ -71,9 +71,8 @@ class MigrationProgressActivity : AbstractMigrationProgressActivity() {
             setBackgroundColor(ContextCompat.getColor(context, R.color.button_text_color))
             setTextColor(ContextCompat.getColor(context, R.color.white_color))
         }
-        store.state.results?.let {
-            statusAdapter.submitList(it.toItemList())
-        }
+        // Keep the results list up-to-date.
+        statusAdapter.submitList(results.toItemList())
     }
 
     override fun onMigrationStateChanged(progress: MigrationProgress, results: MigrationResults) {
