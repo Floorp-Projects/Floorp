@@ -59,7 +59,8 @@ class MockMVMContext : public MVMContext {
                                                     mDisplaySize.width));
     }
     return nsViewportInfo(mDefaultScale, mMinScale, mMaxScale, viewportSize,
-                          mAutoSizeFlag, mAutoScaleFlag, mZoomFlag);
+                          mAutoSizeFlag, mAutoScaleFlag, mZoomFlag,
+                          dom::ViewportFitType::Auto);
   }
   CSSToLayoutDeviceScale CSSToDevPixelScale() const { return mDeviceScale; }
   float GetResolution() const { return mResolution; }
