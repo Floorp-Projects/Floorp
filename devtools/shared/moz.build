@@ -71,6 +71,7 @@ DevToolsModules(
     'Loader.jsm',
     'natural-sort.js',
     'path.js',
+    'picker-constants.js',
     'plural-form.js',
     'protocol.js',
     'service-workers-debug-helper.js',
