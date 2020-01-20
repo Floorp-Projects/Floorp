@@ -217,10 +217,10 @@ static const Register RabaldrScratchI32 = Register::FromCode(15);
 // passing in any ABI we use.  Argregs tend to be low-numbered; register 30
 // should be safe.
 
-static constexpr FloatRegister RabaldrScratchF32 =
-    FloatRegister(30, FloatRegisters::Single);
-static constexpr FloatRegister RabaldrScratchF64 =
-    FloatRegister(30, FloatRegisters::Double);
+static constexpr FloatRegister RabaldrScratchF32{FloatRegisters::s30,
+                                                 FloatRegisters::Single};
+static constexpr FloatRegister RabaldrScratchF64{FloatRegisters::d30,
+                                                 FloatRegisters::Double};
 
 static_assert(RabaldrScratchF32 != ScratchFloat32Reg, "Too busy");
 static_assert(RabaldrScratchF64 != ScratchDoubleReg, "Too busy");
