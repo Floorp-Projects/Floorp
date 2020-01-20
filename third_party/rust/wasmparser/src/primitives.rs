@@ -13,12 +13,9 @@
  * limitations under the License.
  */
 
-use core::result;
-use std::boxed::Box;
-use std::fmt;
-
-#[cfg(feature = "std")]
 use std::error::Error;
+use std::fmt;
+use std::result;
 
 #[derive(Debug, Copy, Clone)]
 pub struct BinaryReaderError {
@@ -28,7 +25,6 @@ pub struct BinaryReaderError {
 
 pub type Result<T> = result::Result<T, BinaryReaderError>;
 
-#[cfg(feature = "std")]
 impl Error for BinaryReaderError {}
 
 impl fmt::Display for BinaryReaderError {
@@ -82,9 +78,18 @@ pub enum Type {
     V128,
     AnyFunc,
     AnyRef,
+    NullRef,
     Func,
     EmptyBlockType,
-    Null,
+}
+
+impl Type {
+    pub(crate) fn is_valid_for_old_select(&self) -> bool {
+        match self {
+            Type::I32 | Type::I64 | Type::F32 | Type::F64 => true,
+            _ => false,
+        }
+    }
 }
 
 /// Either a value type or a function type.
@@ -150,7 +155,7 @@ pub enum ImportSectionEntryType {
     Global(GlobalType),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct MemoryImmediate {
     pub flags: u32,
     pub offset: u32,
@@ -187,7 +192,7 @@ pub enum RelocType {
 }
 
 /// A br_table entries representation.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BrTable<'a> {
     pub(crate) buffer: &'a [u8],
     pub(crate) cnt: usize,
@@ -233,7 +238,7 @@ pub type SIMDLaneIndex = u8;
 /// Instructions as defined [here].
 ///
 /// [here]: https://webassembly.github.io/spec/core/binary/instructions.html
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Operator<'a> {
     Unreachable,
     Nop,
@@ -250,11 +255,12 @@ pub enum Operator<'a> {
     CallIndirect { index: u32, table_index: u32 },
     Drop,
     Select,
-    GetLocal { local_index: u32 },
-    SetLocal { local_index: u32 },
-    TeeLocal { local_index: u32 },
-    GetGlobal { global_index: u32 },
-    SetGlobal { global_index: u32 },
+    TypedSelect { ty: Type },
+    LocalGet { local_index: u32 },
+    LocalSet { local_index: u32 },
+    LocalTee { local_index: u32 },
+    GlobalGet { global_index: u32 },
+    GlobalSet { global_index: u32 },
     I32Load { memarg: MemoryImmediate },
     I64Load { memarg: MemoryImmediate },
     F32Load { memarg: MemoryImmediate },
@@ -286,6 +292,7 @@ pub enum Operator<'a> {
     F64Const { value: Ieee64 },
     RefNull,
     RefIsNull,
+    RefFunc { function_index: u32 },
     I32Eqz,
     I32Eq,
     I32Ne,
@@ -385,25 +392,25 @@ pub enum Operator<'a> {
     F64Max,
     F64Copysign,
     I32WrapI64,
-    I32TruncSF32,
-    I32TruncUF32,
-    I32TruncSF64,
-    I32TruncUF64,
-    I64ExtendSI32,
-    I64ExtendUI32,
-    I64TruncSF32,
-    I64TruncUF32,
-    I64TruncSF64,
-    I64TruncUF64,
-    F32ConvertSI32,
-    F32ConvertUI32,
-    F32ConvertSI64,
-    F32ConvertUI64,
+    I32TruncF32S,
+    I32TruncF32U,
+    I32TruncF64S,
+    I32TruncF64U,
+    I64ExtendI32S,
+    I64ExtendI32U,
+    I64TruncF32S,
+    I64TruncF32U,
+    I64TruncF64S,
+    I64TruncF64U,
+    F32ConvertI32S,
+    F32ConvertI32U,
+    F32ConvertI64S,
+    F32ConvertI64U,
     F32DemoteF64,
-    F64ConvertSI32,
-    F64ConvertUI32,
-    F64ConvertSI64,
-    F64ConvertUI64,
+    F64ConvertI32S,
+    F64ConvertI32U,
+    F64ConvertI64S,
+    F64ConvertI64U,
     F64PromoteF32,
     I32ReinterpretF32,
     I64ReinterpretF64,
@@ -417,14 +424,14 @@ pub enum Operator<'a> {
 
     // 0xFC operators
     // Non-trapping Float-to-int Conversions
-    I32TruncSSatF32,
-    I32TruncUSatF32,
-    I32TruncSSatF64,
-    I32TruncUSatF64,
-    I64TruncSSatF32,
-    I64TruncUSatF32,
-    I64TruncSSatF64,
-    I64TruncUSatF64,
+    I32TruncSatF32S,
+    I32TruncSatF32U,
+    I32TruncSatF64S,
+    I32TruncSatF64U,
+    I64TruncSatF32S,
+    I64TruncSatF32U,
+    I64TruncSatF64S,
+    I64TruncSatF64U,
 
     // 0xFC operators
     // bulk memory https://github.com/WebAssembly/bulk-memory-operations/blob/master/proposals/bulk-memory-operations/Overview.md
@@ -432,9 +439,10 @@ pub enum Operator<'a> {
     DataDrop { segment: u32 },
     MemoryCopy,
     MemoryFill,
-    TableInit { segment: u32 },
+    TableInit { segment: u32, table: u32 },
     ElemDrop { segment: u32 },
-    TableCopy,
+    TableCopy { dst_table: u32, src_table: u32 },
+    TableFill { table: u32 },
     TableGet { table: u32 },
     TableSet { table: u32 },
     TableGrow { table: u32 },
@@ -442,10 +450,10 @@ pub enum Operator<'a> {
 
     // 0xFE operators
     // https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md
-    Wake { memarg: MemoryImmediate },
-    I32Wait { memarg: MemoryImmediate },
-    I64Wait { memarg: MemoryImmediate },
-    Fence { flags: u8 },
+    AtomicNotify { memarg: MemoryImmediate },
+    I32AtomicWait { memarg: MemoryImmediate },
+    I64AtomicWait { memarg: MemoryImmediate },
+    AtomicFence { flags: u8 },
     I32AtomicLoad { memarg: MemoryImmediate },
     I64AtomicLoad { memarg: MemoryImmediate },
     I32AtomicLoad8U { memarg: MemoryImmediate },
@@ -462,53 +470,53 @@ pub enum Operator<'a> {
     I64AtomicStore32 { memarg: MemoryImmediate },
     I32AtomicRmwAdd { memarg: MemoryImmediate },
     I64AtomicRmwAdd { memarg: MemoryImmediate },
-    I32AtomicRmw8UAdd { memarg: MemoryImmediate },
-    I32AtomicRmw16UAdd { memarg: MemoryImmediate },
-    I64AtomicRmw8UAdd { memarg: MemoryImmediate },
-    I64AtomicRmw16UAdd { memarg: MemoryImmediate },
-    I64AtomicRmw32UAdd { memarg: MemoryImmediate },
+    I32AtomicRmw8AddU { memarg: MemoryImmediate },
+    I32AtomicRmw16AddU { memarg: MemoryImmediate },
+    I64AtomicRmw8AddU { memarg: MemoryImmediate },
+    I64AtomicRmw16AddU { memarg: MemoryImmediate },
+    I64AtomicRmw32AddU { memarg: MemoryImmediate },
     I32AtomicRmwSub { memarg: MemoryImmediate },
     I64AtomicRmwSub { memarg: MemoryImmediate },
-    I32AtomicRmw8USub { memarg: MemoryImmediate },
-    I32AtomicRmw16USub { memarg: MemoryImmediate },
-    I64AtomicRmw8USub { memarg: MemoryImmediate },
-    I64AtomicRmw16USub { memarg: MemoryImmediate },
-    I64AtomicRmw32USub { memarg: MemoryImmediate },
+    I32AtomicRmw8SubU { memarg: MemoryImmediate },
+    I32AtomicRmw16SubU { memarg: MemoryImmediate },
+    I64AtomicRmw8SubU { memarg: MemoryImmediate },
+    I64AtomicRmw16SubU { memarg: MemoryImmediate },
+    I64AtomicRmw32SubU { memarg: MemoryImmediate },
     I32AtomicRmwAnd { memarg: MemoryImmediate },
     I64AtomicRmwAnd { memarg: MemoryImmediate },
-    I32AtomicRmw8UAnd { memarg: MemoryImmediate },
-    I32AtomicRmw16UAnd { memarg: MemoryImmediate },
-    I64AtomicRmw8UAnd { memarg: MemoryImmediate },
-    I64AtomicRmw16UAnd { memarg: MemoryImmediate },
-    I64AtomicRmw32UAnd { memarg: MemoryImmediate },
+    I32AtomicRmw8AndU { memarg: MemoryImmediate },
+    I32AtomicRmw16AndU { memarg: MemoryImmediate },
+    I64AtomicRmw8AndU { memarg: MemoryImmediate },
+    I64AtomicRmw16AndU { memarg: MemoryImmediate },
+    I64AtomicRmw32AndU { memarg: MemoryImmediate },
     I32AtomicRmwOr { memarg: MemoryImmediate },
     I64AtomicRmwOr { memarg: MemoryImmediate },
-    I32AtomicRmw8UOr { memarg: MemoryImmediate },
-    I32AtomicRmw16UOr { memarg: MemoryImmediate },
-    I64AtomicRmw8UOr { memarg: MemoryImmediate },
-    I64AtomicRmw16UOr { memarg: MemoryImmediate },
-    I64AtomicRmw32UOr { memarg: MemoryImmediate },
+    I32AtomicRmw8OrU { memarg: MemoryImmediate },
+    I32AtomicRmw16OrU { memarg: MemoryImmediate },
+    I64AtomicRmw8OrU { memarg: MemoryImmediate },
+    I64AtomicRmw16OrU { memarg: MemoryImmediate },
+    I64AtomicRmw32OrU { memarg: MemoryImmediate },
     I32AtomicRmwXor { memarg: MemoryImmediate },
     I64AtomicRmwXor { memarg: MemoryImmediate },
-    I32AtomicRmw8UXor { memarg: MemoryImmediate },
-    I32AtomicRmw16UXor { memarg: MemoryImmediate },
-    I64AtomicRmw8UXor { memarg: MemoryImmediate },
-    I64AtomicRmw16UXor { memarg: MemoryImmediate },
-    I64AtomicRmw32UXor { memarg: MemoryImmediate },
+    I32AtomicRmw8XorU { memarg: MemoryImmediate },
+    I32AtomicRmw16XorU { memarg: MemoryImmediate },
+    I64AtomicRmw8XorU { memarg: MemoryImmediate },
+    I64AtomicRmw16XorU { memarg: MemoryImmediate },
+    I64AtomicRmw32XorU { memarg: MemoryImmediate },
     I32AtomicRmwXchg { memarg: MemoryImmediate },
     I64AtomicRmwXchg { memarg: MemoryImmediate },
-    I32AtomicRmw8UXchg { memarg: MemoryImmediate },
-    I32AtomicRmw16UXchg { memarg: MemoryImmediate },
-    I64AtomicRmw8UXchg { memarg: MemoryImmediate },
-    I64AtomicRmw16UXchg { memarg: MemoryImmediate },
-    I64AtomicRmw32UXchg { memarg: MemoryImmediate },
+    I32AtomicRmw8XchgU { memarg: MemoryImmediate },
+    I32AtomicRmw16XchgU { memarg: MemoryImmediate },
+    I64AtomicRmw8XchgU { memarg: MemoryImmediate },
+    I64AtomicRmw16XchgU { memarg: MemoryImmediate },
+    I64AtomicRmw32XchgU { memarg: MemoryImmediate },
     I32AtomicRmwCmpxchg { memarg: MemoryImmediate },
     I64AtomicRmwCmpxchg { memarg: MemoryImmediate },
-    I32AtomicRmw8UCmpxchg { memarg: MemoryImmediate },
-    I32AtomicRmw16UCmpxchg { memarg: MemoryImmediate },
-    I64AtomicRmw8UCmpxchg { memarg: MemoryImmediate },
-    I64AtomicRmw16UCmpxchg { memarg: MemoryImmediate },
-    I64AtomicRmw32UCmpxchg { memarg: MemoryImmediate },
+    I32AtomicRmw8CmpxchgU { memarg: MemoryImmediate },
+    I32AtomicRmw16CmpxchgU { memarg: MemoryImmediate },
+    I64AtomicRmw8CmpxchgU { memarg: MemoryImmediate },
+    I64AtomicRmw16CmpxchgU { memarg: MemoryImmediate },
+    I64AtomicRmw32CmpxchgU { memarg: MemoryImmediate },
 
     // 0xFD operators
     // SIMD https://github.com/WebAssembly/simd/blob/master/proposals/simd/BinarySIMD.md
@@ -579,6 +587,7 @@ pub enum Operator<'a> {
     F64x2Ge,
     V128Not,
     V128And,
+    V128AndNot,
     V128Or,
     V128Xor,
     V128Bitselect,
@@ -625,6 +634,7 @@ pub enum Operator<'a> {
     I64x2ShrU,
     I64x2Add,
     I64x2Sub,
+    I64x2Mul,
     F32x4Abs,
     F32x4Neg,
     F32x4Sqrt,
@@ -643,18 +653,38 @@ pub enum Operator<'a> {
     F64x2Div,
     F64x2Min,
     F64x2Max,
-    I32x4TruncSF32x4Sat,
-    I32x4TruncUF32x4Sat,
-    I64x2TruncSF64x2Sat,
-    I64x2TruncUF64x2Sat,
-    F32x4ConvertSI32x4,
-    F32x4ConvertUI32x4,
-    F64x2ConvertSI64x2,
-    F64x2ConvertUI64x2,
+    I32x4TruncSatF32x4S,
+    I32x4TruncSatF32x4U,
+    I64x2TruncSatF64x2S,
+    I64x2TruncSatF64x2U,
+    F32x4ConvertI32x4S,
+    F32x4ConvertI32x4U,
+    F64x2ConvertI64x2S,
+    F64x2ConvertI64x2U,
     V8x16Swizzle,
     V8x16Shuffle { lanes: [SIMDLaneIndex; 16] },
-    I8x16LoadSplat { memarg: MemoryImmediate },
-    I16x8LoadSplat { memarg: MemoryImmediate },
-    I32x4LoadSplat { memarg: MemoryImmediate },
-    I64x2LoadSplat { memarg: MemoryImmediate },
+    V8x16LoadSplat { memarg: MemoryImmediate },
+    V16x8LoadSplat { memarg: MemoryImmediate },
+    V32x4LoadSplat { memarg: MemoryImmediate },
+    V64x2LoadSplat { memarg: MemoryImmediate },
+    I8x16NarrowI16x8S,
+    I8x16NarrowI16x8U,
+    I16x8NarrowI32x4S,
+    I16x8NarrowI32x4U,
+    I16x8WidenLowI8x16S,
+    I16x8WidenHighI8x16S,
+    I16x8WidenLowI8x16U,
+    I16x8WidenHighI8x16U,
+    I32x4WidenLowI16x8S,
+    I32x4WidenHighI16x8S,
+    I32x4WidenLowI16x8U,
+    I32x4WidenHighI16x8U,
+    I16x8Load8x8S { memarg: MemoryImmediate },
+    I16x8Load8x8U { memarg: MemoryImmediate },
+    I32x4Load16x4S { memarg: MemoryImmediate },
+    I32x4Load16x4U { memarg: MemoryImmediate },
+    I64x2Load32x2S { memarg: MemoryImmediate },
+    I64x2Load32x2U { memarg: MemoryImmediate },
+    I8x16RoundingAverageU,
+    I16x8RoundingAverageU,
 }

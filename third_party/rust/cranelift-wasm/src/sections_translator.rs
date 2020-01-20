@@ -7,7 +7,7 @@
 //! The special case of the initialize expressions for table elements offsets or global variables
 //! is handled, according to the semantics of WebAssembly, to only specific expressions that are
 //! interpreted on the fly.
-use crate::environ::{ModuleEnvironment, WasmResult};
+use crate::environ::{ModuleEnvironment, WasmError, WasmResult};
 use crate::state::ModuleTranslationState;
 use crate::translation_utils::{
     tabletype_to_type, type_to_type, FuncIndex, Global, GlobalIndex, GlobalInit, Memory,
@@ -17,14 +17,15 @@ use crate::{wasm_unsupported, HashMap};
 use core::convert::TryFrom;
 use cranelift_codegen::ir::immediates::V128Imm;
 use cranelift_codegen::ir::{self, AbiParam, Signature};
+use cranelift_entity::packed_option::ReservedValue;
 use cranelift_entity::EntityRef;
 use std::vec::Vec;
 use wasmparser::{
-    self, CodeSectionReader, Data, DataKind, DataSectionReader, Element, ElementKind,
+    self, CodeSectionReader, Data, DataKind, DataSectionReader, Element, ElementItem, ElementKind,
     ElementSectionReader, Export, ExportSectionReader, ExternalKind, FuncType,
     FunctionSectionReader, GlobalSectionReader, GlobalType, ImportSectionEntryType,
     ImportSectionReader, MemorySectionReader, MemoryType, NameSectionReader, Naming, NamingReader,
-    Operator, TableSectionReader, TypeSectionReader,
+    Operator, TableSectionReader, Type, TypeSectionReader,
 };
 
 /// Parses the Type section of the wasm module.
@@ -141,7 +142,13 @@ pub fn parse_function_section(
     functions: FunctionSectionReader,
     environ: &mut dyn ModuleEnvironment,
 ) -> WasmResult<()> {
-    environ.reserve_func_types(functions.get_count())?;
+    let num_functions = functions.get_count();
+    if num_functions == std::u32::MAX {
+        // We reserve `u32::MAX` for our own use in cranelift-entity.
+        return Err(WasmError::ImplLimitExceeded);
+    }
+
+    environ.reserve_func_types(num_functions)?;
 
     for entry in functions {
         let sigindex = entry?;
@@ -217,7 +224,7 @@ pub fn parse_global_section(
                 GlobalInit::V128Const(V128Imm::from(value.bytes().to_vec().as_slice()))
             }
             Operator::RefNull => GlobalInit::RefNullConst,
-            Operator::GetGlobal { global_index } => {
+            Operator::GlobalGet { global_index } => {
                 GlobalInit::GetGlobal(GlobalIndex::from_u32(global_index))
             }
             ref s => {
@@ -286,7 +293,13 @@ pub fn parse_element_section<'data>(
     environ.reserve_table_elements(elements.get_count())?;
 
     for entry in elements {
-        let Element { kind, items } = entry?;
+        let Element { kind, items, ty } = entry?;
+        if ty != Type::AnyFunc {
+            return Err(wasm_unsupported!(
+                "unsupported table element type: {:?}",
+                ty
+            ));
+        }
         if let ElementKind::Active {
             table_index,
             init_expr,
@@ -295,7 +308,7 @@ pub fn parse_element_section<'data>(
             let mut init_expr_reader = init_expr.get_binary_reader();
             let (base, offset) = match init_expr_reader.read_operator()? {
                 Operator::I32Const { value } => (None, value as u32 as usize),
-                Operator::GetGlobal { global_index } => {
+                Operator::GlobalGet { global_index } => {
                     (Some(GlobalIndex::from_u32(global_index)), 0)
                 }
                 ref s => {
@@ -308,8 +321,11 @@ pub fn parse_element_section<'data>(
             let items_reader = items.get_items_reader()?;
             let mut elems = Vec::with_capacity(usize::try_from(items_reader.get_count()).unwrap());
             for item in items_reader {
-                let x = item?;
-                elems.push(FuncIndex::from_u32(x));
+                let elem = match item? {
+                    ElementItem::Null => FuncIndex::reserved_value(),
+                    ElementItem::Func(index) => FuncIndex::from_u32(index),
+                };
+                elems.push(elem);
             }
             environ.declare_table_elements(
                 TableIndex::from_u32(table_index),
@@ -318,10 +334,7 @@ pub fn parse_element_section<'data>(
                 elems.into_boxed_slice(),
             )?
         } else {
-            return Err(wasm_unsupported!(
-                "unsupported passive elements section: {:?}",
-                kind
-            ));
+            return Err(wasm_unsupported!("unsupported passive elements section",));
         }
     }
     Ok(())
@@ -359,7 +372,7 @@ pub fn parse_data_section<'data>(
             let mut init_expr_reader = init_expr.get_binary_reader();
             let (base, offset) = match init_expr_reader.read_operator()? {
                 Operator::I32Const { value } => (None, value as u32 as usize),
-                Operator::GetGlobal { global_index } => {
+                Operator::GlobalGet { global_index } => {
                     (Some(GlobalIndex::from_u32(global_index)), 0)
                 }
                 ref s => {
@@ -417,6 +430,11 @@ fn parse_function_name_subsection(
     let mut function_names = HashMap::new();
     for _ in 0..naming_reader.get_count() {
         let Naming { index, name } = naming_reader.read().ok()?;
+        if index == std::u32::MAX {
+            // We reserve `u32::MAX` for our own use in cranelift-entity.
+            return None;
+        }
+
         if function_names
             .insert(FuncIndex::from_u32(index), name)
             .is_some()
