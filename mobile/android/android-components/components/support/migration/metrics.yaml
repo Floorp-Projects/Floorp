@@ -18,6 +18,7 @@ migration:
       - gecko
       - settings
       - telemetry_identifiers
+      - addons
     send_in_pings:
       - migration
     bugs:
