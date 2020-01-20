@@ -63,7 +63,7 @@ class WindowGlobalParent final : public WindowContext,
 
   // Check if this actor is managed by PInProcess, as-in the document is loaded
   // in-process.
-  bool IsInProcess() { return mInProcess; }
+  bool IsInProcess() override { return mInProcess; }
 
   // Get the other side of this actor if it is an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is not in-process.
