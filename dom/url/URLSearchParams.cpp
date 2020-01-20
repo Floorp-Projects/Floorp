@@ -342,7 +342,9 @@ already_AddRefed<URLSearchParams> URLSearchParams::Constructor(
     for (uint32_t i = 0; i < list.Length(); ++i) {
       const Sequence<nsString>& item = list[i];
       if (item.Length() != 2) {
-        aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+        nsPrintfCString err("Expected 2 items in pair but got %zu",
+                            item.Length());
+        aRv.ThrowTypeError(NS_ConvertUTF8toUTF16(err));
         return nullptr;
       }
       sp->Append(item[0], item[1]);
