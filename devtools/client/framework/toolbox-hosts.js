@@ -7,7 +7,6 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const Services = require("Services");
-const { DOMHelpers } = require("devtools/shared/dom-helpers");
 
 loader.lazyRequireGetter(
   this,
@@ -82,7 +81,6 @@ BottomHost.prototype = {
     this._browserContainer.appendChild(this.frame);
 
     focusTab(this.hostTab);
-    await createBlankDocument(this.frame);
     this.emit("ready", this.frame);
 
     return this.frame;
@@ -170,7 +168,6 @@ class SidebarHost {
     }
 
     focusTab(this.hostTab);
-    await createBlankDocument(this.frame);
     this.emit("ready", this.frame);
 
     return this.frame;
@@ -279,8 +276,6 @@ WindowHost.prototype = {
         // CSS transitions when switching from docked to window hosts.
         // Added in Bug 832920, should be reviewed in Bug 1542468.
         this.frame.setAttribute("forceOwnRefreshDriver", "");
-
-        this.frame.setAttribute("src", "about:blank");
         resolve(this.frame);
       };
 
@@ -351,7 +346,6 @@ BrowserToolboxHost.prototype = {
 
     this.doc.body.appendChild(this.frame);
 
-    await createBlankDocument(this.frame);
     this.emit("ready", this.frame);
 
     return this.frame;
@@ -425,19 +419,6 @@ function createDevToolsFrame(doc, className) {
   frame.className = className;
   frame.tooltip = "aHTMLTooltip";
   return frame;
-}
-
-/**
- * Load a blank document in the host frame.
- * This is mandatory if the host is created for switching hosts. In that case,
- * the new host's frame needs to have a valid document before we can swap the
- * content of the previous host.
- */
-function createBlankDocument(frame) {
-  return new Promise(resolve => {
-    frame.setAttribute("src", "about:blank");
-    DOMHelpers.onceDOMReady(frame.contentWindow, resolve);
-  });
 }
 
 exports.Hosts = {
