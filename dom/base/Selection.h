@@ -726,8 +726,8 @@ class Selection final : public nsSupportsWeakReference,
   nsresult GetTableCellLocationFromRange(nsRange* aRange,
                                          TableSelection* aSelectionType,
                                          int32_t* aRow, int32_t* aCol);
-  nsresult AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
-                             int32_t* aOutIndex);
+  nsresult MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
+                                  int32_t* aOutIndex);
 
   static nsresult FindInsertionPoint(
       const nsTArray<RangeData>* aElementArray, const nsINode* aPointNode,
