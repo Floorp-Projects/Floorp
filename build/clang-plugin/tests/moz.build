@@ -45,6 +45,7 @@ SOURCES += [
     'TestStackClass.cpp',
     'TestStaticLocalClass.cpp',
     'TestTemporaryClass.cpp',
+    'TestTempRefPtr.cpp',
     'TestTrivialCtorDtor.cpp',
     'TestTrivialDtor.cpp',
 ]
