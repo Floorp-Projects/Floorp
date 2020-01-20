@@ -17,13 +17,13 @@
 
 #  include <algorithm>  // std::sort
 #  include <string>
+#  include <utility>
 
 #  include "mozilla/Assertions.h"
 #  include "mozilla/ArrayUtils.h"
 #  include "mozilla/CheckedInt.h"
 #  include "mozilla/DebugOnly.h"
 #  include "mozilla/MemoryChecking.h"
-#  include "mozilla/Move.h"
 #  include "mozilla/Sprintf.h"
 #  include "mozilla/UniquePtr.h"
 #  include "mozilla/Unused.h"
