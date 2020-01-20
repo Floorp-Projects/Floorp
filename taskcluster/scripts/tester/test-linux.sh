@@ -37,7 +37,6 @@ fi
 : MOZHARNESS_OPTIONS            ${MOZHARNESS_OPTIONS}
 : NEED_XVFB                     ${NEED_XVFB:=true}
 : NEED_WINDOW_MANAGER           ${NEED_WINDOW_MANAGER:=false}
-: NEED_COMPIZ                   ${NEED_COMPIZ}
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
 : START_VNC                     ${START_VNC:=false}
 : TASKCLUSTER_INTERACTIVE       ${TASKCLUSTER_INTERACTIVE:=false}
@@ -179,7 +178,7 @@ if $NEED_WINDOW_MANAGER; then
     eval `echo '' | /usr/bin/gnome-keyring-daemon -r -d --unlock --components=secrets`
 fi
 
-if $NEED_COMPIZ; then
+if [ $DISTRIBUTION == "Ubuntu" ] && [ $RELEASE == "16.04" ]; then
     compiz 2>&1 &
 fi
 
