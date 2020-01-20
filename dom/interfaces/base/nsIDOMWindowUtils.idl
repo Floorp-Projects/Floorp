@@ -115,6 +115,11 @@ interface nsIDOMWindowUtils : nsISupports {
                        out double aMinZoom, out double aMaxZoom,
                        out uint32_t aWidth, out uint32_t aHeight,
                        out boolean aAutoSize);
+  /*
+   * Information retrieved from the viewport-fit value of <meta name="viewport">
+   * element.
+   */
+  AString getViewportFitInfo();
 
   /**
    * Information about the window size in device pixels.

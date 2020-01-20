@@ -1616,6 +1616,9 @@ class Document : public nsINode,
                               ViewportMetaData&& aData);
   void RemoveMetaViewportElement(HTMLMetaElement* aElement);
 
+  // Returns a ViewportMetaData for this document.
+  ViewportMetaData GetViewportMetaData() const;
+
   void UpdateForScrollAnchorAdjustment(nscoord aLength);
 
   /**
@@ -4066,9 +4069,6 @@ class Document : public nsINode,
   // Get parent FeaturePolicy from container. The parent FeaturePolicy is
   // stored in parent iframe or container's browsingContext (cross process)
   already_AddRefed<mozilla::dom::FeaturePolicy> GetParentFeaturePolicy();
-
-  // Returns a ViewportMetaData for this document.
-  ViewportMetaData GetViewportMetaData() const;
 
   FlashClassification DocumentFlashClassificationInternal();
 
