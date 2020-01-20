@@ -156,7 +156,8 @@ void TimeoutManager::MoveIdleToActive() {
       // don't have end before start...
       PROFILER_ADD_MARKER_WITH_PAYLOAD(
           "setTimeout deferred release", DOM, TextMarkerPayload,
-          (marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now, now));
+          (marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now, now,
+           Some(mWindow.WindowID())));
     }
 #endif
     num++;
@@ -905,8 +906,8 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
           // don't have end before start...
           PROFILER_ADD_MARKER_WITH_PAYLOAD(
               "setTimeout", DOM, TextMarkerPayload,
-              (marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now,
-               now));
+              (marker, delta.ToMilliseconds() >= 0 ? timeout->When() : now, now,
+               Some(mWindow.WindowID())));
         }
 #endif
 
