@@ -271,10 +271,6 @@ class InternalRequest final {
     mHeaders = aHeaders;
   }
 
-  bool SameOriginDataURL() const { return mSameOriginDataURL; }
-
-  void UnsetSameOriginDataURL() { mSameOriginDataURL = false; }
-
   void SetBody(nsIInputStream* aStream, int64_t aBodyLength) {
     // A request's body may not be reset once set.
     MOZ_ASSERT_IF(aStream, !mBodyStream);
@@ -402,7 +398,6 @@ class InternalRequest final {
   bool mMozErrors = false;
   nsCString mFragment;
   MOZ_INIT_OUTSIDE_CTOR bool mPreserveContentCodings;
-  MOZ_INIT_OUTSIDE_CTOR bool mSameOriginDataURL;
   bool mSkipServiceWorker = false;
   bool mSynchronous = false;
   bool mUnsafeRequest = false;
