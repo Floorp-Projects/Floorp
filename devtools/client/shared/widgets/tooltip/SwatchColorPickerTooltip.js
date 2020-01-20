@@ -28,6 +28,11 @@ loader.lazyRequireGetter(
   "devtools/client/shared/focus",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "PICKER_TYPES",
+  "devtools/shared/picker-constants"
+);
 
 const TELEMETRY_PICKER_EYEDROPPER_OPEN_COUNT =
   "DEVTOOLS_PICKER_EYEDROPPER_OPENED_COUNT";
@@ -243,7 +248,7 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     toolbox.nodePicker.cancel();
 
     // disable simulating touch events if RDM is active
-    toolbox.tellRDMAboutPickerState(true);
+    toolbox.tellRDMAboutPickerState(true, PICKER_TYPES.EYEDROPPER);
 
     // pickColorFromPage will focus the content document. If the devtools are in a
     // separate window, the colorpicker tooltip will be closed before pickColorFromPage
@@ -275,7 +280,10 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
 
   _onEyeDropperDone() {
     // enable simulating touch events if RDM is active
-    this.inspector.toolbox.tellRDMAboutPickerState(false);
+    this.inspector.toolbox.tellRDMAboutPickerState(
+      false,
+      PICKER_TYPES.EYEDROPPER
+    );
 
     this.eyedropperOpen = false;
     this.activeSwatch = null;
