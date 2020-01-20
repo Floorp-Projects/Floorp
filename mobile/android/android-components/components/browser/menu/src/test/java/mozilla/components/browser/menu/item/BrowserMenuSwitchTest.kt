@@ -5,14 +5,34 @@
 package mozilla.components.browser.menu.item
 
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class BrowserMenuSwitchTest {
 
     @Test
-    fun `browser checkbox uses correct layout`() {
+    fun `browser switch uses correct layout`() {
         val item = BrowserMenuSwitch("Hello") {}
         assertEquals(R.layout.mozac_browser_menu_item_switch, item.getLayoutResource())
+    }
+
+    @Test
+    fun `switch can be converted to candidate with correct end type`() {
+        val listener = { _: Boolean -> }
+
+        assertEquals(
+            CompoundMenuCandidate(
+                "Hello",
+                isChecked = false,
+                end = CompoundMenuCandidate.ButtonType.SWITCH,
+                onCheckedChange = listener
+            ),
+            BrowserMenuSwitch(
+                "Hello",
+                listener = listener
+            ).asCandidate(mock())
+        )
     }
 }

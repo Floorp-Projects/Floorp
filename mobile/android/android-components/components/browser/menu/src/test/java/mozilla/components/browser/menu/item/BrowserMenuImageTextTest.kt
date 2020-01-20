@@ -9,10 +9,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.content.ContextCompat.getColor
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
+import mozilla.components.browser.menu2.candidate.TextMenuCandidate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -76,6 +79,45 @@ class BrowserMenuImageTextTest {
         val imageView = view.findViewById<AppCompatImageView>(R.id.image)
 
         assertNull(imageView.imageTintList)
+    }
+
+    @Test
+    fun `menu image text item can be converted to candidate`() {
+        val listener = {}
+
+        assertEquals(
+            TextMenuCandidate(
+                "label",
+                start = DrawableMenuIcon(null),
+                onClick = listener
+            ),
+            BrowserMenuImageText(
+                "label",
+                android.R.drawable.ic_menu_report_image,
+                listener = listener
+            ).asCandidate(context).run {
+                copy(start = (start as? DrawableMenuIcon)?.copy(drawable = null))
+            }
+        )
+
+        assertEquals(
+            TextMenuCandidate(
+                "label",
+                start = DrawableMenuIcon(
+                    null,
+                    tint = getColor(context, android.R.color.black)
+                ),
+                onClick = listener
+            ),
+            BrowserMenuImageText(
+                "label",
+                android.R.drawable.ic_menu_report_image,
+                android.R.color.black,
+                listener = listener
+            ).asCandidate(context).run {
+                copy(start = (start as? DrawableMenuIcon)?.copy(drawable = null))
+            }
+        )
     }
 
     private fun inflate(item: BrowserMenuImageText): View {

@@ -4,12 +4,19 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.Context
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.ColorRes
+import androidx.core.content.ContextCompat.getColor
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.ContainerStyle
+import mozilla.components.browser.menu2.candidate.DecorativeTextMenuCandidate
+import mozilla.components.browser.menu2.candidate.MenuCandidate
+import mozilla.components.browser.menu2.candidate.TextMenuCandidate
+import mozilla.components.browser.menu2.candidate.TextStyle
 
 /**
  * A simple browser menu item displaying text.
@@ -48,6 +55,28 @@ class SimpleBrowserMenuItem(
         } else {
             // Remove the ripple effect
             textView.background = null
+        }
+    }
+
+    override fun asCandidate(context: Context): MenuCandidate {
+        val textStyle = TextStyle(
+            size = if (textSize == NO_ID.toFloat()) null else textSize,
+            color = if (textColorResource == NO_ID) null else getColor(context, textColorResource)
+        )
+        val containerStyle = ContainerStyle(isVisible = visible())
+        return if (listener != null) {
+            TextMenuCandidate(
+                label,
+                textStyle = textStyle,
+                containerStyle = containerStyle,
+                onClick = listener
+            )
+        } else {
+            DecorativeTextMenuCandidate(
+                label,
+                textStyle = textStyle,
+                containerStyle = containerStyle
+            )
         }
     }
 }

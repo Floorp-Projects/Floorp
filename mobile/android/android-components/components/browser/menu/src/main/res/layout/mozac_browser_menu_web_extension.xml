@@ -14,8 +14,8 @@
 
     <ImageView
         android:id="@+id/action_image"
-        android:layout_width="24dp"
-        android:layout_height="27dp"
+        android:layout_width="@dimen/mozac_browser_menu_item_web_extension_icon_width"
+        android:layout_height="@dimen/mozac_browser_menu_item_web_extension_icon_height"
         android:layout_gravity="center"
         android:importantForAccessibility="no"
         android:src="@drawable/mozac_browser_menu_notification_icon"/>

@@ -4,11 +4,14 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.Context
 import android.view.View
 import android.widget.CompoundButton
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
+import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
+import mozilla.components.browser.menu2.candidate.ContainerStyle
 import java.lang.reflect.Modifier.PRIVATE
 
 /**
@@ -37,4 +40,12 @@ abstract class BrowserMenuCompoundButton(
             }
         }
     }
+
+    override fun asCandidate(context: Context) = CompoundMenuCandidate(
+        label,
+        isChecked = initialState(),
+        end = CompoundMenuCandidate.ButtonType.CHECKBOX,
+        containerStyle = ContainerStyle(isVisible = visible()),
+        onCheckedChange = listener
+    )
 }

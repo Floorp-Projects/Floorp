@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.Context
 import android.content.res.ColorStateList
 import android.view.View
 import androidx.annotation.ColorRes
@@ -15,6 +16,9 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.HighlightableMenuItem
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
+import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
+import mozilla.components.browser.menu2.candidate.LowPriorityHighlightEffect
 
 /**
  * A browser menu switch that can show a highlighted icon.
@@ -72,5 +76,19 @@ class BrowserMenuHighlightableSwitch(
 
         notificationDotView.isVisible = isHighlighted
         switch.text = if (isHighlighted) highlight.label ?: label else label
+    }
+
+    override fun asCandidate(context: Context): CompoundMenuCandidate {
+        val base = super.asCandidate(context)
+        return if (isHighlighted()) {
+            base.copy(
+                text = highlight.label ?: label,
+                start = (base.start as? DrawableMenuIcon)?.copy(
+                    effect = LowPriorityHighlightEffect(notificationTint = highlight.notificationTint)
+                )
+            )
+        } else {
+            base
+        }
     }
 }

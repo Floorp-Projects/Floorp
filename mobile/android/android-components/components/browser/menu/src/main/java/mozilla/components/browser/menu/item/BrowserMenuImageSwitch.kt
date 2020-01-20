@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.Context
 import android.view.View
 import android.widget.Switch
 import androidx.annotation.DrawableRes
@@ -11,6 +12,8 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageView
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.CompoundMenuCandidate
+import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
 import java.lang.reflect.Modifier
 
 /**
@@ -40,4 +43,9 @@ class BrowserMenuImageSwitch(
         val imageView = view.findViewById<AppCompatImageView>(R.id.image)
         imageView.setImageResource(imageResource)
     }
+
+    override fun asCandidate(context: Context) = super.asCandidate(context).copy(
+        start = DrawableMenuIcon(context, imageResource),
+        end = CompoundMenuCandidate.ButtonType.SWITCH
+    )
 }

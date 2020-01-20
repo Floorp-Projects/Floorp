@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu.item
 
+import android.content.Context
 import android.content.res.ColorStateList
 import android.view.View
 import android.widget.TextView
@@ -14,6 +15,10 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.HighlightableMenuItem
 import mozilla.components.browser.menu.R
+import mozilla.components.browser.menu2.candidate.DrawableMenuIcon
+import mozilla.components.browser.menu2.candidate.HighPriorityHighlightEffect
+import mozilla.components.browser.menu2.candidate.LowPriorityHighlightEffect
+import mozilla.components.browser.menu2.candidate.TextMenuCandidate
 
 @Suppress("Deprecation")
 private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0, 0)
@@ -136,6 +141,32 @@ class BrowserMenuHighlightableItem(
             endImageView.setImageDrawable(null)
             endImageView.visibility = View.GONE
             notificationDotView.visibility = View.GONE
+        }
+    }
+
+    override fun asCandidate(context: Context): TextMenuCandidate {
+        val base = super.asCandidate(context)
+        if (!isHighlighted()) return base
+
+        @Suppress("Deprecation")
+        return when (highlight) {
+            is BrowserMenuHighlight.HighPriority -> base.copy(
+                text = highlight.label ?: label,
+                end = if (highlight.endImageResource == NO_ID) null else DrawableMenuIcon(
+                    context,
+                    highlight.endImageResource
+                ),
+                effect = HighPriorityHighlightEffect(
+                    backgroundTint = highlight.backgroundTint
+                )
+            )
+            is BrowserMenuHighlight.LowPriority -> base.copy(
+                text = highlight.label ?: label,
+                start = (base.start as? DrawableMenuIcon)?.copy(
+                    effect = LowPriorityHighlightEffect(notificationTint = highlight.notificationTint)
+                )
+            )
+            is BrowserMenuHighlight.ClassicHighlight -> base
         }
     }
 
