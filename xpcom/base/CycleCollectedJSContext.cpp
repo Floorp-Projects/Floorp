@@ -480,6 +480,15 @@ void CycleCollectedJSContext::AfterProcessMicrotasks() {
   // Cleanup Indexed Database transactions:
   // https://html.spec.whatwg.org/multipage/webappapis.html#perform-a-microtask-checkpoint
   CleanupIDBTransactions(RecursionDepth());
+
+  // Clear kept alive objects in JS WeakRef.
+  // https://whatpr.org/html/4571/webappapis.html#perform-a-microtask-checkpoint
+  //
+  // ECMAScript implementations are expected to call ClearKeptObjects when a
+  // synchronous sequence of ECMAScript execution completes.
+  //
+  // https://tc39.es/proposal-weakrefs/#sec-clear-kept-objects
+  JS::ClearKeptObjects(mJSContext);
 }
 
 void CycleCollectedJSContext::IsIdleGCTaskNeeded() const {

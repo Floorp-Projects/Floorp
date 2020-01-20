@@ -1093,9 +1093,7 @@ JS_FRIEND_API void js::StopDrainingJobQueue(JSContext* cx) {
 JS_FRIEND_API void js::RunJobs(JSContext* cx) {
   MOZ_ASSERT(cx->jobQueue);
   cx->jobQueue->runJobs(cx);
-  for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
-    zone->clearKeptObjects();
-  }
+  JS::ClearKeptObjects(cx);
 }
 
 JSObject* InternalJobQueue::getIncumbentGlobal(JSContext* cx) {
