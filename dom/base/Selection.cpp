@@ -455,8 +455,8 @@ nsresult Selection::GetTableCellLocationFromRange(
   return cellLayout->GetCellIndexes(*aRow, *aCol);
 }
 
-nsresult Selection::AddTableCellRange(nsRange* aRange, bool* aDidAddRange,
-                                      int32_t* aOutIndex) {
+nsresult Selection::MaybeAddTableCellRange(nsRange* aRange, bool* aDidAddRange,
+                                           int32_t* aOutIndex) {
   if (!aDidAddRange || !aOutIndex) return NS_ERROR_NULL_POINTER;
 
   *aDidAddRange = false;
@@ -1921,14 +1921,14 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   // won't use it.
   mCachedRange = nullptr;
 
-  // AddTableCellRange might flush frame.
+  // MaybeAddTableCellRange might flush frame.
   RefPtr<Selection> kungFuDeathGrip(this);
 
   // This inserts a table cell range in proper document order
   // and returns NS_OK if range doesn't contain just one table cell
   bool didAddRange;
   int32_t rangeIndex;
-  nsresult result = AddTableCellRange(range, &didAddRange, &rangeIndex);
+  nsresult result = MaybeAddTableCellRange(range, &didAddRange, &rangeIndex);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
