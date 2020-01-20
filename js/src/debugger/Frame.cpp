@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"   // for AssertionConditionType
 #include "mozilla/HashTable.h"    // for HashMapEntry
 #include "mozilla/Maybe.h"        // for Maybe
-#include <utility>                // for std::move
 #include "mozilla/Range.h"        // for Range
 #include "mozilla/RangedPtr.h"    // for RangedPtr
 #include "mozilla/Result.h"       // for Result
@@ -20,6 +19,7 @@
 #include <stddef.h>  // for size_t
 #include <stdint.h>  // for int32_t
 #include <string.h>  // for strlen
+#include <utility>   // for std::move
 
 #include "jsapi.h"        // for CallArgs, Handle
 #include "jsfriendapi.h"  // for GetErrorMessage

@@ -8,8 +8,9 @@
 
 #include "mozilla/BinarySearch.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include <utility>
 #include "mozilla/ScopeExit.h"
+
+#include <utility>
 
 #include "jit/BaselineIC.h"
 #include "jit/BytecodeAnalysis.h"

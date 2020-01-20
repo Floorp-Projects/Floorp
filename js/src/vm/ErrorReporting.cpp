@@ -6,9 +6,8 @@
 
 #include "vm/ErrorReporting.h"
 
-#include <utility>
-
 #include <stdarg.h>
+#include <utility>
 
 #include "jsexn.h"
 #include "jsfriendapi.h"

@@ -8,9 +8,9 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
-#include <utility>
 
 #include <stdlib.h>
+#include <utility>
 
 #include "jspubtd.h"
 

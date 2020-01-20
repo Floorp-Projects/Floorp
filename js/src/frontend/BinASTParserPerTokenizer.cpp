@@ -9,10 +9,11 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Maybe.h"
-#include <utility>
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Vector.h"
+
+#include <utility>
 
 #include "frontend/BinAST-macros.h"
 #include "frontend/BinASTParser.h"
@@ -22,7 +23,6 @@
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "frontend/SharedContext.h"
-
 #include "js/Result.h"
 #include "vm/RegExpObject.h"
 

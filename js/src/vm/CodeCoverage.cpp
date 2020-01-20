@@ -8,9 +8,9 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include <utility>
 
 #include <stdio.h>
+#include <utility>
 #ifdef XP_WIN
 #  include <process.h>
 #  define getpid _getpid

@@ -193,7 +193,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/MemoryReporting.h"
-#include <utility>
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/TextUtils.h"
@@ -204,6 +203,7 @@
 #include <algorithm>
 #include <initializer_list>
 #include <string.h>
+#include <utility>
 #ifndef XP_WIN
 #  include <sys/mman.h>
 #  include <unistd.h>

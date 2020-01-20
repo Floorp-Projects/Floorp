@@ -9,13 +9,13 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
-#include <utility>
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 
 #include <algorithm>
 #include <new>
+#include <utility>
 
 #include "jsapi.h"
 

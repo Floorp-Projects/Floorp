@@ -8,9 +8,9 @@
 #define js_UbiNodeCensus_h
 
 #include "mozilla/Attributes.h"
-#include <utility>
 
 #include <algorithm>
+#include <utility>
 
 #include "jsapi.h"
 
