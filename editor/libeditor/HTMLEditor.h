@@ -3551,11 +3551,13 @@ class HTMLEditor final : public TextEditor,
 
     RefPtr<dom::BlobImpl> mBlob;
     RefPtr<HTMLEditor> mHTMLEditor;
+    RefPtr<dom::DataTransfer> mDataTransfer;
     nsCOMPtr<Document> mSourceDoc;
     EditorDOMPoint mPointToInsert;
     EditAction mEditAction;
     bool mIsSafe;
     bool mDoDeleteSelection;
+    bool mNeedsToDispatchBeforeInputEvent;
   };
 
   virtual void CreateEventListeners() override;
