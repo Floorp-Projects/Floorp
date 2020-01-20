@@ -4,11 +4,6 @@
 
 "use strict";
 
-Services.prefs.setBoolPref(
-  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
-  true
-);
-
 // We refer to addons that were sideloaded prior to disabling sideloading as legacy.  We
 // determine that they are legacy because they are in a SCOPE that is not included
 // in AddonSettings.SCOPES_SIDELOAD.
@@ -27,74 +22,6 @@ Services.prefs.setBoolPref(
 // We expect new sideloads to fail elsewhere.
 // We expect to be able to change/uninstall legacy sideloads.
 
-// Just enable all scopes for this test.
-Services.prefs.setIntPref("extensions.enabledScopes", AddonManager.SCOPE_ALL);
-// Setting this to all enables the same behavior as before disabling sideloading.
-// We reset this later after doing some legacy sideloading.
-Services.prefs.setIntPref("extensions.sideloadScopes", AddonManager.SCOPE_ALL);
-// AddonTestUtils sets this to zero, we need the default value.
-Services.prefs.clearUserPref("extensions.autoDisableScopes");
-
-createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-
-function getID(n) {
-  return `${n}@tests.mozilla.org`;
-}
-function initialVersion(n) {
-  return `${n}.0`;
-}
-
-// Setup some common extension locations, at least one in each scope.
-
-// SCOPE_SYSTEM
-const globalDir = gProfD.clone();
-globalDir.append("app-system-share");
-globalDir.append(gAppInfo.ID);
-registerDirectory("XRESysSExtPD", globalDir.parent);
-
-// SCOPE_USER
-const userDir = gProfD.clone();
-userDir.append("app-system-user");
-userDir.append(gAppInfo.ID);
-registerDirectory("XREUSysExt", userDir.parent);
-
-// SCOPE_APPLICATION
-const addonAppDir = gProfD.clone();
-addonAppDir.append("app-global");
-addonAppDir.append(gAppInfo.ID);
-registerDirectory("XREAddonAppDir", addonAppDir.parent);
-
-// SCOPE_PROFILE
-const profileDir = gProfD.clone();
-profileDir.append("extensions");
-
-const scopeDirectories = Object.entries({
-  global: globalDir,
-  user: userDir,
-  app: addonAppDir,
-  profile: profileDir,
-});
-
-function check_startup_changes(aType, aIds) {
-  var ids = aIds.slice(0);
-  ids.sort();
-  var changes = AddonManager.getStartupChanges(aType);
-  changes = changes.filter(aEl => /@tests.mozilla.org$/.test(aEl));
-  changes.sort();
-
-  Assert.equal(JSON.stringify(ids), JSON.stringify(changes));
-}
-
-async function createWebExtension(id, version, dir) {
-  let xpi = AddonTestUtils.createTempWebExtensionFile({
-    manifest: {
-      version,
-      applications: { gecko: { id } },
-    },
-  });
-  await AddonTestUtils.manuallyInstall(xpi, dir);
-}
-
 // IDs for scopes that should sideload when sideloading
 // is not disabled.
 let legacyIDs = [
@@ -107,7 +34,7 @@ add_task(async function test_sideloads_legacy() {
   let IDs = [];
 
   // Create a "legacy" addon for each scope.
-  for (let [name, dir] of scopeDirectories) {
+  for (let [name, dir] of Object.entries(scopeDirectories)) {
     let id = getID(`legacy-${name}`);
     IDs.push(id);
     await createWebExtension(id, initialVersion(name), dir);
@@ -138,7 +65,7 @@ add_task(async function test_sideloads_disabled() {
 
   // Create 4 new addons, only one of these, "profile" should
   // sideload.
-  for (let [name, dir] of scopeDirectories) {
+  for (let [name, dir] of Object.entries(scopeDirectories)) {
     await createWebExtension(getID(name), initialVersion(name), dir);
   }
 
@@ -154,7 +81,7 @@ add_task(async function test_sideloads_disabled() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_CHANGED, []);
   check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
 
-  for (let [name] of scopeDirectories) {
+  for (let [name] of Object.entries(scopeDirectories)) {
     let id = getID(name);
     let addon = await promiseAddonByID(id);
     if (name === "profile") {
@@ -183,7 +110,7 @@ add_task(async function test_sideloads_disabled() {
 
 add_task(async function test_sideloads_changed() {
   // Upgrade the manifest version
-  for (let [name, dir] of scopeDirectories) {
+  for (let [name, dir] of Object.entries(scopeDirectories)) {
     let id = getID(name);
     await createWebExtension(id, `${name}.1`, dir);
 
@@ -206,7 +133,7 @@ add_task(async function test_sideloads_changed() {
 add_task(async function test_sideloads_removed() {
   // Side-delete all the extensions then test that we get the
   // startup changes for the legacy sideloads and the one "profile" addon.
-  for (let [name, dir] of scopeDirectories) {
+  for (let [name, dir] of Object.entries(scopeDirectories)) {
     let id = getID(name);
     await OS.File.remove(OS.Path.join(dir.path, `${id}.xpi`));
 
