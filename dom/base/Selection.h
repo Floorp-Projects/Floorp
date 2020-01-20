@@ -168,6 +168,10 @@ class Selection final : public nsSupportsWeakReference,
    * then aRange is first scanned for -moz-user-select:none nodes and split up
    * into multiple ranges to exclude those before adding the resulting ranges
    * to this Selection.
+   *
+   * @param aOutIndex points to the range last added, if at least one was added.
+   *                  If aRange is already contained, it points to the range
+   *                  containing it.
    */
   nsresult AddRangesForSelectableNodes(nsRange* aRange, int32_t* aOutIndex,
                                        bool aNoStartSelect = false);
