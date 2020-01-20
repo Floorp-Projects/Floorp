@@ -25,7 +25,7 @@ add_task(async function() {
   const browser = BrowserTestUtils.addTab(gBrowser, tabURL).linkedBrowser;
   await BrowserTestUtils.browserLoaded(browser);
   const { short_name } = await ManifestObtainer.browserObtainManifest(browser);
-  is(short_name, "🍪=true");
+  is(short_name, "🍪");
   const tab = gBrowser.getTabForBrowser(browser);
   gBrowser.removeTab(tab);
 });

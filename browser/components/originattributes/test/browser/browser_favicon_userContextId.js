@@ -169,8 +169,8 @@ function waitOnFaviconLoaded(aFaviconURL) {
 async function generateCookies(aHost) {
   // we generate two different cookies for two userContextIds.
   let cookies = [];
-  cookies.push("a=" + Math.random().toString());
-  cookies.push("b=" + Math.random().toString());
+  cookies.push(Math.random().toString());
+  cookies.push(Math.random().toString());
 
   // Then, we add cookies into the site for 'personal' and 'work'.
   let tabInfoA = await openTabInUserContext(aHost, USER_CONTEXT_ID_PERSONAL);

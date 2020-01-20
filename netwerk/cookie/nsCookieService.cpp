@@ -3572,7 +3572,11 @@ void nsCookieService::AddInternal(const nsCookieKey& aKey, nsCookie* aCookie,
        reject control chars or non-ASCII chars. This is erring on the loose
        side, since there's probably no good reason to enforce this strictness.
 
-    5. Attribute "HttpOnly", not covered in the RFCs, is supported
+    5. cookie <NAME> is optional, where spec requires it. This is a fairly
+       trivial case, but allows the flexibility of setting only a cookie <VALUE>
+       with a blank <NAME> and is required by some sites (see bug 169091).
+
+    6. Attribute "HttpOnly", not covered in the RFCs, is supported
        (see bug 178993).
 
  ** Begin BNF:
@@ -3592,7 +3596,7 @@ void nsCookieService::AddInternal(const nsCookieKey& aKey, nsCookie* aCookie,
 
     set-cookie    = "Set-Cookie:" cookies
     cookies       = cookie *( cookie-sep cookie )
-    cookie        = NAME "=" VALUE *(";" cookie-av)      ; cookie NAME/VALUE must come first
+    cookie        = [NAME "="] VALUE *(";" cookie-av)    ; cookie NAME/VALUE must come first
     NAME          = token                                ; cookie name
     VALUE         = value                                ; cookie value
     cookie-av     = token ["=" value]
@@ -3717,18 +3721,20 @@ bool nsCookieService::ParseAttributes(nsCString& aCookieHeader,
 
   // extract cookie <NAME> & <VALUE> (first attribute), and copy the strings.
   // if we find multiple cookies, return for processing
-  // note: if there's no '=', we assume the cookie is invalid and fail to
-  // parse it. we used to accept such cookie pair values in the past.
+  // note: if there's no '=', we assume token is <VALUE>. this is required by
+  //       some sites (see bug 169091).
+  // XXX fix the parser to parse according to <VALUE> grammar for this case
   newCookie = GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue,
                             equalsFound);
   if (equalsFound) {
     aCookieData.name() = tokenString;
     aCookieData.value() = tokenValue;
+  } else {
+    aCookieData.value() = tokenString;
   }
 
   // extract remaining attributes
   while (cookieStart != cookieEnd && !newCookie) {
-    bool equalsFound;
     newCookie = GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue,
                               equalsFound);
 
@@ -3782,11 +3788,6 @@ bool nsCookieService::ParseAttributes(nsCString& aCookieHeader,
       StaticPrefs::network_cookie_sameSite_noneRequiresSecure() &&
       !aCookieData.isSecure() &&
       aCookieData.sameSite() == nsICookie::SAMESITE_NONE) {
-    return newCookie;
-  }
-
-  // If the name=value pair wasn't found, let's abort the parsing.
-  if (!equalsFound) {
     return newCookie;
   }
 
