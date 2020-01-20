@@ -2,12 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Make Cu.isInAutomation true.
-Services.prefs.setBoolPref(
-  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer",
-  true
-);
-
 // This verifies startup detection of added/removed/changed items and install
 // location priorities
 
@@ -16,7 +10,6 @@ Services.prefs.setIntPref(
   "extensions.enabledScopes",
   AddonManager.SCOPE_PROFILE | AddonManager.SCOPE_USER
 );
-Services.prefs.setIntPref("extensions.sideloadScopes", AddonManager.SCOPE_ALL);
 
 function getID(n) {
   return `addon${n}@tests.mozilla.org`;
