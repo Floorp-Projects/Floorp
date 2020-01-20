@@ -17,3 +17,4 @@
 | [BrowserMenuItemToolbar](-browser-menu-item-toolbar/index.md) | `class BrowserMenuItemToolbar : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A toolbar of buttons to show inside the browser menu. |
 | [BrowserMenuSwitch](-browser-menu-switch/index.md) | `class BrowserMenuSwitch : `[`BrowserMenuCompoundButton`](-browser-menu-compound-button/index.md)<br>A simple browser menu switch. |
 | [SimpleBrowserMenuItem](-simple-browser-menu-item/index.md) | `class SimpleBrowserMenuItem : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A simple browser menu item displaying text. |
+| [WebExtensionBrowserMenuItem](-web-extension-browser-menu-item/index.md) | `class WebExtensionBrowserMenuItem : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A browser menu item displaying web extension. |

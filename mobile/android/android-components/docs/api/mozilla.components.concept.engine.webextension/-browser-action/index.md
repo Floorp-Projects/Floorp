@@ -24,6 +24,12 @@ Value type that represents the state of a browser action within a [WebExtension]
 | [onClick](on-click.md) | `val onClick: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A callback to be executed when this browser action is clicked. |
 | [title](title.md) | `val title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>The title of the browser action to be visible in the user interface. |
 
+### Functions
+
+| Name | Summary |
+|---|---|
+| [copyWithOverride](copy-with-override.md) | `fun copyWithOverride(override: `[`BrowserAction`](./index.md)`): `[`BrowserAction`](./index.md)<br>Returns a copy of this [BrowserAction](./index.md) with the provided overrides applied e.g. for tab-specific overrides. |
+
 ### Extension Functions
 
 | Name | Summary |
