@@ -12,6 +12,7 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/WindowContext.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
@@ -38,7 +39,8 @@ class JSWindowActorMessageMeta;
 /**
  * A handle in the parent process to a specific nsGlobalWindowInner object.
  */
-class WindowGlobalParent final : public WindowGlobalActor,
+class WindowGlobalParent final : public WindowContext,
+                                 public WindowGlobalActor,
                                  public PWindowGlobalParent {
   friend class gfx::CrossProcessPaint;
   friend class PWindowGlobalParent;
@@ -46,7 +48,7 @@ class WindowGlobalParent final : public WindowGlobalActor,
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WindowGlobalParent,
-                                                         WindowGlobalActor)
+                                                         WindowContext)
 
   static already_AddRefed<WindowGlobalParent> GetByInnerWindowId(
       uint64_t aInnerWindowId);
@@ -160,7 +162,6 @@ class WindowGlobalParent final : public WindowGlobalActor,
     return IPC_OK();
   }
   mozilla::ipc::IPCResult RecvSetHasBeforeUnload(bool aHasBeforeUnload);
-  mozilla::ipc::IPCResult RecvBecomeCurrentWindowGlobal();
   mozilla::ipc::IPCResult RecvDestroy();
   mozilla::ipc::IPCResult RecvRawMessage(const JSWindowActorMessageMeta& aMeta,
                                          const ClonedMessageData& aData,
@@ -204,5 +205,10 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
 }  // namespace dom
 }  // namespace mozilla
+
+inline nsISupports* ToSupports(
+    mozilla::dom::WindowGlobalParent* aWindowGlobal) {
+  return static_cast<mozilla::dom::WindowContext*>(aWindowGlobal);
+}
 
 #endif  // !defined(mozilla_dom_WindowGlobalParent_h)

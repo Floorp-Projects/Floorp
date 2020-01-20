@@ -1072,6 +1072,10 @@ class ContentParent final
       BrowsingContext* aContext,
       BrowsingContext::BaseTransaction&& aTransaction, uint64_t aEpoch);
 
+  mozilla::ipc::IPCResult RecvCommitWindowContextTransaction(
+      WindowContext* aContext, WindowContext::BaseTransaction&& aTransaction,
+      uint64_t aEpoch);
+
   mozilla::ipc::IPCResult RecvFirstIdle();
 
   mozilla::ipc::IPCResult RecvDeviceReset();

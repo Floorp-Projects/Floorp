@@ -111,6 +111,9 @@ using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
+using refcounted class mozilla::dom::WindowContext from "mozilla/dom/WindowContext.h";
+using mozilla::dom::WindowContextTransaction from "mozilla/dom/WindowContext.h";
+using mozilla::dom::WindowContextInitializer from "mozilla/dom/WindowContext.h";
 using base::SharedMemoryHandle from "base/shared_memory.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using mozilla::fontlist::Pointer from "SharedFontList.h";
@@ -855,7 +858,8 @@ child:
 
     // Begin subscribing to a new BrowsingContextGroup, sending down the current
     // value for every individual BrowsingContext.
-    async RegisterBrowsingContextGroup(BrowsingContextInitializer[] aInits);
+    async RegisterBrowsingContextGroup(BrowsingContextInitializer[] aInits,
+                                       WindowContextInitializer[] aWindowInits);
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
     // Initialize top-level actor for testing content process sandbox.
@@ -1602,6 +1606,15 @@ both:
     async SessionStorageData(uint64_t aTopContextId, nsCString aOriginAttrs,
                              nsCString aOriginKey, KeyValuePair[] aDefaultData,
                              KeyValuePair[] aSessionData);
+    async CommitWindowContextTransaction(WindowContext aContext,
+                                         WindowContextTransaction aTransaction,
+                                         uint64_t aEpoch);
+
+child:
+    // NOTE: These methods are only needed on the child, as the parent
+    // WindowContext is managed using the PWindowGlobal actor's lifecycle.
+    async CreateWindowContext(WindowContextInitializer aInit);
+    async DiscardWindowContext(uint64_t aContextId) returns (bool unused);
 };
 
 }

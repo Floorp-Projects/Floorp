@@ -122,15 +122,5 @@ void WindowGlobalActor::ConstructActor(const nsAString& aName,
   }
 }
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalActor)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalActor)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(WindowGlobalActor)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(WindowGlobalActor)
-
 }  // namespace dom
 }  // namespace mozilla
