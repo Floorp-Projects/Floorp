@@ -581,23 +581,6 @@ identity.fxaccounts:
       - main
 
 security:
-  contentblocker_permissions:
-    bug_numbers:
-      - 1581056
-    description: >
-      Amount of set nsContentBlocker permissions at startup, keyed by permission type.
-    expires: "75"
-    kind: uint
-    keyed: true
-    notification_emails:
-      - pbz@mozilla.com
-      - jhofmann@mozilla.com
-      - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
   webauthn_used:
     bug_numbers:
       - 1265472
